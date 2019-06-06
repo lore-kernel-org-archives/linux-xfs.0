@@ -1,217 +1,265 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:35998 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726532AbfFFAbu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 20:31:50 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:46662 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbfFFVKJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 17:10:09 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56L8orG043313
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 21:10:08 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2sugsttync-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 21:10:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56L9v8b056725
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 21:10:07 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2swngjp6yh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 21:10:07 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x56LA6pw016579
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 21:10:06 GMT
+Date: Thu, 6 Jun 2019 14:10:04 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/9] xfs: wire up new v5 bulkstat ioctls
+Message-ID: <20190606211004.GB1871505@magnolia>
+References: <155916885106.758159.3471602893858635007.stgit@magnolia>
+ <155916888365.758159.10884362336065224287.stgit@magnolia>
+ <dfe26188-ce75-a916-db26-eaf8286882e9@oracle.com>
 MIME-Version: 1.0
-References: <20190604135632.1487-1-amir73il@gmail.com> <CAN-5tyFBd4mJ84C2J9dwG_iYeEDN0tX86DjW4oaV7yscj4VR7g@mail.gmail.com>
-In-Reply-To: <CAN-5tyFBd4mJ84C2J9dwG_iYeEDN0tX86DjW4oaV7yscj4VR7g@mail.gmail.com>
-From: Steve French <smfrench@gmail.com>
-Date: Wed, 5 Jun 2019 19:31:37 -0500
-Message-ID: <CAH2r5mtbmXx6g7zf+C8cg8sT6WJKAoH=93nk5O5mLxpBzTHPTg@mail.gmail.com>
-Subject: Re: [PATCH v5 8/9] vfs: allow copy_file_range to copy across devices
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <dfe26188-ce75-a916-db26-eaf8286882e9@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Olga Kornievskaia <olga.kornievskaia@gmail.com>
-Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, Steve French <stfrench@microsoft.com>, Dave Chinner <dchinner@redhat.com>
+To: Allison Collins <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-I tried the patchset and new xfstests with cifs.ko and looks like the
-copy_file_range patches are fine
-
-1) xfs_io copy_range worked fine (once I fixed a bug I found in
-cifs.ko in the "match_server" function)
-2) the new xfstest 989 requires other features (swapfiles) which I can
-add and 990 requires new xfsprogs presumably (xfs_io in current Ubuntu
-doesn't seem to include xfs_io chmod)
-generic/989    [not run] swapfiles are not supported
-generic/990    [not run] xfs_io chmod support is missing
-
-Are there other xfstests that you would like me to run (other than the
-3 in the 900 series)?
-
-On Tue, Jun 4, 2019 at 3:43 PM Olga Kornievskaia
-<olga.kornievskaia@gmail.com> wrote:
->
-> On Tue, Jun 4, 2019 at 9:56 AM Amir Goldstein <amir73il@gmail.com> wrote:
-> >
-> > We want to enable cross-filesystem copy_file_range functionality
-> > where possible, so push the "same superblock only" checks down to
-> > the individual filesystem callouts so they can make their own
-> > decisions about cross-superblock copy offload and fallack to
-> > generic_copy_file_range() for cross-superblock copy.
-> >
-> > [Amir] We do not call ->remap_file_range() in case the files are not
-> > on the same sb and do not call ->copy_file_range() in case the files
-> > do not belong to the same filesystem driver.
-> >
-> > This changes behavior of the copy_file_range(2) syscall, which will
-> > now allow cross filesystem in-kernel copy.  CIFS already supports
-> > cross-superblock copy, between two shares to the same server. This
-> > functionality will now be available via the copy_file_range(2) syscall.
-> >
-> > Cc: Steve French <stfrench@microsoft.com>
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+On Wed, Jun 05, 2019 at 03:30:21PM -0700, Allison Collins wrote:
+> On 5/29/19 3:28 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Wire up the new v5 BULKSTAT ioctl and rename the old one to V1.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >
-> > Darrick,
-> >
-> > Per feedback from Olga, I am sending a modified version of this patch
-> > to address cross file_system_type copy issue in nfs.
-> >
->
-> Thanks Amir, this works for NFS with referrals.
->
-> > For the sake of global warming I am not re-posting the entire patch set.
-> > I removed your RVB because of the change.
-> >
-> > Thanks,
-> > Amir.
-> >
-> > Changes since v4:
-> > - Check "same filesystem driver" by comapring ->copy_file_range()
-> >   function pointer
-> >
-> >  fs/ceph/file.c    |  4 +++-
-> >  fs/cifs/cifsfs.c  |  2 +-
-> >  fs/fuse/file.c    |  5 ++++-
-> >  fs/nfs/nfs4file.c |  5 ++++-
-> >  fs/read_write.c   | 18 ++++++++++++------
-> >  5 files changed, 24 insertions(+), 10 deletions(-)
-> >
-> > diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> > index e87f7b2023af..4cd41ed5cc53 100644
-> > --- a/fs/ceph/file.c
-> > +++ b/fs/ceph/file.c
-> > @@ -1909,6 +1909,8 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
-> >
-> >         if (src_inode == dst_inode)
-> >                 return -EINVAL;
-> > +       if (src_inode->i_sb != dst_inode->i_sb)
-> > +               return -EXDEV;
-> >         if (ceph_snap(dst_inode) != CEPH_NOSNAP)
-> >                 return -EROFS;
-> >
-> > @@ -2109,7 +2111,7 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
-> >         ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
-> >                                      len, flags);
-> >
-> > -       if (ret == -EOPNOTSUPP)
-> > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> >                 ret = generic_copy_file_range(src_file, src_off, dst_file,
-> >                                               dst_off, len, flags);
-> >         return ret;
-> > diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-> > index c65823270313..f11eea6125c1 100644
-> > --- a/fs/cifs/cifsfs.c
-> > +++ b/fs/cifs/cifsfs.c
-> > @@ -1149,7 +1149,7 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
-> >                                         len, flags);
-> >         free_xid(xid);
-> >
-> > -       if (rc == -EOPNOTSUPP)
-> > +       if (rc == -EOPNOTSUPP || rc == -EXDEV)
-> >                 rc = generic_copy_file_range(src_file, off, dst_file,
-> >                                              destoff, len, flags);
-> >         return rc;
-> > diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> > index e03901ae729b..569baf286835 100644
-> > --- a/fs/fuse/file.c
-> > +++ b/fs/fuse/file.c
-> > @@ -3126,6 +3126,9 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
-> >         if (fc->no_copy_file_range)
-> >                 return -EOPNOTSUPP;
-> >
-> > +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > +               return -EXDEV;
-> > +
-> >         inode_lock(inode_out);
-> >
-> >         if (fc->writeback_cache) {
-> > @@ -3182,7 +3185,7 @@ static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
-> >         ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
-> >                                      len, flags);
-> >
-> > -       if (ret == -EOPNOTSUPP)
-> > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> >                 ret = generic_copy_file_range(src_file, src_off, dst_file,
-> >                                               dst_off, len, flags);
-> >         return ret;
-> > diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
-> > index 4842f3ab3161..f4157eb1f69d 100644
-> > --- a/fs/nfs/nfs4file.c
-> > +++ b/fs/nfs/nfs4file.c
-> > @@ -133,6 +133,9 @@ static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> >                                       struct file *file_out, loff_t pos_out,
-> >                                       size_t count, unsigned int flags)
-> >  {
-> > +       /* Only offload copy if superblock is the same */
-> > +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > +               return -EXDEV;
-> >         if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
-> >                 return -EOPNOTSUPP;
-> >         if (file_inode(file_in) == file_inode(file_out))
-> > @@ -148,7 +151,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> >
-> >         ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
-> >                                      flags);
-> > -       if (ret == -EOPNOTSUPP)
-> > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> >                 ret = generic_copy_file_range(file_in, pos_in, file_out,
-> >                                               pos_out, count, flags);
-> >         return ret;
-> > diff --git a/fs/read_write.c b/fs/read_write.c
-> > index cec7e7b1f693..bb594c8f4404 100644
-> > --- a/fs/read_write.c
-> > +++ b/fs/read_write.c
-> > @@ -1599,7 +1599,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
-> >                                   struct file *file_out, loff_t pos_out,
-> >                                   size_t len, unsigned int flags)
-> >  {
-> > -       if (file_out->f_op->copy_file_range)
-> > +       /*
-> > +        * Although we now allow filesystems to handle cross sb copy, passing
-> > +        * a file of the wrong filesystem type to filesystem driver can result
-> > +        * in an attempt to dereference the wrong type of ->private_data, so
-> > +        * avoid doing that until we really have a good reason.
-> > +        * NFS has several different file_system_type's, but they all end up
-> > +        * using the same ->copy_file_range() function pointer.
-> > +        */
-> > +       if (file_out->f_op->copy_file_range &&
-> > +           file_out->f_op->copy_file_range == file_in->f_op->copy_file_range)
-> >                 return file_out->f_op->copy_file_range(file_in, pos_in,
-> >                                                        file_out, pos_out,
-> >                                                        len, flags);
-> > @@ -1622,10 +1631,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >         if (flags != 0)
-> >                 return -EINVAL;
-> >
-> > -       /* this could be relaxed once a method supports cross-fs copies */
-> > -       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > -               return -EXDEV;
+> >   fs/xfs/libxfs/xfs_fs.h |   24 +++++++++++
+> >   fs/xfs/xfs_ioctl.c     |  104 ++++++++++++++++++++++++++++++++++++++++++++++++
+> >   fs/xfs/xfs_ioctl32.c   |    1
+> >   fs/xfs/xfs_ondisk.h    |    1
+> >   4 files changed, 129 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > index 8b8fe78511fb..960f3542e207 100644
+> > --- a/fs/xfs/libxfs/xfs_fs.h
+> > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > @@ -435,7 +435,6 @@ struct xfs_fsop_bulkreq {
+> >   	__s32		__user *ocount;	/* output count pointer		*/
+> >   };
 > > -
-> >         ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-> >                                        flags);
-> >         if (unlikely(ret))
-> > @@ -1648,7 +1653,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> >          * Try cloning first, this is supported by more file systems, and
-> >          * more efficient if both clone and copy are supported (e.g. NFS).
-> >          */
-> > -       if (file_in->f_op->remap_file_range) {
-> > +       if (file_in->f_op->remap_file_range &&
-> > +           file_inode(file_in)->i_sb == file_inode(file_out)->i_sb) {
-> >                 loff_t cloned;
-> >
-> >                 cloned = file_in->f_op->remap_file_range(file_in, pos_in,
-> > --
-> > 2.17.1
-> >
+> >   /*
+> >    * Structures returned from xfs_inumbers routine (XFS_IOC_FSINUMBERS).
+> >    */
+> > @@ -457,6 +456,28 @@ struct xfs_inumbers {
+> >   #define XFS_INUMBERS_VERSION_V1	(1)
+> >   #define XFS_INUMBERS_VERSION_V5	(5)
+> > +/* Header for bulk inode requests. */
+> > +struct xfs_bulk_ireq {
+> > +	uint64_t	ino;		/* I/O: start with this inode	*/
+> > +	uint32_t	flags;		/* I/O: operation flags		*/
+> > +	uint32_t	icount;		/* I: count of entries in buffer */
+> > +	uint32_t	ocount;		/* O: count of entries filled out */
+> > +	uint32_t	reserved32;	/* must be zero			*/
+> > +	uint64_t	reserved[5];	/* must be zero			*/
+> > +};
+> > +
+> > +#define XFS_BULK_IREQ_FLAGS_ALL	(0)
+> > +
+> > +/*
+> > + * ioctl structures for v5 bulkstat and inumbers requests
+> > + */
+> > +struct xfs_bulkstat_req {
+> > +	struct xfs_bulk_ireq	hdr;
+> > +	struct xfs_bulkstat	bulkstat[];
+> > +};
+> > +#define XFS_BULKSTAT_REQ_SIZE(nr)	(sizeof(struct xfs_bulkstat_req) + \
+> > +					 (nr) * sizeof(struct xfs_bulkstat))
+> > +
+> >   /*
+> >    * Error injection.
+> >    */
+> > @@ -758,6 +779,7 @@ struct xfs_scrub_metadata {
+> >   #define XFS_IOC_FSGEOMETRY_V4	     _IOR ('X', 124, struct xfs_fsop_geom_v4)
+> >   #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
+> >   #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
+> > +#define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
+> >   /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index e43ad688e683..f6724c75ba97 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -822,6 +822,107 @@ xfs_ioc_fsbulkstat(
+> >   	return 0;
+> >   }
+> > +/* Return 0 on success or positive error */
+> > +static int
+> > +xfs_bulkstat_fmt(
+> > +	struct xfs_ibulk		*breq,
+> > +	const struct xfs_bulkstat	*bstat)
+> > +{
+> > +	if (copy_to_user(breq->ubuffer, bstat, sizeof(struct xfs_bulkstat)))
+> > +		return -EFAULT;
+> > +	return xfs_ibulk_advance(breq, sizeof(struct xfs_bulkstat));
+> > +}
+> > +
+> > +/*
+> > + * Check the incoming bulk request @hdr from userspace and initialize the
+> > + * internal @breq bulk request appropriately.  Returns 0 if the bulk request
+> > + * should proceed; 1 if there's nothing to do; or the usual negative error
+> > + * code.
+> > + */
+> > +static int
+> > +xfs_bulk_ireq_setup(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_bulk_ireq	*hdr,
+> > +	struct xfs_ibulk	*breq,
+> > +	void __user		*ubuffer)
+> > +{
+> > +	if (hdr->icount == 0 ||
+> > +	    (hdr->flags & ~XFS_BULK_IREQ_FLAGS_ALL) ||
+> > +	    hdr->reserved32 ||
+> > +	    memchr_inv(hdr->reserved, 0, sizeof(hdr->reserved)))
+> > +		return -EINVAL;
+> > +
+> > +	if (XFS_INO_TO_AGNO(mp, hdr->ino) >= mp->m_sb.sb_agcount)
+> > +		goto no_results;
+> > +
+> > +	breq->ubuffer = ubuffer;
+> > +	breq->icount = hdr->icount;
+> > +	breq->startino = hdr->ino;
+> > +	return 0;
+> > +no_results:
+> > +	hdr->ocount = 0;
+> > +	return 1;
+> > +}
+> > +
+> > +/*
+> > + * Update the userspace bulk request @hdr to reflect the end state of the
+> > + * internal bulk request @breq.  If @error is negative then we return just
+> > + * that; otherwise (@error is 0 or 1) we copy the state so that userspace
+> > + * can discover what happened.
+> > + */
+> > +static int
+> > +xfs_bulk_ireq_teardown(
+> > +	struct xfs_bulk_ireq	*hdr,
+> > +	struct xfs_ibulk	*breq,
+> > +	int			error)
+> > +{
+> > +	if (error < 0)
+> > +		return error;
+> Hmm, passing in error just to bail on error seemed a little out of scope to
+> me.  Is there a reason we're doing it here?  Instead of after the preceding
+> call made in the caller?  Referenced below.....
+> 
+> > +
+> > +	hdr->ino = breq->startino;
+> > +	hdr->ocount = breq->ocount;
+> > +	return 0;
+> > +}
+> > +
+> > +/* Handle the v5 bulkstat ioctl. */
+> > +STATIC int
+> > +xfs_ioc_bulkstat(
+> > +	struct xfs_mount		*mp,
+> > +	unsigned int			cmd,
+> > +	struct xfs_bulkstat_req __user	*arg)
+> > +{
+> > +	struct xfs_bulk_ireq		hdr;
+> > +	struct xfs_ibulk		breq = {
+> > +		.mp			= mp,
+> > +	};
+> > +	int				error;
+> > +
+> > +	if (!capable(CAP_SYS_ADMIN))
+> > +		return -EPERM;
+> > +
+> > +	if (XFS_FORCED_SHUTDOWN(mp))
+> > +		return -EIO;
+> > +
+> > +	if (copy_from_user(&hdr, &arg->hdr, sizeof(hdr)))
+> > +		return -EFAULT;
+> > +
+> > +	error = xfs_bulk_ireq_setup(mp, &hdr, &breq, arg->bulkstat);
+> > +	if (error < 0)
+> > +		return error;
+> > +
+> > +	if (!error)
+> > +		error = xfs_bulkstat(&breq, xfs_bulkstat_fmt);
+> > +
+>         Right here.  How about
+> 
+>         if (error < 0)
+>            return error;
+> 
+>         It seems functionally equivalent.  If error < 0, teardown will
+> bounce it back anyway and then the error check below will toss it back up.
+> Is that what you meant?
 
+Yeah, I could do that too. :)
 
+TBH I only threw it in as a helper function because xfs_bulk_ireq_setup
+seemed to need a counterpart; it's such a short function that I could
+just opencode it...  Thoughts?
 
--- 
-Thanks,
+--D
 
-Steve
+> Allison
+> 
+> > +	error = xfs_bulk_ireq_teardown(&hdr, &breq, error);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	if (copy_to_user(&arg->hdr, &hdr, sizeof(hdr)))
+> > +		return -EFAULT;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >   STATIC int
+> >   xfs_ioc_fsgeometry(
+> >   	struct xfs_mount	*mp,
+> > @@ -1986,6 +2087,9 @@ xfs_file_ioctl(
+> >   	case XFS_IOC_FSINUMBERS:
+> >   		return xfs_ioc_fsbulkstat(mp, cmd, arg);
+> > +	case XFS_IOC_BULKSTAT:
+> > +		return xfs_ioc_bulkstat(mp, cmd, arg);
+> > +
+> >   	case XFS_IOC_FSGEOMETRY_V1:
+> >   		return xfs_ioc_fsgeometry(mp, arg, 3);
+> >   	case XFS_IOC_FSGEOMETRY_V4:
+> > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> > index bfe71747776b..84c342be4536 100644
+> > --- a/fs/xfs/xfs_ioctl32.c
+> > +++ b/fs/xfs/xfs_ioctl32.c
+> > @@ -576,6 +576,7 @@ xfs_file_compat_ioctl(
+> >   	case XFS_IOC_ERROR_CLEARALL:
+> >   	case FS_IOC_GETFSMAP:
+> >   	case XFS_IOC_SCRUB_METADATA:
+> > +	case XFS_IOC_BULKSTAT:
+> >   		return xfs_file_ioctl(filp, cmd, p);
+> >   #if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
+> >   	/*
+> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > index d8f941b4d51c..954484c6eb96 100644
+> > --- a/fs/xfs/xfs_ondisk.h
+> > +++ b/fs/xfs/xfs_ondisk.h
+> > @@ -149,6 +149,7 @@ xfs_check_ondisk_structs(void)
+> >   	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
+> >   	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
+> >   }
+> >   #endif /* __XFS_ONDISK_H */
+> > 
