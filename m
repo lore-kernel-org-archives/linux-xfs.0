@@ -1,333 +1,208 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:41534 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727082AbfFFUDQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 16:03:16 -0400
-Date: Thu, 6 Jun 2019 13:02:49 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/1] xfs: check for COW overflows in i_delayed_blks
-Message-ID: <20190606200249.GA1688126@magnolia>
-References: <155968302402.1647082.16959798703857853077.stgit@magnolia>
- <155968303075.1647082.5031279746723706503.stgit@magnolia>
- <20190606191449.GB2791@bfoster>
+Received: from mga03.intel.com ([134.134.136.65]:36145 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726658AbfFFBpU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 21:45:20 -0400
+From: ira.weiny@intel.com
+Subject: [PATCH RFC 06/10] fs/ext4: Teach dax_layout_busy_page() to operate on a sub-range
+Date: Wed,  5 Jun 2019 18:45:39 -0700
+Message-Id: <20190606014544.8339-7-ira.weiny@intel.com>
+In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190606191449.GB2791@bfoster>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Jun 06, 2019 at 03:14:50PM -0400, Brian Foster wrote:
-> On Tue, Jun 04, 2019 at 02:17:10PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > With the new copy on write functionality it's possible to reserve so
-> > much COW space for a file that we end up overflowing i_delayed_blks.
-> > The only user-visible effect of this is to cause totally wrong i_blocks
-> > output in stat, so check for that.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  tests/xfs/907     |  223 +++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/907.out |    8 ++
-> >  tests/xfs/group   |    1 
-> >  3 files changed, 232 insertions(+)
-> >  create mode 100755 tests/xfs/907
-> >  create mode 100644 tests/xfs/907.out
-> > 
-> > 
-> > diff --git a/tests/xfs/907 b/tests/xfs/907
-> > new file mode 100755
-> > index 00000000..d85f12da
-> > --- /dev/null
-> > +++ b/tests/xfs/907
-> > @@ -0,0 +1,223 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0+
-> > +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 907
-> > +#
-> > +# Try to overflow i_delayed_blks by setting the largest cowextsize hint
-> > +# possible, creating a sparse file with a single byte every cowextsize bytes,
-> > +# reflinking it, and retouching every written byte to see if we can create
-> > +# enough speculative COW reservations to overflow i_delayed_blks.
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 7 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	test -n "$loop_mount" && $UMOUNT_PROG $loop_mount > /dev/null 2>&1
-> > +	test -n "$loop_dev" && _destroy_loop_device $loop_dev
-> > +	rm -rf $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +. ./common/reflink
-> > +. ./common/filter
-> > +
-> > +# real QA test starts here
-> > +_supported_os Linux
-> > +_supported_fs xfs
-> > +_require_scratch_reflink
-> > +_require_cp_reflink
-> > +_require_loop
-> > +_require_xfs_debug	# needed for xfs_bmap -c
-> > +
-> > +MAXEXTLEN=2097151	# cowextsize can't be more than MAXEXTLEN
-> > +
-> > +echo "Format and mount"
-> > +_scratch_mkfs > "$seqres.full" 2>&1
-> > +_scratch_mount
-> > +
-> > +# Create a huge sparse filesystem on the scratch device because that's what
-> > +# we're going to need to guarantee that we have enough blocks to overflow in
-> > +# the first place.  We need to have at least enough free space on that huge fs
-> > +# to handle one written block every MAXEXTLEN blocks and to reserve 2^32 blocks
-> > +# in the COW fork.  There needs to be sufficient space in the scratch
-> > +# filesystem to handle a 256M log, all the per-AG metadata, and all the data
-> > +# written to the test file.
-> > +#
-> > +# Worst case, a 64k-block fs needs to be about 300TB.  Best case, a 1k block
-> > +# filesystem needs ~5TB.  For the most common 4k case we only need a ~20TB fs.
-> > +#
-> > +# nr_cows is the number of writes we make to the filesystem.
-> > +# blks_needed is the number of free blocks we need in the fs to trigger the
-> > +#     overflow.  The destination file needs to have more than 2^32 blocks
-> > +#     reserved for COW, and the source file needs to have 1 block written every
-> > +#     MAXEXTLEN blocks (i.e. 2^32/MAXEXTLEN blocks) to set up the destination
-> > +#     file.
-> > +# loop_file_sz is the size of the filesystem we have to create to produce the
-> > +#     overflow problems.  This is 20% more than blks_needed, and rounded to the
-> > +#     nearest 512b so losetup doesn't whine.
-> > +# est_nr_ags is a guess at the AG count, assuming that we'll have one AG per
-> > +#     terabyte (which assumes that we need a multi-terabyte filesystem for this
-> > +#     test).  We assume we'll need 16 blocks for AG metadata and 128K for inode
-> > +#     chunks.
-> > +# space_reqd_kb is the size of the huge sparse filesystem --
-> > +#     256M for the log, per-AG metadata, and 10% more space than however much
-> > +#     we will write to both test files.
-> > +blksz=$(_get_file_block_size "$SCRATCH_MNT")
-> > +nr_cows="$(( ((2 ** 32) / MAXEXTLEN) + 100 ))"
-> > +blks_needed="$(( nr_cows * (1 + MAXEXTLEN) ))"
-> > +loop_file_sz="$(( ((blksz * blks_needed) * 12 / 10) / 512 * 512 ))"
-> > +est_nr_ags="$(( (loop_file_sz / (2 ** 40)) + 1 ))"
-> > +est_ag_space_kb="$(( (est_nr_ags * 16 * blksz / 1024) + 128 ))"
-> > +est_file_space_kb="$(( (((nr_cows * blksz) * 11 / 10) / 1024) ))"
-> > +space_reqd_kb="$(( 262144 + est_ag_space_kb + 2 * est_file_space_kb ))"
-> > +cat >> $seqres.full << ENDL
-> > +blksz: $blksz
-> > +nr_cows: $nr_cows
-> > +blks_needed: $blks_needed
-> > +loop_file_sz: $loop_file_sz
-> > +est_nr_ags: $est_nr_ags
-> > +est_ag_space_kb: $est_ag_space_kb
-> > +est_file_space_kb: $est_file_space_kb
-> > +space_reqd_kb: $space_reqd_kb
-> > +ENDL
-> > +_require_fs_space $SCRATCH_MNT $space_reqd_kb
-> > +
-> 
-> This seems like it would be simpler to just create the worst case sparse
-> fs (say 300TB or so) then make sure the scratch device has enough free
-> blocks to accommodate the number of COWs (plus slop) that need to occur
-> in the loop fs to overflow the counter. I don't have a 64k box handy,
-> but the metadata size difference between a sparse 20TB fs and 300TB fs
-> over a 4k scratch fs is only a few MB. Hm?
+From: Ira Weiny <ira.weiny@intel.com>
 
-<shrug> Originally it did just hardcode 300T, and Eryu complained that
-xfs_db would OOM when it tried to deal with a 300T filesystem.  I
-changed the test to avoid xfs_db, but then it occurred to me (running on
-a slow arm64 box) that the mkfs and xfs_repair runtimes could be cut
-down considerably if the loop fs was only as large as it needed to be.
+Callers of dax_layout_busy_page() are only rarely operating on the
+entire file of concern.
 
-> > +loop_file=$SCRATCH_MNT/a.img
-> > +loop_mount=$SCRATCH_MNT/a
-> > +$XFS_IO_PROG -f -c "truncate $loop_file_sz" $loop_file
-> > +loop_dev=$(_create_loop_device $loop_file)
-> > +
-> > +# Now we have to create the source file.  The goal is to overflow a 32-bit
-> > +# i_delayed_blks, which means that we have to create at least that many delayed
-> > +# allocation block reservations.  Take advantage of the fact that a cowextsize
-> > +# hint causes creation of large speculative delalloc reservations in the cow
-> > +# fork to reduce the amount of work we have to do.
-> > +#
-> > +# The maximum cowextsize can only be set to MAXEXTLEN fs blocks on a filesystem
-> > +# whose AGs each have more than MAXEXTLEN * 2 blocks.  This we can do easily
-> > +# with a multi-terabyte filesystem, so start by setting up the hint.  Note that
-> > +# the current fsxattr interface specifies its u32 cowextsize hint in units of
-> > +# bytes and therefore can't handle MAXEXTLEN * blksz on most filesystems, so we
-> > +# set it via mkfs because mkfs takes units of fs blocks, not bytes.
-> > +
-> > +_mkfs_dev -d cowextsize=$MAXEXTLEN -l size=256m $loop_dev >> $seqres.full
-> > +mkdir $loop_mount
-> > +mount $loop_dev $loop_mount
-> > +
-> > +echo "Create crazy huge file"
-> > +huge_file="$loop_mount/a"
-> > +touch "$huge_file"
-> > +blksz=$(_get_file_block_size "$loop_mount")
-> > +extsize_bytes="$(( MAXEXTLEN * blksz ))"
-> > +
-> > +# Make sure it actually set a hint.
-> > +curr_cowextsize_str="$($XFS_IO_PROG -c 'cowextsize' "$huge_file")"
-> > +echo "$curr_cowextsize_str" >> $seqres.full
-> > +cowextsize_bytes="$(echo "$curr_cowextsize_str" | sed -e 's/^.\([0-9]*\).*$/\1/g')"
-> > +test "$cowextsize_bytes" -eq 0 && echo "could not set cowextsize?"
-> > +
-> > +# Now we have to seed the file with sparse contents.  Remember, the goal is to
-> > +# create a little more than 2^32 delayed allocation blocks in the COW fork with
-> > +# as little effort as possible.  We know that speculative COW preallocation
-> > +# will create MAXEXTLEN-length reservations for us, so that means we should
-> > +# be able to get away with touching a single byte every extsize_bytes.  We
-> > +# do this backwards to avoid having to move EOF.
-> > +seq $nr_cows -1 0 | while read n; do
-> > +	off="$((n * extsize_bytes))"
-> > +	$XFS_IO_PROG -c "pwrite $off 1" "$huge_file" > /dev/null
-> > +done
-> > +
-> > +echo "Reflink crazy huge file"
-> > +_cp_reflink "$huge_file" "$huge_file.b"
-> > +
-> > +# Now that we've shared all the blocks in the file, we touch them all again
-> > +# to create speculative COW preallocations.
-> > +echo "COW crazy huge file"
-> > +seq $nr_cows -1 0 | while read n; do
-> > +	off="$((n * extsize_bytes))"
-> > +	$XFS_IO_PROG -c "pwrite $off 1" "$huge_file" > /dev/null
-> > +done
-> > +
-> > +# Compare the number of blocks allocated to this file (as reported by stat)
-> > +# against the number of blocks that are in the COW fork.  If either one is
-> > +# less than 2^32 then we have evidence of an overflow problem.
-> > +echo "Check crazy huge file"
-> > +allocated_stat_blocks="$(stat -c %b "$huge_file")"
-> > +stat_blksz="$(stat -c %B "$huge_file")"
-> > +allocated_fsblocks=$(( allocated_stat_blocks * stat_blksz / blksz ))
-> > +
-> > +# Make sure we got enough COW reservations to overflow a 32-bit counter.
-> > +
-> > +# Return the number of delalloc & real blocks given bmap output for a fork of a
-> > +# file.  Output is in units of 512-byte blocks.
-> > +count_fork_blocks() {
-> > +	$AWK_PROG "
-> > +{
-> > +	if (\$3 == \"delalloc\") {
-> > +		x += \$4;
-> > +	} else if (\$3 == \"hole\") {
-> > +		;
-> > +	} else {
-> > +		x += \$6;
-> > +	}
-> > +}
-> > +END {
-> > +	print(x);
-> > +}
-> > +"
-> > +}
-> > +
-> > +# Count the number of blocks allocated to a file based on the xfs_bmap output.
-> > +# Output is in units of filesystem blocks.
-> > +count_file_fork_blocks() {
-> > +	local tag="$1"
-> > +	local file="$2"
-> > +	local args="$3"
-> > +
-> > +	$XFS_IO_PROG -c "bmap $args -l -p -v" "$huge_file" > $tmp.extents
-> > +	echo "$tag fork map" >> $seqres.full
-> > +	cat $tmp.extents >> $seqres.full
-> > +	local sectors="$(count_fork_blocks < $tmp.extents)"
-> > +	echo "$(( sectors / (blksz / 512) ))"
-> > +}
-> > +
-> > +cowblocks=$(count_file_fork_blocks cow "$huge_file" "-c")
-> > +attrblocks=$(count_file_fork_blocks attr "$huge_file" "-a")
-> > +datablocks=$(count_file_fork_blocks data "$huge_file" "")
-> > +
-> > +# Did we create more than 2^32 blocks in the cow fork?
-> > +echo "datablocks is $datablocks" >> $seqres.full
-> > +echo "attrblocks is $attrblocks" >> $seqres.full
-> > +echo "cowblocks is $cowblocks" >> $seqres.full
-> > +test "$cowblocks" -lt $((2 ** 32)) && \
-> > +	echo "cowblocks (${cowblocks}) should be more than 2^32!"
+Teach dax_layout_busy_page() to operate on a sub-range of the
+address_space provided.  Specifying 0 - ULONG_MAX however, will continue
+to operate on the "entire file" and XFS is split out to a separate patch
+by this method.
 
-This part checks that the test did what we expect.
+This could potentially speed up dax_layout_busy_page() as well.
 
-> > +
-> > +# Does stat's block allocation count exceed 2^32?
-> > +echo "stat blocks is $allocated_fsblocks" >> $seqres.full
-> > +test "$allocated_fsblocks" -lt $((2 ** 32)) && \
-> > +	echo "stat blocks (${allocated_fsblocks}) should be more than 2^32!"
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/dax.c            | 15 +++++++++++----
+ fs/ext4/ext4.h      |  2 +-
+ fs/ext4/extents.c   |  6 +++---
+ fs/ext4/inode.c     | 19 ++++++++++++-------
+ fs/xfs/xfs_file.c   |  3 ++-
+ include/linux/dax.h |  3 ++-
+ 6 files changed, 31 insertions(+), 17 deletions(-)
 
-This part detects the problem in the incore state.
-
-> > +# Finally, does st_blocks match what we computed from the forks?
-> > +expected_allocated_fsblocks=$((datablocks + cowblocks + attrblocks))
-> > +echo "expected stat blocks is $expected_allocated_fsblocks" >> $seqres.full
-> > +
-> > +_within_tolerance "st_blocks" $allocated_fsblocks $expected_allocated_fsblocks 2% -v
-
-And this one on is a second sanity check that the test did roughly what
-we expected.
-
-> > +
-> 
-> Similar question with the post-processing stuff... how much of this is
-> to detect the problem vs. determine the test sequence did what we
-> expect?
-
-(Answered above.)
-
-> Does the fs check below report corruption or is it purely
-> in-core state that ends up broken?
-
-It's only the incore state that ends up broken.
-
---D
-
-> Brian
-> 
-> > +echo "Test done"
-> > +# Quick check the large sparse fs, but skip xfs_db because it doesn't scale
-> > +# well on a multi-terabyte filesystem.
-> > +LARGE_SCRATCH_DEV=yes _check_xfs_filesystem $loop_dev none none
-> > +
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/907.out b/tests/xfs/907.out
-> > new file mode 100644
-> > index 00000000..cc07d659
-> > --- /dev/null
-> > +++ b/tests/xfs/907.out
-> > @@ -0,0 +1,8 @@
-> > +QA output created by 907
-> > +Format and mount
-> > +Create crazy huge file
-> > +Reflink crazy huge file
-> > +COW crazy huge file
-> > +Check crazy huge file
-> > +st_blocks is in range
-> > +Test done
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index ffe4ae12..e528c559 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -504,3 +504,4 @@
-> >  504 auto quick mkfs label
-> >  505 auto quick spaceman
-> >  506 auto quick health
-> > +907 clone
-> > 
+diff --git a/fs/dax.c b/fs/dax.c
+index 29ff3b683657..abd77b184879 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -568,8 +568,11 @@ bool dax_mapping_is_dax(struct address_space *mapping)
+ EXPORT_SYMBOL_GPL(dax_mapping_is_dax);
+ 
+ /**
+- * dax_layout_busy_page - find first pinned page in @mapping
++ * dax_layout_busy_page - find first pinned page in @mapping within
++ *                        the range @off - @off + @len
+  * @mapping: address space to scan for a page with ref count > 1
++ * @off: offset to start at
++ * @len: length to scan through
+  *
+  * DAX requires ZONE_DEVICE mapped pages. These pages are never
+  * 'onlined' to the page allocator so they are considered idle when
+@@ -582,9 +585,13 @@ EXPORT_SYMBOL_GPL(dax_mapping_is_dax);
+  * to be able to run unmap_mapping_range() and subsequently not race
+  * mapping_mapped() becoming true.
+  */
+-struct page *dax_layout_busy_page(struct address_space *mapping)
++struct page *dax_layout_busy_page(struct address_space *mapping,
++				  loff_t off, loff_t len)
+ {
+-	XA_STATE(xas, &mapping->i_pages, 0);
++	unsigned long start_idx = off >> PAGE_SHIFT;
++	unsigned long end_idx = (len == ULONG_MAX) ? ULONG_MAX
++				: start_idx + (len >> PAGE_SHIFT);
++	XA_STATE(xas, &mapping->i_pages, start_idx);
+ 	void *entry;
+ 	unsigned int scanned = 0;
+ 	struct page *page = NULL;
+@@ -607,7 +614,7 @@ struct page *dax_layout_busy_page(struct address_space *mapping)
+ 	unmap_mapping_range(mapping, 0, 0, 1);
+ 
+ 	xas_lock_irq(&xas);
+-	xas_for_each(&xas, entry, ULONG_MAX) {
++	xas_for_each(&xas, entry, end_idx) {
+ 		if (WARN_ON_ONCE(!xa_is_value(entry)))
+ 			continue;
+ 		if (unlikely(dax_is_locked(entry)))
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index 1cb67859e051..ba5920c21023 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -2530,7 +2530,7 @@ extern int ext4_get_inode_loc(struct inode *, struct ext4_iloc *);
+ extern int ext4_inode_attach_jinode(struct inode *inode);
+ extern int ext4_can_truncate(struct inode *inode);
+ extern int ext4_truncate(struct inode *);
+-extern int ext4_break_layouts(struct inode *);
++extern int ext4_break_layouts(struct inode *inode, loff_t offset, loff_t len);
+ extern int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length);
+ extern int ext4_truncate_restart_trans(handle_t *, struct inode *, int nblocks);
+ extern void ext4_set_inode_flags(struct inode *);
+diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
+index d40ed940001e..9ddb117d8beb 100644
+--- a/fs/ext4/extents.c
++++ b/fs/ext4/extents.c
+@@ -4736,7 +4736,7 @@ static long ext4_zero_range(struct file *file, loff_t offset,
+ 		 */
+ 		down_write(&EXT4_I(inode)->i_mmap_sem);
+ 
+-		ret = ext4_break_layouts(inode);
++		ret = ext4_break_layouts(inode, offset, len);
+ 		if (ret) {
+ 			up_write(&EXT4_I(inode)->i_mmap_sem);
+ 			goto out_mutex;
+@@ -5419,7 +5419,7 @@ int ext4_collapse_range(struct inode *inode, loff_t offset, loff_t len)
+ 	 */
+ 	down_write(&EXT4_I(inode)->i_mmap_sem);
+ 
+-	ret = ext4_break_layouts(inode);
++	ret = ext4_break_layouts(inode, offset, len);
+ 	if (ret)
+ 		goto out_mmap;
+ 
+@@ -5572,7 +5572,7 @@ int ext4_insert_range(struct inode *inode, loff_t offset, loff_t len)
+ 	 */
+ 	down_write(&EXT4_I(inode)->i_mmap_sem);
+ 
+-	ret = ext4_break_layouts(inode);
++	ret = ext4_break_layouts(inode, offset, len);
+ 	if (ret)
+ 		goto out_mmap;
+ 
+diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+index c7c99f51961f..75f543f384e4 100644
+--- a/fs/ext4/inode.c
++++ b/fs/ext4/inode.c
+@@ -4232,7 +4232,7 @@ static void ext4_wait_dax_page(struct ext4_inode_info *ei)
+ 	down_write(&ei->i_mmap_sem);
+ }
+ 
+-int ext4_break_layouts(struct inode *inode)
++int ext4_break_layouts(struct inode *inode, loff_t offset, loff_t len)
+ {
+ 	struct ext4_inode_info *ei = EXT4_I(inode);
+ 	struct page *page;
+@@ -4246,7 +4246,7 @@ int ext4_break_layouts(struct inode *inode)
+ 		break_layout(inode, true);
+ 
+ 	do {
+-		page = dax_layout_busy_page(inode->i_mapping);
++		page = dax_layout_busy_page(inode->i_mapping, offset, len);
+ 		if (!page)
+ 			return 0;
+ 
+@@ -4333,7 +4333,7 @@ int ext4_punch_hole(struct inode *inode, loff_t offset, loff_t length)
+ 	 */
+ 	down_write(&EXT4_I(inode)->i_mmap_sem);
+ 
+-	ret = ext4_break_layouts(inode);
++	ret = ext4_break_layouts(inode, offset, length);
+ 	if (ret)
+ 		goto out_dio;
+ 
+@@ -5605,10 +5605,15 @@ int ext4_setattr(struct dentry *dentry, struct iattr *attr)
+ 
+ 		down_write(&EXT4_I(inode)->i_mmap_sem);
+ 
+-		rc = ext4_break_layouts(inode);
+-		if (rc) {
+-			up_write(&EXT4_I(inode)->i_mmap_sem);
+-			return rc;
++		if (shrink) {
++			loff_t off = attr->ia_size;
++			loff_t len = inode->i_size - attr->ia_size;
++
++			rc = ext4_break_layouts(inode, off, len);
++			if (rc) {
++				up_write(&EXT4_I(inode)->i_mmap_sem);
++				return rc;
++			}
+ 		}
+ 
+ 		if (attr->ia_size != inode->i_size) {
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 76748255f843..ebddf911644c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -746,7 +746,8 @@ xfs_break_dax_layouts(
+ 
+ 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
+ 
+-	page = dax_layout_busy_page(inode->i_mapping);
++	/* We default to the "whole file" */
++	page = dax_layout_busy_page(inode->i_mapping, 0, ULONG_MAX);
+ 	if (!page)
+ 		return 0;
+ 
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index ee6cbd56ddc4..3c3ab8dd76c6 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -107,7 +107,8 @@ int dax_writeback_mapping_range(struct address_space *mapping,
+ 		struct block_device *bdev, struct writeback_control *wbc);
+ 
+ bool dax_mapping_is_dax(struct address_space *mapping);
+-struct page *dax_layout_busy_page(struct address_space *mapping);
++struct page *dax_layout_busy_page(struct address_space *mapping,
++				  loff_t off, loff_t len);
+ dax_entry_t dax_lock_page(struct page *page);
+ void dax_unlock_page(struct page *page, dax_entry_t cookie);
+ #else
+-- 
+2.20.1
