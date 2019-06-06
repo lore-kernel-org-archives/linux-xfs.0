@@ -1,360 +1,198 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53262 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726762AbfFFURj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 16:17:39 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56KDwmu010012
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 20:17:38 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2suj0qtp69-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 20:17:38 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56KGZAr003523
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 20:17:38 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2swnhayd2u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 20:17:38 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x56KHbGN018276
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 20:17:37 GMT
-Date: Thu, 6 Jun 2019 13:17:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 3/9] xfs: introduce new v5 bulkstat structure
-Message-ID: <20190606201735.GA1871505@magnolia>
-References: <155916885106.758159.3471602893858635007.stgit@magnolia>
- <155916886943.758159.11587690616263098061.stgit@magnolia>
- <cd4bd085-7efe-f4cf-6654-ea993e53b241@oracle.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:10322 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725766AbfFFFwP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 01:52:15 -0400
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+From: John Hubbard <jhubbard@nvidia.com>
+Message-ID: <c559c2ce-50dc-d143-5741-fe3d21d0305c@nvidia.com>
+Date: Wed, 5 Jun 2019 22:52:12 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd4bd085-7efe-f4cf-6654-ea993e53b241@oracle.com>
+In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Collins <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: ira.weiny@intel.com, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Jun 05, 2019 at 03:29:58PM -0700, Allison Collins wrote:
+On 6/5/19 6:45 PM, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> ... V1,000,000   ;-)
+> 
+> Pre-requisites:
+> 	John Hubbard's put_user_pages() patch series.[1]
+> 	Jan Kara's ext4_break_layouts() fixes[2]
+> 
+> Based on the feedback from LSFmm and the LWN article which resulted.  I've
+> decided to take a slightly different tack on this problem.
+> 
+> The real issue is that there is no use case for a user to have RDMA pinn'ed
+> memory which is then truncated.  So really any solution we present which:
+> 
+> A) Prevents file system corruption or data leaks
+> ...and...
+> B) Informs the user that they did something wrong
+> 
+> Should be an acceptable solution.
+> 
+> Because this is slightly new behavior.  And because this is gonig to be
+> specific to DAX (because of the lack of a page cache) we have made the user
+> "opt in" to this behavior.
+> 
+> The following patches implement the following solution.
+> 
+> 1) The user has to opt in to allowing GUP pins on a file with a layout lease
+>    (now made visible).
+> 2) GUP will fail (EPERM) if a layout lease is not taken
+> 3) Any truncate or hole punch operation on a GUP'ed DAX page will fail.
+> 4) The user has the option of holding the layout lease to receive a SIGIO for
+>    notification to the original thread that another thread has tried to delete
+>    their data.  Furthermore this indicates that if the user needs to GUP the
+>    file again they will need to retake the Layout lease before doing so.
 > 
 > 
-> On 5/29/19 3:27 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Introduce a new version of the in-core bulkstat structure that supports
-> > our new v5 format features.  This structure also fills the gaps in the
-> > previous structure.  We leave wiring up the ioctls for the next patch.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >   fs/xfs/libxfs/xfs_fs.h     |   48 +++++++++++++++++++++++++++++++-
-> >   fs/xfs/libxfs/xfs_health.h |    2 +
-> >   fs/xfs/xfs_health.c        |    2 +
-> >   fs/xfs/xfs_ioctl.c         |    9 ++++--
-> >   fs/xfs/xfs_ioctl.h         |    2 +
-> >   fs/xfs/xfs_ioctl32.c       |   10 +++++--
-> >   fs/xfs/xfs_itable.c        |   67 +++++++++++++++++++++++++++++++++-----------
-> >   fs/xfs/xfs_itable.h        |    4 ++-
-> >   fs/xfs/xfs_ondisk.h        |    2 +
-> >   9 files changed, 119 insertions(+), 27 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > index ef0dce229fa4..132e364eb141 100644
-> > --- a/fs/xfs/libxfs/xfs_fs.h
-> > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > @@ -358,6 +358,52 @@ struct xfs_bstat {
-> >   	__u16		bs_aextents;	/* attribute number of extents	*/
-> >   };
-> > +/* New bulkstat structure that reports v5 features and fixes padding issues */
-> > +struct xfs_bulkstat {
-> > +	uint64_t	bs_ino;		/* inode number			*/
-> > +	uint64_t	bs_size;	/* file size			*/
-> > +
-> > +	uint64_t	bs_blocks;	/* number of blocks		*/
-> > +	uint64_t	bs_xflags;	/* extended flags		*/
-> > +
-> > +	uint64_t	bs_atime;	/* access time, seconds		*/
-> > +	uint64_t	bs_mtime;	/* modify time, seconds		*/
-> > +
-> > +	uint64_t	bs_ctime;	/* inode change time, seconds	*/
-> > +	uint64_t	bs_btime;	/* creation time, seconds	*/
-> > +
-> > +	uint32_t	bs_gen;		/* generation count		*/
-> > +	uint32_t	bs_uid;		/* user id			*/
-> > +	uint32_t	bs_gid;		/* group id			*/
-> > +	uint32_t	bs_projectid;	/* project id			*/
-> > +
-> > +	uint32_t	bs_atime_nsec;	/* access time, nanoseconds	*/
-> > +	uint32_t	bs_mtime_nsec;	/* modify time, nanoseconds	*/
-> > +	uint32_t	bs_ctime_nsec;	/* inode change time, nanoseconds */
-> > +	uint32_t	bs_btime_nsec;	/* creation time, nanoseconds	*/
-> > +
-> > +	uint32_t	bs_blksize;	/* block size			*/
-> > +	uint32_t	bs_rdev;	/* device value			*/
-> > +	uint32_t	bs_cowextsize_blks; /* cow extent size hint, blocks */
-> > +	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
-> > +
-> > +	uint32_t	bs_nlink;	/* number of links		*/
-> > +	uint32_t	bs_extents;	/* number of extents		*/
-> > +	uint32_t	bs_aextents;	/* attribute number of extents	*/
-> > +	uint16_t	bs_version;	/* structure version		*/
-> > +	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
-> > +
-> > +	uint16_t	bs_sick;	/* sick inode metadata		*/
-> > +	uint16_t	bs_checked;	/* checked inode metadata	*/
-> > +	uint16_t	bs_mode;	/* type and mode		*/
-> > +	uint16_t	bs_pad2;	/* zeroed			*/
-> > +
-> > +	uint64_t	bs_pad[7];	/* zeroed			*/
-> > +};
-> > +
-> > +#define XFS_BULKSTAT_VERSION_V1	(1)
-> > +#define XFS_BULKSTAT_VERSION_V5	(5)
+> NOTE: If the user releases the layout lease or if it has been broken by another
+> operation further GUP operations on the file will fail without re-taking the
+> lease.  This means that if a user would like to register pieces of a file and
+> continue to register other pieces later they would be advised to keep the
+> layout lease, get a SIGIO notification, and retake the lease.
 > 
-> Just a nit.  I notice we have a V1 and V5, but I dont see the V1 being used
-> here or else where in the set.  Was that intentional?  Rest looks ok though
-
-There's no version field in the old struct xfs_bstat, so that's why I'm
-introducing a new flag now.
-
-Further down the road, xfsprogs will be converted to use a wrapper
-function to fill struct xfs_bulkstat.  The wrapper will of course have
-to emulate the v5 call using the old ioctl when userspace is (somehow)
-newer than the kernel, and at that point the emulation will set
-bs_version = V1 to hint to its caller that it's running on an old kernel
-and therefore not to expect fields that weren't in the old version.
-
---D
-
-> Allison
+> NOTE2: Truncation of pages which are not actively pinned will succeed.  Similar
+> to accessing an mmap to this area GUP pins of that memory may fail.
 > 
-> > +
-> >   /* bs_sick flags */
-> >   #define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
-> >   #define XFS_BS_SICK_BMBTD	(1 << 1)  /* data fork */
-> > @@ -374,7 +420,7 @@ struct xfs_bstat {
-> >    * to retain compatibility with "old" filesystems).
-> >    */
-> >   static inline uint32_t
-> > -bstat_get_projid(struct xfs_bstat *bs)
-> > +bstat_get_projid(const struct xfs_bstat *bs)
-> >   {
-> >   	return (uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
-> >   }
-> > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
-> > index 49ddfeac19f2..272005ac8c88 100644
-> > --- a/fs/xfs/libxfs/xfs_health.h
-> > +++ b/fs/xfs/libxfs/xfs_health.h
-> > @@ -185,6 +185,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
-> >   void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
-> >   void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
-> > -void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bstat *bs);
-> > +void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *bs);
-> >   #endif	/* __XFS_HEALTH_H__ */
-> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
-> > index 4c4929f9e7bf..e8ba6034b0db 100644
-> > --- a/fs/xfs/xfs_health.c
-> > +++ b/fs/xfs/xfs_health.c
-> > @@ -373,7 +373,7 @@ static const struct ioctl_sick_map ino_map[] = {
-> >   void
-> >   xfs_bulkstat_health(
-> >   	struct xfs_inode		*ip,
-> > -	struct xfs_bstat		*bs)
-> > +	struct xfs_bulkstat		*bs)
-> >   {
-> >   	const struct ioctl_sick_map	*m;
-> >   	unsigned int			sick;
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index f02a9bd757ad..0f70005cbe61 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -724,10 +724,13 @@ xfs_ioc_space(
-> >   /* Return 0 on success or positive error */
-> >   int
-> >   xfs_fsbulkstat_one_fmt(
-> > -	struct xfs_ibulk	*breq,
-> > -	const struct xfs_bstat	*bstat)
-> > +	struct xfs_ibulk		*breq,
-> > +	const struct xfs_bulkstat	*bstat)
-> >   {
-> > -	if (copy_to_user(breq->ubuffer, bstat, sizeof(*bstat)))
-> > +	struct xfs_bstat		bs1;
-> > +
-> > +	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
-> > +	if (copy_to_user(breq->ubuffer, &bs1, sizeof(bs1)))
-> >   		return -EFAULT;
-> >   	return xfs_ibulk_advance(breq, sizeof(struct xfs_bstat));
-> >   }
-> > diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-> > index cb34bc821201..514d3028a134 100644
-> > --- a/fs/xfs/xfs_ioctl.h
-> > +++ b/fs/xfs/xfs_ioctl.h
-> > @@ -82,7 +82,7 @@ struct xfs_bstat;
-> >   struct xfs_inogrp;
-> >   int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
-> > -			   const struct xfs_bstat *bstat);
-> > +			   const struct xfs_bulkstat *bstat);
-> >   int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
-> >   #endif
-> > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> > index af753f2708e8..9806d27892df 100644
-> > --- a/fs/xfs/xfs_ioctl32.c
-> > +++ b/fs/xfs/xfs_ioctl32.c
-> > @@ -170,10 +170,14 @@ xfs_bstime_store_compat(
-> >   /* Return 0 on success or positive error (to xfs_bulkstat()) */
-> >   STATIC int
-> >   xfs_fsbulkstat_one_fmt_compat(
-> > -	struct xfs_ibulk	*breq,
-> > -	const struct xfs_bstat	*buffer)
-> > +	struct xfs_ibulk		*breq,
-> > +	const struct xfs_bulkstat	*bstat)
-> >   {
-> > -	struct compat_xfs_bstat	__user *p32 = breq->ubuffer;
-> > +	struct compat_xfs_bstat	__user	*p32 = breq->ubuffer;
-> > +	struct xfs_bstat		bs1;
-> > +	struct xfs_bstat		*buffer = &bs1;
-> > +
-> > +	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
-> >   	if (put_user(buffer->bs_ino,	  &p32->bs_ino)		||
-> >   	    put_user(buffer->bs_mode,	  &p32->bs_mode)	||
-> > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> > index bade54d6ac64..764b7f98fd5b 100644
-> > --- a/fs/xfs/xfs_itable.c
-> > +++ b/fs/xfs/xfs_itable.c
-> > @@ -25,7 +25,7 @@
-> >    * Bulk Stat
-> >    * =========
-> >    *
-> > - * Use the inode walking functions to fill out struct xfs_bstat for every
-> > + * Use the inode walking functions to fill out struct xfs_bulkstat for every
-> >    * allocated inode, then pass the stat information to some externally provided
-> >    * iteration function.
-> >    */
-> > @@ -62,7 +62,7 @@ xfs_bulkstat_one_int(
-> >   	struct xfs_icdinode	*dic;		/* dinode core info pointer */
-> >   	struct xfs_inode	*ip;		/* incore inode pointer */
-> >   	struct inode		*inode;
-> > -	struct xfs_bstat	*buf;		/* return buffer */
-> > +	struct xfs_bulkstat	*buf;		/* return buffer */
-> >   	int			error = 0;	/* error value */
-> >   	if (xfs_internal_inum(mp, ino)) {
-> > @@ -91,37 +91,35 @@ xfs_bulkstat_one_int(
-> >   	/* xfs_iget returns the following without needing
-> >   	 * further change.
-> >   	 */
-> > -	buf->bs_projid_lo = dic->di_projid_lo;
-> > -	buf->bs_projid_hi = dic->di_projid_hi;
-> > +	buf->bs_projectid = xfs_get_projid(ip);
-> >   	buf->bs_ino = ino;
-> >   	buf->bs_uid = dic->di_uid;
-> >   	buf->bs_gid = dic->di_gid;
-> >   	buf->bs_size = dic->di_size;
-> >   	buf->bs_nlink = inode->i_nlink;
-> > -	buf->bs_atime.tv_sec = inode->i_atime.tv_sec;
-> > -	buf->bs_atime.tv_nsec = inode->i_atime.tv_nsec;
-> > -	buf->bs_mtime.tv_sec = inode->i_mtime.tv_sec;
-> > -	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
-> > -	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
-> > -	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
-> > +	buf->bs_atime = inode->i_atime.tv_sec;
-> > +	buf->bs_atime_nsec = inode->i_atime.tv_nsec;
-> > +	buf->bs_mtime = inode->i_mtime.tv_sec;
-> > +	buf->bs_mtime_nsec = inode->i_mtime.tv_nsec;
-> > +	buf->bs_ctime = inode->i_ctime.tv_sec;
-> > +	buf->bs_ctime_nsec = inode->i_ctime.tv_nsec;
-> > +	buf->bs_btime = dic->di_crtime.t_sec;
-> > +	buf->bs_btime_nsec = dic->di_crtime.t_nsec;
-> >   	buf->bs_gen = inode->i_generation;
-> >   	buf->bs_mode = inode->i_mode;
-> >   	buf->bs_xflags = xfs_ip2xflags(ip);
-> > -	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
-> > +	buf->bs_extsize_blks = dic->di_extsize;
-> >   	buf->bs_extents = dic->di_nextents;
-> > -	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
-> >   	xfs_bulkstat_health(ip, buf);
-> > -	buf->bs_dmevmask = dic->di_dmevmask;
-> > -	buf->bs_dmstate = dic->di_dmstate;
-> >   	buf->bs_aextents = dic->di_anextents;
-> >   	buf->bs_forkoff = XFS_IFORK_BOFF(ip);
-> > +	buf->bs_version = XFS_BULKSTAT_VERSION_V5;
-> >   	if (dic->di_version == 3) {
-> >   		if (dic->di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
-> > -			buf->bs_cowextsize = dic->di_cowextsize <<
-> > -					mp->m_sb.sb_blocklog;
-> > +			buf->bs_cowextsize_blks = dic->di_cowextsize;
-> >   	}
-> >   	switch (dic->di_format) {
-> > @@ -259,6 +257,43 @@ xfs_bulkstat(
-> >   	return error;
-> >   }
-> > +/* Convert bulkstat (v5) to bstat (v1). */
-> > +void
-> > +xfs_bulkstat_to_bstat(
-> > +	struct xfs_mount		*mp,
-> > +	struct xfs_bstat		*bs1,
-> > +	const struct xfs_bulkstat	*bstat)
-> > +{
-> > +	bs1->bs_ino = bstat->bs_ino;
-> > +	bs1->bs_mode = bstat->bs_mode;
-> > +	bs1->bs_nlink = bstat->bs_nlink;
-> > +	bs1->bs_uid = bstat->bs_uid;
-> > +	bs1->bs_gid = bstat->bs_gid;
-> > +	bs1->bs_rdev = bstat->bs_rdev;
-> > +	bs1->bs_blksize = bstat->bs_blksize;
-> > +	bs1->bs_size = bstat->bs_size;
-> > +	bs1->bs_atime.tv_sec = bstat->bs_atime;
-> > +	bs1->bs_mtime.tv_sec = bstat->bs_mtime;
-> > +	bs1->bs_ctime.tv_sec = bstat->bs_ctime;
-> > +	bs1->bs_atime.tv_nsec = bstat->bs_atime_nsec;
-> > +	bs1->bs_mtime.tv_nsec = bstat->bs_mtime_nsec;
-> > +	bs1->bs_ctime.tv_nsec = bstat->bs_ctime_nsec;
-> > +	bs1->bs_blocks = bstat->bs_blocks;
-> > +	bs1->bs_xflags = bstat->bs_xflags;
-> > +	bs1->bs_extsize = bstat->bs_extsize_blks << mp->m_sb.sb_blocklog;
-> > +	bs1->bs_extents = bstat->bs_extents;
-> > +	bs1->bs_gen = bstat->bs_gen;
-> > +	bs1->bs_projid_lo = bstat->bs_projectid & 0xFFFF;
-> > +	bs1->bs_forkoff = bstat->bs_forkoff;
-> > +	bs1->bs_projid_hi = bstat->bs_projectid >> 16;
-> > +	bs1->bs_sick = bstat->bs_sick;
-> > +	bs1->bs_checked = bstat->bs_checked;
-> > +	bs1->bs_cowextsize = bstat->bs_cowextsize_blks << mp->m_sb.sb_blocklog;
-> > +	bs1->bs_dmevmask = 0;
-> > +	bs1->bs_dmstate = 0;
-> > +	bs1->bs_aextents = bstat->bs_aextents;
-> > +}
-> > +
-> >   struct xfs_inumbers_chunk {
-> >   	inumbers_fmt_pf		formatter;
-> >   	struct xfs_ibulk	*breq;
-> > diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-> > index b4c89454e27a..806069c9838c 100644
-> > --- a/fs/xfs/xfs_itable.h
-> > +++ b/fs/xfs/xfs_itable.h
-> > @@ -41,10 +41,12 @@ xfs_ibulk_advance(
-> >    */
-> >   typedef int (*bulkstat_one_fmt_pf)(struct xfs_ibulk *breq,
-> > -		const struct xfs_bstat *bstat);
-> > +		const struct xfs_bulkstat *bstat);
-> >   int xfs_bulkstat_one(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
-> >   int xfs_bulkstat(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
-> > +void xfs_bulkstat_to_bstat(struct xfs_mount *mp, struct xfs_bstat *bs1,
-> > +		const struct xfs_bulkstat *bstat);
-> >   typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
-> >   		const struct xfs_inogrp *igrp);
-> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> > index c8ba98fae30a..0b4cdda68524 100644
-> > --- a/fs/xfs/xfs_ondisk.h
-> > +++ b/fs/xfs/xfs_ondisk.h
-> > @@ -146,6 +146,8 @@ xfs_check_ondisk_structs(void)
-> >   	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
-> >   	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
-> >   	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
-> > +
-> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
-> >   }
-> >   #endif /* __XFS_ONDISK_H */
-> > 
+
+Hi Ira,
+
+Wow, great to see this. This looks like basically the right behavior, IMHO.
+
+1. We'll need man page additions, to explain it. In fact, even after a quick first
+pass through, I'm vague on two points:
+
+a) I'm not sure how this actually provides "opt-in to new behavior", because I 
+don't see any CONFIG_* or boot time choices, and it looks like the new behavior 
+just is there. That is, if user space doesn't set F_LAYOUT on a range, 
+GUP FOLL_LONGTERM will now fail, which is new behavior. (Did I get that right?)
+
+b) Truncate and hole punch behavior, with and without user space having a SIGIO
+handler. (I'm sure this is obvious after another look through, but it might go
+nicely in a man page.)
+
+2. It *seems* like ext4, xfs are taken care of here, not just for the DAX case,
+but for general RDMA on them? Or is there more that must be done?
+
+3. Christophe Hellwig's unified gup patchset wreaks havoc in gup.c, and will
+conflict violently, as I'm sure you noticed. :)
+
+
+thanks,
+-- 
+John Hubbard
+NVIDIA
+
+> 
+> A general overview follows for background.
+> 
+> It should be noted that one solution for this problem is to use RDMA's On
+> Demand Paging (ODP).  There are 2 big reasons this may not work.
+> 
+> 	1) The hardware being used for RDMA may not support ODP
+> 	2) ODP may be detrimental to the over all network (cluster or cloud)
+> 	   performance
+> 
+> Therefore, in order to support RDMA to File system pages without On Demand
+> Paging (ODP) a number of things need to be done.
+> 
+> 1) GUP "longterm" users need to inform the other subsystems that they have
+>    taken a pin on a page which may remain pinned for a very "long time".[3]
+> 
+> 2) Any page which is "controlled" by a file system needs to have special
+>    handling.  The details of the handling depends on if the page is page cache
+>    fronted or not.
+> 
+>    2a) A page cache fronted page which has been pinned by GUP long term can use a
+>    bounce buffer to allow the file system to write back snap shots of the page.
+>    This is handled by the FS recognizing the GUP long term pin and making a copy
+>    of the page to be written back.
+> 	NOTE: this patch set does not address this path.
+> 
+>    2b) A FS "controlled" page which is not page cache fronted is either easier
+>    to deal with or harder depending on the operation the filesystem is trying
+>    to do.
+> 
+> 	2ba) [Hard case] If the FS operation _is_ a truncate or hole punch the
+> 	FS can no longer use the pages in question until the pin has been
+> 	removed.  This patch set presents a solution to this by introducing
+> 	some reasonable restrictions on user space applications.
+> 
+> 	2bb) [Easy case] If the FS operation is _not_ a truncate or hole punch
+> 	then there is nothing which need be done.  Data is Read or Written
+> 	directly to the page.  This is an easy case which would currently work
+> 	if not for GUP long term pins being disabled.  Therefore this patch set
+> 	need not change access to the file data but does allow for GUP pins
+> 	after 2ba above is dealt with.
+> 
+> 
+> This patch series and presents a solution for problem 2ba)
+> 
+> [1] https://github.com/johnhubbard/linux/tree/gup_dma_core
+> 
+> [2] ext4/dev branch:
+> 
+> - https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/log/?h=dev
+> 
+> 	Specific patches:
+> 
+> 	[2a] ext4: wait for outstanding dio during truncate in nojournal mode
+> 
+> 	- https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?h=dev&id=82a25b027ca48d7ef197295846b352345853dfa8
+> 
+> 	[2b] ext4: do not delete unlinked inode from orphan list on failed truncate
+> 
+> 	- https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?h=dev&id=ee0ed02ca93ef1ecf8963ad96638795d55af2c14
+> 
+> 	[2c] ext4: gracefully handle ext4_break_layouts() failure during truncate
+> 
+> 	- https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?h=dev&id=b9c1c26739ec2d4b4fb70207a0a9ad6747e43f4c
+> 
+> [3] The definition of long time is debatable but it has been established
+> that RDMAs use of pages, minutes or hours after the pin is the extreme case
+> which makes this problem most severe.
+> 
+> 
+> Ira Weiny (10):
+>   fs/locks: Add trace_leases_conflict
+>   fs/locks: Export F_LAYOUT lease to user space
+>   mm/gup: Pass flags down to __gup_device_huge* calls
+>   mm/gup: Ensure F_LAYOUT lease is held prior to GUP'ing pages
+>   fs/ext4: Teach ext4 to break layout leases
+>   fs/ext4: Teach dax_layout_busy_page() to operate on a sub-range
+>   fs/ext4: Fail truncate if pages are GUP pinned
+>   fs/xfs: Teach xfs to use new dax_layout_busy_page()
+>   fs/xfs: Fail truncate if pages are GUP pinned
+>   mm/gup: Remove FOLL_LONGTERM DAX exclusion
+> 
+>  fs/Kconfig                       |   1 +
+>  fs/dax.c                         |  38 ++++++---
+>  fs/ext4/ext4.h                   |   2 +-
+>  fs/ext4/extents.c                |   6 +-
+>  fs/ext4/inode.c                  |  26 +++++--
+>  fs/locks.c                       |  97 ++++++++++++++++++++---
+>  fs/xfs/xfs_file.c                |  24 ++++--
+>  fs/xfs/xfs_inode.h               |   5 +-
+>  fs/xfs/xfs_ioctl.c               |  15 +++-
+>  fs/xfs/xfs_iops.c                |  14 +++-
+>  fs/xfs/xfs_pnfs.c                |  14 ++--
+>  include/linux/dax.h              |   9 ++-
+>  include/linux/fs.h               |   2 +-
+>  include/linux/mm.h               |   2 +
+>  include/trace/events/filelock.h  |  35 +++++++++
+>  include/uapi/asm-generic/fcntl.h |   3 +
+>  mm/gup.c                         | 129 ++++++++++++-------------------
+>  mm/huge_memory.c                 |  12 +++
+>  18 files changed, 299 insertions(+), 135 deletions(-)
+> 
