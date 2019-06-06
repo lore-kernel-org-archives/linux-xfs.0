@@ -1,118 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43683 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726941AbfFFVvK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 17:51:10 -0400
-Date: Fri, 7 Jun 2019 07:50:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] xfs_restore: detect rtinherit on destination
-Message-ID: <20190606215008.GA14308@dread.disaster.area>
-References: <e6968aa2-a5ad-4964-2966-589486e4a251@sandeen.net>
- <20190606195724.2975689-1-sheenobu@fb.com>
- <f89a09b5-8a91-51e0-d869-039dbe9a7349@sandeen.net>
+Received: from mx2.suse.de ([195.135.220.15]:32798 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727324AbfFFK66 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Jun 2019 06:58:58 -0400
+Date: Thu, 6 Jun 2019 12:58:55 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH RFC 07/10] fs/ext4: Fail truncate if pages are GUP pinned
+Message-ID: <20190606105855.GG7433@quack2.suse.cz>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606014544.8339-8-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f89a09b5-8a91-51e0-d869-039dbe9a7349@sandeen.net>
+In-Reply-To: <20190606014544.8339-8-ira.weiny@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Sheena Artrip <sheenobu@fb.com>, sheena.artrip@gmail.com, linux-xfs@vger.kernel.org
+To: ira.weiny@intel.com
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Jun 06, 2019 at 04:23:51PM -0500, Eric Sandeen wrote:
-> On 6/6/19 2:57 PM, Sheena Artrip wrote:
-> > When running xfs_restore with a non-rtdev dump,
-> > it will ignore any rtinherit flags on the destination
-> > and send I/O to the metadata region.
-> > 
-> > Instead, detect rtinherit on the destination XFS fileystem root inode
-> > and use that to override the incoming inode flags.
-> > 
-> > Original version of this patch missed some branches so multiple
-> > invocations of xfsrestore onto the same fs caused
-> > the rtinherit bit to get re-removed. There could be some
-> > additional edge cases in non-realtime to realtime workflows so
-> > the outstanding question would be: is it worth supporting?
-> > 
-> > Changes in v2:
-> > * Changed root inode bulkstat to just ioctl to the destdir inode
+On Wed 05-06-19 18:45:40, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
 > 
-> Thanks for that fixup (though comment still says "root" FWIW)
+> If pages are actively gup pinned fail the truncate operation.
 > 
-> Thinking about this some more, I'm really kind of wondering how this
-> should all be expected to work.  There are several scenarios here,
-> and "is this file rt?" is prescribed in different ways - either in
-> the dump itself, or on the target fs via inheritance flags...
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> ---
+>  fs/ext4/inode.c | 3 +++
+>  1 file changed, 3 insertions(+)
 > 
-> (NB: rt is not the only inheritable flag, so would we need to handle
-> the others?)
-> 
-> non-rt fs dump, restored onto non-rt fs
-> 	- obviously this is fine
-> 
-> rt fs dump, restored onto rt fs
-> 	- obviously this is fine as well
-> 
-> rt fs dump, restored onto non-rt fs
-> 	- this works, with errors - all rt files become non-rt
-> 	- nothing else to do here other than fail outright
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 75f543f384e4..1ded83ec08c0 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -4250,6 +4250,9 @@ int ext4_break_layouts(struct inode *inode, loff_t offset, loff_t len)
+>  		if (!page)
+>  			return 0;
+>  
+> +		if (page_gup_pinned(page))
+> +			return -ETXTBSY;
+> +
+>  		error = ___wait_var_event(&page->_refcount,
+>  				atomic_read(&page->_refcount) == 1,
+>  				TASK_INTERRUPTIBLE, 0, 0,
 
-This should just work, without errors or warnings.
+This caught my eye. Does this mean that now truncate for a file which has
+temporary gup users (such buffers for DIO) can fail with ETXTBUSY? That
+doesn't look desirable. If we would mandate layout lease while pages are
+pinned as I suggested, this could be dealt with by checking for leases with
+pins (breaking such lease would return error and not break it) and if
+breaking leases succeeds (i.e., there are no long-term pinned pages), we'd
+just wait for the remaining references as we do now.
 
-> non-rt fs dump, restored into rt fs dir/fs with "rtinherit" set
-> 	- this one is your case
-> 	- today it's ignored, files stay non-rt
-> 	- you're suggesting it be honored and files turned into rt
-
-Current filesystem policy should override the policy in dump image
-as the dump image may contain an invalid policy....
-
-> the one case that's not handled here is "what if I want to have my
-> realtime dump with realtime files restored onto an rt-capable fs, but
-> turned into regular files?" 
-
-Which is where having the kernel policy override the dump file is
-necesary...
-
-> So your patch gives us one mechanism (restore non-rt files as
-> rt files) but not the converse (restore rt files as non-rt files) -
-> I'm not sure if that matters, but the symmetry bugs me a little.
-> 
-> I'm trying to decide if dump/restore is truly the right way to
-> migrate files from non-rt to rt or vice versa, TBH.  Maybe dchinner
-> or djwong will have thoughts as well...
-
-*nod*
-
-My take on this is that we need to decide which allocation policy to
-use - the kernel policy or the dump file policy - in the different
-situations. It's a simple, easy to document and understand solution.
-
-At minimum, if there's a mismatch between rtdev/non-rtdev between
-dump and restore, then restore should not try to restore or clear rt
-flags at all. i.e the rt flags in the dump image should be
-considered invalid in this situation and masked out in the restore
-process. This prevents errors from being reported during restore,
-and it does "the right thing" according to how the user has
-configured the destination directory. i.e.  if the destdir has the
-rtinherit bit set and there's a rtdev present, the kernel policy
-will cause all file data that is restored to be allocated on the
-rtdev. Otherwise the kernel will place it (correctly) on the data
-dev.
-
-In the case where both have rtdevs, but you want to restore to
-ignore the dump file rtdev policy, we really only need to add a CLI
-option to say "ignore rt flags" and that then allows the kernel
-policy to dictate how the restored files are placed in the same way
-that having a rtdev mismatch does.
-
-This is simple, consistent, fulfils the requirements and should have
-no hidden surprises for users....
-
-Cheers,
-
-Dave.
+								Honza
 -- 
-Dave Chinner
-david@fromorbit.com
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
