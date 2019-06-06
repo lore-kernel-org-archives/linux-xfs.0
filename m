@@ -1,180 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36145 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:55622 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726823AbfFFBpY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jun 2019 21:45:24 -0400
-From: ira.weiny@intel.com
-Subject: [PATCH RFC 08/10] fs/xfs: Teach xfs to use new dax_layout_busy_page()
-Date: Wed,  5 Jun 2019 18:45:41 -0700
-Message-Id: <20190606014544.8339-9-ira.weiny@intel.com>
-In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
+        id S1729165AbfFFQPv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Jun 2019 12:15:51 -0400
+Date: Thu, 6 Jun 2019 09:17:02 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [PATCH RFC 07/10] fs/ext4: Fail truncate if pages are GUP pinned
+Message-ID: <20190606161702.GA11374@iweiny-DESK2.sc.intel.com>
 References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606014544.8339-8-ira.weiny@intel.com>
+ <20190606105855.GG7433@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190606105855.GG7433@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
-Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Thu, Jun 06, 2019 at 12:58:55PM +0200, Jan Kara wrote:
+> On Wed 05-06-19 18:45:40, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > If pages are actively gup pinned fail the truncate operation.
+> > 
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > ---
+> >  fs/ext4/inode.c | 3 +++
+> >  1 file changed, 3 insertions(+)
+> > 
+> > diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> > index 75f543f384e4..1ded83ec08c0 100644
+> > --- a/fs/ext4/inode.c
+> > +++ b/fs/ext4/inode.c
+> > @@ -4250,6 +4250,9 @@ int ext4_break_layouts(struct inode *inode, loff_t offset, loff_t len)
+> >  		if (!page)
+> >  			return 0;
+> >  
+> > +		if (page_gup_pinned(page))
+> > +			return -ETXTBSY;
+> > +
+> >  		error = ___wait_var_event(&page->_refcount,
+> >  				atomic_read(&page->_refcount) == 1,
+> >  				TASK_INTERRUPTIBLE, 0, 0,
+> 
+> This caught my eye. Does this mean that now truncate for a file which has
+> temporary gup users (such buffers for DIO) can fail with ETXTBUSY?
 
-dax_layout_busy_page() can now operate on a sub-range of the
-address_space provided.
+I thought about that before and I _thought_ I had accounted for it.  But I
+think you are right...
 
-Have xfs specify the sub range to dax_layout_busy_page()
+>
+> That
+> doesn't look desirable.
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- fs/xfs/xfs_file.c  | 19 +++++++++++++------
- fs/xfs/xfs_inode.h |  5 +++--
- fs/xfs/xfs_ioctl.c | 15 ++++++++++++---
- fs/xfs/xfs_iops.c  | 14 ++++++++++----
- 4 files changed, 38 insertions(+), 15 deletions(-)
+No not desirable at all...  Ah it just dawned on my why I thought it was ok...
+I was wrong.  :-/
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index ebddf911644c..350eb5546d36 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -300,7 +300,11 @@ xfs_file_aio_write_checks(
- 	if (error <= 0)
- 		return error;
- 
--	error = xfs_break_layouts(inode, iolock, BREAK_WRITE);
-+	/*
-+	 * BREAK_WRITE ignores offset/len tuple just specify the whole file
-+	 * (0 - ULONG_MAX to be safe.
-+	 */
-+	error = xfs_break_layouts(inode, iolock, 0, ULONG_MAX, BREAK_WRITE);
- 	if (error)
- 		return error;
- 
-@@ -740,14 +744,15 @@ xfs_wait_dax_page(
- static int
- xfs_break_dax_layouts(
- 	struct inode		*inode,
--	bool			*retry)
-+	bool			*retry,
-+	loff_t                   off,
-+	loff_t                   len)
- {
- 	struct page		*page;
- 
- 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
- 
--	/* We default to the "whole file" */
--	page = dax_layout_busy_page(inode->i_mapping, 0, ULONG_MAX);
-+	page = dax_layout_busy_page(inode->i_mapping, off, len);
- 	if (!page)
- 		return 0;
- 
-@@ -761,6 +766,8 @@ int
- xfs_break_layouts(
- 	struct inode		*inode,
- 	uint			*iolock,
-+	loff_t                   off,
-+	loff_t                   len,
- 	enum layout_break_reason reason)
- {
- 	bool			retry;
-@@ -772,7 +779,7 @@ xfs_break_layouts(
- 		retry = false;
- 		switch (reason) {
- 		case BREAK_UNMAP:
--			error = xfs_break_dax_layouts(inode, &retry);
-+			error = xfs_break_dax_layouts(inode, &retry, off, len);
- 			if (error || retry)
- 				break;
- 			/* fall through */
-@@ -814,7 +821,7 @@ xfs_file_fallocate(
- 		return -EOPNOTSUPP;
- 
- 	xfs_ilock(ip, iolock);
--	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
-+	error = xfs_break_layouts(inode, &iolock, offset, len, BREAK_UNMAP);
- 	if (error)
- 		goto out_unlock;
- 
-diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-index 558173f95a03..1b0948f5267c 100644
---- a/fs/xfs/xfs_inode.h
-+++ b/fs/xfs/xfs_inode.h
-@@ -475,8 +475,9 @@ enum xfs_prealloc_flags {
- 
- int	xfs_update_prealloc_flags(struct xfs_inode *ip,
- 				  enum xfs_prealloc_flags flags);
--int	xfs_break_layouts(struct inode *inode, uint *iolock,
--		enum layout_break_reason reason);
-+int xfs_break_layouts(struct inode *inode, uint *iolock,
-+		      loff_t off, loff_t len,
-+		      enum layout_break_reason reason);
- 
- /* from xfs_iops.c */
- extern void xfs_setup_inode(struct xfs_inode *ip);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d7dfc13f30f5..a702e44a63b8 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -605,6 +605,7 @@ xfs_ioc_space(
- 	enum xfs_prealloc_flags	flags = 0;
- 	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 	int			error;
-+	loff_t                  break_length;
- 
- 	if (inode->i_flags & (S_IMMUTABLE|S_APPEND))
- 		return -EPERM;
-@@ -625,9 +626,6 @@ xfs_ioc_space(
- 		return error;
- 
- 	xfs_ilock(ip, iolock);
--	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
--	if (error)
--		goto out_unlock;
- 
- 	switch (bf->l_whence) {
- 	case 0: /*SEEK_SET*/
-@@ -673,6 +671,17 @@ xfs_ioc_space(
- 		goto out_unlock;
- 	}
- 
-+	/* break layout for the whole file if len ends up 0 */
-+	if (bf->l_len == 0)
-+		break_length = ULONG_MAX;
-+	else
-+		break_length = bf->l_len;
-+
-+	error = xfs_break_layouts(inode, &iolock, bf->l_start, break_length,
-+				  BREAK_UNMAP);
-+	if (error)
-+		goto out_unlock;
-+
- 	switch (cmd) {
- 	case XFS_IOC_ZERO_RANGE:
- 		flags |= XFS_PREALLOC_SET;
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 74047bd0c1ae..5529bc7a516b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1052,10 +1052,16 @@ xfs_vn_setattr(
- 		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
- 		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
- 
--		error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
--		if (error) {
--			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
--			return error;
-+		if (iattr->ia_size < inode->i_size) {
-+			loff_t                  off = iattr->ia_size;
-+			loff_t                  len = inode->i_size - iattr->ia_size;
-+
-+			error = xfs_break_layouts(inode, &iolock, off, len,
-+						  BREAK_UNMAP);
-+			if (error) {
-+				xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-+				return error;
-+			}
- 		}
- 
- 		error = xfs_vn_setattr_size(dentry, iattr);
--- 
-2.20.1
+> If we would mandate layout lease while pages are
+> pinned as I suggested, this could be dealt with by checking for leases with
+> pins (breaking such lease would return error and not break it) and if
+> breaking leases succeeds (i.e., there are no long-term pinned pages), we'd
+> just wait for the remaining references as we do now.
+
+Agreed.
+
+But I'm going to respond with some of the challenges of this (and ideas I had)
+when replying to your other email.
+
+Ira
+
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
