@@ -1,204 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36538 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388190AbfFJJKd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Jun 2019 05:10:33 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v11 3/7] libnvdimm: add dax_dev sync flag
-Date: Mon, 10 Jun 2019 14:37:26 +0530
-Message-Id: <20190610090730.8589-4-pagupta@redhat.com>
-In-Reply-To: <20190610090730.8589-1-pagupta@redhat.com>
-References: <20190610090730.8589-1-pagupta@redhat.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43162 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726837AbfFFWOC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 18:14:02 -0400
+Date: Fri, 7 Jun 2019 08:13:01 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2 00/11] xfs: rework extent allocation
+Message-ID: <20190606221301.GC14308@dread.disaster.area>
+References: <20190522180546.17063-1-bfoster@redhat.com>
+ <20190523015659.GL29573@dread.disaster.area>
+ <20190523125535.GA20099@bfoster>
+ <20190523221552.GM29573@dread.disaster.area>
+ <20190524120015.GA32730@bfoster>
+ <20190525224317.GZ29573@dread.disaster.area>
+ <20190531171136.GA26315@bfoster>
+ <20190606152101.GA2791@bfoster>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190606152101.GA2791@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com, pagupta@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-This patch adds 'DAXDEV_SYNC' flag which is set
-for nd_region doing synchronous flush. This later
-is used to disable MAP_SYNC functionality for
-ext4 & xfs filesystem for devices don't support
-synchronous flush.
+On Thu, Jun 06, 2019 at 11:21:04AM -0400, Brian Foster wrote:
+> On Fri, May 31, 2019 at 01:11:36PM -0400, Brian Foster wrote:
+> > On Sun, May 26, 2019 at 08:43:17AM +1000, Dave Chinner wrote:
+> > > On Fri, May 24, 2019 at 08:00:18AM -0400, Brian Foster wrote:
+> > > > On Fri, May 24, 2019 at 08:15:52AM +1000, Dave Chinner wrote:
+> > > > > On Thu, May 23, 2019 at 08:55:35AM -0400, Brian Foster wrote:
+> > > > > > Hmmm.. I suppose if I had a script that
+> > > > > > just dumped every applicable stride/delta value for an inode, I could
+> > > > > > dump all of those numbers into a file and we can process it from there..
+> > > > > 
+> > > > > See how the freesp commands work in xfs_db - they just generate a
+> > > > > set of {offset, size} tuples that are then bucketted appropriately.
+> > > > > This is probably the best way to do this at the moment - have xfs_db
+> > > > > walk the inode BMBTs outputting something like {extent size,
+> > > > > distance to next extent} tuples and everything else falls out from
+> > > > > how we bucket that information.
+> > > > > 
+> > > > 
+> > > > That sounds plausible. A bit more involved than what I'm currently
+> > > > working with, but we do already have a blueprint for the scanning
+> > > > implementation required to collect this data via the frag command.
+> > > > Perhaps some of this code between the frag/freesp can be generalized and
+> > > > reused. I'll take a closer look at it.
+> > > > 
+> > > > My only concern is I'd prefer to only go down this path as long as we
+> > > > plan to land the associated command in xfs_db. So this approach suggests
+> > > > to me that we add a "locality" command similar to frag/freesp that
+> > > > presents the locality state of the fs. For now I'm only really concerned
+> > > > with the data associated with known near mode allocations (i.e., such as
+> > > > the extent size:distance relationship you've outlined above) so we can
+> > > > evaluate these algorithmic changes, but this would be for fs devs only
+> > > > so we could always expand on it down the road if we want to assess
+> > > > different allocations. Hm?
+> > > 
+> > > Yup, I'm needing to do similar analysis myself to determine how
+> > > quickly I'm aging the filesystem, so having the tool in xfs_db or
+> > > xfs_spaceman would be very useful.
+> > > 
+> > > FWIW, the tool I've just started writing will just use fallocate and
+> > > truncate to hammer the allocation code as hard and as quickly as
+> > > possible - I want to do accelerated aging of the filesystem, and so
+> > > being able to run tens to hundreds of thousands of free space
+> > > manipulations a second is the goal here....
+> > > 
+> > 
+> > Ok. FWIW, from playing with this so far (before getting distracted for
+> > much of this week) the most straightforward place to add this kind of
+> > functionality turns out to be the frag command itself. It does 99% of
+> > the work required to process data extents already, including pulling the
+> > on-disk records of each inode in-core for processing. I basically just
+> > had to update that code to include all of the record data and add the
+> > locality tracking logic (I haven't got to actually presenting it yet..).
+> > 
+> 
+> I managed to collect some preliminary data based on this strategy. I
+....
+> 
+> Comparison of the baseline and test data shows a generally similar
+> breakdown between the two.
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
----
- drivers/dax/bus.c            |  2 +-
- drivers/dax/super.c          | 19 ++++++++++++++++++-
- drivers/md/dm.c              |  3 ++-
- drivers/nvdimm/pmem.c        |  5 ++++-
- drivers/nvdimm/region_devs.c |  7 +++++++
- include/linux/dax.h          |  9 +++++++--
- include/linux/libnvdimm.h    |  1 +
- 7 files changed, 40 insertions(+), 6 deletions(-)
+Which is the result I wanted to see :)
 
-diff --git a/drivers/dax/bus.c b/drivers/dax/bus.c
-index 2109cfe80219..5f184e751c82 100644
---- a/drivers/dax/bus.c
-+++ b/drivers/dax/bus.c
-@@ -388,7 +388,7 @@ struct dev_dax *__devm_create_dev_dax(struct dax_region *dax_region, int id,
- 	 * No 'host' or dax_operations since there is no access to this
- 	 * device outside of mmap of the resulting character device.
- 	 */
--	dax_dev = alloc_dax(dev_dax, NULL, NULL);
-+	dax_dev = alloc_dax(dev_dax, NULL, NULL, DAXDEV_F_SYNC);
- 	if (!dax_dev)
- 		goto err;
- 
-diff --git a/drivers/dax/super.c b/drivers/dax/super.c
-index bbd57ca0634a..93b3718b5cfa 100644
---- a/drivers/dax/super.c
-+++ b/drivers/dax/super.c
-@@ -186,6 +186,8 @@ enum dax_device_flags {
- 	DAXDEV_ALIVE,
- 	/* gate whether dax_flush() calls the low level flush routine */
- 	DAXDEV_WRITE_CACHE,
-+	/* flag to check if device supports synchronous flush */
-+	DAXDEV_SYNC,
- };
- 
- /**
-@@ -354,6 +356,18 @@ bool dax_write_cache_enabled(struct dax_device *dax_dev)
- }
- EXPORT_SYMBOL_GPL(dax_write_cache_enabled);
- 
-+bool dax_synchronous(struct dax_device *dax_dev)
-+{
-+	return test_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(dax_synchronous);
-+
-+void set_dax_synchronous(struct dax_device *dax_dev)
-+{
-+	set_bit(DAXDEV_SYNC, &dax_dev->flags);
-+}
-+EXPORT_SYMBOL_GPL(set_dax_synchronous);
-+
- bool dax_alive(struct dax_device *dax_dev)
- {
- 	lockdep_assert_held(&dax_srcu);
-@@ -508,7 +522,7 @@ static void dax_add_host(struct dax_device *dax_dev, const char *host)
- }
- 
- struct dax_device *alloc_dax(void *private, const char *__host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, unsigned long flags)
- {
- 	struct dax_device *dax_dev;
- 	const char *host;
-@@ -531,6 +545,9 @@ struct dax_device *alloc_dax(void *private, const char *__host,
- 	dax_add_host(dax_dev, host);
- 	dax_dev->ops = ops;
- 	dax_dev->private = private;
-+	if (flags & DAXDEV_F_SYNC)
-+		set_dax_synchronous(dax_dev);
-+
- 	return dax_dev;
- 
-  err_dev:
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index 1fb1333fefec..7eee7ddc73a8 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1970,7 +1970,8 @@ static struct mapped_device *alloc_dev(int minor)
- 	sprintf(md->disk->disk_name, "dm-%d", minor);
- 
- 	if (IS_ENABLED(CONFIG_DAX_DRIVER)) {
--		md->dax_dev = alloc_dax(md, md->disk->disk_name, &dm_dax_ops);
-+		md->dax_dev = alloc_dax(md, md->disk->disk_name,
-+					&dm_dax_ops, 0);
- 		if (!md->dax_dev)
- 			goto bad;
- 	}
-diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
-index 0279eb1da3ef..bdbd2b414d3d 100644
---- a/drivers/nvdimm/pmem.c
-+++ b/drivers/nvdimm/pmem.c
-@@ -365,6 +365,7 @@ static int pmem_attach_disk(struct device *dev,
- 	struct gendisk *disk;
- 	void *addr;
- 	int rc;
-+	unsigned long flags = 0UL;
- 
- 	pmem = devm_kzalloc(dev, sizeof(*pmem), GFP_KERNEL);
- 	if (!pmem)
-@@ -462,7 +463,9 @@ static int pmem_attach_disk(struct device *dev,
- 	nvdimm_badblocks_populate(nd_region, &pmem->bb, &bb_res);
- 	disk->bb = &pmem->bb;
- 
--	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops);
-+	if (is_nvdimm_sync(nd_region))
-+		flags = DAXDEV_F_SYNC;
-+	dax_dev = alloc_dax(pmem, disk->disk_name, &pmem_dax_ops, flags);
- 	if (!dax_dev) {
- 		put_disk(disk);
- 		return -ENOMEM;
-diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
-index b4ef7d9ff22e..f3ea5369d20a 100644
---- a/drivers/nvdimm/region_devs.c
-+++ b/drivers/nvdimm/region_devs.c
-@@ -1197,6 +1197,13 @@ int nvdimm_has_cache(struct nd_region *nd_region)
- }
- EXPORT_SYMBOL_GPL(nvdimm_has_cache);
- 
-+bool is_nvdimm_sync(struct nd_region *nd_region)
-+{
-+	return is_nd_pmem(&nd_region->dev) &&
-+		!test_bit(ND_REGION_ASYNC, &nd_region->flags);
-+}
-+EXPORT_SYMBOL_GPL(is_nvdimm_sync);
-+
- struct conflict_context {
- 	struct nd_region *nd_region;
- 	resource_size_t start, size;
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 0dd316a74a29..2b106752b1b8 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -7,6 +7,9 @@
- #include <linux/radix-tree.h>
- #include <asm/pgtable.h>
- 
-+/* Flag for synchronous flush */
-+#define DAXDEV_F_SYNC (1UL << 0)
-+
- typedef unsigned long dax_entry_t;
- 
- struct iomap_ops;
-@@ -32,18 +35,20 @@ extern struct attribute_group dax_attribute_group;
- #if IS_ENABLED(CONFIG_DAX)
- struct dax_device *dax_get_by_host(const char *host);
- struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops);
-+		const struct dax_operations *ops, unsigned long flags);
- void put_dax(struct dax_device *dax_dev);
- void kill_dax(struct dax_device *dax_dev);
- void dax_write_cache(struct dax_device *dax_dev, bool wc);
- bool dax_write_cache_enabled(struct dax_device *dax_dev);
-+bool dax_synchronous(struct dax_device *dax_dev);
-+void set_dax_synchronous(struct dax_device *dax_dev);
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
- 	return NULL;
- }
- static inline struct dax_device *alloc_dax(void *private, const char *host,
--		const struct dax_operations *ops)
-+		const struct dax_operations *ops, unsigned long flags)
- {
- 	/*
- 	 * Callers should check IS_ENABLED(CONFIG_DAX) to know if this
-diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
-index feb342d026f2..3238a206e563 100644
---- a/include/linux/libnvdimm.h
-+++ b/include/linux/libnvdimm.h
-@@ -264,6 +264,7 @@ void nvdimm_flush(struct nd_region *nd_region);
- int nvdimm_has_flush(struct nd_region *nd_region);
- int nvdimm_has_cache(struct nd_region *nd_region);
- int nvdimm_in_overwrite(struct nvdimm *nvdimm);
-+bool is_nvdimm_sync(struct nd_region *nd_region);
- 
- static inline int nvdimm_ctl(struct nvdimm *nvdimm, unsigned int cmd, void *buf,
- 		unsigned int buf_len, int *cmd_rc)
+> Thoughts on any of this data or presentation?
+
+I think it's useful for comparing whether an allocator change has
+affected the overall locality of allocation. If it's working as we
+expect, you should get vastly different results for inode32 vs
+inode64 mount options, with inode32 showing much, much higher
+distances for most allocations, so it might be worth running a quick
+test to confirm that it does, indeed, demonstrate the results we'd
+expect from such a change.
+
+> I could dig further into
+> details or alternatively base the histogram on something like extent
+> size and show the average delta for each extent size bucket, but I'm not
+> sure that will tell us anything profound with respect to this patchset.
+
+*nod*
+
+> One thing I noticed while processing this data is that the current
+> dataset skews heavily towards smaller allocations. I still think it's a
+> useful comparison because smaller allocations are more likely to stress
+> either algorithm via a larger locality search space, but I may try to
+> repeat this test with a workload with fewer files and larger allocations
+> and see how that changes things.
+
+>From the testing I've been doing, I think the file count of around
+10k isn't sufficient to really cause severe allocation issues.
+Directory and inodes metadata are great for fragmenting free space,
+so dramtically increasing the number of smaller files might actually
+produce worse behaviour....
+
+Cheers,
+
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
