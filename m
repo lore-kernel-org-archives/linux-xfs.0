@@ -1,185 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36145 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726950AbfFFBp2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jun 2019 21:45:28 -0400
-From: ira.weiny@intel.com
-Subject: [PATCH RFC 10/10] mm/gup: Remove FOLL_LONGTERM DAX exclusion
-Date: Wed,  5 Jun 2019 18:45:43 -0700
-Message-Id: <20190606014544.8339-11-ira.weiny@intel.com>
-In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
+Received: from mail-qk1-f193.google.com ([209.85.222.193]:45932 "EHLO
+        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727109AbfFFTvQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 15:51:16 -0400
+Received: by mail-qk1-f193.google.com with SMTP id s22so2243018qkj.12
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 12:51:16 -0700 (PDT)
+Date: Thu, 6 Jun 2019 16:51:15 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190606195114.GA30714@ziepe.ca>
 References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606104203.GF7433@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190606104203.GF7433@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
-Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Jan Kara <jack@suse.cz>
+Cc: ira.weiny@intel.com, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Thu, Jun 06, 2019 at 12:42:03PM +0200, Jan Kara wrote:
 
-Now that there is a mechanism for users to safely take LONGTERM pins on
-FS DAX pages, remove the FS DAX exclusion from GUP with FOLL_LONGTERM.
+> So I'd like to actually mandate that you *must* hold the file lease until
+> you unpin all pages in the given range (not just that you have an option to
+> hold a lease). And I believe the kernel should actually enforce this. That
+> way we maintain a sane state that if someone uses a physical location of
+> logical file offset on disk, he has a layout lease. Also once this is done,
+> sysadmin has a reasonably easy way to discover run-away RDMA application
+> and kill it if he wishes so.
+> 
+> The question is on how to exactly enforce that lease is taken until all
+> pages are unpinned. I belive it could be done by tracking number of
+> long-term pinned pages within a lease. Gup_longterm could easily increment
+> the count when verifying the lease exists, gup_longterm users will somehow
+> need to propagate corresponding 'filp' (struct file pointer) to
+> put_user_pages_longterm() callsites so that they can look up appropriate
+> lease to drop reference - probably I'd just transition all gup_longterm()
+> users to a saner API similar to the one we have in mm/frame_vector.c where
+> we don't hand out page pointers but an encapsulating structure that does
+> all the necessary tracking. Removing a lease would need to block until all
+> pins are released - this is probably the most hairy part since we need to
+> handle a case if application just closes the file descriptor which
+> would
 
-Special processing remains in effect for CONFIG_CMA
+I think if you are going to do this then the 'struct filp' that
+represents the lease should be held in the kernel (ie inside the RDMA
+umem) until the kernel is done with it.
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- mm/gup.c | 78 ++++++--------------------------------------------------
- 1 file changed, 8 insertions(+), 70 deletions(-)
+Actually does someone have a pointer to this userspace lease API, I'm
+not at all familiar with it, thanks
 
-diff --git a/mm/gup.c b/mm/gup.c
-index d06cc5b14c0b..4f6e5606b81e 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -1392,26 +1392,6 @@ long get_user_pages_remote(struct task_struct *tsk, struct mm_struct *mm,
- }
- EXPORT_SYMBOL(get_user_pages_remote);
- 
--#if defined(CONFIG_FS_DAX) || defined (CONFIG_CMA)
--static bool check_dax_vmas(struct vm_area_struct **vmas, long nr_pages)
--{
--	long i;
--	struct vm_area_struct *vma_prev = NULL;
--
--	for (i = 0; i < nr_pages; i++) {
--		struct vm_area_struct *vma = vmas[i];
--
--		if (vma == vma_prev)
--			continue;
--
--		vma_prev = vma;
--
--		if (vma_is_fsdax(vma))
--			return true;
--	}
--	return false;
--}
--
- #ifdef CONFIG_CMA
- static struct page *new_non_cma_page(struct page *page, unsigned long private)
- {
-@@ -1542,18 +1522,6 @@ static long check_and_migrate_cma_pages(struct task_struct *tsk,
- 
- 	return nr_pages;
- }
--#else
--static long check_and_migrate_cma_pages(struct task_struct *tsk,
--					struct mm_struct *mm,
--					unsigned long start,
--					unsigned long nr_pages,
--					struct page **pages,
--					struct vm_area_struct **vmas,
--					unsigned int gup_flags)
--{
--	return nr_pages;
--}
--#endif
- 
- /*
-  * __gup_longterm_locked() is a wrapper for __get_user_pages_locked which
-@@ -1567,49 +1535,28 @@ static long __gup_longterm_locked(struct task_struct *tsk,
- 				  struct vm_area_struct **vmas,
- 				  unsigned int gup_flags)
- {
--	struct vm_area_struct **vmas_tmp = vmas;
- 	unsigned long flags = 0;
--	long rc, i;
-+	long rc;
- 
--	if (gup_flags & FOLL_LONGTERM) {
--		if (!pages)
--			return -EINVAL;
--
--		if (!vmas_tmp) {
--			vmas_tmp = kcalloc(nr_pages,
--					   sizeof(struct vm_area_struct *),
--					   GFP_KERNEL);
--			if (!vmas_tmp)
--				return -ENOMEM;
--		}
-+	if (flags & FOLL_LONGTERM)
- 		flags = memalloc_nocma_save();
--	}
- 
- 	rc = __get_user_pages_locked(tsk, mm, start, nr_pages, pages,
--				     vmas_tmp, NULL, gup_flags);
-+				     vmas, NULL, gup_flags);
- 
- 	if (gup_flags & FOLL_LONGTERM) {
- 		memalloc_nocma_restore(flags);
- 		if (rc < 0)
- 			goto out;
- 
--		if (check_dax_vmas(vmas_tmp, rc)) {
--			for (i = 0; i < rc; i++)
--				put_page(pages[i]);
--			rc = -EOPNOTSUPP;
--			goto out;
--		}
--
- 		rc = check_and_migrate_cma_pages(tsk, mm, start, rc, pages,
--						 vmas_tmp, gup_flags);
-+						 vmas, gup_flags);
- 	}
- 
- out:
--	if (vmas_tmp != vmas)
--		kfree(vmas_tmp);
- 	return rc;
- }
--#else /* !CONFIG_FS_DAX && !CONFIG_CMA */
-+#else /* !CONFIG_CMA */
- static __always_inline long __gup_longterm_locked(struct task_struct *tsk,
- 						  struct mm_struct *mm,
- 						  unsigned long start,
-@@ -1621,7 +1568,7 @@ static __always_inline long __gup_longterm_locked(struct task_struct *tsk,
- 	return __get_user_pages_locked(tsk, mm, start, nr_pages, pages, vmas,
- 				       NULL, flags);
- }
--#endif /* CONFIG_FS_DAX || CONFIG_CMA */
-+#endif /* CONFIG_CMA */
- 
- /*
-  * This is the same as get_user_pages_remote(), just with a
-@@ -1882,9 +1829,6 @@ static int gup_pte_range(pmd_t pmd, unsigned long addr, unsigned long end,
- 			goto pte_unmap;
- 
- 		if (pte_devmap(pte)) {
--			if (unlikely(flags & FOLL_LONGTERM))
--				goto pte_unmap;
--
- 			pgmap = get_dev_pagemap(pte_pfn(pte), pgmap);
- 			if (unlikely(!pgmap)) {
- 				undo_dev_pagemap(nr, nr_start, pages);
-@@ -2057,12 +2001,9 @@ static int gup_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
- 	if (!pmd_access_permitted(orig, flags & FOLL_WRITE))
- 		return 0;
- 
--	if (pmd_devmap(orig)) {
--		if (unlikely(flags & FOLL_LONGTERM))
--			return 0;
-+	if (pmd_devmap(orig))
- 		return __gup_device_huge_pmd(orig, pmdp, addr, end, pages, nr,
- 					     flags);
--	}
- 
- 	refs = 0;
- 	page = pmd_page(orig) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
-@@ -2101,12 +2042,9 @@ static int gup_huge_pud(pud_t orig, pud_t *pudp, unsigned long addr,
- 	if (!pud_access_permitted(orig, flags & FOLL_WRITE))
- 		return 0;
- 
--	if (pud_devmap(orig)) {
--		if (unlikely(flags & FOLL_LONGTERM))
--			return 0;
-+	if (pud_devmap(orig))
- 		return __gup_device_huge_pud(orig, pudp, addr, end, pages, nr,
- 					     flags);
--	}
- 
- 	refs = 0;
- 	page = pud_page(orig) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
--- 
-2.20.1
+And yes, a better output format from GUP would be great..
+
+> Maybe we could block only on explicit lease unlock and just drop the layout
+> lease on file close and if there are still pinned pages, send SIGKILL to an
+> application as a reminder it did something stupid...
+
+Which process would you SIGKILL? At least for the rdma case a FD is
+holding the GUP, so to do the put_user_pages() the kernel needs to
+close the FD. I guess it would have to kill every process that has the
+FD open? Seems complicated...
+
+Regards,
+Jason
