@@ -1,196 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yw1-f68.google.com ([209.85.161.68]:41463 "EHLO
-        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727559AbfFFSMc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 14:12:32 -0400
-Received: by mail-yw1-f68.google.com with SMTP id y185so1194091ywy.8
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 11:12:32 -0700 (PDT)
+Received: from mga03.intel.com ([134.134.136.65]:36140 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726589AbfFFBpM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 21:45:12 -0400
+From: ira.weiny@intel.com
+Subject: [PATCH RFC 02/10] fs/locks: Export F_LAYOUT lease to user space
+Date: Wed,  5 Jun 2019 18:45:35 -0700
+Message-Id: <20190606014544.8339-3-ira.weiny@intel.com>
+In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-References: <CABeZSNmcmL3_VvDVvbcneDd3f2jCiu7Pn8YQ7y7mJH8BizaWXw@mail.gmail.com>
- <680c16d9-cb95-f2b1-b65b-c956b1e5c1ed@sandeen.net>
-In-Reply-To: <680c16d9-cb95-f2b1-b65b-c956b1e5c1ed@sandeen.net>
-From: Sheena Artrip <sheena.artrip@gmail.com>
-Date: Thu, 6 Jun 2019 11:12:20 -0700
-Message-ID: <CABeZSNnw=UN9+muYXD-JYV3cECZPUfzxW1y8HE4ks=PCEdFqEQ@mail.gmail.com>
-Subject: Re: [RFC][PATCH] xfs_restore: detect rtinherit on destination
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
-Cc: sheenobu@fb.com
+To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Jun 6, 2019 at 7:11 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->
-> On 6/5/19 4:16 PM, Sheena Artrip wrote:
-> > When running xfs_restore with a non-rtdev dump,
-> > it will ignore any rtinherit flags on the destination
-> > and send I/O to the metadata region.
-> >
-> > Instead, detect rtinherit on the destination XFS fileystem root inode
-> > and use that to override the incoming inode flags.
-> >
-> > Original version of this patch missed some branches so multiple
-> > invocations of xfsrestore onto the same fs caused
-> > the rtinherit bit to get re-removed. There could be some
-> > additional edge cases in non-realtime to realtime workflows so
-> > the outstanding question would be: is it worth supporting?
->
-> Hm, interesting.
->
-> So this is a mechanism to allow dump/restore to migrate everything
-> to the realtime subvol?  I can't decide if I like this - normally I'd
-> think of an xfsdump/xfsrestore session as more or less replicating the
-> filesystem that was dumped, and not something that will fundamentally
-> change what was dumped.
->
-> OTOH, we can restore onto any dir we want, and I could see the argument
-> that we should respect things like the rtinherit flag if that's what
-> the destination dir says.
+From: Ira Weiny <ira.weiny@intel.com>
 
-Yes. What is strange is that an xfsrestore onto a rtdev system will
-silently "fill"
-the metadata partition until the available inode count goes to zero and we get
-an ENOSPC. Not yet sure if the file data goes straight to the metadata partition
-or if it's simply accounting for it in the metadata partition.
+GUP longterm pins of non-pagecache file system pages (eg FS DAX) are
+currently disallowed because they are unsafe.
 
-I'm guessing xfsrestore should either fail-fast or allow this via
-rtinherit detection. I don't mind putting it behind a flag either.
+The danger for pinning these pages comes from the fact that hole punch
+and/or truncate of those files results in the pages being mapped and
+pinned by a user space process while DAX has potentially allocated those
+pages to other processes.
 
-> One thing about the patch - the mechanism you've copied to get the root
-> inode number via bulkstat turns out to be broken ... it's possible
-> to have a non-root inode with the lowest number on the fs, unfortunately.
+Most (All) users who are mapping FS DAX pages for long term pin purposes
+(such as RDMA) are not going to want to deallocate these pages while
+those pages are in use.  To do so would mean the application would lose
+data.  So the use case for allowing truncate operations of such pages
+is limited.
 
-I think i saw that on the list but this code is also a near-identical
-copy of what is in xfsdump/content.c.
+However, the kernel must protect itself and users from potential
+mistakes and/or malicious user space code.  Rather than disabling long
+term pins as is done now.   Allow for users who know they are going to
+be pinning this memory to alert the file system of this intention.
+Furthermore, allow users to be alerted such that they can react if a
+truncate operation occurs for some reason.
 
-> But, wouldn't you want to test the rtinherit flag on the target dir anyway,
-> not necessarily the root dir?
+Example user space pseudocode for a user using RDMA and wanting to allow
+a truncate would look like this:
 
-Makes sense. How would I get the rtinherit flag on the target dir? Is there
-a xfs-specific stat function that will give us a xfs_bstat_t for the
-dstdir inode
-I've opened or is it already part of stat64_t?
+lease_break_sigio_handler() {
+...
+	if (sigio.fd == rdma_fd) {
+		complete_rdma_operations(...);
+		ibv_dereg_mr(mr);
+		close(rdma_fd);
+		fcntl(rdma_fd, F_SETLEASE, F_UNLCK);
+	}
+}
 
-> > Signed-off-by: Sheena Artrip <sheena.artrip@gmail.com>
-> > ---
-> >  restore/content.c | 65 +++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 65 insertions(+)
-> >
-> > diff --git a/restore/content.c b/restore/content.c
-> > index 6b22965..96dd698 100644
-> > --- a/restore/content.c
-> > +++ b/restore/content.c
-> > @@ -670,6 +670,9 @@ struct tran {
-> >                  /* to establish critical regions while updating pers
-> >                   * inventory
-> >                   */
-> > +       bool_t t_dstisrealtime;
-> > +               /* to force the realtime flag on incoming inodes
-> > +                */
-> >  };
-> >
-> >  typedef struct tran tran_t;
-> > @@ -1803,6 +1806,51 @@ content_init(int argc, char *argv[], size64_t vmsz)
-> >                  free_handle(fshanp, fshlen);
-> >          }
-> >
-> > +       /* determine if destination root inode has rtinherit.
-> > +        * If so, we should force XFS_REALTIME on the incoming inodes.
-> > +        */
-> > +       if (persp->a.dstdirisxfspr) {
-> > +               stat64_t rootstat;
-> > +               xfs_fsop_bulkreq_t bulkreq;
-> > +               int ocount = 0;
-> > +               xfs_bstat_t *sc_rootxfsstatp;
-> > +
-> > +               int rootfd = open(persp->a.dstdir, O_RDONLY);
-> > +
-> > +               sc_rootxfsstatp =
-> > +                       (xfs_bstat_t *)calloc(1, sizeof(xfs_bstat_t));
-> > +               assert(sc_rootxfsstatp);
-> > +
-> > +               /* Get the inode of the destination folder */
-> > +               int rval = fstat64(rootfd, &rootstat);
-> > +               if (rval) {
-> > +                       (void)close(rootfd);
-> > +                       mlog(MLOG_NORMAL, _(
-> > +                         "could not stat %s\n"),
-> > +                         persp->a.dstdir);
-> > +                       return BOOL_FALSE;
-> > +               }
-> > +
-> > +               /* Get the first valid (i.e. root) inode in this fs */
-> > +               bulkreq.lastip = (__u64 *)&rootstat.st_ino;
-> > +               bulkreq.icount = 1;
-> > +               bulkreq.ubuffer = sc_rootxfsstatp;
-> > +               bulkreq.ocount = &ocount;
-> > +               if (ioctl(rootfd, XFS_IOC_FSBULKSTAT, &bulkreq) < 0) {
-> > +                       (void)close(rootfd);
-> > +                       mlog(MLOG_ERROR,
-> > +                             _("failed to get bulkstat information
-> > for root inode\n"));
-> > +                       return BOOL_FALSE;
-> > +               }
-> > +
-> > +               (void)close(rootfd);
-> > +
-> > +               /* test against rtinherit */
-> > +               if((sc_rootxfsstatp->bs_xflags & XFS_XFLAG_RTINHERIT) != 0) {
-> > +                       tranp->t_dstisrealtime = true;
-> > +               }
-> > +       }
-> > +
-> >          /* map in pers. inv. descriptors, if any. NOTE: this ptr is to be
-> >           * referenced ONLY via the macros provided; the descriptors will be
-> >           * occasionally remapped, causing the ptr to change.
-> > @@ -7270,6 +7318,10 @@ restore_file_cb(void *cp, bool_t linkpr, char
-> > *path1, char *path2)
-> >          bool_t ahcs = contextp->cb_ahcs;
-> >          stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
-> >
-> > +       if (tranp->t_dstisrealtime) {
-> > +               bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
-> > +       }
-> > +
-> >          int rval;
-> >          bool_t ok;
-> >
-> > @@ -7480,6 +7532,10 @@ restore_reg(drive_t *drivep,
-> >          if (tranp->t_toconlypr)
-> >                  return BOOL_TRUE;
-> >
-> > +       if (tranp->t_dstisrealtime) {
-> > +             bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
-> > +       }
-> > +
-> >          oflags = O_CREAT | O_RDWR;
-> >          if (persp->a.dstdirisxfspr && bstatp->bs_xflags & XFS_XFLAG_REALTIME)
-> >                  oflags |= O_DIRECT;
-> > @@ -8470,6 +8526,11 @@ restore_extent(filehdr_t *fhdrp,
-> >                  }
-> >                  assert(new_off == off);
-> >          }
-> > +
-> > +       if (tranp->t_dstisrealtime) {
-> > +             bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
-> > +       }
-> > +
-> >          if ((fd != -1) && (bstatp->bs_xflags & XFS_XFLAG_REALTIME)) {
-> >                  if ((ioctl(fd, XFS_IOC_DIOINFO, &da) < 0)) {
-> >                          mlog(MLOG_NORMAL | MLOG_WARNING, _(
-> > @@ -8729,6 +8790,10 @@ restore_extattr(drive_t *drivep,
-> >
-> >          assert(extattrbufp);
-> >
-> > +       if (tranp->t_dstisrealtime) {
-> > +               bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
-> > +       }
-> > +
-> >          if (!isdirpr)
-> >                  isfilerestored = partial_check(bstatp->bs_ino,
-> > bstatp->bs_size);
-> >
-> > --
-> > 2.17.1
-> >
+setup_rdma_to_dax_file() {
+...
+	rdma_fd = open(...)
+	fcntl(rdma_fd, F_SETLEASE, F_LAYOUT);
+	sigaction(SIGIO, ...  lease_break ...);
+	ptr = mmap(rdma_fd, ...);
+	mr = ibv_reg_mr(ptr, ...);
+	do_rdma_stuff(...);
+}
+
+Follow on patches implement the notification of the lease holder on
+truncate as well as failing the truncate if the GUP pin is not released.
+
+This first patch exports the F_LAYOUT lease type and allows the user to set
+and get it.
+
+After the complete series:
+
+1) Failure to obtain a F_LAYOUT lease on an open FS DAX file will result
+   in a failure to GUP pin any pages in that file.  An example of a call
+   which results in GUP pin is ibv_reg_mr().
+2) While the GUP pin is in place (eg MR is in use) truncates of the
+   affected pages will fail.
+3) If the user registers a sigaction they will be notified of the
+   truncate so they can react.  Failure to react will result in the
+   lease being revoked after <sysfs>/lease-break-time seconds.  After
+   this time new GUP pins will fail without a new lease being taken.
+4) A truncate will work if the pages being truncated are not actively
+   pinned at the time of truncate.  Attempts to pin these pages after
+   will result in a failure.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/locks.c                       | 36 +++++++++++++++++++++++++++-----
+ include/linux/fs.h               |  2 +-
+ include/uapi/asm-generic/fcntl.h |  3 +++
+ 3 files changed, 35 insertions(+), 6 deletions(-)
+
+diff --git a/fs/locks.c b/fs/locks.c
+index 0cc2b9f30e22..de9761c068de 100644
+--- a/fs/locks.c
++++ b/fs/locks.c
+@@ -191,6 +191,8 @@ static int target_leasetype(struct file_lock *fl)
+ 		return F_UNLCK;
+ 	if (fl->fl_flags & FL_DOWNGRADE_PENDING)
+ 		return F_RDLCK;
++	if (fl->fl_flags & FL_LAYOUT)
++		return F_LAYOUT;
+ 	return fl->fl_type;
+ }
+ 
+@@ -611,7 +613,8 @@ static const struct lock_manager_operations lease_manager_ops = {
+ /*
+  * Initialize a lease, use the default lock manager operations
+  */
+-static int lease_init(struct file *filp, long type, struct file_lock *fl)
++static int lease_init(struct file *filp, long type, unsigned int flags,
++		      struct file_lock *fl)
+ {
+ 	if (assign_type(fl, type) != 0)
+ 		return -EINVAL;
+@@ -621,6 +624,8 @@ static int lease_init(struct file *filp, long type, struct file_lock *fl)
+ 
+ 	fl->fl_file = filp;
+ 	fl->fl_flags = FL_LEASE;
++	if (flags & FL_LAYOUT)
++		fl->fl_flags |= FL_LAYOUT;
+ 	fl->fl_start = 0;
+ 	fl->fl_end = OFFSET_MAX;
+ 	fl->fl_ops = NULL;
+@@ -629,7 +634,8 @@ static int lease_init(struct file *filp, long type, struct file_lock *fl)
+ }
+ 
+ /* Allocate a file_lock initialised to this type of lease */
+-static struct file_lock *lease_alloc(struct file *filp, long type)
++static struct file_lock *lease_alloc(struct file *filp, long type,
++				     unsigned int flags)
+ {
+ 	struct file_lock *fl = locks_alloc_lock();
+ 	int error = -ENOMEM;
+@@ -637,7 +643,7 @@ static struct file_lock *lease_alloc(struct file *filp, long type)
+ 	if (fl == NULL)
+ 		return ERR_PTR(error);
+ 
+-	error = lease_init(filp, type, fl);
++	error = lease_init(filp, type, flags, fl);
+ 	if (error) {
+ 		locks_free_lock(fl);
+ 		return ERR_PTR(error);
+@@ -1588,7 +1594,7 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
+ 	int want_write = (mode & O_ACCMODE) != O_RDONLY;
+ 	LIST_HEAD(dispose);
+ 
+-	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK);
++	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK, 0);
+ 	if (IS_ERR(new_fl))
+ 		return PTR_ERR(new_fl);
+ 	new_fl->fl_flags = type;
+@@ -1725,6 +1731,8 @@ EXPORT_SYMBOL(lease_get_mtime);
+  *
+  *	%F_UNLCK to indicate no lease is held.
+  *
++ *	%F_LAYOUT to indicate a layout lease is held.
++ *
+  *	(if a lease break is pending):
+  *
+  *	%F_RDLCK to indicate an exclusive lease needs to be
+@@ -2015,8 +2023,26 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
+ 	struct file_lock *fl;
+ 	struct fasync_struct *new;
+ 	int error;
++	unsigned int flags = 0;
++
++	/*
++	 * NOTE on F_LAYOUT lease
++	 *
++	 * LAYOUT lease types are taken on files which the user knows that
++	 * they will be pinning in memory for some indeterminate amount of
++	 * time.  Such as for use with RDMA.  While we don't know what user
++	 * space is going to do with the file we still use a F_RDLOCK level of
++	 * lease.  This ensures that there are no conflicts between
++	 * 2 users.  The conflict should only come from the File system wanting
++	 * to revoke the lease in break_layout()  And this is done by using
++	 * F_WRLCK in the break code.
++	 */
++	if (arg == F_LAYOUT) {
++		arg = F_RDLCK;
++		flags = FL_LAYOUT;
++	}
+ 
+-	fl = lease_alloc(filp, arg);
++	fl = lease_alloc(filp, arg, flags);
+ 	if (IS_ERR(fl))
+ 		return PTR_ERR(fl);
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index f7fdfe93e25d..9e9d8d35ee93 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -998,7 +998,7 @@ static inline struct file *get_file(struct file *f)
+ #define FL_DOWNGRADE_PENDING	256 /* Lease is being downgraded */
+ #define FL_UNLOCK_PENDING	512 /* Lease is being broken */
+ #define FL_OFDLCK	1024	/* lock is "owned" by struct file */
+-#define FL_LAYOUT	2048	/* outstanding pNFS layout */
++#define FL_LAYOUT	2048	/* outstanding pNFS layout or user held pin */
+ 
+ #define FL_CLOSE_POSIX (FL_POSIX | FL_CLOSE)
+ 
+diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+index 9dc0bf0c5a6e..baddd54f3031 100644
+--- a/include/uapi/asm-generic/fcntl.h
++++ b/include/uapi/asm-generic/fcntl.h
+@@ -174,6 +174,9 @@ struct f_owner_ex {
+ #define F_SHLCK		8	/* or 4 */
+ #endif
+ 
++#define F_LAYOUT	16      /* layout lease to allow longterm pins such as
++				   RDMA */
++
+ /* operations for bsd flock(), also used by the kernel implementation */
+ #define LOCK_SH		1	/* shared lock */
+ #define LOCK_EX		2	/* exclusive lock */
+-- 
+2.20.1
