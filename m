@@ -1,219 +1,308 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36140 "EHLO mga03.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37499 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726589AbfFFBpM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jun 2019 21:45:12 -0400
-From: ira.weiny@intel.com
-Subject: [PATCH RFC 02/10] fs/locks: Export F_LAYOUT lease to user space
-Date: Wed,  5 Jun 2019 18:45:35 -0700
-Message-Id: <20190606014544.8339-3-ira.weiny@intel.com>
-In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
-References: <20190606014544.8339-1-ira.weiny@intel.com>
+        id S1728504AbfFFTOz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Jun 2019 15:14:55 -0400
+Date: Thu, 6 Jun 2019 15:14:50 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/1] xfs: check for COW overflows in i_delayed_blks
+Message-ID: <20190606191449.GB2791@bfoster>
+References: <155968302402.1647082.16959798703857853077.stgit@magnolia>
+ <155968303075.1647082.5031279746723706503.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155968303075.1647082.5031279746723706503.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
-Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Tue, Jun 04, 2019 at 02:17:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> With the new copy on write functionality it's possible to reserve so
+> much COW space for a file that we end up overflowing i_delayed_blks.
+> The only user-visible effect of this is to cause totally wrong i_blocks
+> output in stat, so check for that.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  tests/xfs/907     |  223 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/907.out |    8 ++
+>  tests/xfs/group   |    1 
+>  3 files changed, 232 insertions(+)
+>  create mode 100755 tests/xfs/907
+>  create mode 100644 tests/xfs/907.out
+> 
+> 
+> diff --git a/tests/xfs/907 b/tests/xfs/907
+> new file mode 100755
+> index 00000000..d85f12da
+> --- /dev/null
+> +++ b/tests/xfs/907
+> @@ -0,0 +1,223 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0+
+> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 907
+> +#
+> +# Try to overflow i_delayed_blks by setting the largest cowextsize hint
+> +# possible, creating a sparse file with a single byte every cowextsize bytes,
+> +# reflinking it, and retouching every written byte to see if we can create
+> +# enough speculative COW reservations to overflow i_delayed_blks.
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 7 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	test -n "$loop_mount" && $UMOUNT_PROG $loop_mount > /dev/null 2>&1
+> +	test -n "$loop_dev" && _destroy_loop_device $loop_dev
+> +	rm -rf $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/reflink
+> +. ./common/filter
+> +
+> +# real QA test starts here
+> +_supported_os Linux
+> +_supported_fs xfs
+> +_require_scratch_reflink
+> +_require_cp_reflink
+> +_require_loop
+> +_require_xfs_debug	# needed for xfs_bmap -c
+> +
+> +MAXEXTLEN=2097151	# cowextsize can't be more than MAXEXTLEN
+> +
+> +echo "Format and mount"
+> +_scratch_mkfs > "$seqres.full" 2>&1
+> +_scratch_mount
+> +
+> +# Create a huge sparse filesystem on the scratch device because that's what
+> +# we're going to need to guarantee that we have enough blocks to overflow in
+> +# the first place.  We need to have at least enough free space on that huge fs
+> +# to handle one written block every MAXEXTLEN blocks and to reserve 2^32 blocks
+> +# in the COW fork.  There needs to be sufficient space in the scratch
+> +# filesystem to handle a 256M log, all the per-AG metadata, and all the data
+> +# written to the test file.
+> +#
+> +# Worst case, a 64k-block fs needs to be about 300TB.  Best case, a 1k block
+> +# filesystem needs ~5TB.  For the most common 4k case we only need a ~20TB fs.
+> +#
+> +# nr_cows is the number of writes we make to the filesystem.
+> +# blks_needed is the number of free blocks we need in the fs to trigger the
+> +#     overflow.  The destination file needs to have more than 2^32 blocks
+> +#     reserved for COW, and the source file needs to have 1 block written every
+> +#     MAXEXTLEN blocks (i.e. 2^32/MAXEXTLEN blocks) to set up the destination
+> +#     file.
+> +# loop_file_sz is the size of the filesystem we have to create to produce the
+> +#     overflow problems.  This is 20% more than blks_needed, and rounded to the
+> +#     nearest 512b so losetup doesn't whine.
+> +# est_nr_ags is a guess at the AG count, assuming that we'll have one AG per
+> +#     terabyte (which assumes that we need a multi-terabyte filesystem for this
+> +#     test).  We assume we'll need 16 blocks for AG metadata and 128K for inode
+> +#     chunks.
+> +# space_reqd_kb is the size of the huge sparse filesystem --
+> +#     256M for the log, per-AG metadata, and 10% more space than however much
+> +#     we will write to both test files.
+> +blksz=$(_get_file_block_size "$SCRATCH_MNT")
+> +nr_cows="$(( ((2 ** 32) / MAXEXTLEN) + 100 ))"
+> +blks_needed="$(( nr_cows * (1 + MAXEXTLEN) ))"
+> +loop_file_sz="$(( ((blksz * blks_needed) * 12 / 10) / 512 * 512 ))"
+> +est_nr_ags="$(( (loop_file_sz / (2 ** 40)) + 1 ))"
+> +est_ag_space_kb="$(( (est_nr_ags * 16 * blksz / 1024) + 128 ))"
+> +est_file_space_kb="$(( (((nr_cows * blksz) * 11 / 10) / 1024) ))"
+> +space_reqd_kb="$(( 262144 + est_ag_space_kb + 2 * est_file_space_kb ))"
+> +cat >> $seqres.full << ENDL
+> +blksz: $blksz
+> +nr_cows: $nr_cows
+> +blks_needed: $blks_needed
+> +loop_file_sz: $loop_file_sz
+> +est_nr_ags: $est_nr_ags
+> +est_ag_space_kb: $est_ag_space_kb
+> +est_file_space_kb: $est_file_space_kb
+> +space_reqd_kb: $space_reqd_kb
+> +ENDL
+> +_require_fs_space $SCRATCH_MNT $space_reqd_kb
+> +
 
-GUP longterm pins of non-pagecache file system pages (eg FS DAX) are
-currently disallowed because they are unsafe.
+This seems like it would be simpler to just create the worst case sparse
+fs (say 300TB or so) then make sure the scratch device has enough free
+blocks to accommodate the number of COWs (plus slop) that need to occur
+in the loop fs to overflow the counter. I don't have a 64k box handy,
+but the metadata size difference between a sparse 20TB fs and 300TB fs
+over a 4k scratch fs is only a few MB. Hm?
 
-The danger for pinning these pages comes from the fact that hole punch
-and/or truncate of those files results in the pages being mapped and
-pinned by a user space process while DAX has potentially allocated those
-pages to other processes.
+> +loop_file=$SCRATCH_MNT/a.img
+> +loop_mount=$SCRATCH_MNT/a
+> +$XFS_IO_PROG -f -c "truncate $loop_file_sz" $loop_file
+> +loop_dev=$(_create_loop_device $loop_file)
+> +
+> +# Now we have to create the source file.  The goal is to overflow a 32-bit
+> +# i_delayed_blks, which means that we have to create at least that many delayed
+> +# allocation block reservations.  Take advantage of the fact that a cowextsize
+> +# hint causes creation of large speculative delalloc reservations in the cow
+> +# fork to reduce the amount of work we have to do.
+> +#
+> +# The maximum cowextsize can only be set to MAXEXTLEN fs blocks on a filesystem
+> +# whose AGs each have more than MAXEXTLEN * 2 blocks.  This we can do easily
+> +# with a multi-terabyte filesystem, so start by setting up the hint.  Note that
+> +# the current fsxattr interface specifies its u32 cowextsize hint in units of
+> +# bytes and therefore can't handle MAXEXTLEN * blksz on most filesystems, so we
+> +# set it via mkfs because mkfs takes units of fs blocks, not bytes.
+> +
+> +_mkfs_dev -d cowextsize=$MAXEXTLEN -l size=256m $loop_dev >> $seqres.full
+> +mkdir $loop_mount
+> +mount $loop_dev $loop_mount
+> +
+> +echo "Create crazy huge file"
+> +huge_file="$loop_mount/a"
+> +touch "$huge_file"
+> +blksz=$(_get_file_block_size "$loop_mount")
+> +extsize_bytes="$(( MAXEXTLEN * blksz ))"
+> +
+> +# Make sure it actually set a hint.
+> +curr_cowextsize_str="$($XFS_IO_PROG -c 'cowextsize' "$huge_file")"
+> +echo "$curr_cowextsize_str" >> $seqres.full
+> +cowextsize_bytes="$(echo "$curr_cowextsize_str" | sed -e 's/^.\([0-9]*\).*$/\1/g')"
+> +test "$cowextsize_bytes" -eq 0 && echo "could not set cowextsize?"
+> +
+> +# Now we have to seed the file with sparse contents.  Remember, the goal is to
+> +# create a little more than 2^32 delayed allocation blocks in the COW fork with
+> +# as little effort as possible.  We know that speculative COW preallocation
+> +# will create MAXEXTLEN-length reservations for us, so that means we should
+> +# be able to get away with touching a single byte every extsize_bytes.  We
+> +# do this backwards to avoid having to move EOF.
+> +seq $nr_cows -1 0 | while read n; do
+> +	off="$((n * extsize_bytes))"
+> +	$XFS_IO_PROG -c "pwrite $off 1" "$huge_file" > /dev/null
+> +done
+> +
+> +echo "Reflink crazy huge file"
+> +_cp_reflink "$huge_file" "$huge_file.b"
+> +
+> +# Now that we've shared all the blocks in the file, we touch them all again
+> +# to create speculative COW preallocations.
+> +echo "COW crazy huge file"
+> +seq $nr_cows -1 0 | while read n; do
+> +	off="$((n * extsize_bytes))"
+> +	$XFS_IO_PROG -c "pwrite $off 1" "$huge_file" > /dev/null
+> +done
+> +
+> +# Compare the number of blocks allocated to this file (as reported by stat)
+> +# against the number of blocks that are in the COW fork.  If either one is
+> +# less than 2^32 then we have evidence of an overflow problem.
+> +echo "Check crazy huge file"
+> +allocated_stat_blocks="$(stat -c %b "$huge_file")"
+> +stat_blksz="$(stat -c %B "$huge_file")"
+> +allocated_fsblocks=$(( allocated_stat_blocks * stat_blksz / blksz ))
+> +
+> +# Make sure we got enough COW reservations to overflow a 32-bit counter.
+> +
+> +# Return the number of delalloc & real blocks given bmap output for a fork of a
+> +# file.  Output is in units of 512-byte blocks.
+> +count_fork_blocks() {
+> +	$AWK_PROG "
+> +{
+> +	if (\$3 == \"delalloc\") {
+> +		x += \$4;
+> +	} else if (\$3 == \"hole\") {
+> +		;
+> +	} else {
+> +		x += \$6;
+> +	}
+> +}
+> +END {
+> +	print(x);
+> +}
+> +"
+> +}
+> +
+> +# Count the number of blocks allocated to a file based on the xfs_bmap output.
+> +# Output is in units of filesystem blocks.
+> +count_file_fork_blocks() {
+> +	local tag="$1"
+> +	local file="$2"
+> +	local args="$3"
+> +
+> +	$XFS_IO_PROG -c "bmap $args -l -p -v" "$huge_file" > $tmp.extents
+> +	echo "$tag fork map" >> $seqres.full
+> +	cat $tmp.extents >> $seqres.full
+> +	local sectors="$(count_fork_blocks < $tmp.extents)"
+> +	echo "$(( sectors / (blksz / 512) ))"
+> +}
+> +
+> +cowblocks=$(count_file_fork_blocks cow "$huge_file" "-c")
+> +attrblocks=$(count_file_fork_blocks attr "$huge_file" "-a")
+> +datablocks=$(count_file_fork_blocks data "$huge_file" "")
+> +
+> +# Did we create more than 2^32 blocks in the cow fork?
+> +echo "datablocks is $datablocks" >> $seqres.full
+> +echo "attrblocks is $attrblocks" >> $seqres.full
+> +echo "cowblocks is $cowblocks" >> $seqres.full
+> +test "$cowblocks" -lt $((2 ** 32)) && \
+> +	echo "cowblocks (${cowblocks}) should be more than 2^32!"
+> +
+> +# Does stat's block allocation count exceed 2^32?
+> +echo "stat blocks is $allocated_fsblocks" >> $seqres.full
+> +test "$allocated_fsblocks" -lt $((2 ** 32)) && \
+> +	echo "stat blocks (${allocated_fsblocks}) should be more than 2^32!"
+> +
+> +# Finally, does st_blocks match what we computed from the forks?
+> +expected_allocated_fsblocks=$((datablocks + cowblocks + attrblocks))
+> +echo "expected stat blocks is $expected_allocated_fsblocks" >> $seqres.full
+> +
+> +_within_tolerance "st_blocks" $allocated_fsblocks $expected_allocated_fsblocks 2% -v
+> +
 
-Most (All) users who are mapping FS DAX pages for long term pin purposes
-(such as RDMA) are not going to want to deallocate these pages while
-those pages are in use.  To do so would mean the application would lose
-data.  So the use case for allowing truncate operations of such pages
-is limited.
+Similar question with the post-processing stuff... how much of this is
+to detect the problem vs. determine the test sequence did what we
+expect? Does the fs check below report corruption or is it purely
+in-core state that ends up broken?
 
-However, the kernel must protect itself and users from potential
-mistakes and/or malicious user space code.  Rather than disabling long
-term pins as is done now.   Allow for users who know they are going to
-be pinning this memory to alert the file system of this intention.
-Furthermore, allow users to be alerted such that they can react if a
-truncate operation occurs for some reason.
+Brian
 
-Example user space pseudocode for a user using RDMA and wanting to allow
-a truncate would look like this:
-
-lease_break_sigio_handler() {
-...
-	if (sigio.fd == rdma_fd) {
-		complete_rdma_operations(...);
-		ibv_dereg_mr(mr);
-		close(rdma_fd);
-		fcntl(rdma_fd, F_SETLEASE, F_UNLCK);
-	}
-}
-
-setup_rdma_to_dax_file() {
-...
-	rdma_fd = open(...)
-	fcntl(rdma_fd, F_SETLEASE, F_LAYOUT);
-	sigaction(SIGIO, ...  lease_break ...);
-	ptr = mmap(rdma_fd, ...);
-	mr = ibv_reg_mr(ptr, ...);
-	do_rdma_stuff(...);
-}
-
-Follow on patches implement the notification of the lease holder on
-truncate as well as failing the truncate if the GUP pin is not released.
-
-This first patch exports the F_LAYOUT lease type and allows the user to set
-and get it.
-
-After the complete series:
-
-1) Failure to obtain a F_LAYOUT lease on an open FS DAX file will result
-   in a failure to GUP pin any pages in that file.  An example of a call
-   which results in GUP pin is ibv_reg_mr().
-2) While the GUP pin is in place (eg MR is in use) truncates of the
-   affected pages will fail.
-3) If the user registers a sigaction they will be notified of the
-   truncate so they can react.  Failure to react will result in the
-   lease being revoked after <sysfs>/lease-break-time seconds.  After
-   this time new GUP pins will fail without a new lease being taken.
-4) A truncate will work if the pages being truncated are not actively
-   pinned at the time of truncate.  Attempts to pin these pages after
-   will result in a failure.
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- fs/locks.c                       | 36 +++++++++++++++++++++++++++-----
- include/linux/fs.h               |  2 +-
- include/uapi/asm-generic/fcntl.h |  3 +++
- 3 files changed, 35 insertions(+), 6 deletions(-)
-
-diff --git a/fs/locks.c b/fs/locks.c
-index 0cc2b9f30e22..de9761c068de 100644
---- a/fs/locks.c
-+++ b/fs/locks.c
-@@ -191,6 +191,8 @@ static int target_leasetype(struct file_lock *fl)
- 		return F_UNLCK;
- 	if (fl->fl_flags & FL_DOWNGRADE_PENDING)
- 		return F_RDLCK;
-+	if (fl->fl_flags & FL_LAYOUT)
-+		return F_LAYOUT;
- 	return fl->fl_type;
- }
- 
-@@ -611,7 +613,8 @@ static const struct lock_manager_operations lease_manager_ops = {
- /*
-  * Initialize a lease, use the default lock manager operations
-  */
--static int lease_init(struct file *filp, long type, struct file_lock *fl)
-+static int lease_init(struct file *filp, long type, unsigned int flags,
-+		      struct file_lock *fl)
- {
- 	if (assign_type(fl, type) != 0)
- 		return -EINVAL;
-@@ -621,6 +624,8 @@ static int lease_init(struct file *filp, long type, struct file_lock *fl)
- 
- 	fl->fl_file = filp;
- 	fl->fl_flags = FL_LEASE;
-+	if (flags & FL_LAYOUT)
-+		fl->fl_flags |= FL_LAYOUT;
- 	fl->fl_start = 0;
- 	fl->fl_end = OFFSET_MAX;
- 	fl->fl_ops = NULL;
-@@ -629,7 +634,8 @@ static int lease_init(struct file *filp, long type, struct file_lock *fl)
- }
- 
- /* Allocate a file_lock initialised to this type of lease */
--static struct file_lock *lease_alloc(struct file *filp, long type)
-+static struct file_lock *lease_alloc(struct file *filp, long type,
-+				     unsigned int flags)
- {
- 	struct file_lock *fl = locks_alloc_lock();
- 	int error = -ENOMEM;
-@@ -637,7 +643,7 @@ static struct file_lock *lease_alloc(struct file *filp, long type)
- 	if (fl == NULL)
- 		return ERR_PTR(error);
- 
--	error = lease_init(filp, type, fl);
-+	error = lease_init(filp, type, flags, fl);
- 	if (error) {
- 		locks_free_lock(fl);
- 		return ERR_PTR(error);
-@@ -1588,7 +1594,7 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
- 	int want_write = (mode & O_ACCMODE) != O_RDONLY;
- 	LIST_HEAD(dispose);
- 
--	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK);
-+	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK, 0);
- 	if (IS_ERR(new_fl))
- 		return PTR_ERR(new_fl);
- 	new_fl->fl_flags = type;
-@@ -1725,6 +1731,8 @@ EXPORT_SYMBOL(lease_get_mtime);
-  *
-  *	%F_UNLCK to indicate no lease is held.
-  *
-+ *	%F_LAYOUT to indicate a layout lease is held.
-+ *
-  *	(if a lease break is pending):
-  *
-  *	%F_RDLCK to indicate an exclusive lease needs to be
-@@ -2015,8 +2023,26 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
- 	struct file_lock *fl;
- 	struct fasync_struct *new;
- 	int error;
-+	unsigned int flags = 0;
-+
-+	/*
-+	 * NOTE on F_LAYOUT lease
-+	 *
-+	 * LAYOUT lease types are taken on files which the user knows that
-+	 * they will be pinning in memory for some indeterminate amount of
-+	 * time.  Such as for use with RDMA.  While we don't know what user
-+	 * space is going to do with the file we still use a F_RDLOCK level of
-+	 * lease.  This ensures that there are no conflicts between
-+	 * 2 users.  The conflict should only come from the File system wanting
-+	 * to revoke the lease in break_layout()  And this is done by using
-+	 * F_WRLCK in the break code.
-+	 */
-+	if (arg == F_LAYOUT) {
-+		arg = F_RDLCK;
-+		flags = FL_LAYOUT;
-+	}
- 
--	fl = lease_alloc(filp, arg);
-+	fl = lease_alloc(filp, arg, flags);
- 	if (IS_ERR(fl))
- 		return PTR_ERR(fl);
- 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index f7fdfe93e25d..9e9d8d35ee93 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -998,7 +998,7 @@ static inline struct file *get_file(struct file *f)
- #define FL_DOWNGRADE_PENDING	256 /* Lease is being downgraded */
- #define FL_UNLOCK_PENDING	512 /* Lease is being broken */
- #define FL_OFDLCK	1024	/* lock is "owned" by struct file */
--#define FL_LAYOUT	2048	/* outstanding pNFS layout */
-+#define FL_LAYOUT	2048	/* outstanding pNFS layout or user held pin */
- 
- #define FL_CLOSE_POSIX (FL_POSIX | FL_CLOSE)
- 
-diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
-index 9dc0bf0c5a6e..baddd54f3031 100644
---- a/include/uapi/asm-generic/fcntl.h
-+++ b/include/uapi/asm-generic/fcntl.h
-@@ -174,6 +174,9 @@ struct f_owner_ex {
- #define F_SHLCK		8	/* or 4 */
- #endif
- 
-+#define F_LAYOUT	16      /* layout lease to allow longterm pins such as
-+				   RDMA */
-+
- /* operations for bsd flock(), also used by the kernel implementation */
- #define LOCK_SH		1	/* shared lock */
- #define LOCK_EX		2	/* exclusive lock */
--- 
-2.20.1
+> +echo "Test done"
+> +# Quick check the large sparse fs, but skip xfs_db because it doesn't scale
+> +# well on a multi-terabyte filesystem.
+> +LARGE_SCRATCH_DEV=yes _check_xfs_filesystem $loop_dev none none
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/907.out b/tests/xfs/907.out
+> new file mode 100644
+> index 00000000..cc07d659
+> --- /dev/null
+> +++ b/tests/xfs/907.out
+> @@ -0,0 +1,8 @@
+> +QA output created by 907
+> +Format and mount
+> +Create crazy huge file
+> +Reflink crazy huge file
+> +COW crazy huge file
+> +Check crazy huge file
+> +st_blocks is in range
+> +Test done
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index ffe4ae12..e528c559 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -504,3 +504,4 @@
+>  504 auto quick mkfs label
+>  505 auto quick spaceman
+>  506 auto quick health
+> +907 clone
+> 
