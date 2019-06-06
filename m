@@ -1,264 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f193.google.com ([209.85.219.193]:35280 "EHLO
-        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725766AbfFFF1R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 01:27:17 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43683 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726941AbfFFVvK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 17:51:10 -0400
+Date: Fri, 7 Jun 2019 07:50:08 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] xfs_restore: detect rtinherit on destination
+Message-ID: <20190606215008.GA14308@dread.disaster.area>
+References: <e6968aa2-a5ad-4964-2966-589486e4a251@sandeen.net>
+ <20190606195724.2975689-1-sheenobu@fb.com>
+ <f89a09b5-8a91-51e0-d869-039dbe9a7349@sandeen.net>
 MIME-Version: 1.0
-References: <20190604135632.1487-1-amir73il@gmail.com> <CAN-5tyFBd4mJ84C2J9dwG_iYeEDN0tX86DjW4oaV7yscj4VR7g@mail.gmail.com>
- <CAH2r5mtbmXx6g7zf+C8cg8sT6WJKAoH=93nk5O5mLxpBzTHPTg@mail.gmail.com>
-In-Reply-To: <CAH2r5mtbmXx6g7zf+C8cg8sT6WJKAoH=93nk5O5mLxpBzTHPTg@mail.gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 6 Jun 2019 07:27:04 +0200
-Message-ID: <CAOQ4uxih=W2gtRaHGnMMtqdcQSp4=xUeZq8JOaCq=uWpr82aqA@mail.gmail.com>
-Subject: Re: [PATCH v5 8/9] vfs: allow copy_file_range to copy across devices
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <f89a09b5-8a91-51e0-d869-039dbe9a7349@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Steve French <smfrench@gmail.com>
-Cc: Olga Kornievskaia <olga.kornievskaia@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, ceph-devel@vger.kernel.org, linux-nfs <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, Steve French <stfrench@microsoft.com>, Dave Chinner <dchinner@redhat.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Sheena Artrip <sheenobu@fb.com>, sheena.artrip@gmail.com, linux-xfs@vger.kernel.org
 
-On Thu, Jun 6, 2019 at 2:31 AM Steve French <smfrench@gmail.com> wrote:
->
-> I tried the patchset and new xfstests with cifs.ko and looks like the
-> copy_file_range patches are fine
+On Thu, Jun 06, 2019 at 04:23:51PM -0500, Eric Sandeen wrote:
+> On 6/6/19 2:57 PM, Sheena Artrip wrote:
+> > When running xfs_restore with a non-rtdev dump,
+> > it will ignore any rtinherit flags on the destination
+> > and send I/O to the metadata region.
+> > 
+> > Instead, detect rtinherit on the destination XFS fileystem root inode
+> > and use that to override the incoming inode flags.
+> > 
+> > Original version of this patch missed some branches so multiple
+> > invocations of xfsrestore onto the same fs caused
+> > the rtinherit bit to get re-removed. There could be some
+> > additional edge cases in non-realtime to realtime workflows so
+> > the outstanding question would be: is it worth supporting?
+> > 
+> > Changes in v2:
+> > * Changed root inode bulkstat to just ioctl to the destdir inode
+> 
+> Thanks for that fixup (though comment still says "root" FWIW)
+> 
+> Thinking about this some more, I'm really kind of wondering how this
+> should all be expected to work.  There are several scenarios here,
+> and "is this file rt?" is prescribed in different ways - either in
+> the dump itself, or on the target fs via inheritance flags...
+> 
+> (NB: rt is not the only inheritable flag, so would we need to handle
+> the others?)
+> 
+> non-rt fs dump, restored onto non-rt fs
+> 	- obviously this is fine
+> 
+> rt fs dump, restored onto rt fs
+> 	- obviously this is fine as well
+> 
+> rt fs dump, restored onto non-rt fs
+> 	- this works, with errors - all rt files become non-rt
+> 	- nothing else to do here other than fail outright
 
-Glad to hear!
+This should just work, without errors or warnings.
 
-Just to clarify that you are referring to the latest patch version.
-If you took patch v5 (that you replied to) and the rest of the patches from v4,
-that was correct.
+> non-rt fs dump, restored into rt fs dir/fs with "rtinherit" set
+> 	- this one is your case
+> 	- today it's ignored, files stay non-rt
+> 	- you're suggesting it be honored and files turned into rt
 
-You can compare to my github branch if in any doubt (or just test my branch):
-https://github.com/amir73il/linux/commits/copy_file_range-v5
-NOTE that the github branch has a CIFS patch that was not included in
-v4 posting to Darrick ("cifs: copy_file_range needs to strip setuid bits ..."),
-because I decided this patch should be sent directly to you later.
-Please do include this patch in you CIFS tests.
+Current filesystem policy should override the policy in dump image
+as the dump image may contain an invalid policy....
 
+> the one case that's not handled here is "what if I want to have my
+> realtime dump with realtime files restored onto an rt-capable fs, but
+> turned into regular files?" 
 
->
-> 1) xfs_io copy_range worked fine (once I fixed a bug I found in
-> cifs.ko in the "match_server" function)
-> 2) the new xfstest 989 requires other features (swapfiles) which I can
-> add and 990 requires new xfsprogs presumably (xfs_io in current Ubuntu
-> doesn't seem to include xfs_io chmod)
+Which is where having the kernel policy override the dump file is
+necesary...
 
-It's true, you would need minimum version xfs_io 4.20 to run that test,
-but I am less worried about testing bounds checks with CIFS, as all bounds
-checks are performed before entering cifs code.
+> So your patch gives us one mechanism (restore non-rt files as
+> rt files) but not the converse (restore rt files as non-rt files) -
+> I'm not sure if that matters, but the symmetry bugs me a little.
+> 
+> I'm trying to decide if dump/restore is truly the right way to
+> migrate files from non-rt to rt or vice versa, TBH.  Maybe dchinner
+> or djwong will have thoughts as well...
 
-BTW, checking for xfs_io chmod was in xfstests patches v2:
-https://github.com/amir73il/xfstests/commits/copy_file_range-v2
-I since posted v3. Actually not much changed, but checking for an even
-newer (only just posted) feature of xfs_io:
-https://github.com/amir73il/xfstests/commits/copy_file_range-v3
-So you are not any better with this version w.r.t test 990.
+*nod*
 
-> generic/989    [not run] swapfiles are not supported
+My take on this is that we need to decide which allocation policy to
+use - the kernel policy or the dump file policy - in the different
+situations. It's a simple, easy to document and understand solution.
 
-Expected not to run on cifs
+At minimum, if there's a mismatch between rtdev/non-rtdev between
+dump and restore, then restore should not try to restore or clear rt
+flags at all. i.e the rt flags in the dump image should be
+considered invalid in this situation and masked out in the restore
+process. This prevents errors from being reported during restore,
+and it does "the right thing" according to how the user has
+configured the destination directory. i.e.  if the destdir has the
+rtinherit bit set and there's a rtdev present, the kernel policy
+will cause all file data that is restored to be allocated on the
+rtdev. Otherwise the kernel will place it (correctly) on the data
+dev.
 
-> generic/990    [not run] xfs_io chmod support is missing
+In the case where both have rtdevs, but you want to restore to
+ignore the dump file rtdev policy, we really only need to add a CLI
+option to say "ignore rt flags" and that then allows the kernel
+policy to dictate how the restored files are placed in the same way
+that having a rtdev mismatch does.
 
-Expected not to with old xfs_io
+This is simple, consistent, fulfils the requirements and should have
+no hidden surprises for users....
 
->
-> Are there other xfstests that you would like me to run (other than the
-> 3 in the 900 series)?
+Cheers,
 
-Yes, please run tests group "-g copy_range", namely 430..434
-
-Also, the "900 series" had 4 tests not 3, so not sure which tests did run?
-Did 991 (cross-device copy) run? That is THE test to run and cifs is THE
-filesystem to test with to actually exercise filesystem implementation of
-server side cross-device (i.e. cross-share) copy.
-
-Thanks!
-Amir.
-
-
-> On Tue, Jun 4, 2019 at 3:43 PM Olga Kornievskaia
-> <olga.kornievskaia@gmail.com> wrote:
-> >
-> > On Tue, Jun 4, 2019 at 9:56 AM Amir Goldstein <amir73il@gmail.com> wrote:
-> > >
-> > > We want to enable cross-filesystem copy_file_range functionality
-> > > where possible, so push the "same superblock only" checks down to
-> > > the individual filesystem callouts so they can make their own
-> > > decisions about cross-superblock copy offload and fallack to
-> > > generic_copy_file_range() for cross-superblock copy.
-> > >
-> > > [Amir] We do not call ->remap_file_range() in case the files are not
-> > > on the same sb and do not call ->copy_file_range() in case the files
-> > > do not belong to the same filesystem driver.
-> > >
-> > > This changes behavior of the copy_file_range(2) syscall, which will
-> > > now allow cross filesystem in-kernel copy.  CIFS already supports
-> > > cross-superblock copy, between two shares to the same server. This
-> > > functionality will now be available via the copy_file_range(2) syscall.
-> > >
-> > > Cc: Steve French <stfrench@microsoft.com>
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> > > ---
-> > >
-> > > Darrick,
-> > >
-> > > Per feedback from Olga, I am sending a modified version of this patch
-> > > to address cross file_system_type copy issue in nfs.
-> > >
-> >
-> > Thanks Amir, this works for NFS with referrals.
-> >
-> > > For the sake of global warming I am not re-posting the entire patch set.
-> > > I removed your RVB because of the change.
-> > >
-> > > Thanks,
-> > > Amir.
-> > >
-> > > Changes since v4:
-> > > - Check "same filesystem driver" by comapring ->copy_file_range()
-> > >   function pointer
-> > >
-> > >  fs/ceph/file.c    |  4 +++-
-> > >  fs/cifs/cifsfs.c  |  2 +-
-> > >  fs/fuse/file.c    |  5 ++++-
-> > >  fs/nfs/nfs4file.c |  5 ++++-
-> > >  fs/read_write.c   | 18 ++++++++++++------
-> > >  5 files changed, 24 insertions(+), 10 deletions(-)
-> > >
-> > > diff --git a/fs/ceph/file.c b/fs/ceph/file.c
-> > > index e87f7b2023af..4cd41ed5cc53 100644
-> > > --- a/fs/ceph/file.c
-> > > +++ b/fs/ceph/file.c
-> > > @@ -1909,6 +1909,8 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
-> > >
-> > >         if (src_inode == dst_inode)
-> > >                 return -EINVAL;
-> > > +       if (src_inode->i_sb != dst_inode->i_sb)
-> > > +               return -EXDEV;
-> > >         if (ceph_snap(dst_inode) != CEPH_NOSNAP)
-> > >                 return -EROFS;
-> > >
-> > > @@ -2109,7 +2111,7 @@ static ssize_t ceph_copy_file_range(struct file *src_file, loff_t src_off,
-> > >         ret = __ceph_copy_file_range(src_file, src_off, dst_file, dst_off,
-> > >                                      len, flags);
-> > >
-> > > -       if (ret == -EOPNOTSUPP)
-> > > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> > >                 ret = generic_copy_file_range(src_file, src_off, dst_file,
-> > >                                               dst_off, len, flags);
-> > >         return ret;
-> > > diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
-> > > index c65823270313..f11eea6125c1 100644
-> > > --- a/fs/cifs/cifsfs.c
-> > > +++ b/fs/cifs/cifsfs.c
-> > > @@ -1149,7 +1149,7 @@ static ssize_t cifs_copy_file_range(struct file *src_file, loff_t off,
-> > >                                         len, flags);
-> > >         free_xid(xid);
-> > >
-> > > -       if (rc == -EOPNOTSUPP)
-> > > +       if (rc == -EOPNOTSUPP || rc == -EXDEV)
-> > >                 rc = generic_copy_file_range(src_file, off, dst_file,
-> > >                                              destoff, len, flags);
-> > >         return rc;
-> > > diff --git a/fs/fuse/file.c b/fs/fuse/file.c
-> > > index e03901ae729b..569baf286835 100644
-> > > --- a/fs/fuse/file.c
-> > > +++ b/fs/fuse/file.c
-> > > @@ -3126,6 +3126,9 @@ static ssize_t __fuse_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >         if (fc->no_copy_file_range)
-> > >                 return -EOPNOTSUPP;
-> > >
-> > > +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > > +               return -EXDEV;
-> > > +
-> > >         inode_lock(inode_out);
-> > >
-> > >         if (fc->writeback_cache) {
-> > > @@ -3182,7 +3185,7 @@ static ssize_t fuse_copy_file_range(struct file *src_file, loff_t src_off,
-> > >         ret = __fuse_copy_file_range(src_file, src_off, dst_file, dst_off,
-> > >                                      len, flags);
-> > >
-> > > -       if (ret == -EOPNOTSUPP)
-> > > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> > >                 ret = generic_copy_file_range(src_file, src_off, dst_file,
-> > >                                               dst_off, len, flags);
-> > >         return ret;
-> > > diff --git a/fs/nfs/nfs4file.c b/fs/nfs/nfs4file.c
-> > > index 4842f3ab3161..f4157eb1f69d 100644
-> > > --- a/fs/nfs/nfs4file.c
-> > > +++ b/fs/nfs/nfs4file.c
-> > > @@ -133,6 +133,9 @@ static ssize_t __nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >                                       struct file *file_out, loff_t pos_out,
-> > >                                       size_t count, unsigned int flags)
-> > >  {
-> > > +       /* Only offload copy if superblock is the same */
-> > > +       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > > +               return -EXDEV;
-> > >         if (!nfs_server_capable(file_inode(file_out), NFS_CAP_COPY))
-> > >                 return -EOPNOTSUPP;
-> > >         if (file_inode(file_in) == file_inode(file_out))
-> > > @@ -148,7 +151,7 @@ static ssize_t nfs4_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >
-> > >         ret = __nfs4_copy_file_range(file_in, pos_in, file_out, pos_out, count,
-> > >                                      flags);
-> > > -       if (ret == -EOPNOTSUPP)
-> > > +       if (ret == -EOPNOTSUPP || ret == -EXDEV)
-> > >                 ret = generic_copy_file_range(file_in, pos_in, file_out,
-> > >                                               pos_out, count, flags);
-> > >         return ret;
-> > > diff --git a/fs/read_write.c b/fs/read_write.c
-> > > index cec7e7b1f693..bb594c8f4404 100644
-> > > --- a/fs/read_write.c
-> > > +++ b/fs/read_write.c
-> > > @@ -1599,7 +1599,16 @@ static ssize_t do_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >                                   struct file *file_out, loff_t pos_out,
-> > >                                   size_t len, unsigned int flags)
-> > >  {
-> > > -       if (file_out->f_op->copy_file_range)
-> > > +       /*
-> > > +        * Although we now allow filesystems to handle cross sb copy, passing
-> > > +        * a file of the wrong filesystem type to filesystem driver can result
-> > > +        * in an attempt to dereference the wrong type of ->private_data, so
-> > > +        * avoid doing that until we really have a good reason.
-> > > +        * NFS has several different file_system_type's, but they all end up
-> > > +        * using the same ->copy_file_range() function pointer.
-> > > +        */
-> > > +       if (file_out->f_op->copy_file_range &&
-> > > +           file_out->f_op->copy_file_range == file_in->f_op->copy_file_range)
-> > >                 return file_out->f_op->copy_file_range(file_in, pos_in,
-> > >                                                        file_out, pos_out,
-> > >                                                        len, flags);
-> > > @@ -1622,10 +1631,6 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >         if (flags != 0)
-> > >                 return -EINVAL;
-> > >
-> > > -       /* this could be relaxed once a method supports cross-fs copies */
-> > > -       if (file_inode(file_in)->i_sb != file_inode(file_out)->i_sb)
-> > > -               return -EXDEV;
-> > > -
-> > >         ret = generic_copy_file_checks(file_in, pos_in, file_out, pos_out, &len,
-> > >                                        flags);
-> > >         if (unlikely(ret))
-> > > @@ -1648,7 +1653,8 @@ ssize_t vfs_copy_file_range(struct file *file_in, loff_t pos_in,
-> > >          * Try cloning first, this is supported by more file systems, and
-> > >          * more efficient if both clone and copy are supported (e.g. NFS).
-> > >          */
-> > > -       if (file_in->f_op->remap_file_range) {
-> > > +       if (file_in->f_op->remap_file_range &&
-> > > +           file_inode(file_in)->i_sb == file_inode(file_out)->i_sb) {
-> > >                 loff_t cloned;
-> > >
-> > >                 cloned = file_in->f_op->remap_file_range(file_in, pos_in,
-> > > --
-> > > 2.17.1
-> > >
->
->
->
-> --
-> Thanks,
->
-> Steve
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
