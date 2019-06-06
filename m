@@ -1,91 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:65321 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726066AbfFFWVR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Jun 2019 18:21:17 -0400
-Date: Thu, 6 Jun 2019 15:22:28 -0700
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
-References: <20190606014544.8339-1-ira.weiny@intel.com>
- <20190606104203.GF7433@quack2.suse.cz>
- <20190606195114.GA30714@ziepe.ca>
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:40058 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729330AbfFFPf4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 11:35:56 -0400
+Received: by mail-oi1-f194.google.com with SMTP id w196so1873651oie.7
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 08:35:55 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190606195114.GA30714@ziepe.ca>
+References: <20190606014544.8339-1-ira.weiny@intel.com> <20190606104203.GF7433@quack2.suse.cz>
+In-Reply-To: <20190606104203.GF7433@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Thu, 6 Jun 2019 08:35:42 -0700
+Message-ID: <CAPcyv4h-k_5T39fDY+SVrLXG_XETmgz-6N3NjQUteYG7g9NdDQ@mail.gmail.com>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Jan Kara <jack@suse.cz>
+Cc: "Weiny, Ira" <ira.weiny@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On Thu, Jun 06, 2019 at 04:51:15PM -0300, Jason Gunthorpe wrote:
-> On Thu, Jun 06, 2019 at 12:42:03PM +0200, Jan Kara wrote:
-> 
-> > So I'd like to actually mandate that you *must* hold the file lease until
-> > you unpin all pages in the given range (not just that you have an option to
-> > hold a lease). And I believe the kernel should actually enforce this. That
-> > way we maintain a sane state that if someone uses a physical location of
-> > logical file offset on disk, he has a layout lease. Also once this is done,
-> > sysadmin has a reasonably easy way to discover run-away RDMA application
-> > and kill it if he wishes so.
-> > 
-> > The question is on how to exactly enforce that lease is taken until all
-> > pages are unpinned. I belive it could be done by tracking number of
-> > long-term pinned pages within a lease. Gup_longterm could easily increment
-> > the count when verifying the lease exists, gup_longterm users will somehow
-> > need to propagate corresponding 'filp' (struct file pointer) to
-> > put_user_pages_longterm() callsites so that they can look up appropriate
-> > lease to drop reference - probably I'd just transition all gup_longterm()
-> > users to a saner API similar to the one we have in mm/frame_vector.c where
-> > we don't hand out page pointers but an encapsulating structure that does
-> > all the necessary tracking. Removing a lease would need to block until all
-> > pins are released - this is probably the most hairy part since we need to
-> > handle a case if application just closes the file descriptor which
-> > would
-> 
-> I think if you are going to do this then the 'struct filp' that
-> represents the lease should be held in the kernel (ie inside the RDMA
-> umem) until the kernel is done with it.
+On Thu, Jun 6, 2019 at 3:42 AM Jan Kara <jack@suse.cz> wrote:
+>
+> On Wed 05-06-19 18:45:33, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> >
+> > ... V1,000,000   ;-)
+> >
+> > Pre-requisites:
+> >       John Hubbard's put_user_pages() patch series.[1]
+> >       Jan Kara's ext4_break_layouts() fixes[2]
+> >
+> > Based on the feedback from LSFmm and the LWN article which resulted.  I've
+> > decided to take a slightly different tack on this problem.
+> >
+> > The real issue is that there is no use case for a user to have RDMA pinn'ed
+> > memory which is then truncated.  So really any solution we present which:
+> >
+> > A) Prevents file system corruption or data leaks
+> > ...and...
+> > B) Informs the user that they did something wrong
+> >
+> > Should be an acceptable solution.
+> >
+> > Because this is slightly new behavior.  And because this is gonig to be
+> > specific to DAX (because of the lack of a page cache) we have made the user
+> > "opt in" to this behavior.
+> >
+> > The following patches implement the following solution.
+> >
+> > 1) The user has to opt in to allowing GUP pins on a file with a layout lease
+> >    (now made visible).
+> > 2) GUP will fail (EPERM) if a layout lease is not taken
+> > 3) Any truncate or hole punch operation on a GUP'ed DAX page will fail.
+> > 4) The user has the option of holding the layout lease to receive a SIGIO for
+> >    notification to the original thread that another thread has tried to delete
+> >    their data.  Furthermore this indicates that if the user needs to GUP the
+> >    file again they will need to retake the Layout lease before doing so.
+> >
+> >
+> > NOTE: If the user releases the layout lease or if it has been broken by
+> > another operation further GUP operations on the file will fail without
+> > re-taking the lease.  This means that if a user would like to register
+> > pieces of a file and continue to register other pieces later they would
+> > be advised to keep the layout lease, get a SIGIO notification, and retake
+> > the lease.
+> >
+> > NOTE2: Truncation of pages which are not actively pinned will succeed.
+> > Similar to accessing an mmap to this area GUP pins of that memory may
+> > fail.
+>
+> So after some through I'm willing accept the fact that pinned DAX pages
+> will just make truncate / hole punch fail and shove it into a same bucket
+> of situations like "user can open a file and unlink won't delete it" or
+> "ETXTBUSY when user is executing a file being truncated".  The problem I
+> have with this proposal is a lack of visibility from sysadmin POV. For
+> ETXTBUSY or "unlinked but open file" sysadmin can just do lsof, find the
+> problematic process and kill it. There's nothing like that with your
+> proposal since currently once you hold page reference, you can unmap the
+> file, drop layout lease, close the file, and there's no trace that you're
+> responsible for the pinned page anymore.
+>
+> So I'd like to actually mandate that you *must* hold the file lease until
+> you unpin all pages in the given range (not just that you have an option to
+> hold a lease). And I believe the kernel should actually enforce this. That
+> way we maintain a sane state that if someone uses a physical location of
+> logical file offset on disk, he has a layout lease. Also once this is done,
+> sysadmin has a reasonably easy way to discover run-away RDMA application
+> and kill it if he wishes so.
 
-Yea there seems merit to this.  I'm still not resolving how this helps track
-who has the pin across a fork.
+Yes, this satisfies the primary concern that made me oppose failing
+truncate. If the administrator determines that reclaiming capacity is
+more important than maintaining active RDMA mappings "lsof + kill" is
+a reasonable way to recover. I'd go so far as to say that anything
+less is an abdication of the kernel's responsibility as an arbiter of
+platform resources.
 
-> 
-> Actually does someone have a pointer to this userspace lease API, I'm
-> not at all familiar with it, thanks
+> The question is on how to exactly enforce that lease is taken until all
+> pages are unpinned. I belive it could be done by tracking number of
+> long-term pinned pages within a lease. Gup_longterm could easily increment
+> the count when verifying the lease exists, gup_longterm users will somehow
+> need to propagate corresponding 'filp' (struct file pointer) to
+> put_user_pages_longterm() callsites so that they can look up appropriate
+> lease to drop reference - probably I'd just transition all gup_longterm()
+> users to a saner API similar to the one we have in mm/frame_vector.c where
+> we don't hand out page pointers but an encapsulating structure that does
+> all the necessary tracking. Removing a lease would need to block until all
+> pins are released - this is probably the most hairy part since we need to
+> handle a case if application just closes the file descriptor which would
+> release the lease but OTOH we need to make sure task exit does not deadlock.
+> Maybe we could block only on explicit lease unlock and just drop the layout
+> lease on file close and if there are still pinned pages, send SIGKILL to an
+> application as a reminder it did something stupid...
+>
+> What do people think about this?
 
-man fcntl
-	search for SETLEASE
-
-But I had to add the F_LAYOUT lease type.  (Personally I'm for calling it
-F_LONGTERM at this point.  I don't think LAYOUT is compatible with what we are
-proposing here.)
-
-Anyway, yea would be a libc change at lease for man page etc...  But again I
-want to get some buy in before going through all that.
-
-> 
-> And yes, a better output format from GUP would be great..
-> 
-> > Maybe we could block only on explicit lease unlock and just drop the layout
-> > lease on file close and if there are still pinned pages, send SIGKILL to an
-> > application as a reminder it did something stupid...
-> 
-> Which process would you SIGKILL? At least for the rdma case a FD is
-> holding the GUP, so to do the put_user_pages() the kernel needs to
-> close the FD. I guess it would have to kill every process that has the
-> FD open? Seems complicated...
-
-Tending to agree...  But I'm still not opposed to killing bad actors...  ;-)
-
-NOTE: Jason I think you need to be more clear about the FD you are speaking of.
-I believe you mean the FD which refers to the RMDA context.  That is what I
-called it in my other email.
-
-Ira
-
-> 
-> Regards,
-> Jason
+SIGKILL on close() without explicit unlock and wait-on-last-pin with
+explicit unlock sounds reasonable to me.
