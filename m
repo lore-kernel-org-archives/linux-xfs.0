@@ -1,135 +1,279 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60530 "EHLO sandeen.net"
+Received: from mga03.intel.com ([134.134.136.65]:64215 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728066AbfFFWIN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Jun 2019 18:08:13 -0400
-Subject: Re: [PATCH v2] xfs_restore: detect rtinherit on destination
-References: <e6968aa2-a5ad-4964-2966-589486e4a251@sandeen.net>
- <20190606195724.2975689-1-sheenobu@fb.com>
- <f89a09b5-8a91-51e0-d869-039dbe9a7349@sandeen.net>
- <20190606215008.GA14308@dread.disaster.area>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4a03b347-1a71-857d-af9d-1d7eca00056a@sandeen.net>
-Date: Thu, 6 Jun 2019 17:08:12 -0500
+        id S1726554AbfFFWCT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 6 Jun 2019 18:02:19 -0400
+Date: Thu, 6 Jun 2019 15:03:30 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606104203.GF7433@quack2.suse.cz>
 MIME-Version: 1.0
-In-Reply-To: <20190606215008.GA14308@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190606104203.GF7433@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Sheena Artrip <sheenobu@fb.com>, sheena.artrip@gmail.com, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org
 
-On 6/6/19 4:50 PM, Dave Chinner wrote:
-> On Thu, Jun 06, 2019 at 04:23:51PM -0500, Eric Sandeen wrote:
->> On 6/6/19 2:57 PM, Sheena Artrip wrote:
->>> When running xfs_restore with a non-rtdev dump,
->>> it will ignore any rtinherit flags on the destination
->>> and send I/O to the metadata region.
->>>
->>> Instead, detect rtinherit on the destination XFS fileystem root inode
->>> and use that to override the incoming inode flags.
->>>
->>> Original version of this patch missed some branches so multiple
->>> invocations of xfsrestore onto the same fs caused
->>> the rtinherit bit to get re-removed. There could be some
->>> additional edge cases in non-realtime to realtime workflows so
->>> the outstanding question would be: is it worth supporting?
->>>
->>> Changes in v2:
->>> * Changed root inode bulkstat to just ioctl to the destdir inode
->>
->> Thanks for that fixup (though comment still says "root" FWIW)
->>
->> Thinking about this some more, I'm really kind of wondering how this
->> should all be expected to work.  There are several scenarios here,
->> and "is this file rt?" is prescribed in different ways - either in
->> the dump itself, or on the target fs via inheritance flags...
->>
->> (NB: rt is not the only inheritable flag, so would we need to handle
->> the others?)
->>
->> non-rt fs dump, restored onto non-rt fs
->> 	- obviously this is fine
->>
->> rt fs dump, restored onto rt fs
->> 	- obviously this is fine as well
->>
->> rt fs dump, restored onto non-rt fs
->> 	- this works, with errors - all rt files become non-rt
->> 	- nothing else to do here other than fail outright
+On Thu, Jun 06, 2019 at 12:42:03PM +0200, Jan Kara wrote:
+> On Wed 05-06-19 18:45:33, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > ... V1,000,000   ;-)
+> > 
+> > Pre-requisites:
+> > 	John Hubbard's put_user_pages() patch series.[1]
+> > 	Jan Kara's ext4_break_layouts() fixes[2]
+> > 
+> > Based on the feedback from LSFmm and the LWN article which resulted.  I've
+> > decided to take a slightly different tack on this problem.
+> > 
+> > The real issue is that there is no use case for a user to have RDMA pinn'ed
+> > memory which is then truncated.  So really any solution we present which:
+> > 
+> > A) Prevents file system corruption or data leaks
+> > ...and...
+> > B) Informs the user that they did something wrong
+> > 
+> > Should be an acceptable solution.
+> > 
+> > Because this is slightly new behavior.  And because this is gonig to be
+> > specific to DAX (because of the lack of a page cache) we have made the user
+> > "opt in" to this behavior.
+> > 
+> > The following patches implement the following solution.
+> > 
+> > 1) The user has to opt in to allowing GUP pins on a file with a layout lease
+> >    (now made visible).
+> > 2) GUP will fail (EPERM) if a layout lease is not taken
+> > 3) Any truncate or hole punch operation on a GUP'ed DAX page will fail.
+> > 4) The user has the option of holding the layout lease to receive a SIGIO for
+> >    notification to the original thread that another thread has tried to delete
+> >    their data.  Furthermore this indicates that if the user needs to GUP the
+> >    file again they will need to retake the Layout lease before doing so.
+> > 
+> > 
+> > NOTE: If the user releases the layout lease or if it has been broken by
+> > another operation further GUP operations on the file will fail without
+> > re-taking the lease.  This means that if a user would like to register
+> > pieces of a file and continue to register other pieces later they would
+> > be advised to keep the layout lease, get a SIGIO notification, and retake
+> > the lease.
+> > 
+> > NOTE2: Truncation of pages which are not actively pinned will succeed.
+> > Similar to accessing an mmap to this area GUP pins of that memory may
+> > fail.
 > 
-> This should just work, without errors or warnings.
+> So after some through I'm willing accept the fact that pinned DAX pages
+> will just make truncate / hole punch fail and shove it into a same bucket
+> of situations like "user can open a file and unlink won't delete it" or
+> "ETXTBUSY when user is executing a file being truncated".  The problem I
+> have with this proposal is a lack of visibility from sysadmin POV. For
+> ETXTBUSY or "unlinked but open file" sysadmin can just do lsof, find the
+> problematic process and kill it. There's nothing like that with your
+> proposal since currently once you hold page reference, you can unmap the
+> file, drop layout lease, close the file, and there's no trace that you're
+> responsible for the pinned page anymore.
 
-I said errors but I meant warnings:
+Agreed.  For some "GUP interfaces" one may be able to figure this out but I'm
+not familiar with any.  For RDMA there has been some additions for tracking
+resources but I don't think any of that is useful here.  Regardless from a FS
+POV this is awkward to have to understand all the independent interfaces, so I
+agree.
 
-xfsrestore: restoring non-directory files
-xfsrestore: WARNING: attempt to set extended attributes (xflags 0x80000001, extsize = 0x0, projid = 0x0) of rtdir/bar failed: Invalid argument
-xfsrestore: WARNING: attempt to set extended attributes (xflags 0x80000001, extsize = 0x0, projid = 0x0) of rtdir/baz failed: Invalid argument
-xfsrestore: restore complete: 0 seconds elapsed
-
-and yeah, probably should not be noisy there.
-
->> non-rt fs dump, restored into rt fs dir/fs with "rtinherit" set
->> 	- this one is your case
->> 	- today it's ignored, files stay non-rt
->> 	- you're suggesting it be honored and files turned into rt
 > 
-> Current filesystem policy should override the policy in dump image
-> as the dump image may contain an invalid policy....
-> 
->> the one case that's not handled here is "what if I want to have my
->> realtime dump with realtime files restored onto an rt-capable fs, but
->> turned into regular files?" 
-> 
-> Which is where having the kernel policy override the dump file is
-> necesary...
+> So I'd like to actually mandate that you *must* hold the file lease until
+> you unpin all pages in the given range (not just that you have an option to
+> hold a lease). And I believe the kernel should actually enforce this. That
+> way we maintain a sane state that if someone uses a physical location of
+> logical file offset on disk, he has a layout lease. Also once this is done,
+> sysadmin has a reasonably easy way to discover run-away RDMA application
+> and kill it if he wishes so.
 
-The trick is that we don't have a "no-rt" flag we can set on a dir,
-so there is no "files in this dir ar not rt" policy to follow.
+Fair enough.
 
->> So your patch gives us one mechanism (restore non-rt files as
->> rt files) but not the converse (restore rt files as non-rt files) -
->> I'm not sure if that matters, but the symmetry bugs me a little.
->>
->> I'm trying to decide if dump/restore is truly the right way to
->> migrate files from non-rt to rt or vice versa, TBH.  Maybe dchinner
->> or djwong will have thoughts as well...
-> 
-> *nod*
-> 
-> My take on this is that we need to decide which allocation policy to
-> use - the kernel policy or the dump file policy - in the different
-> situations. It's a simple, easy to document and understand solution.
-> 
-> At minimum, if there's a mismatch between rtdev/non-rtdev between
-> dump and restore, then restore should not try to restore or clear rt
-> flags at all. i.e the rt flags in the dump image should be
-> considered invalid in this situation and masked out in the restore
-> process. This prevents errors from being reported during restore,
-> and it does "the right thing" according to how the user has
-> configured the destination directory. i.e.  if the destdir has the
-> rtinherit bit set and there's a rtdev present, the kernel policy
-> will cause all file data that is restored to be allocated on the
-> rtdev. Otherwise the kernel will place it (correctly) on the data
-> dev.
-> 
-> In the case where both have rtdevs, but you want to restore to
-> ignore the dump file rtdev policy, we really only need to add a CLI
-> option to say "ignore rt flags" and that then allows the kernel
-> policy to dictate how the restored files are placed in the same way
-> that having a rtdev mismatch does.
-> 
-> This is simple, consistent, fulfils the requirements and should have
-> no hidden surprises for users....
+I was kind of heading that direction but had not thought this far forward.  I
+was exploring how to have a lease remain on the file even after a "lease
+break".  But that is incompatible with the current semantics of a "layout"
+lease (as currently defined in the kernel).  [In the end I wanted to get an RFC
+out to see what people think of this idea so I did not look at keeping the
+lease.]
 
-Sounds reasonable.  So the CLI flag would say "ignore RT info in the
-dump, and write files according to the destination fs policy?"
-I think that makes sense.
+Also hitch is that currently a lease is forcefully broken after
+<sysfs>/lease-break-time.  To do what you suggest I think we would need a new
+lease type with the semantics you describe.
 
-Now: do we need to do the same for all inheritable flags?  projid,
-extsize, etc?  I think we probably do.
+Previously I had thought this would be a good idea (for other reasons).  But
+what does everyone think about using a "longterm lease" similar to [1] which
+has the semantics you proppose?  In [1] I was not sure "longterm" was a good
+name but with your proposal I think it makes more sense.
 
--Eric
+> 
+> The question is on how to exactly enforce that lease is taken until all
+> pages are unpinned. I belive it could be done by tracking number of
+> long-term pinned pages within a lease. Gup_longterm could easily increment
+> the count when verifying the lease exists, gup_longterm users will somehow
+> need to propagate corresponding 'filp' (struct file pointer) to
+> put_user_pages_longterm() callsites so that they can look up appropriate
+> lease to drop reference
+
+I actually think that might be pretty easy.  I actually added a ref count to
+the longterm lease before.[2]  This was done to be able to take the lease
+within the GUP code.  We don't need that functionality exactly but that patch
+implements some of what you propose.  With a ref count on the lease we can
+refuse to release it until all GUP users have released it.
+
+>
+> - probably I'd just transition all gup_longterm()
+> users to a saner API similar to the one we have in mm/frame_vector.c where
+> we don't hand out page pointers but an encapsulating structure that does
+> all the necessary tracking.
+
+I'll take a look at that code.  But that seems like a pretty big change.
+
+>
+> Removing a lease would need to block until all
+> pins are released - this is probably the most hairy part since we need to
+> handle a case if application just closes the file descriptor which would
+> release the lease but OTOH we need to make sure task exit does not deadlock.
+> Maybe we could block only on explicit lease unlock and just drop the layout
+> lease on file close and if there are still pinned pages, send SIGKILL to an
+> application as a reminder it did something stupid...
+
+As presented at LSFmm I'm not opposed to killing a process which does not
+"follow the rules".  But I'm concerned about how to handle this across a fork.
+
+Limiting the open()/LEASE/GUP/close()/SIGKILL to a specific pid "leak"'s pins
+to a child through the RDMA context.  This was the major issue Jason had with
+the SIGBUS proposal.
+
+Always sending a SIGKILL would prevent an RDMA process from doing something
+like system("ls") (would kill the child unnecessarily).  Are we ok with that?
+
+> 
+> What do people think about this?
+
+But generally I like the idea of the leases being sticky.  Not sure about the
+SIGKILL.
+
+Thanks for the review,
+Ira
+
+[1] https://patchwork.kernel.org/patch/10921171/
+[2] https://patchwork.kernel.org/patch/10921177/
+
+> 
+> 								Honza
+> > 
+> > 
+> > A general overview follows for background.
+> > 
+> > It should be noted that one solution for this problem is to use RDMA's On
+> > Demand Paging (ODP).  There are 2 big reasons this may not work.
+> > 
+> > 	1) The hardware being used for RDMA may not support ODP
+> > 	2) ODP may be detrimental to the over all network (cluster or cloud)
+> > 	   performance
+> > 
+> > Therefore, in order to support RDMA to File system pages without On Demand
+> > Paging (ODP) a number of things need to be done.
+> > 
+> > 1) GUP "longterm" users need to inform the other subsystems that they have
+> >    taken a pin on a page which may remain pinned for a very "long time".[3]
+> > 
+> > 2) Any page which is "controlled" by a file system needs to have special
+> >    handling.  The details of the handling depends on if the page is page cache
+> >    fronted or not.
+> > 
+> >    2a) A page cache fronted page which has been pinned by GUP long term can use a
+> >    bounce buffer to allow the file system to write back snap shots of the page.
+> >    This is handled by the FS recognizing the GUP long term pin and making a copy
+> >    of the page to be written back.
+> > 	NOTE: this patch set does not address this path.
+> > 
+> >    2b) A FS "controlled" page which is not page cache fronted is either easier
+> >    to deal with or harder depending on the operation the filesystem is trying
+> >    to do.
+> > 
+> > 	2ba) [Hard case] If the FS operation _is_ a truncate or hole punch the
+> > 	FS can no longer use the pages in question until the pin has been
+> > 	removed.  This patch set presents a solution to this by introducing
+> > 	some reasonable restrictions on user space applications.
+> > 
+> > 	2bb) [Easy case] If the FS operation is _not_ a truncate or hole punch
+> > 	then there is nothing which need be done.  Data is Read or Written
+> > 	directly to the page.  This is an easy case which would currently work
+> > 	if not for GUP long term pins being disabled.  Therefore this patch set
+> > 	need not change access to the file data but does allow for GUP pins
+> > 	after 2ba above is dealt with.
+> > 
+> > 
+> > This patch series and presents a solution for problem 2ba)
+> > 
+> > [1] https://github.com/johnhubbard/linux/tree/gup_dma_core
+> > 
+> > [2] ext4/dev branch:
+> > 
+> > - https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/log/?h=dev
+> > 
+> > 	Specific patches:
+> > 
+> > 	[2a] ext4: wait for outstanding dio during truncate in nojournal mode
+> > 
+> > 	- https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?h=dev&id=82a25b027ca48d7ef197295846b352345853dfa8
+> > 
+> > 	[2b] ext4: do not delete unlinked inode from orphan list on failed truncate
+> > 
+> > 	- https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?h=dev&id=ee0ed02ca93ef1ecf8963ad96638795d55af2c14
+> > 
+> > 	[2c] ext4: gracefully handle ext4_break_layouts() failure during truncate
+> > 
+> > 	- https://git.kernel.org/pub/scm/linux/kernel/git/tytso/ext4.git/commit/?h=dev&id=b9c1c26739ec2d4b4fb70207a0a9ad6747e43f4c
+> > 
+> > [3] The definition of long time is debatable but it has been established
+> > that RDMAs use of pages, minutes or hours after the pin is the extreme case
+> > which makes this problem most severe.
+> > 
+> > 
+> > Ira Weiny (10):
+> >   fs/locks: Add trace_leases_conflict
+> >   fs/locks: Export F_LAYOUT lease to user space
+> >   mm/gup: Pass flags down to __gup_device_huge* calls
+> >   mm/gup: Ensure F_LAYOUT lease is held prior to GUP'ing pages
+> >   fs/ext4: Teach ext4 to break layout leases
+> >   fs/ext4: Teach dax_layout_busy_page() to operate on a sub-range
+> >   fs/ext4: Fail truncate if pages are GUP pinned
+> >   fs/xfs: Teach xfs to use new dax_layout_busy_page()
+> >   fs/xfs: Fail truncate if pages are GUP pinned
+> >   mm/gup: Remove FOLL_LONGTERM DAX exclusion
+> > 
+> >  fs/Kconfig                       |   1 +
+> >  fs/dax.c                         |  38 ++++++---
+> >  fs/ext4/ext4.h                   |   2 +-
+> >  fs/ext4/extents.c                |   6 +-
+> >  fs/ext4/inode.c                  |  26 +++++--
+> >  fs/locks.c                       |  97 ++++++++++++++++++++---
+> >  fs/xfs/xfs_file.c                |  24 ++++--
+> >  fs/xfs/xfs_inode.h               |   5 +-
+> >  fs/xfs/xfs_ioctl.c               |  15 +++-
+> >  fs/xfs/xfs_iops.c                |  14 +++-
+> >  fs/xfs/xfs_pnfs.c                |  14 ++--
+> >  include/linux/dax.h              |   9 ++-
+> >  include/linux/fs.h               |   2 +-
+> >  include/linux/mm.h               |   2 +
+> >  include/trace/events/filelock.h  |  35 +++++++++
+> >  include/uapi/asm-generic/fcntl.h |   3 +
+> >  mm/gup.c                         | 129 ++++++++++++-------------------
+> >  mm/huge_memory.c                 |  12 +++
+> >  18 files changed, 299 insertions(+), 135 deletions(-)
+> > 
+> > -- 
+> > 2.20.1
+> > 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
