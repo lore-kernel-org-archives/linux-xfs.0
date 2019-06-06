@@ -1,45 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga14.intel.com ([192.55.52.115]:33754 "EHLO mga14.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:36145 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729191AbfFFQJe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Jun 2019 12:09:34 -0400
-Date: Thu, 6 Jun 2019 09:10:46 -0700
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH RFC 03/10] mm/gup: Pass flags down to __gup_device_huge*
- calls
-Message-ID: <20190606161045.GA11331@iweiny-DESK2.sc.intel.com>
+        id S1726823AbfFFBpY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 21:45:24 -0400
+From: ira.weiny@intel.com
+Subject: [PATCH RFC 08/10] fs/xfs: Teach xfs to use new dax_layout_busy_page()
+Date: Wed,  5 Jun 2019 18:45:41 -0700
+Message-Id: <20190606014544.8339-9-ira.weiny@intel.com>
+In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
 References: <20190606014544.8339-1-ira.weiny@intel.com>
- <20190606014544.8339-4-ira.weiny@intel.com>
- <20190606061819.GA20520@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190606061819.GA20520@infradead.org>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Jun 05, 2019 at 11:18:19PM -0700, Christoph Hellwig wrote:
-> On Wed, Jun 05, 2019 at 06:45:36PM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > In order to support checking for a layout lease on a FS DAX inode these
-> > calls need to know if FOLL_LONGTERM was specified.
-> > 
-> > Prepare for this with this patch.
-> 
-> The GUP fast argument passing is a mess.  That is why I've come up
-> with this as part of the (not ready) get_user_pages_fast_bvec
-> implementation:
-> 
-> http://git.infradead.org/users/hch/misc.git/commitdiff/c3d019802dbde5a4cc4160e7ec8ccba479b19f97
+From: Ira Weiny <ira.weiny@intel.com>
 
-Agreed that looks better.
+dax_layout_busy_page() can now operate on a sub-range of the
+address_space provided.
 
-And I'm sure I will have to re-roll this to deal with conflicts with this set.
-But for now I needed this for the follow ons and having a nice separate little
-patch like this means I can just drop it after I get your clean up!  :-D
+Have xfs specify the sub range to dax_layout_busy_page()
 
-Ira
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/xfs/xfs_file.c  | 19 +++++++++++++------
+ fs/xfs/xfs_inode.h |  5 +++--
+ fs/xfs/xfs_ioctl.c | 15 ++++++++++++---
+ fs/xfs/xfs_iops.c  | 14 ++++++++++----
+ 4 files changed, 38 insertions(+), 15 deletions(-)
+
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index ebddf911644c..350eb5546d36 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -300,7 +300,11 @@ xfs_file_aio_write_checks(
+ 	if (error <= 0)
+ 		return error;
+ 
+-	error = xfs_break_layouts(inode, iolock, BREAK_WRITE);
++	/*
++	 * BREAK_WRITE ignores offset/len tuple just specify the whole file
++	 * (0 - ULONG_MAX to be safe.
++	 */
++	error = xfs_break_layouts(inode, iolock, 0, ULONG_MAX, BREAK_WRITE);
+ 	if (error)
+ 		return error;
+ 
+@@ -740,14 +744,15 @@ xfs_wait_dax_page(
+ static int
+ xfs_break_dax_layouts(
+ 	struct inode		*inode,
+-	bool			*retry)
++	bool			*retry,
++	loff_t                   off,
++	loff_t                   len)
+ {
+ 	struct page		*page;
+ 
+ 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
+ 
+-	/* We default to the "whole file" */
+-	page = dax_layout_busy_page(inode->i_mapping, 0, ULONG_MAX);
++	page = dax_layout_busy_page(inode->i_mapping, off, len);
+ 	if (!page)
+ 		return 0;
+ 
+@@ -761,6 +766,8 @@ int
+ xfs_break_layouts(
+ 	struct inode		*inode,
+ 	uint			*iolock,
++	loff_t                   off,
++	loff_t                   len,
+ 	enum layout_break_reason reason)
+ {
+ 	bool			retry;
+@@ -772,7 +779,7 @@ xfs_break_layouts(
+ 		retry = false;
+ 		switch (reason) {
+ 		case BREAK_UNMAP:
+-			error = xfs_break_dax_layouts(inode, &retry);
++			error = xfs_break_dax_layouts(inode, &retry, off, len);
+ 			if (error || retry)
+ 				break;
+ 			/* fall through */
+@@ -814,7 +821,7 @@ xfs_file_fallocate(
+ 		return -EOPNOTSUPP;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
++	error = xfs_break_layouts(inode, &iolock, offset, len, BREAK_UNMAP);
+ 	if (error)
+ 		goto out_unlock;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 558173f95a03..1b0948f5267c 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -475,8 +475,9 @@ enum xfs_prealloc_flags {
+ 
+ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
+ 				  enum xfs_prealloc_flags flags);
+-int	xfs_break_layouts(struct inode *inode, uint *iolock,
+-		enum layout_break_reason reason);
++int xfs_break_layouts(struct inode *inode, uint *iolock,
++		      loff_t off, loff_t len,
++		      enum layout_break_reason reason);
+ 
+ /* from xfs_iops.c */
+ extern void xfs_setup_inode(struct xfs_inode *ip);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index d7dfc13f30f5..a702e44a63b8 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -605,6 +605,7 @@ xfs_ioc_space(
+ 	enum xfs_prealloc_flags	flags = 0;
+ 	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	int			error;
++	loff_t                  break_length;
+ 
+ 	if (inode->i_flags & (S_IMMUTABLE|S_APPEND))
+ 		return -EPERM;
+@@ -625,9 +626,6 @@ xfs_ioc_space(
+ 		return error;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+-	if (error)
+-		goto out_unlock;
+ 
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+@@ -673,6 +671,17 @@ xfs_ioc_space(
+ 		goto out_unlock;
+ 	}
+ 
++	/* break layout for the whole file if len ends up 0 */
++	if (bf->l_len == 0)
++		break_length = ULONG_MAX;
++	else
++		break_length = bf->l_len;
++
++	error = xfs_break_layouts(inode, &iolock, bf->l_start, break_length,
++				  BREAK_UNMAP);
++	if (error)
++		goto out_unlock;
++
+ 	switch (cmd) {
+ 	case XFS_IOC_ZERO_RANGE:
+ 		flags |= XFS_PREALLOC_SET;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 74047bd0c1ae..5529bc7a516b 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1052,10 +1052,16 @@ xfs_vn_setattr(
+ 		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 
+-		error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+-		if (error) {
+-			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+-			return error;
++		if (iattr->ia_size < inode->i_size) {
++			loff_t                  off = iattr->ia_size;
++			loff_t                  len = inode->i_size - iattr->ia_size;
++
++			error = xfs_break_layouts(inode, &iolock, off, len,
++						  BREAK_UNMAP);
++			if (error) {
++				xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
++				return error;
++			}
+ 		}
+ 
+ 		error = xfs_vn_setattr_size(dentry, iattr);
+-- 
+2.20.1
