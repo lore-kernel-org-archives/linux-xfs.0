@@ -1,44 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:36145 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726863AbfFFBpV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 5 Jun 2019 21:45:21 -0400
-From: ira.weiny@intel.com
-Subject: [PATCH RFC 07/10] fs/ext4: Fail truncate if pages are GUP pinned
-Date: Wed,  5 Jun 2019 18:45:40 -0700
-Message-Id: <20190606014544.8339-8-ira.weiny@intel.com>
-In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
-References: <20190606014544.8339-1-ira.weiny@intel.com>
+Received: from out30-54.freemail.mail.aliyun.com ([115.124.30.54]:39481 "EHLO
+        out30-54.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726474AbfFFDOL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 23:14:11 -0400
+Date: Thu, 06 Jun 2019 11:13:57 +0800
+From: "Alvin Zheng" <Alvin@linux.alibaba.com>
+Reply-To: "Alvin Zheng" <Alvin@linux.alibaba.com>
+Message-ID: <885213d6-d14d-4639-9c6b-78ee2c644f95.Alvin@linux.alibaba.com>
+Subject: =?UTF-8?B?UmU6IFtidWcgcmVwb3J0XVtzdGFibGVdIHhmc3Rlc3RzOmdlbmVyaWMvNTM4IGZhaWxlZCBv?=
+  =?UTF-8?B?biB4ZnM=?=
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>,<20190605124227.GC17558@kroah.com>
+In-Reply-To: <20190605124227.GC17558@kroah.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
-Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: gregkh <gregkh@linuxfoundation.org>
+Cc: "darrick.wong" <darrick.wong@oracle.com>, axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, caspar <caspar@linux.alibaba.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>
 
-From: Ira Weiny <ira.weiny@intel.com>
-
-If pages are actively gup pinned fail the truncate operation.
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- fs/ext4/inode.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-index 75f543f384e4..1ded83ec08c0 100644
---- a/fs/ext4/inode.c
-+++ b/fs/ext4/inode.c
-@@ -4250,6 +4250,9 @@ int ext4_break_layouts(struct inode *inode, loff_t offset, loff_t len)
- 		if (!page)
- 			return 0;
- 
-+		if (page_gup_pinned(page))
-+			return -ETXTBSY;
-+
- 		error = ___wait_var_event(&page->_refcount,
- 				atomic_read(&page->_refcount) == 1,
- 				TASK_INTERRUPTIBLE, 0, 0,
--- 
-2.20.1
+VGhlIHhmcyBwYXRjaCAoeGZzOiBzZXJpYWxpemUgdW5hbGlnbmVkIGRpbyB3cml0ZXMgYWdhaW5z
+dCBhbGwgb3RoZXIgZGlvIHdyaXRlcykgZG9lcyBmaXggdGhlIGRhdGEgY29ycnVwdGlvbiBidWcg
+b2Yga2VybmVsIDQuMTkgb24geGZzLgpBcyBmb3IgMzExMGZjNzk2MDZmICgiYmxrLW1xOiBpbXBy
+b3ZlIHBsdWcgbGlzdCBzb3J0aW5nIiksIGl0IGhhcHBlbnMgdG8gZml4IHRoZSBsb2dpYyBlcnJv
+ciBvZiB0aGUgc29ydCBmdW5jdGlvbiBpbiB0aGUgYmxvY2sgbGF5ZXIgYW5kIGl0IGlzIGJhc2Vk
+IG9uIHRoZSBtdWx0aXBsZSBtYXBzIG9mIHRoZSBibGstbXEgd2hpY2ggd2FzIGludHJvZHVjZWQg
+aW4gdjUuMC4gVGhlcmVmb3JlLCBiYWNrcG9ydGluZyB0aGlzIGNvbW1pdCB3aWxsIGludHJvZHVj
+ZSBhIGxvdCBvZiByZWxldmFudCBjb2RlLiAKClJlZ2FyZHMsCkFsdmluCgotLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KRnJv
+bTpncmVna2ggPGdyZWdraEBsaW51eGZvdW5kYXRpb24ub3JnPgpTZW5kIFRpbWU6MjAxOeW5tDbm
+nIg15pelKOaYn+acn+S4iSkgMjA6NDIKVG86QWx2aW4gWmhlbmcgPEFsdmluQGxpbnV4LmFsaWJh
+YmEuY29tPgpDYzpkYXJyaWNrLndvbmcgPGRhcnJpY2sud29uZ0BvcmFjbGUuY29tPjsgYXhib2Ug
+PGF4Ym9lQGtlcm5lbC5kaz47IGxpbnV4LWJsb2NrIDxsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5v
+cmc+OyBsaW51eC14ZnMgPGxpbnV4LXhmc0B2Z2VyLmtlcm5lbC5vcmc+OyBjYXNwYXIgPGNhc3Bh
+ckBsaW51eC5hbGliYWJhLmNvbT47IGpvc2VwaC5xaSA8am9zZXBoLnFpQGxpbnV4LmFsaWJhYmEu
+Y29tPgpTdWJqZWN0OlJlOiBbYnVnIHJlcG9ydF1bc3RhYmxlXSB4ZnN0ZXN0czpnZW5lcmljLzUz
+OCBmYWlsZWQgb24geGZzCgoKT24gV2VkLCBKdW4gMDUsIDIwMTkgYXQgMDg6MjE6NDRQTSArMDgw
+MCwgQWx2aW4gWmhlbmcgd3JvdGU6Cj4gSGksCj4gICBJIHdhcyB1c2luZyBrZXJuZWwgdjQuMTku
+NDggYW5kIGZvdW5kIHRoYXQgaXQgY2Fubm90IHBhc3MgdGhlIGdlbmVyaWMvNTM4IG9uIHhmcy4g
+VGhlIGVycm9yIG91dHB1dCBpcyBhcyBmb2xsb3dzOgoKSGFzIDQuMTkgZXZlciBiZWVuIGFibGUg
+dG8gcGFzcyB0aGF0IHRlc3Q/ICBJZiBub3QsIEkgd291bGRuJ3Qgd29ycnkKYWJvdXQgaXQgOikK
+Cj4gCj4gICBGU1RZUCAgICAgICAgIC0tIHhmcyAobm9uLWRlYnVnKQo+ICAgUExBVEZPUk0gICAg
+ICAtLSBMaW51eC94ODZfNjQgYWxpbnV4Mi02IDQuMTkuNDgKPiAgIE1LRlNfT1BUSU9OUyAgLS0g
+LWYgLWJzaXplPTQwOTYgL2Rldi92ZGMKPiAgIE1PVU5UX09QVElPTlMgLS0gL2Rldi92ZGMgL21u
+dC90ZXN0YXJlYS9zY3JhCj4gICBnZW5lcmljLzUzOCAwcyAuLi4gLSBvdXRwdXQgbWlzbWF0Y2gg
+KHNlZSAvcm9vdC91c3IvbG9jYWwvc3JjL3hmc3Rlc3RzL3Jlc3VsdHMvL2dlbmVyaWMvNTM4Lm91
+dC5iYWQpCj4gICAgICAgLS0tIHRlc3RzL2dlbmVyaWMvNTM4Lm91dCAgIDIwMTktMDUtMjcgMTM6
+NTc6MDYuNTA1NjY2NDY1ICswODAwCj4gICAgICAgKysrIC9yb290L3Vzci9sb2NhbC9zcmMveGZz
+dGVzdHMvcmVzdWx0cy8vZ2VuZXJpYy81Mzgub3V0LmJhZCAgICAgICAyMDE5LTA2LTA1IDE2OjQz
+OjE0LjcwMjAwMjMyNiArMDgwMAo+ICAgICAgIEBAIC0xLDIgKzEsMTAgQEAKPiAgICAgICAgUUEg
+b3V0cHV0IGNyZWF0ZWQgYnkgNTM4Cj4gICAgICAgK0RhdGEgdmVyaWZpY2F0aW9uIGZhaWxzCj4g
+ICAgICAgK0ZpbmQgY29ycnVwdGlvbgo+ICAgICAgICswMDAwMDAwMCAgMDAgMDAgMDAgMDAgMDAg
+MDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KPiAgICAg
+ICArKgo+ICAgICAgICswMDAwMDIwMCAgNWEgNWEgNWEgNWEgNWEgNWEgNWEgNWEgNWEgNWEgNWEg
+NWEgNWEgNWEgNWEgNWEgIFpaWlpaWlpaWlpaWlpaWloKPiAgICAgICArMDAwMDIwMDAKPiAgICAg
+ICAuLi4KPiAgICAgICAoUnVuICdkaWZmIC11IC9yb290L3Vzci9sb2NhbC9zcmMveGZzdGVzdHMv
+dGVzdHMvZ2VuZXJpYy81Mzgub3V0IC9yb290L3Vzci9sb2NhbC9zcmMveGZzdGVzdHMvcmVzdWx0
+cy8vZ2VuZXJpYy81Mzgub3V0LmJhZCcgIHRvIHNlZSB0aGUgZW50aXJlIGRpZmYpCj4gICBSYW46
+IGdlbmVyaWMvNTM4Cj4gICBGYWlsdXJlczogZ2VuZXJpYy81MzgKPiAgIEZhaWxlZCAxIG9mIDEg
+dGVzdHMKPiAgIAo+IEkgYWxzbyBmb3VuZCB0aGF0IHRoZSBsYXRlc3Qga2VybmVsICh2NS4yLjAt
+cmMyKSBvZiB1cHN0cmVhbSBjYW4gcGFzcyB0aGUgZ2VuZXJpYy81MzggdGVzdC4gVGhlcmVmb3Jl
+LCBJIGJpc2VjdGVkIGFuZCBmb3VuZCB0aGUgZmlyc3QgZ29vZCBjb21taXQgaXMgMzExMGZjNzk2
+MDYuIFRoaXMgY29tbWl0IGFkZHMgdGhlIGhhcmR3YXJlIHF1ZXVlIGludG8gdGhlIHNvcnQgZnVu
+Y3Rpb24uIEJlc2lkZXMsIHRoZSBzb3J0IGZ1bmN0aW9uIHJldHVybnMgYSBuZWdhdGl2ZSB2YWx1
+ZSB3aGVuIHRoZSBvZmZzZXQgYW5kIHF1ZXVlIChzb2Z0d2FyZSBhbmQgaGFyZHdhcmUpIG9mIHR3
+byBJL08gcmVxdWVzdHMgYXJlIHNhbWUuIEkgdGhpbmsgdGhlIHNlY29uZCBwYXJ0IG9mIHRoZSBj
+aGFuZ2UgbWFrZSBzZW5zZXMuIFRoZSBrZXJuZWwgc2hvdWxkIG5vdCBjaGFuZ2UgdGhlIHJlbGF0
+aXZlIHBvc2l0aW9uIG9mIHR3byBJL08gcmVxdWVzdHMgd2hlbiB0aGVpciBvZmZzZXQgYW5kIHF1
+ZXVlIGFyZSBzYW1lLiBTbyBJIG1hZGUgdGhlIGZvbGxvd2luZyBjaGFuZ2VzIGFuZCBtZXJnZWQg
+aXQgaW50byB0aGUga2VybmVsIDQuMTkuNDguIEFmdGVyIHRoZSBtb2RpZmljYXRpb24sIHdlIGNh
+biBwYXNzIHRoZSBnZW5lcmljLzUzOCB0ZXN0IG9uIHhmcy4gVGhlIHNhbWUgY2FzZSBjYW4gYmUg
+cGFzc2VkIG9uIGV4dDQsIHNpbmNlIGV4dDQgaGFzIGNvcnJlc3BvbmRpbmcgZml4IDBkYjI0MTIy
+YmQ3ZiAoImV4dDQ6IGZpeCBkYXRhIGNvcnJ1cHRpb24gY2F1c2VkIGJ5IG92ZXJsYXBwaW5nIHVu
+YWxpZ25lZCBhbmQgYWxpZ25lZCBJTyIpLiBUaG91Z2ggSSB0aGluayB4ZnMgc2hvdWxkIGJlIHJl
+c3BvbnNpYmxlIGZvciB0aGlzIGlzc3VlLCB0aGUgYmxvY2sgbGF5ZXIgY29kZSBiZWxvdyBpcyBh
+bHNvIHByb2JsZW1hdGljLiBBbnkgaWRlYXM/Cj4gCj4gZGlmZiAtLWdpdCBhL2Jsb2NrL2Jsay1t
+cS5jIGIvYmxvY2svYmxrLW1xLmMKPiBpbmRleCA0ZTU2M2VlLi5hNzMwOWNkIDEwMDY0NAo+IC0t
+LSBhL2Jsb2NrL2Jsay1tcS5jCj4gKysrIGIvYmxvY2svYmxrLW1xLmMKPiBAQCAtMTYxMCw3ICsx
+NjEwLDcgQEAgc3RhdGljIGludCBwbHVnX2N0eF9jbXAodm9pZCAqcHJpdiwgc3RydWN0IGxpc3Rf
+aGVhZCAqYSwgc3RydWN0IGxpc3RfaGVhZCAqYikKPiAKPiAgICAgICAgIHJldHVybiAhKHJxYS0+
+bXFfY3R4IDwgcnFiLT5tcV9jdHggfHwKPiAgICAgICAgICAgICAgICAgIChycWEtPm1xX2N0eCA9
+PSBycWItPm1xX2N0eCAmJgo+IC0gICAgICAgICAgICAgICAgIGJsa19ycV9wb3MocnFhKSA8IGJs
+a19ycV9wb3MocnFiKSkpOwo+ICsgICAgICAgICAgICAgICAgIGJsa19ycV9wb3MocnFhKSA8PSBi
+bGtfcnFfcG9zKHJxYikpKTsKPiAgfQo+IAo+ICB2b2lkIGJsa19tcV9mbHVzaF9wbHVnX2xpc3Qo
+c3RydWN0IGJsa19wbHVnICpwbHVnLCBib29sIGZyb21fc2NoZWR1bGUpCgpJIHdvdWxkIG5vdCBs
+aWtlIHRvIHRha2UgYSBwYXRjaCB0aGF0IGlzIG5vdCB1cHN0cmVhbSwgYnV0IHJhdGhlciB0YWtl
+CnRoZSBvcmlnaW5hbCBjb21taXQuCgpDYW4gMzExMGZjNzk2MDZmICgiYmxrLW1xOiBpbXByb3Zl
+IHBsdWcgbGlzdCBzb3J0aW5nIikgb24gaXRzIG93bgpyZXNvbHZlIHRoaXMgaXNzdWUgZm9yIDQu
+MTkueT8KCnRoYW5rcywKCmdyZWcgay1o
