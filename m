@@ -1,99 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-133.freemail.mail.aliyun.com ([115.124.30.133]:41057 "EHLO
-        out30-133.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726532AbfFEWvM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 18:51:12 -0400
-Subject: Re: [bug report][stable] xfstests:generic/538 failed on xfs
-References: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
- <20190605124227.GC17558@kroah.com> <20190605135756.GA15671@bfoster>
-From: Joseph Qi <joseph.qi@linux.alibaba.com>
-Message-ID: <d644a3a9-f05e-ccde-967b-2e9e9b8cb66a@linux.alibaba.com>
-Date: Thu, 6 Jun 2019 06:51:07 +0800
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:46346 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727082AbfFFT5g (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 15:57:36 -0400
+Received: from pps.filterd (m0148461.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x56Jm2qQ004400
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 12:57:35 -0700
+Received: from maileast.thefacebook.com ([163.114.130.16])
+        by mx0a-00082601.pphosted.com with ESMTP id 2sy5hk11ug-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 12:57:34 -0700
+From: Sheena Artrip <sheenobu@fb.com>
+Subject: [PATCH v2] xfs_restore: detect rtinherit on destination
+Date: Thu, 6 Jun 2019 12:57:24 -0700
+Message-ID: <20190606195724.2975689-1-sheenobu@fb.com>
+In-Reply-To: <e6968aa2-a5ad-4964-2966-589486e4a251@sandeen.net>
+References: <e6968aa2-a5ad-4964-2966-589486e4a251@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20190605135756.GA15671@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>, gregkh <gregkh@linuxfoundation.org>
-Cc: Alvin Zheng <Alvin@linux.alibaba.com>, "darrick.wong" <darrick.wong@oracle.com>, axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, caspar <caspar@linux.alibaba.com>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: sheena.artrip@gmail.com, linux-xfs@vger.kernel.org, Sheena Artrip <sheenobu@fb.com>
 
+When running xfs_restore with a non-rtdev dump,
+it will ignore any rtinherit flags on the destination
+and send I/O to the metadata region.
 
+Instead, detect rtinherit on the destination XFS fileystem root inode
+and use that to override the incoming inode flags.
 
-On 19/6/5 21:57, Brian Foster wrote:
-> On Wed, Jun 05, 2019 at 02:42:27PM +0200, gregkh wrote:
->> On Wed, Jun 05, 2019 at 08:21:44PM +0800, Alvin Zheng wrote:
->>> Hi,
->>>   I was using kernel v4.19.48 and found that it cannot pass the generic/538 on xfs. The error output is as follows:
->>
->> Has 4.19 ever been able to pass that test?  If not, I wouldn't worry
->> about it :)
->>
-> 
-> FWIW, the fstests commit references the following kernel patches for
-> fixes in XFS and ext4:
-> 
->   xfs: serialize unaligned dio writes against all other dio writes
->   ext4: fix data corruption caused by unaligned direct AIO
+Original version of this patch missed some branches so multiple
+invocations of xfsrestore onto the same fs caused
+the rtinherit bit to get re-removed. There could be some
+additional edge cases in non-realtime to realtime workflows so
+the outstanding question would be: is it worth supporting?
 
-IIUC, the corresponding ext4 fix is:
-ext4: fix data corruption caused by overlapping unaligned and aligned IO
-It was backported in 4.19.45.
+Changes in v2:
+* Changed root inode bulkstat to just ioctl to the destdir inode
 
-Thanks,
-Joseph
+Signed-off-by: Sheena Artrip <sheenobu@fb.com>
+---
+ restore/content.c | 51 +++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 51 insertions(+)
 
-> 
-> It looks like both of those patches landed in 5.1.
-> 
-> Brian
-> 
->>>
->>>   FSTYP         -- xfs (non-debug)
->>>   PLATFORM      -- Linux/x86_64 alinux2-6 4.19.48
->>>   MKFS_OPTIONS  -- -f -bsize=4096 /dev/vdc
->>>   MOUNT_OPTIONS -- /dev/vdc /mnt/testarea/scra
->>>   generic/538 0s ... - output mismatch (see /root/usr/local/src/xfstests/results//generic/538.out.bad)
->>>       --- tests/generic/538.out   2019-05-27 13:57:06.505666465 +0800
->>>       +++ /root/usr/local/src/xfstests/results//generic/538.out.bad       2019-06-05 16:43:14.702002326 +0800
->>>       @@ -1,2 +1,10 @@
->>>        QA output created by 538
->>>       +Data verification fails
->>>       +Find corruption
->>>       +00000000  00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00  ................
->>>       +*
->>>       +00000200  5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a 5a  ZZZZZZZZZZZZZZZZ
->>>       +00002000
->>>       ...
->>>       (Run 'diff -u /root/usr/local/src/xfstests/tests/generic/538.out /root/usr/local/src/xfstests/results//generic/538.out.bad'  to see the entire diff)
->>>   Ran: generic/538
->>>   Failures: generic/538
->>>   Failed 1 of 1 tests
->>>   
->>> I also found that the latest kernel (v5.2.0-rc2) of upstream can pass the generic/538 test. Therefore, I bisected and found the first good commit is 3110fc79606. This commit adds the hardware queue into the sort function. Besides, the sort function returns a negative value when the offset and queue (software and hardware) of two I/O requests are same. I think the second part of the change make senses. The kernel should not change the relative position of two I/O requests when their offset and queue are same. So I made the following changes and merged it into the kernel 4.19.48. After the modification, we can pass the generic/538 test on xfs. The same case can be passed on ext4, since ext4 has corresponding fix 0db24122bd7f ("ext4: fix data corruption caused by overlapping unaligned and aligned IO"). Though I think xfs should be responsible for this issue, the block layer code below is also problematic. Any ideas?
->>>
->>> diff --git a/block/blk-mq.c b/block/blk-mq.c
->>> index 4e563ee..a7309cd 100644
->>> --- a/block/blk-mq.c
->>> +++ b/block/blk-mq.c
->>> @@ -1610,7 +1610,7 @@ static int plug_ctx_cmp(void *priv, struct list_head *a, struct list_head *b)
->>>
->>>         return !(rqa->mq_ctx < rqb->mq_ctx ||
->>>                  (rqa->mq_ctx == rqb->mq_ctx &&
->>> -                 blk_rq_pos(rqa) < blk_rq_pos(rqb)));
->>> +                 blk_rq_pos(rqa) <= blk_rq_pos(rqb)));
->>>  }
->>>
->>>  void blk_mq_flush_plug_list(struct blk_plug *plug, bool from_schedule)
->>
->> I would not like to take a patch that is not upstream, but rather take
->> the original commit.
->>
->> Can 3110fc79606f ("blk-mq: improve plug list sorting") on its own
->> resolve this issue for 4.19.y?
->>
->> thanks,
->>
->> greg k-h
+diff --git a/restore/content.c b/restore/content.c
+index 6b22965..4822d1c 100644
+--- a/restore/content.c
++++ b/restore/content.c
+@@ -670,6 +670,9 @@ struct tran {
+ 		/* to establish critical regions while updating pers
+ 		 * inventory
+ 		 */
++	bool_t t_dstisrealtime;
++		/* to force the realtime flag on incoming inodes
++		 */
+ };
+ 
+ typedef struct tran tran_t;
+@@ -1803,6 +1806,37 @@ content_init(int argc, char *argv[], size64_t vmsz)
+ 		free_handle(fshanp, fshlen);
+ 	}
+ 
++	/* determine if destination root inode has rtinherit.
++	 * If so, we should force XFS_REALTIME on the incoming inodes.
++	 */
++	if (persp->a.dstdirisxfspr) {
++		struct fsxattr dstxattr;
++
++		int dstfd = open(persp->a.dstdir, O_RDONLY);
++		if (dstfd < 0) {
++			mlog(MLOG_NORMAL | MLOG_WARNING,
++					_("open of %s failed: %s\n"),
++					persp->a.dstdir,
++					strerror(errno));
++			return BOOL_FALSE;
++		}
++
++		/* Get the xattr details for the destination folder */
++		if (ioctl(dstfd, XFS_IOC_FSGETXATTR, &dstxattr) < 0) {
++			(void)close(dstfd);
++			mlog(MLOG_ERROR,
++			      _("failed to get xattr information for dst inode\n"));
++			return BOOL_FALSE;
++		}
++
++		(void)close(dstfd);
++
++		/* test against rtinherit */
++		if((dstxattr.fsx_xflags & XFS_XFLAG_RTINHERIT) != 0) {
++			tranp->t_dstisrealtime = true;
++		}
++	}
++
+ 	/* map in pers. inv. descriptors, if any. NOTE: this ptr is to be
+ 	 * referenced ONLY via the macros provided; the descriptors will be
+ 	 * occasionally remapped, causing the ptr to change.
+@@ -7270,6 +7304,10 @@ restore_file_cb(void *cp, bool_t linkpr, char *path1, char *path2)
+ 	bool_t ahcs = contextp->cb_ahcs;
+ 	stream_context_t *strctxp = (stream_context_t *)drivep->d_strmcontextp;
+ 
++	if (tranp->t_dstisrealtime) {
++		bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
++	}
++
+ 	int rval;
+ 	bool_t ok;
+ 
+@@ -7480,6 +7518,10 @@ restore_reg(drive_t *drivep,
+ 	if (tranp->t_toconlypr)
+ 		return BOOL_TRUE;
+ 
++	if (tranp->t_dstisrealtime) {
++	      bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
++	}
++
+ 	oflags = O_CREAT | O_RDWR;
+ 	if (persp->a.dstdirisxfspr && bstatp->bs_xflags & XFS_XFLAG_REALTIME)
+ 		oflags |= O_DIRECT;
+@@ -8470,6 +8512,11 @@ restore_extent(filehdr_t *fhdrp,
+ 		}
+ 		assert(new_off == off);
+ 	}
++
++	if (tranp->t_dstisrealtime) {
++	      bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
++	}
++
+ 	if ((fd != -1) && (bstatp->bs_xflags & XFS_XFLAG_REALTIME)) {
+ 		if ((ioctl(fd, XFS_IOC_DIOINFO, &da) < 0)) {
+ 			mlog(MLOG_NORMAL | MLOG_WARNING, _(
+@@ -8729,6 +8776,10 @@ restore_extattr(drive_t *drivep,
+ 
+ 	assert(extattrbufp);
+ 
++	if (tranp->t_dstisrealtime) {
++		bstatp->bs_xflags |= XFS_XFLAG_REALTIME;
++	}
++
+ 	if (!isdirpr)
+ 		isfilerestored = partial_check(bstatp->bs_ino,  bstatp->bs_size);
+ 
+-- 
+2.17.1
