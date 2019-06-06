@@ -1,109 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:43132 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727915AbfFFVPL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 17:15:11 -0400
-Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
-        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56L8Vs9065498
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 21:15:09 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2130.oracle.com with ESMTP id 2suevdu8pv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 21:15:09 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56LF6K4069326
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 21:15:08 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2swngmr6qb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 21:15:08 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x56LF85J019193
-        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 21:15:08 GMT
-Date: Thu, 6 Jun 2019 14:15:06 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 9/9] xfs: allow bulkstat_single of special inodes
-Message-ID: <20190606211506.GC1871505@magnolia>
-References: <155916885106.758159.3471602893858635007.stgit@magnolia>
- <155916890871.758159.15869425204728307163.stgit@magnolia>
+Received: from mga03.intel.com ([134.134.136.65]:36145 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726805AbfFFBpQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 21:45:16 -0400
+From: ira.weiny@intel.com
+Subject: [PATCH RFC 04/10] mm/gup: Ensure F_LAYOUT lease is held prior to GUP'ing pages
+Date: Wed,  5 Jun 2019 18:45:37 -0700
+Message-Id: <20190606014544.8339-5-ira.weiny@intel.com>
+In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155916890871.758159.15869425204728307163.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, May 29, 2019 at 03:28:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create a new ireq flag (for single bulkstats) that enables userspace to
-> ask us for a special inode number instead of interpreting @ino as a
-> literal inode number.  This enables us to query the root inode easily.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_fs.h |   11 ++++++++++-
->  fs/xfs/xfs_ioctl.c     |   10 ++++++++++
->  2 files changed, 20 insertions(+), 1 deletion(-)
-> 
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 77c06850ac52..1826aa11b585 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -482,7 +482,16 @@ struct xfs_ireq {
->  	uint64_t	reserved[2];	/* must be zero			*/
->  };
->  
-> -#define XFS_IREQ_FLAGS_ALL	(0)
-> +/*
-> + * The @ino value is a special value, not a literal inode number.  See the
-> + * XFS_IREQ_SPECIAL_* values below.
-> + */
-> +#define XFS_IREQ_SPECIAL	(1 << 0)
-> +
-> +#define XFS_IREQ_FLAGS_ALL	(XFS_IREQ_SPECIAL)
-> +
-> +/* Return the root directory inode. */
-> +#define XFS_IREQ_SPECIAL_ROOT	(1)
->  
->  /*
->   * ioctl structures for v5 bulkstat and inumbers requests
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index cf48a2bad325..605bfff3011f 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -959,6 +959,16 @@ xfs_ireq_setup(
->  	    memchr_inv(hdr->reserved, 0, sizeof(hdr->reserved)))
->  		return -EINVAL;
->  
-> +	if (hdr->flags & XFS_IREQ_SPECIAL) {
-> +		switch (hdr->ino) {
-> +		case XFS_IREQ_SPECIAL_ROOT:
+From: Ira Weiny <ira.weiny@intel.com>
 
-Hmmm sooo... this doesn't solve Eric's immediate problem where xfsdump
-needs to be fed the root inode.  We assumed for years that the first
-inode returned by bulkstat would always be the root dir, but it turned
-out that mkfs puts the root dir at the start of the first possible inode
-chunk past the end of the (AG headers + AG btree roots + AGFL blocks).
-If all those blocks get freed then inodes can sneak into AG 0 before the
-"first" inode chunk, invalidating the assumption.
+On FS DAX files users must inform the file system they intend to take
+long term GUP pins on the file pages.  Failure to do so should result in
+an error.
 
-IOWS, do we need to retrofit SPECIAL_ROOT into the old FSBULKSTAT_SINGLE
-somehow?  Maybe if you pass in bulkreq.lastip == NULL then you get root?
+Ensure that a F_LAYOUT lease exists at the time the GUP call is made.
+If not return EPERM.
 
---D
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/locks.c         | 41 +++++++++++++++++++++++++++++++++++++++++
+ include/linux/mm.h |  2 ++
+ mm/gup.c           | 25 +++++++++++++++++++++++++
+ mm/huge_memory.c   | 12 ++++++++++++
+ 4 files changed, 80 insertions(+)
 
-> +			hdr->ino = mp->m_sb.sb_rootino;
-> +			break;
-> +		default:
-> +			return -EINVAL;
-> +		}
-> +	}
-> +
->  	if (XFS_INO_TO_AGNO(mp, hdr->ino) >= mp->m_sb.sb_agcount)
->  		return -EINVAL;
->  
-> 
+diff --git a/fs/locks.c b/fs/locks.c
+index de9761c068de..43f5dc97652c 100644
+--- a/fs/locks.c
++++ b/fs/locks.c
+@@ -2945,3 +2945,44 @@ static int __init filelock_init(void)
+ 	return 0;
+ }
+ core_initcall(filelock_init);
++
++/**
++ * mapping_inode_has_layout()
++ * @page page we are trying to GUP
++ *
++ * This should only be called on DAX pages.  DAX pages which are mapped through
++ * FS DAX do not use the page cache.  As a result they require the user to take
++ * a LAYOUT lease on them prior to be able to pin them for longterm use.
++ * This allows the user to opt-into the fact that truncation operations will
++ * fail for the duration of the pin.
++ *
++ * @Return true if the page has a LAYOUT lease associated with it's file.
++ */
++bool mapping_inode_has_layout(struct page *page)
++{
++	bool ret = false;
++	struct inode *inode;
++	struct file_lock *fl;
++	struct file_lock_context *ctx;
++
++	if (WARN_ON(PageAnon(page)) ||
++	    WARN_ON(!page) ||
++	    WARN_ON(!page->mapping) ||
++	    WARN_ON(!page->mapping->host))
++		return false;
++
++	inode = page->mapping->host;
++
++	ctx = locks_get_lock_context(inode, F_RDLCK);
++	spin_lock(&ctx->flc_lock);
++	list_for_each_entry(fl, &ctx->flc_lease, fl_list) {
++		if (fl->fl_flags & FL_LAYOUT) {
++			ret = true;
++			break;
++		}
++	}
++	spin_unlock(&ctx->flc_lock);
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(mapping_inode_has_layout);
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index bc373a9b69fc..432b004b920c 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1630,6 +1630,8 @@ long get_user_pages_unlocked(unsigned long start, unsigned long nr_pages,
+ int get_user_pages_fast(unsigned long start, int nr_pages,
+ 			unsigned int gup_flags, struct page **pages);
+ 
++bool mapping_inode_has_layout(struct page *page);
++
+ /* Container for pinned pfns / pages */
+ struct frame_vector {
+ 	unsigned int nr_allocated;	/* Number of frames we have space for */
+diff --git a/mm/gup.c b/mm/gup.c
+index 26a7a3a3a657..d06cc5b14c0b 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -361,6 +361,13 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
+ 			page = pte_page(pte);
+ 		else
+ 			goto no_page;
++
++		if (unlikely(flags & FOLL_LONGTERM) &&
++		    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
++		    !mapping_inode_has_layout(page)) {
++			page = ERR_PTR(-EPERM);
++			goto out;
++		}
+ 	} else if (unlikely(!page)) {
+ 		if (flags & FOLL_DUMP) {
+ 			/* Avoid special (like zero) pages in core dumps */
+@@ -1905,6 +1912,16 @@ static int gup_pte_range(pmd_t pmd, unsigned long addr, unsigned long end,
+ 
+ 		VM_BUG_ON_PAGE(compound_head(page) != head, page);
+ 
++		if (pte_devmap(pte) &&
++		    unlikely(flags & FOLL_LONGTERM) &&
++		    pgmap->type == MEMORY_DEVICE_FS_DAX &&
++		    !mapping_inode_has_layout(head)) {
++			mod_node_page_state(page_pgdat(head),
++					    NR_GUP_FAST_PAGE_BACKOFFS, 1);
++			put_user_page(head);
++			goto pte_unmap;
++		}
++
+ 		SetPageReferenced(page);
+ 		pages[*nr] = page;
+ 		(*nr)++;
+@@ -1955,6 +1972,14 @@ static int __gup_device_huge(unsigned long pfn, unsigned long addr,
+ 		}
+ 		SetPageReferenced(page);
+ 		pages[*nr] = page;
++
++		if (unlikely(flags & FOLL_LONGTERM) &&
++		    pgmap->type == MEMORY_DEVICE_FS_DAX &&
++		    !mapping_inode_has_layout(page)) {
++			undo_dev_pagemap(nr, nr_start, pages);
++			return 0;
++		}
++
+ 		if (try_get_gup_pin_page(page, NR_GUP_FAST_PAGES_REQUESTED)) {
+ 			undo_dev_pagemap(nr, nr_start, pages);
+ 			return 0;
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index bb7fd7fa6f77..cdc213e50902 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -950,6 +950,12 @@ struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 	if (!*pgmap)
+ 		return ERR_PTR(-EFAULT);
+ 	page = pfn_to_page(pfn);
++
++	if (unlikely(flags & FOLL_LONGTERM) &&
++	    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
++	    !mapping_inode_has_layout(page))
++		return ERR_PTR(-EPERM);
++
+ 	if (unlikely(!try_get_gup_pin_page(page,
+ 					   NR_GUP_SLOW_PAGES_REQUESTED)))
+ 		page = ERR_PTR(-ENOMEM);
+@@ -1092,6 +1098,12 @@ struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
+ 	if (!*pgmap)
+ 		return ERR_PTR(-EFAULT);
+ 	page = pfn_to_page(pfn);
++
++	if (unlikely(flags & FOLL_LONGTERM) &&
++	    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
++	    !mapping_inode_has_layout(page))
++		return ERR_PTR(-EPERM);
++
+ 	if (unlikely(!try_get_gup_pin_page(page,
+ 					   NR_GUP_SLOW_PAGES_REQUESTED)))
+ 		page = ERR_PTR(-ENOMEM);
+-- 
+2.20.1
