@@ -1,67 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:45932 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727109AbfFFTvQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 15:51:16 -0400
-Received: by mail-qk1-f193.google.com with SMTP id s22so2243018qkj.12
-        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 12:51:16 -0700 (PDT)
-Date: Thu, 6 Jun 2019 16:51:15 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190606195114.GA30714@ziepe.ca>
+Received: from mga03.intel.com ([134.134.136.65]:36140 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726589AbfFFBpK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 5 Jun 2019 21:45:10 -0400
+From: ira.weiny@intel.com
+Subject: [PATCH RFC 01/10] fs/locks: Add trace_leases_conflict
+Date: Wed,  5 Jun 2019 18:45:34 -0700
+Message-Id: <20190606014544.8339-2-ira.weiny@intel.com>
+In-Reply-To: <20190606014544.8339-1-ira.weiny@intel.com>
 References: <20190606014544.8339-1-ira.weiny@intel.com>
- <20190606104203.GF7433@quack2.suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190606104203.GF7433@quack2.suse.cz>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: ira.weiny@intel.com, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>
+Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Jun 06, 2019 at 12:42:03PM +0200, Jan Kara wrote:
+From: Ira Weiny <ira.weiny@intel.com>
 
-> So I'd like to actually mandate that you *must* hold the file lease until
-> you unpin all pages in the given range (not just that you have an option to
-> hold a lease). And I believe the kernel should actually enforce this. That
-> way we maintain a sane state that if someone uses a physical location of
-> logical file offset on disk, he has a layout lease. Also once this is done,
-> sysadmin has a reasonably easy way to discover run-away RDMA application
-> and kill it if he wishes so.
-> 
-> The question is on how to exactly enforce that lease is taken until all
-> pages are unpinned. I belive it could be done by tracking number of
-> long-term pinned pages within a lease. Gup_longterm could easily increment
-> the count when verifying the lease exists, gup_longterm users will somehow
-> need to propagate corresponding 'filp' (struct file pointer) to
-> put_user_pages_longterm() callsites so that they can look up appropriate
-> lease to drop reference - probably I'd just transition all gup_longterm()
-> users to a saner API similar to the one we have in mm/frame_vector.c where
-> we don't hand out page pointers but an encapsulating structure that does
-> all the necessary tracking. Removing a lease would need to block until all
-> pins are released - this is probably the most hairy part since we need to
-> handle a case if application just closes the file descriptor which
-> would
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/locks.c                      | 20 ++++++++++++++-----
+ include/trace/events/filelock.h | 35 +++++++++++++++++++++++++++++++++
+ 2 files changed, 50 insertions(+), 5 deletions(-)
 
-I think if you are going to do this then the 'struct filp' that
-represents the lease should be held in the kernel (ie inside the RDMA
-umem) until the kernel is done with it.
-
-Actually does someone have a pointer to this userspace lease API, I'm
-not at all familiar with it, thanks
-
-And yes, a better output format from GUP would be great..
-
-> Maybe we could block only on explicit lease unlock and just drop the layout
-> lease on file close and if there are still pinned pages, send SIGKILL to an
-> application as a reminder it did something stupid...
-
-Which process would you SIGKILL? At least for the rdma case a FD is
-holding the GUP, so to do the put_user_pages() the kernel needs to
-close the FD. I guess it would have to kill every process that has the
-FD open? Seems complicated...
-
-Regards,
-Jason
+diff --git a/fs/locks.c b/fs/locks.c
+index ec1e4a5df629..0cc2b9f30e22 100644
+--- a/fs/locks.c
++++ b/fs/locks.c
+@@ -1534,11 +1534,21 @@ static void time_out_leases(struct inode *inode, struct list_head *dispose)
+ 
+ static bool leases_conflict(struct file_lock *lease, struct file_lock *breaker)
+ {
+-	if ((breaker->fl_flags & FL_LAYOUT) != (lease->fl_flags & FL_LAYOUT))
+-		return false;
+-	if ((breaker->fl_flags & FL_DELEG) && (lease->fl_flags & FL_LEASE))
+-		return false;
+-	return locks_conflict(breaker, lease);
++	bool rc;
++
++	if ((breaker->fl_flags & FL_LAYOUT) != (lease->fl_flags & FL_LAYOUT)) {
++		rc = false;
++		goto trace;
++	}
++	if ((breaker->fl_flags & FL_DELEG) && (lease->fl_flags & FL_LEASE)) {
++		rc = false;
++		goto trace;
++	}
++
++	rc = locks_conflict(breaker, lease);
++trace:
++	trace_leases_conflict(rc, lease, breaker);
++	return rc;
+ }
+ 
+ static bool
+diff --git a/include/trace/events/filelock.h b/include/trace/events/filelock.h
+index fad7befa612d..4b735923f2ff 100644
+--- a/include/trace/events/filelock.h
++++ b/include/trace/events/filelock.h
+@@ -203,6 +203,41 @@ TRACE_EVENT(generic_add_lease,
+ 		show_fl_type(__entry->fl_type))
+ );
+ 
++TRACE_EVENT(leases_conflict,
++	TP_PROTO(bool conflict, struct file_lock *lease, struct file_lock *breaker),
++
++	TP_ARGS(conflict, lease, breaker),
++
++	TP_STRUCT__entry(
++		__field(void *, lease)
++		__field(void *, breaker)
++		__field(unsigned int, l_fl_flags)
++		__field(unsigned int, b_fl_flags)
++		__field(unsigned char, l_fl_type)
++		__field(unsigned char, b_fl_type)
++		__field(bool, conflict)
++	),
++
++	TP_fast_assign(
++		__entry->lease = lease;
++		__entry->l_fl_flags = lease->fl_flags;
++		__entry->l_fl_type = lease->fl_type;
++		__entry->breaker = breaker;
++		__entry->b_fl_flags = breaker->fl_flags;
++		__entry->b_fl_type = breaker->fl_type;
++		__entry->conflict = conflict;
++	),
++
++	TP_printk("conflict %d: lease=0x%p fl_flags=%s fl_type=%s; breaker=0x%p fl_flags=%s fl_type=%s",
++		__entry->conflict,
++		__entry->lease,
++		show_fl_flags(__entry->l_fl_flags),
++		show_fl_type(__entry->l_fl_type),
++		__entry->breaker,
++		show_fl_flags(__entry->b_fl_flags),
++		show_fl_type(__entry->b_fl_type))
++);
++
+ #endif /* _TRACE_FILELOCK_H */
+ 
+ /* This part must be outside protection */
+-- 
+2.20.1
