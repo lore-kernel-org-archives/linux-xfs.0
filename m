@@ -1,249 +1,360 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53700 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728876AbfFFPVM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 6 Jun 2019 11:21:12 -0400
-Date: Thu, 6 Jun 2019 11:21:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH v2 00/11] xfs: rework extent allocation
-Message-ID: <20190606152101.GA2791@bfoster>
-References: <20190522180546.17063-1-bfoster@redhat.com>
- <20190523015659.GL29573@dread.disaster.area>
- <20190523125535.GA20099@bfoster>
- <20190523221552.GM29573@dread.disaster.area>
- <20190524120015.GA32730@bfoster>
- <20190525224317.GZ29573@dread.disaster.area>
- <20190531171136.GA26315@bfoster>
+Received: from userp2120.oracle.com ([156.151.31.85]:53262 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726762AbfFFURj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 16:17:39 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56KDwmu010012
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 20:17:38 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2suj0qtp69-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 20:17:38 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x56KGZAr003523
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 20:17:38 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2swnhayd2u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 06 Jun 2019 20:17:38 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x56KHbGN018276
+        for <linux-xfs@vger.kernel.org>; Thu, 6 Jun 2019 20:17:37 GMT
+Date: Thu, 6 Jun 2019 13:17:35 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/9] xfs: introduce new v5 bulkstat structure
+Message-ID: <20190606201735.GA1871505@magnolia>
+References: <155916885106.758159.3471602893858635007.stgit@magnolia>
+ <155916886943.758159.11587690616263098061.stgit@magnolia>
+ <cd4bd085-7efe-f4cf-6654-ea993e53b241@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190531171136.GA26315@bfoster>
+In-Reply-To: <cd4bd085-7efe-f4cf-6654-ea993e53b241@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
+To: Allison Collins <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Fri, May 31, 2019 at 01:11:36PM -0400, Brian Foster wrote:
-> On Sun, May 26, 2019 at 08:43:17AM +1000, Dave Chinner wrote:
-> > On Fri, May 24, 2019 at 08:00:18AM -0400, Brian Foster wrote:
-> > > On Fri, May 24, 2019 at 08:15:52AM +1000, Dave Chinner wrote:
-> > > > On Thu, May 23, 2019 at 08:55:35AM -0400, Brian Foster wrote:
-> > > > > Hmmm.. I suppose if I had a script that
-> > > > > just dumped every applicable stride/delta value for an inode, I could
-> > > > > dump all of those numbers into a file and we can process it from there..
-> > > > 
-> > > > See how the freesp commands work in xfs_db - they just generate a
-> > > > set of {offset, size} tuples that are then bucketted appropriately.
-> > > > This is probably the best way to do this at the moment - have xfs_db
-> > > > walk the inode BMBTs outputting something like {extent size,
-> > > > distance to next extent} tuples and everything else falls out from
-> > > > how we bucket that information.
-> > > > 
-> > > 
-> > > That sounds plausible. A bit more involved than what I'm currently
-> > > working with, but we do already have a blueprint for the scanning
-> > > implementation required to collect this data via the frag command.
-> > > Perhaps some of this code between the frag/freesp can be generalized and
-> > > reused. I'll take a closer look at it.
-> > > 
-> > > My only concern is I'd prefer to only go down this path as long as we
-> > > plan to land the associated command in xfs_db. So this approach suggests
-> > > to me that we add a "locality" command similar to frag/freesp that
-> > > presents the locality state of the fs. For now I'm only really concerned
-> > > with the data associated with known near mode allocations (i.e., such as
-> > > the extent size:distance relationship you've outlined above) so we can
-> > > evaluate these algorithmic changes, but this would be for fs devs only
-> > > so we could always expand on it down the road if we want to assess
-> > > different allocations. Hm?
-> > 
-> > Yup, I'm needing to do similar analysis myself to determine how
-> > quickly I'm aging the filesystem, so having the tool in xfs_db or
-> > xfs_spaceman would be very useful.
-> > 
-> > FWIW, the tool I've just started writing will just use fallocate and
-> > truncate to hammer the allocation code as hard and as quickly as
-> > possible - I want to do accelerated aging of the filesystem, and so
-> > being able to run tens to hundreds of thousands of free space
-> > manipulations a second is the goal here....
-> > 
+On Wed, Jun 05, 2019 at 03:29:58PM -0700, Allison Collins wrote:
 > 
-> Ok. FWIW, from playing with this so far (before getting distracted for
-> much of this week) the most straightforward place to add this kind of
-> functionality turns out to be the frag command itself. It does 99% of
-> the work required to process data extents already, including pulling the
-> on-disk records of each inode in-core for processing. I basically just
-> had to update that code to include all of the record data and add the
-> locality tracking logic (I haven't got to actually presenting it yet..).
 > 
+> On 5/29/19 3:27 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Introduce a new version of the in-core bulkstat structure that supports
+> > our new v5 format features.  This structure also fills the gaps in the
+> > previous structure.  We leave wiring up the ioctls for the next patch.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >   fs/xfs/libxfs/xfs_fs.h     |   48 +++++++++++++++++++++++++++++++-
+> >   fs/xfs/libxfs/xfs_health.h |    2 +
+> >   fs/xfs/xfs_health.c        |    2 +
+> >   fs/xfs/xfs_ioctl.c         |    9 ++++--
+> >   fs/xfs/xfs_ioctl.h         |    2 +
+> >   fs/xfs/xfs_ioctl32.c       |   10 +++++--
+> >   fs/xfs/xfs_itable.c        |   67 +++++++++++++++++++++++++++++++++-----------
+> >   fs/xfs/xfs_itable.h        |    4 ++-
+> >   fs/xfs/xfs_ondisk.h        |    2 +
+> >   9 files changed, 119 insertions(+), 27 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> > index ef0dce229fa4..132e364eb141 100644
+> > --- a/fs/xfs/libxfs/xfs_fs.h
+> > +++ b/fs/xfs/libxfs/xfs_fs.h
+> > @@ -358,6 +358,52 @@ struct xfs_bstat {
+> >   	__u16		bs_aextents;	/* attribute number of extents	*/
+> >   };
+> > +/* New bulkstat structure that reports v5 features and fixes padding issues */
+> > +struct xfs_bulkstat {
+> > +	uint64_t	bs_ino;		/* inode number			*/
+> > +	uint64_t	bs_size;	/* file size			*/
+> > +
+> > +	uint64_t	bs_blocks;	/* number of blocks		*/
+> > +	uint64_t	bs_xflags;	/* extended flags		*/
+> > +
+> > +	uint64_t	bs_atime;	/* access time, seconds		*/
+> > +	uint64_t	bs_mtime;	/* modify time, seconds		*/
+> > +
+> > +	uint64_t	bs_ctime;	/* inode change time, seconds	*/
+> > +	uint64_t	bs_btime;	/* creation time, seconds	*/
+> > +
+> > +	uint32_t	bs_gen;		/* generation count		*/
+> > +	uint32_t	bs_uid;		/* user id			*/
+> > +	uint32_t	bs_gid;		/* group id			*/
+> > +	uint32_t	bs_projectid;	/* project id			*/
+> > +
+> > +	uint32_t	bs_atime_nsec;	/* access time, nanoseconds	*/
+> > +	uint32_t	bs_mtime_nsec;	/* modify time, nanoseconds	*/
+> > +	uint32_t	bs_ctime_nsec;	/* inode change time, nanoseconds */
+> > +	uint32_t	bs_btime_nsec;	/* creation time, nanoseconds	*/
+> > +
+> > +	uint32_t	bs_blksize;	/* block size			*/
+> > +	uint32_t	bs_rdev;	/* device value			*/
+> > +	uint32_t	bs_cowextsize_blks; /* cow extent size hint, blocks */
+> > +	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
+> > +
+> > +	uint32_t	bs_nlink;	/* number of links		*/
+> > +	uint32_t	bs_extents;	/* number of extents		*/
+> > +	uint32_t	bs_aextents;	/* attribute number of extents	*/
+> > +	uint16_t	bs_version;	/* structure version		*/
+> > +	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
+> > +
+> > +	uint16_t	bs_sick;	/* sick inode metadata		*/
+> > +	uint16_t	bs_checked;	/* checked inode metadata	*/
+> > +	uint16_t	bs_mode;	/* type and mode		*/
+> > +	uint16_t	bs_pad2;	/* zeroed			*/
+> > +
+> > +	uint64_t	bs_pad[7];	/* zeroed			*/
+> > +};
+> > +
+> > +#define XFS_BULKSTAT_VERSION_V1	(1)
+> > +#define XFS_BULKSTAT_VERSION_V5	(5)
+> 
+> Just a nit.  I notice we have a V1 and V5, but I dont see the V1 being used
+> here or else where in the set.  Was that intentional?  Rest looks ok though
 
-I managed to collect some preliminary data based on this strategy. I
-regenerated the associated dataset as I wanted to introduce more near
-mode allocation events where locality is relevant/measurable. The set is
-still generated via filebench, but the workload now runs file 8x file
-creators in parallel with 16x random size file appenders (with 1% of the
-dataset being preallocated to support the appends, and thus without
-contention). In total, it creates 10k files that amount to ~5.8TB of
-space. The filesystem geometry is as follows:
+There's no version field in the old struct xfs_bstat, so that's why I'm
+introducing a new flag now.
 
-meta-data=/dev/mapper/fedora_hpe--apollo--cn99xx--19-tmp isize=512    agcount=8, agsize=268435455 blks
-         =                       sectsz=4096  attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=0
-data     =                       bsize=4096   blocks=1941012480, imaxpct=5
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=521728, version=2
-         =                       sectsz=4096  sunit=1 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
+Further down the road, xfsprogs will be converted to use a wrapper
+function to fill struct xfs_bulkstat.  The wrapper will of course have
+to emulate the v5 call using the old ioctl when userspace is (somehow)
+newer than the kernel, and at that point the emulation will set
+bs_version = V1 to hint to its caller that it's running on an old kernel
+and therefore not to expect fields that weren't in the old version.
 
-The locality data is collected via a hacked up variant of 'xfs_db -c
-frag ...' that reuses the 'freesp' command histogram to display locality
-deltas instead of extent lengths. Each bucket shows how many
-extents/allocs fall into that particular delta range and the average
-length of the associated extents. Note that the percent column is based
-on extent count vs the total (not block or delta counts). Finally, note
-that the final row uses a dummy value of agsize to account AG jumps. As
-such, the associated delta values are invalid, but the extent count/size
-values are valid. This data is included to provide some insight on how
-often we fall back to external AGs (from the locality target) due to
-contention.
+--D
 
-Bear in mind that so far I've only run this workload once on each kernel
-and I believe there is opportunity for variance run-to-run. Current data
-and observations follow:
-
-- Baseline kernel (5.2.0-rc1):
-
-Files on this filesystem average 59.81 extents per file
-      from         to    extents           delta      avgsz    pct
-         0          0          1               0       4879   0.00
-         1          1         18              18        633   0.00
-         2          3         76             193        630   0.01
-         4          7        117             644      10801   0.02
-         8         15        246            2735        701   0.04
-        16         31        411            9769        873   0.07
-        32         63        858           40614        877   0.14
-        64        127       1931          183122        872   0.32
-       128        255       3658          693079       1423   0.60
-       256        511       4393         1619094        767   0.73
-       512       1023       6049         4582491        666   1.00
-      1024       2047      19564        34684608        810   3.23
-      2048       4095      21391        62471744        828   3.53
-      4096       8191      24735       140424459        920   4.08
-      8192      16383      18383       213465918       1030   3.03
-     16384      32767      14447       336272956       1195   2.38
-     32768      65535      12359       580683797       1154   2.04
-     65536     131071      11943      1138606730       1446   1.97
-    131072     262143      16825      3279118006       1701   2.78
-    262144     524287      32133     12725299194       1905   5.30
-    524288    1048575      58899     45775066024       1845   9.72
-   1048576    2097151      95302    147197567651       2020  15.73
-   2097152    4194303      86659    252037848233       2794  14.30
-   4194304    8388607      67067    397513880288       2876  11.07
-   8388608   16777215      47940    583161227489       2319   7.91
-  16777216   33554431      24878    537577890034       3321   4.11
-  33554432   67108863       5889    269065981311      16106   0.97
-  67108864  134217727       3022    304867554478      33429   0.50
- 134217728  268435454       2994    539180795612      35744   0.49
- 268435455  268435455      23709   6364336202595       4840   3.91
-
-- Control (base w/ unconditional SIZE mode allocs):
-
-Files on this filesystem average 58.60 extents per file
-      from         to    extents           delta      avgsz    pct
-         0          0          1               0        180   0.00
-         4          7         19             115      11379   0.00
-         8         15         21             231         15   0.00
-        16         31          3              58         45   0.00
-        64        127          3             288       7124   0.00
-       128        255          4             780      60296   0.00
-       256        511          3             978      51563   0.00
-       512       1023          9            7072     105727   0.00
-      1024       2047         33           50773       4765   0.01
-      2048       4095         98          306258      15689   0.02
-      4096       8191        258         1513775       1981   0.04
-      8192      16383        458         5633481       2537   0.08
-     16384      32767        934        23078682       3013   0.16
-     32768      65535       1783        87851701       3109   0.30
-     65536     131071       3382       332685185       1810   0.57
-    131072     262143       8904      1784659842       2275   1.50
-    262144     524287      23878      9433551033       1903   4.02
-    524288    1048575      54422     42483032893       1894   9.17
-   1048576    2097151      97884    148883431239       2048  16.49
-   2097152    4194303      81999    236737184381       2741  13.81
-   4194304    8388607      86826    510450130696       2639  14.63
-   8388608   16777215      54870    652250378434       2101   9.24
-  16777216   33554431      40408    985568011752       1959   6.81
-  33554432   67108863      46354   2258464180697       2538   7.81
-  67108864  134217727      59461   5705095317989       3380  10.02
- 134217728  268435454      16205   2676447855794       4891   2.73
- 268435455  268435455      15423   4140080022465       5243   2.60
-
-- Test (base + this series):
-
-Files on this filesystem average 59.76 extents per file
-      from         to    extents           delta      avgsz    pct
-         0          0          2               0        419   0.00
-         1          1        258             258        387   0.04
-         2          3         81             201        598   0.01
-         4          7        139             790      13824   0.02
-         8         15        257            2795        710   0.04
-        16         31        417            9790        852   0.07
-        32         63        643           30714        901   0.11
-        64        127       1158          110148        835   0.19
-       128        255       1947          370953        822   0.32
-       256        511       3567         1348313        744   0.59
-       512       1023       5151         3921794        695   0.85
-      1024       2047      22895        39640251        924   3.78
-      2048       4095      34375       100757727        922   5.68
-      4096       8191      30381       171773183        914   5.02
-      8192      16383      18977       214896159       1091   3.13
-     16384      32767       8460       192726268       1212   1.40
-     32768      65535       6071       286544623       1611   1.00
-     65536     131071       7803       757765738       1680   1.29
-    131072     262143      15300      3001300980       1877   2.53
-    262144     524287      27218     10868169139       1993   4.50
-    524288    1048575      60423     47321126020       1948   9.98
-   1048576    2097151     100683    158191884842       2174  16.63
-   2097152    4194303      92642    274106200889       2508  15.30
-   4194304    8388607      73987    436219940202       2421  12.22
-   8388608   16777215      49636    591854981117       2434   8.20
-  16777216   33554431      15716    353157130237       4772   2.60
-  33554432   67108863       4948    228004142686      19221   0.82
-  67108864  134217727       2381    231811967738      35781   0.39
- 134217728  268435454       2140    385403697868      29221   0.35
- 268435455  268435455      17746   4763655584430       7603   2.93
-
-Firstly, comparison of the baseline and control data shows that near
-mode allocation is effective at improving allocation locality compared
-to size mode. In both cases, the 1048576-4194304 buckets hold the
-majority of extents. If we look at the sub-1048576 data, however, ~40%
-of allocations land in this range on the baseline kernel vs. only ~16%
-for the control. Another interesting data point is the noticeable drop
-in AG skips (~24k) from the baseline kernel to the control (~15k). I
-suspect this is due to the additional overhead of locality based
-allocation causing more contention.
-
-Comparison of the baseline and test data shows a generally similar
-breakdown between the two. The sub-1048576 range populates the same
-buckets and makes up ~41% of the total extents. The per-bucket numbers
-differ, but all of the buckets are within a percentage point or so. One
-previously unknown advantage of the test algorithm shown by this data is
-that the number of AG skips drops down to ~18k, which almost splits the
-difference between the baseline and control (and slightly in favor of
-the latter). I suspect that is related to the more simple and bounded
-near mode algorithm as compared to the current 
-
-Thoughts on any of this data or presentation? I could dig further into
-details or alternatively base the histogram on something like extent
-size and show the average delta for each extent size bucket, but I'm not
-sure that will tell us anything profound with respect to this patchset.
-One thing I noticed while processing this data is that the current
-dataset skews heavily towards smaller allocations. I still think it's a
-useful comparison because smaller allocations are more likely to stress
-either algorithm via a larger locality search space, but I may try to
-repeat this test with a workload with fewer files and larger allocations
-and see how that changes things.
-
-Brian
+> Allison
+> 
+> > +
+> >   /* bs_sick flags */
+> >   #define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
+> >   #define XFS_BS_SICK_BMBTD	(1 << 1)  /* data fork */
+> > @@ -374,7 +420,7 @@ struct xfs_bstat {
+> >    * to retain compatibility with "old" filesystems).
+> >    */
+> >   static inline uint32_t
+> > -bstat_get_projid(struct xfs_bstat *bs)
+> > +bstat_get_projid(const struct xfs_bstat *bs)
+> >   {
+> >   	return (uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
+> >   }
+> > diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+> > index 49ddfeac19f2..272005ac8c88 100644
+> > --- a/fs/xfs/libxfs/xfs_health.h
+> > +++ b/fs/xfs/libxfs/xfs_health.h
+> > @@ -185,6 +185,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
+> >   void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
+> >   void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
+> > -void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bstat *bs);
+> > +void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *bs);
+> >   #endif	/* __XFS_HEALTH_H__ */
+> > diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+> > index 4c4929f9e7bf..e8ba6034b0db 100644
+> > --- a/fs/xfs/xfs_health.c
+> > +++ b/fs/xfs/xfs_health.c
+> > @@ -373,7 +373,7 @@ static const struct ioctl_sick_map ino_map[] = {
+> >   void
+> >   xfs_bulkstat_health(
+> >   	struct xfs_inode		*ip,
+> > -	struct xfs_bstat		*bs)
+> > +	struct xfs_bulkstat		*bs)
+> >   {
+> >   	const struct ioctl_sick_map	*m;
+> >   	unsigned int			sick;
+> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> > index f02a9bd757ad..0f70005cbe61 100644
+> > --- a/fs/xfs/xfs_ioctl.c
+> > +++ b/fs/xfs/xfs_ioctl.c
+> > @@ -724,10 +724,13 @@ xfs_ioc_space(
+> >   /* Return 0 on success or positive error */
+> >   int
+> >   xfs_fsbulkstat_one_fmt(
+> > -	struct xfs_ibulk	*breq,
+> > -	const struct xfs_bstat	*bstat)
+> > +	struct xfs_ibulk		*breq,
+> > +	const struct xfs_bulkstat	*bstat)
+> >   {
+> > -	if (copy_to_user(breq->ubuffer, bstat, sizeof(*bstat)))
+> > +	struct xfs_bstat		bs1;
+> > +
+> > +	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
+> > +	if (copy_to_user(breq->ubuffer, &bs1, sizeof(bs1)))
+> >   		return -EFAULT;
+> >   	return xfs_ibulk_advance(breq, sizeof(struct xfs_bstat));
+> >   }
+> > diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+> > index cb34bc821201..514d3028a134 100644
+> > --- a/fs/xfs/xfs_ioctl.h
+> > +++ b/fs/xfs/xfs_ioctl.h
+> > @@ -82,7 +82,7 @@ struct xfs_bstat;
+> >   struct xfs_inogrp;
+> >   int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
+> > -			   const struct xfs_bstat *bstat);
+> > +			   const struct xfs_bulkstat *bstat);
+> >   int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
+> >   #endif
+> > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> > index af753f2708e8..9806d27892df 100644
+> > --- a/fs/xfs/xfs_ioctl32.c
+> > +++ b/fs/xfs/xfs_ioctl32.c
+> > @@ -170,10 +170,14 @@ xfs_bstime_store_compat(
+> >   /* Return 0 on success or positive error (to xfs_bulkstat()) */
+> >   STATIC int
+> >   xfs_fsbulkstat_one_fmt_compat(
+> > -	struct xfs_ibulk	*breq,
+> > -	const struct xfs_bstat	*buffer)
+> > +	struct xfs_ibulk		*breq,
+> > +	const struct xfs_bulkstat	*bstat)
+> >   {
+> > -	struct compat_xfs_bstat	__user *p32 = breq->ubuffer;
+> > +	struct compat_xfs_bstat	__user	*p32 = breq->ubuffer;
+> > +	struct xfs_bstat		bs1;
+> > +	struct xfs_bstat		*buffer = &bs1;
+> > +
+> > +	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
+> >   	if (put_user(buffer->bs_ino,	  &p32->bs_ino)		||
+> >   	    put_user(buffer->bs_mode,	  &p32->bs_mode)	||
+> > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> > index bade54d6ac64..764b7f98fd5b 100644
+> > --- a/fs/xfs/xfs_itable.c
+> > +++ b/fs/xfs/xfs_itable.c
+> > @@ -25,7 +25,7 @@
+> >    * Bulk Stat
+> >    * =========
+> >    *
+> > - * Use the inode walking functions to fill out struct xfs_bstat for every
+> > + * Use the inode walking functions to fill out struct xfs_bulkstat for every
+> >    * allocated inode, then pass the stat information to some externally provided
+> >    * iteration function.
+> >    */
+> > @@ -62,7 +62,7 @@ xfs_bulkstat_one_int(
+> >   	struct xfs_icdinode	*dic;		/* dinode core info pointer */
+> >   	struct xfs_inode	*ip;		/* incore inode pointer */
+> >   	struct inode		*inode;
+> > -	struct xfs_bstat	*buf;		/* return buffer */
+> > +	struct xfs_bulkstat	*buf;		/* return buffer */
+> >   	int			error = 0;	/* error value */
+> >   	if (xfs_internal_inum(mp, ino)) {
+> > @@ -91,37 +91,35 @@ xfs_bulkstat_one_int(
+> >   	/* xfs_iget returns the following without needing
+> >   	 * further change.
+> >   	 */
+> > -	buf->bs_projid_lo = dic->di_projid_lo;
+> > -	buf->bs_projid_hi = dic->di_projid_hi;
+> > +	buf->bs_projectid = xfs_get_projid(ip);
+> >   	buf->bs_ino = ino;
+> >   	buf->bs_uid = dic->di_uid;
+> >   	buf->bs_gid = dic->di_gid;
+> >   	buf->bs_size = dic->di_size;
+> >   	buf->bs_nlink = inode->i_nlink;
+> > -	buf->bs_atime.tv_sec = inode->i_atime.tv_sec;
+> > -	buf->bs_atime.tv_nsec = inode->i_atime.tv_nsec;
+> > -	buf->bs_mtime.tv_sec = inode->i_mtime.tv_sec;
+> > -	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
+> > -	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
+> > -	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
+> > +	buf->bs_atime = inode->i_atime.tv_sec;
+> > +	buf->bs_atime_nsec = inode->i_atime.tv_nsec;
+> > +	buf->bs_mtime = inode->i_mtime.tv_sec;
+> > +	buf->bs_mtime_nsec = inode->i_mtime.tv_nsec;
+> > +	buf->bs_ctime = inode->i_ctime.tv_sec;
+> > +	buf->bs_ctime_nsec = inode->i_ctime.tv_nsec;
+> > +	buf->bs_btime = dic->di_crtime.t_sec;
+> > +	buf->bs_btime_nsec = dic->di_crtime.t_nsec;
+> >   	buf->bs_gen = inode->i_generation;
+> >   	buf->bs_mode = inode->i_mode;
+> >   	buf->bs_xflags = xfs_ip2xflags(ip);
+> > -	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
+> > +	buf->bs_extsize_blks = dic->di_extsize;
+> >   	buf->bs_extents = dic->di_nextents;
+> > -	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
+> >   	xfs_bulkstat_health(ip, buf);
+> > -	buf->bs_dmevmask = dic->di_dmevmask;
+> > -	buf->bs_dmstate = dic->di_dmstate;
+> >   	buf->bs_aextents = dic->di_anextents;
+> >   	buf->bs_forkoff = XFS_IFORK_BOFF(ip);
+> > +	buf->bs_version = XFS_BULKSTAT_VERSION_V5;
+> >   	if (dic->di_version == 3) {
+> >   		if (dic->di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
+> > -			buf->bs_cowextsize = dic->di_cowextsize <<
+> > -					mp->m_sb.sb_blocklog;
+> > +			buf->bs_cowextsize_blks = dic->di_cowextsize;
+> >   	}
+> >   	switch (dic->di_format) {
+> > @@ -259,6 +257,43 @@ xfs_bulkstat(
+> >   	return error;
+> >   }
+> > +/* Convert bulkstat (v5) to bstat (v1). */
+> > +void
+> > +xfs_bulkstat_to_bstat(
+> > +	struct xfs_mount		*mp,
+> > +	struct xfs_bstat		*bs1,
+> > +	const struct xfs_bulkstat	*bstat)
+> > +{
+> > +	bs1->bs_ino = bstat->bs_ino;
+> > +	bs1->bs_mode = bstat->bs_mode;
+> > +	bs1->bs_nlink = bstat->bs_nlink;
+> > +	bs1->bs_uid = bstat->bs_uid;
+> > +	bs1->bs_gid = bstat->bs_gid;
+> > +	bs1->bs_rdev = bstat->bs_rdev;
+> > +	bs1->bs_blksize = bstat->bs_blksize;
+> > +	bs1->bs_size = bstat->bs_size;
+> > +	bs1->bs_atime.tv_sec = bstat->bs_atime;
+> > +	bs1->bs_mtime.tv_sec = bstat->bs_mtime;
+> > +	bs1->bs_ctime.tv_sec = bstat->bs_ctime;
+> > +	bs1->bs_atime.tv_nsec = bstat->bs_atime_nsec;
+> > +	bs1->bs_mtime.tv_nsec = bstat->bs_mtime_nsec;
+> > +	bs1->bs_ctime.tv_nsec = bstat->bs_ctime_nsec;
+> > +	bs1->bs_blocks = bstat->bs_blocks;
+> > +	bs1->bs_xflags = bstat->bs_xflags;
+> > +	bs1->bs_extsize = bstat->bs_extsize_blks << mp->m_sb.sb_blocklog;
+> > +	bs1->bs_extents = bstat->bs_extents;
+> > +	bs1->bs_gen = bstat->bs_gen;
+> > +	bs1->bs_projid_lo = bstat->bs_projectid & 0xFFFF;
+> > +	bs1->bs_forkoff = bstat->bs_forkoff;
+> > +	bs1->bs_projid_hi = bstat->bs_projectid >> 16;
+> > +	bs1->bs_sick = bstat->bs_sick;
+> > +	bs1->bs_checked = bstat->bs_checked;
+> > +	bs1->bs_cowextsize = bstat->bs_cowextsize_blks << mp->m_sb.sb_blocklog;
+> > +	bs1->bs_dmevmask = 0;
+> > +	bs1->bs_dmstate = 0;
+> > +	bs1->bs_aextents = bstat->bs_aextents;
+> > +}
+> > +
+> >   struct xfs_inumbers_chunk {
+> >   	inumbers_fmt_pf		formatter;
+> >   	struct xfs_ibulk	*breq;
+> > diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+> > index b4c89454e27a..806069c9838c 100644
+> > --- a/fs/xfs/xfs_itable.h
+> > +++ b/fs/xfs/xfs_itable.h
+> > @@ -41,10 +41,12 @@ xfs_ibulk_advance(
+> >    */
+> >   typedef int (*bulkstat_one_fmt_pf)(struct xfs_ibulk *breq,
+> > -		const struct xfs_bstat *bstat);
+> > +		const struct xfs_bulkstat *bstat);
+> >   int xfs_bulkstat_one(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
+> >   int xfs_bulkstat(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
+> > +void xfs_bulkstat_to_bstat(struct xfs_mount *mp, struct xfs_bstat *bs1,
+> > +		const struct xfs_bulkstat *bstat);
+> >   typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
+> >   		const struct xfs_inogrp *igrp);
+> > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> > index c8ba98fae30a..0b4cdda68524 100644
+> > --- a/fs/xfs/xfs_ondisk.h
+> > +++ b/fs/xfs/xfs_ondisk.h
+> > @@ -146,6 +146,8 @@ xfs_check_ondisk_structs(void)
+> >   	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
+> >   	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
+> >   	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+> > +
+> > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
+> >   }
+> >   #endif /* __XFS_ONDISK_H */
+> > 
