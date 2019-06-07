@@ -1,65 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:35532 "EHLO sandeen.net"
+Received: from mga18.intel.com ([134.134.136.126]:24997 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727467AbfFQOy2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 17 Jun 2019 10:54:28 -0400
-Subject: Re: xfs_db sigsegv, xfs.org wiki and misc
-References: <20190617140924.7db29e91@narya.grin.hu>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <c5193452-a2a3-703b-764a-6993096f3a81@sandeen.net>
-Date: Mon, 17 Jun 2019 09:54:26 -0500
+        id S1728446AbfFGOvB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jun 2019 10:51:01 -0400
+Date: Fri, 7 Jun 2019 07:52:13 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190607145213.GB14559@iweiny-DESK2.sc.intel.com>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606104203.GF7433@quack2.suse.cz>
+ <20190606195114.GA30714@ziepe.ca>
+ <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
+ <20190607103636.GA12765@quack2.suse.cz>
+ <20190607121729.GA14802@ziepe.ca>
 MIME-Version: 1.0
-In-Reply-To: <20190617140924.7db29e91@narya.grin.hu>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190607121729.GA14802@ziepe.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: grin <lxfs@drop.grin.hu>, linux-xfs@vger.kernel.org
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On 6/17/19 7:09 AM, grin wrote:
-> Hello,
+On Fri, Jun 07, 2019 at 09:17:29AM -0300, Jason Gunthorpe wrote:
+> On Fri, Jun 07, 2019 at 12:36:36PM +0200, Jan Kara wrote:
 > 
-> I haven't checked XFS project lately, and that's a decade or so, it
-> means that when I have met a bug I went out and tried to see where and
-> how to report. Just mentioning the following, since you may not be
-> aware from the inside:
+> > Because the pins would be invisible to sysadmin from that point on. 
 > 
-> The xfs.org seems to be the "main" xfs website, search gives it first,
-> and has a huge amount of informations. Problem is: most links point to
-> nonexistant pages (SGI links hijacked by HP main page), including those
-> mentioning documentation, development or suggest bug reporting. Only
-> two valid pointers are the #xfs on FreeNode and this mailing list. Some
-> mentioned https://xfs.wiki.kernel.org/ which is bacially impossible to 
-> find unless looking for it specifically, and it doesn't contain much
-> info anyway. So I can't see who to mention this to, maybe you know.
-
-yes sadly no xfs devs own xfs.org
-
-> Anyway. xfs_db SIGSEGV, v5.0, pretty reliably, on
->> inode <n>
->> type inode
->> print 
->  [...lots of output of the extents...]
->  crash
+> It is not invisible, it just shows up in a rdma specific kernel
+> interface. You have to use rdma netlink to see the kernel object
+> holding this pin.
 > 
-> I am not sure how it's handled: whether it's a very low level utility
-> and sigsegv is a way to show "you're doing something wrong", or rather
-> it is a bug and shall be fixed. If you would kindly tell me whether
-> I shall report it anywhere, send metadump, or anything, I would be much
-> happier (to know at least).
+> If this visibility is the main sticking point I suggest just enhancing
+> the existing MR reporting to include the file info for current GUP
+> pins and teaching lsof to collect information from there as well so it
+> is easy to use.
 > 
-> (At least one external tool tries to use it and it's bitten by the
-> crash.)
+> If the ownership of the lease transfers to the MR, and we report that
+> ownership to userspace in a way lsof can find, then I think all the
+> concerns that have been raised are met, right?
 
-core + binary perhaps?  Or provide a gdb backtrace, or a metadump of the
-filesystem?  If you want to provide a metadump I'd suggest contacting me
-off list to do so.
+I was contemplating some new lsof feature yesterday.  But what I don't think we
+want is sysadmins to have multiple tools for multiple subsystems.  Or even have
+to teach lsof something new for every potential new subsystem user of GUP pins.
 
-Thanks,
--Eric
+I was thinking more along the lines of reporting files which have GUP pins on
+them directly somewhere (dare I say procfs?) and teaching lsof to report that
+information.  That would cover any subsystem which does a longterm pin.
 
-> Thanks,
-> g
 > 
+> > ugly to live so we have to come up with something better. The best I can
+> > currently come up with is to have a method associated with the lease that
+> > would invalidate the RDMA context that holds the pins in the same way that
+> > a file close would do it.
+> 
+> This is back to requiring all RDMA HW to have some new behavior they
+> currently don't have..
+> 
+> The main objection to the current ODP & DAX solution is that very
+> little HW can actually implement it, having the alternative still
+> require HW support doesn't seem like progress.
+> 
+> I think we will eventually start seein some HW be able to do this
+> invalidation, but it won't be universal, and I'd rather leave it
+> optional, for recovery from truely catastrophic errors (ie my DAX is
+> on fire, I need to unplug it).
+
+Agreed.  I think software wise there is not much some of the devices can do
+with such an "invalidate".
+
+Ira
