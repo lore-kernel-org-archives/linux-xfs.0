@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45942 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729625AbfFGT3o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:29:44 -0400
-Subject: [PATCH 6/9] libxfs: break out FSCOUNTS manpage
+Received: from userp2130.oracle.com ([156.151.31.86]:44458 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729625AbfFGT3u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:29:50 -0400
+Subject: [PATCH 7/9] libxfs: break out the RESBLKS manpage
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Jun 2019 12:29:38 -0700
-Message-ID: <155993577871.2343530.12457677945958502175.stgit@magnolia>
+Date: Fri, 07 Jun 2019 12:29:45 -0700
+Message-ID: <155993578504.2343530.9106560408928916864.stgit@magnolia>
 In-Reply-To: <155993574034.2343530.12919951702156931143.stgit@magnolia>
 References: <155993574034.2343530.12919951702156931143.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,67 +20,62 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a separate manual page for the FSCOUNTS ioctl so we can document
-how it works.
+Create a separate manual page for the RESBLKS ioctls so we can document
+how they work.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man2/ioctl_xfs_fscounts.2 |   67 +++++++++++++++++++++++++++++++++++++++++
- man/man3/xfsctl.3             |   14 +++++----
- 2 files changed, 75 insertions(+), 6 deletions(-)
- create mode 100644 man/man2/ioctl_xfs_fscounts.2
+ man/man2/ioctl_xfs_getresblks.2 |   65 +++++++++++++++++++++++++++++++++++++++
+ man/man3/xfsctl.3               |   14 +++++++-
+ 2 files changed, 77 insertions(+), 2 deletions(-)
+ create mode 100644 man/man2/ioctl_xfs_getresblks.2
 
 
-diff --git a/man/man2/ioctl_xfs_fscounts.2 b/man/man2/ioctl_xfs_fscounts.2
+diff --git a/man/man2/ioctl_xfs_getresblks.2 b/man/man2/ioctl_xfs_getresblks.2
 new file mode 100644
-index 00000000..44b214a1
+index 00000000..57533927
 --- /dev/null
-+++ b/man/man2/ioctl_xfs_fscounts.2
-@@ -0,0 +1,67 @@
++++ b/man/man2/ioctl_xfs_getresblks.2
+@@ -0,0 +1,65 @@
 +.\" Copyright (c) 2019, Oracle.  All rights reserved.
 +.\"
 +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
 +.\" SPDX-License-Identifier: GPL-2.0+
 +.\" %%%LICENSE_END
-+.TH IOCTL-XFS-FSCOUNTS 2 2019-04-16 "XFS"
++.TH IOCTL-XFS-GETRESBLKS 2 2019-04-16 "XFS"
 +.SH NAME
-+ioctl_xfs_fscounts \- query XFS summary counter information
++ioctl_xfs_getresblks \- query XFS summary counter information
 +.SH SYNOPSIS
 +.br
 +.B #include <xfs/xfs_fs.h>
 +.PP
-+.BI "int ioctl(int " fd ", XFS_IOC_FSCOUNTS, struct xfs_fsop_counts *" arg );
++.BI "int ioctl(int " fd ", XFS_IOC_GET_RESBLKS, struct xfs_fsop_resblks *" arg );
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_SET_RESBLKS, struct xfs_fsop_resblks *" arg );
 +.SH DESCRIPTION
-+Query the raw filesystem summary counters.
-+Unlike
-+.BR statvfs (3),
-+the values returned here are the raw values, which do not reflect any
-+alterations or limits set by quotas.
-+The counter information is conveyed in a structure of the following form:
++Query or set the free space reservation information.
++These blocks are reserved by the filesystem as a last-ditch attempt to prevent
++metadata update failures due to insufficient space.
++Only the system administrator can call these ioctls, because overriding the
++defaults is extremely dangerous and should never be tried by anyone.
++.PP
++The reservation information is conveyed in a structure of the following form:
 +.PP
 +.in +4n
 +.nf
-+struct xfs_fscounts {
-+	__u64   freedata;
-+	__u64   freertx;
-+	__u64   freeino;
-+	__u64   allocino;
++struct xfs_fsop_resblks {
++	__u64  resblks;
++	__u64  resblks_avail;
 +};
 +.fi
 +.in
 +.PP
-+.I freedata
-+is the number of free filesystem blocks on the data device.
++.I resblks
++is the number of blocks that the filesystem will try to maintain to prevent
++critical out of space situations.
 +.PP
-+.I freertx
-+is the number of free xtents on the realtime device.
-+.PP
-+.I freeino
-+is the number of inode records that are not in use within the space that has
-+been allocated for them.
-+.PP
-+.I allocino
-+is the number of inode records for which space has been allocated.
++.I resblks_avail
++is the number of reserved blocks remaining.
 +.SH RETURN VALUE
 +On error, \-1 is returned, and
 +.I errno
@@ -100,50 +95,46 @@ index 00000000..44b214a1
 +.TP
 +.B EIO
 +An I/O error was encountered while performing the query.
++.TP
++.B EPERM
++Caller does not have permission to call this ioctl.
 +.SH CONFORMING TO
 +This API is specific to XFS filesystem on the Linux kernel.
 +.SH SEE ALSO
 +.BR ioctl (2)
 diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index 148119a9..007f7d58 100644
+index 007f7d58..25e51417 100644
 --- a/man/man3/xfsctl.3
 +++ b/man/man3/xfsctl.3
-@@ -390,6 +390,12 @@ See
- .BR ioctl_xfs_scrub_metadata (2)
+@@ -396,12 +396,21 @@ See
+ .BR ioctl_xfs_fscounts (2)
  for more information.
  
 +.TP
-+.B XFS_IOC_FSCOUNTS
++.nf
++.B XFS_IOC_GET_RESBLKS
++.fi
++.TP
++.B XFS_IOC_SET_RESBLKS
 +See
-+.BR ioctl_xfs_fscounts (2)
++.BR ioctl_xfs_getresblks (2)
 +for more information.
++Save yourself a lot of frustration and avoid these ioctls.
 +
  .PP
  .nf
  .B XFS_IOC_THAW
-@@ -398,16 +404,11 @@ for more information.
- .B XFS_IOC_SET_RESBLKS
+ .B XFS_IOC_FREEZE
+-.B XFS_IOC_GET_RESBLKS
+-.B XFS_IOC_SET_RESBLKS
  .B XFS_IOC_FSGROWFSDATA
  .B XFS_IOC_FSGROWFSLOG
--.B XFS_IOC_FSGROWFSRT
  .fi
- .TP
--.B XFS_IOC_FSCOUNTS
-+.B XFS_IOC_FSGROWFSRT
- These interfaces are used to implement various filesystem internal
- operations on XFS filesystems.
--For
--.B XFS_FS_COUNTS
--(get filesystem dynamic global information), the output structure is of type
--.BR xfs_fsop_counts_t .
- The remainder of these operations will not be described further
- as they are not of general use to applications.
- 
-@@ -416,6 +417,7 @@ as they are not of general use to applications.
- .BR ioctl_xfs_fsop_geometry (2),
+@@ -418,6 +427,7 @@ as they are not of general use to applications.
  .BR ioctl_xfs_fsbulkstat (2),
  .BR ioctl_xfs_fsinumbers (2),
-+.BR ioctl_xfs_fscounts (2),
+ .BR ioctl_xfs_fscounts (2),
++.BR ioctl_xfs_getresblks (2),
  .BR fstatfs (2),
  .BR statfs (2),
  .BR xfs (5),
