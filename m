@@ -1,86 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58708 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:46316 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726441AbfFZCem (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:34:42 -0400
-Subject: [PATCH 4/5] vfs: don't allow most setxattr to immutable files
+        with ESMTP id S1730978AbfFGSeW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 14:34:22 -0400
+Date: Fri, 7 Jun 2019 11:34:10 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Jun 2019 19:33:24 -0700
-Message-ID: <156151640402.2283603.11025968584452701508.stgit@magnolia>
-In-Reply-To: <156151637248.2283603.8458727861336380714.stgit@magnolia>
-References: <156151637248.2283603.8458727861336380714.stgit@magnolia>
+Subject: Re: [PATCH] Documentation: xfs: Fix typo
+Message-ID: <20190607183410.GF1871505@magnolia>
+References: <20190509030549.2253-1-ruansy.fnst@cn.fujitsu.com>
+ <20190607114415.32cb32dd@lwn.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190607114415.32cb32dd@lwn.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
-Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jun 07, 2019 at 11:44:15AM -0600, Jonathan Corbet wrote:
+> On Thu, 9 May 2019 11:05:49 +0800
+> Shiyang Ruan <ruansy.fnst@cn.fujitsu.com> wrote:
+> 
+> > In "Y+P" of this line, there are two non-ASCII characters(0xd9 0x8d)
+> > following behind the 'Y'.  Shown as a small '=' under the '+' in VIM
+> > and a '賺' in webpage[1].
+> > 
+> > I think it's a mistake and remove these strange characters.
+> > 
+> > [1]: https://www.kernel.org/doc/Documentation/filesystems/xfs-delayed-logging-design.txt
+> > 
+> > Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+> > ---
+> >  Documentation/filesystems/xfs-delayed-logging-design.txt | 2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/Documentation/filesystems/xfs-delayed-logging-design.txt b/Documentation/filesystems/xfs-delayed-logging-design.txt
+> > index 2ce36439c09f..9a6dd289b17b 100644
+> > --- a/Documentation/filesystems/xfs-delayed-logging-design.txt
+> > +++ b/Documentation/filesystems/xfs-delayed-logging-design.txt
+> > @@ -34,7 +34,7 @@ transaction:
+> >  	   D			A+B+C+D		X+n+m+o
+> >  	    <object written to disk>
+> >  	   E			   E		   Y (> X+n+m+o)
+> > -	   F			  E+F		  Yٍ+p
+> > +	   F			  E+F		  Y+p
+> 
+> OK, that does look funky, applied.
+> 
+> This patch probably should have been copied to the XFS list (added), even
+> though get_maintainer.pl doesn't know that.
 
-The chattr manpage has this to say about immutable files:
+Yeah, it's "Y+p" not "Y<weird plusequals thing>p" in the xfs
+documentation repo:
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/tree/design/XFS_Filesystem_Structure/delayed_logging.asciidoc
 
-However, we don't actually check the immutable flag in the setattr code,
-which means that we can update inode flags and project ids and extent
-size hints on supposedly immutable files.  Therefore, reject setflags
-and fssetxattr calls on an immutable file if the file is immutable and
-will remain that way.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/inode.c |   27 +++++++++++++++++++++++++++
- 1 file changed, 27 insertions(+)
+I doubt the value of maintaining duplicate copies of this document in
+the kernel and the xfs documentation repo, and since the xfs docs and
+kernel licences aren't compatible maybe we should withdraw one...
 
+...but since Dave is the author I'm gonna punt to him.  IMHO either we
+should claim responsibility for those files in MAINTAINERS or drop them.
+:)
 
-diff --git a/fs/inode.c b/fs/inode.c
-index cf07378e5731..4261c709e50e 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2214,6 +2214,14 @@ int vfs_ioc_setflags_prepare(struct inode *inode, unsigned int oldflags,
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
-+	/*
-+	 * We aren't allowed to change any other flags if the immutable flag is
-+	 * already set and is not being unset.
-+	 */
-+	if ((oldflags & FS_IMMUTABLE_FL) && (flags & FS_IMMUTABLE_FL) &&
-+	    oldflags != flags)
-+		return -EPERM;
-+
- 	/*
- 	 * Now that we're done checking the new flags, flush all pending IO and
- 	 * dirty mappings before setting S_IMMUTABLE on an inode via
-@@ -2284,6 +2292,25 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 	    !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
- 		return -EINVAL;
- 
-+	/*
-+	 * We aren't allowed to change any fields if the immutable flag is
-+	 * already set and is not being unset.
-+	 */
-+	if ((old_fa->fsx_xflags & FS_XFLAG_IMMUTABLE) &&
-+	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
-+		if (old_fa->fsx_xflags != fa->fsx_xflags)
-+			return -EPERM;
-+		if (old_fa->fsx_projid != fa->fsx_projid)
-+			return -EPERM;
-+		if ((fa->fsx_xflags & (FS_XFLAG_EXTSIZE |
-+				       FS_XFLAG_EXTSZINHERIT)) &&
-+		    old_fa->fsx_extsize != fa->fsx_extsize)
-+			return -EPERM;
-+		if ((old_fa->fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
-+		    old_fa->fsx_cowextsize != fa->fsx_cowextsize)
-+			return -EPERM;
-+	}
-+
- 	/* Extent size hints of zero turn off the flags. */
- 	if (fa->fsx_extsize == 0)
- 		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
+Thanks for the heads-up,
+--D
+
+> Thanks,
+> 
+> jon
