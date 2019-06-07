@@ -1,321 +1,514 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:48682 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405444AbfFKQVx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 12:21:53 -0400
-Date: Tue, 11 Jun 2019 09:21:28 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:43224 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729625AbfFGT2c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:28:32 -0400
+Subject: [PATCH 1/6] libfrog: refactor online geometry queries
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 10/10] xfs: refactor INUMBERS to use iwalk functions
-Message-ID: <20190611162127.GT1871505@magnolia>
-References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
- <155968503328.1657646.15035810252397604734.stgit@magnolia>
- <20190611150851.GC10942@bfoster>
+Date: Fri, 07 Jun 2019 12:28:21 -0700
+Message-ID: <155993570154.2343365.13903320635252036528.stgit@magnolia>
+In-Reply-To: <155993569512.2343365.15510991248022865602.stgit@magnolia>
+References: <155993569512.2343365.15510991248022865602.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190611150851.GC10942@bfoster>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: sandeen@sandeen.net, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 11, 2019 at 11:08:51AM -0400, Brian Foster wrote:
-> On Tue, Jun 04, 2019 at 02:50:33PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Now that we have generic functions to walk inode records, refactor the
-> > INUMBERS implementation to use it.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_ioctl.c   |   20 ++++--
-> >  fs/xfs/xfs_ioctl.h   |    2 +
-> >  fs/xfs/xfs_ioctl32.c |   35 ++++------
-> >  fs/xfs/xfs_itable.c  |  168 ++++++++++++++++++++------------------------------
-> >  fs/xfs/xfs_itable.h  |   22 +------
-> >  fs/xfs/xfs_iwalk.c   |  161 ++++++++++++++++++++++++++++++++++++++++++++++--
-> >  fs/xfs/xfs_iwalk.h   |   12 ++++
-> 
-> It looks like there's a decent amount of xfs_iwalk code changes in this
-> patch. That should probably be a separate patch, at minimum to have a
-> separate changelog to document the changes/updates required for
-> inumbers.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-<nod> I'll break out the iwalk changes into a separate patch so that
-this one only has the changes needed to wire up the ioctl.
+Refactor all the open-coded XFS_IOC_FSGEOMETRY queries into a single
+helper that we can use to standardize behaviors across mixed xfslibs
+versions.  This is the prelude to introducing a new FSGEOMETRY version
+in 5.2 and needing to fix the (relatively few) client programs.
 
-> >  7 files changed, 262 insertions(+), 158 deletions(-)
-> > 
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> > index 06abe5c9c0ee..bade54d6ac64 100644
-> > --- a/fs/xfs/xfs_itable.c
-> > +++ b/fs/xfs/xfs_itable.c
-> > @@ -259,121 +259,85 @@ xfs_bulkstat(
-> >  	return error;
-> >  }
-> >  
-> > -int
-> > -xfs_inumbers_fmt(
-> > -	void			__user *ubuffer, /* buffer to write to */
-> > -	const struct xfs_inogrp	*buffer,	/* buffer to read from */
-> > -	long			count,		/* # of elements to read */
-> > -	long			*written)	/* # of bytes written */
-> > +struct xfs_inumbers_chunk {
-> > +	inumbers_fmt_pf		formatter;
-> > +	struct xfs_ibulk	*breq;
-> > +};
-> > +
-> > +/*
-> > + * INUMBERS
-> > + * ========
-> > + * This is how we export inode btree records to userspace, so that XFS tools
-> > + * can figure out where inodes are allocated.
-> > + */
-> > +
-> > +/*
-> > + * Format the inode group structure and report it somewhere.
-> > + *
-> > + * Similar to xfs_bulkstat_one_int, lastino is the inode cursor as we walk
-> > + * through the filesystem so we move it forward unless there was a runtime
-> > + * error.  If the formatter tells us the buffer is now full we also move the
-> > + * cursor forward and abort the walk.
-> > + */
-> > +STATIC int
-> > +xfs_inumbers_walk(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_trans	*tp,
-> > +	xfs_agnumber_t		agno,
-> > +	const struct xfs_inobt_rec_incore *irec,
-> > +	void			*data)
-> >  {
-> > -	if (copy_to_user(ubuffer, buffer, count * sizeof(*buffer)))
-> > -		return -EFAULT;
-> > -	*written = count * sizeof(*buffer);
-> > -	return 0;
-> > +	struct xfs_inogrp	inogrp = {
-> > +		.xi_startino	= XFS_AGINO_TO_INO(mp, agno, irec->ir_startino),
-> > +		.xi_alloccount	= irec->ir_count - irec->ir_freecount,
-> > +		.xi_allocmask	= ~irec->ir_free,
-> > +	};
-> 
-> Not related to this patch, but I'm wondering if we should be using
-> xfs_inobt_irec_to_allocmask() here to mask off holes from the resulting
-> allocation bitmap. Eh, I guess it's misleading either way..
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ Makefile            |    1 +
+ fsr/xfs_fsr.c       |   26 ++++----------------------
+ growfs/xfs_growfs.c |   25 +++++++++----------------
+ include/xfrog.h     |   22 ++++++++++++++++++++++
+ io/bmap.c           |    3 ++-
+ io/fsmap.c          |    3 ++-
+ io/open.c           |    3 ++-
+ io/stat.c           |    5 +++--
+ libfrog/fsgeom.c    |   18 ++++++++++++++++++
+ quota/free.c        |    6 +++---
+ repair/xfs_repair.c |    5 +++--
+ rtcp/Makefile       |    3 +++
+ rtcp/xfs_rtcp.c     |    7 ++++---
+ scrub/phase1.c      |    3 ++-
+ spaceman/file.c     |    3 ++-
+ spaceman/info.c     |   25 ++++++++-----------------
+ 16 files changed, 88 insertions(+), 70 deletions(-)
+ create mode 100644 include/xfrog.h
 
-Holes were supposed to be marked in ir_free also, right?
 
-So (assuming the irec isn't corrupt) we should be protected against
-reporting a hole as an "allocated" inode, right?
-
-> > +	struct xfs_inumbers_chunk *ic = data;
-> > +	xfs_agino_t		agino;
-> > +	int			error;
-> > +
-> > +	error = ic->formatter(ic->breq, &inogrp);
-> > +	if (error && error != XFS_IBULK_BUFFER_FULL)
-> > +		return error;
-> > +	if (error == XFS_IBULK_BUFFER_FULL)
-> > +		error = XFS_INOBT_WALK_ABORT;
-> > +
-> > +	agino = irec->ir_startino + XFS_INODES_PER_CHUNK;
-> > +	ic->breq->startino = XFS_AGINO_TO_INO(mp, agno, agino);
-> > +	return error;
-> >  }
-> >  
-> ...
-> > diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> > index c4a9c4c246b7..3a35d1cf7e14 100644
-> > --- a/fs/xfs/xfs_iwalk.c
-> > +++ b/fs/xfs/xfs_iwalk.c
-> ...
-> > @@ -286,7 +298,7 @@ xfs_iwalk_ag_start(
-> >  	 * have to deal with tearing down the cursor to walk the records.
-> >  	 */
-> >  	error = xfs_iwalk_grab_ichunk(*curpp, agino, &icount,
-> > -			&iwag->recs[iwag->nr_recs]);
-> > +			&iwag->recs[iwag->nr_recs], trim);
-> 
-> Hmm, it looks like we could lift the lookup from xfs_iwalk_grab_ichunk()
-> up into xfs_iwalk_ag_start() and avoid needing to pass trim down
-> multiple levels. In fact, if we're not trimming the record we don't need
-> to grab the record at all in this path. We could do the lookup (setting
-> has_more) then bounce right up to the core walker algorithm, right? If
-> so, that seems a bit cleaner in terms of only using special cased code
-> when it's actually necessary.
-
-Right.
-
-> 
-> >  	if (error)
-> >  		return error;
-> >  	if (icount)
-> ...
-> > @@ -561,3 +574,135 @@ xfs_iwalk_threaded(
-> ...
-> > +/*
-> > + * Walk all inode btree records in a single AG, from @iwag->startino to the end
-> > + * of the AG.
-> > + */
-> > +STATIC int
-> > +xfs_inobt_walk_ag(
-> > +	struct xfs_iwalk_ag		*iwag)
-> > +{
-> > +	struct xfs_mount		*mp = iwag->mp;
-> > +	struct xfs_trans		*tp = iwag->tp;
-> > +	struct xfs_buf			*agi_bp = NULL;
-> > +	struct xfs_btree_cur		*cur = NULL;
-> > +	xfs_agnumber_t			agno;
-> > +	xfs_agino_t			agino;
-> > +	int				has_more;
-> > +	int				error = 0;
-> > +
-> > +	/* Set up our cursor at the right place in the inode btree. */
-> > +	agno = XFS_INO_TO_AGNO(mp, iwag->startino);
-> > +	agino = XFS_INO_TO_AGINO(mp, iwag->startino);
-> > +	error = xfs_iwalk_ag_start(iwag, agno, agino, &cur, &agi_bp, &has_more,
-> > +			false);
-> > +
-> > +	while (!error && has_more && !xfs_pwork_want_abort(&iwag->pwork)) {
-> > +		struct xfs_inobt_rec_incore	*irec;
-> > +
-> > +		cond_resched();
-> > +
-> > +		/* Fetch the inobt record. */
-> > +		irec = &iwag->recs[iwag->nr_recs];
-> > +		error = xfs_inobt_get_rec(cur, irec, &has_more);
-> > +		if (error || !has_more)
-> > +			break;
-> > +
-> > +		/*
-> > +		 * If there's space in the buffer for more records, increment
-> > +		 * the btree cursor and grab more.
-> > +		 */
-> > +		if (++iwag->nr_recs < iwag->sz_recs) {
-> > +			error = xfs_btree_increment(cur, 0, &has_more);
-> > +			if (error || !has_more)
-> > +				break;
-> > +			continue;
-> > +		}
-> > +
-> > +		/*
-> > +		 * Otherwise, we need to save cursor state and run the callback
-> > +		 * function on the cached records.  The run_callbacks function
-> > +		 * is supposed to return a cursor pointing to the record where
-> > +		 * we would be if we had been able to increment like above.
-> > +		 */
-> > +		error = xfs_iwalk_run_callbacks(iwag, xfs_inobt_walk_ag_recs,
-> > +				agno, &cur, &agi_bp, &has_more);
-> > +	}
-> > +
-> > +	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
-> > +
-> > +	/* Walk any records left behind in the cache. */
-> > +	if (iwag->nr_recs == 0 || error || xfs_pwork_want_abort(&iwag->pwork))
-> > +		return error;
-> > +
-> > +	return xfs_inobt_walk_ag_recs(iwag);
-> > +}
-> 
-> Similar comments apply here as for the previous xfs_iwalk_ag() patch.
-> Though looking at it, the only differences here are the lack of free
-> inode check, readahead and the callback function (particularly once you
-> consider the partial completion refactoring we discussed earlier). I
-> think this could all be generalized with a single flag such that there's
-> no need for separate xfs_[inobt|iwalk]_ag() functions.
-
-Yep.  Already refactoring that. :)
-
-> Hmmm.. perhaps we could use a flag or separate function pointers in
-> struct xfs_iwalk_ag to accomplish the same thing all the way up through
-> the record walker functions. IOW, xfs_iwalk_ag_recs() looks like it
-> could call either callback based on which is defined in the
-> xfs_iwalk_ag.
-
-<nod>
-
-> This could all be done as a separate patch of course, if that's easier.
-
-I might just go back and remove the function pointer from run_callbacks
-in the earlier patches...
-
-> 
-> > +
-> > +/*
-> > + * Walk all inode btree records in the filesystem starting from @startino.  The
-> > + * @inobt_walk_fn will be called for each btree record, being passed the incore
-> > + * record and @data.  @max_prefetch controls how many inobt records we try to
-> > + * cache ahead of time.
-> > + */
-> > +int
-> > +xfs_inobt_walk(
-> > +	struct xfs_mount	*mp,
-> > +	struct xfs_trans	*tp,
-> > +	xfs_ino_t		startino,
-> > +	xfs_inobt_walk_fn	inobt_walk_fn,
-> > +	unsigned int		max_prefetch,
-> > +	void			*data)
-> > +{
-> > +	struct xfs_iwalk_ag	iwag = {
-> > +		.mp		= mp,
-> > +		.tp		= tp,
-> > +		.inobt_walk_fn	= inobt_walk_fn,
-> > +		.data		= data,
-> > +		.startino	= startino,
-> > +		.pwork		= XFS_PWORK_SINGLE_THREADED,
-> > +	};
-> > +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
-> > +	int			error;
-> > +
-> > +	ASSERT(agno < mp->m_sb.sb_agcount);
-> > +
-> > +	xfs_iwalk_set_prefetch(&iwag, max_prefetch * XFS_INODES_PER_CHUNK);
-> 
-> A brief comment above this line would be helpful. Something like:
-> 
-> 	/* translate inumbers record count to inode count */
-
-Done.  Thanks for the review!
-
---D
-
-> Brian
-> 
-> > +	error = xfs_iwalk_alloc(&iwag);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	for (; agno < mp->m_sb.sb_agcount; agno++) {
-> > +		error = xfs_inobt_walk_ag(&iwag);
-> > +		if (error)
-> > +			break;
-> > +		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-> > +	}
-> > +
-> > +	xfs_iwalk_free(&iwag);
-> > +	return error;
-> > +}
-> > diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
-> > index 76d8f87a39ef..20bee93d4676 100644
-> > --- a/fs/xfs/xfs_iwalk.h
-> > +++ b/fs/xfs/xfs_iwalk.h
-> > @@ -18,4 +18,16 @@ int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
-> >  		xfs_iwalk_fn iwalk_fn, unsigned int max_prefetch, bool poll,
-> >  		void *data);
-> >  
-> > +/* Walk all inode btree records in the filesystem starting from @startino. */
-> > +typedef int (*xfs_inobt_walk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
-> > +				 xfs_agnumber_t agno,
-> > +				 const struct xfs_inobt_rec_incore *irec,
-> > +				 void *data);
-> > +/* Return value (for xfs_inobt_walk_fn) that aborts the walk immediately. */
-> > +#define XFS_INOBT_WALK_ABORT	(XFS_IWALK_ABORT)
-> > +
-> > +int xfs_inobt_walk(struct xfs_mount *mp, struct xfs_trans *tp,
-> > +		xfs_ino_t startino, xfs_inobt_walk_fn inobt_walk_fn,
-> > +		unsigned int max_prefetch, void *data);
-> > +
-> >  #endif /* __XFS_IWALK_H__ */
-> > 
+diff --git a/Makefile b/Makefile
+index 9204bed8..0edc2700 100644
+--- a/Makefile
++++ b/Makefile
+@@ -107,6 +107,7 @@ copy: libxlog
+ mkfs: libxcmd
+ spaceman: libxcmd
+ scrub: libhandle libxcmd
++rtcp: libfrog
+ 
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index fef6262c..0bfecf37 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -11,6 +11,7 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_attr_sf.h"
+ #include "path.h"
++#include "xfrog.h"
+ 
+ #include <fcntl.h>
+ #include <errno.h>
+@@ -83,9 +84,8 @@ int cmp(const void *, const void *);
+ static void tmp_init(char *mnt);
+ static char * tmp_next(char *mnt);
+ static void tmp_close(char *mnt);
+-int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
+ 
+-static xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
++static struct xfs_fsop_geom fsgeom;	/* geometry of active mounted system */
+ 
+ #define NMOUNT 64
+ static int numfs;
+@@ -102,12 +102,6 @@ static int	nfrags = 0;	/* Debug option: Coerse into specific number
+ 				 * of extents */
+ static int	openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
+ 
+-static int
+-xfs_fsgeometry(int fd, xfs_fsop_geom_v1_t *geom)
+-{
+-    return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, geom);
+-}
+-
+ static int
+ xfs_bulkstat_single(int fd, xfs_ino_t *lastip, xfs_bstat_t *ubuffer)
+ {
+@@ -630,7 +624,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+ 		return -1;
+ 	}
+ 
+-	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
++	if (xfrog_geometry(fsfd, &fsgeom) < 0 ) {
+ 		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
+ 			  mntdir);
+ 		close(fsfd);
+@@ -772,7 +766,7 @@ fsrfile(char *fname, xfs_ino_t ino)
+ 	}
+ 
+ 	/* Get the fs geometry */
+-	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
++	if (xfrog_geometry(fsfd, &fsgeom) < 0 ) {
+ 		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
+ 		goto out;
+ 	}
+@@ -1612,18 +1606,6 @@ getnextents(int fd)
+ 	return(nextents);
+ }
+ 
+-/*
+- * Get the fs geometry
+- */
+-int
+-xfs_getgeom(int fd, xfs_fsop_geom_v1_t * fsgeom)
+-{
+-	if (xfs_fsgeometry(fd, fsgeom) < 0) {
+-		return -1;
+-	}
+-	return 0;
+-}
+-
+ /*
+  * Get xfs realtime space information
+  */
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 20089d2b..28dd6d84 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -7,6 +7,7 @@
+ #include "libxfs.h"
+ #include "path.h"
+ #include "fsgeom.h"
++#include "xfrog.h"
+ 
+ static void
+ usage(void)
+@@ -165,22 +166,14 @@ main(int argc, char **argv)
+ 	}
+ 
+ 	/* get the current filesystem size & geometry */
+-	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
+-		/*
+-		 * OK, new xfsctl barfed - back off and try earlier version
+-		 * as we're probably running an older kernel version.
+-		 * Only field added in the v2 geometry xfsctl is "logsunit"
+-		 * so we'll zero that out for later display (as zero).
+-		 */
+-		geo.logsunit = 0;
+-		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
+-			fprintf(stderr, _(
+-				"%s: cannot determine geometry of filesystem"
+-				" mounted at %s: %s\n"),
+-				progname, fname, strerror(errno));
+-			exit(1);
+-		}
++	if (xfrog_geometry(ffd, &geo)) {
++		fprintf(stderr, _(
++			"%s: cannot determine geometry of filesystem"
++			" mounted at %s: %s\n"),
++			progname, fname, strerror(errno));
++		exit(1);
+ 	}
++
+ 	isint = geo.logstart > 0;
+ 
+ 	/*
+@@ -359,7 +352,7 @@ main(int argc, char **argv)
+ 		}
+ 	}
+ 
+-	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &ngeo) < 0) {
++	if (xfrog_geometry(ffd, &ngeo)) {
+ 		fprintf(stderr, _("%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"),
+ 			progname, strerror(errno));
+ 		exit(1);
+diff --git a/include/xfrog.h b/include/xfrog.h
+new file mode 100644
+index 00000000..b683cf63
+--- /dev/null
++++ b/include/xfrog.h
+@@ -0,0 +1,22 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2002 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++#ifndef __XFROG_H__
++#define __XFROG_H__
++
++/*
++ * XFS Filesystem Runtime Online Gluecode
++ * ======================================
++ *
++ * These support functions wrap the more complex xfs ioctls so that xfs
++ * utilities can take advantage of them without having to deal with graceful
++ * degradation in the face of new ioctls.  They will also provide higher level
++ * abstractions when possible.
++ */
++
++struct xfs_fsop_geom;
++int xfrog_geometry(int fd, struct xfs_fsop_geom *fsgeo);
++
++#endif	/* __XFROG_H__ */
+diff --git a/io/bmap.c b/io/bmap.c
+index d408826a..5f0d12ca 100644
+--- a/io/bmap.c
++++ b/io/bmap.c
+@@ -9,6 +9,7 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t bmap_cmd;
+ 
+@@ -105,7 +106,7 @@ bmap_f(
+ 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
+ 
+ 	if (vflag) {
+-		c = xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo);
++		c = xfrog_geometry(file->fd, &fsgeo);
+ 		if (c < 0) {
+ 			fprintf(stderr,
+ 				_("%s: can't get geometry [\"%s\"]: %s\n"),
+diff --git a/io/fsmap.c b/io/fsmap.c
+index 477c36fc..d3ff7dea 100644
+--- a/io/fsmap.c
++++ b/io/fsmap.c
+@@ -9,6 +9,7 @@
+ #include "path.h"
+ #include "io.h"
+ #include "input.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t	fsmap_cmd;
+ static dev_t		xfs_data_dev;
+@@ -447,7 +448,7 @@ fsmap_f(
+ 	}
+ 
+ 	if (vflag) {
+-		c = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &fsgeo);
++		c = xfrog_geometry(file->fd, &fsgeo);
+ 		if (c < 0) {
+ 			fprintf(stderr,
+ 				_("%s: can't get geometry [\"%s\"]: %s\n"),
+diff --git a/io/open.c b/io/open.c
+index c7f5248a..997df119 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -9,6 +9,7 @@
+ #include "init.h"
+ #include "io.h"
+ #include "libxfs.h"
++#include "xfrog.h"
+ 
+ #ifndef __O_TMPFILE
+ #if defined __alpha__
+@@ -118,7 +119,7 @@ openfile(
+ 	if (flags & IO_PATH) {
+ 		/* Can't call ioctl() on O_PATH fds */
+ 		memset(geom, 0, sizeof(*geom));
+-	} else if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
++	} else if (xfrog_geometry(fd, geom)) {
+ 		perror("XFS_IOC_FSGEOMETRY");
+ 		close(fd);
+ 		return -1;
+diff --git a/io/stat.c b/io/stat.c
+index 37c0b2e8..26b4eb68 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -12,6 +12,7 @@
+ #include "io.h"
+ #include "statx.h"
+ #include "libxfs.h"
++#include "xfrog.h"
+ 
+ #include <fcntl.h>
+ 
+@@ -194,8 +195,8 @@ statfs_f(
+ 	}
+ 	if (file->flags & IO_FOREIGN)
+ 		return 0;
+-	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
+-		perror("XFS_IOC_FSGEOMETRY_V1");
++	if (xfrog_geometry(file->fd, &fsgeo)) {
++		perror("XFS_IOC_FSGEOMETRY");
+ 	} else {
+ 		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
+ 		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index 8879d161..a6dab3a8 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -4,6 +4,7 @@
+  */
+ #include "libxfs.h"
+ #include "fsgeom.h"
++#include "xfrog.h"
+ 
+ void
+ xfs_report_geom(
+@@ -67,3 +68,20 @@ xfs_report_geom(
+ 		geo->rtextsize * geo->blocksize, (unsigned long long)geo->rtblocks,
+ 			(unsigned long long)geo->rtextents);
+ }
++
++/* Try to obtain the xfs geometry. */
++int
++xfrog_geometry(
++	int			fd,
++	struct xfs_fsop_geom	*fsgeo)
++{
++	int			ret;
++
++	memset(fsgeo, 0, sizeof(*fsgeo));
++
++	ret = ioctl(fd, XFS_IOC_FSGEOMETRY, fsgeo);
++	if (!ret)
++		return 0;
++
++	return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, fsgeo);
++}
+diff --git a/quota/free.c b/quota/free.c
+index 1d13006e..f47001bf 100644
+--- a/quota/free.c
++++ b/quota/free.c
+@@ -8,6 +8,7 @@
+ #include "command.h"
+ #include "init.h"
+ #include "quota.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t free_cmd;
+ 
+@@ -67,9 +68,8 @@ mount_free_space_data(
+ 	}
+ 
+ 	if (!(mount->fs_flags & FS_FOREIGN)) {
+-		if ((xfsctl(mount->fs_dir, fd, XFS_IOC_FSGEOMETRY_V1,
+-							&fsgeo)) < 0) {
+-			perror("XFS_IOC_FSGEOMETRY_V1");
++		if (xfrog_geometry(fd, &fsgeo)) {
++			perror("XFS_IOC_FSGEOMETRY");
+ 			close(fd);
+ 			return 0;
+ 		}
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index 9657503f..e6717d3c 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -22,6 +22,7 @@
+ #include "dinode.h"
+ #include "slab.h"
+ #include "rmap.h"
++#include "xfrog.h"
+ 
+ /*
+  * option tables for getsubopt calls
+@@ -636,11 +637,11 @@ check_fs_vs_host_sectsize(
+ {
+ 	int	fd;
+ 	long	old_flags;
+-	struct xfs_fsop_geom_v1 geom = { 0 };
++	struct xfs_fsop_geom	geom = { 0 };
+ 
+ 	fd = libxfs_device_to_fd(x.ddev);
+ 
+-	if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
++	if (xfrog_geometry(fd, &geom)) {
+ 		do_log(_("Cannot get host filesystem geometry.\n"
+ 	"Repair may fail if there is a sector size mismatch between\n"
+ 	"the image and the host filesystem.\n"));
+diff --git a/rtcp/Makefile b/rtcp/Makefile
+index 808b5378..264b4f27 100644
+--- a/rtcp/Makefile
++++ b/rtcp/Makefile
+@@ -9,6 +9,9 @@ LTCOMMAND = xfs_rtcp
+ CFILES = xfs_rtcp.c
+ LLDFLAGS = -static
+ 
++LLDLIBS = $(LIBFROG)
++LTDEPENDENCIES = $(LIBFROG)
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
+index f928a86a..0b37ee89 100644
+--- a/rtcp/xfs_rtcp.c
++++ b/rtcp/xfs_rtcp.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include "libxfs.h"
++#include "xfrog.h"
+ 
+ int rtcp(char *, char *, int);
+ int xfsrtextsize(char *path);
+@@ -368,8 +369,8 @@ rtcp( char *source, char *target, int fextsize)
+ int
+ xfsrtextsize( char *path)
+ {
+-	int fd, rval, rtextsize;
+-	xfs_fsop_geom_v1_t geo;
++	struct xfs_fsop_geom	geo;
++	int			fd, rval, rtextsize;
+ 
+ 	fd = open( path, O_RDONLY );
+ 	if ( fd < 0 ) {
+@@ -377,7 +378,7 @@ xfsrtextsize( char *path)
+ 			progname, path, strerror(errno));
+ 		return -1;
+ 	}
+-	rval = xfsctl( path, fd, XFS_IOC_FSGEOMETRY_V1, &geo );
++	rval = xfrog_geometry(fd, &geo);
+ 	close(fd);
+ 	if ( rval < 0 )
+ 		return -1;
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 04a5f4a9..5ab2a4fe 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -26,6 +26,7 @@
+ #include "disk.h"
+ #include "scrub.h"
+ #include "repair.h"
++#include "xfrog.h"
+ 
+ /* Phase 1: Find filesystem geometry (and clean up after) */
+ 
+@@ -129,7 +130,7 @@ _("Does not appear to be an XFS filesystem!"));
+ 	}
+ 
+ 	/* Retrieve XFS geometry. */
+-	error = ioctl(ctx->mnt_fd, XFS_IOC_FSGEOMETRY, &ctx->geo);
++	error = xfrog_geometry(ctx->mnt_fd, &ctx->geo);
+ 	if (error) {
+ 		str_errno(ctx, ctx->mntpoint);
+ 		return false;
+diff --git a/spaceman/file.c b/spaceman/file.c
+index 7e33e07e..690dd760 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -12,6 +12,7 @@
+ #include "init.h"
+ #include "path.h"
+ #include "space.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t print_cmd;
+ 
+@@ -56,7 +57,7 @@ openfile(
+ 		return -1;
+ 	}
+ 
+-	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
++	if (xfrog_geometry(fd, geom)) {
+ 		if (errno == ENOTTY)
+ 			fprintf(stderr,
+ _("%s: Not on a mounted XFS filesystem.\n"),
+diff --git a/spaceman/info.c b/spaceman/info.c
+index 01d0744a..714d715c 100644
+--- a/spaceman/info.c
++++ b/spaceman/info.c
+@@ -9,6 +9,7 @@
+ #include "path.h"
+ #include "space.h"
+ #include "fsgeom.h"
++#include "xfrog.h"
+ 
+ static void
+ info_help(void)
+@@ -37,24 +38,14 @@ info_f(
+ 	}
+ 
+ 	/* get the current filesystem size & geometry */
+-	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
++	error = xfrog_geometry(file->fd, &geo);
+ 	if (error) {
+-		/*
+-		 * OK, new xfsctl barfed - back off and try earlier version
+-		 * as we're probably running an older kernel version.
+-		 * Only field added in the v2 geometry xfsctl is "logsunit"
+-		 * so we'll zero that out for later display (as zero).
+-		 */
+-		geo.logsunit = 0;
+-		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
+-		if (error) {
+-			fprintf(stderr, _(
+-				"%s: cannot determine geometry of filesystem"
+-				" mounted at %s: %s\n"),
+-				progname, file->name, strerror(errno));
+-			exitcode = 1;
+-			return 0;
+-		}
++		fprintf(stderr, _(
++			"%s: cannot determine geometry of filesystem"
++			" mounted at %s: %s\n"),
++			progname, file->name, strerror(errno));
++		exitcode = 1;
++		return 0;
+ 	}
+ 
+ 	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
