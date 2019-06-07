@@ -1,44 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:56118 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729172AbfFGTaU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:30:20 -0400
-Subject: [PATCH v2 0/6] xfsprogs-5.1: fix various problems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Jun 2019 12:28:15 -0700
-Message-ID: <155993569512.2343365.15510991248022865602.stgit@magnolia>
+Received: from ms.lwn.net ([45.79.88.28]:58516 "EHLO ms.lwn.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729172AbfFGTaW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jun 2019 15:30:22 -0400
+Date: Fri, 7 Jun 2019 13:30:21 -0600
+From: Jonathan Corbet <corbet@lwn.net>
+Subject: Re: [PATCH] Documentation: xfs: Fix typo
+Message-ID: <20190607133021.3a537e3a@lwn.net>
+In-Reply-To: <20190607183410.GF1871505@magnolia>
+References: <20190509030549.2253-1-ruansy.fnst@cn.fujitsu.com>
+        <20190607114415.32cb32dd@lwn.net>
+        <20190607183410.GF1871505@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi all,
+On Fri, 7 Jun 2019 11:34:10 -0700
+"Darrick J. Wong" <darrick.wong@oracle.com> wrote:
 
-Latest respin of patches fixing various problems in xfsprogs.
+> I doubt the value of maintaining duplicate copies of this document in
+> the kernel and the xfs documentation repo, and since the xfs docs and
+> kernel licences aren't compatible maybe we should withdraw one...
 
-Patches 1-3 refactor all utilities to use common libfrog functions to
-retrieve the filesystem geometry, bulkstat, and inumbers.  The helpers
-will make it easier for newer userspace to fall back to older versions
-of ioctls.
+Um .... the in-kernel docs say nothing about an incompatible license.  I
+see only a GPL license at the repo you pointed to as well.  Is there
+something I don't know going on here?  If the licenses aren't compatible
+then those files shouldn't be there.
 
-Patch 4 strengthens mkfs's log alignment checking code.
+Thanks,
 
-Patch 5 fixes xfs_io repair command error reporting.
-
-Patch 6 fixes libxfs-diff to handle files that are in libxfs/ in xfsprogs
-but still in fs/xfs/ in the kernel.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-5.1-fixes
+jon
