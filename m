@@ -1,76 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46316 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730978AbfFGSeW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 14:34:22 -0400
-Date: Fri, 7 Jun 2019 11:34:10 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] Documentation: xfs: Fix typo
-Message-ID: <20190607183410.GF1871505@magnolia>
-References: <20190509030549.2253-1-ruansy.fnst@cn.fujitsu.com>
- <20190607114415.32cb32dd@lwn.net>
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:39600 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730864AbfFGSuV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 14:50:21 -0400
+Received: by mail-qt1-f196.google.com with SMTP id i34so3477430qta.6
+        for <linux-xfs@vger.kernel.org>; Fri, 07 Jun 2019 11:50:21 -0700 (PDT)
+Date: Fri, 7 Jun 2019 15:50:19 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190607185019.GP14802@ziepe.ca>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606104203.GF7433@quack2.suse.cz>
+ <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
+ <20190607110426.GB12765@quack2.suse.cz>
+ <20190607182534.GC14559@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190607114415.32cb32dd@lwn.net>
+In-Reply-To: <20190607182534.GC14559@iweiny-DESK2.sc.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jonathan Corbet <corbet@lwn.net>
-Cc: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Ira Weiny <ira.weiny@intel.com>
+Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, linux-rdma@vger.kernel.org
 
-On Fri, Jun 07, 2019 at 11:44:15AM -0600, Jonathan Corbet wrote:
-> On Thu, 9 May 2019 11:05:49 +0800
-> Shiyang Ruan <ruansy.fnst@cn.fujitsu.com> wrote:
-> 
-> > In "Y+P" of this line, there are two non-ASCII characters(0xd9 0x8d)
-> > following behind the 'Y'.  Shown as a small '=' under the '+' in VIM
-> > and a '賺' in webpage[1].
-> > 
-> > I think it's a mistake and remove these strange characters.
-> > 
-> > [1]: https://www.kernel.org/doc/Documentation/filesystems/xfs-delayed-logging-design.txt
-> > 
-> > Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> > ---
-> >  Documentation/filesystems/xfs-delayed-logging-design.txt | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/Documentation/filesystems/xfs-delayed-logging-design.txt b/Documentation/filesystems/xfs-delayed-logging-design.txt
-> > index 2ce36439c09f..9a6dd289b17b 100644
-> > --- a/Documentation/filesystems/xfs-delayed-logging-design.txt
-> > +++ b/Documentation/filesystems/xfs-delayed-logging-design.txt
-> > @@ -34,7 +34,7 @@ transaction:
-> >  	   D			A+B+C+D		X+n+m+o
-> >  	    <object written to disk>
-> >  	   E			   E		   Y (> X+n+m+o)
-> > -	   F			  E+F		  Yٍ+p
-> > +	   F			  E+F		  Y+p
-> 
-> OK, that does look funky, applied.
-> 
-> This patch probably should have been copied to the XFS list (added), even
-> though get_maintainer.pl doesn't know that.
+On Fri, Jun 07, 2019 at 11:25:35AM -0700, Ira Weiny wrote:
 
-Yeah, it's "Y+p" not "Y<weird plusequals thing>p" in the xfs
-documentation repo:
+> And I think this is related to what Christoph Hellwig is doing with bio_vec and
+> dma.  Really we want drivers out of the page processing business.
 
-https://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git/tree/design/XFS_Filesystem_Structure/delayed_logging.asciidoc
+At least for RDMA, and a few other places I've noticed, I'd really
+like to get totally out of the handling struct pages game.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+We are DMA based and really only want DMA addresses for the target
+device. I know other places need CPU pages or more complicated
+things.. But I also know there are other drivers like RDMA..
 
-I doubt the value of maintaining duplicate copies of this document in
-the kernel and the xfs documentation repo, and since the xfs docs and
-kernel licences aren't compatible maybe we should withdraw one...
+So I think it would be very helpful to have a driver API something
+like:
 
-...but since Dave is the author I'm gonna punt to him.  IMHO either we
-should claim responsibility for those files in MAINTAINERS or drop them.
-:)
+int get_user_mem_for_dma(struct device *dma_device,
+                void __user *mem, size_t length,
+                struct gup_handle *res,
+                struct 'bio dma list' *dma_list,
+                const struct dma_params *params);
+void put_user_mem_for_dma(struct gup_handle *res, 
+                 struct 'bio dma list' *dma_list);
 
-Thanks for the heads-up,
---D
+And we could hope to put in there all the specialty logic we want to
+have for this flow:
+ - The weird HMM stuff in hmm_range_dma_map()
+ - Interaction with DAX
+ - Interaction with DMA BUF
+ - Holding file leases
+ - PCI peer 2 peer features
+ - Optimizations for huge pages
+ - Handling page dirtying from DMA
+ - etc
 
-> Thanks,
-> 
-> jon
+I think Matthew was suggesting something like this at LS/MM, so +1
+from here..
+
+When Christoph sends his BIO dma work I was thinking of investigating
+this avenue, as we already have something quite similiar in RDMA that
+could perhaps be hoisted out for re-use into mm/
+
+Jason
