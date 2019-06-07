@@ -1,61 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:41240 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728064AbfFGMRb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 08:17:31 -0400
-Received: by mail-qt1-f195.google.com with SMTP id s57so1912682qte.8
-        for <linux-xfs@vger.kernel.org>; Fri, 07 Jun 2019 05:17:30 -0700 (PDT)
-Date: Fri, 7 Jun 2019 09:17:29 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190607121729.GA14802@ziepe.ca>
-References: <20190606014544.8339-1-ira.weiny@intel.com>
- <20190606104203.GF7433@quack2.suse.cz>
- <20190606195114.GA30714@ziepe.ca>
- <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
- <20190607103636.GA12765@quack2.suse.cz>
+Received: from mx1.redhat.com ([209.132.183.28]:50510 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727102AbfFGM4W (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 7 Jun 2019 08:56:22 -0400
+Date: Fri, 7 Jun 2019 08:56:18 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH v2 00/11] xfs: rework extent allocation
+Message-ID: <20190607125618.GB57123@bfoster>
+References: <20190522180546.17063-1-bfoster@redhat.com>
+ <20190523015659.GL29573@dread.disaster.area>
+ <20190523125535.GA20099@bfoster>
+ <20190523221552.GM29573@dread.disaster.area>
+ <20190524120015.GA32730@bfoster>
+ <20190525224317.GZ29573@dread.disaster.area>
+ <20190531171136.GA26315@bfoster>
+ <20190606220558.GB14308@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190607103636.GA12765@quack2.suse.cz>
+In-Reply-To: <20190606220558.GB14308@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Ira Weiny <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Fri, Jun 07, 2019 at 12:36:36PM +0200, Jan Kara wrote:
+On Fri, Jun 07, 2019 at 08:05:59AM +1000, Dave Chinner wrote:
+> On Fri, May 31, 2019 at 01:11:36PM -0400, Brian Foster wrote:
+> > On Sun, May 26, 2019 at 08:43:17AM +1000, Dave Chinner wrote:
+> > > Most of the cases I've seen have had the same symptom - "skip to
+> > > next AG, allocate at same high-up-in AGBNO target as the previous AG
+> > > wanted, then allocate backwards in the same AG until freespace
+> > > extent is exhausted. It then skips to some other freespace extent,
+> > > and depending on whether it's a forwards or backwards skip the
+> > > problem either goes away or continues. This is not a new behaviour,
+> > > I first saw it some 15 years ago, but I've never been able to
+> > > provoke it reliably enough with test code to get to the root
+> > > cause...
+> > > 
+> > 
+> > I guess the biggest question to me is whether we're more looking for a
+> > backwards searching pattern or a pattern where we split up a larger free
+> > extent into smaller chunks (in reverse), or both. I can definitely see
+> > some isolated areas where a backwards search could lead to this
+> > behavior. E.g., my previous experiment to replace near mode allocs with
+> > size mode allocs always allocates in reverse when free space is
+> > sufficiently fragmented. To see this in practice would require repeated
+> > size mode allocations, however, which I think is unlikely because once
+> > we jump AGs and do a size mode alloc, the subsequent allocs should be
+> > near mode within the new AG (unless we jump again and again, which I
+> > don't think is consistent with what you're describing).
+> > 
+> > Hmm, the next opportunity for this kind of behavior in the near mode
+> > allocator is probably the bnobt left/right span. This would require the
+> > right circumstances to hit. We'd have to bypass the first (cntbt)
+> > algorithm then find a closer extent in the left mode search vs. the
+> > right mode search, and then probably repeat that across however many
+> > allocations it takes to work out of this state.
+> > 
+> > If instead we're badly breaking up an extent in the wrong order, it
+> > looks like we do have the capability to allocate the right portion of an
+> > extent (in xfs_alloc_compute_diff()) but that is only enabled for non
+> > data allocations. xfs_alloc_compute_aligned() can cause a similar effect
+> > if alignment is set, but I'm not sure that would break up an extent into
+> > more than one usable chunk.
+> 
+> This is pretty much matches what I've been able to infer about the
+> cause, but lacking a way to actually trigger it and be able to
+> monitor the behviour in real time is where I've got stuck on this.
+> I see the result in aged, fragmented filesystems and can infer how
+> it may have occurred, but can't cause it to occur on demand...
+> 
 
-> Because the pins would be invisible to sysadmin from that point on. 
+Ok.
 
-It is not invisible, it just shows up in a rdma specific kernel
-interface. You have to use rdma netlink to see the kernel object
-holding this pin.
+> > In any event, maybe I'll hack some temporary code in the xfs_db locality
+> > stuff to quickly flag whether I happen to get lucky enough to reproduce
+> > any instances of this during the associated test workloads (and if so,
+> > try and collect more data).
+> 
+> *nod*
+> 
+> Best we can do, I think, and hope we stumble across an easily
+> reproducable trigger...
+> 
 
-If this visibility is the main sticking point I suggest just enhancing
-the existing MR reporting to include the file info for current GUP
-pins and teaching lsof to collect information from there as well so it
-is easy to use.
+Unfortunately I haven't seen any instances of this in the workloads I
+ran to generate the most recent datasets. I have a couple more
+experiments to try though so I'll keep an eye out.
 
-If the ownership of the lease transfers to the MR, and we report that
-ownership to userspace in a way lsof can find, then I think all the
-concerns that have been raised are met, right?
+Brian
 
-> ugly to live so we have to come up with something better. The best I can
-> currently come up with is to have a method associated with the lease that
-> would invalidate the RDMA context that holds the pins in the same way that
-> a file close would do it.
-
-This is back to requiring all RDMA HW to have some new behavior they
-currently don't have..
-
-The main objection to the current ODP & DAX solution is that very
-little HW can actually implement it, having the alternative still
-require HW support doesn't seem like progress.
-
-I think we will eventually start seein some HW be able to do this
-invalidation, but it won't be universal, and I'd rather leave it
-optional, for recovery from truely catastrophic errors (ie my DAX is
-on fire, I need to unplug it).
-
-Jason
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
