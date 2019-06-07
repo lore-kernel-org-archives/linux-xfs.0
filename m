@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:45142 "EHLO
+Received: from aserp2130.oracle.com ([141.146.126.79]:45270 "EHLO
         aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729625AbfFGT25 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:28:57 -0400
-Subject: [PATCH 5/6] xfs_io: repair_f should use its own name
+        with ESMTP id S1729625AbfFGT3C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 7 Jun 2019 15:29:02 -0400
+Subject: [PATCH 6/6] libxfs-diff: try harder to find the kernel equivalent
+ libxfs files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 07 Jun 2019 12:28:51 -0700
-Message-ID: <155993573179.2343365.6485890004354925274.stgit@magnolia>
+Date: Fri, 07 Jun 2019 12:28:58 -0700
+Message-ID: <155993573805.2343365.14121664229730887571.stgit@magnolia>
 In-Reply-To: <155993569512.2343365.15510991248022865602.stgit@magnolia>
 References: <155993569512.2343365.15510991248022865602.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,25 +21,24 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If the repair command fails, it should tag the error message with its
-own name ("repair").
+Now that we're syncing userspace libxfs/ files with kernel fs/xfs/
+files, teach the diff tool to try fs/xfs/xfs_foo.c if
+fs/xfs/libxfs/xfs_foo.c doesn't exist.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- io/scrub.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ tools/libxfs-diff |    1 +
+ 1 file changed, 1 insertion(+)
 
 
-diff --git a/io/scrub.c b/io/scrub.c
-index 2ff1a6af..052497be 100644
---- a/io/scrub.c
-+++ b/io/scrub.c
-@@ -293,7 +293,7 @@ repair_ioctl(
+diff --git a/tools/libxfs-diff b/tools/libxfs-diff
+index fa57c004..c18ad487 100755
+--- a/tools/libxfs-diff
++++ b/tools/libxfs-diff
+@@ -22,5 +22,6 @@ dir="$(readlink -m "${dir}/..")"
  
- 	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
- 	if (error)
--		perror("scrub");
-+		perror("repair");
- 	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		printf(_("Corruption remains.\n"));
- 	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
+ for i in libxfs/xfs*.[ch]; do
+ 	kfile="${dir}/$i"
++	test -f "${kfile}" || kfile="$(echo "${kfile}" | sed -e 's|libxfs/||g')"
+ 	diff -Naurpw --label "$i" <(sed -e '/#include/d' "$i") --label "${kfile}" <(sed -e '/#include/d' "${kfile}")
+ done
