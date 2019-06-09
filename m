@@ -1,92 +1,112 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54430 "EHLO mx1.redhat.com"
+Received: from mail.kernel.org ([198.145.29.99]:36638 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727203AbfFHQtU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 8 Jun 2019 12:49:20 -0400
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH 2/2] block: fix page leak in case of merging to same page
-Date: Sun,  9 Jun 2019 00:48:53 +0800
-Message-Id: <20190608164853.10938-3-ming.lei@redhat.com>
-In-Reply-To: <20190608164853.10938-1-ming.lei@redhat.com>
-References: <20190608164853.10938-1-ming.lei@redhat.com>
+        id S1728319AbfFIMw1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 9 Jun 2019 08:52:27 -0400
+Message-ID: <dbc19013b6f2a654541980edd1a00b72331645f9.camel@kernel.org>
+Subject: Re: [PATCH RFC 01/10] fs/locks: Add trace_leases_conflict
+From: Jeff Layton <jlayton@kernel.org>
+Date: Sun, 09 Jun 2019 08:52:20 -0400
+In-Reply-To: <20190606014544.8339-2-ira.weiny@intel.com>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+         <20190606014544.8339-2-ira.weiny@intel.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>
+To: ira.weiny@intel.com, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-Different iovec may use one same page, then 'pages' array filled
-by iov_iter_get_pages() may get reference of the same page several
-times. If some page in 'pages' can be merged to same page in one bvec
-by bio_add_page(), bio_release_pages() only drops the page's reference
-once.
+On Wed, 2019-06-05 at 18:45 -0700, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> ---
+>  fs/locks.c                      | 20 ++++++++++++++-----
+>  include/trace/events/filelock.h | 35 +++++++++++++++++++++++++++++++++
+>  2 files changed, 50 insertions(+), 5 deletions(-)
+> 
+> diff --git a/fs/locks.c b/fs/locks.c
+> index ec1e4a5df629..0cc2b9f30e22 100644
+> --- a/fs/locks.c
+> +++ b/fs/locks.c
+> @@ -1534,11 +1534,21 @@ static void time_out_leases(struct inode *inode, struct list_head *dispose)
+>  
+>  static bool leases_conflict(struct file_lock *lease, struct file_lock *breaker)
+>  {
+> -	if ((breaker->fl_flags & FL_LAYOUT) != (lease->fl_flags & FL_LAYOUT))
+> -		return false;
+> -	if ((breaker->fl_flags & FL_DELEG) && (lease->fl_flags & FL_LEASE))
+> -		return false;
+> -	return locks_conflict(breaker, lease);
+> +	bool rc;
+> +
+> +	if ((breaker->fl_flags & FL_LAYOUT) != (lease->fl_flags & FL_LAYOUT)) {
+> +		rc = false;
+> +		goto trace;
+> +	}
+> +	if ((breaker->fl_flags & FL_DELEG) && (lease->fl_flags & FL_LEASE)) {
+> +		rc = false;
+> +		goto trace;
+> +	}
+> +
+> +	rc = locks_conflict(breaker, lease);
+> +trace:
+> +	trace_leases_conflict(rc, lease, breaker);
+> +	return rc;
+>  }
+>  
+>  static bool
+> diff --git a/include/trace/events/filelock.h b/include/trace/events/filelock.h
+> index fad7befa612d..4b735923f2ff 100644
+> --- a/include/trace/events/filelock.h
+> +++ b/include/trace/events/filelock.h
+> @@ -203,6 +203,41 @@ TRACE_EVENT(generic_add_lease,
+>  		show_fl_type(__entry->fl_type))
+>  );
+>  
+> +TRACE_EVENT(leases_conflict,
+> +	TP_PROTO(bool conflict, struct file_lock *lease, struct file_lock *breaker),
+> +
+> +	TP_ARGS(conflict, lease, breaker),
+> +
+> +	TP_STRUCT__entry(
+> +		__field(void *, lease)
+> +		__field(void *, breaker)
+> +		__field(unsigned int, l_fl_flags)
+> +		__field(unsigned int, b_fl_flags)
+> +		__field(unsigned char, l_fl_type)
+> +		__field(unsigned char, b_fl_type)
+> +		__field(bool, conflict)
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__entry->lease = lease;
+> +		__entry->l_fl_flags = lease->fl_flags;
+> +		__entry->l_fl_type = lease->fl_type;
+> +		__entry->breaker = breaker;
+> +		__entry->b_fl_flags = breaker->fl_flags;
+> +		__entry->b_fl_type = breaker->fl_type;
+> +		__entry->conflict = conflict;
+> +	),
+> +
+> +	TP_printk("conflict %d: lease=0x%p fl_flags=%s fl_type=%s; breaker=0x%p fl_flags=%s fl_type=%s",
+> +		__entry->conflict,
+> +		__entry->lease,
+> +		show_fl_flags(__entry->l_fl_flags),
+> +		show_fl_type(__entry->l_fl_type),
+> +		__entry->breaker,
+> +		show_fl_flags(__entry->b_fl_flags),
+> +		show_fl_type(__entry->b_fl_type))
+> +);
+> +
+>  #endif /* _TRACE_FILELOCK_H */
+>  
+>  /* This part must be outside protection */
 
-This way causes page leak reported by David Gibson.
+This looks useful. I'll plan to merge this one for v5.3 unless there
+are objections.
 
-This issue can be triggered since 576ed913 ("block: use bio_add_page in
-bio_iov_iter_get_pages").
-
-Fixes the issue by put the page's ref if it is merged to same page.
-
-Cc: David Gibson <david@gibson.dropbear.id.au>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>
-Link: https://lkml.org/lkml/2019/4/23/64
-Fixes: 576ed913 ("block: use bio_add_page in bio_iov_iter_get_pages")
-Reported-by: David Gibson <david@gibson.dropbear.id.au>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/bio.c         | 14 ++++++++++++--
- include/linux/bio.h |  1 +
- 2 files changed, 13 insertions(+), 2 deletions(-)
-
-diff --git a/block/bio.c b/block/bio.c
-index 39e3b931dc3b..5f7b46360c36 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -657,6 +657,10 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 	WARN_ON_ONCE((flags & BVEC_MERGE_TO_SAME_PAGE) &&
- 			(len + off) > PAGE_SIZE);
- 
-+	if ((flags & BVEC_MERGE_PUT_SAME_PAGE) &&
-+			(flags & BVEC_MERGE_TO_SAME_PAGE))
-+		put_page(page);
-+
- 	return true;
- }
- 
-@@ -924,8 +928,14 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 		struct page *page = pages[i];
- 
- 		len = min_t(size_t, PAGE_SIZE - offset, left);
--		if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset) != len))
--			return -EINVAL;
-+
-+		if (!__bio_try_merge_page(bio, page, len, offset,
-+					BVEC_MERGE_PUT_SAME_PAGE |
-+					BVEC_MERGE_TO_SAME_PAGE)) {
-+			if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset)
-+						!= len))
-+				return -EINVAL;
-+		}
- 		offset = 0;
- 	}
- 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 48a95bca1703..dec6cf683d8e 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -422,6 +422,7 @@ void bio_chain(struct bio *, struct bio *);
- enum bvec_merge_flags {
- 	BVEC_MERGE_DEFAULT,
- 	BVEC_MERGE_TO_SAME_PAGE = BIT(0),
-+	BVEC_MERGE_PUT_SAME_PAGE = BIT(1),
- };
- 
- extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
--- 
-2.20.1
+Reviewed-by: Jeff Layton <jlayton@kernel.org>
