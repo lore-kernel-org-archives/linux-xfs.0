@@ -1,51 +1,79 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50236 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725320AbfFJElv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 00:41:51 -0400
-Date: Sun, 9 Jun 2019 21:41:44 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
-Message-ID: <20190610044144.GA1872750@magnolia>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
- <155552787330.20411.11893581890744963309.stgit@magnolia>
- <20190610015145.GB3266@mit.edu>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:38942 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387464AbfFJGho (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 02:37:44 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190610015145.GB3266@mit.edu>
+References: <20190602124114.26810-1-amir73il@gmail.com> <20190602124114.26810-4-amir73il@gmail.com>
+ <20190610035829.GA18429@mit.edu>
+In-Reply-To: <20190610035829.GA18429@mit.edu>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 10 Jun 2019 09:37:32 +0300
+Message-ID: <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/6] generic: copy_file_range swapfile test
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+Cc: Eryu Guan <guaneryu@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Jun 09, 2019 at 09:51:45PM -0400, Theodore Ts'o wrote:
-> On Wed, Apr 17, 2019 at 12:04:33PM -0700, Darrick J. Wong wrote:
-> > diff --git a/mm/memory.c b/mm/memory.c
-> > index ab650c21bccd..dfd5eba278d6 100644
-> > --- a/mm/memory.c
-> > +++ b/mm/memory.c
-> > @@ -2149,6 +2149,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
-> >  
-> >  	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
-> >  
-> > +	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
-> > +		return VM_FAULT_SIGBUS;
-> > +
-> >  	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
-> >  	/* Restore original flags so that caller is not surprised */
-> >  	vmf->flags = old_flags;
-> 
-> Shouldn't this check be moved before the modification of vmf->flags?
-> It looks like do_page_mkwrite() isn't supposed to be returning with
-> vmf->flags modified, lest "the caller gets surprised".
+On Mon, Jun 10, 2019 at 6:58 AM Theodore Ts'o <tytso@mit.edu> wrote:
+>
+> On Sun, Jun 02, 2019 at 03:41:11PM +0300, Amir Goldstein wrote:
+> > This test case was split out of Dave Chinner's copy_file_range bounds
+> > check test to reduce the requirements for running the bounds check.
+> >
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+>
+> I've just updated to the latest fstests, where this has landed as
+> generic/554.  This test is failing on ext4, and should fail on all
+> file systems which do not support copy_file_range (ext4, nfsv3, etc.),
+> since xfs_io will fall back to emulating this via reading and writing
 
-Yeah, I think that was a merge error during a rebase... :(
+Why do you think this is xfs_io fall back and not kernel fall back to
+do_splice_direct()? Anyway, both cases allow read from swapfile
+on upstream.
 
-Er ... if you're still planning to take this patch through your tree,
-can you move it to above the "vmf->flags = FAULT_FLAG_WRITE..." ?
+> the file, and this causes a test failure because:
+>
+> > +echo swap files return ETXTBUSY
+> > +_format_swapfile $testdir/swapfile 16m
+> > +swapon $testdir/swapfile
+> > +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/file" $testdir/swapfile
+> > +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/swapfile" $testdir/copy
+> > +swapoff $testdir/swapfile
+>
+> Currently, the VFS doesn't prevent us from reading a swap file.
+> Perhaps it shouldn't, for security (theatre) reasons, but root can
+> read the raw block device anyway, so it's really kind of pointless.
+>
 
---D
+Hmm, my intention with the copy_file_range() behavior was that
+it mostly follows user copy limitations/semantics.
+I guess preventing copy *from* swapfile doesn't make much sense
+and we should relax this check in the new c_f_r bounds check in VFS.
 
-> 	   	     	       	      	   - Ted
+> I'm not sure what's the best way fix this, but I'm going to exclude
+> this test in my test appliance builds for now.
+>
+
+Trying to understand the desired flow of tests and fixes.
+I agree that generic/554 failure may be a test/interface bug that
+we should fix in a way that current upstream passes the test for
+ext4. Unless there is objection, I will send a patch to fix the test
+to only test copy *to* swapfile.
+
+generic/553, OTOH, is expected to fail on upstream kernel.
+Are you leaving 553 in appliance build in anticipation to upstream fix?
+I guess the answer is in the ext4 IS_IMMUTABLE patch that you
+posted and plan to push to upstream/stable sooner than VFS patches.
+
+In any case, the VFS c_f_r patches are aiming for v5.3 and
+I will make sure to promote them for stable as well.
+
+Do you think that should there be a different policy w.r.t timing of
+merging xfstests tests that fail on upstream kernel?
+
+Thanks,
+Amir.
