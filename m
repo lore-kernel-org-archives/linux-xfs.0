@@ -1,172 +1,262 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:42932 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:53262 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388190AbfFJJCq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Jun 2019 05:02:46 -0400
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 1/2] block: introduce 'enum bvec_merge_flags' for __bio_try_merge_page
-Date: Mon, 10 Jun 2019 17:02:14 +0800
-Message-Id: <20190610090215.14412-2-ming.lei@redhat.com>
-In-Reply-To: <20190610090215.14412-1-ming.lei@redhat.com>
-References: <20190610090215.14412-1-ming.lei@redhat.com>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+        id S2388190AbfFJJJP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Jun 2019 05:09:15 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v11 1/7] libnvdimm: nd_region flush callback support
+Date: Mon, 10 Jun 2019 14:37:24 +0530
+Message-Id: <20190610090730.8589-2-pagupta@redhat.com>
+In-Reply-To: <20190610090730.8589-1-pagupta@redhat.com>
+References: <20190610090730.8589-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, David Gibson <david@gibson.dropbear.id.au>
+To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com, pagupta@redhat.com
 
-Introduce 'enum bvec_merge_flags' and pass it to __bio_try_merge_page,
-we have to deal with several cases related with page reference when
-merging same page to bio(bvec), such as:
+This patch adds functionality to perform flush from guest
+to host over VIRTIO. We are registering a callback based
+on 'nd_region' type. virtio_pmem driver requires this special
+flush function. For rest of the region types we are registering
+existing flush function. Report error returned by host fsync
+failure to userspace.
 
-1) only merge to same page without putting reference of the same page,
-such as iomap & xfs
-
-2) merge to same page and putting reference of the same page, such as
-__bio_iov_iter_get_pages()
-
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: David Gibson <david@gibson.dropbear.id.au>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
 ---
- block/bio.c         | 20 ++++++++++++--------
- fs/iomap.c          |  3 ++-
- fs/xfs/xfs_aops.c   |  3 ++-
- include/linux/bio.h | 14 +++++++++++++-
- 4 files changed, 29 insertions(+), 11 deletions(-)
+ drivers/acpi/nfit/core.c     |  4 ++--
+ drivers/nvdimm/claim.c       |  6 ++++--
+ drivers/nvdimm/nd.h          |  1 +
+ drivers/nvdimm/pmem.c        | 13 ++++++++-----
+ drivers/nvdimm/region_devs.c | 26 ++++++++++++++++++++++++--
+ include/linux/libnvdimm.h    |  9 ++++++++-
+ 6 files changed, 47 insertions(+), 12 deletions(-)
 
-diff --git a/block/bio.c b/block/bio.c
-index 683cbb40f051..39e3b931dc3b 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -636,7 +636,7 @@ EXPORT_SYMBOL(bio_clone_fast);
+diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
+index f1ed0befe303..9ddd8667153e 100644
+--- a/drivers/acpi/nfit/core.c
++++ b/drivers/acpi/nfit/core.c
+@@ -2434,7 +2434,7 @@ static void write_blk_ctl(struct nfit_blk *nfit_blk, unsigned int bw,
+ 		offset = to_interleave_offset(offset, mmio);
  
- static inline bool page_is_mergeable(const struct bio_vec *bv,
- 		struct page *page, unsigned int len, unsigned int off,
--		bool same_page)
-+		enum bvec_merge_flags flags)
- {
- 	phys_addr_t vec_end_addr = page_to_phys(bv->bv_page) +
- 		bv->bv_offset + bv->bv_len - 1;
-@@ -648,13 +648,14 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 		return false;
+ 	writeq(cmd, mmio->addr.base + offset);
+-	nvdimm_flush(nfit_blk->nd_region);
++	nvdimm_flush(nfit_blk->nd_region, NULL);
  
- 	if ((vec_end_addr & PAGE_MASK) != page_addr) {
--		if (same_page)
-+		if (flags & BVEC_MERGE_TO_SAME_PAGE)
- 			return false;
- 		if (pfn_to_page(PFN_DOWN(vec_end_addr)) + 1 != page)
- 			return false;
+ 	if (nfit_blk->dimm_flags & NFIT_BLK_DCR_LATCH)
+ 		readq(mmio->addr.base + offset);
+@@ -2483,7 +2483,7 @@ static int acpi_nfit_blk_single_io(struct nfit_blk *nfit_blk,
  	}
  
--	WARN_ON_ONCE(same_page && (len + off) > PAGE_SIZE);
-+	WARN_ON_ONCE((flags & BVEC_MERGE_TO_SAME_PAGE) &&
-+			(len + off) > PAGE_SIZE);
+ 	if (rw)
+-		nvdimm_flush(nfit_blk->nd_region);
++		nvdimm_flush(nfit_blk->nd_region, NULL);
  
- 	return true;
+ 	rc = read_blk_stat(nfit_blk, lane) ? -EIO : 0;
+ 	return rc;
+diff --git a/drivers/nvdimm/claim.c b/drivers/nvdimm/claim.c
+index fb667bf469c7..13510bae1e6f 100644
+--- a/drivers/nvdimm/claim.c
++++ b/drivers/nvdimm/claim.c
+@@ -263,7 +263,7 @@ static int nsio_rw_bytes(struct nd_namespace_common *ndns,
+ 	struct nd_namespace_io *nsio = to_nd_namespace_io(&ndns->dev);
+ 	unsigned int sz_align = ALIGN(size + (offset & (512 - 1)), 512);
+ 	sector_t sector = offset >> 9;
+-	int rc = 0;
++	int rc = 0, ret = 0;
+ 
+ 	if (unlikely(!size))
+ 		return 0;
+@@ -301,7 +301,9 @@ static int nsio_rw_bytes(struct nd_namespace_common *ndns,
+ 	}
+ 
+ 	memcpy_flushcache(nsio->addr + offset, buf, size);
+-	nvdimm_flush(to_nd_region(ndns->dev.parent));
++	ret = nvdimm_flush(to_nd_region(ndns->dev.parent), NULL);
++	if (ret)
++		rc = ret;
+ 
+ 	return rc;
  }
-@@ -729,8 +730,9 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 		if (bvec_gap_to_prev(q, bvec, offset))
- 			return 0;
+diff --git a/drivers/nvdimm/nd.h b/drivers/nvdimm/nd.h
+index a5ac3b240293..0c74d2428bd7 100644
+--- a/drivers/nvdimm/nd.h
++++ b/drivers/nvdimm/nd.h
+@@ -159,6 +159,7 @@ struct nd_region {
+ 	struct badblocks bb;
+ 	struct nd_interleave_set *nd_set;
+ 	struct nd_percpu_lane __percpu *lane;
++	int (*flush)(struct nd_region *nd_region, struct bio *bio);
+ 	struct nd_mapping mapping[0];
+ };
  
--		if (page_is_mergeable(bvec, page, len, offset, false) &&
--		    can_add_page_to_seg(q, bvec, page, len, offset)) {
-+		if (page_is_mergeable(bvec, page, len, offset,
-+		    BVEC_MERGE_DEFAULT) && can_add_page_to_seg(q, bvec,
-+		    page, len, offset)) {
- 			bvec->bv_len += len;
- 			goto done;
- 		}
-@@ -779,7 +781,8 @@ EXPORT_SYMBOL(bio_add_pc_page);
-  * Return %true on success or %false on failure.
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 0279eb1da3ef..c757a47183b8 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -192,6 +192,7 @@ static blk_status_t pmem_do_bvec(struct pmem_device *pmem, struct page *page,
+ 
+ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ {
++	int ret = 0;
+ 	blk_status_t rc = 0;
+ 	bool do_acct;
+ 	unsigned long start;
+@@ -201,7 +202,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 	struct nd_region *nd_region = to_region(pmem);
+ 
+ 	if (bio->bi_opf & REQ_PREFLUSH)
+-		nvdimm_flush(nd_region);
++		ret = nvdimm_flush(nd_region, bio);
+ 
+ 	do_acct = nd_iostat_start(bio, &start);
+ 	bio_for_each_segment(bvec, bio, iter) {
+@@ -216,7 +217,10 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 		nd_iostat_end(bio, start);
+ 
+ 	if (bio->bi_opf & REQ_FUA)
+-		nvdimm_flush(nd_region);
++		ret = nvdimm_flush(nd_region, bio);
++
++	if (ret)
++		bio->bi_status = errno_to_blk_status(ret);
+ 
+ 	bio_endio(bio);
+ 	return BLK_QC_T_NONE;
+@@ -469,7 +473,6 @@ static int pmem_attach_disk(struct device *dev,
+ 	}
+ 	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+ 	pmem->dax_dev = dax_dev;
+-
+ 	gendev = disk_to_dev(disk);
+ 	gendev->groups = pmem_attribute_groups;
+ 
+@@ -527,14 +530,14 @@ static int nd_pmem_remove(struct device *dev)
+ 		sysfs_put(pmem->bb_state);
+ 		pmem->bb_state = NULL;
+ 	}
+-	nvdimm_flush(to_nd_region(dev->parent));
++	nvdimm_flush(to_nd_region(dev->parent), NULL);
+ 
+ 	return 0;
+ }
+ 
+ static void nd_pmem_shutdown(struct device *dev)
+ {
+-	nvdimm_flush(to_nd_region(dev->parent));
++	nvdimm_flush(to_nd_region(dev->parent), NULL);
+ }
+ 
+ static void nd_pmem_notify(struct device *dev, enum nvdimm_event event)
+diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
+index b4ef7d9ff22e..e5b59708865e 100644
+--- a/drivers/nvdimm/region_devs.c
++++ b/drivers/nvdimm/region_devs.c
+@@ -295,7 +295,9 @@ static ssize_t deep_flush_store(struct device *dev, struct device_attribute *att
+ 		return rc;
+ 	if (!flush)
+ 		return -EINVAL;
+-	nvdimm_flush(nd_region);
++	rc = nvdimm_flush(nd_region, NULL);
++	if (rc)
++		return rc;
+ 
+ 	return len;
+ }
+@@ -1085,6 +1087,11 @@ static struct nd_region *nd_region_create(struct nvdimm_bus *nvdimm_bus,
+ 	dev->of_node = ndr_desc->of_node;
+ 	nd_region->ndr_size = resource_size(ndr_desc->res);
+ 	nd_region->ndr_start = ndr_desc->res->start;
++	if (ndr_desc->flush)
++		nd_region->flush = ndr_desc->flush;
++	else
++		nd_region->flush = NULL;
++
+ 	nd_device_register(dev);
+ 
+ 	return nd_region;
+@@ -1125,11 +1132,24 @@ struct nd_region *nvdimm_volatile_region_create(struct nvdimm_bus *nvdimm_bus,
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_volatile_region_create);
+ 
++int nvdimm_flush(struct nd_region *nd_region, struct bio *bio)
++{
++	int rc = 0;
++
++	if (!nd_region->flush)
++		rc = generic_nvdimm_flush(nd_region);
++	else {
++		if (nd_region->flush(nd_region, bio))
++			rc = -EIO;
++	}
++
++	return rc;
++}
+ /**
+  * nvdimm_flush - flush any posted write queues between the cpu and pmem media
+  * @nd_region: blk or interleaved pmem region
   */
- bool __bio_try_merge_page(struct bio *bio, struct page *page,
--		unsigned int len, unsigned int off, bool same_page)
-+		unsigned int len, unsigned int off,
-+		enum bvec_merge_flags flags)
+-void nvdimm_flush(struct nd_region *nd_region)
++int generic_nvdimm_flush(struct nd_region *nd_region)
  {
- 	if (WARN_ON_ONCE(bio_flagged(bio, BIO_CLONED)))
- 		return false;
-@@ -787,7 +790,7 @@ bool __bio_try_merge_page(struct bio *bio, struct page *page,
- 	if (bio->bi_vcnt > 0) {
- 		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 	struct nd_region_data *ndrd = dev_get_drvdata(&nd_region->dev);
+ 	int i, idx;
+@@ -1153,6 +1173,8 @@ void nvdimm_flush(struct nd_region *nd_region)
+ 		if (ndrd_get_flush_wpq(ndrd, i, 0))
+ 			writeq(1, ndrd_get_flush_wpq(ndrd, i, idx));
+ 	wmb();
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_flush);
  
--		if (page_is_mergeable(bv, page, len, off, same_page)) {
-+		if (page_is_mergeable(bv, page, len, off, flags)) {
- 			bv->bv_len += len;
- 			bio->bi_iter.bi_size += len;
- 			return true;
-@@ -837,7 +840,8 @@ EXPORT_SYMBOL_GPL(__bio_add_page);
- int bio_add_page(struct bio *bio, struct page *page,
- 		 unsigned int len, unsigned int offset)
- {
--	if (!__bio_try_merge_page(bio, page, len, offset, false)) {
-+	if (!__bio_try_merge_page(bio, page, len, offset,
-+				  BVEC_MERGE_DEFAULT)) {
- 		if (bio_full(bio))
- 			return 0;
- 		__bio_add_page(bio, page, len, offset);
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 23ef63fd1669..e04652bbf92a 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -316,7 +316,8 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
+index feb342d026f2..5a4f7b13574d 100644
+--- a/include/linux/libnvdimm.h
++++ b/include/linux/libnvdimm.h
+@@ -19,6 +19,7 @@
+ #include <linux/types.h>
+ #include <linux/uuid.h>
+ #include <linux/spinlock.h>
++#include <linux/bio.h>
+ 
+ struct badrange_entry {
+ 	u64 start;
+@@ -65,6 +66,9 @@ enum {
  	 */
- 	sector = iomap_sector(iomap, pos);
- 	if (ctx->bio && bio_end_sector(ctx->bio) == sector) {
--		if (__bio_try_merge_page(ctx->bio, page, plen, poff, true))
-+		if (__bio_try_merge_page(ctx->bio, page, plen, poff,
-+					 BVEC_MERGE_TO_SAME_PAGE))
- 			goto done;
- 		is_contig = true;
- 	}
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index a6f0f4761a37..7e7385bc3b9e 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -774,7 +774,8 @@ xfs_add_to_ioend(
- 				wpc->imap.br_state, offset, bdev, sector);
- 	}
+ 	ND_REGION_PERSIST_MEMCTRL = 2,
  
--	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff, true)) {
-+	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff,
-+				BVEC_MERGE_TO_SAME_PAGE)) {
- 		if (iop)
- 			atomic_inc(&iop->write_count);
- 		if (bio_full(wpc->ioend->io_bio))
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index 0f23b5682640..ee18895431ba 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -419,11 +419,23 @@ extern void bio_uninit(struct bio *);
- extern void bio_reset(struct bio *);
- void bio_chain(struct bio *, struct bio *);
++	/* Platform provides asynchronous flush mechanism */
++	ND_REGION_ASYNC = 3,
++
+ 	/* mark newly adjusted resources as requiring a label update */
+ 	DPA_RESOURCE_ADJUSTED = 1 << 0,
+ };
+@@ -121,6 +125,7 @@ struct nd_mapping_desc {
+ 	int position;
+ };
  
-+enum bvec_merge_flags {
-+	BVEC_MERGE_DEFAULT,
-+
-+	/*
-+	 * only merge if new page is same with bio's last page, this
-+	 * is exactly the behaviour before introducing multi-page
-+	 * bvec
-+	 */
-+	BVEC_MERGE_TO_SAME_PAGE = BIT(0),
-+};
-+
- extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
- extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
- 			   unsigned int, unsigned int);
- bool __bio_try_merge_page(struct bio *bio, struct page *page,
--		unsigned int len, unsigned int off, bool same_page);
-+		unsigned int len, unsigned int off,
-+		enum bvec_merge_flags flags);
- void __bio_add_page(struct bio *bio, struct page *page,
- 		unsigned int len, unsigned int off);
- int bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter);
++struct nd_region;
+ struct nd_region_desc {
+ 	struct resource *res;
+ 	struct nd_mapping_desc *mapping;
+@@ -133,6 +138,7 @@ struct nd_region_desc {
+ 	int target_node;
+ 	unsigned long flags;
+ 	struct device_node *of_node;
++	int (*flush)(struct nd_region *nd_region, struct bio *bio);
+ };
+ 
+ struct device;
+@@ -260,7 +266,8 @@ unsigned long nd_blk_memremap_flags(struct nd_blk_region *ndbr);
+ unsigned int nd_region_acquire_lane(struct nd_region *nd_region);
+ void nd_region_release_lane(struct nd_region *nd_region, unsigned int lane);
+ u64 nd_fletcher64(void *addr, size_t len, bool le);
+-void nvdimm_flush(struct nd_region *nd_region);
++int nvdimm_flush(struct nd_region *nd_region, struct bio *bio);
++int generic_nvdimm_flush(struct nd_region *nd_region);
+ int nvdimm_has_flush(struct nd_region *nd_region);
+ int nvdimm_has_cache(struct nd_region *nd_region);
+ int nvdimm_in_overwrite(struct nvdimm *nvdimm);
 -- 
 2.20.1
