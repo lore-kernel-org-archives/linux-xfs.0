@@ -1,97 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56928 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388190AbfFJJCh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Jun 2019 05:02:37 -0400
-From: Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH V3 2/2] block: fix page leak in case of merging to same page
-Date: Mon, 10 Jun 2019 17:02:15 +0800
-Message-Id: <20190610090215.14412-3-ming.lei@redhat.com>
-In-Reply-To: <20190610090215.14412-1-ming.lei@redhat.com>
-References: <20190610090215.14412-1-ming.lei@redhat.com>
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:42114 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388190AbfFJJIZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 05:08:25 -0400
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190602124114.26810-1-amir73il@gmail.com> <20190602124114.26810-4-amir73il@gmail.com>
+ <20190610035829.GA18429@mit.edu> <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
+In-Reply-To: <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 10 Jun 2019 12:08:12 +0300
+Message-ID: <CAOQ4uxie1H+9VDO_UjyZXcotnFv+ybfcJdLxX8suP5gOvg_wrA@mail.gmail.com>
+Subject: Re: [PATCH v3 3/6] generic: copy_file_range swapfile test
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, Ming Lei <ming.lei@redhat.com>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Eryu Guan <guaneryu@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-Different iovec may use one same page, then 'pages' array filled
-by iov_iter_get_pages() may get reference of the same page several
-times. If some elements in 'pages' can be merged to same page in
-one bvec by bio_add_page(), bio_release_pages() only drops the
-page's reference once.
+On Mon, Jun 10, 2019 at 9:37 AM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> On Mon, Jun 10, 2019 at 6:58 AM Theodore Ts'o <tytso@mit.edu> wrote:
+> >
+> > On Sun, Jun 02, 2019 at 03:41:11PM +0300, Amir Goldstein wrote:
+> > > This test case was split out of Dave Chinner's copy_file_range bounds
+> > > check test to reduce the requirements for running the bounds check.
+> > >
+> > > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> >
+> > I've just updated to the latest fstests, where this has landed as
+> > generic/554.  This test is failing on ext4, and should fail on all
+> > file systems which do not support copy_file_range (ext4, nfsv3, etc.),
+> > since xfs_io will fall back to emulating this via reading and writing
+>
+> Why do you think this is xfs_io fall back and not kernel fall back to
+> do_splice_direct()? Anyway, both cases allow read from swapfile
+> on upstream.
+>
+> > the file, and this causes a test failure because:
+> >
+> > > +echo swap files return ETXTBUSY
+> > > +_format_swapfile $testdir/swapfile 16m
+> > > +swapon $testdir/swapfile
+> > > +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/file" $testdir/swapfile
+> > > +$XFS_IO_PROG -f -c "copy_range -l 32k $testdir/swapfile" $testdir/copy
+> > > +swapoff $testdir/swapfile
+> >
+> > Currently, the VFS doesn't prevent us from reading a swap file.
+> > Perhaps it shouldn't, for security (theatre) reasons, but root can
+> > read the raw block device anyway, so it's really kind of pointless.
+> >
+>
+> Hmm, my intention with the copy_file_range() behavior was that
+> it mostly follows user copy limitations/semantics.
+> I guess preventing copy *from* swapfile doesn't make much sense
+> and we should relax this check in the new c_f_r bounds check in VFS.
+>
+> > I'm not sure what's the best way fix this, but I'm going to exclude
+> > this test in my test appliance builds for now.
+> >
+>
+> Trying to understand the desired flow of tests and fixes.
+> I agree that generic/554 failure may be a test/interface bug that
+> we should fix in a way that current upstream passes the test for
+> ext4. Unless there is objection, I will send a patch to fix the test
+> to only test copy *to* swapfile.
 
-This way causes page leak reported by David Gibson.
+I made this change and test still failed on upstream ext4, because
+kernel performs copy_file_range() to swapfile.
+To me that seems like a real kernel bug, which is addressed by vfs
+c_f_r patches, so I don't know if you should be excluding the test
+from test appliance after all ?
 
-This issue can be triggered since 576ed913 ("block: use bio_add_page in
-bio_iov_iter_get_pages").
+Thanks,
+Amir.
 
-Fixes the issue by putting the page's ref if it is merged to same page.
-
-Cc: David Gibson <david@gibson.dropbear.id.au>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: Christoph Hellwig <hch@infradead.org>
-Link: https://lkml.org/lkml/2019/4/23/64
-Fixes: 576ed913 ("block: use bio_add_page in bio_iov_iter_get_pages")
-Reported-by: David Gibson <david@gibson.dropbear.id.au>
-Signed-off-by: Ming Lei <ming.lei@redhat.com>
----
- block/bio.c         | 12 ++++++++++--
- include/linux/bio.h |  8 ++++++++
- 2 files changed, 18 insertions(+), 2 deletions(-)
-
-diff --git a/block/bio.c b/block/bio.c
-index 39e3b931dc3b..358ccb5086e6 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -652,6 +652,9 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
- 			return false;
- 		if (pfn_to_page(PFN_DOWN(vec_end_addr)) + 1 != page)
- 			return false;
-+	/* drop page ref if the page has been added and user asks to do that */
-+	} else if (flags & BVEC_MERGE_PUT_SAME_PAGE) {
-+		put_page(page);
- 	}
- 
- 	WARN_ON_ONCE((flags & BVEC_MERGE_TO_SAME_PAGE) &&
-@@ -924,8 +927,13 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
- 		struct page *page = pages[i];
- 
- 		len = min_t(size_t, PAGE_SIZE - offset, left);
--		if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset) != len))
--			return -EINVAL;
-+
-+		if (!__bio_try_merge_page(bio, page, len, offset,
-+					BVEC_MERGE_PUT_SAME_PAGE)) {
-+			if (WARN_ON_ONCE(bio_full(bio)))
-+                                return -EINVAL;
-+			__bio_add_page(bio, page, len, offset);
-+		}
- 		offset = 0;
- 	}
- 
-diff --git a/include/linux/bio.h b/include/linux/bio.h
-index ee18895431ba..0168bc5df8e4 100644
---- a/include/linux/bio.h
-+++ b/include/linux/bio.h
-@@ -428,6 +428,14 @@ enum bvec_merge_flags {
- 	 * bvec
- 	 */
- 	BVEC_MERGE_TO_SAME_PAGE = BIT(0),
-+
-+	/*
-+	 * put refcount of bio's last page if the start page to add is
-+	 * same with bio's last page. If user gets refcount of every
-+	 * page added to bio before calling bio_add_page, please consider
-+	 * to use this flag for avoiding page leak
-+	 */
-+	BVEC_MERGE_PUT_SAME_PAGE = BIT(1),
- };
- 
- extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
--- 
-2.20.1
+>
+> generic/553, OTOH, is expected to fail on upstream kernel.
+> Are you leaving 553 in appliance build in anticipation to upstream fix?
+> I guess the answer is in the ext4 IS_IMMUTABLE patch that you
+> posted and plan to push to upstream/stable sooner than VFS patches.
+>
+> In any case, the VFS c_f_r patches are aiming for v5.3 and
+> I will make sure to promote them for stable as well.
+>
+> Do you think that should there be a different policy w.r.t timing of
+> merging xfstests tests that fail on upstream kernel?
+>
+> Thanks,
+> Amir.
