@@ -1,93 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51628 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728276AbfFJT2s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 10 Jun 2019 15:28:48 -0400
-Date: Mon, 10 Jun 2019 15:28:03 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v11 4/7] dm: enable synchronous dax
-Message-ID: <20190610192803.GA29002@redhat.com>
-References: <20190610090730.8589-1-pagupta@redhat.com>
- <20190610090730.8589-5-pagupta@redhat.com>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:35594 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389331AbfFJUjy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 16:39:54 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190610090730.8589-5-pagupta@redhat.com>
+References: <20190610173657.4655-1-amir73il@gmail.com>
+In-Reply-To: <20190610173657.4655-1-amir73il@gmail.com>
+From: Steve French <smfrench@gmail.com>
+Date: Mon, 10 Jun 2019 15:39:42 -0500
+Message-ID: <CAH2r5mtQObwvdtaNr31fd-wDpjrZi5YLZ+ZcaW0ECVvTR-ByXQ@mail.gmail.com>
+Subject: Re: [PATCH] cifs: copy_file_range needs to strip setuid bits and
+ update timestamps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>
 
-On Mon, Jun 10 2019 at  5:07am -0400,
-Pankaj Gupta <pagupta@redhat.com> wrote:
+Looks good in my testing so far - but also want to do a little more
+testing with the copy_file_range xfstest cases because your patches
+fixed one additional test (not cross mount copy) so we can understand
+why it fixed that test case.
 
->  This patch sets dax device 'DAXDEV_SYNC' flag if all the target
->  devices of device mapper support synchrononous DAX. If device
->  mapper consists of both synchronous and asynchronous dax devices,
->  we don't set 'DAXDEV_SYNC' flag.
-> 
-> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+On Mon, Jun 10, 2019 at 12:37 PM Amir Goldstein <amir73il@gmail.com> wrote:
+>
+> cifs has both source and destination inodes locked throughout the copy.
+> Like ->write_iter(), we update mtime and strip setuid bits of destination
+> file before copy and like ->read_iter(), we update atime of source file
+> after copy.
+>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
 > ---
->  drivers/md/dm-table.c | 14 ++++++++++++++
->  1 file changed, 14 insertions(+)
-> 
-> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> index 350cf0451456..c5160d846fe6 100644
-> --- a/drivers/md/dm-table.c
-> +++ b/drivers/md/dm-table.c
-> @@ -890,10 +890,17 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
->  			start, len);
->  }
->  
-> +static int device_synchronous(struct dm_target *ti, struct dm_dev *dev,
-> +				       sector_t start, sector_t len, void *data)
-> +{
-> +	return dax_synchronous(dev->dax_dev);
-> +}
+>
+> Hi Steve,
+>
+> Please apply this patch to you cifs branch after merging Darrick's
+> copy-file-range-fixes branch from:
+>         git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+>
+> Thanks,
+> Amir.
+>
+>  fs/cifs/cifsfs.c | 11 ++++++++---
+>  1 file changed, 8 insertions(+), 3 deletions(-)
+>
+> diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+> index f11eea6125c1..83956452c108 100644
+> --- a/fs/cifs/cifsfs.c
+> +++ b/fs/cifs/cifsfs.c
+> @@ -1096,6 +1096,10 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
+>                 goto out;
+>         }
+>
+> +       rc = -EOPNOTSUPP;
+> +       if (!target_tcon->ses->server->ops->copychunk_range)
+> +               goto out;
 > +
->  bool dm_table_supports_dax(struct dm_table *t, int blocksize)
->  {
->  	struct dm_target *ti;
->  	unsigned i;
-> +	bool dax_sync = true;
->  
->  	/* Ensure that all targets support DAX. */
->  	for (i = 0; i < dm_table_get_num_targets(t); i++) {
-> @@ -906,7 +913,14 @@ bool dm_table_supports_dax(struct dm_table *t, int blocksize)
->  		    !ti->type->iterate_devices(ti, device_supports_dax,
->  			    &blocksize))
->  			return false;
+>         /*
+>          * Note: cifs case is easier than btrfs since server responsible for
+>          * checks for proper open modes and file type and if it wants
+> @@ -1107,11 +1111,12 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
+>         /* should we flush first and last page first */
+>         truncate_inode_pages(&target_inode->i_data, 0);
+>
+> -       if (target_tcon->ses->server->ops->copychunk_range)
+> +       rc = file_modified(dst_file);
+> +       if (!rc)
+>                 rc = target_tcon->ses->server->ops->copychunk_range(xid,
+>                         smb_file_src, smb_file_target, off, len, destoff);
+> -       else
+> -               rc = -EOPNOTSUPP;
 > +
-> +		/* Check devices support synchronous DAX */
-> +		if (dax_sync &&
-> +		    !ti->type->iterate_devices(ti, device_synchronous, NULL))
-> +			dax_sync = false;
->  	}
-> +	if (dax_sync)
-> +		set_dax_synchronous(t->md->dax_dev);
->  
->  	return true;
->  }
-> -- 
-> 2.20.1
-> 
+> +       file_accessed(src_file);
+>
+>         /* force revalidate of size and timestamps of target file now
+>          * that target is updated on the server
+> --
+> 2.17.1
+>
 
-dm_table_supports_dax() is called multiple times (from
-dm_table_set_restrictions and dm_table_determine_type).  It is strange
-to have a getter have a side-effect of being a setter too.  Overloading
-like this could get you in trouble in the future.
 
-Are you certain this is what you want?
+-- 
+Thanks,
 
-Or would it be better to refactor dm_table_supports_dax() to take an
-iterate_devices_fn arg and have callers pass the appropriate function?
-Then have dm_table_set_restrictions() caller do:
-
-     if (dm_table_supports_dax(t, device_synchronous, NULL))
-     	  set_dax_synchronous(t->md->dax_dev);
-
-(NULL arg implies dm_table_supports_dax() refactoring would take a int
-*data pointer rather than int type).
-
-Mike
+Steve
