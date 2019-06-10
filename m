@@ -1,86 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f193.google.com ([209.85.219.193]:32935 "EHLO
-        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388362AbfFKPlP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 11:41:15 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51628 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728276AbfFJT2s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 10 Jun 2019 15:28:48 -0400
+Date: Mon, 10 Jun 2019 15:28:03 -0400
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH v11 4/7] dm: enable synchronous dax
+Message-ID: <20190610192803.GA29002@redhat.com>
+References: <20190610090730.8589-1-pagupta@redhat.com>
+ <20190610090730.8589-5-pagupta@redhat.com>
 MIME-Version: 1.0
-References: <20190611153916.13360-1-amir73il@gmail.com> <20190611153916.13360-2-amir73il@gmail.com>
-In-Reply-To: <20190611153916.13360-2-amir73il@gmail.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 11 Jun 2019 18:41:03 +0300
-Message-ID: <CAOQ4uxgF5F_XOSq1dJLmhsFA+uKcu46Cn7f+dPT0cLUzfuigiw@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] generic/554: test only copy to active swap file
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190610090730.8589-5-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org
 
-On Tue, Jun 11, 2019 at 6:39 PM Amir Goldstein <amir73il@gmail.com> wrote:
->
-> Depending on filesystem, copying from active swapfile may be allowed,
-> just as read from swapfile may be allowed.
->
-> Note the kernel fix commit in test description.
->
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Forgot to add:
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jun 10 2019 at  5:07am -0400,
+Pankaj Gupta <pagupta@redhat.com> wrote:
 
+>  This patch sets dax device 'DAXDEV_SYNC' flag if all the target
+>  devices of device mapper support synchrononous DAX. If device
+>  mapper consists of both synchronous and asynchronous dax devices,
+>  we don't set 'DAXDEV_SYNC' flag.
+> 
+> Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
 > ---
->
-> Eryu,
->
-> Per your and Ted's request, I've documented the kernel fix commit
-> in the new copy_range tests. Those commits are now on Darrick's
-> copy-file-range-fixes branch, which is on its way to linux-next
-> and to kernel 5.3.
->
-> Thanks,
-> Amir.
->
->
-> Changes from v1:
-> - Document kernel fix commit
->
->  tests/generic/554     | 6 ++++--
->  tests/generic/554.out | 1 -
->  2 files changed, 4 insertions(+), 3 deletions(-)
->
-> diff --git a/tests/generic/554 b/tests/generic/554
-> index 10ae4035..fa19d580 100755
-> --- a/tests/generic/554
-> +++ b/tests/generic/554
-> @@ -4,7 +4,10 @@
->  #
->  # FS QA Test No. 554
->  #
-> -# Check that we cannot copy_file_range() to/from a swapfile
-> +# Check that we cannot copy_file_range() to a swapfile
-> +#
-> +# This is a regression test for kernel commit:
-> +#   a31713517dac ("vfs: introduce generic_file_rw_checks()")
->  #
->  seq=`basename $0`
->  seqres=$RESULT_DIR/$seq
-> @@ -46,7 +49,6 @@ echo swap files return ETXTBUSY
->  _format_swapfile $SCRATCH_MNT/swapfile 16m
->  swapon $SCRATCH_MNT/swapfile
->  $XFS_IO_PROG -f -c "copy_range -l 32k $SCRATCH_MNT/file" $SCRATCH_MNT/swapfile
-> -$XFS_IO_PROG -f -c "copy_range -l 32k $SCRATCH_MNT/swapfile" $SCRATCH_MNT/copy
->  swapoff $SCRATCH_MNT/swapfile
->
->  # success, all done
-> diff --git a/tests/generic/554.out b/tests/generic/554.out
-> index ffaa7b0a..19385a05 100644
-> --- a/tests/generic/554.out
-> +++ b/tests/generic/554.out
-> @@ -1,4 +1,3 @@
->  QA output created by 554
->  swap files return ETXTBUSY
->  copy_range: Text file busy
-> -copy_range: Text file busy
-> --
-> 2.17.1
->
+>  drivers/md/dm-table.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
+> index 350cf0451456..c5160d846fe6 100644
+> --- a/drivers/md/dm-table.c
+> +++ b/drivers/md/dm-table.c
+> @@ -890,10 +890,17 @@ static int device_supports_dax(struct dm_target *ti, struct dm_dev *dev,
+>  			start, len);
+>  }
+>  
+> +static int device_synchronous(struct dm_target *ti, struct dm_dev *dev,
+> +				       sector_t start, sector_t len, void *data)
+> +{
+> +	return dax_synchronous(dev->dax_dev);
+> +}
+> +
+>  bool dm_table_supports_dax(struct dm_table *t, int blocksize)
+>  {
+>  	struct dm_target *ti;
+>  	unsigned i;
+> +	bool dax_sync = true;
+>  
+>  	/* Ensure that all targets support DAX. */
+>  	for (i = 0; i < dm_table_get_num_targets(t); i++) {
+> @@ -906,7 +913,14 @@ bool dm_table_supports_dax(struct dm_table *t, int blocksize)
+>  		    !ti->type->iterate_devices(ti, device_supports_dax,
+>  			    &blocksize))
+>  			return false;
+> +
+> +		/* Check devices support synchronous DAX */
+> +		if (dax_sync &&
+> +		    !ti->type->iterate_devices(ti, device_synchronous, NULL))
+> +			dax_sync = false;
+>  	}
+> +	if (dax_sync)
+> +		set_dax_synchronous(t->md->dax_dev);
+>  
+>  	return true;
+>  }
+> -- 
+> 2.20.1
+> 
+
+dm_table_supports_dax() is called multiple times (from
+dm_table_set_restrictions and dm_table_determine_type).  It is strange
+to have a getter have a side-effect of being a setter too.  Overloading
+like this could get you in trouble in the future.
+
+Are you certain this is what you want?
+
+Or would it be better to refactor dm_table_supports_dax() to take an
+iterate_devices_fn arg and have callers pass the appropriate function?
+Then have dm_table_set_restrictions() caller do:
+
+     if (dm_table_supports_dax(t, device_synchronous, NULL))
+     	  set_dax_synchronous(t->md->dax_dev);
+
+(NULL arg implies dm_table_supports_dax() refactoring would take a int
+*data pointer rather than int type).
+
+Mike
