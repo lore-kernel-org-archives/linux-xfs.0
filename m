@@ -1,56 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:49573 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1730055AbfFJBni (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Jun 2019 21:43:38 -0400
-Date: Sun, 9 Jun 2019 21:43:29 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
-Message-ID: <20190610014329.GA3266@mit.edu>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
- <155552787330.20411.11893581890744963309.stgit@magnolia>
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:34141 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387420AbfFJDkc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 9 Jun 2019 23:40:32 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <155552787330.20411.11893581890744963309.stgit@magnolia>
+References: <20190608164853.10938-1-ming.lei@redhat.com> <20190608164853.10938-3-ming.lei@redhat.com>
+In-Reply-To: <20190608164853.10938-3-ming.lei@redhat.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Date: Mon, 10 Jun 2019 11:40:18 +0800
+Message-ID: <CACVXFVMt1APzg-4vma+Jw-c5=pJhbYFRETjjw0PkeX_1hw--Qw@mail.gmail.com>
+Subject: Re: [PATCH 2/2] block: fix page leak in case of merging to same page
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block <linux-block@vger.kernel.org>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>, Alexander Viro <viro@zeniv.linux.org.uk>, Christoph Hellwig <hch@infradead.org>
 
-On Wed, Apr 17, 2019 at 12:04:33PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The chattr manpage has this to say about immutable files:
-> 
-> "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> or renamed, no link can be created to this file, most of the file's
-> metadata can not be modified, and the file can not be opened in write
-> mode."
-> 
-> Once the flag is set, it is enforced for quite a few file operations,
-> such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
-> don't check for immutability when doing a write(), a PROT_WRITE mmap(),
-> a truncate(), or a write to a previously established mmap.
-> 
-> If a program has an open write fd to a file that the administrator
-> subsequently marks immutable, the program still can change the file
-> contents.  Weird!
-> 
-> The ability to write to an immutable file does not follow the manpage
-> promise that immutable files cannot be modified.  Worse yet it's
-> inconsistent with the behavior of other syscalls which don't allow
-> modifications of immutable files.
-> 
-> Therefore, add the necessary checks to make the write, mmap, and
-> truncate behavior consistent with what the manpage says and consistent
-> with other syscalls on filesystems which support IMMUTABLE.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Jun 9, 2019 at 12:50 AM Ming Lei <ming.lei@redhat.com> wrote:
+>
+> Different iovec may use one same page, then 'pages' array filled
+> by iov_iter_get_pages() may get reference of the same page several
+> times. If some page in 'pages' can be merged to same page in one bvec
+> by bio_add_page(), bio_release_pages() only drops the page's reference
+> once.
+>
+> This way causes page leak reported by David Gibson.
+>
+> This issue can be triggered since 576ed913 ("block: use bio_add_page in
+> bio_iov_iter_get_pages").
+>
+> Fixes the issue by put the page's ref if it is merged to same page.
+>
+> Cc: David Gibson <david@gibson.dropbear.id.au>
+> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> Cc: linux-xfs@vger.kernel.org
+> Cc: Alexander Viro <viro@zeniv.linux.org.uk>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Link: https://lkml.org/lkml/2019/4/23/64
+> Fixes: 576ed913 ("block: use bio_add_page in bio_iov_iter_get_pages")
+> Reported-by: David Gibson <david@gibson.dropbear.id.au>
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+>  block/bio.c         | 14 ++++++++++++--
+>  include/linux/bio.h |  1 +
+>  2 files changed, 13 insertions(+), 2 deletions(-)
+>
+> diff --git a/block/bio.c b/block/bio.c
+> index 39e3b931dc3b..5f7b46360c36 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -657,6 +657,10 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
+>         WARN_ON_ONCE((flags & BVEC_MERGE_TO_SAME_PAGE) &&
+>                         (len + off) > PAGE_SIZE);
+>
+> +       if ((flags & BVEC_MERGE_PUT_SAME_PAGE) &&
+> +                       (flags & BVEC_MERGE_TO_SAME_PAGE))
+> +               put_page(page);
+> +
+>         return true;
+>  }
+>
+> @@ -924,8 +928,14 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+>                 struct page *page = pages[i];
+>
+>                 len = min_t(size_t, PAGE_SIZE - offset, left);
+> -               if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset) != len))
+> -                       return -EINVAL;
+> +
+> +               if (!__bio_try_merge_page(bio, page, len, offset,
+> +                                       BVEC_MERGE_PUT_SAME_PAGE |
+> +                                       BVEC_MERGE_TO_SAME_PAGE)) {
 
-Thanks, looks good.  I'm going to take this patch through the ext4
-tree since it doesn't have any dependencies on the rest of the patch
-series.
+oops, it is wrong to pass  BVEC_MERGE_TO_SAME_PAGE here, which
+should disable multi-page merge.
 
-	    	     	       	     - Ted
+Please ignore this patchset, and will fix it in V2.
+
+
+Thanks,
+Ming Lei
