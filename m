@@ -1,145 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38940 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726514AbfFJRLH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 13:11:07 -0400
-Date: Mon, 10 Jun 2019 10:10:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/10] xfs: convert quotacheck to use the new iwalk
- functions
-Message-ID: <20190610171003.GK1871505@magnolia>
-References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
- <155968498085.1657646.3518168545540841602.stgit@magnolia>
- <20190610135848.GB6473@bfoster>
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:35366 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387456AbfFJROU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 13:14:20 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190610135848.GB6473@bfoster>
+References: <20190610160624.GG1871505@magnolia>
+In-Reply-To: <20190610160624.GG1871505@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 10 Jun 2019 20:14:08 +0300
+Message-ID: <CAOQ4uxhkE_TsN7XMBgzxVhEYDw+gZEOOCiZzn9otVwQtB-XHeA@mail.gmail.com>
+Subject: Re: [ANNOUNCE] xfs-linux: copy-file-range-fixes updated to fe0da9c09b2d
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Miklos Szeredi <miklos@szeredi.hu>, Anna Schumaker <Anna.Schumaker@netapp.com>, Steve French <smfrench@gmail.com>, Ilya Dryomov <idryomov@gmail.com>
+Cc: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Linux NFS Mailing List <linux-nfs@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, ceph-devel@vger.kernel.org
 
-On Mon, Jun 10, 2019 at 09:58:52AM -0400, Brian Foster wrote:
-> On Tue, Jun 04, 2019 at 02:49:40PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Convert quotacheck to use the new iwalk iterator to dig through the
-> > inodes.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_qm.c |   62 ++++++++++++++++++-------------------------------------
-> >  1 file changed, 20 insertions(+), 42 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > index aa6b6db3db0e..a5b2260406a8 100644
-> > --- a/fs/xfs/xfs_qm.c
-> > +++ b/fs/xfs/xfs_qm.c
-> ...
-> > @@ -1136,20 +1135,18 @@ xfs_qm_dqusage_adjust(
-> >  	 * rootino must have its resources accounted for, not so with the quota
-> >  	 * inodes.
-> >  	 */
-> > -	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
-> > -		*res = BULKSTAT_RV_NOTHING;
-> > -		return -EINVAL;
-> > -	}
-> > +	if (xfs_is_quota_inode(&mp->m_sb, ino))
-> > +		return 0;
-> >  
-> >  	/*
-> >  	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
-> >  	 * at mount time and therefore nobody will be racing chown/chproj.
-> >  	 */
-> > -	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
-> > -	if (error) {
-> > -		*res = BULKSTAT_RV_NOTHING;
-> > +	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
-> 
-> I was wondering if we should start using IGET_UNTRUSTED here, but I
-> guess we're 1.) protected by quotacheck context and 2.) have the same
-> record validity semantics as the existing bulkstat walker. LGTM:
++CC affected maintainers
 
-Yep.  There's nothing else running in the fs at quotacheck time so inode
-records should not be changing while quotacheck runs.
+On Mon, Jun 10, 2019 at 7:06 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> Hi folks,
+>
+> The copy-file-range-fixes branch of the xfs-linux repository at:
+>
+>         git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+>
+> has just been updated.  This is a common branch from which everyone else
+> can create their own copy-file-range fix branches for 5.3.  When you
+> send your pull request to Linus please let him know that the fixes
+> stream out from here like some kind of hydra. :)
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > +	if (error == -EINVAL || error == -ENOENT)
-> > +		return 0;
-> > +	if (error)
-> >  		return error;
-> > -	}
-> >  
-> >  	ASSERT(ip->i_delayed_blks == 0);
-> >  
-> > @@ -1157,7 +1154,7 @@ xfs_qm_dqusage_adjust(
-> >  		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
-> >  
-> >  		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
-> > -			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-> > +			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
-> >  			if (error)
-> >  				goto error0;
-> >  		}
-> > @@ -1200,13 +1197,8 @@ xfs_qm_dqusage_adjust(
-> >  			goto error0;
-> >  	}
-> >  
-> > -	xfs_irele(ip);
-> > -	*res = BULKSTAT_RV_DIDONE;
-> > -	return 0;
-> > -
-> >  error0:
-> >  	xfs_irele(ip);
-> > -	*res = BULKSTAT_RV_GIVEUP;
-> >  	return error;
-> >  }
-> >  
-> > @@ -1270,18 +1262,13 @@ STATIC int
-> >  xfs_qm_quotacheck(
-> >  	xfs_mount_t	*mp)
-> >  {
-> > -	int			done, count, error, error2;
-> > -	xfs_ino_t		lastino;
-> > -	size_t			structsz;
-> > +	int			error, error2;
-> >  	uint			flags;
-> >  	LIST_HEAD		(buffer_list);
-> >  	struct xfs_inode	*uip = mp->m_quotainfo->qi_uquotaip;
-> >  	struct xfs_inode	*gip = mp->m_quotainfo->qi_gquotaip;
-> >  	struct xfs_inode	*pip = mp->m_quotainfo->qi_pquotaip;
-> >  
-> > -	count = INT_MAX;
-> > -	structsz = 1;
-> > -	lastino = 0;
-> >  	flags = 0;
-> >  
-> >  	ASSERT(uip || gip || pip);
-> > @@ -1318,18 +1305,9 @@ xfs_qm_quotacheck(
-> >  		flags |= XFS_PQUOTA_CHKD;
-> >  	}
-> >  
-> > -	do {
-> > -		/*
-> > -		 * Iterate thru all the inodes in the file system,
-> > -		 * adjusting the corresponding dquot counters in core.
-> > -		 */
-> > -		error = xfs_bulkstat(mp, &lastino, &count,
-> > -				     xfs_qm_dqusage_adjust,
-> > -				     structsz, NULL, &done);
-> > -		if (error)
-> > -			break;
-> > -
-> > -	} while (!done);
-> > +	error = xfs_iwalk(mp, NULL, 0, xfs_qm_dqusage_adjust, 0, NULL);
-> > +	if (error)
-> > +		goto error_return;
-> >  
-> >  	/*
-> >  	 * We've made all the changes that we need to make incore.  Flush them
-> > 
+Thanks Darrick!
+Should we also request to include this branch in linux-next?
+
+Attention nfs/cifs/fuse/ceph maintainers!
+This branch includes changes to your filesystems.
+At lease nfs/cifs/ceph have been tested with these changes and the
+new xfstests.
+
+I think it would be preferred if you merge Darrick's branch into your
+5.3 branch as soon as you have one ready to reduce chances of
+conflicts down the road.
+
+I will be sending out 2 more patches to cifs/ceph, which depend on
+this branch directly to maintainers.
+
+Thanks,
+Amir.
