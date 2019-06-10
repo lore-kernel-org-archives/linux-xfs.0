@@ -1,69 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33126 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:36720 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391391AbfFJQGc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 12:06:32 -0400
-Date: Mon, 10 Jun 2019 09:06:24 -0700
+        with ESMTP id S2389392AbfFJQJo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 12:09:44 -0400
+Date: Mon, 10 Jun 2019 09:09:34 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: copy-file-range-fixes updated to fe0da9c09b2d
-Message-ID: <20190610160624.GG1871505@magnolia>
+Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
+Message-ID: <20190610160934.GH1871505@magnolia>
+References: <155552786671.20411.6442426840435740050.stgit@magnolia>
+ <155552787330.20411.11893581890744963309.stgit@magnolia>
+ <20190610015145.GB3266@mit.edu>
+ <20190610044144.GA1872750@magnolia>
+ <20190610131417.GD15963@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190610131417.GD15963@mit.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, olga.kornievskaia@gmail.com, amir73il@gmail.com, Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
 
-Hi folks,
+On Mon, Jun 10, 2019 at 09:14:17AM -0400, Theodore Ts'o wrote:
+> On Sun, Jun 09, 2019 at 09:41:44PM -0700, Darrick J. Wong wrote:
+> > On Sun, Jun 09, 2019 at 09:51:45PM -0400, Theodore Ts'o wrote:
+> > > On Wed, Apr 17, 2019 at 12:04:33PM -0700, Darrick J. Wong wrote:
+> >
+> > > Shouldn't this check be moved before the modification of vmf->flags?
+> > > It looks like do_page_mkwrite() isn't supposed to be returning with
+> > > vmf->flags modified, lest "the caller gets surprised".
+> > 
+> > Yeah, I think that was a merge error during a rebase... :(
+> > 
+> > Er ... if you're still planning to take this patch through your tree,
+> > can you move it to above the "vmf->flags = FAULT_FLAG_WRITE..." ?
+> 
+> I was planning on only taking 8/8 through the ext4 tree.  I also added
+> a patch which filtered writes, truncates, and page_mkwrites (but not
+> mmap) for immutable files at the ext4 level.
 
-The copy-file-range-fixes branch of the xfs-linux repository at:
+*Oh*.  I saw your reply attached to the 1/8 patch and thought that was
+the one you were taking.  I was sort of surprised, tbh. :)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> I *could* take this patch through the mm/fs tree, but I wasn't sure
+> what your plans were for the rest of the patch series, and it seemed
+> like it hadn't gotten much review/attention from other fs or mm folks
+> (well, I guess Brian Foster weighed in).
 
-has just been updated.  This is a common branch from which everyone else
-can create their own copy-file-range fix branches for 5.3.  When you
-send your pull request to Linus please let him know that the fixes
-stream out from here like some kind of hydra. :)
+> What do you think?
 
-FWIW these patches are the fixes for the problems that have been
-reported in generic/553 and generic/554.
+Not sure.  The comments attached to the LWN story were sort of nasty,
+and now that a couple of people said "Oh, well, Debian documented the
+inconsistent behavior so just let it be" I haven't felt like
+resurrecting the series for 5.3.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-fsdevel@vger.kernel.org so they can be picked up
-in the next update.
+I do want to clean up the parameter validation for the VFS SETFLAGS and
+FSSETXATTR ioctls though... eh, maybe I'll just send out the series as
+it stands now.  I'm still maintaining it, so all that work might as well
+go somewhere.
 
-The new head of the copy-file-range-fixes branch is commit:
+--D
 
-fe0da9c09b2d fuse: copy_file_range needs to strip setuid bits and update timestamps
-
-New Commits:
-
-Amir Goldstein (7):
-      [a31713517dac] vfs: introduce generic_file_rw_checks()
-      [646955cd5425] vfs: remove redundant checks from generic_remap_checks()
-      [96e6e8f4a68d] vfs: add missing checks to copy_file_range
-      [e38f7f53c352] vfs: introduce file_modified() helper
-      [8c3f406c097b] xfs: use file_modified() helper
-      [5dae222a5ff0] vfs: allow copy_file_range to copy across devices
-      [fe0da9c09b2d] fuse: copy_file_range needs to strip setuid bits and update timestamps
-
-Dave Chinner (2):
-      [f16acc9d9b37] vfs: introduce generic_copy_file_range()
-      [64bf5ff58dff] vfs: no fallback for ->copy_file_range
-
-
-Code Diffstat:
-
- fs/ceph/file.c     |  23 ++++++++--
- fs/cifs/cifsfs.c   |   4 ++
- fs/fuse/file.c     |  29 +++++++++++--
- fs/inode.c         |  20 +++++++++
- fs/nfs/nfs4file.c  |  23 ++++++++--
- fs/read_write.c    | 124 +++++++++++++++++++++++++++++------------------------
- fs/xfs/xfs_file.c  |  15 +------
- include/linux/fs.h |   9 ++++
- mm/filemap.c       | 110 ++++++++++++++++++++++++++++++++++++++---------
- 9 files changed, 257 insertions(+), 100 deletions(-)
+> 
+> 						- Ted
+> 
+> 
+> 
