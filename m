@@ -1,96 +1,145 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:59898 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:38940 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728096AbfFJREl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 13:04:41 -0400
-Date: Mon, 10 Jun 2019 10:04:34 -0700
+        with ESMTP id S1726514AbfFJRLH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 13:11:07 -0400
+Date: Mon, 10 Jun 2019 10:10:03 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3 3/6] generic: copy_file_range swapfile test
-Message-ID: <20190610170434.GJ1871505@magnolia>
-References: <20190602124114.26810-1-amir73il@gmail.com>
- <20190602124114.26810-4-amir73il@gmail.com>
- <20190610035829.GA18429@mit.edu>
- <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
- <20190610133131.GE15963@mit.edu>
- <20190610160616.GE1688126@magnolia>
- <CAOQ4uxiQsOTFO5f_aQWrmbSgSGuOy2wHoJbQAdWHrA1s-pZoHQ@mail.gmail.com>
+Subject: Re: [PATCH 02/10] xfs: convert quotacheck to use the new iwalk
+ functions
+Message-ID: <20190610171003.GK1871505@magnolia>
+References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+ <155968498085.1657646.3518168545540841602.stgit@magnolia>
+ <20190610135848.GB6473@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAOQ4uxiQsOTFO5f_aQWrmbSgSGuOy2wHoJbQAdWHrA1s-pZoHQ@mail.gmail.com>
+In-Reply-To: <20190610135848.GB6473@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Eryu Guan <guaneryu@gmail.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Mon, Jun 10, 2019 at 07:54:52PM +0300, Amir Goldstein wrote:
-> On Mon, Jun 10, 2019 at 7:06 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> >
-> > On Mon, Jun 10, 2019 at 09:31:31AM -0400, Theodore Ts'o wrote:
-> > > On Mon, Jun 10, 2019 at 09:37:32AM +0300, Amir Goldstein wrote:
-> > > >
-> > > >Why do you think thhis is xfs_io fall back and not kernel fall back to
-> > > >do_splice_direct()? Anyway, both cases allow read from swapfile
-> > > >on upstream.
-> > >
-> > > Ah, I had assumed this was changed that was made because if you are
-> > > implementing copy_file_range in terms of some kind of reflink-like
-> > > mechanism, it becomes super-messy since you know have to break tons
-> > > and tons of COW sharing each time the kernel swaps to the swap file.
-> > >
-> > > I didn't think we had (or maybe we did, and I missed it) a discussion
-> > > about whether reading from a swap file should be prohibited.
-> > > Personally, I think it's security theatre, and not worth the
-> > > effort/overhead, but whatever.... my main complaint was with the
-> > > unnecessary test failures with upstream kernels.
-> > >
-> > > > Trying to understand the desired flow of tests and fixes.
-> > > > I agree that generic/554 failure may be a test/interface bug that
-> > > > we should fix in a way that current upstream passes the test for
-> > > > ext4. Unless there is objection, I will send a patch to fix the test
-> > > > to only test copy *to* swapfile.
-> > > >
-> > > > generic/553, OTOH, is expected to fail on upstream kernel.
-> > > > Are you leaving 553 in appliance build in anticipation to upstream fix?
-> > > > I guess the answer is in the ext4 IS_IMMUTABLE patch that you
-> > > > posted and plan to push to upstream/stable sooner than VFS patches.
-> > >
-> > > So I find it kind of annoying when tests land before the fixes do
-> > > upstream.  I still have this in my global_exclude file:
-> >
-> > Yeah, it's awkward for VFS fixes because on the one hand we don't want
-> > to have multiyear regressions like generic/484, but OTOH stuffing tests
-> > in before code goes upstream enables broader testing by the other fs
-> > maintainers.
+On Mon, Jun 10, 2019 at 09:58:52AM -0400, Brian Foster wrote:
+> On Tue, Jun 04, 2019 at 02:49:40PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Convert quotacheck to use the new iwalk iterator to dig through the
+> > inodes.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_qm.c |   62 ++++++++++++++++++-------------------------------------
+> >  1 file changed, 20 insertions(+), 42 deletions(-)
+> > 
+> > 
+> > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > index aa6b6db3db0e..a5b2260406a8 100644
+> > --- a/fs/xfs/xfs_qm.c
+> > +++ b/fs/xfs/xfs_qm.c
+> ...
+> > @@ -1136,20 +1135,18 @@ xfs_qm_dqusage_adjust(
+> >  	 * rootino must have its resources accounted for, not so with the quota
+> >  	 * inodes.
+> >  	 */
+> > -	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
+> > -		*res = BULKSTAT_RV_NOTHING;
+> > -		return -EINVAL;
+> > -	}
+> > +	if (xfs_is_quota_inode(&mp->m_sb, ino))
+> > +		return 0;
+> >  
+> >  	/*
+> >  	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
+> >  	 * at mount time and therefore nobody will be racing chown/chproj.
+> >  	 */
+> > -	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
+> > -	if (error) {
+> > -		*res = BULKSTAT_RV_NOTHING;
+> > +	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
 > 
-> And to prove this point, Ted pointed out a test bug in 554, which also
-> affects the kernel and man pages fixes, so it was really worth it ;-)
+> I was wondering if we should start using IGET_UNTRUSTED here, but I
+> guess we're 1.) protected by quotacheck context and 2.) have the same
+> record validity semantics as the existing bulkstat walker. LGTM:
 
-:D
+Yep.  There's nothing else running in the fs at quotacheck time so inode
+records should not be changing while quotacheck runs.
 
-> >
-> > In any case, the fixes are in the copy-range-fixes branch which I'm
-> > finally publishing...
-> >
-> > > # The proposed fix for generic/484, "locks: change POSIX lock
-> > > # ownership on execve when files_struct is displaced" would break NFS
-> > > # Jeff Layton and Eric Biederman have some ideas for how to address it
-> > > # but fixing it is non-trivial
-> >
-> > Also, uh, can we remove this from the auto and quick groups for now?
-> >
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 > 
-> I am not opposed to removing these test from auto,quick, although removing
-> from quick is a bit shady. I would like to mark them explicitly with group
-> known_issues, so that users can run ./check -g quick -x known_issues.
-> BTW, overlay/061 is also a known_issue that is going to be hard to fix.
-> 
-> But anyway, neither 553 nor 554 fall into that category.
-
-Sorry, I was unclear -- I was asking to remove g/484 from auto/quick.
-
---D
-
-> Thanks,
-> Amir.
+> > +	if (error == -EINVAL || error == -ENOENT)
+> > +		return 0;
+> > +	if (error)
+> >  		return error;
+> > -	}
+> >  
+> >  	ASSERT(ip->i_delayed_blks == 0);
+> >  
+> > @@ -1157,7 +1154,7 @@ xfs_qm_dqusage_adjust(
+> >  		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+> >  
+> >  		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> > -			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
+> > +			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+> >  			if (error)
+> >  				goto error0;
+> >  		}
+> > @@ -1200,13 +1197,8 @@ xfs_qm_dqusage_adjust(
+> >  			goto error0;
+> >  	}
+> >  
+> > -	xfs_irele(ip);
+> > -	*res = BULKSTAT_RV_DIDONE;
+> > -	return 0;
+> > -
+> >  error0:
+> >  	xfs_irele(ip);
+> > -	*res = BULKSTAT_RV_GIVEUP;
+> >  	return error;
+> >  }
+> >  
+> > @@ -1270,18 +1262,13 @@ STATIC int
+> >  xfs_qm_quotacheck(
+> >  	xfs_mount_t	*mp)
+> >  {
+> > -	int			done, count, error, error2;
+> > -	xfs_ino_t		lastino;
+> > -	size_t			structsz;
+> > +	int			error, error2;
+> >  	uint			flags;
+> >  	LIST_HEAD		(buffer_list);
+> >  	struct xfs_inode	*uip = mp->m_quotainfo->qi_uquotaip;
+> >  	struct xfs_inode	*gip = mp->m_quotainfo->qi_gquotaip;
+> >  	struct xfs_inode	*pip = mp->m_quotainfo->qi_pquotaip;
+> >  
+> > -	count = INT_MAX;
+> > -	structsz = 1;
+> > -	lastino = 0;
+> >  	flags = 0;
+> >  
+> >  	ASSERT(uip || gip || pip);
+> > @@ -1318,18 +1305,9 @@ xfs_qm_quotacheck(
+> >  		flags |= XFS_PQUOTA_CHKD;
+> >  	}
+> >  
+> > -	do {
+> > -		/*
+> > -		 * Iterate thru all the inodes in the file system,
+> > -		 * adjusting the corresponding dquot counters in core.
+> > -		 */
+> > -		error = xfs_bulkstat(mp, &lastino, &count,
+> > -				     xfs_qm_dqusage_adjust,
+> > -				     structsz, NULL, &done);
+> > -		if (error)
+> > -			break;
+> > -
+> > -	} while (!done);
+> > +	error = xfs_iwalk(mp, NULL, 0, xfs_qm_dqusage_adjust, 0, NULL);
+> > +	if (error)
+> > +		goto error_return;
+> >  
+> >  	/*
+> >  	 * We've made all the changes that we need to make incore.  Flush them
+> > 
