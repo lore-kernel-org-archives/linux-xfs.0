@@ -1,69 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:36720 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389392AbfFJQJo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 12:09:44 -0400
-Date: Mon, 10 Jun 2019 09:09:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
-Message-ID: <20190610160934.GH1871505@magnolia>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
- <155552787330.20411.11893581890744963309.stgit@magnolia>
- <20190610015145.GB3266@mit.edu>
- <20190610044144.GA1872750@magnolia>
- <20190610131417.GD15963@mit.edu>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:44575 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727648AbfFJQzD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 12:55:03 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190610131417.GD15963@mit.edu>
+References: <20190602124114.26810-1-amir73il@gmail.com> <20190602124114.26810-4-amir73il@gmail.com>
+ <20190610035829.GA18429@mit.edu> <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
+ <20190610133131.GE15963@mit.edu> <20190610160616.GE1688126@magnolia>
+In-Reply-To: <20190610160616.GE1688126@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Mon, 10 Jun 2019 19:54:52 +0300
+Message-ID: <CAOQ4uxiQsOTFO5f_aQWrmbSgSGuOy2wHoJbQAdWHrA1s-pZoHQ@mail.gmail.com>
+Subject: Re: [PATCH v3 3/6] generic: copy_file_range swapfile test
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Theodore Ts'o <tytso@mit.edu>, Eryu Guan <guaneryu@gmail.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jun 10, 2019 at 09:14:17AM -0400, Theodore Ts'o wrote:
-> On Sun, Jun 09, 2019 at 09:41:44PM -0700, Darrick J. Wong wrote:
-> > On Sun, Jun 09, 2019 at 09:51:45PM -0400, Theodore Ts'o wrote:
-> > > On Wed, Apr 17, 2019 at 12:04:33PM -0700, Darrick J. Wong wrote:
+On Mon, Jun 10, 2019 at 7:06 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
+> On Mon, Jun 10, 2019 at 09:31:31AM -0400, Theodore Ts'o wrote:
+> > On Mon, Jun 10, 2019 at 09:37:32AM +0300, Amir Goldstein wrote:
+> > >
+> > >Why do you think thhis is xfs_io fall back and not kernel fall back to
+> > >do_splice_direct()? Anyway, both cases allow read from swapfile
+> > >on upstream.
 > >
-> > > Shouldn't this check be moved before the modification of vmf->flags?
-> > > It looks like do_page_mkwrite() isn't supposed to be returning with
-> > > vmf->flags modified, lest "the caller gets surprised".
-> > 
-> > Yeah, I think that was a merge error during a rebase... :(
-> > 
-> > Er ... if you're still planning to take this patch through your tree,
-> > can you move it to above the "vmf->flags = FAULT_FLAG_WRITE..." ?
-> 
-> I was planning on only taking 8/8 through the ext4 tree.  I also added
-> a patch which filtered writes, truncates, and page_mkwrites (but not
-> mmap) for immutable files at the ext4 level.
+> > Ah, I had assumed this was changed that was made because if you are
+> > implementing copy_file_range in terms of some kind of reflink-like
+> > mechanism, it becomes super-messy since you know have to break tons
+> > and tons of COW sharing each time the kernel swaps to the swap file.
+> >
+> > I didn't think we had (or maybe we did, and I missed it) a discussion
+> > about whether reading from a swap file should be prohibited.
+> > Personally, I think it's security theatre, and not worth the
+> > effort/overhead, but whatever.... my main complaint was with the
+> > unnecessary test failures with upstream kernels.
+> >
+> > > Trying to understand the desired flow of tests and fixes.
+> > > I agree that generic/554 failure may be a test/interface bug that
+> > > we should fix in a way that current upstream passes the test for
+> > > ext4. Unless there is objection, I will send a patch to fix the test
+> > > to only test copy *to* swapfile.
+> > >
+> > > generic/553, OTOH, is expected to fail on upstream kernel.
+> > > Are you leaving 553 in appliance build in anticipation to upstream fix?
+> > > I guess the answer is in the ext4 IS_IMMUTABLE patch that you
+> > > posted and plan to push to upstream/stable sooner than VFS patches.
+> >
+> > So I find it kind of annoying when tests land before the fixes do
+> > upstream.  I still have this in my global_exclude file:
+>
+> Yeah, it's awkward for VFS fixes because on the one hand we don't want
+> to have multiyear regressions like generic/484, but OTOH stuffing tests
+> in before code goes upstream enables broader testing by the other fs
+> maintainers.
 
-*Oh*.  I saw your reply attached to the 1/8 patch and thought that was
-the one you were taking.  I was sort of surprised, tbh. :)
+And to prove this point, Ted pointed out a test bug in 554, which also
+affects the kernel and man pages fixes, so it was really worth it ;-)
 
-> I *could* take this patch through the mm/fs tree, but I wasn't sure
-> what your plans were for the rest of the patch series, and it seemed
-> like it hadn't gotten much review/attention from other fs or mm folks
-> (well, I guess Brian Foster weighed in).
+>
+> In any case, the fixes are in the copy-range-fixes branch which I'm
+> finally publishing...
+>
+> > # The proposed fix for generic/484, "locks: change POSIX lock
+> > # ownership on execve when files_struct is displaced" would break NFS
+> > # Jeff Layton and Eric Biederman have some ideas for how to address it
+> > # but fixing it is non-trivial
+>
+> Also, uh, can we remove this from the auto and quick groups for now?
+>
 
-> What do you think?
+I am not opposed to removing these test from auto,quick, although removing
+from quick is a bit shady. I would like to mark them explicitly with group
+known_issues, so that users can run ./check -g quick -x known_issues.
+BTW, overlay/061 is also a known_issue that is going to be hard to fix.
 
-Not sure.  The comments attached to the LWN story were sort of nasty,
-and now that a couple of people said "Oh, well, Debian documented the
-inconsistent behavior so just let it be" I haven't felt like
-resurrecting the series for 5.3.
+But anyway, neither 553 nor 554 fall into that category.
 
-I do want to clean up the parameter validation for the VFS SETFLAGS and
-FSSETXATTR ioctls though... eh, maybe I'll just send out the series as
-it stands now.  I'm still maintaining it, so all that work might as well
-go somewhere.
-
---D
-
-> 
-> 						- Ted
-> 
-> 
-> 
+Thanks,
+Amir.
