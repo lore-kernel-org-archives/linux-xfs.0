@@ -1,59 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56844 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387770AbfFKNmc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 09:42:32 -0400
-Subject: Re: [Jfs-discussion] [PATCH 1/4] vfs: create a generic checking
- function for FS_IOC_SETFLAGS
-References: <156022833285.3227089.11990489625041926920.stgit@magnolia>
- <156022834076.3227089.14763553158562888103.stgit@magnolia>
-From: Dave Kleikamp <dave.kleikamp@oracle.com>
-Message-ID: <fb974a33-2192-30ab-9f31-885c3796360b@oracle.com>
-Date: Tue, 11 Jun 2019 08:41:06 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:41736 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389125AbfFKPHO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Jun 2019 11:07:14 -0400
+Date: Tue, 11 Jun 2019 11:07:12 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 09/10] xfs: poll waiting for quotacheck
+Message-ID: <20190611150712.GB10942@bfoster>
+References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+ <155968502703.1657646.17911228005649046316.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <156022834076.3227089.14763553158562888103.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <155968502703.1657646.17911228005649046316.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
-Cc: linux-xfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 6/10/19 11:45 PM, Darrick J. Wong wrote:
+On Tue, Jun 04, 2019 at 02:50:27PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Create a generic checking function for the incoming FS_IOC_SETFLAGS flag
-> values so that we can standardize the implementations that follow ext4's
-> flag values.
+> Create a pwork destroy function that uses polling instead of
+> uninterruptible sleep to wait for work items to finish so that we can
+> touch the softlockup watchdog.  IOWs, gross hack.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
 
- -- clip --
+Seems reasonable given the quirky circumstances of quotacheck. Just a
+couple nits..
 
-> diff --git a/fs/jfs/ioctl.c b/fs/jfs/ioctl.c
-> index ba34dae8bd9f..c8446d2cd0c7 100644
-> --- a/fs/jfs/ioctl.c
-> +++ b/fs/jfs/ioctl.c
-> @@ -98,6 +98,12 @@ long jfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
->  		/* Lock against other parallel changes of flags */
->  		inode_lock(inode);
+>  fs/xfs/xfs_iwalk.c |    3 +++
+>  fs/xfs/xfs_iwalk.h |    3 ++-
+>  fs/xfs/xfs_pwork.c |   21 +++++++++++++++++++++
+>  fs/xfs/xfs_pwork.h |    2 ++
+>  fs/xfs/xfs_qm.c    |    2 +-
+>  5 files changed, 29 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+> index 71ee1628aa70..c4a9c4c246b7 100644
+> --- a/fs/xfs/xfs_iwalk.c
+> +++ b/fs/xfs/xfs_iwalk.c
+> @@ -526,6 +526,7 @@ xfs_iwalk_threaded(
+>  	xfs_ino_t		startino,
+>  	xfs_iwalk_fn		iwalk_fn,
+>  	unsigned int		max_prefetch,
+> +	bool			polled,
+>  	void			*data)
+>  {
+>  	struct xfs_pwork_ctl	pctl;
+> @@ -556,5 +557,7 @@ xfs_iwalk_threaded(
+>  		startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
+>  	}
 >  
-> +		oldflags = jfs_map_ext2(jfs_inode->mode2 & JFS_FL_USER_VISIBLE,
-> +					0);
-> +		err = vfs_ioc_setflags_check(inode, oldflags, flags);
-> +		if (err)
-> +			goto setflags_out;
+> +	if (polled)
+> +		return xfs_pwork_destroy_poll(&pctl);
+>  	return xfs_pwork_destroy(&pctl);
 
-inode_unlock(inode) is not called on the error path.
+Rather than have duplicate destruction paths, could we rework
+xfs_pwork_destroy_poll() to something like xfs_pwork_poll() that just
+does the polling and returns, then the caller can fall back into the
+current xfs_pwork_destroy()? I.e., this ends up looking like:
+
+	...
+	/* poll to keep soft lockup watchdog quiet */
+	if (polled)
+		xfs_pwork_poll(&pctl);
+	return xfs_pwork_destroy(&pctl);
+
+>  }
+...
+> diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
+> index 19605a3a2482..3b885e0b52ac 100644
+> --- a/fs/xfs/xfs_pwork.c
+> +++ b/fs/xfs/xfs_pwork.c
+...
+> @@ -97,6 +101,23 @@ xfs_pwork_destroy(
+>  	return pctl->error;
+>  }
+>  
+> +/*
+> + * Wait for the work to finish and tear down the control structure.
+> + * Continually poll completion status and touch the soft lockup watchdog.
+> + * This is for things like mount that hold locks.
+> + */
+> +int
+> +xfs_pwork_destroy_poll(
+> +	struct xfs_pwork_ctl	*pctl)
+> +{
+> +	while (atomic_read(&pctl->nr_work) > 0) {
+> +		msleep(1);
+> +		touch_softlockup_watchdog();
+> +	}
+
+Any idea what the typical watchdog timeout is? I'm curious where the 1ms
+comes from and whether we could get away with anything larger. I realize
+that might introduce mount latency with the current sleep based
+implementation, but we could also consider a waitqueue and using
+something like wait_event_timeout() to schedule out for longer time
+periods and still wake up immediately when the count drops to 0.
+
+Brian
 
 > +
->  		oldflags = jfs_inode->mode2;
+> +	return xfs_pwork_destroy(pctl);
+> +}
+> +
+>  /*
+>   * Return the amount of parallelism that the data device can handle, or 0 for
+>   * no limit.
+> diff --git a/fs/xfs/xfs_pwork.h b/fs/xfs/xfs_pwork.h
+> index e0c1354a2d8c..08da723a8dc9 100644
+> --- a/fs/xfs/xfs_pwork.h
+> +++ b/fs/xfs/xfs_pwork.h
+> @@ -18,6 +18,7 @@ struct xfs_pwork_ctl {
+>  	struct workqueue_struct	*wq;
+>  	struct xfs_mount	*mp;
+>  	xfs_pwork_work_fn	work_fn;
+> +	atomic_t		nr_work;
+>  	int			error;
+>  };
 >  
->  		/*
-
-This patch leaves jfs's open-coded version of the same check.
-
-Thanks,
-Shaggy
+> @@ -45,6 +46,7 @@ int xfs_pwork_init(struct xfs_mount *mp, struct xfs_pwork_ctl *pctl,
+>  		unsigned int nr_threads);
+>  void xfs_pwork_queue(struct xfs_pwork_ctl *pctl, struct xfs_pwork *pwork);
+>  int xfs_pwork_destroy(struct xfs_pwork_ctl *pctl);
+> +int xfs_pwork_destroy_poll(struct xfs_pwork_ctl *pctl);
+>  unsigned int xfs_pwork_guess_datadev_parallelism(struct xfs_mount *mp);
+>  
+>  #endif /* __XFS_PWORK_H__ */
+> diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> index e4f3785f7a64..de6a623ada02 100644
+> --- a/fs/xfs/xfs_qm.c
+> +++ b/fs/xfs/xfs_qm.c
+> @@ -1305,7 +1305,7 @@ xfs_qm_quotacheck(
+>  		flags |= XFS_PQUOTA_CHKD;
+>  	}
+>  
+> -	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, NULL);
+> +	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, true, NULL);
+>  	if (error)
+>  		goto error_return;
+>  
+> 
