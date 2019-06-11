@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44470 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403815AbfFKErw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:47:52 -0400
-Subject: [PATCH 3/6] vfs: flush and wait for io when setting the immutable
- flag via FSSETXATTR
+Received: from aserp2130.oracle.com ([141.146.126.79]:44436 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388869AbfFKEsC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:48:02 -0400
+Subject: [PATCH 4/6] vfs: don't allow most setxattr to immutable files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 10 Jun 2019 21:46:33 -0700
-Message-ID: <156022839302.3227213.8773888198343223122.stgit@magnolia>
+Date: Mon, 10 Jun 2019 21:46:45 -0700
+Message-ID: <156022840560.3227213.4776913678782966728.stgit@magnolia>
 In-Reply-To: <156022836912.3227213.13598042497272336695.stgit@magnolia>
 References: <156022836912.3227213.13598042497272336695.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,170 +20,71 @@ Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orang
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we're using FS_IOC_FSSETXATTR to set the immutable flag on a file,
-we need to ensure that userspace can't continue to write the file after
-the file becomes immutable.  To make that happen, we have to flush all
-the dirty pagecache pages to disk to ensure that we can fail a page
-fault on a mmap'd region, wait for pending directio to complete, and
-hope the caller locked out any new writes by holding the inode lock.
+The chattr manpage has this to say about immutable files:
+
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
+
+However, we don't actually check the immutable flag in the setattr code,
+which means that we can update inode flags and project ids and extent
+size hints on supposedly immutable files.  Therefore, reject setflags
+and fssetxattr calls on an immutable file if the file is immutable and
+will remain that way.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/btrfs/ioctl.c   |    3 +++
- fs/ext4/ioctl.c    |    3 +++
- fs/f2fs/file.c     |    3 +++
- fs/xfs/xfs_ioctl.c |   39 +++++++++++++++++++++++++++++++++------
- include/linux/fs.h |   23 +++++++++++++++++++++++
- 5 files changed, 65 insertions(+), 6 deletions(-)
+ fs/inode.c |   31 +++++++++++++++++++++++++++++++
+ 1 file changed, 31 insertions(+)
 
 
-diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-index f431813b2454..63a9281e6ce0 100644
---- a/fs/btrfs/ioctl.c
-+++ b/fs/btrfs/ioctl.c
-@@ -432,6 +432,9 @@ static int btrfs_ioctl_fssetxattr(struct file *file, void __user *arg)
+diff --git a/fs/inode.c b/fs/inode.c
+index a3757051fd55..adfb458bf533 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2184,6 +2184,17 @@ int vfs_ioc_setflags_check(struct inode *inode, int oldflags, int flags)
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
  
- 	__btrfs_ioctl_fsgetxattr(binode, &old_fa);
- 	ret = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-+	if (ret)
-+		goto out_unlock;
-+	ret = vfs_ioc_fssetxattr_flush_data(inode, &fa);
- 	if (ret)
- 		goto out_unlock;
- 
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index a05341b94d98..6037585c1520 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -1115,6 +1115,9 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 		inode_lock(inode);
- 		ext4_fsgetxattr(inode, &old_fa);
- 		err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-+		if (err)
-+			goto out;
-+		err = vfs_ioc_fssetxattr_flush_data(inode, &fa);
- 		if (err)
- 			goto out;
- 		flags = (ei->i_flags & ~EXT4_FL_XFLAG_VISIBLE) |
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index d3cf4bdb8738..97f4bb36540f 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -2832,6 +2832,9 @@ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- 
- 	__f2fs_ioc_fsgetxattr(inode, &old_fa);
- 	err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-+	if (err)
-+		goto out;
-+	err = vfs_ioc_fssetxattr_flush_data(inode, &fa);
- 	if (err)
- 		goto out;
- 	flags = (fi->i_flags & ~F2FS_FL_XFLAG_VISIBLE) |
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index b494e7e881e3..88583b3e1e76 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1014,6 +1014,28 @@ xfs_diflags_to_linux(
- #endif
- }
- 
-+/*
-+ * Lock the inode against file io and page faults, then flush all dirty pages
-+ * and wait for writeback and direct IO operations to finish.  Returns with
-+ * the relevant inode lock flags set in @join_flags.  Caller is responsible for
-+ * unlocking even on error return.
-+ */
-+static int
-+xfs_ioctl_setattr_flush(
-+	struct xfs_inode	*ip,
-+	int			*join_flags)
-+{
-+	/* Already locked the inode from IO?  Assume we're done. */
-+	if (((*join_flags) & (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL)) ==
-+			     (XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL))
-+		return 0;
-+
-+	/* Lock and flush all mappings and IO in preparation for flag change */
-+	*join_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	xfs_ilock(ip, *join_flags);
-+	return inode_flush_data(VFS_I(ip));
-+}
-+
- static int
- xfs_ioctl_setattr_xflags(
- 	struct xfs_trans	*tp,
-@@ -1099,23 +1121,22 @@ xfs_ioctl_setattr_dax_invalidate(
- 	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
- 		return 0;
- 
--	if (S_ISDIR(inode->i_mode))
-+	if (!S_ISREG(inode->i_mode))
- 		return 0;
- 
--	/* lock, flush and invalidate mapping in preparation for flag change */
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	error = filemap_write_and_wait(inode->i_mapping);
-+	error = xfs_ioctl_setattr_flush(ip, join_flags);
- 	if (error)
- 		goto out_unlock;
- 	error = invalidate_inode_pages2(inode->i_mapping);
- 	if (error)
- 		goto out_unlock;
- 
--	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
- 	return 0;
- 
- out_unlock:
--	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
-+	if (*join_flags)
-+		xfs_iunlock(ip, *join_flags);
-+	*join_flags = 0;
- 	return error;
- 
- }
-@@ -1337,6 +1358,12 @@ xfs_ioctl_setattr(
- 	if (code)
- 		goto error_free_dquots;
- 
-+	if (!join_flags && vfs_ioc_fssetxattr_need_flush(VFS_I(ip), fa)) {
-+		code = xfs_ioctl_setattr_flush(ip, &join_flags);
-+		if (code)
-+			goto error_free_dquots;
++	/*
++	 * We aren't allowed to change any other flags if the immutable flag is
++	 * already set and is not being unset.
++	 */
++	if ((oldflags & FS_IMMUTABLE_FL) &&
++	    (flags & FS_IMMUTABLE_FL)) {
++		if ((oldflags & ~FS_IMMUTABLE_FL) !=
++		    (flags & ~FS_IMMUTABLE_FL))
++			return -EPERM;
 +	}
 +
- 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 9c899c63957e..dae2b31cd32b 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3584,5 +3584,28 @@ static inline int vfs_ioc_setflags_flush_data(struct inode *inode, int flags)
- int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 			     struct fsxattr *fa);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(vfs_ioc_setflags_check);
+@@ -2226,6 +2237,26 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
+ 	    !S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
+ 		return -EINVAL;
  
-+/*
-+ * Do we need to flush the file data before changing attributes?  When we're
-+ * setting the immutable flag we must stop all directio writes and flush the
-+ * dirty pages so that we can fail the page fault on the next write attempt.
-+ */
-+static inline bool vfs_ioc_fssetxattr_need_flush(struct inode *inode,
-+						 struct fsxattr *fa)
-+{
-+	if (S_ISREG(inode->i_mode) && !IS_IMMUTABLE(inode) &&
-+	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
-+		return true;
++	/*
++	 * We aren't allowed to change any fields if the immutable flag is
++	 * already set and is not being unset.
++	 */
++	if ((old_fa->fsx_xflags & FS_XFLAG_IMMUTABLE) &&
++	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE)) {
++		if ((old_fa->fsx_xflags & ~FS_XFLAG_IMMUTABLE) !=
++		    (fa->fsx_xflags & ~FS_XFLAG_IMMUTABLE))
++			return -EPERM;
++		if (old_fa->fsx_projid != fa->fsx_projid)
++			return -EPERM;
++		if ((fa->fsx_xflags & (FS_XFLAG_EXTSIZE |
++				       FS_XFLAG_EXTSZINHERIT)) &&
++		    old_fa->fsx_extsize != fa->fsx_extsize)
++			return -EPERM;
++		if ((old_fa->fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
++		    old_fa->fsx_cowextsize != fa->fsx_cowextsize)
++			return -EPERM;
++	}
 +
-+	return false;
-+}
-+
-+/* Flush file data before changing attributes, if necessary. */
-+static inline int vfs_ioc_fssetxattr_flush_data(struct inode *inode,
-+						struct fsxattr *fa)
-+{
-+	if (vfs_ioc_fssetxattr_need_flush(inode, fa))
-+		return inode_flush_data(inode);
-+	return 0;
-+}
- 
- #endif /* _LINUX_FS_H */
+ 	/* Extent size hints of zero turn off the flags. */
+ 	if (fa->fsx_extsize == 0)
+ 		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
