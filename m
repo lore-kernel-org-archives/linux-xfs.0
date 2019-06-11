@@ -1,66 +1,123 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38406 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388845AbfFKBQg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 21:16:36 -0400
-Date: Mon, 10 Jun 2019 18:16:12 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] vfs: allow copy_file_range from a swapfile
-Message-ID: <20190611011612.GQ1871505@magnolia>
-References: <20190610172606.4119-1-amir73il@gmail.com>
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:35192 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728685AbfFKCM0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 22:12:26 -0400
+Date: Tue, 11 Jun 2019 10:12:22 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH v3 3/6] generic: copy_file_range swapfile test
+Message-ID: <20190611021222.GY15846@desktop>
+References: <20190602124114.26810-1-amir73il@gmail.com>
+ <20190602124114.26810-4-amir73il@gmail.com>
+ <20190610035829.GA18429@mit.edu>
+ <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
+ <20190610133131.GE15963@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190610172606.4119-1-amir73il@gmail.com>
+In-Reply-To: <20190610133131.GE15963@mit.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, Theodore Ts'o <tytso@mit.edu>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
+To: Theodore Ts'o <tytso@mit.edu>
+Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, Jun 10, 2019 at 08:26:06PM +0300, Amir Goldstein wrote:
-> read(2) is allowed from a swapfile, so copy_file_range(2) should
-> be allowed as well.
+On Mon, Jun 10, 2019 at 09:31:31AM -0400, Theodore Ts'o wrote:
+> On Mon, Jun 10, 2019 at 09:37:32AM +0300, Amir Goldstein wrote:
+> >
+> >Why do you think thhis is xfs_io fall back and not kernel fall back to
+> >do_splice_direct()? Anyway, both cases allow read from swapfile
+> >on upstream.
 > 
-> Reported-by: Theodore Ts'o <tytso@mit.edu>
-> Fixes: 96e6e8f4a68d ("vfs: add missing checks to copy_file_range")
-> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-> ---
+> Ah, I had assumed this was changed that was made because if you are
+> implementing copy_file_range in terms of some kind of reflink-like
+> mechanism, it becomes super-messy since you know have to break tons
+> and tons of COW sharing each time the kernel swaps to the swap file.
 > 
-> Darrick,
+> I didn't think we had (or maybe we did, and I missed it) a discussion
+> about whether reading from a swap file should be prohibited.
+> Personally, I think it's security theatre, and not worth the
+> effort/overhead, but whatever.... my main complaint was with the
+> unnecessary test failures with upstream kernels.
 > 
-> This fixes the generic/554 issue reported by Ted.
+> > Trying to understand the desired flow of tests and fixes. 
+> > I agree that generic/554 failure may be a test/interface bug that
+> > we should fix in a way that current upstream passes the test for
+> > ext4. Unless there is objection, I will send a patch to fix the test
+> > to only test copy *to* swapfile.
+> > 
+> > generic/553, OTOH, is expected to fail on upstream kernel.
+> > Are you leaving 553 in appliance build in anticipation to upstream fix?
+> > I guess the answer is in the ext4 IS_IMMUTABLE patch that you
+> > posted and plan to push to upstream/stable sooner than VFS patches.
+> 
+> So I find it kind of annoying when tests land before the fixes do
+> upstream.  I still have this in my global_exclude file:
+> 
+> # The proposed fix for generic/484, "locks: change POSIX lock
+> # ownership on execve when files_struct is displaced" would break NFS
+> # Jeff Layton and Eric Biederman have some ideas for how to address it
+> # but fixing it is non-trivial
+> generic/484
+> 
+> The generic/484 test landed in August 2018, and as far as I know, the
+> issue which it is testing for *still* hasn't been fixed upstream.
+> (There were issues raised with the proposed fix, and it looks like the
+> people looking at the kernel change have lost interest.)
 
-Frankly I think we should go the other way -- non-root doesn't get to
-copy from or read from swap files.
+I usually push "known failing" tests only when there's a known & pending
+fix which is expected to be merged into mainline kernel soon. And as
+Darrick stated, "enables broader testing by the other fs maintainers."
+and could bring broader attention of the failure.
 
---D
+But generic/484 is a bit unfortunate. It was in that exact situation
+back then (or at least gave me the impression that the fix would be
+merged soon), but apparaently things changed after test being applied..
 
-> I intend to remove the test case of copy from swap file from
-> generic/554, so test is expected to pass with or without this fix.
-> But if you wait for next week's xfstests update before applying
-> this fix, then at lease maintainer that run current xfstests master
-> could use current copy-file-range-fixes branch to pass the tests.
 > 
-> Thanks,
-> Amir.
+> The problem is that there are people who are trying to use xfstests to
+> look for failures, and unless they start digging into the kernel
+> archives from last year, they won't understand that generic/484 is a
+> known failing test, and it will get fixed....someday.
 > 
->  mm/filemap.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> For people in the know, or for people who use my kvm-xfstests,
+> gce-xfstests, it's not a big problem, since I've already blacklisted
+> the test.  But not everyone (and in fact, probably most people don't)
+> use my front end scripts.
 > 
-> diff --git a/mm/filemap.c b/mm/filemap.c
-> index aac71aef4c61..f74e5ce7ca50 100644
-> --- a/mm/filemap.c
-> +++ b/mm/filemap.c
-> @@ -3081,7 +3081,7 @@ int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
->  	if (IS_IMMUTABLE(inode_out))
->  		return -EPERM;
->  
-> -	if (IS_SWAPFILE(inode_in) || IS_SWAPFILE(inode_out))
-> +	if (IS_SWAPFILE(inode_out))
->  		return -ETXTBSY;
->  
->  	/* Ensure offsets don't wrap. */
-> -- 
-> 2.17.1
+> For generic/553, I have a fix in ext4 so it will clear the failure,
+> and that's fine, since I think we've all agreed in principle what the
+> correct fix will be, and presumably it will get fixed soon.  At that
+> point, I might revert the commit from ext4, and rely on the VFS to
+> catch the error, but the overhead of a few extra unlikely() tests
+> aren't that big.  But yeah, I did that mainly because unnecessary test
+> failures because doing an ext4-specific fix didn't have many
+> downsides, and one risk of adding tests to the global exclude file is
+> that I then have to remember to remove it from the global exclude file
+> when the issue is finally fixed upstream.
 > 
+> > Do you think that should there be a different policy w.r.t timing of
+> > merging xfstests tests that fail on upstream kernel?
+> 
+> That's my opinion, and generic/484 is the best argument for why we
+> should wait.  Other people may have other opinions though, and I have
+> a workaround, so I don't feel super-strong about it.  (generic/454 is
+> now the second test in my global exclude file.  :-)
+
+I don't see generic/454 failing with ext4 (I'm testing with default
+mkfs/mount options, kernel is 5.2-rc2). But IMHO, I think generic/454 is
+different, it's not a targeted regression test, it's kind of generic
+test that should work for all filesystems.
+
+> 
+> At the very *least* there should be a comment in the test that fix is
+> pending, and might not be applied yet, with a URL to the mailing list
+> discussion.  That will save effort when months (years?) go by, and the
+> fix still hasn't landed the upstream kernel....
+
+Agreed, I've been making sure there's a comment referring to the fix or
+pending fix (e.g. only commit summary no hash ID) for such targeted
+regression tests.
+
+Thanks,
+Eryu
