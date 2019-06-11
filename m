@@ -1,71 +1,22 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:37887 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389093AbfFJTxZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 15:53:25 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH] generic/554: test only copy to active swap file
-Date: Mon, 10 Jun 2019 22:53:17 +0300
-Message-Id: <20190610195317.8516-1-amir73il@gmail.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:44700 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404447AbfFKPKW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 11:10:22 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: alternative take on the same page merging leak fix
+Date: Tue, 11 Jun 2019 17:10:02 +0200
+Message-Id: <20190611151007.13625-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Theodore Ts'o <tytso@mit.edu>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc: David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Depending on filesystem, copying from active swapfile may be allowed,
-just as read from swapfile may be allowed.
+Hi Jens, hi Ming,
 
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
----
-
-Eryu,
-
-Following feedback by Ted, I've decided it would be better to
-remove the test case of copy from swap file.
-There is no reason to deny that copy, but there is also no reason
-for us to assert that filesystems must allow this functionality.
-
-Even after removing the copy from test case, test still fails
-on upstream for all filesystems I tested.
-Tests passes with Darrick's copy-file-range-fixes branch.
-
-Thanks,
-Amir.
-
- tests/generic/554     | 3 +--
- tests/generic/554.out | 1 -
- 2 files changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/tests/generic/554 b/tests/generic/554
-index 10ae4035..c946ca17 100755
---- a/tests/generic/554
-+++ b/tests/generic/554
-@@ -4,7 +4,7 @@
- #
- # FS QA Test No. 554
- #
--# Check that we cannot copy_file_range() to/from a swapfile
-+# Check that we cannot copy_file_range() to a swapfile
- #
- seq=`basename $0`
- seqres=$RESULT_DIR/$seq
-@@ -46,7 +46,6 @@ echo swap files return ETXTBUSY
- _format_swapfile $SCRATCH_MNT/swapfile 16m
- swapon $SCRATCH_MNT/swapfile
- $XFS_IO_PROG -f -c "copy_range -l 32k $SCRATCH_MNT/file" $SCRATCH_MNT/swapfile
--$XFS_IO_PROG -f -c "copy_range -l 32k $SCRATCH_MNT/swapfile" $SCRATCH_MNT/copy
- swapoff $SCRATCH_MNT/swapfile
- 
- # success, all done
-diff --git a/tests/generic/554.out b/tests/generic/554.out
-index ffaa7b0a..19385a05 100644
---- a/tests/generic/554.out
-+++ b/tests/generic/554.out
-@@ -1,4 +1,3 @@
- QA output created by 554
- swap files return ETXTBUSY
- copy_range: Text file busy
--copy_range: Text file busy
--- 
-2.17.1
+this is the tested and split version of what I think is the better
+fix for the get_user_pages page leak, as it leaves the intelligence
+in the callers instead of in bio_try_to_merge_page.
