@@ -1,86 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60346 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389125AbfFKPFS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Jun 2019 11:05:18 -0400
-Date: Tue, 11 Jun 2019 11:04:27 -0400
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH v11 4/7] dm: enable synchronous dax
-Message-ID: <20190611150427.GA29288@redhat.com>
-References: <20190610090730.8589-1-pagupta@redhat.com>
- <20190610090730.8589-5-pagupta@redhat.com>
- <20190610192803.GA29002@redhat.com>
- <1206355816.34396746.1560258658768.JavaMail.zimbra@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:44734 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404429AbfFKPKc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 11:10:32 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/5] block: factor out a bio_try_merge_pc_page helper
+Date: Tue, 11 Jun 2019 17:10:04 +0200
+Message-Id: <20190611151007.13625-3-hch@lst.de>
+In-Reply-To: <20190611151007.13625-1-hch@lst.de>
+References: <20190611151007.13625-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1206355816.34396746.1560258658768.JavaMail.zimbra@redhat.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Pankaj Gupta <pagupta@redhat.com>
-Cc: cohuck@redhat.com, jack@suse.cz, kvm@vger.kernel.org, mst@redhat.com, jasowang@redhat.com, david@fromorbit.com, qemu-devel@nongnu.org, virtualization@lists.linux-foundation.org, dm-devel@redhat.com, adilger kernel <adilger.kernel@dilger.ca>, zwisler@kernel.org, aarcange@redhat.com, dave jiang <dave.jiang@intel.com>, jstaron@google.com, linux-nvdimm@lists.01.org, vishal l verma <vishal.l.verma@intel.com>, david@redhat.com, willy@infradead.org, hch@infradead.org, linux-acpi@vger.kernel.org, jmoyer@redhat.com, linux-ext4@vger.kernel.org, lenb@kernel.org, kilobyte@angband.pl, rdunlap@infradead.org, riel@surriel.com, yuval shaia <yuval.shaia@oracle.com>, stefanha@redhat.com, pbonzini@redhat.com, dan j williams <dan.j.williams@intel.com>, lcapitulino@redhat.com, kwolf@redhat.com, nilal@redhat.com, tytso@mit.edu, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, darrick wong <darrick.wong@oracle.com>, rjw@rjwysocki.net, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, imammedo@redhat.com
+To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc: David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Jun 11 2019 at  9:10am -0400,
-Pankaj Gupta <pagupta@redhat.com> wrote:
+Factor the case of trying to add to an existing segment in
+__bio_add_pc_page into a new helper that is similar to the regular
+bio case.  Subsume the existing can_add_page_to_seg helper into this new
+one.
 
-> Hi Mike,
-> 
-> Thanks for the review Please find my reply inline.
-> 
-> > 
-> > dm_table_supports_dax() is called multiple times (from
-> > dm_table_set_restrictions and dm_table_determine_type).  It is strange
-> > to have a getter have a side-effect of being a setter too.  Overloading
-> > like this could get you in trouble in the future.
-> > 
-> > Are you certain this is what you want?
-> 
-> I agree with you.
-> 
-> > 
-> > Or would it be better to refactor dm_table_supports_dax() to take an
-> > iterate_devices_fn arg and have callers pass the appropriate function?
-> > Then have dm_table_set_restrictions() caller do:
-> > 
-> >      if (dm_table_supports_dax(t, device_synchronous, NULL))
-> >                set_dax_synchronous(t->md->dax_dev);
-> > 
-> > (NULL arg implies dm_table_supports_dax() refactoring would take a int
-> > *data pointer rather than int type).
-> > 
-> > Mike
-> > 
-> 
-> I am sending below patch as per your suggestion. Does it look
-> near to what you have in mind?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ block/bio.c | 44 ++++++++++++++++++++------------------------
+ 1 file changed, 20 insertions(+), 24 deletions(-)
 
-Yes, it does.. just one nit I noticed inlined below.
-
-> diff --git a/drivers/md/dm-table.c b/drivers/md/dm-table.c
-> index 350cf0451456..8d89acc8b8c2 100644
-> --- a/drivers/md/dm-table.c
-> +++ b/drivers/md/dm-table.c
-
-...
-
-> @@ -1910,8 +1919,13 @@ void dm_table_set_restrictions(struct dm_table *t, struct request_queue *q,
->         }
->         blk_queue_write_cache(q, wc, fua);
-> 
-> -       if (dm_table_supports_dax(t, PAGE_SIZE))
-> +       if (dm_table_supports_dax(t, device_supports_dax, &page_size)) {
-> +
-
-No need for an empty newline here ^
-
->                 blk_queue_flag_set(QUEUE_FLAG_DAX, q);
-> +               if (dm_table_supports_dax(t, device_synchronous, NULL))
-> +                       set_dax_synchronous(t->md->dax_dev);
-> +       }
->         else
->                 blk_queue_flag_clear(QUEUE_FLAG_DAX, q);
-> 
-
-Thanks,
-Mike
+diff --git a/block/bio.c b/block/bio.c
+index 6db39699aab9..85e243ea6a0e 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -659,24 +659,27 @@ static inline bool page_is_mergeable(const struct bio_vec *bv,
+ 	return true;
+ }
+ 
+-/*
+- * Check if the @page can be added to the current segment(@bv), and make
+- * sure to call it only if page_is_mergeable(@bv, @page) is true
+- */
+-static bool can_add_page_to_seg(struct request_queue *q,
+-		struct bio_vec *bv, struct page *page, unsigned len,
+-		unsigned offset)
++static bool bio_try_merge_pc_page(struct request_queue *q, struct bio *bio,
++		struct page *page, unsigned len, unsigned off, bool *same_page)
+ {
++	struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 	unsigned long mask = queue_segment_boundary(q);
+ 	phys_addr_t addr1 = page_to_phys(bv->bv_page) + bv->bv_offset;
+-	phys_addr_t addr2 = page_to_phys(page) + offset + len - 1;
++	phys_addr_t addr2 = page_to_phys(page) + off + len - 1;
++
++	if (page == bv->bv_page && off == bv->bv_offset + bv->bv_len) {
++		*same_page = true;
++		goto done;
++	}
+ 
+ 	if ((addr1 | mask) != (addr2 | mask))
+ 		return false;
+-
+ 	if (bv->bv_len + len > queue_max_segment_size(q))
+ 		return false;
+-
++	if (!page_is_mergeable(bv, page, len, off, false))
++		return false;
++done:
++	bv->bv_len += len;
+ 	return true;
+ }
+ 
+@@ -701,6 +704,7 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
+ 		bool put_same_page)
+ {
+ 	struct bio_vec *bvec;
++	bool same_page = false;
+ 
+ 	/*
+ 	 * cloned bio must not modify vec list
+@@ -712,26 +716,18 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
+ 		return 0;
+ 
+ 	if (bio->bi_vcnt > 0) {
+-		bvec = &bio->bi_io_vec[bio->bi_vcnt - 1];
+-
+-		if (page == bvec->bv_page &&
+-		    offset == bvec->bv_offset + bvec->bv_len) {
+-			if (put_same_page)
++		if (bio_try_merge_pc_page(q, bio, page, len, offset,
++				&same_page)) {
++			if (put_same_page && same_page)
+ 				put_page(page);
+-			bvec->bv_len += len;
+-			goto done;
+-		}
+-
+-		if (page_is_mergeable(bvec, page, len, offset, false) &&
+-		    can_add_page_to_seg(q, bvec, page, len, offset)) {
+-			bvec->bv_len += len;
+ 			goto done;
+ 		}
+ 
+ 		/*
+-		 * If the queue doesn't support SG gaps and adding this
+-		 * offset would create a gap, disallow it.
++		 * If the queue doesn't support SG gaps and adding this offset
++		 * would create a gap, disallow it.
+ 		 */
++		bvec = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 		if (bvec_gap_to_prev(q, bvec, offset))
+ 			return 0;
+ 	}
+-- 
+2.20.1
