@@ -1,86 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35394 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725710AbfFKECF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:02:05 -0400
-Date: Mon, 10 Jun 2019 21:01:57 -0700
+Received: from aserp2130.oracle.com ([141.146.126.79]:43402 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391097AbfFKEqy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:46:54 -0400
+Subject: [PATCH 0/4] vfs: clean up SETFLAGS and FSSETXATTR option processing
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/8] mm/fs: don't allow writes to immutable files
-Message-ID: <20190611040157.GC1872258@magnolia>
-References: <155552786671.20411.6442426840435740050.stgit@magnolia>
- <155552787330.20411.11893581890744963309.stgit@magnolia>
- <20190610015145.GB3266@mit.edu>
- <20190610044144.GA1872750@magnolia>
- <20190610131417.GD15963@mit.edu>
- <20190610160934.GH1871505@magnolia>
- <20190610204154.GA5466@mit.edu>
+Date: Mon, 10 Jun 2019 21:45:32 -0700
+Message-ID: <156022833285.3227089.11990489625041926920.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190610204154.GA5466@mit.edu>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-mm@kvack.org
+To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
+Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Mon, Jun 10, 2019 at 04:41:54PM -0400, Theodore Ts'o wrote:
-> On Mon, Jun 10, 2019 at 09:09:34AM -0700, Darrick J. Wong wrote:
-> > > I was planning on only taking 8/8 through the ext4 tree.  I also added
-> > > a patch which filtered writes, truncates, and page_mkwrites (but not
-> > > mmap) for immutable files at the ext4 level.
-> > 
-> > *Oh*.  I saw your reply attached to the 1/8 patch and thought that was
-> > the one you were taking.  I was sort of surprised, tbh. :)
-> 
-> Sorry, my bad.  I mis-replied to the wrong e-mail message  :-)
+Hi all,
 
-Also ... after flailing around with the v2 series I decided that it
-would be much less work to refactor all the current implementations to
-call a common parameter-checking function, which will hopefully make the
-behavior of SETFLAGS and FSSETXATTR more consistent across filesystems.
+The FS_IOC_SETFLAGS and FS_IOC_FSSETXATTR ioctls were promoted from ext4
+and XFS, respectively, into the VFS.  However, we didn't promote any of
+the parameter checking code from those filesystems, which lead to a mess
+where each filesystem open-codes whatever parameter checks they want and
+the behavior across filesystems is no longer consistent.
 
-That makes the immutable series much less code and fewer patches, but
-also means that the 8/8 patch isn't needed anymore.
+Therefore, create some generic checking functions in the VFS and remove
+all the open-coded pieces in each filesystem.  This preserves the
+current behavior where a filesystem can choose to ignore fields it
+doesn't understand.
 
-I'm about to send both out.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
-> > > I *could* take this patch through the mm/fs tree, but I wasn't sure
-> > > what your plans were for the rest of the patch series, and it seemed
-> > > like it hadn't gotten much review/attention from other fs or mm folks
-> > > (well, I guess Brian Foster weighed in).
-> > 
-> > > What do you think?
-> > 
-> > Not sure.  The comments attached to the LWN story were sort of nasty,
-> > and now that a couple of people said "Oh, well, Debian documented the
-> > inconsistent behavior so just let it be" I haven't felt like
-> > resurrecting the series for 5.3.
-> 
-> Ah, I had missed the LWN article.   <Looks>
-> 
-> Yeah, it's the same set of issues that we had discussed when this
-> first came up.  We can go round and round on this one; It's true that
-> root can now cause random programs which have a file mmap'ed for
-> writing to seg fault, but root has a million ways of killing and
-> otherwise harming running application programs, and it's unlikely
-> files get marked for immutable all that often.  We just have to pick
-> one way of doing things, and let it be same across all the file
-> systems.
-> 
-> My understanding was that XFS had chosen to make the inode immutable
-> as soon as the flag is set (as opposed to forbidding new fd's to be
-> opened which were writeable), and I was OK moving ext4 to that common
-> interpretation of the immmutable bit, even though it would be a change
-> to ext4.
-> 
-> And then when I saw that Amir had included a patch that would cause
-> test failures unless that patch series was applied, it seemed that we
-> had all thought that the change was a done deal.  Perhaps we should
-> have had a more explicit discussion when the test was sent for review,
-> but I had assumed it was exclusively a copy_file_range set of tests,
-> so I didn't realize it was going to cause ext4 failures.
-> 
->      	    	       	   	 - Ted
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=file-ioctl-cleanups
