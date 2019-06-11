@@ -1,93 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46456 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389620AbfFKEuO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:50:14 -0400
-Subject: [PATCH 6/6] xfs: clean up xfs_merge_ioc_xflags
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 10 Jun 2019 21:47:01 -0700
-Message-ID: <156022842153.3227213.3285668171167534801.stgit@magnolia>
-In-Reply-To: <156022836912.3227213.13598042497272336695.stgit@magnolia>
-References: <156022836912.3227213.13598042497272336695.stgit@magnolia>
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:44377 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390081AbfFKEyI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:54:08 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <20190610173657.4655-1-amir73il@gmail.com> <CAH2r5mtQObwvdtaNr31fd-wDpjrZi5YLZ+ZcaW0ECVvTR-ByXQ@mail.gmail.com>
+In-Reply-To: <CAH2r5mtQObwvdtaNr31fd-wDpjrZi5YLZ+ZcaW0ECVvTR-ByXQ@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 11 Jun 2019 07:53:55 +0300
+Message-ID: <CAOQ4uxhS6153+bo+JKen7E++1cNquGG2Eir1uc37UEcGFyck5w@mail.gmail.com>
+Subject: Re: [PATCH] cifs: copy_file_range needs to strip setuid bits and
+ update timestamps
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
-Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Steve French <smfrench@gmail.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs <linux-xfs@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, CIFS <linux-cifs@vger.kernel.org>, =?UTF-8?Q?Aur=C3=A9lien_Aptel?= <aaptel@suse.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jun 10, 2019 at 11:39 PM Steve French <smfrench@gmail.com> wrote:
+>
+> Looks good in my testing so far - but also want to do a little more
+> testing with the copy_file_range xfstest cases because your patches
+> fixed one additional test (not cross mount copy) so we can understand
+> why it fixed that test case.
 
-Clean up the calling convention since we're editing the fsxattr struct
-anyway.
+I know which of my patches fixed generic/43[01].
+It was 96e6e8f4a68d ("vfs: add missing checks to copy_file_range")
+More specifically this code:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ioctl.c |   32 ++++++++++++++------------------
- 1 file changed, 14 insertions(+), 18 deletions(-)
+        /* Shorten the copy to EOF */
+        size_in = i_size_read(inode_in);
+        if (pos_in >= size_in)
+                count = 0;
+        else
+                count = min(count, size_in - (uint64_t)pos_in);
 
+If CIFS sends an out of range value of copy length to Windows server,
+server replies with an error. That is inconsistent with the semantics of
+copy_file_range(2) syscall, which expects "short copy", hence need
+to shorten length before passing on to server.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 7b19ba2956ad..a67bc9afdd0b 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -829,35 +829,31 @@ xfs_ioc_ag_geometry(
-  * Linux extended inode flags interface.
-  */
- 
--STATIC unsigned int
-+static inline void
- xfs_merge_ioc_xflags(
--	unsigned int	flags,
--	unsigned int	start)
-+	struct fsxattr	*fa,
-+	unsigned int	flags)
- {
--	unsigned int	xflags = start;
--
- 	if (flags & FS_IMMUTABLE_FL)
--		xflags |= FS_XFLAG_IMMUTABLE;
-+		fa->fsx_xflags |= FS_XFLAG_IMMUTABLE;
- 	else
--		xflags &= ~FS_XFLAG_IMMUTABLE;
-+		fa->fsx_xflags &= ~FS_XFLAG_IMMUTABLE;
- 	if (flags & FS_APPEND_FL)
--		xflags |= FS_XFLAG_APPEND;
-+		fa->fsx_xflags |= FS_XFLAG_APPEND;
- 	else
--		xflags &= ~FS_XFLAG_APPEND;
-+		fa->fsx_xflags &= ~FS_XFLAG_APPEND;
- 	if (flags & FS_SYNC_FL)
--		xflags |= FS_XFLAG_SYNC;
-+		fa->fsx_xflags |= FS_XFLAG_SYNC;
- 	else
--		xflags &= ~FS_XFLAG_SYNC;
-+		fa->fsx_xflags &= ~FS_XFLAG_SYNC;
- 	if (flags & FS_NOATIME_FL)
--		xflags |= FS_XFLAG_NOATIME;
-+		fa->fsx_xflags |= FS_XFLAG_NOATIME;
- 	else
--		xflags &= ~FS_XFLAG_NOATIME;
-+		fa->fsx_xflags &= ~FS_XFLAG_NOATIME;
- 	if (flags & FS_NODUMP_FL)
--		xflags |= FS_XFLAG_NODUMP;
-+		fa->fsx_xflags |= FS_XFLAG_NODUMP;
- 	else
--		xflags &= ~FS_XFLAG_NODUMP;
--
--	return xflags;
-+		fa->fsx_xflags &= ~FS_XFLAG_NODUMP;
- }
- 
- STATIC unsigned int
-@@ -1504,7 +1500,7 @@ xfs_ioc_setxflags(
- 		return -EOPNOTSUPP;
- 
- 	__xfs_ioc_fsgetxattr(ip, false, &fa);
--	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
-+	xfs_merge_ioc_xflags(&fa, flags);
- 
- 	error = mnt_want_write_file(filp);
- 	if (error)
+I verified with Aurelien that this is the case and I was under the impression
+that he was going to create a similar local fix to cifs code for stable.
+I thought he told you, so I forgot to report back myself.
+
+Thanks,
+Amir.
