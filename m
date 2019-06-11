@@ -1,31 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2403815AbfFKH5Z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Jun 2019 03:57:25 -0400
-Date: Tue, 11 Jun 2019 15:57:09 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH V2 0/2] block: fix page leak by merging to same page
-Message-ID: <20190611075707.GA15921@ming.t460p>
-References: <20190610041819.11575-1-ming.lei@redhat.com>
- <20190610133446.GA28712@infradead.org>
- <20190610150958.GA29607@ming.t460p>
- <20190611074541.GA31787@infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:57712 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725766AbfFKIjb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 11 Jun 2019 04:39:31 -0400
+From: Luis Henriques <lhenriques@suse.com>
+Subject: Re: [PATCH] ceph: copy_file_range needs to strip setuid bits and update timestamps
+References: <20190610174007.4818-1-amir73il@gmail.com>
+Date: Tue, 11 Jun 2019 09:39:27 +0100
+In-Reply-To: <20190610174007.4818-1-amir73il@gmail.com> (Amir Goldstein's
+        message of "Mon, 10 Jun 2019 20:40:07 +0300")
+Message-ID: <87h88w8qio.fsf@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190611074541.GA31787@infradead.org>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Alexander Viro <viro@zeniv.linux.org.uk>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Ilya Dryomov <idryomov@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, ceph-devel@vger.kernel.org
 
-On Tue, Jun 11, 2019 at 12:45:41AM -0700, Christoph Hellwig wrote:
-> Can you please trim your replies?  I've scrolled two patches before
-> giving up trying to read your mail.
+Amir Goldstein <amir73il@gmail.com> writes:
 
-OK, next time will trim the reply.
+> Because ceph doesn't hold destination inode lock throughout the copy,
+> strip setuid bits before and after copy.
+>
+> The destination inode mtime is updated before and after the copy and the
+> source inode atime is updated after the copy, similar to the filesystem
+> ->read_iter() implementation.
+>
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>
+> Hi Ilya,
+>
+> Please consider applying this patch to ceph branch after merging
+> Darrick's copy-file-range-fixes branch from:
+>         git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+>
+> The series (including this patch) was tested on ceph by
+> Luis Henriques using new copy_range xfstests.
+>
+> AFAIK, only fallback from ceph to generic_copy_file_range()
+> implementation was tested and not the actual ceph clustered
+> copy_file_range.
 
-Thanks,
-Ming
+JFYI I've also run tests that exercise the ceph implementation,
+i.e. that actually do the copy offload.  It's the xfstests that (AFAIR)
+only exercise the generic VFS copy_file_range as they never meet the
+requirements for this copy offload to happen (for example, the copy must
+be at least the same length as the files object size which is 4M by
+default).
+
+Cheers,
+-- 
+Luis
+
+
+>
+> Thanks,
+> Amir.
+>
+>  fs/ceph/file.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+>
+> diff --git a/fs/ceph/file.c b/fs/ceph/file.c
+> index c5517ffeb11c..b04c97c7d393 100644
+> --- a/fs/ceph/file.c
+> +++ b/fs/ceph/file.c
+> @@ -1949,6 +1949,15 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>  		goto out;
+>  	}
+>  
+> +	/* Should dst_inode lock be held throughout the copy operation? */
+> +	inode_lock(dst_inode);
+> +	ret = file_modified(dst_file);
+> +	inode_unlock(dst_inode);
+> +	if (ret < 0) {
+> +		dout("failed to modify dst file before copy (%zd)\n", ret);
+> +		goto out;
+> +	}
+> +
+>  	/*
+>  	 * We need FILE_WR caps for dst_ci and FILE_RD for src_ci as other
+>  	 * clients may have dirty data in their caches.  And OSDs know nothing
+> @@ -2099,6 +2108,14 @@ static ssize_t __ceph_copy_file_range(struct file *src_file, loff_t src_off,
+>  out:
+>  	ceph_free_cap_flush(prealloc_cf);
+>  
+> +	file_accessed(src_file);
+> +	/* To be on the safe side, try to remove privs also after copy */
+> +	inode_lock(dst_inode);
+> +	err = file_modified(dst_file);
+> +	inode_unlock(dst_inode);
+> +	if (err < 0)
+> +		dout("failed to modify dst file after copy (%d)\n", err);
+> +
+>  	return ret;
+>  }
