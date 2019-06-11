@@ -1,14 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44650 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391203AbfFKEsE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:48:04 -0400
-Subject: [PATCH 5/6] xfs: refactor setflags to use setattr code directly
+Received: from userp2120.oracle.com ([156.151.31.85]:33190 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389288AbfFKErt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 00:47:49 -0400
+Subject: [PATCH v3 0/6] vfs: make immutable files actually immutable
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 10 Jun 2019 21:46:53 -0700
-Message-ID: <156022841356.3227213.6932589992914531998.stgit@magnolia>
-In-Reply-To: <156022836912.3227213.13598042497272336695.stgit@magnolia>
-References: <156022836912.3227213.13598042497272336695.stgit@magnolia>
+Date: Mon, 10 Jun 2019 21:46:09 -0700
+Message-ID: <156022836912.3227213.13598042497272336695.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -18,82 +16,46 @@ List-Id: xfs
 To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
 Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-Refactor the SETFLAGS implementation to use the SETXATTR code directly
-instead of partially constructing a struct fsxattr and calling bits and
-pieces of the setxattr code.  This reduces code size and becomes
-necessary in the next patch to maintain the behavior of allowing
-userspace to set immutable on an immutable file so long as nothing
-/else/ about the attributes change.
+The chattr(1) manpage has this to say about the immutable bit that
+system administrators can set on files:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ioctl.c |   40 +++-------------------------------------
- 1 file changed, 3 insertions(+), 37 deletions(-)
+"A file with the 'i' attribute cannot be modified: it cannot be deleted
+or renamed, no link can be created to this file, most of the file's
+metadata can not be modified, and the file can not be opened in write
+mode."
 
+Given the clause about how the file 'cannot be modified', it is
+surprising that programs holding writable file descriptors can continue
+to write to and truncate files after the immutable flag has been set,
+but they cannot call other things such as utimes, fallocate, unlink,
+link, setxattr, or reflink.
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 88583b3e1e76..7b19ba2956ad 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1491,11 +1491,8 @@ xfs_ioc_setxflags(
- 	struct file		*filp,
- 	void			__user *arg)
- {
--	struct xfs_trans	*tp;
- 	struct fsxattr		fa;
--	struct fsxattr		old_fa;
- 	unsigned int		flags;
--	int			join_flags = 0;
- 	int			error;
- 
- 	if (copy_from_user(&flags, arg, sizeof(flags)))
-@@ -1506,44 +1503,13 @@ xfs_ioc_setxflags(
- 		      FS_SYNC_FL))
- 		return -EOPNOTSUPP;
- 
--	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
-+	__xfs_ioc_fsgetxattr(ip, false, &fa);
-+	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
- 
- 	error = mnt_want_write_file(filp);
- 	if (error)
- 		return error;
--
--	/*
--	 * Changing DAX config may require inode locking for mapping
--	 * invalidation. These need to be held all the way to transaction commit
--	 * or cancel time, so need to be passed through to
--	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
--	 * appropriately.
--	 */
--	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
--	if (error)
--		goto out_drop_write;
--
--	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
--	if (IS_ERR(tp)) {
--		error = PTR_ERR(tp);
--		goto out_drop_write;
--	}
--
--	__xfs_ioc_fsgetxattr(ip, false, &old_fa);
--	error = vfs_ioc_fssetxattr_check(VFS_I(ip), &old_fa, &fa);
--	if (error) {
--		xfs_trans_cancel(tp);
--		goto out_drop_write;
--	}
--
--	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
--	if (error) {
--		xfs_trans_cancel(tp);
--		goto out_drop_write;
--	}
--
--	error = xfs_trans_commit(tp);
--out_drop_write:
-+	error = xfs_ioctl_setattr(ip, &fa);
- 	mnt_drop_write_file(filp);
- 	return error;
- }
+Since the immutable flag is only settable by administrators, resolve
+this inconsistent behavior in favor of the documented behavior -- once
+the flag is set, the file cannot be modified, period.  We presume that
+administrators must be trusted to know what they're doing, and that
+cutting off programs with writable fds will probably break them.
+
+Therefore, add immutability checks to the relevant VFS functions, then
+refactor the SETFLAGS and FSSETXATTR implementations to use common
+argument checking functions so that we can then force pagefaults on all
+the file data when setting immutability.
+
+Note that various distro manpages points out the inconsistent behavior
+of the various Linux filesystems w.r.t. immutable.  This fixes all that.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=immutable-files
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=immutable-files
