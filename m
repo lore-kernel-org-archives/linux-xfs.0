@@ -1,62 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:33750 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390280AbfFKCgv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 22:36:51 -0400
-Date: Tue, 11 Jun 2019 10:36:47 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH v3 3/6] generic: copy_file_range swapfile test
-Message-ID: <20190611023647.GA15846@desktop>
-References: <20190602124114.26810-1-amir73il@gmail.com>
- <20190602124114.26810-4-amir73il@gmail.com>
- <20190610035829.GA18429@mit.edu>
- <CAOQ4uxi-s6ncLGjh_u5x4DFK+dvcaobDCqup_ZV3mZOYDRuOEQ@mail.gmail.com>
- <20190610133131.GE15963@mit.edu>
- <20190611021222.GY15846@desktop>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:34066 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S2390670AbfFKCv3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 10 Jun 2019 22:51:29 -0400
+Date: Mon, 10 Jun 2019 22:51:08 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH] vfs: allow copy_file_range from a swapfile
+Message-ID: <20190611025108.GB2774@mit.edu>
+References: <20190610172606.4119-1-amir73il@gmail.com>
+ <20190611011612.GQ1871505@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190611021222.GY15846@desktop>
+In-Reply-To: <20190611011612.GQ1871505@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Amir Goldstein <amir73il@gmail.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Amir Goldstein <amir73il@gmail.com>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Olga Kornievskaia <olga.kornievskaia@gmail.com>, Luis Henriques <lhenriques@suse.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel@vger.kernel.org, linux-api@vger.kernel.org, ceph-devel@vger.kernel.org, linux-nfs@vger.kernel.org, linux-cifs@vger.kernel.org
 
-On Tue, Jun 11, 2019 at 10:12:22AM +0800, Eryu Guan wrote:
-[snip]
+On Mon, Jun 10, 2019 at 06:16:12PM -0700, Darrick J. Wong wrote:
+> On Mon, Jun 10, 2019 at 08:26:06PM +0300, Amir Goldstein wrote:
+> > read(2) is allowed from a swapfile, so copy_file_range(2) should
+> > be allowed as well.
 > > 
-> > > Do you think that should there be a different policy w.r.t timing of
-> > > merging xfstests tests that fail on upstream kernel?
+> > Reported-by: Theodore Ts'o <tytso@mit.edu>
+> > Fixes: 96e6e8f4a68d ("vfs: add missing checks to copy_file_range")
+> > Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> > ---
 > > 
-> > That's my opinion, and generic/484 is the best argument for why we
-> > should wait.  Other people may have other opinions though, and I have
-> > a workaround, so I don't feel super-strong about it.  (generic/454 is
-> > now the second test in my global exclude file.  :-)
-> 
-> I don't see generic/454 failing with ext4 (I'm testing with default
-> mkfs/mount options, kernel is 5.2-rc2). But IMHO, I think generic/454 is
-
-Oh, I see, I think you meant generic/554 not generic/454 (thanks Darrick
-for pointing that out :)
-
-> different, it's not a targeted regression test, it's kind of generic
-> test that should work for all filesystems.
-> 
+> > Darrick,
 > > 
-> > At the very *least* there should be a comment in the test that fix is
-> > pending, and might not be applied yet, with a URL to the mailing list
-> > discussion.  That will save effort when months (years?) go by, and the
-> > fix still hasn't landed the upstream kernel....
+> > This fixes the generic/554 issue reported by Ted.
 > 
-> Agreed, I've been making sure there's a comment referring to the fix or
-> pending fix (e.g. only commit summary no hash ID) for such targeted
-> regression tests.
+> Frankly I think we should go the other way -- non-root doesn't get to
+> copy from or read from swap files.
 
-And I took generic/55[34] as generic tests not targeted regression test.
-But looks like it's better to reference the fixes anyway.
+The issue is that without this patch, *root* doesn't get to copy from
+swap files.  Non-root shouldn't have access via Unix permissions.  We
+could add a special case if we don't trust system administrators to be
+able to set the Unix permissions correctly, I suppose, but we don't do
+that for block devices when they are mounted....
 
-Amir, would you mind adding such references to generic/55[34] as well?
-
-Thanks,
-Eryu
+					- Ted
