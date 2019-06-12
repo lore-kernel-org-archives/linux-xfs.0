@@ -1,85 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:59829 "EHLO
-        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725958AbfFLFUv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 01:20:51 -0400
-From: Alvin Zheng <Alvin@linux.alibaba.com>
-Subject: [PATCH xfsprogs manual] Inconsistency between the code and the manual
- page
-Message-ID: <a8dbaa7f-f89c-8a78-1fc6-3626f6b3f873@linux.alibaba.com>
-Date: Wed, 12 Jun 2019 13:20:46 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:40664 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730957AbfFLGho (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Jun 2019 02:37:44 -0400
+Date: Wed, 12 Jun 2019 08:37:11 +0200
+From: Cornelia Huck <cohuck@redhat.com>
+Subject: Re: [PATCH v12 2/7] virtio-pmem: Add virtio pmem driver
+Message-ID: <20190612083711.2c0cfd7e.cohuck@redhat.com>
+In-Reply-To: <1003601865.34513553.1560310490030.JavaMail.zimbra@redhat.com>
+References: <20190611163802.25352-1-pagupta@redhat.com>
+        <20190611163802.25352-3-pagupta@redhat.com>
+        <20190611190209.0b25033e.cohuck@redhat.com>
+        <1003601865.34513553.1560310490030.JavaMail.zimbra@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>, "darrick.wong" <darrick.wong@oracle.com>
-Cc: caspar <caspar@linux.alibaba.com>
+To: Pankaj Gupta <pagupta@redhat.com>
+Cc: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, dan j williams <dan.j.williams@intel.com>, zwisler@kernel.org, vishal l verma <vishal.l.verma@intel.com>, dave jiang <dave.jiang@intel.com>, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger kernel <adilger.kernel@dilger.ca>, darrick wong <darrick.wong@oracle.com>, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, xiaoguangrong eric <xiaoguangrong.eric@gmail.com>, pbonzini@redhat.com, yuval shaia <yuval.shaia@oracle.com>, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
 
-Hi,
+Hi Pankaj,
 
-     The manual page of mkfs.xfs (xfsprogs-5.0.0) says "When specifying  
-parameters in units of sectors or filesystem blocks, the -s option or 
-the -b option first needs to be added to the command line.  Failure to 
-specify the size of the units will result in illegal value errors when 
-parameters are quantified in those units". However, I read the code and 
-found that if the size of the block and sector is not specified, the 
-default size (block: 4k, sector: 512B) will be used. Therefore, the 
-following commands can work normally in xfsprogs-5.0.0.
+On Tue, 11 Jun 2019 23:34:50 -0400 (EDT)
+Pankaj Gupta <pagupta@redhat.com> wrote:
 
-      mkfs.xfs -n size=2b /dev/vdc
-      mkfs.xfs -d agsize=8192b /dev/vdc
-
-     So I think the manual of mkfs.xfs should be updated as follows. Any 
-ideas?
-
-diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-index 4b8c78c..45d7a84 100644
---- a/man/man8/mkfs.xfs.8
-+++ b/man/man8/mkfs.xfs.8
-@@ -115,9 +115,7 @@ When specifying parameters in units of sectors or 
-filesystem blocks, the
-  .B \-s
-  option or the
-  .B \-b
--option first needs to be added to the command line.
--Failure to specify the size of the units will result in illegal value 
-errors
--when parameters are quantified in those units.
-+option can be used to specify the size of the sector or block. If the 
-size of the block or sector is not specified, the default size (block: 
-4KiB, sector: 512B) will be used.
-  .PP
-  Many feature options allow an optional argument of 0 or 1, to explicitly
-  disable or enable the functionality.
-@@ -136,10 +134,6 @@ The filesystem block size is specified with a
-  in bytes. The default value is 4096 bytes (4 KiB), the minimum is 512, 
-and the
-  maximum is 65536 (64 KiB).
-  .IP
--To specify any options on the command line in units of filesystem 
-blocks, this
--option must be specified first so that the filesystem block size is
--applied consistently to all options.
--.IP
-  Although
-  .B mkfs.xfs
-  will accept any of these values and create a valid filesystem,
-@@ -894,10 +888,6 @@ is 512 bytes. The minimum value for sector size is
-  .I sector_size
-  must be a power of 2 size and cannot be made larger than the
-  filesystem block size.
--.IP
--To specify any options on the command line in units of sectors, this
--option must be specified first so that the sector size is
--applied consistently to all options.
-  .RE
-  .TP
-  .BI \-L " label"
+> Hi Cornelia,
+> 
+> > On Tue, 11 Jun 2019 22:07:57 +0530
+> > Pankaj Gupta <pagupta@redhat.com> wrote:
 
 
-     Best regards,
+> > > +	err1 = virtqueue_kick(vpmem->req_vq);
+> > > +	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> > > +	/*
+> > > +	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
+> > > +	 * do anything about that.
+> > > +	 */  
+> > 
+> > Does it make sense to kick if you couldn't add at all?  
+> 
+> When we could not add because of -ENOSPC we are waiting and when buffer is added
+> then only we do a kick. For any other error which might be a rare occurrence, I think
+> kick is harmless here and keeps the code clean?
 
-     Alvin
+Yes, I agree it does not hurt. Let's keep it as-is.
+
+
+> Sure, Thank you. Attaching below on top changes on current patch2 based on
+> your suggestions. Let me know if these are okay and then will send official
+> v13 to for upstream merging.
+
+Looks good to me, except for one change.
+
+[Again sorry for the late review, did not want to get the version
+numbers up :)]
+
+> 
+> Thanks,
+> Pankaj
+> 
+> ===============
+> 
+> diff --git a/drivers/nvdimm/nd_virtio.c b/drivers/nvdimm/nd_virtio.c
+> index efc535723517..5b8d2367da0b 100644
+> --- a/drivers/nvdimm/nd_virtio.c
+> +++ b/drivers/nvdimm/nd_virtio.c
+> @@ -10,7 +10,7 @@
+>  #include "nd.h"
+>  
+>   /* The interrupt handler */
+> -void host_ack(struct virtqueue *vq)
+> +void virtio_pmem_host_ack(struct virtqueue *vq)
+>  {
+>         struct virtio_pmem *vpmem = vq->vdev->priv;
+>         struct virtio_pmem_request *req_data, *req_buf;
+> @@ -32,10 +32,10 @@ void host_ack(struct virtqueue *vq)
+>         }
+>         spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+>  }
+> -EXPORT_SYMBOL_GPL(host_ack);
+> +EXPORT_SYMBOL_GPL(virtio_pmem_host_ack);
+>  
+>   /* The request submission function */
+> -int virtio_pmem_flush(struct nd_region *nd_region)
+> +static int virtio_pmem_flush(struct nd_region *nd_region)
+>  {
+>         struct virtio_device *vdev = nd_region->provider_data;
+>         struct virtio_pmem *vpmem  = vdev->priv;
+> @@ -69,7 +69,7 @@ int virtio_pmem_flush(struct nd_region *nd_region)
+>         while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req_data,
+>                                         GFP_ATOMIC)) == -ENOSPC) {
+>  
+> -               dev_err(&vdev->dev, "failed to send command to virtio pmem device, no free slots in the virtqueue\n");
+> +               dev_info(&vdev->dev, "failed to send command to virtio pmem device, no free slots in the virtqueue\n");
+>                 req_data->wq_buf_avail = false;
+>                 list_add_tail(&req_data->list, &vpmem->req_list);
+>                 spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
+> @@ -90,7 +90,8 @@ int virtio_pmem_flush(struct nd_region *nd_region)
+>         } else {
+>                 /* A host repsonse results in "host_ack" getting called */
+>                 wait_event(req_data->host_acked, req_data->done);
+> -               err = virtio32_to_cpu(vdev, req_data->resp.ret);
+> +               if ((err = virtio32_to_cpu(vdev, req_data->resp.ret)))
+> +                       err = -EIO;
+
+Hm, why are you making this change? I think the previous code was fine.
+
+>         }
+>  
+>         kfree(req_data);
+> @@ -100,7 +101,8 @@ int virtio_pmem_flush(struct nd_region *nd_region)
+>  /* The asynchronous flush callback function */
+>  int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
+>  {
+> -       /* Create child bio for asynchronous flush and chain with
+> +       /*
+> +        * Create child bio for asynchronous flush and chain with
+>          * parent bio. Otherwise directly call nd_region flush.
+>          */
+>         if (bio && bio->bi_iter.bi_sector != -1) {
+> diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
+> index b60ebd8cd2fd..5e3d07b47e0c 100644
+> --- a/drivers/nvdimm/virtio_pmem.c
+> +++ b/drivers/nvdimm/virtio_pmem.c
+> @@ -19,7 +19,7 @@ static int init_vq(struct virtio_pmem *vpmem)
+>  {
+>         /* single vq */
+>         vpmem->req_vq = virtio_find_single_vq(vpmem->vdev,
+> -                                               host_ack, "flush_queue");
+> +                                       virtio_pmem_host_ack, "flush_queue");
+>         if (IS_ERR(vpmem->req_vq))
+>                 return PTR_ERR(vpmem->req_vq);
+>  
+> diff --git a/drivers/nvdimm/virtio_pmem.h b/drivers/nvdimm/virtio_pmem.h
+> index 6e47521be158..998efbc7660c 100644
+> --- a/drivers/nvdimm/virtio_pmem.h
+> +++ b/drivers/nvdimm/virtio_pmem.h
+> @@ -50,6 +50,6 @@ struct virtio_pmem {
+>         uint64_t size;
+>  };
+>  
+> -void host_ack(struct virtqueue *vq);
+> +void virtio_pmem_host_ack(struct virtqueue *vq);
+>  int async_pmem_flush(struct nd_region *nd_region, struct bio *bio);
+>  #endif
