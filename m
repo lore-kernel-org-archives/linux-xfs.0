@@ -1,76 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38008 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727068AbfFLKS0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Jun 2019 06:18:26 -0400
-Date: Wed, 12 Jun 2019 18:18:11 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH 4/5] block: fix page leak when merging to same page
-Message-ID: <20190612101808.GC16000@ming.t460p>
-References: <20190611151007.13625-1-hch@lst.de>
- <20190611151007.13625-5-hch@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:42614 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726851AbfFLK3V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Jun 2019 06:29:21 -0400
+Date: Wed, 12 Jun 2019 12:29:17 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190612102917.GB14578@quack2.suse.cz>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606104203.GF7433@quack2.suse.cz>
+ <20190606195114.GA30714@ziepe.ca>
+ <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
+ <20190607103636.GA12765@quack2.suse.cz>
+ <20190607121729.GA14802@ziepe.ca>
+ <20190607145213.GB14559@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190611151007.13625-5-hch@lst.de>
+In-Reply-To: <20190607145213.GB14559@iweiny-DESK2.sc.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Ira Weiny <ira.weiny@intel.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Jun 11, 2019 at 05:10:06PM +0200, Christoph Hellwig wrote:
-> When multiple iovecs reference the same page, each get_user_page call
-> will add a reference to the page.  But once we've created the bio that
-> information gets lost and only a single reference will be dropped after
-> I/O completion.  Use the same_page information returned from
-> __bio_try_merge_page to drop additional references to pages that were
-> already present in the bio.
+On Fri 07-06-19 07:52:13, Ira Weiny wrote:
+> On Fri, Jun 07, 2019 at 09:17:29AM -0300, Jason Gunthorpe wrote:
+> > On Fri, Jun 07, 2019 at 12:36:36PM +0200, Jan Kara wrote:
+> > 
+> > > Because the pins would be invisible to sysadmin from that point on. 
+> > 
+> > It is not invisible, it just shows up in a rdma specific kernel
+> > interface. You have to use rdma netlink to see the kernel object
+> > holding this pin.
+> > 
+> > If this visibility is the main sticking point I suggest just enhancing
+> > the existing MR reporting to include the file info for current GUP
+> > pins and teaching lsof to collect information from there as well so it
+> > is easy to use.
+> > 
+> > If the ownership of the lease transfers to the MR, and we report that
+> > ownership to userspace in a way lsof can find, then I think all the
+> > concerns that have been raised are met, right?
 > 
-> Based on a patch from Ming Lei.
+> I was contemplating some new lsof feature yesterday.  But what I don't
+> think we want is sysadmins to have multiple tools for multiple
+> subsystems.  Or even have to teach lsof something new for every potential
+> new subsystem user of GUP pins.
+
+Agreed.
+
+> I was thinking more along the lines of reporting files which have GUP
+> pins on them directly somewhere (dare I say procfs?) and teaching lsof to
+> report that information.  That would cover any subsystem which does a
+> longterm pin.
+
+So lsof already parses /proc/<pid>/maps to learn about files held open by
+memory mappings. It could parse some other file as well I guess. The good
+thing about that would be that then "longterm pin" structure would just hold
+struct file reference. That would avoid any needs of special behavior on
+file close (the file reference in the "longterm pin" structure would make
+sure struct file and thus the lease stays around, we'd just need to make
+explicit lease unlock block until the "longterm pin" structure is freed).
+The bad thing is that it requires us to come up with a sane new proc
+interface for reporting "longterm pins" and associated struct file. Also we
+need to define what this interface shows if the pinned pages are in DRAM
+(either page cache or anon) and not on NVDIMM.
+
+> > > ugly to live so we have to come up with something better. The best I can
+> > > currently come up with is to have a method associated with the lease that
+> > > would invalidate the RDMA context that holds the pins in the same way that
+> > > a file close would do it.
+> > 
+> > This is back to requiring all RDMA HW to have some new behavior they
+> > currently don't have..
+> > 
+> > The main objection to the current ODP & DAX solution is that very
+> > little HW can actually implement it, having the alternative still
+> > require HW support doesn't seem like progress.
+> > 
+> > I think we will eventually start seein some HW be able to do this
+> > invalidation, but it won't be universal, and I'd rather leave it
+> > optional, for recovery from truely catastrophic errors (ie my DAX is
+> > on fire, I need to unplug it).
 > 
-> Link: https://lkml.org/lkml/2019/4/23/64
-> Fixes: 576ed913 ("block: use bio_add_page in bio_iov_iter_get_pages")
-> Reported-by: David Gibson <david@gibson.dropbear.id.au>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/bio.c | 12 ++++++++++--
->  1 file changed, 10 insertions(+), 2 deletions(-)
-> 
-> diff --git a/block/bio.c b/block/bio.c
-> index c34327aa9216..0d841ba4373a 100644
-> --- a/block/bio.c
-> +++ b/block/bio.c
-> @@ -891,6 +891,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
->  	unsigned short entries_left = bio->bi_max_vecs - bio->bi_vcnt;
->  	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
->  	struct page **pages = (struct page **)bv;
-> +	bool same_page = false;
->  	ssize_t size, left;
->  	unsigned len, i;
->  	size_t offset;
-> @@ -911,8 +912,15 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
->  		struct page *page = pages[i];
->  
->  		len = min_t(size_t, PAGE_SIZE - offset, left);
-> -		if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset) != len))
-> -			return -EINVAL;
-> +
-> +		if (__bio_try_merge_page(bio, page, len, offset, &same_page)) {
-> +			if (same_page)
-> +				put_page(page);
-> +		} else {
-> +			if (WARN_ON_ONCE(bio_full(bio)))
-> +                                return -EINVAL;
-> +			__bio_add_page(bio, page, len, offset);
-> +		}
->  		offset = 0;
->  	}
+> Agreed.  I think software wise there is not much some of the devices can do
+> with such an "invalidate".
 
-Looks fine for v5.2:
+So out of curiosity: What does RDMA driver do when userspace just closes
+the file pointing to RDMA object? It has to handle that somehow by aborting
+everything that's going on... And I wanted similar behavior here.
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
+								Honza
 
-
-Thanks,
-Ming
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
