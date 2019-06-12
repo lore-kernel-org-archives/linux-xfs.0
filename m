@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33042 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:33090 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726783AbfFLGsW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:48:22 -0400
-Subject: [PATCH 04/14] xfs: bulkstat should copy lastip whenever userspace
- supplies one
+        with ESMTP id S1731273AbfFLGs1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:48:27 -0400
+Subject: [PATCH 05/14] xfs: remove unnecessary includes of xfs_itable.h
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 11 Jun 2019 23:47:57 -0700
-Message-ID: <156032207698.3774243.8898205522589429271.stgit@magnolia>
+Date: Tue, 11 Jun 2019 23:48:03 -0700
+Message-ID: <156032208315.3774243.12030637267920512012.stgit@magnolia>
 In-Reply-To: <156032205136.3774243.15725828509940520561.stgit@magnolia>
 References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,64 +20,62 @@ Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When userspace passes in a @lastip pointer we should copy the results
-back, even if the @ocount pointer is NULL.
+Don't include xfs_itable.h in files that don't need it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_ioctl.c   |   13 ++++++-------
- fs/xfs/xfs_ioctl32.c |   13 ++++++-------
- 2 files changed, 12 insertions(+), 14 deletions(-)
+ fs/xfs/scrub/common.c |    1 -
+ fs/xfs/scrub/dir.c    |    1 -
+ fs/xfs/scrub/scrub.c  |    1 -
+ fs/xfs/xfs_trace.c    |    1 -
+ 4 files changed, 4 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index d7dfc13f30f5..5ffbdcff3dba 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -768,14 +768,13 @@ xfs_ioc_bulkstat(
- 	if (error)
- 		return error;
- 
--	if (bulkreq.ocount != NULL) {
--		if (copy_to_user(bulkreq.lastip, &inlast,
--						sizeof(xfs_ino_t)))
--			return -EFAULT;
-+	if (bulkreq.lastip != NULL &&
-+	    copy_to_user(bulkreq.lastip, &inlast, sizeof(xfs_ino_t)))
-+		return -EFAULT;
- 
--		if (copy_to_user(bulkreq.ocount, &count, sizeof(count)))
--			return -EFAULT;
--	}
-+	if (bulkreq.ocount != NULL &&
-+	    copy_to_user(bulkreq.ocount, &count, sizeof(count)))
-+		return -EFAULT;
- 
- 	return 0;
- }
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 614fc6886d24..814ffe6fbab7 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -310,14 +310,13 @@ xfs_compat_ioc_bulkstat(
- 	if (error)
- 		return error;
- 
--	if (bulkreq.ocount != NULL) {
--		if (copy_to_user(bulkreq.lastip, &inlast,
--						sizeof(xfs_ino_t)))
--			return -EFAULT;
-+	if (bulkreq.lastip != NULL &&
-+	    copy_to_user(bulkreq.lastip, &inlast, sizeof(xfs_ino_t)))
-+		return -EFAULT;
- 
--		if (copy_to_user(bulkreq.ocount, &count, sizeof(count)))
--			return -EFAULT;
--	}
-+	if (bulkreq.ocount != NULL &&
-+	    copy_to_user(bulkreq.ocount, &count, sizeof(count)))
-+		return -EFAULT;
- 
- 	return 0;
- }
+diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+index 973aa59975e3..561d7e818e8b 100644
+--- a/fs/xfs/scrub/common.c
++++ b/fs/xfs/scrub/common.c
+@@ -17,7 +17,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+-#include "xfs_itable.h"
+ #include "xfs_alloc.h"
+ #include "xfs_alloc_btree.h"
+ #include "xfs_bmap.h"
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index a38a22785a1a..9018ca4aba64 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -17,7 +17,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+-#include "xfs_itable.h"
+ #include "xfs_da_format.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_dir2.h"
+diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+index f630389ee176..5689a33e999c 100644
+--- a/fs/xfs/scrub/scrub.c
++++ b/fs/xfs/scrub/scrub.c
+@@ -17,7 +17,6 @@
+ #include "xfs_sb.h"
+ #include "xfs_inode.h"
+ #include "xfs_icache.h"
+-#include "xfs_itable.h"
+ #include "xfs_alloc.h"
+ #include "xfs_alloc_btree.h"
+ #include "xfs_bmap.h"
+diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+index cb6489c22cad..f555a3c560b9 100644
+--- a/fs/xfs/xfs_trace.c
++++ b/fs/xfs/xfs_trace.c
+@@ -16,7 +16,6 @@
+ #include "xfs_btree.h"
+ #include "xfs_da_btree.h"
+ #include "xfs_ialloc.h"
+-#include "xfs_itable.h"
+ #include "xfs_alloc.h"
+ #include "xfs_bmap.h"
+ #include "xfs_attr.h"
