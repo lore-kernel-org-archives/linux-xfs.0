@@ -1,53 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43714 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726776AbfFLPCD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 11:02:03 -0400
-Date: Wed, 12 Jun 2019 08:01:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] mkfs: remove useless log options in usage
-Message-ID: <20190612150155.GA3773859@magnolia>
-References: <1560330575-2209-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
+Received: from mx2.suse.de ([195.135.220.15]:35500 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2437415AbfFLJwJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Jun 2019 05:52:09 -0400
+Date: Wed, 12 Jun 2019 11:46:34 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH RFC 02/10] fs/locks: Export F_LAYOUT lease to user space
+Message-ID: <20190612094634.GA14578@quack2.suse.cz>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606014544.8339-3-ira.weiny@intel.com>
+ <4e5eb31a41b91a28fbc83c65195a2c75a59cfa24.camel@kernel.org>
+ <20190611213812.GC14336@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1560330575-2209-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
+In-Reply-To: <20190611213812.GC14336@iweiny-DESK2.sc.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-Cc: linux-xfs@vger.kernel.org
+To: Ira Weiny <ira.weiny@intel.com>
+Cc: Jeff Layton <jlayton@kernel.org>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Jun 12, 2019 at 05:09:35PM +0800, Yang Xu wrote:
-> Since commit 2cf637cf(mkfs: remove logarithm based CLI options),
-> xfsprogs has discarded log options in node_options, remove it in usage.
+On Tue 11-06-19 14:38:13, Ira Weiny wrote:
+> On Sun, Jun 09, 2019 at 09:00:24AM -0400, Jeff Layton wrote:
+> > On Wed, 2019-06-05 at 18:45 -0700, ira.weiny@intel.com wrote:
+> > > From: Ira Weiny <ira.weiny@intel.com>
+> > > 
+> > > GUP longterm pins of non-pagecache file system pages (eg FS DAX) are
+> > > currently disallowed because they are unsafe.
+> > > 
+> > > The danger for pinning these pages comes from the fact that hole punch
+> > > and/or truncate of those files results in the pages being mapped and
+> > > pinned by a user space process while DAX has potentially allocated those
+> > > pages to other processes.
+> > > 
+> > > Most (All) users who are mapping FS DAX pages for long term pin purposes
+> > > (such as RDMA) are not going to want to deallocate these pages while
+> > > those pages are in use.  To do so would mean the application would lose
+> > > data.  So the use case for allowing truncate operations of such pages
+> > > is limited.
+> > > 
+> > > However, the kernel must protect itself and users from potential
+> > > mistakes and/or malicious user space code.  Rather than disabling long
+> > > term pins as is done now.   Allow for users who know they are going to
+> > > be pinning this memory to alert the file system of this intention.
+> > > Furthermore, allow users to be alerted such that they can react if a
+> > > truncate operation occurs for some reason.
+> > > 
+> > > Example user space pseudocode for a user using RDMA and wanting to allow
+> > > a truncate would look like this:
+> > > 
+> > > lease_break_sigio_handler() {
+> > > ...
+> > > 	if (sigio.fd == rdma_fd) {
+> > > 		complete_rdma_operations(...);
+> > > 		ibv_dereg_mr(mr);
+> > > 		close(rdma_fd);
+> > > 		fcntl(rdma_fd, F_SETLEASE, F_UNLCK);
+> > > 	}
+> > > }
+> > > 
+> > > setup_rdma_to_dax_file() {
+> > > ...
+> > > 	rdma_fd = open(...)
+> > > 	fcntl(rdma_fd, F_SETLEASE, F_LAYOUT);
+> > 
+> > I'm not crazy about this interface. F_LAYOUT doesn't seem to be in the
+> > same category as F_RDLCK/F_WRLCK/F_UNLCK.
+> > 
+> > Maybe instead of F_SETLEASE, this should use new
+> > F_SETLAYOUT/F_GETLAYOUT cmd values? There is nothing that would prevent
+> > you from setting both a lease and a layout on a file, and indeed knfsd
+> > can set both.
+> > 
+> > This interface seems to conflate the two.
 > 
-> Signed-off-by: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+> I've been feeling the same way.  This is why I was leaning toward a new lease
+> type.  I called it "F_LONGTERM" but the name is not important.
+> 
+> I think the concept of adding "exclusive" to the layout lease can fix this
+> because the NFS lease is non-exclusive where the user space one (for the
+> purpose of GUP pinning) would need to be.
+> 
+> FWIW I have not worked out exactly what this new "exclusive" code will look
+> like.  Jan said:
+> 
+> 	"There actually is support for locks that are not broken after given
+> 	timeout so there shouldn't be too many changes need."
+> 
+> But I'm not seeing that for Lease code.  So I'm working on something for the
+> lease code now.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Yeah, sorry for misleading you. Somehow I thought that if lease_break_time
+== 0, we will wait indefinitely but when checking the code again, that
+doesn't seem to be the case.
 
---D
-
-> ---
->  mkfs/xfs_mkfs.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index db3ad38e..91391b72 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -858,7 +858,7 @@ usage( void )
->  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
->  			    sectsize=num\n\
->  /* force overwrite */	[-f]\n\
-> -/* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
-> +/* inode size */	[-i perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
->  			    projid32bit=0|1,sparse=0|1]\n\
->  /* no discard */	[-K]\n\
->  /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
-> -- 
-> 2.18.1
-> 
-> 
-> 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
