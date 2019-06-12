@@ -1,35 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:57628 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2406508AbfFLHp4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Jun 2019 03:45:56 -0400
-Date: Wed, 12 Jun 2019 09:45:27 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: alternative take on the same page merging leak fix
-Message-ID: <20190612074527.GA20491@lst.de>
-References: <20190611151007.13625-1-hch@lst.de> <20190612010922.GA17522@ming.t460p>
+Received: from userp2120.oracle.com ([156.151.31.85]:43714 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726776AbfFLPCD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 11:02:03 -0400
+Date: Wed, 12 Jun 2019 08:01:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] mkfs: remove useless log options in usage
+Message-ID: <20190612150155.GA3773859@magnolia>
+References: <1560330575-2209-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190612010922.GA17522@ming.t460p>
+In-Reply-To: <1560330575-2209-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jun 12, 2019 at 09:09:23AM +0800, Ming Lei wrote:
-> We have to backport the fixes to -stable tree, and downstream need to
-> ship the fix too.
+On Wed, Jun 12, 2019 at 05:09:35PM +0800, Yang Xu wrote:
+> Since commit 2cf637cf(mkfs: remove logarithm based CLI options),
+> xfsprogs has discarded log options in node_options, remove it in usage.
 > 
-> The issue is quite serious because the leak is in IO path and the whole
-> system ram can be used up easily on some workloads. So I think the fix
-> should be for 5.2, however, regression risk might be increased by
-> pulling cleanup & re-factor in now.
-> 
-> I really appreciate you may cook a fix-only patch for this issue.
-> Especially the change in add pc page code isn't necessary for fixing
-> the issue.
+> Signed-off-by: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
 
-Patches 3 and 4 have no dependencies on 1 and 2, and should have
-arguably been ordered first in the series.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  mkfs/xfs_mkfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index db3ad38e..91391b72 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -858,7 +858,7 @@ usage( void )
+>  			    (sunit=value,swidth=value|su=num,sw=num|noalign),\n\
+>  			    sectsize=num\n\
+>  /* force overwrite */	[-f]\n\
+> -/* inode size */	[-i log=n|perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+> +/* inode size */	[-i perblock=n|size=num,maxpct=n,attr=0|1|2,\n\
+>  			    projid32bit=0|1,sparse=0|1]\n\
+>  /* no discard */	[-K]\n\
+>  /* log subvol */	[-l agnum=n,internal,size=num,logdev=xxx,version=n\n\
+> -- 
+> 2.18.1
+> 
+> 
+> 
