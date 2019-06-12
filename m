@@ -1,105 +1,210 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:39852 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729161AbfFLWVA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 18:21:00 -0400
-Date: Thu, 13 Jun 2019 08:19:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH xfsprogs manual] Inconsistency between the code and the
- manual page
-Message-ID: <20190612221957.GF14363@dread.disaster.area>
-References: <a8dbaa7f-f89c-8a78-1fc6-3626f6b3f873@linux.alibaba.com>
+Received: from mx1.redhat.com ([209.132.183.28]:42284 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2391200AbfFLH1H (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 12 Jun 2019 03:27:07 -0400
+Date: Wed, 12 Jun 2019 15:32:13 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] generic: test statfs on project quota directory
+Message-ID: <20190612073213.GA30864@dhcp-12-102.nay.redhat.com>
+References: <20190513014951.4357-1-zlang@redhat.com>
+ <01F47CA1-E737-4F52-8FF2-A3E0DCD8EB1B@dilger.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <a8dbaa7f-f89c-8a78-1fc6-3626f6b3f873@linux.alibaba.com>
+In-Reply-To: <01F47CA1-E737-4F52-8FF2-A3E0DCD8EB1B@dilger.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Alvin Zheng <Alvin@linux.alibaba.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, "darrick.wong" <darrick.wong@oracle.com>, caspar <caspar@linux.alibaba.com>
+To: fstests@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
 
-On Wed, Jun 12, 2019 at 01:20:46PM +0800, Alvin Zheng wrote:
-> Hi,
+On Tue, May 14, 2019 at 09:28:38AM -0600, Andreas Dilger wrote:
+> On May 12, 2019, at 7:49 PM, Zorro Lang <zlang@redhat.com> wrote:
+> > 
+> > There's a bug on xfs cause statfs get negative f_ffree value from
+> > a project quota directory. It's fixed by "de7243057 fs/xfs: fix
+> > f_ffree value for statfs when project quota is set". So add statfs
+> > testing on project quota block and inode count limit.
+> > 
+> > For testing foreign fs quota, change _qmount() function, turn on
+> > project if quotaon support.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> > 
+> > Hi,
+> > 
+> > (Long time passed, re-send this patch again to get reviewing)
+> > 
+> > There's one thing I don't understand, so CC ext4 mail list. Please
+> > feel free to reply, if anyone knows that:
+> > 
+> > $ mkfs.ext4 $SCRATCH_DEV
+> > $ tune2fs -O quota,project $SCRATCH_DEV
+> > $ mount $SCRATCH_DEV $SCRATCH_MNT -o prjquota
+> > $ quotaon -P $SCRATCH_MNT
+> > $ mkdir $SCRATCH_MNT/t
+> > $ xfs_quota -f -x -c "project -p $SCRATCH_MNT/t -s 42" $SCRATCH_MNT
+> > $ xfs_quota -f -x -c "limit -p bsoft=100m answer" $SCRATCH_MNT
+> > $ df -k $SCRATCH_MNT/t
+> > Filesystem    1K-blocks  Used Available Use% Mounted on
+> > SCRATCH_DEV    102400     4    102396   1% SCRATCH_MNT
+> > 
+> > On XFS, the 'Used' field always shows '0'. But why ext4 always has
+> > more 4k? Is it a bug or expected.
 > 
->     The manual page of mkfs.xfs (xfsprogs-5.0.0) says "When specifying 
-> parameters in units of sectors or filesystem blocks, the -s option or the -b
-> option first needs to be added to the command line.  Failure to specify the
-> size of the units will result in illegal value errors when parameters are
-> quantified in those units". However, I read the code and found that if the
-> size of the block and sector is not specified, the default size (block: 4k,
-> sector: 512B) will be used. Therefore, the following commands can work
-> normally in xfsprogs-5.0.0.
+> Each directory in ext4 consumes a 4KB block, so setting the project
+> quota on a directory always consumes at least one block.
+
+Ping fstests@vger.kernel.org.
+
+One month passed. Is there anything else block this patch merge?
+
+Thanks,
+Zorro
+
 > 
->      mkfs.xfs -n size=2b /dev/vdc
->      mkfs.xfs -d agsize=8192b /dev/vdc
+> Cheers, Andreas
 > 
->     So I think the manual of mkfs.xfs should be updated as follows. Any
-> ideas?
-
-The intent of the wording in the mkfs man page is "when using a
-custom sector or block size, it must be specified before any
-parameter that uses units of sector or block sizes." So just
-removing the "it must be specified first" wording is incorrect
-because mkfs should throw errors is it is not specified first.
-
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index 4b8c78c..45d7a84 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -115,9 +115,7 @@ When specifying parameters in units of sectors or
-> filesystem blocks, the
->  .B \-s
->  option or the
->  .B \-b
-> -option first needs to be added to the command line.
-> -Failure to specify the size of the units will result in illegal value
-> errors
-> -when parameters are quantified in those units.
-> +option can be used to specify the size of the sector or block. If the size
-> of the block or sector is not specified, the default size (block: 4KiB,
-> sector: 512B) will be used.
-
-That's fine to remove.
-
->  .PP
->  Many feature options allow an optional argument of 0 or 1, to explicitly
->  disable or enable the functionality.
-> @@ -136,10 +134,6 @@ The filesystem block size is specified with a
->  in bytes. The default value is 4096 bytes (4 KiB), the minimum is 512, and
-> the
->  maximum is 65536 (64 KiB).
->  .IP
-> -To specify any options on the command line in units of filesystem blocks,
-> this
-> -option must be specified first so that the filesystem block size is
-> -applied consistently to all options.
-
-"If a non-default filesystem block size is specified, the option
-must be specified before any options that use filesystem block size
-units so that the non-default filesystem block size is applied
-consistently to all options."
-
-> -.IP
->  Although
->  .B mkfs.xfs
->  will accept any of these values and create a valid filesystem,
-> @@ -894,10 +888,6 @@ is 512 bytes. The minimum value for sector size is
->  .I sector_size
->  must be a power of 2 size and cannot be made larger than the
->  filesystem block size.
-> -.IP
-> -To specify any options on the command line in units of sectors, this
-> -option must be specified first so that the sector size is
-> -applied consistently to all options.
-
-Same wording as for the filesystem block size applies to sector
-sizes as well.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > common/quota          |  4 +++
+> > tests/generic/999     | 74 +++++++++++++++++++++++++++++++++++++++++++
+> > tests/generic/999.out |  3 ++
+> > tests/generic/group   |  1 +
+> > 4 files changed, 82 insertions(+)
+> > create mode 100755 tests/generic/999
+> > create mode 100644 tests/generic/999.out
+> > 
+> > diff --git a/common/quota b/common/quota
+> > index f19f81a1..315df8cb 100644
+> > --- a/common/quota
+> > +++ b/common/quota
+> > @@ -200,6 +200,10 @@ _qmount()
+> >    if [ "$FSTYP" != "xfs" ]; then
+> >        quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
+> >        quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
+> > +	# try to turn on project quota if it's supported
+> > +	if quotaon --help 2>&1 | grep -q '\-\-project'; then
+> > +		quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
+> > +	fi
+> >    fi
+> >    chmod ugo+rwx $SCRATCH_MNT
+> > }
+> > diff --git a/tests/generic/999 b/tests/generic/999
+> > new file mode 100755
+> > index 00000000..555341f1
+> > --- /dev/null
+> > +++ b/tests/generic/999
+> > @@ -0,0 +1,74 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 999
+> > +#
+> > +# Test statfs when project quota is set.
+> > +# Uncover de7243057 fs/xfs: fix f_ffree value for statfs when project quota is set
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	_scratch_unmount
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +. ./common/filter
+> > +. ./common/quota
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs generic
+> > +_supported_os Linux
+> > +_require_scratch
+> > +_require_quota
+> > +_require_xfs_quota_foreign
+> > +
+> > +_scratch_mkfs >/dev/null 2>&1
+> > +_scratch_enable_pquota
+> > +_qmount_option "prjquota"
+> > +_qmount
+> > +_require_prjquota $SCRATCH_DEV
+> > +
+> > +# Create a directory to be project object, and create a file to take 64k space
+> > +mkdir $SCRATCH_MNT/t
+> > +$XFS_IO_PROG -f -c "pwrite 0 65536" -c sync $SCRATCH_MNT/t/file >>$seqres.full
+> > +
+> > +# Setup temporary replacements for /etc/projects and /etc/projid
+> > +cat >$tmp.projects <<EOF
+> > +42:$SCRATCH_MNT/t
+> > +EOF
+> > +
+> > +cat >$tmp.projid <<EOF
+> > +answer:42
+> > +EOF
+> > +
+> > +quota_cmd="$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid"
+> > +$quota_cmd -x -c 'project -s answer' $SCRATCH_MNT >/dev/null 2>&1
+> > +$quota_cmd -x -c 'limit -p isoft=53 bsoft=100m answer' $SCRATCH_MNT
+> > +
+> > +# The itotal and size should be 53 and 102400(k), as above project quota limit.
+> > +# The isued and used should be 2 and 64(k), as this case takes. But ext4 always
+> > +# shows more 4k 'used' space than XFS, it prints 68k at here. So filter the
+> > +# 6[48] at the end.
+> > +df -k --output=file,itotal,iused,size,used $SCRATCH_MNT/t | \
+> > +	_filter_scratch | _filter_spaces | \
+> > +	sed -e "/SCRATCH_MNT/s/6[48]/N/"
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/999.out b/tests/generic/999.out
+> > new file mode 100644
+> > index 00000000..1bebabd4
+> > --- /dev/null
+> > +++ b/tests/generic/999.out
+> > @@ -0,0 +1,3 @@
+> > +QA output created by 999
+> > +File Inodes IUsed 1K-blocks Used
+> > +SCRATCH_MNT/t 53 2 102400 N
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index 9f4845c6..35da10a5 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -542,3 +542,4 @@
+> > 537 auto quick trim
+> > 538 auto quick aio
+> > 539 auto quick punch seek
+> > +999 auto quick quota
+> > --
+> > 2.17.2
+> > 
+> 
+> 
+> Cheers, Andreas
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> 
+> Cheers, Andreas
+> 
+> 
+> 
+> 
+> 
