@@ -1,103 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46442 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:51566 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2407268AbfFLAdD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 20:33:03 -0400
-Date: Tue, 11 Jun 2019 17:32:19 -0700
+        with ESMTP id S2391522AbfFLAgk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 20:36:40 -0400
+Date: Tue, 11 Jun 2019 17:35:38 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 02/10] xfs: convert quotacheck to use the new iwalk
- functions
-Message-ID: <20190612003219.GV1871505@magnolia>
-References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
- <155968498085.1657646.3518168545540841602.stgit@magnolia>
- <20190610135848.GB6473@bfoster>
- <20190611232347.GE14363@dread.disaster.area>
+Subject: Re: [Jfs-discussion] [PATCH 1/4] vfs: create a generic checking
+ function for FS_IOC_SETFLAGS
+Message-ID: <20190612003538.GW1871505@magnolia>
+References: <156022833285.3227089.11990489625041926920.stgit@magnolia>
+ <156022834076.3227089.14763553158562888103.stgit@magnolia>
+ <fb974a33-2192-30ab-9f31-885c3796360b@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190611232347.GE14363@dread.disaster.area>
+In-Reply-To: <fb974a33-2192-30ab-9f31-885c3796360b@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Dave Kleikamp <dave.kleikamp@oracle.com>
+Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, linux-kernel@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Wed, Jun 12, 2019 at 09:23:47AM +1000, Dave Chinner wrote:
-> On Mon, Jun 10, 2019 at 09:58:52AM -0400, Brian Foster wrote:
-> > On Tue, Jun 04, 2019 at 02:49:40PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Convert quotacheck to use the new iwalk iterator to dig through the
-> > > inodes.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_qm.c |   62 ++++++++++++++++++-------------------------------------
-> > >  1 file changed, 20 insertions(+), 42 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > > index aa6b6db3db0e..a5b2260406a8 100644
-> > > --- a/fs/xfs/xfs_qm.c
-> > > +++ b/fs/xfs/xfs_qm.c
-> > ...
-> > > @@ -1136,20 +1135,18 @@ xfs_qm_dqusage_adjust(
-> > >  	 * rootino must have its resources accounted for, not so with the quota
-> > >  	 * inodes.
-> > >  	 */
-> > > -	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
-> > > -		*res = BULKSTAT_RV_NOTHING;
-> > > -		return -EINVAL;
-> > > -	}
-> > > +	if (xfs_is_quota_inode(&mp->m_sb, ino))
-> > > +		return 0;
-> > >  
-> > >  	/*
-> > >  	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
-> > >  	 * at mount time and therefore nobody will be racing chown/chproj.
-> > >  	 */
-> > > -	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
-> > > -	if (error) {
-> > > -		*res = BULKSTAT_RV_NOTHING;
-> > > +	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
+On Tue, Jun 11, 2019 at 08:41:06AM -0500, Dave Kleikamp wrote:
+> On 6/10/19 11:45 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > I was wondering if we should start using IGET_UNTRUSTED here, but I
-> > guess we're 1.) protected by quotacheck context and 2.) have the same
-> > record validity semantics as the existing bulkstat walker. LGTM:
+> > Create a generic checking function for the incoming FS_IOC_SETFLAGS flag
+> > values so that we can standardize the implementations that follow ext4's
+> > flag values.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> FWIW, I'd be wanting to go the other way with bulkstat. i.e. finding
-> ways of reducing IGET_UNTRUSTED in bulkstat because it adds
-> substantial CPU overhead during inode lookup because it has to look
-> up the inobt to validate the inode number. i.e. we are locking the
-> AGI and doing an inobt lookup on every inode we bulkstat because
-> there is some time between the initial inobt lookup and the
-> xfs_iget() call and that's when the inode chunk can get removed.
+>  -- clip --
 > 
-> IOWs, we only need to validate that the inode buffer still contains
-> inodes before we start instantiating inodes from it, but because we
-> don't hold any locks across individual inode processing in bulkstat
-> we have to revalidate that buffer contains inodes for every
-> allocated inode in that buffer. If we had a way of passing a locked
-> cluster buffer into xfs_iget to avoid having to look it up and read
-> it, we could do a single inode cluster read after validating the
-> inobt record is still valid, we could cycle all the remaining inodes
-> through xfs_iget() without having to use IGET_UNTRUSTED to validate
-> the inode cluster still contains valid inodes on every inode....
+> > diff --git a/fs/jfs/ioctl.c b/fs/jfs/ioctl.c
+> > index ba34dae8bd9f..c8446d2cd0c7 100644
+> > --- a/fs/jfs/ioctl.c
+> > +++ b/fs/jfs/ioctl.c
+> > @@ -98,6 +98,12 @@ long jfs_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+> >  		/* Lock against other parallel changes of flags */
+> >  		inode_lock(inode);
+> >  
+> > +		oldflags = jfs_map_ext2(jfs_inode->mode2 & JFS_FL_USER_VISIBLE,
+> > +					0);
+> > +		err = vfs_ioc_setflags_check(inode, oldflags, flags);
+> > +		if (err)
+> > +			goto setflags_out;
 > 
-> We still need to cycle inodes through the cache (so bulkstat is
-> coherent with other inode operations), but this would substantially
-> reduce the per-inode bulkstat CPU overhead, I think....
+> inode_unlock(inode) is not called on the error path.
+> 
+> > +
+> >  		oldflags = jfs_inode->mode2;
+> >  
+> >  		/*
+> 
+> This patch leaves jfs's open-coded version of the same check.
 
-I'll think about this as an addendum to the series, because I suspect
-that remodelling the existing users is going to be an entire series on
-its own.  (IOWs, my brain is too tired for today)
+Heh, thanks for pointing that out.  I'll fix both of those things.
 
 --D
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Thanks,
+> Shaggy
