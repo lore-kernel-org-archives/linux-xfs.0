@@ -1,108 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:46452 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729566AbfFLXcF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 12 Jun 2019 19:32:05 -0400
-Date: Wed, 12 Jun 2019 16:33:25 -0700
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190612233324.GE14336@iweiny-DESK2.sc.intel.com>
-References: <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
- <20190607103636.GA12765@quack2.suse.cz>
- <20190607121729.GA14802@ziepe.ca>
- <20190607145213.GB14559@iweiny-DESK2.sc.intel.com>
- <20190612102917.GB14578@quack2.suse.cz>
- <20190612114721.GB3876@ziepe.ca>
- <20190612120907.GC14578@quack2.suse.cz>
- <20190612191421.GM3876@ziepe.ca>
- <20190612221336.GA27080@iweiny-DESK2.sc.intel.com>
- <CAPcyv4gkksnceCV-p70hkxAyEPJWFvpMezJA1rEj6TEhKAJ7qQ@mail.gmail.com>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:43379 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729567AbfFLXeE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 19:34:04 -0400
+Date: Thu, 13 Jun 2019 09:33:02 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 02/10] xfs: convert quotacheck to use the new iwalk
+ functions
+Message-ID: <20190612233302.GG14363@dread.disaster.area>
+References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+ <155968498085.1657646.3518168545540841602.stgit@magnolia>
+ <20190610135848.GB6473@bfoster>
+ <20190611232347.GE14363@dread.disaster.area>
+ <20190612003219.GV1871505@magnolia>
+ <20190612125506.GE12395@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAPcyv4gkksnceCV-p70hkxAyEPJWFvpMezJA1rEj6TEhKAJ7qQ@mail.gmail.com>
+In-Reply-To: <20190612125506.GE12395@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On Wed, Jun 12, 2019 at 03:54:19PM -0700, Dan Williams wrote:
-> On Wed, Jun 12, 2019 at 3:12 PM Ira Weiny <ira.weiny@intel.com> wrote:
-> >
-> > On Wed, Jun 12, 2019 at 04:14:21PM -0300, Jason Gunthorpe wrote:
-> > > On Wed, Jun 12, 2019 at 02:09:07PM +0200, Jan Kara wrote:
-> > > > On Wed 12-06-19 08:47:21, Jason Gunthorpe wrote:
-> > > > > On Wed, Jun 12, 2019 at 12:29:17PM +0200, Jan Kara wrote:
-> > > > >
-> > > > > > > > The main objection to the current ODP & DAX solution is that very
-> > > > > > > > little HW can actually implement it, having the alternative still
-> > > > > > > > require HW support doesn't seem like progress.
-> > > > > > > >
-> > > > > > > > I think we will eventually start seein some HW be able to do this
-> > > > > > > > invalidation, but it won't be universal, and I'd rather leave it
-> > > > > > > > optional, for recovery from truely catastrophic errors (ie my DAX is
-> > > > > > > > on fire, I need to unplug it).
-> > > > > > >
-> > > > > > > Agreed.  I think software wise there is not much some of the devices can do
-> > > > > > > with such an "invalidate".
-> > > > > >
-> > > > > > So out of curiosity: What does RDMA driver do when userspace just closes
-> > > > > > the file pointing to RDMA object? It has to handle that somehow by aborting
-> > > > > > everything that's going on... And I wanted similar behavior here.
-> > > > >
-> > > > > It aborts *everything* connected to that file descriptor. Destroying
-> > > > > everything avoids creating inconsistencies that destroying a subset
-> > > > > would create.
-> > > > >
-> > > > > What has been talked about for lease break is not destroying anything
-> > > > > but very selectively saying that one memory region linked to the GUP
-> > > > > is no longer functional.
-> > > >
-> > > > OK, so what I had in mind was that if RDMA app doesn't play by the rules
-> > > > and closes the file with existing pins (and thus layout lease) we would
-> > > > force it to abort everything. Yes, it is disruptive but then the app didn't
-> > > > obey the rule that it has to maintain file lease while holding pins. Thus
-> > > > such situation should never happen unless the app is malicious / buggy.
-> > >
-> > > We do have the infrastructure to completely revoke the entire
-> > > *content* of a FD (this is called device disassociate). It is
-> > > basically close without the app doing close. But again it only works
-> > > with some drivers. However, this is more likely something a driver
-> > > could support without a HW change though.
-> > >
-> > > It is quite destructive as it forcibly kills everything RDMA related
-> > > the process(es) are doing, but it is less violent than SIGKILL, and
-> > > there is perhaps a way for the app to recover from this, if it is
-> > > coded for it.
-> >
-> > I don't think many are...  I think most would effectively be "killed" if this
-> > happened to them.
-> >
-> > >
-> > > My preference would be to avoid this scenario, but if it is really
-> > > necessary, we could probably build it with some work.
-> > >
-> > > The only case we use it today is forced HW hot unplug, so it is rarely
-> > > used and only for an 'emergency' like use case.
-> >
-> > I'd really like to avoid this as well.  I think it will be very confusing for
-> > RDMA apps to have their context suddenly be invalid.  I think if we have a way
-> > for admins to ID who is pinning a file the admin can take more appropriate
-> > action on those processes.   Up to and including killing the process.
-> 
-> Can RDMA context invalidation, "device disassociate", be inflicted on
-> a process from the outside? Identifying the pid of a pin holder only
-> leaves SIGKILL of the entire process as the remediation for revoking a
-> pin, and I assume admins would use the finer grained invalidation
-> where it was available.
+On Wed, Jun 12, 2019 at 08:55:06AM -0400, Brian Foster wrote:
+> On Tue, Jun 11, 2019 at 05:32:19PM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 12, 2019 at 09:23:47AM +1000, Dave Chinner wrote:
+> Since we're already discussing tweaks to readahead, another approach to
+> this problem could be to try and readahead all the way into the inode
+> cache. For example, consider a mechanism where a cluster buffer
+> readahead sets a flag on the buffer that effectively triggers an iget of
+> each allocated inode in the buffer. Darrick has already shown that the
+> inode memory allocation and iget itself has considerable overhead even
+> when the cluster buffer is already cached. We know that's not due to
+> btree lookups because quotacheck isn't using IGET_UNTRUSTED, so perhaps
+> we could amortize more of this cost via readahead.
 
-No not in the way you are describing it.  As Jason said you can hotplug the
-device which is "from the outside" but this would affect all users of that
-device.
+The DONTCACHE inode caching semantics of bulkstat tend to conflict
+with "readahead all the way to the inode cache".
 
-Effectively, we would need a way for an admin to close a specific file
-descriptor (or set of fds) which point to that file.  AFAIK there is no way to
-do that at all, is there?
+> The caveats are that would probably be more involved than something that
+> just caches the current cluster buffer and passes it into the iget path.
+> We'd have to rectify readahead in-core inodes against DONTCACHE inodes
+> used by bulkstat, for example, though I don't think that would be too
+> difficult to address via a new inode readahead flag or some such
+> preserve existing DONTCACHE behavior.
 
-Ira
+I did try that once, the cache thrashing was .... difficult to
+contain under memory pressure. bulkstat pushes hundreds of thousands
+of inodes a second through the inode cache, and under memory
+pressure it will still cause working set perturbation with DONTCACHE
+being set. Holding DONTCACHE inodes for some time in the cache kinda
+defeats the simple purpose it has, and relying on cache hits to
+convert "readahead" to "dont cache" becomes really nasty when we
+try to use inode readahead for other things (like speeding up
+directory traversals by having xfs_readdir() issue inode readahead).
+
+The largest delay in bulkstat is the inode cluster IO latency.
+Getting rid of that is where the biggest win is (hence cluster
+read-ahead). The second largest overhead is the CPU burnt doing
+inode lookups, and on filesystems with lots of inodes, a significant
+amount of that is in the IGET_UNTRUSTED inobt lookup. IOWs, avoiding
+GET_UNTRUSTED is relatively low hanging fruit.
+
+The next limitation for bulkstat is the superblock inode list lock
+contention. Getting rid of the IGET_UNTRUSTED overhead is likely to
+push the lock contention into the severe range (the lock is already
+the largest CPU consumer at 16 threads bulkstating 600,000 inodes/s
+on a 16p machine) so until we get rid of that lock contention, there
+isn't much point in doing major rework to the bulkstat algorithm as
+it doesn't address the limitations that the current algorithm has.
+
+> It's also likely that passing the buffer into iget would already address
+> most of the overhead associated with the buffer lookup, so there might
+> not be enough tangible benefit at that point. The positive is that it's
+> probably an incremental step on top of an "iget from an existing cluster
+> buffer" mechanism and so could be easily prototyped by hacking in a read
+> side b_iodone handler or something.
+
+We don't want to put inode cache insertion into a IO completion
+routine. Tried it, caused horrible problems with metadata read IO
+latency and substantially increased inode cache lock contention by
+bouncing the radix trees around both submission and completion CPU
+contexts...
+
+/me has spent many, many years trying lots of different ways to make
+the inode cache in XFS go faster and has failed most of the time....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
