@@ -1,221 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2130.oracle.com ([141.146.126.79]:36432 "EHLO
-        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2437202AbfFLPFZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 11:05:25 -0400
-Date: Wed, 12 Jun 2019 08:05:07 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:56862 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbfFLQyD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 12:54:03 -0400
+Date: Wed, 12 Jun 2019 09:53:46 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] generic: test statfs on project quota directory
-Message-ID: <20190612150507.GB3773859@magnolia>
-References: <20190513014951.4357-1-zlang@redhat.com>
- <01F47CA1-E737-4F52-8FF2-A3E0DCD8EB1B@dilger.ca>
- <20190612073213.GA30864@dhcp-12-102.nay.redhat.com>
+Subject: Re: [PATCH 01/10] xfs: create simplified inode walk function
+Message-ID: <20190612165346.GK1688126@magnolia>
+References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+ <155968497450.1657646.15305138327955918345.stgit@magnolia>
+ <20190610135816.GA6473@bfoster>
+ <20190610165909.GI1871505@magnolia>
+ <20190610175509.GF6473@bfoster>
+ <20190610231134.GM1871505@magnolia>
+ <20190611223341.GD14363@dread.disaster.area>
+ <20190611230514.GU1871505@magnolia>
+ <20190612121310.GD12395@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190612073213.GA30864@dhcp-12-102.nay.redhat.com>
+In-Reply-To: <20190612121310.GD12395@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org, Andreas Dilger <adilger@dilger.ca>
+To: Brian Foster <bfoster@redhat.com>
+Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
 
-On Wed, Jun 12, 2019 at 03:32:13PM +0800, Zorro Lang wrote:
-> On Tue, May 14, 2019 at 09:28:38AM -0600, Andreas Dilger wrote:
-> > On May 12, 2019, at 7:49 PM, Zorro Lang <zlang@redhat.com> wrote:
+On Wed, Jun 12, 2019 at 08:13:10AM -0400, Brian Foster wrote:
+> On Tue, Jun 11, 2019 at 04:05:14PM -0700, Darrick J. Wong wrote:
+> > On Wed, Jun 12, 2019 at 08:33:41AM +1000, Dave Chinner wrote:
+> > > On Mon, Jun 10, 2019 at 04:11:34PM -0700, Darrick J. Wong wrote:
+> > > > On Mon, Jun 10, 2019 at 01:55:10PM -0400, Brian Foster wrote:
+> > > > > > I could extend the comment to explain why we don't use PAGE_SIZE...
+> > > > > > 
+> > > > > 
+> > > > > Sounds good, though what I think would be better is to define a
+> > > > > IWALK_DEFAULT_RECS or some such somewhere and put the calculation
+> > > > > details with that.
+> > > > > 
+> > > > > Though now that you point out the readahead thing, aren't we at risk of
+> > > > > a similar problem for users who happen to pass a really large userspace
+> > > > > buffer? Should we cap the kernel allocation/readahead window in all
+> > > > > cases and not just the default case?
+> > > > 
+> > > > Hmm, that's right, we don't want to let userspace arbitrarily determine
+> > > > the size of the buffer, and I think the current implementation caps it
+> > > > the readahaead at ... oh, PAGE_SIZE / sizeof(xfs_inogrp_t).
+> > > > 
+> > > > Oh, right, and in the V1 patchset Dave said that we should constrain
+> > > > readahead even further.
 > > > 
-> > > There's a bug on xfs cause statfs get negative f_ffree value from
-> > > a project quota directory. It's fixed by "de7243057 fs/xfs: fix
-> > > f_ffree value for statfs when project quota is set". So add statfs
-> > > testing on project quota block and inode count limit.
+> > > Right, I should explain a bit further why, too - it's about
+> > > performance.  I've found that a user buffer size of ~1024 inodes is
+> > > generally enough to max out performance of bulkstat. i.e. somewhere
+> > > around 1000 inodes per syscall is enough to mostly amortise all of
+> > > the cost of syscall, setup, readahead, etc vs the CPU overhead of
+> > > copying all the inodes into the user buffer.
 > > > 
-> > > For testing foreign fs quota, change _qmount() function, turn on
-> > > project if quotaon support.
-> > > 
-> > > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > > ---
-> > > 
-> > > Hi,
-> > > 
-> > > (Long time passed, re-send this patch again to get reviewing)
-> > > 
-> > > There's one thing I don't understand, so CC ext4 mail list. Please
-> > > feel free to reply, if anyone knows that:
-> > > 
-> > > $ mkfs.ext4 $SCRATCH_DEV
-> > > $ tune2fs -O quota,project $SCRATCH_DEV
-> > > $ mount $SCRATCH_DEV $SCRATCH_MNT -o prjquota
-> > > $ quotaon -P $SCRATCH_MNT
-> > > $ mkdir $SCRATCH_MNT/t
-> > > $ xfs_quota -f -x -c "project -p $SCRATCH_MNT/t -s 42" $SCRATCH_MNT
-> > > $ xfs_quota -f -x -c "limit -p bsoft=100m answer" $SCRATCH_MNT
-> > > $ df -k $SCRATCH_MNT/t
-> > > Filesystem    1K-blocks  Used Available Use% Mounted on
-> > > SCRATCH_DEV    102400     4    102396   1% SCRATCH_MNT
-> > > 
-> > > On XFS, the 'Used' field always shows '0'. But why ext4 always has
-> > > more 4k? Is it a bug or expected.
+> > > Once the user buffer goes over a few thousand inodes, performance
+> > > then starts to tail back off - we don't get any gains from trying to
+> > > bulkstat tens of thousands of inodes at a time, especially under
+> > > memory pressure because that can push us into readahead and buffer
+> > > cache thrashing.
 > > 
-> > Each directory in ext4 consumes a 4KB block, so setting the project
-> > quota on a directory always consumes at least one block.
+> > <nod> I don't mind setting the max inobt record cache buffer size to a
+> > smaller value (1024 bytes == 4096 inodes readahead?) so we can get a
+> > little farther into future hardware scalability (or decreases in syscall
+> > performance :P).
+> > 
 > 
-> Ping fstests@vger.kernel.org.
+> The 1k baseline presumably applies to the current code. Taking a closer
+> look at the current code, we unconditionally allocate a 4 page record
+> buffer and start to fill it. For every record we grab, we issue
+> readahead on the underlying clusters.
 > 
-> One month passed. Is there anything else block this patch merge?
+> Hmm, that seems like generally what this patchset is doing aside from
+> the more variable record buffer allocation. I'm fine with changing
+> things like record buffer allocation, readahead semantics, etc. given
+> Dave's practical analysis above, but TBH I don't think that should all
+> be part of the same patch. IMO, this rework patch should maintain as
+> close as possible to current behavior and a subsequent patches in the
+> series can tweak record buffer size and whatnot to improve readahead
+> logic. That makes this all easier to review, discuss and maintain in the
+> event of regression.
 
-If this is a regression test for an xfs bug, why isn't this in
-tests/xfs/ ?  Especially because ext4 has different behaviors that clash
-with the golden output -- what happens if you run this with inline data
-enabled?
+This also got me thinking that I should look up what INUMBERS does,
+which is that it uses the icount to determine the cache size, up to a
+maximum of PAGE_SIZE.  Since INUMBERS doesn't issue readahead I think
+it's fine to preserve that behavior too... and probably with a separate
+xfs_inobt_walk_set_prefetch function.
+
+> > I guess the question here is how to relate the number of inodes the user
+> > asked for to how many inobt records we have to read to find that many
+> > allocated inodes?  Or in other words, what's the average ir_freecount
+> > across all the inobt records?
+> > 
+> 
+> The current code basically looks like it allocates an oversized buffer
+> and hopes for the best with regard to readahead. If we took a similar
+> approach in terms of overestimating the buffer size (assuming not all
+> inode records are fully allocated), I suppose we could also track the
+> number of cluster readaheads issued and govern the collect/drain
+> sequences of the record buffer based on that..? But again, I think we
+> should have this as a separate "xfs: make iwalk readahead smarter ..."
+> patch that documents Dave's analysis above, perhaps includes some
+> numbers, etc..
+
+Ok.
 
 --D
 
-> Thanks,
-> Zorro
+> > Note that this is technically a decrease since the old code would
+> > reserve 16K for this purpose...
+> > 
 > 
-> > 
-> > Cheers, Andreas
-> > 
-> > > common/quota          |  4 +++
-> > > tests/generic/999     | 74 +++++++++++++++++++++++++++++++++++++++++++
-> > > tests/generic/999.out |  3 ++
-> > > tests/generic/group   |  1 +
-> > > 4 files changed, 82 insertions(+)
-> > > create mode 100755 tests/generic/999
-> > > create mode 100644 tests/generic/999.out
+> Indeed.
+> 
+> Brian
+> 
+> > > > > > /*
+> > > > > >  * Note: We hardcode 4096 here (instead of, say, PAGE_SIZE) because we want to
+> > > > > >  * constrain the amount of inode readahead to 16k inodes regardless of CPU:
+> > > > > >  *
+> > > > > >  * 4096 bytes / 16 bytes per inobt record = 256 inobt records
+> > > > > >  * 256 inobt records * 64 inodes per record = 16384 inodes
+> > > > > >  * 16384 inodes * 512 bytes per inode(?) = 8MB of inode readahead
+> > > > > >  */
 > > > 
-> > > diff --git a/common/quota b/common/quota
-> > > index f19f81a1..315df8cb 100644
-> > > --- a/common/quota
-> > > +++ b/common/quota
-> > > @@ -200,6 +200,10 @@ _qmount()
-> > >    if [ "$FSTYP" != "xfs" ]; then
-> > >        quotacheck -ug $SCRATCH_MNT >>$seqres.full 2>&1
-> > >        quotaon -ug $SCRATCH_MNT >>$seqres.full 2>&1
-> > > +	# try to turn on project quota if it's supported
-> > > +	if quotaon --help 2>&1 | grep -q '\-\-project'; then
-> > > +		quotaon --project $SCRATCH_MNT >>$seqres.full 2>&1
-> > > +	fi
-> > >    fi
-> > >    chmod ugo+rwx $SCRATCH_MNT
-> > > }
-> > > diff --git a/tests/generic/999 b/tests/generic/999
-> > > new file mode 100755
-> > > index 00000000..555341f1
-> > > --- /dev/null
-> > > +++ b/tests/generic/999
-> > > @@ -0,0 +1,74 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 999
-> > > +#
-> > > +# Test statfs when project quota is set.
-> > > +# Uncover de7243057 fs/xfs: fix f_ffree value for statfs when project quota is set
-> > > +#
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1	# failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	cd /
-> > > +	_scratch_unmount
-> > > +	rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/filter
-> > > +. ./common/quota
-> > > +
-> > > +# remove previous $seqres.full before test
-> > > +rm -f $seqres.full
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs generic
-> > > +_supported_os Linux
-> > > +_require_scratch
-> > > +_require_quota
-> > > +_require_xfs_quota_foreign
-> > > +
-> > > +_scratch_mkfs >/dev/null 2>&1
-> > > +_scratch_enable_pquota
-> > > +_qmount_option "prjquota"
-> > > +_qmount
-> > > +_require_prjquota $SCRATCH_DEV
-> > > +
-> > > +# Create a directory to be project object, and create a file to take 64k space
-> > > +mkdir $SCRATCH_MNT/t
-> > > +$XFS_IO_PROG -f -c "pwrite 0 65536" -c sync $SCRATCH_MNT/t/file >>$seqres.full
-> > > +
-> > > +# Setup temporary replacements for /etc/projects and /etc/projid
-> > > +cat >$tmp.projects <<EOF
-> > > +42:$SCRATCH_MNT/t
-> > > +EOF
-> > > +
-> > > +cat >$tmp.projid <<EOF
-> > > +answer:42
-> > > +EOF
-> > > +
-> > > +quota_cmd="$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid"
-> > > +$quota_cmd -x -c 'project -s answer' $SCRATCH_MNT >/dev/null 2>&1
-> > > +$quota_cmd -x -c 'limit -p isoft=53 bsoft=100m answer' $SCRATCH_MNT
-> > > +
-> > > +# The itotal and size should be 53 and 102400(k), as above project quota limit.
-> > > +# The isued and used should be 2 and 64(k), as this case takes. But ext4 always
-> > > +# shows more 4k 'used' space than XFS, it prints 68k at here. So filter the
-> > > +# 6[48] at the end.
-> > > +df -k --output=file,itotal,iused,size,used $SCRATCH_MNT/t | \
-> > > +	_filter_scratch | _filter_spaces | \
-> > > +	sed -e "/SCRATCH_MNT/s/6[48]/N/"
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/generic/999.out b/tests/generic/999.out
-> > > new file mode 100644
-> > > index 00000000..1bebabd4
-> > > --- /dev/null
-> > > +++ b/tests/generic/999.out
-> > > @@ -0,0 +1,3 @@
-> > > +QA output created by 999
-> > > +File Inodes IUsed 1K-blocks Used
-> > > +SCRATCH_MNT/t 53 2 102400 N
-> > > diff --git a/tests/generic/group b/tests/generic/group
-> > > index 9f4845c6..35da10a5 100644
-> > > --- a/tests/generic/group
-> > > +++ b/tests/generic/group
-> > > @@ -542,3 +542,4 @@
-> > > 537 auto quick trim
-> > > 538 auto quick aio
-> > > 539 auto quick punch seek
-> > > +999 auto quick quota
-> > > --
-> > > 2.17.2
+> > > Hence I suspect that even this is overkill - it makes no sense to
+> > > have a huge readahead window when there has been no measurable
+> > > performance benefit to doing large inode count bulkstat syscalls.
 > > > 
+> > > And, FWIW, readahead probably should also be capped at what the user
+> > > buffer can hold - no point in reading 16k inodes when the output
+> > > buffer can only fit 1000 inodes...
 > > 
+> > It already is -- the icount parameter from userspace is (eventually) fed
+> > to xfs_iwalk-set_prefetch.
 > > 
-> > Cheers, Andreas
+> > --D
 > > 
-> > 
-> > 
-> > 
-> > 
-> > 
-> > 
-> > 
-> > Cheers, Andreas
-> > 
-> > 
-> > 
-> > 
-> > 
-> 
-> 
+> > > Cheers,
+> > > 
+> > > Dave.
+> > > -- 
+> > > Dave Chinner
+> > > david@fromorbit.com
