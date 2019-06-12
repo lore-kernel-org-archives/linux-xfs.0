@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34322 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726783AbfFLGtV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:49:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5C6nKaw055709
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:20 GMT
+Received: from aserp2130.oracle.com ([141.146.126.79]:53864 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726783AbfFLGt2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:49:28 -0400
+Received: from pps.filterd (aserp2130.oracle.com [127.0.0.1])
+        by aserp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5C6mfrF066049
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:25 GMT
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2t05nqsbvb-1
+        by aserp2130.oracle.com with ESMTP id 2t02hesk96-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:20 +0000
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:25 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5C6mg4b099172
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:19 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2t0p9rq317-1
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5C6mIlA098605
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:25 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2t0p9rq335-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:19 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5C6nIWM030934
-        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:18 GMT
-Subject: [PATCH 2/9] xfs: rename bulkstat functions
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:25 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5C6nOG4014786
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:24 GMT
+Subject: [PATCH 3/9] xfs: introduce new v5 bulkstat structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 11 Jun 2019 23:49:17 -0700
-Message-ID: <156032215702.3774581.162933705652978520.stgit@magnolia>
+Date: Tue, 11 Jun 2019 23:49:23 -0700
+Message-ID: <156032216323.3774581.1704774190336020486.stgit@magnolia>
 In-Reply-To: <156032214432.3774581.1304900948974476604.stgit@magnolia>
 References: <156032214432.3774581.1304900948974476604.stgit@magnolia>
 MIME-Version: 1.0
@@ -37,162 +37,325 @@ Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Rename the bulkstat functions to 'fsbulkstat' so that they match the
-ioctl names.  We will be introducing a new set of bulkstat/inumbers
-ioctls soon, and it will be important to keep the names straight.
+Introduce a new version of the in-core bulkstat structure that supports
+our new v5 format features.  This structure also fills the gaps in the
+previous structure.  We leave wiring up the ioctls for the next patch.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c   |   14 +++++++-------
- fs/xfs/xfs_ioctl.h   |    5 +++--
- fs/xfs/xfs_ioctl32.c |   18 +++++++++---------
- 3 files changed, 19 insertions(+), 18 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h     |   48 ++++++++++++++++++++++++++++++-
+ fs/xfs/libxfs/xfs_health.h |    2 +
+ fs/xfs/xfs_health.c        |    2 +
+ fs/xfs/xfs_ioctl.c         |    9 ++++--
+ fs/xfs/xfs_ioctl.h         |    2 +
+ fs/xfs/xfs_ioctl32.c       |   10 ++++--
+ fs/xfs/xfs_itable.c        |   69 +++++++++++++++++++++++++++++++++-----------
+ fs/xfs/xfs_itable.h        |    4 ++-
+ fs/xfs/xfs_ondisk.h        |    2 +
+ 9 files changed, 120 insertions(+), 28 deletions(-)
 
 
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index ef0dce229fa4..132e364eb141 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -358,6 +358,52 @@ struct xfs_bstat {
+ 	__u16		bs_aextents;	/* attribute number of extents	*/
+ };
+ 
++/* New bulkstat structure that reports v5 features and fixes padding issues */
++struct xfs_bulkstat {
++	uint64_t	bs_ino;		/* inode number			*/
++	uint64_t	bs_size;	/* file size			*/
++
++	uint64_t	bs_blocks;	/* number of blocks		*/
++	uint64_t	bs_xflags;	/* extended flags		*/
++
++	uint64_t	bs_atime;	/* access time, seconds		*/
++	uint64_t	bs_mtime;	/* modify time, seconds		*/
++
++	uint64_t	bs_ctime;	/* inode change time, seconds	*/
++	uint64_t	bs_btime;	/* creation time, seconds	*/
++
++	uint32_t	bs_gen;		/* generation count		*/
++	uint32_t	bs_uid;		/* user id			*/
++	uint32_t	bs_gid;		/* group id			*/
++	uint32_t	bs_projectid;	/* project id			*/
++
++	uint32_t	bs_atime_nsec;	/* access time, nanoseconds	*/
++	uint32_t	bs_mtime_nsec;	/* modify time, nanoseconds	*/
++	uint32_t	bs_ctime_nsec;	/* inode change time, nanoseconds */
++	uint32_t	bs_btime_nsec;	/* creation time, nanoseconds	*/
++
++	uint32_t	bs_blksize;	/* block size			*/
++	uint32_t	bs_rdev;	/* device value			*/
++	uint32_t	bs_cowextsize_blks; /* cow extent size hint, blocks */
++	uint32_t	bs_extsize_blks; /* extent size hint, blocks	*/
++
++	uint32_t	bs_nlink;	/* number of links		*/
++	uint32_t	bs_extents;	/* number of extents		*/
++	uint32_t	bs_aextents;	/* attribute number of extents	*/
++	uint16_t	bs_version;	/* structure version		*/
++	uint16_t	bs_forkoff;	/* inode fork offset in bytes	*/
++
++	uint16_t	bs_sick;	/* sick inode metadata		*/
++	uint16_t	bs_checked;	/* checked inode metadata	*/
++	uint16_t	bs_mode;	/* type and mode		*/
++	uint16_t	bs_pad2;	/* zeroed			*/
++
++	uint64_t	bs_pad[7];	/* zeroed			*/
++};
++
++#define XFS_BULKSTAT_VERSION_V1	(1)
++#define XFS_BULKSTAT_VERSION_V5	(5)
++
+ /* bs_sick flags */
+ #define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
+ #define XFS_BS_SICK_BMBTD	(1 << 1)  /* data fork */
+@@ -374,7 +420,7 @@ struct xfs_bstat {
+  * to retain compatibility with "old" filesystems).
+  */
+ static inline uint32_t
+-bstat_get_projid(struct xfs_bstat *bs)
++bstat_get_projid(const struct xfs_bstat *bs)
+ {
+ 	return (uint32_t)bs->bs_projid_hi << 16 | bs->bs_projid_lo;
+ }
+diff --git a/fs/xfs/libxfs/xfs_health.h b/fs/xfs/libxfs/xfs_health.h
+index 49ddfeac19f2..272005ac8c88 100644
+--- a/fs/xfs/libxfs/xfs_health.h
++++ b/fs/xfs/libxfs/xfs_health.h
+@@ -185,6 +185,6 @@ xfs_inode_is_healthy(struct xfs_inode *ip)
+ 
+ void xfs_fsop_geom_health(struct xfs_mount *mp, struct xfs_fsop_geom *geo);
+ void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo);
+-void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bstat *bs);
++void xfs_bulkstat_health(struct xfs_inode *ip, struct xfs_bulkstat *bs);
+ 
+ #endif	/* __XFS_HEALTH_H__ */
+diff --git a/fs/xfs/xfs_health.c b/fs/xfs/xfs_health.c
+index 4c4929f9e7bf..e8ba6034b0db 100644
+--- a/fs/xfs/xfs_health.c
++++ b/fs/xfs/xfs_health.c
+@@ -373,7 +373,7 @@ static const struct ioctl_sick_map ino_map[] = {
+ void
+ xfs_bulkstat_health(
+ 	struct xfs_inode		*ip,
+-	struct xfs_bstat		*bs)
++	struct xfs_bulkstat		*bs)
+ {
+ 	const struct ioctl_sick_map	*m;
+ 	unsigned int			sick;
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 34b38d8e8dc9..5e0476003763 100644
+index 5e0476003763..0b8c631d53dd 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -724,7 +724,7 @@ xfs_ioc_space(
- 
+@@ -725,10 +725,13 @@ xfs_ioc_space(
  /* Return 0 on success or positive error */
  int
--xfs_bulkstat_one_fmt(
-+xfs_fsbulkstat_one_fmt(
- 	struct xfs_ibulk	*breq,
- 	const struct xfs_bstat	*bstat)
+ xfs_fsbulkstat_one_fmt(
+-	struct xfs_ibulk	*breq,
+-	const struct xfs_bstat	*bstat)
++	struct xfs_ibulk		*breq,
++	const struct xfs_bulkstat	*bstat)
  {
-@@ -734,7 +734,7 @@ xfs_bulkstat_one_fmt(
+-	if (copy_to_user(breq->ubuffer, bstat, sizeof(*bstat)))
++	struct xfs_bstat		bs1;
++
++	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
++	if (copy_to_user(breq->ubuffer, &bs1, sizeof(bs1)))
+ 		return -EFAULT;
+ 	return xfs_ibulk_advance(breq, sizeof(struct xfs_bstat));
  }
- 
- int
--xfs_inumbers_fmt(
-+xfs_fsinumbers_fmt(
- 	struct xfs_ibulk	*breq,
- 	const struct xfs_inogrp	*igrp)
- {
-@@ -744,7 +744,7 @@ xfs_inumbers_fmt(
- }
- 
- STATIC int
--xfs_ioc_bulkstat(
-+xfs_ioc_fsbulkstat(
- 	xfs_mount_t		*mp,
- 	unsigned int		cmd,
- 	void			__user *arg)
-@@ -794,16 +794,16 @@ xfs_ioc_bulkstat(
- 	 */
- 	if (cmd == XFS_IOC_FSINUMBERS) {
- 		breq.startino = lastino ? lastino + 1 : 0;
--		error = xfs_inumbers(&breq, xfs_inumbers_fmt);
-+		error = xfs_inumbers(&breq, xfs_fsinumbers_fmt);
- 		lastino = breq.startino - 1;
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE) {
- 		breq.startino = lastino;
- 		breq.icount = 1;
--		error = xfs_bulkstat_one(&breq, xfs_bulkstat_one_fmt);
-+		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
- 		lastino = breq.startino;
- 	} else {	/* XFS_IOC_FSBULKSTAT */
- 		breq.startino = lastino ? lastino + 1 : 0;
--		error = xfs_bulkstat(&breq, xfs_bulkstat_one_fmt);
-+		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
- 		lastino = breq.startino - 1;
- 	}
- 
-@@ -1983,7 +1983,7 @@ xfs_file_ioctl(
- 	case XFS_IOC_FSBULKSTAT_SINGLE:
- 	case XFS_IOC_FSBULKSTAT:
- 	case XFS_IOC_FSINUMBERS:
--		return xfs_ioc_bulkstat(mp, cmd, arg);
-+		return xfs_ioc_fsbulkstat(mp, cmd, arg);
- 
- 	case XFS_IOC_FSGEOMETRY_V1:
- 		return xfs_ioc_fsgeometry(mp, arg, 3);
 diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-index fb303eaa8863..cb34bc821201 100644
+index cb34bc821201..514d3028a134 100644
 --- a/fs/xfs/xfs_ioctl.h
 +++ b/fs/xfs/xfs_ioctl.h
-@@ -81,7 +81,8 @@ struct xfs_ibulk;
- struct xfs_bstat;
+@@ -82,7 +82,7 @@ struct xfs_bstat;
  struct xfs_inogrp;
  
--int xfs_bulkstat_one_fmt(struct xfs_ibulk *breq, const struct xfs_bstat *bstat);
--int xfs_inumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
-+int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
-+			   const struct xfs_bstat *bstat);
-+int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
+ int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
+-			   const struct xfs_bstat *bstat);
++			   const struct xfs_bulkstat *bstat);
+ int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
  
  #endif
 diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index d69bff304768..464114439a5d 100644
+index 464114439a5d..ecc8109a3e96 100644
 --- a/fs/xfs/xfs_ioctl32.c
 +++ b/fs/xfs/xfs_ioctl32.c
-@@ -86,7 +86,7 @@ xfs_compat_growfs_rt_copyin(
- }
- 
- STATIC int
--xfs_inumbers_fmt_compat(
-+xfs_fsinumbers_fmt_compat(
- 	struct xfs_ibulk	*breq,
- 	const struct xfs_inogrp	*igrp)
- {
-@@ -101,7 +101,7 @@ xfs_inumbers_fmt_compat(
- }
- 
- #else
--#define xfs_inumbers_fmt_compat xfs_inumbers_fmt
-+#define xfs_fsinumbers_fmt_compat xfs_fsinumbers_fmt
- #endif	/* BROKEN_X86_ALIGNMENT */
- 
- STATIC int
-@@ -171,7 +171,7 @@ xfs_bstime_store_compat(
- 
+@@ -172,10 +172,14 @@ xfs_bstime_store_compat(
  /* Return 0 on success or positive error (to xfs_bulkstat()) */
  STATIC int
--xfs_bulkstat_one_fmt_compat(
-+xfs_fsbulkstat_one_fmt_compat(
- 	struct xfs_ibulk	*breq,
- 	const struct xfs_bstat	*buffer)
+ xfs_fsbulkstat_one_fmt_compat(
+-	struct xfs_ibulk	*breq,
+-	const struct xfs_bstat	*buffer)
++	struct xfs_ibulk		*breq,
++	const struct xfs_bulkstat	*bstat)
  {
-@@ -206,7 +206,7 @@ xfs_bulkstat_one_fmt_compat(
+-	struct compat_xfs_bstat	__user *p32 = breq->ubuffer;
++	struct compat_xfs_bstat	__user	*p32 = breq->ubuffer;
++	struct xfs_bstat		bs1;
++	struct xfs_bstat		*buffer = &bs1;
++
++	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
  
- /* copied from xfs_ioctl.c */
- STATIC int
--xfs_compat_ioc_bulkstat(
-+xfs_compat_ioc_fsbulkstat(
- 	xfs_mount_t		  *mp,
- 	unsigned int		  cmd,
- 	struct compat_xfs_fsop_bulkreq __user *p32)
-@@ -226,8 +226,8 @@ xfs_compat_ioc_bulkstat(
- 	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
- 	 * functions and structure size are the correct ones to use ...
+ 	if (put_user(buffer->bs_ino,	  &p32->bs_ino)		||
+ 	    put_user(buffer->bs_mode,	  &p32->bs_mode)	||
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index b2f640ecb507..7993566bd4a1 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -25,7 +25,7 @@
+  * Bulk Stat
+  * =========
+  *
+- * Use the inode walking functions to fill out struct xfs_bstat for every
++ * Use the inode walking functions to fill out struct xfs_bulkstat for every
+  * allocated inode, then pass the stat information to some externally provided
+  * iteration function.
+  */
+@@ -33,7 +33,7 @@
+ struct xfs_bstat_chunk {
+ 	bulkstat_one_fmt_pf	formatter;
+ 	struct xfs_ibulk	*breq;
+-	struct xfs_bstat	*buf;
++	struct xfs_bulkstat	*buf;
+ };
+ 
+ /*
+@@ -63,7 +63,7 @@ xfs_bulkstat_one_int(
+ 	struct xfs_icdinode	*dic;		/* dinode core info pointer */
+ 	struct xfs_inode	*ip;		/* incore inode pointer */
+ 	struct inode		*inode;
+-	struct xfs_bstat	*buf = bc->buf;
++	struct xfs_bulkstat	*buf = bc->buf;
+ 	int			error = -EINVAL;
+ 
+ 	if (xfs_internal_inum(mp, ino))
+@@ -86,37 +86,35 @@ xfs_bulkstat_one_int(
+ 	/* xfs_iget returns the following without needing
+ 	 * further change.
  	 */
--	inumbers_fmt_pf		inumbers_func = xfs_inumbers_fmt_compat;
--	bulkstat_one_fmt_pf	bs_one_func = xfs_bulkstat_one_fmt_compat;
-+	inumbers_fmt_pf		inumbers_func = xfs_fsinumbers_fmt_compat;
-+	bulkstat_one_fmt_pf	bs_one_func = xfs_fsbulkstat_one_fmt_compat;
+-	buf->bs_projid_lo = dic->di_projid_lo;
+-	buf->bs_projid_hi = dic->di_projid_hi;
++	buf->bs_projectid = xfs_get_projid(ip);
+ 	buf->bs_ino = ino;
+ 	buf->bs_uid = dic->di_uid;
+ 	buf->bs_gid = dic->di_gid;
+ 	buf->bs_size = dic->di_size;
  
- #ifdef CONFIG_X86_X32
- 	if (in_x32_syscall()) {
-@@ -239,8 +239,8 @@ xfs_compat_ioc_bulkstat(
- 		 * the data written out in compat layout will not match what
- 		 * x32 userspace expects.
- 		 */
--		inumbers_func = xfs_inumbers_fmt;
--		bs_one_func = xfs_bulkstat_one_fmt;
-+		inumbers_func = xfs_fsinumbers_fmt;
-+		bs_one_func = xfs_fsbulkstat_one_fmt;
+ 	buf->bs_nlink = inode->i_nlink;
+-	buf->bs_atime.tv_sec = inode->i_atime.tv_sec;
+-	buf->bs_atime.tv_nsec = inode->i_atime.tv_nsec;
+-	buf->bs_mtime.tv_sec = inode->i_mtime.tv_sec;
+-	buf->bs_mtime.tv_nsec = inode->i_mtime.tv_nsec;
+-	buf->bs_ctime.tv_sec = inode->i_ctime.tv_sec;
+-	buf->bs_ctime.tv_nsec = inode->i_ctime.tv_nsec;
++	buf->bs_atime = inode->i_atime.tv_sec;
++	buf->bs_atime_nsec = inode->i_atime.tv_nsec;
++	buf->bs_mtime = inode->i_mtime.tv_sec;
++	buf->bs_mtime_nsec = inode->i_mtime.tv_nsec;
++	buf->bs_ctime = inode->i_ctime.tv_sec;
++	buf->bs_ctime_nsec = inode->i_ctime.tv_nsec;
++	buf->bs_btime = dic->di_crtime.t_sec;
++	buf->bs_btime_nsec = dic->di_crtime.t_nsec;
+ 	buf->bs_gen = inode->i_generation;
+ 	buf->bs_mode = inode->i_mode;
+ 
+ 	buf->bs_xflags = xfs_ip2xflags(ip);
+-	buf->bs_extsize = dic->di_extsize << mp->m_sb.sb_blocklog;
++	buf->bs_extsize_blks = dic->di_extsize;
+ 	buf->bs_extents = dic->di_nextents;
+-	memset(buf->bs_pad, 0, sizeof(buf->bs_pad));
+ 	xfs_bulkstat_health(ip, buf);
+-	buf->bs_dmevmask = dic->di_dmevmask;
+-	buf->bs_dmstate = dic->di_dmstate;
+ 	buf->bs_aextents = dic->di_anextents;
+ 	buf->bs_forkoff = XFS_IFORK_BOFF(ip);
++	buf->bs_version = XFS_BULKSTAT_VERSION_V5;
+ 
+ 	if (dic->di_version == 3) {
+ 		if (dic->di_flags2 & XFS_DIFLAG2_COWEXTSIZE)
+-			buf->bs_cowextsize = dic->di_cowextsize <<
+-					mp->m_sb.sb_blocklog;
++			buf->bs_cowextsize_blks = dic->di_cowextsize;
  	}
- #endif
  
-@@ -670,7 +670,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_FSBULKSTAT_32:
- 	case XFS_IOC_FSBULKSTAT_SINGLE_32:
- 	case XFS_IOC_FSINUMBERS_32:
--		return xfs_compat_ioc_bulkstat(mp, cmd, arg);
-+		return xfs_compat_ioc_fsbulkstat(mp, cmd, arg);
- 	case XFS_IOC_FD_TO_HANDLE_32:
- 	case XFS_IOC_PATH_TO_HANDLE_32:
- 	case XFS_IOC_PATH_TO_FSHANDLE_32: {
+ 	switch (dic->di_format) {
+@@ -269,6 +267,43 @@ xfs_bulkstat(
+ 	return error;
+ }
+ 
++/* Convert bulkstat (v5) to bstat (v1). */
++void
++xfs_bulkstat_to_bstat(
++	struct xfs_mount		*mp,
++	struct xfs_bstat		*bs1,
++	const struct xfs_bulkstat	*bstat)
++{
++	bs1->bs_ino = bstat->bs_ino;
++	bs1->bs_mode = bstat->bs_mode;
++	bs1->bs_nlink = bstat->bs_nlink;
++	bs1->bs_uid = bstat->bs_uid;
++	bs1->bs_gid = bstat->bs_gid;
++	bs1->bs_rdev = bstat->bs_rdev;
++	bs1->bs_blksize = bstat->bs_blksize;
++	bs1->bs_size = bstat->bs_size;
++	bs1->bs_atime.tv_sec = bstat->bs_atime;
++	bs1->bs_mtime.tv_sec = bstat->bs_mtime;
++	bs1->bs_ctime.tv_sec = bstat->bs_ctime;
++	bs1->bs_atime.tv_nsec = bstat->bs_atime_nsec;
++	bs1->bs_mtime.tv_nsec = bstat->bs_mtime_nsec;
++	bs1->bs_ctime.tv_nsec = bstat->bs_ctime_nsec;
++	bs1->bs_blocks = bstat->bs_blocks;
++	bs1->bs_xflags = bstat->bs_xflags;
++	bs1->bs_extsize = bstat->bs_extsize_blks << mp->m_sb.sb_blocklog;
++	bs1->bs_extents = bstat->bs_extents;
++	bs1->bs_gen = bstat->bs_gen;
++	bs1->bs_projid_lo = bstat->bs_projectid & 0xFFFF;
++	bs1->bs_forkoff = bstat->bs_forkoff;
++	bs1->bs_projid_hi = bstat->bs_projectid >> 16;
++	bs1->bs_sick = bstat->bs_sick;
++	bs1->bs_checked = bstat->bs_checked;
++	bs1->bs_cowextsize = bstat->bs_cowextsize_blks << mp->m_sb.sb_blocklog;
++	bs1->bs_dmevmask = 0;
++	bs1->bs_dmstate = 0;
++	bs1->bs_aextents = bstat->bs_aextents;
++}
++
+ struct xfs_inumbers_chunk {
+ 	inumbers_fmt_pf		formatter;
+ 	struct xfs_ibulk	*breq;
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index 1e1a5bb9fd9f..e2a448f69e24 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -41,10 +41,12 @@ xfs_ibulk_advance(
+  */
+ 
+ typedef int (*bulkstat_one_fmt_pf)(struct xfs_ibulk *breq,
+-		const struct xfs_bstat *bstat);
++		const struct xfs_bulkstat *bstat);
+ 
+ int xfs_bulkstat_one(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
+ int xfs_bulkstat(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
++void xfs_bulkstat_to_bstat(struct xfs_mount *mp, struct xfs_bstat *bs1,
++		const struct xfs_bulkstat *bstat);
+ 
+ typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
+ 		const struct xfs_inogrp *igrp);
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index c8ba98fae30a..0b4cdda68524 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -146,6 +146,8 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_OFFSET(struct xfs_dir3_data_hdr, hdr.magic,	0);
+ 	XFS_CHECK_OFFSET(struct xfs_dir3_free, hdr.hdr.magic,	0);
+ 	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
++
++	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
+ }
+ 
+ #endif /* __XFS_ONDISK_H */
