@@ -1,127 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:36677 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726013AbfFAHWD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 1 Jun 2019 03:22:03 -0400
-MIME-Version: 1.0
-References: <20190527172655.9287-1-amir73il@gmail.com> <20190528202659.GA12412@mit.edu>
- <CAOQ4uxgo5jmwQbLAKQre9=7pLQw=CwMgDaWPaJxi-5NGnPEVPQ@mail.gmail.com>
- <CAOQ4uxgj94WR82iHE4PDGSD0UDxG5sCtr+Sv+t1sOHHmnXFYzQ@mail.gmail.com>
- <20190531164136.GA3066@mit.edu> <20190531224549.GF29573@dread.disaster.area>
-In-Reply-To: <20190531224549.GF29573@dread.disaster.area>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Sat, 1 Jun 2019 10:21:49 +0300
-Message-ID: <CAOQ4uxjeGxNsjT9N_X6W+mVbvn2kTaoeLE-tXVYq0-3MwC_+Xg@mail.gmail.com>
-Subject: Re: [RFC][PATCH] link.2: AT_ATOMIC_DATA and AT_ATOMIC_METADATA
-Content-Type: text/plain; charset="UTF-8"
+Received: from out30-132.freemail.mail.aliyun.com ([115.124.30.132]:58540 "EHLO
+        out30-132.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731018AbfFLGYl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:24:41 -0400
+From: Alvin@linux.alibaba.com
+Subject: [PATCH] Fix the inconsistency between the code and the manual page of mkfs.xfs
+Date: Wed, 12 Jun 2019 14:23:29 +0800
+Message-Id: <1560320609-6336-1-git-send-email-Alvin@linux.alibaba.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Jan Kara <jack@suse.cz>, "Darrick J . Wong" <darrick.wong@oracle.com>, Chris Mason <clm@fb.com>, Al Viro <viro@zeniv.linux.org.uk>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>, Linux API <linux-api@vger.kernel.org>, Ric Wheeler <rwheeler@redhat.com>
+To: linux-xfs@vger.kernel.org
+Cc: caspar@linux.alibaba.com, Alvin Zheng <Alvin@linux.alibaba.com>
 
-On Sat, Jun 1, 2019 at 1:46 AM Dave Chinner <david@fromorbit.com> wrote:
->
-> On Fri, May 31, 2019 at 12:41:36PM -0400, Theodore Ts'o wrote:
-> > On Fri, May 31, 2019 at 06:21:45PM +0300, Amir Goldstein wrote:
-> > > What do you think of:
-> > >
-> > > "AT_ATOMIC_DATA (since Linux 5.x)
-> > > A filesystem which accepts this flag will guarantee that if the linked file
-> > > name exists after a system crash, then all of the data written to the file
-> > > and all of the file's metadata at the time of the linkat(2) call will be
-> > > visible.
-> >
-> > ".... will be visible after the the file system is remounted".  (Never
-> > hurts to be explicit.)
-> >
-> > > The way to achieve this guarantee on old kernels is to call fsync (2)
-> > > before linking the file, but doing so will also results in flushing of
-> > > volatile disk caches.
-> > >
-> > > A filesystem which accepts this flag does NOT
-> > > guarantee that any of the file hardlinks will exist after a system crash,
-> > > nor that the last observed value of st_nlink (see stat (2)) will persist."
-> > >
-> >
-> > This is I think more precise:
-> >
-> >     This guarantee can be achieved by calling fsync(2) before linking
-> >     the file, but there may be more performant ways to provide these
-> >     semantics.  In particular, note that the use of the AT_ATOMIC_DATA
-> >     flag does *not* guarantee that the new link created by linkat(2)
-> >     will be persisted after a crash.
->
-> So here's the *implementation* problem I see with this definition of
-> AT_ATOMIC_DATA. After linkat(dirfd, name, AT_ATOMIC_DATA), there is
-> no guarantee that the data is on disk or that the link is present.
->
-> However:
->
->         linkat(dirfd, name, AT_ATOMIC_DATA);
->         fsync(dirfd);
->
-> Suddenly changes all that.
->
-> i.e. when we fsync(dirfd) we guarantee that "name" is present in the
-> directory and because we used AT_ATOMIC_DATA it implies that the
-> data pointed to by "name" must be present on disk. IOWs, what was
-> once a pure directory sync operation now *must* fsync all the child
-> inodes that have been linkat(AT_ATOMIC_DATA) since the last time the
-> direct has been made stable.
->
-> IOWs, the described AT_ATOMIC_DATA "we don't have to write the data
-> during linkat() go-fast-get-out-of-gaol-free" behaviour isn't worth
-> the pixels it is written on - it just moves all the complexity to
-> directory fsync, and that's /already/ a behavioural minefield.
+From: Alvin Zheng <Alvin@linux.alibaba.com>
 
-Where does it say we don't have to write the data during linkat()?
-I was only talking about avoid FLUSH/FUA caused by fsync().
-I wrote in commit message:
-"First implementation of AT_ATOMIC_DATA is expected to be
-filemap_write_and_wait() for xfs/ext4 and probably fdatasync for btrfs."
+Signed-off-by: Alvin Zheng <Alvin@linux.alibaba.com>
+---
+ man/man8/mkfs.xfs.8 | 12 +-----------
+ 1 file changed, 1 insertion(+), 11 deletions(-)
 
-I failed to convey the reasoning for this flag to you.
-It is *not* about the latency of the "atomic link" for the calling thread
-It is about not interfering with other workloads running at the same time.
-
->
-> IMO, the "work-around" of forcing filesystems to write back
-> destination inodes during a link() operation is just nasty and will
-> just end up with really weird performance anomalies occurring in
-> production systems. That's not really a solution, either, especially
-> as it is far, far faster for applications to use AIO_FSYNC and then
-> on the completion callback run a normal linkat() operation...
->
-> Hence, if I've understood these correctly, then I'll be recommending
-> that XFS follows this:
->
-> > We should also document that a file system which does not implement
-> > this flag MUST return EINVAL if it is passed this flag to linkat(2).
->
-> and returns -EINVAL to these flags because we do not have the change
-> tracking infrastructure to handle these directory fsync semantics.
-> I also suspect that, even if we could track this efficiently, we
-> can't do the flushing atomically because of locking order
-> constraints between directories, regular files, pages in the page
-> cache, etc.
-
-That is not at all what I had in mind for XFS with the flag.
-
->
-> Given that we can already use AIO to provide this sort of ordering,
-> and AIO is vastly faster than synchronous IO, I don't see any point
-> in adding complex barrier interfaces that can be /easily implemented
-> in userspace/ using existing AIO primitives. You should start
-> thinking about expanding libaio with stuff like
-> "link_after_fdatasync()" and suddenly the whole problem of
-> filesystem data vs metadata ordering goes away because the
-> application directly controls all ordering without blocking and
-> doesn't need to care what the filesystem under it does....
->
-
-OK. I can work with that. It's not that simple, but I will reply on
-your next email, where you wrote more about this alternative.
-
-Thanks,
-Amir.
+diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
+index 4b8c78c..45d7a84 100644
+--- a/man/man8/mkfs.xfs.8
++++ b/man/man8/mkfs.xfs.8
+@@ -115,9 +115,7 @@ When specifying parameters in units of sectors or filesystem blocks, the
+ .B \-s
+ option or the
+ .B \-b
+-option first needs to be added to the command line.
+-Failure to specify the size of the units will result in illegal value errors
+-when parameters are quantified in those units.
++option can be used to specify the size of the sector or block. If the size of the block or sector is not specified, the default size (block: 4KiB, sector: 512B) will be used.
+ .PP
+ Many feature options allow an optional argument of 0 or 1, to explicitly
+ disable or enable the functionality.
+@@ -136,10 +134,6 @@ The filesystem block size is specified with a
+ in bytes. The default value is 4096 bytes (4 KiB), the minimum is 512, and the
+ maximum is 65536 (64 KiB).
+ .IP
+-To specify any options on the command line in units of filesystem blocks, this
+-option must be specified first so that the filesystem block size is
+-applied consistently to all options.
+-.IP
+ Although
+ .B mkfs.xfs
+ will accept any of these values and create a valid filesystem,
+@@ -894,10 +888,6 @@ is 512 bytes. The minimum value for sector size is
+ .I sector_size
+ must be a power of 2 size and cannot be made larger than the
+ filesystem block size.
+-.IP
+-To specify any options on the command line in units of sectors, this
+-option must be specified first so that the sector size is
+-applied consistently to all options.
+ .RE
+ .TP
+ .BI \-L " label"
+-- 
+1.8.3.1
