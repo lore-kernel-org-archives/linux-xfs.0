@@ -1,14 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:34058 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:34176 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726783AbfFLGtJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:49:09 -0400
-Subject: [PATCH 12/14] xfs: refactor INUMBERS to use iwalk functions
+        with ESMTP id S1726783AbfFLGtO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:49:14 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5C6nDCa055593
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:13 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2t05nqsbun-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:13 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5C6msTS049361
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:12 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2t04hyrwtr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:12 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5C6nCw8019329
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 06:49:12 GMT
+Subject: [PATCH 1/9] xfs: remove various bulk request typedef usage
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 11 Jun 2019 23:48:49 -0700
-Message-ID: <156032212910.3774243.13112993369352430725.stgit@magnolia>
-In-Reply-To: <156032205136.3774243.15725828509940520561.stgit@magnolia>
-References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
+Date: Tue, 11 Jun 2019 23:49:10 -0700
+Message-ID: <156032215069.3774581.2889208827415117467.stgit@magnolia>
+In-Reply-To: <156032214432.3774581.1304900948974476604.stgit@magnolia>
+References: <156032214432.3774581.1304900948974476604.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,357 +33,185 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we have generic functions to walk inode records, refactor the
-INUMBERS implementation to use it.
+Remove xfs_bstat_t, xfs_fsop_bulkreq_t, xfs_inogrp_t, and similarly
+named compat typedefs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c   |   20 ++++--
- fs/xfs/xfs_ioctl.h   |    2 +
- fs/xfs/xfs_ioctl32.c |   35 ++++-------
- fs/xfs/xfs_itable.c  |  166 +++++++++++++++++++-------------------------------
- fs/xfs/xfs_itable.h  |   22 +------
- 5 files changed, 95 insertions(+), 150 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h |   16 ++++++++--------
+ fs/xfs/xfs_ioctl.c     |    2 +-
+ fs/xfs/xfs_ioctl32.c   |   11 +++++++----
+ fs/xfs/xfs_ioctl32.h   |   14 +++++++-------
+ 4 files changed, 23 insertions(+), 20 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 60595e61f2a6..04b661ff0799 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -733,6 +733,16 @@ xfs_bulkstat_one_fmt(
- 	return xfs_ibulk_advance(breq, sizeof(struct xfs_bstat));
- }
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index e7382c780ed7..ef0dce229fa4 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -97,7 +97,7 @@ struct getbmapx {
+  * For use by backup and restore programs to set the XFS on-disk inode
+  * fields di_dmevmask and di_dmstate.  These must be set to exactly and
+  * only values previously obtained via xfs_bulkstat!  (Specifically the
+- * xfs_bstat_t fields bs_dmevmask and bs_dmstate.)
++ * struct xfs_bstat fields bs_dmevmask and bs_dmstate.)
+  */
+ #ifndef HAVE_FSDMIDATA
+ struct fsdmidata {
+@@ -328,7 +328,7 @@ typedef struct xfs_bstime {
+ 	__s32		tv_nsec;	/* and nanoseconds	*/
+ } xfs_bstime_t;
  
-+int
-+xfs_inumbers_fmt(
-+	struct xfs_ibulk	*breq,
-+	const struct xfs_inogrp	*igrp)
-+{
-+	if (copy_to_user(breq->ubuffer, igrp, sizeof(*igrp)))
-+		return -EFAULT;
-+	return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
-+}
-+
- STATIC int
- xfs_ioc_bulkstat(
- 	xfs_mount_t		*mp,
-@@ -783,13 +793,9 @@ xfs_ioc_bulkstat(
- 	 * in filesystem".
- 	 */
- 	if (cmd == XFS_IOC_FSINUMBERS) {
--		int	count = breq.icount;
--
--		breq.startino = lastino;
--		error = xfs_inumbers(mp, &breq.startino, &count,
--					bulkreq.ubuffer, xfs_inumbers_fmt);
--		breq.ocount = count;
--		lastino = breq.startino;
-+		breq.startino = lastino ? lastino + 1 : 0;
-+		error = xfs_inumbers(&breq, xfs_inumbers_fmt);
-+		lastino = breq.startino - 1;
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE) {
- 		breq.startino = lastino;
- 		breq.icount = 1;
-diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-index f32c8aadfeba..fb303eaa8863 100644
---- a/fs/xfs/xfs_ioctl.h
-+++ b/fs/xfs/xfs_ioctl.h
-@@ -79,7 +79,9 @@ xfs_set_dmattrs(
- 
- struct xfs_ibulk;
- struct xfs_bstat;
-+struct xfs_inogrp;
- 
- int xfs_bulkstat_one_fmt(struct xfs_ibulk *breq, const struct xfs_bstat *bstat);
-+int xfs_inumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
- 
- #endif
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 5d1c143bac18..3ca8ff9d4ac7 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -87,22 +87,17 @@ xfs_compat_growfs_rt_copyin(
- 
- STATIC int
- xfs_inumbers_fmt_compat(
--	void			__user *ubuffer,
--	const struct xfs_inogrp	*buffer,
--	long			count,
--	long			*written)
-+	struct xfs_ibulk	*breq,
-+	const struct xfs_inogrp	*igrp)
- {
--	compat_xfs_inogrp_t	__user *p32 = ubuffer;
--	long			i;
-+	struct compat_xfs_inogrp __user *p32 = breq->ubuffer;
- 
--	for (i = 0; i < count; i++) {
--		if (put_user(buffer[i].xi_startino,   &p32[i].xi_startino) ||
--		    put_user(buffer[i].xi_alloccount, &p32[i].xi_alloccount) ||
--		    put_user(buffer[i].xi_allocmask,  &p32[i].xi_allocmask))
--			return -EFAULT;
--	}
--	*written = count * sizeof(*p32);
--	return 0;
-+	if (put_user(igrp->xi_startino,   &p32->xi_startino) ||
-+	    put_user(igrp->xi_alloccount, &p32->xi_alloccount) ||
-+	    put_user(igrp->xi_allocmask,  &p32->xi_allocmask))
-+		return -EFAULT;
-+
-+	return xfs_ibulk_advance(breq, sizeof(struct compat_xfs_inogrp));
- }
- 
- #else
-@@ -228,7 +223,7 @@ xfs_compat_ioc_bulkstat(
- 	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
- 	 * functions and structure size are the correct ones to use ...
- 	 */
--	inumbers_fmt_pf inumbers_func = xfs_inumbers_fmt_compat;
-+	inumbers_fmt_pf		inumbers_func = xfs_inumbers_fmt_compat;
- 	bulkstat_one_fmt_pf	bs_one_func = xfs_bulkstat_one_fmt_compat;
- 
- #ifdef CONFIG_X86_X32
-@@ -291,13 +286,9 @@ xfs_compat_ioc_bulkstat(
- 	 * in filesystem".
- 	 */
- 	if (cmd == XFS_IOC_FSINUMBERS_32) {
--		int	count = breq.icount;
--
--		breq.startino = lastino;
--		error = xfs_inumbers(mp, &breq.startino, &count,
--				bulkreq.ubuffer, inumbers_func);
--		breq.ocount = count;
--		lastino = breq.startino;
-+		breq.startino = lastino ? lastino + 1 : 0;
-+		error = xfs_inumbers(&breq, inumbers_func);
-+		lastino = breq.startino - 1;
- 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE_32) {
- 		breq.startino = lastino;
- 		breq.icount = 1;
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 1b3c9feb5f6f..b2f640ecb507 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -269,121 +269,83 @@ xfs_bulkstat(
- 	return error;
- }
- 
--int
--xfs_inumbers_fmt(
--	void			__user *ubuffer, /* buffer to write to */
--	const struct xfs_inogrp	*buffer,	/* buffer to read from */
--	long			count,		/* # of elements to read */
--	long			*written)	/* # of bytes written */
-+struct xfs_inumbers_chunk {
-+	inumbers_fmt_pf		formatter;
-+	struct xfs_ibulk	*breq;
+-typedef struct xfs_bstat {
++struct xfs_bstat {
+ 	__u64		bs_ino;		/* inode number			*/
+ 	__u16		bs_mode;	/* type and mode		*/
+ 	__u16		bs_nlink;	/* number of links		*/
+@@ -356,7 +356,7 @@ typedef struct xfs_bstat {
+ 	__u32		bs_dmevmask;	/* DMIG event mask		*/
+ 	__u16		bs_dmstate;	/* DMIG state info		*/
+ 	__u16		bs_aextents;	/* attribute number of extents	*/
+-} xfs_bstat_t;
 +};
-+
-+/*
-+ * INUMBERS
-+ * ========
-+ * This is how we export inode btree records to userspace, so that XFS tools
-+ * can figure out where inodes are allocated.
-+ */
-+
-+/*
-+ * Format the inode group structure and report it somewhere.
-+ *
-+ * Similar to xfs_bulkstat_one_int, lastino is the inode cursor as we walk
-+ * through the filesystem so we move it forward unless there was a runtime
-+ * error.  If the formatter tells us the buffer is now full we also move the
-+ * cursor forward and abort the walk.
-+ */
-+STATIC int
-+xfs_inumbers_walk(
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	xfs_agnumber_t		agno,
-+	const struct xfs_inobt_rec_incore *irec,
-+	void			*data)
- {
--	if (copy_to_user(ubuffer, buffer, count * sizeof(*buffer)))
--		return -EFAULT;
--	*written = count * sizeof(*buffer);
--	return 0;
-+	struct xfs_inogrp	inogrp = {
-+		.xi_startino	= XFS_AGINO_TO_INO(mp, agno, irec->ir_startino),
-+		.xi_alloccount	= irec->ir_count - irec->ir_freecount,
-+		.xi_allocmask	= ~irec->ir_free,
-+	};
-+	struct xfs_inumbers_chunk *ic = data;
-+	xfs_agino_t		agino;
-+	int			error;
-+
-+	error = ic->formatter(ic->breq, &inogrp);
-+	if (error && error != XFS_IBULK_BUFFER_FULL)
-+		return error;
-+	if (error == XFS_IBULK_BUFFER_FULL)
-+		error = XFS_INOBT_WALK_ABORT;
-+
-+	agino = irec->ir_startino + XFS_INODES_PER_CHUNK;
-+	ic->breq->startino = XFS_AGINO_TO_INO(mp, agno, agino);
-+	return error;
- }
+ 
+ /* bs_sick flags */
+ #define XFS_BS_SICK_INODE	(1 << 0)  /* inode core */
+@@ -382,22 +382,22 @@ bstat_get_projid(struct xfs_bstat *bs)
+ /*
+  * The user-level BulkStat Request interface structure.
+  */
+-typedef struct xfs_fsop_bulkreq {
++struct xfs_fsop_bulkreq {
+ 	__u64		__user *lastip;	/* last inode # pointer		*/
+ 	__s32		icount;		/* count of entries in buffer	*/
+ 	void		__user *ubuffer;/* user buffer for inode desc.	*/
+ 	__s32		__user *ocount;	/* output count pointer		*/
+-} xfs_fsop_bulkreq_t;
++};
+ 
  
  /*
-  * Return inode number table for the filesystem.
+  * Structures returned from xfs_inumbers routine (XFS_IOC_FSINUMBERS).
   */
--int					/* error status */
-+int
- xfs_inumbers(
--	struct xfs_mount	*mp,/* mount point for filesystem */
--	xfs_ino_t		*lastino,/* last inode returned */
--	int			*count,/* size of buffer/count returned */
--	void			__user *ubuffer,/* buffer with inode descriptions */
-+	struct xfs_ibulk	*breq,
- 	inumbers_fmt_pf		formatter)
- {
--	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, *lastino);
--	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, *lastino);
--	struct xfs_btree_cur	*cur = NULL;
--	struct xfs_buf		*agbp = NULL;
--	struct xfs_inogrp	*buffer;
--	int			bcount;
--	int			left = *count;
--	int			bufidx = 0;
-+	struct xfs_inumbers_chunk ic = {
-+		.formatter	= formatter,
-+		.breq		= breq,
-+	};
- 	int			error = 0;
+-typedef struct xfs_inogrp {
++struct xfs_inogrp {
+ 	__u64		xi_startino;	/* starting inode number	*/
+ 	__s32		xi_alloccount;	/* # bits set in allocmask	*/
+ 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
+-} xfs_inogrp_t;
++};
  
--	*count = 0;
--	if (agno >= mp->m_sb.sb_agcount ||
--	    *lastino != XFS_AGINO_TO_INO(mp, agno, agino))
--		return error;
-+	if (xfs_bulkstat_already_done(breq->mp, breq->startino))
-+		return 0;
  
--	bcount = min(left, (int)(PAGE_SIZE / sizeof(*buffer)));
--	buffer = kmem_zalloc(bcount * sizeof(*buffer), KM_SLEEP);
--	do {
--		struct xfs_inobt_rec_incore	r;
--		int				stat;
--
--		if (!agbp) {
--			error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
--			if (error)
--				break;
--
--			cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
--						    XFS_BTNUM_INO);
--			error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_GE,
--						 &stat);
--			if (error)
--				break;
--			if (!stat)
--				goto next_ag;
--		}
--
--		error = xfs_inobt_get_rec(cur, &r, &stat);
--		if (error)
--			break;
--		if (!stat)
--			goto next_ag;
--
--		agino = r.ir_startino + XFS_INODES_PER_CHUNK - 1;
--		buffer[bufidx].xi_startino =
--			XFS_AGINO_TO_INO(mp, agno, r.ir_startino);
--		buffer[bufidx].xi_alloccount = r.ir_count - r.ir_freecount;
--		buffer[bufidx].xi_allocmask = ~r.ir_free;
--		if (++bufidx == bcount) {
--			long	written;
--
--			error = formatter(ubuffer, buffer, bufidx, &written);
--			if (error)
--				break;
--			ubuffer += written;
--			*count += bufidx;
--			bufidx = 0;
--		}
--		if (!--left)
--			break;
--
--		error = xfs_btree_increment(cur, 0, &stat);
--		if (error)
--			break;
--		if (stat)
--			continue;
--
--next_ag:
--		xfs_btree_del_cursor(cur, XFS_BTREE_ERROR);
--		cur = NULL;
--		xfs_buf_relse(agbp);
--		agbp = NULL;
--		agino = 0;
--		agno++;
--	} while (agno < mp->m_sb.sb_agcount);
--
--	if (!error) {
--		if (bufidx) {
--			long	written;
--
--			error = formatter(ubuffer, buffer, bufidx, &written);
--			if (!error)
--				*count += bufidx;
--		}
--		*lastino = XFS_AGINO_TO_INO(mp, agno, agino);
--	}
-+	error = xfs_inobt_walk(breq->mp, NULL, breq->startino,
-+			xfs_inumbers_walk, breq->icount, &ic);
+ /*
+@@ -529,7 +529,7 @@ typedef struct xfs_swapext
+ 	xfs_off_t	sx_offset;	/* offset into file */
+ 	xfs_off_t	sx_length;	/* leng from offset */
+ 	char		sx_pad[16];	/* pad space, unused */
+-	xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
++	struct xfs_bstat sx_stat;	/* stat of target b4 copy */
+ } xfs_swapext_t;
  
--	kmem_free(buffer);
--	if (cur)
--		xfs_btree_del_cursor(cur, error);
--	if (agbp)
--		xfs_buf_relse(agbp);
-+	/*
-+	 * We found some inode groups, so clear the error status and return
-+	 * them.  The lastino pointer will point directly at the inode that
-+	 * triggered any error that occurred, so on the next call the error
-+	 * will be triggered again and propagated to userspace as there will be
-+	 * no formatted inode groups in the buffer.
-+	 */
-+	if (breq->ocount > 0)
-+		error = 0;
+ /*
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 04b661ff0799..34b38d8e8dc9 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -766,7 +766,7 @@ xfs_ioc_bulkstat(
+ 	if (XFS_FORCED_SHUTDOWN(mp))
+ 		return -EIO;
  
- 	return error;
+-	if (copy_from_user(&bulkreq, arg, sizeof(xfs_fsop_bulkreq_t)))
++	if (copy_from_user(&bulkreq, arg, sizeof(struct xfs_fsop_bulkreq)))
+ 		return -EFAULT;
+ 
+ 	if (copy_from_user(&lastino, bulkreq.lastip, sizeof(__s64)))
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index 3ca8ff9d4ac7..d69bff304768 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -118,11 +118,14 @@ xfs_ioctl32_bstime_copyin(
+ 	return 0;
  }
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 328a161b8898..1e1a5bb9fd9f 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -46,25 +46,9 @@ typedef int (*bulkstat_one_fmt_pf)(struct xfs_ibulk *breq,
- int xfs_bulkstat_one(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
- int xfs_bulkstat(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
  
--typedef int (*inumbers_fmt_pf)(
--	void			__user *ubuffer, /* buffer to write to */
--	const xfs_inogrp_t	*buffer,	/* buffer to read from */
--	long			count,		/* # of elements to read */
--	long			*written);	/* # of bytes written */
-+typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
-+		const struct xfs_inogrp *igrp);
+-/* xfs_bstat_t has differing alignment on intel, & bstime_t sizes everywhere */
++/*
++ * struct xfs_bstat has differing alignment on intel, & bstime_t sizes
++ * everywhere
++ */
+ STATIC int
+ xfs_ioctl32_bstat_copyin(
+-	xfs_bstat_t		*bstat,
+-	compat_xfs_bstat_t	__user *bstat32)
++	struct xfs_bstat		*bstat,
++	struct compat_xfs_bstat	__user	*bstat32)
+ {
+ 	if (get_user(bstat->bs_ino,	&bstat32->bs_ino)	||
+ 	    get_user(bstat->bs_mode,	&bstat32->bs_mode)	||
+@@ -206,7 +209,7 @@ STATIC int
+ xfs_compat_ioc_bulkstat(
+ 	xfs_mount_t		  *mp,
+ 	unsigned int		  cmd,
+-	compat_xfs_fsop_bulkreq_t __user *p32)
++	struct compat_xfs_fsop_bulkreq __user *p32)
+ {
+ 	u32			addr;
+ 	struct xfs_fsop_bulkreq	bulkreq;
+diff --git a/fs/xfs/xfs_ioctl32.h b/fs/xfs/xfs_ioctl32.h
+index d28fa824284a..7985344d3aa6 100644
+--- a/fs/xfs/xfs_ioctl32.h
++++ b/fs/xfs/xfs_ioctl32.h
+@@ -36,7 +36,7 @@ typedef struct compat_xfs_bstime {
+ 	__s32		tv_nsec;	/* and nanoseconds	*/
+ } compat_xfs_bstime_t;
  
--int
--xfs_inumbers_fmt(
--	void			__user *ubuffer, /* buffer to write to */
--	const xfs_inogrp_t	*buffer,	/* buffer to read from */
--	long			count,		/* # of elements to read */
--	long			*written);	/* # of bytes written */
--
--int					/* error status */
--xfs_inumbers(
--	xfs_mount_t		*mp,	/* mount point for filesystem */
--	xfs_ino_t		*last,	/* last inode returned */
--	int			*count,	/* size of buffer/count returned */
--	void			__user *buffer, /* buffer with inode info */
--	inumbers_fmt_pf		formatter);
-+int xfs_inumbers(struct xfs_ibulk *breq, inumbers_fmt_pf formatter);
+-typedef struct compat_xfs_bstat {
++struct compat_xfs_bstat {
+ 	__u64		bs_ino;		/* inode number			*/
+ 	__u16		bs_mode;	/* type and mode		*/
+ 	__u16		bs_nlink;	/* number of links		*/
+@@ -61,14 +61,14 @@ typedef struct compat_xfs_bstat {
+ 	__u32		bs_dmevmask;	/* DMIG event mask		*/
+ 	__u16		bs_dmstate;	/* DMIG state info		*/
+ 	__u16		bs_aextents;	/* attribute number of extents	*/
+-} __compat_packed compat_xfs_bstat_t;
++} __compat_packed;
  
- #endif	/* __XFS_ITABLE_H__ */
+-typedef struct compat_xfs_fsop_bulkreq {
++struct compat_xfs_fsop_bulkreq {
+ 	compat_uptr_t	lastip;		/* last inode # pointer		*/
+ 	__s32		icount;		/* count of entries in buffer	*/
+ 	compat_uptr_t	ubuffer;	/* user buffer for inode desc.	*/
+ 	compat_uptr_t	ocount;		/* output count pointer		*/
+-} compat_xfs_fsop_bulkreq_t;
++};
+ 
+ #define XFS_IOC_FSBULKSTAT_32 \
+ 	_IOWR('X', 101, struct compat_xfs_fsop_bulkreq)
+@@ -106,7 +106,7 @@ typedef struct compat_xfs_swapext {
+ 	xfs_off_t		sx_offset;	/* offset into file */
+ 	xfs_off_t		sx_length;	/* leng from offset */
+ 	char			sx_pad[16];	/* pad space, unused */
+-	compat_xfs_bstat_t	sx_stat;	/* stat of target b4 copy */
++	struct compat_xfs_bstat	sx_stat;	/* stat of target b4 copy */
+ } __compat_packed compat_xfs_swapext_t;
+ 
+ #define XFS_IOC_SWAPEXT_32	_IOWR('X', 109, struct compat_xfs_swapext)
+@@ -201,11 +201,11 @@ typedef struct compat_xfs_fsop_geom_v1 {
+ #define XFS_IOC_FSGEOMETRY_V1_32  \
+ 	_IOR('X', 100, struct compat_xfs_fsop_geom_v1)
+ 
+-typedef struct compat_xfs_inogrp {
++struct compat_xfs_inogrp {
+ 	__u64		xi_startino;	/* starting inode number	*/
+ 	__s32		xi_alloccount;	/* # bits set in allocmask	*/
+ 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
+-} __attribute__((packed)) compat_xfs_inogrp_t;
++} __attribute__((packed));
+ 
+ /* These growfs input structures have padding on the end, so must translate */
+ typedef struct compat_xfs_growfs_data {
