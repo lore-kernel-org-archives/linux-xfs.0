@@ -1,172 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:33542 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404861AbfFKRBa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 11 Jun 2019 13:01:30 -0400
-Date: Tue, 11 Jun 2019 13:01:21 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 09/10] xfs: poll waiting for quotacheck
-Message-ID: <20190611170118.GB12395@bfoster>
+Received: from userp2130.oracle.com ([156.151.31.86]:41330 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389700AbfFLRyh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 13:54:37 -0400
+Date: Wed, 12 Jun 2019 10:54:14 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 01/10] xfs: create simplified inode walk function
+Message-ID: <20190612175414.GE3773859@magnolia>
 References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
- <155968502703.1657646.17911228005649046316.stgit@magnolia>
- <20190611150712.GB10942@bfoster>
- <20190611160627.GS1871505@magnolia>
+ <155968497450.1657646.15305138327955918345.stgit@magnolia>
+ <20190610135816.GA6473@bfoster>
+ <20190610165909.GI1871505@magnolia>
+ <20190610175509.GF6473@bfoster>
+ <20190610231134.GM1871505@magnolia>
+ <20190611223341.GD14363@dread.disaster.area>
+ <20190611230514.GU1871505@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: multipart/mixed; boundary="8t9RHnE3ZwKMSgU+"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190611160627.GS1871505@magnolia>
+In-Reply-To: <20190611230514.GU1871505@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 
-On Tue, Jun 11, 2019 at 09:06:27AM -0700, Darrick J. Wong wrote:
-> On Tue, Jun 11, 2019 at 11:07:12AM -0400, Brian Foster wrote:
-> > On Tue, Jun 04, 2019 at 02:50:27PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Create a pwork destroy function that uses polling instead of
-> > > uninterruptible sleep to wait for work items to finish so that we can
-> > > touch the softlockup watchdog.  IOWs, gross hack.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > 
-> > Seems reasonable given the quirky circumstances of quotacheck. Just a
-> > couple nits..
-> > 
-> > >  fs/xfs/xfs_iwalk.c |    3 +++
-> > >  fs/xfs/xfs_iwalk.h |    3 ++-
-> > >  fs/xfs/xfs_pwork.c |   21 +++++++++++++++++++++
-> > >  fs/xfs/xfs_pwork.h |    2 ++
-> > >  fs/xfs/xfs_qm.c    |    2 +-
-> > >  5 files changed, 29 insertions(+), 2 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> > > index 71ee1628aa70..c4a9c4c246b7 100644
-> > > --- a/fs/xfs/xfs_iwalk.c
-> > > +++ b/fs/xfs/xfs_iwalk.c
-> > > @@ -526,6 +526,7 @@ xfs_iwalk_threaded(
-> > >  	xfs_ino_t		startino,
-> > >  	xfs_iwalk_fn		iwalk_fn,
-> > >  	unsigned int		max_prefetch,
-> > > +	bool			polled,
-> > >  	void			*data)
-> > >  {
-> > >  	struct xfs_pwork_ctl	pctl;
-> > > @@ -556,5 +557,7 @@ xfs_iwalk_threaded(
-> > >  		startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-> > >  	}
-> > >  
-> > > +	if (polled)
-> > > +		return xfs_pwork_destroy_poll(&pctl);
-> > >  	return xfs_pwork_destroy(&pctl);
-> > 
-> > Rather than have duplicate destruction paths, could we rework
-> > xfs_pwork_destroy_poll() to something like xfs_pwork_poll() that just
-> > does the polling and returns, then the caller can fall back into the
-> > current xfs_pwork_destroy()? I.e., this ends up looking like:
-> > 
-> > 	...
-> > 	/* poll to keep soft lockup watchdog quiet */
-> > 	if (polled)
-> > 		xfs_pwork_poll(&pctl);
-> > 	return xfs_pwork_destroy(&pctl);
-> 
-> Sounds good, will do!
-> 
-> > >  }
-> > ...
-> > > diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
-> > > index 19605a3a2482..3b885e0b52ac 100644
-> > > --- a/fs/xfs/xfs_pwork.c
-> > > +++ b/fs/xfs/xfs_pwork.c
-> > ...
-> > > @@ -97,6 +101,23 @@ xfs_pwork_destroy(
-> > >  	return pctl->error;
-> > >  }
-> > >  
-> > > +/*
-> > > + * Wait for the work to finish and tear down the control structure.
-> > > + * Continually poll completion status and touch the soft lockup watchdog.
-> > > + * This is for things like mount that hold locks.
-> > > + */
-> > > +int
-> > > +xfs_pwork_destroy_poll(
-> > > +	struct xfs_pwork_ctl	*pctl)
-> > > +{
-> > > +	while (atomic_read(&pctl->nr_work) > 0) {
-> > > +		msleep(1);
-> > > +		touch_softlockup_watchdog();
-> > > +	}
-> > 
-> > Any idea what the typical watchdog timeout is?
-> 
-> Usually 30s for the hangcheck timeout.
-> 
-> > I'm curious where the 1ms
-> > comes from and whether we could get away with anything larger. I realize
-> > that might introduce mount latency with the current sleep based
-> > implementation, but we could also consider a waitqueue and using
-> > something like wait_event_timeout() to schedule out for longer time
-> > periods and still wake up immediately when the count drops to 0.
-> 
-> That's a much better approach than this naïve one which waits
-> unnecessarily after the pwork finishes; I'll replace it with this.
-> The kernel doesn't export the hang check timeout variable, so I think
-> I'll just set it to 1s, which should be infrequent enough not to use a
-> lot of CPU and frequent enough that we don't spew warnings everywhere.
-> 
 
-Ack, that sounds reasonable to me if the timeout itself is 30s or so.
+--8t9RHnE3ZwKMSgU+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Brian
+On Tue, Jun 11, 2019 at 04:05:14PM -0700, Darrick J. Wong wrote:
+> On Wed, Jun 12, 2019 at 08:33:41AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 10, 2019 at 04:11:34PM -0700, Darrick J. Wong wrote:
+> > > On Mon, Jun 10, 2019 at 01:55:10PM -0400, Brian Foster wrote:
+> > > > > I could extend the comment to explain why we don't use PAGE_SIZE...
+> > > > > 
+> > > > 
+> > > > Sounds good, though what I think would be better is to define a
+> > > > IWALK_DEFAULT_RECS or some such somewhere and put the calculation
+> > > > details with that.
+> > > > 
+> > > > Though now that you point out the readahead thing, aren't we at risk of
+> > > > a similar problem for users who happen to pass a really large userspace
+> > > > buffer? Should we cap the kernel allocation/readahead window in all
+> > > > cases and not just the default case?
+> > > 
+> > > Hmm, that's right, we don't want to let userspace arbitrarily determine
+> > > the size of the buffer, and I think the current implementation caps it
+> > > the readahaead at ... oh, PAGE_SIZE / sizeof(xfs_inogrp_t).
+> > > 
+> > > Oh, right, and in the V1 patchset Dave said that we should constrain
+> > > readahead even further.
+> > 
+> > Right, I should explain a bit further why, too - it's about
+> > performance.  I've found that a user buffer size of ~1024 inodes is
+> > generally enough to max out performance of bulkstat. i.e. somewhere
+> > around 1000 inodes per syscall is enough to mostly amortise all of
+> > the cost of syscall, setup, readahead, etc vs the CPU overhead of
+> > copying all the inodes into the user buffer.
+> > 
+> > Once the user buffer goes over a few thousand inodes, performance
+> > then starts to tail back off - we don't get any gains from trying to
+> > bulkstat tens of thousands of inodes at a time, especially under
+> > memory pressure because that can push us into readahead and buffer
+> > cache thrashing.
+> 
+> <nod> I don't mind setting the max inobt record cache buffer size to a
+> smaller value (1024 bytes == 4096 inodes readahead?) so we can get a
+> little farther into future hardware scalability (or decreases in syscall
+> performance :P).
+> 
+> I guess the question here is how to relate the number of inodes the user
+> asked for to how many inobt records we have to read to find that many
+> allocated inodes?  Or in other words, what's the average ir_freecount
+> across all the inobt records?
 
+Partial results computed by using xfs_db to dump all the inobt records
+in the fs to look at averge freecounts, and the number of inobt records
+with zero freecount:
+
+Development workstation / and /home:
+4678 total, zerofree 72.49%, avg freecount 4.24
+107940 total, zerofree 94.84%, avg freecount 0.78
+
+This laptop /, /home, and /boot:
+4613 total, zerofree 80.73%, avg freecount 3.11
+49660 total, zerofree 99.54%, avg freecount 0.04
+10 total, zerofree 20.00%, avg freecount 27.40
+
+Backup server / and /home:
+3897 total, zerofree 22.99%, avg freecount 27.08
+55995 total, zerofree 99.87%, avg freecount 0.01
+
+(Note that the root fs is nearly out of space now, thanks journald...)
+
+xfstests host / and $TEST_DIR:
+1834 total, zerofree 76.28%, avg freecount 3.31
+20097 total, zerofree 83.41%, avg freecount 3.62
+
+The script I used to generate these reports is attached.  From this
+admittedly cursory output I "conclude" that bulkstat could get away with
+prefetching (icount / 48) inobt records up to a max of 1000 inodes.
+A more conservative estimate would be (icount / 32) inobt records.
+
+--D
+
+> 
+> Note that this is technically a decrease since the old code would
+> reserve 16K for this purpose...
+> 
+> > > > > /*
+> > > > >  * Note: We hardcode 4096 here (instead of, say, PAGE_SIZE) because we want to
+> > > > >  * constrain the amount of inode readahead to 16k inodes regardless of CPU:
+> > > > >  *
+> > > > >  * 4096 bytes / 16 bytes per inobt record = 256 inobt records
+> > > > >  * 256 inobt records * 64 inodes per record = 16384 inodes
+> > > > >  * 16384 inodes * 512 bytes per inode(?) = 8MB of inode readahead
+> > > > >  */
+> > 
+> > Hence I suspect that even this is overkill - it makes no sense to
+> > have a huge readahead window when there has been no measurable
+> > performance benefit to doing large inode count bulkstat syscalls.
+> > 
+> > And, FWIW, readahead probably should also be capped at what the user
+> > buffer can hold - no point in reading 16k inodes when the output
+> > buffer can only fit 1000 inodes...
+> 
+> It already is -- the icount parameter from userspace is (eventually) fed
+> to xfs_iwalk-set_prefetch.
+> 
 > --D
 > 
-> > Brian
+> > Cheers,
 > > 
-> > > +
-> > > +	return xfs_pwork_destroy(pctl);
-> > > +}
-> > > +
-> > >  /*
-> > >   * Return the amount of parallelism that the data device can handle, or 0 for
-> > >   * no limit.
-> > > diff --git a/fs/xfs/xfs_pwork.h b/fs/xfs/xfs_pwork.h
-> > > index e0c1354a2d8c..08da723a8dc9 100644
-> > > --- a/fs/xfs/xfs_pwork.h
-> > > +++ b/fs/xfs/xfs_pwork.h
-> > > @@ -18,6 +18,7 @@ struct xfs_pwork_ctl {
-> > >  	struct workqueue_struct	*wq;
-> > >  	struct xfs_mount	*mp;
-> > >  	xfs_pwork_work_fn	work_fn;
-> > > +	atomic_t		nr_work;
-> > >  	int			error;
-> > >  };
-> > >  
-> > > @@ -45,6 +46,7 @@ int xfs_pwork_init(struct xfs_mount *mp, struct xfs_pwork_ctl *pctl,
-> > >  		unsigned int nr_threads);
-> > >  void xfs_pwork_queue(struct xfs_pwork_ctl *pctl, struct xfs_pwork *pwork);
-> > >  int xfs_pwork_destroy(struct xfs_pwork_ctl *pctl);
-> > > +int xfs_pwork_destroy_poll(struct xfs_pwork_ctl *pctl);
-> > >  unsigned int xfs_pwork_guess_datadev_parallelism(struct xfs_mount *mp);
-> > >  
-> > >  #endif /* __XFS_PWORK_H__ */
-> > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-> > > index e4f3785f7a64..de6a623ada02 100644
-> > > --- a/fs/xfs/xfs_qm.c
-> > > +++ b/fs/xfs/xfs_qm.c
-> > > @@ -1305,7 +1305,7 @@ xfs_qm_quotacheck(
-> > >  		flags |= XFS_PQUOTA_CHKD;
-> > >  	}
-> > >  
-> > > -	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, NULL);
-> > > +	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, true, NULL);
-> > >  	if (error)
-> > >  		goto error_return;
-> > >  
-> > > 
+> > Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
+
+--8t9RHnE3ZwKMSgU+
+Content-Type: application/x-sh
+Content-Disposition: attachment; filename="xfsinoload.sh"
+Content-Transfer-Encoding: quoted-printable
+
+#!/bin/bash=0A=0A# Report histogram of inobt record freecounts=0A=0Adie() {=
+=0A	echo "$@" >> /dev/stderr=0A	exit 1=0A}=0A=0Adev=3D"$1"=0Atest -b "${dev=
+}" || die "${dev}: not a block device"=0A=0Aagcount=3D"$(xfs_info "${dev}" =
+| grep agcount=3D | sed -e 's/^.*agcount=3D\([0-9]*\).*$/\1/g')"=0Asparse=
+=3D=0Axfs_info "${dev}" | grep -q sparse=3D1 && sparse=3Dyes=0A=0Arm -f /tm=
+p/barf=0Aseq 0 "$(( agcount - 1 ))" | while read ag; do=0A	xfs_db -f -c "ag=
+i ${ag}" -c "addr root" -c "btdump" "${dev}"=0Adone > /tmp/barf=0A=0Acol=3D=
+2=0Atest -n "${sparse}" && col=3D4=0Agrep : /tmp/barf | awk -F ',' "{print =
+\$${col}}" | sort | uniq -c | sort -g -k 1 | awk '{print $0; if ($2 =3D=3D =
+0) zerofree_nr =3D $1; freecount_total +=3D ($1 * $2); total +=3D $1;}END{p=
+rintf("%d inobt recs; zero free %.2f%% of recs; avg freecount %.2f\n", tota=
+l, zerofree_nr * 100.0 / total, freecount_total / total);}'=0A
+--8t9RHnE3ZwKMSgU+--
