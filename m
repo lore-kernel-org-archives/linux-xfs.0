@@ -1,148 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56862 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726200AbfFLQyD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 12:54:03 -0400
-Date: Wed, 12 Jun 2019 09:53:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 01/10] xfs: create simplified inode walk function
-Message-ID: <20190612165346.GK1688126@magnolia>
-References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
- <155968497450.1657646.15305138327955918345.stgit@magnolia>
- <20190610135816.GA6473@bfoster>
- <20190610165909.GI1871505@magnolia>
- <20190610175509.GF6473@bfoster>
- <20190610231134.GM1871505@magnolia>
- <20190611223341.GD14363@dread.disaster.area>
- <20190611230514.GU1871505@magnolia>
- <20190612121310.GD12395@bfoster>
+Received: from mail-oi1-f194.google.com ([209.85.167.194]:41243 "EHLO
+        mail-oi1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726454AbfFLSuD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 14:50:03 -0400
+Received: by mail-oi1-f194.google.com with SMTP id g7so9286266oia.8
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 11:50:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190612121310.GD12395@bfoster>
+References: <20190606014544.8339-1-ira.weiny@intel.com> <20190606104203.GF7433@quack2.suse.cz>
+ <20190606195114.GA30714@ziepe.ca> <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
+ <20190607103636.GA12765@quack2.suse.cz> <20190607121729.GA14802@ziepe.ca>
+ <20190607145213.GB14559@iweiny-DESK2.sc.intel.com> <20190612102917.GB14578@quack2.suse.cz>
+In-Reply-To: <20190612102917.GB14578@quack2.suse.cz>
+From: Dan Williams <dan.j.williams@intel.com>
+Date: Wed, 12 Jun 2019 11:49:52 -0700
+Message-ID: <CAPcyv4jSyTjC98UsWb3-FnZekV0oyboiSe9n1NYDC2TSKAqiqw@mail.gmail.com>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Ira Weiny <ira.weiny@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Dave Chinner <david@fromorbit.com>, Matthew Wilcox <willy@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-nvdimm <linux-nvdimm@lists.01.org>, linux-ext4 <linux-ext4@vger.kernel.org>, Linux MM <linux-mm@kvack.org>
 
-On Wed, Jun 12, 2019 at 08:13:10AM -0400, Brian Foster wrote:
-> On Tue, Jun 11, 2019 at 04:05:14PM -0700, Darrick J. Wong wrote:
-> > On Wed, Jun 12, 2019 at 08:33:41AM +1000, Dave Chinner wrote:
-> > > On Mon, Jun 10, 2019 at 04:11:34PM -0700, Darrick J. Wong wrote:
-> > > > On Mon, Jun 10, 2019 at 01:55:10PM -0400, Brian Foster wrote:
-> > > > > > I could extend the comment to explain why we don't use PAGE_SIZE...
-> > > > > > 
-> > > > > 
-> > > > > Sounds good, though what I think would be better is to define a
-> > > > > IWALK_DEFAULT_RECS or some such somewhere and put the calculation
-> > > > > details with that.
-> > > > > 
-> > > > > Though now that you point out the readahead thing, aren't we at risk of
-> > > > > a similar problem for users who happen to pass a really large userspace
-> > > > > buffer? Should we cap the kernel allocation/readahead window in all
-> > > > > cases and not just the default case?
-> > > > 
-> > > > Hmm, that's right, we don't want to let userspace arbitrarily determine
-> > > > the size of the buffer, and I think the current implementation caps it
-> > > > the readahaead at ... oh, PAGE_SIZE / sizeof(xfs_inogrp_t).
-> > > > 
-> > > > Oh, right, and in the V1 patchset Dave said that we should constrain
-> > > > readahead even further.
-> > > 
-> > > Right, I should explain a bit further why, too - it's about
-> > > performance.  I've found that a user buffer size of ~1024 inodes is
-> > > generally enough to max out performance of bulkstat. i.e. somewhere
-> > > around 1000 inodes per syscall is enough to mostly amortise all of
-> > > the cost of syscall, setup, readahead, etc vs the CPU overhead of
-> > > copying all the inodes into the user buffer.
-> > > 
-> > > Once the user buffer goes over a few thousand inodes, performance
-> > > then starts to tail back off - we don't get any gains from trying to
-> > > bulkstat tens of thousands of inodes at a time, especially under
-> > > memory pressure because that can push us into readahead and buffer
-> > > cache thrashing.
-> > 
-> > <nod> I don't mind setting the max inobt record cache buffer size to a
-> > smaller value (1024 bytes == 4096 inodes readahead?) so we can get a
-> > little farther into future hardware scalability (or decreases in syscall
-> > performance :P).
-> > 
-> 
-> The 1k baseline presumably applies to the current code. Taking a closer
-> look at the current code, we unconditionally allocate a 4 page record
-> buffer and start to fill it. For every record we grab, we issue
-> readahead on the underlying clusters.
-> 
-> Hmm, that seems like generally what this patchset is doing aside from
-> the more variable record buffer allocation. I'm fine with changing
-> things like record buffer allocation, readahead semantics, etc. given
-> Dave's practical analysis above, but TBH I don't think that should all
-> be part of the same patch. IMO, this rework patch should maintain as
-> close as possible to current behavior and a subsequent patches in the
-> series can tweak record buffer size and whatnot to improve readahead
-> logic. That makes this all easier to review, discuss and maintain in the
-> event of regression.
+On Wed, Jun 12, 2019 at 3:29 AM Jan Kara <jack@suse.cz> wrote:
+>
+> On Fri 07-06-19 07:52:13, Ira Weiny wrote:
+> > On Fri, Jun 07, 2019 at 09:17:29AM -0300, Jason Gunthorpe wrote:
+> > > On Fri, Jun 07, 2019 at 12:36:36PM +0200, Jan Kara wrote:
+> > >
+> > > > Because the pins would be invisible to sysadmin from that point on.
+> > >
+> > > It is not invisible, it just shows up in a rdma specific kernel
+> > > interface. You have to use rdma netlink to see the kernel object
+> > > holding this pin.
+> > >
+> > > If this visibility is the main sticking point I suggest just enhancing
+> > > the existing MR reporting to include the file info for current GUP
+> > > pins and teaching lsof to collect information from there as well so it
+> > > is easy to use.
+> > >
+> > > If the ownership of the lease transfers to the MR, and we report that
+> > > ownership to userspace in a way lsof can find, then I think all the
+> > > concerns that have been raised are met, right?
+> >
+> > I was contemplating some new lsof feature yesterday.  But what I don't
+> > think we want is sysadmins to have multiple tools for multiple
+> > subsystems.  Or even have to teach lsof something new for every potential
+> > new subsystem user of GUP pins.
+>
+> Agreed.
+>
+> > I was thinking more along the lines of reporting files which have GUP
+> > pins on them directly somewhere (dare I say procfs?) and teaching lsof to
+> > report that information.  That would cover any subsystem which does a
+> > longterm pin.
+>
+> So lsof already parses /proc/<pid>/maps to learn about files held open by
+> memory mappings. It could parse some other file as well I guess. The good
+> thing about that would be that then "longterm pin" structure would just hold
+> struct file reference. That would avoid any needs of special behavior on
+> file close (the file reference in the "longterm pin" structure would make
+> sure struct file and thus the lease stays around, we'd just need to make
+> explicit lease unlock block until the "longterm pin" structure is freed).
+> The bad thing is that it requires us to come up with a sane new proc
+> interface for reporting "longterm pins" and associated struct file. Also we
+> need to define what this interface shows if the pinned pages are in DRAM
+> (either page cache or anon) and not on NVDIMM.
 
-This also got me thinking that I should look up what INUMBERS does,
-which is that it uses the icount to determine the cache size, up to a
-maximum of PAGE_SIZE.  Since INUMBERS doesn't issue readahead I think
-it's fine to preserve that behavior too... and probably with a separate
-xfs_inobt_walk_set_prefetch function.
-
-> > I guess the question here is how to relate the number of inodes the user
-> > asked for to how many inobt records we have to read to find that many
-> > allocated inodes?  Or in other words, what's the average ir_freecount
-> > across all the inobt records?
-> > 
-> 
-> The current code basically looks like it allocates an oversized buffer
-> and hopes for the best with regard to readahead. If we took a similar
-> approach in terms of overestimating the buffer size (assuming not all
-> inode records are fully allocated), I suppose we could also track the
-> number of cluster readaheads issued and govern the collect/drain
-> sequences of the record buffer based on that..? But again, I think we
-> should have this as a separate "xfs: make iwalk readahead smarter ..."
-> patch that documents Dave's analysis above, perhaps includes some
-> numbers, etc..
-
-Ok.
-
---D
-
-> > Note that this is technically a decrease since the old code would
-> > reserve 16K for this purpose...
-> > 
-> 
-> Indeed.
-> 
-> Brian
-> 
-> > > > > > /*
-> > > > > >  * Note: We hardcode 4096 here (instead of, say, PAGE_SIZE) because we want to
-> > > > > >  * constrain the amount of inode readahead to 16k inodes regardless of CPU:
-> > > > > >  *
-> > > > > >  * 4096 bytes / 16 bytes per inobt record = 256 inobt records
-> > > > > >  * 256 inobt records * 64 inodes per record = 16384 inodes
-> > > > > >  * 16384 inodes * 512 bytes per inode(?) = 8MB of inode readahead
-> > > > > >  */
-> > > 
-> > > Hence I suspect that even this is overkill - it makes no sense to
-> > > have a huge readahead window when there has been no measurable
-> > > performance benefit to doing large inode count bulkstat syscalls.
-> > > 
-> > > And, FWIW, readahead probably should also be capped at what the user
-> > > buffer can hold - no point in reading 16k inodes when the output
-> > > buffer can only fit 1000 inodes...
-> > 
-> > It already is -- the icount parameter from userspace is (eventually) fed
-> > to xfs_iwalk-set_prefetch.
-> > 
-> > --D
-> > 
-> > > Cheers,
-> > > 
-> > > Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
+The anon vs shared detection case is important because a longterm pin
+might be blocking a memory-hot-unplug operation if it is pinning
+ZONE_MOVABLE memory, but I don't think we want DRAM vs NVDIMM to be an
+explicit concern of the interface. For the anon / cached case I expect
+it might be useful to put that communication under the memory-blocks
+sysfs interface. I.e. a list of pids that are pinning that
+memory-block from being hot-unplugged.
