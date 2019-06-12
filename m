@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33156 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726048AbfFLGsG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:48:06 -0400
-Subject: [PATCH 01/14] xfs: create iterator error codes
+Received: from aserp2130.oracle.com ([141.146.126.79]:52922 "EHLO
+        aserp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726783AbfFLGsO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 02:48:14 -0400
+Subject: [PATCH 03/14] xfs: convert quotacheck to use the new iwalk functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 11 Jun 2019 23:47:37 -0700
-Message-ID: <156032205794.3774243.2000474980369140298.stgit@magnolia>
+Date: Tue, 11 Jun 2019 23:47:50 -0700
+Message-ID: <156032207066.3774243.16050321871188357424.stgit@magnolia>
 In-Reply-To: <156032205136.3774243.15725828509940520561.stgit@magnolia>
 References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,125 +16,149 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Currently, xfs doesn't have generic error codes defined for "stop
-iterating"; we just reuse the XFS_BTREE_QUERY_* return values.  This
-looks a little weird if we're not actually iterating a btree index.
-Before we start adding more iterators, we should create general
-XFS_ITER_{CONTINUE,ABORT} return values and define the XFS_BTREE_QUERY_*
-ones from that.
+Convert quotacheck to use the new iwalk iterator to dig through the
+inodes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/libxfs/xfs_alloc.c  |    2 +-
- fs/xfs/libxfs/xfs_btree.h  |    4 ++--
- fs/xfs/libxfs/xfs_shared.h |    6 ++++++
- fs/xfs/scrub/agheader.c    |    4 ++--
- fs/xfs/scrub/repair.c      |    4 ++--
- fs/xfs/xfs_dquot.c         |    2 +-
- 6 files changed, 14 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_qm.c |   63 +++++++++++++++++--------------------------------------
+ 1 file changed, 20 insertions(+), 43 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index a9ff3cf82cce..b9eb3a8aeaf9 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -3146,7 +3146,7 @@ xfs_alloc_has_record(
- 
- /*
-  * Walk all the blocks in the AGFL.  The @walk_fn can return any negative
-- * error code or XFS_BTREE_QUERY_RANGE_ABORT.
-+ * error code or XFS_ITER_*.
-  */
- int
- xfs_agfl_walk(
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index e3b3e9dce5da..94530766dd30 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -469,8 +469,8 @@ uint xfs_btree_compute_maxlevels(uint *limits, unsigned long len);
- unsigned long long xfs_btree_calc_size(uint *limits, unsigned long long len);
- 
- /* return codes */
--#define XFS_BTREE_QUERY_RANGE_CONTINUE	0	/* keep iterating */
--#define XFS_BTREE_QUERY_RANGE_ABORT	1	/* stop iterating */
-+#define XFS_BTREE_QUERY_RANGE_CONTINUE	(XFS_ITER_CONTINUE) /* keep iterating */
-+#define XFS_BTREE_QUERY_RANGE_ABORT	(XFS_ITER_ABORT)    /* stop iterating */
- typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
- 		union xfs_btree_rec *rec, void *priv);
- 
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 4e909791aeac..fa788139dfe3 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -136,4 +136,10 @@ void xfs_symlink_local_to_remote(struct xfs_trans *tp, struct xfs_buf *bp,
- 				 struct xfs_inode *ip, struct xfs_ifork *ifp);
- xfs_failaddr_t xfs_symlink_shortform_verify(struct xfs_inode *ip);
- 
-+/* Keep iterating the data structure. */
-+#define XFS_ITER_CONTINUE	(0)
-+
-+/* Stop iterating the data structure. */
-+#define XFS_ITER_ABORT		(1)
-+
- #endif /* __XFS_SHARED_H__ */
-diff --git a/fs/xfs/scrub/agheader.c b/fs/xfs/scrub/agheader.c
-index adaeabdefdd3..1d5361f9ebfc 100644
---- a/fs/xfs/scrub/agheader.c
-+++ b/fs/xfs/scrub/agheader.c
-@@ -646,7 +646,7 @@ xchk_agfl_block(
- 	xchk_agfl_block_xref(sc, agbno);
- 
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
--		return XFS_BTREE_QUERY_RANGE_ABORT;
-+		return XFS_ITER_ABORT;
- 
- 	return 0;
- }
-@@ -737,7 +737,7 @@ xchk_agfl(
- 	/* Check the blocks in the AGFL. */
- 	error = xfs_agfl_walk(sc->mp, XFS_BUF_TO_AGF(sc->sa.agf_bp),
- 			sc->sa.agfl_bp, xchk_agfl_block, &sai);
--	if (error == XFS_BTREE_QUERY_RANGE_ABORT) {
-+	if (error == XFS_ITER_ABORT) {
- 		error = 0;
- 		goto out_free;
- 	}
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index eb358f0f5e0a..e2a352c1bad7 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -672,7 +672,7 @@ xrep_findroot_agfl_walk(
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index aa6b6db3db0e..52e8ec0aa064 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -14,7 +14,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_ialloc.h"
+-#include "xfs_itable.h"
++#include "xfs_iwalk.h"
+ #include "xfs_quota.h"
+ #include "xfs_error.h"
+ #include "xfs_bmap.h"
+@@ -1118,17 +1118,15 @@ xfs_qm_quotacheck_dqadjust(
+ /* ARGSUSED */
+ STATIC int
+ xfs_qm_dqusage_adjust(
+-	xfs_mount_t	*mp,		/* mount point for filesystem */
+-	xfs_ino_t	ino,		/* inode number to get data for */
+-	void		__user *buffer,	/* not used */
+-	int		ubsize,		/* not used */
+-	int		*ubused,	/* not used */
+-	int		*res)		/* result code value */
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino,
++	void			*data)
  {
- 	xfs_agblock_t		*agbno = priv;
+-	xfs_inode_t	*ip;
+-	xfs_qcnt_t	nblks;
+-	xfs_filblks_t	rtblks = 0;	/* total rt blks */
+-	int		error;
++	struct xfs_inode	*ip;
++	xfs_qcnt_t		nblks;
++	xfs_filblks_t		rtblks = 0;	/* total rt blks */
++	int			error;
  
--	return (*agbno == bno) ? XFS_BTREE_QUERY_RANGE_ABORT : 0;
-+	return (*agbno == bno) ? XFS_ITER_ABORT : 0;
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+ 
+@@ -1136,20 +1134,18 @@ xfs_qm_dqusage_adjust(
+ 	 * rootino must have its resources accounted for, not so with the quota
+ 	 * inodes.
+ 	 */
+-	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
+-		*res = BULKSTAT_RV_NOTHING;
+-		return -EINVAL;
+-	}
++	if (xfs_is_quota_inode(&mp->m_sb, ino))
++		return 0;
+ 
+ 	/*
+ 	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
+ 	 * at mount time and therefore nobody will be racing chown/chproj.
+ 	 */
+-	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
+-	if (error) {
+-		*res = BULKSTAT_RV_NOTHING;
++	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
++	if (error == -EINVAL || error == -ENOENT)
++		return 0;
++	if (error)
+ 		return error;
+-	}
+ 
+ 	ASSERT(ip->i_delayed_blks == 0);
+ 
+@@ -1157,7 +1153,7 @@ xfs_qm_dqusage_adjust(
+ 		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 
+ 		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+-			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+ 			if (error)
+ 				goto error0;
+ 		}
+@@ -1200,13 +1196,8 @@ xfs_qm_dqusage_adjust(
+ 			goto error0;
+ 	}
+ 
+-	xfs_irele(ip);
+-	*res = BULKSTAT_RV_DIDONE;
+-	return 0;
+-
+ error0:
+ 	xfs_irele(ip);
+-	*res = BULKSTAT_RV_GIVEUP;
+ 	return error;
  }
  
- /* Does this block match the btree information passed in? */
-@@ -702,7 +702,7 @@ xrep_findroot_block(
- 	if (owner == XFS_RMAP_OWN_AG) {
- 		error = xfs_agfl_walk(mp, ri->agf, ri->agfl_bp,
- 				xrep_findroot_agfl_walk, &agbno);
--		if (error == XFS_BTREE_QUERY_RANGE_ABORT)
-+		if (error == XFS_ITER_ABORT)
- 			return 0;
- 		if (error)
- 			return error;
-diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
-index a1af984e4913..8674551c5e98 100644
---- a/fs/xfs/xfs_dquot.c
-+++ b/fs/xfs/xfs_dquot.c
-@@ -1243,7 +1243,7 @@ xfs_qm_exit(void)
- /*
-  * Iterate every dquot of a particular type.  The caller must ensure that the
-  * particular quota type is active.  iter_fn can return negative error codes,
-- * or XFS_BTREE_QUERY_RANGE_ABORT to indicate that it wants to stop iterating.
-+ * or XFS_ITER_ABORT to indicate that it wants to stop iterating.
-  */
- int
- xfs_qm_dqiterate(
+@@ -1270,18 +1261,13 @@ STATIC int
+ xfs_qm_quotacheck(
+ 	xfs_mount_t	*mp)
+ {
+-	int			done, count, error, error2;
+-	xfs_ino_t		lastino;
+-	size_t			structsz;
++	int			error, error2;
+ 	uint			flags;
+ 	LIST_HEAD		(buffer_list);
+ 	struct xfs_inode	*uip = mp->m_quotainfo->qi_uquotaip;
+ 	struct xfs_inode	*gip = mp->m_quotainfo->qi_gquotaip;
+ 	struct xfs_inode	*pip = mp->m_quotainfo->qi_pquotaip;
+ 
+-	count = INT_MAX;
+-	structsz = 1;
+-	lastino = 0;
+ 	flags = 0;
+ 
+ 	ASSERT(uip || gip || pip);
+@@ -1318,18 +1304,9 @@ xfs_qm_quotacheck(
+ 		flags |= XFS_PQUOTA_CHKD;
+ 	}
+ 
+-	do {
+-		/*
+-		 * Iterate thru all the inodes in the file system,
+-		 * adjusting the corresponding dquot counters in core.
+-		 */
+-		error = xfs_bulkstat(mp, &lastino, &count,
+-				     xfs_qm_dqusage_adjust,
+-				     structsz, NULL, &done);
+-		if (error)
+-			break;
+-
+-	} while (!done);
++	error = xfs_iwalk(mp, NULL, 0, xfs_qm_dqusage_adjust, 0, NULL);
++	if (error)
++		goto error_return;
+ 
+ 	/*
+ 	 * We've made all the changes that we need to make incore.  Flush them
