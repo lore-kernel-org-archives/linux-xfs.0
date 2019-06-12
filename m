@@ -1,204 +1,103 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:34670 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727600AbfFGNlM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 7 Jun 2019 09:41:12 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 126FD2E95B8
-        for <linux-xfs@vger.kernel.org>; Fri,  7 Jun 2019 13:41:12 +0000 (UTC)
-Subject: Re: [PATCH] xfs: show build options in sysfs
-References: <97e16da4-e5ad-3049-0f6b-c1e24462e035@redhat.com>
- <20190607132057.GD57123@bfoster>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <08f400d3-47e8-77bd-3685-d230e9ff49bd@redhat.com>
-Date: Fri, 7 Jun 2019 08:41:09 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:46442 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2407268AbfFLAdD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 11 Jun 2019 20:33:03 -0400
+Date: Tue, 11 Jun 2019 17:32:19 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/10] xfs: convert quotacheck to use the new iwalk
+ functions
+Message-ID: <20190612003219.GV1871505@magnolia>
+References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
+ <155968498085.1657646.3518168545540841602.stgit@magnolia>
+ <20190610135848.GB6473@bfoster>
+ <20190611232347.GE14363@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20190607132057.GD57123@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190611232347.GE14363@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 6/7/19 8:20 AM, Brian Foster wrote:
-> On Thu, Jun 06, 2019 at 10:30:09PM -0500, Eric Sandeen wrote:
->> This adds the "build options" string to a sysfs entry:
->>
->> # cat /sys/fs/xfs/features/build_opts 
->> ACLs, security attributes, realtime, scrub, no debug
->>
->> because right now we only get it in dmesg and scraping dmesg
->> is not a great option.
->>
->> This is really /build options/, not features as in "on-disk,
->> superblock features" like XFS_SB_FEAT_* - putting this under a
->> features/ dir will leave the window open open to do supported
->> superblock features ala ext4 & f2fs in the future if desired.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> No sure if it would make sense to have i.e.
->>
->> /sys/fs/xfs/features/build_options
->> /sys/fs/xfs/features/finobt
->> /sys/fs/xfs/features/rmapbt
->> ...
->>
->> all in the same features/ dir ?
->>
+On Wed, Jun 12, 2019 at 09:23:47AM +1000, Dave Chinner wrote:
+> On Mon, Jun 10, 2019 at 09:58:52AM -0400, Brian Foster wrote:
+> > On Tue, Jun 04, 2019 at 02:49:40PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Convert quotacheck to use the new iwalk iterator to dig through the
+> > > inodes.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > > ---
+> > >  fs/xfs/xfs_qm.c |   62 ++++++++++++++++++-------------------------------------
+> > >  1 file changed, 20 insertions(+), 42 deletions(-)
+> > > 
+> > > 
+> > > diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+> > > index aa6b6db3db0e..a5b2260406a8 100644
+> > > --- a/fs/xfs/xfs_qm.c
+> > > +++ b/fs/xfs/xfs_qm.c
+> > ...
+> > > @@ -1136,20 +1135,18 @@ xfs_qm_dqusage_adjust(
+> > >  	 * rootino must have its resources accounted for, not so with the quota
+> > >  	 * inodes.
+> > >  	 */
+> > > -	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
+> > > -		*res = BULKSTAT_RV_NOTHING;
+> > > -		return -EINVAL;
+> > > -	}
+> > > +	if (xfs_is_quota_inode(&mp->m_sb, ino))
+> > > +		return 0;
+> > >  
+> > >  	/*
+> > >  	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
+> > >  	 * at mount time and therefore nobody will be racing chown/chproj.
+> > >  	 */
+> > > -	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
+> > > -	if (error) {
+> > > -		*res = BULKSTAT_RV_NOTHING;
+> > > +	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
+> > 
+> > I was wondering if we should start using IGET_UNTRUSTED here, but I
+> > guess we're 1.) protected by quotacheck context and 2.) have the same
+> > record validity semantics as the existing bulkstat walker. LGTM:
 > 
-> What's the purpose of the features dir, and why an entry per feature as
-> opposed to a single 'features' file like we're adding for build_opts?
-
-just because ext4 and f2fs did it that way, and supposedly sysfs
-is one value per file.
-
-also our entire sysfs structure is based around having dirs under xfs/
-- tbh I haven't yet sorted out how to actually ad a bare file under
-xfs/ ;)  Of course it's possible but existing infra in our code is friendlier
-with subdirs of files.  ;)
-
-> Would those per-feature files present any data? The patch seems
-> reasonable to me in general, but I'd prefer to see the directory
-> structure thing at least hashed out before we decide on this kind of
-> placement (as opposed to something like /sys/fs/xfs/build_opts, if that
-> is possible).
-
-Yeah, that's why I raised the question above, stupid me ;)
-
-> I see that ext4 has a per-file feature dir along these lines:
+> FWIW, I'd be wanting to go the other way with bulkstat. i.e. finding
+> ways of reducing IGET_UNTRUSTED in bulkstat because it adds
+> substantial CPU overhead during inode lookup because it has to look
+> up the inobt to validate the inode number. i.e. we are locking the
+> AGI and doing an inobt lookup on every inode we bulkstat because
+> there is some time between the initial inobt lookup and the
+> xfs_iget() call and that's when the inode chunk can get removed.
 > 
-> $ ls /sys/fs/ext4/features/
-> batched_discard  encryption  lazy_itable_init  meta_bg_resize  metadata_csum_seed
-> $ cat /sys/fs/ext4/features/*
-> supported
-> supported
-> supported
-> supported
-> supported
+> IOWs, we only need to validate that the inode buffer still contains
+> inodes before we start instantiating inodes from it, but because we
+> don't hold any locks across individual inode processing in bulkstat
+> we have to revalidate that buffer contains inodes for every
+> allocated inode in that buffer. If we had a way of passing a locked
+> cluster buffer into xfs_iget to avoid having to look it up and read
+> it, we could do a single inode cluster read after validating the
+> inobt record is still valid, we could cycle all the remaining inodes
+> through xfs_iget() without having to use IGET_UNTRUSTED to validate
+> the inode cluster still contains valid inodes on every inode....
 > 
-> I'm not sure if those files disappear when a feature is not available or
-> persist and return something other than "supported?" Are those files
-> used by anything in userspace?
+> We still need to cycle inodes through the cache (so bulkstat is
+> coherent with other inode operations), but this would substantially
+> reduce the per-inode bulkstat CPU overhead, I think....
 
-It's based on what the running code can support, i.e. the total of its
-COMPAT_FEATURES stuff.
+I'll think about this as an addendum to the series, because I suspect
+that remodelling the existing users is going to be an entire series on
+its own.  (IOWs, my brain is too tired for today)
 
->> Also I didn't test module unload/teardown as I'm testing on xfs root.
->>
+--D
+
+> Cheers,
 > 
-> insmod/rmmod works on a quick test on one of my VMs.
-
-thanks, sorry for being lazy there.
-
--Eric
-
-> Brian
-> 
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index a14d11d78bd8..bc0e7fd63567 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -55,9 +55,10 @@
->>  static const struct super_operations xfs_super_operations;
->>  struct bio_set xfs_ioend_bioset;
->>  
->> -static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
->> +static struct kset *xfs_kset;			/* top-level xfs sysfs dir */
->> +static struct xfs_kobj xfs_features_kobj;	/* global features */
->>  #ifdef DEBUG
->> -static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
->> +static struct xfs_kobj xfs_dbg_kobj;		/* global debug sysfs attrs */
->>  #endif
->>  
->>  /*
->> @@ -2134,11 +2135,16 @@ init_xfs_fs(void)
->>  	if (error)
->>  		goto out_free_stats;
->>  
->> +	xfs_features_kobj.kobject.kset = xfs_kset;
->> +	error = xfs_sysfs_init(&xfs_features_kobj, &xfs_features_ktype,
->> +				NULL, "features");
->> +	if (error)
->> +		goto out_remove_stats_kobj;
->>  #ifdef DEBUG
->>  	xfs_dbg_kobj.kobject.kset = xfs_kset;
->>  	error = xfs_sysfs_init(&xfs_dbg_kobj, &xfs_dbg_ktype, NULL, "debug");
->>  	if (error)
->> -		goto out_remove_stats_kobj;
->> +		goto out_remove_features_kobj;
->>  #endif
->>  
->>  	error = xfs_qm_init();
->> @@ -2155,8 +2161,10 @@ init_xfs_fs(void)
->>   out_remove_dbg_kobj:
->>  #ifdef DEBUG
->>  	xfs_sysfs_del(&xfs_dbg_kobj);
->> - out_remove_stats_kobj:
->> + out_remove_features_kobj:
->>  #endif
->> +	xfs_sysfs_del(&xfs_features_kobj);
->> + out_remove_stats_kobj:
->>  	xfs_sysfs_del(&xfsstats.xs_kobj);
->>   out_free_stats:
->>  	free_percpu(xfsstats.xs_stats);
->> @@ -2186,6 +2194,7 @@ exit_xfs_fs(void)
->>  #ifdef DEBUG
->>  	xfs_sysfs_del(&xfs_dbg_kobj);
->>  #endif
->> +	xfs_sysfs_del(&xfs_features_kobj);
->>  	xfs_sysfs_del(&xfsstats.xs_kobj);
->>  	free_percpu(xfsstats.xs_stats);
->>  	kset_unregister(xfs_kset);
->> diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
->> index cabda13f3c64..98f36ad16237 100644
->> --- a/fs/xfs/xfs_sysfs.c
->> +++ b/fs/xfs/xfs_sysfs.c
->> @@ -222,6 +222,28 @@ struct kobj_type xfs_dbg_ktype = {
->>  
->>  #endif /* DEBUG */
->>  
->> +/* features */
->> +
->> +STATIC ssize_t
->> +build_opts_show(
->> +	struct kobject	*kobject,
->> +	char		*buf)
->> +{
->> +	return snprintf(buf, PAGE_SIZE, "%s\n", XFS_BUILD_OPTIONS);
->> +}
->> +XFS_SYSFS_ATTR_RO(build_opts);
->> +
->> +static struct attribute *xfs_features_attrs[] = {
->> +	ATTR_LIST(build_opts),
->> +	NULL,
->> +};
->> +
->> +struct kobj_type xfs_features_ktype = {
->> +	.release = xfs_sysfs_release,
->> +	.sysfs_ops = &xfs_sysfs_ops,
->> +	.default_attrs = xfs_features_attrs,
->> +};
->> +
->>  /* stats */
->>  
->>  static inline struct xstats *
->> diff --git a/fs/xfs/xfs_sysfs.h b/fs/xfs/xfs_sysfs.h
->> index e9f810fc6731..e475f6b7eb91 100644
->> --- a/fs/xfs/xfs_sysfs.h
->> +++ b/fs/xfs/xfs_sysfs.h
->> @@ -11,6 +11,7 @@ extern struct kobj_type xfs_mp_ktype;	/* xfs_mount */
->>  extern struct kobj_type xfs_dbg_ktype;	/* debug */
->>  extern struct kobj_type xfs_log_ktype;	/* xlog */
->>  extern struct kobj_type xfs_stats_ktype;	/* stats */
->> +extern struct kobj_type xfs_features_ktype;	/* features*/
->>  
->>  static inline struct xfs_kobj *
->>  to_kobj(struct kobject *kobject)
->>
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
