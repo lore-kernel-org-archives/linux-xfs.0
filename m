@@ -1,10 +1,10 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi1-f195.google.com ([209.85.167.195]:39130 "EHLO
-        mail-oi1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727926AbfFMQyJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 12:54:09 -0400
-Received: by mail-oi1-f195.google.com with SMTP id m202so14963331oig.6
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 09:54:09 -0700 (PDT)
+Received: from mail-oi1-f193.google.com ([209.85.167.193]:43013 "EHLO
+        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729949AbfFMBO6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 12 Jun 2019 21:14:58 -0400
+Received: by mail-oi1-f193.google.com with SMTP id w79so13154265oif.10
+        for <linux-xfs@vger.kernel.org>; Wed, 12 Jun 2019 18:14:57 -0700 (PDT)
 MIME-Version: 1.0
 References: <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
  <20190607103636.GA12765@quack2.suse.cz> <20190607121729.GA14802@ziepe.ca>
@@ -14,8 +14,8 @@ References: <20190606222228.GB11698@iweiny-DESK2.sc.intel.com>
  <CAPcyv4gkksnceCV-p70hkxAyEPJWFvpMezJA1rEj6TEhKAJ7qQ@mail.gmail.com> <20190612233324.GE14336@iweiny-DESK2.sc.intel.com>
 In-Reply-To: <20190612233324.GE14336@iweiny-DESK2.sc.intel.com>
 From: Dan Williams <dan.j.williams@intel.com>
-Date: Thu, 13 Jun 2019 09:53:57 -0700
-Message-ID: <CAPcyv4hKw7owf+Jpxiu+V7DE+U4GkQ1Hr3korZvgSve-LPexNA@mail.gmail.com>
+Date: Wed, 12 Jun 2019 18:14:46 -0700
+Message-ID: <CAPcyv4jf19CJbtXTp=ag7Ns=ZQtqeQd3C0XhV9FcFCwd9JCNtQ@mail.gmail.com>
 Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
 Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
@@ -104,13 +104,8 @@ On Wed, Jun 12, 2019 at 4:32 PM Ira Weiny <ira.weiny@intel.com> wrote:
 > descriptor (or set of fds) which point to that file.  AFAIK there is no way to
 > do that at all, is there?
 
-You can certainly give the lease holder the option to close the file
-voluntarily via the siginfo_t that can be attached to a lease break
-signal. But it's not really "close" you want as much as a finer
-grained disassociate.
-
-All that said you could require the lease taker opt-in to SIGKILL via
-F_SETSIG before marking the lease "exclusive". That effectively
-precludes failing truncate, but it's something we can enforce today
-and work on finer grained / less drastic escalations over time for
-something that should "never" happen.
+Even if there were that gets back to my other question, does RDMA
+teardown happen at close(fd), or at final fput() of the 'struct file'?
+I.e. does it also need munmap() to get the vma to drop its reference?
+Perhaps a pointer to the relevant code would help me wrap my head
+around this mechanism.
