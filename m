@@ -1,148 +1,368 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:59002 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726838AbfFMSee (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jun 2019 14:34:34 -0400
-Date: Thu, 13 Jun 2019 14:34:25 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/10] xfs: convert quotacheck to use the new iwalk
- functions
-Message-ID: <20190613183425.GE21773@bfoster>
-References: <155968496814.1657646.13743491598480818627.stgit@magnolia>
- <155968498085.1657646.3518168545540841602.stgit@magnolia>
- <20190610135848.GB6473@bfoster>
- <20190611232347.GE14363@dread.disaster.area>
- <20190612003219.GV1871505@magnolia>
- <20190612125506.GE12395@bfoster>
- <20190612233302.GG14363@dread.disaster.area>
+Received: from aserp2120.oracle.com ([141.146.126.78]:35268 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727273AbfFMS5G (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:57:06 -0400
+Date: Thu, 13 Jun 2019 11:07:53 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/14] xfs: create simplified inode walk function
+Message-ID: <20190613180753.GG3773859@magnolia>
+References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
+ <156032206425.3774243.10420463221575428170.stgit@magnolia>
+ <20190613162703.GB21773@bfoster>
+ <20190613180609.GF3773859@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190612233302.GG14363@dread.disaster.area>
+In-Reply-To: <20190613180609.GF3773859@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 09:33:02AM +1000, Dave Chinner wrote:
-> On Wed, Jun 12, 2019 at 08:55:06AM -0400, Brian Foster wrote:
-> > On Tue, Jun 11, 2019 at 05:32:19PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jun 12, 2019 at 09:23:47AM +1000, Dave Chinner wrote:
-> > Since we're already discussing tweaks to readahead, another approach to
-> > this problem could be to try and readahead all the way into the inode
-> > cache. For example, consider a mechanism where a cluster buffer
-> > readahead sets a flag on the buffer that effectively triggers an iget of
-> > each allocated inode in the buffer. Darrick has already shown that the
-> > inode memory allocation and iget itself has considerable overhead even
-> > when the cluster buffer is already cached. We know that's not due to
-> > btree lookups because quotacheck isn't using IGET_UNTRUSTED, so perhaps
-> > we could amortize more of this cost via readahead.
+On Thu, Jun 13, 2019 at 11:06:09AM -0700, Darrick J. Wong wrote:
+> On Thu, Jun 13, 2019 at 12:27:06PM -0400, Brian Foster wrote:
+> > On Tue, Jun 11, 2019 at 11:47:44PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Create a new iterator function to simplify walking inodes in an XFS
+> > > filesystem.  This new iterator will replace the existing open-coded
+> > > walking that goes on in various places.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/Makefile                  |    1 
+> > >  fs/xfs/libxfs/xfs_ialloc_btree.c |   36 +++
+> > >  fs/xfs/libxfs/xfs_ialloc_btree.h |    3 
+> > >  fs/xfs/xfs_itable.c              |    5 
+> > >  fs/xfs/xfs_itable.h              |    8 +
+> > >  fs/xfs/xfs_iwalk.c               |  418 ++++++++++++++++++++++++++++++++++++++
+> > >  fs/xfs/xfs_iwalk.h               |   19 ++
+> > >  fs/xfs/xfs_trace.h               |   40 ++++
+> > >  8 files changed, 524 insertions(+), 6 deletions(-)
+> > >  create mode 100644 fs/xfs/xfs_iwalk.c
+> > >  create mode 100644 fs/xfs/xfs_iwalk.h
+> > > 
+> > > 
+> > ...
+> > > diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+> > > new file mode 100644
+> > > index 000000000000..49289588413f
+> > > --- /dev/null
+> > > +++ b/fs/xfs/xfs_iwalk.c
+> > > @@ -0,0 +1,418 @@
+> > ...
+> > > +/* Allocate memory for a walk. */
+> > > +STATIC int
+> > > +xfs_iwalk_alloc(
+> > > +	struct xfs_iwalk_ag	*iwag)
+> > > +{
+> > > +	size_t			size;
+> > > +
+> > > +	ASSERT(iwag->recs == NULL);
+> > > +	iwag->nr_recs = 0;
+> > > +
+> > > +	/* Allocate a prefetch buffer for inobt records. */
+> > > +	size = iwag->sz_recs * sizeof(struct xfs_inobt_rec_incore);
+> > > +	iwag->recs = kmem_alloc(size, KM_MAYFAIL);
+> > > +	if (iwag->recs == NULL)
+> > > +		return -ENOMEM;
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > > +/* Free memory we allocated for a walk. */
+> > > +STATIC void
+> > > +xfs_iwalk_free(
+> > > +	struct xfs_iwalk_ag	*iwag)
+> > > +{
+> > > +	kmem_free(iwag->recs);
+> > 
+> > It might be a good idea to ->recs = NULL here since the alloc call
+> > asserts for that (if any future code happens to free and realloc the
+> > recs buffer for whatever reason).
+
+Fixed.
+
+> > > +}
+> > > +
+> > ...
+> > > +/* Walk all inodes in a single AG, from @iwag->startino to the end of the AG. */
+> > > +STATIC int
+> > > +xfs_iwalk_ag(
+> > > +	struct xfs_iwalk_ag		*iwag)
+> > > +{
+> > > +	struct xfs_mount		*mp = iwag->mp;
+> > > +	struct xfs_trans		*tp = iwag->tp;
+> > > +	struct xfs_buf			*agi_bp = NULL;
+> > > +	struct xfs_btree_cur		*cur = NULL;
+> > > +	xfs_agnumber_t			agno;
+> > > +	xfs_agino_t			agino;
+> > > +	int				has_more;
+> > > +	int				error = 0;
+> > > +
+> > > +	/* Set up our cursor at the right place in the inode btree. */
+> > > +	agno = XFS_INO_TO_AGNO(mp, iwag->startino);
+> > > +	agino = XFS_INO_TO_AGINO(mp, iwag->startino);
+> > > +	error = xfs_iwalk_ag_start(iwag, agno, agino, &cur, &agi_bp, &has_more);
+> > > +
+> > > +	while (!error && has_more) {
+> > > +		struct xfs_inobt_rec_incore	*irec;
+> > > +
+> > > +		cond_resched();
+> > > +
+> > > +		/* Fetch the inobt record. */
+> > > +		irec = &iwag->recs[iwag->nr_recs];
+> > > +		error = xfs_inobt_get_rec(cur, irec, &has_more);
+> > > +		if (error || !has_more)
+> > > +			break;
+> > > +
+> > > +		/* No allocated inodes in this chunk; skip it. */
+> > > +		if (irec->ir_freecount == irec->ir_count) {
+> > > +			error = xfs_btree_increment(cur, 0, &has_more);
+> > > +			if (error)
+> > > +				break;
+> > > +			continue;
+> > > +		}
+> > > +
+> > > +		/*
+> > > +		 * Start readahead for this inode chunk in anticipation of
+> > > +		 * walking the inodes.
+> > > +		 */
+> > > +		xfs_bulkstat_ichunk_ra(mp, agno, irec);
+> > > +
+> > > +		/*
+> > > +		 * If there's space in the buffer for more records, increment
+> > > +		 * the btree cursor and grab more.
+> > > +		 */
+> > > +		if (++iwag->nr_recs < iwag->sz_recs) {
+> > > +			error = xfs_btree_increment(cur, 0, &has_more);
+> > > +			if (error || !has_more)
+> > > +				break;
+> > > +			continue;
+> > > +		}
+> > > +
+> > > +		/*
+> > > +		 * Otherwise, we need to save cursor state and run the callback
+> > > +		 * function on the cached records.  The run_callbacks function
+> > > +		 * is supposed to return a cursor pointing to the record where
+> > > +		 * we would be if we had been able to increment like above.
+> > > +		 */
+> > > +		has_more = true;
+> > 
+> > has_more should always be true if we get here right? If so, perhaps
+> > better to replace this with ASSERT(has_more).
+
+Right; fixed.
+
+> > > +		error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp,
+> > > +				&has_more);
+> > > +	}
+> > > +
+> > > +	if (iwag->nr_recs == 0 || error)
+> > > +		goto out;
+> > > +
+> > > +	/* Walk the unprocessed records in the cache. */
+> > > +	error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp, &has_more);
+> > > +
+> > > +out:
+> > > +	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
+> > > +	return error;
+> > > +}
+> > > +
+> > > +/*
+> > > + * Given the number of inodes to prefetch, set the number of inobt records that
+> > > + * we cache in memory, which controls the number of inodes we try to read
+> > > + * ahead.
+> > > + */
+> > > +static inline void
+> > > +xfs_iwalk_set_prefetch(
+> > > +	struct xfs_iwalk_ag	*iwag,
+> > > +	unsigned int		max_prefetch)
+> > > +{
+> > > +	/*
+> > > +	 * Default to 4096 bytes' worth of inobt records; this should be plenty
+> > > +	 * of inodes to read ahead.  This number was chosen so that the cache
+> > > +	 * is never more than a single memory page and the amount of inode
+> > > +	 * readahead is limited to to 16k inodes regardless of CPU:
+> > > +	 *
+> > > +	 * 4096 bytes / 16 bytes per inobt record = 256 inobt records
+> > > +	 * 256 inobt records * 64 inodes per record = 16384 inodes
+> > > +	 * 16384 inodes * 512 bytes per inode(?) = 8MB of inode readahead
+> > > +	 */
+> > > +	iwag->sz_recs = 4096 / sizeof(struct xfs_inobt_rec_incore);
+> > > +
+> > 
+> > So we decided not to preserve current readahead behavior in this patch?
 > 
-> The DONTCACHE inode caching semantics of bulkstat tend to conflict
-> with "readahead all the way to the inode cache".
+> I sent this patch before I received your reply. :(
+
+...and hit send before replying to everything.
+
+--D
+
+> The current version of this patch restores the (4 * PAGE_SIZE) behavior,
+> and a new patch immediately afterwards replaces it with better logic.
+> "better" is where we allow prefetch up to 2048 inodes and use the
+> (admittedly sparse) amount of information gathered so far about average
+> inode chunk free factors to guess at how many inobt records to cache.
 > 
-
-Yep..
-
-> > The caveats are that would probably be more involved than something that
-> > just caches the current cluster buffer and passes it into the iget path.
-> > We'd have to rectify readahead in-core inodes against DONTCACHE inodes
-> > used by bulkstat, for example, though I don't think that would be too
-> > difficult to address via a new inode readahead flag or some such
-> > preserve existing DONTCACHE behavior.
+> > > +	/*
+> > > +	 * If the caller gives us a desired prefetch amount, round it up to
+> > > +	 * an even inode chunk and cap it as defined previously.
+> > > +	 */
+> > > +	if (max_prefetch) {
+> > > +		unsigned int	nr;
+> > > +
+> > > +		nr = round_up(max_prefetch, XFS_INODES_PER_CHUNK) /
+> > > +				XFS_INODES_PER_CHUNK;
+> > > +		iwag->sz_recs = min_t(unsigned int, iwag->sz_recs, nr);
+> > 
+> > This is comparing the record count calculated above with max_prefetch,
+> > which the rounding just above suggests is in inodes. BTW, could we add a
+> > one line /* prefetch in inodes */ comment on the max_prefetch parameter
+> > line at the top of the function?
 > 
-> I did try that once, the cache thrashing was .... difficult to
-> contain under memory pressure. bulkstat pushes hundreds of thousands
-> of inodes a second through the inode cache, and under memory
-> pressure it will still cause working set perturbation with DONTCACHE
-> being set. Holding DONTCACHE inodes for some time in the cache kinda
-> defeats the simple purpose it has, and relying on cache hits to
-> convert "readahead" to "dont cache" becomes really nasty when we
-> try to use inode readahead for other things (like speeding up
-> directory traversals by having xfs_readdir() issue inode readahead).
+> I renamed the parameter "inode_records", FWIW.
+> > 
+> > Aside from those nits the rest looks good to me.
 > 
-
-Yeah, though you're taking things a bit further than I was originally
-thinking by applying this to bulkstat in general. I conflated bulkstat
-with quotacheck above (because the latter uses the former), but I
-probably should have just referred to quotacheck since the bulkstat
-callback is where we actually grab the inode anyways.
-
-The experiment I was thinking about was really just intended for
-quotacheck because it's already running in a fairly isolated context.
-There's no other working set, no contention to worry about with other
-tasks, etc., so it's a simple environment to evaluate this kind of
-(hacky) experiment. FWIW the motivation is related, since when qc is
-required the user basically has to sit there and wait for it to complete
-before the fs is usable (as opposed to bulkstat, which I just chalk up
-to being a long running fs operation requested by the user).
-
-Of course if there's simply no benefit in the quotacheck context, then
-there's clearly not much reason to consider similar behavior for
-bulkstat in general. But even if there was a benefit to qc, I agree with
-your point that things get a whole lot more complex when we have to
-consider working set and workload of an operational fs. Either way, I'm
-still curious if it helps in qc context. :)
-
-> The largest delay in bulkstat is the inode cluster IO latency.
-> Getting rid of that is where the biggest win is (hence cluster
-> read-ahead). The second largest overhead is the CPU burnt doing
-> inode lookups, and on filesystems with lots of inodes, a significant
-> amount of that is in the IGET_UNTRUSTED inobt lookup. IOWs, avoiding
-> GET_UNTRUSTED is relatively low hanging fruit.
+> <nod> Thanks for review!
 > 
-
-Agreed, but this again is more applicable to general bulkstat. Have you
-looked at Darrick's quotacheck flame graph? It shows the majority of
-quotacheck overhead in the inode memory allocation and grabbing the
-(presumably already in-core, though that is not visible in the graphic)
-cluster buffer. IGET_UNTRUSTED is not a factor here because the special
-quotacheck context allows us to elide it.
-
-BTW, a related point here is that perhaps anything that speeds up
-xfs_buf_find() might also speed this up (hmm.. _less_ read-ahead
-perhaps?) without resorting to special case inode preallocation hacks.
-It's probably worth collecting more detailed perf data on that qc
-codepath before getting too far into the weeds...
-
-> The next limitation for bulkstat is the superblock inode list lock
-> contention. Getting rid of the IGET_UNTRUSTED overhead is likely to
-> push the lock contention into the severe range (the lock is already
-> the largest CPU consumer at 16 threads bulkstating 600,000 inodes/s
-> on a 16p machine) so until we get rid of that lock contention, there
-> isn't much point in doing major rework to the bulkstat algorithm as
-> it doesn't address the limitations that the current algorithm has.
+> (Oh, more replies are slowly wandering in...)
 > 
-> > It's also likely that passing the buffer into iget would already address
-> > most of the overhead associated with the buffer lookup, so there might
-> > not be enough tangible benefit at that point. The positive is that it's
-> > probably an incremental step on top of an "iget from an existing cluster
-> > buffer" mechanism and so could be easily prototyped by hacking in a read
-> > side b_iodone handler or something.
+> --D
 > 
-> We don't want to put inode cache insertion into a IO completion
-> routine. Tried it, caused horrible problems with metadata read IO
-> latency and substantially increased inode cache lock contention by
-> bouncing the radix trees around both submission and completion CPU
-> contexts...
-> 
-
-Agreed, that certainly makes sense. It would be kind of crazy to have
-single inode lookups waiting on inode cache population of entire cluster
-buffers worth of inodes.
-
-> /me has spent many, many years trying lots of different ways to make
-> the inode cache in XFS go faster and has failed most of the time....
-> 
-
-Heh. :)
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > 
+> > Brian
+> > 
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * Allocate enough space to prefetch at least two records so that we
+> > > +	 * can cache both the inobt record where the iwalk started and the next
+> > > +	 * record.  This simplifies the AG inode walk loop setup code.
+> > > +	 */
+> > > +	iwag->sz_recs = max_t(unsigned int, iwag->sz_recs, 2);
+> > > +}
+> > > +
+> > > +/*
+> > > + * Walk all inodes in the filesystem starting from @startino.  The @iwalk_fn
+> > > + * will be called for each allocated inode, being passed the inode's number and
+> > > + * @data.  @max_prefetch controls how many inobt records' worth of inodes we
+> > > + * try to readahead.
+> > > + */
+> > > +int
+> > > +xfs_iwalk(
+> > > +	struct xfs_mount	*mp,
+> > > +	struct xfs_trans	*tp,
+> > > +	xfs_ino_t		startino,
+> > > +	xfs_iwalk_fn		iwalk_fn,
+> > > +	unsigned int		max_prefetch,
+> > > +	void			*data)
+> > > +{
+> > > +	struct xfs_iwalk_ag	iwag = {
+> > > +		.mp		= mp,
+> > > +		.tp		= tp,
+> > > +		.iwalk_fn	= iwalk_fn,
+> > > +		.data		= data,
+> > > +		.startino	= startino,
+> > > +	};
+> > > +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+> > > +	int			error;
+> > > +
+> > > +	ASSERT(agno < mp->m_sb.sb_agcount);
+> > > +
+> > > +	xfs_iwalk_set_prefetch(&iwag, max_prefetch);
+> > > +	error = xfs_iwalk_alloc(&iwag);
+> > > +	if (error)
+> > > +		return error;
+> > > +
+> > > +	for (; agno < mp->m_sb.sb_agcount; agno++) {
+> > > +		error = xfs_iwalk_ag(&iwag);
+> > > +		if (error)
+> > > +			break;
+> > > +		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
+> > > +	}
+> > > +
+> > > +	xfs_iwalk_free(&iwag);
+> > > +	return error;
+> > > +}
+> > > diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
+> > > new file mode 100644
+> > > index 000000000000..9e762e31dadc
+> > > --- /dev/null
+> > > +++ b/fs/xfs/xfs_iwalk.h
+> > > @@ -0,0 +1,19 @@
+> > > +// SPDX-License-Identifier: GPL-2.0+
+> > > +/*
+> > > + * Copyright (C) 2019 Oracle.  All Rights Reserved.
+> > > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > > + */
+> > > +#ifndef __XFS_IWALK_H__
+> > > +#define __XFS_IWALK_H__
+> > > +
+> > > +/* Walk all inodes in the filesystem starting from @startino. */
+> > > +typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
+> > > +			    xfs_ino_t ino, void *data);
+> > > +/* Return values for xfs_iwalk_fn. */
+> > > +#define XFS_IWALK_CONTINUE	(XFS_ITER_CONTINUE)
+> > > +#define XFS_IWALK_ABORT		(XFS_ITER_ABORT)
+> > > +
+> > > +int xfs_iwalk(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t startino,
+> > > +		xfs_iwalk_fn iwalk_fn, unsigned int max_prefetch, void *data);
+> > > +
+> > > +#endif /* __XFS_IWALK_H__ */
+> > > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > > index 2464ea351f83..f9bb1d50bc0e 100644
+> > > --- a/fs/xfs/xfs_trace.h
+> > > +++ b/fs/xfs/xfs_trace.h
+> > > @@ -3516,6 +3516,46 @@ DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
+> > >  DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
+> > >  DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
+> > >  
+> > > +TRACE_EVENT(xfs_iwalk_ag,
+> > > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > > +		 xfs_agino_t startino),
+> > > +	TP_ARGS(mp, agno, startino),
+> > > +	TP_STRUCT__entry(
+> > > +		__field(dev_t, dev)
+> > > +		__field(xfs_agnumber_t, agno)
+> > > +		__field(xfs_agino_t, startino)
+> > > +	),
+> > > +	TP_fast_assign(
+> > > +		__entry->dev = mp->m_super->s_dev;
+> > > +		__entry->agno = agno;
+> > > +		__entry->startino = startino;
+> > > +	),
+> > > +	TP_printk("dev %d:%d agno %d startino %u",
+> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
+> > > +		  __entry->startino)
+> > > +)
+> > > +
+> > > +TRACE_EVENT(xfs_iwalk_ag_rec,
+> > > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > > +		 struct xfs_inobt_rec_incore *irec),
+> > > +	TP_ARGS(mp, agno, irec),
+> > > +	TP_STRUCT__entry(
+> > > +		__field(dev_t, dev)
+> > > +		__field(xfs_agnumber_t, agno)
+> > > +		__field(xfs_agino_t, startino)
+> > > +		__field(uint64_t, freemask)
+> > > +	),
+> > > +	TP_fast_assign(
+> > > +		__entry->dev = mp->m_super->s_dev;
+> > > +		__entry->agno = agno;
+> > > +		__entry->startino = irec->ir_startino;
+> > > +		__entry->freemask = irec->ir_free;
+> > > +	),
+> > > +	TP_printk("dev %d:%d agno %d startino %u freemask 0x%llx",
+> > > +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
+> > > +		  __entry->startino, __entry->freemask)
+> > > +)
+> > > +
+> > >  #endif /* _TRACE_XFS_H */
+> > >  
+> > >  #undef TRACE_INCLUDE_PATH
+> > > 
