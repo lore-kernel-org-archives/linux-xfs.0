@@ -1,512 +1,358 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57568 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726265AbfFMSDs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:03:48 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 20/20] xfs: merge xfs_trans_bmap.c into xfs_bmap_item.c
-Date: Thu, 13 Jun 2019 20:03:00 +0200
-Message-Id: <20190613180300.30447-21-hch@lst.de>
-In-Reply-To: <20190613180300.30447-1-hch@lst.de>
-References: <20190613180300.30447-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:50382 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726265AbfFMSGb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:06:31 -0400
+Date: Thu, 13 Jun 2019 11:06:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/14] xfs: create simplified inode walk function
+Message-ID: <20190613180609.GF3773859@magnolia>
+References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
+ <156032206425.3774243.10420463221575428170.stgit@magnolia>
+ <20190613162703.GB21773@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190613162703.GB21773@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Brian Foster <bfoster@redhat.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-Keep all bmap item related code together.
+On Thu, Jun 13, 2019 at 12:27:06PM -0400, Brian Foster wrote:
+> On Tue, Jun 11, 2019 at 11:47:44PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a new iterator function to simplify walking inodes in an XFS
+> > filesystem.  This new iterator will replace the existing open-coded
+> > walking that goes on in various places.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/Makefile                  |    1 
+> >  fs/xfs/libxfs/xfs_ialloc_btree.c |   36 +++
+> >  fs/xfs/libxfs/xfs_ialloc_btree.h |    3 
+> >  fs/xfs/xfs_itable.c              |    5 
+> >  fs/xfs/xfs_itable.h              |    8 +
+> >  fs/xfs/xfs_iwalk.c               |  418 ++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_iwalk.h               |   19 ++
+> >  fs/xfs/xfs_trace.h               |   40 ++++
+> >  8 files changed, 524 insertions(+), 6 deletions(-)
+> >  create mode 100644 fs/xfs/xfs_iwalk.c
+> >  create mode 100644 fs/xfs/xfs_iwalk.h
+> > 
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+> > new file mode 100644
+> > index 000000000000..49289588413f
+> > --- /dev/null
+> > +++ b/fs/xfs/xfs_iwalk.c
+> > @@ -0,0 +1,418 @@
+> ...
+> > +/* Allocate memory for a walk. */
+> > +STATIC int
+> > +xfs_iwalk_alloc(
+> > +	struct xfs_iwalk_ag	*iwag)
+> > +{
+> > +	size_t			size;
+> > +
+> > +	ASSERT(iwag->recs == NULL);
+> > +	iwag->nr_recs = 0;
+> > +
+> > +	/* Allocate a prefetch buffer for inobt records. */
+> > +	size = iwag->sz_recs * sizeof(struct xfs_inobt_rec_incore);
+> > +	iwag->recs = kmem_alloc(size, KM_MAYFAIL);
+> > +	if (iwag->recs == NULL)
+> > +		return -ENOMEM;
+> > +
+> > +	return 0;
+> > +}
+> > +
+> > +/* Free memory we allocated for a walk. */
+> > +STATIC void
+> > +xfs_iwalk_free(
+> > +	struct xfs_iwalk_ag	*iwag)
+> > +{
+> > +	kmem_free(iwag->recs);
+> 
+> It might be a good idea to ->recs = NULL here since the alloc call
+> asserts for that (if any future code happens to free and realloc the
+> recs buffer for whatever reason).
+> 
+> > +}
+> > +
+> ...
+> > +/* Walk all inodes in a single AG, from @iwag->startino to the end of the AG. */
+> > +STATIC int
+> > +xfs_iwalk_ag(
+> > +	struct xfs_iwalk_ag		*iwag)
+> > +{
+> > +	struct xfs_mount		*mp = iwag->mp;
+> > +	struct xfs_trans		*tp = iwag->tp;
+> > +	struct xfs_buf			*agi_bp = NULL;
+> > +	struct xfs_btree_cur		*cur = NULL;
+> > +	xfs_agnumber_t			agno;
+> > +	xfs_agino_t			agino;
+> > +	int				has_more;
+> > +	int				error = 0;
+> > +
+> > +	/* Set up our cursor at the right place in the inode btree. */
+> > +	agno = XFS_INO_TO_AGNO(mp, iwag->startino);
+> > +	agino = XFS_INO_TO_AGINO(mp, iwag->startino);
+> > +	error = xfs_iwalk_ag_start(iwag, agno, agino, &cur, &agi_bp, &has_more);
+> > +
+> > +	while (!error && has_more) {
+> > +		struct xfs_inobt_rec_incore	*irec;
+> > +
+> > +		cond_resched();
+> > +
+> > +		/* Fetch the inobt record. */
+> > +		irec = &iwag->recs[iwag->nr_recs];
+> > +		error = xfs_inobt_get_rec(cur, irec, &has_more);
+> > +		if (error || !has_more)
+> > +			break;
+> > +
+> > +		/* No allocated inodes in this chunk; skip it. */
+> > +		if (irec->ir_freecount == irec->ir_count) {
+> > +			error = xfs_btree_increment(cur, 0, &has_more);
+> > +			if (error)
+> > +				break;
+> > +			continue;
+> > +		}
+> > +
+> > +		/*
+> > +		 * Start readahead for this inode chunk in anticipation of
+> > +		 * walking the inodes.
+> > +		 */
+> > +		xfs_bulkstat_ichunk_ra(mp, agno, irec);
+> > +
+> > +		/*
+> > +		 * If there's space in the buffer for more records, increment
+> > +		 * the btree cursor and grab more.
+> > +		 */
+> > +		if (++iwag->nr_recs < iwag->sz_recs) {
+> > +			error = xfs_btree_increment(cur, 0, &has_more);
+> > +			if (error || !has_more)
+> > +				break;
+> > +			continue;
+> > +		}
+> > +
+> > +		/*
+> > +		 * Otherwise, we need to save cursor state and run the callback
+> > +		 * function on the cached records.  The run_callbacks function
+> > +		 * is supposed to return a cursor pointing to the record where
+> > +		 * we would be if we had been able to increment like above.
+> > +		 */
+> > +		has_more = true;
+> 
+> has_more should always be true if we get here right? If so, perhaps
+> better to replace this with ASSERT(has_more).
+> 
+> > +		error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp,
+> > +				&has_more);
+> > +	}
+> > +
+> > +	if (iwag->nr_recs == 0 || error)
+> > +		goto out;
+> > +
+> > +	/* Walk the unprocessed records in the cache. */
+> > +	error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp, &has_more);
+> > +
+> > +out:
+> > +	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
+> > +	return error;
+> > +}
+> > +
+> > +/*
+> > + * Given the number of inodes to prefetch, set the number of inobt records that
+> > + * we cache in memory, which controls the number of inodes we try to read
+> > + * ahead.
+> > + */
+> > +static inline void
+> > +xfs_iwalk_set_prefetch(
+> > +	struct xfs_iwalk_ag	*iwag,
+> > +	unsigned int		max_prefetch)
+> > +{
+> > +	/*
+> > +	 * Default to 4096 bytes' worth of inobt records; this should be plenty
+> > +	 * of inodes to read ahead.  This number was chosen so that the cache
+> > +	 * is never more than a single memory page and the amount of inode
+> > +	 * readahead is limited to to 16k inodes regardless of CPU:
+> > +	 *
+> > +	 * 4096 bytes / 16 bytes per inobt record = 256 inobt records
+> > +	 * 256 inobt records * 64 inodes per record = 16384 inodes
+> > +	 * 16384 inodes * 512 bytes per inode(?) = 8MB of inode readahead
+> > +	 */
+> > +	iwag->sz_recs = 4096 / sizeof(struct xfs_inobt_rec_incore);
+> > +
+> 
+> So we decided not to preserve current readahead behavior in this patch?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/Makefile         |   1 -
- fs/xfs/xfs_bmap_item.c  | 200 ++++++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trans.h      |  11 --
- fs/xfs/xfs_trans_bmap.c | 216 ----------------------------------------
- 4 files changed, 199 insertions(+), 229 deletions(-)
- delete mode 100644 fs/xfs/xfs_trans_bmap.c
+I sent this patch before I received your reply. :(
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index cc0cd3970122..7a87e8411d06 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -105,7 +105,6 @@ xfs-y				+= xfs_log.o \
- 				   xfs_rmap_item.o \
- 				   xfs_log_recover.o \
- 				   xfs_trans_ail.o \
--				   xfs_trans_bmap.o \
- 				   xfs_trans_buf.o \
- 				   xfs_trans_inode.o
- 
-diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
-index 341b1e231178..c22afe288b21 100644
---- a/fs/xfs/xfs_bmap_item.c
-+++ b/fs/xfs/xfs_bmap_item.c
-@@ -6,6 +6,7 @@
- #include "xfs.h"
- #include "xfs_fs.h"
- #include "xfs_format.h"
-+#include "xfs_shared.h"
- #include "xfs_log_format.h"
- #include "xfs_trans_resv.h"
- #include "xfs_bit.h"
-@@ -212,7 +213,7 @@ static const struct xfs_item_ops xfs_bud_item_ops = {
- 	.iop_release	= xfs_bud_item_release,
- };
- 
--struct xfs_bud_log_item *
-+static struct xfs_bud_log_item *
- xfs_trans_get_bud(
- 	struct xfs_trans		*tp,
- 	struct xfs_bui_log_item		*buip)
-@@ -229,6 +230,203 @@ xfs_trans_get_bud(
- 	return budp;
- }
- 
-+/*
-+ * Finish an bmap update and log it to the BUD. Note that the
-+ * transaction is marked dirty regardless of whether the bmap update
-+ * succeeds or fails to support the BUI/BUD lifecycle rules.
-+ */
-+static int
-+xfs_trans_log_finish_bmap_update(
-+	struct xfs_trans		*tp,
-+	struct xfs_bud_log_item		*budp,
-+	enum xfs_bmap_intent_type	type,
-+	struct xfs_inode		*ip,
-+	int				whichfork,
-+	xfs_fileoff_t			startoff,
-+	xfs_fsblock_t			startblock,
-+	xfs_filblks_t			*blockcount,
-+	xfs_exntst_t			state)
-+{
-+	int				error;
-+
-+	error = xfs_bmap_finish_one(tp, ip, type, whichfork, startoff,
-+			startblock, blockcount, state);
-+
-+	/*
-+	 * Mark the transaction dirty, even on error. This ensures the
-+	 * transaction is aborted, which:
-+	 *
-+	 * 1.) releases the BUI and frees the BUD
-+	 * 2.) shuts down the filesystem
-+	 */
-+	tp->t_flags |= XFS_TRANS_DIRTY;
-+	set_bit(XFS_LI_DIRTY, &budp->bud_item.li_flags);
-+
-+	return error;
-+}
-+
-+/* Sort bmap intents by inode. */
-+static int
-+xfs_bmap_update_diff_items(
-+	void				*priv,
-+	struct list_head		*a,
-+	struct list_head		*b)
-+{
-+	struct xfs_bmap_intent		*ba;
-+	struct xfs_bmap_intent		*bb;
-+
-+	ba = container_of(a, struct xfs_bmap_intent, bi_list);
-+	bb = container_of(b, struct xfs_bmap_intent, bi_list);
-+	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
-+}
-+
-+/* Get an BUI. */
-+STATIC void *
-+xfs_bmap_update_create_intent(
-+	struct xfs_trans		*tp,
-+	unsigned int			count)
-+{
-+	struct xfs_bui_log_item		*buip;
-+
-+	ASSERT(count == XFS_BUI_MAX_FAST_EXTENTS);
-+	ASSERT(tp != NULL);
-+
-+	buip = xfs_bui_init(tp->t_mountp);
-+	ASSERT(buip != NULL);
-+
-+	/*
-+	 * Get a log_item_desc to point at the new item.
-+	 */
-+	xfs_trans_add_item(tp, &buip->bui_item);
-+	return buip;
-+}
-+
-+/* Set the map extent flags for this mapping. */
-+static void
-+xfs_trans_set_bmap_flags(
-+	struct xfs_map_extent		*bmap,
-+	enum xfs_bmap_intent_type	type,
-+	int				whichfork,
-+	xfs_exntst_t			state)
-+{
-+	bmap->me_flags = 0;
-+	switch (type) {
-+	case XFS_BMAP_MAP:
-+	case XFS_BMAP_UNMAP:
-+		bmap->me_flags = type;
-+		break;
-+	default:
-+		ASSERT(0);
-+	}
-+	if (state == XFS_EXT_UNWRITTEN)
-+		bmap->me_flags |= XFS_BMAP_EXTENT_UNWRITTEN;
-+	if (whichfork == XFS_ATTR_FORK)
-+		bmap->me_flags |= XFS_BMAP_EXTENT_ATTR_FORK;
-+}
-+
-+/* Log bmap updates in the intent item. */
-+STATIC void
-+xfs_bmap_update_log_item(
-+	struct xfs_trans		*tp,
-+	void				*intent,
-+	struct list_head		*item)
-+{
-+	struct xfs_bui_log_item		*buip = intent;
-+	struct xfs_bmap_intent		*bmap;
-+	uint				next_extent;
-+	struct xfs_map_extent		*map;
-+
-+	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
-+
-+	tp->t_flags |= XFS_TRANS_DIRTY;
-+	set_bit(XFS_LI_DIRTY, &buip->bui_item.li_flags);
-+
-+	/*
-+	 * atomic_inc_return gives us the value after the increment;
-+	 * we want to use it as an array index so we need to subtract 1 from
-+	 * it.
-+	 */
-+	next_extent = atomic_inc_return(&buip->bui_next_extent) - 1;
-+	ASSERT(next_extent < buip->bui_format.bui_nextents);
-+	map = &buip->bui_format.bui_extents[next_extent];
-+	map->me_owner = bmap->bi_owner->i_ino;
-+	map->me_startblock = bmap->bi_bmap.br_startblock;
-+	map->me_startoff = bmap->bi_bmap.br_startoff;
-+	map->me_len = bmap->bi_bmap.br_blockcount;
-+	xfs_trans_set_bmap_flags(map, bmap->bi_type, bmap->bi_whichfork,
-+			bmap->bi_bmap.br_state);
-+}
-+
-+/* Get an BUD so we can process all the deferred rmap updates. */
-+STATIC void *
-+xfs_bmap_update_create_done(
-+	struct xfs_trans		*tp,
-+	void				*intent,
-+	unsigned int			count)
-+{
-+	return xfs_trans_get_bud(tp, intent);
-+}
-+
-+/* Process a deferred rmap update. */
-+STATIC int
-+xfs_bmap_update_finish_item(
-+	struct xfs_trans		*tp,
-+	struct list_head		*item,
-+	void				*done_item,
-+	void				**state)
-+{
-+	struct xfs_bmap_intent		*bmap;
-+	xfs_filblks_t			count;
-+	int				error;
-+
-+	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
-+	count = bmap->bi_bmap.br_blockcount;
-+	error = xfs_trans_log_finish_bmap_update(tp, done_item,
-+			bmap->bi_type,
-+			bmap->bi_owner, bmap->bi_whichfork,
-+			bmap->bi_bmap.br_startoff,
-+			bmap->bi_bmap.br_startblock,
-+			&count,
-+			bmap->bi_bmap.br_state);
-+	if (!error && count > 0) {
-+		ASSERT(bmap->bi_type == XFS_BMAP_UNMAP);
-+		bmap->bi_bmap.br_blockcount = count;
-+		return -EAGAIN;
-+	}
-+	kmem_free(bmap);
-+	return error;
-+}
-+
-+/* Abort all pending BUIs. */
-+STATIC void
-+xfs_bmap_update_abort_intent(
-+	void				*intent)
-+{
-+	xfs_bui_release(intent);
-+}
-+
-+/* Cancel a deferred rmap update. */
-+STATIC void
-+xfs_bmap_update_cancel_item(
-+	struct list_head		*item)
-+{
-+	struct xfs_bmap_intent		*bmap;
-+
-+	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
-+	kmem_free(bmap);
-+}
-+
-+const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
-+	.max_items	= XFS_BUI_MAX_FAST_EXTENTS,
-+	.diff_items	= xfs_bmap_update_diff_items,
-+	.create_intent	= xfs_bmap_update_create_intent,
-+	.abort_intent	= xfs_bmap_update_abort_intent,
-+	.log_item	= xfs_bmap_update_log_item,
-+	.create_done	= xfs_bmap_update_create_done,
-+	.finish_item	= xfs_bmap_update_finish_item,
-+	.cancel_item	= xfs_bmap_update_cancel_item,
-+};
-+
- /*
-  * Process a bmap update intent item that was recovered from the log.
-  * We need to update some inode's bmbt.
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 4f048baa2a49..229f24d700b5 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -244,15 +244,4 @@ void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
- 
- extern kmem_zone_t	*xfs_trans_zone;
- 
--/* mapping updates */
--enum xfs_bmap_intent_type;
--
--struct xfs_bud_log_item *xfs_trans_get_bud(struct xfs_trans *tp,
--		struct xfs_bui_log_item *buip);
--int xfs_trans_log_finish_bmap_update(struct xfs_trans *tp,
--		struct xfs_bud_log_item *rudp, enum xfs_bmap_intent_type type,
--		struct xfs_inode *ip, int whichfork, xfs_fileoff_t startoff,
--		xfs_fsblock_t startblock, xfs_filblks_t *blockcount,
--		xfs_exntst_t state);
--
- #endif	/* __XFS_TRANS_H__ */
-diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
-deleted file mode 100644
-index c6f5b217d17c..000000000000
---- a/fs/xfs/xfs_trans_bmap.c
-+++ /dev/null
-@@ -1,216 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0+
--/*
-- * Copyright (C) 2016 Oracle.  All Rights Reserved.
-- * Author: Darrick J. Wong <darrick.wong@oracle.com>
-- */
--#include "xfs.h"
--#include "xfs_fs.h"
--#include "xfs_shared.h"
--#include "xfs_format.h"
--#include "xfs_log_format.h"
--#include "xfs_trans_resv.h"
--#include "xfs_mount.h"
--#include "xfs_defer.h"
--#include "xfs_trans.h"
--#include "xfs_trans_priv.h"
--#include "xfs_bmap_item.h"
--#include "xfs_alloc.h"
--#include "xfs_bmap.h"
--#include "xfs_inode.h"
--
--/*
-- * Finish an bmap update and log it to the BUD. Note that the
-- * transaction is marked dirty regardless of whether the bmap update
-- * succeeds or fails to support the BUI/BUD lifecycle rules.
-- */
--int
--xfs_trans_log_finish_bmap_update(
--	struct xfs_trans		*tp,
--	struct xfs_bud_log_item		*budp,
--	enum xfs_bmap_intent_type	type,
--	struct xfs_inode		*ip,
--	int				whichfork,
--	xfs_fileoff_t			startoff,
--	xfs_fsblock_t			startblock,
--	xfs_filblks_t			*blockcount,
--	xfs_exntst_t			state)
--{
--	int				error;
--
--	error = xfs_bmap_finish_one(tp, ip, type, whichfork, startoff,
--			startblock, blockcount, state);
--
--	/*
--	 * Mark the transaction dirty, even on error. This ensures the
--	 * transaction is aborted, which:
--	 *
--	 * 1.) releases the BUI and frees the BUD
--	 * 2.) shuts down the filesystem
--	 */
--	tp->t_flags |= XFS_TRANS_DIRTY;
--	set_bit(XFS_LI_DIRTY, &budp->bud_item.li_flags);
--
--	return error;
--}
--
--/* Sort bmap intents by inode. */
--static int
--xfs_bmap_update_diff_items(
--	void				*priv,
--	struct list_head		*a,
--	struct list_head		*b)
--{
--	struct xfs_bmap_intent		*ba;
--	struct xfs_bmap_intent		*bb;
--
--	ba = container_of(a, struct xfs_bmap_intent, bi_list);
--	bb = container_of(b, struct xfs_bmap_intent, bi_list);
--	return ba->bi_owner->i_ino - bb->bi_owner->i_ino;
--}
--
--/* Get an BUI. */
--STATIC void *
--xfs_bmap_update_create_intent(
--	struct xfs_trans		*tp,
--	unsigned int			count)
--{
--	struct xfs_bui_log_item		*buip;
--
--	ASSERT(count == XFS_BUI_MAX_FAST_EXTENTS);
--	ASSERT(tp != NULL);
--
--	buip = xfs_bui_init(tp->t_mountp);
--	ASSERT(buip != NULL);
--
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	xfs_trans_add_item(tp, &buip->bui_item);
--	return buip;
--}
--
--/* Set the map extent flags for this mapping. */
--static void
--xfs_trans_set_bmap_flags(
--	struct xfs_map_extent		*bmap,
--	enum xfs_bmap_intent_type	type,
--	int				whichfork,
--	xfs_exntst_t			state)
--{
--	bmap->me_flags = 0;
--	switch (type) {
--	case XFS_BMAP_MAP:
--	case XFS_BMAP_UNMAP:
--		bmap->me_flags = type;
--		break;
--	default:
--		ASSERT(0);
--	}
--	if (state == XFS_EXT_UNWRITTEN)
--		bmap->me_flags |= XFS_BMAP_EXTENT_UNWRITTEN;
--	if (whichfork == XFS_ATTR_FORK)
--		bmap->me_flags |= XFS_BMAP_EXTENT_ATTR_FORK;
--}
--
--/* Log bmap updates in the intent item. */
--STATIC void
--xfs_bmap_update_log_item(
--	struct xfs_trans		*tp,
--	void				*intent,
--	struct list_head		*item)
--{
--	struct xfs_bui_log_item		*buip = intent;
--	struct xfs_bmap_intent		*bmap;
--	uint				next_extent;
--	struct xfs_map_extent		*map;
--
--	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
--
--	tp->t_flags |= XFS_TRANS_DIRTY;
--	set_bit(XFS_LI_DIRTY, &buip->bui_item.li_flags);
--
--	/*
--	 * atomic_inc_return gives us the value after the increment;
--	 * we want to use it as an array index so we need to subtract 1 from
--	 * it.
--	 */
--	next_extent = atomic_inc_return(&buip->bui_next_extent) - 1;
--	ASSERT(next_extent < buip->bui_format.bui_nextents);
--	map = &buip->bui_format.bui_extents[next_extent];
--	map->me_owner = bmap->bi_owner->i_ino;
--	map->me_startblock = bmap->bi_bmap.br_startblock;
--	map->me_startoff = bmap->bi_bmap.br_startoff;
--	map->me_len = bmap->bi_bmap.br_blockcount;
--	xfs_trans_set_bmap_flags(map, bmap->bi_type, bmap->bi_whichfork,
--			bmap->bi_bmap.br_state);
--}
--
--/* Get an BUD so we can process all the deferred rmap updates. */
--STATIC void *
--xfs_bmap_update_create_done(
--	struct xfs_trans		*tp,
--	void				*intent,
--	unsigned int			count)
--{
--	return xfs_trans_get_bud(tp, intent);
--}
--
--/* Process a deferred rmap update. */
--STATIC int
--xfs_bmap_update_finish_item(
--	struct xfs_trans		*tp,
--	struct list_head		*item,
--	void				*done_item,
--	void				**state)
--{
--	struct xfs_bmap_intent		*bmap;
--	xfs_filblks_t			count;
--	int				error;
--
--	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
--	count = bmap->bi_bmap.br_blockcount;
--	error = xfs_trans_log_finish_bmap_update(tp, done_item,
--			bmap->bi_type,
--			bmap->bi_owner, bmap->bi_whichfork,
--			bmap->bi_bmap.br_startoff,
--			bmap->bi_bmap.br_startblock,
--			&count,
--			bmap->bi_bmap.br_state);
--	if (!error && count > 0) {
--		ASSERT(bmap->bi_type == XFS_BMAP_UNMAP);
--		bmap->bi_bmap.br_blockcount = count;
--		return -EAGAIN;
--	}
--	kmem_free(bmap);
--	return error;
--}
--
--/* Abort all pending BUIs. */
--STATIC void
--xfs_bmap_update_abort_intent(
--	void				*intent)
--{
--	xfs_bui_release(intent);
--}
--
--/* Cancel a deferred rmap update. */
--STATIC void
--xfs_bmap_update_cancel_item(
--	struct list_head		*item)
--{
--	struct xfs_bmap_intent		*bmap;
--
--	bmap = container_of(item, struct xfs_bmap_intent, bi_list);
--	kmem_free(bmap);
--}
--
--const struct xfs_defer_op_type xfs_bmap_update_defer_type = {
--	.max_items	= XFS_BUI_MAX_FAST_EXTENTS,
--	.diff_items	= xfs_bmap_update_diff_items,
--	.create_intent	= xfs_bmap_update_create_intent,
--	.abort_intent	= xfs_bmap_update_abort_intent,
--	.log_item	= xfs_bmap_update_log_item,
--	.create_done	= xfs_bmap_update_create_done,
--	.finish_item	= xfs_bmap_update_finish_item,
--	.cancel_item	= xfs_bmap_update_cancel_item,
--};
--- 
-2.20.1
+The current version of this patch restores the (4 * PAGE_SIZE) behavior,
+and a new patch immediately afterwards replaces it with better logic.
+"better" is where we allow prefetch up to 2048 inodes and use the
+(admittedly sparse) amount of information gathered so far about average
+inode chunk free factors to guess at how many inobt records to cache.
+
+> > +	/*
+> > +	 * If the caller gives us a desired prefetch amount, round it up to
+> > +	 * an even inode chunk and cap it as defined previously.
+> > +	 */
+> > +	if (max_prefetch) {
+> > +		unsigned int	nr;
+> > +
+> > +		nr = round_up(max_prefetch, XFS_INODES_PER_CHUNK) /
+> > +				XFS_INODES_PER_CHUNK;
+> > +		iwag->sz_recs = min_t(unsigned int, iwag->sz_recs, nr);
+> 
+> This is comparing the record count calculated above with max_prefetch,
+> which the rounding just above suggests is in inodes. BTW, could we add a
+> one line /* prefetch in inodes */ comment on the max_prefetch parameter
+> line at the top of the function?
+
+I renamed the parameter "inode_records", FWIW.
+> 
+> Aside from those nits the rest looks good to me.
+
+<nod> Thanks for review!
+
+(Oh, more replies are slowly wandering in...)
+
+--D
+
+> 
+> Brian
+> 
+> > +	}
+> > +
+> > +	/*
+> > +	 * Allocate enough space to prefetch at least two records so that we
+> > +	 * can cache both the inobt record where the iwalk started and the next
+> > +	 * record.  This simplifies the AG inode walk loop setup code.
+> > +	 */
+> > +	iwag->sz_recs = max_t(unsigned int, iwag->sz_recs, 2);
+> > +}
+> > +
+> > +/*
+> > + * Walk all inodes in the filesystem starting from @startino.  The @iwalk_fn
+> > + * will be called for each allocated inode, being passed the inode's number and
+> > + * @data.  @max_prefetch controls how many inobt records' worth of inodes we
+> > + * try to readahead.
+> > + */
+> > +int
+> > +xfs_iwalk(
+> > +	struct xfs_mount	*mp,
+> > +	struct xfs_trans	*tp,
+> > +	xfs_ino_t		startino,
+> > +	xfs_iwalk_fn		iwalk_fn,
+> > +	unsigned int		max_prefetch,
+> > +	void			*data)
+> > +{
+> > +	struct xfs_iwalk_ag	iwag = {
+> > +		.mp		= mp,
+> > +		.tp		= tp,
+> > +		.iwalk_fn	= iwalk_fn,
+> > +		.data		= data,
+> > +		.startino	= startino,
+> > +	};
+> > +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+> > +	int			error;
+> > +
+> > +	ASSERT(agno < mp->m_sb.sb_agcount);
+> > +
+> > +	xfs_iwalk_set_prefetch(&iwag, max_prefetch);
+> > +	error = xfs_iwalk_alloc(&iwag);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	for (; agno < mp->m_sb.sb_agcount; agno++) {
+> > +		error = xfs_iwalk_ag(&iwag);
+> > +		if (error)
+> > +			break;
+> > +		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
+> > +	}
+> > +
+> > +	xfs_iwalk_free(&iwag);
+> > +	return error;
+> > +}
+> > diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
+> > new file mode 100644
+> > index 000000000000..9e762e31dadc
+> > --- /dev/null
+> > +++ b/fs/xfs/xfs_iwalk.h
+> > @@ -0,0 +1,19 @@
+> > +// SPDX-License-Identifier: GPL-2.0+
+> > +/*
+> > + * Copyright (C) 2019 Oracle.  All Rights Reserved.
+> > + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> > + */
+> > +#ifndef __XFS_IWALK_H__
+> > +#define __XFS_IWALK_H__
+> > +
+> > +/* Walk all inodes in the filesystem starting from @startino. */
+> > +typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
+> > +			    xfs_ino_t ino, void *data);
+> > +/* Return values for xfs_iwalk_fn. */
+> > +#define XFS_IWALK_CONTINUE	(XFS_ITER_CONTINUE)
+> > +#define XFS_IWALK_ABORT		(XFS_ITER_ABORT)
+> > +
+> > +int xfs_iwalk(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t startino,
+> > +		xfs_iwalk_fn iwalk_fn, unsigned int max_prefetch, void *data);
+> > +
+> > +#endif /* __XFS_IWALK_H__ */
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index 2464ea351f83..f9bb1d50bc0e 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -3516,6 +3516,46 @@ DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
+> >  DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
+> >  DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
+> >  
+> > +TRACE_EVENT(xfs_iwalk_ag,
+> > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > +		 xfs_agino_t startino),
+> > +	TP_ARGS(mp, agno, startino),
+> > +	TP_STRUCT__entry(
+> > +		__field(dev_t, dev)
+> > +		__field(xfs_agnumber_t, agno)
+> > +		__field(xfs_agino_t, startino)
+> > +	),
+> > +	TP_fast_assign(
+> > +		__entry->dev = mp->m_super->s_dev;
+> > +		__entry->agno = agno;
+> > +		__entry->startino = startino;
+> > +	),
+> > +	TP_printk("dev %d:%d agno %d startino %u",
+> > +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
+> > +		  __entry->startino)
+> > +)
+> > +
+> > +TRACE_EVENT(xfs_iwalk_ag_rec,
+> > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > +		 struct xfs_inobt_rec_incore *irec),
+> > +	TP_ARGS(mp, agno, irec),
+> > +	TP_STRUCT__entry(
+> > +		__field(dev_t, dev)
+> > +		__field(xfs_agnumber_t, agno)
+> > +		__field(xfs_agino_t, startino)
+> > +		__field(uint64_t, freemask)
+> > +	),
+> > +	TP_fast_assign(
+> > +		__entry->dev = mp->m_super->s_dev;
+> > +		__entry->agno = agno;
+> > +		__entry->startino = irec->ir_startino;
+> > +		__entry->freemask = irec->ir_free;
+> > +	),
+> > +	TP_printk("dev %d:%d agno %d startino %u freemask 0x%llx",
+> > +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
+> > +		  __entry->startino, __entry->freemask)
+> > +)
+> > +
+> >  #endif /* _TRACE_XFS_H */
+> >  
+> >  #undef TRACE_INCLUDE_PATH
+> > 
