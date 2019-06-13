@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57518 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:57524 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726265AbfFMSDh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:03:37 -0400
+        with ESMTP id S1726265AbfFMSDj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:03:39 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 15/20] xfs: merge xfs_rud_init into xfs_trans_get_rud
-Date: Thu, 13 Jun 2019 20:02:55 +0200
-Message-Id: <20190613180300.30447-16-hch@lst.de>
+Subject: [PATCH 16/20] xfs: merge xfs_bud_init into xfs_trans_get_bud
+Date: Thu, 13 Jun 2019 20:02:56 +0200
+Message-Id: <20190613180300.30447-17-hch@lst.de>
 In-Reply-To: <20190613180300.30447-1-hch@lst.de>
 References: <20190613180300.30447-1-hch@lst.de>
 MIME-Version: 1.0
@@ -22,79 +22,83 @@ There is no good reason to keep these two functions separate.
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_rmap_item.c  | 14 ++++++--------
- fs/xfs/xfs_rmap_item.h  |  2 --
- fs/xfs/xfs_trans_rmap.c | 12 ------------
- 3 files changed, 6 insertions(+), 22 deletions(-)
+ fs/xfs/xfs_bmap_item.c  | 14 ++++++--------
+ fs/xfs/xfs_bmap_item.h  |  2 --
+ fs/xfs/xfs_trans_bmap.c | 16 ----------------
+ 3 files changed, 6 insertions(+), 26 deletions(-)
 
-diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
-index c2f6acdc593d..7f903de481df 100644
---- a/fs/xfs/xfs_rmap_item.c
-+++ b/fs/xfs/xfs_rmap_item.c
-@@ -238,22 +238,20 @@ static const struct xfs_item_ops xfs_rud_item_ops = {
- 	.iop_release	= xfs_rud_item_release,
+diff --git a/fs/xfs/xfs_bmap_item.c b/fs/xfs/xfs_bmap_item.c
+index e20ec733c8ae..341b1e231178 100644
+--- a/fs/xfs/xfs_bmap_item.c
++++ b/fs/xfs/xfs_bmap_item.c
+@@ -212,22 +212,20 @@ static const struct xfs_item_ops xfs_bud_item_ops = {
+ 	.iop_release	= xfs_bud_item_release,
  };
  
 -/*
-- * Allocate and initialize an rud item with the given number of extents.
+- * Allocate and initialize an bud item with the given number of extents.
 - */
- struct xfs_rud_log_item *
--xfs_rud_init(
+ struct xfs_bud_log_item *
+-xfs_bud_init(
 -	struct xfs_mount		*mp,
-+xfs_trans_get_rud(
++xfs_trans_get_bud(
 +	struct xfs_trans		*tp,
- 	struct xfs_rui_log_item		*ruip)
+ 	struct xfs_bui_log_item		*buip)
 -
  {
--	struct xfs_rud_log_item	*rudp;
-+	struct xfs_rud_log_item		*rudp;
+-	struct xfs_bud_log_item	*budp;
++	struct xfs_bud_log_item		*budp;
  
- 	rudp = kmem_zone_zalloc(xfs_rud_zone, KM_SLEEP);
--	xfs_log_item_init(mp, &rudp->rud_item, XFS_LI_RUD, &xfs_rud_item_ops);
-+	xfs_log_item_init(tp->t_mountp, &rudp->rud_item, XFS_LI_RUD,
-+			  &xfs_rud_item_ops);
- 	rudp->rud_ruip = ruip;
- 	rudp->rud_format.rud_rui_id = ruip->rui_format.rui_id;
+ 	budp = kmem_zone_zalloc(xfs_bud_zone, KM_SLEEP);
+-	xfs_log_item_init(mp, &budp->bud_item, XFS_LI_BUD, &xfs_bud_item_ops);
++	xfs_log_item_init(tp->t_mountp, &budp->bud_item, XFS_LI_BUD,
++			  &xfs_bud_item_ops);
+ 	budp->bud_buip = buip;
+ 	budp->bud_format.bud_bui_id = buip->bui_format.bui_id;
  
-+	xfs_trans_add_item(tp, &rudp->rud_item);
- 	return rudp;
++	xfs_trans_add_item(tp, &budp->bud_item);
+ 	return budp;
  }
  
-diff --git a/fs/xfs/xfs_rmap_item.h b/fs/xfs/xfs_rmap_item.h
-index 7e482baa27f5..8708e4a5aa5c 100644
---- a/fs/xfs/xfs_rmap_item.h
-+++ b/fs/xfs/xfs_rmap_item.h
-@@ -78,8 +78,6 @@ extern struct kmem_zone	*xfs_rui_zone;
- extern struct kmem_zone	*xfs_rud_zone;
+diff --git a/fs/xfs/xfs_bmap_item.h b/fs/xfs/xfs_bmap_item.h
+index 89e043a88bb8..ad479cc73de8 100644
+--- a/fs/xfs/xfs_bmap_item.h
++++ b/fs/xfs/xfs_bmap_item.h
+@@ -75,8 +75,6 @@ extern struct kmem_zone	*xfs_bui_zone;
+ extern struct kmem_zone	*xfs_bud_zone;
  
- struct xfs_rui_log_item *xfs_rui_init(struct xfs_mount *, uint);
--struct xfs_rud_log_item *xfs_rud_init(struct xfs_mount *,
--		struct xfs_rui_log_item *);
- int xfs_rui_copy_format(struct xfs_log_iovec *buf,
- 		struct xfs_rui_log_format *dst_rui_fmt);
- void xfs_rui_item_free(struct xfs_rui_log_item *);
-diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
-index 5c7936b1be13..863e3281daaa 100644
---- a/fs/xfs/xfs_trans_rmap.c
-+++ b/fs/xfs/xfs_trans_rmap.c
-@@ -60,18 +60,6 @@ xfs_trans_set_rmap_flags(
- 	}
- }
+ struct xfs_bui_log_item *xfs_bui_init(struct xfs_mount *);
+-struct xfs_bud_log_item *xfs_bud_init(struct xfs_mount *,
+-		struct xfs_bui_log_item *);
+ void xfs_bui_item_free(struct xfs_bui_log_item *);
+ void xfs_bui_release(struct xfs_bui_log_item *);
+ int xfs_bui_recover(struct xfs_trans *parent_tp, struct xfs_bui_log_item *buip);
+diff --git a/fs/xfs/xfs_trans_bmap.c b/fs/xfs/xfs_trans_bmap.c
+index e1c7d55b32c3..c6f5b217d17c 100644
+--- a/fs/xfs/xfs_trans_bmap.c
++++ b/fs/xfs/xfs_trans_bmap.c
+@@ -18,22 +18,6 @@
+ #include "xfs_bmap.h"
+ #include "xfs_inode.h"
  
--struct xfs_rud_log_item *
--xfs_trans_get_rud(
+-/*
+- * This routine is called to allocate a "bmap update done"
+- * log item.
+- */
+-struct xfs_bud_log_item *
+-xfs_trans_get_bud(
 -	struct xfs_trans		*tp,
--	struct xfs_rui_log_item		*ruip)
+-	struct xfs_bui_log_item		*buip)
 -{
--	struct xfs_rud_log_item		*rudp;
+-	struct xfs_bud_log_item		*budp;
 -
--	rudp = xfs_rud_init(tp->t_mountp, ruip);
--	xfs_trans_add_item(tp, &rudp->rud_item);
--	return rudp;
+-	budp = xfs_bud_init(tp->t_mountp, buip);
+-	xfs_trans_add_item(tp, &budp->bud_item);
+-	return budp;
 -}
 -
  /*
-  * Finish an rmap update and log it to the RUD. Note that the transaction is
-  * marked dirty regardless of whether the rmap update succeeds or fails to
+  * Finish an bmap update and log it to the BUD. Note that the
+  * transaction is marked dirty regardless of whether the bmap update
 -- 
 2.20.1
