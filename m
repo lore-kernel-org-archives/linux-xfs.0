@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:57552 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:57560 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726265AbfFMSDn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:03:43 -0400
+        with ESMTP id S1726265AbfFMSDq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 14:03:46 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 18/20] xfs: merge xfs_trans_refcount.c into xfs_refcount_item.c
-Date: Thu, 13 Jun 2019 20:02:58 +0200
-Message-Id: <20190613180300.30447-19-hch@lst.de>
+Subject: [PATCH 19/20] xfs: merge xfs_trans_rmap.c into xfs_rmap_item.c
+Date: Thu, 13 Jun 2019 20:02:59 +0200
+Message-Id: <20190613180300.30447-20-hch@lst.de>
 In-Reply-To: <20190613180300.30447-1-hch@lst.de>
 References: <20190613180300.30447-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,284 +17,307 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: Brian Foster <bfoster@redhat.com>
 
-Keep all the refcount item related code together in one file.
+Keep all rmap item related code together in one file.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/Makefile             |   1 -
- fs/xfs/xfs_refcount_item.c  | 208 ++++++++++++++++++++++++++++++++-
- fs/xfs/xfs_trans.h          |  11 --
- fs/xfs/xfs_trans_refcount.c | 224 ------------------------------------
- 4 files changed, 207 insertions(+), 237 deletions(-)
- delete mode 100644 fs/xfs/xfs_trans_refcount.c
+ fs/xfs/Makefile         |   3 +-
+ fs/xfs/xfs_rmap_item.c  | 229 ++++++++++++++++++++++++++++++++++++-
+ fs/xfs/xfs_trans.h      |  11 --
+ fs/xfs/xfs_trans_rmap.c | 245 ----------------------------------------
+ 4 files changed, 229 insertions(+), 259 deletions(-)
+ delete mode 100644 fs/xfs/xfs_trans_rmap.c
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index ddaf774313ff..de6f5451a413 100644
+index de6f5451a413..cc0cd3970122 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -108,7 +108,6 @@ xfs-y				+= xfs_log.o \
+@@ -107,8 +107,7 @@ xfs-y				+= xfs_log.o \
+ 				   xfs_trans_ail.o \
  				   xfs_trans_bmap.o \
  				   xfs_trans_buf.o \
- 				   xfs_trans_inode.o \
--				   xfs_trans_refcount.o \
- 				   xfs_trans_rmap.o \
+-				   xfs_trans_inode.o \
+-				   xfs_trans_rmap.o \
++				   xfs_trans_inode.o
  
  # optional features
-diff --git a/fs/xfs/xfs_refcount_item.c b/fs/xfs/xfs_refcount_item.c
-index fc2dfe92c43a..e8a13872389f 100644
---- a/fs/xfs/xfs_refcount_item.c
-+++ b/fs/xfs/xfs_refcount_item.c
-@@ -217,7 +217,7 @@ static const struct xfs_item_ops xfs_cud_item_ops = {
- 	.iop_release	= xfs_cud_item_release,
+ xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
+diff --git a/fs/xfs/xfs_rmap_item.c b/fs/xfs/xfs_rmap_item.c
+index 7f903de481df..0d01a975605c 100644
+--- a/fs/xfs/xfs_rmap_item.c
++++ b/fs/xfs/xfs_rmap_item.c
+@@ -238,7 +238,7 @@ static const struct xfs_item_ops xfs_rud_item_ops = {
+ 	.iop_release	= xfs_rud_item_release,
  };
  
--struct xfs_cud_log_item *
-+static struct xfs_cud_log_item *
- xfs_trans_get_cud(
+-struct xfs_rud_log_item *
++static struct xfs_rud_log_item *
+ xfs_trans_get_rud(
  	struct xfs_trans		*tp,
- 	struct xfs_cui_log_item		*cuip)
-@@ -234,6 +234,212 @@ xfs_trans_get_cud(
- 	return cudp;
+ 	struct xfs_rui_log_item		*ruip)
+@@ -255,6 +255,233 @@ xfs_trans_get_rud(
+ 	return rudp;
  }
  
-+/*
-+ * Finish an refcount update and log it to the CUD. Note that the
-+ * transaction is marked dirty regardless of whether the refcount
-+ * update succeeds or fails to support the CUI/CUD lifecycle rules.
-+ */
-+static int
-+xfs_trans_log_finish_refcount_update(
-+	struct xfs_trans		*tp,
-+	struct xfs_cud_log_item		*cudp,
-+	enum xfs_refcount_intent_type	type,
-+	xfs_fsblock_t			startblock,
-+	xfs_extlen_t			blockcount,
-+	xfs_fsblock_t			*new_fsb,
-+	xfs_extlen_t			*new_len,
-+	struct xfs_btree_cur		**pcur)
-+{
-+	int				error;
-+
-+	error = xfs_refcount_finish_one(tp, type, startblock,
-+			blockcount, new_fsb, new_len, pcur);
-+
-+	/*
-+	 * Mark the transaction dirty, even on error. This ensures the
-+	 * transaction is aborted, which:
-+	 *
-+	 * 1.) releases the CUI and frees the CUD
-+	 * 2.) shuts down the filesystem
-+	 */
-+	tp->t_flags |= XFS_TRANS_DIRTY;
-+	set_bit(XFS_LI_DIRTY, &cudp->cud_item.li_flags);
-+
-+	return error;
-+}
-+
-+/* Sort refcount intents by AG. */
-+static int
-+xfs_refcount_update_diff_items(
-+	void				*priv,
-+	struct list_head		*a,
-+	struct list_head		*b)
-+{
-+	struct xfs_mount		*mp = priv;
-+	struct xfs_refcount_intent	*ra;
-+	struct xfs_refcount_intent	*rb;
-+
-+	ra = container_of(a, struct xfs_refcount_intent, ri_list);
-+	rb = container_of(b, struct xfs_refcount_intent, ri_list);
-+	return  XFS_FSB_TO_AGNO(mp, ra->ri_startblock) -
-+		XFS_FSB_TO_AGNO(mp, rb->ri_startblock);
-+}
-+
-+/* Get an CUI. */
-+STATIC void *
-+xfs_refcount_update_create_intent(
-+	struct xfs_trans		*tp,
-+	unsigned int			count)
-+{
-+	struct xfs_cui_log_item		*cuip;
-+
-+	ASSERT(tp != NULL);
-+	ASSERT(count > 0);
-+
-+	cuip = xfs_cui_init(tp->t_mountp, count);
-+	ASSERT(cuip != NULL);
-+
-+	/*
-+	 * Get a log_item_desc to point at the new item.
-+	 */
-+	xfs_trans_add_item(tp, &cuip->cui_item);
-+	return cuip;
-+}
-+
-+/* Set the phys extent flags for this reverse mapping. */
++/* Set the map extent flags for this reverse mapping. */
 +static void
-+xfs_trans_set_refcount_flags(
-+	struct xfs_phys_extent		*refc,
-+	enum xfs_refcount_intent_type	type)
++xfs_trans_set_rmap_flags(
++	struct xfs_map_extent		*rmap,
++	enum xfs_rmap_intent_type	type,
++	int				whichfork,
++	xfs_exntst_t			state)
 +{
-+	refc->pe_flags = 0;
++	rmap->me_flags = 0;
++	if (state == XFS_EXT_UNWRITTEN)
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
++	if (whichfork == XFS_ATTR_FORK)
++		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
 +	switch (type) {
-+	case XFS_REFCOUNT_INCREASE:
-+	case XFS_REFCOUNT_DECREASE:
-+	case XFS_REFCOUNT_ALLOC_COW:
-+	case XFS_REFCOUNT_FREE_COW:
-+		refc->pe_flags |= type;
++	case XFS_RMAP_MAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
++		break;
++	case XFS_RMAP_MAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
++		break;
++	case XFS_RMAP_UNMAP:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
++		break;
++	case XFS_RMAP_UNMAP_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
++		break;
++	case XFS_RMAP_CONVERT:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
++		break;
++	case XFS_RMAP_CONVERT_SHARED:
++		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
++		break;
++	case XFS_RMAP_ALLOC:
++		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
++		break;
++	case XFS_RMAP_FREE:
++		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
 +		break;
 +	default:
 +		ASSERT(0);
 +	}
 +}
 +
-+/* Log refcount updates in the intent item. */
++/*
++ * Finish an rmap update and log it to the RUD. Note that the transaction is
++ * marked dirty regardless of whether the rmap update succeeds or fails to
++ * support the RUI/RUD lifecycle rules.
++ */
++static int
++xfs_trans_log_finish_rmap_update(
++	struct xfs_trans		*tp,
++	struct xfs_rud_log_item		*rudp,
++	enum xfs_rmap_intent_type	type,
++	uint64_t			owner,
++	int				whichfork,
++	xfs_fileoff_t			startoff,
++	xfs_fsblock_t			startblock,
++	xfs_filblks_t			blockcount,
++	xfs_exntst_t			state,
++	struct xfs_btree_cur		**pcur)
++{
++	int				error;
++
++	error = xfs_rmap_finish_one(tp, type, owner, whichfork, startoff,
++			startblock, blockcount, state, pcur);
++
++	/*
++	 * Mark the transaction dirty, even on error. This ensures the
++	 * transaction is aborted, which:
++	 *
++	 * 1.) releases the RUI and frees the RUD
++	 * 2.) shuts down the filesystem
++	 */
++	tp->t_flags |= XFS_TRANS_DIRTY;
++	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
++
++	return error;
++}
++
++/* Sort rmap intents by AG. */
++static int
++xfs_rmap_update_diff_items(
++	void				*priv,
++	struct list_head		*a,
++	struct list_head		*b)
++{
++	struct xfs_mount		*mp = priv;
++	struct xfs_rmap_intent		*ra;
++	struct xfs_rmap_intent		*rb;
++
++	ra = container_of(a, struct xfs_rmap_intent, ri_list);
++	rb = container_of(b, struct xfs_rmap_intent, ri_list);
++	return  XFS_FSB_TO_AGNO(mp, ra->ri_bmap.br_startblock) -
++		XFS_FSB_TO_AGNO(mp, rb->ri_bmap.br_startblock);
++}
++
++/* Get an RUI. */
++STATIC void *
++xfs_rmap_update_create_intent(
++	struct xfs_trans		*tp,
++	unsigned int			count)
++{
++	struct xfs_rui_log_item		*ruip;
++
++	ASSERT(tp != NULL);
++	ASSERT(count > 0);
++
++	ruip = xfs_rui_init(tp->t_mountp, count);
++	ASSERT(ruip != NULL);
++
++	/*
++	 * Get a log_item_desc to point at the new item.
++	 */
++	xfs_trans_add_item(tp, &ruip->rui_item);
++	return ruip;
++}
++
++/* Log rmap updates in the intent item. */
 +STATIC void
-+xfs_refcount_update_log_item(
++xfs_rmap_update_log_item(
 +	struct xfs_trans		*tp,
 +	void				*intent,
 +	struct list_head		*item)
 +{
-+	struct xfs_cui_log_item		*cuip = intent;
-+	struct xfs_refcount_intent	*refc;
++	struct xfs_rui_log_item		*ruip = intent;
++	struct xfs_rmap_intent		*rmap;
 +	uint				next_extent;
-+	struct xfs_phys_extent		*ext;
++	struct xfs_map_extent		*map;
 +
-+	refc = container_of(item, struct xfs_refcount_intent, ri_list);
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
 +
 +	tp->t_flags |= XFS_TRANS_DIRTY;
-+	set_bit(XFS_LI_DIRTY, &cuip->cui_item.li_flags);
++	set_bit(XFS_LI_DIRTY, &ruip->rui_item.li_flags);
 +
 +	/*
 +	 * atomic_inc_return gives us the value after the increment;
 +	 * we want to use it as an array index so we need to subtract 1 from
 +	 * it.
 +	 */
-+	next_extent = atomic_inc_return(&cuip->cui_next_extent) - 1;
-+	ASSERT(next_extent < cuip->cui_format.cui_nextents);
-+	ext = &cuip->cui_format.cui_extents[next_extent];
-+	ext->pe_startblock = refc->ri_startblock;
-+	ext->pe_len = refc->ri_blockcount;
-+	xfs_trans_set_refcount_flags(ext, refc->ri_type);
++	next_extent = atomic_inc_return(&ruip->rui_next_extent) - 1;
++	ASSERT(next_extent < ruip->rui_format.rui_nextents);
++	map = &ruip->rui_format.rui_extents[next_extent];
++	map->me_owner = rmap->ri_owner;
++	map->me_startblock = rmap->ri_bmap.br_startblock;
++	map->me_startoff = rmap->ri_bmap.br_startoff;
++	map->me_len = rmap->ri_bmap.br_blockcount;
++	xfs_trans_set_rmap_flags(map, rmap->ri_type, rmap->ri_whichfork,
++			rmap->ri_bmap.br_state);
 +}
 +
-+/* Get an CUD so we can process all the deferred refcount updates. */
++/* Get an RUD so we can process all the deferred rmap updates. */
 +STATIC void *
-+xfs_refcount_update_create_done(
++xfs_rmap_update_create_done(
 +	struct xfs_trans		*tp,
 +	void				*intent,
 +	unsigned int			count)
 +{
-+	return xfs_trans_get_cud(tp, intent);
++	return xfs_trans_get_rud(tp, intent);
 +}
 +
-+/* Process a deferred refcount update. */
++/* Process a deferred rmap update. */
 +STATIC int
-+xfs_refcount_update_finish_item(
++xfs_rmap_update_finish_item(
 +	struct xfs_trans		*tp,
 +	struct list_head		*item,
 +	void				*done_item,
 +	void				**state)
 +{
-+	struct xfs_refcount_intent	*refc;
-+	xfs_fsblock_t			new_fsb;
-+	xfs_extlen_t			new_aglen;
++	struct xfs_rmap_intent		*rmap;
 +	int				error;
 +
-+	refc = container_of(item, struct xfs_refcount_intent, ri_list);
-+	error = xfs_trans_log_finish_refcount_update(tp, done_item,
-+			refc->ri_type,
-+			refc->ri_startblock,
-+			refc->ri_blockcount,
-+			&new_fsb, &new_aglen,
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
++	error = xfs_trans_log_finish_rmap_update(tp, done_item,
++			rmap->ri_type,
++			rmap->ri_owner, rmap->ri_whichfork,
++			rmap->ri_bmap.br_startoff,
++			rmap->ri_bmap.br_startblock,
++			rmap->ri_bmap.br_blockcount,
++			rmap->ri_bmap.br_state,
 +			(struct xfs_btree_cur **)state);
-+	/* Did we run out of reservation?  Requeue what we didn't finish. */
-+	if (!error && new_aglen > 0) {
-+		ASSERT(refc->ri_type == XFS_REFCOUNT_INCREASE ||
-+		       refc->ri_type == XFS_REFCOUNT_DECREASE);
-+		refc->ri_startblock = new_fsb;
-+		refc->ri_blockcount = new_aglen;
-+		return -EAGAIN;
-+	}
-+	kmem_free(refc);
++	kmem_free(rmap);
 +	return error;
 +}
 +
-+/* Clean up after processing deferred refcounts. */
++/* Clean up after processing deferred rmaps. */
 +STATIC void
-+xfs_refcount_update_finish_cleanup(
++xfs_rmap_update_finish_cleanup(
 +	struct xfs_trans	*tp,
 +	void			*state,
 +	int			error)
 +{
 +	struct xfs_btree_cur	*rcur = state;
 +
-+	xfs_refcount_finish_one_cleanup(tp, rcur, error);
++	xfs_rmap_finish_one_cleanup(tp, rcur, error);
 +}
 +
-+/* Abort all pending CUIs. */
++/* Abort all pending RUIs. */
 +STATIC void
-+xfs_refcount_update_abort_intent(
++xfs_rmap_update_abort_intent(
 +	void				*intent)
 +{
-+	xfs_cui_release(intent);
++	xfs_rui_release(intent);
 +}
 +
-+/* Cancel a deferred refcount update. */
++/* Cancel a deferred rmap update. */
 +STATIC void
-+xfs_refcount_update_cancel_item(
++xfs_rmap_update_cancel_item(
 +	struct list_head		*item)
 +{
-+	struct xfs_refcount_intent	*refc;
++	struct xfs_rmap_intent		*rmap;
 +
-+	refc = container_of(item, struct xfs_refcount_intent, ri_list);
-+	kmem_free(refc);
++	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
++	kmem_free(rmap);
 +}
 +
-+const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
-+	.max_items	= XFS_CUI_MAX_FAST_EXTENTS,
-+	.diff_items	= xfs_refcount_update_diff_items,
-+	.create_intent	= xfs_refcount_update_create_intent,
-+	.abort_intent	= xfs_refcount_update_abort_intent,
-+	.log_item	= xfs_refcount_update_log_item,
-+	.create_done	= xfs_refcount_update_create_done,
-+	.finish_item	= xfs_refcount_update_finish_item,
-+	.finish_cleanup = xfs_refcount_update_finish_cleanup,
-+	.cancel_item	= xfs_refcount_update_cancel_item,
++const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
++	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
++	.diff_items	= xfs_rmap_update_diff_items,
++	.create_intent	= xfs_rmap_update_create_intent,
++	.abort_intent	= xfs_rmap_update_abort_intent,
++	.log_item	= xfs_rmap_update_log_item,
++	.create_done	= xfs_rmap_update_create_done,
++	.finish_item	= xfs_rmap_update_finish_item,
++	.finish_cleanup = xfs_rmap_update_finish_cleanup,
++	.cancel_item	= xfs_rmap_update_cancel_item,
 +};
 +
  /*
-  * Process a refcount update intent item that was recovered from the log.
-  * We need to update the refcountbt.
+  * Process an rmap update intent item that was recovered from the log.
+  * We need to update the rmapbt.
 diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index a0fd818e0e95..e430b71f0cc4 100644
+index e430b71f0cc4..4f048baa2a49 100644
 --- a/fs/xfs/xfs_trans.h
 +++ b/fs/xfs/xfs_trans.h
-@@ -255,17 +255,6 @@ int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
- 		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
- 		xfs_exntst_t state, struct xfs_btree_cur **pcur);
+@@ -244,17 +244,6 @@ void		xfs_trans_buf_copy_type(struct xfs_buf *dst_bp,
  
--/* refcount updates */
--enum xfs_refcount_intent_type;
+ extern kmem_zone_t	*xfs_trans_zone;
+ 
+-/* rmap updates */
+-enum xfs_rmap_intent_type;
 -
--struct xfs_cud_log_item *xfs_trans_get_cud(struct xfs_trans *tp,
--		struct xfs_cui_log_item *cuip);
--int xfs_trans_log_finish_refcount_update(struct xfs_trans *tp,
--		struct xfs_cud_log_item *cudp,
--		enum xfs_refcount_intent_type type, xfs_fsblock_t startblock,
--		xfs_extlen_t blockcount, xfs_fsblock_t *new_fsb,
--		xfs_extlen_t *new_len, struct xfs_btree_cur **pcur);
+-struct xfs_rud_log_item *xfs_trans_get_rud(struct xfs_trans *tp,
+-		struct xfs_rui_log_item *ruip);
+-int xfs_trans_log_finish_rmap_update(struct xfs_trans *tp,
+-		struct xfs_rud_log_item *rudp, enum xfs_rmap_intent_type type,
+-		uint64_t owner, int whichfork, xfs_fileoff_t startoff,
+-		xfs_fsblock_t startblock, xfs_filblks_t blockcount,
+-		xfs_exntst_t state, struct xfs_btree_cur **pcur);
 -
  /* mapping updates */
  enum xfs_bmap_intent_type;
  
-diff --git a/fs/xfs/xfs_trans_refcount.c b/fs/xfs/xfs_trans_refcount.c
+diff --git a/fs/xfs/xfs_trans_rmap.c b/fs/xfs/xfs_trans_rmap.c
 deleted file mode 100644
-index d793fb500378..000000000000
---- a/fs/xfs/xfs_trans_refcount.c
+index 863e3281daaa..000000000000
+--- a/fs/xfs/xfs_trans_rmap.c
 +++ /dev/null
-@@ -1,224 +0,0 @@
+@@ -1,245 +0,0 @@
 -// SPDX-License-Identifier: GPL-2.0+
 -/*
 - * Copyright (C) 2016 Oracle.  All Rights Reserved.
@@ -310,214 +333,235 @@ index d793fb500378..000000000000
 -#include "xfs_defer.h"
 -#include "xfs_trans.h"
 -#include "xfs_trans_priv.h"
--#include "xfs_refcount_item.h"
+-#include "xfs_rmap_item.h"
 -#include "xfs_alloc.h"
--#include "xfs_refcount.h"
+-#include "xfs_rmap.h"
 -
--/*
-- * Finish an refcount update and log it to the CUD. Note that the
-- * transaction is marked dirty regardless of whether the refcount
-- * update succeeds or fails to support the CUI/CUD lifecycle rules.
-- */
--int
--xfs_trans_log_finish_refcount_update(
--	struct xfs_trans		*tp,
--	struct xfs_cud_log_item		*cudp,
--	enum xfs_refcount_intent_type	type,
--	xfs_fsblock_t			startblock,
--	xfs_extlen_t			blockcount,
--	xfs_fsblock_t			*new_fsb,
--	xfs_extlen_t			*new_len,
--	struct xfs_btree_cur		**pcur)
--{
--	int				error;
--
--	error = xfs_refcount_finish_one(tp, type, startblock,
--			blockcount, new_fsb, new_len, pcur);
--
--	/*
--	 * Mark the transaction dirty, even on error. This ensures the
--	 * transaction is aborted, which:
--	 *
--	 * 1.) releases the CUI and frees the CUD
--	 * 2.) shuts down the filesystem
--	 */
--	tp->t_flags |= XFS_TRANS_DIRTY;
--	set_bit(XFS_LI_DIRTY, &cudp->cud_item.li_flags);
--
--	return error;
--}
--
--/* Sort refcount intents by AG. */
--static int
--xfs_refcount_update_diff_items(
--	void				*priv,
--	struct list_head		*a,
--	struct list_head		*b)
--{
--	struct xfs_mount		*mp = priv;
--	struct xfs_refcount_intent	*ra;
--	struct xfs_refcount_intent	*rb;
--
--	ra = container_of(a, struct xfs_refcount_intent, ri_list);
--	rb = container_of(b, struct xfs_refcount_intent, ri_list);
--	return  XFS_FSB_TO_AGNO(mp, ra->ri_startblock) -
--		XFS_FSB_TO_AGNO(mp, rb->ri_startblock);
--}
--
--/* Get an CUI. */
--STATIC void *
--xfs_refcount_update_create_intent(
--	struct xfs_trans		*tp,
--	unsigned int			count)
--{
--	struct xfs_cui_log_item		*cuip;
--
--	ASSERT(tp != NULL);
--	ASSERT(count > 0);
--
--	cuip = xfs_cui_init(tp->t_mountp, count);
--	ASSERT(cuip != NULL);
--
--	/*
--	 * Get a log_item_desc to point at the new item.
--	 */
--	xfs_trans_add_item(tp, &cuip->cui_item);
--	return cuip;
--}
--
--/* Set the phys extent flags for this reverse mapping. */
+-/* Set the map extent flags for this reverse mapping. */
 -static void
--xfs_trans_set_refcount_flags(
--	struct xfs_phys_extent		*refc,
--	enum xfs_refcount_intent_type	type)
+-xfs_trans_set_rmap_flags(
+-	struct xfs_map_extent		*rmap,
+-	enum xfs_rmap_intent_type	type,
+-	int				whichfork,
+-	xfs_exntst_t			state)
 -{
--	refc->pe_flags = 0;
+-	rmap->me_flags = 0;
+-	if (state == XFS_EXT_UNWRITTEN)
+-		rmap->me_flags |= XFS_RMAP_EXTENT_UNWRITTEN;
+-	if (whichfork == XFS_ATTR_FORK)
+-		rmap->me_flags |= XFS_RMAP_EXTENT_ATTR_FORK;
 -	switch (type) {
--	case XFS_REFCOUNT_INCREASE:
--	case XFS_REFCOUNT_DECREASE:
--	case XFS_REFCOUNT_ALLOC_COW:
--	case XFS_REFCOUNT_FREE_COW:
--		refc->pe_flags |= type;
+-	case XFS_RMAP_MAP:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_MAP;
+-		break;
+-	case XFS_RMAP_MAP_SHARED:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_MAP_SHARED;
+-		break;
+-	case XFS_RMAP_UNMAP:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP;
+-		break;
+-	case XFS_RMAP_UNMAP_SHARED:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_UNMAP_SHARED;
+-		break;
+-	case XFS_RMAP_CONVERT:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT;
+-		break;
+-	case XFS_RMAP_CONVERT_SHARED:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_CONVERT_SHARED;
+-		break;
+-	case XFS_RMAP_ALLOC:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_ALLOC;
+-		break;
+-	case XFS_RMAP_FREE:
+-		rmap->me_flags |= XFS_RMAP_EXTENT_FREE;
 -		break;
 -	default:
 -		ASSERT(0);
 -	}
 -}
 -
--/* Log refcount updates in the intent item. */
+-/*
+- * Finish an rmap update and log it to the RUD. Note that the transaction is
+- * marked dirty regardless of whether the rmap update succeeds or fails to
+- * support the RUI/RUD lifecycle rules.
+- */
+-int
+-xfs_trans_log_finish_rmap_update(
+-	struct xfs_trans		*tp,
+-	struct xfs_rud_log_item		*rudp,
+-	enum xfs_rmap_intent_type	type,
+-	uint64_t			owner,
+-	int				whichfork,
+-	xfs_fileoff_t			startoff,
+-	xfs_fsblock_t			startblock,
+-	xfs_filblks_t			blockcount,
+-	xfs_exntst_t			state,
+-	struct xfs_btree_cur		**pcur)
+-{
+-	int				error;
+-
+-	error = xfs_rmap_finish_one(tp, type, owner, whichfork, startoff,
+-			startblock, blockcount, state, pcur);
+-
+-	/*
+-	 * Mark the transaction dirty, even on error. This ensures the
+-	 * transaction is aborted, which:
+-	 *
+-	 * 1.) releases the RUI and frees the RUD
+-	 * 2.) shuts down the filesystem
+-	 */
+-	tp->t_flags |= XFS_TRANS_DIRTY;
+-	set_bit(XFS_LI_DIRTY, &rudp->rud_item.li_flags);
+-
+-	return error;
+-}
+-
+-/* Sort rmap intents by AG. */
+-static int
+-xfs_rmap_update_diff_items(
+-	void				*priv,
+-	struct list_head		*a,
+-	struct list_head		*b)
+-{
+-	struct xfs_mount		*mp = priv;
+-	struct xfs_rmap_intent		*ra;
+-	struct xfs_rmap_intent		*rb;
+-
+-	ra = container_of(a, struct xfs_rmap_intent, ri_list);
+-	rb = container_of(b, struct xfs_rmap_intent, ri_list);
+-	return  XFS_FSB_TO_AGNO(mp, ra->ri_bmap.br_startblock) -
+-		XFS_FSB_TO_AGNO(mp, rb->ri_bmap.br_startblock);
+-}
+-
+-/* Get an RUI. */
+-STATIC void *
+-xfs_rmap_update_create_intent(
+-	struct xfs_trans		*tp,
+-	unsigned int			count)
+-{
+-	struct xfs_rui_log_item		*ruip;
+-
+-	ASSERT(tp != NULL);
+-	ASSERT(count > 0);
+-
+-	ruip = xfs_rui_init(tp->t_mountp, count);
+-	ASSERT(ruip != NULL);
+-
+-	/*
+-	 * Get a log_item_desc to point at the new item.
+-	 */
+-	xfs_trans_add_item(tp, &ruip->rui_item);
+-	return ruip;
+-}
+-
+-/* Log rmap updates in the intent item. */
 -STATIC void
--xfs_refcount_update_log_item(
+-xfs_rmap_update_log_item(
 -	struct xfs_trans		*tp,
 -	void				*intent,
 -	struct list_head		*item)
 -{
--	struct xfs_cui_log_item		*cuip = intent;
--	struct xfs_refcount_intent	*refc;
+-	struct xfs_rui_log_item		*ruip = intent;
+-	struct xfs_rmap_intent		*rmap;
 -	uint				next_extent;
--	struct xfs_phys_extent		*ext;
+-	struct xfs_map_extent		*map;
 -
--	refc = container_of(item, struct xfs_refcount_intent, ri_list);
+-	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
 -
 -	tp->t_flags |= XFS_TRANS_DIRTY;
--	set_bit(XFS_LI_DIRTY, &cuip->cui_item.li_flags);
+-	set_bit(XFS_LI_DIRTY, &ruip->rui_item.li_flags);
 -
 -	/*
 -	 * atomic_inc_return gives us the value after the increment;
 -	 * we want to use it as an array index so we need to subtract 1 from
 -	 * it.
 -	 */
--	next_extent = atomic_inc_return(&cuip->cui_next_extent) - 1;
--	ASSERT(next_extent < cuip->cui_format.cui_nextents);
--	ext = &cuip->cui_format.cui_extents[next_extent];
--	ext->pe_startblock = refc->ri_startblock;
--	ext->pe_len = refc->ri_blockcount;
--	xfs_trans_set_refcount_flags(ext, refc->ri_type);
+-	next_extent = atomic_inc_return(&ruip->rui_next_extent) - 1;
+-	ASSERT(next_extent < ruip->rui_format.rui_nextents);
+-	map = &ruip->rui_format.rui_extents[next_extent];
+-	map->me_owner = rmap->ri_owner;
+-	map->me_startblock = rmap->ri_bmap.br_startblock;
+-	map->me_startoff = rmap->ri_bmap.br_startoff;
+-	map->me_len = rmap->ri_bmap.br_blockcount;
+-	xfs_trans_set_rmap_flags(map, rmap->ri_type, rmap->ri_whichfork,
+-			rmap->ri_bmap.br_state);
 -}
 -
--/* Get an CUD so we can process all the deferred refcount updates. */
+-/* Get an RUD so we can process all the deferred rmap updates. */
 -STATIC void *
--xfs_refcount_update_create_done(
+-xfs_rmap_update_create_done(
 -	struct xfs_trans		*tp,
 -	void				*intent,
 -	unsigned int			count)
 -{
--	return xfs_trans_get_cud(tp, intent);
+-	return xfs_trans_get_rud(tp, intent);
 -}
 -
--/* Process a deferred refcount update. */
+-/* Process a deferred rmap update. */
 -STATIC int
--xfs_refcount_update_finish_item(
+-xfs_rmap_update_finish_item(
 -	struct xfs_trans		*tp,
 -	struct list_head		*item,
 -	void				*done_item,
 -	void				**state)
 -{
--	struct xfs_refcount_intent	*refc;
--	xfs_fsblock_t			new_fsb;
--	xfs_extlen_t			new_aglen;
+-	struct xfs_rmap_intent		*rmap;
 -	int				error;
 -
--	refc = container_of(item, struct xfs_refcount_intent, ri_list);
--	error = xfs_trans_log_finish_refcount_update(tp, done_item,
--			refc->ri_type,
--			refc->ri_startblock,
--			refc->ri_blockcount,
--			&new_fsb, &new_aglen,
+-	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
+-	error = xfs_trans_log_finish_rmap_update(tp, done_item,
+-			rmap->ri_type,
+-			rmap->ri_owner, rmap->ri_whichfork,
+-			rmap->ri_bmap.br_startoff,
+-			rmap->ri_bmap.br_startblock,
+-			rmap->ri_bmap.br_blockcount,
+-			rmap->ri_bmap.br_state,
 -			(struct xfs_btree_cur **)state);
--	/* Did we run out of reservation?  Requeue what we didn't finish. */
--	if (!error && new_aglen > 0) {
--		ASSERT(refc->ri_type == XFS_REFCOUNT_INCREASE ||
--		       refc->ri_type == XFS_REFCOUNT_DECREASE);
--		refc->ri_startblock = new_fsb;
--		refc->ri_blockcount = new_aglen;
--		return -EAGAIN;
--	}
--	kmem_free(refc);
+-	kmem_free(rmap);
 -	return error;
 -}
 -
--/* Clean up after processing deferred refcounts. */
+-/* Clean up after processing deferred rmaps. */
 -STATIC void
--xfs_refcount_update_finish_cleanup(
+-xfs_rmap_update_finish_cleanup(
 -	struct xfs_trans	*tp,
 -	void			*state,
 -	int			error)
 -{
 -	struct xfs_btree_cur	*rcur = state;
 -
--	xfs_refcount_finish_one_cleanup(tp, rcur, error);
+-	xfs_rmap_finish_one_cleanup(tp, rcur, error);
 -}
 -
--/* Abort all pending CUIs. */
+-/* Abort all pending RUIs. */
 -STATIC void
--xfs_refcount_update_abort_intent(
+-xfs_rmap_update_abort_intent(
 -	void				*intent)
 -{
--	xfs_cui_release(intent);
+-	xfs_rui_release(intent);
 -}
 -
--/* Cancel a deferred refcount update. */
+-/* Cancel a deferred rmap update. */
 -STATIC void
--xfs_refcount_update_cancel_item(
+-xfs_rmap_update_cancel_item(
 -	struct list_head		*item)
 -{
--	struct xfs_refcount_intent	*refc;
+-	struct xfs_rmap_intent		*rmap;
 -
--	refc = container_of(item, struct xfs_refcount_intent, ri_list);
--	kmem_free(refc);
+-	rmap = container_of(item, struct xfs_rmap_intent, ri_list);
+-	kmem_free(rmap);
 -}
 -
--const struct xfs_defer_op_type xfs_refcount_update_defer_type = {
--	.max_items	= XFS_CUI_MAX_FAST_EXTENTS,
--	.diff_items	= xfs_refcount_update_diff_items,
--	.create_intent	= xfs_refcount_update_create_intent,
--	.abort_intent	= xfs_refcount_update_abort_intent,
--	.log_item	= xfs_refcount_update_log_item,
--	.create_done	= xfs_refcount_update_create_done,
--	.finish_item	= xfs_refcount_update_finish_item,
--	.finish_cleanup = xfs_refcount_update_finish_cleanup,
--	.cancel_item	= xfs_refcount_update_cancel_item,
+-const struct xfs_defer_op_type xfs_rmap_update_defer_type = {
+-	.max_items	= XFS_RUI_MAX_FAST_EXTENTS,
+-	.diff_items	= xfs_rmap_update_diff_items,
+-	.create_intent	= xfs_rmap_update_create_intent,
+-	.abort_intent	= xfs_rmap_update_abort_intent,
+-	.log_item	= xfs_rmap_update_log_item,
+-	.create_done	= xfs_rmap_update_create_done,
+-	.finish_item	= xfs_rmap_update_finish_item,
+-	.finish_cleanup = xfs_rmap_update_finish_cleanup,
+-	.cancel_item	= xfs_rmap_update_cancel_item,
 -};
 -- 
 2.20.1
