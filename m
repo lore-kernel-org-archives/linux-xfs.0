@@ -1,38 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f42.google.com ([209.85.210.42]:32791 "EHLO
-        mail-ot1-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727232AbfFMKGZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 06:06:25 -0400
-Received: by mail-ot1-f42.google.com with SMTP id p4so15173437oti.0
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 03:06:25 -0700 (PDT)
-Subject: Re: alternative take on the same page merging leak fix v2
-References: <20190613095529.25005-1-hch@lst.de>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <00c908ad-ca33-164d-3741-6c67813c1f0d@kernel.dk>
-Date: Thu, 13 Jun 2019 04:04:03 -0600
-MIME-Version: 1.0
+Received: from bombadil.infradead.org ([198.137.202.133]:38668 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731928AbfFMJzo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 05:55:44 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] block: fix page leak when merging to same page
+Date: Thu, 13 Jun 2019 11:55:29 +0200
+Message-Id: <20190613095529.25005-3-hch@lst.de>
 In-Reply-To: <20190613095529.25005-1-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+References: <20190613095529.25005-1-hch@lst.de>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, Ming Lei <ming.lei@redhat.com>
+To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
 Cc: David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On 6/13/19 3:55 AM, Christoph Hellwig wrote:
-> Hi Jens, hi Ming,
-> 
-> this is the tested and split version of what I think is the better
-> fix for the get_user_pages page leak, as it leaves the intelligence
-> in the callers instead of in bio_try_to_merge_page.
-> 
-> Changes since v1:
->   - drop patches not required for 5.2
->   - added Reviewed-by tags
+When multiple iovecs reference the same page, each get_user_page call
+will add a reference to the page.  But once we've created the bio that
+information gets lost and only a single reference will be dropped after
+I/O completion.  Use the same_page information returned from
+__bio_try_merge_page to drop additional references to pages that were
+already present in the bio.
 
-Applied for 5.2, thanks.
+Based on a patch from Ming Lei.
 
+Link: https://lkml.org/lkml/2019/4/23/64
+Fixes: 576ed913 ("block: use bio_add_page in bio_iov_iter_get_pages")
+Reported-by: David Gibson <david@gibson.dropbear.id.au>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/bio.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/block/bio.c b/block/bio.c
+index 59588c57694d..35b3c568a48f 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -895,6 +895,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 	unsigned short entries_left = bio->bi_max_vecs - bio->bi_vcnt;
+ 	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
+ 	struct page **pages = (struct page **)bv;
++	bool same_page = false;
+ 	ssize_t size, left;
+ 	unsigned len, i;
+ 	size_t offset;
+@@ -915,8 +916,15 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 		struct page *page = pages[i];
+ 
+ 		len = min_t(size_t, PAGE_SIZE - offset, left);
+-		if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset) != len))
+-			return -EINVAL;
++
++		if (__bio_try_merge_page(bio, page, len, offset, &same_page)) {
++			if (same_page)
++				put_page(page);
++		} else {
++			if (WARN_ON_ONCE(bio_full(bio)))
++                                return -EINVAL;
++			__bio_add_page(bio, page, len, offset);
++		}
+ 		offset = 0;
+ 	}
+ 
 -- 
-Jens Axboe
+2.20.1
