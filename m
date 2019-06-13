@@ -1,339 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49626 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55696 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727165AbfFMQ1J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jun 2019 12:27:09 -0400
-Date: Thu, 13 Jun 2019 12:27:06 -0400
+        id S2390780AbfFMQ1U (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Jun 2019 12:27:20 -0400
+Date: Thu, 13 Jun 2019 12:27:18 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 02/14] xfs: create simplified inode walk function
-Message-ID: <20190613162703.GB21773@bfoster>
+Subject: Re: [PATCH 05/14] xfs: remove unnecessary includes of xfs_itable.h
+Message-ID: <20190613162715.GC21773@bfoster>
 References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
- <156032206425.3774243.10420463221575428170.stgit@magnolia>
+ <156032208315.3774243.12030637267920512012.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156032206425.3774243.10420463221575428170.stgit@magnolia>
+In-Reply-To: <156032208315.3774243.12030637267920512012.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jun 11, 2019 at 11:47:44PM -0700, Darrick J. Wong wrote:
+On Tue, Jun 11, 2019 at 11:48:03PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Create a new iterator function to simplify walking inodes in an XFS
-> filesystem.  This new iterator will replace the existing open-coded
-> walking that goes on in various places.
+> Don't include xfs_itable.h in files that don't need it.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/Makefile                  |    1 
->  fs/xfs/libxfs/xfs_ialloc_btree.c |   36 +++
->  fs/xfs/libxfs/xfs_ialloc_btree.h |    3 
->  fs/xfs/xfs_itable.c              |    5 
->  fs/xfs/xfs_itable.h              |    8 +
->  fs/xfs/xfs_iwalk.c               |  418 ++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_iwalk.h               |   19 ++
->  fs/xfs/xfs_trace.h               |   40 ++++
->  8 files changed, 524 insertions(+), 6 deletions(-)
->  create mode 100644 fs/xfs/xfs_iwalk.c
->  create mode 100644 fs/xfs/xfs_iwalk.h
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/scrub/common.c |    1 -
+>  fs/xfs/scrub/dir.c    |    1 -
+>  fs/xfs/scrub/scrub.c  |    1 -
+>  fs/xfs/xfs_trace.c    |    1 -
+>  4 files changed, 4 deletions(-)
 > 
 > 
-...
-> diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> new file mode 100644
-> index 000000000000..49289588413f
-> --- /dev/null
-> +++ b/fs/xfs/xfs_iwalk.c
-> @@ -0,0 +1,418 @@
-...
-> +/* Allocate memory for a walk. */
-> +STATIC int
-> +xfs_iwalk_alloc(
-> +	struct xfs_iwalk_ag	*iwag)
-> +{
-> +	size_t			size;
-> +
-> +	ASSERT(iwag->recs == NULL);
-> +	iwag->nr_recs = 0;
-> +
-> +	/* Allocate a prefetch buffer for inobt records. */
-> +	size = iwag->sz_recs * sizeof(struct xfs_inobt_rec_incore);
-> +	iwag->recs = kmem_alloc(size, KM_MAYFAIL);
-> +	if (iwag->recs == NULL)
-> +		return -ENOMEM;
-> +
-> +	return 0;
-> +}
-> +
-> +/* Free memory we allocated for a walk. */
-> +STATIC void
-> +xfs_iwalk_free(
-> +	struct xfs_iwalk_ag	*iwag)
-> +{
-> +	kmem_free(iwag->recs);
-
-It might be a good idea to ->recs = NULL here since the alloc call
-asserts for that (if any future code happens to free and realloc the
-recs buffer for whatever reason).
-
-> +}
-> +
-...
-> +/* Walk all inodes in a single AG, from @iwag->startino to the end of the AG. */
-> +STATIC int
-> +xfs_iwalk_ag(
-> +	struct xfs_iwalk_ag		*iwag)
-> +{
-> +	struct xfs_mount		*mp = iwag->mp;
-> +	struct xfs_trans		*tp = iwag->tp;
-> +	struct xfs_buf			*agi_bp = NULL;
-> +	struct xfs_btree_cur		*cur = NULL;
-> +	xfs_agnumber_t			agno;
-> +	xfs_agino_t			agino;
-> +	int				has_more;
-> +	int				error = 0;
-> +
-> +	/* Set up our cursor at the right place in the inode btree. */
-> +	agno = XFS_INO_TO_AGNO(mp, iwag->startino);
-> +	agino = XFS_INO_TO_AGINO(mp, iwag->startino);
-> +	error = xfs_iwalk_ag_start(iwag, agno, agino, &cur, &agi_bp, &has_more);
-> +
-> +	while (!error && has_more) {
-> +		struct xfs_inobt_rec_incore	*irec;
-> +
-> +		cond_resched();
-> +
-> +		/* Fetch the inobt record. */
-> +		irec = &iwag->recs[iwag->nr_recs];
-> +		error = xfs_inobt_get_rec(cur, irec, &has_more);
-> +		if (error || !has_more)
-> +			break;
-> +
-> +		/* No allocated inodes in this chunk; skip it. */
-> +		if (irec->ir_freecount == irec->ir_count) {
-> +			error = xfs_btree_increment(cur, 0, &has_more);
-> +			if (error)
-> +				break;
-> +			continue;
-> +		}
-> +
-> +		/*
-> +		 * Start readahead for this inode chunk in anticipation of
-> +		 * walking the inodes.
-> +		 */
-> +		xfs_bulkstat_ichunk_ra(mp, agno, irec);
-> +
-> +		/*
-> +		 * If there's space in the buffer for more records, increment
-> +		 * the btree cursor and grab more.
-> +		 */
-> +		if (++iwag->nr_recs < iwag->sz_recs) {
-> +			error = xfs_btree_increment(cur, 0, &has_more);
-> +			if (error || !has_more)
-> +				break;
-> +			continue;
-> +		}
-> +
-> +		/*
-> +		 * Otherwise, we need to save cursor state and run the callback
-> +		 * function on the cached records.  The run_callbacks function
-> +		 * is supposed to return a cursor pointing to the record where
-> +		 * we would be if we had been able to increment like above.
-> +		 */
-> +		has_more = true;
-
-has_more should always be true if we get here right? If so, perhaps
-better to replace this with ASSERT(has_more).
-
-> +		error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp,
-> +				&has_more);
-> +	}
-> +
-> +	if (iwag->nr_recs == 0 || error)
-> +		goto out;
-> +
-> +	/* Walk the unprocessed records in the cache. */
-> +	error = xfs_iwalk_run_callbacks(iwag, agno, &cur, &agi_bp, &has_more);
-> +
-> +out:
-> +	xfs_iwalk_del_inobt(tp, &cur, &agi_bp, error);
-> +	return error;
-> +}
-> +
-> +/*
-> + * Given the number of inodes to prefetch, set the number of inobt records that
-> + * we cache in memory, which controls the number of inodes we try to read
-> + * ahead.
-> + */
-> +static inline void
-> +xfs_iwalk_set_prefetch(
-> +	struct xfs_iwalk_ag	*iwag,
-> +	unsigned int		max_prefetch)
-> +{
-> +	/*
-> +	 * Default to 4096 bytes' worth of inobt records; this should be plenty
-> +	 * of inodes to read ahead.  This number was chosen so that the cache
-> +	 * is never more than a single memory page and the amount of inode
-> +	 * readahead is limited to to 16k inodes regardless of CPU:
-> +	 *
-> +	 * 4096 bytes / 16 bytes per inobt record = 256 inobt records
-> +	 * 256 inobt records * 64 inodes per record = 16384 inodes
-> +	 * 16384 inodes * 512 bytes per inode(?) = 8MB of inode readahead
-> +	 */
-> +	iwag->sz_recs = 4096 / sizeof(struct xfs_inobt_rec_incore);
-> +
-
-So we decided not to preserve current readahead behavior in this patch?
-
-> +	/*
-> +	 * If the caller gives us a desired prefetch amount, round it up to
-> +	 * an even inode chunk and cap it as defined previously.
-> +	 */
-> +	if (max_prefetch) {
-> +		unsigned int	nr;
-> +
-> +		nr = round_up(max_prefetch, XFS_INODES_PER_CHUNK) /
-> +				XFS_INODES_PER_CHUNK;
-> +		iwag->sz_recs = min_t(unsigned int, iwag->sz_recs, nr);
-
-This is comparing the record count calculated above with max_prefetch,
-which the rounding just above suggests is in inodes. BTW, could we add a
-one line /* prefetch in inodes */ comment on the max_prefetch parameter
-line at the top of the function?
-
-Aside from those nits the rest looks good to me.
-
-Brian
-
-> +	}
-> +
-> +	/*
-> +	 * Allocate enough space to prefetch at least two records so that we
-> +	 * can cache both the inobt record where the iwalk started and the next
-> +	 * record.  This simplifies the AG inode walk loop setup code.
-> +	 */
-> +	iwag->sz_recs = max_t(unsigned int, iwag->sz_recs, 2);
-> +}
-> +
-> +/*
-> + * Walk all inodes in the filesystem starting from @startino.  The @iwalk_fn
-> + * will be called for each allocated inode, being passed the inode's number and
-> + * @data.  @max_prefetch controls how many inobt records' worth of inodes we
-> + * try to readahead.
-> + */
-> +int
-> +xfs_iwalk(
-> +	struct xfs_mount	*mp,
-> +	struct xfs_trans	*tp,
-> +	xfs_ino_t		startino,
-> +	xfs_iwalk_fn		iwalk_fn,
-> +	unsigned int		max_prefetch,
-> +	void			*data)
-> +{
-> +	struct xfs_iwalk_ag	iwag = {
-> +		.mp		= mp,
-> +		.tp		= tp,
-> +		.iwalk_fn	= iwalk_fn,
-> +		.data		= data,
-> +		.startino	= startino,
-> +	};
-> +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
-> +	int			error;
-> +
-> +	ASSERT(agno < mp->m_sb.sb_agcount);
-> +
-> +	xfs_iwalk_set_prefetch(&iwag, max_prefetch);
-> +	error = xfs_iwalk_alloc(&iwag);
-> +	if (error)
-> +		return error;
-> +
-> +	for (; agno < mp->m_sb.sb_agcount; agno++) {
-> +		error = xfs_iwalk_ag(&iwag);
-> +		if (error)
-> +			break;
-> +		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-> +	}
-> +
-> +	xfs_iwalk_free(&iwag);
-> +	return error;
-> +}
-> diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
-> new file mode 100644
-> index 000000000000..9e762e31dadc
-> --- /dev/null
-> +++ b/fs/xfs/xfs_iwalk.h
-> @@ -0,0 +1,19 @@
-> +// SPDX-License-Identifier: GPL-2.0+
-> +/*
-> + * Copyright (C) 2019 Oracle.  All Rights Reserved.
-> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
-> + */
-> +#ifndef __XFS_IWALK_H__
-> +#define __XFS_IWALK_H__
-> +
-> +/* Walk all inodes in the filesystem starting from @startino. */
-> +typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
-> +			    xfs_ino_t ino, void *data);
-> +/* Return values for xfs_iwalk_fn. */
-> +#define XFS_IWALK_CONTINUE	(XFS_ITER_CONTINUE)
-> +#define XFS_IWALK_ABORT		(XFS_ITER_ABORT)
-> +
-> +int xfs_iwalk(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t startino,
-> +		xfs_iwalk_fn iwalk_fn, unsigned int max_prefetch, void *data);
-> +
-> +#endif /* __XFS_IWALK_H__ */
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 2464ea351f83..f9bb1d50bc0e 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3516,6 +3516,46 @@ DEFINE_EVENT(xfs_inode_corrupt_class, name,	\
->  DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_sick);
->  DEFINE_INODE_CORRUPT_EVENT(xfs_inode_mark_healthy);
->  
-> +TRACE_EVENT(xfs_iwalk_ag,
-> +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-> +		 xfs_agino_t startino),
-> +	TP_ARGS(mp, agno, startino),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_agnumber_t, agno)
-> +		__field(xfs_agino_t, startino)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = mp->m_super->s_dev;
-> +		__entry->agno = agno;
-> +		__entry->startino = startino;
-> +	),
-> +	TP_printk("dev %d:%d agno %d startino %u",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-> +		  __entry->startino)
-> +)
-> +
-> +TRACE_EVENT(xfs_iwalk_ag_rec,
-> +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
-> +		 struct xfs_inobt_rec_incore *irec),
-> +	TP_ARGS(mp, agno, irec),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(xfs_agnumber_t, agno)
-> +		__field(xfs_agino_t, startino)
-> +		__field(uint64_t, freemask)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = mp->m_super->s_dev;
-> +		__entry->agno = agno;
-> +		__entry->startino = irec->ir_startino;
-> +		__entry->freemask = irec->ir_free;
-> +	),
-> +	TP_printk("dev %d:%d agno %d startino %u freemask 0x%llx",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->agno,
-> +		  __entry->startino, __entry->freemask)
-> +)
-> +
->  #endif /* _TRACE_XFS_H */
->  
->  #undef TRACE_INCLUDE_PATH
+> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
+> index 973aa59975e3..561d7e818e8b 100644
+> --- a/fs/xfs/scrub/common.c
+> +++ b/fs/xfs/scrub/common.c
+> @@ -17,7 +17,6 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_icache.h"
+> -#include "xfs_itable.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_alloc_btree.h"
+>  #include "xfs_bmap.h"
+> diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+> index a38a22785a1a..9018ca4aba64 100644
+> --- a/fs/xfs/scrub/dir.c
+> +++ b/fs/xfs/scrub/dir.c
+> @@ -17,7 +17,6 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_icache.h"
+> -#include "xfs_itable.h"
+>  #include "xfs_da_format.h"
+>  #include "xfs_da_btree.h"
+>  #include "xfs_dir2.h"
+> diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
+> index f630389ee176..5689a33e999c 100644
+> --- a/fs/xfs/scrub/scrub.c
+> +++ b/fs/xfs/scrub/scrub.c
+> @@ -17,7 +17,6 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_icache.h"
+> -#include "xfs_itable.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_alloc_btree.h"
+>  #include "xfs_bmap.h"
+> diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
+> index cb6489c22cad..f555a3c560b9 100644
+> --- a/fs/xfs/xfs_trace.c
+> +++ b/fs/xfs/xfs_trace.c
+> @@ -16,7 +16,6 @@
+>  #include "xfs_btree.h"
+>  #include "xfs_da_btree.h"
+>  #include "xfs_ialloc.h"
+> -#include "xfs_itable.h"
+>  #include "xfs_alloc.h"
+>  #include "xfs_bmap.h"
+>  #include "xfs_attr.h"
 > 
