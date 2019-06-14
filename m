@@ -1,65 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:36428 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725616AbfFNBUB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 13 Jun 2019 21:20:01 -0400
-Date: Fri, 14 Jun 2019 09:19:47 +0800
-From: Ming Lei <ming.lei@redhat.com>
-Subject: Re: alternative take on the same page merging leak fix v2
-Message-ID: <20190614011946.GB14436@ming.t460p>
-References: <20190613095529.25005-1-hch@lst.de>
- <00c908ad-ca33-164d-3741-6c67813c1f0d@kernel.dk>
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:47003 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726167AbfFNCKZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 22:10:25 -0400
+Date: Fri, 14 Jun 2019 12:09:21 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190614020921.GM14363@dread.disaster.area>
+References: <20190606104203.GF7433@quack2.suse.cz>
+ <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
+ <20190607110426.GB12765@quack2.suse.cz>
+ <20190607182534.GC14559@iweiny-DESK2.sc.intel.com>
+ <20190608001036.GF14308@dread.disaster.area>
+ <20190612123751.GD32656@bombadil.infradead.org>
+ <20190613002555.GH14363@dread.disaster.area>
+ <20190613152755.GI32656@bombadil.infradead.org>
+ <20190613211321.GC32404@iweiny-DESK2.sc.intel.com>
+ <20190613234530.GK22901@ziepe.ca>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <00c908ad-ca33-164d-3741-6c67813c1f0d@kernel.dk>
+In-Reply-To: <20190613234530.GK22901@ziepe.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, linux-rdma@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 04:04:03AM -0600, Jens Axboe wrote:
-> On 6/13/19 3:55 AM, Christoph Hellwig wrote:
-> > Hi Jens, hi Ming,
+On Thu, Jun 13, 2019 at 08:45:30PM -0300, Jason Gunthorpe wrote:
+> On Thu, Jun 13, 2019 at 02:13:21PM -0700, Ira Weiny wrote:
+> > On Thu, Jun 13, 2019 at 08:27:55AM -0700, Matthew Wilcox wrote:
+> > > On Thu, Jun 13, 2019 at 10:25:55AM +1000, Dave Chinner wrote:
+> > > > e.g. Process A has an exclusive layout lease on file F. It does an
+> > > > IO to file F. The filesystem IO path checks that Process A owns the
+> > > > lease on the file and so skips straight through layout breaking
+> > > > because it owns the lease and is allowed to modify the layout. It
+> > > > then takes the inode metadata locks to allocate new space and write
+> > > > new data.
+> > > > 
+> > > > Process B now tries to write to file F. The FS checks whether
+> > > > Process B owns a layout lease on file F. It doesn't, so then it
+> > > > tries to break the layout lease so the IO can proceed. The layout
+> > > > breaking code sees that process A has an exclusive layout lease
+> > > > granted, and so returns -ETXTBSY to process B - it is not allowed to
+> > > > break the lease and so the IO fails with -ETXTBSY.
+> > > 
+> > > This description doesn't match the behaviour that RDMA wants either.
+> > > Even if Process A has a lease on the file, an IO from Process A which
+> > > results in blocks being freed from the file is going to result in the
+> > > RDMA device being able to write to blocks which are now freed (and
+> > > potentially reallocated to another file).
 > > 
-> > this is the tested and split version of what I think is the better
-> > fix for the get_user_pages page leak, as it leaves the intelligence
-> > in the callers instead of in bio_try_to_merge_page.
-> > 
-> > Changes since v1:
-> >   - drop patches not required for 5.2
-> >   - added Reviewed-by tags
+> > I don't understand why this would not work for RDMA?  As long as the layout
+> > does not change the page pins can remain in place.
 > 
-> Applied for 5.2, thanks.
+> Because process A had a layout lease (and presumably a MR) and the
+> layout was still modified in way that invalidates the RDMA MR.
 
-Hi Jens & Christoph,
+The lease holder is allowed to modify the mapping it has a lease
+over. That's necessary so lease holders can write data into
+unallocated space in the file. The lease is there to prevent third
+parties from modifying the layout without the lease holder being
+informed and taking appropriate action to allow that 3rd party
+modification to occur.
 
-Looks the following change is missed in patch 1, otherwise kernel oops
-is triggered during kernel booting:
+If the lease holder modifies the mapping in a way that causes it's
+own internal state to screw up, then that's a bug in the lease
+holder application.
 
-diff --git a/block/bio.c b/block/bio.c
-index 35b3c568a48f..9ccf07c666f7 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -706,6 +706,8 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 		return 0;
- 
- 	if (bio->bi_vcnt > 0) {
-+		bool same_page;
-+
- 		bvec = &bio->bi_io_vec[bio->bi_vcnt - 1];
- 
- 		if (page == bvec->bv_page &&
-@@ -723,7 +725,7 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
- 		if (bvec_gap_to_prev(q, bvec, offset))
- 			return 0;
- 
--		if (page_is_mergeable(bvec, page, len, offset, false) &&
-+		if (page_is_mergeable(bvec, page, len, offset, &same_page) &&
- 		    can_add_page_to_seg(q, bvec, page, len, offset)) {
- 			bvec->bv_len += len;
- 			goto done;
+Cheers,
 
-Thanks,
-Ming
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
