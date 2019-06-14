@@ -1,75 +1,283 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52008 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726606AbfFDXX1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 4 Jun 2019 19:23:27 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E92B3300BEB4
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Jun 2019 23:23:26 +0000 (UTC)
-Received: from Liberator-6.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id BD8CFD1FD
-        for <linux-xfs@vger.kernel.org>; Tue,  4 Jun 2019 23:23:26 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] include WARN, REPAIR build options in XFS_BUILD_OPTIONS
-Message-ID: <15ed3957-d4f5-01a0-3d2e-d8a69cc435ce@redhat.com>
-Date: Tue, 4 Jun 2019 18:23:25 -0500
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:43643 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725809AbfFNRIo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 14 Jun 2019 13:08:44 -0400
+Date: Fri, 14 Jun 2019 13:08:40 -0400
+From: Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: pagecache locking (was: bcachefs status update) merged)
+Message-ID: <20190614170840.GA32023@kmo-pixel>
+References: <20190610191420.27007-1-kent.overstreet@gmail.com>
+ <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
+ <20190611011737.GA28701@kmo-pixel>
+ <20190611043336.GB14363@dread.disaster.area>
+ <20190612162144.GA7619@kmo-pixel>
+ <20190612230224.GJ14308@dread.disaster.area>
+ <20190613183625.GA28171@kmo-pixel>
+ <20190613235524.GK14363@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190613235524.GK14363@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-The XFS_BUILD_OPTIONS string, shown at module init time and 
-in modinfo output, does not currently include all available
-build options.  So, add in CONFIG_XFS_WARN and CONFIG_XFS_REPAIR.
+On Fri, Jun 14, 2019 at 09:55:24AM +1000, Dave Chinner wrote:
+> On Thu, Jun 13, 2019 at 02:36:25PM -0400, Kent Overstreet wrote:
+> > On Thu, Jun 13, 2019 at 09:02:24AM +1000, Dave Chinner wrote:
+> > > On Wed, Jun 12, 2019 at 12:21:44PM -0400, Kent Overstreet wrote:
+> > > > Ok, I'm totally on board with returning EDEADLOCK.
+> > > > 
+> > > > Question: Would we be ok with returning EDEADLOCK for any IO where the buffer is
+> > > > in the same address space as the file being read/written to, even if the buffer
+> > > > and the IO don't technically overlap?
+> > > 
+> > > I'd say that depends on the lock granularity. For a range lock,
+> > > we'd be able to do the IO for non-overlapping ranges. For a normal
+> > > mutex or rwsem, then we risk deadlock if the page fault triggers on
+> > > the same address space host as we already have locked for IO. That's
+> > > the case we currently handle with the second IO lock in XFS, ext4,
+> > > btrfs, etc (XFS_MMAPLOCK_* in XFS).
+> > > 
+> > > One of the reasons I'm looking at range locks for XFS is to get rid
+> > > of the need for this second mmap lock, as there is no reason for it
+> > > existing if we can lock ranges and EDEADLOCK inside page faults and
+> > > return errors.
+> > 
+> > My concern is that range locks are going to turn out to be both more complicated
+> > and heavier weight, performance wise, than the approach I've taken of just a
+> > single lock per address space.
+> 
+> That's the battle I'm fighting at the moment with them for direct
+> IO(*), but range locks are something I'm doing for XFS and I don't
+> really care if anyone else wants to use them or not.
 
-It has been suggested in some quarters
-That this is not enough.
-Well ... 
+I'm not saying I won't use them :)
 
-Anybody who would like to see this in a sysfs file can send
-a patch.  :)
+I just want to do the simple thing first, and then if range locks turn out well
+I don't think it'll be hard to switch bcachefs to them. Or if the simple thing
+turns out to be good enough, even better :)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+> (*)Direct IO on XFS is a pure shared lock workload, so the rwsem
+> scales until single atomic update cache line bouncing limits
+> throughput. That means I can max out my hardware at 1.6 million
+> random 4k read/write IOPS (a bit over 6GB/s)(**) to a single file
+> with a rwsem at 32 AIO+DIO dispatch threads. I've only got range
+> locks to about 1.1M IOPS on the same workload, though it's within a
+> couple of percent of a rwsem up to 16 threads...
+> 
+> (**) A small handful of nvme SSDs fed by AIO+DIO are /way faster/
+> than pmem that is emulated with RAM, let alone real pmem which is
+> much slower at random writes than RAM.
 
-I might send that patch, but would like to have the string
-advertising build options be complete, for now.
+So something I should mention is that I've been 
 
-diff --git a/fs/xfs/xfs_super.h b/fs/xfs/xfs_super.h
-index 21cb49a..763e43d 100644
---- a/fs/xfs/xfs_super.h
-+++ b/fs/xfs/xfs_super.h
-@@ -38,6 +38,18 @@
- # define XFS_SCRUB_STRING
- #endif
+> 
+> > Reason being range locks only help when you've got multiple operations going on
+> > simultaneously that don't conflict - i.e. it's really only going to be useful
+> > for applications that are doing buffered IO and direct IO simultaneously to the
+> > same file.
+> 
+> Yes, they do that, but that's not why I'm looking at this.  Range
+> locks are primarily for applications that mix multiple different
+> types of operations to the same file concurrently. e.g:
+> 
+> - fallocate and read/write() can be run concurrently if they
+> don't overlap, but right now we serialise them because we have no
+> visibility into what other operations require.
+
+True true. Have you ever seen this be an issue for real applications?
+
+> - buffered read and buffered write can run concurrently if they
+> don't overlap, but right now they are serialised because that's the
+> only way to provide POSIX atomic write vs read semantics (only XFS
+> provides userspace with that guarantee).
+
+We already talked about this on IRC, but it's not the _only_ way - page locks
+suffice if we lock all the pages for the read/write at once, and that's actually
+a really good thing to for performance.
+
+bcachefs doesn't currently provide any guarantees here, but since we already are
+batching up the page operations for buffered writes (and I have patches to do so
+for the buffered read path in filemap.c) I will tweak that slightly to provide
+some sort of guarantee.
+
+This is something I care about in bcachefs because I'm pretty sure I can make
+both the buffered read and write paths work without taking any per inode locks -
+so unrelated IOs to the same file won't be modifying at shared cachelines at
+all. Haven't gotten around to it yet for the buffered write path, but it's on
+the todo list.
+
+> - Sub-block direct IO is serialised against all other direct IO
+> because we can't tell if it overlaps with some other direct IO and
+> so we have to take the slow but safe option - range locks solve that
+> problem, too.
+
+This feels like an internal filesystem implementation detail (not objecting,
+just doesn't sound like something applicable outside xfs to me).
  
-+#ifdef CONFIG_XFS_ONLINE_REPAIR
-+# define XFS_REPAIR_STRING	"repair, "
-+#else
-+# define XFS_REPAIR_STRING
-+#endif
-+
-+#ifdef CONFIG_XFS_WARN
-+# define XFS_WARN_STRING	"verbose warnings, "
-+#else
-+# define XFS_WARN_STRING
-+#endif
-+
- #ifdef DEBUG
- # define XFS_DBG_STRING		"debug"
- #else
-@@ -49,6 +61,8 @@
- 				XFS_SECURITY_STRING \
- 				XFS_REALTIME_STRING \
- 				XFS_SCRUB_STRING \
-+				XFS_REPAIR_STRING \
-+				XFS_WARN_STRING \
- 				XFS_DBG_STRING /* DBG must be last */
- 
- struct xfs_inode;
+> - there's inode_dio_wait() for DIO truncate serialisation
+> because AIO doesn't hold inode locks across IO - range locks can be
+> held all the way to AIO completion so we can get rid of
+> inode_Dio_wait() in XFS and that allows truncate/fallocate to run
+> concurrently with non-overlapping direct IO.
+
+getting rid of inode_dio_wait() and unifying that with other locking would be
+great, for sure.
+
+> - holding non-overlapping range locks on either side of page
+> faults which then gets rid of the need for the special mmap locking
+> path to serialise it against invalidation operations.
+> 
+> IOWs, range locks for IO solve a bunch of long term problems we have
+> in XFS and largely simplify the lock algorithms within the
+> filesystem. And it puts us on the path to introduce range locks for
+> extent mapping serialisation, allowing concurrent mapping lookups
+> and allocation within a single file. It also has the potential to
+> allow us to do concurrent directory modifications....
+
+*nod*
+
+Don't take any of what I'm saying as arguing against range locks. They don't
+seem _as_ useful to me for bcachefs because a lot of what you want them for I
+can already do concurrently - but if they turn out to work better than my
+pagecache add lock I'll happily switch to them later. I'm just reserving
+judgement until I see them and get to play with them.
+
+> IO range locks are not "locking the page cache". IO range locks are
+> purely for managing concurrent IO state in a fine grained manner.
+> The page cache already has it's own locking - that just needs to
+> nest inside IO range locks as teh io locks are what provide the high
+> level exclusion from overlapping page cache operations...
+
+I suppose I worded it badly, my point was just that range locks can be viewed as
+a superset of my pagecache add lock so switching to them would be an easy
+conversion.
+
+> > > > This would simplify things a lot and eliminate a really nasty corner case - page
+> > > > faults trigger readahead. Even if the buffer and the direct IO don't overlap,
+> > > > readahead can pull in pages that do overlap with the dio.
+> > > 
+> > > Page cache readahead needs to be moved under the filesystem IO
+> > > locks. There was a recent thread about how readahead can race with
+> > > hole punching and other fallocate() operations because page cache
+> > > readahead bypasses the filesystem IO locks used to serialise page
+> > > cache invalidation.
+> > > 
+> > > e.g. Readahead can be directed by userspace via fadvise, so we now
+> > > have file->f_op->fadvise() so that filesystems can lock the inode
+> > > before calling generic_fadvise() such that page cache instantiation
+> > > and readahead dispatch can be serialised against page cache
+> > > invalidation. I have a patch for XFS sitting around somewhere that
+> > > implements the ->fadvise method.
+> > 
+> > I just puked a little in my mouth.
+> 
+> Yeah, it's pretty gross. But the page cache simply isn't designed to
+> allow atomic range operations to be performed. We ahven't be able to
+> drag it out of the 1980s - we wrote the fs/iomap.c code so we could
+> do range based extent mapping for IOs rather than the horrible,
+> inefficient page-by-page block mapping the generic page cache code
+> does - that gave us a 30+% increase in buffered IO throughput
+> because we only do a single mapping lookup per IO rather than one
+> per page...
+
+I don't think there's anything _fundamentally_ wrong with the pagecache design -
+i.e. a radix tree of pages.
+
+We do _badly_ need support for arbitrary power of 2 sized pages in the
+pagecache (and it _really_ needs to be compound pages, not just hugepages - a
+lot of the work that's been done that just adds if (hugepage) to page cache code
+is FUCKING RETARDED) - the overhead of working with 4k pages has gotten to be
+completely absurd. But AFAIK the radix tree/xarray side of that is done, what
+needs to be fixed is all the stuff in e.g. filemap.c that assumes it's iterating
+over fixed size pages - that code needs to be reworked to be more like iterating
+over extents.
+
+> That said, the page cache is still far, far slower than direct IO,
+> and the gap is just getting wider and wider as nvme SSDs get faster
+> and faster. PCIe 4 SSDs are just going to make this even more
+> obvious - it's getting to the point where the only reason for having
+> a page cache is to support mmap() and cheap systems with spinning
+> rust storage.
+
+It is true that buffered IO performance is _way_ behind direct IO performance
+today in a lot of situations, but this is mostly due to the fact that we've
+completely dropped the ball and it's 2019 and we're STILL DOING EVERYTHING 4k AT
+A TIME.
+
+> > I think both approaches are workable, but I do think that pushing the locking
+> > down to __add_to_page_cache_locked is fundamentally the better, more correct
+> > approach.
+> > 
+> >  - It better matches the semantics of what we're trying to do. All these
+> >    operations we're trying to protect - dio, fallocate, truncate - they all have
+> >    in common that they just want to shoot down a range of the page cache and
+> >    keep it from being readded. And in general, it's better to have locks that
+> >    protect specific data structures ("adding to this radix tree"), vs. large
+> >    critical sections ("the io path").
+> 
+> I disagree :)
+> 
+> The high level IO locks provide the IO concurrency policy for the
+> filesystem. The page cache is an internal structure for caching
+> pages - it is not a structure for efficiently and cleanly
+> implementing IO concurrency policy. That's the mistake the current
+> page cache architecture makes - it tries to be the central control
+> for all the filesystem IO (because filesystems are dumb and the page
+> cache knows best!) but, unfortunately, this does not provide the
+> semantics or functionality that all filesystems want and/or need.
+
+We might be talking past each other a bit.
+
+I think we both agree that there should be a separation of concerns w.r.t.
+locking, and that hanging too much stuff off the page cache has been a mistake
+in the past (e.g. buffer heads).
+
+But that doesn't mean the page cache shouldn't have locking, just that that
+locking should only protect the page cache, not other filesystem state.
+
+I am _not_ arguing that this should replace filesystem IO path locks for other,
+not page cache purposes.
+
+> Just look at the truncate detection mess we have every time we
+> lookup and lock a page anywhere in the mm/ code - do you see any
+> code in all that which detects a hole punch race? Nope, you don't
+> because the filesystems take responsibility for serialising that
+> functionality.
+
+Yeah, I know.
+
+> Unfortunately, we have so much legacy filesystem cruft we'll never get rid of
+> those truncate hacks.
+
+Actually - I honestly think that this page cache add lock is simple and
+straightforward enough to use that converting legacy filesystems to it wouldn't
+be crazypants, and getting rid of all those hacks would be _awesome_. The legacy
+filesystems tend to to implement the really crazy fallocate stuff, it's just
+truncate that really has to be dealt with.
+
+> Don't get me wrong - I'm not opposed to incuding page cache add
+> locking - I'm just saying that the problems it tries to address (and
+> ones it cannot address) are already largely solved in existing
+> filesystems. I suspect that if we do merge this code, whatever
+> locking is added would have to be optional....
+
+That's certainly a fair point. There is more than one way to skin a cat.
+
+Not sure "largely solved" is true though - solved in XFS yes, but these issues
+have not been taken seriously in other filesystems up until pretty recently...
+
+That said, I do think this will prove useful for non bcachefs filesystems at
+some point. Like you alluded to, truncate synchronization is hot garbage in most
+filesystems, and this would give us an easy way of improving that and possibly
+getting rid of those truncate hacks in filemap.c.
+
+And because (on the add side at least) this lock only needs to taken when adding
+pages to the page cache, not when the pages needed are already present - in
+bcachefs at least this is a key enabler for making buffered IO not modify any
+per-inode cachelines in the fast path, and I think other filesystems could do
+the same thing.
