@@ -1,58 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:56416 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725867AbfFNDIO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 23:08:14 -0400
-Date: Fri, 14 Jun 2019 13:07:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190614030712.GO14363@dread.disaster.area>
-References: <20190607110426.GB12765@quack2.suse.cz>
- <20190607182534.GC14559@iweiny-DESK2.sc.intel.com>
- <20190608001036.GF14308@dread.disaster.area>
- <20190612123751.GD32656@bombadil.infradead.org>
- <20190613002555.GH14363@dread.disaster.area>
- <20190613152755.GI32656@bombadil.infradead.org>
- <20190613211321.GC32404@iweiny-DESK2.sc.intel.com>
- <20190613234530.GK22901@ziepe.ca>
- <20190614020921.GM14363@dread.disaster.area>
- <20190614023107.GK32656@bombadil.infradead.org>
+Received: from mail-lj1-f193.google.com ([209.85.208.193]:45879 "EHLO
+        mail-lj1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725838AbfFNDIh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 23:08:37 -0400
+Received: by mail-lj1-f193.google.com with SMTP id m23so766738lje.12
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 20:08:35 -0700 (PDT)
+Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
+        by smtp.gmail.com with ESMTPSA id g15sm313603ljk.83.2019.06.13.20.08.33
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Thu, 13 Jun 2019 20:08:33 -0700 (PDT)
+Received: by mail-lj1-f178.google.com with SMTP id 131so809673ljf.4
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 20:08:33 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190614023107.GK32656@bombadil.infradead.org>
+References: <20190610191420.27007-1-kent.overstreet@gmail.com>
+ <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
+ <20190611011737.GA28701@kmo-pixel> <20190611043336.GB14363@dread.disaster.area>
+ <20190612162144.GA7619@kmo-pixel> <20190612230224.GJ14308@dread.disaster.area>
+ <20190613183625.GA28171@kmo-pixel> <20190613235524.GK14363@dread.disaster.area>
+In-Reply-To: <20190613235524.GK14363@dread.disaster.area>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 13 Jun 2019 17:08:16 -1000
+Message-ID: <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
+Subject: Re: pagecache locking (was: bcachefs status update) merged)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, linux-rdma@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Jun 13, 2019 at 07:31:07PM -0700, Matthew Wilcox wrote:
-> On Fri, Jun 14, 2019 at 12:09:21PM +1000, Dave Chinner wrote:
-> > If the lease holder modifies the mapping in a way that causes it's
-> > own internal state to screw up, then that's a bug in the lease
-> > holder application.
-> 
-> Sounds like the lease semantics aren't the right ones for the longterm
-> GUP users then.  The point of the longterm GUP is so the pages can be
-> written to, and if the filesystem is going to move the pages around when
-> they're written to, that just won't work.
+On Thu, Jun 13, 2019 at 1:56 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> - buffered read and buffered write can run concurrently if they
+> don't overlap, but right now they are serialised because that's the
+> only way to provide POSIX atomic write vs read semantics (only XFS
+> provides userspace with that guarantee).
 
-And now we go full circle back to the constraints we decided on long
-ago because we can't rely on demand paging RDMA hardware any time
-soon to do everything we need to transparently support long-term GUP
-on file-backed mappings. i.e.:
+I do not believe that posix itself actually requires that at all,
+although extended standards may.
 
-	RDMA to file backed mappings must first preallocate and
-	write zeros to the range of the file they are mapping so
-	that the filesystem block mapping is complete and static for
-	the life of the RDMA mapping that will pin it.
+That said, from a quality of implementation standpoint, it's obviously
+a good thing to do, so it might be worth looking at if something
+reasonable can be done. The XFS atomicity guarantees are better than
+what other filesystems give, but they might also not be exactly
+required.
 
-IOWs, the layout lease will tell the RDMA application that the
-static setup it has already done  to work correctly with a file
-backed mapping may be about to be broken by a third party.....
+But POSIX actually ends up being pretty lax, and says
 
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  "Writes can be serialized with respect to other reads and writes. If
+a read() of file data can be proven (by any means) to occur after a
+write() of the data, it must reflect that write(), even if the calls
+are made by different processes. A similar requirement applies to
+multiple write operations to the same file position. This is needed to
+guarantee the propagation of data from write() calls to subsequent
+read() calls. This requirement is particularly significant for
+networked file systems, where some caching schemes violate these
+semantics."
+
+Note the "can" in "can be serialized", not "must". Also note that
+whole language about how the read file data must match the written
+data only if the read can be proven to have occurred after a write of
+that data.  Concurrency is very much left in the air, only provably
+serial operations matter.
+
+(There is also language that talks about "after the write has
+successfully returned" etc - again, it's about reads that occur
+_after_ the write, not concurrently with the write).
+
+The only atomicity guarantees are about the usual pipe writes and
+PIPE_BUF. Those are very explicit.
+
+Of course, there are lots of standards outside of just the POSIX
+read/write thing, so you may be thinking of some other stricter
+standard. POSIX itself has always been pretty permissive.
+
+And as mentioned, I do agree from a QoI standpoint that atomicity is
+nice, and that the XFS behavior is better. However, it does seem that
+nobody really cares, because I'm not sure we've ever done it in
+general (although we do have that i_rwsem, but I think it's mainly
+used to give the proper lseek behavior). And so the XFS behavior may
+not necessarily be *worth* it, although I presume you have some test
+for this as part of xfstests.
+
+                Linus
