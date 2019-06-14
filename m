@@ -1,71 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60257 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725777AbfFNAgV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 20:36:21 -0400
-Date: Fri, 14 Jun 2019 10:35:18 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: pagecache locking (was: bcachefs status update) merged)
-Message-ID: <20190614003518.GL14363@dread.disaster.area>
-References: <20190610191420.27007-1-kent.overstreet@gmail.com>
- <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
- <20190611011737.GA28701@kmo-pixel>
- <20190611043336.GB14363@dread.disaster.area>
- <20190612162144.GA7619@kmo-pixel>
- <20190612230224.GJ14308@dread.disaster.area>
- <20190613183625.GA28171@kmo-pixel>
- <AE838C22-1A11-4F93-AB88-80CF009BD301@dilger.ca>
- <20190613212112.GB28171@kmo-pixel>
+Received: from mx1.redhat.com ([209.132.183.28]:36428 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725616AbfFNBUB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 13 Jun 2019 21:20:01 -0400
+Date: Fri, 14 Jun 2019 09:19:47 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: alternative take on the same page merging leak fix v2
+Message-ID: <20190614011946.GB14436@ming.t460p>
+References: <20190613095529.25005-1-hch@lst.de>
+ <00c908ad-ca33-164d-3741-6c67813c1f0d@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190613212112.GB28171@kmo-pixel>
+In-Reply-To: <00c908ad-ca33-164d-3741-6c67813c1f0d@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Kent Overstreet <kent.overstreet@gmail.com>
-Cc: Andreas Dilger <adilger@dilger.ca>, Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 05:21:12PM -0400, Kent Overstreet wrote:
-> On Thu, Jun 13, 2019 at 03:13:40PM -0600, Andreas Dilger wrote:
-> > There are definitely workloads that require multiple threads doing non-overlapping
-> > writes to a single file in HPC.  This is becoming an increasingly common problem
-> > as the number of cores on a single client increase, since there is typically one
-> > thread per core trying to write to a shared file.  Using multiple files (one per
-> > core) is possible, but that has file management issues for users when there are a
-> > million cores running on the same job/file (obviously not on the same client node)
-> > dumping data every hour.
+On Thu, Jun 13, 2019 at 04:04:03AM -0600, Jens Axboe wrote:
+> On 6/13/19 3:55 AM, Christoph Hellwig wrote:
+> > Hi Jens, hi Ming,
+> > 
+> > this is the tested and split version of what I think is the better
+> > fix for the get_user_pages page leak, as it leaves the intelligence
+> > in the callers instead of in bio_try_to_merge_page.
+> > 
+> > Changes since v1:
+> >   - drop patches not required for 5.2
+> >   - added Reviewed-by tags
 > 
-> Mixed buffered and O_DIRECT though? That profile looks like just buffered IO to
-> me.
-> 
-> > We were just looking at this exact problem last week, and most of the threads are
-> > spinning in grab_cache_page_nowait->add_to_page_cache_lru() and set_page_dirty()
-> > when writing at 1.9GB/s when they could be writing at 5.8GB/s (when threads are
-> > writing O_DIRECT instead of buffered).  Flame graph is attached for 16-thread case,
-> > but high-end systems today easily have 2-4x that many cores.
-> 
-> Yeah I've been spending some time on buffered IO performance too - 4k page
-> overhead is a killer.
-> 
-> bcachefs has a buffered write path that looks up multiple pages at a time and
-> locks them, and then copies the data to all the pages at once (I stole the idea
-> from btrfs). It was a very significant performance increase.
+> Applied for 5.2, thanks.
 
-Careful with that - locking multiple pages is also a deadlock vector
-that triggers unexpectedly when something conspires to lock pages in
-non-ascending order. e.g.
+Hi Jens & Christoph,
 
-64081362e8ff mm/page-writeback.c: fix range_cyclic writeback vs writepages deadlock
+Looks the following change is missed in patch 1, otherwise kernel oops
+is triggered during kernel booting:
 
-The fs/iomap.c code avoids this problem by mapping the IO first,
-then iterating pages one at a time until the mapping is consumed,
-then it gets another mapping. It also avoids needing to put a page
-array on stack....
+diff --git a/block/bio.c b/block/bio.c
+index 35b3c568a48f..9ccf07c666f7 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -706,6 +706,8 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
+ 		return 0;
+ 
+ 	if (bio->bi_vcnt > 0) {
++		bool same_page;
++
+ 		bvec = &bio->bi_io_vec[bio->bi_vcnt - 1];
+ 
+ 		if (page == bvec->bv_page &&
+@@ -723,7 +725,7 @@ static int __bio_add_pc_page(struct request_queue *q, struct bio *bio,
+ 		if (bvec_gap_to_prev(q, bvec, offset))
+ 			return 0;
+ 
+-		if (page_is_mergeable(bvec, page, len, offset, false) &&
++		if (page_is_mergeable(bvec, page, len, offset, &same_page) &&
+ 		    can_add_page_to_seg(q, bvec, page, len, offset)) {
+ 			bvec->bv_len += len;
+ 			goto done;
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+Ming
