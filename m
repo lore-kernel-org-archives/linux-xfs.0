@@ -1,72 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f177.google.com ([209.85.208.177]:36343 "EHLO
-        mail-lj1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbfFNCbB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 22:31:01 -0400
-Received: by mail-lj1-f177.google.com with SMTP id i21so752879ljj.3
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 19:31:00 -0700 (PDT)
-Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
-        by smtp.gmail.com with ESMTPSA id c19sm243945lfi.39.2019.06.13.19.30.58
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Thu, 13 Jun 2019 19:30:58 -0700 (PDT)
-Received: by mail-lj1-f178.google.com with SMTP id p17so765848ljg.1
-        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 19:30:58 -0700 (PDT)
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:37437 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726103AbfFNC74 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 22:59:56 -0400
+Date: Fri, 14 Jun 2019 12:58:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
+Message-ID: <20190614025852.GN14363@dread.disaster.area>
+References: <20190606014544.8339-1-ira.weiny@intel.com>
+ <20190606104203.GF7433@quack2.suse.cz>
+ <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
+ <20190607110426.GB12765@quack2.suse.cz>
+ <20190607182534.GC14559@iweiny-DESK2.sc.intel.com>
+ <20190608001036.GF14308@dread.disaster.area>
+ <20190612123751.GD32656@bombadil.infradead.org>
+ <20190613002555.GH14363@dread.disaster.area>
+ <20190613203404.GA30404@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-References: <20190610191420.27007-1-kent.overstreet@gmail.com>
- <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
- <20190611011737.GA28701@kmo-pixel> <20190611043336.GB14363@dread.disaster.area>
- <20190612162144.GA7619@kmo-pixel> <20190612230224.GJ14308@dread.disaster.area>
- <20190613183625.GA28171@kmo-pixel> <20190613235524.GK14363@dread.disaster.area>
-In-Reply-To: <20190613235524.GK14363@dread.disaster.area>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Thu, 13 Jun 2019 16:30:36 -1000
-Message-ID: <CAHk-=wj3SQjfHHvE_CNrQAYS2p7bsC=OXEc156cHA_ujyaG0NA@mail.gmail.com>
-Subject: Re: pagecache locking (was: bcachefs status update) merged)
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190613203404.GA30404@iweiny-DESK2.sc.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: Ira Weiny <ira.weiny@intel.com>
+Cc: Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 1:56 PM Dave Chinner <david@fromorbit.com> wrote:
->
-> That said, the page cache is still far, far slower than direct IO,
+On Thu, Jun 13, 2019 at 01:34:05PM -0700, Ira Weiny wrote:
+> On Thu, Jun 13, 2019 at 10:25:55AM +1000, Dave Chinner wrote:
+> > On Wed, Jun 12, 2019 at 05:37:53AM -0700, Matthew Wilcox wrote:
+> > > On Sat, Jun 08, 2019 at 10:10:36AM +1000, Dave Chinner wrote:
+> > > > On Fri, Jun 07, 2019 at 11:25:35AM -0700, Ira Weiny wrote:
+> > > > > Are you suggesting that we have something like this from user space?
+> > > > > 
+> > > > > 	fcntl(fd, F_SETLEASE, F_LAYOUT | F_UNBREAKABLE);
+> > > > 
+> > > > Rather than "unbreakable", perhaps a clearer description of the
+> > > > policy it entails is "exclusive"?
+> > > > 
+> > > > i.e. what we are talking about here is an exclusive lease that
+> > > > prevents other processes from changing the layout. i.e. the
+> > > > mechanism used to guarantee a lease is exclusive is that the layout
+> > > > becomes "unbreakable" at the filesystem level, but the policy we are
+> > > > actually presenting to uses is "exclusive access"...
+> > > 
+> > > That's rather different from the normal meaning of 'exclusive' in the
+> > > context of locks, which is "only one user can have access to this at
+> > > a time".
+> > 
+> > 
+> > Layout leases are not locks, they are a user access policy object.
+> > It is the process/fd which holds the lease and it's the process/fd
+> > that is granted exclusive access.  This is exactly the same semantic
+> > as O_EXCL provides for granting exclusive access to a block device
+> > via open(), yes?
+> > 
+> > > As I understand it, this is rather more like a 'shared' or
+> > > 'read' lock.  The filesystem would be the one which wants an exclusive
+> > > lock, so it can modify the mapping of logical to physical blocks.
+> > 
+> > ISTM that you're conflating internal filesystem implementation with
+> > application visible semantics. Yes, the filesystem uses internal
+> > locks to serialise the modification of the things the lease manages
+> > access too, but that has nothing to do with the access policy the
+> > lease provides to users.
+> > 
+> > e.g. Process A has an exclusive layout lease on file F. It does an
+> > IO to file F. The filesystem IO path checks that Process A owns the
+> > lease on the file and so skips straight through layout breaking
+> > because it owns the lease and is allowed to modify the layout. It
+> > then takes the inode metadata locks to allocate new space and write
+> > new data.
+> > 
+> > Process B now tries to write to file F. The FS checks whether
+> > Process B owns a layout lease on file F. It doesn't, so then it
+> > tries to break the layout lease so the IO can proceed. The layout
+> > breaking code sees that process A has an exclusive layout lease
+> > granted, and so returns -ETXTBSY to process B - it is not allowed to
+> > break the lease and so the IO fails with -ETXTBSY.
+> > 
+> > i.e. the exclusive layout lease prevents other processes from
+> > performing operations that may need to modify the layout from
+> > performing those operations. It does not "lock" the file/inode in
+> > any way, it just changes how the layout lease breaking behaves.
+> 
+> Question: Do we expect Process A to get notified that Process B was attempting
+> to change the layout?
 
-Bullshit, Dave.
+In which case?
 
-You've made that claim before, and it's been complete bullshit before
-too, and I've called you out on it then too.
+In the non-exclusive case, yes, the lease gets
+recalled and the application needs to play nice and release it's
+references and drop the lease.
 
-Why do you continue to make this obviously garbage argument?
+In the exclusive case, no. The application has said "I don't play
+nice with others" and so we basically tell process B to get stuffed
+and process A can continue onwards oblivious to the wreckage it
+leaves behind....
 
-The key word in the "page cache" name is "cache".
+> This changes the exclusivity semantics.  While Process A has an exclusive lease
+> it could release it if notified to allow process B temporary exclusivity.
 
-Caches work, Dave. Anybody who thinks caches don't work is
-incompetent. 99% of all filesystem accesses are cached, and they never
-do any IO at all, and the page cache handles them beautifully.
+And then it's not an exclusive lease - it's just a normal layout
+lease. Process B -does not need a lease- to write to the file.
 
-When you say that the page cache is slower than direct IO, it's
-because you don't even see or care about the *fast* case. You only get
-involved once there is actual IO to be done.
+All the layout lease does is provide notification to applications
+that rely on the layout of the file being under their control that
+someone else is about to modify the layout. The lease holder that
+"plays nice" then releases the layout and drops it's lease, allowing
+process B to begin it's operation.
 
-So you're making that statement without taking into account all the
-cases that you don't see, and that you don't care about, because the
-page cache has already handled them for you, and done so much better
-than DIO can do or ever _will_ do.
+Process A then immediately takes a new layout lease, and remaps the
+file layout via FIEMAP or by creating a new RDMA MR for the mmap
+region. THose operations get serialised by the filesystem because
+the operation being run by process B is run atomically w.r.t. the
+original lease being broken. Hence the new mapping that process A
+gets with it's new lease reflects whatever change was made by
+process B.
 
-Is direct IO faster when you *know* it's not cached, and shouldn't be
-cached? Sure. But that/s actually quite rare.
+IOWs, the "normal" layout lease recall behaviour provides "temporary
+exclusivity" for third parties. If you are able to release leases
+temporarily and regain them then there is no need for an exclusive
+lease.
 
-How often do you use non-temporal stores when you do non-IO
-programming? Approximately never, perhaps? Because caches work.
+> Question 2: Do we expect other process' (say Process C) to also be able to map
+> and pin the file?  I believe users will need this and for layout purposes it is
+> ok to do so.  But this means that Process A does not have "exclusive" access to
+> the lease.
 
-And no, SSD's haven't made caches irrelevant. Not doing IO at all is
-still orders of magnitude faster than doing IO. And it's not clear
-nvdimms will either.
+This is an application architecture problem, not a layout lease or
+filesystem problem. :)
 
-So stop with the stupid and dishonest argument already, where you
-ignore the effects of caching.
+i.e. if you have a single process controlling all the RDMA mappings,
+then you can use exclusive leases. If you have multiple processes
+that are uncoordinated and all require layout access to the same
+file then you can't use exclusive layout leases in the application.
+i.e. your application has to play nice with others.
 
-                Linus
+Indeed, this is more than a application architecture problem - it's
+actually a system wide architecture problem.  e.g. the pNFS server
+cannot use exclusive layout leases because it has to play nice with
+anything else on the local filesystem that might require a layout
+lease. An example of this woudl be an app that provides coherent
+RDMA access to the same storage that pNFS is sharing (e.g. a
+userspace CIFS server).
+
+Hence I see that exclusive layout leases will end up being the
+exception rather than the norm, because most applications will need
+to play nice with other applications on the system that also
+directly access the storage under the filesystem....
+
+> So given Process C has also placed a layout lease on the file.  Indicating
+> that it does not want the layout to change.
+
+That is *not what layout leases provide*.
+
+Layout leases grant the owner the ability to map the layout and
+directly access the underlying storage and to do it safely because
+they will get a notification of 3rd party access that will
+invalidate their mapping. Layout leases do not prevent anyone from
+_changing_ the layout and, in fact, pNFS _requires_ the lease holder
+to be able to modify the layout.
+
+IOWs, the layout lease _as it stands now_ is a notification
+mechanism that tells the lease owner when someone else is about to
+modify the layout. It does not make the file layout immutable.
+
+The "exclusive" aspect of layout we have been discussing is a
+mechanism that prevents 3rd party modification of the layout by
+denying the ability to break the layout. This "exclusive" aspect
+does not make the layout immutable, either, it just means the
+layout is only modifiable by the exclusive lease holder. 
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
