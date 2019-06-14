@@ -1,76 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:47003 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726167AbfFNCKZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 22:10:25 -0400
-Date: Fri, 14 Jun 2019 12:09:21 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190614020921.GM14363@dread.disaster.area>
-References: <20190606104203.GF7433@quack2.suse.cz>
- <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
- <20190607110426.GB12765@quack2.suse.cz>
- <20190607182534.GC14559@iweiny-DESK2.sc.intel.com>
- <20190608001036.GF14308@dread.disaster.area>
- <20190612123751.GD32656@bombadil.infradead.org>
- <20190613002555.GH14363@dread.disaster.area>
- <20190613152755.GI32656@bombadil.infradead.org>
- <20190613211321.GC32404@iweiny-DESK2.sc.intel.com>
- <20190613234530.GK22901@ziepe.ca>
+Received: from mail-lj1-f177.google.com ([209.85.208.177]:36343 "EHLO
+        mail-lj1-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725780AbfFNCbB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 13 Jun 2019 22:31:01 -0400
+Received: by mail-lj1-f177.google.com with SMTP id i21so752879ljj.3
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 19:31:00 -0700 (PDT)
+Received: from mail-lj1-f178.google.com (mail-lj1-f178.google.com. [209.85.208.178])
+        by smtp.gmail.com with ESMTPSA id c19sm243945lfi.39.2019.06.13.19.30.58
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Thu, 13 Jun 2019 19:30:58 -0700 (PDT)
+Received: by mail-lj1-f178.google.com with SMTP id p17so765848ljg.1
+        for <linux-xfs@vger.kernel.org>; Thu, 13 Jun 2019 19:30:58 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190613234530.GK22901@ziepe.ca>
+References: <20190610191420.27007-1-kent.overstreet@gmail.com>
+ <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
+ <20190611011737.GA28701@kmo-pixel> <20190611043336.GB14363@dread.disaster.area>
+ <20190612162144.GA7619@kmo-pixel> <20190612230224.GJ14308@dread.disaster.area>
+ <20190613183625.GA28171@kmo-pixel> <20190613235524.GK14363@dread.disaster.area>
+In-Reply-To: <20190613235524.GK14363@dread.disaster.area>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 13 Jun 2019 16:30:36 -1000
+Message-ID: <CAHk-=wj3SQjfHHvE_CNrQAYS2p7bsC=OXEc156cHA_ujyaG0NA@mail.gmail.com>
+Subject: Re: pagecache locking (was: bcachefs status update) merged)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Ira Weiny <ira.weiny@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, linux-rdma@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Jun 13, 2019 at 08:45:30PM -0300, Jason Gunthorpe wrote:
-> On Thu, Jun 13, 2019 at 02:13:21PM -0700, Ira Weiny wrote:
-> > On Thu, Jun 13, 2019 at 08:27:55AM -0700, Matthew Wilcox wrote:
-> > > On Thu, Jun 13, 2019 at 10:25:55AM +1000, Dave Chinner wrote:
-> > > > e.g. Process A has an exclusive layout lease on file F. It does an
-> > > > IO to file F. The filesystem IO path checks that Process A owns the
-> > > > lease on the file and so skips straight through layout breaking
-> > > > because it owns the lease and is allowed to modify the layout. It
-> > > > then takes the inode metadata locks to allocate new space and write
-> > > > new data.
-> > > > 
-> > > > Process B now tries to write to file F. The FS checks whether
-> > > > Process B owns a layout lease on file F. It doesn't, so then it
-> > > > tries to break the layout lease so the IO can proceed. The layout
-> > > > breaking code sees that process A has an exclusive layout lease
-> > > > granted, and so returns -ETXTBSY to process B - it is not allowed to
-> > > > break the lease and so the IO fails with -ETXTBSY.
-> > > 
-> > > This description doesn't match the behaviour that RDMA wants either.
-> > > Even if Process A has a lease on the file, an IO from Process A which
-> > > results in blocks being freed from the file is going to result in the
-> > > RDMA device being able to write to blocks which are now freed (and
-> > > potentially reallocated to another file).
-> > 
-> > I don't understand why this would not work for RDMA?  As long as the layout
-> > does not change the page pins can remain in place.
-> 
-> Because process A had a layout lease (and presumably a MR) and the
-> layout was still modified in way that invalidates the RDMA MR.
+On Thu, Jun 13, 2019 at 1:56 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> That said, the page cache is still far, far slower than direct IO,
 
-The lease holder is allowed to modify the mapping it has a lease
-over. That's necessary so lease holders can write data into
-unallocated space in the file. The lease is there to prevent third
-parties from modifying the layout without the lease holder being
-informed and taking appropriate action to allow that 3rd party
-modification to occur.
+Bullshit, Dave.
 
-If the lease holder modifies the mapping in a way that causes it's
-own internal state to screw up, then that's a bug in the lease
-holder application.
+You've made that claim before, and it's been complete bullshit before
+too, and I've called you out on it then too.
 
-Cheers,
+Why do you continue to make this obviously garbage argument?
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+The key word in the "page cache" name is "cache".
+
+Caches work, Dave. Anybody who thinks caches don't work is
+incompetent. 99% of all filesystem accesses are cached, and they never
+do any IO at all, and the page cache handles them beautifully.
+
+When you say that the page cache is slower than direct IO, it's
+because you don't even see or care about the *fast* case. You only get
+involved once there is actual IO to be done.
+
+So you're making that statement without taking into account all the
+cases that you don't see, and that you don't care about, because the
+page cache has already handled them for you, and done so much better
+than DIO can do or ever _will_ do.
+
+Is direct IO faster when you *know* it's not cached, and shouldn't be
+cached? Sure. But that/s actually quite rare.
+
+How often do you use non-temporal stores when you do non-IO
+programming? Approximately never, perhaps? Because caches work.
+
+And no, SSD's haven't made caches irrelevant. Not doing IO at all is
+still orders of magnitude faster than doing IO. And it's not clear
+nvdimms will either.
+
+So stop with the stupid and dishonest argument already, where you
+ignore the effects of caching.
+
+                Linus
