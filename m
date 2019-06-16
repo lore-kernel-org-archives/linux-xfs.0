@@ -1,177 +1,146 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:58642 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725909AbfFRTlx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 15:41:53 -0400
-Date: Tue, 18 Jun 2019 12:41:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 6/9] libxfs: break out FSCOUNTS manpage
-Message-ID: <20190618194148.GM5387@magnolia>
-References: <155993574034.2343530.12919951702156931143.stgit@magnolia>
- <155993577871.2343530.12457677945958502175.stgit@magnolia>
- <ed87e06d-b762-b6f8-d566-a49faee63b47@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:44094 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725895AbfFPRBP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 16 Jun 2019 13:01:15 -0400
+Date: Mon, 17 Jun 2019 01:06:25 +0800
+From: Zorro Lang <zlang@redhat.com>
+Subject: Re: [PATCH] xfs: test xfs_info on block device and mountpoint
+Message-ID: <20190616170625.GE30864@dhcp-12-102.nay.redhat.com>
+References: <20190614044954.22022-1-zlang@redhat.com>
+ <20190616164948.GD1872778@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ed87e06d-b762-b6f8-d566-a49faee63b47@sandeen.net>
+In-Reply-To: <20190616164948.GD1872778@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Mon, Jun 17, 2019 at 12:12:42PM -0500, Eric Sandeen wrote:
-> On 6/7/19 2:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sun, Jun 16, 2019 at 09:49:48AM -0700, Darrick J. Wong wrote:
+> On Fri, Jun 14, 2019 at 12:49:54PM +0800, Zorro Lang wrote:
+> > There was a bug, xfs_info fails on a mounted block device:
 > > 
-> > Create a separate manual page for the FSCOUNTS ioctl so we can document
-> > how it works.
+> >   # xfs_info /dev/mapper/testdev
+> >   xfs_info: /dev/mapper/testdev contains a mounted filesystem
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> >   fatal error -- couldn't initialize XFS library
+> > 
+> > xfsprogs has fixed it, this case is used to cover this bug.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
 > > ---
-> >  man/man2/ioctl_xfs_fscounts.2 |   67 +++++++++++++++++++++++++++++++++++++++++
-> >  man/man3/xfsctl.3             |   14 +++++----
-> >  2 files changed, 75 insertions(+), 6 deletions(-)
-> >  create mode 100644 man/man2/ioctl_xfs_fscounts.2
+> >  tests/xfs/1000     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/1000.out |  2 ++
+> >  tests/xfs/group    |  1 +
+> >  3 files changed, 68 insertions(+)
+> >  create mode 100755 tests/xfs/1000
+> >  create mode 100644 tests/xfs/1000.out
 > > 
-> > 
-> > diff --git a/man/man2/ioctl_xfs_fscounts.2 b/man/man2/ioctl_xfs_fscounts.2
-> > new file mode 100644
-> > index 00000000..44b214a1
+> > diff --git a/tests/xfs/1000 b/tests/xfs/1000
+> > new file mode 100755
+> > index 00000000..689fe9e7
 > > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_fscounts.2
-> > @@ -0,0 +1,67 @@
-> > +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> > +.\"
-> > +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> > +.\" SPDX-License-Identifier: GPL-2.0+
-> > +.\" %%%LICENSE_END
-> > +.TH IOCTL-XFS-FSCOUNTS 2 2019-04-16 "XFS"
-> > +.SH NAME
-> > +ioctl_xfs_fscounts \- query XFS summary counter information
-> > +.SH SYNOPSIS
-> > +.br
-> > +.B #include <xfs/xfs_fs.h>
-> > +.PP
-> > +.BI "int ioctl(int " fd ", XFS_IOC_FSCOUNTS, struct xfs_fsop_counts *" arg );
-> > +.SH DESCRIPTION
-> > +Query the raw filesystem summary counters.
-> > +Unlike
-> > +.BR statvfs (3),
-> > +the values returned here are the raw values, which do not reflect any
-> > +alterations or limits set by quotas.
-> 
-> it's altered by /project/ quotas specifically, right?  Should that be
-> made clear?  Or is it more than just project?
-
-It's only project quotas; will clarify.
-
-> 
-> > +The counter information is conveyed in a structure of the following form:
-> > +.PP
-> > +.in +4n
-> > +.nf
-> > +struct xfs_fscounts {
-> 
-> xfs_fsop_counts?
-> 
-> (this is the second time there's a misnamed structure (I think?)
-> so I feel like double checking them all is in order unless i'm
-> missing something?)
-
-Massive thinko on my part, I guess?
-
-> > +	__u64   freedata;
-> > +	__u64   freertx;
-> > +	__u64   freeino;
-> > +	__u64   allocino;
-> > +};
-> > +.fi
-> > +.in
-> > +.PP
-> > +.I freedata
-> > +is the number of free filesystem blocks on the data device.
-> > +.PP
-> > +.I freertx
-> > +is the number of free xtents on the realtime device.
-> 
-> extents
-
-Fixed.
-
---D
-
-> > +.PP
-> > +.I freeino
-> > +is the number of inode records that are not in use within the space that has
-> > +been allocated for them.
-> > +.PP
-> > +.I allocino
-> > +is the number of inode records for which space has been allocated.
-> > +.SH RETURN VALUE
-> > +On error, \-1 is returned, and
-> > +.I errno
-> > +is set to indicate the error.
-> > +.PP
-> > +.SH ERRORS
-> > +Error codes can be one of, but are not limited to, the following:
-> > +.TP
-> > +.B EFSBADCRC
-> > +Metadata checksum validation failed while performing the query.
-> > +.TP
-> > +.B EFSCORRUPTED
-> > +Metadata corruption was encountered while performing the query.
-> > +.TP
-> > +.B EINVAL
-> > +The specified allocation group number is not valid for this filesystem.
-> > +.TP
-> > +.B EIO
-> > +An I/O error was encountered while performing the query.
-> > +.SH CONFORMING TO
-> > +This API is specific to XFS filesystem on the Linux kernel.
-> > +.SH SEE ALSO
-> > +.BR ioctl (2)
-> > diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> > index 148119a9..007f7d58 100644
-> > --- a/man/man3/xfsctl.3
-> > +++ b/man/man3/xfsctl.3
-> > @@ -390,6 +390,12 @@ See
-> >  .BR ioctl_xfs_scrub_metadata (2)
-> >  for more information.
-> >  
-> > +.TP
-> > +.B XFS_IOC_FSCOUNTS
-> > +See
-> > +.BR ioctl_xfs_fscounts (2)
-> > +for more information.
+> > +++ b/tests/xfs/1000
+> > @@ -0,0 +1,65 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0
+> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 1000
+> > +#
+> > +# test xfs_info on block device and mountpoint
+> > +#
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
 > > +
-> >  .PP
-> >  .nf
-> >  .B XFS_IOC_THAW
-> > @@ -398,16 +404,11 @@ for more information.
-> >  .B XFS_IOC_SET_RESBLKS
-> >  .B XFS_IOC_FSGROWFSDATA
-> >  .B XFS_IOC_FSGROWFSLOG
-> > -.B XFS_IOC_FSGROWFSRT
-> >  .fi
-> >  .TP
-> > -.B XFS_IOC_FSCOUNTS
-> > +.B XFS_IOC_FSGROWFSRT
-> >  These interfaces are used to implement various filesystem internal
-> >  operations on XFS filesystems.
-> > -For
-> > -.B XFS_FS_COUNTS
-> > -(get filesystem dynamic global information), the output structure is of type
-> > -.BR xfs_fsop_counts_t .
-> >  The remainder of these operations will not be described further
-> >  as they are not of general use to applications.
-> >  
-> > @@ -416,6 +417,7 @@ as they are not of general use to applications.
-> >  .BR ioctl_xfs_fsop_geometry (2),
-> >  .BR ioctl_xfs_fsbulkstat (2),
-> >  .BR ioctl_xfs_fsinumbers (2),
-> > +.BR ioctl_xfs_fscounts (2),
-> >  .BR fstatfs (2),
-> >  .BR statfs (2),
-> >  .BR xfs (5),
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1	# failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $tmp.*
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +
+> > +# remove previous $seqres.full before test
+> > +rm -f $seqres.full
+> > +
+> > +# real QA test starts here
+> > +_supported_fs xfs
+> > +_supported_os Linux
+> > +_require_scratch
+> > +
+> > +test_xfs_info()
+> > +{
+> > +	local target="$1"
+> > +	local file=$tmp.$seq.info
+> > +
+> > +	$XFS_INFO_PROG $target > $file 2>&1
+> > +	if [ $? -ne 0 ];then
+> > +		echo "$XFS_INFO_PROG $target fails:"
+> > +		cat $file
+> 
+> Should we compare the contents between the two xfs_info invocations?
+
+Hmm, make sense!
+
+> 
+> > +	else
+> > +		cat $file >> $seqres.full
+> > +	fi
+> > +}
+> > +
+> > +_scratch_mkfs > $seqres.full 2>&1
+> > +# test unmounted block device(contains XFS)
+> > +# Due to old xfsprogs doesn't support xfs_info a unmounted device, skip it
+> > +$XFS_DB_PROG -c "info" $SCRATCH_DEV | grep -q "command info not found"
+> 
+> Does _require_xfs_db_command not work here?
+
+Wow, I forgot it, thanks for reminding:)
+
+> 
+> --D
+> 
+> > +if [ $? -ne 0 ]; then
+> > +	test_xfs_info $SCRATCH_DEV
+> > +fi
+> > +
+> > +_scratch_mount
+> > +# test mounted block device and mountpoint
+> > +test_xfs_info $SCRATCH_DEV
+> > +test_xfs_info $SCRATCH_MNT
+> > +
+> > +echo "Silence is golden"
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/xfs/1000.out b/tests/xfs/1000.out
+> > new file mode 100644
+> > index 00000000..681b3b48
+> > --- /dev/null
+> > +++ b/tests/xfs/1000.out
+> > @@ -0,0 +1,2 @@
+> > +QA output created by 1000
+> > +Silence is golden
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index ffe4ae12..047fe332 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -504,3 +504,4 @@
+> >  504 auto quick mkfs label
+> >  505 auto quick spaceman
+> >  506 auto quick health
+> > +1000 auto quick
+> > -- 
+> > 2.17.2
 > > 
