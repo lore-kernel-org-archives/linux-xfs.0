@@ -1,67 +1,138 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44506 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728572AbfFRRUJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 13:20:09 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5IHESdj161611
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 17:20:07 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2t4rmp5uh5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 17:20:06 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5IHJZG9117719
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 17:20:06 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2t59gdyfx3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 17:20:06 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5IHK5Yc011069
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 17:20:05 GMT
-Date: Tue, 18 Jun 2019 10:20:04 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:37150 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726087AbfFPQuI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Jun 2019 12:50:08 -0400
+Date: Sun, 16 Jun 2019 09:49:48 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-documentation: master updated to 3b2f427
-Message-ID: <20190618172004.GF5387@magnolia>
+Subject: Re: [PATCH] xfs: test xfs_info on block device and mountpoint
+Message-ID: <20190616164948.GD1872778@magnolia>
+References: <20190614044954.22022-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190614044954.22022-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi folks,
+On Fri, Jun 14, 2019 at 12:49:54PM +0800, Zorro Lang wrote:
+> There was a bug, xfs_info fails on a mounted block device:
+> 
+>   # xfs_info /dev/mapper/testdev
+>   xfs_info: /dev/mapper/testdev contains a mounted filesystem
+> 
+>   fatal error -- couldn't initialize XFS library
+> 
+> xfsprogs has fixed it, this case is used to cover this bug.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+>  tests/xfs/1000     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/1000.out |  2 ++
+>  tests/xfs/group    |  1 +
+>  3 files changed, 68 insertions(+)
+>  create mode 100755 tests/xfs/1000
+>  create mode 100644 tests/xfs/1000.out
+> 
+> diff --git a/tests/xfs/1000 b/tests/xfs/1000
+> new file mode 100755
+> index 00000000..689fe9e7
+> --- /dev/null
+> +++ b/tests/xfs/1000
+> @@ -0,0 +1,65 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 1000
+> +#
+> +# test xfs_info on block device and mountpoint
+> +#
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +
+> +# remove previous $seqres.full before test
+> +rm -f $seqres.full
+> +
+> +# real QA test starts here
+> +_supported_fs xfs
+> +_supported_os Linux
+> +_require_scratch
+> +
+> +test_xfs_info()
+> +{
+> +	local target="$1"
+> +	local file=$tmp.$seq.info
+> +
+> +	$XFS_INFO_PROG $target > $file 2>&1
+> +	if [ $? -ne 0 ];then
+> +		echo "$XFS_INFO_PROG $target fails:"
+> +		cat $file
 
-The master branch of the xfs-documentation repository at:
+Should we compare the contents between the two xfs_info invocations?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-documentation.git
+> +	else
+> +		cat $file >> $seqres.full
+> +	fi
+> +}
+> +
+> +_scratch_mkfs > $seqres.full 2>&1
+> +# test unmounted block device(contains XFS)
+> +# Due to old xfsprogs doesn't support xfs_info a unmounted device, skip it
+> +$XFS_DB_PROG -c "info" $SCRATCH_DEV | grep -q "command info not found"
 
-has just been updated.
+Does _require_xfs_db_command not work here?
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+--D
 
-The new head of the master branch is commit:
-
-3b2f427 Fix typos in xfs-documentation
-
-New Commits:
-
-Andrea Gelmini (1):
-      [3b2f427] Fix typos in xfs-documentation
-
-
-Code Diffstat:
-
- admin/XFS_Performance_Tuning/filesystem_tunables.asciidoc  |  6 +++---
- .../XFS_Performance_Tuning/xfs_performance_tuning.asciidoc |  4 ++--
- .../XFS_Filesystem_Structure/extended_attributes.asciidoc  |  2 +-
- design/XFS_Filesystem_Structure/journaling_log.asciidoc    |  2 +-
- design/XFS_Filesystem_Structure/magic.asciidoc             |  2 +-
- design/XFS_Filesystem_Structure/refcountbt.asciidoc        |  2 +-
- design/xfs-smr-structure.asciidoc                          | 14 +++++++-------
- 7 files changed, 16 insertions(+), 16 deletions(-)
+> +if [ $? -ne 0 ]; then
+> +	test_xfs_info $SCRATCH_DEV
+> +fi
+> +
+> +_scratch_mount
+> +# test mounted block device and mountpoint
+> +test_xfs_info $SCRATCH_DEV
+> +test_xfs_info $SCRATCH_MNT
+> +
+> +echo "Silence is golden"
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/1000.out b/tests/xfs/1000.out
+> new file mode 100644
+> index 00000000..681b3b48
+> --- /dev/null
+> +++ b/tests/xfs/1000.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 1000
+> +Silence is golden
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index ffe4ae12..047fe332 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -504,3 +504,4 @@
+>  504 auto quick mkfs label
+>  505 auto quick spaceman
+>  506 auto quick health
+> +1000 auto quick
+> -- 
+> 2.17.2
+> 
