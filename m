@@ -1,146 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44094 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725895AbfFPRBP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 16 Jun 2019 13:01:15 -0400
-Date: Mon, 17 Jun 2019 01:06:25 +0800
-From: Zorro Lang <zlang@redhat.com>
-Subject: Re: [PATCH] xfs: test xfs_info on block device and mountpoint
-Message-ID: <20190616170625.GE30864@dhcp-12-102.nay.redhat.com>
-References: <20190614044954.22022-1-zlang@redhat.com>
- <20190616164948.GD1872778@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:40790 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727878AbfFQJO3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jun 2019 05:14:29 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 2/2] block: fix page leak when merging to same page
+Date: Mon, 17 Jun 2019 11:14:12 +0200
+Message-Id: <20190617091412.15923-3-hch@lst.de>
+In-Reply-To: <20190617091412.15923-1-hch@lst.de>
+References: <20190617091412.15923-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190616164948.GD1872778@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc: David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Sun, Jun 16, 2019 at 09:49:48AM -0700, Darrick J. Wong wrote:
-> On Fri, Jun 14, 2019 at 12:49:54PM +0800, Zorro Lang wrote:
-> > There was a bug, xfs_info fails on a mounted block device:
-> > 
-> >   # xfs_info /dev/mapper/testdev
-> >   xfs_info: /dev/mapper/testdev contains a mounted filesystem
-> > 
-> >   fatal error -- couldn't initialize XFS library
-> > 
-> > xfsprogs has fixed it, this case is used to cover this bug.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
-> > ---
-> >  tests/xfs/1000     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/1000.out |  2 ++
-> >  tests/xfs/group    |  1 +
-> >  3 files changed, 68 insertions(+)
-> >  create mode 100755 tests/xfs/1000
-> >  create mode 100644 tests/xfs/1000.out
-> > 
-> > diff --git a/tests/xfs/1000 b/tests/xfs/1000
-> > new file mode 100755
-> > index 00000000..689fe9e7
-> > --- /dev/null
-> > +++ b/tests/xfs/1000
-> > @@ -0,0 +1,65 @@
-> > +#! /bin/bash
-> > +# SPDX-License-Identifier: GPL-2.0
-> > +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> > +#
-> > +# FS QA Test No. 1000
-> > +#
-> > +# test xfs_info on block device and mountpoint
-> > +#
-> > +seq=`basename $0`
-> > +seqres=$RESULT_DIR/$seq
-> > +echo "QA output created by $seq"
-> > +
-> > +here=`pwd`
-> > +tmp=/tmp/$$
-> > +status=1	# failure is the default!
-> > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > +
-> > +_cleanup()
-> > +{
-> > +	cd /
-> > +	rm -f $tmp.*
-> > +}
-> > +
-> > +# get standard environment, filters and checks
-> > +. ./common/rc
-> > +
-> > +# remove previous $seqres.full before test
-> > +rm -f $seqres.full
-> > +
-> > +# real QA test starts here
-> > +_supported_fs xfs
-> > +_supported_os Linux
-> > +_require_scratch
-> > +
-> > +test_xfs_info()
-> > +{
-> > +	local target="$1"
-> > +	local file=$tmp.$seq.info
-> > +
-> > +	$XFS_INFO_PROG $target > $file 2>&1
-> > +	if [ $? -ne 0 ];then
-> > +		echo "$XFS_INFO_PROG $target fails:"
-> > +		cat $file
-> 
-> Should we compare the contents between the two xfs_info invocations?
+When multiple iovecs reference the same page, each get_user_page call
+will add a reference to the page.  But once we've created the bio that
+information gets lost and only a single reference will be dropped after
+I/O completion.  Use the same_page information returned from
+__bio_try_merge_page to drop additional references to pages that were
+already present in the bio.
 
-Hmm, make sense!
+Based on a patch from Ming Lei.
 
-> 
-> > +	else
-> > +		cat $file >> $seqres.full
-> > +	fi
-> > +}
-> > +
-> > +_scratch_mkfs > $seqres.full 2>&1
-> > +# test unmounted block device(contains XFS)
-> > +# Due to old xfsprogs doesn't support xfs_info a unmounted device, skip it
-> > +$XFS_DB_PROG -c "info" $SCRATCH_DEV | grep -q "command info not found"
-> 
-> Does _require_xfs_db_command not work here?
+Link: https://lkml.org/lkml/2019/4/23/64
+Fixes: 576ed913 ("block: use bio_add_page in bio_iov_iter_get_pages")
+Reported-by: David Gibson <david@gibson.dropbear.id.au>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Ming Lei <ming.lei@redhat.com>
+---
+ block/bio.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-Wow, I forgot it, thanks for reminding:)
-
-> 
-> --D
-> 
-> > +if [ $? -ne 0 ]; then
-> > +	test_xfs_info $SCRATCH_DEV
-> > +fi
-> > +
-> > +_scratch_mount
-> > +# test mounted block device and mountpoint
-> > +test_xfs_info $SCRATCH_DEV
-> > +test_xfs_info $SCRATCH_MNT
-> > +
-> > +echo "Silence is golden"
-> > +# success, all done
-> > +status=0
-> > +exit
-> > diff --git a/tests/xfs/1000.out b/tests/xfs/1000.out
-> > new file mode 100644
-> > index 00000000..681b3b48
-> > --- /dev/null
-> > +++ b/tests/xfs/1000.out
-> > @@ -0,0 +1,2 @@
-> > +QA output created by 1000
-> > +Silence is golden
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index ffe4ae12..047fe332 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -504,3 +504,4 @@
-> >  504 auto quick mkfs label
-> >  505 auto quick spaceman
-> >  506 auto quick health
-> > +1000 auto quick
-> > -- 
-> > 2.17.2
-> > 
+diff --git a/block/bio.c b/block/bio.c
+index daa1c1ae72cd..ce797d73bb43 100644
+--- a/block/bio.c
++++ b/block/bio.c
+@@ -896,6 +896,7 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 	unsigned short entries_left = bio->bi_max_vecs - bio->bi_vcnt;
+ 	struct bio_vec *bv = bio->bi_io_vec + bio->bi_vcnt;
+ 	struct page **pages = (struct page **)bv;
++	bool same_page = false;
+ 	ssize_t size, left;
+ 	unsigned len, i;
+ 	size_t offset;
+@@ -916,8 +917,15 @@ static int __bio_iov_iter_get_pages(struct bio *bio, struct iov_iter *iter)
+ 		struct page *page = pages[i];
+ 
+ 		len = min_t(size_t, PAGE_SIZE - offset, left);
+-		if (WARN_ON_ONCE(bio_add_page(bio, page, len, offset) != len))
+-			return -EINVAL;
++
++		if (__bio_try_merge_page(bio, page, len, offset, &same_page)) {
++			if (same_page)
++				put_page(page);
++		} else {
++			if (WARN_ON_ONCE(bio_full(bio)))
++                                return -EINVAL;
++			__bio_add_page(bio, page, len, offset);
++		}
+ 		offset = 0;
+ 	}
+ 
+-- 
+2.20.1
