@@ -1,73 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:41593 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727297AbfFFW36 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 6 Jun 2019 18:29:58 -0400
-Date: Fri, 7 Jun 2019 08:28:53 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH RFC 00/10] RDMA/FS DAX truncate proposal
-Message-ID: <20190606222853.GD14308@dread.disaster.area>
-References: <20190606014544.8339-1-ira.weiny@intel.com>
- <20190606104203.GF7433@quack2.suse.cz>
- <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:42544 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727479AbfFQWJ0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jun 2019 18:09:26 -0400
+Received: by mail-yw1-f67.google.com with SMTP id s5so5787240ywd.9
+        for <linux-xfs@vger.kernel.org>; Mon, 17 Jun 2019 15:09:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190606220329.GA11698@iweiny-DESK2.sc.intel.com>
+References: <e6968aa2-a5ad-4964-2966-589486e4a251@sandeen.net>
+ <20190606195724.2975689-1-sheenobu@fb.com> <f89a09b5-8a91-51e0-d869-039dbe9a7349@sandeen.net>
+ <20190606215008.GA14308@dread.disaster.area> <4a03b347-1a71-857d-af9d-1d7eca00056a@sandeen.net>
+ <20190606223607.GE14308@dread.disaster.area>
+In-Reply-To: <20190606223607.GE14308@dread.disaster.area>
+From: Sheena Artrip <sheena.artrip@gmail.com>
+Date: Mon, 17 Jun 2019 15:09:15 -0700
+Message-ID: <CABeZSNkGoKhfV2-=CfqSPUsf9CxLNFP5vRa161M_LowfnJ8TzA@mail.gmail.com>
+Subject: Re: [PATCH v2] xfs_restore: detect rtinherit on destination
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ira Weiny <ira.weiny@intel.com>
-Cc: Jan Kara <jack@suse.cz>, Dan Williams <dan.j.williams@intel.com>, Theodore Ts'o <tytso@mit.edu>, Jeff Layton <jlayton@kernel.org>, Matthew Wilcox <willy@infradead.org>, linux-xfs@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, John Hubbard <jhubbard@nvidia.com>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Jason Gunthorpe <jgg@ziepe.ca>, linux-rdma@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Eric Sandeen <sandeen@sandeen.net>, Sheena Artrip <sheenobu@fb.com>, linux-xfs@vger.kernel.org
 
-On Thu, Jun 06, 2019 at 03:03:30PM -0700, Ira Weiny wrote:
-> On Thu, Jun 06, 2019 at 12:42:03PM +0200, Jan Kara wrote:
-> > On Wed 05-06-19 18:45:33, ira.weiny@intel.com wrote:
-> > So I'd like to actually mandate that you *must* hold the file lease until
-> > you unpin all pages in the given range (not just that you have an option to
-> > hold a lease). And I believe the kernel should actually enforce this. That
-> > way we maintain a sane state that if someone uses a physical location of
-> > logical file offset on disk, he has a layout lease. Also once this is done,
-> > sysadmin has a reasonably easy way to discover run-away RDMA application
-> > and kill it if he wishes so.
-> 
-> Fair enough.
-> 
-> I was kind of heading that direction but had not thought this far forward.  I
-> was exploring how to have a lease remain on the file even after a "lease
-> break".  But that is incompatible with the current semantics of a "layout"
-> lease (as currently defined in the kernel).  [In the end I wanted to get an RFC
-> out to see what people think of this idea so I did not look at keeping the
-> lease.]
-> 
-> Also hitch is that currently a lease is forcefully broken after
-> <sysfs>/lease-break-time.  To do what you suggest I think we would need a new
-> lease type with the semantics you describe.
+On Thu, Jun 6, 2019 at 3:37 PM Dave Chinner <david@fromorbit.com> wrote:
+>
+> On Thu, Jun 06, 2019 at 05:08:12PM -0500, Eric Sandeen wrote:
+> > On 6/6/19 4:50 PM, Dave Chinner wrote:
+> > > My take on this is that we need to decide which allocation policy to
+> > > use - the kernel policy or the dump file policy - in the different
+> > > situations. It's a simple, easy to document and understand solution.
+> > >
+> > > At minimum, if there's a mismatch between rtdev/non-rtdev between
+> > > dump and restore, then restore should not try to restore or clear rt
+> > > flags at all. i.e the rt flags in the dump image should be
+> > > considered invalid in this situation and masked out in the restore
+> > > process. This prevents errors from being reported during restore,
+> > > and it does "the right thing" according to how the user has
+> > > configured the destination directory. i.e.  if the destdir has the
+> > > rtinherit bit set and there's a rtdev present, the kernel policy
+> > > will cause all file data that is restored to be allocated on the
+> > > rtdev. Otherwise the kernel will place it (correctly) on the data
+> > > dev.
+> > >
+> > > In the case where both have rtdevs, but you want to restore to
+> > > ignore the dump file rtdev policy, we really only need to add a CLI
+> > > option to say "ignore rt flags" and that then allows the kernel
+> > > policy to dictate how the restored files are placed in the same way
+> > > that having a rtdev mismatch does.
+> > >
+> > > This is simple, consistent, fulfils the requirements and should have
+> > > no hidden surprises for users....
+> >
+> > Sounds reasonable.  So the CLI flag would say "ignore RT info in the
+> > dump, and write files according to the destination fs policy?"
+> > I think that makes sense.
 
-That just requires a flag when gaining the layout lease to say it is
-an "unbreakable layout lease". That gives the kernel the information
-needed to determine whether it should attempt to break the lease on
-truncate or just return ETXTBSY....
+Any suggested flag name/prefix for this? Last i checked all the single
+letters were taken up?
 
-i.e. it allows gup-pinning applications that want to behave nicely
-with other users to drop their gup pins and release the lease when
-something else wants to truncate/hole punch the file rather than
-have truncate return an error. e.g. to allow apps to cleanly interop
-with other breakable layout leases (e.g. pNFS) on the same
-filesystem.
-
-FWIW, I'd also like to see the "truncate fails when unbreakable
-layout lease is held" behaviour to be common across all
-filesystem/storage types, not be confined to DAX only. i.e. truncate
-should return ETXTBSY when an unbreakable layout lease is held
-by an application, not just when "DAX+gup-pinned" is triggered....
-
-Whatever we decide, the behaviour of truncate et al needs to be
-predictable, consistent and easily discoverable...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> *nod*
+>
+> > Now: do we need to do the same for all inheritable flags?  projid,
+> > extsize, etc?  I think we probably do.
+>
+> I disagree. These things are all supported on all destination
+> filesystems, unlike the rtdev. They are also things that can be
+> changed after the fact, unlike rtdev allocation policy. i.e. rtdev
+> has to be set /before/ restore, just about everything else can be
+> set or reset after the fact....
+> Cheers,
+>
+> Dave.
+> --
+> Dave Chinner
+> david@fromorbit.com
