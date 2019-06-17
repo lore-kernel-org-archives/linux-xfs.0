@@ -1,138 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37150 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726087AbfFPQuI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 16 Jun 2019 12:50:08 -0400
-Date: Sun, 16 Jun 2019 09:49:48 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: test xfs_info on block device and mountpoint
-Message-ID: <20190616164948.GD1872778@magnolia>
-References: <20190614044954.22022-1-zlang@redhat.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:40712 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726753AbfFQJO2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 17 Jun 2019 05:14:28 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: same page merging leak fix v4
+Date: Mon, 17 Jun 2019 11:14:10 +0200
+Message-Id: <20190617091412.15923-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190614044954.22022-1-zlang@redhat.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, Ming Lei <ming.lei@redhat.com>
+Cc: David Gibson <david@gibson.dropbear.id.au>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-block@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Jun 14, 2019 at 12:49:54PM +0800, Zorro Lang wrote:
-> There was a bug, xfs_info fails on a mounted block device:
-> 
->   # xfs_info /dev/mapper/testdev
->   xfs_info: /dev/mapper/testdev contains a mounted filesystem
-> 
->   fatal error -- couldn't initialize XFS library
-> 
-> xfsprogs has fixed it, this case is used to cover this bug.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
-> ---
->  tests/xfs/1000     | 65 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/1000.out |  2 ++
->  tests/xfs/group    |  1 +
->  3 files changed, 68 insertions(+)
->  create mode 100755 tests/xfs/1000
->  create mode 100644 tests/xfs/1000.out
-> 
-> diff --git a/tests/xfs/1000 b/tests/xfs/1000
-> new file mode 100755
-> index 00000000..689fe9e7
-> --- /dev/null
-> +++ b/tests/xfs/1000
-> @@ -0,0 +1,65 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 1000
-> +#
-> +# test xfs_info on block device and mountpoint
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +
-> +test_xfs_info()
-> +{
-> +	local target="$1"
-> +	local file=$tmp.$seq.info
-> +
-> +	$XFS_INFO_PROG $target > $file 2>&1
-> +	if [ $? -ne 0 ];then
-> +		echo "$XFS_INFO_PROG $target fails:"
-> +		cat $file
+Hi Jens, hi Ming,
 
-Should we compare the contents between the two xfs_info invocations?
+this is the tested and split version of what I think is the better
+fix for the get_user_pages page leak, as it leaves the intelligence
+in the callers instead of in bio_try_to_merge_page.
 
-> +	else
-> +		cat $file >> $seqres.full
-> +	fi
-> +}
-> +
-> +_scratch_mkfs > $seqres.full 2>&1
-> +# test unmounted block device(contains XFS)
-> +# Due to old xfsprogs doesn't support xfs_info a unmounted device, skip it
-> +$XFS_DB_PROG -c "info" $SCRATCH_DEV | grep -q "command info not found"
+Changes since v2:
+ - pass a proper same_page variable from the passthrough path
 
-Does _require_xfs_db_command not work here?
-
---D
-
-> +if [ $? -ne 0 ]; then
-> +	test_xfs_info $SCRATCH_DEV
-> +fi
-> +
-> +_scratch_mount
-> +# test mounted block device and mountpoint
-> +test_xfs_info $SCRATCH_DEV
-> +test_xfs_info $SCRATCH_MNT
-> +
-> +echo "Silence is golden"
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/1000.out b/tests/xfs/1000.out
-> new file mode 100644
-> index 00000000..681b3b48
-> --- /dev/null
-> +++ b/tests/xfs/1000.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 1000
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index ffe4ae12..047fe332 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -504,3 +504,4 @@
->  504 auto quick mkfs label
->  505 auto quick spaceman
->  506 auto quick health
-> +1000 auto quick
-> -- 
-> 2.17.2
-> 
+Changes since v1:
+ - drop patches not required for 5.2
+ - added Reviewed-by tags
