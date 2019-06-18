@@ -1,51 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46972 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726178AbfFTTw4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jun 2019 15:52:56 -0400
-Subject: Re: [PATCH 10/12] xfs_io: repair_f should use its own name
-References: <156104936953.1172531.2121427277342917243.stgit@magnolia>
- <156104943322.1172531.14877921651268434165.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <0628fbe6-f9ce-6af2-c0e0-0d5bde6d5de9@sandeen.net>
-Date: Thu, 20 Jun 2019 14:52:55 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:33268 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730102AbfFRVAN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:00:13 -0400
+Date: Tue, 18 Jun 2019 13:59:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: move xfs_ino_geometry to xfs_mount.h
+Message-ID: <20190618205935.GS5387@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <156104943322.1172531.14877921651268434165.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 
-On 6/20/19 11:50 AM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> If the repair command fails, it should tag the error message with its
-> own name ("repair").
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+The inode geometry structure isn't related to ondisk format; it's
+support for the mount structure.  Move it to xfs_mount.h.
 
-> ---
->  io/scrub.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> 
-> diff --git a/io/scrub.c b/io/scrub.c
-> index 2ff1a6af..052497be 100644
-> --- a/io/scrub.c
-> +++ b/io/scrub.c
-> @@ -293,7 +293,7 @@ repair_ioctl(
->  
->  	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
->  	if (error)
-> -		perror("scrub");
-> +		perror("repair");
->  	if (meta.sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
->  		printf(_("Corruption remains.\n"));
->  	if (meta.sm_flags & XFS_SCRUB_OFLAG_PREEN)
-> 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_format.h |   41 -----------------------------------------
+ fs/xfs/xfs_mount.h         |   42 ++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+), 41 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
+index 5729474e362f..c968b60cee15 100644
+--- a/fs/xfs/libxfs/xfs_format.h
++++ b/fs/xfs/libxfs/xfs_format.h
+@@ -1694,45 +1694,4 @@ struct xfs_acl {
+ #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
+ #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+ 
+-struct xfs_ino_geometry {
+-	/* Maximum inode count in this filesystem. */
+-	uint64_t	maxicount;
+-
+-	/* Actual inode cluster buffer size, in bytes. */
+-	unsigned int	inode_cluster_size;
+-
+-	/*
+-	 * Desired inode cluster buffer size, in bytes.  This value is not
+-	 * rounded up to at least one filesystem block, which is necessary for
+-	 * the sole purpose of validating sb_spino_align.  Runtime code must
+-	 * only ever use inode_cluster_size.
+-	 */
+-	unsigned int	inode_cluster_size_raw;
+-
+-	/* Inode cluster sizes, adjusted to be at least 1 fsb. */
+-	unsigned int	inodes_per_cluster;
+-	unsigned int	blocks_per_cluster;
+-
+-	/* Inode cluster alignment. */
+-	unsigned int	cluster_align;
+-	unsigned int	cluster_align_inodes;
+-	unsigned int	inoalign_mask;	/* mask sb_inoalignmt if used */
+-
+-	unsigned int	inobt_mxr[2]; /* max inobt btree records */
+-	unsigned int	inobt_mnr[2]; /* min inobt btree records */
+-	unsigned int	inobt_maxlevels; /* max inobt btree levels. */
+-
+-	/* Size of inode allocations under normal operation. */
+-	unsigned int	ialloc_inos;
+-	unsigned int	ialloc_blks;
+-
+-	/* Minimum inode blocks for a sparse allocation. */
+-	unsigned int	ialloc_min_blks;
+-
+-	/* stripe unit inode alignment */
+-	unsigned int	ialloc_align;
+-
+-	unsigned int	agino_log;	/* #bits for agino in inum */
+-};
+-
+ #endif /* __XFS_FORMAT_H__ */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 448986d260dd..7591c1b70e84 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -57,6 +57,48 @@ struct xfs_error_cfg {
+ 	long		retry_timeout;	/* in jiffies, -1 = infinite */
+ };
+ 
++/* Computed inode geometry for the filesystem. */
++struct xfs_ino_geometry {
++	/* Maximum inode count in this filesystem. */
++	uint64_t	maxicount;
++
++	/* Actual inode cluster buffer size, in bytes. */
++	unsigned int	inode_cluster_size;
++
++	/*
++	 * Desired inode cluster buffer size, in bytes.  This value is not
++	 * rounded up to at least one filesystem block, which is necessary for
++	 * the sole purpose of validating sb_spino_align.  Runtime code must
++	 * only ever use inode_cluster_size.
++	 */
++	unsigned int	inode_cluster_size_raw;
++
++	/* Inode cluster sizes, adjusted to be at least 1 fsb. */
++	unsigned int	inodes_per_cluster;
++	unsigned int	blocks_per_cluster;
++
++	/* Inode cluster alignment. */
++	unsigned int	cluster_align;
++	unsigned int	cluster_align_inodes;
++	unsigned int	inoalign_mask;	/* mask sb_inoalignmt if used */
++
++	unsigned int	inobt_mxr[2]; /* max inobt btree records */
++	unsigned int	inobt_mnr[2]; /* min inobt btree records */
++	unsigned int	inobt_maxlevels; /* max inobt btree levels. */
++
++	/* Size of inode allocations under normal operation. */
++	unsigned int	ialloc_inos;
++	unsigned int	ialloc_blks;
++
++	/* Minimum inode blocks for a sparse allocation. */
++	unsigned int	ialloc_min_blks;
++
++	/* stripe unit inode alignment */
++	unsigned int	ialloc_align;
++
++	unsigned int	agino_log;	/* #bits for agino in inum */
++};
++
+ typedef struct xfs_mount {
+ 	struct super_block	*m_super;
+ 	xfs_tid_t		m_tid;		/* next unused tid for fs */
