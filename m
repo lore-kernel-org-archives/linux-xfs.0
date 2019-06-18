@@ -1,60 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:58782 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725905AbfFTVxn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 17:53:43 -0400
-Date: Thu, 20 Jun 2019 17:52:12 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH 1/6] mm/fs: don't allow writes to immutable files
-Message-ID: <20190620215212.GG4650@mit.edu>
-References: <156022836912.3227213.13598042497272336695.stgit@magnolia>
- <156022837711.3227213.11787906519006016743.stgit@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:34684 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730696AbfFRVHI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:07:08 -0400
+Subject: [PATCH 0/4] fstests: various fixes
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 18 Jun 2019 14:07:00 -0700
+Message-ID: <156089201978.345809.17444450351199726553.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156022837711.3227213.11787906519006016743.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Jun 10, 2019 at 09:46:17PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> The chattr manpage has this to say about immutable files:
-> 
-> "A file with the 'i' attribute cannot be modified: it cannot be deleted
-> or renamed, no link can be created to this file, most of the file's
-> metadata can not be modified, and the file can not be opened in write
-> mode."
-> 
-> Once the flag is set, it is enforced for quite a few file operations,
-> such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
-> don't check for immutability when doing a write(), a PROT_WRITE mmap(),
-> a truncate(), or a write to a previously established mmap.
-> 
-> If a program has an open write fd to a file that the administrator
-> subsequently marks immutable, the program still can change the file
-> contents.  Weird!
-> 
-> The ability to write to an immutable file does not follow the manpage
-> promise that immutable files cannot be modified.  Worse yet it's
-> inconsistent with the behavior of other syscalls which don't allow
-> modifications of immutable files.
-> 
-> Therefore, add the necessary checks to make the write, mmap, and
-> truncate behavior consistent with what the manpage says and consistent
-> with other syscalls on filesystems which support IMMUTABLE.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-I note that this patch doesn't allow writes to swap files.  So Amir's
-generic/554 test will still fail for those file systems that don't use
-copy_file_range.
+Fix some more problems uncovered by wipefsing the scratch devices between
+tests, and fix various problems with last week's xfs min log size calculation.
 
-I'm indifferent as to whether you add a new patch, or include that
-change in this patch, but perhaps we should fix this while we're
-making changes in these code paths?
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-				- Ted
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=random-fixes
