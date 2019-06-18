@@ -1,84 +1,95 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42138 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729528AbfFRQ7w (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 12:59:52 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5IGvhYl037808
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 16:59:51 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2t4r3tnt6u-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 16:59:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5IGxlAC013490
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 16:59:50 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2t5mgc2sx9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 16:59:50 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5IGxnOK006792
-        for <linux-xfs@vger.kernel.org>; Tue, 18 Jun 2019 16:59:49 GMT
-Date: Tue, 18 Jun 2019 09:59:47 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to fe0da9c09b2d
-Message-ID: <20190618165947.GD5387@magnolia>
+Received: from sandeen.net ([63.231.237.45]:51646 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730242AbfFRUAp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 18 Jun 2019 16:00:45 -0400
+Subject: Re: [PATCH 9/9] libxfs: break out fs shutdown manpage
+References: <155993574034.2343530.12919951702156931143.stgit@magnolia>
+ <155993579746.2343530.1053923086240021800.stgit@magnolia>
+ <d041c695-f438-c202-4c78-9273d3bdfa2a@sandeen.net>
+ <20190618195611.GP5387@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <1047033c-fdd9-7773-af30-c92515184589@sandeen.net>
+Date: Tue, 18 Jun 2019 15:00:43 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+In-Reply-To: <20190618195611.GP5387@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
-
-Hi folks,
-
-The for-next branch of the xfs-linux repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
-
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-This announcement only covers building a new for-next branch from the
-copy-file-range-fixes branch for wider testing.  I pushed this out a
-week ago, but apparently forgot to send an announcement specifically for
-for-next. :/
-
-The new head of the for-next branch is commit:
-
-fe0da9c09b2d fuse: copy_file_range needs to strip setuid bits and update timestamps
-
-New Commits:
-
-Amir Goldstein (7):
-      [a31713517dac] vfs: introduce generic_file_rw_checks()
-      [646955cd5425] vfs: remove redundant checks from generic_remap_checks()
-      [96e6e8f4a68d] vfs: add missing checks to copy_file_range
-      [e38f7f53c352] vfs: introduce file_modified() helper
-      [8c3f406c097b] xfs: use file_modified() helper
-      [5dae222a5ff0] vfs: allow copy_file_range to copy across devices
-      [fe0da9c09b2d] fuse: copy_file_range needs to strip setuid bits and update timestamps
-
-Dave Chinner (2):
-      [f16acc9d9b37] vfs: introduce generic_copy_file_range()
-      [64bf5ff58dff] vfs: no fallback for ->copy_file_range
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
 
-Code Diffstat:
 
- fs/ceph/file.c     |  23 ++++++++--
- fs/cifs/cifsfs.c   |   4 ++
- fs/fuse/file.c     |  29 +++++++++++--
- fs/inode.c         |  20 +++++++++
- fs/nfs/nfs4file.c  |  23 ++++++++--
- fs/read_write.c    | 124 +++++++++++++++++++++++++++++------------------------
- fs/xfs/xfs_file.c  |  15 +------
- include/linux/fs.h |   9 ++++
- mm/filemap.c       | 110 ++++++++++++++++++++++++++++++++++++++---------
- 9 files changed, 257 insertions(+), 100 deletions(-)
+On 6/18/19 2:56 PM, Darrick J. Wong wrote:
+> On Mon, Jun 17, 2019 at 12:27:26PM -0500, Eric Sandeen wrote:
+>> On 6/7/19 2:29 PM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>
+>>> Create a separate manual page for the fs shutdown ioctl so we can
+>>> document how it works.
+>>>
+>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>> ---
+>>>  man/man2/ioctl_xfs_goingdown.2 |   61 ++++++++++++++++++++++++++++++++++++++++
+>>>  man/man3/xfsctl.3              |    7 +++++
+>>>  2 files changed, 68 insertions(+)
+>>>  create mode 100644 man/man2/ioctl_xfs_goingdown.2
+>>>
+>>>
+>>> diff --git a/man/man2/ioctl_xfs_goingdown.2 b/man/man2/ioctl_xfs_goingdown.2
+>>> new file mode 100644
+>>> index 00000000..e9a56f28
+>>> --- /dev/null
+>>> +++ b/man/man2/ioctl_xfs_goingdown.2
+>>> @@ -0,0 +1,61 @@
+>>> +.\" Copyright (c) 2019, Oracle.  All rights reserved.
+>>> +.\"
+>>> +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+>>> +.\" SPDX-License-Identifier: GPL-2.0+
+>>> +.\" %%%LICENSE_END
+>>> +.TH IOCTL-XFS-GOINGDOWN 2 2019-04-16 "XFS"
+>>> +.SH NAME
+>>> +ioctl_xfs_goingdown \- shut down an XFS filesystem
+>>> +.SH SYNOPSIS
+>>> +.br
+>>> +.B #include <xfs/xfs_fs.h>
+>>> +.PP
+>>> +.BI "int ioctl(int " fd ", XFS_IOC_GOINGDOWN, uint32_t " flags );
+>>> +.SH DESCRIPTION
+>>> +Shuts down a live XFS filesystem.
+>>> +This is a software initiated hard shutdown and should be avoided whenever
+>>> +possible.
+>>> +After this call completes, the filesystem will be totally unusable and must be
+>>> +unmounted.
+>>> +
+>>> +.PP
+>>> +.I flags
+>>> +can be one of the following:
+>>> +.RS 0.4i
+>>> +.TP
+>>> +.B XFS_FSOP_GOING_FLAGS_DEFAULT
+>>> +Flush all dirty data and in-core state to disk, flush the log, then shut down.
+>>> +.TP
+>>> +.B XFS_FSOP_GOING_FLAGS_LOGFLUSH
+>>> +Flush all pending transactions to the log, then shut down, leaving all dirty
+>>> +data unwritten.
+>>> +.TP
+>>> +.B XFS_FSOP_GOING_FLAGS_NOLOGFLUSH
+>>> +Shut down, leaving all dirty transactions and dirty data.
+>>
+>> leaving it ... what?
+>>
+>> Maybe "Shut down, without flushing any dirty transactions or data to disk."
+> 
+> "Shut down immediately, without writing pending transactions or dirty data
+> to disk." ?
+
+The two other cases use "flush" terminology so I was sticking with that.  If
+"write" is less jargon-y then I'd do it for all of them - using similar terminology
+for all 3 cases helps the reader understand the differences more clearly, I think.
+
+-Eric
