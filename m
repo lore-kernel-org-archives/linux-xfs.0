@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38140 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731068AbfFRVHN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:07:13 -0400
-Subject: [PATCH 1/4] dump: _cleanup_dump should only check the scratch fs if
- the test required it
+Received: from aserp2120.oracle.com ([141.146.126.78]:54868 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731068AbfFRVHX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:07:23 -0400
+Subject: [PATCH 2/4] xfs: rework min log size helper
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Jun 2019 14:07:08 -0700
-Message-ID: <156089202883.345809.17656192140244878661.stgit@magnolia>
+Date: Tue, 18 Jun 2019 14:07:15 -0700
+Message-ID: <156089203509.345809.3448903728041546348.stgit@magnolia>
 In-Reply-To: <156089201978.345809.17444450351199726553.stgit@magnolia>
 References: <156089201978.345809.17444450351199726553.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,34 +20,117 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-_cleanup_dump always tries to check the scratch fs, even if the caller
-didn't actually _require_scratch.  If a previous test wrote garbage to
-the scratch device then the dump test will fail here when repair
-stumbles over the garbage.
+The recent _scratch_find_xfs_min_logblocks helper has a major thinko in
+it -- it relies on feeding a too-small size to _scratch_do_mkfs so that
+mkfs will tell us the minimum log size.  Unfortunately, _scratch_do_mkfs
+will see that first failure and retry the mkfs without MKFS_OPTIONS,
+which means that we return the minimum log size for the default mkfs
+settings without MKFS_OPTIONS.
 
-This was observed by running xfs/016 and xfs/036 in succession.  xfs/016
-writes 0xc6 to the scratch device and tries to format a small log.  If
-the log is too small the format fails and the test will _notrun.  The
-subsequent xfs/036 will _notrun and then _cleanup_dump if no tape device
-is set, at which point we try to check the scratch device and logprint
-aborts due to the abnormal log size (0xc6c6c6c6).
+This is a problem if someone's running fstests with a set of
+MKFS_OPTIONS that affects the minimum log size.  To fix this, open-code
+the _scratch_do_mkfs retry behavior so that we only do the "retry
+without MKFS_OPTIONS" behavior if the mkfs failed for a reason other
+than the minimum log size check.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/dump |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ common/rc  |   13 ++++++++++---
+ common/xfs |   23 +++++++++++++++++++++--
+ 2 files changed, 31 insertions(+), 5 deletions(-)
 
 
-diff --git a/common/dump b/common/dump
-index 7c4c9cd8..2b8e0893 100644
---- a/common/dump
-+++ b/common/dump
-@@ -250,7 +250,7 @@ _cleanup_dump()
- 	mv $dir.$seq $dir
-     done
+diff --git a/common/rc b/common/rc
+index 25203bb4..a38b7f02 100644
+--- a/common/rc
++++ b/common/rc
+@@ -438,6 +438,14 @@ _scratch_mkfs_options()
+     echo $SCRATCH_OPTIONS $MKFS_OPTIONS $* $SCRATCH_DEV
+ }
  
--    if [ $status -ne $NOTRUNSTS ]; then
-+    if [ -f ${RESULT_DIR}/require_scratch ] && [ $status -ne $NOTRUNSTS ]; then
- 	# Sleep added to stop _check_scratch_fs from complaining that the
- 	# scratch_dev is still busy
- 	sleep 10
++# Format the scratch device directly.  First argument is the mkfs command.
++# Second argument are all the parameters.  stdout goes to $tmp.mkfsstd and
++# stderr goes to $tmp.mkfserr.
++__scratch_do_mkfs()
++{
++	eval "$1 $2 $SCRATCH_DEV" 2>$tmp.mkfserr 1>$tmp.mkfsstd
++}
++
+ # Do the actual mkfs work on SCRATCH_DEV. Firstly mkfs with both MKFS_OPTIONS
+ # and user specified mkfs options, if that fails (due to conflicts between mkfs
+ # options), do a second mkfs with only user provided mkfs options.
+@@ -456,8 +464,7 @@ _scratch_do_mkfs()
+ 
+ 	# save mkfs output in case conflict means we need to run again.
+ 	# only the output for the mkfs that applies should be shown
+-	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
+-		2>$tmp.mkfserr 1>$tmp.mkfsstd
++	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
+ 	mkfs_status=$?
+ 
+ 	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
+@@ -471,7 +478,7 @@ _scratch_do_mkfs()
+ 		) >> $seqres.full
+ 
+ 		# running mkfs again. overwrite previous mkfs output files
+-		eval "$mkfs_cmd $extra_mkfs_options $SCRATCH_DEV" \
++		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options" \
+ 			2>$tmp.mkfserr 1>$tmp.mkfsstd
+ 		mkfs_status=$?
+ 	fi
+diff --git a/common/xfs b/common/xfs
+index f8dafc6c..8733e2ae 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -87,16 +87,33 @@ _scratch_find_xfs_min_logblocks()
+ 	# minimum log size.
+ 	local XFS_MIN_LOG_BYTES=2097152
+ 
+-	_scratch_do_mkfs "$mkfs_cmd" "cat" $* -N -l size=$XFS_MIN_LOG_BYTES \
+-		2>$tmp.mkfserr 1>$tmp.mkfsstd
++	# Try formatting the filesystem with all the options given and the
++	# minimum log size.  We hope either that this succeeds or that mkfs
++	# tells us the required minimum log size for the feature set.
++	#
++	# We cannot use _scratch_do_mkfs because it will retry /any/ failed
++	# mkfs with MKFS_OPTIONS removed even if the only "failure" was that
++	# the log was too small.
++	local extra_mkfs_options="$* -N -l size=$XFS_MIN_LOG_BYTES"
++	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
+ 	local mkfs_status=$?
+ 
++	# If the format fails for a reason other than the log being too small,
++	# try again without MKFS_OPTIONS because that's what _scratch_do_mkfs
++	# will do if we pass in the log size option.
++	if [ $mkfs_status -ne 0 ] &&
++	   ! grep -q 'log size.*too small, minimum' $tmp.mkfserr; then
++		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options"
++		local mkfs_status=$?
++	fi
++
+ 	# mkfs suceeded, so we must pick out the log block size to do the
+ 	# unit conversion
+ 	if [ $mkfs_status -eq 0 ]; then
+ 		local blksz="$(grep '^log.*bsize' $tmp.mkfsstd | \
+ 			sed -e 's/log.*bsize=\([0-9]*\).*$/\1/g')"
+ 		echo $((XFS_MIN_LOG_BYTES / blksz))
++		rm -f $tmp.mkfsstd $tmp.mkfserr
+ 		return
+ 	fi
+ 
+@@ -104,6 +121,7 @@ _scratch_find_xfs_min_logblocks()
+ 	if grep -q 'minimum size is' $tmp.mkfserr; then
+ 		grep 'minimum size is' $tmp.mkfserr | \
+ 			sed -e 's/^.*minimum size is \([0-9]*\) blocks/\1/g'
++		rm -f $tmp.mkfsstd $tmp.mkfserr
+ 		return
+ 	fi
+ 
+@@ -111,6 +129,7 @@ _scratch_find_xfs_min_logblocks()
+ 	echo "Cannot determine minimum log size" >&2
+ 	cat $tmp.mkfsstd >> $seqres.full
+ 	cat $tmp.mkfserr >> $seqres.full
++	rm -f $tmp.mkfsstd $tmp.mkfserr
+ }
+ 
+ _scratch_mkfs_xfs()
