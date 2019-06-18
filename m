@@ -1,54 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f43.google.com ([209.85.167.43]:35623 "EHLO
-        mail-lf1-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725785AbfFOEB0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 15 Jun 2019 00:01:26 -0400
-Received: by mail-lf1-f43.google.com with SMTP id a25so3021553lfg.2
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Jun 2019 21:01:25 -0700 (PDT)
-Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com. [209.85.208.182])
-        by smtp.gmail.com with ESMTPSA id 25sm890527ljo.38.2019.06.14.21.01.23
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Fri, 14 Jun 2019 21:01:24 -0700 (PDT)
-Received: by mail-lj1-f182.google.com with SMTP id k18so4250297ljc.11
-        for <linux-xfs@vger.kernel.org>; Fri, 14 Jun 2019 21:01:23 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:58642 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725909AbfFRTlx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 15:41:53 -0400
+Date: Tue, 18 Jun 2019 12:41:48 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/9] libxfs: break out FSCOUNTS manpage
+Message-ID: <20190618194148.GM5387@magnolia>
+References: <155993574034.2343530.12919951702156931143.stgit@magnolia>
+ <155993577871.2343530.12457677945958502175.stgit@magnolia>
+ <ed87e06d-b762-b6f8-d566-a49faee63b47@sandeen.net>
 MIME-Version: 1.0
-References: <20190610191420.27007-1-kent.overstreet@gmail.com>
- <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
- <20190611011737.GA28701@kmo-pixel> <20190611043336.GB14363@dread.disaster.area>
- <20190612162144.GA7619@kmo-pixel> <20190612230224.GJ14308@dread.disaster.area>
- <20190613183625.GA28171@kmo-pixel> <20190613235524.GK14363@dread.disaster.area>
- <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
-In-Reply-To: <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 14 Jun 2019 18:01:07 -1000
-Message-ID: <CAHk-=wgz+7O0pdn8Wfxc5EQKNy44FTtf4LAPO1WgCidNjxbWzg@mail.gmail.com>
-Subject: Re: pagecache locking (was: bcachefs status update) merged)
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ed87e06d-b762-b6f8-d566-a49faee63b47@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Amir Goldstein <amir73il@gmail.com>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 13, 2019 at 5:08 PM Linus Torvalds
-<torvalds@linux-foundation.org> wrote:
->
-> I do not believe that posix itself actually requires that at all,
-> although extended standards may.
+On Mon, Jun 17, 2019 at 12:12:42PM -0500, Eric Sandeen wrote:
+> On 6/7/19 2:29 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a separate manual page for the FSCOUNTS ioctl so we can document
+> > how it works.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  man/man2/ioctl_xfs_fscounts.2 |   67 +++++++++++++++++++++++++++++++++++++++++
+> >  man/man3/xfsctl.3             |   14 +++++----
+> >  2 files changed, 75 insertions(+), 6 deletions(-)
+> >  create mode 100644 man/man2/ioctl_xfs_fscounts.2
+> > 
+> > 
+> > diff --git a/man/man2/ioctl_xfs_fscounts.2 b/man/man2/ioctl_xfs_fscounts.2
+> > new file mode 100644
+> > index 00000000..44b214a1
+> > --- /dev/null
+> > +++ b/man/man2/ioctl_xfs_fscounts.2
+> > @@ -0,0 +1,67 @@
+> > +.\" Copyright (c) 2019, Oracle.  All rights reserved.
+> > +.\"
+> > +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+> > +.\" SPDX-License-Identifier: GPL-2.0+
+> > +.\" %%%LICENSE_END
+> > +.TH IOCTL-XFS-FSCOUNTS 2 2019-04-16 "XFS"
+> > +.SH NAME
+> > +ioctl_xfs_fscounts \- query XFS summary counter information
+> > +.SH SYNOPSIS
+> > +.br
+> > +.B #include <xfs/xfs_fs.h>
+> > +.PP
+> > +.BI "int ioctl(int " fd ", XFS_IOC_FSCOUNTS, struct xfs_fsop_counts *" arg );
+> > +.SH DESCRIPTION
+> > +Query the raw filesystem summary counters.
+> > +Unlike
+> > +.BR statvfs (3),
+> > +the values returned here are the raw values, which do not reflect any
+> > +alterations or limits set by quotas.
+> 
+> it's altered by /project/ quotas specifically, right?  Should that be
+> made clear?  Or is it more than just project?
 
-So I tried to see if I could find what this perhaps alludes to.
+It's only project quotas; will clarify.
 
-And I suspect it's not in the read/write thing, but the pthreads side
-talks about atomicity.
+> 
+> > +The counter information is conveyed in a structure of the following form:
+> > +.PP
+> > +.in +4n
+> > +.nf
+> > +struct xfs_fscounts {
+> 
+> xfs_fsop_counts?
+> 
+> (this is the second time there's a misnamed structure (I think?)
+> so I feel like double checking them all is in order unless i'm
+> missing something?)
 
-Interesting, but I doubt if that's actually really intentional, since
-the non-thread read/write behavior specifically seems to avoid the
-whole concurrency issue.
+Massive thinko on my part, I guess?
 
-The pthreads atomicity thing seems to be about not splitting up IO and
-doing it in chunks when you have m:n threading models, but can be
-(mis-)construed to have threads given higher atomicity guarantees than
-processes.
+> > +	__u64   freedata;
+> > +	__u64   freertx;
+> > +	__u64   freeino;
+> > +	__u64   allocino;
+> > +};
+> > +.fi
+> > +.in
+> > +.PP
+> > +.I freedata
+> > +is the number of free filesystem blocks on the data device.
+> > +.PP
+> > +.I freertx
+> > +is the number of free xtents on the realtime device.
+> 
+> extents
 
-               Linus
+Fixed.
+
+--D
+
+> > +.PP
+> > +.I freeino
+> > +is the number of inode records that are not in use within the space that has
+> > +been allocated for them.
+> > +.PP
+> > +.I allocino
+> > +is the number of inode records for which space has been allocated.
+> > +.SH RETURN VALUE
+> > +On error, \-1 is returned, and
+> > +.I errno
+> > +is set to indicate the error.
+> > +.PP
+> > +.SH ERRORS
+> > +Error codes can be one of, but are not limited to, the following:
+> > +.TP
+> > +.B EFSBADCRC
+> > +Metadata checksum validation failed while performing the query.
+> > +.TP
+> > +.B EFSCORRUPTED
+> > +Metadata corruption was encountered while performing the query.
+> > +.TP
+> > +.B EINVAL
+> > +The specified allocation group number is not valid for this filesystem.
+> > +.TP
+> > +.B EIO
+> > +An I/O error was encountered while performing the query.
+> > +.SH CONFORMING TO
+> > +This API is specific to XFS filesystem on the Linux kernel.
+> > +.SH SEE ALSO
+> > +.BR ioctl (2)
+> > diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+> > index 148119a9..007f7d58 100644
+> > --- a/man/man3/xfsctl.3
+> > +++ b/man/man3/xfsctl.3
+> > @@ -390,6 +390,12 @@ See
+> >  .BR ioctl_xfs_scrub_metadata (2)
+> >  for more information.
+> >  
+> > +.TP
+> > +.B XFS_IOC_FSCOUNTS
+> > +See
+> > +.BR ioctl_xfs_fscounts (2)
+> > +for more information.
+> > +
+> >  .PP
+> >  .nf
+> >  .B XFS_IOC_THAW
+> > @@ -398,16 +404,11 @@ for more information.
+> >  .B XFS_IOC_SET_RESBLKS
+> >  .B XFS_IOC_FSGROWFSDATA
+> >  .B XFS_IOC_FSGROWFSLOG
+> > -.B XFS_IOC_FSGROWFSRT
+> >  .fi
+> >  .TP
+> > -.B XFS_IOC_FSCOUNTS
+> > +.B XFS_IOC_FSGROWFSRT
+> >  These interfaces are used to implement various filesystem internal
+> >  operations on XFS filesystems.
+> > -For
+> > -.B XFS_FS_COUNTS
+> > -(get filesystem dynamic global information), the output structure is of type
+> > -.BR xfs_fsop_counts_t .
+> >  The remainder of these operations will not be described further
+> >  as they are not of general use to applications.
+> >  
+> > @@ -416,6 +417,7 @@ as they are not of general use to applications.
+> >  .BR ioctl_xfs_fsop_geometry (2),
+> >  .BR ioctl_xfs_fsbulkstat (2),
+> >  .BR ioctl_xfs_fsinumbers (2),
+> > +.BR ioctl_xfs_fscounts (2),
+> >  .BR fstatfs (2),
+> >  .BR statfs (2),
+> >  .BR xfs (5),
+> > 
