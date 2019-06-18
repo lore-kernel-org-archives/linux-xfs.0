@@ -1,360 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43174 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727386AbfFRTOE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 15:14:04 -0400
-Date: Tue, 18 Jun 2019 12:13:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/9] libxfs: break out the fsop geometry manpage
-Message-ID: <20190618191358.GJ5387@magnolia>
-References: <155993574034.2343530.12919951702156931143.stgit@magnolia>
- <155993575303.2343530.6107806014092743035.stgit@magnolia>
- <f8d67b57-33ed-7e2a-ffc3-4b862811e845@sandeen.net>
+Received: from mail-yw1-f67.google.com ([209.85.161.67]:36915 "EHLO
+        mail-yw1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725826AbfFREWK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 00:22:10 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <f8d67b57-33ed-7e2a-ffc3-4b862811e845@sandeen.net>
+References: <20190610191420.27007-1-kent.overstreet@gmail.com>
+ <CAHk-=wi0iMHcO5nsYug06fV3-8s8fz7GDQWCuanefEGq6mHH1Q@mail.gmail.com>
+ <20190611011737.GA28701@kmo-pixel> <20190611043336.GB14363@dread.disaster.area>
+ <20190612162144.GA7619@kmo-pixel> <20190612230224.GJ14308@dread.disaster.area>
+ <20190613183625.GA28171@kmo-pixel> <20190613235524.GK14363@dread.disaster.area>
+ <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
+ <CAHk-=wgz+7O0pdn8Wfxc5EQKNy44FTtf4LAPO1WgCidNjxbWzg@mail.gmail.com>
+ <20190617224714.GR14363@dread.disaster.area> <CAHk-=wiR3a7+b0cUN45hGp1dvFh=s1i1OkVhoP7CivJxKqsLFQ@mail.gmail.com>
+In-Reply-To: <CAHk-=wiR3a7+b0cUN45hGp1dvFh=s1i1OkVhoP7CivJxKqsLFQ@mail.gmail.com>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 18 Jun 2019 07:21:56 +0300
+Message-ID: <CAOQ4uxjqQjrCCt=ixgdUYjBJvKLhw4R9NeMZOB_s2rrWvoDMBw@mail.gmail.com>
+Subject: Re: pagecache locking (was: bcachefs status update) merged)
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Dave Chinner <david@fromorbit.com>, Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-On Fri, Jun 14, 2019 at 05:00:30PM -0500, Eric Sandeen wrote:
-> On 6/7/19 2:29 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Break out the fs geometry ioctl into a separate manpage so that we can
-> > document how it works.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  man/man2/ioctl_xfs_fsop_geometry.2 |  214 ++++++++++++++++++++++++++++++++++++
-> >  man/man3/xfsctl.3                  |   11 +-
-> >  2 files changed, 221 insertions(+), 4 deletions(-)
-> >  create mode 100644 man/man2/ioctl_xfs_fsop_geometry.2
-> > 
-> > 
-> > diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsop_geometry.2
-> > new file mode 100644
-> > index 00000000..4045e03b
-> > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_fsop_geometry.2
-> > @@ -0,0 +1,214 @@
-> > +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> > +.\"
-> > +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> > +.\" SPDX-License-Identifier: GPL-2.0+
-> > +.\" %%%LICENSE_END
-> > +.TH IOCTL-XFS-FSOP-GEOMETRY 2 2019-04-11 "XFS"
-> > +.SH NAME
-> > +ioctl_xfs_fsop_geometry \- report XFS filesystem shape
-> > +.SH SYNOPSIS
-> > +.br
-> > +.B #include <xfs/xfs_fs.h>
-> > +.PP
-> > +.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY, struct xfs_fsop_geometry *" arg );
-> > +.PP
-> 
-> ditto on the .br?
-> 
-> also xfs_fsop_geometry isn't a thing, is it?  xfs_fsop_geom?
-> 
-> > +.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V1, struct xfs_fsop_geometry_v1 *" arg );
-> 
-> and xfs_fsop_geom_v1
+> > Right, but regardless of the spec we have to consider that the
+> > behaviour of XFS comes from it's Irix heritage (actually from EFS,
+> > the predecessor of XFS from the late 1980s)
+>
+> Sure. And as I mentioned, I think it's technically the nicer guarantee.
+>
+> That said, it's a pretty *expensive* guarantee. It's one that you
+> yourself are not willing to give for O_DIRECT IO.
+>
+> And it's not a guarantee that Linux has ever had. In fact, it's not
+> even something I've ever seen anybody ever depend on.
+>
+> I agree that it's possible that some app out there might depend on
+> that kind of guarantee, but I also suspect it's much much more likely
+> that it's the other way around: XFS is being unnecessarily strict,
+> because everybody is testing against filesystems that don't actually
+> give the total atomicity guarantees.
+>
+> Nobody develops for other unixes any more (and nobody really ever did
+> it by reading standards papers - even if they had been very explicit).
+>
+> And honestly, the only people who really do threaded accesses to the same file
+>
+>  (a) don't want that guarantee in the first place
+>
+>  (b) are likely to use direct-io that apparently doesn't give that
+> atomicity guarantee even on xfs
+>
+> so I do think it's moot.
+>
+> End result: if we had a really cheap range lock, I think it would be a
+> good idea to use it (for the whole QoI implementation), but for
+> practical reasons it's likely better to just stick to the current lack
+> of serialization because it performs better and nobody really seems to
+> want anything else anyway.
+>
 
-Fixed.
+This is the point in the conversation where somebody usually steps in
+and says "let the user/distro decide". Distro maintainers are in a much
+better position to take the risk of breaking hypothetical applications.
 
-> > +.SH DESCRIPTION
-> > +Report the storage space parameters that influence allocation decisions in
-> > +this XFS filesystem.
-> > +This information is conveyed in a structure of the following form:
-> > +.PP
-> > +.in +4n
-> > +.nf
-> > +struct xfs_fsop_geom {
-> > +	__u32         blocksize;
-> > +	__u32         rtextsize;
-> > +	__u32         agblocks;
-> > +	__u32         agcount;
-> > +	__u32         logblocks;
-> > +	__u32         sectsize;
-> > +	__u32         inodesize;
-> > +	__u32         imaxpct;
-> > +	__u64         datablocks;
-> > +	__u64         rtblocks;
-> > +	__u64         rtextents;
-> > +	__u64         logstart;
-> > +	unsigned char uuid[16];
-> > +	__u32         sunit;
-> > +	__u32         swidth;
-> > +	__s32         version;
-> > +	__u32         flags;
-> > +	__u32         logsectsize;
-> > +	__u32         rtsectsize;
-> > +	__u32         dirblocksize;
-> > +	/* struct xfs_fsop_geom_v1 stops here. */
-> > +
-> > +	__u32         logsunit;
-> > +};
-> > +.fi
-> > +.in
-> > +.PP
-> > +.I blocksize
-> > +is the size of a fundamental filesystem block, in bytes.
-> > +.PP
-> > +.I rtextsize
-> > +is the size of an extent on the realtime volume, in bytes.
-> > +.PP
-> > +.I agblocks
-> > +is the size of an allocation group, in units of filesystem blocks.
-> > +.PP
-> > +.I agcount
-> > +is the number of allocation groups in the filesystem.
-> > +.PP
-> > +.I logblocks
-> > +is the size of the log, in units of filesystem blocks.
-> > +.PP
-> > +.I sectsize
-> > +is the smallest amount of data that can be written to the data device
-> > +atomically, in bytes.
-> > +.PP
-> > +.I inodesize
-> > +is the size of an inode record, in bytes.
-> > +.PP
-> > +.I imaxpct
-> > +is the maximum percentage of the filesystem that can be allocated to inode
-> > +record blocks.
-> > +.PP
-> > +.I datablocks
-> > +is the size of the data device, in units of filesystem blocks.
-> > +.PP
-> > +.I rtblocks
-> > +is the size of the realtime device, in units of filesystem blocks.
-> > +.PP
-> > +.I rtextents
-> > +is the number of extents that can be allocated on the realtime device.
-> > +This ought to be
-> > +.RB "( " rtblocks " * " blocksize " ) / " rtextsize .
-> 
-> ought to be?  I'm not sure what that means?
+I should point out that even if "strict atomic rw" behavior is desired, then
+page cache warmup [1] significantly improves performance.
+Having mentioned that, the discussion can now return to what is the
+preferred way to solve the punch hole vs. page cache add race.
 
-Dropped.
+XFS may end up with special tailored range locks, which beings some
+other benefits to XFS, but all filesystems need the solution for the punch
+hole vs. page cache add race.
+Jan recently took a stab at it for ext4 [2], but that didn't work out.
+So I wonder what everyone thinks about Kent's page add lock as the
+solution to the problem.
+Allegedly, all filesystems (XFS included) are potentially exposed to
+stale data exposure/data corruption.
 
-> > +.PP
-> > +.I logstart
-> > +tells the start of the log, in units of filesystem blocks.
-> 
-> contains?
+Thanks,
+Amir.
 
-I'll change it to 'is' here.
-
-> > +If the filesystem has an external log, this will be zero.
-> > +.PP
-> > +.I uuid
-> > +is the universal unique identifier of the filesystem.
-> > +.PP
-> > +.I sunit
-> > +is what the filesystem has been told is the size of a RAID stripe unit on the
-> > +underlying data device, in filesystem blocks.
-> > +.PP
-> > +.I swidth
-> > +is what the filesystem has been told is the width of a RAID stripe on the
-> > +underlying data device, in units of RAID stripe units.
-> > +.PP
-> > +.I version
-> > +is the version of this structure.
-> > +This value will be XFS_FSOP_GEOM_VERSION.
-> > +.PP
-> > +.I flags
-> > +tell us what features are enabled on the filesystem.
-> > +This field can be any combination of the following:
-> > +.RS 0.4i
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_ATTR
-> > +Extended attributes are present.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_NLINK
-> > +This filesystem supports up to 2^32 links.
-> 
-> and if not it supports what?
-> 
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_QUOTA
-> > +Quotas are enabled.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_IALIGN
-> > +Inodes are aligned for better performance.
-> 
-> aligned to ____ ? (worth trying to explain?)
-
-Aligned to ... inode cluster buffer size, which we've never really
-documented outside of "RTFS"? :)
-
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_DALIGN
-> > +Data blocks are aligned for better performance.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_SHARED
-> > +Unused.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_EXTFLG
-> > +Filesystem supports unwritten extents.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_DIRV2
-> > +Directories maintain free space data for better performance.
-> 
-> I don't remember all the v1->v2 differences but in other places
-> you simply say "contains version 2 format" or whatnot, so that might
-> suffice here.  Also can't do v1 since forever, anyway.  ;)
-
-Fixed.
-
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_LOGV2
-> > +Log uses the V2 format.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_SECTOR
-> > +The log device has a sector size larger than 512 bytes.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_ATTR2
-> > +Filesystem contains V2 extended attributes.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_PROJID32
-> > +Project IDs can be as large as 2^32.
-> 
-> otherwise 2^16?
-
-
-yes.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_DIRV2CI
-> > +Case-insensitive lookups are supported on directories.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_LAZYSB
-> > +On-disk superblock counters are updated only at unmount time.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_V5SB
-> > +Metadata blocks are self describing and contain checksums.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_FTYPE
-> > +Directories cache inode types in directory entries.
-> 
-> s/cache/contain/
-
-Ok.
-
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_FINOBT
-> > +Filesystem maintains an index of free inodes.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_SPINODES
-> > +Filesystem tries harder to allocate inodes when free space is fragmented.
-> 
-> Filesystem may allocate discontinuous inode chunks when free space is fragmented?
-
-Ok.
-
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_RMAPBT
-> > +Filesystem stores reverse mappings of blocks to owners.
-> > +.TP
-> > +.B XFS_FSOP_GEOM_FLAGS_REFLINK
-> > +Filesystem supports sharing blocks.
-> 
-> between inodes?
-
-Between files; will fix.
-
-> > +.RE
-> > +
-> > +.PD 1
-> > +.PP
-> > +.I logsectsize
-> > +is the smallest amount of data that can be written to the log device atomically,
-> > +in bytes.
-> 
-> oh hello, we're back to the structure members again!
-> 
-> I wonder if it'd be better to move the flag details down below all the structure descriptions.
-
-Yeah, probably.  I'll do that for all the new manpages since otherwise
-this becomes a mess.
-
---D
-
-> > +.PP
-> > +.I rtsectsize
-> > +is the smallest amount of data that can be written to the realtime device
-> > +atomically, in bytes.
-> > +.PP
-> > +.I dirblocksize
-> > +is the size of directory blocks, in bytes.
-> > +.PP
-> > +.I logsunit
-> > +is what the filesystem has been told is the size of a RAID stripe unit on the
-> > +underlying log device, in filesystem blocks.
-> > +This field is meaningful only if the flag
-> > +.B  XFS_FSOP_GEOM_FLAGS_LOGV2
-> > +is set.
-> > +.SH RETURN VALUE
-> > +On error, \-1 is returned, and
-> > +.I errno
-> > +is set to indicate the error.
-> > +.PP
-> > +.SH ERRORS
-> > +Error codes can be one of, but are not limited to, the following:
-> > +.TP
-> > +.B EFAULT
-> > +The kernel was not able to copy into the userspace buffer.
-> > +.TP
-> > +.B EFSBADCRC
-> > +Metadata checksum validation failed while performing the query.
-> > +.TP
-> > +.B EFSCORRUPTED
-> > +Metadata corruption was encountered while performing the query.
-> > +.TP
-> > +.B EIO
-> > +An I/O error was encountered while performing the query.
-> > +.SH CONFORMING TO
-> > +This API is specific to XFS filesystem on the Linux kernel.
-> > +.SH SEE ALSO
-> > +.BR ioctl (2)
-> > diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> > index 2992b5be..1237eac6 100644
-> > --- a/man/man3/xfsctl.3
-> > +++ b/man/man3/xfsctl.3
-> > @@ -479,6 +479,12 @@ the kernel, except no output count parameter is used (should
-> >  be initialized to zero).
-> >  An error is returned if the inode number is invalid.
-> >  
-> > +.TP
-> > +.B XFS_IOC_FSGEOMETRY
-> > +See
-> > +.BR ioctl_xfs_fsop_geometry (2)
-> > +for more information.
-> > +
-> >  .PP
-> >  .nf
-> >  .B XFS_IOC_THAW
-> > @@ -494,10 +500,6 @@ An error is returned if the inode number is invalid.
-> >  These interfaces are used to implement various filesystem internal
-> >  operations on XFS filesystems.
-> >  For
-> > -.B XFS_IOC_FSGEOMETRY
-> > -(get filesystem mkfs time information), the output structure is of type
-> > -.BR struct xfs_fsop_geom .
-> > -For
-> >  .B XFS_FS_COUNTS
-> >  (get filesystem dynamic global information), the output structure is of type
-> >  .BR xfs_fsop_counts_t .
-> > @@ -506,6 +508,7 @@ as they are not of general use to applications.
-> >  
-> >  .SH SEE ALSO
-> >  .BR ioctl_xfs_fsgetxattr (2),
-> > +.BR ioctl_xfs_fsop_geometry (2),
-> >  .BR fstatfs (2),
-> >  .BR statfs (2),
-> >  .BR xfs (5),
-> > 
+[1] https://lore.kernel.org/linux-fsdevel/20190404165737.30889-1-amir73il@gmail.com/
+[2] https://lore.kernel.org/linux-fsdevel/20190603132155.20600-3-jack@suse.cz/
