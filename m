@@ -1,12 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35150 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:34964 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730864AbfFRVH4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:07:56 -0400
-Subject: [PATCH 0/1] xfs: test overflow of delalloc block counters
+        with ESMTP id S1730791AbfFRVHe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:07:34 -0400
+Subject: [PATCH 4/4] xfs/119: fix MKFS_OPTIONS exporting
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Jun 2019 14:07:31 -0700
-Message-ID: <156089205119.347309.8343884194087205290.stgit@magnolia>
+Date: Tue, 18 Jun 2019 14:07:27 -0700
+Message-ID: <156089204777.345809.18314859473454869520.stgit@magnolia>
+In-Reply-To: <156089201978.345809.17444450351199726553.stgit@magnolia>
+References: <156089201978.345809.17444450351199726553.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -14,26 +16,36 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-A new test to make sure that we don't overflow the per-inode delayed
-allocation block reservation counter.
+This test originally exported its own MKFS_OPTIONS to force the tested
+filesystem config to the mkfs defaults + test-specific log size options.
+This overrides whatever the test runner might have set in MKFS_OPTIONS.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
+In commit 2fd273886b525 ("xfs: refactor minimum log size formatting
+code") we fail to export our test-specific MKFS_OPTIONS before
+calculating the minimum log size, which leads to the wrong min log size
+being calculated once we fixed the helper to be smarter about mkfs options.
 
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ tests/xfs/119 |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
---D
 
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=widen-idelayed
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=widen-idelayed
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=widen-idelayed
+diff --git a/tests/xfs/119 b/tests/xfs/119
+index 8825a5c3..f245a0a6 100755
+--- a/tests/xfs/119
++++ b/tests/xfs/119
+@@ -38,7 +38,8 @@ _require_scratch
+ # this may hang
+ sync
+ 
+-logblks=$(_scratch_find_xfs_min_logblocks -l version=2,su=64k)
++export MKFS_OPTIONS="-l version=2,su=64k"
++logblks=$(_scratch_find_xfs_min_logblocks)
+ export MKFS_OPTIONS="-l version=2,size=${logblks}b,su=64k"
+ export MOUNT_OPTIONS="-o logbsize=64k"
+ _scratch_mkfs_xfs >/dev/null
