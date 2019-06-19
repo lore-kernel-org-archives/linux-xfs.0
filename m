@@ -1,64 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47544 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726109AbfFSS3H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jun 2019 14:29:07 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5JIT2Vg034328
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2019 18:29:05 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2t7809d331-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2019 18:29:05 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5JISU4R048492
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2019 18:29:04 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2t77yp0khc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2019 18:29:04 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5JIT4ph011785
-        for <linux-xfs@vger.kernel.org>; Wed, 19 Jun 2019 18:29:04 GMT
-From: Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH 1/1] xfsprogs: Fix uninitialized cfg->lsunit
-Date: Wed, 19 Jun 2019 11:28:57 -0700
-Message-Id: <20190619182857.9959-1-allison.henderson@oracle.com>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40621 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726251AbfFSWjB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jun 2019 18:39:01 -0400
+Date: Thu, 20 Jun 2019 08:37:56 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: pagecache locking (was: bcachefs status update) merged)
+Message-ID: <20190619223756.GC26375@dread.disaster.area>
+References: <20190612162144.GA7619@kmo-pixel>
+ <20190612230224.GJ14308@dread.disaster.area>
+ <20190613183625.GA28171@kmo-pixel>
+ <20190613235524.GK14363@dread.disaster.area>
+ <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
+ <CAHk-=wgz+7O0pdn8Wfxc5EQKNy44FTtf4LAPO1WgCidNjxbWzg@mail.gmail.com>
+ <20190617224714.GR14363@dread.disaster.area>
+ <CAHk-=wiR3a7+b0cUN45hGp1dvFh=s1i1OkVhoP7CivJxKqsLFQ@mail.gmail.com>
+ <CAOQ4uxjqQjrCCt=ixgdUYjBJvKLhw4R9NeMZOB_s2rrWvoDMBw@mail.gmail.com>
+ <20190619103838.GB32409@quack2.suse.cz>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190619103838.GB32409@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
 
-While investigating another mkfs bug, noticed that cfg->lsunit is sometimes
-left uninitialized when it should not.  This is because calc_stripe_factors
-in some cases needs cfg->loginternal to be set first.  This is done in
-validate_logdev. So move calc_stripe_factors below validate_logdev while
-parsing configs.
+On Wed, Jun 19, 2019 at 12:38:38PM +0200, Jan Kara wrote:
+> On Tue 18-06-19 07:21:56, Amir Goldstein wrote:
+> > > > Right, but regardless of the spec we have to consider that the
+> > > > behaviour of XFS comes from it's Irix heritage (actually from EFS,
+> > > > the predecessor of XFS from the late 1980s)
+> > >
+> > > Sure. And as I mentioned, I think it's technically the nicer guarantee.
+> > >
+> > > That said, it's a pretty *expensive* guarantee. It's one that you
+> > > yourself are not willing to give for O_DIRECT IO.
+> > >
+> > > And it's not a guarantee that Linux has ever had. In fact, it's not
+> > > even something I've ever seen anybody ever depend on.
+> > >
+> > > I agree that it's possible that some app out there might depend on
+> > > that kind of guarantee, but I also suspect it's much much more likely
+> > > that it's the other way around: XFS is being unnecessarily strict,
+> > > because everybody is testing against filesystems that don't actually
+> > > give the total atomicity guarantees.
+> > >
+> > > Nobody develops for other unixes any more (and nobody really ever did
+> > > it by reading standards papers - even if they had been very explicit).
+> > >
+> > > And honestly, the only people who really do threaded accesses to the same file
+> > >
+> > >  (a) don't want that guarantee in the first place
+> > >
+> > >  (b) are likely to use direct-io that apparently doesn't give that
+> > > atomicity guarantee even on xfs
+> > >
+> > > so I do think it's moot.
+> > >
+> > > End result: if we had a really cheap range lock, I think it would be a
+> > > good idea to use it (for the whole QoI implementation), but for
+> > > practical reasons it's likely better to just stick to the current lack
+> > > of serialization because it performs better and nobody really seems to
+> > > want anything else anyway.
+> > >
+> > 
+> > This is the point in the conversation where somebody usually steps in
+> > and says "let the user/distro decide". Distro maintainers are in a much
+> > better position to take the risk of breaking hypothetical applications.
+> > 
+> > I should point out that even if "strict atomic rw" behavior is desired, then
+> > page cache warmup [1] significantly improves performance.
+> > Having mentioned that, the discussion can now return to what is the
+> > preferred way to solve the punch hole vs. page cache add race.
+> > 
+> > XFS may end up with special tailored range locks, which beings some
+> > other benefits to XFS, but all filesystems need the solution for the punch
+> > hole vs. page cache add race.
+> > Jan recently took a stab at it for ext4 [2], but that didn't work out.
+> 
+> Yes, but I have idea how to fix it. I just need to push acquiring ext4's
+> i_mmap_sem down a bit further so that only page cache filling is protected
+> by it but not copying of data out to userspace. But I didn't get to coding
+> it last week due to other stuff.
+> 
+> > So I wonder what everyone thinks about Kent's page add lock as the
+> > solution to the problem.
+> > Allegedly, all filesystems (XFS included) are potentially exposed to
+> > stale data exposure/data corruption.
+> 
+> When we first realized that hole-punching vs page faults races are an issue I
+> was looking into a generic solution but at that time there was a sentiment
+> against adding another rwsem to struct address_space (or inode) so we ended
+> up with a private lock in ext4 (i_mmap_rwsem), XFS (I_MMAPLOCK), and other
+> filesystems these days. If people think that growing struct inode for
+> everybody is OK, we can think about lifting private filesystem solutions
+> into a generic one. I'm fine with that.
 
-Signed-off-by: Allison Collins <allison.henderson@oracle.com>
----
- mkfs/xfs_mkfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I'd prefer it doesn't get lifted to the VFS because I'm planning on
+getting rid of it in XFS with range locks. i.e. the XFS_MMAPLOCK is
+likely to go away in the near term because a range lock can be
+taken on either side of the mmap_sem in the page fault path.
 
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index ddb25ec..f4a5e4b 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3995,7 +3995,6 @@ main(
- 	cfg.rtblocks = calc_dev_size(cli.rtsize, &cfg, &ropts, R_SIZE, "rt");
- 
- 	validate_rtextsize(&cfg, &cli, &ft);
--	calc_stripe_factors(&cfg, &cli, &ft);
- 
- 	/*
- 	 * Open and validate the device configurations
-@@ -4005,6 +4004,7 @@ main(
- 	validate_datadev(&cfg, &cli);
- 	validate_logdev(&cfg, &cli, &logfile);
- 	validate_rtdev(&cfg, &cli, &rtfile);
-+	calc_stripe_factors(&cfg, &cli, &ft);
- 
- 	/*
- 	 * At this point when know exactly what size all the devices are,
+> That being said as Dave said we use those fs-private locks also for
+> serializing against equivalent issues arising for DAX. So the problem is
+> not only about page cache but generally about doing IO and caching
+> block mapping information for a file range. So the solution should not be
+> too tied to page cache.
+
+Yup, that was the point I was trying to make when Linus started
+shouting at me about how caches work and how essential they are.  I
+guess the fact that DAX doesn't use the page cache isn't as widely
+known as I assumed it was...
+
+Cheers,
+
+Dave.
 -- 
-2.7.4
+Dave Chinner
+david@fromorbit.com
