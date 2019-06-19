@@ -1,188 +1,192 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:23614 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731062AbfFSH6W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 19 Jun 2019 03:58:22 -0400
-Message-ID: <5D09EB1A.6000301@cn.fujitsu.com>
-Date: Wed, 19 Jun 2019 15:58:18 +0800
-From: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-MIME-Version: 1.0
-Subject: Re: [PATCH v2] xfs/191: update mkfs.xfs input results
-References: <1560414701-2590-1-git-send-email-xuyang2018.jy@cn.fujitsu.com> <20190616143956.GC15846@desktop>
-In-Reply-To: <20190616143956.GC15846@desktop>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:60384 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726479AbfFSKKy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 19 Jun 2019 06:10:54 -0400
+From: Zorro Lang <zlang@redhat.com>
+Subject: [PATCH] xfs: project quota ineritance flag test
+Date: Wed, 19 Jun 2019 18:10:47 +0800
+Message-Id: <20190619101047.3149-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: darrick.wong@oracle.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: fstests@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-on 2019/06/16 22:39, Eryu Guan wrote:
+This case is used to cover xfsprogs bug "b136f48b xfs_quota: fix
+false error reporting of project inheritance flag is not set" at
+first. Then test more behavior when project ineritance flag is
+set or removed.
 
-> [cc xfs list for xfs specific test]
->
-> On Thu, Jun 13, 2019 at 04:31:41PM +0800, Yang Xu wrote:
->> Currently, on 5.2.0-rc4+ kernel, when I run xfs/191-input-validation with upstream xfsprogs,
->> I get the following errors because mkfs.xfs binary has changed a lot.
-> Lines are too long for commit log, please wrap at column 68.
->
->> --------------------------
->> PLATFORM      -- Linux/x86_64  5.2.0-rc4+
->> MKFS_OPTIONS  -- -f -bsize=4096 /dev/sda11
->> MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/sda11 /mnt/xfstests/scratch
-> But these quotes don't need to be wrapped.
->
->> pass -n size=2b /dev/sda11
->> pass -d agsize=8192b /dev/sda11
->> pass -d agsize=65536s /dev/sda11
->> pass -d su=0,sw=64 /dev/sda11
->> pass -d su=4096s,sw=64 /dev/sda11
->> pass -d su=4096b,sw=64 /dev/sda11
->> pass -l su=10b /dev/sda11
->> fail -n log=15 /dev/sda11
->> fail -r size=65536,rtdev=$fsimg /dev/sda11
->> fail -r rtdev=$fsimg /dev/sda11
->> fail -i log=10 /dev/sda11
->> --------------------------
->>
->> "pass -d su=0,sw=64 /dev/sda11", expect fail, this behavior has been fixed by commit 16adcb88:
->> (mkfs: more sunit/swidth sanity checking).
->>
->> "fail -n log=15 /dev/sda11" "fail -i log=10 /dev/sda11", expect pass, this option has been removed
->> since commit 2cf637c(mkfs: remove logarithm based CLI option).
->>
->> "fail -r size=65536,rtdev=$fsimg /dev/sda11" "fail -r rtdev=$fsimg /dev/sda11" works well if we disable
->> reflink, fail if we enable reflink. It fails because reflink was not supported in realtime devices
->> since commit bfa66ec.
->>
->> I change the expected result for compatibility with current xfsprogs and add rtdev test with reflink .
->>
->> Signed-off-by: Yang Xu<xuyang2018.jy@cn.fujitsu.com>
-> I noticed Darrick provided a Reviewed-by tag, but as Darrick also noted,
-> it'd be good to know what do other xfs maintainers think about this
-> test.
->
-Hi Eryu
+Signed-off-by: Zorro Lang <zlang@redhat.com>
+---
+ tests/xfs/507     | 117 ++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/507.out |  23 +++++++++
+ tests/xfs/group   |   1 +
+ 3 files changed, 141 insertions(+)
+ create mode 100755 tests/xfs/507
+ create mode 100644 tests/xfs/507.out
 
-I have sent a v3 patch about your comment.
-Besides, I also want to know what other xfs maintainers think about this case. keep it or update it?
-Let's wait for a short time.
-
-Thanks
-Yang Xu
-
->> ---
->>   tests/xfs/191-input-validation | 36 ++++++++++++++++++++++------------
->>   1 file changed, 24 insertions(+), 12 deletions(-)
->>
->> diff --git a/tests/xfs/191-input-validation b/tests/xfs/191-input-validation
->> index b6658015..9fe72051 100755
->> --- a/tests/xfs/191-input-validation
->> +++ b/tests/xfs/191-input-validation
->> @@ -112,10 +112,11 @@ do_mkfs_fail -b size=2b $SCRATCH_DEV
->>   do_mkfs_fail -b size=nfi $SCRATCH_DEV
->>   do_mkfs_fail -b size=4096nfi $SCRATCH_DEV
->>   do_mkfs_fail -n size=2s $SCRATCH_DEV
->> -do_mkfs_fail -n size=2b $SCRATCH_DEV
->>   do_mkfs_fail -n size=nfi $SCRATCH_DEV
->>   do_mkfs_fail -n size=4096nfi $SCRATCH_DEV
->>
->> +do_mkfs_pass -n size=2b $SCRATCH_DEV
->> +
->>   # bad label length
->>   do_mkfs_fail -L thisiswaytoolong $SCRATCH_DEV
->>
->> @@ -129,6 +130,8 @@ do_mkfs_pass -d agsize=32M $SCRATCH_DEV
->>   do_mkfs_pass -d agsize=1g $SCRATCH_DEV
->>   do_mkfs_pass -d agsize=$((32 * 1024 * 1024)) $SCRATCH_DEV
->>   do_mkfs_pass -b size=4096 -d agsize=8192b $SCRATCH_DEV
->> +do_mkfs_pass -d agsize=8192b $SCRATCH_DEV
->> +do_mkfs_pass -d agsize=65536s $SCRATCH_DEV
->>   do_mkfs_pass -d sectsize=512,agsize=65536s $SCRATCH_DEV
->>   do_mkfs_pass -s size=512 -d agsize=65536s $SCRATCH_DEV
->>   do_mkfs_pass -d noalign $SCRATCH_DEV
->> @@ -136,7 +139,10 @@ do_mkfs_pass -d sunit=0,swidth=0 $SCRATCH_DEV
->>   do_mkfs_pass -d sunit=8,swidth=8 $SCRATCH_DEV
->>   do_mkfs_pass -d sunit=8,swidth=64 $SCRATCH_DEV
->>   do_mkfs_pass -d su=0,sw=0 $SCRATCH_DEV
->> +do_mkfs_pass -d su=0,sw=64 $SCRATCH_DEV
->>   do_mkfs_pass -d su=4096,sw=1 $SCRATCH_DEV
->> +do_mkfs_pass -d su=4096s,sw=64 $SCRATCH_DEV
->> +do_mkfs_pass -d su=4096b,sw=64 $SCRATCH_DEV
->>   do_mkfs_pass -d su=4k,sw=1 $SCRATCH_DEV
->>   do_mkfs_pass -d su=4K,sw=8 $SCRATCH_DEV
->>   do_mkfs_pass -b size=4096 -d su=1b,sw=8 $SCRATCH_DEV
->> @@ -147,8 +153,6 @@ do_mkfs_pass -s size=512 -d su=8s,sw=8 $SCRATCH_DEV
->>   do_mkfs_fail -d size=${fssize}b $SCRATCH_DEV
->>   do_mkfs_fail -d size=${fssize}s $SCRATCH_DEV
->>   do_mkfs_fail -d size=${fssize}yerk $SCRATCH_DEV
->> -do_mkfs_fail -d agsize=8192b $SCRATCH_DEV
->> -do_mkfs_fail -d agsize=65536s $SCRATCH_DEV
->>   do_mkfs_fail -d agsize=32Mbsdfsdo $SCRATCH_DEV
->>   do_mkfs_fail -d agsize=1GB $SCRATCH_DEV
->>   do_mkfs_fail -d agcount=1k $SCRATCH_DEV
->> @@ -159,13 +163,10 @@ do_mkfs_fail -d sunit=64,swidth=0 $SCRATCH_DEV
->>   do_mkfs_fail -d sunit=64,swidth=64,noalign $SCRATCH_DEV
->>   do_mkfs_fail -d sunit=64k,swidth=64 $SCRATCH_DEV
->>   do_mkfs_fail -d sunit=64,swidth=64m $SCRATCH_DEV
->> -do_mkfs_fail -d su=0,sw=64 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=0 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4097,sw=1 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=64,noalign $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=64s $SCRATCH_DEV
->> -do_mkfs_fail -d su=4096s,sw=64 $SCRATCH_DEV
->> -do_mkfs_fail -d su=4096b,sw=64 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096garabge,sw=64 $SCRATCH_DEV
->>   do_mkfs_fail -d su=4096,sw=64,sunit=64,swidth=64 $SCRATCH_DEV
->>   do_mkfs_fail -d sectsize=10,agsize=65536s $SCRATCH_DEV
->> @@ -206,6 +207,7 @@ do_mkfs_pass -l sunit=64 $SCRATCH_DEV
->>   do_mkfs_pass -l sunit=64 -d sunit=8,swidth=8 $SCRATCH_DEV
->>   do_mkfs_pass -l sunit=8 $SCRATCH_DEV
->>   do_mkfs_pass -l su=$((4096*10)) $SCRATCH_DEV
->> +do_mkfs_pass -l su=10b $SCRATCH_DEV
->>   do_mkfs_pass -b size=4096 -l su=10b $SCRATCH_DEV
->>   do_mkfs_pass -l sectsize=512,su=$((4096*10)) $SCRATCH_DEV
->>   do_mkfs_pass -l internal $SCRATCH_DEV
->> @@ -228,7 +230,6 @@ do_mkfs_fail -l agnum=32 $SCRATCH_DEV
->>   do_mkfs_fail -l sunit=0  $SCRATCH_DEV
->>   do_mkfs_fail -l sunit=63 $SCRATCH_DEV
->>   do_mkfs_fail -l su=1 $SCRATCH_DEV
->> -do_mkfs_fail -l su=10b $SCRATCH_DEV
->>   do_mkfs_fail -l su=10s $SCRATCH_DEV
->>   do_mkfs_fail -l su=$((4096*10+1)) $SCRATCH_DEV
->>   do_mkfs_fail -l sectsize=10,agsize=65536s $SCRATCH_DEV
->> @@ -246,7 +247,6 @@ do_mkfs_fail -l version=0  $SCRATCH_DEV
->>
->>   # naming section, should pass
->>   do_mkfs_pass -n size=65536 $SCRATCH_DEV
->> -do_mkfs_pass -n log=15 $SCRATCH_DEV
->>   do_mkfs_pass -n version=2 $SCRATCH_DEV
->>   do_mkfs_pass -n version=ci $SCRATCH_DEV
->>   do_mkfs_pass -n ftype=0 -m crc=0 $SCRATCH_DEV
->> @@ -257,6 +257,7 @@ do_mkfs_fail -n version=1 $SCRATCH_DEV
->>   do_mkfs_fail -n version=cid $SCRATCH_DEV
->>   do_mkfs_fail -n ftype=4 $SCRATCH_DEV
->>   do_mkfs_fail -n ftype=0 $SCRATCH_DEV
->> +do_mkfs_fail -n log=15 $SCRATCH_DEV
->>
->>   reset_fsimg
->>
->> @@ -273,14 +274,24 @@ do_mkfs_fail -m crc=0,finobt=1 $SCRATCH_DEV
->>   do_mkfs_fail -m crc=1 -n ftype=0 $SCRATCH_DEV
->>
->>
->> +# realtime section, results depend on reflink
->> +$MKFS_XFS_PROG -f -m reflink=0 $SCRATCH_DEV>/dev/null 2>&1
-> _scratch_mkfs_xfs_supported -m reflink=0>/dev/null 2>&1
->
-> This helper doesn't actually create new fs but tests the given param
-> with a dry run.
->
-> And I think we need _require_scratch_nocheck instead of
-> _require_scratch, as we test mkfs function and do wipefs $SCRATCH_DEV
-> before every test now.
->
-> Thanks,
-> Eryu
->
+diff --git a/tests/xfs/507 b/tests/xfs/507
+new file mode 100755
+index 00000000..509da03e
+--- /dev/null
++++ b/tests/xfs/507
+@@ -0,0 +1,117 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
++#
++# FS QA Test 507
++#
++# Test project quota inheritance flag, uncover xfsprogs:
++#    b136f48b xfs_quota: fix false error reporting of project inheritance flag is not set
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/quota
++
++# remove previous $seqres.full before test
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++_require_scratch
++_require_xfs_quota
++
++cat >$tmp.projects <<EOF
++10:$SCRATCH_MNT/dir
++EOF
++
++cat >$tmp.projid <<EOF
++root:0
++test:10
++EOF
++
++QUOTA_CMD="$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid"
++
++filter_xfs_pquota()
++{
++        perl -ne "
++s,$tmp.projects,[PROJECTS_FILE],;
++s,$SCRATCH_MNT,[SCR_MNT],;
++s,$SCRATCH_DEV,[SCR_DEV],;
++        print;"
++}
++
++do_quota_nospc()
++{
++	local file=$1
++	local exp=$2
++
++	echo "Write $file, expect $exp:" | _filter_scratch
++
++	# replace the "pwrite64" which old xfs_io prints
++	$XFS_IO_PROG -t -f -c "pwrite 0 5m" $file 2>&1 >/dev/null | \
++		sed -e 's/pwrite64/pwrite/g'
++	rm -f $file
++}
++
++_scratch_mkfs_xfs >>$seqres.full 2>&1
++_qmount_option "prjquota"
++_qmount
++_require_prjquota $SCRATCH_DEV
++
++mkdir $SCRATCH_MNT/dir
++$QUOTA_CMD -x -c 'project -s test' $SCRATCH_MNT >>$seqres.full 2>&1
++$QUOTA_CMD -x -c 'limit -p bsoft=1m bhard=2m test' $SCRATCH_MNT
++
++# test the Project inheritance bit is a directory only flag, and it's set on
++# directory by default
++echo "== The parent directory has Project inheritance bit by default =="
++touch $SCRATCH_MNT/dir/foo
++mkdir $SCRATCH_MNT/dir/dir_inherit
++touch $SCRATCH_MNT/dir/dir_inherit/foo
++$QUOTA_CMD -x -c 'project -c test' $SCRATCH_MNT | filter_xfs_pquota
++echo ""
++
++# test the quota and the project inheritance quota work well
++do_quota_nospc $SCRATCH_MNT/dir/foo ENOSPC
++do_quota_nospc $SCRATCH_MNT/dir/dir_inherit/foo ENOSPC
++echo ""
++
++# test the project quota won't be inherited, if removing the Project
++# inheritance bit
++echo "== After removing parent directory has Project inheritance bit =="
++$XFS_IO_PROG -x -c "chattr -P" $SCRATCH_MNT/dir
++touch $SCRATCH_MNT/dir/foo
++mkdir $SCRATCH_MNT/dir/dir_uninherit
++touch $SCRATCH_MNT/dir/dir_uninherit/foo
++$QUOTA_CMD -x -c 'project -c test' $SCRATCH_MNT | filter_xfs_pquota
++echo ""
++
++# after remove the Project inheritance bit of the original parent directory,
++# then verify:
++# 1) there's not any limit on the original parent directory and files under it
++# 2) the quota limit of sub-directory which has inherited still works
++# 3) there's not limit on the new sub-dirctory (not inherit from parent)
++do_quota_nospc $SCRATCH_MNT/dir/foo Success
++do_quota_nospc $SCRATCH_MNT/dir/dir_inherit/foo ENOSPC
++do_quota_nospc $SCRATCH_MNT/dir/dir_uninherit/foo Success
++
++_scratch_unmount
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/507.out b/tests/xfs/507.out
+new file mode 100644
+index 00000000..c8c09d3f
+--- /dev/null
++++ b/tests/xfs/507.out
+@@ -0,0 +1,23 @@
++QA output created by 507
++== The parent directory has Project inheritance bit by default ==
++Checking project test (path [SCR_MNT]/dir)...
++Processed 1 ([PROJECTS_FILE] and cmdline) paths for project test with recursion depth infinite (-1).
++
++Write SCRATCH_MNT/dir/foo, expect ENOSPC:
++pwrite: No space left on device
++Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
++pwrite: No space left on device
++
++== After removing parent directory has Project inheritance bit ==
++Checking project test (path [SCR_MNT]/dir)...
++[SCR_MNT]/dir - project inheritance flag is not set
++[SCR_MNT]/dir/foo - project identifier is not set (inode=0, tree=10)
++[SCR_MNT]/dir/dir_uninherit - project identifier is not set (inode=0, tree=10)
++[SCR_MNT]/dir/dir_uninherit - project inheritance flag is not set
++[SCR_MNT]/dir/dir_uninherit/foo - project identifier is not set (inode=0, tree=10)
++Processed 1 ([PROJECTS_FILE] and cmdline) paths for project test with recursion depth infinite (-1).
++
++Write SCRATCH_MNT/dir/foo, expect Success:
++Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
++pwrite: No space left on device
++Write SCRATCH_MNT/dir/dir_uninherit/foo, expect Success:
+diff --git a/tests/xfs/group b/tests/xfs/group
+index ffe4ae12..46200752 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -504,3 +504,4 @@
+ 504 auto quick mkfs label
+ 505 auto quick spaceman
+ 506 auto quick health
++507 auto quick quota
+-- 
+2.17.2
