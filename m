@@ -1,14 +1,14 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:55554 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726530AbfFTQvY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:51:24 -0400
-Subject: [PATCH 5/9] man: create a separate INUMBERS ioctl manpage
+Received: from userp2120.oracle.com ([156.151.31.85]:44924 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726661AbfFTQwZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:52:25 -0400
+Subject: [PATCH 08/12] libfrog: refactor open-coded INUMBERS calls
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jun 2019 09:51:20 -0700
-Message-ID: <156104948000.1174403.11692931049872468663.stgit@magnolia>
-In-Reply-To: <156104944877.1174403.14568482035189263260.stgit@magnolia>
-References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
+Date: Thu, 20 Jun 2019 09:50:20 -0700
+Message-ID: <156104942067.1172531.15834435379895326132.stgit@magnolia>
+In-Reply-To: <156104936953.1172531.2121427277342917243.stgit@magnolia>
+References: <156104936953.1172531.2121427277342917243.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -20,194 +20,278 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a separate manual page for the xfs INUMBERS ioctl so we can
-document how it works.
+Refactor all the INUMBERS ioctl callsites into helper functions.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man2/ioctl_xfs_fsinumbers.2 |  122 +++++++++++++++++++++++++++++++++++++++
- man/man3/xfsctl.3               |   34 +----------
- 2 files changed, 126 insertions(+), 30 deletions(-)
- create mode 100644 man/man2/ioctl_xfs_fsinumbers.2
+ include/xfrog.h    |    4 ++++
+ io/imap.c          |   32 +++++++++++++++-----------------
+ io/open.c          |   20 ++++++++------------
+ libfrog/bulkstat.c |   19 +++++++++++++++++++
+ scrub/fscounters.c |   18 +++++++-----------
+ scrub/inodes.c     |   23 +++++++++--------------
+ 6 files changed, 62 insertions(+), 54 deletions(-)
 
 
-diff --git a/man/man2/ioctl_xfs_fsinumbers.2 b/man/man2/ioctl_xfs_fsinumbers.2
-new file mode 100644
-index 00000000..04f32109
---- /dev/null
-+++ b/man/man2/ioctl_xfs_fsinumbers.2
-@@ -0,0 +1,122 @@
-+.\" Copyright (c) 2019, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" SPDX-License-Identifier: GPL-2.0+
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-FSINUMBERS 2 2019-06-17 "XFS"
-+.SH NAME
-+ioctl_xfs_fsinumbers \- extract a list of valid inode numbers from an XFS filesystem
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.PP
-+.BI "int ioctl(int " fd ", XFS_IOC_FSINUMBERS, struct xfs_fsop_bulkreq *" arg );
-+.SH DESCRIPTION
-+Queries inode allocation information from an XFS filesystem.
-+It is intended to be called iteratively to obtain the entire set of inodes.
-+These ioctls use
-+.B struct xfs_fsop_bulkreq
-+to set up a bulk transfer with the kernel:
-+.PP
-+.in +4n
-+.nf
-+struct xfs_fsop_bulkreq {
-+	__u64   *lastip;
-+	__s32   count;
-+	void    *ubuffer;
-+	__s32   *ocount;
-+};
-+.fi
-+.in
-+.PP
-+.I lastip
-+points to a value that will receive the number of the "last inode".
-+This should be set to one less than the number of the first inode for which the
-+caller wants information, or zero to start with the first inode in the
-+filesystem.
-+After the call, this value will be set to the number of the last inode for
-+which information is supplied.
-+This field will not be updated if
-+.I ocount
-+is NULL.
-+.PP
-+.I count
-+is the number of elements in the
-+.B ubuffer
-+array and therefore the number of inode groups for which to return allocation
-+information.
-+.PP
-+.I ocount
-+points to a value that will receive the number of records returned.
-+An output value of zero means that there are no more inode groups left to
-+enumerate.
-+If this value is NULL, then neither
-+.I ocount
-+nor
-+.I lastip
-+will be updated.
-+.PP
-+.I ubuffer
-+points to a memory buffer where inode group information will be copied.
-+This buffer must be an array of
-+.B struct xfs_inogrp
-+which is described below.
-+The array must have at least
-+.I count
-+elements.
-+.PP
-+.in +4n
-+.nf
-+struct xfs_inogrp {
-+	__u64   xi_startino;
-+	__s32   xi_alloccount;
-+	__u64   xi_allocmask;
-+}
-+.fi
-+.in
-+.PP
-+This structure describes inode usage information for a group of 64 consecutive
-+inode numbers.
-+The fields are as follows:
-+.PP
-+.I xi_startino
-+is the first inode number of this group.
-+.PP
-+.I xi_alloccount
-+is the number of bits that are set in
-+.IR xi_allocmask .
-+This is the number of inodes allocated in this group.
-+.PP
-+.I xi_allocmask
-+is a bitmask of inodes that are allocated in this inode group.
-+The bitmask is 64 bits long, and the least significant bit corresponds to inode
-+.BR xi_startino .
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EFAULT
-+The kernel was not able to copy into the userspace buffer.
-+.TP
-+.B EFSBADCRC
-+Metadata checksum validation failed while performing the query.
-+.TP
-+.B EFSCORRUPTED
-+Metadata corruption was encountered while performing the query.
-+.TP
-+.B EINVAL
-+One of the arguments was not valid.
-+.TP
-+.B EIO
-+An I/O error was encountered while performing the query.
-+.TP
-+.B ENOMEM
-+There was insufficient memory to perform the query.
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH SEE ALSO
-+.BR ioctl (2)
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index 78fad975..c14f7d33 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -368,36 +368,9 @@ can be any open file in the XFS filesystem in question.
- .PP
- .TP
- .B XFS_IOC_FSINUMBERS
--This interface is used to extract a list of valid inode numbers from an
--XFS filesystem.
--It is intended to be called iteratively, to obtain the entire set of inodes.
--The information is passed in and out via a structure of type
--.B xfs_fsop_bulkreq_t
--pointed to by the final argument.
--.B lastip
--is a pointer to a variable containing the last inode number returned,
--initially it should be zero.
--.B icount
--is the size of the array of structures specified by
--.BR ubuffer .
--.B ubuffer
--is the address of an array of structures, of type
--.BR xfs_inogrp_t .
--This structure has the following elements:
--.B xi_startino
--(starting inode number),
--.B xi_alloccount
--(count of bits set in xi_allocmask), and
--.B xi_allocmask
--(mask of allocated inodes in this group).
--The bitmask is 64 bits long, and the least significant bit corresponds to inode
--.B xi_startino.
--Each bit is set if the corresponding inode is in use.
--.B ocount
--is a pointer to a count of returned values, filled in by the call.
--An output
--.B ocount
--value of zero means that the inode table has been exhausted.
-+See
-+.BR ioctl_xfs_fsinumbers (2)
-+for more information.
+diff --git a/include/xfrog.h b/include/xfrog.h
+index 176a2e1d..dab1214d 100644
+--- a/include/xfrog.h
++++ b/include/xfrog.h
+@@ -107,4 +107,8 @@ int xfrog_bulkstat_single(struct xfrog *froggie, uint64_t ino,
+ int xfrog_bulkstat(struct xfrog *froggie, uint64_t *lastino, uint32_t icount,
+ 		struct xfs_bstat *ubuffer, uint32_t *ocount);
  
- .TP
- .B XFS_IOC_FSGEOMETRY
-@@ -443,6 +416,7 @@ as they are not of general use to applications.
- .BR ioctl_xfs_fsop_geometry (2),
- .BR ioctl_xfs_fsbulkstat (2),
- .BR ioctl_xfs_scrub_metadata (2),
-+.BR ioctl_xfs_fsinumbers (2),
- .BR fstatfs (2),
- .BR statfs (2),
- .BR xfs (5),
++struct xfs_inogrp;
++int xfrog_inumbers(struct xfrog *froggie, uint64_t *lastino, uint32_t icount,
++		struct xfs_inogrp *ubuffer, uint32_t *ocount);
++
+ #endif	/* __XFROG_H__ */
+diff --git a/io/imap.c b/io/imap.c
+index fbc8e9e1..05a4985d 100644
+--- a/io/imap.c
++++ b/io/imap.c
+@@ -8,18 +8,20 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t imap_cmd;
+ 
+ static int
+ imap_f(int argc, char **argv)
+ {
+-	int		count;
+-	int		nent;
+-	int		i;
+-	__u64		last = 0;
+-	xfs_inogrp_t	*t;
+-	xfs_fsop_bulkreq_t bulkreq;
++	struct xfrog		frog = XFROG_INIT(file->fd);
++	struct xfs_inogrp	*t;
++	uint64_t		last = 0;
++	uint32_t		count;
++	uint32_t		nent;
++	int			i;
++	int			error;
+ 
+ 	if (argc != 2)
+ 		nent = 1;
+@@ -30,14 +32,8 @@ imap_f(int argc, char **argv)
+ 	if (!t)
+ 		return 0;
+ 
+-	bulkreq.lastip  = &last;
+-	bulkreq.icount  = nent;
+-	bulkreq.ubuffer = (void *)t;
+-	bulkreq.ocount  = &count;
+-
+-	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+-		if (count == 0)
+-			goto out_free;
++	while ((error = xfrog_inumbers(&frog, &last, nent, t, &count)) == 0 &&
++	       count > 0) {
+ 		for (i = 0; i < count; i++) {
+ 			printf(_("ino %10llu count %2d mask %016llx\n"),
+ 				(unsigned long long)t[i].xi_startino,
+@@ -45,9 +41,11 @@ imap_f(int argc, char **argv)
+ 				(unsigned long long)t[i].xi_allocmask);
+ 		}
+ 	}
+-	perror("xfsctl(XFS_IOC_FSINUMBERS)");
+-	exitcode = 1;
+-out_free:
++
++	if (error) {
++		perror("xfsctl(XFS_IOC_FSINUMBERS)");
++		exitcode = 1;
++	}
+ 	free(t);
+ 	return 0;
+ }
+diff --git a/io/open.c b/io/open.c
+index 36e07dc3..35bcd23a 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -669,24 +669,20 @@ inode_help(void)
+ "\n"));
+ }
+ 
++#define IGROUP_NR	(1024)
+ static __u64
+ get_last_inode(void)
+ {
+-	__u64			lastip = 0;
+-	__u64			lastgrp = 0;
+-	__s32			ocount = 0;
++	struct xfrog		frog = XFROG_INIT(file->fd);
++	uint64_t		lastip = 0;
++	uint32_t		lastgrp = 0;
++	uint32_t		ocount = 0;
+ 	__u64			last_ino;
+-	struct xfs_inogrp	igroup[1024];
+-	struct xfs_fsop_bulkreq	bulkreq;
+-
+-	bulkreq.lastip = &lastip;
+-	bulkreq.ubuffer = &igroup;
+-	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
+-	bulkreq.ocount = &ocount;
++	struct xfs_inogrp	igroup[IGROUP_NR];
+ 
+ 	for (;;) {
+-		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
+-				&bulkreq)) {
++		if (xfrog_inumbers(&frog, &lastip, IGROUP_NR, igroup,
++					&ocount)) {
+ 			perror("XFS_IOC_FSINUMBERS");
+ 			return 0;
+ 		}
+diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
+index 30a9e6bc..9ce238b8 100644
+--- a/libfrog/bulkstat.c
++++ b/libfrog/bulkstat.c
+@@ -42,3 +42,22 @@ xfrog_bulkstat(
+ 
+ 	return ioctl(froggie->fd, XFS_IOC_FSBULKSTAT, &bulkreq);
+ }
++
++/* Query inode allocation bitmask information. */
++int
++xfrog_inumbers(
++	struct xfrog		*froggie,
++	uint64_t		*lastino,
++	uint32_t		icount,
++	struct xfs_inogrp	*ubuffer,
++	uint32_t		*ocount)
++{
++	struct xfs_fsop_bulkreq	bulkreq = {
++		.lastip		= (__u64 *)lastino,
++		.icount		= icount,
++		.ubuffer	= ubuffer,
++		.ocount		= (__s32 *)ocount,
++	};
++
++	return ioctl(froggie->fd, XFS_IOC_FSINUMBERS, &bulkreq);
++}
+diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+index adb79b50..cd216b30 100644
+--- a/scrub/fscounters.c
++++ b/scrub/fscounters.c
+@@ -15,6 +15,7 @@
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "fscounters.h"
++#include "xfrog.h"
+ 
+ /*
+  * Filesystem counter collection routines.  We can count the number of
+@@ -41,26 +42,21 @@ xfs_count_inodes_range(
+ 	uint64_t		last_ino,
+ 	uint64_t		*count)
+ {
+-	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+ 	struct xfs_inogrp	inogrp;
+-	__u64			igrp_ino;
++	uint64_t		igrp_ino;
+ 	uint64_t		nr = 0;
+-	__s32			igrplen = 0;
++	uint32_t		igrplen = 0;
+ 	int			error;
+ 
+ 	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
+ 	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
+ 
+-	igrpreq.lastip  = &igrp_ino;
+-	igrpreq.icount  = 1;
+-	igrpreq.ubuffer = &inogrp;
+-	igrpreq.ocount  = &igrplen;
+-
+ 	igrp_ino = first_ino;
+-	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+-	while (!error && igrplen && inogrp.xi_startino < last_ino) {
++	while (!(error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
++			&igrplen))) {
++		if (igrplen == 0 || inogrp.xi_startino >= last_ino)
++			break;
+ 		nr += inogrp.xi_alloccount;
+-		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+ 	}
+ 
+ 	if (error) {
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 09dd0055..dea925be 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -90,17 +90,16 @@ xfs_iterate_inodes_range(
+ 	xfs_inode_iter_fn	fn,
+ 	void			*arg)
+ {
+-	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+ 	struct xfs_handle	handle;
+ 	struct xfs_inogrp	inogrp;
+ 	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
+ 	char			idescr[DESCR_BUFSZ];
+ 	char			buf[DESCR_BUFSZ];
+ 	struct xfs_bstat	*bs;
+-	__u64			igrp_ino;
++	uint64_t		igrp_ino;
+ 	uint64_t		ino;
+ 	uint32_t		bulklen = 0;
+-	__s32			igrplen = 0;
++	uint32_t		igrplen = 0;
+ 	bool			moveon = true;
+ 	int			i;
+ 	int			error;
+@@ -109,11 +108,6 @@ xfs_iterate_inodes_range(
+ 
+ 	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
+ 
+-	igrpreq.lastip  = &igrp_ino;
+-	igrpreq.icount  = 1;
+-	igrpreq.ubuffer = &inogrp;
+-	igrpreq.ocount  = &igrplen;
+-
+ 	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
+ 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+ 			sizeof(handle.ha_fid.fid_len);
+@@ -121,8 +115,11 @@ xfs_iterate_inodes_range(
+ 
+ 	/* Find the inode chunk & alloc mask */
+ 	igrp_ino = first_ino;
+-	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+-	while (!error && igrplen) {
++	while (!(error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
++			&igrplen))) {
++		if (igrplen == 0)
++			break;
++
+ 		/* Load the inodes. */
+ 		ino = inogrp.xi_startino - 1;
+ 
+@@ -131,7 +128,7 @@ xfs_iterate_inodes_range(
+ 		 * there are more than 64 inodes per block.  Skip these.
+ 		 */
+ 		if (inogrp.xi_alloccount == 0)
+-			goto igrp_retry;
++			continue;
+ 		error = xfrog_bulkstat(&ctx->mnt, &ino, inogrp.xi_alloccount,
+ 				bstat, &bulklen);
+ 		if (error)
+@@ -155,7 +152,7 @@ xfs_iterate_inodes_range(
+ 				stale_count++;
+ 				if (stale_count < 30) {
+ 					igrp_ino = inogrp.xi_startino;
+-					goto igrp_retry;
++					continue;
+ 				}
+ 				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
+ 						(uint64_t)bs->bs_ino);
+@@ -177,8 +174,6 @@ _("Changed too many times during scan; giving up."));
+ 		}
+ 
+ 		stale_count = 0;
+-igrp_retry:
+-		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+ 	}
+ 
+ err:
