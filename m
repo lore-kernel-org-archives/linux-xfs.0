@@ -1,66 +1,159 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f175.google.com ([209.85.208.175]:33111 "EHLO
-        mail-lj1-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731801AbfFTNIl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 09:08:41 -0400
-Received: by mail-lj1-f175.google.com with SMTP id h10so2679614ljg.0
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 06:08:39 -0700 (PDT)
-From: Alexey Lyashkov <umka@cloudlinux.com>
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Memory reclaim and XFS objects
-Message-Id: <EF1A27FA-4DEA-41A7-8C47-FA8A947E4C19@cloudlinux.com>
-Date: Thu, 20 Jun 2019 16:06:36 +0300
+Received: from userp2130.oracle.com ([156.151.31.86]:48136 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725869AbfFTSnG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 14:43:06 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KIcu7i154526
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:43:04 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2t7809jrtc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:43:04 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KIgY6q025359
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:43:04 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2t77ynsguq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:43:03 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5KIh3xn019771
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:43:03 GMT
+Subject: [PATCH 2/2] xfs: account for log space when formatting new AGs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 20 Jun 2019 11:43:01 -0700
+Message-ID: <156105618181.1200596.7381990220006852218.stgit@magnolia>
+In-Reply-To: <156105616866.1200596.7212155126558008316.stgit@magnolia>
+References: <156105616866.1200596.7212155126558008316.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-own customers hit a system hung after several OOM conditionals.
-Looking into crash dump, i found a large number threads (334) stick in =
-xfs_reclaim_inodes_ag in waiting a mutex.
-example of it.
-PID: 2      TASK: ffff88de5b7c1160  CPU: 6   COMMAND: "kthreadd"
- #0 [ffff88de5b7cf488] __schedule at ffffffff81b2d932
- #1 [ffff88de5b7cf518] schedule_preempt_disabled at ffffffff81b2ed79
- #2 [ffff88de5b7cf528] __mutex_lock_slowpath at ffffffff81b2cc77
- #3 [ffff88de5b7cf580] mutex_lock at ffffffff81b2c05f
- #4 [ffff88de5b7cf598] xfs_reclaim_inodes_ag at ffffffffc0366f1c [xfs]
- #5 [ffff88de5b7cf730] xfs_reclaim_inodes_nr at ffffffffc03680c3 [xfs]
- #6 [ffff88de5b7cf750] xfs_fs_free_cached_objects at ffffffffc037a169 =
-[xfs]
- #7 [ffff88de5b7cf760] super_cache_scan at ffffffff81640e4e
- #8 [ffff88de5b7cf7a0] shrink_slab at ffffffff815bd3f3
- #9 [ffff88de5b7cf868] shrink_zone at ffffffff815c0cb0
-#10 [ffff88de5b7cf8e0] do_try_to_free_pages at ffffffff815c1230
-#11 [ffff88de5b7cf988] try_to_free_pages at ffffffff815c1775
-#12 [ffff88de5b7cfa18] __alloc_pages_slowpath at ffffffff81b250fd
-#13 [ffff88de5b7cfb08] __alloc_pages_nodemask at ffffffff815b4d35
-#14 [ffff88de5b7cfbc0] new_slab at ffffffff81611c46
-#15 [ffff88de5b7cfc00] ___slab_alloc at ffffffff8161210c
-#16 [ffff88de5b7cfcd0] __slab_alloc at ffffffff81b26903
-#17 [ffff88de5b7cfd10] kmem_cache_alloc_node at ffffffff81612ac9
-#18 [ffff88de5b7cfd60] copy_process at ffffffff81491be9
-#19 [ffff88de5b7cfde8] do_fork at ffffffff81493751
-#20 [ffff88de5b7cfe60] kernel_thread at ffffffff81493a06
-#21 [ffff88de5b7cfe70] create_kthread at ffffffff814bf664
-#22 [ffff88de5b7cfe88] kthreadd at ffffffff814c0315=20
-# grep -c xfs_reclaim_inodes_nr bt.log
-334
+When we're writing out a fresh new AG, make sure that we don't list an
+internal log as free and that we create the rmap for the region.  growfs
+never does this, but we will need it when we hook up mkfs.
 
-Looking in code, it looks result of race between different threads who =
-want to do reclaim in same time,=20
-but each thread don=E2=80=99t able to flush own nr objects limit.
-I think xfs_reclaim_inodes_nr don=E2=80=99t need to have SYNC_WAIT as =
-shrink_slab have own loop to flush additional objects in case first loop =
-ins=E2=80=99t flush all.
-What you think about this change?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_ag.c |   66 ++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 66 insertions(+)
 
 
-
-Thanks for response,
-Alex=
+diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+index 80a3df7ccab3..57aa85d8e3aa 100644
+--- a/fs/xfs/libxfs/xfs_ag.c
++++ b/fs/xfs/libxfs/xfs_ag.c
+@@ -10,6 +10,7 @@
+ #include "xfs_shared.h"
+ #include "xfs_format.h"
+ #include "xfs_trans_resv.h"
++#include "xfs_bit.h"
+ #include "xfs_sb.h"
+ #include "xfs_mount.h"
+ #include "xfs_btree.h"
+@@ -44,6 +45,12 @@ xfs_get_aghdr_buf(
+ 	return bp;
+ }
+ 
++static inline bool is_log_ag(struct xfs_mount *mp, struct aghdr_init_data *id)
++{
++	return mp->m_sb.sb_logstart > 0 &&
++	       id->agno == XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
++}
++
+ /*
+  * Generic btree root block init function
+  */
+@@ -64,11 +71,50 @@ xfs_freesp_init_recs(
+ 	struct aghdr_init_data	*id)
+ {
+ 	struct xfs_alloc_rec	*arec;
++	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+ 
+ 	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+ 	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
++
++	if (is_log_ag(mp, id)) {
++		struct xfs_alloc_rec	*nrec;
++		xfs_agblock_t		start = XFS_FSB_TO_AGBNO(mp,
++							mp->m_sb.sb_logstart);
++
++		ASSERT(start >= mp->m_ag_prealloc_blocks);
++		if (start != mp->m_ag_prealloc_blocks) {
++			/*
++			 * Modify first record to pad stripe align of log
++			 */
++			arec->ar_blockcount = cpu_to_be32(start -
++						mp->m_ag_prealloc_blocks);
++			nrec = arec + 1;
++			/*
++			 * Insert second record at start of internal log
++			 * which then gets trimmed.
++			 */
++			nrec->ar_startblock = cpu_to_be32(
++					be32_to_cpu(arec->ar_startblock) +
++					be32_to_cpu(arec->ar_blockcount));
++			arec = nrec;
++			be16_add_cpu(&block->bb_numrecs, 1);
++		}
++		/*
++		 * Change record start to after the internal log
++		 */
++		be32_add_cpu(&arec->ar_startblock, mp->m_sb.sb_logblocks);
++	}
++
++	/*
++	 * Calculate the record block count and check for the case where
++	 * the log might have consumed all available space in the AG. If
++	 * so, reset the record count to 0 to avoid exposure of an invalid
++	 * record start block.
++	 */
+ 	arec->ar_blockcount = cpu_to_be32(id->agsize -
+ 					  be32_to_cpu(arec->ar_startblock));
++	if (!arec->ar_blockcount)
++		block->bb_numrecs = 0;
+ }
+ 
+ /*
+@@ -154,6 +200,18 @@ xfs_rmaproot_init(
+ 		rrec->rm_offset = 0;
+ 		be16_add_cpu(&block->bb_numrecs, 1);
+ 	}
++
++	/* account for the log space */
++	if (is_log_ag(mp, id)) {
++		rrec = XFS_RMAP_REC_ADDR(block,
++				be16_to_cpu(block->bb_numrecs) + 1);
++		rrec->rm_startblock = cpu_to_be32(
++				XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart));
++		rrec->rm_blockcount = cpu_to_be32(mp->m_sb.sb_logblocks);
++		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_LOG);
++		rrec->rm_offset = 0;
++		be16_add_cpu(&block->bb_numrecs, 1);
++	}
+ }
+ 
+ /*
+@@ -214,6 +272,14 @@ xfs_agfblock_init(
+ 		agf->agf_refcount_level = cpu_to_be32(1);
+ 		agf->agf_refcount_blocks = cpu_to_be32(1);
+ 	}
++
++	if (is_log_ag(mp, id)) {
++		int64_t	logblocks = mp->m_sb.sb_logblocks;
++
++		be32_add_cpu(&agf->agf_freeblks, -logblocks);
++		agf->agf_longest = cpu_to_be32(id->agsize -
++			XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart) - logblocks);
++	}
+ }
+ 
+ static void
