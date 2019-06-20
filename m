@@ -1,34 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43650 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726530AbfFTQux (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:50:53 -0400
-Subject: [PATCH v2 0/9] xfsprogs: document the ioctls scrub uses
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jun 2019 09:50:48 -0700
-Message-ID: <156104944877.1174403.14568482035189263260.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from sandeen.net ([63.231.237.45]:55548 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725906AbfFTV3i (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 20 Jun 2019 17:29:38 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH 00/11] xfsprogs: remove unneeded #includes
+Date: Thu, 20 Jun 2019 16:29:23 -0500
+Message-Id: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hi all,
+This is the result of a mechanical process and ... may have a few
+oddities, for example removing "init.h" from some utils made me
+realize that we inherit it from libxfs and also have it in local
+headers; libxfs has a global but so does scrub, etc.  So that stuff
+can/should be fixed up, but in the meantime, this zaps out a ton
+of header dependencies, and seems worthwhile.
 
-Add documentation for all the ioctls that xfs_scrub uses, so that we
-finally have some literature about how those interfaces are supposed to
-work.
+I'll try to do the same thing for the kernel and hold off on
+committing the libxfs/* patch here until I can "merge" it in.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=document-ioctls
+-Eric
