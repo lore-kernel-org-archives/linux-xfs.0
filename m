@@ -1,85 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:54584 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725906AbfFTWHO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 18:07:14 -0400
-Date: Fri, 21 Jun 2019 08:06:14 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 00/11] xfsprogs: remove unneeded #includes
-Message-ID: <20190620220614.GE26375@dread.disaster.area>
-References: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:38116 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726428AbfFTPck (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 11:32:40 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KFUnEG108080
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 15:32:39 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2t7809htmf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 15:32:39 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KFWWa1044065
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 15:32:38 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2t77ypefup-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 15:32:38 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5KFWaJQ015015
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 15:32:37 GMT
+Date: Thu, 20 Jun 2019 08:32:34 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/1] xfsprogs: Fix uninitialized cfg->lsunit
+Message-ID: <20190620153234.GV5387@magnolia>
+References: <20190619182857.9959-1-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+In-Reply-To: <20190619182857.9959-1-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
+To: Allison Collins <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Thu, Jun 20, 2019 at 04:29:23PM -0500, Eric Sandeen wrote:
-> This is the result of a mechanical process and ... may have a few
-> oddities, for example removing "init.h" from some utils made me
-> realize that we inherit it from libxfs and also have it in local
+On Wed, Jun 19, 2019 at 11:28:57AM -0700, Allison Collins wrote:
+> While investigating another mkfs bug, noticed that cfg->lsunit is sometimes
+> left uninitialized when it should not.  This is because calc_stripe_factors
+> in some cases needs cfg->loginternal to be set first.  This is done in
+> validate_logdev. So move calc_stripe_factors below validate_logdev while
+> parsing configs.
 
-We do? That'd be really, really broken if we did - including local
-header files from a global header files is not a good idea.
+<grumble> The cfg in main() is not (in a manner easily detectable by
+toolz) uninitialized, it's zero-initialized by default and we haven't
+set cfg->loginternal correctly yet...
 
-/me goes looking, can't find where libxfs.h includes init.h
+...what we really need here is enum { FALSE, TRUE, FILENOTFOUND } to
+detect that we're using incorrect garbage data. :P
 
-libxfs/init.h is private to libxfs/, it's not a global include file,
-and it is included directly in all the libxfs/*.c files that need
-it, which is 3 files - init.c, rdwr.c and util.c. 
+(Really, someone should take a closer look at whether or not there are
+other places where we do things like this...)
 
-> headers; libxfs has a global but so does scrub, etc.  So that stuff
-> can/should be fixed up, but in the meantime, this zaps out a ton
-> of header dependencies, and seems worthwhile.
+Anyway, this does solve a problem, so
 
-IMO, this doesn't improve the tangle of header files in userspace.
-All it does is make the include patterns inconsistent across files
-because of the tangled mess of the libxfs/ vs include/ header files
-that was never completely resolved when libxfs was created as a
-shared kernel library....
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-IOWs, the include pattern I was originally aiming for with the
-libxfs/ shared userspace/kernel library was:
+--D
 
-#include "libxfs_priv.h"
-<include shared kernel header files>
-
-And for things outside libxfs/ that use libxfs:
-
-#include "libxfs.h"
-<include local header files>
-
-IOWs, "libxfs_priv.h" contained the includes for all the local
-userspace libxfs includes and defines and non-shared support
-structures, and it would export on build all the header files that
-external code needs to build into include/ via symlinks. This is
-incomplete - stuff like include/xfs_mount.h, xfs_inode.h, etc needs
-to move into libxfs as private header files (similar to how they are
-private in the kernel) and then exported at build time.
-
-Likewise, "libxfs.h" should only contain global include files and
-those exported from libxfs, and that's all the external code should
-include to use /anything/ from libxfs. i.e.  a single include forms
-the external interface to libxfs.
-
-AFAIC, nothing should be including platform or build dependent
-things like platform_defs.h, because that should be pulled in by
-libxfs.h or libxfs_priv.h. And nothing external should need to pull
-in, say, xfs_format.h or xfs_mount.h, because they are all pulled in
-by include/libxfs.h (which it mostly does already).
-
-Hence I'd prefer we finish untangling the header file include mess
-before we cull unneceesary includes. Otherwise we are going to end
-up culling the wrong includes and then have to clean up that mess as
-well to bring the code back to being clean and consistent....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  mkfs/xfs_mkfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index ddb25ec..f4a5e4b 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3995,7 +3995,6 @@ main(
+>  	cfg.rtblocks = calc_dev_size(cli.rtsize, &cfg, &ropts, R_SIZE, "rt");
+>  
+>  	validate_rtextsize(&cfg, &cli, &ft);
+> -	calc_stripe_factors(&cfg, &cli, &ft);
+>  
+>  	/*
+>  	 * Open and validate the device configurations
+> @@ -4005,6 +4004,7 @@ main(
+>  	validate_datadev(&cfg, &cli);
+>  	validate_logdev(&cfg, &cli, &logfile);
+>  	validate_rtdev(&cfg, &cli, &rtfile);
+> +	calc_stripe_factors(&cfg, &cli, &ft);
+>  
+>  	/*
+>  	 * At this point when know exactly what size all the devices are,
+> -- 
+> 2.7.4
+> 
