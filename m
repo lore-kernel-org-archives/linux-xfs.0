@@ -1,136 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54868 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:41992 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731068AbfFRVHX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:07:23 -0400
-Subject: [PATCH 2/4] xfs: rework min log size helper
+        with ESMTP id S1725869AbfFTSmx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 14:42:53 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KId6jH063684
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2t7809jpnj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KIgdA2151491
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2t77yphh6r-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5KIgorr019670
+        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:50 GMT
+Subject: [PATCH 0/2] xfs: help mkfs shed its AG initialization code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 18 Jun 2019 14:07:15 -0700
-Message-ID: <156089203509.345809.3448903728041546348.stgit@magnolia>
-In-Reply-To: <156089201978.345809.17444450351199726553.stgit@magnolia>
-References: <156089201978.345809.17444450351199726553.stgit@magnolia>
+Date: Thu, 20 Jun 2019 11:42:48 -0700
+Message-ID: <156105616866.1200596.7212155126558008316.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-The recent _scratch_find_xfs_min_logblocks helper has a major thinko in
-it -- it relies on feeding a too-small size to _scratch_do_mkfs so that
-mkfs will tell us the minimum log size.  Unfortunately, _scratch_do_mkfs
-will see that first failure and retry the mkfs without MKFS_OPTIONS,
-which means that we return the minimum log size for the default mkfs
-settings without MKFS_OPTIONS.
+In this series, we start by adapting the libxfs AG construction code to
+be aware that an internal log can be placed with an AG that is being
+initialized.  This is necessary to refactor mkfs to use the AG
+construction set instead of its own open-coded initialization work.
 
-This is a problem if someone's running fstests with a set of
-MKFS_OPTIONS that affects the minimum log size.  To fix this, open-code
-the _scratch_do_mkfs retry behavior so that we only do the "retry
-without MKFS_OPTIONS" behavior if the mkfs failed for a reason other
-than the minimum log size check.
+In userspace, the next thing we have to do is to fix the uncached buffer
+code so that libxfs_putbuf won't try to suck them into the buffer cache;
+and then fix delwri_{queue,submit} so that IO errors are returned by the
+submit function.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- common/rc  |   13 ++++++++++---
- common/xfs |   23 +++++++++++++++++++++--
- 2 files changed, 31 insertions(+), 5 deletions(-)
+The final patch in the xfsprogs series replaces all of mkfs' AG
+initialization functions with a single call to the functions in libxfs.
 
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-diff --git a/common/rc b/common/rc
-index 25203bb4..a38b7f02 100644
---- a/common/rc
-+++ b/common/rc
-@@ -438,6 +438,14 @@ _scratch_mkfs_options()
-     echo $SCRATCH_OPTIONS $MKFS_OPTIONS $* $SCRATCH_DEV
- }
- 
-+# Format the scratch device directly.  First argument is the mkfs command.
-+# Second argument are all the parameters.  stdout goes to $tmp.mkfsstd and
-+# stderr goes to $tmp.mkfserr.
-+__scratch_do_mkfs()
-+{
-+	eval "$1 $2 $SCRATCH_DEV" 2>$tmp.mkfserr 1>$tmp.mkfsstd
-+}
-+
- # Do the actual mkfs work on SCRATCH_DEV. Firstly mkfs with both MKFS_OPTIONS
- # and user specified mkfs options, if that fails (due to conflicts between mkfs
- # options), do a second mkfs with only user provided mkfs options.
-@@ -456,8 +464,7 @@ _scratch_do_mkfs()
- 
- 	# save mkfs output in case conflict means we need to run again.
- 	# only the output for the mkfs that applies should be shown
--	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
--		2>$tmp.mkfserr 1>$tmp.mkfsstd
-+	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
- 	mkfs_status=$?
- 
- 	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
-@@ -471,7 +478,7 @@ _scratch_do_mkfs()
- 		) >> $seqres.full
- 
- 		# running mkfs again. overwrite previous mkfs output files
--		eval "$mkfs_cmd $extra_mkfs_options $SCRATCH_DEV" \
-+		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options" \
- 			2>$tmp.mkfserr 1>$tmp.mkfsstd
- 		mkfs_status=$?
- 	fi
-diff --git a/common/xfs b/common/xfs
-index f8dafc6c..8733e2ae 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -87,16 +87,33 @@ _scratch_find_xfs_min_logblocks()
- 	# minimum log size.
- 	local XFS_MIN_LOG_BYTES=2097152
- 
--	_scratch_do_mkfs "$mkfs_cmd" "cat" $* -N -l size=$XFS_MIN_LOG_BYTES \
--		2>$tmp.mkfserr 1>$tmp.mkfsstd
-+	# Try formatting the filesystem with all the options given and the
-+	# minimum log size.  We hope either that this succeeds or that mkfs
-+	# tells us the required minimum log size for the feature set.
-+	#
-+	# We cannot use _scratch_do_mkfs because it will retry /any/ failed
-+	# mkfs with MKFS_OPTIONS removed even if the only "failure" was that
-+	# the log was too small.
-+	local extra_mkfs_options="$* -N -l size=$XFS_MIN_LOG_BYTES"
-+	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
- 	local mkfs_status=$?
- 
-+	# If the format fails for a reason other than the log being too small,
-+	# try again without MKFS_OPTIONS because that's what _scratch_do_mkfs
-+	# will do if we pass in the log size option.
-+	if [ $mkfs_status -ne 0 ] &&
-+	   ! grep -q 'log size.*too small, minimum' $tmp.mkfserr; then
-+		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options"
-+		local mkfs_status=$?
-+	fi
-+
- 	# mkfs suceeded, so we must pick out the log block size to do the
- 	# unit conversion
- 	if [ $mkfs_status -eq 0 ]; then
- 		local blksz="$(grep '^log.*bsize' $tmp.mkfsstd | \
- 			sed -e 's/log.*bsize=\([0-9]*\).*$/\1/g')"
- 		echo $((XFS_MIN_LOG_BYTES / blksz))
-+		rm -f $tmp.mkfsstd $tmp.mkfserr
- 		return
- 	fi
- 
-@@ -104,6 +121,7 @@ _scratch_find_xfs_min_logblocks()
- 	if grep -q 'minimum size is' $tmp.mkfserr; then
- 		grep 'minimum size is' $tmp.mkfserr | \
- 			sed -e 's/^.*minimum size is \([0-9]*\) blocks/\1/g'
-+		rm -f $tmp.mkfsstd $tmp.mkfserr
- 		return
- 	fi
- 
-@@ -111,6 +129,7 @@ _scratch_find_xfs_min_logblocks()
- 	echo "Cannot determine minimum log size" >&2
- 	cat $tmp.mkfsstd >> $seqres.full
- 	cat $tmp.mkfserr >> $seqres.full
-+	rm -f $tmp.mkfsstd $tmp.mkfserr
- }
- 
- _scratch_mkfs_xfs()
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=mkfs-refactor
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-refactor
