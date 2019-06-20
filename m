@@ -1,63 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41992 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725869AbfFTSmx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 14:42:53 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KId6jH063684
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2t7809jpnj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5KIgdA2151491
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2t77yphh6r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:51 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5KIgorr019670
-        for <linux-xfs@vger.kernel.org>; Thu, 20 Jun 2019 18:42:50 GMT
-Subject: [PATCH 0/2] xfs: help mkfs shed its AG initialization code
+Received: from userp2130.oracle.com ([156.151.31.86]:43320 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726867AbfFTQub (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:50:31 -0400
+Subject: [PATCH 09/12] mkfs: validate start and end of aligned logs
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jun 2019 11:42:48 -0700
-Message-ID: <156105616866.1200596.7212155126558008316.stgit@magnolia>
+Date: Thu, 20 Jun 2019 09:50:27 -0700
+Message-ID: <156104942708.1172531.3848135690205396934.stgit@magnolia>
+In-Reply-To: <156104936953.1172531.2121427277342917243.stgit@magnolia>
+References: <156104936953.1172531.2121427277342917243.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
+To: sandeen@sandeen.net, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In this series, we start by adapting the libxfs AG construction code to
-be aware that an internal log can be placed with an AG that is being
-initialized.  This is necessary to refactor mkfs to use the AG
-construction set instead of its own open-coded initialization work.
+Validate that the start and end of the log stay within a single AG if
+we adjust either end to align to stripe units.
 
-In userspace, the next thing we have to do is to fix the uncached buffer
-code so that libxfs_putbuf won't try to suck them into the buffer cache;
-and then fix delwri_{queue,submit} so that IO errors are returned by the
-submit function.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ mkfs/xfs_mkfs.c |   15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-The final patch in the xfsprogs series replaces all of mkfs' AG
-initialization functions with a single call to the functions in libxfs.
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=mkfs-refactor
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=mkfs-refactor
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index ddb25ecc..468b8fde 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3033,15 +3033,28 @@ align_internal_log(
+ 	struct xfs_mount	*mp,
+ 	int			sunit)
+ {
++	uint64_t		logend;
++
+ 	/* round up log start if necessary */
+ 	if ((cfg->logstart % sunit) != 0)
+ 		cfg->logstart = ((cfg->logstart + (sunit - 1)) / sunit) * sunit;
+ 
++	/* If our log start overlaps the next AG's metadata, fail. */
++	if (!xfs_verify_fsbno(mp, cfg->logstart)) {
++			fprintf(stderr,
++_("Due to stripe alignment, the internal log start (%lld) cannot be aligned\n"
++  "within an allocation group.\n"),
++			(long long) cfg->logstart);
++		usage();
++	}
++
+ 	/* round up/down the log size now */
+ 	align_log_size(cfg, sunit);
+ 
+ 	/* check the aligned log still fits in an AG. */
+-	if (cfg->logblocks > cfg->agsize - XFS_FSB_TO_AGBNO(mp, cfg->logstart)) {
++	logend = cfg->logstart + cfg->logblocks - 1;
++	if (XFS_FSB_TO_AGNO(mp, cfg->logstart) != XFS_FSB_TO_AGNO(mp, logend) ||
++	    !xfs_verify_fsbno(mp, logend)) {
+ 		fprintf(stderr,
+ _("Due to stripe alignment, the internal log size (%lld) is too large.\n"
+   "Must fit within an allocation group.\n"),
