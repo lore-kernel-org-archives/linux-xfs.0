@@ -1,90 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44368 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726881AbfFTQvk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:51:40 -0400
-Subject: [PATCH 01/12] libfrog: don't set negative errno in conversion
- functions
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 20 Jun 2019 09:49:36 -0700
-Message-ID: <156104937602.1172531.10936665245404210667.stgit@magnolia>
-In-Reply-To: <156104936953.1172531.2121427277342917243.stgit@magnolia>
-References: <156104936953.1172531.2121427277342917243.stgit@magnolia>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:58782 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725905AbfFTVxn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 17:53:43 -0400
+Date: Thu, 20 Jun 2019 17:52:12 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH 1/6] mm/fs: don't allow writes to immutable files
+Message-ID: <20190620215212.GG4650@mit.edu>
+References: <156022836912.3227213.13598042497272336695.stgit@magnolia>
+ <156022837711.3227213.11787906519006016743.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156022837711.3227213.11787906519006016743.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jun 10, 2019 at 09:46:17PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> The chattr manpage has this to say about immutable files:
+> 
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+> 
+> Once the flag is set, it is enforced for quite a few file operations,
+> such as fallocate, fpunch, fzero, rm, touch, open, etc.  However, we
+> don't check for immutability when doing a write(), a PROT_WRITE mmap(),
+> a truncate(), or a write to a previously established mmap.
+> 
+> If a program has an open write fd to a file that the administrator
+> subsequently marks immutable, the program still can change the file
+> contents.  Weird!
+> 
+> The ability to write to an immutable file does not follow the manpage
+> promise that immutable files cannot be modified.  Worse yet it's
+> inconsistent with the behavior of other syscalls which don't allow
+> modifications of immutable files.
+> 
+> Therefore, add the necessary checks to make the write, mmap, and
+> truncate behavior consistent with what the manpage says and consistent
+> with other syscalls on filesystems which support IMMUTABLE.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't set errno to a negative value when we're converting integers.
-That's a kernel thing; this is userspace.
+I note that this patch doesn't allow writes to swap files.  So Amir's
+generic/554 test will still fail for those file systems that don't use
+copy_file_range.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- libfrog/convert.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+I'm indifferent as to whether you add a new patch, or include that
+change in this patch, but perhaps we should fix this while we're
+making changes in these code paths?
 
-
-diff --git a/libfrog/convert.c b/libfrog/convert.c
-index ed4cae7f..62397507 100644
---- a/libfrog/convert.c
-+++ b/libfrog/convert.c
-@@ -47,7 +47,7 @@ cvt_s64(
- 		return i;
- 
- 	/* Not all the input was consumed, return error. */
--	errno = -ERANGE;
-+	errno = ERANGE;
- 	return INT64_MIN;
- }
- 
-@@ -68,7 +68,7 @@ cvt_s32(
- 	if (errno)
- 		return i;
- 	if (i > INT32_MAX || i < INT32_MIN) {
--		errno = -ERANGE;
-+		errno = ERANGE;
- 		return INT32_MIN;
- 	}
- 	return i;
-@@ -91,7 +91,7 @@ cvt_s16(
- 	if (errno)
- 		return i;
- 	if (i > INT16_MAX || i < INT16_MIN) {
--		errno = -ERANGE;
-+		errno = ERANGE;
- 		return INT16_MIN;
- 	}
- 	return i;
-@@ -123,7 +123,7 @@ cvt_u64(
- 		return i;
- 
- 	/* Not all the input was consumed, return error. */
--	errno = -ERANGE;
-+	errno = ERANGE;
- 	return UINT64_MAX;
- }
- 
-@@ -144,7 +144,7 @@ cvt_u32(
- 	if (errno)
- 		return i;
- 	if (i > UINT32_MAX) {
--		errno = -ERANGE;
-+		errno = ERANGE;
- 		return UINT32_MAX;
- 	}
- 	return i;
-@@ -167,7 +167,7 @@ cvt_u16(
- 	if (errno)
- 		return i;
- 	if (i > UINT16_MAX) {
--		errno = -ERANGE;
-+		errno = ERANGE;
- 		return UINT16_MAX;
- 	}
- 	return i;
+				- Ted
