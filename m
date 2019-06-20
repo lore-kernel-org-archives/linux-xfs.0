@@ -1,78 +1,483 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:55576 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726286AbfFTV3k (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 20 Jun 2019 17:29:40 -0400
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 11/11] xfs_spaceman: remove unneeded includes
-Date: Thu, 20 Jun 2019 16:29:34 -0500
-Message-Id: <1561066174-13144-12-git-send-email-sandeen@redhat.com>
-In-Reply-To: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
-References: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:43744 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726530AbfFTQvC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:51:02 -0400
+Subject: [PATCH 1/9] man: create a separate GETXATTR/SETXATTR ioctl manpage
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 20 Jun 2019 09:50:54 -0700
+Message-ID: <156104945493.1174403.4930583691574810947.stgit@magnolia>
+In-Reply-To: <156104944877.1174403.14568482035189263260.stgit@magnolia>
+References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
+
+Break out the xfs file attribute get and set ioctls into a separate
+manpage to reduce clutter in xfsctl.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- spaceman/file.c     | 3 ---
- spaceman/freesp.c   | 1 -
- spaceman/init.c     | 2 --
- spaceman/prealloc.c | 1 -
- 4 files changed, 7 deletions(-)
+ man/man2/ioctl_xfs_fsgetxattr.2  |  245 ++++++++++++++++++++++++++++++++++++++
+ man/man2/ioctl_xfs_fsgetxattra.2 |    1 
+ man/man2/ioctl_xfs_fssetxattr.2  |    1 
+ man/man3/xfsctl.3                |  159 +------------------------
+ 4 files changed, 255 insertions(+), 151 deletions(-)
+ create mode 100644 man/man2/ioctl_xfs_fsgetxattr.2
+ create mode 100644 man/man2/ioctl_xfs_fsgetxattra.2
+ create mode 100644 man/man2/ioctl_xfs_fssetxattr.2
 
-diff --git a/spaceman/file.c b/spaceman/file.c
-index 7e33e07..edc52b8 100644
---- a/spaceman/file.c
-+++ b/spaceman/file.c
-@@ -6,10 +6,7 @@
-  */
+
+diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
+new file mode 100644
+index 00000000..7462c46c
+--- /dev/null
++++ b/man/man2/ioctl_xfs_fsgetxattr.2
+@@ -0,0 +1,245 @@
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-FSGETXATTR 2 2019-06-17 "XFS"
++.SH NAME
++ioctl_xfs_fsgetxattr \- query information for an open file
++.SH SYNOPSIS
++.br
++.B #include <linux/fs.h>
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_FSGETXATTR, struct fsxattr *" arg );
++.br
++.BI "int ioctl(int " fd ", XFS_IOC_FSGETXATTRA, struct fsxattr *" arg );
++.br
++.BI "int ioctl(int " fd ", XFS_IOC_FSSETXATTR, struct fsxattr *" arg );
++.SH DESCRIPTION
++Query or set additional attributes associated with files in various file
++systems.
++The attributes are conveyed in a structure of the form:
++.PP
++.in +4n
++.nf
++struct fsxattr {
++	__u32         fsx_xflags;
++	__u32         fsx_extsize;
++	__u32         fsx_nextents;
++	__u32         fsx_projid;
++	__u32         fsx_cowextsize;
++	unsigned char fsx_pad[8];
++};
++.fi
++.in
++.PP
++.I fsx_xflags
++are extended flags that apply to this file.
++Refer to the section
++.B XFS INODE FLAGS
++below for more information.
++
++.PP
++.I fsx_extsize
++is the preferred extent allocation size for data blocks mapped to this file,
++in units of filesystem blocks.
++If this value is zero, the filesystem will choose a default option, which
++is currently zero.
++If
++.B XFS_IOC_FSSETXATTR
++is called with
++.B XFS_XFLAG_EXTSIZE
++set in
++.I fsx_xflags
++and this field is zero, the XFLAG will be cleared instead.
++.PP
++.I fsx_nextents
++is the number of data extents in this file.
++If
++.B XFS_IOC_FSGETXATTRA
++was used, then this is the number of extended attribute extents in the file.
++.PP
++.I fsx_projid
++is the project ID of this file.
++.PP
++.I fsx_cowextsize
++is the preferred extent allocation size for copy on write operations
++targeting this file, in units of filesystem blocks.
++If this field is zero, the filesystem will choose a default option,
++which is currently 128 filesystem blocks.
++If
++.B XFS_IOC_FSSETXATTR
++is called with
++.B XFS_XFLAG_COWEXTSIZE
++set in
++.I fsx_xflags
++and this field is zero, the XFLAG will be cleared instead.
++
++.PP
++.I fsx_pad
++must be zeroed.
++
++.SH XFS INODE FLAGS
++This field can be a combination of the following:
++
++.TP
++.B XFS_XFLAG_REALTIME
++The file is a realtime file.
++This bit can only be changed when the file is empty.
++.TP
++.B XFS_XFLAG_PREALLOC
++The file has preallocated space.
++.TP
++.B XFS_XFLAG_IMMUTABLE
++The file is immutable - it cannot be modified, deleted or renamed,
++no link can be created to this file and no data can be written to the
++file.
++Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
++capability can set or clear this flag.
++If this flag is set before a
++.B XFS_IOC_FSSETXATTR
++call and would not be cleared by the call, then no other attributes can be
++changed and
++.B EPERM
++will be returned.
++.TP
++.B XFS_XFLAG_APPEND
++The file is append-only - it can only be open in append mode for
++writing.
++Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
++capability can set or clear this flag.
++.TP
++.B XFS_XFLAG_SYNC
++All writes to the file are synchronous.
++If set on a directory and the
++.B /proc/sys/fs/xfs/inherit_sync
++knob is set, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_NOATIME
++When the file is accessed, its atime record is not modified.
++If set on a directory and the
++.B /proc/sys/fs/xfs/inherit_noatime
++knob is set, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_NODUMP
++The file should be skipped by backup utilities.
++If set on a directory and the
++.B /proc/sys/fs/xfs/inherit_nodump
++knob is set, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_RTINHERIT
++Realtime inheritance bit - new files created in the directory
++will be automatically as realtime times.
++If set on a directory, new subdirectories created in the directory will also
++have the inheritance flag set.
++.TP
++.B XFS_XFLAG_PROJINHERIT
++Project inheritance bit - new files and directories created in
++this directory will inherit the project ID of this directory.
++If set on a directory, new subdirectories created in the directory will also
++have the inheritance flag set.
++.TP
++.B XFS_XFLAG_NOSYMLINKS
++Disallows creation of symbolic links in the directory.
++This flag can only be set on a directory.
++If set on a directory and the
++.B /proc/sys/fs/xfs/inherit_nosymlinks
++knob is set, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_EXTSIZE
++Extent size bit - if a basic extent size value is set on the file
++then the allocator will allocate in multiples of the set size for
++this file (see
++.B fsx_extsize
++below).
++This flag can only be set on a file if it is empty.
++.TP
++.B XFS_XFLAG_EXTSZINHERIT
++Extent size inheritance bit - new files and directories created in
++the directory will inherit the extent size value (see
++.B fsx_extsize
++below) of the parent directory.
++New subdirectories created in the directory will inherit the extent size
++inheritance bit.
++.TP
++.B XFS_XFLAG_NODEFRAG
++No defragment file bit - the file should be skipped during a defragmentation
++operation.
++If set on a directory and the
++.B /proc/sys/fs/xfs/inherit_nodefrag
++knob is set, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_FILESTREAM
++Filestream allocator bit - allows a directory to reserve an allocation group
++for exclusive use by files created within that directory.
++Files being written in other directories will not use the same allocation group
++and so files within different directories will not interleave extents on disk.
++The reservation is only active while files are being created and written into
++the directory.
++If set on a directory, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_DAX
++If the filesystem lives on directly accessible persistent memory, reads and
++writes to this file will go straight to the persistent memory, bypassing the
++page cache.
++A file cannot be reflinked and have the
++.BR XFS_XFLAG_DAX
++set at the same time.
++That is to say that DAX files cannot share blocks.
++If set on a directory, new files and subdirectories created in the directory
++will also have the flag set.
++.TP
++.B XFS_XFLAG_COWEXTSIZE
++Copy on Write Extent size bit - if a CoW extent size value is set on the file,
++the allocator will allocate extents for staging a copy on write operation
++in multiples of the set size for this file (see
++.B fsx_cowextsize
++below).
++If set on a directory, new files and subdirectories created in the directory
++will have both the flag and the CoW extent size value set.
++.TP
++.B XFS_XFLAG_HASATTR
++The file has extended attributes associated with it.
++
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EACCESS
++Caller does not have sufficient access to change the attributes.
++.TP
++.B EFAULT
++The kernel was not able to copy into the userspace buffer.
++.TP
++.B EFSBADCRC
++Metadata checksum validation failed while performing the query.
++.TP
++.B EFSCORRUPTED
++Metadata corruption was encountered while performing the query.
++.TP
++.B EINVAL
++One of the arguments was not valid.
++.TP
++.B EIO
++An I/O error was encountered while performing the query.
++.TP
++.B ENOMEM
++There was insufficient memory to perform the query.
++.TP
++.B EPERM
++Caller did not have permission to change the attributes.
++.SH CONFORMING TO
++This API is implemented by the ext4, xfs, btrfs, and f2fs filesystems on the
++Linux kernel.
++Not all fields may be understood by filesystems other than xfs.
++.SH SEE ALSO
++.BR ioctl (2),
++.BR ioctl_iflags (2)
+diff --git a/man/man2/ioctl_xfs_fsgetxattra.2 b/man/man2/ioctl_xfs_fsgetxattra.2
+new file mode 100644
+index 00000000..9bd595ae
+--- /dev/null
++++ b/man/man2/ioctl_xfs_fsgetxattra.2
+@@ -0,0 +1 @@
++.so man2/ioctl_xfs_fsgetxattr.2
+diff --git a/man/man2/ioctl_xfs_fssetxattr.2 b/man/man2/ioctl_xfs_fssetxattr.2
+new file mode 100644
+index 00000000..9bd595ae
+--- /dev/null
++++ b/man/man2/ioctl_xfs_fssetxattr.2
+@@ -0,0 +1 @@
++.so man2/ioctl_xfs_fsgetxattr.2
+diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+index 462ccbd8..2992b5be 100644
+--- a/man/man3/xfsctl.3
++++ b/man/man3/xfsctl.3
+@@ -132,161 +132,17 @@ will fail with EINVAL.
+ All I/O requests are kept consistent with any data brought into
+ the cache with an access through a non-direct I/O file descriptor.
  
- #include "libxfs.h"
--#include <sys/mman.h>
- #include "command.h"
--#include "input.h"
--#include "init.h"
- #include "path.h"
- #include "space.h"
+-.TP
+-.B XFS_IOC_FSGETXATTR
+-Get additional attributes associated with files in XFS file systems.
+-The final argument points to a variable of type
+-.BR "struct fsxattr" ,
+-whose fields include:
+-.B fsx_xflags
+-(extended flag bits),
+-.B fsx_extsize
+-(nominal extent size in file system blocks),
+-.B fsx_nextents
+-(number of data extents in the file).
+-A
+-.B fsx_extsize
+-value returned indicates that a preferred extent size was previously
+-set on the file, a
+-.B fsx_extsize
+-of zero indicates that the defaults for that filesystem will be used.
+-A
+-.B fsx_cowextsize
+-value returned indicates that a preferred copy on write extent size was
+-previously set on the file, whereas a
+-.B fsx_cowextsize
+-of zero indicates that the defaults for that filesystem will be used.
+-The current default for
+-.B fsx_cowextsize
+-is 128 blocks.
+-Currently the meaningful bits for the
+-.B fsx_xflags
+-field are:
+-.PD 0
+-.RS
+-.TP 1.0i
+-.SM "Bit 0 (0x1) \- XFS_XFLAG_REALTIME"
+-The file is a realtime file.
+-.TP
+-.SM "Bit 1 (0x2) \- XFS_XFLAG_PREALLOC"
+-The file has preallocated space.
+-.TP
+-.SM "Bit 3 (0x8) \- XFS_XFLAG_IMMUTABLE"
+-The file is immutable - it cannot be modified, deleted or renamed,
+-no link can be created to this file and no data can be written to the
+-file.
+-Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
+-capability can set or clear this flag.
+-.TP
+-.SM "Bit 4 (0x10) \- XFS_XFLAG_APPEND"
+-The file is append-only - it can only be open in append mode for
+-writing.
+-Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
+-capability can set or clear this flag.
+-.TP
+-.SM "Bit 5 (0x20) \- XFS_XFLAG_SYNC"
+-All writes to the file are synchronous.
+-.TP
+-.SM "Bit 6 (0x40) \- XFS_XFLAG_NOATIME"
+-When the file is accessed, its atime record is not modified.
+-.TP
+-.SM "Bit 7 (0x80) \- XFS_XFLAG_NODUMP"
+-The file should be skipped by backup utilities.
+-.TP
+-.SM "Bit 8 (0x100) \- XFS_XFLAG_RTINHERIT"
+-Realtime inheritance bit - new files created in the directory
+-will be automatically realtime, and new directories created in
+-the directory will inherit the inheritance bit.
+-.TP
+-.SM "Bit 9 (0x200) \- XFS_XFLAG_PROJINHERIT"
+-Project inheritance bit - new files and directories created in
+-the directory will inherit the parents project ID.  New
+-directories also inherit the project inheritance bit.
+-.TP
+-.SM "Bit 10 (0x400) \- XFS_XFLAG_NOSYMLINKS"
+-Can only be set on a directory and disallows creation of
+-symbolic links in that directory.
+-.TP
+-.SM "Bit 11 (0x800) \- XFS_XFLAG_EXTSIZE"
+-Extent size bit - if a basic extent size value is set on the file
+-then the allocator will allocate in multiples of the set size for
+-this file (see
+-.B XFS_IOC_FSSETXATTR
+-below).
+-.TP
+-.SM "Bit 12 (0x1000) \- XFS_XFLAG_EXTSZINHERIT"
+-Extent size inheritance bit - new files and directories created in
+-the directory will inherit the parents basic extent size value (see
+-.B XFS_IOC_FSSETXATTR
+-below).
+-Can only be set on a directory.
+-.TP
+-.SM "Bit 13 (0x2000) \- XFS_XFLAG_NODEFRAG"
+-No defragment file bit - the file should be skipped during a defragmentation
+-operation. When applied to a directory, new files and directories created will
+-inherit the no\-defrag bit.
+-.TP
+-.SM "Bit 14 (0x4000) \- XFS_XFLAG_FILESTREAM"
+-Filestream allocator bit - allows a directory to reserve an allocation
+-group for exclusive use by files created within that directory. Files
+-being written in other directories will not use the same allocation
+-group and so files within different directories will not interleave
+-extents on disk. The reservation is only active while files are being
+-created and written into the directory.
+-.TP
+-.SM "Bit 15 (0x8000) \- XFS_XFLAG_DAX"
+-If the filesystem lives on directly accessible persistent memory, reads and
+-writes to this file will go straight to the persistent memory, bypassing the
+-page cache.
+-A file cannot be reflinked and have the
+-.BR XFS_XFLAG_DAX
+-set at the same time.
+-That is to say that DAX files cannot share blocks.
+-.TP
+-.SM "Bit 16 (0x10000) \- XFS_XFLAG_COWEXTSIZE"
+-Copy on Write Extent size bit - if a CoW extent size value is set on the file,
+-the allocator will allocate extents for staging a copy on write operation
+-in multiples of the set size for this file (see
+-.B XFS_IOC_FSSETXATTR
+-below).
+-If the CoW extent size is set on a directory, then new file and directories
+-created in the directory will inherit the parent's CoW extent size value.
+-.TP
+-.SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
+-The file has extended attributes associated with it.
+-.RE
+ .PP
+-.PD
+-
+-.TP
+-.B XFS_IOC_FSGETXATTRA
+-Identical to
++.nf
+ .B XFS_IOC_FSGETXATTR
+-except that the
+-.B fsx_nextents
+-field contains the number of attribute extents in the file.
+-
++.B XFS_IOC_FSGETXATTRA
++.fi
++.PD 0
+ .TP
+ .B XFS_IOC_FSSETXATTR
+-Set additional attributes associated with files in XFS file systems.
+-The final argument points to a variable of type
+-.BR "struct fsxattr" ,
+-but only the following fields are used in this call:
+-.BR fsx_xflags ,
+-.BR fsx_extsize ,
+-.BR fsx_cowextsize ,
+-and
+-.BR fsx_projid .
+-The
+-.B fsx_xflags
+-realtime file bit and the file's extent size may be changed only
+-when the file is empty, except in the case of a directory where
+-the extent size can be set at any time (this value is only used
+-for regular file allocations, so should only be set on a directory
+-in conjunction with the XFS_XFLAG_EXTSZINHERIT flag).
+-The copy on write extent size,
+-.BR fsx_cowextsize ,
+-can be set at any time.
++See
++.BR ioctl_xfs_fsgetxattr (2)
++for more information.
  
-diff --git a/spaceman/freesp.c b/spaceman/freesp.c
-index 11d0aaf..bfc4793 100644
---- a/spaceman/freesp.c
-+++ b/spaceman/freesp.c
-@@ -7,7 +7,6 @@
-  */
+ .TP
+ .B XFS_IOC_GETBMAP
+@@ -649,6 +505,7 @@ The remainder of these operations will not be described further
+ as they are not of general use to applications.
  
- #include "libxfs.h"
--#include <linux/fiemap.h>
- #include "command.h"
- #include "init.h"
- #include "path.h"
-diff --git a/spaceman/init.c b/spaceman/init.c
-index c845f92..ec0c22b 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -6,8 +6,6 @@
- 
- #include "libxfs.h"
- #include "command.h"
--#include "input.h"
--#include "init.h"
- #include "path.h"
- #include "space.h"
- 
-diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-index 85dfc9e..c8aa5bd 100644
---- a/spaceman/prealloc.c
-+++ b/spaceman/prealloc.c
-@@ -7,7 +7,6 @@
- #include "libxfs.h"
- #include "command.h"
- #include "input.h"
--#include "init.h"
- #include "path.h"
- #include "space.h"
- 
--- 
-1.8.3.1
+ .SH SEE ALSO
++.BR ioctl_xfs_fsgetxattr (2),
+ .BR fstatfs (2),
+ .BR statfs (2),
+ .BR xfs (5),
