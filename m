@@ -1,132 +1,90 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33268 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730102AbfFRVAN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 18 Jun 2019 17:00:13 -0400
-Date: Tue, 18 Jun 2019 13:59:36 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:44368 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726881AbfFTQvk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 12:51:40 -0400
+Subject: [PATCH 01/12] libfrog: don't set negative errno in conversion
+ functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: move xfs_ino_geometry to xfs_mount.h
-Message-ID: <20190618205935.GS5387@magnolia>
+Date: Thu, 20 Jun 2019 09:49:36 -0700
+Message-ID: <156104937602.1172531.10936665245404210667.stgit@magnolia>
+In-Reply-To: <156104936953.1172531.2121427277342917243.stgit@magnolia>
+References: <156104936953.1172531.2121427277342917243.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The inode geometry structure isn't related to ondisk format; it's
-support for the mount structure.  Move it to xfs_mount.h.
+Don't set errno to a negative value when we're converting integers.
+That's a kernel thing; this is userspace.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_format.h |   41 -----------------------------------------
- fs/xfs/xfs_mount.h         |   42 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 42 insertions(+), 41 deletions(-)
+ libfrog/convert.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_format.h b/fs/xfs/libxfs/xfs_format.h
-index 5729474e362f..c968b60cee15 100644
---- a/fs/xfs/libxfs/xfs_format.h
-+++ b/fs/xfs/libxfs/xfs_format.h
-@@ -1694,45 +1694,4 @@ struct xfs_acl {
- #define SGI_ACL_FILE_SIZE	(sizeof(SGI_ACL_FILE)-1)
- #define SGI_ACL_DEFAULT_SIZE	(sizeof(SGI_ACL_DEFAULT)-1)
+
+diff --git a/libfrog/convert.c b/libfrog/convert.c
+index ed4cae7f..62397507 100644
+--- a/libfrog/convert.c
++++ b/libfrog/convert.c
+@@ -47,7 +47,7 @@ cvt_s64(
+ 		return i;
  
--struct xfs_ino_geometry {
--	/* Maximum inode count in this filesystem. */
--	uint64_t	maxicount;
--
--	/* Actual inode cluster buffer size, in bytes. */
--	unsigned int	inode_cluster_size;
--
--	/*
--	 * Desired inode cluster buffer size, in bytes.  This value is not
--	 * rounded up to at least one filesystem block, which is necessary for
--	 * the sole purpose of validating sb_spino_align.  Runtime code must
--	 * only ever use inode_cluster_size.
--	 */
--	unsigned int	inode_cluster_size_raw;
--
--	/* Inode cluster sizes, adjusted to be at least 1 fsb. */
--	unsigned int	inodes_per_cluster;
--	unsigned int	blocks_per_cluster;
--
--	/* Inode cluster alignment. */
--	unsigned int	cluster_align;
--	unsigned int	cluster_align_inodes;
--	unsigned int	inoalign_mask;	/* mask sb_inoalignmt if used */
--
--	unsigned int	inobt_mxr[2]; /* max inobt btree records */
--	unsigned int	inobt_mnr[2]; /* min inobt btree records */
--	unsigned int	inobt_maxlevels; /* max inobt btree levels. */
--
--	/* Size of inode allocations under normal operation. */
--	unsigned int	ialloc_inos;
--	unsigned int	ialloc_blks;
--
--	/* Minimum inode blocks for a sparse allocation. */
--	unsigned int	ialloc_min_blks;
--
--	/* stripe unit inode alignment */
--	unsigned int	ialloc_align;
--
--	unsigned int	agino_log;	/* #bits for agino in inum */
--};
--
- #endif /* __XFS_FORMAT_H__ */
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 448986d260dd..7591c1b70e84 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -57,6 +57,48 @@ struct xfs_error_cfg {
- 	long		retry_timeout;	/* in jiffies, -1 = infinite */
- };
+ 	/* Not all the input was consumed, return error. */
+-	errno = -ERANGE;
++	errno = ERANGE;
+ 	return INT64_MIN;
+ }
  
-+/* Computed inode geometry for the filesystem. */
-+struct xfs_ino_geometry {
-+	/* Maximum inode count in this filesystem. */
-+	uint64_t	maxicount;
-+
-+	/* Actual inode cluster buffer size, in bytes. */
-+	unsigned int	inode_cluster_size;
-+
-+	/*
-+	 * Desired inode cluster buffer size, in bytes.  This value is not
-+	 * rounded up to at least one filesystem block, which is necessary for
-+	 * the sole purpose of validating sb_spino_align.  Runtime code must
-+	 * only ever use inode_cluster_size.
-+	 */
-+	unsigned int	inode_cluster_size_raw;
-+
-+	/* Inode cluster sizes, adjusted to be at least 1 fsb. */
-+	unsigned int	inodes_per_cluster;
-+	unsigned int	blocks_per_cluster;
-+
-+	/* Inode cluster alignment. */
-+	unsigned int	cluster_align;
-+	unsigned int	cluster_align_inodes;
-+	unsigned int	inoalign_mask;	/* mask sb_inoalignmt if used */
-+
-+	unsigned int	inobt_mxr[2]; /* max inobt btree records */
-+	unsigned int	inobt_mnr[2]; /* min inobt btree records */
-+	unsigned int	inobt_maxlevels; /* max inobt btree levels. */
-+
-+	/* Size of inode allocations under normal operation. */
-+	unsigned int	ialloc_inos;
-+	unsigned int	ialloc_blks;
-+
-+	/* Minimum inode blocks for a sparse allocation. */
-+	unsigned int	ialloc_min_blks;
-+
-+	/* stripe unit inode alignment */
-+	unsigned int	ialloc_align;
-+
-+	unsigned int	agino_log;	/* #bits for agino in inum */
-+};
-+
- typedef struct xfs_mount {
- 	struct super_block	*m_super;
- 	xfs_tid_t		m_tid;		/* next unused tid for fs */
+@@ -68,7 +68,7 @@ cvt_s32(
+ 	if (errno)
+ 		return i;
+ 	if (i > INT32_MAX || i < INT32_MIN) {
+-		errno = -ERANGE;
++		errno = ERANGE;
+ 		return INT32_MIN;
+ 	}
+ 	return i;
+@@ -91,7 +91,7 @@ cvt_s16(
+ 	if (errno)
+ 		return i;
+ 	if (i > INT16_MAX || i < INT16_MIN) {
+-		errno = -ERANGE;
++		errno = ERANGE;
+ 		return INT16_MIN;
+ 	}
+ 	return i;
+@@ -123,7 +123,7 @@ cvt_u64(
+ 		return i;
+ 
+ 	/* Not all the input was consumed, return error. */
+-	errno = -ERANGE;
++	errno = ERANGE;
+ 	return UINT64_MAX;
+ }
+ 
+@@ -144,7 +144,7 @@ cvt_u32(
+ 	if (errno)
+ 		return i;
+ 	if (i > UINT32_MAX) {
+-		errno = -ERANGE;
++		errno = ERANGE;
+ 		return UINT32_MAX;
+ 	}
+ 	return i;
+@@ -167,7 +167,7 @@ cvt_u16(
+ 	if (errno)
+ 		return i;
+ 	if (i > UINT16_MAX) {
+-		errno = -ERANGE;
++		errno = ERANGE;
+ 		return UINT16_MAX;
+ 	}
+ 	return i;
