@@ -1,159 +1,171 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:36350 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726250AbfFUI5z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 04:57:55 -0400
-Date: Fri, 21 Jun 2019 16:57:48 +0800
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:42261 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726232AbfFUJS5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 05:18:57 -0400
+Date: Fri, 21 Jun 2019 17:18:51 +0800
 From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH 2/4] xfs: rework min log size helper
-Message-ID: <20190621085748.GH15846@desktop>
+Subject: Re: [PATCH 3/4] xfs/016: calculate minimum log size and end locations
+Message-ID: <20190621091851.GI15846@desktop>
 References: <156089201978.345809.17444450351199726553.stgit@magnolia>
- <156089203509.345809.3448903728041546348.stgit@magnolia>
+ <156089204146.345809.516891823391869532.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156089203509.345809.3448903728041546348.stgit@magnolia>
+In-Reply-To: <156089204146.345809.516891823391869532.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Tue, Jun 18, 2019 at 02:07:15PM -0700, Darrick J. Wong wrote:
+On Tue, Jun 18, 2019 at 02:07:21PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The recent _scratch_find_xfs_min_logblocks helper has a major thinko in
-> it -- it relies on feeding a too-small size to _scratch_do_mkfs so that
-> mkfs will tell us the minimum log size.  Unfortunately, _scratch_do_mkfs
-> will see that first failure and retry the mkfs without MKFS_OPTIONS,
-> which means that we return the minimum log size for the default mkfs
-> settings without MKFS_OPTIONS.
+> xfs/016 looks for corruption in the log when the log wraps.  However,
+> it hardcodes the minimum log size and the "95%" point where it wants to
+> start the "nudge and check for corruption" part of the test.  New
+> features require larger logs, which causes the test to fail when it
+> can't mkfs with the smaller log size and when that 95% point doesn't put
+> us within 20x "_log_traffic 2"s of the end of the log.
 > 
-> This is a problem if someone's running fstests with a set of
-> MKFS_OPTIONS that affects the minimum log size.  To fix this, open-code
-> the _scratch_do_mkfs retry behavior so that we only do the "retry
-> without MKFS_OPTIONS" behavior if the mkfs failed for a reason other
-> than the minimum log size check.
+> Fix the first problem by using the new min log size helper and replace
+> the 95% figure with an estimate of where we need to be to guarantee that
+> the 20x loop wraps the log.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/rc  |   13 ++++++++++---
->  common/xfs |   23 +++++++++++++++++++++--
->  2 files changed, 31 insertions(+), 5 deletions(-)
-> 
-> 
-> diff --git a/common/rc b/common/rc
-> index 25203bb4..a38b7f02 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -438,6 +438,14 @@ _scratch_mkfs_options()
->      echo $SCRATCH_OPTIONS $MKFS_OPTIONS $* $SCRATCH_DEV
->  }
->  
-> +# Format the scratch device directly.  First argument is the mkfs command.
-> +# Second argument are all the parameters.  stdout goes to $tmp.mkfsstd and
-> +# stderr goes to $tmp.mkfserr.
-> +__scratch_do_mkfs()
-> +{
-> +	eval "$1 $2 $SCRATCH_DEV" 2>$tmp.mkfserr 1>$tmp.mkfsstd
 
-I'd prefer leaving stdout and stderr to caller to handle, because ..
+Call for reviews from other XFS folks :)
 
+Thanks!
 
-> +}
-> +
->  # Do the actual mkfs work on SCRATCH_DEV. Firstly mkfs with both MKFS_OPTIONS
->  # and user specified mkfs options, if that fails (due to conflicts between mkfs
->  # options), do a second mkfs with only user provided mkfs options.
-> @@ -456,8 +464,7 @@ _scratch_do_mkfs()
->  
->  	# save mkfs output in case conflict means we need to run again.
->  	# only the output for the mkfs that applies should be shown
-> -	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
-> -		2>$tmp.mkfserr 1>$tmp.mkfsstd
-
-it's easier to know the $tmp.mkfserr and $tmp.mkfsstd files should be
-cleaned up, otherwise it's not that clear where these files come from.
-
-> +	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
->  	mkfs_status=$?
->  
->  	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
-> @@ -471,7 +478,7 @@ _scratch_do_mkfs()
->  		) >> $seqres.full
->  
->  		# running mkfs again. overwrite previous mkfs output files
-> -		eval "$mkfs_cmd $extra_mkfs_options $SCRATCH_DEV" \
-> +		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options" \
->  			2>$tmp.mkfserr 1>$tmp.mkfsstd
-
-With the implemention in the patch, the "2>$tmp.mkfserr 1>$tmp.mkfsstd"
-part should be removed too, but with the suggested implemention we can
-keep it :)
-
->  		mkfs_status=$?
->  	fi
-> diff --git a/common/xfs b/common/xfs
-> index f8dafc6c..8733e2ae 100644
-> --- a/common/xfs
-> +++ b/common/xfs
-> @@ -87,16 +87,33 @@ _scratch_find_xfs_min_logblocks()
->  	# minimum log size.
->  	local XFS_MIN_LOG_BYTES=2097152
->  
-> -	_scratch_do_mkfs "$mkfs_cmd" "cat" $* -N -l size=$XFS_MIN_LOG_BYTES \
-> -		2>$tmp.mkfserr 1>$tmp.mkfsstd
-> +	# Try formatting the filesystem with all the options given and the
-> +	# minimum log size.  We hope either that this succeeds or that mkfs
-> +	# tells us the required minimum log size for the feature set.
-> +	#
-> +	# We cannot use _scratch_do_mkfs because it will retry /any/ failed
-> +	# mkfs with MKFS_OPTIONS removed even if the only "failure" was that
-> +	# the log was too small.
-> +	local extra_mkfs_options="$* -N -l size=$XFS_MIN_LOG_BYTES"
-> +	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
->  	local mkfs_status=$?
->  
-> +	# If the format fails for a reason other than the log being too small,
-> +	# try again without MKFS_OPTIONS because that's what _scratch_do_mkfs
-> +	# will do if we pass in the log size option.
-> +	if [ $mkfs_status -ne 0 ] &&
-> +	   ! grep -q 'log size.*too small, minimum' $tmp.mkfserr; then
-> +		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options"
-> +		local mkfs_status=$?
-
-We've already declared mkfs_status as local, no need to do it again
-here.
-
-Thanks,
 Eryu
 
-> +	fi
+> ---
+>  tests/xfs/016     |   50 ++++++++++++++++++++++++++++++++++++++------------
+>  tests/xfs/016.out |    1 +
+>  2 files changed, 39 insertions(+), 12 deletions(-)
+> 
+> 
+> diff --git a/tests/xfs/016 b/tests/xfs/016
+> index 3407a4b1..aed37dca 100755
+> --- a/tests/xfs/016
+> +++ b/tests/xfs/016
+> @@ -44,10 +44,21 @@ _block_filter()
+>  
+>  _init()
+>  {
+> +    echo "*** determine log size"
+> +    local sz_mb=50
+> +    local dsize="-d size=${sz_mb}m"
+> +    local lsize="-l size=$(_scratch_find_xfs_min_logblocks $dsize)b"
+> +    local force_opts="$dsize $lsize"
+> +    _scratch_mkfs_xfs $force_opts >> $seqres.full 2>&1
 > +
->  	# mkfs suceeded, so we must pick out the log block size to do the
->  	# unit conversion
->  	if [ $mkfs_status -eq 0 ]; then
->  		local blksz="$(grep '^log.*bsize' $tmp.mkfsstd | \
->  			sed -e 's/log.*bsize=\([0-9]*\).*$/\1/g')"
->  		echo $((XFS_MIN_LOG_BYTES / blksz))
-> +		rm -f $tmp.mkfsstd $tmp.mkfserr
->  		return
->  	fi
->  
-> @@ -104,6 +121,7 @@ _scratch_find_xfs_min_logblocks()
->  	if grep -q 'minimum size is' $tmp.mkfserr; then
->  		grep 'minimum size is' $tmp.mkfserr | \
->  			sed -e 's/^.*minimum size is \([0-9]*\) blocks/\1/g'
-> +		rm -f $tmp.mkfsstd $tmp.mkfserr
->  		return
->  	fi
->  
-> @@ -111,6 +129,7 @@ _scratch_find_xfs_min_logblocks()
->  	echo "Cannot determine minimum log size" >&2
->  	cat $tmp.mkfsstd >> $seqres.full
->  	cat $tmp.mkfserr >> $seqres.full
-> +	rm -f $tmp.mkfsstd $tmp.mkfserr
+> +    # set log_size and log_size_bb globally
+> +    log_size_bb=`_log_size`
+> +    log_size=$((log_size_bb * 512))
+> +    echo "log_size_bb = $log_size_bb log_size = $log_size" >> $seqres.full
+> +
+>      echo "*** reset partition"
+> -    $here/src/devzero -b 2048 -n 50 -v 198 $SCRATCH_DEV
+> +    $here/src/devzero -b 2048 -n $sz_mb -v 198 $SCRATCH_DEV # write 0xc6
+>      echo "*** mkfs"
+> -    force_opts="-dsize=50m -lsize=$log_size"
+>      #
+>      # Do not discard blocks as we check for patterns in free space.
+>      # 
+> @@ -65,6 +76,9 @@ _init()
+>      . $tmp.mkfs
+>      [ $logsunit -ne 0 ] && \
+>          _notrun "Cannot run this test using log MKFS_OPTIONS specified"
+> +
+> +    # quotas generate extra log traffic so force it off
+> +    _qmount_option noquota
 >  }
 >  
->  _scratch_mkfs_xfs()
+>  _log_traffic()
+> @@ -157,6 +171,7 @@ _check_corrupt()
+>  # get standard environment, filters and checks
+>  . ./common/rc
+>  . ./common/filter
+> +. ./common/quota
+>  
+>  # real QA test starts here
+>  _supported_fs xfs
+> @@ -164,10 +179,6 @@ _supported_os Linux
+>  
+>  rm -f $seqres.full
+>  
+> -# mkfs sizes
+> -log_size=3493888
+> -log_size_bb=`expr $log_size / 512`
+> -
+>  _require_scratch
+>  _init
+>  
+> @@ -188,18 +199,29 @@ echo "log sunit = $lsunit"			>>$seqres.full
+>  [ $head -eq 2 -o $head -eq $((lsunit/512)) ] || \
+>      _fail "!!! unexpected initial log position $head vs. $((lsunit/512))"
+>  
+> -# find how how many blocks per op for 100 ops
+> +# find how how many blocks per op for 200 ops
+>  # ignore the fact that it will also include an unmount record etc...
+>  # this should be small overall
+>  echo "    lots of traffic for sampling" >>$seqres.full
+> -sample_size_ops=100
+> +sample_size_ops=200
+>  _log_traffic $sample_size_ops
+>  head1=`_log_head`
+>  num_blocks=`expr $head1 - $head`
+>  blocks_per_op=`echo "scale=3; $num_blocks / $sample_size_ops" | bc`
+> +echo "log position = $head1; old log position: $head" >> $seqres.full
+>  echo "blocks_per_op = $blocks_per_op" >>$seqres.full
+> -num_expected_ops=`echo "$log_size_bb / $blocks_per_op" | bc`
+> +
+> +# Since this is a log wrapping test, it's critical to push the log head to
+> +# the point where it will wrap around within twenty rounds of log traffic.
+> +near_end_min=$(echo "$log_size_bb - (10 * $blocks_per_op / 1)" | bc)
+> +echo "near_end_min = $near_end_min" >>$seqres.full
+> +
+> +# Estimate the number of ops needed to get the log head close to but not past
+> +# near_end_min.  We'd rather fall short and have to step our way closer to the
+> +# end than run past the end.
+> +num_expected_ops=$(( 8 * $(echo "$log_size_bb / $blocks_per_op" | bc) / 10))
+>  echo "num_expected_ops = $num_expected_ops" >>$seqres.full
+> +
+>  num_expected_to_go=`echo "$num_expected_ops - $sample_size_ops" | bc`
+>  echo "num_expected_to_go = $num_expected_to_go" >>$seqres.full
+>  
+> @@ -208,13 +230,17 @@ _log_traffic $num_expected_to_go
+>  head=`_log_head`
+>  echo "log position = $head"                     >>$seqres.full
+>  
+> -# e.g. 3891
+> -near_end_min=`echo "0.95 * $log_size_bb" | bc | sed 's/\..*//'`
+> -echo "near_end_min = $near_end_min" >>$seqres.full
+> +# If we fell short of near_end_min, step our way towards it.
+> +while [ $head -lt $near_end_min ]; do
+> +	echo "    bump traffic from $head towards $near_end_min" >> $seqres.full
+> +	_log_traffic 10 > /dev/null 2>&1
+> +	head=$(_log_head)
+> +done
+>  
+>  [ $head -gt $near_end_min -a $head -lt $log_size_bb ] || \
+>      _fail "!!! unexpected near end log position $head"
+>  
+> +# Try to wrap the log, checking for corruption with each advance.
+>  for c in `seq 0 20`
+>  do
+>      echo "   little traffic"            >>$seqres.full
+> diff --git a/tests/xfs/016.out b/tests/xfs/016.out
+> index f7844cdf..f4c8f88d 100644
+> --- a/tests/xfs/016.out
+> +++ b/tests/xfs/016.out
+> @@ -1,4 +1,5 @@
+>  QA output created by 016
+> +*** determine log size
+>  *** reset partition
+>  Wrote 51200.00Kb (value 0xc6)
+>  *** mkfs
 > 
