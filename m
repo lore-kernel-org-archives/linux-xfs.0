@@ -1,67 +1,257 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55092 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726002AbfFUNjp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 21 Jun 2019 09:39:45 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v14 5/7] dax: check synchronous mapping is supported
-Date: Fri, 21 Jun 2019 19:04:53 +0530
-Message-Id: <20190621133455.3303-6-pagupta@redhat.com>
-In-Reply-To: <20190621133455.3303-1-pagupta@redhat.com>
-References: <20190621133455.3303-1-pagupta@redhat.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:37862 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726134AbfFUX6U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:58:20 -0400
+Date: Fri, 21 Jun 2019 16:58:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 02/11] xfs: move small allocation helper
+Message-ID: <20190621235806.GA5387@magnolia>
+References: <20190522180546.17063-1-bfoster@redhat.com>
+ <20190522180546.17063-3-bfoster@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190522180546.17063-3-bfoster@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-This patch introduces 'daxdev_mapping_supported' helper
-which checks if 'MAP_SYNC' is supported with filesystem
-mapping. It also checks if corresponding dax_device is
-synchronous. Virtio pmem device is asynchronous and
-does not not support VM_SYNC.
+On Wed, May 22, 2019 at 02:05:37PM -0400, Brian Foster wrote:
+> Move the small allocation helper further up in the file to avoid the
+> need for a function declaration. The remaining declarations will be
+> removed by followup patches. No functional changes.
+> 
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Suggested-by: Jan Kara <jack@suse.cz>
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- include/linux/dax.h | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-diff --git a/include/linux/dax.h b/include/linux/dax.h
-index 86fc55c99b58..d1bea3979b5a 100644
---- a/include/linux/dax.h
-+++ b/include/linux/dax.h
-@@ -53,6 +53,18 @@ static inline void set_dax_synchronous(struct dax_device *dax_dev)
- {
- 	__set_dax_synchronous(dax_dev);
- }
-+/*
-+ * Check if given mapping is supported by the file / underlying device.
-+ */
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+					     struct dax_device *dax_dev)
-+{
-+	if (!(vma->vm_flags & VM_SYNC))
-+		return true;
-+	if (!IS_DAX(file_inode(vma->vm_file)))
-+		return false;
-+	return dax_synchronous(dax_dev);
-+}
- #else
- static inline struct dax_device *dax_get_by_host(const char *host)
- {
-@@ -87,6 +99,11 @@ static inline bool dax_synchronous(struct dax_device *dax_dev)
- static inline void set_dax_synchronous(struct dax_device *dax_dev)
- {
- }
-+static inline bool daxdev_mapping_supported(struct vm_area_struct *vma,
-+				struct dax_device *dax_dev)
-+{
-+	return !(vma->vm_flags & VM_SYNC);
-+}
- #endif
- 
- struct writeback_control;
--- 
-2.20.1
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 192 +++++++++++++++++++-------------------
+>  1 file changed, 95 insertions(+), 97 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 9751531d3000..b345fe771c54 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -41,8 +41,6 @@ struct workqueue_struct *xfs_alloc_wq;
+>  STATIC int xfs_alloc_ag_vextent_exact(xfs_alloc_arg_t *);
+>  STATIC int xfs_alloc_ag_vextent_near(xfs_alloc_arg_t *);
+>  STATIC int xfs_alloc_ag_vextent_size(xfs_alloc_arg_t *);
+> -STATIC int xfs_alloc_ag_vextent_small(xfs_alloc_arg_t *,
+> -		xfs_btree_cur_t *, xfs_agblock_t *, xfs_extlen_t *, int *);
+>  
+>  /*
+>   * Size of the AGFL.  For CRC-enabled filesystes we steal a couple of slots in
+> @@ -699,6 +697,101 @@ xfs_alloc_update_counters(
+>   * Allocation group level functions.
+>   */
+>  
+> +/*
+> + * Deal with the case where only small freespaces remain. Either return the
+> + * contents of the last freespace record, or allocate space from the freelist if
+> + * there is nothing in the tree.
+> + */
+> +STATIC int			/* error */
+> +xfs_alloc_ag_vextent_small(
+> +	struct xfs_alloc_arg	*args,	/* allocation argument structure */
+> +	struct xfs_btree_cur	*ccur,	/* optional by-size cursor */
+> +	xfs_agblock_t		*fbnop,	/* result block number */
+> +	xfs_extlen_t		*flenp,	/* result length */
+> +	int			*stat)	/* status: 0-freelist, 1-normal/none */
+> +{
+> +	int			error = 0;
+> +	xfs_agblock_t		fbno = NULLAGBLOCK;
+> +	xfs_extlen_t		flen = 0;
+> +	int			i;
+> +
+> +	error = xfs_btree_decrement(ccur, 0, &i);
+> +	if (error)
+> +		goto error;
+> +	if (i) {
+> +		error = xfs_alloc_get_rec(ccur, &fbno, &flen, &i);
+> +		if (error)
+> +			goto error;
+> +		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error);
+> +		goto out;
+> +	}
+> +
+> +	if (args->minlen != 1 || args->alignment != 1 ||
+> +	    args->resv == XFS_AG_RESV_AGFL ||
+> +	    (be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_flcount) <=
+> +	     args->minleft))
+> +		goto out;
+> +
+> +	error = xfs_alloc_get_freelist(args->tp, args->agbp, &fbno, 0);
+> +	if (error)
+> +		goto error;
+> +	if (fbno == NULLAGBLOCK)
+> +		goto out;
+> +
+> +	xfs_extent_busy_reuse(args->mp, args->agno, fbno, 1,
+> +			      xfs_alloc_allow_busy_reuse(args->datatype));
+> +
+> +	if (xfs_alloc_is_userdata(args->datatype)) {
+> +		struct xfs_buf	*bp;
+> +
+> +		bp = xfs_btree_get_bufs(args->mp, args->tp, args->agno, fbno,
+> +					0);
+> +		if (!bp) {
+> +			error = -EFSCORRUPTED;
+> +			goto error;
+> +		}
+> +		xfs_trans_binval(args->tp, bp);
+> +	}
+> +	args->len = 1;
+> +	args->agbno = fbno;
+> +	XFS_WANT_CORRUPTED_GOTO(args->mp,
+> +		fbno < be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length),
+> +		error);
+> +	args->wasfromfl = 1;
+> +	trace_xfs_alloc_small_freelist(args);
+> +
+> +	/*
+> +	 * If we're feeding an AGFL block to something that doesn't live in the
+> +	 * free space, we need to clear out the OWN_AG rmap.
+> +	 */
+> +	error = xfs_rmap_free(args->tp, args->agbp, args->agno, fbno, 1,
+> +			      &XFS_RMAP_OINFO_AG);
+> +	if (error)
+> +		goto error;
+> +
+> +	*stat = 0;
+> +	return 0;
+> +
+> +out:
+> +	/*
+> +	 * Can't do the allocation, give up.
+> +	 */
+> +	if (flen < args->minlen) {
+> +		args->agbno = NULLAGBLOCK;
+> +		trace_xfs_alloc_small_notenough(args);
+> +		flen = 0;
+> +	}
+> +	*fbnop = fbno;
+> +	*flenp = flen;
+> +	*stat = 1;
+> +	trace_xfs_alloc_small_done(args);
+> +	return 0;
+> +
+> +error:
+> +	trace_xfs_alloc_small_error(args);
+> +	return error;
+> +}
+> +
+>  /*
+>   * Allocate a variable extent in the allocation group agno.
+>   * Type and bno are used to determine where in the allocation group the
+> @@ -1582,101 +1675,6 @@ xfs_alloc_ag_vextent_size(
+>  	return 0;
+>  }
+>  
+> -/*
+> - * Deal with the case where only small freespaces remain. Either return the
+> - * contents of the last freespace record, or allocate space from the freelist if
+> - * there is nothing in the tree.
+> - */
+> -STATIC int			/* error */
+> -xfs_alloc_ag_vextent_small(
+> -	struct xfs_alloc_arg	*args,	/* allocation argument structure */
+> -	struct xfs_btree_cur	*ccur,	/* optional by-size cursor */
+> -	xfs_agblock_t		*fbnop,	/* result block number */
+> -	xfs_extlen_t		*flenp,	/* result length */
+> -	int			*stat)	/* status: 0-freelist, 1-normal/none */
+> -{
+> -	int			error = 0;
+> -	xfs_agblock_t		fbno = NULLAGBLOCK;
+> -	xfs_extlen_t		flen = 0;
+> -	int			i;
+> -
+> -	error = xfs_btree_decrement(ccur, 0, &i);
+> -	if (error)
+> -		goto error;
+> -	if (i) {
+> -		error = xfs_alloc_get_rec(ccur, &fbno, &flen, &i);
+> -		if (error)
+> -			goto error;
+> -		XFS_WANT_CORRUPTED_GOTO(args->mp, i == 1, error);
+> -		goto out;
+> -	}
+> -
+> -	if (args->minlen != 1 || args->alignment != 1 ||
+> -	    args->resv == XFS_AG_RESV_AGFL ||
+> -	    (be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_flcount) <=
+> -	     args->minleft))
+> -		goto out;
+> -
+> -	error = xfs_alloc_get_freelist(args->tp, args->agbp, &fbno, 0);
+> -	if (error)
+> -		goto error;
+> -	if (fbno == NULLAGBLOCK)
+> -		goto out;
+> -
+> -	xfs_extent_busy_reuse(args->mp, args->agno, fbno, 1,
+> -			      xfs_alloc_allow_busy_reuse(args->datatype));
+> -
+> -	if (xfs_alloc_is_userdata(args->datatype)) {
+> -		struct xfs_buf	*bp;
+> -
+> -		bp = xfs_btree_get_bufs(args->mp, args->tp, args->agno, fbno,
+> -					0);
+> -		if (!bp) {
+> -			error = -EFSCORRUPTED;
+> -			goto error;
+> -		}
+> -		xfs_trans_binval(args->tp, bp);
+> -	}
+> -	args->len = 1;
+> -	args->agbno = fbno;
+> -	XFS_WANT_CORRUPTED_GOTO(args->mp,
+> -		fbno < be32_to_cpu(XFS_BUF_TO_AGF(args->agbp)->agf_length),
+> -		error);
+> -	args->wasfromfl = 1;
+> -	trace_xfs_alloc_small_freelist(args);
+> -
+> -	/*
+> -	 * If we're feeding an AGFL block to something that doesn't live in the
+> -	 * free space, we need to clear out the OWN_AG rmap.
+> -	 */
+> -	error = xfs_rmap_free(args->tp, args->agbp, args->agno, fbno, 1,
+> -			      &XFS_RMAP_OINFO_AG);
+> -	if (error)
+> -		goto error;
+> -
+> -	*stat = 0;
+> -	return 0;
+> -
+> -out:
+> -	/*
+> -	 * Can't do the allocation, give up.
+> -	 */
+> -	if (flen < args->minlen) {
+> -		args->agbno = NULLAGBLOCK;
+> -		trace_xfs_alloc_small_notenough(args);
+> -		flen = 0;
+> -	}
+> -	*fbnop = fbno;
+> -	*flenp = flen;
+> -	*stat = 1;
+> -	trace_xfs_alloc_small_done(args);
+> -	return 0;
+> -
+> -error:
+> -	trace_xfs_alloc_small_error(args);
+> -	return error;
+> -}
+> -
+>  /*
+>   * Free the extent starting at agno/bno for length.
+>   */
+> -- 
+> 2.17.2
+> 
