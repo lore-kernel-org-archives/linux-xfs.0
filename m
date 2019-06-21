@@ -1,175 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50626 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727048AbfFXFxK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:10 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 04/12] xfs: initialize ioma->flags in xfs_bmbt_to_iomap
-Date: Mon, 24 Jun 2019 07:52:45 +0200
-Message-Id: <20190624055253.31183-5-hch@lst.de>
-In-Reply-To: <20190624055253.31183-1-hch@lst.de>
-References: <20190624055253.31183-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:45332 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726017AbfFUQz4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 12:55:56 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5LGiE6b156579
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 16:55:54 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2t7809qhc9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 16:55:54 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5LGsYak161618
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 16:55:53 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2t77yq26bw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 16:55:53 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5LGtqmS026005
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 16:55:52 GMT
+Subject: Re: [PATCH 2/2] xfs: account for log space when formatting new AGs
+References: <156105616866.1200596.7212155126558008316.stgit@magnolia>
+ <156105618181.1200596.7381990220006852218.stgit@magnolia>
+From: Allison Collins <allison.henderson@oracle.com>
+Message-ID: <7f19d19c-8291-57c4-709b-4716fa9db994@oracle.com>
+Date: Fri, 21 Jun 2019 09:55:51 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <156105618181.1200596.7381990220006852218.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Currently we don't overwrite the flags field in the iomap in
-xfs_bmbt_to_iomap.  This works fine with 0-initialized iomaps on stack,
-but is harmful once we want to be able to reuse an iomap in the
-writeback code.  Replace the shared paramter with a set of initial
-flags an thus ensures the flags field is always reinitialized.
+On 6/20/19 11:43 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When we're writing out a fresh new AG, make sure that we don't list an
+> internal log as free and that we create the rmap for the region.  growfs
+> never does this, but we will need it when we hook up mkfs.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Looks ok to me.  Thanks for the comments they help!
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_iomap.c | 28 +++++++++++++++++-----------
- fs/xfs/xfs_iomap.h |  2 +-
- fs/xfs/xfs_pnfs.c  |  2 +-
- 3 files changed, 19 insertions(+), 13 deletions(-)
-
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 63d323916bba..6b29452bfba0 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -57,7 +57,7 @@ xfs_bmbt_to_iomap(
- 	struct xfs_inode	*ip,
- 	struct iomap		*iomap,
- 	struct xfs_bmbt_irec	*imap,
--	bool			shared)
-+	u16			flags)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
- 
-@@ -82,12 +82,11 @@ xfs_bmbt_to_iomap(
- 	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
- 	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
- 	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
-+	iomap->flags = flags;
- 
- 	if (xfs_ipincount(ip) &&
- 	    (ip->i_itemp->ili_fsync_fields & ~XFS_ILOG_TIMESTAMP))
- 		iomap->flags |= IOMAP_F_DIRTY;
--	if (shared)
--		iomap->flags |= IOMAP_F_SHARED;
- 	return 0;
- }
- 
-@@ -543,6 +542,7 @@ xfs_file_iomap_begin_delay(
- 	struct xfs_iext_cursor	icur, ccur;
- 	xfs_fsblock_t		prealloc_blocks = 0;
- 	bool			eof = false, cow_eof = false, shared = false;
-+	u16			iomap_flags = 0;
- 	int			whichfork = XFS_DATA_FORK;
- 	int			error = 0;
- 
-@@ -710,7 +710,7 @@ xfs_file_iomap_begin_delay(
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
- 	 */
--	iomap->flags |= IOMAP_F_NEW;
-+	iomap_flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, count, whichfork,
- 			whichfork == XFS_DATA_FORK ? &imap : &cmap);
- done:
-@@ -718,14 +718,17 @@ xfs_file_iomap_begin_delay(
- 		if (imap.br_startoff > offset_fsb) {
- 			xfs_trim_extent(&cmap, offset_fsb,
- 					imap.br_startoff - offset_fsb);
--			error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
-+			error = xfs_bmbt_to_iomap(ip, iomap, &cmap,
-+					IOMAP_F_SHARED);
- 			goto out_unlock;
- 		}
- 		/* ensure we only report blocks we have a reservation for */
- 		xfs_trim_extent(&imap, cmap.br_startoff, cmap.br_blockcount);
- 		shared = true;
- 	}
--	error = xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
-+	if (shared)
-+		iomap_flags |= IOMAP_F_SHARED;
-+	error = xfs_bmbt_to_iomap(ip, iomap, &imap, iomap_flags);
- out_unlock:
- 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	return error;
-@@ -933,6 +936,7 @@ xfs_file_iomap_begin(
- 	xfs_fileoff_t		offset_fsb, end_fsb;
- 	int			nimaps = 1, error = 0;
- 	bool			shared = false;
-+	u16			iomap_flags = 0;
- 	unsigned		lockmode;
- 
- 	if (XFS_FORCED_SHUTDOWN(mp))
-@@ -1048,11 +1052,13 @@ xfs_file_iomap_begin(
- 	if (error)
- 		return error;
- 
--	iomap->flags |= IOMAP_F_NEW;
-+	iomap_flags |= IOMAP_F_NEW;
- 	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, &imap);
- 
- out_finish:
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
-+	if (shared)
-+		iomap_flags |= IOMAP_F_SHARED;
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, iomap_flags);
- 
- out_found:
- 	ASSERT(nimaps);
-@@ -1196,7 +1202,7 @@ xfs_seek_iomap_begin(
- 		if (data_fsb < cow_fsb + cmap.br_blockcount)
- 			end_fsb = min(end_fsb, data_fsb);
- 		xfs_trim_extent(&cmap, offset_fsb, end_fsb);
--		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, true);
-+		error = xfs_bmbt_to_iomap(ip, iomap, &cmap, IOMAP_F_SHARED);
- 		/*
- 		 * This is a COW extent, so we must probe the page cache
- 		 * because there could be dirty page cache being backed
-@@ -1218,7 +1224,7 @@ xfs_seek_iomap_begin(
- 	imap.br_state = XFS_EXT_NORM;
- done:
- 	xfs_trim_extent(&imap, offset_fsb, end_fsb);
--	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-+	error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0);
- out_unlock:
- 	xfs_iunlock(ip, lockmode);
- 	return error;
-@@ -1264,7 +1270,7 @@ xfs_xattr_iomap_begin(
- 	if (error)
- 		return error;
- 	ASSERT(nimaps);
--	return xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-+	return xfs_bmbt_to_iomap(ip, iomap, &imap, 0);
- }
- 
- const struct iomap_ops xfs_xattr_iomap_ops = {
-diff --git a/fs/xfs/xfs_iomap.h b/fs/xfs/xfs_iomap.h
-index 5c2f6aa6d78f..71d0ae460c44 100644
---- a/fs/xfs/xfs_iomap.h
-+++ b/fs/xfs/xfs_iomap.h
-@@ -16,7 +16,7 @@ int xfs_iomap_write_direct(struct xfs_inode *, xfs_off_t, size_t,
- int xfs_iomap_write_unwritten(struct xfs_inode *, xfs_off_t, xfs_off_t, bool);
- 
- int xfs_bmbt_to_iomap(struct xfs_inode *, struct iomap *,
--		struct xfs_bmbt_irec *, bool shared);
-+		struct xfs_bmbt_irec *, u16);
- xfs_extlen_t xfs_eof_alignment(struct xfs_inode *ip, xfs_extlen_t extsize);
- 
- static inline xfs_filblks_t
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index bde2c9f56a46..12f664785248 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -185,7 +185,7 @@ xfs_fs_map_blocks(
- 	}
- 	xfs_iunlock(ip, XFS_IOLOCK_EXCL);
- 
--	error = xfs_bmbt_to_iomap(ip, iomap, &imap, false);
-+	error = xfs_bmbt_to_iomap(ip, iomap, &imap, 0);
- 	*device_generation = mp->m_generation;
- 	return error;
- out_unlock:
--- 
-2.20.1
+> ---
+>   fs/xfs/libxfs/xfs_ag.c |   66 ++++++++++++++++++++++++++++++++++++++++++++++++
+>   1 file changed, 66 insertions(+)
+> 
+> 
+> diff --git a/fs/xfs/libxfs/xfs_ag.c b/fs/xfs/libxfs/xfs_ag.c
+> index 80a3df7ccab3..57aa85d8e3aa 100644
+> --- a/fs/xfs/libxfs/xfs_ag.c
+> +++ b/fs/xfs/libxfs/xfs_ag.c
+> @@ -10,6 +10,7 @@
+>   #include "xfs_shared.h"
+>   #include "xfs_format.h"
+>   #include "xfs_trans_resv.h"
+> +#include "xfs_bit.h"
+>   #include "xfs_sb.h"
+>   #include "xfs_mount.h"
+>   #include "xfs_btree.h"
+> @@ -44,6 +45,12 @@ xfs_get_aghdr_buf(
+>   	return bp;
+>   }
+>   
+> +static inline bool is_log_ag(struct xfs_mount *mp, struct aghdr_init_data *id)
+> +{
+> +	return mp->m_sb.sb_logstart > 0 &&
+> +	       id->agno == XFS_FSB_TO_AGNO(mp, mp->m_sb.sb_logstart);
+> +}
+> +
+>   /*
+>    * Generic btree root block init function
+>    */
+> @@ -64,11 +71,50 @@ xfs_freesp_init_recs(
+>   	struct aghdr_init_data	*id)
+>   {
+>   	struct xfs_alloc_rec	*arec;
+> +	struct xfs_btree_block	*block = XFS_BUF_TO_BLOCK(bp);
+>   
+>   	arec = XFS_ALLOC_REC_ADDR(mp, XFS_BUF_TO_BLOCK(bp), 1);
+>   	arec->ar_startblock = cpu_to_be32(mp->m_ag_prealloc_blocks);
+> +
+> +	if (is_log_ag(mp, id)) {
+> +		struct xfs_alloc_rec	*nrec;
+> +		xfs_agblock_t		start = XFS_FSB_TO_AGBNO(mp,
+> +							mp->m_sb.sb_logstart);
+> +
+> +		ASSERT(start >= mp->m_ag_prealloc_blocks);
+> +		if (start != mp->m_ag_prealloc_blocks) {
+> +			/*
+> +			 * Modify first record to pad stripe align of log
+> +			 */
+> +			arec->ar_blockcount = cpu_to_be32(start -
+> +						mp->m_ag_prealloc_blocks);
+> +			nrec = arec + 1;
+> +			/*
+> +			 * Insert second record at start of internal log
+> +			 * which then gets trimmed.
+> +			 */
+> +			nrec->ar_startblock = cpu_to_be32(
+> +					be32_to_cpu(arec->ar_startblock) +
+> +					be32_to_cpu(arec->ar_blockcount));
+> +			arec = nrec;
+> +			be16_add_cpu(&block->bb_numrecs, 1);
+> +		}
+> +		/*
+> +		 * Change record start to after the internal log
+> +		 */
+> +		be32_add_cpu(&arec->ar_startblock, mp->m_sb.sb_logblocks);
+> +	}
+> +
+> +	/*
+> +	 * Calculate the record block count and check for the case where
+> +	 * the log might have consumed all available space in the AG. If
+> +	 * so, reset the record count to 0 to avoid exposure of an invalid
+> +	 * record start block.
+> +	 */
+>   	arec->ar_blockcount = cpu_to_be32(id->agsize -
+>   					  be32_to_cpu(arec->ar_startblock));
+> +	if (!arec->ar_blockcount)
+> +		block->bb_numrecs = 0;
+>   }
+>   
+>   /*
+> @@ -154,6 +200,18 @@ xfs_rmaproot_init(
+>   		rrec->rm_offset = 0;
+>   		be16_add_cpu(&block->bb_numrecs, 1);
+>   	}
+> +
+> +	/* account for the log space */
+> +	if (is_log_ag(mp, id)) {
+> +		rrec = XFS_RMAP_REC_ADDR(block,
+> +				be16_to_cpu(block->bb_numrecs) + 1);
+> +		rrec->rm_startblock = cpu_to_be32(
+> +				XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart));
+> +		rrec->rm_blockcount = cpu_to_be32(mp->m_sb.sb_logblocks);
+> +		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_LOG);
+> +		rrec->rm_offset = 0;
+> +		be16_add_cpu(&block->bb_numrecs, 1);
+> +	}
+>   }
+>   
+>   /*
+> @@ -214,6 +272,14 @@ xfs_agfblock_init(
+>   		agf->agf_refcount_level = cpu_to_be32(1);
+>   		agf->agf_refcount_blocks = cpu_to_be32(1);
+>   	}
+> +
+> +	if (is_log_ag(mp, id)) {
+> +		int64_t	logblocks = mp->m_sb.sb_logblocks;
+> +
+> +		be32_add_cpu(&agf->agf_freeblks, -logblocks);
+> +		agf->agf_longest = cpu_to_be32(id->agsize -
+> +			XFS_FSB_TO_AGBNO(mp, mp->m_sb.sb_logstart) - logblocks);
+> +	}
+>   }
+>   
+>   static void
+> 
