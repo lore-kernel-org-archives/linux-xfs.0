@@ -1,41 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50608 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727048AbfFXFxG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:06 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 03/12] xfs: fix a comment typo in xfs_submit_ioend
-Date: Mon, 24 Jun 2019 07:52:44 +0200
-Message-Id: <20190624055253.31183-4-hch@lst.de>
-In-Reply-To: <20190624055253.31183-1-hch@lst.de>
-References: <20190624055253.31183-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:48302 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726045AbfFUX5F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:57:05 -0400
+Subject: [PATCH v2 0/4] vfs: clean up SETFLAGS and FSSETXATTR option
+ processing
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 21 Jun 2019 16:56:07 -0700
+Message-ID: <156116136742.1664814.17093419199766834123.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
+Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-The fail argument is long gone, update the comment.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_aops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+The FS_IOC_SETFLAGS and FS_IOC_FSSETXATTR ioctls were promoted from ext4
+and XFS, respectively, into the VFS.  However, we didn't promote any of
+the parameter checking code from those filesystems, which lead to a mess
+where each filesystem open-codes whatever parameter checks they want and
+the behavior across filesystems is no longer consistent.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 9cceb90e77c5..dc60aec0c5a7 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -626,7 +626,7 @@ xfs_map_blocks(
-  * reference to the ioend to ensure that the ioend completion is only done once
-  * all bios have been submitted and the ioend is really done.
-  *
-- * If @fail is non-zero, it means that we have a situation where some part of
-+ * If @status is non-zero, it means that we have a situation where some part of
-  * the submission process has failed after we have marked paged for writeback
-  * and unlocked them. In this situation, we need to fail the bio and ioend
-  * rather than submit it to IO. This typically only happens on a filesystem
--- 
-2.20.1
+Therefore, create some generic checking functions in the VFS and remove
+all the open-coded pieces in each filesystem.  This preserves the
+current behavior where a filesystem can choose to ignore fields it
+doesn't understand.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=file-ioctl-cleanups
