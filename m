@@ -1,235 +1,452 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50678 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727156AbfFXFxT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:19 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/12] xfs: don't preallocate a transaction for file size updates
-Date: Mon, 24 Jun 2019 07:52:48 +0200
-Message-Id: <20190624055253.31183-8-hch@lst.de>
-In-Reply-To: <20190624055253.31183-1-hch@lst.de>
-References: <20190624055253.31183-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:43788 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726043AbfFUT5r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 15:57:47 -0400
+Subject: [PATCH 6/6] mkfs: use libxfs to write out new AGs
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 21 Jun 2019 12:57:39 -0700
+Message-ID: <156114705924.1643538.6635085530435538461.stgit@magnolia>
+In-Reply-To: <156114701371.1643538.316410894576032261.stgit@magnolia>
+References: <156114701371.1643538.316410894576032261.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-We have historically decided that we want to preallocate the xfs_trans
-structure at writeback time so that we don't have to allocate on in
-the I/O completion handler.  But we treat unwrittent extent and COW
-fork conversions different already, which proves that the transaction
-allocations in the end I/O handler are not a problem.  Removing the
-preallocation gets rid of a lot of corner case code, and also ensures
-we only allocate one and log a transaction when actually required,
-as the ioend merging can reduce the number of actual i_size updates
-significantly.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Use the libxfs AG initialization functions to write out the new
+filesystem instead of open-coding everything.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 110 +++++-----------------------------------------
- fs/xfs/xfs_aops.h |   1 -
- 2 files changed, 12 insertions(+), 99 deletions(-)
+ include/libxfs.h         |    1 
+ libxfs/libxfs_api_defs.h |    3 
+ mkfs/xfs_mkfs.c          |  359 +++-------------------------------------------
+ 3 files changed, 29 insertions(+), 334 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 633baaaff7ae..017b87b7765f 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -130,44 +130,23 @@ static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
- 		XFS_I(ioend->io_inode)->i_d.di_size;
- }
+
+diff --git a/include/libxfs.h b/include/libxfs.h
+index dd5fe542..3bf7feab 100644
+--- a/include/libxfs.h
++++ b/include/libxfs.h
+@@ -63,6 +63,7 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
+ #include "xfs_bmap.h"
+ #include "xfs_trace.h"
+ #include "xfs_trans.h"
++#include "xfs_ag.h"
+ #include "xfs_rmap_btree.h"
+ #include "xfs_rmap.h"
+ #include "xfs_refcount_btree.h"
+diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
+index 0ae21318..645c9b1b 100644
+--- a/libxfs/libxfs_api_defs.h
++++ b/libxfs/libxfs_api_defs.h
+@@ -154,4 +154,7 @@
+ #define LIBXFS_ATTR_CREATE		ATTR_CREATE
+ #define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
  
--STATIC int
--xfs_setfilesize_trans_alloc(
--	struct xfs_ioend	*ioend)
--{
--	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
--	struct xfs_trans	*tp;
--	int			error;
--
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
--	if (error)
--		return error;
--
--	ioend->io_append_trans = tp;
--
--	/*
--	 * We may pass freeze protection with a transaction.  So tell lockdep
--	 * we released it.
--	 */
--	__sb_writers_release(ioend->io_inode->i_sb, SB_FREEZE_FS);
--	/*
--	 * We hand off the transaction to the completion thread now, so
--	 * clear the flag here.
--	 */
--	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
--	return 0;
--}
--
- /*
-  * Update on-disk file size now that data has been written to disk.
-  */
--STATIC int
--__xfs_setfilesize(
-+int
-+xfs_setfilesize(
- 	struct xfs_inode	*ip,
--	struct xfs_trans	*tp,
- 	xfs_off_t		offset,
- 	size_t			size)
- {
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_trans	*tp;
- 	xfs_fsize_t		isize;
-+	int			error;
++#define xfs_ag_init_headers		libxfs_ag_init_headers
++#define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
 +
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
-+	if (error)
-+		return error;
- 
- 	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	isize = xfs_new_eof(ip, offset + size);
-@@ -186,48 +165,6 @@ __xfs_setfilesize(
- 	return xfs_trans_commit(tp);
- }
- 
--int
--xfs_setfilesize(
--	struct xfs_inode	*ip,
--	xfs_off_t		offset,
--	size_t			size)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	struct xfs_trans	*tp;
--	int			error;
+ #endif /* __LIBXFS_API_DEFS_H__ */
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 56ba5379..8a44bb98 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3431,349 +3431,30 @@ initialise_ag_headers(
+ 	struct xfs_mount	*mp,
+ 	struct xfs_sb		*sbp,
+ 	xfs_agnumber_t		agno,
+-	int			*worst_freelist)
++	int			*worst_freelist,
++	struct list_head	*buffer_list)
+ {
++	struct aghdr_init_data	id = {
++		.agno		= agno,
++		.agsize		= cfg->agsize,
++	};
+ 	struct xfs_perag	*pag = libxfs_perag_get(mp, agno);
+-	struct xfs_agfl		*agfl;
+-	struct xfs_agf		*agf;
+-	struct xfs_agi		*agi;
+-	struct xfs_buf		*buf;
+-	struct xfs_btree_block	*block;
+-	struct xfs_alloc_rec	*arec;
+-	struct xfs_alloc_rec	*nrec;
+-	int			bucket;
+-	uint64_t		agsize = cfg->agsize;
+-	xfs_agblock_t		agblocks;
+-	bool			is_log_ag = false;
+-	int			c;
 -
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
--	if (error)
--		return error;
--
--	return __xfs_setfilesize(ip, tp, offset, size);
--}
--
--STATIC int
--xfs_setfilesize_ioend(
--	struct xfs_ioend	*ioend,
--	int			error)
--{
--	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
--	struct xfs_trans	*tp = ioend->io_append_trans;
+-	if (cfg->loginternal && agno == cfg->logagno)
+-		is_log_ag = true;
 -
 -	/*
--	 * The transaction may have been allocated in the I/O submission thread,
--	 * thus we need to mark ourselves as being in a transaction manually.
--	 * Similarly for freeze protection.
+-	 * Superblock.
 -	 */
--	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
--	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
+-			XFS_FSS_TO_BB(mp, 1));
+-	buf->b_ops = &xfs_sb_buf_ops;
+-	memset(buf->b_addr, 0, cfg->sectorsize);
+-	libxfs_sb_to_disk(buf->b_addr, sbp);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
++	int			error;
+ 
+-	/*
+-	 * AG header block: freespace
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1));
+-	buf->b_ops = &xfs_agf_buf_ops;
+-	agf = XFS_BUF_TO_AGF(buf);
+-	memset(agf, 0, cfg->sectorsize);
+ 	if (agno == cfg->agcount - 1)
+-		agsize = cfg->dblocks - (xfs_rfsblock_t)(agno * agsize);
+-	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
+-	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
+-	agf->agf_seqno = cpu_to_be32(agno);
+-	agf->agf_length = cpu_to_be32(agsize);
+-	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
+-	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
+-	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
+-	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
+-	pag->pagf_levels[XFS_BTNUM_BNOi] = 1;
+-	pag->pagf_levels[XFS_BTNUM_CNTi] = 1;
 -
--	/* we abort the update if there was an IO error */
--	if (error) {
--		xfs_trans_cancel(tp);
--		return error;
+-	if (xfs_sb_version_hasrmapbt(sbp)) {
+-		agf->agf_roots[XFS_BTNUM_RMAPi] = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+-		agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
+-		agf->agf_rmap_blocks = cpu_to_be32(1);
+-	}
++		id.agsize = cfg->dblocks - (xfs_rfsblock_t)(agno * cfg->agsize);
+ 
+-	if (xfs_sb_version_hasreflink(sbp)) {
+-		agf->agf_refcount_root = cpu_to_be32(libxfs_refc_block(mp));
+-		agf->agf_refcount_level = cpu_to_be32(1);
+-		agf->agf_refcount_blocks = cpu_to_be32(1);
++	INIT_LIST_HEAD(&id.buffer_list);
++	error = -libxfs_ag_init_headers(mp, &id);
++	if (error) {
++		fprintf(stderr, _("AG header init failed, error %d\n"), error);
++		exit(1);
+ 	}
+ 
+-	agf->agf_flfirst = 0;
+-	agf->agf_fllast = cpu_to_be32(libxfs_agfl_size(mp) - 1);
+-	agf->agf_flcount = 0;
+-	agblocks = (xfs_agblock_t)(agsize - libxfs_prealloc_blocks(mp));
+-	agf->agf_freeblks = cpu_to_be32(agblocks);
+-	agf->agf_longest = cpu_to_be32(agblocks);
+-
+-	if (xfs_sb_version_hascrc(sbp))
+-		platform_uuid_copy(&agf->agf_uuid, &sbp->sb_uuid);
++	list_splice_tail_init(&id.buffer_list, buffer_list);
+ 
+-	if (is_log_ag) {
+-		be32_add_cpu(&agf->agf_freeblks, -(int64_t)cfg->logblocks);
+-		agf->agf_longest = cpu_to_be32(agsize -
+-			XFS_FSB_TO_AGBNO(mp, cfg->logstart) - cfg->logblocks);
+-	}
+ 	if (libxfs_alloc_min_freelist(mp, pag) > *worst_freelist)
+ 		*worst_freelist = libxfs_alloc_min_freelist(mp, pag);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-
+-	/*
+-	 * AG freelist header block
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1));
+-	buf->b_ops = &xfs_agfl_buf_ops;
+-	agfl = XFS_BUF_TO_AGFL(buf);
+-	/* setting to 0xff results in initialisation to NULLAGBLOCK */
+-	memset(agfl, 0xff, cfg->sectorsize);
+-	if (xfs_sb_version_hascrc(sbp)) {
+-		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
+-		agfl->agfl_seqno = cpu_to_be32(agno);
+-		platform_uuid_copy(&agfl->agfl_uuid, &sbp->sb_uuid);
+-		for (bucket = 0; bucket < libxfs_agfl_size(mp); bucket++)
+-			agfl->agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
 -	}
 -
--	return __xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
--}
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 -
- /*
-  * IO write completion.
-  */
-@@ -267,12 +204,9 @@ xfs_end_ioend(
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 	else if (ioend->io_type == IOMAP_UNWRITTEN)
- 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
--	else
--		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
+-	/*
+-	 * AG header block: inodes
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
+-			XFS_FSS_TO_BB(mp, 1));
+-	agi = XFS_BUF_TO_AGI(buf);
+-	buf->b_ops = &xfs_agi_buf_ops;
+-	memset(agi, 0, cfg->sectorsize);
+-	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
+-	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
+-	agi->agi_seqno = cpu_to_be32(agno);
+-	agi->agi_length = cpu_to_be32(agsize);
+-	agi->agi_count = 0;
+-	agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
+-	agi->agi_level = cpu_to_be32(1);
+-	if (xfs_sb_version_hasfinobt(sbp)) {
+-		agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
+-		agi->agi_free_level = cpu_to_be32(1);
+-	}
+-	agi->agi_freecount = 0;
+-	agi->agi_newino = cpu_to_be32(NULLAGINO);
+-	agi->agi_dirino = cpu_to_be32(NULLAGINO);
+-	if (xfs_sb_version_hascrc(sbp))
+-		platform_uuid_copy(&agi->agi_uuid, &sbp->sb_uuid);
+-	for (c = 0; c < XFS_AGI_UNLINKED_BUCKETS; c++)
+-		agi->agi_unlinked[c] = cpu_to_be32(NULLAGINO);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 -
-+	if (!error && xfs_ioend_is_append(ioend))
-+		error = xfs_setfilesize(ip, offset, size);
- done:
--	if (ioend->io_append_trans)
--		error = xfs_setfilesize_ioend(ioend, error);
- 	list_replace_init(&ioend->io_list, &ioend_list);
- 	xfs_destroy_ioend(ioend, error);
- 
-@@ -307,8 +241,6 @@ xfs_ioend_can_merge(
- 		return false;
- 	if (ioend->io_offset + ioend->io_size != next->io_offset)
- 		return false;
--	if (xfs_ioend_is_append(ioend) != xfs_ioend_is_append(next))
--		return false;
- 	return true;
- }
- 
-@@ -320,7 +252,6 @@ xfs_ioend_try_merge(
- {
- 	struct xfs_ioend	*next_ioend;
- 	int			ioend_error;
--	int			error;
- 
- 	if (list_empty(more_ioends))
- 		return;
-@@ -334,10 +265,6 @@ xfs_ioend_try_merge(
- 			break;
- 		list_move_tail(&next_ioend->io_list, &ioend->io_list);
- 		ioend->io_size += next_ioend->io_size;
--		if (ioend->io_append_trans) {
--			error = xfs_setfilesize_ioend(next_ioend, 1);
--			ASSERT(error == 1);
+-	/*
+-	 * BNO btree root block
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
+-			BTOBB(cfg->blocksize));
+-	buf->b_ops = &xfs_bnobt_buf_ops;
+-	block = XFS_BUF_TO_BLOCK(buf);
+-	memset(block, 0, cfg->blocksize);
+-	libxfs_btree_init_block(mp, buf, XFS_BTNUM_BNO, 0, 1, agno);
+-
+-	arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
+-	arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
+-	if (is_log_ag) {
+-		xfs_agblock_t	start = XFS_FSB_TO_AGBNO(mp, cfg->logstart);
+-
+-		ASSERT(start >= libxfs_prealloc_blocks(mp));
+-		if (start != libxfs_prealloc_blocks(mp)) {
+-			/*
+-			 * Modify first record to pad stripe align of log
+-			 */
+-			arec->ar_blockcount = cpu_to_be32(start -
+-						libxfs_prealloc_blocks(mp));
+-			nrec = arec + 1;
+-			/*
+-			 * Insert second record at start of internal log
+-			 * which then gets trimmed.
+-			 */
+-			nrec->ar_startblock = cpu_to_be32(
+-					be32_to_cpu(arec->ar_startblock) +
+-					be32_to_cpu(arec->ar_blockcount));
+-			arec = nrec;
+-			be16_add_cpu(&block->bb_numrecs, 1);
 -		}
- 	}
- }
- 
-@@ -398,7 +325,7 @@ xfs_end_bio(
- 
- 	if (ioend->io_fork == XFS_COW_FORK ||
- 	    ioend->io_type == IOMAP_UNWRITTEN ||
--	    ioend->io_append_trans != NULL) {
-+	    xfs_ioend_is_append(ioend)) {
- 		spin_lock_irqsave(&ip->i_ioend_lock, flags);
- 		if (list_empty(&ip->i_ioend_list))
- 			WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
-@@ -660,18 +587,6 @@ xfs_submit_ioend(
- 		memalloc_nofs_restore(nofs_flag);
- 	}
- 
--	/* Reserve log space if we might write beyond the on-disk inode size. */
--	if (!status &&
--	    (ioend->io_fork == XFS_COW_FORK ||
--	     ioend->io_type != IOMAP_UNWRITTEN) &&
--	    xfs_ioend_is_append(ioend) &&
--	    !ioend->io_append_trans) {
--		unsigned nofs_flag = memalloc_nofs_save();
+-		/*
+-		 * Change record start to after the internal log
+-		 */
+-		be32_add_cpu(&arec->ar_startblock, cfg->logblocks);
+-	}
+-	/*
+-	 * Calculate the record block count and check for the case where
+-	 * the log might have consumed all available space in the AG. If
+-	 * so, reset the record count to 0 to avoid exposure of an invalid
+-	 * record start block.
+-	 */
+-	arec->ar_blockcount = cpu_to_be32(agsize -
+-					  be32_to_cpu(arec->ar_startblock));
+-	if (!arec->ar_blockcount)
+-		block->bb_numrecs = 0;
 -
--		status = xfs_setfilesize_trans_alloc(ioend);
--		memalloc_nofs_restore(nofs_flag);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-
+-	/*
+-	 * CNT btree root block
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
+-			BTOBB(cfg->blocksize));
+-	buf->b_ops = &xfs_cntbt_buf_ops;
+-	block = XFS_BUF_TO_BLOCK(buf);
+-	memset(block, 0, cfg->blocksize);
+-	libxfs_btree_init_block(mp, buf, XFS_BTNUM_CNT, 0, 1, agno);
+-
+-	arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
+-	arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
+-	if (is_log_ag) {
+-		xfs_agblock_t	start = XFS_FSB_TO_AGBNO(mp, cfg->logstart);
+-
+-		ASSERT(start >= libxfs_prealloc_blocks(mp));
+-		if (start != libxfs_prealloc_blocks(mp)) {
+-			arec->ar_blockcount = cpu_to_be32(start -
+-					libxfs_prealloc_blocks(mp));
+-			nrec = arec + 1;
+-			nrec->ar_startblock = cpu_to_be32(
+-					be32_to_cpu(arec->ar_startblock) +
+-					be32_to_cpu(arec->ar_blockcount));
+-			arec = nrec;
+-			be16_add_cpu(&block->bb_numrecs, 1);
+-		}
+-		be32_add_cpu(&arec->ar_startblock, cfg->logblocks);
+-	}
+-	/*
+-	 * Calculate the record block count and check for the case where
+-	 * the log might have consumed all available space in the AG. If
+-	 * so, reset the record count to 0 to avoid exposure of an invalid
+-	 * record start block.
+-	 */
+-	arec->ar_blockcount = cpu_to_be32(agsize -
+-					  be32_to_cpu(arec->ar_startblock));
+-	if (!arec->ar_blockcount)
+-		block->bb_numrecs = 0;
+-
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-
+-	/*
+-	 * refcount btree root block
+-	 */
+-	if (xfs_sb_version_hasreflink(sbp)) {
+-		buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AGB_TO_DADDR(mp, agno, libxfs_refc_block(mp)),
+-			BTOBB(cfg->blocksize));
+-		buf->b_ops = &xfs_refcountbt_buf_ops;
+-
+-		block = XFS_BUF_TO_BLOCK(buf);
+-		memset(block, 0, cfg->blocksize);
+-		libxfs_btree_init_block(mp, buf, XFS_BTNUM_REFC, 0, 0, agno);
+-		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
 -	}
 -
- 	ioend->io_bio->bi_private = ioend;
- 	ioend->io_bio->bi_end_io = xfs_end_bio;
- 
-@@ -715,7 +630,6 @@ xfs_alloc_ioend(
- 	ioend->io_inode = inode;
- 	ioend->io_size = 0;
- 	ioend->io_offset = offset;
--	ioend->io_append_trans = NULL;
- 	ioend->io_bio = bio;
- 	return ioend;
+-	/*
+-	 * INO btree root block
+-	 */
+-	buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
+-			BTOBB(cfg->blocksize));
+-	buf->b_ops = &xfs_inobt_buf_ops;
+-	block = XFS_BUF_TO_BLOCK(buf);
+-	memset(block, 0, cfg->blocksize);
+-	libxfs_btree_init_block(mp, buf, XFS_BTNUM_INO, 0, 0, agno);
+-	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-
+-	/*
+-	 * Free INO btree root block
+-	 */
+-	if (xfs_sb_version_hasfinobt(sbp)) {
+-		buf = libxfs_getbuf(mp->m_ddev_targp,
+-				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
+-				BTOBB(cfg->blocksize));
+-		buf->b_ops = &xfs_finobt_buf_ops;
+-		block = XFS_BUF_TO_BLOCK(buf);
+-		memset(block, 0, cfg->blocksize);
+-		libxfs_btree_init_block(mp, buf, XFS_BTNUM_FINO, 0, 0, agno);
+-		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-	}
+-
+-	/* RMAP btree root block */
+-	if (xfs_sb_version_hasrmapbt(sbp)) {
+-		struct xfs_rmap_rec	*rrec;
+-
+-		buf = libxfs_getbuf(mp->m_ddev_targp,
+-			XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
+-			BTOBB(cfg->blocksize));
+-		buf->b_ops = &xfs_rmapbt_buf_ops;
+-		block = XFS_BUF_TO_BLOCK(buf);
+-		memset(block, 0, cfg->blocksize);
+-
+-		libxfs_btree_init_block(mp, buf, XFS_BTNUM_RMAP, 0, 0, agno);
+-
+-		/*
+-		 * mark the AG header regions as static metadata
+-		 * The BNO btree block is the first block after the
+-		 * headers, so it's location defines the size of region
+-		 * the static metadata consumes.
+-		 */
+-		rrec = XFS_RMAP_REC_ADDR(block, 1);
+-		rrec->rm_startblock = 0;
+-		rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
+-
+-		/* account freespace btree root blocks */
+-		rrec = XFS_RMAP_REC_ADDR(block, 2);
+-		rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
+-		rrec->rm_blockcount = cpu_to_be32(2);
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
+-
+-		/* account inode btree root blocks */
+-		rrec = XFS_RMAP_REC_ADDR(block, 3);
+-		rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
+-		rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
+-						XFS_IBT_BLOCK(mp));
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
+-
+-		/* account for rmap btree root */
+-		rrec = XFS_RMAP_REC_ADDR(block, 4);
+-		rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
+-		rrec->rm_blockcount = cpu_to_be32(1);
+-		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
+-		rrec->rm_offset = 0;
+-		be16_add_cpu(&block->bb_numrecs, 1);
+-
+-		/* account for refcount btree root */
+-		if (xfs_sb_version_hasreflink(sbp)) {
+-			rrec = XFS_RMAP_REC_ADDR(block, 5);
+-			rrec->rm_startblock = cpu_to_be32(libxfs_refc_block(mp));
+-			rrec->rm_blockcount = cpu_to_be32(1);
+-			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
+-			rrec->rm_offset = 0;
+-			be16_add_cpu(&block->bb_numrecs, 1);
+-		}
+-
+-		/* account for the log space */
+-		if (is_log_ag) {
+-			rrec = XFS_RMAP_REC_ADDR(block,
+-					be16_to_cpu(block->bb_numrecs) + 1);
+-			rrec->rm_startblock = cpu_to_be32(
+-					XFS_FSB_TO_AGBNO(mp, cfg->logstart));
+-			rrec->rm_blockcount = cpu_to_be32(cfg->logblocks);
+-			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_LOG);
+-			rrec->rm_offset = 0;
+-			be16_add_cpu(&block->bb_numrecs, 1);
+-		}
+-
+-		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
+-	}
+-
+ 	libxfs_perag_put(pag);
  }
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 72e30d1c3bdf..23c087f0bcbf 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -18,7 +18,6 @@ struct xfs_ioend {
- 	struct inode		*io_inode;	/* file being written to */
- 	size_t			io_size;	/* size of the extent */
- 	xfs_off_t		io_offset;	/* offset in the file */
--	struct xfs_trans	*io_append_trans;/* xact. for size update */
- 	struct bio		*io_bio;	/* bio being built */
- 	struct bio		io_inline_bio;	/* MUST BE LAST! */
- };
--- 
-2.20.1
+ 
+@@ -3896,6 +3577,8 @@ main(
+ 		},
+ 	};
+ 
++	struct list_head	buffer_list;
++
+ 	platform_uuid_generate(&cli.uuid);
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -4087,8 +3770,16 @@ main(
+ 	/*
+ 	 * Initialise all the static on disk metadata.
+ 	 */
++	INIT_LIST_HEAD(&buffer_list);
+ 	for (agno = 0; agno < cfg.agcount; agno++)
+-		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist);
++		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist,
++				&buffer_list);
++
++	if (libxfs_buf_delwri_submit(&buffer_list)) {
++		fprintf(stderr, _("%s: writing AG headers failed\n"),
++				progname);
++		exit(1);
++	}
+ 
+ 	/*
+ 	 * Initialise the freespace freelists (i.e. AGFLs) in each AG.
