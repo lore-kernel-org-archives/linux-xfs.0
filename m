@@ -1,49 +1,168 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:59656 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725906AbfFUA4E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 20 Jun 2019 20:56:04 -0400
-Date: Thu, 20 Jun 2019 20:54:20 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH 1/6] mm/fs: don't allow writes to immutable files
-Message-ID: <20190621005420.GH4650@mit.edu>
-References: <156022836912.3227213.13598042497272336695.stgit@magnolia>
- <156022837711.3227213.11787906519006016743.stgit@magnolia>
- <20190620215212.GG4650@mit.edu>
- <20190620221306.GD5375@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:37118 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726429AbfFUX5m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:57:42 -0400
+Subject: [PATCH 4/4] vfs: teach vfs_ioc_fssetxattr_check to check extent
+ size hints
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 21 Jun 2019 16:56:45 -0700
+Message-ID: <156116140570.1664814.4607468365269898575.stgit@magnolia>
+In-Reply-To: <156116136742.1664814.17093419199766834123.stgit@magnolia>
+References: <156116136742.1664814.17093419199766834123.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190620221306.GD5375@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
+Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Thu, Jun 20, 2019 at 03:13:06PM -0700, Darrick J. Wong wrote:
-> > I note that this patch doesn't allow writes to swap files.  So Amir's
-> > generic/554 test will still fail for those file systems that don't use
-> > copy_file_range.
-> 
-> I didn't add any IS_SWAPFILE checks here, so I'm not sure to what you're
-> referring?
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Sorry, my bad; I mistyped.  What I should have said is this patch
-doesn't *prohibit* writes to swap files....
+Move the extent size hint checks that aren't xfs-specific to the vfs.
 
-(And so Amir's generic/554 test, even modified so it allow reads from
-swapfiles, but not writes, when using copy_file_range, is still
-failing for ext4.  I was looking to see if I could remove it from my
-exclude list, but not yet.  :-)
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+---
+ fs/inode.c         |   18 +++++++++++++
+ fs/xfs/xfs_ioctl.c |   70 ++++++++++++++++++++++------------------------------
+ 2 files changed, 47 insertions(+), 41 deletions(-)
 
-> > I'm indifferent as to whether you add a new patch, or include that
-> > change in this patch, but perhaps we should fix this while we're
-> > making changes in these code paths?
-> 
-> The swapfile patches should be in a separate patch, which I was planning
-> to work on but hadn't really gotten around to it.
 
-Ok, great, thanks!!
-
-				- Ted
+diff --git a/fs/inode.c b/fs/inode.c
+index f1ffa9605078..6374ad2ef25b 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2234,6 +2234,24 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
+ 			return -EINVAL;
+ 	}
+ 
++	/* Check extent size hints. */
++	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(inode->i_mode))
++		return -EINVAL;
++
++	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
++			!S_ISDIR(inode->i_mode))
++		return -EINVAL;
++
++	if ((fa->fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
++	    !S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
++		return -EINVAL;
++
++	/* Extent size hints of zero turn off the flags. */
++	if (fa->fsx_extsize == 0)
++		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
++	if (fa->fsx_cowextsize == 0)
++		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 82961de98900..b494e7e881e3 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1201,39 +1201,31 @@ xfs_ioctl_setattr_check_extsize(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-
+-	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(VFS_I(ip)->i_mode))
+-		return -EINVAL;
+-
+-	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
+-	    !S_ISDIR(VFS_I(ip)->i_mode))
+-		return -EINVAL;
++	xfs_extlen_t		size;
++	xfs_fsblock_t		extsize_fsb;
+ 
+ 	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_d.di_nextents &&
+ 	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
+ 		return -EINVAL;
+ 
+-	if (fa->fsx_extsize != 0) {
+-		xfs_extlen_t    size;
+-		xfs_fsblock_t   extsize_fsb;
+-
+-		extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
+-		if (extsize_fsb > MAXEXTLEN)
+-			return -EINVAL;
++	if (fa->fsx_extsize == 0)
++		return 0;
+ 
+-		if (XFS_IS_REALTIME_INODE(ip) ||
+-		    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
+-			size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
+-		} else {
+-			size = mp->m_sb.sb_blocksize;
+-			if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
+-				return -EINVAL;
+-		}
++	extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
++	if (extsize_fsb > MAXEXTLEN)
++		return -EINVAL;
+ 
+-		if (fa->fsx_extsize % size)
++	if (XFS_IS_REALTIME_INODE(ip) ||
++	    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
++		size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
++	} else {
++		size = mp->m_sb.sb_blocksize;
++		if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
+ 			return -EINVAL;
+-	} else
+-		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
++	}
++
++	if (fa->fsx_extsize % size)
++		return -EINVAL;
+ 
+ 	return 0;
+ }
+@@ -1259,6 +1251,8 @@ xfs_ioctl_setattr_check_cowextsize(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	xfs_extlen_t		size;
++	xfs_fsblock_t		cowextsize_fsb;
+ 
+ 	if (!(fa->fsx_xflags & FS_XFLAG_COWEXTSIZE))
+ 		return 0;
+@@ -1267,25 +1261,19 @@ xfs_ioctl_setattr_check_cowextsize(
+ 	    ip->i_d.di_version != 3)
+ 		return -EINVAL;
+ 
+-	if (!S_ISREG(VFS_I(ip)->i_mode) && !S_ISDIR(VFS_I(ip)->i_mode))
+-		return -EINVAL;
+-
+-	if (fa->fsx_cowextsize != 0) {
+-		xfs_extlen_t    size;
+-		xfs_fsblock_t   cowextsize_fsb;
++	if (fa->fsx_cowextsize == 0)
++		return 0;
+ 
+-		cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
+-		if (cowextsize_fsb > MAXEXTLEN)
+-			return -EINVAL;
++	cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
++	if (cowextsize_fsb > MAXEXTLEN)
++		return -EINVAL;
+ 
+-		size = mp->m_sb.sb_blocksize;
+-		if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
+-			return -EINVAL;
++	size = mp->m_sb.sb_blocksize;
++	if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
++		return -EINVAL;
+ 
+-		if (fa->fsx_cowextsize % size)
+-			return -EINVAL;
+-	} else
+-		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
++	if (fa->fsx_cowextsize % size)
++		return -EINVAL;
+ 
+ 	return 0;
+ }
