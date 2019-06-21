@@ -1,148 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50730 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727330AbfFXFxZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:25 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/12] xfs: refactor the ioend merging code
-Date: Mon, 24 Jun 2019 07:52:50 +0200
-Message-Id: <20190624055253.31183-10-hch@lst.de>
-In-Reply-To: <20190624055253.31183-1-hch@lst.de>
-References: <20190624055253.31183-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:43600 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726125AbfFUT5h (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 15:57:37 -0400
+Subject: [PATCH 5/6] libxfs: make xfs_buf_delwri_submit actually do something
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 21 Jun 2019 12:57:33 -0700
+Message-ID: <156114705295.1643538.4760286307932278728.stgit@magnolia>
+In-Reply-To: <156114701371.1643538.316410894576032261.stgit@magnolia>
+References: <156114701371.1643538.316410894576032261.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Introduce two nicely abstracted helper, which can be moved to the
-iomap code later.  Also use list_pop and list_first_entry_or_null
-to simplify the code a bit.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+xfs_buf_delwri_queue doesn't report errors, which means that if the
+buffer write fails we have no way of knowing that something bad
+happened.  In the kernel we queue and then submit buffers, and the
+submit call communicates errors to callers.  Do the same here since
+we're going to start using the AG header initialization functions, which
+use delwri_{queue,submit} heavily.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c | 66 ++++++++++++++++++++++++++---------------------
- 1 file changed, 36 insertions(+), 30 deletions(-)
+ libxfs/libxfs_io.h   |    6 +++++-
+ libxfs/libxfs_priv.h |    1 -
+ libxfs/rdwr.c        |   25 +++++++++++++++++++++++++
+ 3 files changed, 30 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index acbd73976067..5d302ebe2a33 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -121,6 +121,19 @@ xfs_destroy_ioend(
- 	}
+
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index c47a435d..d033faad 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -70,6 +70,7 @@ typedef struct xfs_buf {
+ 	struct xfs_buf_map	*b_maps;
+ 	struct xfs_buf_map	__b_map;
+ 	int			b_nmaps;
++	struct list_head	b_list;
+ #ifdef XFS_BUF_TRACING
+ 	struct list_head	b_lock_list;
+ 	const char		*b_func;
+@@ -243,11 +244,14 @@ xfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags)
+ 	return bp;
  }
  
-+static void
-+xfs_destroy_ioends(
-+	struct xfs_ioend	*ioend,
-+	int			error)
++/* Push a single buffer on a delwri queue. */
+ static inline void
+ xfs_buf_delwri_queue(struct xfs_buf *bp, struct list_head *buffer_list)
+ {
+ 	bp->b_node.cn_count++;
+-	libxfs_writebuf(bp, 0);
++	list_add_tail(&bp->b_list, buffer_list);
+ }
+ 
++int xfs_buf_delwri_submit(struct list_head *buffer_list);
++
+ #endif	/* __LIBXFS_IO_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index fd420f4f..0233393d 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -381,7 +381,6 @@ roundup_64(uint64_t x, uint32_t y)
+ #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+ #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
+ #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
+-#define xfs_buf_delwri_submit(bl)	(0)
+ #define xfs_buf_oneshot(bp)		((void) 0)
+ 
+ #define XBRW_READ			LIBXFS_BREAD
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 9c6c93a7..dd582a4e 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1472,3 +1472,28 @@ libxfs_irele(
+ 	libxfs_idestroy(ip);
+ 	kmem_zone_free(xfs_inode_zone, ip);
+ }
++
++/*
++ * Write out a buffer list synchronously.
++ *
++ * This will take the @buffer_list, write all buffers out and wait for I/O
++ * completion on all of the buffers. @buffer_list is consumed by the function,
++ * so callers must have some other way of tracking buffers if they require such
++ * functionality.
++ */
++int
++xfs_buf_delwri_submit(
++	struct list_head	*buffer_list)
 +{
-+	struct list_head	tmp;
++	struct xfs_buf		*bp, *n;
++	int			error = 0, error2;
 +
-+	list_replace_init(&ioend->io_list, &tmp);
-+	xfs_destroy_ioend(ioend, error);
-+	while ((ioend = list_pop(&tmp, struct xfs_ioend, io_list)))
-+		xfs_destroy_ioend(ioend, error);
++	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
++		list_del_init(&bp->b_list);
++		error2 = libxfs_writebuf(bp, 0);
++		if (!error)
++			error = error2;
++	}
++
++	return error;
 +}
-+
- /*
-  * Fast and loose check if this write could update the on-disk inode size.
-  */
-@@ -173,7 +186,6 @@ xfs_end_ioend(
- 	struct xfs_ioend	*ioend)
- {
- 	unsigned int		nofs_flag = memalloc_nofs_save();
--	struct list_head	ioend_list;
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	xfs_off_t		offset = ioend->io_offset;
- 	size_t			size = ioend->io_size;
-@@ -207,16 +219,7 @@ xfs_end_ioend(
- 	if (!error && xfs_ioend_is_append(ioend))
- 		error = xfs_setfilesize(ip, offset, size);
- done:
--	list_replace_init(&ioend->io_list, &ioend_list);
--	xfs_destroy_ioend(ioend, error);
--
--	while (!list_empty(&ioend_list)) {
--		ioend = list_first_entry(&ioend_list, struct xfs_ioend,
--				io_list);
--		list_del_init(&ioend->io_list);
--		xfs_destroy_ioend(ioend, error);
--	}
--
-+	xfs_destroy_ioends(ioend, error);
- 	memalloc_nofs_restore(nofs_flag);
- }
- 
-@@ -246,15 +249,16 @@ xfs_ioend_try_merge(
- 	struct xfs_ioend	*ioend,
- 	struct list_head	*more_ioends)
- {
--	struct xfs_ioend	*next_ioend;
-+	struct xfs_ioend	*next;
- 
--	while (!list_empty(more_ioends)) {
--		next_ioend = list_first_entry(more_ioends, struct xfs_ioend,
--				io_list);
--		if (!xfs_ioend_can_merge(ioend, next_ioend))
-+	INIT_LIST_HEAD(&ioend->io_list);
-+
-+	while ((next = list_first_entry_or_null(more_ioends, struct xfs_ioend,
-+			io_list))) {
-+		if (!xfs_ioend_can_merge(ioend, next))
- 			break;
--		list_move_tail(&next_ioend->io_list, &ioend->io_list);
--		ioend->io_size += next_ioend->io_size;
-+		list_move_tail(&next->io_list, &ioend->io_list);
-+		ioend->io_size += next->io_size;
- 	}
- }
- 
-@@ -277,29 +281,31 @@ xfs_ioend_compare(
- 	return 0;
- }
- 
-+static void
-+xfs_sort_ioends(
-+	struct list_head	*ioend_list)
-+{
-+	list_sort(NULL, ioend_list, xfs_ioend_compare);
-+}
-+
- /* Finish all pending io completions. */
- void
- xfs_end_io(
- 	struct work_struct	*work)
- {
--	struct xfs_inode	*ip;
-+	struct xfs_inode	*ip =
-+		container_of(work, struct xfs_inode, i_ioend_work);
- 	struct xfs_ioend	*ioend;
--	struct list_head	completion_list;
-+	struct list_head	tmp;
- 	unsigned long		flags;
- 
--	ip = container_of(work, struct xfs_inode, i_ioend_work);
--
- 	spin_lock_irqsave(&ip->i_ioend_lock, flags);
--	list_replace_init(&ip->i_ioend_list, &completion_list);
-+	list_replace_init(&ip->i_ioend_list, &tmp);
- 	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
- 
--	list_sort(NULL, &completion_list, xfs_ioend_compare);
--
--	while (!list_empty(&completion_list)) {
--		ioend = list_first_entry(&completion_list, struct xfs_ioend,
--				io_list);
--		list_del_init(&ioend->io_list);
--		xfs_ioend_try_merge(ioend, &completion_list);
-+	xfs_sort_ioends(&tmp);
-+	while ((ioend = list_pop(&tmp, struct xfs_ioend, io_list))) {
-+		xfs_ioend_try_merge(ioend, &tmp);
- 		xfs_end_ioend(ioend);
- 	}
- }
--- 
-2.20.1
