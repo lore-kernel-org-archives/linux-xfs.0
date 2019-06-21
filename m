@@ -1,131 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from icp-osb-irony-out1.external.iinet.net.au ([203.59.1.210]:33315
-        "EHLO icp-osb-irony-out1.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726323AbfFXDID (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jun 2019 23:08:03 -0400
-Subject: [PATCH 04/10] xfs: mount-api - refactor xfs_fs_fill_super()
-From: Ian Kent <raven@themaw.net>
-Date: Mon, 24 Jun 2019 10:58:44 +0800
-Message-ID: <156134512264.2519.11045220600510784871.stgit@fedora-28>
-In-Reply-To: <156134510205.2519.16185588460828778620.stgit@fedora-28>
-References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from mx1.redhat.com ([209.132.183.28]:43418 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726147AbfFUNkc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Jun 2019 09:40:32 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v14 6/7] ext4: disable map_sync for async flush
+Date: Fri, 21 Jun 2019 19:04:54 +0530
+Message-Id: <20190621133455.3303-7-pagupta@redhat.com>
+In-Reply-To: <20190621133455.3303-1-pagupta@redhat.com>
+References: <20190621133455.3303-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
+To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
 
-Much of the code in xfs_fs_fill_super() will be used by the
-fill super function used by the new mount-api.
+Dont support 'MAP_SYNC' with non-DAX files and DAX files
+with asynchronous dax_device. Virtio pmem provides
+asynchronous host page cache flush mechanism. We don't
+support 'MAP_SYNC' with virtio pmem and ext4.
 
-So refactor the common code into a helper in an attempt to
-show what's actually changed.
-
-Signed-off-by: Ian Kent <raven@themaw.net>
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/xfs/xfs_super.c |   65 ++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 42 insertions(+), 23 deletions(-)
+ fs/ext4/file.c | 10 ++++++----
+ 1 file changed, 6 insertions(+), 4 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e78fea14d598..cf8efb465969 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1823,27 +1823,14 @@ xfs_mount_alloc(
- 
- 
- STATIC int
--xfs_fs_fill_super(
--	struct super_block	*sb,
--	void			*data,
-+__xfs_fs_fill_super(
-+	struct xfs_mount	*mp,
- 	int			silent)
+diff --git a/fs/ext4/file.c b/fs/ext4/file.c
+index 98ec11f69cd4..dee549339e13 100644
+--- a/fs/ext4/file.c
++++ b/fs/ext4/file.c
+@@ -360,15 +360,17 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
+ static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
  {
-+	struct super_block	*sb = mp->m_super;
- 	struct inode		*root;
--	struct xfs_mount	*mp = NULL;
--	int			flags = 0, error = -ENOMEM;
--
--	/*
--	 * allocate mp and do all low-level struct initializations before we
--	 * attach it to the super
--	 */
--	mp = xfs_mount_alloc(sb);
--	if (!mp)
--		goto out;
--	sb->s_fs_info = mp;
--
--	error = xfs_parseargs(mp, (char *)data);
--	if (error)
--		goto out_free_fsname;
-+	int			flags = 0;
-+	int			error;
+ 	struct inode *inode = file->f_mapping->host;
++	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
++	struct dax_device *dax_dev = sbi->s_daxdev;
  
- 	sb_min_blocksize(sb, BBSIZE);
- 	sb->s_xattr = xfs_xattr_handlers;
-@@ -1870,7 +1857,7 @@ xfs_fs_fill_super(
+-	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
++	if (unlikely(ext4_forced_shutdown(sbi)))
+ 		return -EIO;
  
- 	error = xfs_open_devices(mp);
- 	if (error)
--		goto out_free_fsname;
-+		goto out;
+ 	/*
+-	 * We don't support synchronous mappings for non-DAX files. At least
+-	 * until someone comes with a sensible use case.
++	 * We don't support synchronous mappings for non-DAX files and
++	 * for DAX files if underneath dax_device is not synchronous.
+ 	 */
+-	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
++	if (!daxdev_mapping_supported(vma, dax_dev))
+ 		return -EOPNOTSUPP;
  
- 	error = xfs_init_mount_workqueues(mp);
- 	if (error)
-@@ -2003,10 +1990,6 @@ xfs_fs_fill_super(
- 	xfs_destroy_mount_workqueues(mp);
-  out_close_devices:
- 	xfs_close_devices(mp);
-- out_free_fsname:
--	sb->s_fs_info = NULL;
--	xfs_free_fsname(mp);
--	kfree(mp);
-  out:
- 	return error;
- 
-@@ -2016,6 +1999,42 @@ xfs_fs_fill_super(
- 	goto out_free_sb;
- }
- 
-+STATIC int
-+xfs_fs_fill_super(
-+	struct super_block	*sb,
-+	void			*data,
-+	int			silent)
-+{
-+	struct xfs_mount	*mp = NULL;
-+	int			error = -ENOMEM;
-+
-+	/*
-+	 * allocate mp and do all low-level struct initializations before we
-+	 * attach it to the super
-+	 */
-+	mp = xfs_mount_alloc(sb);
-+	if (!mp)
-+		goto out;
-+	sb->s_fs_info = mp;
-+
-+	error = xfs_parseargs(mp, (char *)data);
-+	if (error)
-+		goto out_free_fsname;
-+
-+	error = __xfs_fs_fill_super(mp, silent);
-+	if (error)
-+		goto out_free_fsname;
-+
-+	return 0;
-+
-+ out_free_fsname:
-+	sb->s_fs_info = NULL;
-+	xfs_free_fsname(mp);
-+	kfree(mp);
-+out:
-+	return error;
-+}
-+
- STATIC void
- xfs_fs_put_super(
- 	struct super_block	*sb)
+ 	file_accessed(file);
+-- 
+2.20.1
