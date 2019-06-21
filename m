@@ -1,329 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50782 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727417AbfFXFxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:35 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/12] iomap: add tracing for the address space operations
-Date: Mon, 24 Jun 2019 07:52:53 +0200
-Message-Id: <20190624055253.31183-13-hch@lst.de>
-In-Reply-To: <20190624055253.31183-1-hch@lst.de>
-References: <20190624055253.31183-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:57654 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726125AbfFUT5X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 15:57:23 -0400
+Subject: [PATCH 3/6] libxfs: fix uncached buffer refcounting
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Fri, 21 Jun 2019 12:57:12 -0700
+Message-ID: <156114703289.1643538.16263048212251920271.stgit@magnolia>
+In-Reply-To: <156114701371.1643538.316410894576032261.stgit@magnolia>
+References: <156114701371.1643538.316410894576032261.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Lift the xfs code for tracing address space operations to the iomap
-layer.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Currently, uncached buffers in userspace are created with zero refcount
+and are fed to cache_node_put when they're released.  This is totally
+broken -- the refcount should be 1 (because the caller now holds a
+reference) and we should never be dumping uncached buffers into the
+cache.  Fix both of these problems.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c                   | 13 +++++-
- fs/xfs/xfs_aops.c            | 27 ++----------
- fs/xfs/xfs_trace.h           | 65 ----------------------------
- include/trace/events/iomap.h | 82 ++++++++++++++++++++++++++++++++++++
- 4 files changed, 97 insertions(+), 90 deletions(-)
- create mode 100644 include/trace/events/iomap.h
+ libxfs/libxfs_io.h   |   18 ++++++++++++++++++
+ libxfs/libxfs_priv.h |    2 --
+ libxfs/rdwr.c        |    5 ++++-
+ 3 files changed, 22 insertions(+), 3 deletions(-)
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 72a1b622e634..c98107a6bf81 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -23,7 +23,8 @@
- #include <linux/task_io_accounting_ops.h>
- #include <linux/dax.h>
- #include <linux/sched/signal.h>
--
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/iomap.h>
- #include "internal.h"
- 
- static struct bio_set iomap_ioend_bioset;
-@@ -369,6 +370,8 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
- 	unsigned poff;
- 	loff_t ret;
- 
-+	trace_iomap_readpage(page->mapping->host, 1);
-+
- 	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
- 		ret = iomap_apply(inode, page_offset(page) + poff,
- 				PAGE_SIZE - poff, 0, ops, &ctx,
-@@ -465,6 +468,8 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
- 	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
- 	loff_t length = last - pos + PAGE_SIZE, ret = 0;
- 
-+	trace_iomap_readpages(mapping->host, nr_pages);
-+
- 	while (length > 0) {
- 		ret = iomap_apply(mapping->host, pos, length, 0, ops,
- 				&ctx, iomap_readpages_actor);
-@@ -531,6 +536,8 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
- int
- iomap_releasepage(struct page *page, gfp_t gfp_mask)
- {
-+	trace_iomap_releasepage(page->mapping->host, page, 0, 0);
-+
- 	/*
- 	 * mm accommodates an old ext3 case where clean pages might not have had
- 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
-@@ -546,6 +553,8 @@ EXPORT_SYMBOL_GPL(iomap_releasepage);
- void
- iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
- {
-+	trace_iomap_invalidatepage(page->mapping->host, page, offset, len);
-+
- 	/*
- 	 * If we are invalidating the entire page, clear the dirty state from it
- 	 * and release it to avoid unnecessary buildup of the LRU.
-@@ -2579,6 +2588,8 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 	u64 end_offset;
- 	loff_t offset;
- 
-+	trace_iomap_writepage(inode, page, 0, 0);
-+
- 	/*
- 	 * Refuse to write the page out if we are called from reclaim context.
- 	 *
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 26b838aea2db..a27ecce31c88 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -440,16 +440,6 @@ xfs_submit_ioend(
- 	return status;
+
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 94261270..b6f8756a 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -225,4 +225,22 @@ xfs_buf_associate_memory(struct xfs_buf *bp, void *mem, size_t len)
+ 	return 0;
  }
  
--STATIC void
--xfs_vm_invalidatepage(
--	struct page		*page,
--	unsigned int		offset,
--	unsigned int		length)
--{
--	trace_xfs_invalidatepage(page->mapping->host, page, offset, length);
--	iomap_invalidatepage(page, offset, length);
--}
--
- /*
-  * If the page has delalloc blocks on it, we need to punch them out before we
-  * invalidate the page.  If we don't, we leave a stale delalloc mapping on the
-@@ -484,7 +474,7 @@ xfs_discard_page(
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
-+	iomap_invalidatepage(page, 0, PAGE_SIZE);
- }
- 
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-@@ -524,15 +514,6 @@ xfs_dax_writepages(
- 			xfs_find_bdev_for_inode(mapping->host), wbc);
- }
- 
--STATIC int
--xfs_vm_releasepage(
--	struct page		*page,
--	gfp_t			gfp_mask)
--{
--	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
--	return iomap_releasepage(page, gfp_mask);
--}
--
- STATIC sector_t
- xfs_vm_bmap(
- 	struct address_space	*mapping,
-@@ -561,7 +542,6 @@ xfs_vm_readpage(
- 	struct file		*unused,
- 	struct page		*page)
- {
--	trace_xfs_vm_readpage(page->mapping->host, 1);
- 	return iomap_readpage(page, &xfs_iomap_ops);
- }
- 
-@@ -572,7 +552,6 @@ xfs_vm_readpages(
- 	struct list_head	*pages,
- 	unsigned		nr_pages)
- {
--	trace_xfs_vm_readpages(mapping->host, nr_pages);
- 	return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- }
- 
-@@ -592,8 +571,8 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.writepage		= xfs_vm_writepage,
- 	.writepages		= xfs_vm_writepages,
- 	.set_page_dirty		= iomap_set_page_dirty,
--	.releasepage		= xfs_vm_releasepage,
--	.invalidatepage		= xfs_vm_invalidatepage,
-+	.releasepage		= iomap_releasepage,
-+	.invalidatepage		= iomap_invalidatepage,
- 	.bmap			= xfs_vm_bmap,
- 	.direct_IO		= noop_direct_IO,
- 	.migratepage		= iomap_migrate_page,
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 2464ea351f83..051bd7d4769a 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1153,71 +1153,6 @@ DEFINE_RW_EVENT(xfs_file_buffered_write);
- DEFINE_RW_EVENT(xfs_file_direct_write);
- DEFINE_RW_EVENT(xfs_file_dax_write);
- 
--DECLARE_EVENT_CLASS(xfs_page_class,
--	TP_PROTO(struct inode *inode, struct page *page, unsigned long off,
--		 unsigned int len),
--	TP_ARGS(inode, page, off, len),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(pgoff_t, pgoff)
--		__field(loff_t, size)
--		__field(unsigned long, offset)
--		__field(unsigned int, length)
--	),
--	TP_fast_assign(
--		__entry->dev = inode->i_sb->s_dev;
--		__entry->ino = XFS_I(inode)->i_ino;
--		__entry->pgoff = page_offset(page);
--		__entry->size = i_size_read(inode);
--		__entry->offset = off;
--		__entry->length = len;
--	),
--	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
--		  "length %x",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->pgoff,
--		  __entry->size,
--		  __entry->offset,
--		  __entry->length)
--)
--
--#define DEFINE_PAGE_EVENT(name)		\
--DEFINE_EVENT(xfs_page_class, name,	\
--	TP_PROTO(struct inode *inode, struct page *page, unsigned long off, \
--		 unsigned int len),	\
--	TP_ARGS(inode, page, off, len))
--DEFINE_PAGE_EVENT(xfs_writepage);
--DEFINE_PAGE_EVENT(xfs_releasepage);
--DEFINE_PAGE_EVENT(xfs_invalidatepage);
--
--DECLARE_EVENT_CLASS(xfs_readpage_class,
--	TP_PROTO(struct inode *inode, int nr_pages),
--	TP_ARGS(inode, nr_pages),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(int, nr_pages)
--	),
--	TP_fast_assign(
--		__entry->dev = inode->i_sb->s_dev;
--		__entry->ino = inode->i_ino;
--		__entry->nr_pages = nr_pages;
--	),
--	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->nr_pages)
--)
--
--#define DEFINE_READPAGE_EVENT(name)		\
--DEFINE_EVENT(xfs_readpage_class, name,	\
--	TP_PROTO(struct inode *inode, int nr_pages), \
--	TP_ARGS(inode, nr_pages))
--DEFINE_READPAGE_EVENT(xfs_vm_readpage);
--DEFINE_READPAGE_EVENT(xfs_vm_readpages);
--
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
- 		 int whichfork, struct xfs_bmbt_irec *irec),
-diff --git a/include/trace/events/iomap.h b/include/trace/events/iomap.h
-new file mode 100644
-index 000000000000..da50ece663f8
---- /dev/null
-+++ b/include/trace/events/iomap.h
-@@ -0,0 +1,82 @@
-+// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Copyright (c) 2009-2019, Christoph Hellwig
-+ * All Rights Reserved.
++ * Allocate an uncached buffer that points nowhere.  The refcount will be 1,
++ * and the cache node hash list will be empty to indicate that it's uncached.
 + */
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM iomap
++static inline struct xfs_buf *
++xfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags)
++{
++	struct xfs_buf	*bp;
 +
-+#if !defined(_TRACE_IOMAP_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_IOMAP_H
++	bp = libxfs_getbufr(targ, XFS_BUF_DADDR_NULL, bblen);
++	if (!bp)
++		return NULL;
 +
-+#include <linux/tracepoint.h>
++	INIT_LIST_HEAD(&bp->b_node.cn_hash);
++	bp->b_node.cn_count = 1;
++	return bp;
++}
 +
-+DECLARE_EVENT_CLASS(iomap_page_class,
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned long off,
-+		 unsigned int len),
-+	TP_ARGS(inode, page, off, len),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(u64, ino)
-+		__field(pgoff_t, pgoff)
-+		__field(loff_t, size)
-+		__field(unsigned long, offset)
-+		__field(unsigned int, length)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->pgoff = page_offset(page);
-+		__entry->size = i_size_read(inode);
-+		__entry->offset = off;
-+		__entry->length = len;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
-+		  "length %x",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->pgoff,
-+		  __entry->size,
-+		  __entry->offset,
-+		  __entry->length)
-+)
-+
-+#define DEFINE_PAGE_EVENT(name)		\
-+DEFINE_EVENT(iomap_page_class, name,	\
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned long off, \
-+		 unsigned int len),	\
-+	TP_ARGS(inode, page, off, len))
-+DEFINE_PAGE_EVENT(iomap_writepage);
-+DEFINE_PAGE_EVENT(iomap_releasepage);
-+DEFINE_PAGE_EVENT(iomap_invalidatepage);
-+
-+DECLARE_EVENT_CLASS(iomap_readpage_class,
-+	TP_PROTO(struct inode *inode, int nr_pages),
-+	TP_ARGS(inode, nr_pages),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(u64, ino)
-+		__field(int, nr_pages)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->nr_pages = nr_pages;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->nr_pages)
-+)
-+
-+#define DEFINE_READPAGE_EVENT(name)		\
-+DEFINE_EVENT(iomap_readpage_class, name,	\
-+	TP_PROTO(struct inode *inode, int nr_pages), \
-+	TP_ARGS(inode, nr_pages))
-+DEFINE_READPAGE_EVENT(iomap_readpage);
-+DEFINE_READPAGE_EVENT(iomap_readpages);
-+
-+#endif /* _TRACE_IOMAP_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
--- 
-2.20.1
+ #endif	/* __LIBXFS_IO_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index 9004ff0c..eb92942a 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -378,8 +378,6 @@ roundup_64(uint64_t x, uint32_t y)
+ 	(len) = __bar; /* no set-but-unused warning */	\
+ 	NULL;						\
+ })
+-#define xfs_buf_get_uncached(t,n,f)     \
+-	libxfs_getbufr((t), XFS_BUF_DADDR_NULL, (n));
+ #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+ #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
+ #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 998862af..9c6c93a7 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -866,7 +866,10 @@ libxfs_putbuf(xfs_buf_t *bp)
+ 		}
+ 	}
+ 
+-	cache_node_put(libxfs_bcache, (struct cache_node *)bp);
++	if (!list_empty(&bp->b_node.cn_hash))
++		cache_node_put(libxfs_bcache, (struct cache_node *)bp);
++	else if (--bp->b_node.cn_count == 0)
++		libxfs_putbufr(bp);
+ }
+ 
+ void
