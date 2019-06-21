@@ -1,175 +1,99 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48548 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726314AbfFUX50 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:57:26 -0400
-Subject: [PATCH 3/4] fs: teach vfs_ioc_fssetxattr_check to check project id
- info
+Received: from userp2120.oracle.com ([156.151.31.85]:37216 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726066AbfFUX7E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:59:04 -0400
+Subject: [PATCH 5/7] xfs: refactor setflags to use setattr code directly
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 21 Jun 2019 16:56:37 -0700
-Message-ID: <156116139763.1664814.8565619516886294289.stgit@magnolia>
-In-Reply-To: <156116136742.1664814.17093419199766834123.stgit@magnolia>
-References: <156116136742.1664814.17093419199766834123.stgit@magnolia>
+Date: Fri, 21 Jun 2019 16:57:30 -0700
+Message-ID: <156116145090.1664939.13744166286109265130.stgit@magnolia>
+In-Reply-To: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+References: <156116141046.1664939.11424021489724835645.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
-Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
+Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Standardize the project id checks for FSSETXATTR.
+Refactor the SETFLAGS implementation to use the SETXATTR code directly
+instead of partially constructing a struct fsxattr and calling bits and
+pieces of the setxattr code.  This reduces code size and becomes
+necessary in the next patch to maintain the behavior of allowing
+userspace to set immutable on an immutable file so long as nothing
+/else/ about the attributes change.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/ioctl.c    |   27 ---------------------------
- fs/f2fs/file.c     |   27 ---------------------------
- fs/inode.c         |   13 +++++++++++++
- fs/xfs/xfs_ioctl.c |   15 ---------------
- 4 files changed, 13 insertions(+), 69 deletions(-)
+ fs/xfs/xfs_ioctl.c |   40 +++-------------------------------------
+ 1 file changed, 3 insertions(+), 37 deletions(-)
 
 
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index c2f48c90ca45..6aa1df1918f7 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -697,30 +697,6 @@ static long ext4_ioctl_group_add(struct file *file,
- 	return err;
- }
- 
--static int ext4_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
--{
--	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
--	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
--
--	if (__kprojid_val(EXT4_I(inode)->i_projid) != fa->fsx_projid)
--		return -EINVAL;
--
--	if (ext4_test_inode_flag(inode, EXT4_INODE_PROJINHERIT)) {
--		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
--			return -EINVAL;
--	} else {
--		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
--			return -EINVAL;
--	}
--
--	return 0;
--}
--
- static void ext4_fsgetxattr(struct inode *inode, struct fsxattr *fa)
- {
- 	struct ext4_inode_info *ei = EXT4_I(inode);
-@@ -1135,9 +1111,6 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 
- 		inode_lock(inode);
- 		ext4_fsgetxattr(inode, &old_fa);
--		err = ext4_ioctl_check_project(inode, &fa);
--		if (err)
--			goto out;
- 		err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
- 		if (err)
- 			goto out;
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index f707de6bd4a8..183ed1ac60e1 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -2799,30 +2799,6 @@ static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
- 	return 0;
- }
- 
--static int f2fs_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
--{
--	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
--	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
--
--	if (__kprojid_val(F2FS_I(inode)->i_projid) != fa->fsx_projid)
--		return -EINVAL;
--
--	if (F2FS_I(inode)->i_flags & F2FS_PROJINHERIT_FL) {
--		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
--			return -EINVAL;
--	} else {
--		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
--			return -EINVAL;
--	}
--
--	return 0;
--}
--
- static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- {
- 	struct inode *inode = file_inode(filp);
-@@ -2850,9 +2826,6 @@ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- 		return err;
- 
- 	inode_lock(inode);
--	err = f2fs_ioctl_check_project(inode, &fa);
--	if (err)
--		goto out;
- 
- 	__f2fs_ioc_fsgetxattr(inode, &old_fa);
- 	err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-diff --git a/fs/inode.c b/fs/inode.c
-index ddfe60679b53..f1ffa9605078 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2221,6 +2221,19 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
-+	/*
-+	 * Project Quota ID state is only allowed to change from within the init
-+	 * namespace. Enforce that restriction only if we are trying to change
-+	 * the quota ID state. Everything else is allowed in user namespaces.
-+	 */
-+	if (current_user_ns() != &init_user_ns) {
-+		if (old_fa->fsx_projid != fa->fsx_projid)
-+			return -EINVAL;
-+		if ((old_fa->fsx_xflags ^ fa->fsx_xflags) &
-+				FS_XFLAG_PROJINHERIT)
-+			return -EINVAL;
-+	}
-+
- 	return 0;
- }
- EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 08c24f2f55c3..82961de98900 100644
+index 88583b3e1e76..7b19ba2956ad 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1299,21 +1299,6 @@ xfs_ioctl_setattr_check_projid(
- 	if (fa->fsx_projid > (uint16_t)-1 &&
- 	    !xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
- 		return -EINVAL;
+@@ -1491,11 +1491,8 @@ xfs_ioc_setxflags(
+ 	struct file		*filp,
+ 	void			__user *arg)
+ {
+-	struct xfs_trans	*tp;
+ 	struct fsxattr		fa;
+-	struct fsxattr		old_fa;
+ 	unsigned int		flags;
+-	int			join_flags = 0;
+ 	int			error;
+ 
+ 	if (copy_from_user(&flags, arg, sizeof(flags)))
+@@ -1506,44 +1503,13 @@ xfs_ioc_setxflags(
+ 		      FS_SYNC_FL))
+ 		return -EOPNOTSUPP;
+ 
+-	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
++	__xfs_ioc_fsgetxattr(ip, false, &fa);
++	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
+ 
+ 	error = mnt_want_write_file(filp);
+ 	if (error)
+ 		return error;
 -
 -	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
+-	 * Changing DAX config may require inode locking for mapping
+-	 * invalidation. These need to be held all the way to transaction commit
+-	 * or cancel time, so need to be passed through to
+-	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
+-	 * appropriately.
 -	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
+-	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
+-	if (error)
+-		goto out_drop_write;
 -
--	if (xfs_get_projid(ip) != fa->fsx_projid)
--		return -EINVAL;
--	if ((fa->fsx_xflags & FS_XFLAG_PROJINHERIT) !=
--	    (ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT))
--		return -EINVAL;
+-	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
+-	if (IS_ERR(tp)) {
+-		error = PTR_ERR(tp);
+-		goto out_drop_write;
+-	}
 -
- 	return 0;
+-	__xfs_ioc_fsgetxattr(ip, false, &old_fa);
+-	error = vfs_ioc_fssetxattr_check(VFS_I(ip), &old_fa, &fa);
+-	if (error) {
+-		xfs_trans_cancel(tp);
+-		goto out_drop_write;
+-	}
+-
+-	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
+-	if (error) {
+-		xfs_trans_cancel(tp);
+-		goto out_drop_write;
+-	}
+-
+-	error = xfs_trans_commit(tp);
+-out_drop_write:
++	error = xfs_ioctl_setattr(ip, &fa);
+ 	mnt_drop_write_file(filp);
+ 	return error;
  }
- 
