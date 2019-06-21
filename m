@@ -1,189 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50662 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbfFXFxQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:16 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 06/12] xfs: remove XFS_TRANS_NOFS
-Date: Mon, 24 Jun 2019 07:52:47 +0200
-Message-Id: <20190624055253.31183-7-hch@lst.de>
-In-Reply-To: <20190624055253.31183-1-hch@lst.de>
-References: <20190624055253.31183-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:46660 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726017AbfFUTCM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 15:02:12 -0400
+Date: Fri, 21 Jun 2019 12:02:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/4] xfs: rework min log size helper
+Message-ID: <20190621190206.GC5380@magnolia>
+References: <156089201978.345809.17444450351199726553.stgit@magnolia>
+ <156089203509.345809.3448903728041546348.stgit@magnolia>
+ <20190621085748.GH15846@desktop>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190621085748.GH15846@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Instead of a magic flag for xfs_trans_alloc, just ensure all callers
-that can't relclaim through the file system use memalloc_nofs_save to
-set the per-task nofs flag.
+On Fri, Jun 21, 2019 at 04:57:48PM +0800, Eryu Guan wrote:
+> On Tue, Jun 18, 2019 at 02:07:15PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > The recent _scratch_find_xfs_min_logblocks helper has a major thinko in
+> > it -- it relies on feeding a too-small size to _scratch_do_mkfs so that
+> > mkfs will tell us the minimum log size.  Unfortunately, _scratch_do_mkfs
+> > will see that first failure and retry the mkfs without MKFS_OPTIONS,
+> > which means that we return the minimum log size for the default mkfs
+> > settings without MKFS_OPTIONS.
+> > 
+> > This is a problem if someone's running fstests with a set of
+> > MKFS_OPTIONS that affects the minimum log size.  To fix this, open-code
+> > the _scratch_do_mkfs retry behavior so that we only do the "retry
+> > without MKFS_OPTIONS" behavior if the mkfs failed for a reason other
+> > than the minimum log size check.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  common/rc  |   13 ++++++++++---
+> >  common/xfs |   23 +++++++++++++++++++++--
+> >  2 files changed, 31 insertions(+), 5 deletions(-)
+> > 
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 25203bb4..a38b7f02 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -438,6 +438,14 @@ _scratch_mkfs_options()
+> >      echo $SCRATCH_OPTIONS $MKFS_OPTIONS $* $SCRATCH_DEV
+> >  }
+> >  
+> > +# Format the scratch device directly.  First argument is the mkfs command.
+> > +# Second argument are all the parameters.  stdout goes to $tmp.mkfsstd and
+> > +# stderr goes to $tmp.mkfserr.
+> > +__scratch_do_mkfs()
+> > +{
+> > +	eval "$1 $2 $SCRATCH_DEV" 2>$tmp.mkfserr 1>$tmp.mkfsstd
+> 
+> I'd prefer leaving stdout and stderr to caller to handle, because ..
+> 
+> 
+> > +}
+> > +
+> >  # Do the actual mkfs work on SCRATCH_DEV. Firstly mkfs with both MKFS_OPTIONS
+> >  # and user specified mkfs options, if that fails (due to conflicts between mkfs
+> >  # options), do a second mkfs with only user provided mkfs options.
+> > @@ -456,8 +464,7 @@ _scratch_do_mkfs()
+> >  
+> >  	# save mkfs output in case conflict means we need to run again.
+> >  	# only the output for the mkfs that applies should be shown
+> > -	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
+> > -		2>$tmp.mkfserr 1>$tmp.mkfsstd
+> 
+> it's easier to know the $tmp.mkfserr and $tmp.mkfsstd files should be
+> cleaned up, otherwise it's not that clear where these files come from.
+> 
+> > +	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
+> >  	mkfs_status=$?
+> >  
+> >  	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
+> > @@ -471,7 +478,7 @@ _scratch_do_mkfs()
+> >  		) >> $seqres.full
+> >  
+> >  		# running mkfs again. overwrite previous mkfs output files
+> > -		eval "$mkfs_cmd $extra_mkfs_options $SCRATCH_DEV" \
+> > +		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options" \
+> >  			2>$tmp.mkfserr 1>$tmp.mkfsstd
+> 
+> With the implemention in the patch, the "2>$tmp.mkfserr 1>$tmp.mkfsstd"
+> part should be removed too, but with the suggested implemention we can
+> keep it :)
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_shared.h |  1 -
- fs/xfs/xfs_aops.c          | 12 +++++++++---
- fs/xfs/xfs_file.c          | 12 +++++++++---
- fs/xfs/xfs_iomap.c         |  2 +-
- fs/xfs/xfs_reflink.c       |  4 ++--
- fs/xfs/xfs_trans.c         |  4 +---
- 6 files changed, 22 insertions(+), 13 deletions(-)
+Ok, will change this.
 
-diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
-index 4e909791aeac..1f2b5a0c71b4 100644
---- a/fs/xfs/libxfs/xfs_shared.h
-+++ b/fs/xfs/libxfs/xfs_shared.h
-@@ -65,7 +65,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
- #define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
- #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
- #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
--#define XFS_TRANS_NOFS		0x80	/* pass KM_NOFS to kmem_alloc */
- /*
-  * LOWMODE is used by the allocator to activate the lowspace algorithm - when
-  * free space is running low the extent allocator may choose to allocate an
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 93a760f13017..633baaaff7ae 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -138,8 +138,7 @@ xfs_setfilesize_trans_alloc(
- 	struct xfs_trans	*tp;
- 	int			error;
- 
--	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0,
--				XFS_TRANS_NOFS, &tp);
-+	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
- 	if (error)
- 		return error;
- 
-@@ -236,6 +235,7 @@ STATIC void
- xfs_end_ioend(
- 	struct xfs_ioend	*ioend)
- {
-+	unsigned int		nofs_flag = memalloc_nofs_save();
- 	struct list_head	ioend_list;
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
- 	xfs_off_t		offset = ioend->io_offset;
-@@ -282,6 +282,8 @@ xfs_end_ioend(
- 		list_del_init(&ioend->io_list);
- 		xfs_destroy_ioend(ioend, error);
- 	}
-+
-+	memalloc_nofs_restore(nofs_flag);
- }
- 
- /*
-@@ -663,8 +665,12 @@ xfs_submit_ioend(
- 	    (ioend->io_fork == XFS_COW_FORK ||
- 	     ioend->io_type != IOMAP_UNWRITTEN) &&
- 	    xfs_ioend_is_append(ioend) &&
--	    !ioend->io_append_trans)
-+	    !ioend->io_append_trans) {
-+		unsigned nofs_flag = memalloc_nofs_save();
-+
- 		status = xfs_setfilesize_trans_alloc(ioend);
-+		memalloc_nofs_restore(nofs_flag);
-+	}
- 
- 	ioend->io_bio->bi_private = ioend;
- 	ioend->io_bio->bi_end_io = xfs_end_bio;
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 916a35cae5e9..f2d806ef8f06 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -379,6 +379,7 @@ xfs_dio_write_end_io(
- 	struct inode		*inode = file_inode(iocb->ki_filp);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	loff_t			offset = iocb->ki_pos;
-+	unsigned int		nofs_flag;
- 	int			error = 0;
- 
- 	trace_xfs_end_io_direct_write(ip, offset, size);
-@@ -395,10 +396,11 @@ xfs_dio_write_end_io(
- 	 */
- 	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
- 
-+	nofs_flag = memalloc_nofs_save();
- 	if (flags & IOMAP_DIO_COW) {
- 		error = xfs_reflink_end_cow(ip, offset, size);
- 		if (error)
--			return error;
-+			goto out;
- 	}
- 
- 	/*
-@@ -407,8 +409,10 @@ xfs_dio_write_end_io(
- 	 * earlier allows a racing dio read to find unwritten extents before
- 	 * they are converted.
- 	 */
--	if (flags & IOMAP_DIO_UNWRITTEN)
--		return xfs_iomap_write_unwritten(ip, offset, size, true);
-+	if (flags & IOMAP_DIO_UNWRITTEN) {
-+		error = xfs_iomap_write_unwritten(ip, offset, size, true);
-+		goto out;
-+	}
- 
- 	/*
- 	 * We need to update the in-core inode size here so that we don't end up
-@@ -430,6 +434,8 @@ xfs_dio_write_end_io(
- 		spin_unlock(&ip->i_flags_lock);
- 	}
- 
-+out:
-+	memalloc_nofs_restore(nofs_flag);
- 	return error;
- }
- 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 6b29452bfba0..461ea023b910 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -782,7 +782,7 @@ xfs_iomap_write_unwritten(
- 		 * complete here and might deadlock on the iolock.
- 		 */
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
--				XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
-+				XFS_TRANS_RESERVE, &tp);
- 		if (error)
- 			return error;
- 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 680ae7662a78..0b23c2b29609 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -572,7 +572,7 @@ xfs_reflink_cancel_cow_range(
- 
- 	/* Start a rolling transaction to remove the mappings */
- 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
--			0, 0, XFS_TRANS_NOFS, &tp);
-+			0, 0, 0, &tp);
- 	if (error)
- 		goto out;
- 
-@@ -631,7 +631,7 @@ xfs_reflink_end_cow_extent(
- 
- 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
- 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
--			XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
-+			XFS_TRANS_RESERVE, &tp);
- 	if (error)
- 		return error;
- 
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index 0746b329a937..21228d7455af 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -264,9 +264,7 @@ xfs_trans_alloc(
- 	 * GFP_NOFS allocation context so that we avoid lockdep false positives
- 	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
- 	 */
--	tp = kmem_zone_zalloc(xfs_trans_zone,
--		(flags & XFS_TRANS_NOFS) ? KM_NOFS : KM_SLEEP);
--
-+	tp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
- 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
- 		sb_start_intwrite(mp->m_super);
- 
--- 
-2.20.1
+> >  		mkfs_status=$?
+> >  	fi
+> > diff --git a/common/xfs b/common/xfs
+> > index f8dafc6c..8733e2ae 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -87,16 +87,33 @@ _scratch_find_xfs_min_logblocks()
+> >  	# minimum log size.
+> >  	local XFS_MIN_LOG_BYTES=2097152
+> >  
+> > -	_scratch_do_mkfs "$mkfs_cmd" "cat" $* -N -l size=$XFS_MIN_LOG_BYTES \
+> > -		2>$tmp.mkfserr 1>$tmp.mkfsstd
+> > +	# Try formatting the filesystem with all the options given and the
+> > +	# minimum log size.  We hope either that this succeeds or that mkfs
+> > +	# tells us the required minimum log size for the feature set.
+> > +	#
+> > +	# We cannot use _scratch_do_mkfs because it will retry /any/ failed
+> > +	# mkfs with MKFS_OPTIONS removed even if the only "failure" was that
+> > +	# the log was too small.
+> > +	local extra_mkfs_options="$* -N -l size=$XFS_MIN_LOG_BYTES"
+> > +	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
+> >  	local mkfs_status=$?
+> >  
+> > +	# If the format fails for a reason other than the log being too small,
+> > +	# try again without MKFS_OPTIONS because that's what _scratch_do_mkfs
+> > +	# will do if we pass in the log size option.
+> > +	if [ $mkfs_status -ne 0 ] &&
+> > +	   ! grep -q 'log size.*too small, minimum' $tmp.mkfserr; then
+> > +		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options"
+> > +		local mkfs_status=$?
+> 
+> We've already declared mkfs_status as local, no need to do it again
+> here.
+
+Will fix.
+
+--D
+
+> Thanks,
+> Eryu
+> 
+> > +	fi
+> > +
+> >  	# mkfs suceeded, so we must pick out the log block size to do the
+> >  	# unit conversion
+> >  	if [ $mkfs_status -eq 0 ]; then
+> >  		local blksz="$(grep '^log.*bsize' $tmp.mkfsstd | \
+> >  			sed -e 's/log.*bsize=\([0-9]*\).*$/\1/g')"
+> >  		echo $((XFS_MIN_LOG_BYTES / blksz))
+> > +		rm -f $tmp.mkfsstd $tmp.mkfserr
+> >  		return
+> >  	fi
+> >  
+> > @@ -104,6 +121,7 @@ _scratch_find_xfs_min_logblocks()
+> >  	if grep -q 'minimum size is' $tmp.mkfserr; then
+> >  		grep 'minimum size is' $tmp.mkfserr | \
+> >  			sed -e 's/^.*minimum size is \([0-9]*\) blocks/\1/g'
+> > +		rm -f $tmp.mkfsstd $tmp.mkfserr
+> >  		return
+> >  	fi
+> >  
+> > @@ -111,6 +129,7 @@ _scratch_find_xfs_min_logblocks()
+> >  	echo "Cannot determine minimum log size" >&2
+> >  	cat $tmp.mkfsstd >> $seqres.full
+> >  	cat $tmp.mkfserr >> $seqres.full
+> > +	rm -f $tmp.mkfsstd $tmp.mkfserr
+> >  }
+> >  
+> >  _scratch_mkfs_xfs()
+> > 
