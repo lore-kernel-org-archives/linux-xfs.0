@@ -1,167 +1,125 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46660 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726017AbfFUTCM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 15:02:12 -0400
-Date: Fri, 21 Jun 2019 12:02:06 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:50284 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726058AbfFUX7C (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:59:02 -0400
+Subject: [PATCH 7/7] vfs: don't allow writes to swap files
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/4] xfs: rework min log size helper
-Message-ID: <20190621190206.GC5380@magnolia>
-References: <156089201978.345809.17444450351199726553.stgit@magnolia>
- <156089203509.345809.3448903728041546348.stgit@magnolia>
- <20190621085748.GH15846@desktop>
+Date: Fri, 21 Jun 2019 16:57:46 -0700
+Message-ID: <156116146628.1664939.13724544486987830540.stgit@magnolia>
+In-Reply-To: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+References: <156116141046.1664939.11424021489724835645.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190621085748.GH15846@desktop>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eryu Guan <guaneryu@gmail.com>
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
+Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-On Fri, Jun 21, 2019 at 04:57:48PM +0800, Eryu Guan wrote:
-> On Tue, Jun 18, 2019 at 02:07:15PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > The recent _scratch_find_xfs_min_logblocks helper has a major thinko in
-> > it -- it relies on feeding a too-small size to _scratch_do_mkfs so that
-> > mkfs will tell us the minimum log size.  Unfortunately, _scratch_do_mkfs
-> > will see that first failure and retry the mkfs without MKFS_OPTIONS,
-> > which means that we return the minimum log size for the default mkfs
-> > settings without MKFS_OPTIONS.
-> > 
-> > This is a problem if someone's running fstests with a set of
-> > MKFS_OPTIONS that affects the minimum log size.  To fix this, open-code
-> > the _scratch_do_mkfs retry behavior so that we only do the "retry
-> > without MKFS_OPTIONS" behavior if the mkfs failed for a reason other
-> > than the minimum log size check.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  common/rc  |   13 ++++++++++---
-> >  common/xfs |   23 +++++++++++++++++++++--
-> >  2 files changed, 31 insertions(+), 5 deletions(-)
-> > 
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index 25203bb4..a38b7f02 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -438,6 +438,14 @@ _scratch_mkfs_options()
-> >      echo $SCRATCH_OPTIONS $MKFS_OPTIONS $* $SCRATCH_DEV
-> >  }
-> >  
-> > +# Format the scratch device directly.  First argument is the mkfs command.
-> > +# Second argument are all the parameters.  stdout goes to $tmp.mkfsstd and
-> > +# stderr goes to $tmp.mkfserr.
-> > +__scratch_do_mkfs()
-> > +{
-> > +	eval "$1 $2 $SCRATCH_DEV" 2>$tmp.mkfserr 1>$tmp.mkfsstd
-> 
-> I'd prefer leaving stdout and stderr to caller to handle, because ..
-> 
-> 
-> > +}
-> > +
-> >  # Do the actual mkfs work on SCRATCH_DEV. Firstly mkfs with both MKFS_OPTIONS
-> >  # and user specified mkfs options, if that fails (due to conflicts between mkfs
-> >  # options), do a second mkfs with only user provided mkfs options.
-> > @@ -456,8 +464,7 @@ _scratch_do_mkfs()
-> >  
-> >  	# save mkfs output in case conflict means we need to run again.
-> >  	# only the output for the mkfs that applies should be shown
-> > -	eval "$mkfs_cmd $MKFS_OPTIONS $extra_mkfs_options $SCRATCH_DEV" \
-> > -		2>$tmp.mkfserr 1>$tmp.mkfsstd
-> 
-> it's easier to know the $tmp.mkfserr and $tmp.mkfsstd files should be
-> cleaned up, otherwise it's not that clear where these files come from.
-> 
-> > +	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
-> >  	mkfs_status=$?
-> >  
-> >  	# a mkfs failure may be caused by conflicts between $MKFS_OPTIONS and
-> > @@ -471,7 +478,7 @@ _scratch_do_mkfs()
-> >  		) >> $seqres.full
-> >  
-> >  		# running mkfs again. overwrite previous mkfs output files
-> > -		eval "$mkfs_cmd $extra_mkfs_options $SCRATCH_DEV" \
-> > +		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options" \
-> >  			2>$tmp.mkfserr 1>$tmp.mkfsstd
-> 
-> With the implemention in the patch, the "2>$tmp.mkfserr 1>$tmp.mkfsstd"
-> part should be removed too, but with the suggested implemention we can
-> keep it :)
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok, will change this.
+Don't let userspace write to an active swap file because the kernel
+effectively has a long term lease on the storage and things could get
+seriously corrupted if we let this happen.
 
-> >  		mkfs_status=$?
-> >  	fi
-> > diff --git a/common/xfs b/common/xfs
-> > index f8dafc6c..8733e2ae 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -87,16 +87,33 @@ _scratch_find_xfs_min_logblocks()
-> >  	# minimum log size.
-> >  	local XFS_MIN_LOG_BYTES=2097152
-> >  
-> > -	_scratch_do_mkfs "$mkfs_cmd" "cat" $* -N -l size=$XFS_MIN_LOG_BYTES \
-> > -		2>$tmp.mkfserr 1>$tmp.mkfsstd
-> > +	# Try formatting the filesystem with all the options given and the
-> > +	# minimum log size.  We hope either that this succeeds or that mkfs
-> > +	# tells us the required minimum log size for the feature set.
-> > +	#
-> > +	# We cannot use _scratch_do_mkfs because it will retry /any/ failed
-> > +	# mkfs with MKFS_OPTIONS removed even if the only "failure" was that
-> > +	# the log was too small.
-> > +	local extra_mkfs_options="$* -N -l size=$XFS_MIN_LOG_BYTES"
-> > +	__scratch_do_mkfs "$mkfs_cmd" "$MKFS_OPTIONS $extra_mkfs_options"
-> >  	local mkfs_status=$?
-> >  
-> > +	# If the format fails for a reason other than the log being too small,
-> > +	# try again without MKFS_OPTIONS because that's what _scratch_do_mkfs
-> > +	# will do if we pass in the log size option.
-> > +	if [ $mkfs_status -ne 0 ] &&
-> > +	   ! grep -q 'log size.*too small, minimum' $tmp.mkfserr; then
-> > +		__scratch_do_mkfs "$mkfs_cmd" "$extra_mkfs_options"
-> > +		local mkfs_status=$?
-> 
-> We've already declared mkfs_status as local, no need to do it again
-> here.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/attr.c     |    3 +++
+ mm/filemap.c  |    3 +++
+ mm/memory.c   |    4 +++-
+ mm/mmap.c     |    2 ++
+ mm/swapfile.c |   15 +++++++++++++--
+ 5 files changed, 24 insertions(+), 3 deletions(-)
 
-Will fix.
 
---D
-
-> Thanks,
-> Eryu
-> 
-> > +	fi
-> > +
-> >  	# mkfs suceeded, so we must pick out the log block size to do the
-> >  	# unit conversion
-> >  	if [ $mkfs_status -eq 0 ]; then
-> >  		local blksz="$(grep '^log.*bsize' $tmp.mkfsstd | \
-> >  			sed -e 's/log.*bsize=\([0-9]*\).*$/\1/g')"
-> >  		echo $((XFS_MIN_LOG_BYTES / blksz))
-> > +		rm -f $tmp.mkfsstd $tmp.mkfserr
-> >  		return
-> >  	fi
-> >  
-> > @@ -104,6 +121,7 @@ _scratch_find_xfs_min_logblocks()
-> >  	if grep -q 'minimum size is' $tmp.mkfserr; then
-> >  		grep 'minimum size is' $tmp.mkfserr | \
-> >  			sed -e 's/^.*minimum size is \([0-9]*\) blocks/\1/g'
-> > +		rm -f $tmp.mkfsstd $tmp.mkfserr
-> >  		return
-> >  	fi
-> >  
-> > @@ -111,6 +129,7 @@ _scratch_find_xfs_min_logblocks()
-> >  	echo "Cannot determine minimum log size" >&2
-> >  	cat $tmp.mkfsstd >> $seqres.full
-> >  	cat $tmp.mkfserr >> $seqres.full
-> > +	rm -f $tmp.mkfsstd $tmp.mkfserr
-> >  }
-> >  
-> >  _scratch_mkfs_xfs()
-> > 
+diff --git a/fs/attr.c b/fs/attr.c
+index 1fcfdcc5b367..42f4d4fb0631 100644
+--- a/fs/attr.c
++++ b/fs/attr.c
+@@ -236,6 +236,9 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
+ 	if (IS_IMMUTABLE(inode))
+ 		return -EPERM;
+ 
++	if (IS_SWAPFILE(inode))
++		return -ETXTBSY;
++
+ 	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
+ 	    IS_APPEND(inode))
+ 		return -EPERM;
+diff --git a/mm/filemap.c b/mm/filemap.c
+index dad85e10f5f8..fd80bc20e30a 100644
+--- a/mm/filemap.c
++++ b/mm/filemap.c
+@@ -2938,6 +2938,9 @@ inline ssize_t generic_write_checks(struct kiocb *iocb, struct iov_iter *from)
+ 	if (IS_IMMUTABLE(inode))
+ 		return -EPERM;
+ 
++	if (IS_SWAPFILE(inode))
++		return -ETXTBSY;
++
+ 	if (!iov_iter_count(from))
+ 		return 0;
+ 
+diff --git a/mm/memory.c b/mm/memory.c
+index 4311cfdade90..c04c6a689995 100644
+--- a/mm/memory.c
++++ b/mm/memory.c
+@@ -2235,7 +2235,9 @@ static vm_fault_t do_page_mkwrite(struct vm_fault *vmf)
+ 
+ 	vmf->flags = FAULT_FLAG_WRITE|FAULT_FLAG_MKWRITE;
+ 
+-	if (vmf->vma->vm_file && IS_IMMUTABLE(file_inode(vmf->vma->vm_file)))
++	if (vmf->vma->vm_file &&
++	    (IS_IMMUTABLE(file_inode(vmf->vma->vm_file)) ||
++	     IS_SWAPFILE(file_inode(vmf->vma->vm_file))))
+ 		return VM_FAULT_SIGBUS;
+ 
+ 	ret = vmf->vma->vm_ops->page_mkwrite(vmf);
+diff --git a/mm/mmap.c b/mm/mmap.c
+index ac1e32205237..031807339869 100644
+--- a/mm/mmap.c
++++ b/mm/mmap.c
+@@ -1488,6 +1488,8 @@ unsigned long do_mmap(struct file *file, unsigned long addr,
+ 					return -EACCES;
+ 				if (IS_IMMUTABLE(file_inode(file)))
+ 					return -EPERM;
++				if (IS_SWAPFILE(file_inode(file)))
++					return -ETXTBSY;
+ 			}
+ 
+ 			/*
+diff --git a/mm/swapfile.c b/mm/swapfile.c
+index 596ac98051c5..390859785558 100644
+--- a/mm/swapfile.c
++++ b/mm/swapfile.c
+@@ -3165,6 +3165,19 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
+ 	if (error)
+ 		goto bad_swap;
+ 
++	/*
++	 * Flush any pending IO and dirty mappings before we start using this
++	 * swap file.
++	 */
++	if (S_ISREG(inode->i_mode)) {
++		inode->i_flags |= S_SWAPFILE;
++		error = inode_flush_data(inode);
++		if (error) {
++			inode->i_flags &= ~S_SWAPFILE;
++			goto bad_swap;
++		}
++	}
++
+ 	mutex_lock(&swapon_mutex);
+ 	prio = -1;
+ 	if (swap_flags & SWAP_FLAG_PREFER)
+@@ -3185,8 +3198,6 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
+ 	atomic_inc(&proc_poll_event);
+ 	wake_up_interruptible(&proc_poll_wait);
+ 
+-	if (S_ISREG(inode->i_mode))
+-		inode->i_flags |= S_SWAPFILE;
+ 	error = 0;
+ 	goto out;
+ bad_swap:
