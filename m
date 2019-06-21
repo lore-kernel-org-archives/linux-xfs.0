@@ -1,66 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from icp-osb-irony-out1.external.iinet.net.au ([203.59.1.210]:33360
-        "EHLO icp-osb-irony-out1.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727027AbfFXDIP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jun 2019 23:08:15 -0400
-Subject: [PATCH 07/10] xfs: mount-api - add xfs_fc_free()
-From: Ian Kent <raven@themaw.net>
-Date: Mon, 24 Jun 2019 10:59:02 +0800
-Message-ID: <156134514204.2519.9597800141023778002.stgit@fedora-28>
-In-Reply-To: <156134510205.2519.16185588460828778620.stgit@fedora-28>
-References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+Received: from mx1.redhat.com ([209.132.183.28]:47684 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726002AbfFUP2E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 21 Jun 2019 11:28:04 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 613C5356F2
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 15:28:04 +0000 (UTC)
+Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E790E5D772
+        for <linux-xfs@vger.kernel.org>; Fri, 21 Jun 2019 15:28:03 +0000 (UTC)
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs_repair: don't search for libxfs.h in system headers
+Message-ID: <b1265852-70ea-5402-191d-b3843996fc89@redhat.com>
+Date: Fri, 21 Jun 2019 10:28:03 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs <linux-xfs@vger.kernel.org>
-Cc: Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-Add the fs_context_operations method .free that performs fs
-context cleanup on context release.
-
-Signed-off-by: Ian Kent <raven@themaw.net>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_super.c |   23 +++++++++++++++++++++++
- 1 file changed, 23 insertions(+)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 7326b21b32d1..0a771e1390e7 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -2413,10 +2413,33 @@ static const struct super_operations xfs_super_operations = {
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
- };
+And now for something completely different: a noncontroversial,
+trivially reviewable #include change!
+
+(right?)
+
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 47828a06..019df71c 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -3,7 +3,7 @@
+  * Copyright (C) 2016 Oracle.  All Rights Reserved.
+  * Author: Darrick J. Wong <darrick.wong@oracle.com>
+  */
+-#include <libxfs.h>
++#include "libxfs.h"
+ #include "btree.h"
+ #include "err_protos.h"
+ #include "libxlog.h"
+diff --git a/repair/slab.c b/repair/slab.c
+index ba5c2327..d5947a5a 100644
+--- a/repair/slab.c
++++ b/repair/slab.c
+@@ -3,7 +3,7 @@
+  * Copyright (C) 2016 Oracle.  All Rights Reserved.
+  * Author: Darrick J. Wong <darrick.wong@oracle.com>
+  */
+-#include <libxfs.h>
++#include "libxfs.h"
+ #include "slab.h"
  
-+static void xfs_fc_free(struct fs_context *fc)
-+{
-+	struct xfs_fs_context	*ctx = fc->fs_private;
-+	struct xfs_mount	*mp = fc->s_fs_info;
-+
-+	if (mp) {
-+		/*
-+		 * If an error occurs before ownership the xfs_mount
-+		 * info struct is passed to xfs by the VFS (by assigning
-+		 * it to sb->s_fs_info and clearing the corresponding
-+		 * fs_context field, done before calling fill super via
-+		 * .get_tree()) there may be some strings to cleanup.
-+		 */
-+		if (mp->m_logname)
-+			kfree(mp->m_logname);
-+		if (mp->m_rtname)
-+			kfree(mp->m_rtname);
-+		kfree(mp);
-+	}
-+	kfree(ctx);
-+}
-+
- static const struct fs_context_operations xfs_context_ops = {
- 	.parse_param = xfs_parse_param,
- 	.get_tree    = xfs_get_tree,
- 	.reconfigure = xfs_reconfigure,
-+	.free	     = xfs_fc_free,
- };
- 
- static struct file_system_type xfs_fs_type = {
+ #undef SLAB_DEBUG
