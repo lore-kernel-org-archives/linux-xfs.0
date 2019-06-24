@@ -1,110 +1,235 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43600 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726125AbfFUT5h (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 15:57:37 -0400
-Subject: [PATCH 5/6] libxfs: make xfs_buf_delwri_submit actually do something
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 21 Jun 2019 12:57:33 -0700
-Message-ID: <156114705295.1643538.4760286307932278728.stgit@magnolia>
-In-Reply-To: <156114701371.1643538.316410894576032261.stgit@magnolia>
-References: <156114701371.1643538.316410894576032261.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:50678 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727156AbfFXFxT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 01:53:19 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 07/12] xfs: don't preallocate a transaction for file size updates
+Date: Mon, 24 Jun 2019 07:52:48 +0200
+Message-Id: <20190624055253.31183-8-hch@lst.de>
+In-Reply-To: <20190624055253.31183-1-hch@lst.de>
+References: <20190624055253.31183-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+We have historically decided that we want to preallocate the xfs_trans
+structure at writeback time so that we don't have to allocate on in
+the I/O completion handler.  But we treat unwrittent extent and COW
+fork conversions different already, which proves that the transaction
+allocations in the end I/O handler are not a problem.  Removing the
+preallocation gets rid of a lot of corner case code, and also ensures
+we only allocate one and log a transaction when actually required,
+as the ioend merging can reduce the number of actual i_size updates
+significantly.
 
-xfs_buf_delwri_queue doesn't report errors, which means that if the
-buffer write fails we have no way of knowing that something bad
-happened.  In the kernel we queue and then submit buffers, and the
-submit call communicates errors to callers.  Do the same here since
-we're going to start using the AG header initialization functions, which
-use delwri_{queue,submit} heavily.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/libxfs_io.h   |    6 +++++-
- libxfs/libxfs_priv.h |    1 -
- libxfs/rdwr.c        |   25 +++++++++++++++++++++++++
- 3 files changed, 30 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c | 110 +++++-----------------------------------------
+ fs/xfs/xfs_aops.h |   1 -
+ 2 files changed, 12 insertions(+), 99 deletions(-)
 
-
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index c47a435d..d033faad 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -70,6 +70,7 @@ typedef struct xfs_buf {
- 	struct xfs_buf_map	*b_maps;
- 	struct xfs_buf_map	__b_map;
- 	int			b_nmaps;
-+	struct list_head	b_list;
- #ifdef XFS_BUF_TRACING
- 	struct list_head	b_lock_list;
- 	const char		*b_func;
-@@ -243,11 +244,14 @@ xfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags)
- 	return bp;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 633baaaff7ae..017b87b7765f 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -130,44 +130,23 @@ static inline bool xfs_ioend_is_append(struct xfs_ioend *ioend)
+ 		XFS_I(ioend->io_inode)->i_d.di_size;
  }
  
-+/* Push a single buffer on a delwri queue. */
- static inline void
- xfs_buf_delwri_queue(struct xfs_buf *bp, struct list_head *buffer_list)
- {
- 	bp->b_node.cn_count++;
--	libxfs_writebuf(bp, 0);
-+	list_add_tail(&bp->b_list, buffer_list);
- }
- 
-+int xfs_buf_delwri_submit(struct list_head *buffer_list);
-+
- #endif	/* __LIBXFS_IO_H__ */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index fd420f4f..0233393d 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -381,7 +381,6 @@ roundup_64(uint64_t x, uint32_t y)
- #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
- #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
- #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
--#define xfs_buf_delwri_submit(bl)	(0)
- #define xfs_buf_oneshot(bp)		((void) 0)
- 
- #define XBRW_READ			LIBXFS_BREAD
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 9c6c93a7..dd582a4e 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1472,3 +1472,28 @@ libxfs_irele(
- 	libxfs_idestroy(ip);
- 	kmem_zone_free(xfs_inode_zone, ip);
- }
-+
-+/*
-+ * Write out a buffer list synchronously.
-+ *
-+ * This will take the @buffer_list, write all buffers out and wait for I/O
-+ * completion on all of the buffers. @buffer_list is consumed by the function,
-+ * so callers must have some other way of tracking buffers if they require such
-+ * functionality.
-+ */
+-STATIC int
+-xfs_setfilesize_trans_alloc(
+-	struct xfs_ioend	*ioend)
+-{
+-	struct xfs_mount	*mp = XFS_I(ioend->io_inode)->i_mount;
+-	struct xfs_trans	*tp;
+-	int			error;
+-
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+-	if (error)
+-		return error;
+-
+-	ioend->io_append_trans = tp;
+-
+-	/*
+-	 * We may pass freeze protection with a transaction.  So tell lockdep
+-	 * we released it.
+-	 */
+-	__sb_writers_release(ioend->io_inode->i_sb, SB_FREEZE_FS);
+-	/*
+-	 * We hand off the transaction to the completion thread now, so
+-	 * clear the flag here.
+-	 */
+-	current_restore_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+-	return 0;
+-}
+-
+ /*
+  * Update on-disk file size now that data has been written to disk.
+  */
+-STATIC int
+-__xfs_setfilesize(
 +int
-+xfs_buf_delwri_submit(
-+	struct list_head	*buffer_list)
-+{
-+	struct xfs_buf		*bp, *n;
-+	int			error = 0, error2;
++xfs_setfilesize(
+ 	struct xfs_inode	*ip,
+-	struct xfs_trans	*tp,
+ 	xfs_off_t		offset,
+ 	size_t			size)
+ {
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_trans	*tp;
+ 	xfs_fsize_t		isize;
++	int			error;
 +
-+	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
-+		list_del_init(&bp->b_list);
-+		error2 = libxfs_writebuf(bp, 0);
-+		if (!error)
-+			error = error2;
-+	}
-+
-+	return error;
-+}
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
++	if (error)
++		return error;
+ 
+ 	xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 	isize = xfs_new_eof(ip, offset + size);
+@@ -186,48 +165,6 @@ __xfs_setfilesize(
+ 	return xfs_trans_commit(tp);
+ }
+ 
+-int
+-xfs_setfilesize(
+-	struct xfs_inode	*ip,
+-	xfs_off_t		offset,
+-	size_t			size)
+-{
+-	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_trans	*tp;
+-	int			error;
+-
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+-	if (error)
+-		return error;
+-
+-	return __xfs_setfilesize(ip, tp, offset, size);
+-}
+-
+-STATIC int
+-xfs_setfilesize_ioend(
+-	struct xfs_ioend	*ioend,
+-	int			error)
+-{
+-	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+-	struct xfs_trans	*tp = ioend->io_append_trans;
+-
+-	/*
+-	 * The transaction may have been allocated in the I/O submission thread,
+-	 * thus we need to mark ourselves as being in a transaction manually.
+-	 * Similarly for freeze protection.
+-	 */
+-	current_set_flags_nested(&tp->t_pflags, PF_MEMALLOC_NOFS);
+-	__sb_writers_acquired(VFS_I(ip)->i_sb, SB_FREEZE_FS);
+-
+-	/* we abort the update if there was an IO error */
+-	if (error) {
+-		xfs_trans_cancel(tp);
+-		return error;
+-	}
+-
+-	return __xfs_setfilesize(ip, tp, ioend->io_offset, ioend->io_size);
+-}
+-
+ /*
+  * IO write completion.
+  */
+@@ -267,12 +204,9 @@ xfs_end_ioend(
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 	else if (ioend->io_type == IOMAP_UNWRITTEN)
+ 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+-	else
+-		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
+-
++	if (!error && xfs_ioend_is_append(ioend))
++		error = xfs_setfilesize(ip, offset, size);
+ done:
+-	if (ioend->io_append_trans)
+-		error = xfs_setfilesize_ioend(ioend, error);
+ 	list_replace_init(&ioend->io_list, &ioend_list);
+ 	xfs_destroy_ioend(ioend, error);
+ 
+@@ -307,8 +241,6 @@ xfs_ioend_can_merge(
+ 		return false;
+ 	if (ioend->io_offset + ioend->io_size != next->io_offset)
+ 		return false;
+-	if (xfs_ioend_is_append(ioend) != xfs_ioend_is_append(next))
+-		return false;
+ 	return true;
+ }
+ 
+@@ -320,7 +252,6 @@ xfs_ioend_try_merge(
+ {
+ 	struct xfs_ioend	*next_ioend;
+ 	int			ioend_error;
+-	int			error;
+ 
+ 	if (list_empty(more_ioends))
+ 		return;
+@@ -334,10 +265,6 @@ xfs_ioend_try_merge(
+ 			break;
+ 		list_move_tail(&next_ioend->io_list, &ioend->io_list);
+ 		ioend->io_size += next_ioend->io_size;
+-		if (ioend->io_append_trans) {
+-			error = xfs_setfilesize_ioend(next_ioend, 1);
+-			ASSERT(error == 1);
+-		}
+ 	}
+ }
+ 
+@@ -398,7 +325,7 @@ xfs_end_bio(
+ 
+ 	if (ioend->io_fork == XFS_COW_FORK ||
+ 	    ioend->io_type == IOMAP_UNWRITTEN ||
+-	    ioend->io_append_trans != NULL) {
++	    xfs_ioend_is_append(ioend)) {
+ 		spin_lock_irqsave(&ip->i_ioend_lock, flags);
+ 		if (list_empty(&ip->i_ioend_list))
+ 			WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
+@@ -660,18 +587,6 @@ xfs_submit_ioend(
+ 		memalloc_nofs_restore(nofs_flag);
+ 	}
+ 
+-	/* Reserve log space if we might write beyond the on-disk inode size. */
+-	if (!status &&
+-	    (ioend->io_fork == XFS_COW_FORK ||
+-	     ioend->io_type != IOMAP_UNWRITTEN) &&
+-	    xfs_ioend_is_append(ioend) &&
+-	    !ioend->io_append_trans) {
+-		unsigned nofs_flag = memalloc_nofs_save();
+-
+-		status = xfs_setfilesize_trans_alloc(ioend);
+-		memalloc_nofs_restore(nofs_flag);
+-	}
+-
+ 	ioend->io_bio->bi_private = ioend;
+ 	ioend->io_bio->bi_end_io = xfs_end_bio;
+ 
+@@ -715,7 +630,6 @@ xfs_alloc_ioend(
+ 	ioend->io_inode = inode;
+ 	ioend->io_size = 0;
+ 	ioend->io_offset = offset;
+-	ioend->io_append_trans = NULL;
+ 	ioend->io_bio = bio;
+ 	return ioend;
+ }
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 72e30d1c3bdf..23c087f0bcbf 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -18,7 +18,6 @@ struct xfs_ioend {
+ 	struct inode		*io_inode;	/* file being written to */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
+-	struct xfs_trans	*io_append_trans;/* xact. for size update */
+ 	struct bio		*io_bio;	/* bio being built */
+ 	struct bio		io_inline_bio;	/* MUST BE LAST! */
+ };
+-- 
+2.20.1
