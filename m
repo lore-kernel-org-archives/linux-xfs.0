@@ -1,54 +1,134 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:58581 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726749AbfFXPIr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 11:08:47 -0400
-Date: Mon, 24 Jun 2019 11:08:39 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH] shared/011: run on all file system that support cgroup
- writeback
-Message-ID: <20190624150839.GB6350@mit.edu>
-References: <20190624134407.21365-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:56876 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727454AbfFXPPc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 11:15:32 -0400
+Date: Mon, 24 Jun 2019 08:14:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 02/12] xfs: simplify xfs_chain_bio
+Message-ID: <20190624151458.GI5387@magnolia>
+References: <20190624055253.31183-1-hch@lst.de>
+ <20190624055253.31183-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190624134407.21365-1-hch@lst.de>
+In-Reply-To: <20190624055253.31183-3-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 03:44:07PM +0200, Christoph Hellwig wrote:
-> Run the cgroup writeback test on xfs, for which I've just posted
-> a patch to support cgroup writeback as well as ext2 and f2fs, which
-> have supported cgroup writeback for a while now.
+On Mon, Jun 24, 2019 at 07:52:43AM +0200, Christoph Hellwig wrote:
+> Move setting up operation and write hint to xfs_alloc_ioend, and
+> then just copy over all needed information from the previous bio
+> in xfs_chain_bio and stop passing various parameters to it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+I always thought it was a little odd that we were still setting bio
+fields in the submission function...
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
->  tests/shared/011 | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  fs/xfs/xfs_aops.c | 35 +++++++++++++++++------------------
+>  1 file changed, 17 insertions(+), 18 deletions(-)
 > 
-> diff --git a/tests/shared/011 b/tests/shared/011
-> index a0ac375d..96ce9d1c 100755
-> --- a/tests/shared/011
-> +++ b/tests/shared/011
-> @@ -39,7 +39,7 @@ rm -f $seqres.full
->  # real QA test starts here
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index a6f0f4761a37..9cceb90e77c5 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -665,7 +665,6 @@ xfs_submit_ioend(
 >  
->  # Modify as appropriate.
-> -_supported_fs ext4 btrfs
-> +_supported_fs ext2 ext4 f2fs btrfs xfs
-
-Per my comments in another e-mail thread, given how many of the
-primary file systems support cgroup-aware writeback, maybe we should
-just remove the _supported_fs line and move this test to generic?
-
-Whether we like it or not, there are more and more userspace tools
-which assume that cgroup-aware writeback is a thing.
-
-Alternatively, maybe we should have some standardized way so the
-kernel can signal whether or not a particular mounted file system
-supports cgroup-aware writeback?
-
-						- Ted
+>  	ioend->io_bio->bi_private = ioend;
+>  	ioend->io_bio->bi_end_io = xfs_end_bio;
+> -	ioend->io_bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+>  
+>  	/*
+>  	 * If we are failing the IO now, just mark the ioend with an
+> @@ -679,7 +678,6 @@ xfs_submit_ioend(
+>  		return status;
+>  	}
+>  
+> -	ioend->io_bio->bi_write_hint = ioend->io_inode->i_write_hint;
+>  	submit_bio(ioend->io_bio);
+>  	return 0;
+>  }
+> @@ -691,7 +689,8 @@ xfs_alloc_ioend(
+>  	xfs_exntst_t		state,
+>  	xfs_off_t		offset,
+>  	struct block_device	*bdev,
+> -	sector_t		sector)
+> +	sector_t		sector,
+> +	struct writeback_control *wbc)
+>  {
+>  	struct xfs_ioend	*ioend;
+>  	struct bio		*bio;
+> @@ -699,6 +698,8 @@ xfs_alloc_ioend(
+>  	bio = bio_alloc_bioset(GFP_NOFS, BIO_MAX_PAGES, &xfs_ioend_bioset);
+>  	bio_set_dev(bio, bdev);
+>  	bio->bi_iter.bi_sector = sector;
+> +	bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+> +	bio->bi_write_hint = inode->i_write_hint;
+>  
+>  	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
+>  	INIT_LIST_HEAD(&ioend->io_list);
+> @@ -719,24 +720,22 @@ xfs_alloc_ioend(
+>   * so that the bi_private linkage is set up in the right direction for the
+>   * traversal in xfs_destroy_ioend().
+>   */
+> -static void
+> +static struct bio *
+>  xfs_chain_bio(
+> -	struct xfs_ioend	*ioend,
+> -	struct writeback_control *wbc,
+> -	struct block_device	*bdev,
+> -	sector_t		sector)
+> +	struct bio		*prev)
+>  {
+>  	struct bio *new;
+>  
+>  	new = bio_alloc(GFP_NOFS, BIO_MAX_PAGES);
+> -	bio_set_dev(new, bdev);
+> -	new->bi_iter.bi_sector = sector;
+> -	bio_chain(ioend->io_bio, new);
+> -	bio_get(ioend->io_bio);		/* for xfs_destroy_ioend */
+> -	ioend->io_bio->bi_opf = REQ_OP_WRITE | wbc_to_write_flags(wbc);
+> -	ioend->io_bio->bi_write_hint = ioend->io_inode->i_write_hint;
+> -	submit_bio(ioend->io_bio);
+> -	ioend->io_bio = new;
+> +	bio_copy_dev(new, prev);
+> +	new->bi_iter.bi_sector = bio_end_sector(prev);
+> +	new->bi_opf = prev->bi_opf;
+> +	new->bi_write_hint = prev->bi_write_hint;
+> +
+> +	bio_chain(prev, new);
+> +	bio_get(prev);		/* for xfs_destroy_ioend */
+> +	submit_bio(prev);
+> +	return new;
+>  }
+>  
+>  /*
+> @@ -771,14 +770,14 @@ xfs_add_to_ioend(
+>  		if (wpc->ioend)
+>  			list_add(&wpc->ioend->io_list, iolist);
+>  		wpc->ioend = xfs_alloc_ioend(inode, wpc->fork,
+> -				wpc->imap.br_state, offset, bdev, sector);
+> +				wpc->imap.br_state, offset, bdev, sector, wbc);
+>  	}
+>  
+>  	if (!__bio_try_merge_page(wpc->ioend->io_bio, page, len, poff, true)) {
+>  		if (iop)
+>  			atomic_inc(&iop->write_count);
+>  		if (bio_full(wpc->ioend->io_bio))
+> -			xfs_chain_bio(wpc->ioend, wbc, bdev, sector);
+> +			wpc->ioend->io_bio = xfs_chain_bio(wpc->ioend->io_bio);
+>  		bio_add_page(wpc->ioend->io_bio, page, len, poff);
+>  	}
+>  
+> -- 
+> 2.20.1
+> 
