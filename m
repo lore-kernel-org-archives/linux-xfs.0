@@ -1,42 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33408 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726274AbfFYKIl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jun 2019 06:08:41 -0400
-Date: Tue, 25 Jun 2019 12:08:10 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 11/12] iomap: move the xfs writeback code to iomap.c
-Message-ID: <20190625100810.GH1462@lst.de>
-References: <20190624055253.31183-1-hch@lst.de> <20190624055253.31183-12-hch@lst.de> <20190624154601.GK5387@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:42432 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726414AbfFXOyJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 10:54:09 -0400
+Date: Mon, 24 Jun 2019 07:53:41 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 03/12] xfs: fix a comment typo in xfs_submit_ioend
+Message-ID: <20190624145341.GG5387@magnolia>
+References: <20190624055253.31183-1-hch@lst.de>
+ <20190624055253.31183-4-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190624154601.GK5387@magnolia>
+In-Reply-To: <20190624055253.31183-4-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 08:46:01AM -0700, Darrick J. Wong wrote:
-> This looks like a straight code copy from fs/xfs/ into fs/iomap.c.
-> That's fine with me, but seeing as this file is now ~2700 lines long,
-> perhaps we should break this up among major functional lines?
+On Mon, Jun 24, 2019 at 07:52:44AM +0200, Christoph Hellwig wrote:
+> The fail argument is long gone, update the comment.
 > 
-> Looking at fs/iomap.c, I see...
-> 
->  * Basic iomap iterator functions (~40 lines)
->  * Page cache management (readpage*, write, mkwrite) (~860 lines)
->  * Zeroing (~80 lines)
->  * FIEMAP and seek hole / seek data (~300 lines)
->  * directio (~500 lines)
->  * swapfiles (~170 lines)
->  * and now, page cache writeback (~520 lines)
-> 
-> If I have spare time this week (ha ha) I'll see if I can break all this
-> up (as a separate patch series), so for this:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Meh.  Not sure I'm a fan of too fine grained splits like the one
-above.  And ~3k lines is still pretty manageable.  But yes, once it
-grows むore it might be worth splitting a bit.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_aops.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 9cceb90e77c5..dc60aec0c5a7 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -626,7 +626,7 @@ xfs_map_blocks(
+>   * reference to the ioend to ensure that the ioend completion is only done once
+>   * all bios have been submitted and the ioend is really done.
+>   *
+> - * If @fail is non-zero, it means that we have a situation where some part of
+> + * If @status is non-zero, it means that we have a situation where some part of
+>   * the submission process has failed after we have marked paged for writeback
+>   * and unlocked them. In this situation, we need to fail the bio and ioend
+>   * rather than submit it to IO. This typically only happens on a filesystem
+> -- 
+> 2.20.1
+> 
