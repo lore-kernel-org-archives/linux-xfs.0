@@ -1,60 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41680 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728725AbfFXPy1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Jun 2019 11:54:27 -0400
-Date: Mon, 24 Jun 2019 17:54:25 +0200
-From: Jan Kara <jack@suse.cz>
-Subject: Re: [PATCH] quota: honor quote type in Q_XGETQSTAT[V] calls
-Message-ID: <20190624155425.GJ32376@quack2.suse.cz>
-References: <0b96d49c-3c0b-eb71-dd87-750a6a48f1ef@redhat.com>
- <20190624105800.GD32376@quack2.suse.cz>
- <c5b47955-4771-e883-4e72-11810141eb19@redhat.com>
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:37083 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726424AbfFXXeu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:34:50 -0400
+Message-ID: <cca5319857aefccadb64dbcf084185fa8ecf6296.camel@themaw.net>
+Subject: Re: [PATCH 02/10] xfs: mount-api - refactor suffix_kstrtoint()
+From: Ian Kent <raven@themaw.net>
+Date: Tue, 25 Jun 2019 07:34:41 +0800
+In-Reply-To: <20190624230633.GB5387@magnolia>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+         <156134510851.2519.2387740442257250106.stgit@fedora-28>
+         <20190624172943.GV5387@magnolia>
+         <20190624223554.GA7777@dread.disaster.area>
+         <20190624230633.GB5387@magnolia>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c5b47955-4771-e883-4e72-11810141eb19@redhat.com>
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: Jan Kara <jack@suse.cz>, fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Bob Peterson <rpeterso@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Mon 24-06-19 07:45:27, Eric Sandeen wrote:
-> On 6/24/19 5:58 AM, Jan Kara wrote:
-> > On Fri 21-06-19 18:27:13, Eric Sandeen wrote:
-> >> The code in quota_getstate and quota_getstatev is strange; it
-> >> says the returned fs_quota_stat[v] structure has room for only
-> >> one type of time limits, so fills it in with the first enabled
-> >> quota, even though every quotactl command must have a type sent
-> >> in by the user.
-> >>
-> >> Instead of just picking the first enabled quota, fill in the
-> >> reply with the timers for the quota type that was actually
-> >> requested.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> I guess this is a change in behavior, but it goes from a rather
-> >> unexpected and unpredictable behavior to something more expected,
-> >> so I hope it's ok.
-> >>
-> >> I'm working on breaking out xfs quota timers by type as well
-> >> (they are separate on disk, but not in memory) so I'll work
-> >> up an xfstest to go with this...
+On Mon, 2019-06-24 at 16:06 -0700, Darrick J. Wong wrote:
+> On Tue, Jun 25, 2019 at 08:35:54AM +1000, Dave Chinner wrote:
+> > On Mon, Jun 24, 2019 at 10:29:43AM -0700, Darrick J. Wong wrote:
+> > > On Mon, Jun 24, 2019 at 10:58:30AM +0800, Ian Kent wrote:
+> > > > The mount-api doesn't have a "human unit" parse type yet so
+> > > > the options that have values like "10k" etc. still need to
+> > > > be converted by the fs.
+> > > 
+> > > /me wonders if that ought to be lifted to fs_parser.c, or is xfs the
+> > > only filesystem that has mount options with unit suffixes?
 > > 
-> > Yeah, makes sense. I've added the patch to my tree.
-> > 
-> > 								Honza
-> > 
+> > I've suggested the same thing (I've seen this patchset before :)
+> > and ISTR it makes everything easier if we just keep it here for this
+> > patchset and then lift it once everything is merged...
 > 
-> Thanks Jan - if you'd like to fix my "quote" for "quota" in the
-> subject line, please feel free.  ;)
+> Ok, fair enough. :)
 
-Done :) Thanks for the patch.
+I mentioned it to David after Dave said much the same thing, David said
+he had done some work on it but I haven't heard more yet.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> 
+> --D
+> 
+> > -Dave.
+> > -- 
+> > Dave Chinner
+> > david@fromorbit.com
