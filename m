@@ -1,88 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59024 "EHLO
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47308 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726486AbfFXXQf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:16:35 -0400
-Date: Tue, 25 Jun 2019 09:15:23 +1000
+        by vger.kernel.org with ESMTP id S1727699AbfFXXub (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:50:31 -0400
+Date: Tue, 25 Jun 2019 09:49:21 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 07/12] xfs: don't preallocate a transaction for file size
- updates
-Message-ID: <20190624231523.GC7777@dread.disaster.area>
+Subject: Re: [PATCH 12/12] iomap: add tracing for the address space operations
+Message-ID: <20190624234921.GE7777@dread.disaster.area>
 References: <20190624055253.31183-1-hch@lst.de>
- <20190624055253.31183-8-hch@lst.de>
- <20190624161720.GQ5387@magnolia>
+ <20190624055253.31183-13-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190624161720.GQ5387@magnolia>
+In-Reply-To: <20190624055253.31183-13-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 09:17:20AM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 24, 2019 at 07:52:48AM +0200, Christoph Hellwig wrote:
-> > We have historically decided that we want to preallocate the xfs_trans
-> > structure at writeback time so that we don't have to allocate on in
-> > the I/O completion handler.  But we treat unwrittent extent and COW
-> > fork conversions different already, which proves that the transaction
-> > allocations in the end I/O handler are not a problem.  Removing the
-> > preallocation gets rid of a lot of corner case code, and also ensures
-> > we only allocate one and log a transaction when actually required,
-> > as the ioend merging can reduce the number of actual i_size updates
-> > significantly.
+On Mon, Jun 24, 2019 at 07:52:53AM +0200, Christoph Hellwig wrote:
+> Lift the xfs code for tracing address space operations to the iomap
+> layer.
 > 
-> That's what I thought when I wrote the ioend merging patches, but IIRC
-> Dave objected on the grounds that most file writes are trivial file
-> extending writes and therefore we should leave this alone to avoid
-> slowing down the ioend path even if it came at a cost of cancelling a
-> lot of empty transactions.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-The issue is stuff like extracting a tarball, where we might write a
-hundred thousand files and they are all written in a single IO. i.e.
-there is no IO completion merging at all.
+....
 
-> I wasn't 100% convinced it mattered but ran out of time in the
-> development window and never got around to researching if it made any
-> difference.
+> diff --git a/include/trace/events/iomap.h b/include/trace/events/iomap.h
+> new file mode 100644
+> index 000000000000..da50ece663f8
+> --- /dev/null
+> +++ b/include/trace/events/iomap.h
+> @@ -0,0 +1,82 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +/*
+> + * Copyright (c) 2009-2019, Christoph Hellwig
+> + * All Rights Reserved.
+> + */
+> +#undef TRACE_SYSTEM
+> +#define TRACE_SYSTEM iomap
 
-Yeah, it's not all that simple :/
+Can you add a comment somewhere here that says these tracepoints are
+volatile and we reserve the right to change them at any time so they
+don't form any sort of persistent UAPI that we have to maintain?
 
-In these cases, we always have to allocate a transaction for every
-file being written. If we do it before we submit the IO, then all
-the transactions are allocated from the single writeback context. If
-we don't have log space, data writeback pauses while the tail of the
-AIL is pushed, metadata writeback occurs, and then the transaction
-allocation for data writeback is woken, and data writeback
-submission continues. It's fairly orderly, and we don't end up
-trying to write back data while we are doing bulk metadata flushing
-from the AIL.
-
-If we delay the transaction allocation to the ioend context and we
-are low on log space, we end up blocking a kworker on a transaction
-allocation which then has to wait for metadata writeback. The
-kworker infrastructure will then issue the next ioend work, which
-then blocks on transaction allocation. Delayed allocation can cause
-thousands of small file IOs to be inflight at the same time due to
-intra-file contiguous allocation and IO merging in the block layer,
-hence we can have thousands of individual IO completions that
-require transaction allocation to be completed.
-
-> So, uh, how much of a hit do we take for having to allocate a
-> transaction for a file size extension?  Particularly since we can
-> combine those things now?
-
-Unless we are out of log space, the transaction allocation and free
-should be largely uncontended and so it's just a small amount of CPU
-usage. i.e it's a slab allocation/free and then lockless space
-reservation/free. If we are out of log space, then we sleep waiting
-for space - the issue really comes down to where it is better to
-sleep in that case....
-
-Cheers,
-
-Dave.
+-Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
