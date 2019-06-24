@@ -1,51 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:42432 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:42380 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726414AbfFXOyJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 10:54:09 -0400
-Date: Mon, 24 Jun 2019 07:53:41 -0700
+        with ESMTP id S1726414AbfFXOyG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 10:54:06 -0400
+Date: Mon, 24 Jun 2019 07:53:25 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 03/12] xfs: fix a comment typo in xfs_submit_ioend
-Message-ID: <20190624145341.GG5387@magnolia>
+Subject: Re: [PATCH 01/12] list.h: add a list_pop helper
+Message-ID: <20190624145325.GF5387@magnolia>
 References: <20190624055253.31183-1-hch@lst.de>
- <20190624055253.31183-4-hch@lst.de>
+ <20190624055253.31183-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190624055253.31183-4-hch@lst.de>
+In-Reply-To: <20190624055253.31183-2-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Christoph Hellwig <hch@lst.de>
 Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 07:52:44AM +0200, Christoph Hellwig wrote:
-> The fail argument is long gone, update the comment.
+On Mon, Jun 24, 2019 at 07:52:42AM +0200, Christoph Hellwig wrote:
+> We have a very common pattern where we want to delete the first entry
+> from a list and return it as the properly typed container structure.
+> 
+> Add a list_pop helper to implement this behavior.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  include/linux/list.h | 22 ++++++++++++++++++++++
+>  1 file changed, 22 insertions(+)
+> 
+> diff --git a/include/linux/list.h b/include/linux/list.h
+> index e951228db4b2..e07a5f54cc9d 100644
+> --- a/include/linux/list.h
+> +++ b/include/linux/list.h
+> @@ -500,6 +500,28 @@ static inline void list_splice_tail_init(struct list_head *list,
+>  	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
+>  })
+>  
+> +/**
+> + * list_pop - delete the first entry from a list and return it
+> + * @list:	the list to take the element from.
+> + * @type:	the type of the struct this is embedded in.
+> + * @member:	the name of the list_head within the struct.
+> + *
+> + * Note that if the list is empty, it returns NULL.
+> + */
+> +#define list_pop(list, type, member) 				\
 
-Looks ok,
+Unnecessary space after the ')' here, though I can fix that up if I
+merge this version of the series...
+
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/xfs_aops.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 9cceb90e77c5..dc60aec0c5a7 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -626,7 +626,7 @@ xfs_map_blocks(
->   * reference to the ioend to ensure that the ioend completion is only done once
->   * all bios have been submitted and the ioend is really done.
->   *
-> - * If @fail is non-zero, it means that we have a situation where some part of
-> + * If @status is non-zero, it means that we have a situation where some part of
->   * the submission process has failed after we have marked paged for writeback
->   * and unlocked them. In this situation, we need to fail the bio and ioend
->   * rather than submit it to IO. This typically only happens on a filesystem
+
+> +({								\
+> +	struct list_head *head__ = (list);			\
+> +	struct list_head *pos__ = READ_ONCE(head__->next);	\
+> +	type *entry__ = NULL;					\
+> +								\
+> +	if (pos__ != head__) {					\
+> +		entry__ = list_entry(pos__, type, member);	\
+> +		list_del(pos__);				\
+> +	}							\
+> +								\
+> +	entry__;						\
+> +})
+> +
+>  /**
+>   * list_next_entry - get the next element in list
+>   * @pos:	the type * to cursor
 > -- 
 > 2.20.1
 > 
