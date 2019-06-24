@@ -1,34 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33395 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726274AbfFYKHc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jun 2019 06:07:32 -0400
-Date: Tue, 25 Jun 2019 12:07:01 +0200
+Received: from bombadil.infradead.org ([198.137.202.133]:38426 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728933AbfFXNnS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 09:43:18 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 04/12] xfs: initialize ioma->flags in xfs_bmbt_to_iomap
-Message-ID: <20190625100701.GG1462@lst.de>
-References: <20190624055253.31183-1-hch@lst.de> <20190624055253.31183-5-hch@lst.de> <20190624145707.GH5387@magnolia>
+Subject: xfs cgroup writeback support
+Date: Mon, 24 Jun 2019 15:43:13 +0200
+Message-Id: <20190624134315.21307-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190624145707.GH5387@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-On Mon, Jun 24, 2019 at 07:57:07AM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 24, 2019 at 07:52:45AM +0200, Christoph Hellwig wrote:
-> > Currently we don't overwrite the flags field in the iomap in
-> > xfs_bmbt_to_iomap.  This works fine with 0-initialized iomaps on stack,
-> > but is harmful once we want to be able to reuse an iomap in the
-> > writeback code.
-> 
-> Is that going to affect all the other iomap users, or is xfs the only
-> one that assumes zero-initialized iomaps being passed into
-> ->iomap_begin?
+Hi all,
 
-This doesn't affect any existing user as they all get a zeroed iomap
-passed from the caller in iomap.c.  It affects the writeback code
-once it uses struct iomap as it overwrites a previously used iomap.
+this small series adds cgroup writeback support to XFS.  Unlike
+the previous iteration of the support a few years ago it also
+ensures that that trailing bios in an ioend inherit the right
+cgroup.  It has been tested with the shared/011 xfstests test
+that was written to test this functionality in all file systems,
+and manually by Stefan Priebe.
+
+This work was funded by Profihost AG.
+
+Note that the first patch was also in my series to move the xfs
+writepage code to iomap.c and the second one will conflict with
+it.  We'll need to sort out which series to merge first, but given
+how simple this one I would suggest to go for this one.
