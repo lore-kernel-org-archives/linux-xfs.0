@@ -1,67 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36930 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726636AbfFUX6g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:58:36 -0400
-Subject: [PATCH v4 0/7] vfs: make immutable files actually immutable
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 21 Jun 2019 16:56:50 -0700
-Message-ID: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+Received: from mx2.suse.de ([195.135.220.15]:55440 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727608AbfFXLhm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jun 2019 07:37:42 -0400
+Date: Mon, 24 Jun 2019 13:37:37 +0200
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 2/7] vfs: flush and wait for io when setting the
+ immutable flag via SETFLAGS
+Message-ID: <20190624113737.GG32376@quack2.suse.cz>
+References: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+ <156116142734.1664939.5074567130774423066.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156116142734.1664939.5074567130774423066.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
-Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-Hi all,
+On Fri 21-06-19 16:57:07, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When we're using FS_IOC_SETFLAGS to set the immutable flag on a file, we
+> need to ensure that userspace can't continue to write the file after the
+> file becomes immutable.  To make that happen, we have to flush all the
+> dirty pagecache pages to disk to ensure that we can fail a page fault on
+> a mmap'd region, wait for pending directio to complete, and hope the
+> caller locked out any new writes by holding the inode lock.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-The chattr(1) manpage has this to say about the immutable bit that
-system administrators can set on files:
+Seeing the way this worked out, is there a reason to have separate
+vfs_ioc_setflags_flush_data() instead of folding the functionality in
+vfs_ioc_setflags_check() (possibly renaming it to
+vfs_ioc_setflags_prepare() to indicate it does already some changes)? I
+don't see any place that would need these two separated...
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+> +/*
+> + * Flush all pending IO and dirty mappings before setting S_IMMUTABLE on an
+> + * inode via FS_IOC_SETFLAGS.  If the flush fails we'll clear the flag before
+> + * returning error.
+> + *
+> + * Note: the caller should be holding i_mutex, or else be sure that
+> + * they have exclusive access to the inode structure.
+> + */
+> +static inline int vfs_ioc_setflags_flush_data(struct inode *inode, int flags)
+> +{
+> +	int ret;
+> +
+> +	if (!vfs_ioc_setflags_need_flush(inode, flags))
+> +		return 0;
+> +
+> +	inode_set_flags(inode, S_IMMUTABLE, S_IMMUTABLE);
+> +	ret = inode_flush_data(inode);
+> +	if (ret)
+> +		inode_set_flags(inode, 0, S_IMMUTABLE);
+> +	return ret;
+> +}
 
-Given the clause about how the file 'cannot be modified', it is
-surprising that programs holding writable file descriptors can continue
-to write to and truncate files after the immutable flag has been set,
-but they cannot call other things such as utimes, fallocate, unlink,
-link, setxattr, or reflink.
+Also this sets S_IMMUTABLE whenever vfs_ioc_setflags_need_flush() returns
+true. That is currently the right thing but seems like a landmine waiting
+to trip? So I'd just drop the vfs_ioc_setflags_need_flush() abstraction to
+make it clear what's going on.
 
-Since the immutable flag is only settable by administrators, resolve
-this inconsistent behavior in favor of the documented behavior -- once
-the flag is set, the file cannot be modified, period.  We presume that
-administrators must be trusted to know what they're doing, and that
-cutting off programs with writable fds will probably break them.
-
-Therefore, add immutability checks to the relevant VFS functions, then
-refactor the SETFLAGS and FSSETXATTR implementations to use common
-argument checking functions so that we can then force pagefaults on all
-the file data when setting immutability.
-
-Note that various distro manpages points out the inconsistent behavior
-of the various Linux filesystems w.r.t. immutable.  This fixes all that.
-
-I also discovered that userspace programs can write and create writable
-memory mappings to active swap files.  This is extremely bad because
-this allows anyone with write privileges to corrupt system memory.  The
-final patch in this series closes off that hole, at least for swap
-files.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This has been lightly tested with fstests.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=immutable-files
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=immutable-files
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
