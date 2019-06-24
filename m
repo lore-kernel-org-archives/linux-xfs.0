@@ -1,93 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:37106 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726066AbfFUX6u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 19:58:50 -0400
-Subject: [PATCH 6/7] xfs: clean up xfs_merge_ioc_xflags
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 21 Jun 2019 16:57:38 -0700
-Message-ID: <156116145859.1664939.13167913873080632498.stgit@magnolia>
-In-Reply-To: <156116141046.1664939.11424021489724835645.stgit@magnolia>
-References: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+Received: from icp-osb-irony-out1.external.iinet.net.au ([203.59.1.210]:33360
+        "EHLO icp-osb-irony-out1.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727027AbfFXDIP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jun 2019 23:08:15 -0400
+Subject: [PATCH 07/10] xfs: mount-api - add xfs_fc_free()
+From: Ian Kent <raven@themaw.net>
+Date: Mon, 24 Jun 2019 10:59:02 +0800
+Message-ID: <156134514204.2519.9597800141023778002.stgit@fedora-28>
+In-Reply-To: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
-Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Add the fs_context_operations method .free that performs fs
+context cleanup on context release.
 
-Clean up the calling convention since we're editing the fsxattr struct
-anyway.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Ian Kent <raven@themaw.net>
 ---
- fs/xfs/xfs_ioctl.c |   32 ++++++++++++++------------------
- 1 file changed, 14 insertions(+), 18 deletions(-)
+ fs/xfs/xfs_super.c |   23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 7b19ba2956ad..a67bc9afdd0b 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -829,35 +829,31 @@ xfs_ioc_ag_geometry(
-  * Linux extended inode flags interface.
-  */
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 7326b21b32d1..0a771e1390e7 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -2413,10 +2413,33 @@ static const struct super_operations xfs_super_operations = {
+ 	.free_cached_objects	= xfs_fs_free_cached_objects,
+ };
  
--STATIC unsigned int
-+static inline void
- xfs_merge_ioc_xflags(
--	unsigned int	flags,
--	unsigned int	start)
-+	struct fsxattr	*fa,
-+	unsigned int	flags)
- {
--	unsigned int	xflags = start;
--
- 	if (flags & FS_IMMUTABLE_FL)
--		xflags |= FS_XFLAG_IMMUTABLE;
-+		fa->fsx_xflags |= FS_XFLAG_IMMUTABLE;
- 	else
--		xflags &= ~FS_XFLAG_IMMUTABLE;
-+		fa->fsx_xflags &= ~FS_XFLAG_IMMUTABLE;
- 	if (flags & FS_APPEND_FL)
--		xflags |= FS_XFLAG_APPEND;
-+		fa->fsx_xflags |= FS_XFLAG_APPEND;
- 	else
--		xflags &= ~FS_XFLAG_APPEND;
-+		fa->fsx_xflags &= ~FS_XFLAG_APPEND;
- 	if (flags & FS_SYNC_FL)
--		xflags |= FS_XFLAG_SYNC;
-+		fa->fsx_xflags |= FS_XFLAG_SYNC;
- 	else
--		xflags &= ~FS_XFLAG_SYNC;
-+		fa->fsx_xflags &= ~FS_XFLAG_SYNC;
- 	if (flags & FS_NOATIME_FL)
--		xflags |= FS_XFLAG_NOATIME;
-+		fa->fsx_xflags |= FS_XFLAG_NOATIME;
- 	else
--		xflags &= ~FS_XFLAG_NOATIME;
-+		fa->fsx_xflags &= ~FS_XFLAG_NOATIME;
- 	if (flags & FS_NODUMP_FL)
--		xflags |= FS_XFLAG_NODUMP;
-+		fa->fsx_xflags |= FS_XFLAG_NODUMP;
- 	else
--		xflags &= ~FS_XFLAG_NODUMP;
--
--	return xflags;
-+		fa->fsx_xflags &= ~FS_XFLAG_NODUMP;
- }
++static void xfs_fc_free(struct fs_context *fc)
++{
++	struct xfs_fs_context	*ctx = fc->fs_private;
++	struct xfs_mount	*mp = fc->s_fs_info;
++
++	if (mp) {
++		/*
++		 * If an error occurs before ownership the xfs_mount
++		 * info struct is passed to xfs by the VFS (by assigning
++		 * it to sb->s_fs_info and clearing the corresponding
++		 * fs_context field, done before calling fill super via
++		 * .get_tree()) there may be some strings to cleanup.
++		 */
++		if (mp->m_logname)
++			kfree(mp->m_logname);
++		if (mp->m_rtname)
++			kfree(mp->m_rtname);
++		kfree(mp);
++	}
++	kfree(ctx);
++}
++
+ static const struct fs_context_operations xfs_context_ops = {
+ 	.parse_param = xfs_parse_param,
+ 	.get_tree    = xfs_get_tree,
+ 	.reconfigure = xfs_reconfigure,
++	.free	     = xfs_fc_free,
+ };
  
- STATIC unsigned int
-@@ -1504,7 +1500,7 @@ xfs_ioc_setxflags(
- 		return -EOPNOTSUPP;
- 
- 	__xfs_ioc_fsgetxattr(ip, false, &fa);
--	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
-+	xfs_merge_ioc_xflags(&fa, flags);
- 
- 	error = mnt_want_write_file(filp);
- 	if (error)
+ static struct file_system_type xfs_fs_type = {
