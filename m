@@ -1,75 +1,268 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:45829 "EHLO
-        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728499AbfFXXoQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:44:16 -0400
-Date: Tue, 25 Jun 2019 09:43:04 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 11/12] iomap: move the xfs writeback code to iomap.c
-Message-ID: <20190624234304.GD7777@dread.disaster.area>
-References: <20190624055253.31183-1-hch@lst.de>
- <20190624055253.31183-12-hch@lst.de>
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:41223 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727561AbfFXXrJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:47:09 -0400
+Message-ID: <6dc984b1eb55d201c95314d146fbeafb45d71c03.camel@themaw.net>
+Subject: Re: [PATCH 03/10] xfs: mount-api - add xfs_parse_param()
+From: Ian Kent <raven@themaw.net>
+Date: Tue, 25 Jun 2019 07:47:02 +0800
+In-Reply-To: <20190624172632.GU5387@magnolia>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+         <156134511636.2519.2203014992522713286.stgit@fedora-28>
+         <20190624172632.GU5387@magnolia>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190624055253.31183-12-hch@lst.de>
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Mon, Jun 24, 2019 at 07:52:52AM +0200, Christoph Hellwig wrote:
-> Takes the xfs writeback code and move it to iomap.c.  A new structure
-> with three methods is added as the abstraction from the generic
-> writeback code to the file system.  These methods are used to map
-> blocks, submit an ioend, and cancel a page that encountered an error
-> before it was added to an ioend.
+On Mon, 2019-06-24 at 10:26 -0700, Darrick J. Wong wrote:
+> On Mon, Jun 24, 2019 at 10:58:36AM +0800, Ian Kent wrote:
+> > Add the fs_context_operations method .parse_param that's called
+> > by the mount-api ito parse each file system mount option.
+> > 
+> > Signed-off-by: Ian Kent <raven@themaw.net>
+> > ---
+> >  fs/xfs/xfs_super.c |  176
+> > ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 176 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 14c2a775786c..e78fea14d598 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -495,6 +495,178 @@ xfs_parseargs(
+> >  	return 0;
+> >  }
+> >  
+> > +struct xfs_fs_context {
+> > +	int	dsunit;
+> > +	int	dswidth;
+> > +	uint8_t	iosizelog;
+> > +};
+> > +
+> > +/*
+> > + * This function fills in xfs_mount_t fields based on mount args.
+> > + * Note: the superblock has _not_ yet been read in.
+> > + *
+> > + * Note that this function leaks the various device name allocations on
+> > + * failure.  The caller takes care of them.
 > 
-> Note that we temporarily lose the writepage tracing, but that will
-> be added back soon.
+> Wait, what?  Do you mean "The caller is responsible for freeing the
+> device name allocations if option parsing ends in failure"?
 
-I'm a little concerned this is going to limit what we can do
-with the XFS IO path because now we can't change this code without
-considering the direct impact on other filesystems. The QA burden of
-changing the XFS writeback code goes through the roof with this
-change (i.e. we can break multiple filesystems, not just XFS).
+Mmm ... yes, that needs to be re-worded.
 
-The writepage code is one of the areas that, historically speaking,
-has one of the highest rates of modification in XFS - we've
-substantially reworked this code from top to bottom 4 or 5 times in
-a bit over ten years, and each time it's been removing abstraction
-layers and getting the writeback code closer to the internal XFS
-extent mapping infrastructure.
+It sounded sensible at the time and was copied from the initial
+code, but it isn't clear, I'll have another go at that one in
+v2.
 
-This steps the other way - it adds abstraction to move the XFS code
-to be generic, and now we have to be concerned about how changes to
-the XFS IO path affects other filesystems. While I can see the
-desire to use this code in other filesystems, no other filesystem
-does COW or delayed allocation like XFS and this functionality is
-tightly tied into the iomap page writeback architecture.
+> 
+> > + */
+> > +STATIC int
+> > +xfs_parse_param(
+> > +	struct fs_context	 *fc,
+> > +	struct fs_parameter	 *param)
+> > +{
+> > +	struct xfs_fs_context    *ctx = fc->fs_private;
+> > +	struct xfs_mount	 *mp = fc->s_fs_info;
+> > +	struct fs_parse_result    result;
+> > +	int			  iosize = 0;
+> > +	int			  opt;
+> > +
+> > +	opt = fs_parse(fc, &xfs_fs_parameters, param, &result);
+> > +	if (opt < 0)
+> > +		return opt;
+> > +
+> > +	switch (opt) {
+> > +	case Opt_logbufs:
+> > +		mp->m_logbufs = result.uint_32;
+> > +		break;
+> > +	case Opt_logbsize:
+> > +		if (suffix_kstrtoint(param->string, 10, &mp->m_logbsize))
+> > +			return -EINVAL;
+> > +		break;
+> > +	case Opt_logdev:
+> > +		kfree(mp->m_logname);
+> > +		mp->m_logname = kstrdup(param->string, GFP_KERNEL);
+> > +		if (!mp->m_logname)
+> > +			return -ENOMEM;
+> > +		break;
+> > +	case Opt_rtdev:
+> > +		kfree(mp->m_rtname);
+> > +		mp->m_rtname = kstrdup(param->string, GFP_KERNEL);
+> > +		if (!mp->m_rtname)
+> > +			return -ENOMEM;
+> > +		break;
+> > +	case Opt_allocsize:
+> > +	case Opt_biosize:
+> > +		if (suffix_kstrtoint(param->string, 10, &iosize))
+> > +			return -EINVAL;
+> > +		ctx->iosizelog = ffs(iosize) - 1;
+> > +		break;
+> > +	case Opt_bsdgroups:
+> > +		mp->m_flags |= XFS_MOUNT_GRPID;
+> > +		break;
+> > +	case Opt_grpid:
+> > +		if (result.negated)
+> > +			mp->m_flags &= ~XFS_MOUNT_GRPID;
+> > +		else
+> > +			mp->m_flags |= XFS_MOUNT_GRPID;
+> > +		break;
+> > +	case Opt_sysvgroups:
+> > +		mp->m_flags &= ~XFS_MOUNT_GRPID;
+> > +		break;
+> > +	case Opt_wsync:
+> > +		mp->m_flags |= XFS_MOUNT_WSYNC;
+> > +		break;
+> > +	case Opt_norecovery:
+> > +		mp->m_flags |= XFS_MOUNT_NORECOVERY;
+> > +		break;
+> > +	case Opt_noalign:
+> > +		mp->m_flags |= XFS_MOUNT_NOALIGN;
+> > +		break;
+> > +	case Opt_swalloc:
+> > +		mp->m_flags |= XFS_MOUNT_SWALLOC;
+> > +		break;
+> > +	case Opt_sunit:
+> > +		ctx->dsunit = result.uint_32;
+> > +		break;
+> > +	case Opt_swidth:
+> > +		ctx->dswidth = result.uint_32;
+> > +		break;
+> > +	case Opt_inode32:
+> > +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+> > +		break;
+> > +	case Opt_inode64:
+> > +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+> > +		break;
+> > +	case Opt_nouuid:
+> > +		mp->m_flags |= XFS_MOUNT_NOUUID;
+> > +		break;
+> > +	case Opt_ikeep:
+> > +		if (result.negated)
+> > +			mp->m_flags &= ~XFS_MOUNT_IKEEP;
+> > +		else
+> > +			mp->m_flags |= XFS_MOUNT_IKEEP;
+> > +		break;
+> > +	case Opt_largeio:
+> > +		if (result.negated)
+> > +			mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+> > +		else
+> > +			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
+> > +		break;
+> > +	case Opt_attr2:
+> > +		if (!result.negated) {
+> > +			mp->m_flags |= XFS_MOUNT_ATTR2;
+> > +		} else {
+> > +			mp->m_flags &= ~XFS_MOUNT_ATTR2;
+> > +			mp->m_flags |= XFS_MOUNT_NOATTR2;
+> > +		}
+> > +		break;
+> > +	case Opt_filestreams:
+> > +		mp->m_flags |= XFS_MOUNT_FILESTREAMS;
+> > +		break;
+> > +	case Opt_quota:
+> > +		if (!result.negated) {
+> > +			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+> > +					 XFS_UQUOTA_ENFD);
+> > +		} else {
+> > +			mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+> > +			mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
+> > +			mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
+> > +		}
+> > +		break;
+> > +	case Opt_uquota:
+> > +	case Opt_usrquota:
+> > +		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+> > +				 XFS_UQUOTA_ENFD);
+> > +		break;
+> > +	case Opt_qnoenforce:
+> > +	case Opt_uqnoenforce:
+> > +		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
+> > +		mp->m_qflags &= ~XFS_UQUOTA_ENFD;
+> > +		break;
+> > +	case Opt_pquota:
+> > +	case Opt_prjquota:
+> > +		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
+> > +				 XFS_PQUOTA_ENFD);
+> > +		break;
+> > +	case Opt_pqnoenforce:
+> > +		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+> > +		mp->m_qflags &= ~XFS_PQUOTA_ENFD;
+> > +		break;
+> > +	case Opt_gquota:
+> > +	case Opt_grpquota:
+> > +		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+> > +				 XFS_GQUOTA_ENFD);
+> > +		break;
+> > +	case Opt_gqnoenforce:
+> > +		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+> > +		mp->m_qflags &= ~XFS_GQUOTA_ENFD;
+> > +		break;
+> > +	case Opt_discard:
+> > +		if (result.negated)
+> > +			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+> > +		else
+> > +			mp->m_flags |= XFS_MOUNT_DISCARD;
+> > +		break;
+> > +#ifdef CONFIG_FS_DAX
+> > +	case Opt_dax:
+> > +		mp->m_flags |= XFS_MOUNT_DAX;
+> > +		break;
+> > +#endif
+> > +	default:
+> > +		return invalf(fc, "XFS: unknown mount option [%s].", param-
+> > >key);
+> 
+> What do these messages end up looking like in dmesg?
+> 
+> The reason I ask is that today when mount option processing fails we log
+> the device name in the error message:
+> 
+> # mount /dev/sda1 /mnt -o gribblegronk
+> [64010.878477] XFS (sda1): unknown mount option [gribblegronk].
+> 
+> AFAICT using invalf (instead of xfs_warn) means that now we don't report
+> the device name, and all you'd get is:
+> 
+> "[64010.878477] XFS: unknown mount option [gribblegronk]."
+> 
+> which is not as helpful...
 
-As such, I'm not convinced that a wholesale lifting of this code
-into the generic iomap code is going to make our life easier or
-better. The stuff we've already got in fs/iomap.c is largely
-uncontroversial and straight forward, but this writeback code is
-anything but straight forward.....
+Yes, I thought that might be seen as a problem.
 
-Another issue this raises is that fs/iomap.c is already huge chunk
-of code with lots of different functionality in it. Adding another
-500+ lines of new functionality to it doesn't make it any easier to
-navigate or find things.
+The device name was obtained from the super block in the the
+original code and the super block isn't available at this
+point.
 
-If we are going to move this writeback code to the generic iomap
-infrastructure, can we please split the iomap code up in to smaller
-files first?  e.g. fs/iomap-dio.c for all the direct IO code,
-fs/iomap-pageio.c for all the page-based IO, fs/iomap.c for all the
-core functionality (like iomap_apply()) and fs/iomap-util.c for all
-the miscellaneous one-off functions like fiemap, etc?
+Not sure what to do about it but I'll have a look.
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> --D
+> 
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  struct proc_xfs_info {
+> >  	uint64_t	flag;
+> >  	char		*str;
+> > @@ -1914,6 +2086,10 @@ static const struct super_operations
+> > xfs_super_operations = {
+> >  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> >  };
+> >  
+> > +static const struct fs_context_operations xfs_context_ops = {
+> > +	.parse_param = xfs_parse_param,
+> > +};
+> > +
+> >  static struct file_system_type xfs_fs_type = {
+> >  	.owner			= THIS_MODULE,
+> >  	.name			= "xfs",
+> > 
