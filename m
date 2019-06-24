@@ -1,54 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:25669 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726450AbfFYK3a (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 06:29:30 -0400
-Message-ID: <5D11F781.4040906@cn.fujitsu.com>
-Date: Tue, 25 Jun 2019 18:29:21 +0800
-From: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:39540 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727733AbfFXV7r (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 17:59:47 -0400
+Date: Mon, 24 Jun 2019 14:58:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 2/7] vfs: flush and wait for io when setting the
+ immutable flag via SETFLAGS
+Message-ID: <20190624215817.GE1611011@magnolia>
+References: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+ <156116142734.1664939.5074567130774423066.stgit@magnolia>
+ <20190624113737.GG32376@quack2.suse.cz>
 MIME-Version: 1.0
-Subject: Re: [PATCH v2 2/2] generic/554: test only copy to active swap file
-References: <20190611153916.13360-1-amir73il@gmail.com> <20190611153916.13360-2-amir73il@gmail.com> <20190618090238.kmeocxasyxds7lzg@XZHOUW.usersys.redhat.com> <CAOQ4uxhePeTzR1t3e67xY+H0vcvh5toB3S=vdYVKm-skJrM00g@mail.gmail.com> <20190618150242.GA4576@mit.edu> <20190618151144.GB5387@magnolia>
-In-Reply-To: <20190618151144.GB5387@magnolia>
-Content-Type: text/plain; charset="ISO-8859-1"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190624113737.GG32376@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, darrick <darrick.wong@oracle.com>, Murphy Zhou <jencce.kernel@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Jan Kara <jack@suse.cz>
+Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-on 2019/06/18 23:11, Darrick J. Wong  wrote:
+On Mon, Jun 24, 2019 at 01:37:37PM +0200, Jan Kara wrote:
+> On Fri 21-06-19 16:57:07, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > When we're using FS_IOC_SETFLAGS to set the immutable flag on a file, we
+> > need to ensure that userspace can't continue to write the file after the
+> > file becomes immutable.  To make that happen, we have to flush all the
+> > dirty pagecache pages to disk to ensure that we can fail a page fault on
+> > a mmap'd region, wait for pending directio to complete, and hope the
+> > caller locked out any new writes by holding the inode lock.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Seeing the way this worked out, is there a reason to have separate
+> vfs_ioc_setflags_flush_data() instead of folding the functionality in
+> vfs_ioc_setflags_check() (possibly renaming it to
+> vfs_ioc_setflags_prepare() to indicate it does already some changes)? I
+> don't see any place that would need these two separated...
 
-> On Tue, Jun 18, 2019 at 11:02:42AM -0400, Theodore Ts'o wrote:
->> On Tue, Jun 18, 2019 at 12:16:45PM +0300, Amir Goldstein wrote:
->>> On Tue, Jun 18, 2019 at 12:02 PM Murphy Zhou<jencce.kernel@gmail.com>  wrote:
->>>> Would you mind updating sha1 after it get merged to Linus tree?
->>>>
->>>> That would be helpful for people tracking this issue.
->>>>
->>> This is the commit id in linux-next and expected to stay the same
->>> when the fix is merged to Linus tree for 5.3.
->> When I talked to Darrick last week, that was *not* the sense I got
->> from him.  It's not necessarily guaranteed to be stable just yet...
-> Darrick hasn't gotten any complaints about the copy-file-range-fixes
-> branch (which has been in for-next for a week now), so he thinks that
-> commit id (a31713517dac) should be stable from here on out.
->
-> (Note that doesn't guarantee that Linus will pull said branch...)
->
-> --D
-Hi Amir
+XFS needs them to be separated.
 
-The kernel fix commit message is right?  :-)  Because when I backport this patch into 5.2.0-rc6+ kernel,
-generic/554(553) also fails, it should be commit a5544984af4 (vfs: add missing checks to copy_file_range).
-By the way, a31713517dac ("vfs: introduce generic_file_rw_checks()") doesn't check for immutable and swap file.
+If we even /think/ that we're going to be setting the immutable flag
+then we need to grab the IOLOCK and the MMAPLOCK to prevent further
+writes while we drain all the directio writes and dirty data.  IO
+completions for the write draining can take the ILOCK, which means that
+we can't have grabbed it yet.
 
-I think we can change this message after the fix is merged to Linus tree for 5.3.  What do you think about it?
+Next, we grab the ILOCK so we can check the new flags against the inode
+and then update the inode core.
 
-Thanks
-Yang Xu
+For most filesystems I think it suffices to inode_lock and then do both,
+though.
 
->>       	   	    			- Ted
->
->
+> > +/*
+> > + * Flush all pending IO and dirty mappings before setting S_IMMUTABLE on an
+> > + * inode via FS_IOC_SETFLAGS.  If the flush fails we'll clear the flag before
+> > + * returning error.
+> > + *
+> > + * Note: the caller should be holding i_mutex, or else be sure that
+> > + * they have exclusive access to the inode structure.
+> > + */
+> > +static inline int vfs_ioc_setflags_flush_data(struct inode *inode, int flags)
+> > +{
+> > +	int ret;
+> > +
+> > +	if (!vfs_ioc_setflags_need_flush(inode, flags))
+> > +		return 0;
+> > +
+> > +	inode_set_flags(inode, S_IMMUTABLE, S_IMMUTABLE);
+> > +	ret = inode_flush_data(inode);
+> > +	if (ret)
+> > +		inode_set_flags(inode, 0, S_IMMUTABLE);
+> > +	return ret;
+> > +}
+> 
+> Also this sets S_IMMUTABLE whenever vfs_ioc_setflags_need_flush() returns
+> true. That is currently the right thing but seems like a landmine waiting
+> to trip? So I'd just drop the vfs_ioc_setflags_need_flush() abstraction to
+> make it clear what's going on.
+
+Ok.
+
+--D
+
+> 
+> 								Honza
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
