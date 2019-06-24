@@ -1,67 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f65.google.com ([209.85.167.65]:34330 "EHLO
-        mail-lf1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726323AbfFXBtD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jun 2019 21:49:03 -0400
-Received: by mail-lf1-f65.google.com with SMTP id y198so8776333lfa.1
-        for <linux-xfs@vger.kernel.org>; Sun, 23 Jun 2019 18:49:02 -0700 (PDT)
+Received: from userp2130.oracle.com ([156.151.31.86]:60004 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728417AbfFXOqb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 10:46:31 -0400
+Date: Mon, 24 Jun 2019 07:45:58 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs_quota: fix built-in help for project setup
+Message-ID: <20190624144558.GE5387@magnolia>
+References: <8b7e8e8d-0297-caff-568e-c9d1e75eda63@redhat.com>
 MIME-Version: 1.0
-From: Steven Swanson <swanson@eng.ucsd.edu>
-Date: Sun, 23 Jun 2019 15:09:27 -0700
-Message-ID: <CABjYnA7JXEwoxyE+2QisupAQuG0YJ3GUY24QooqY3vAZoFZOLg@mail.gmail.com>
-Subject: Call for participation: Persistent Programming In Real Life
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8b7e8e8d-0297-caff-568e-c9d1e75eda63@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-nvdimm <linux-nvdimm@lists.01.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-You are invited to attend the first annual Persistent Programming in
-Real Life (PIRL) meeting (https://pirl.nvsl.io/).  PIRL brings
-together software development leaders interested in learning about
-programming methodologies for persistent memories (e.g. NVDIMMs,
-Optane DC) and sharing their experiences with others.  This is a
-meeting for developer project leads on the front lines of persistent
-programming, not sales, marketing, or non-technical management.
+On Mon, Jun 24, 2019 at 08:55:38AM -0500, Eric Sandeen wrote:
+> -s is used to set up a new project, not -c.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-PIRL features a program of 18 presentations and 5 keynotes from
-industry-leading developers who have built real systems using
-persistent memory.  They will share what they have done (and want to
-do) with persistent memory, what worked, what didn=E2=80=99t, what was hard=
-,
-what was easy, what was surprising, and what they learned.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-This year=E2=80=99s keynote presentations will be:
+--D
 
-* Pratap Subrahmanyam (Vmware): Programming Persistent Memory In A
-Virtualized Environment Using Golang
-* Zuoyu Tao (Oracle): Exadata With Persistent Memory =E2=80=93 An Epic Jour=
-ney
-* Dan Williams (Intel Corporation): The 3rd Rail Of Linux Filesystems:
-A Survival Story
-* Stephen Bates (Eideticom): Successfully Deploying Persistent Memory
-And Acceleration Via Compute Express Link
-* Scott Miller (Dreamworks): Persistent Memory In Feature Animation Product=
-ion
-
-Other speakers include engineers from NetApp, Lawrence Livermore
-National Laboratory, Oracle, Sandia National Labs, Intel, SAP, Redhat,
-and universities from around the world.  Full Details are available at
-the PIRL Website: https://pirl.nvsl.io/.
-
-PIRL will be held on the University of California, San Diego campus at
-Scripps Forum, a state-of-the-art conference facility just a few
-meters from the beach.
-
-PIRL is small.  We are limiting attendance this year to under 100
-people, including speakers.  There will be lots of time for informal
-discussion and networking. Early registration ends July 10th.
-
-If you have any questions, please contact Steven Swanson (swanson@cs.ucsd.e=
-du).
-
-Organizing Committee
-
-Steven Swanson (UCSD) Jim Fister (SNIA) Andy Rudoff (Intel) Jishen
-Zhao (UCSD) Joe Izraelevitz (UCSD)
+> ---
+> 
+> diff --git a/quota/project.c b/quota/project.c
+> index 7c22947..03ae10d 100644
+> --- a/quota/project.c
+> +++ b/quota/project.c
+> @@ -43,7 +43,7 @@ project_help(void)
+>  " and subdirectories below it (i.e. a tree) can be restricted to using a\n"
+>  " subset of the available space in the filesystem.\n"
+>  "\n"
+> -" A managed tree must be setup initially using the -c option with a project.\n"
+> +" A managed tree must be setup initially using the -s option with a project.\n"
+>  " The specified project name or identifier is matched to one or more trees\n"
+>  " defined in /etc/projects, and these trees are then recursively descended\n"
+>  " to mark the affected inodes as being part of that tree - which sets inode\n"
+> 
