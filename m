@@ -1,30 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33470 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727070AbfFYKPq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jun 2019 06:15:46 -0400
-Date: Tue, 25 Jun 2019 12:15:15 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 12/12] iomap: add tracing for the address space
- operations
-Message-ID: <20190625101515.GL1462@lst.de>
-References: <20190624055253.31183-1-hch@lst.de> <20190624055253.31183-13-hch@lst.de> <20190624234921.GE7777@dread.disaster.area>
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:58581 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726749AbfFXPIr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 11:08:47 -0400
+Date: Mon, 24 Jun 2019 11:08:39 -0400
+From: "Theodore Ts'o" <tytso@mit.edu>
+Subject: Re: [PATCH] shared/011: run on all file system that support cgroup
+ writeback
+Message-ID: <20190624150839.GB6350@mit.edu>
+References: <20190624134407.21365-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190624234921.GE7777@dread.disaster.area>
+In-Reply-To: <20190624134407.21365-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Jun 25, 2019 at 09:49:21AM +1000, Dave Chinner wrote:
-> > +#undef TRACE_SYSTEM
-> > +#define TRACE_SYSTEM iomap
+On Mon, Jun 24, 2019 at 03:44:07PM +0200, Christoph Hellwig wrote:
+> Run the cgroup writeback test on xfs, for which I've just posted
+> a patch to support cgroup writeback as well as ext2 and f2fs, which
+> have supported cgroup writeback for a while now.
 > 
-> Can you add a comment somewhere here that says these tracepoints are
-> volatile and we reserve the right to change them at any time so they
-> don't form any sort of persistent UAPI that we have to maintain?
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  tests/shared/011 | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/tests/shared/011 b/tests/shared/011
+> index a0ac375d..96ce9d1c 100755
+> --- a/tests/shared/011
+> +++ b/tests/shared/011
+> @@ -39,7 +39,7 @@ rm -f $seqres.full
+>  # real QA test starts here
+>  
+>  # Modify as appropriate.
+> -_supported_fs ext4 btrfs
+> +_supported_fs ext2 ext4 f2fs btrfs xfs
 
-Sure.  Note that we don't have any such comment in xfs either..
+Per my comments in another e-mail thread, given how many of the
+primary file systems support cgroup-aware writeback, maybe we should
+just remove the _supported_fs line and move this test to generic?
+
+Whether we like it or not, there are more and more userspace tools
+which assume that cgroup-aware writeback is a thing.
+
+Alternatively, maybe we should have some standardized way so the
+kernel can signal whether or not a particular mounted file system
+supports cgroup-aware writeback?
+
+						- Ted
