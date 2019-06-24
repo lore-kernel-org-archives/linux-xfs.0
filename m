@@ -1,36 +1,33 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50594 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727282AbfFXQFH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 12:05:07 -0400
-Date: Mon, 24 Jun 2019 09:04:50 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from mx2.suse.de ([195.135.220.15]:47560 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727082AbfFXQG0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jun 2019 12:06:26 -0400
 Subject: Re: [PATCH 09/12] xfs: refactor the ioend merging code
-Message-ID: <20190624160450.GO5387@magnolia>
 References: <20190624055253.31183-1-hch@lst.de>
  <20190624055253.31183-10-hch@lst.de>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <e42c54c4-4c64-8185-8ac3-cca38ad8e8a4@suse.com>
+Date: Mon, 24 Jun 2019 19:06:22 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <20190624055253.31183-10-hch@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 07:52:50AM +0200, Christoph Hellwig wrote:
+
+
+On 24.06.19 г. 8:52 ч., Christoph Hellwig wrote:
 > Introduce two nicely abstracted helper, which can be moved to the
 > iomap code later.  Also use list_pop and list_first_entry_or_null
 > to simplify the code a bit.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 > ---
 >  fs/xfs/xfs_aops.c | 66 ++++++++++++++++++++++++++---------------------
 >  1 file changed, 36 insertions(+), 30 deletions(-)
@@ -54,6 +51,13 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > +	xfs_destroy_ioend(ioend, error);
 > +	while ((ioend = list_pop(&tmp, struct xfs_ioend, io_list)))
 > +		xfs_destroy_ioend(ioend, error);
+
+nit: I'd prefer if the list_pop patch is right before this one since
+this is the first user of it. Additionally, I don't think list_pop is
+really a net-negative win in comparison to list_for_each_entry_safe
+here. In fact this "delete the list" would seems more idiomatic if
+implemented via list_for_each_entry_safe
+
 > +}
 > +
 >  /*
@@ -151,8 +155,10 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 > +	while ((ioend = list_pop(&tmp, struct xfs_ioend, io_list))) {
 > +		xfs_ioend_try_merge(ioend, &tmp);
 >  		xfs_end_ioend(ioend);
+
+Here again, tmp is a local copy that is immutable so using while()
+instead of list_for_each_entry_safe doesn't seem to be providing much.
+
 >  	}
 >  }
-> -- 
-> 2.20.1
 > 
