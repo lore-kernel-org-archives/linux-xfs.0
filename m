@@ -1,62 +1,137 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:46474 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725985AbfFUQZf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 21 Jun 2019 12:25:35 -0400
-Subject: Re: [PATCH 1/4] dump: _cleanup_dump should only check the scratch fs
- if the test required it
-References: <156089201978.345809.17444450351199726553.stgit@magnolia>
- <156089202883.345809.17656192140244878661.stgit@magnolia>
-From: Allison Collins <allison.henderson@oracle.com>
-Message-ID: <8194cb6e-4a29-5b18-e7be-fdb646dd8fe6@oracle.com>
-Date: Fri, 21 Jun 2019 09:25:28 -0700
+Received: from icp-osb-irony-out1.external.iinet.net.au ([203.59.1.210]:33430
+        "EHLO icp-osb-irony-out1.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726858AbfFXDIm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 23 Jun 2019 23:08:42 -0400
+Subject: [PATCH 08/10] xfs: mount-api - switch to new mount-api
+From: Ian Kent <raven@themaw.net>
+Date: Mon, 24 Jun 2019 10:59:07 +0800
+Message-ID: <156134514772.2519.274012421344093746.stgit@fedora-28>
+In-Reply-To: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
 MIME-Version: 1.0
-In-Reply-To: <156089202883.345809.17656192140244878661.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Cc: Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On 6/18/19 2:07 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> _cleanup_dump always tries to check the scratch fs, even if the caller
-> didn't actually _require_scratch.  If a previous test wrote garbage to
-> the scratch device then the dump test will fail here when repair
-> stumbles over the garbage.
-> 
-> This was observed by running xfs/016 and xfs/036 in succession.  xfs/016
-> writes 0xc6 to the scratch device and tries to format a small log.  If
-> the log is too small the format fails and the test will _notrun.  The
-> subsequent xfs/036 will _notrun and then _cleanup_dump if no tape device
-> is set, at which point we try to check the scratch device and logprint
-> aborts due to the abnormal log size (0xc6c6c6c6).
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+The infrastructure needed to use the new mount-api is now
+in place, switch over to use it.
 
-Looks ok to me.
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Also remove Opt_err enum as it's no longer used.
 
-> ---
->   common/dump |    2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> 
-> diff --git a/common/dump b/common/dump
-> index 7c4c9cd8..2b8e0893 100644
-> --- a/common/dump
-> +++ b/common/dump
-> @@ -250,7 +250,7 @@ _cleanup_dump()
->   	mv $dir.$seq $dir
->       done
->   
-> -    if [ $status -ne $NOTRUNSTS ]; then
-> +    if [ -f ${RESULT_DIR}/require_scratch ] && [ $status -ne $NOTRUNSTS ]; then
->   	# Sleep added to stop _check_scratch_fs from complaining that the
->   	# scratch_dev is still busy
->   	sleep 10
-> 
+Signed-off-by: Ian Kent <raven@themaw.net>
+---
+ fs/xfs/xfs_super.c |   72 +++++++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 68 insertions(+), 4 deletions(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0a771e1390e7..6e6eace31e07 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -71,7 +71,7 @@ enum {
+ 	Opt_filestreams, Opt_quota, Opt_noquota, Opt_usrquota, Opt_grpquota,
+ 	Opt_prjquota, Opt_uquota, Opt_gquota, Opt_pquota,
+ 	Opt_uqnoenforce, Opt_gqnoenforce, Opt_pqnoenforce, Opt_qnoenforce,
+-	Opt_discard, Opt_nodiscard, Opt_dax, Opt_err,
++	Opt_discard, Opt_nodiscard, Opt_dax,
+ };
+ 
+ static const match_table_t tokens = {
+@@ -118,7 +118,6 @@ static const match_table_t tokens = {
+ 	{Opt_discard,	"discard"},	/* Discard unused blocks */
+ 	{Opt_nodiscard,	"nodiscard"},	/* Do not discard unused blocks */
+ 	{Opt_dax,	"dax"},		/* Enable direct access to bdev pages */
+-	{Opt_err,	NULL},
+ };
+ 
+ static const struct fs_parameter_spec xfs_param_specs[] = {
+@@ -2407,7 +2406,6 @@ static const struct super_operations xfs_super_operations = {
+ 	.freeze_fs		= xfs_fs_freeze,
+ 	.unfreeze_fs		= xfs_fs_unfreeze,
+ 	.statfs			= xfs_fs_statfs,
+-	.remount_fs		= xfs_fs_remount,
+ 	.show_options		= xfs_fs_show_options,
+ 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+ 	.free_cached_objects	= xfs_fs_free_cached_objects,
+@@ -2442,10 +2440,76 @@ static const struct fs_context_operations xfs_context_ops = {
+ 	.free	     = xfs_fc_free,
+ };
+ 
++/*
++ * Set up the filesystem mount context.
++ */
++int xfs_init_fs_context(struct fs_context *fc)
++{
++	struct xfs_fs_context	*ctx;
++	struct xfs_mount	*mp;
++
++	ctx = kzalloc(sizeof(struct xfs_fs_context), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
++	if (!mp) {
++		kfree(ctx);
++		return -ENOMEM;
++	}
++
++	spin_lock_init(&mp->m_sb_lock);
++	spin_lock_init(&mp->m_agirotor_lock);
++	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
++	spin_lock_init(&mp->m_perag_lock);
++	mutex_init(&mp->m_growlock);
++	atomic_set(&mp->m_active_trans, 0);
++	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
++	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
++	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
++	mp->m_kobj.kobject.kset = xfs_kset;
++	/*
++	 * We don't create the finobt per-ag space reservation until after log
++	 * recovery, so we must set this to true so that an ifree transaction
++	 * started during log recovery will not depend on space reservations
++	 * for finobt expansion.
++	 */
++	mp->m_finobt_nores = true;
++
++	/*
++	 * Set some default flags that could be cleared by the mount option
++	 * parsing.
++	 */
++	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
++
++	/*
++	 * These can be overridden by the mount option parsing.
++	 */
++	mp->m_logbufs = -1;
++	mp->m_logbsize = -1;
++
++	/*
++	 * Copy binary VFS mount flags we are interested in.
++	 */
++	if (fc->sb_flags & SB_RDONLY)
++		mp->m_flags |= XFS_MOUNT_RDONLY;
++	if (fc->sb_flags & SB_DIRSYNC)
++		mp->m_flags |= XFS_MOUNT_DIRSYNC;
++	if (fc->sb_flags & SB_SYNCHRONOUS)
++		mp->m_flags |= XFS_MOUNT_WSYNC;
++
++	fc->fs_private = ctx;
++	fc->s_fs_info = mp;
++	fc->ops = &xfs_context_ops;
++
++	return 0;
++}
++
+ static struct file_system_type xfs_fs_type = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "xfs",
+-	.mount			= xfs_fs_mount,
++	.init_fs_context	= xfs_init_fs_context,
++	.parameters		= &xfs_fs_parameters,
+ 	.kill_sb		= kill_block_super,
+ 	.fs_flags		= FS_REQUIRES_DEV,
+ };
