@@ -1,46 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from cloud1-vm154.de-nserver.de ([178.250.10.56]:53347 "EHLO
-        cloud1-vm154.de-nserver.de" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727763AbfFYKMS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 06:12:18 -0400
-Subject: Re: [PATCH 2/2] xfs: implement cgroup aware writeback
-References: <20190624134315.21307-1-hch@lst.de>
- <20190624134315.21307-3-hch@lst.de> <20190624162215.GS5387@magnolia>
- <20190625100057.GD1462@lst.de>
-From: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
-Message-ID: <044a8a27-ad1c-73ff-5a29-189f0b38c3d9@profihost.ag>
-Date: Tue, 25 Jun 2019 12:06:52 +0200
+Received: from mail106.syd.optusnet.com.au ([211.29.132.42]:48325 "EHLO
+        mail106.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726551AbfFXXAP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:00:15 -0400
+Date: Tue, 25 Jun 2019 08:59:04 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 06/12] xfs: remove XFS_TRANS_NOFS
+Message-ID: <20190624225904.GB7777@dread.disaster.area>
+References: <20190624055253.31183-1-hch@lst.de>
+ <20190624055253.31183-7-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20190625100057.GD1462@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: de-DE
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190624055253.31183-7-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Am 25.06.19 um 12:00 schrieb Christoph Hellwig:
-> On Mon, Jun 24, 2019 at 09:22:15AM -0700, Darrick J. Wong wrote:
->> On Mon, Jun 24, 2019 at 03:43:15PM +0200, Christoph Hellwig wrote:
->>> Link every newly allocated writeback bio to cgroup pointed to by the
->>> writeback control structure, and charge every byte written back to it.
->>>
->>> Tested-by: Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
->>
->> Was this tested by running shared/011?  Or did it involve other checks?
-> 
-> I verified it with shared/011 and local frobbing.  Stefan can chime
-> in on what testing he did.
+On Mon, Jun 24, 2019 at 07:52:47AM +0200, Christoph Hellwig wrote:
+> Instead of a magic flag for xfs_trans_alloc, just ensure all callers
+> that can't relclaim through the file system use memalloc_nofs_save to
+> set the per-task nofs flag.
 
-I ran some real life Tests:
+I'm thinking that it would be a good idea to add comments to explain
+exactly what the memalloc_nofs_save/restore() are protecting where
+they are used. Right now the XFS_TRANS_NOFS flag is largely
+undocumented, so a reader is left guessing as to why the flag is
+necessary and what contexts it may apply to. Hence I think we should
+fix that while we are changing over to a different GFP_NOFS
+allocation context mechanism....
 
-1.) using Dovecot for IMAP and limit Disk I/O
+Cheers,
 
-2.) Using dd without oflag=direct in systemd slices.
-
-3.) Limit apache slice with various PHP applications in it.
-
-Greets,
-Stefan
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
