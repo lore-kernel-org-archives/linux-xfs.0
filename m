@@ -1,54 +1,88 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54146 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725916AbfFXMp2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Jun 2019 08:45:28 -0400
-Subject: Re: [PATCH] quota: honor quote type in Q_XGETQSTAT[V] calls
-References: <0b96d49c-3c0b-eb71-dd87-750a6a48f1ef@redhat.com>
- <20190624105800.GD32376@quack2.suse.cz>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <c5b47955-4771-e883-4e72-11810141eb19@redhat.com>
-Date: Mon, 24 Jun 2019 07:45:27 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:59024 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726486AbfFXXQf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 19:16:35 -0400
+Date: Tue, 25 Jun 2019 09:15:23 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 07/12] xfs: don't preallocate a transaction for file size
+ updates
+Message-ID: <20190624231523.GC7777@dread.disaster.area>
+References: <20190624055253.31183-1-hch@lst.de>
+ <20190624055253.31183-8-hch@lst.de>
+ <20190624161720.GQ5387@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190624105800.GD32376@quack2.suse.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190624161720.GQ5387@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>, Bob Peterson <rpeterso@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 6/24/19 5:58 AM, Jan Kara wrote:
-> On Fri 21-06-19 18:27:13, Eric Sandeen wrote:
->> The code in quota_getstate and quota_getstatev is strange; it
->> says the returned fs_quota_stat[v] structure has room for only
->> one type of time limits, so fills it in with the first enabled
->> quota, even though every quotactl command must have a type sent
->> in by the user.
->>
->> Instead of just picking the first enabled quota, fill in the
->> reply with the timers for the quota type that was actually
->> requested.
->>
->> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
->> ---
->>
->> I guess this is a change in behavior, but it goes from a rather
->> unexpected and unpredictable behavior to something more expected,
->> so I hope it's ok.
->>
->> I'm working on breaking out xfs quota timers by type as well
->> (they are separate on disk, but not in memory) so I'll work
->> up an xfstest to go with this...
+On Mon, Jun 24, 2019 at 09:17:20AM -0700, Darrick J. Wong wrote:
+> On Mon, Jun 24, 2019 at 07:52:48AM +0200, Christoph Hellwig wrote:
+> > We have historically decided that we want to preallocate the xfs_trans
+> > structure at writeback time so that we don't have to allocate on in
+> > the I/O completion handler.  But we treat unwrittent extent and COW
+> > fork conversions different already, which proves that the transaction
+> > allocations in the end I/O handler are not a problem.  Removing the
+> > preallocation gets rid of a lot of corner case code, and also ensures
+> > we only allocate one and log a transaction when actually required,
+> > as the ioend merging can reduce the number of actual i_size updates
+> > significantly.
 > 
-> Yeah, makes sense. I've added the patch to my tree.
-> 
-> 								Honza
-> 
+> That's what I thought when I wrote the ioend merging patches, but IIRC
+> Dave objected on the grounds that most file writes are trivial file
+> extending writes and therefore we should leave this alone to avoid
+> slowing down the ioend path even if it came at a cost of cancelling a
+> lot of empty transactions.
 
-Thanks Jan - if you'd like to fix my "quote" for "quota" in the
-subject line, please feel free.  ;)
+The issue is stuff like extracting a tarball, where we might write a
+hundred thousand files and they are all written in a single IO. i.e.
+there is no IO completion merging at all.
 
--Eric
+> I wasn't 100% convinced it mattered but ran out of time in the
+> development window and never got around to researching if it made any
+> difference.
+
+Yeah, it's not all that simple :/
+
+In these cases, we always have to allocate a transaction for every
+file being written. If we do it before we submit the IO, then all
+the transactions are allocated from the single writeback context. If
+we don't have log space, data writeback pauses while the tail of the
+AIL is pushed, metadata writeback occurs, and then the transaction
+allocation for data writeback is woken, and data writeback
+submission continues. It's fairly orderly, and we don't end up
+trying to write back data while we are doing bulk metadata flushing
+from the AIL.
+
+If we delay the transaction allocation to the ioend context and we
+are low on log space, we end up blocking a kworker on a transaction
+allocation which then has to wait for metadata writeback. The
+kworker infrastructure will then issue the next ioend work, which
+then blocks on transaction allocation. Delayed allocation can cause
+thousands of small file IOs to be inflight at the same time due to
+intra-file contiguous allocation and IO merging in the block layer,
+hence we can have thousands of individual IO completions that
+require transaction allocation to be completed.
+
+> So, uh, how much of a hit do we take for having to allocate a
+> transaction for a file size extension?  Particularly since we can
+> combine those things now?
+
+Unless we are out of log space, the transaction allocation and free
+should be largely uncontended and so it's just a small amount of CPU
+usage. i.e it's a slab allocation/free and then lockless space
+reservation/free. If we are out of log space, then we sleep waiting
+for space - the issue really comes down to where it is better to
+sleep in that case....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
