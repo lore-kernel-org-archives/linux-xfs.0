@@ -1,76 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51904 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726774AbfFYRSC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 13:18:02 -0400
-Date: Tue, 25 Jun 2019 10:16:16 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/4] vfs: create a generic checking function for
- FS_IOC_FSSETXATTR
-Message-ID: <20190625171616.GB2230847@magnolia>
-References: <156116136742.1664814.17093419199766834123.stgit@magnolia>
- <156116138952.1664814.16552129914959122837.stgit@magnolia>
- <20190625105725.GB26085@infradead.org>
- <20190625170248.GS8917@twin.jikos.cz>
+Received: from bombadil.infradead.org ([198.137.202.133]:37036 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727034AbfFYLCz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 07:02:55 -0400
+Date: Tue, 25 Jun 2019 04:02:54 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 02/12] libfrog: cvt_u64 should use strtoull, not strtoll
+Message-ID: <20190625110254.GE9601@infradead.org>
+References: <156104936953.1172531.2121427277342917243.stgit@magnolia>
+ <156104938235.1172531.7192571581132527840.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190625170248.GS8917@twin.jikos.cz>
+In-Reply-To: <156104938235.1172531.7192571581132527840.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dsterba@suse.cz, Christoph Hellwig <hch@infradead.org>, matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 
-On Tue, Jun 25, 2019 at 07:02:48PM +0200, David Sterba wrote:
-> On Tue, Jun 25, 2019 at 03:57:25AM -0700, Christoph Hellwig wrote:
-> > On Fri, Jun 21, 2019 at 04:56:29PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Create a generic checking function for the incoming FS_IOC_FSSETXATTR
-> > > fsxattr values so that we can standardize some of the implementation
-> > > behaviors.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > Reviewed-by: Jan Kara <jack@suse.cz>
-> > > ---
-> > >  fs/btrfs/ioctl.c   |   21 +++++++++-------
-> > >  fs/ext4/ioctl.c    |   27 ++++++++++++++------
-> > >  fs/f2fs/file.c     |   26 ++++++++++++++-----
-> > >  fs/inode.c         |   17 +++++++++++++
-> > >  fs/xfs/xfs_ioctl.c |   70 ++++++++++++++++++++++++++++++----------------------
-> > >  include/linux/fs.h |    3 ++
-> > >  6 files changed, 111 insertions(+), 53 deletions(-)
-> > > 
-> > > 
-> > > diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-> > > index f408aa93b0cf..7ddda5b4b6a6 100644
-> > > --- a/fs/btrfs/ioctl.c
-> > > +++ b/fs/btrfs/ioctl.c
-> > > @@ -366,6 +366,13 @@ static int check_xflags(unsigned int flags)
-> > >  	return 0;
-> > >  }
-> > >  
-> > > +static void __btrfs_ioctl_fsgetxattr(struct btrfs_inode *binode,
-> > > +				     struct fsxattr *fa)
-> > > +{
-> > > +	memset(fa, 0, sizeof(*fa));
-> > > +	fa->fsx_xflags = btrfs_inode_flags_to_xflags(binode->flags);
-> > 
-> > Is there really much of a point in this helper? Epeciall as
-> > the zeroing could easily be done in the variable declaration
-> > line using
-> > 
-> > 	struct fsxattr fa = { };
+On Thu, Jun 20, 2019 at 09:49:42AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Agreed, not counting the initialization the wrapper is merely another
-> name for btrfs_inode_flags_to_xflags. I also find it slightly confusing
-> that __btrfs_ioctl_fsgetxattr name is too close to the ioctl callback
-> implementation btrfs_ioctl_fsgetxattr but only does some initialization.
+> cvt_u64 converts a string to an unsigned 64-bit number, so it should use
+> strtoull, not strtoll because we don't want negative numbers here.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Ok; it's easily enough changed to:
+Looks good,
 
-	struct fsxattr old_fa = {
-		.fsx_xflags = btrfs_inode_flags_to_xflags(binode->flags),
-	};
-
---D
+Reviewed-by: Christoph Hellwig <hch@lst.de>
