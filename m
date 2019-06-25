@@ -1,29 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42028 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730665AbfFYDCy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:02:54 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P2xQku183579
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:53 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2t9brt1ha7-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:51088 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728088AbfFYDEp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:04:45 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P2xIbF093268
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:04:43 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2t9c9phf7p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:53 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P31NIk163426
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:52 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2tat7bys0v-1
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:04:43 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P32hg3098162
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:43 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2t9p6tx1wp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:52 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5P32qae016179
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:52 GMT
-Subject: [PATCH 3/5] xfs: refactor attr scrub memory allocation function
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:43 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5P32eqH013497
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:40 GMT
+Subject: [PATCH 1/5] xfs: attribute scrub should use seen_enough to pass
+ error values
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 24 Jun 2019 20:02:51 -0700
-Message-ID: <156143177110.2221192.12144130344450670626.stgit@magnolia>
+Date: Mon, 24 Jun 2019 20:02:39 -0700
+Message-ID: <156143175903.2221192.5580755117803210207.stgit@magnolia>
 In-Reply-To: <156143175282.2221192.3546713622107331271.stgit@magnolia>
 References: <156143175282.2221192.3546713622107331271.stgit@magnolia>
 MIME-Version: 1.0
@@ -37,80 +38,47 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the code that allocates memory buffers for the extended attribute
-scrub code into a separate function so we can reduce memory allocations
-in the next patch.
+When we're iterating all the attributes using the built-in xattr
+iterator, we can use the seen_enough variable to pass error codes back
+to the main scrub function instead of flattening them into 0/1.  This
+will be used in a more exciting fashion in upcoming patches.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/attr.c |   33 ++++++++++++++++++++++++---------
- fs/xfs/scrub/attr.h |    2 ++
- 2 files changed, 26 insertions(+), 9 deletions(-)
+ fs/xfs/scrub/attr.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 
 diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index fd16eb3fa003..c20b6da1db84 100644
+index dce74ec57038..f0fd26abd39d 100644
 --- a/fs/xfs/scrub/attr.c
 +++ b/fs/xfs/scrub/attr.c
-@@ -31,26 +31,41 @@
- #include <linux/posix_acl_xattr.h>
- #include <linux/xattr.h>
+@@ -83,7 +83,7 @@ xchk_xattr_listent(
+ 	sx = container_of(context, struct xchk_xattr, context);
  
--/* Set us up to scrub an inode's extended attributes. */
-+/* Allocate enough memory to hold an attr value and attr block bitmaps. */
- int
--xchk_setup_xattr(
-+xchk_setup_xattr_buf(
- 	struct xfs_scrub	*sc,
--	struct xfs_inode	*ip)
-+	size_t			value_size)
- {
- 	size_t			sz;
+ 	if (xchk_should_terminate(sx->sc, &error)) {
+-		context->seen_enough = 1;
++		context->seen_enough = error;
+ 		return;
+ 	}
  
- 	/*
--	 * Allocate the buffer without the inode lock held.  We need enough
--	 * space to read every xattr value in the file or enough space to
--	 * hold three copies of the xattr free space bitmap.  (Not both at
--	 * the same time.)
-+	 * We need enough space to read an xattr value from the file or enough
-+	 * space to hold three copies of the xattr free space bitmap.  We don't
-+	 * need the buffer space for both purposes at the same time.
- 	 */
--	sz = max_t(size_t, XATTR_SIZE_MAX, 3 * sizeof(long) *
--			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize));
-+	sz = 3 * sizeof(long) * BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
-+	sz = max_t(size_t, sz, value_size);
-+
- 	sc->buf = kmem_zalloc_large(sz, KM_SLEEP);
- 	if (!sc->buf)
- 		return -ENOMEM;
- 
-+	return 0;
-+}
-+
-+/* Set us up to scrub an inode's extended attributes. */
-+int
-+xchk_setup_xattr(
-+	struct xfs_scrub	*sc,
-+	struct xfs_inode	*ip)
-+{
-+	int			error;
-+
-+	error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX);
-+	if (error)
-+		return error;
-+
- 	return xchk_setup_inode_contents(sc, ip, 0);
+@@ -125,7 +125,7 @@ xchk_xattr_listent(
+ 					     args.blkno);
+ fail_xref:
+ 	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+-		context->seen_enough = 1;
++		context->seen_enough = XFS_ITER_ABORT;
+ 	return;
  }
  
-diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-index baa92f34f790..919adff24447 100644
---- a/fs/xfs/scrub/attr.h
-+++ b/fs/xfs/scrub/attr.h
-@@ -62,4 +62,6 @@ xchk_xattr_dstmap(
- 			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
- }
- 
-+int xchk_setup_xattr_buf(struct xfs_scrub *sc, size_t value_size);
+@@ -464,6 +464,10 @@ xchk_xattr(
+ 	error = xfs_attr_list_int_ilocked(&sx.context);
+ 	if (!xchk_fblock_process_error(sc, XFS_ATTR_FORK, 0, &error))
+ 		goto out;
 +
- #endif	/* __XFS_SCRUB_ATTR_H__ */
++	/* Did our listent function try to return any errors? */
++	if (sx.context.seen_enough < 0)
++		error = sx.context.seen_enough;
+ out:
+ 	return error;
+ }
