@@ -1,104 +1,126 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:54862 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726545AbfFYU3u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jun 2019 16:29:50 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 29A6278D0
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 15:29:40 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 80704dd8
-Message-ID: <637c74e5-01b9-af25-0576-ba544ff8f0e6@sandeen.net>
-Date: Tue, 25 Jun 2019 15:29:47 -0500
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="DTK5tcwtxK8Ha7FI9cM3yLjHi7WRUODrl"
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:44292 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726521AbfFYUhn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 16:37:43 -0400
+Received: by mail-pl1-f194.google.com with SMTP id t7so64632plr.11
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 13:37:43 -0700 (PDT)
+From: Andreas Dilger <adilger@dilger.ca>
+Message-Id: <E84C8EBC-8341-49E5-8EED-0980D158CD50@dilger.ca>
+Content-Type: multipart/signed;
+ boundary="Apple-Mail=_D22B91A1-39DB-42F5-937D-A1034700DAE0";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
+Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
+Subject: Re: [PATCH v4 0/7] vfs: make immutable files actually immutable
+Date: Tue, 25 Jun 2019 14:37:37 -0600
+In-Reply-To: <20190625180326.GC2230847@magnolia>
+References: <156116141046.1664939.11424021489724835645.stgit@magnolia>
+ <20190625103631.GB30156@infradead.org> <20190625180326.GC2230847@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, matthew.garrett@nebula.com, yuchao0@huawei.com, Theodore Ts'o <tytso@mit.edu>, ard.biesheuvel@linaro.org, Josef Bacik <josef@toxicpanda.com>, Chris Mason <clm@fb.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, dsterba@suse.com, Jaegeuk Kim <jaegeuk@kernel.org>, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-xfs <linux-xfs@vger.kernel.org>, linux-mm <linux-mm@kvack.org>, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 Developers List <linux-ext4@vger.kernel.org>, linux-btrfs <linux-btrfs@vger.kernel.org>
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---DTK5tcwtxK8Ha7FI9cM3yLjHi7WRUODrl
-Content-Type: multipart/mixed; boundary="2aDeQPoMOFcNzn71RUH5jWarwTT20Fl53";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <637c74e5-01b9-af25-0576-ba544ff8f0e6@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 80704dd8
 
---2aDeQPoMOFcNzn71RUH5jWarwTT20Fl53
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+--Apple-Mail=_D22B91A1-39DB-42F5-937D-A1034700DAE0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-Hi folks,
+On Jun 25, 2019, at 12:03 PM, Darrick J. Wong <darrick.wong@oracle.com> =
+wrote:
+>=20
+> On Tue, Jun 25, 2019 at 03:36:31AM -0700, Christoph Hellwig wrote:
+>> On Fri, Jun 21, 2019 at 04:56:50PM -0700, Darrick J. Wong wrote:
+>>> Hi all,
+>>>=20
+>>> The chattr(1) manpage has this to say about the immutable bit that
+>>> system administrators can set on files:
+>>>=20
+>>> "A file with the 'i' attribute cannot be modified: it cannot be =
+deleted
+>>> or renamed, no link can be created to this file, most of the file's
+>>> metadata can not be modified, and the file can not be opened in =
+write
+>>> mode."
+>>>=20
+>>> Given the clause about how the file 'cannot be modified', it is
+>>> surprising that programs holding writable file descriptors can =
+continue
+>>> to write to and truncate files after the immutable flag has been =
+set,
+>>> but they cannot call other things such as utimes, fallocate, unlink,
+>>> link, setxattr, or reflink.
+>>=20
+>> I still think living code beats documentation.  And as far as I can
+>> tell the immutable bit never behaved as documented or implemented
+>> in this series on Linux, and it originated on Linux.
+>=20
+> The behavior has never been consistent -- since the beginning you can
+> keep write()ing to a fd after the file becomes immutable, but you =
+can't
+> ftruncate() it.  I would really like to make the behavior consistent.
+> Since the authors of nearly every new system call and ioctl since the
+> late 1990s have interpreted S_IMMUTABLE to mean "immutable takes =
+effect
+> everywhere immediately" I resolved the inconsistency in favor of that
+> interpretation.
+>=20
+> I asked Ted what he thought that that userspace having the ability to
+> continue writing to an immutable file, and he thought it was an
+> implementation bug that had been there for 25 years.  Even he thought
+> that immutable should take effect immediately everywhere.
+>=20
+>> If you want  hard cut off style immutable flag it should really be a
+>> new API, but I don't really see the point.  It isn't like the usual
+>> workload is to set the flag on a file actively in use.
+>=20
+> FWIW Ted also thought that since it's rare for admins to set +i on a
+> file actively in use we could just change it without forcing everyone
+> onto a new api.
 
-The for-next branch of the xfsprogs repository at:
+On the flip side, it is possible to continue to write to an open fd
+after removing the write permission, and this is a problem we've hit
+in the real world with NFS export, so real applications do this.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+It may be the same case with immutable files, where an application sets
+the immutable flag immediately after creation, but continues to write
+until it closes the file, so that the file can't be modified by other
+processes, and there isn't a risk that the file is missing the immutable
+flag if the writing process dies before setting it at the end.
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding
-patches were in this update. If they have not been in this update,
-please resubmit them to linux-xfs@vger.kernel.org so they can be
-picked up in the next update.
-
-The new head of the for-next branch is commit:
-
-80704dd8 (HEAD -> for-next, korg/for-next, refs/patches/for-next/xfs_io__=
-repair_f_should_use_its_own_name.patch) xfs_io: repair_f should use its o=
-wn name
-
-New Commits:
-
-Amir Goldstein (1):
-      [34ea9bb2] xfs_info: limit findmnt to find mounted xfs filesystems
-
-Darrick J. Wong (4):
-      [4f2c97eb] libfrog: don't set negative errno in conversion function=
-s
-      [dde3c46f] libfrog: cvt_u64 should use strtoull, not strtoll
-      [bd7f9d76] mkfs: validate start and end of aligned logs
-      [80704dd8] xfs_io: repair_f should use its own name
+Cheers, Andreas
 
 
-Code Diffstat:
-
- io/scrub.c           |  2 +-
- libfrog/convert.c    | 22 +++++++++++-----------
- mkfs/xfs_mkfs.c      | 15 ++++++++++++++-
- spaceman/xfs_info.sh |  2 +-
- 4 files changed, 27 insertions(+), 14 deletions(-)
 
 
---2aDeQPoMOFcNzn71RUH5jWarwTT20Fl53--
 
---DTK5tcwtxK8Ha7FI9cM3yLjHi7WRUODrl
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+
+--Apple-Mail=_D22B91A1-39DB-42F5-937D-A1034700DAE0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP
 
 -----BEGIN PGP SIGNATURE-----
 Comment: GPGTools - http://gpgtools.org
 
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl0ShDwACgkQIK4WkuE9
-3uDNWQ//demfXk2e1/eDN9vDOl6+o6qIpdOKtDoQ/sfQ9xdSnfH9jYXlN6EO3foB
-x/cBWojwCa2ammqKv4GGZVE4zE0u2BH+gSvXCGuL1EGp3Dhoxsp5a/lgBh2Kkcty
-27MFaqM+mif3ntyJk9zj+9Gyx/poySUCiU4qdG0ZHhvECtOZHsWq1lS4HVcJMShN
-u5QHvkcGMgrKx/enpRO38oY06oF4Ylt92aC5uInAsffDdY5C02wW8CKhklfK0M9y
-pkTx/CThkffjMxNrwXsXWbwcIgzmXUdygpIGdUfbeY3zalygA09p1syf8sH3HIwy
-zQ7xJpbYgKBCjgwOGdX3+MSBGCnOEq25V//NpZw6nHXqyuIqJ1yKsWBH4u/khb8H
-eEbzdaCT5RYgSod5+x9DKICkmpjNHqm1pGfugbm7LS92byH8twc/TACnfHhCsQ0k
-mKEW5NKKIFtWV+T1SM5fUsRkqwQ0MlZEcp4bKqEEzd3XoaiJ5HMlYA3nlYvSOspo
-jqOS2Pic4I1lKDi4eqLRpE6QGUdPhq4D28POhXethjjZXFtOpKegMoiDNxZoGZf/
-ON9OxNX/AwgxpP7fswt4sify5YPhCkrJQycTJ01gbQJ143D55RgCHR/RISxN4H/6
-Xcm50ws7TJlr2uVeUiCMJIn2p3mk1Yn1RwhfW7RYlUX5ncLevLQ=
-=XPOj
+iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAl0ShhEACgkQcqXauRfM
+H+CbrRAAps35LK3poNlahSXPmgZ5tD+3nAlaeG8JU1XTggnEeHdAHY7wdK713thT
+OumdwU7nj1s+0ngxeUxPU/ZVWyuL2LjugpWEfw8lf0N/16hoTIUPBAe7kXce3jb+
+eg72QT36y1srscGQ/95rv/DPfelxzC7WiVYV7ZHIIF2Cq31B34cZ7GF0zpi6oZSH
+RKioHBOX1Qez1CksvAevhtSGf9e0dF1hNx7gyoVFnGb5V72P7WGGQqWSW4nSJvMe
+xhzkT0wLU28MioHsIcnqwnZJdvCb66Z1FGvAwsNItELe2tch4JzZjVR5sbq/g0+Q
+CpDZk350WiKaFzo9m1TO2Eiiog2vS1bqO+hZuwf7jPqcfIa6Tu9BdCx9U/bKp/rN
+sEtDj+p4qnjTCX2ggozPxye92wzhbF2o25jjoofBh9x9ShQ3GAc/gaTxcR9fpuWJ
+UmMwXwKMVXP/kvBaclrbz/zxaeo3ga7z3mFGgzxU6we9M5x1Lo+ppFxRpEPMIVkW
+LUEIQ4emE6yqzOWLWH6iPnxly9Jtzye3jsiq6s7RPPUGHn1/SCdhVZG130vKEpkC
+IcSmmJGlhPcI8wJ5/gwhAoxm9yLa+t0oH/Y6HUoNc722A3sCVRV5JWoHuK9MKBDK
+IPKKud+iKoNON0zr28k4iNyK1XAO+7yAqjfBAmdm0grbW/nItxg=
+=YBbV
 -----END PGP SIGNATURE-----
 
---DTK5tcwtxK8Ha7FI9cM3yLjHi7WRUODrl--
+--Apple-Mail=_D22B91A1-39DB-42F5-937D-A1034700DAE0--
