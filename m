@@ -1,68 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50596 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726307AbfFZQih (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 12:38:37 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QGYxf9014718
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 16:38:36 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2t9cyqkd1f-1
+Received: from userp2130.oracle.com ([156.151.31.86]:41846 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730654AbfFYDCg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:02:36 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P2xUqT183808
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:35 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2t9brt1h9g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 16:38:36 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QGcBpP026169
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 16:38:35 GMT
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:34 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P31XOj163879
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:34 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2t99f4jgn2-1
+        by userp3020.oracle.com with ESMTP id 2tat7byrw7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 16:38:35 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5QGcZa6006793
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 16:38:35 GMT
-Date: Wed, 26 Jun 2019 09:38:34 -0700
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:34 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5P32YXs032327
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:34 GMT
+Subject: [PATCH 0/5] xfs: extended attribute scrub fixes
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to c0546224d7e9
-Message-ID: <20190626163834.GG5171@magnolia>
+Date: Mon, 24 Jun 2019 20:02:32 -0700
+Message-ID: <156143175282.2221192.3546713622107331271.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
-Hi folks,
+Hi all,
 
-The for-next branch of the xfs-linux repository at:
+I discovered by sampling xfs_scrub stack trace swith a flame graph that
+the attr scrub code has a sizeable oversight -- the xattr scrub code
+always allocates a zeroed 65K temporary buffer before locking the inode,
+even if it then turns out that the inode does not have extended
+attributes.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+In addition to the pointless memory allocation, the scrub code itself is
+careful to initialize whatever part of the memory buffer it's going to
+use before reading the contents, which means that the memory clearing is
+not only painful (it's 5% of the sample traces!) but totally pointless.
 
-has just been updated.
+Therefore, this series first cleans up the open-coded pointer
+calculations where the buffer is concerned, and then restructures the
+code so to allocate the smallest size buffer needed and only just before
+it's actually needed.  The final patch disables buffer zeroing for
+better performance.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-The new head of the for-next branch is commit:
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-c0546224d7e9 xfs: implement cgroup aware writeback
+--D
 
-New Commits:
-
-Christoph Hellwig (2):
-      [7f72216dc9a3] xfs: simplify xfs_chain_bio
-      [c0546224d7e9] xfs: implement cgroup aware writeback
-
-Darrick J. Wong (2):
-      [8069dcc20df1] xfs: refactor free space btree record initialization
-      [eef36088357e] xfs: account for log space when formatting new AGs
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_ag.c | 94 ++++++++++++++++++++++++++++++++++++++++++++------
- fs/xfs/xfs_aops.c      | 37 ++++++++++----------
- fs/xfs/xfs_super.c     |  2 ++
- 3 files changed, 104 insertions(+), 29 deletions(-)
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=attr-scrub-fixes
