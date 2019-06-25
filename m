@@ -1,53 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57574 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726402AbfFYDZi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:25:38 -0400
-Date: Mon, 24 Jun 2019 20:25:27 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from verein.lst.de ([213.95.11.211]:33375 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726274AbfFYKGD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jun 2019 06:06:03 -0400
+Date: Tue, 25 Jun 2019 12:05:32 +0200
+From: Christoph Hellwig <hch@lst.de>
 Subject: Re: xfs cgroup writeback support
-Message-ID: <20190625032527.GF1611011@magnolia>
-References: <20190624134315.21307-1-hch@lst.de>
+Message-ID: <20190625100532.GE1462@lst.de>
+References: <20190624134315.21307-1-hch@lst.de> <20190625032527.GF1611011@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190624134315.21307-1-hch@lst.de>
+In-Reply-To: <20190625032527.GF1611011@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
 
-On Mon, Jun 24, 2019 at 03:43:13PM +0200, Christoph Hellwig wrote:
-> Hi all,
-> 
-> this small series adds cgroup writeback support to XFS.  Unlike
-> the previous iteration of the support a few years ago it also
-> ensures that that trailing bios in an ioend inherit the right
-> cgroup.  It has been tested with the shared/011 xfstests test
-> that was written to test this functionality in all file systems,
-> and manually by Stefan Priebe.
-> 
-> This work was funded by Profihost AG.
-> 
-> Note that the first patch was also in my series to move the xfs
-> writepage code to iomap.c and the second one will conflict with
-> it.  We'll need to sort out which series to merge first, but given
-> how simple this one I would suggest to go for this one.
+On Mon, Jun 24, 2019 at 08:25:27PM -0700, Darrick J. Wong wrote:
+> By the way, did all the things Dave complained about in last year's
+> attempt[1] to add cgroup writeback support get fixed?  IIRC someone
+> whose name I didn't recognise complained about log starvation due to
+> REQ_META bios being charged to the wrong cgroup and other misbehavior.
 
-By the way, did all the things Dave complained about in last year's
-attempt[1] to add cgroup writeback support get fixed?  IIRC someone
-whose name I didn't recognise complained about log starvation due to
-REQ_META bios being charged to the wrong cgroup and other misbehavior.
+As mentioned in the reference thread while the metadata throttling is
+an issue, it is in existing one and not one touched by the cgroup
+writeback support.  This patch just ensures that writeback takes the
+cgroup information from the inode instead of the current task.  The
+fact that blkcg should not even look at any cgroup information for
+REQ_META is something that should be fixed entirely in core cgroup
+code is orthogonal to how we pick the attached cgroup.
 
-Also, I remember that in the earlier 2017 discussion[2] we talked about
-a fstest to test that writeback throttling actually capped bandwidth
-usage correctly.  I haven't been following cgroupwb development since
-2017 -- does it not ratelimit bandwidth now, or is there some test for
-that?  The only test I could find was shared/011 which only tests the
-accounting, not bandwidth.
+> Also, I remember that in the earlier 2017 discussion[2] we talked about
+> a fstest to test that writeback throttling actually capped bandwidth
+> usage correctly.  I haven't been following cgroupwb development since
+> 2017 -- does it not ratelimit bandwidth now, or is there some test for
+> that?  The only test I could find was shared/011 which only tests the
+> accounting, not bandwidth.
 
---D
-
-[1] https://patchwork.kernel.org/comment/21658249/
-[2] https://patchwork.kernel.org/comment/21042703/
+As far as I can tell cfq could limit bandwith, but cgq is done now.
+Either way all that is hiddent way below us.
