@@ -1,71 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:56516 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725783AbfF1Vfl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 17:35:41 -0400
-Date: Fri, 28 Jun 2019 17:35:30 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: mysterious test failure when running xfstests on XFS
-Message-ID: <20190628213530.GA19489@mit.edu>
-References: <20190628202117.GA15307@mit.edu>
+Received: from sandeen.net ([63.231.237.45]:55354 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726393AbfFYUgD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jun 2019 16:36:03 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 0428978D0
+        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 15:35:52 -0500 (CDT)
+Subject: [ANNOUNCE] xfsprogs for-next updated to 78c146f8
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <637c74e5-01b9-af25-0576-ba544ff8f0e6@sandeen.net>
+Message-ID: <ced02a94-2445-f35c-0c51-60484937dfb6@sandeen.net>
+Date: Tue, 25 Jun 2019 15:36:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190628202117.GA15307@mit.edu>
+In-Reply-To: <637c74e5-01b9-af25-0576-ba544ff8f0e6@sandeen.net>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="NTuWkgd6fc6zEY9DHd8sOJJU2dg7lXJhK"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, sandeen@sandeen.net
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Fri, Jun 28, 2019 at 04:21:17PM -0400, Theodore Ts'o wrote:
-> 
-> rm -f $IMAGE
-> + rm -f /tmp/10216.img
-> touch $IMAGE
-> + touch /tmp/10216.img
-> ./xfsprogs-dev/mkfs/mkfs.xfs  -d file,name=$IMAGE,size=512m
-> + ./xfsprogs-dev/mkfs/mkfs.xfs -d file,name=/tmp/10216.img,size=512m
-> mkfs.xfs: Use the -f option to force overwrite.
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--NTuWkgd6fc6zEY9DHd8sOJJU2dg7lXJhK
+Content-Type: multipart/mixed; boundary="oVuoffMLXK8RCpp69MjKmsd53QenFtQR3";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <ced02a94-2445-f35c-0c51-60484937dfb6@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 78c146f8
+References: <637c74e5-01b9-af25-0576-ba544ff8f0e6@sandeen.net>
+In-Reply-To: <637c74e5-01b9-af25-0576-ba544ff8f0e6@sandeen.net>
 
-I figured out.  The problem is I'm building xfsprogs with
---disable-blkid.  This was for historical reasons, back when I was
-trying to use a fully hermetic build, since the cross compiler I was
-using would not include anything in /usr/include.  I'm no longer
-trying to use the Android Native Development Kit (NDK), so maybe I'll
-give up on this goal and use the system-proivded blkid.  (Or I'll
-build util-linux in xfstests-bld and solve the problem that way.)
+--oVuoffMLXK8RCpp69MjKmsd53QenFtQR3
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-In any case, here's a patch to fix this.
+And, left one out ;)
 
-						- Ted
+The new head of the for-next branch is commit:
+
+78c146f8 (HEAD -> for-next, korg/for-next, refs/patches/for-next/xfs_quot=
+a__fix_built-in_help_for_project_setup.patch) xfs_quota: fix built-in hel=
+p for project setup
+
+New Commits:
+
+Eric Sandeen (1):
+      [78c146f8] xfs_quota: fix built-in help for project setup
 
 
->From 4767f770ff5d60635164410e7834e5aece505424 Mon Sep 17 00:00:00 2001
-From: Theodore Ts'o <tytso@mit.edu>
-Date: Fri, 28 Jun 2019 17:21:50 -0400
-Subject: [PATCH] libfrog: fix check_overwrite() when blkid is not available
+Code Diffstat:
 
-A return value of 0 means "nothing found"; the code was incorrectly
-returning 1 instead.
-
-Signed-off-by: Theodore Ts'o <tytso@mit.edu>
----
- libfrog/topology.c | 2 +-
+ quota/project.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/libfrog/topology.c b/libfrog/topology.c
-index cac164f3..c2e93e65 100644
---- a/libfrog/topology.c
-+++ b/libfrog/topology.c
-@@ -264,7 +264,7 @@ int
- check_overwrite(
- 	const char	*device)
- {
--	return 1;
-+	return 0;
- }
- 
- static void blkid_get_topology(
--- 
-2.22.0
+
+--oVuoffMLXK8RCpp69MjKmsd53QenFtQR3--
+
+--NTuWkgd6fc6zEY9DHd8sOJJU2dg7lXJhK
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl0ShbEACgkQIK4WkuE9
+3uC2XxAAji0yoJKedBGG5jAVIxx4ADHggygXPpYROyZBUbZmxbcrAiIowYX8HS9b
+EZCRD+CpfhhY2vvPIFk/t2AcX0DpKX3//jF8LN8hxqZO+uli7C/0vUbSYYpr8qC5
+sXollnCqd38Fx+iJeA+cXaPmHE7pOlQ5Ef4pE3GSbtQU0i2iNfivNydIOM/QGxli
+dx8Vsq3LD2IUBaOIIrGs7Fs0Qblz6GaZN2tlI+GZe9ee/poAi7NB7y16FS6kC0v7
+ZQF7UugrMmbIn1YRfmHmQPrlAaXyon+vY2y6dgsXZy+iG6Y+oty5SmIIAyObLrzw
+QkN/+dkjSaq7Rwi2xBGN/cWy/7RLq3U08A4XS4qEYwwk6L4pc7LUdLtFHWszKiqK
+dg/YC46qAamFwBCwKr8pznyhlmUJ/0d+1OTFl7VJ2wyowlPnjjtv9kX0ae1ooYlu
+xZZsTPG1f262Q6y84u9+riRLT3mfCo/H45AyD3QmkoZ3dT+oBEHNY5S5KXNgaqVY
+I5T+RAQcEAKTr6eEmVpORy+tnM1BLL70RIRqxv90Lb2tG2blPefI+CbZ/t8KLZSc
+XrTZ8afu/ZK+ZhRai6/8TBRKKmg1jObAxSY11idtOMC/hJ+blzZAFRY+i8ELzwAU
+ybApgQWkwiUi6NA2evZcNEyptHdhHiHU3nqFfanZt8HFs0vBaZw=
+=2lrz
+-----END PGP SIGNATURE-----
+
+--NTuWkgd6fc6zEY9DHd8sOJJU2dg7lXJhK--
