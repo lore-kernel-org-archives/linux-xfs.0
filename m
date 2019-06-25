@@ -1,58 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39016 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728495AbfFYAoM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 24 Jun 2019 20:44:12 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D210F3091851
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 00:44:12 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9FB475C231
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 00:44:12 +0000 (UTC)
-From: Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 0/2] xfs: don't fragment files with ZERO_RANGE calls
-Message-ID: <ace9a6b9-3833-ec15-e3df-b9d88985685e@redhat.com>
-Date: Mon, 24 Jun 2019 19:44:11 -0500
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38612 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726774AbfFYClH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 22:41:07 -0400
+Date: Tue, 25 Jun 2019 12:39:54 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/2] xfs: convert extents in place for ZERO_RANGE
+Message-ID: <20190625023954.GF7777@dread.disaster.area>
+References: <ace9a6b9-3833-ec15-e3df-b9d88985685e@redhat.com>
+ <25a2ebbc-0ec9-f5dd-eba0-4101c80837dd@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <25a2ebbc-0ec9-f5dd-eba0-4101c80837dd@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-the ZERO_RANGE fallocate mode currently punches out
-the requested range, then reallocates it as unwritten extents.
+On Mon, Jun 24, 2019 at 07:48:11PM -0500, Eric Sandeen wrote:
+> Rather than completely removing and re-allocating a range
+> during ZERO_RANGE fallocate calls, convert whole blocks in the
+> range using xfs_alloc_file_space(XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT)
+> and then zero the edges with xfs_zero_range()
 
-This is fine, but the re-allocation fragments the file when we could
-be converting in place:
+That's what I originally used to implement ZERO_RANGE and that
+had problems with zeroing the partial blocks either side and
+unexpected inode size changes. See commit:
 
-$ rm -rf moo ; fallocate -l 16m moo ; xfs_io -c "bmap -vp" -c 'fzero 1m 64k' -c "bmap -vp"  moo
-moo:
- EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL FLAGS
-   0: [0..32767]:      187007640..187040407  2 (52789912..52822679) 32768 10000
-moo:
- EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL FLAGS
-   0: [0..2047]:       187007640..187009687  2 (52789912..52791959)  2048 10000
-   1: [2048..2175]:    187040408..187040535  2 (52822680..52822807)   128 10000
-   2: [2176..32767]:   187009816..187040407  2 (52792088..52822679) 30592 10000
+5d11fb4b9a1d xfs: rework zero range to prevent invalid i_size updates
 
+I also remember discussion about zero range being inefficient on
+sparse files and fragmented files - the current implementation
+effectively defragments such files, whilst using XFS_BMAPI_CONVERT
+just leaves all the fragments behind.
 
-$ rm -rf moo ; xfs_io -f -c "pwrite 0 16m" -c "bmap -vp"  -c 'fzero 1m 64k' -c "bmap -vp" moo
-wrote 16777216/16777216 bytes at offset 0
-16 MiB, 4096 ops; 0.0000 sec (124.504 MiB/sec and 31873.0060 ops/sec)
-moo:
- EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL FLAGS
-   0: [0..32767]:      187605400..187638167  2 (53387672..53420439) 32768 00000
-moo:
- EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL FLAGS
-   0: [0..2047]:       187605400..187607447  2 (53387672..53389719)  2048 00000
-   1: [2048..2175]:    187670808..187670935  2 (53453080..53453207)   128 10000
-   2: [2176..65407]:   187607576..187670807  2 (53389848..53453079) 63232 00000
+> (Note that this changes the rounding direction of the
+> xfs_alloc_file_space range, because we only want to hit whole
+> blocks within the range.)
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> <currently running fsx ad infinitum, so far so good>
+> 
+> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> index 0a96c4d1718e..eae202bfe134 100644
+> --- a/fs/xfs/xfs_bmap_util.c
+> +++ b/fs/xfs/xfs_bmap_util.c
+> @@ -1164,23 +1164,25 @@ xfs_zero_file_space(
+>  
+>  	blksize = 1 << mp->m_sb.sb_blocklog;
+>  
+> +	error = xfs_flush_unmap_range(ip, offset, len);
+> +	if (error)
+> +		return error;
+>  	/*
+> -	 * Punch a hole and prealloc the range. We use hole punch rather than
+> -	 * unwritten extent conversion for two reasons:
+> -	 *
+> -	 * 1.) Hole punch handles partial block zeroing for us.
+> -	 *
+> -	 * 2.) If prealloc returns ENOSPC, the file range is still zero-valued
+> -	 * by virtue of the hole punch.
+> +	 * Convert whole blocks in the range to unwritten, then call iomap
+> +	 * via xfs_zero_range to zero the range.  iomap will skip holes and
+> +	 * unwritten extents, and just zero the edges if needed.  If conversion
+> +	 * fails, iomap will simply write zeros to the whole range.
+> +	 * nb: always_cow doesn't support unwritten extents.
+>  	 */
+> -	error = xfs_free_file_space(ip, offset, len);
+> -	if (error || xfs_is_always_cow_inode(ip))
+> -		return error;
+> +	if (!xfs_is_always_cow_inode(ip))
+> +		xfs_alloc_file_space(ip, round_up(offset, blksize),
+> +				     round_down(offset + len, blksize) -
+> +				     round_up(offset, blksize),
+> +				     XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT);
 
-We did it this way in part to utilize xfs_free_file_space's partial block 
-zeroing capabilities, so factor that out, then use it + xfs_alloc_file_space
-to convert in place.
+If this fails with, say, corruption we should abort with an error,
+not ignore it. I think we can only safely ignore ENOSPC and maybe
+EDQUOT here...
+
+> -	return xfs_alloc_file_space(ip, round_down(offset, blksize),
+> -				     round_up(offset + len, blksize) -
+> -				     round_down(offset, blksize),
+> -				     XFS_BMAPI_PREALLOC);
+> +	error = xfs_zero_range(ip, offset, len);
+
+What prevents xfs_zero_range() from changing the file size if
+offset + len is beyond EOF and there are allocated extents (from
+delalloc conversion) beyond EOF? (i.e. FALLOC_FL_KEEP_SIZE is set by
+the caller).
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
