@@ -1,38 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:35902 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730505AbfFYOr1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 10:47:27 -0400
-Date: Tue, 25 Jun 2019 07:47:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 12/12] iomap: add tracing for the address space operations
-Message-ID: <20190625144707.GC5379@magnolia>
-References: <20190624055253.31183-1-hch@lst.de>
- <20190624055253.31183-13-hch@lst.de>
- <20190624234921.GE7777@dread.disaster.area>
- <20190625101515.GL1462@lst.de>
+Received: from verein.lst.de ([213.95.11.211]:35780 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728946AbfFYPVx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jun 2019 11:21:53 -0400
+Date: Tue, 25 Jun 2019 17:21:20 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 04/12] xfs: initialize ioma->flags in xfs_bmbt_to_iomap
+Message-ID: <20190625152120.GA8153@lst.de>
+References: <20190624055253.31183-1-hch@lst.de> <20190624055253.31183-5-hch@lst.de> <20190624145707.GH5387@magnolia> <20190625100701.GG1462@lst.de> <20190625151357.GA2230847@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190625101515.GL1462@lst.de>
+In-Reply-To: <20190625151357.GA2230847@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jun 25, 2019 at 12:15:15PM +0200, Christoph Hellwig wrote:
-> On Tue, Jun 25, 2019 at 09:49:21AM +1000, Dave Chinner wrote:
-> > > +#undef TRACE_SYSTEM
-> > > +#define TRACE_SYSTEM iomap
-> > 
-> > Can you add a comment somewhere here that says these tracepoints are
-> > volatile and we reserve the right to change them at any time so they
-> > don't form any sort of persistent UAPI that we have to maintain?
+On Tue, Jun 25, 2019 at 08:13:57AM -0700, Darrick J. Wong wrote:
+> > This doesn't affect any existing user as they all get a zeroed iomap
+> > passed from the caller in iomap.c.  It affects the writeback code
+> > once it uses struct iomap as it overwrites a previously used iomap.
 > 
-> Sure.  Note that we don't have any such comment in xfs either..
+> Then shouldn't this new writeback code zero the iomap before calling
+> back into the filesystem, just to maintain consistent behavior?
 
-I think we ought to add a comment to both of the tracepoint header files
-in xfs then...
-
---D
+The core code doesn't decide when to overwrite it, that ->map_blocks
+method does that based on a few factors (including the data_seq/cow_seq
+counters that are entirely inside xfs).
