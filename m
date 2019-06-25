@@ -1,23 +1,25 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:59332 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:54128 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726521AbfFYKtd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 06:49:33 -0400
-Date: Tue, 25 Jun 2019 03:49:33 -0700
+        with ESMTP id S1726715AbfFYKeq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 06:34:46 -0400
+Date: Tue, 25 Jun 2019 03:34:46 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs_repair: don't search for libxfs.h in system headers
-Message-ID: <20190625104933.GJ30156@infradead.org>
-References: <b1265852-70ea-5402-191d-b3843996fc89@redhat.com>
+Subject: Re: [PATCH 01/10] xfs: mount-api - add fs parameter description
+Message-ID: <20190625103445.GA30156@infradead.org>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <b1265852-70ea-5402-191d-b3843996fc89@redhat.com>
+In-Reply-To: <156134510205.2519.16185588460828778620.stgit@fedora-28>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>
+To: Ian Kent <raven@themaw.net>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>
 
-Looks good,
+This is missing a cover letter to explain the point of this
+series.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+It adds giant amount of code for not user visible benefit.  Why would
+we want this series?
