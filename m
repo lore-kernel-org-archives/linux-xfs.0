@@ -1,76 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:47658 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726006AbfFZQcI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 12:32:08 -0400
-Date: Wed, 26 Jun 2019 09:28:31 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/5] vfs: don't allow writes to swap files
-Message-ID: <20190626162831.GF5171@magnolia>
-References: <156151637248.2283603.8458727861336380714.stgit@magnolia>
- <156151641177.2283603.7806026378321236401.stgit@magnolia>
- <20190626035151.GA10613@ZenIV.linux.org.uk>
+Received: from mx2.suse.de ([195.135.220.15]:48750 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726414AbfFYMmY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jun 2019 08:42:24 -0400
+Subject: Re: [PATCH 09/12] xfs: refactor the ioend merging code
+References: <20190624055253.31183-1-hch@lst.de>
+ <20190624055253.31183-10-hch@lst.de>
+ <e42c54c4-4c64-8185-8ac3-cca38ad8e8a4@suse.com>
+ <20190625101445.GK1462@lst.de>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <387a9e4b-6a15-5b08-6878-53ed5cfb9bb0@suse.com>
+Date: Tue, 25 Jun 2019 15:42:20 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190626035151.GA10613@ZenIV.linux.org.uk>
+In-Reply-To: <20190625101445.GK1462@lst.de>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jun 26, 2019 at 04:51:51AM +0100, Al Viro wrote:
-> On Tue, Jun 25, 2019 at 07:33:31PM -0700, Darrick J. Wong wrote:
-> > --- a/fs/attr.c
-> > +++ b/fs/attr.c
-> > @@ -236,6 +236,9 @@ int notify_change(struct dentry * dentry, struct iattr * attr, struct inode **de
-> >  	if (IS_IMMUTABLE(inode))
-> >  		return -EPERM;
-> >  
-> > +	if (IS_SWAPFILE(inode))
-> > +		return -ETXTBSY;
-> > +
-> >  	if ((ia_valid & (ATTR_MODE | ATTR_UID | ATTR_GID | ATTR_TIMES_SET)) &&
-> >  	    IS_APPEND(inode))
-> >  		return -EPERM;
+
+
+On 25.06.19 г. 13:14 ч., Christoph Hellwig wrote:
+> On Mon, Jun 24, 2019 at 07:06:22PM +0300, Nikolay Borisov wrote:
+>>> +{
+>>> +	struct list_head	tmp;
+>>> +
+>>> +	list_replace_init(&ioend->io_list, &tmp);
+>>> +	xfs_destroy_ioend(ioend, error);
+>>> +	while ((ioend = list_pop(&tmp, struct xfs_ioend, io_list)))
+>>> +		xfs_destroy_ioend(ioend, error);
+>>
+>> nit: I'd prefer if the list_pop patch is right before this one since
+>> this is the first user of it.
 > 
-> Er...  So why exactly is e.g. chmod(2) forbidden for swapfiles?  Or touch(1),
-> for that matter...
-
-Oops, that check is overly broad; I think the only attribute change we
-need to filter here is ATTR_SIZE.... which we could do unconditionally
-in inode_newsize_ok.
-
-What's the use case for allowing userspace to increase the size of an
-active swapfile?  I don't see any; the kernel has a permanent lease on
-the file space mapping (at least until swapoff)...
-
-> > diff --git a/mm/swapfile.c b/mm/swapfile.c
-> > index 596ac98051c5..1ca4ee8c2d60 100644
-> > --- a/mm/swapfile.c
-> > +++ b/mm/swapfile.c
-> > @@ -3165,6 +3165,19 @@ SYSCALL_DEFINE2(swapon, const char __user *, specialfile, int, swap_flags)
-> >  	if (error)
-> >  		goto bad_swap;
-> >  
-> > +	/*
-> > +	 * Flush any pending IO and dirty mappings before we start using this
-> > +	 * swap file.
-> > +	 */
-> > +	if (S_ISREG(inode->i_mode)) {
-> > +		inode->i_flags |= S_SWAPFILE;
-> > +		error = inode_drain_writes(inode);
-> > +		if (error) {
-> > +			inode->i_flags &= ~S_SWAPFILE;
-> > +			goto bad_swap;
-> > +		}
-> > +	}
+> I try to keep generic infrastructure first instead of interveawing
+> it with subystem-specific patches.
 > 
-> Why are swap partitions any less worthy of protection?
+>> Additionally, I don't think list_pop is
+>> really a net-negative win 
+> 
+> What is a "net-negative win" ?
 
-Hmm, yeah, S_SWAPFILE should apply to block devices too.  I figured that
-the mantra of "sane tools will open block devices with O_EXCL" should
-have sufficed, but there's really no reason to allow that either.
+What I meant was 'net-positive win', in terms of making the code more
+readable or optimised.
 
---D
+> 
+>> in comparison to list_for_each_entry_safe
+>> here. In fact this "delete the list" would seems more idiomatic if
+>> implemented via list_for_each_entry_safe
+> 
+> I disagree.  The for_each loops require an additional next iterator,
+> and also don't clearly express what is going on, but require additional
+> spotting of the list_del.
+
+That is of course your opinion. At the very least we can agree to disagree.
+
+What I'm worried about, though, is now you've essentially introduced a
+new idiom to dispose of lists, which is used only in your code. If it
+doesn't become more widespread and gradually start replacing current
+list_for_each_entry_safe usage then you would have increased the public
+list interface to cater for one specific use case, just because it seems
+more natural to you. I guess only time will show whether it makes sense
+to have list_pop_entry
