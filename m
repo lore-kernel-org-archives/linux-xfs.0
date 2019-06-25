@@ -1,202 +1,166 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52286 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730654AbfFYDCt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:02:49 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P2xWg6191534
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:48 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2t9cyq9ecy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:48 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5P32l8I098339
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:47 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2t9p6tx1y1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:47 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5P32kiM032491
-        for <linux-xfs@vger.kernel.org>; Tue, 25 Jun 2019 03:02:46 GMT
-Subject: [PATCH 2/5] xfs: refactor extended attribute buffer pointer
- functions
+Received: from userp2130.oracle.com ([156.151.31.86]:40570 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730654AbfFYDAl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:00:41 -0400
+Date: Mon, 24 Jun 2019 20:00:18 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 24 Jun 2019 20:02:45 -0700
-Message-ID: <156143176508.2221192.11009218495687783386.stgit@magnolia>
-In-Reply-To: <156143175282.2221192.3546713622107331271.stgit@magnolia>
-References: <156143175282.2221192.3546713622107331271.stgit@magnolia>
+Subject: Re: [PATCH 2/2] xfs: convert extents in place for ZERO_RANGE
+Message-ID: <20190625030018.GC5387@magnolia>
+References: <ace9a6b9-3833-ec15-e3df-b9d88985685e@redhat.com>
+ <25a2ebbc-0ec9-f5dd-eba0-4101c80837dd@sandeen.net>
+ <20190625023954.GF7777@dread.disaster.area>
+ <2b135e00-3bfd-f41a-7c43-a0518fc756fe@sandeen.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2b135e00-3bfd-f41a-7c43-a0518fc756fe@sandeen.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>
+Cc: Dave Chinner <david@fromorbit.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jun 24, 2019 at 09:52:03PM -0500, Eric Sandeen wrote:
+> On 6/24/19 9:39 PM, Dave Chinner wrote:
+> > On Mon, Jun 24, 2019 at 07:48:11PM -0500, Eric Sandeen wrote:
+> >> Rather than completely removing and re-allocating a range
+> >> during ZERO_RANGE fallocate calls, convert whole blocks in the
+> >> range using xfs_alloc_file_space(XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT)
+> >> and then zero the edges with xfs_zero_range()
+> > 
+> > That's what I originally used to implement ZERO_RANGE and that
+> > had problems with zeroing the partial blocks either side and
+> > unexpected inode size changes. See commit:
+> > 
+> > 5d11fb4b9a1d xfs: rework zero range to prevent invalid i_size updates
+> 
+> Yep I did see that.  It had a lot of hand-rolled partial block stuff
+> that seems more complex than this, no?  That commit didn't indicate
+> what the root cause of the failure actually was, AFAICT.
+> 
+> (funny thought that I skimmed that commit just to see why we had
+> what we have, but didn't really intentionally re-implement it...
+> even though I guess I almost did...)
 
-Replace the open-coded attribute buffer pointer calculations with helper
-functions to make it more obvious what we're doing with our freeform
-memory allocation w.r.t. either storing xattr values or computing btree
-block free space.
+FWIW the complaint I had about the fragmentary behavior really only
+applied to fun and games when one fallocated an ext4 image and then ran
+mkfs.ext4 which uses zero range which fragmented the image...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/attr.c |   15 +++++-------
- fs/xfs/scrub/attr.h |   65 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 72 insertions(+), 8 deletions(-)
- create mode 100644 fs/xfs/scrub/attr.h
+> > I also remember discussion about zero range being inefficient on
+> > sparse files and fragmented files - the current implementation
+> > effectively defragments such files, whilst using XFS_BMAPI_CONVERT
+> > just leaves all the fragments behind.
+> 
+> That's true - and it fragments unfragmented files.  Is ZERO_RANGE
+> supposed to be a defragmenter?
 
+...so please remember, the key point we were talking about when we
+discussed this a year ago was that if the /entire/ zero range maps to a
+single extent within eof then maybe we ought to just convert it to
+unwritten.
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index f0fd26abd39d..fd16eb3fa003 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -26,6 +26,7 @@
- #include "scrub/common.h"
- #include "scrub/dabtree.h"
- #include "scrub/trace.h"
-+#include "scrub/attr.h"
- 
- #include <linux/posix_acl_xattr.h>
- #include <linux/xattr.h>
-@@ -111,7 +112,7 @@ xchk_xattr_listent(
- 	args.namelen = namelen;
- 	args.hashval = xfs_da_hashname(args.name, args.namelen);
- 	args.trans = context->tp;
--	args.value = sx->sc->buf;
-+	args.value = xchk_xattr_valuebuf(sx->sc);
- 	args.valuelen = XATTR_SIZE_MAX;
- 
- 	error = xfs_attr_get_ilocked(context->dp, &args);
-@@ -170,13 +171,12 @@ xchk_xattr_check_freemap(
- 	unsigned long			*map,
- 	struct xfs_attr3_icleaf_hdr	*leafhdr)
- {
--	unsigned long			*freemap;
--	unsigned long			*dstmap;
-+	unsigned long			*freemap = xchk_xattr_freemap(sc);
-+	unsigned long			*dstmap = xchk_xattr_dstmap(sc);
- 	unsigned int			mapsize = sc->mp->m_attr_geo->blksize;
- 	int				i;
- 
- 	/* Construct bitmap of freemap contents. */
--	freemap = (unsigned long *)sc->buf + BITS_TO_LONGS(mapsize);
- 	bitmap_zero(freemap, mapsize);
- 	for (i = 0; i < XFS_ATTR_LEAF_MAPSIZE; i++) {
- 		if (!xchk_xattr_set_map(sc, freemap,
-@@ -186,7 +186,6 @@ xchk_xattr_check_freemap(
- 	}
- 
- 	/* Look for bits that are set in freemap and are marked in use. */
--	dstmap = freemap + BITS_TO_LONGS(mapsize);
- 	return bitmap_and(dstmap, freemap, map, mapsize) == 0;
- }
- 
-@@ -201,13 +200,13 @@ xchk_xattr_entry(
- 	char				*buf_end,
- 	struct xfs_attr_leafblock	*leaf,
- 	struct xfs_attr3_icleaf_hdr	*leafhdr,
--	unsigned long			*usedmap,
- 	struct xfs_attr_leaf_entry	*ent,
- 	int				idx,
- 	unsigned int			*usedbytes,
- 	__u32				*last_hashval)
- {
- 	struct xfs_mount		*mp = ds->state->mp;
-+	unsigned long			*usedmap = xchk_xattr_usedmap(ds->sc);
- 	char				*name_end;
- 	struct xfs_attr_leaf_name_local	*lentry;
- 	struct xfs_attr_leaf_name_remote *rentry;
-@@ -267,7 +266,7 @@ xchk_xattr_block(
- 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
- 	struct xfs_attr_leaf_entry	*ent;
- 	struct xfs_attr_leaf_entry	*entries;
--	unsigned long			*usedmap = ds->sc->buf;
-+	unsigned long			*usedmap = xchk_xattr_usedmap(ds->sc);
- 	char				*buf_end;
- 	size_t				off;
- 	__u32				last_hashval = 0;
-@@ -324,7 +323,7 @@ xchk_xattr_block(
- 
- 		/* Check the entry and nameval. */
- 		xchk_xattr_entry(ds, level, buf_end, leaf, &leafhdr,
--				usedmap, ent, i, &usedbytes, &last_hashval);
-+				ent, i, &usedbytes, &last_hashval);
- 
- 		if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 			goto out;
-diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-new file mode 100644
-index 000000000000..baa92f34f790
---- /dev/null
-+++ b/fs/xfs/scrub/attr.h
-@@ -0,0 +1,65 @@
-+// SPDX-License-Identifier: GPL-2.0-or-later
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef __XFS_SCRUB_ATTR_H__
-+#define __XFS_SCRUB_ATTR_H__
-+
-+/*
-+ * Temporary storage for online scrub and repair of extended attributes.
-+ */
-+struct xchk_xattr_buf {
-+	/*
-+	 * Memory buffer -- either used for extracting attr values while
-+	 * walking the attributes; or for computing attr block bitmaps when
-+	 * checking the attribute tree.
-+	 *
-+	 * Each bitmap contains enough bits to track every byte in an attr
-+	 * block (rounded up to the size of an unsigned long).  The attr block
-+	 * used space bitmap starts at the beginning of the buffer; the free
-+	 * space bitmap follows immediately after; and we have a third buffer
-+	 * for storing intermediate bitmap results.
-+	 */
-+	uint8_t			buf[0];
-+};
-+
-+/* A place to store attribute values. */
-+static inline uint8_t *
-+xchk_xattr_valuebuf(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xchk_xattr_buf	*ab = sc->buf;
-+
-+	return ab->buf;
-+}
-+
-+/* A bitmap of space usage computed by walking an attr leaf block. */
-+static inline unsigned long *
-+xchk_xattr_usedmap(
-+	struct xfs_scrub	*sc)
-+{
-+	struct xchk_xattr_buf	*ab = sc->buf;
-+
-+	return (unsigned long *)ab->buf;
-+}
-+
-+/* A bitmap of free space computed by walking attr leaf block free info. */
-+static inline unsigned long *
-+xchk_xattr_freemap(
-+	struct xfs_scrub	*sc)
-+{
-+	return xchk_xattr_usedmap(sc) +
-+			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
-+}
-+
-+/* A bitmap used to hold temporary results. */
-+static inline unsigned long *
-+xchk_xattr_dstmap(
-+	struct xfs_scrub	*sc)
-+{
-+	return xchk_xattr_freemap(sc) +
-+			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
-+}
-+
-+#endif	/* __XFS_SCRUB_ATTR_H__ */
+Note also that for pmem there's a slightly different optimization --
+if the entire range is mapped by written extents (not necessarily
+contiguous, just no holes/cow/delalloc/unwritten bits) then we can use
+blkdev_issue_zeroout to zero memory and clear hwpoison cheaply.
+
+> >> (Note that this changes the rounding direction of the
+> >> xfs_alloc_file_space range, because we only want to hit whole
+> >> blocks within the range.)
+> >>
+> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> >> ---
+> >>
+> >> <currently running fsx ad infinitum, so far so good>
+> 
+> <still running, so far so good (4k blocks)>
+> 
+> >> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+> >> index 0a96c4d1718e..eae202bfe134 100644
+> >> --- a/fs/xfs/xfs_bmap_util.c
+> >> +++ b/fs/xfs/xfs_bmap_util.c
+> >> @@ -1164,23 +1164,25 @@ xfs_zero_file_space(
+> >>  
+> >>  	blksize = 1 << mp->m_sb.sb_blocklog;
+> >>  
+> >> +	error = xfs_flush_unmap_range(ip, offset, len);
+> >> +	if (error)
+> >> +		return error;
+> >>  	/*
+> >> -	 * Punch a hole and prealloc the range. We use hole punch rather than
+> >> -	 * unwritten extent conversion for two reasons:
+> >> -	 *
+> >> -	 * 1.) Hole punch handles partial block zeroing for us.
+> >> -	 *
+> >> -	 * 2.) If prealloc returns ENOSPC, the file range is still zero-valued
+> >> -	 * by virtue of the hole punch.
+> >> +	 * Convert whole blocks in the range to unwritten, then call iomap
+> >> +	 * via xfs_zero_range to zero the range.  iomap will skip holes and
+> >> +	 * unwritten extents, and just zero the edges if needed.  If conversion
+> >> +	 * fails, iomap will simply write zeros to the whole range.
+> >> +	 * nb: always_cow doesn't support unwritten extents.
+> >>  	 */
+> >> -	error = xfs_free_file_space(ip, offset, len);
+> >> -	if (error || xfs_is_always_cow_inode(ip))
+> >> -		return error;
+> >> +	if (!xfs_is_always_cow_inode(ip))
+> >> +		xfs_alloc_file_space(ip, round_up(offset, blksize),
+> >> +				     round_down(offset + len, blksize) -
+> >> +				     round_up(offset, blksize),
+> >> +				     XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT);
+> > 
+> > If this fails with, say, corruption we should abort with an error,
+> > not ignore it. I think we can only safely ignore ENOSPC and maybe
+> > EDQUOT here...
+> 
+> Yes, I suppose so, though if this encounters corruption I'd guess
+> xfs_zero_range probably would as well but that's just handwaving.
+
+<nod>
+
+> >> -	return xfs_alloc_file_space(ip, round_down(offset, blksize),
+> >> -				     round_up(offset + len, blksize) -
+> >> -				     round_down(offset, blksize),
+> >> -				     XFS_BMAPI_PREALLOC);
+> >> +	error = xfs_zero_range(ip, offset, len);
+> > 
+> > What prevents xfs_zero_range() from changing the file size if
+> > offset + len is beyond EOF and there are allocated extents (from
+> > delalloc conversion) beyond EOF? (i.e. FALLOC_FL_KEEP_SIZE is set by
+> > the caller).
+> 
+> nothing, but AFAIK it does the same today... even w/o extents past
+> EOF:
+> 
+> $ xfs_io -f -c "truncate 0" -c "fzero 0 1m" testfile
+
+fzero -k ?
+
+--D
+
+> 
+> $ ls -lh testfile
+> -rw-------. 1 sandeen sandeen 1.0M Jun 24 21:48 testfile
+> 
+> $ xfs_bmap -vvp testfile
+> testfile:
+>  EXT: FILE-OFFSET      BLOCK-RANGE          AG AG-OFFSET            TOTAL FLAGS
+>    0: [0..2047]:       183206064..183208111  2 (48988336..48990383)  2048 10000
+>  FLAG Values:
+>     010000 Unwritten preallocated extent
+>     001000 Doesn't begin on stripe unit
+>     000100 Doesn't end   on stripe unit
+>     000010 Doesn't begin on stripe width
+>     000001 Doesn't end   on stripe width
+> 
+> At the end of the day it's just one allocation behavior over another,
+> it's not a correctness issue, so if there are concerns I don't have
+> to push it...
+> 
+> -Eric
+>  
+> > Cheers,
+> > 
+> > Dave.
+> > 
