@@ -1,31 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:33322 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.211]:33555 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726421AbfFYKAp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 25 Jun 2019 06:00:45 -0400
-Date: Tue, 25 Jun 2019 12:00:14 +0200
+        id S1726301AbfFYKZm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 25 Jun 2019 06:25:42 -0400
+Date: Tue, 25 Jun 2019 12:25:07 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] xfs: simplify xfs_chain_bio
-Message-ID: <20190625100014.GC1462@lst.de>
-References: <20190624134315.21307-1-hch@lst.de> <20190624134315.21307-2-hch@lst.de> <20190624161750.GR5387@magnolia>
+Subject: Re: [PATCH 07/12] xfs: don't preallocate a transaction for file
+ size updates
+Message-ID: <20190625102507.GA1986@lst.de>
+References: <20190624055253.31183-1-hch@lst.de> <20190624055253.31183-8-hch@lst.de> <20190624161720.GQ5387@magnolia> <20190624231523.GC7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190624161750.GR5387@magnolia>
+In-Reply-To: <20190624231523.GC7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: Dave Chinner <david@fromorbit.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Jun 24, 2019 at 09:17:50AM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 24, 2019 at 03:43:14PM +0200, Christoph Hellwig wrote:
-> > Move setting up operation and write hint to xfs_alloc_ioend, and
-> > then just copy over all needed information from the previous bio
-> > in xfs_chain_bio and stop passing various parameters to it.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, Jun 25, 2019 at 09:15:23AM +1000, Dave Chinner wrote:
+> > So, uh, how much of a hit do we take for having to allocate a
+> > transaction for a file size extension?  Particularly since we can
+> > combine those things now?
 > 
-> Uh, is this the same patch with the same name in the previous series?
+> Unless we are out of log space, the transaction allocation and free
+> should be largely uncontended and so it's just a small amount of CPU
+> usage. i.e it's a slab allocation/free and then lockless space
+> reservation/free. If we are out of log space, then we sleep waiting
+> for space - the issue really comes down to where it is better to
+> sleep in that case....
 
-Yes.  See the cover letter for details.
+I see the general point, but we'll still have the same issue with
+unwritten extent conversion and cow completions, and I don't remember
+seeing any issue in that regard.  And we'd hit exactly that case
+with random writes to preallocated or COW files, i.e. the typical image
+file workload.
