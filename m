@@ -1,64 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f195.google.com ([209.85.219.195]:47057 "EHLO
-        mail-yb1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728499AbfFYKf5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 06:35:57 -0400
-MIME-Version: 1.0
-References: <20190611153916.13360-1-amir73il@gmail.com> <20190611153916.13360-2-amir73il@gmail.com>
- <20190618090238.kmeocxasyxds7lzg@XZHOUW.usersys.redhat.com>
- <CAOQ4uxhePeTzR1t3e67xY+H0vcvh5toB3S=vdYVKm-skJrM00g@mail.gmail.com>
- <20190618150242.GA4576@mit.edu> <20190618151144.GB5387@magnolia> <5D11F781.4040906@cn.fujitsu.com>
-In-Reply-To: <5D11F781.4040906@cn.fujitsu.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Tue, 25 Jun 2019 13:35:45 +0300
-Message-ID: <CAOQ4uxgYApyiiSCWiCUJRgRoYYztMuON2d_mhLso-=DkqwNcbA@mail.gmail.com>
-Subject: Re: [PATCH v2 2/2] generic/554: test only copy to active swap file
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:56953 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726631AbfFYAB0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 20:01:26 -0400
+Message-ID: <85355779e58e1aad41d078327eb9b693fae56eea.camel@themaw.net>
+Subject: Re: [PATCH 07/10] xfs: mount-api - add xfs_fc_free()
+From: Ian Kent <raven@themaw.net>
+Date: Tue, 25 Jun 2019 08:01:21 +0800
+In-Reply-To: <20190624175627.GY5387@magnolia>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+         <156134514204.2519.9597800141023778002.stgit@fedora-28>
+         <20190624175627.GY5387@magnolia>
 Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, darrick <darrick.wong@oracle.com>, Murphy Zhou <jencce.kernel@gmail.com>, fstests <fstests@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Tue, Jun 25, 2019 at 1:29 PM Yang Xu <xuyang2018.jy@cn.fujitsu.com> wrote:
->
-> on 2019/06/18 23:11, Darrick J. Wong  wrote:
->
-> > On Tue, Jun 18, 2019 at 11:02:42AM -0400, Theodore Ts'o wrote:
-> >> On Tue, Jun 18, 2019 at 12:16:45PM +0300, Amir Goldstein wrote:
-> >>> On Tue, Jun 18, 2019 at 12:02 PM Murphy Zhou<jencce.kernel@gmail.com>  wrote:
-> >>>> Would you mind updating sha1 after it get merged to Linus tree?
-> >>>>
-> >>>> That would be helpful for people tracking this issue.
-> >>>>
-> >>> This is the commit id in linux-next and expected to stay the same
-> >>> when the fix is merged to Linus tree for 5.3.
-> >> When I talked to Darrick last week, that was *not* the sense I got
-> >> from him.  It's not necessarily guaranteed to be stable just yet...
-> > Darrick hasn't gotten any complaints about the copy-file-range-fixes
-> > branch (which has been in for-next for a week now), so he thinks that
-> > commit id (a31713517dac) should be stable from here on out.
-> >
-> > (Note that doesn't guarantee that Linus will pull said branch...)
-> >
-> > --D
-> Hi Amir
->
-> The kernel fix commit message is right?  :-)  Because when I backport this patch into 5.2.0-rc6+ kernel,
-> generic/554(553) also fails, it should be commit a5544984af4 (vfs: add missing checks to copy_file_range).
-> By the way, a31713517dac ("vfs: introduce generic_file_rw_checks()") doesn't check for immutable and swap file.
->
-> I think we can change this message after the fix is merged to Linus tree for 5.3.  What do you think about it?
+On Mon, 2019-06-24 at 10:56 -0700, Darrick J. Wong wrote:
+> On Mon, Jun 24, 2019 at 10:59:02AM +0800, Ian Kent wrote:
+> > Add the fs_context_operations method .free that performs fs
+> > context cleanup on context release.
+> > 
+> > Signed-off-by: Ian Kent <raven@themaw.net>
+> > ---
+> >  fs/xfs/xfs_super.c |   23 +++++++++++++++++++++++
+> >  1 file changed, 23 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index 7326b21b32d1..0a771e1390e7 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -2413,10 +2413,33 @@ static const struct super_operations
+> > xfs_super_operations = {
+> >  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> >  };
+> >  
+> > +static void xfs_fc_free(struct fs_context *fc)
+> > +{
+> > +	struct xfs_fs_context	*ctx = fc->fs_private;
+> > +	struct xfs_mount	*mp = fc->s_fs_info;
+> > +
+> > +	if (mp) {
+> > +		/*
+> > +		 * If an error occurs before ownership the xfs_mount
+> > +		 * info struct is passed to xfs by the VFS (by assigning
+> > +		 * it to sb->s_fs_info and clearing the corresponding
+> > +		 * fs_context field, done before calling fill super via
+> > +		 * .get_tree()) there may be some strings to cleanup.
+> > +		 */
+> > +		if (mp->m_logname)
+> > +			kfree(mp->m_logname);
+> 
+> Doesn't kfree handle null parameters gracefully?
 
-You are right. Documented commit is wrong.
-The correct commit in linux-next is:
-96e6e8f4a68d ("vfs: add missing checks to copy_file_range")
+It does, old habits die hard, will fix, ;)
 
-(Not sure where you got a5544984af4 from?)
-Let's fix that after the commit is upstream.
-
-Obviously, you would need to backport the entire series and not just this
-one commit to stable kernel.
-
-Thanks,
-Amir.
+> 
+> --D
+> 
+> > +		if (mp->m_rtname)
+> > +			kfree(mp->m_rtname);
+> > +		kfree(mp);
+> > +	}
+> > +	kfree(ctx);
+> > +}
+> > +
+> >  static const struct fs_context_operations xfs_context_ops = {
+> >  	.parse_param = xfs_parse_param,
+> >  	.get_tree    = xfs_get_tree,
+> >  	.reconfigure = xfs_reconfigure,
+> > +	.free	     = xfs_fc_free,
+> >  };
+> >  
+> >  static struct file_system_type xfs_fs_type = {
+> > 
