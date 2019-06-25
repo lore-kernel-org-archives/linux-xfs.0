@@ -1,25 +1,27 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:54128 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:36924 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726715AbfFYKeq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 06:34:46 -0400
-Date: Tue, 25 Jun 2019 03:34:46 -0700
+        with ESMTP id S1726419AbfFYLBH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 07:01:07 -0400
+Date: Tue, 25 Jun 2019 04:01:06 -0700
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 01/10] xfs: mount-api - add fs parameter description
-Message-ID: <20190625103445.GA30156@infradead.org>
-References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+Subject: Re: [PATCH 01/11] xfs_estimate: remove unneeded includes
+Message-ID: <20190625110106.GA9601@infradead.org>
+References: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+ <1561066174-13144-2-git-send-email-sandeen@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+In-Reply-To: <1561066174-13144-2-git-send-email-sandeen@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ian Kent <raven@themaw.net>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@zeniv.linux.org.uk>
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is missing a cover letter to explain the point of this
-series.
+On Thu, Jun 20, 2019 at 04:29:24PM -0500, Eric Sandeen wrote:
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-It adds giant amount of code for not user visible benefit.  Why would
-we want this series?
+Looks good,
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
