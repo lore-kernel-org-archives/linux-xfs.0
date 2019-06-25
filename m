@@ -1,272 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out5-smtp.messagingengine.com ([66.111.4.29]:53261 "EHLO
-        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728694AbfFYAAc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 20:00:32 -0400
-Message-ID: <1bae22f3b34059dcd24caf1f12fc121ca1a906d3.camel@themaw.net>
-Subject: Re: [PATCH 06/10] xfs: mount api - add xfs_reconfigure()
-From: Ian Kent <raven@themaw.net>
-Date: Tue, 25 Jun 2019 08:00:26 +0800
-In-Reply-To: <20190624175541.GX5387@magnolia>
-References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
-         <156134513640.2519.16288235480703050854.stgit@fedora-28>
-         <20190624175541.GX5387@magnolia>
-Content-Type: text/plain; charset="UTF-8"
+Received: from sandeen.net ([63.231.237.45]:37644 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727769AbfFYApd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 24 Jun 2019 20:45:33 -0400
+Subject: [PATCH 1/2] xfs: factor range zeroing out of xfs_free_file_space
+References: <ace9a6b9-3833-ec15-e3df-b9d88985685e@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <23867a36-6f3b-81fb-e463-dc941617e9de@sandeen.net>
+Date: Mon, 24 Jun 2019 19:45:32 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <ace9a6b9-3833-ec15-e3df-b9d88985685e@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 2019-06-24 at 10:55 -0700, Darrick J. Wong wrote:
-> On Mon, Jun 24, 2019 at 10:58:56AM +0800, Ian Kent wrote:
-> > Add the fs_context_operations method .reconfigure that performs
-> > remount validation as previously done by the super_operations
-> > .remount_fs method.
-> > 
-> > An attempt has also been made to update the comment about options
-> > handling problems with mount(8) to reflect the current situation.
-> > 
-> > Signed-off-by: Ian Kent <raven@themaw.net>
-> > ---
-> >  fs/xfs/xfs_super.c |  171
-> > ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 171 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index 0ec0142b94e1..7326b21b32d1 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1721,6 +1721,176 @@ xfs_validate_params(
-> >  	return 0;
-> >  }
-> >  
-> > +STATIC int
-> > +xfs_reconfigure(
-> > +	struct fs_context *fc)
-> > +{
-> > +	struct xfs_fs_context	*ctx = fc->fs_private;
-> > +	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
-> > +	struct xfs_mount        *new_mp = fc->s_fs_info;
-> > +	xfs_sb_t		*sbp = &mp->m_sb;
-> > +	int			flags = fc->sb_flags;
-> > +	int			error;
-> > +
-> > +	error = xfs_validate_params(new_mp, ctx, fc->purpose);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/*
-> > +	 * There have been problems in the past with options
-> > +	 * passed from mount(8).
-> > +	 *
-> > +	 * The problem being that options passed by mount(8) in
-> > +	 * the case where only the the mount point path is given
-> > +	 * would consist of the existing fstab options with the
-> > +	 * options from mtab for the current mount merged in and
-> > +	 * the options given on the command line last. But the
-> > +	 * result couldn't be relied upon to accurately reflect the
-> > +	 * current mount options so that rejecting options that
-> > +	 * can't be changed on reconfigure could erronously cause
-> > +	 * mount failure.
-> > +	 *
-> > +	 * The mount-api uses a legacy mount options handler
-> > +	 * in the VFS to accomodate mount(8) so these options
-> > +	 * will continue to be passed. Even if mount(8) is
-> > +	 * updated to use fsopen()/fsconfig()/fsmount() it's
-> > +	 * likely to continue to set the existing options so
-> > +	 * options problems with reconfigure could continue.
-> > +	 *
-> > +	 * For the longest time mtab locking was a problem and
-> > +	 * this could have been one possible cause. It's also
-> > +	 * possible there could have been options order problems.
-> > +	 *
-> > +	 * That has changed now as mtab is a link to the proc
-> > +	 * file system mount table so mtab options should be
-> > +	 * always accurate.
-> > +	 *
-> > +	 * Consulting the util-linux maintainer (Karel Zak) he
-> > +	 * is confident that, in this case, the options passed
-> > +	 * by mount(8) will be those of the current mount and
-> > +	 * the options order should be a correct merge of fstab
-> > +	 * and mtab options, and new options given on the command
-> > +	 * line.
-> 
-> I don't know if it's too late to do this, but could we mandate this
-> behavior for the new mount api that dhowells has been working on, and
-> then pass a flag to all the fs parsers so that they know when it's safe
-> to complain about attempts to remount with changes to options that can't
-> be changed?
+Factor out the range zeroing part of xfs_free_file_space into
+a new function, xfs_zero_range, which is a wrapper around
+iomap_zero_range + EOF handling.
 
-Sounds like a good idea but I'm not sure if it can be done.
-David?
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> 
-> > +	 *
-> > +	 * So, in theory, it should be possible to compare incoming
-> > +	 * options and return an error for options that differ from
-> > +	 * the current mount and can't be changed on reconfigure to
-> > +	 * prevent users from believing they might have changed mount
-> > +	 * options using remount which can't be changed.
-> > +	 *
-> > +	 * But for now continue to return success for every reconfigure
-> > +	 * request, and silently ignore all options that can't actually
-> > +	 * be changed.
-> 
-> The comment lines could be longer (i.e. wrapped at column 80 instead of
-> 72 or wherever they are now) and moved to be part of the comment for the
-> function instead of inside the body.
-
-Ok, will do.
-
-TBH I wish it was less verbose but this is what I ended up with
-after trying to understand what the original comment meant.
-
-> 
-> > +	 */
-> > +
-> > +	/* inode32 -> inode64 */
-> > +	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> > +	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> > +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
-> > +	}
-> > +
-> > +	/* inode64 -> inode32 */
-> > +	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> > +	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> > +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
-> > +	}
-> > +
-> > +	/* ro -> rw */
-> > +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
-> > +		if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> > +			xfs_warn(mp,
-> > +		"ro->rw transition prohibited on norecovery mount");
-> > +			return -EINVAL;
-> > +		}
-> > +
-> > +		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> > +		    xfs_sb_has_ro_compat_feature(sbp,
-> > +					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-> > +			xfs_warn(mp,
-> > +"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
-> > +				(sbp->sb_features_ro_compat &
-> > +					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-> > +			return -EINVAL;
-> > +		}
-> > +
-> > +		mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> > +
-> > +		/*
-> > +		 * If this is the first remount to writeable state we
-> > +		 * might have some superblock changes to update.
-> > +		 */
-> > +		if (mp->m_update_sb) {
-> > +			error = xfs_sync_sb(mp, false);
-> > +			if (error) {
-> > +				xfs_warn(mp, "failed to write sb changes");
-> > +				return error;
-> > +			}
-> > +			mp->m_update_sb = false;
-> > +		}
-> > +
-> > +		/*
-> > +		 * Fill out the reserve pool if it is empty. Use the stashed
-> > +		 * value if it is non-zero, otherwise go with the default.
-> > +		 */
-> > +		xfs_restore_resvblks(mp);
-> > +		xfs_log_work_queue(mp);
-> > +
-> > +		/* Recover any CoW blocks that never got remapped. */
-> > +		error = xfs_reflink_recover_cow(mp);
-> > +		if (error) {
-> > +			xfs_err(mp,
-> > +	"Error %d recovering leftover CoW allocations.", error);
-> > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > +			return error;
-> > +		}
-> > +		xfs_start_block_reaping(mp);
-> > +
-> > +		/* Create the per-AG metadata reservation pool .*/
-> > +		error = xfs_fs_reserve_ag_blocks(mp);
-> > +		if (error && error != -ENOSPC)
-> > +			return error;
-> 
-> Ugh, could you please refactor everything from the "ro -> rw" case in
-> xfs_fs_remount into a separate function and then call it from here?
-
-Yes, I admit I thought about doing that myself pretty much immediately
-after posting the series, ;)
-
-> Then both functions can shrink to:
-> 
-> 	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
-> 		error = xfs_remount_rw(mp);
-> 		if (error)
-> 			return error;
-> 	} else if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
-> 		error = xfs_remount_ro(mp);
-> 		if (error)
-> 			return error;
-> 	}
-> 
-> > +	}
-> > +
-> > +	/* rw -> ro */
-> > +	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
-> > +		/*
-> > +		 * Cancel background eofb scanning so it cannot race with the
-> > +		 * final log force+buftarg wait and deadlock the remount.
-> > +		 */
-> > +		xfs_stop_block_reaping(mp);
-> > +
-> > +		/* Get rid of any leftover CoW reservations... */
-> > +		error = xfs_icache_free_cowblocks(mp, NULL);
-> > +		if (error) {
-> > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > +			return error;
-> > +		}
-> > +
-> > +		/* Free the per-AG metadata reservation pool. */
-> > +		error = xfs_fs_unreserve_ag_blocks(mp);
-> > +		if (error) {
-> > +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > +			return error;
-> > +		}
-> > +
-> > +		/*
-> > +		 * Before we sync the metadata, we need to free up the reserve
-> > +		 * block pool so that the used block count in the superblock on
-> > +		 * disk is correct at the end of the remount. Stash the current
-> > +		 * reserve pool size so that if we get remounted rw, we can
-> > +		 * return it to the same size.
-> > +		 */
-> > +		xfs_save_resvblks(mp);
-> > +
-> > +		xfs_quiesce_attr(mp);
-> > +		mp->m_flags |= XFS_MOUNT_RDONLY;
-> 
-> ...and here?
-> 
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  /*
-> >   * Second stage of a freeze. The data is already frozen so we only
-> >   * need to take care of the metadata. Once that's done sync the superblock
-> > @@ -2246,6 +2416,7 @@ static const struct super_operations
-> > xfs_super_operations = {
-> >  static const struct fs_context_operations xfs_context_ops = {
-> >  	.parse_param = xfs_parse_param,
-> >  	.get_tree    = xfs_get_tree,
-> > +	.reconfigure = xfs_reconfigure,
-> >  };
-> >  
-> >  static struct file_system_type xfs_fs_type = {
-> > 
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 2a7e10f26bb0..0a96c4d1718e 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1061,6 +1061,37 @@ xfs_flush_unmap_range(
+ 	return 0;
+ }
+ 
++/*
++ * Ensure that the specified range is all zeros.
++ * Unmapped or unwritten blocks are left alone by the iomap mechanism,
++ * as they already return zero on read.
++ * This will happily extend i_size if asked to do so.
++ */
++static int
++xfs_zero_range(
++	struct xfs_inode	*ip,
++	xfs_off_t		offset,
++	xfs_off_t		len)
++{
++	int			error;
++
++	error = iomap_zero_range(VFS_I(ip), offset, len, NULL, &xfs_iomap_ops);
++	if (error)
++		return error;
++	/*
++	 * If we zeroed right up to EOF and EOF straddles a page boundary we
++	 * must make sure that the post-EOF area is also zeroed because the
++	 * page could be mmap'd and iomap_zero_range doesn't do that for us.
++	 * Writeback of the eof page will do this, albeit clumsily.
++	 */
++	if (offset + len >= XFS_ISIZE(ip) && offset_in_page(offset + len) > 0) {
++		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
++				round_down(offset + len, PAGE_SIZE), LLONG_MAX);
++	}
++
++	return error;
++}
++
+ int
+ xfs_free_file_space(
+ 	struct xfs_inode	*ip,
+@@ -1101,28 +1132,15 @@ xfs_free_file_space(
+ 	}
+ 
+ 	/*
+-	 * Now that we've unmap all full blocks we'll have to zero out any
+-	 * partial block at the beginning and/or end.  iomap_zero_range is smart
+-	 * enough to skip any holes, including those we just created, but we
+-	 * must take care not to zero beyond EOF and enlarge i_size.
+-	 */
+-	if (offset >= XFS_ISIZE(ip))
+-		return 0;
+-	if (offset + len > XFS_ISIZE(ip))
+-		len = XFS_ISIZE(ip) - offset;
+-	error = iomap_zero_range(VFS_I(ip), offset, len, NULL, &xfs_iomap_ops);
+-	if (error)
+-		return error;
+-
+-	/*
+-	 * If we zeroed right up to EOF and EOF straddles a page boundary we
+-	 * must make sure that the post-EOF area is also zeroed because the
+-	 * page could be mmap'd and iomap_zero_range doesn't do that for us.
+-	 * Writeback of the eof page will do this, albeit clumsily.
++	 * Now that we've unmapped all full blocks we'll have to zero out any
++	 * partial block at the beginning and/or end.  xfs_zero_range is smart
++	 * enough to skip any holes, including those we just created.  We don't
++	 * want to zero beyond EOF and enlarge i_size.
+ 	 */
+-	if (offset + len >= XFS_ISIZE(ip) && offset_in_page(offset + len) > 0) {
+-		error = filemap_write_and_wait_range(VFS_I(ip)->i_mapping,
+-				round_down(offset + len, PAGE_SIZE), LLONG_MAX);
++	if (offset < XFS_ISIZE(ip)) {
++		if (offset + len > XFS_ISIZE(ip))
++			len = XFS_ISIZE(ip) - offset;
++		error = xfs_zero_range(ip, offset, len);
+ 	}
+ 
+ 	return error;
