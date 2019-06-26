@@ -1,152 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:53630 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726646AbfFZCd6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:33:58 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5Q2TSGd026675
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 02:33:57 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2t9c9pqjn6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 02:33:57 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5Q2WkMf020695
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 02:33:56 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2t9p6uh2p7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 02:33:56 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5Q2Xtrj024620
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 02:33:55 GMT
-Subject: [PATCH 3/3] xfs: make the dax inode flag advisory
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Jun 2019 19:33:54 -0700
-Message-ID: <156151643447.2283767.3325726340667217253.stgit@magnolia>
-In-Reply-To: <156151641630.2283767.9637137346807567604.stgit@magnolia>
-References: <156151641630.2283767.9637137346807567604.stgit@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:54096 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726104AbfFZMDj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jun 2019 08:03:39 -0400
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH 2/2] fs: fold __generic_write_end back into generic_write_end
+Date: Wed, 26 Jun 2019 14:03:33 +0200
+Message-Id: <20190626120333.13310-2-agruenba@redhat.com>
+In-Reply-To: <20190626120333.13310-1-agruenba@redhat.com>
+References: <20190626120333.13310-1-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
 
-We have no ability to change S_DAX on an inode, which means that this
-flag is purely advisory.  Remove all the (broken) code that tried to
-change the state since it's cluttering up the code for no good reason.
-If the kernel ever gains the ability to change S_DAX on the fly we can
-always add this back.
+This effectively reverts a6d639da63ae ("fs: factor out a
+__generic_write_end helper") as we now open code what is left of that
+helper in iomap.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_ioctl.c |   76 ----------------------------------------------------
- 1 file changed, 76 deletions(-)
+ fs/buffer.c   | 62 ++++++++++++++++++++++++---------------------------
+ fs/internal.h |  2 --
+ 2 files changed, 29 insertions(+), 35 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index c28f4263bac2..caa90d65aa74 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1002,12 +1002,6 @@ xfs_diflags_to_linux(
- 		inode->i_flags |= S_NOATIME;
- 	else
- 		inode->i_flags &= ~S_NOATIME;
--#if 0	/* disabled until the flag switching races are sorted out */
--	if (xflags & FS_XFLAG_DAX)
--		inode->i_flags |= S_DAX;
--	else
--		inode->i_flags &= ~S_DAX;
--#endif
+diff --git a/fs/buffer.c b/fs/buffer.c
+index e450c55f6434..49a871570092 100644
+--- a/fs/buffer.c
++++ b/fs/buffer.c
+@@ -2086,38 +2086,6 @@ int block_write_begin(struct address_space *mapping, loff_t pos, unsigned len,
  }
+ EXPORT_SYMBOL(block_write_begin);
  
- static int
-@@ -1078,63 +1072,6 @@ xfs_ioctl_setattr_drain_writes(
- 	return inode_drain_writes(inode);
- }
- 
--/*
-- * If we are changing DAX flags, we have to ensure the file is clean and any
-- * cached objects in the address space are invalidated and removed. This
-- * requires us to lock out other IO and page faults similar to a truncate
-- * operation. The locks need to be held until the transaction has been committed
-- * so that the cache invalidation is atomic with respect to the DAX flag
-- * manipulation.
-- *
-- * The caller must use @join_flags to release the locks which are held on @ip
-- * regardless of return value.
-- */
--static int
--xfs_ioctl_setattr_dax_invalidate(
--	struct xfs_inode	*ip,
--	struct fsxattr		*fa,
--	int			*join_flags)
+-void __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
+-		struct page *page)
 -{
--	struct inode		*inode = VFS_I(ip);
--	struct super_block	*sb = inode->i_sb;
--	int			error;
+-	loff_t old_size = inode->i_size;
+-	bool i_size_changed = false;
 -
 -	/*
--	 * It is only valid to set the DAX flag on regular files and
--	 * directories on filesystems where the block size is equal to the page
--	 * size. On directories it serves as an inherited hint so we don't
--	 * have to check the device for dax support or flush pagecache.
+-	 * No need to use i_size_read() here, the i_size cannot change under us
+-	 * because we hold i_rwsem.
+-	 *
+-	 * But it's important to update i_size while still holding page lock:
+-	 * page writeout could otherwise come in and zero beyond i_size.
 -	 */
--	if (fa->fsx_xflags & FS_XFLAG_DAX) {
--		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
--			return -EINVAL;
--		if (S_ISREG(inode->i_mode) &&
--		    !bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
--				sb->s_blocksize))
--			return -EINVAL;
+-	if (pos + copied > inode->i_size) {
+-		i_size_write(inode, pos + copied);
+-		i_size_changed = true;
 -	}
 -
--	/* If the DAX state is not changing, we have nothing to do here. */
--	if ((fa->fsx_xflags & FS_XFLAG_DAX) && IS_DAX(inode))
--		return 0;
--	if (!(fa->fsx_xflags & FS_XFLAG_DAX) && !IS_DAX(inode))
--		return 0;
+-	unlock_page(page);
 -
--	if (S_ISDIR(inode->i_mode))
--		return 0;
--
--	/* lock, flush and invalidate mapping in preparation for flag change */
--	if (*join_flags == 0) {
--		*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
--		xfs_ilock(ip, *join_flags);
--		error = filemap_write_and_wait(inode->i_mapping);
--		if (error)
--			return error;
--	}
--
--	return invalidate_inode_pages2(inode->i_mapping);
+-	if (old_size < pos)
+-		pagecache_isize_extended(inode, old_size, pos);
+-	/*
+-	 * Don't mark the inode dirty under page lock. First, it unnecessarily
+-	 * makes the holding time of page lock longer. Second, it forces lock
+-	 * ordering of page lock and transaction start for journaling
+-	 * filesystems.
+-	 */
+-	if (i_size_changed)
+-		mark_inode_dirty(inode);
 -}
 -
- /*
-  * Set up the transaction structure for the setattr operation, checking that we
-  * have permission to do so. On success, return a clean transaction and the
-@@ -1347,19 +1284,6 @@ xfs_ioctl_setattr(
- 		goto error_free_dquots;
- 	}
+ int block_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+@@ -2158,9 +2126,37 @@ int generic_write_end(struct file *file, struct address_space *mapping,
+ 			loff_t pos, unsigned len, unsigned copied,
+ 			struct page *page, void *fsdata)
+ {
++	struct inode *inode = mapping->host;
++	loff_t old_size = inode->i_size;
++	bool i_size_changed = false;
++
+ 	copied = block_write_end(file, mapping, pos, len, copied, page, fsdata);
+-	__generic_write_end(mapping->host, pos, copied, page);
++
++	/*
++	 * No need to use i_size_read() here, the i_size cannot change under us
++	 * because we hold i_rwsem.
++	 *
++	 * But it's important to update i_size while still holding page lock:
++	 * page writeout could otherwise come in and zero beyond i_size.
++	 */
++	if (pos + copied > inode->i_size) {
++		i_size_write(inode, pos + copied);
++		i_size_changed = true;
++	}
++
++	unlock_page(page);
+ 	put_page(page);
++
++	if (old_size < pos)
++		pagecache_isize_extended(inode, old_size, pos);
++	/*
++	 * Don't mark the inode dirty under page lock. First, it unnecessarily
++	 * makes the holding time of page lock longer. Second, it forces lock
++	 * ordering of page lock and transaction start for journaling
++	 * filesystems.
++	 */
++	if (i_size_changed)
++		mark_inode_dirty(inode);
+ 	return copied;
+ }
+ EXPORT_SYMBOL(generic_write_end);
+diff --git a/fs/internal.h b/fs/internal.h
+index a48ef81be37d..2f3c3de51fad 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -40,8 +40,6 @@ static inline int __sync_blockdev(struct block_device *bdev, int wait)
+ extern void guard_bio_eod(int rw, struct bio *bio);
+ extern int __block_write_begin_int(struct page *page, loff_t pos, unsigned len,
+ 		get_block_t *get_block, struct iomap *iomap);
+-void __generic_write_end(struct inode *inode, loff_t pos, unsigned copied,
+-		struct page *page);
  
--	/*
--	 * Changing DAX config may require inode locking for mapping
--	 * invalidation. These need to be held all the way to transaction commit
--	 * or cancel time, so need to be passed through to
--	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
--	 * appropriately.
--	 */
--	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
--	if (code) {
--		xfs_iunlock(ip, join_flags);
--		goto error_free_dquots;
--	}
--
- 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
- 	if (IS_ERR(tp)) {
- 		code = PTR_ERR(tp);
+ /*
+  * char_dev.c
+-- 
+2.20.1
