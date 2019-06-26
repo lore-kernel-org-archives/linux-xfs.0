@@ -1,30 +1,93 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-oi1-f193.google.com ([209.85.167.193]:45065 "EHLO
-        mail-oi1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727181AbfFZNRy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 09:17:54 -0400
-Received: by mail-oi1-f193.google.com with SMTP id m206so1848254oib.12
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 06:17:54 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190626120333.13310-1-agruenba@redhat.com> <20190626125502.GB4744@lst.de>
-In-Reply-To: <20190626125502.GB4744@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:49988 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726157AbfFZNXl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jun 2019 09:23:41 -0400
 From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Wed, 26 Jun 2019 15:17:42 +0200
-Message-ID: <CAHc6FU5suCE2-TtNMR4mGZ5DHB+3diVL=uUwccKES=eHwSPYkA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] iomap: don't mark the inode dirty in iomap_write_end
-Content-Type: text/plain; charset="UTF-8"
+Subject: [PATCH v2 1/3] iomap: don't mark the inode dirty in iomap_write_end
+Date: Wed, 26 Jun 2019 15:23:33 +0200
+Message-Id: <20190626132335.14809-1-agruenba@redhat.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>, linux-xfs@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org
+Cc: cluster-devel@redhat.com, linux-xfs@vger.kernel.org, Andreas Gruenbacher <agruenba@redhat.com>
 
-On Wed, 26 Jun 2019 at 14:55, Christoph Hellwig <hch@lst.de> wrote:
-> Doesn't the series also need a third patch reducing the amount
-> of mark_inode_dirty calls as per your initial proposal?
+Marking the inode dirty for each page copied into the page cache can be
+very inefficient for file systems that use the VFS dirty inode tracking,
+and is completely pointless for those that don't use the VFS dirty inode
+tracking.  So instead, only set an iomap flag when changing the in-core
+inode size, and open code the rest of __generic_write_end.
 
-The page dirtying already reduces from once per page to once per
-mapping, so that should be good enough.
+Partially based on code from Christoph Hellwig.
 
-Thanks,
-Andreas
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/gfs2/bmap.c        |  2 ++
+ fs/iomap.c            | 15 ++++++++++++++-
+ include/linux/iomap.h |  1 +
+ 3 files changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index 93ea1d529aa3..f4b895fc632d 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -1182,6 +1182,8 @@ static int gfs2_iomap_end(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 	if (ip->i_qadata && ip->i_qadata->qa_qd_num)
+ 		gfs2_quota_unlock(ip);
++	if (iomap->flags & IOMAP_F_SIZE_CHANGED)
++		mark_inode_dirty(inode);
+ 	gfs2_write_unlock(inode);
+ 
+ out:
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 12654c2e78f8..97569064faaa 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -777,6 +777,7 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+ 		unsigned copied, struct page *page, struct iomap *iomap)
+ {
+ 	const struct iomap_page_ops *page_ops = iomap->page_ops;
++	loff_t old_size = inode->i_size;
+ 	int ret;
+ 
+ 	if (iomap->type == IOMAP_INLINE) {
+@@ -788,7 +789,19 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+ 		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
+ 	}
+ 
+-	__generic_write_end(inode, pos, ret, page);
++	/*
++	 * Update the in-memory inode size after copying the data into the page
++	 * cache.  It's up to the file system to write the updated size to disk,
++	 * preferably after I/O completion so that no stale data is exposed.
++	 */
++	if (pos + ret > old_size) {
++		i_size_write(inode, pos + ret);
++		iomap->flags |= IOMAP_F_SIZE_CHANGED;
++	}
++	unlock_page(page);
++
++	if (old_size < pos)
++		pagecache_isize_extended(inode, old_size, pos);
+ 	if (page_ops && page_ops->page_done)
+ 		page_ops->page_done(inode, pos, copied, page, iomap);
+ 	put_page(page);
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 2103b94cb1bf..1df9ea187a9a 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -35,6 +35,7 @@ struct vm_fault;
+ #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
+ #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+ #define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
++#define IOMAP_F_SIZE_CHANGED	0x08	/* file size has changed */
+ 
+ /*
+  * Flags that only need to be reported for IOMAP_REPORT requests:
+-- 
+2.20.1
