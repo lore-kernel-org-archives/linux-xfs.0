@@ -1,114 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49784 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726487AbfFZUqn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:43 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKhsv5012188
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:42 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2t9brtcmy4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:42 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKja7i148522
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:41 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2t9accwepv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:41 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5QKkexE005140
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:40 GMT
-Subject: [PATCH 1/6] xfs: remove more ondisk directory corruption asserts
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:46:40 -0700
-Message-ID: <156158199994.495944.4584531696054696463.stgit@magnolia>
-In-Reply-To: <156158199378.495944.4088787757066517679.stgit@magnolia>
-References: <156158199378.495944.4088787757066517679.stgit@magnolia>
+Received: from mail-yb1-f194.google.com ([209.85.219.194]:33031 "EHLO
+        mail-yb1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbfFZVaq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 17:30:46 -0400
+Received: by mail-yb1-f194.google.com with SMTP id n3so219219ybn.0
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 14:30:45 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <CAFVd4NsBRm_pbySuSc4U=a=G4wiowZ3gFBooLEQZGZJe9V748g@mail.gmail.com>
+ <CAJCQCtRD2g1c5uyDurLbt7tedPM8g6f1-74ECAW9cA1Do1yNBQ@mail.gmail.com>
+In-Reply-To: <CAJCQCtRD2g1c5uyDurLbt7tedPM8g6f1-74ECAW9cA1Do1yNBQ@mail.gmail.com>
+From: Rich Otero <rotero@editshare.com>
+Date: Wed, 26 Jun 2019 17:30:33 -0400
+Message-ID: <CAFVd4NszdvQ0P4KPo9pRqtRRJxebhtMBqGVAZTmGAPBWe25nFg@mail.gmail.com>
+Subject: Re: XFS Repair Error
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>, Steve Alves <steve.alves@editshare.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+> This applies
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 
-Continue our game of replacing ASSERTs for corrupt ondisk metadata with
-EFSCORRUPTED returns.
+kernel version: 3.12.17
+xfsprogs version: 3.1.7
+number of CPUs: 12
+contents of /proc/meminfo: 32 GiB RAM, 8 GiB swap, memory pressure on
+this server is generally very low
+contents of /proc/mounts: /dev/sdb1 /RAIDS/RAID_1 xfs
+rw,noatime,attr2,inode64,logbsize=256k,sunit=512,swidth=2048,usrquota,grpquota
+0 0
+contents of /proc/partitions: 8       17 54690576384 sdb1
+RAID layout: /dev/sdb is a 16-disk RAID-6 on a Broadcom MegaRAID
+9361-series card
+LVM configuration: none
+type of disks you are using: WDC RE 4 TB SAS (WD4001FYYG-01SL3)
+write cache status of drives: MegaRAID card has writeback enabled for this RAID
+size of BBWC and mode it is running in: unknown
+xfs_info output on the filesystem in question: no longer available
+dmesg output showing all error messages and stack traces: no longer available
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_da_btree.c  |   19 ++++++++++++-------
- fs/xfs/libxfs/xfs_dir2_node.c |    3 ++-
- 2 files changed, 14 insertions(+), 8 deletions(-)
+> Also, are the disk failures fixed? Is the RAID happy? I'm very
+> skeptical of writing anything, including repairs, let alone rw
+> mounting, a file system that's one a busted or questionably working
+> storage stack. The storage stack needs to be in working order first.
+> Is it?
 
+This particular server is used for development purposes and the data
+stored on it is replicated on other servers, so the integrity of the
+data is not very important. We have used XFS in our storage products
+for 15 years, mostly on RAID-5 and RAID-6 using LSI 3ware and Broadcom
+MegaRAID cards. It is not uncommon for disks to fail and be replaced
+and for the RAID to rebuild while the XFS is still in use, and we very
+rarely experience XFS problems during or after the rebuild. In this
+particular case, we suspected a malfunctioning RAID card and replaced
+it, and we are replacing some faulty disks.
 
-diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
-index e2737e2ac2ae..c914ae763113 100644
---- a/fs/xfs/libxfs/xfs_da_btree.c
-+++ b/fs/xfs/libxfs/xfs_da_btree.c
-@@ -493,10 +493,8 @@ xfs_da3_split(
- 	ASSERT(state->path.active == 0);
- 	oldblk = &state->path.blk[0];
- 	error = xfs_da3_root_split(state, oldblk, addblk);
--	if (error) {
--		addblk->bp = NULL;
--		return error;	/* GROT: dir is inconsistent */
--	}
-+	if (error)
-+		goto out;
- 
- 	/*
- 	 * Update pointers to the node which used to be block 0 and just got
-@@ -511,7 +509,10 @@ xfs_da3_split(
- 	 */
- 	node = oldblk->bp->b_addr;
- 	if (node->hdr.info.forw) {
--		ASSERT(be32_to_cpu(node->hdr.info.forw) == addblk->blkno);
-+		if (be32_to_cpu(node->hdr.info.forw) != addblk->blkno) {
-+			error = -EFSCORRUPTED;
-+			goto out;
-+		}
- 		node = addblk->bp->b_addr;
- 		node->hdr.info.back = cpu_to_be32(oldblk->blkno);
- 		xfs_trans_log_buf(state->args->trans, addblk->bp,
-@@ -520,15 +521,19 @@ xfs_da3_split(
- 	}
- 	node = oldblk->bp->b_addr;
- 	if (node->hdr.info.back) {
--		ASSERT(be32_to_cpu(node->hdr.info.back) == addblk->blkno);
-+		if (be32_to_cpu(node->hdr.info.back) != addblk->blkno) {
-+			error = -EFSCORRUPTED;
-+			goto out;
-+		}
- 		node = addblk->bp->b_addr;
- 		node->hdr.info.forw = cpu_to_be32(oldblk->blkno);
- 		xfs_trans_log_buf(state->args->trans, addblk->bp,
- 				  XFS_DA_LOGRANGE(node, &node->hdr.info,
- 				  sizeof(node->hdr.info)));
- 	}
-+out:
- 	addblk->bp = NULL;
--	return 0;
-+	return error;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 16731d2d684b..f7f3fb458019 100644
---- a/fs/xfs/libxfs/xfs_dir2_node.c
-+++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -743,7 +743,8 @@ xfs_dir2_leafn_lookup_for_entry(
- 	ents = dp->d_ops->leaf_ents_p(leaf);
- 
- 	xfs_dir3_leaf_check(dp, bp);
--	ASSERT(leafhdr.count > 0);
-+	if (leafhdr.count <= 0)
-+		return -EFSCORRUPTED;
- 
- 	/*
- 	 * Look up the hash value in the leaf entries.
+> OK why -L ? Was there a previous mount attempt and if so when kernel
+> errors? Was there a previous repair attempt without -L? -L is a heavy
+> hammer that shouldn't be needed unless the log is damaged and if the
+> log is damaged or otherwise can't be replayed, you should get a kernel
+> message about that.
+
+Previously, mounting the XFS failed because the "structure must be
+cleaned." That led to the first attempt at xfs_repair without -L,
+which ended in an error complaining that the journal needed to be
+replayed. But since I couldn't mount, that was impossible, so the
+second xfs_repair attempt was with -L.
+
+I needed to make this server functional again quickly, and since I
+didn't care about losing the data, I simply reformatted the RAID
+(`mkfs.xfs -f`), so I won't be able to reproduce the xfs_repair error.
+In my eight years using XFS, I've never seen that error before, so I
+thought it would be interesting to report to the list and see what I
+could learn about it.
+
+Regards,
+Rich Otero
+EditShare
+rotero@editshare.com
+617-782-0479
+
+On Wed, Jun 26, 2019 at 5:04 PM Chris Murphy <lists@colorremedies.com> wrote:
+>
+> On Wed, Jun 26, 2019 at 2:32 PM Rich Otero <rotero@editshare.com> wrote:
+> >
+> > I have an XFS filesystem of approximately 56 TB on a RAID that has
+> > been experiencing some disk failures. The disk problems seem to have
+> > led to filesystem corruption, so I attempted to repair the filesystem
+>
+> This applies
+> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+>
+> Also, are the disk failures fixed? Is the RAID happy? I'm very
+> skeptical of writing anything, including repairs, let alone rw
+> mounting, a file system that's one a busted or questionably working
+> storage stack. The storage stack needs to be in working order first.
+> Is it?
+>
+> > with `xfs_repair -L <device>`. Xfs_repair finished with a message
+> > stating that an error occurred and to report the bug.
+>
+> OK why -L ? Was there a previous mount attempt and if so when kernel
+> errors? Was there a previous repair attempt without -L? -L is a heavy
+> hammer that shouldn't be needed unless the log is damaged and if the
+> log is damaged or otherwise can't be replayed, you should get a kernel
+> message about that.
+>
+>
+> --
+> Chris Murphy
