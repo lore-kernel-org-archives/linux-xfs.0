@@ -1,270 +1,275 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:59498 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:60660 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726548AbfFZCgk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:36:40 -0400
-Subject: [PATCH 3/5] vfs: flush and wait for io when setting the immutable
- flag via FSSETXATTR
+        with ESMTP id S1726500AbfFZCjd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:39:33 -0400
+Subject: [PATCH 06/10] libfrog: refactor open-coded INUMBERS calls
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Jun 2019 19:33:16 -0700
-Message-ID: <156151639615.2283603.2028690322950797383.stgit@magnolia>
-In-Reply-To: <156151637248.2283603.8458727861336380714.stgit@magnolia>
-References: <156151637248.2283603.8458727861336380714.stgit@magnolia>
+Date: Tue, 25 Jun 2019 19:37:27 -0700
+Message-ID: <156151664777.2286979.3952912465639847748.stgit@magnolia>
+In-Reply-To: <156151660523.2286979.13694849827562044045.stgit@magnolia>
+References: <156151660523.2286979.13694849827562044045.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
-Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: sandeen@sandeen.net, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we're using FS_IOC_FSSETXATTR to set the immutable flag on a file,
-we need to ensure that userspace can't continue to write the file after
-the file becomes immutable.  To make that happen, we have to flush all
-the dirty pagecache pages to disk to ensure that we can fail a page
-fault on a mmap'd region, wait for pending directio to complete, and
-hope the caller locked out any new writes by holding the inode lock.
-
-XFS has more complex locking than other FSSETXATTR implementations so we
-have to keep the checking and preparation code in different functions.
+Refactor all the INUMBERS ioctl callsites into helper functions.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/btrfs/ioctl.c   |    2 +
- fs/ext4/ioctl.c    |    2 +
- fs/f2fs/file.c     |    2 +
- fs/inode.c         |   31 +++++++++++++++++++++++
- fs/xfs/xfs_ioctl.c |   71 +++++++++++++++++++++++++++++++++++++++-------------
- include/linux/fs.h |    3 ++
- 6 files changed, 90 insertions(+), 21 deletions(-)
+ include/xfrog.h    |    4 ++++
+ io/imap.c          |   32 +++++++++++++++-----------------
+ io/open.c          |   20 ++++++++------------
+ libfrog/bulkstat.c |   19 +++++++++++++++++++
+ scrub/fscounters.c |   18 +++++++-----------
+ scrub/inodes.c     |   15 +++++----------
+ 6 files changed, 58 insertions(+), 50 deletions(-)
 
 
-diff --git a/fs/btrfs/ioctl.c b/fs/btrfs/ioctl.c
-index 0f5af7c5f66b..bbd6d908900e 100644
---- a/fs/btrfs/ioctl.c
-+++ b/fs/btrfs/ioctl.c
-@@ -423,7 +423,7 @@ static int btrfs_ioctl_fssetxattr(struct file *file, void __user *arg)
- 	old_flags = binode->flags;
- 	old_i_flags = inode->i_flags;
+diff --git a/include/xfrog.h b/include/xfrog.h
+index a76b00ec..d069de13 100644
+--- a/include/xfrog.h
++++ b/include/xfrog.h
+@@ -107,4 +107,8 @@ int xfrog_bulkstat_single(struct xfs_fd *xfd, uint64_t ino,
+ int xfrog_bulkstat(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
+ 		struct xfs_bstat *ubuffer, uint32_t *ocount);
  
--	ret = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-+	ret = vfs_ioc_fssetxattr_prepare(inode, &old_fa, &fa);
- 	if (ret)
- 		goto out_unlock;
++struct xfs_inogrp;
++int xfrog_inumbers(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
++		struct xfs_inogrp *ubuffer, uint32_t *ocount);
++
+ #endif	/* __XFROG_H__ */
+diff --git a/io/imap.c b/io/imap.c
+index fbc8e9e1..9a3d8965 100644
+--- a/io/imap.c
++++ b/io/imap.c
+@@ -8,18 +8,20 @@
+ #include "input.h"
+ #include "init.h"
+ #include "io.h"
++#include "xfrog.h"
  
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index 1e88c3af9a8d..146587c3fe8e 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -1109,7 +1109,7 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ static cmdinfo_t imap_cmd;
  
- 		inode_lock(inode);
- 		ext4_fill_fsxattr(inode, &old_fa);
--		err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-+		err = vfs_ioc_fssetxattr_prepare(inode, &old_fa, &fa);
- 		if (err)
- 			goto out;
- 		flags = (ei->i_flags & ~EXT4_FL_XFLAG_VISIBLE) |
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index d6ed319388d6..af0fc040a15c 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -2826,7 +2826,7 @@ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- 	inode_lock(inode);
- 
- 	f2fs_fill_fsxattr(inode, &old_fa);
--	err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-+	err = vfs_ioc_fssetxattr_prepare(inode, &old_fa, &fa);
- 	if (err)
- 		goto out;
- 	flags = (fi->i_flags & ~F2FS_FL_XFLAG_VISIBLE) |
-diff --git a/fs/inode.c b/fs/inode.c
-index 65a412af3ffb..cf07378e5731 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2293,3 +2293,34 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 	return 0;
- }
- EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
-+
-+/*
-+ * Generic function to check FS_IOC_FSSETXATTR values and reject any invalid
-+ * configurations.  If none are found, flush all pending IO and dirty mappings
-+ * before setting S_IMMUTABLE on an inode.  If the flush fails we'll clear the
-+ * flag before returning error.
-+ *
-+ * Note: the caller must hold whatever locks are necessary to block any other
-+ * threads from starting a write to the file.
-+ */
-+int vfs_ioc_fssetxattr_prepare(struct inode *inode,
-+			       const struct fsxattr *old_fa,
-+			       struct fsxattr *fa)
-+{
-+	int ret;
-+
-+	ret = vfs_ioc_fssetxattr_check(inode, old_fa, fa);
-+	if (ret)
-+		return ret;
-+
-+	if (!S_ISREG(inode->i_mode) || IS_IMMUTABLE(inode) ||
-+	    !(fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
-+		return 0;
-+
-+	inode_set_flags(inode, S_IMMUTABLE, S_IMMUTABLE);
-+	ret = inode_drain_writes(inode);
-+	if (ret)
-+		inode_set_flags(inode, 0, S_IMMUTABLE);
-+	return ret;
-+}
-+EXPORT_SYMBOL(vfs_ioc_fssetxattr_prepare);
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 011657bd50ca..723550c8a2e4 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1058,6 +1058,30 @@ xfs_ioctl_setattr_xflags(
- 	return 0;
- }
- 
-+/*
-+ * If we're setting immutable on a regular file, we need to prevent new writes.
-+ * Once we've done that, we must wait for all the other writes to complete.
-+ *
-+ * The caller must use @join_flags to release the locks which are held on @ip
-+ * regardless of return value.
-+ */
-+static int
-+xfs_ioctl_setattr_drain_writes(
-+	struct xfs_inode	*ip,
-+	const struct fsxattr	*fa,
-+	int			*join_flags)
-+{
-+	struct inode		*inode = VFS_I(ip);
-+
-+	if (!S_ISREG(inode->i_mode) || !(fa->fsx_xflags & FS_XFLAG_IMMUTABLE))
-+		return 0;
-+
-+	*join_flags = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-+	xfs_ilock(ip, *join_flags);
-+
-+	return inode_drain_writes(inode);
-+}
-+
- /*
-  * If we are changing DAX flags, we have to ensure the file is clean and any
-  * cached objects in the address space are invalidated and removed. This
-@@ -1065,6 +1089,9 @@ xfs_ioctl_setattr_xflags(
-  * operation. The locks need to be held until the transaction has been committed
-  * so that the cache invalidation is atomic with respect to the DAX flag
-  * manipulation.
-+ *
-+ * The caller must use @join_flags to release the locks which are held on @ip
-+ * regardless of return value.
-  */
  static int
- xfs_ioctl_setattr_dax_invalidate(
-@@ -1076,8 +1103,6 @@ xfs_ioctl_setattr_dax_invalidate(
- 	struct super_block	*sb = inode->i_sb;
- 	int			error;
+ imap_f(int argc, char **argv)
+ {
+-	int		count;
+-	int		nent;
+-	int		i;
+-	__u64		last = 0;
+-	xfs_inogrp_t	*t;
+-	xfs_fsop_bulkreq_t bulkreq;
++	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
++	struct xfs_inogrp	*t;
++	uint64_t		last = 0;
++	uint32_t		count;
++	uint32_t		nent;
++	int			i;
++	int			error;
  
--	*join_flags = 0;
--
- 	/*
- 	 * It is only valid to set the DAX flag on regular files and
- 	 * directories on filesystems where the block size is equal to the page
-@@ -1103,21 +1128,15 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (argc != 2)
+ 		nent = 1;
+@@ -30,14 +32,8 @@ imap_f(int argc, char **argv)
+ 	if (!t)
  		return 0;
  
- 	/* lock, flush and invalidate mapping in preparation for flag change */
--	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	error = filemap_write_and_wait(inode->i_mapping);
--	if (error)
--		goto out_unlock;
--	error = invalidate_inode_pages2(inode->i_mapping);
--	if (error)
--		goto out_unlock;
+-	bulkreq.lastip  = &last;
+-	bulkreq.icount  = nent;
+-	bulkreq.ubuffer = (void *)t;
+-	bulkreq.ocount  = &count;
 -
--	*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
--	return 0;
--
--out_unlock:
--	xfs_iunlock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
--	return error;
-+	if (*join_flags == 0) {
-+		*join_flags = XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL;
-+		xfs_ilock(ip, *join_flags);
-+		error = filemap_write_and_wait(inode->i_mapping);
-+		if (error)
-+			return error;
+-	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+-		if (count == 0)
+-			goto out_free;
++	while ((error = xfrog_inumbers(&xfd, &last, nent, t, &count)) == 0 &&
++	       count > 0) {
+ 		for (i = 0; i < count; i++) {
+ 			printf(_("ino %10llu count %2d mask %016llx\n"),
+ 				(unsigned long long)t[i].xi_startino,
+@@ -45,9 +41,11 @@ imap_f(int argc, char **argv)
+ 				(unsigned long long)t[i].xi_allocmask);
+ 		}
+ 	}
+-	perror("xfsctl(XFS_IOC_FSINUMBERS)");
+-	exitcode = 1;
+-out_free:
++
++	if (error) {
++		perror("xfsctl(XFS_IOC_FSINUMBERS)");
++		exitcode = 1;
 +	}
- 
-+	return invalidate_inode_pages2(inode->i_mapping);
+ 	free(t);
+ 	return 0;
+ }
+diff --git a/io/open.c b/io/open.c
+index 67976f7f..968a9d9e 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -669,24 +669,20 @@ inode_help(void)
+ "\n"));
  }
  
++#define IGROUP_NR	(1024)
+ static __u64
+ get_last_inode(void)
+ {
+-	__u64			lastip = 0;
+-	__u64			lastgrp = 0;
+-	__s32			ocount = 0;
++	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
++	uint64_t		lastip = 0;
++	uint32_t		lastgrp = 0;
++	uint32_t		ocount = 0;
+ 	__u64			last_ino;
+-	struct xfs_inogrp	igroup[1024];
+-	struct xfs_fsop_bulkreq	bulkreq;
+-
+-	bulkreq.lastip = &lastip;
+-	bulkreq.ubuffer = &igroup;
+-	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
+-	bulkreq.ocount = &ocount;
++	struct xfs_inogrp	igroup[IGROUP_NR];
+ 
+ 	for (;;) {
+-		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
+-				&bulkreq)) {
++		if (xfrog_inumbers(&xfd, &lastip, IGROUP_NR, igroup,
++					&ocount)) {
+ 			perror("XFS_IOC_FSINUMBERS");
+ 			return 0;
+ 		}
+diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
+index 5db34eba..6632ffbb 100644
+--- a/libfrog/bulkstat.c
++++ b/libfrog/bulkstat.c
+@@ -42,3 +42,22 @@ xfrog_bulkstat(
+ 
+ 	return ioctl(xfd->fd, XFS_IOC_FSBULKSTAT, &bulkreq);
+ }
++
++/* Query inode allocation bitmask information. */
++int
++xfrog_inumbers(
++	struct xfs_fd		*xfd,
++	uint64_t		*lastino,
++	uint32_t		icount,
++	struct xfs_inogrp	*ubuffer,
++	uint32_t		*ocount)
++{
++	struct xfs_fsop_bulkreq	bulkreq = {
++		.lastip		= (__u64 *)lastino,
++		.icount		= icount,
++		.ubuffer	= ubuffer,
++		.ocount		= (__s32 *)ocount,
++	};
++
++	return ioctl(xfd->fd, XFS_IOC_FSINUMBERS, &bulkreq);
++}
+diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+index adb79b50..cd216b30 100644
+--- a/scrub/fscounters.c
++++ b/scrub/fscounters.c
+@@ -15,6 +15,7 @@
+ #include "xfs_scrub.h"
+ #include "common.h"
+ #include "fscounters.h"
++#include "xfrog.h"
+ 
  /*
-@@ -1326,6 +1345,12 @@ xfs_ioctl_setattr(
- 			return code;
+  * Filesystem counter collection routines.  We can count the number of
+@@ -41,26 +42,21 @@ xfs_count_inodes_range(
+ 	uint64_t		last_ino,
+ 	uint64_t		*count)
+ {
+-	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+ 	struct xfs_inogrp	inogrp;
+-	__u64			igrp_ino;
++	uint64_t		igrp_ino;
+ 	uint64_t		nr = 0;
+-	__s32			igrplen = 0;
++	uint32_t		igrplen = 0;
+ 	int			error;
+ 
+ 	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
+ 	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
+ 
+-	igrpreq.lastip  = &igrp_ino;
+-	igrpreq.icount  = 1;
+-	igrpreq.ubuffer = &inogrp;
+-	igrpreq.ocount  = &igrplen;
+-
+ 	igrp_ino = first_ino;
+-	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+-	while (!error && igrplen && inogrp.xi_startino < last_ino) {
++	while (!(error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
++			&igrplen))) {
++		if (igrplen == 0 || inogrp.xi_startino >= last_ino)
++			break;
+ 		nr += inogrp.xi_alloccount;
+-		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
  	}
  
-+	code = xfs_ioctl_setattr_drain_writes(ip, fa, &join_flags);
-+	if (code) {
-+		xfs_iunlock(ip, join_flags);
-+		goto error_free_dquots;
-+	}
-+
- 	/*
- 	 * Changing DAX config may require inode locking for mapping
- 	 * invalidation. These need to be held all the way to transaction commit
-@@ -1334,8 +1359,10 @@ xfs_ioctl_setattr(
- 	 * appropriately.
- 	 */
- 	code = xfs_ioctl_setattr_dax_invalidate(ip, fa, &join_flags);
--	if (code)
-+	if (code) {
-+		xfs_iunlock(ip, join_flags);
- 		goto error_free_dquots;
-+	}
+ 	if (error) {
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 09dd0055..06d1245d 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -90,17 +90,16 @@ xfs_iterate_inodes_range(
+ 	xfs_inode_iter_fn	fn,
+ 	void			*arg)
+ {
+-	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+ 	struct xfs_handle	handle;
+ 	struct xfs_inogrp	inogrp;
+ 	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
+ 	char			idescr[DESCR_BUFSZ];
+ 	char			buf[DESCR_BUFSZ];
+ 	struct xfs_bstat	*bs;
+-	__u64			igrp_ino;
++	uint64_t		igrp_ino;
+ 	uint64_t		ino;
+ 	uint32_t		bulklen = 0;
+-	__s32			igrplen = 0;
++	uint32_t		igrplen = 0;
+ 	bool			moveon = true;
+ 	int			i;
+ 	int			error;
+@@ -109,11 +108,6 @@ xfs_iterate_inodes_range(
  
- 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
- 	if (IS_ERR(tp)) {
-@@ -1485,6 +1512,12 @@ xfs_ioc_setxflags(
- 	if (error)
- 		return error;
+ 	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
  
-+	error = xfs_ioctl_setattr_drain_writes(ip, &fa, &join_flags);
-+	if (error) {
-+		xfs_iunlock(ip, join_flags);
-+		goto out_drop_write;
-+	}
-+
- 	/*
- 	 * Changing DAX config may require inode locking for mapping
- 	 * invalidation. These need to be held all the way to transaction commit
-@@ -1493,8 +1526,10 @@ xfs_ioc_setxflags(
- 	 * appropriately.
- 	 */
- 	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
--	if (error)
-+	if (error) {
-+		xfs_iunlock(ip, join_flags);
- 		goto out_drop_write;
-+	}
+-	igrpreq.lastip  = &igrp_ino;
+-	igrpreq.icount  = 1;
+-	igrpreq.ubuffer = &inogrp;
+-	igrpreq.ocount  = &igrplen;
+-
+ 	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
+ 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+ 			sizeof(handle.ha_fid.fid_len);
+@@ -121,7 +115,7 @@ xfs_iterate_inodes_range(
  
- 	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
- 	if (IS_ERR(tp)) {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 51266c9dbadc..675ce9743bc1 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3560,6 +3560,9 @@ int vfs_ioc_setflags_prepare(struct inode *inode, unsigned int oldflags,
+ 	/* Find the inode chunk & alloc mask */
+ 	igrp_ino = first_ino;
+-	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
++	error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp, &igrplen);
+ 	while (!error && igrplen) {
+ 		/* Load the inodes. */
+ 		ino = inogrp.xi_startino - 1;
+@@ -178,7 +172,8 @@ _("Changed too many times during scan; giving up."));
  
- int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 			     struct fsxattr *fa);
-+int vfs_ioc_fssetxattr_prepare(struct inode *inode,
-+			       const struct fsxattr *old_fa,
-+			       struct fsxattr *fa);
+ 		stale_count = 0;
+ igrp_retry:
+-		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
++		error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
++				&igrplen);
+ 	}
  
- /*
-  * Flush file data before changing attributes.  Caller must hold any locks
+ err:
