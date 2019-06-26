@@ -1,23 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:36938 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727835AbfFYLB3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 07:01:29 -0400
-Date: Tue, 25 Jun 2019 04:01:29 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 00/11] xfsprogs: remove unneeded #includes
-Message-ID: <20190625110129.GB9601@infradead.org>
-References: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:44324 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725283AbfFZECx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 00:02:53 -0400
+Date: Wed, 26 Jun 2019 05:02:02 +0100
+From: Al Viro <viro@zeniv.linux.org.uk>
+Subject: Re: [PATCH 1/5] vfs: create a generic checking and prep function for
+ FS_IOC_SETFLAGS
+Message-ID: <20190626040202.GA32272@ZenIV.linux.org.uk>
+References: <156151632209.2283456.3592379873620132456.stgit@magnolia>
+ <156151633004.2283456.4175543089138173586.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1561066174-13144-1-git-send-email-sandeen@redhat.com>
+In-Reply-To: <156151633004.2283456.4175543089138173586.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-btrfs@vger.kernel.org
 
-The whole series looks good to me:
+On Tue, Jun 25, 2019 at 07:32:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Create a generic function to check incoming FS_IOC_SETFLAGS flag values
+> and later prepare the inode for updates so that we can standardize the
+> implementations that follow ext4's flag values.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Change in efivarfs behaviour deserves a note.  I'm not saying it's wrong,
+but behaviour is changed there - no-op FS_IOC_SETFLAGS used to fail
+without CAP_LINUX_IMMUTABLE...
