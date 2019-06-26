@@ -1,82 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52444 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:45820 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726042AbfFZSMn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 14:12:43 -0400
-Date: Wed, 26 Jun 2019 11:12:06 -0700
+        with ESMTP id S1726362AbfFZUJr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:09:47 -0400
+Date: Wed, 26 Jun 2019 13:09:19 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: short circuit xfs_get_acl() if no acl is possible
-Message-ID: <20190626181206.GH5171@magnolia>
-References: <35128e32-d69b-316e-c8d6-8f109646390d@redhat.com>
- <20190508201033.GW5207@magnolia>
- <20190509130535.GB41691@bfoster>
+Subject: Re: [PATCH v2 1/3] iomap: don't mark the inode dirty in
+ iomap_write_end
+Message-ID: <20190626200919.GI5171@magnolia>
+References: <20190626132335.14809-1-agruenba@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190509130535.GB41691@bfoster>
+In-Reply-To: <20190626132335.14809-1-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, David Valin <dvalin@redhat.com>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, May 09, 2019 at 09:05:39AM -0400, Brian Foster wrote:
-> On Wed, May 08, 2019 at 01:10:33PM -0700, Darrick J. Wong wrote:
-> > On Wed, May 08, 2019 at 02:28:09PM -0500, Eric Sandeen wrote:
-> > > If there are no attributes on the inode, don't go through the
-> > > cost of memory allocation and callling xfs_attr_get when we
-> > > already know we'll just get -ENOATTR.
-> > > 
-> > > Reported-by: David Valin <dvalin@redhat.com>
-> > > Suggested-by: Dave Chinner <david@fromorbit.com>
-> > > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > > ---
-> > > 
-> > > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> > > index 8039e35147dd..b469b44e9e71 100644
-> > > --- a/fs/xfs/xfs_acl.c
-> > > +++ b/fs/xfs/xfs_acl.c
-> > > @@ -132,6 +132,9 @@ xfs_get_acl(struct inode *inode, int type)
-> > >  		BUG();
-> > >  	}
-> > >  
-> > > +	if (!xfs_inode_hasattr(ip))
-> > > +		return NULL;
-> > 
-> > This isn't going to cause problems if someone's adding an ACL to the
-> > inode at the same time, right?
-> > 
-> > I'm assuming that's the case since we only would load inodes when
-> > setting up a vfs inode but before any userspace can get its sticky
-> > fingers all over the inode, but it sure would be nice to know that
-> > for sure. :)
-> > 
+On Wed, Jun 26, 2019 at 03:23:33PM +0200, Andreas Gruenbacher wrote:
+> Marking the inode dirty for each page copied into the page cache can be
+> very inefficient for file systems that use the VFS dirty inode tracking,
+> and is completely pointless for those that don't use the VFS dirty inode
+> tracking.  So instead, only set an iomap flag when changing the in-core
+> inode size, and open code the rest of __generic_write_end.
 > 
-> Hmm, that's a good question. At first I was thinking it wouldn't matter,
-> but then I remembered the fairly recent issue around writing back an
-> empty leaf buffer on format conversion a bit too early. That has me
-> wondering if that would be an issue here as well. For example, suppose a
-> non-empty local format attr fork is being converted to extent format due
-> to a concurrent (and unrelated) xattr set. That involves
-> xfs_attr_shortform_to_leaf() -> xfs_bmap_local_to_extents_empty(), which
-> looks like it creates a transient empty fork state. Might
-> xfs_inode_hasattr() catch that as a false negative here? If so, that
-> would certainly be a problem if the existing xattr was the ACL the
-> caller happens to be interested in. It might be prudent to surround this
-> check with ILOCK_SHARED...
+> Partially based on code from Christoph Hellwig.
+> 
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-<shrug> But xfs_inode_hasattr checks forkoff > 0, so as long as the
-shortform to leaf conversion doesn't zero forkoff we'd be fine, I think.
-AFAICT it doesn't...?
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> Brian
+> ---
+>  fs/gfs2/bmap.c        |  2 ++
+>  fs/iomap.c            | 15 ++++++++++++++-
+>  include/linux/iomap.h |  1 +
+>  3 files changed, 17 insertions(+), 1 deletion(-)
 > 
-> > --D
-> > 
-> > > +
-> > >  	/*
-> > >  	 * If we have a cached ACLs value just return it, not need to
-> > >  	 * go out to the disk.
-> > > 
+> diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+> index 93ea1d529aa3..f4b895fc632d 100644
+> --- a/fs/gfs2/bmap.c
+> +++ b/fs/gfs2/bmap.c
+> @@ -1182,6 +1182,8 @@ static int gfs2_iomap_end(struct inode *inode, loff_t pos, loff_t length,
+>  
+>  	if (ip->i_qadata && ip->i_qadata->qa_qd_num)
+>  		gfs2_quota_unlock(ip);
+> +	if (iomap->flags & IOMAP_F_SIZE_CHANGED)
+> +		mark_inode_dirty(inode);
+>  	gfs2_write_unlock(inode);
+>  
+>  out:
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 12654c2e78f8..97569064faaa 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -777,6 +777,7 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>  		unsigned copied, struct page *page, struct iomap *iomap)
+>  {
+>  	const struct iomap_page_ops *page_ops = iomap->page_ops;
+> +	loff_t old_size = inode->i_size;
+>  	int ret;
+>  
+>  	if (iomap->type == IOMAP_INLINE) {
+> @@ -788,7 +789,19 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>  		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
+>  	}
+>  
+> -	__generic_write_end(inode, pos, ret, page);
+> +	/*
+> +	 * Update the in-memory inode size after copying the data into the page
+> +	 * cache.  It's up to the file system to write the updated size to disk,
+> +	 * preferably after I/O completion so that no stale data is exposed.
+> +	 */
+> +	if (pos + ret > old_size) {
+> +		i_size_write(inode, pos + ret);
+> +		iomap->flags |= IOMAP_F_SIZE_CHANGED;
+> +	}
+> +	unlock_page(page);
+> +
+> +	if (old_size < pos)
+> +		pagecache_isize_extended(inode, old_size, pos);
+>  	if (page_ops && page_ops->page_done)
+>  		page_ops->page_done(inode, pos, copied, page, iomap);
+>  	put_page(page);
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 2103b94cb1bf..1df9ea187a9a 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -35,6 +35,7 @@ struct vm_fault;
+>  #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
+>  #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+>  #define IOMAP_F_BUFFER_HEAD	0x04	/* file system requires buffer heads */
+> +#define IOMAP_F_SIZE_CHANGED	0x08	/* file size has changed */
+>  
+>  /*
+>   * Flags that only need to be reported for IOMAP_REPORT requests:
+> -- 
+> 2.20.1
+> 
