@@ -1,332 +1,540 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52196 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726877AbfF0KtR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:49:17 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 13/13] iomap: add tracing for the address space operations
-Date: Thu, 27 Jun 2019 12:48:36 +0200
-Message-Id: <20190627104836.25446-14-hch@lst.de>
-In-Reply-To: <20190627104836.25446-1-hch@lst.de>
-References: <20190627104836.25446-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:48994 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbfFZUpf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:45:35 -0400
+Subject: [PATCH 14/15] xfs: multithreaded iwalk implementation
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 26 Jun 2019 13:45:25 -0700
+Message-ID: <156158192497.495087.5608242533988384883.stgit@magnolia>
+In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
+References: <156158183697.495087.5371839759804528321.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-Lift the xfs code for tracing address space operations to the iomap
-layer.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Create a parallel iwalk implementation and switch quotacheck to use it.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c                   | 13 +++++-
- fs/xfs/xfs_aops.c            | 27 ++----------
- fs/xfs/xfs_trace.h           | 65 ---------------------------
- include/trace/events/iomap.h | 85 ++++++++++++++++++++++++++++++++++++
- 4 files changed, 100 insertions(+), 90 deletions(-)
- create mode 100644 include/trace/events/iomap.h
+ fs/xfs/Makefile      |    1 
+ fs/xfs/xfs_globals.c |    3 +
+ fs/xfs/xfs_iwalk.c   |   82 +++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_iwalk.h   |    2 +
+ fs/xfs/xfs_pwork.c   |  126 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/xfs_pwork.h   |   58 +++++++++++++++++++++++
+ fs/xfs/xfs_qm.c      |    2 -
+ fs/xfs/xfs_sysctl.h  |    6 ++
+ fs/xfs/xfs_sysfs.c   |   40 ++++++++++++++++
+ fs/xfs/xfs_trace.h   |   18 +++++++
+ 10 files changed, 337 insertions(+), 1 deletion(-)
+ create mode 100644 fs/xfs/xfs_pwork.c
+ create mode 100644 fs/xfs/xfs_pwork.h
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index bb5c42561398..5db939468499 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -23,7 +23,8 @@
- #include <linux/task_io_accounting_ops.h>
- #include <linux/dax.h>
- #include <linux/sched/signal.h>
--
-+#define CREATE_TRACE_POINTS
-+#include <trace/events/iomap.h>
- #include "internal.h"
+
+diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+index 74d30ef0dbce..48940a27d4aa 100644
+--- a/fs/xfs/Makefile
++++ b/fs/xfs/Makefile
+@@ -84,6 +84,7 @@ xfs-y				+= xfs_aops.o \
+ 				   xfs_message.o \
+ 				   xfs_mount.o \
+ 				   xfs_mru_cache.o \
++				   xfs_pwork.o \
+ 				   xfs_reflink.o \
+ 				   xfs_stats.o \
+ 				   xfs_super.o \
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index d0d377384120..a44b564871b5 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -31,6 +31,9 @@ xfs_param_t xfs_params = {
+ 	.fstrm_timer	= {	1,		30*100,		3600*100},
+ 	.eofb_timer	= {	1,		300,		3600*24},
+ 	.cowb_timer	= {	1,		1800,		3600*24},
++#ifdef DEBUG
++	.pwork_threads	= {	-1,		-1,		NR_CPUS	},
++#endif
+ };
  
- static struct bio_set iomap_ioend_bioset;
-@@ -369,6 +370,8 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
- 	unsigned poff;
- 	loff_t ret;
+ struct xfs_globals xfs_globals = {
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index 0cd4885c8780..f0277369e896 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -20,6 +20,7 @@
+ #include "xfs_icache.h"
+ #include "xfs_health.h"
+ #include "xfs_trans.h"
++#include "xfs_pwork.h"
  
-+	trace_iomap_readpage(page->mapping->host, 1);
-+
- 	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
- 		ret = iomap_apply(inode, page_offset(page) + poff,
- 				PAGE_SIZE - poff, 0, ops, &ctx,
-@@ -465,6 +468,8 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
- 	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
- 	loff_t length = last - pos + PAGE_SIZE, ret = 0;
- 
-+	trace_iomap_readpages(mapping->host, nr_pages);
-+
- 	while (length > 0) {
- 		ret = iomap_apply(mapping->host, pos, length, 0, ops,
- 				&ctx, iomap_readpages_actor);
-@@ -531,6 +536,8 @@ EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
- int
- iomap_releasepage(struct page *page, gfp_t gfp_mask)
- {
-+	trace_iomap_releasepage(page->mapping->host, page, 0, 0);
-+
- 	/*
- 	 * mm accommodates an old ext3 case where clean pages might not have had
- 	 * the dirty bit cleared. Thus, it can send actual dirty pages to
-@@ -546,6 +553,8 @@ EXPORT_SYMBOL_GPL(iomap_releasepage);
- void
- iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
- {
-+	trace_iomap_invalidatepage(page->mapping->host, page, offset, len);
-+
- 	/*
- 	 * If we are invalidating the entire page, clear the dirty state from it
- 	 * and release it to avoid unnecessary buildup of the LRU.
-@@ -2586,6 +2595,8 @@ iomap_do_writepage(struct page *page, struct writeback_control *wbc, void *data)
- 	u64 end_offset;
- 	loff_t offset;
- 
-+	trace_iomap_writepage(inode, page, 0, 0);
-+
- 	/*
- 	 * Refuse to write the page out if we are called from reclaim context.
- 	 *
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 072750f34fe6..bdcde2ece779 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -540,16 +540,6 @@ xfs_submit_ioend(
- 	return status;
- }
- 
--STATIC void
--xfs_vm_invalidatepage(
--	struct page		*page,
--	unsigned int		offset,
--	unsigned int		length)
--{
--	trace_xfs_invalidatepage(page->mapping->host, page, offset, length);
--	iomap_invalidatepage(page, offset, length);
--}
--
  /*
-  * If the page has delalloc blocks on it, we need to punch them out before we
-  * invalidate the page.  If we don't, we leave a stale delalloc mapping on the
-@@ -584,7 +574,7 @@ xfs_discard_page(
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
-+	iomap_invalidatepage(page, 0, PAGE_SIZE);
+  * Walking Inodes in the Filesystem
+@@ -45,6 +46,9 @@
+  */
+ 
+ struct xfs_iwalk_ag {
++	/* parallel work control data; will be null if single threaded */
++	struct xfs_pwork		pwork;
++
+ 	struct xfs_mount		*mp;
+ 	struct xfs_trans		*tp;
+ 
+@@ -182,6 +186,9 @@ xfs_iwalk_ag_recs(
+ 
+ 		trace_xfs_iwalk_ag_rec(mp, agno, irec);
+ 
++		if (xfs_pwork_want_abort(&iwag->pwork))
++			return 0;
++
+ 		if (iwag->inobt_walk_fn) {
+ 			error = iwag->inobt_walk_fn(mp, tp, agno, irec,
+ 					iwag->data);
+@@ -193,6 +200,9 @@ xfs_iwalk_ag_recs(
+ 			continue;
+ 
+ 		for (j = 0; j < XFS_INODES_PER_CHUNK; j++) {
++			if (xfs_pwork_want_abort(&iwag->pwork))
++				return 0;
++
+ 			/* Skip if this inode is free */
+ 			if (XFS_INOBT_MASK(j) & irec->ir_free)
+ 				continue;
+@@ -387,6 +397,8 @@ xfs_iwalk_ag(
+ 		struct xfs_inobt_rec_incore	*irec;
+ 
+ 		cond_resched();
++		if (xfs_pwork_want_abort(&iwag->pwork))
++			goto out;
+ 
+ 		/* Fetch the inobt record. */
+ 		irec = &iwag->recs[iwag->nr_recs];
+@@ -520,6 +532,7 @@ xfs_iwalk(
+ 		.sz_recs	= xfs_iwalk_prefetch(inode_records),
+ 		.trim_start	= 1,
+ 		.skip_empty	= 1,
++		.pwork		= XFS_PWORK_SINGLE_THREADED,
+ 	};
+ 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+ 	int			error;
+@@ -541,6 +554,74 @@ xfs_iwalk(
+ 	return error;
  }
  
- static const struct iomap_writeback_ops xfs_writeback_ops = {
-@@ -624,15 +614,6 @@ xfs_dax_writepages(
- 			xfs_find_bdev_for_inode(mapping->host), wbc);
- }
++/* Run per-thread iwalk work. */
++static int
++xfs_iwalk_ag_work(
++	struct xfs_mount	*mp,
++	struct xfs_pwork	*pwork)
++{
++	struct xfs_iwalk_ag	*iwag;
++	int			error = 0;
++
++	iwag = container_of(pwork, struct xfs_iwalk_ag, pwork);
++	if (xfs_pwork_want_abort(pwork))
++		goto out;
++
++	error = xfs_iwalk_alloc(iwag);
++	if (error)
++		goto out;
++
++	error = xfs_iwalk_ag(iwag);
++	xfs_iwalk_free(iwag);
++out:
++	kmem_free(iwag);
++	return error;
++}
++
++/*
++ * Walk all the inodes in the filesystem using multiple threads to process each
++ * AG.
++ */
++int
++xfs_iwalk_threaded(
++	struct xfs_mount	*mp,
++	xfs_ino_t		startino,
++	xfs_iwalk_fn		iwalk_fn,
++	unsigned int		inode_records,
++	void			*data)
++{
++	struct xfs_pwork_ctl	pctl;
++	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
++	unsigned int		nr_threads;
++	int			error;
++
++	ASSERT(agno < mp->m_sb.sb_agcount);
++
++	nr_threads = xfs_pwork_guess_datadev_parallelism(mp);
++	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk",
++			nr_threads);
++	if (error)
++		return error;
++
++	for (; agno < mp->m_sb.sb_agcount; agno++) {
++		struct xfs_iwalk_ag	*iwag;
++
++		if (xfs_pwork_ctl_want_abort(&pctl))
++			break;
++
++		iwag = kmem_zalloc(sizeof(struct xfs_iwalk_ag), KM_SLEEP);
++		iwag->mp = mp;
++		iwag->iwalk_fn = iwalk_fn;
++		iwag->data = data;
++		iwag->startino = startino;
++		iwag->sz_recs = xfs_iwalk_prefetch(inode_records);
++		xfs_pwork_queue(&pctl, &iwag->pwork);
++		startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
++	}
++
++	return xfs_pwork_destroy(&pctl);
++}
++
+ /*
+  * Allow callers to cache up to a page's worth of inobt records.  This reflects
+  * the existing inumbers prefetching behavior.  Since the inobt walk does not
+@@ -601,6 +682,7 @@ xfs_inobt_walk(
+ 		.data		= data,
+ 		.startino	= startino,
+ 		.sz_recs	= xfs_inobt_walk_prefetch(inobt_records),
++		.pwork		= XFS_PWORK_SINGLE_THREADED,
+ 	};
+ 	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
+ 	int			error;
+diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
+index 94fad060b3e9..22c31763a9b8 100644
+--- a/fs/xfs/xfs_iwalk.h
++++ b/fs/xfs/xfs_iwalk.h
+@@ -15,6 +15,8 @@ typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
  
--STATIC int
--xfs_vm_releasepage(
--	struct page		*page,
--	gfp_t			gfp_mask)
--{
--	trace_xfs_releasepage(page->mapping->host, page, 0, 0);
--	return iomap_releasepage(page, gfp_mask);
--}
--
- STATIC sector_t
- xfs_vm_bmap(
- 	struct address_space	*mapping,
-@@ -661,7 +642,6 @@ xfs_vm_readpage(
- 	struct file		*unused,
- 	struct page		*page)
- {
--	trace_xfs_vm_readpage(page->mapping->host, 1);
- 	return iomap_readpage(page, &xfs_iomap_ops);
- }
+ int xfs_iwalk(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t startino,
+ 		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, void *data);
++int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
++		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, void *data);
  
-@@ -672,7 +652,6 @@ xfs_vm_readpages(
- 	struct list_head	*pages,
- 	unsigned		nr_pages)
- {
--	trace_xfs_vm_readpages(mapping->host, nr_pages);
- 	return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- }
+ /* Walk all inode btree records in the filesystem starting from @startino. */
+ typedef int (*xfs_inobt_walk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
+diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
+new file mode 100644
+index 000000000000..779596ed9432
+--- /dev/null
++++ b/fs/xfs/xfs_pwork.c
+@@ -0,0 +1,126 @@
++// SPDX-License-Identifier: GPL-2.0-or-later
++/*
++ * Copyright (C) 2019 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#include "xfs.h"
++#include "xfs_fs.h"
++#include "xfs_shared.h"
++#include "xfs_format.h"
++#include "xfs_log_format.h"
++#include "xfs_trans_resv.h"
++#include "xfs_mount.h"
++#include "xfs_trace.h"
++#include "xfs_sysctl.h"
++#include "xfs_pwork.h"
++
++/*
++ * Parallel Work Queue
++ * ===================
++ *
++ * Abstract away the details of running a large and "obviously" parallelizable
++ * task across multiple CPUs.  Callers initialize the pwork control object with
++ * a desired level of parallelization and a work function.  Next, they embed
++ * struct xfs_pwork in whatever structure they use to pass work context to a
++ * worker thread and queue that pwork.  The work function will be passed the
++ * pwork item when it is run (from process context) and any returned error will
++ * be recorded in xfs_pwork_ctl.error.  Work functions should check for errors
++ * and abort if necessary; the non-zeroness of xfs_pwork_ctl.error does not
++ * stop workqueue item processing.
++ *
++ * This is the rough equivalent of the xfsprogs workqueue code, though we can't
++ * reuse that name here.
++ */
++
++/* Invoke our caller's function. */
++static void
++xfs_pwork_work(
++	struct work_struct	*work)
++{
++	struct xfs_pwork	*pwork;
++	struct xfs_pwork_ctl	*pctl;
++	int			error;
++
++	pwork = container_of(work, struct xfs_pwork, work);
++	pctl = pwork->pctl;
++	error = pctl->work_fn(pctl->mp, pwork);
++	if (error && !pctl->error)
++		pctl->error = error;
++}
++
++/*
++ * Set up control data for parallel work.  @work_fn is the function that will
++ * be called.  @tag will be written into the kernel threads.  @nr_threads is
++ * the level of parallelism desired, or 0 for no limit.
++ */
++int
++xfs_pwork_init(
++	struct xfs_mount	*mp,
++	struct xfs_pwork_ctl	*pctl,
++	xfs_pwork_work_fn	work_fn,
++	const char		*tag,
++	unsigned int		nr_threads)
++{
++#ifdef DEBUG
++	if (xfs_globals.pwork_threads >= 0)
++		nr_threads = xfs_globals.pwork_threads;
++#endif
++	trace_xfs_pwork_init(mp, nr_threads, current->pid);
++
++	pctl->wq = alloc_workqueue("%s-%d", WQ_FREEZABLE, nr_threads, tag,
++			current->pid);
++	if (!pctl->wq)
++		return -ENOMEM;
++	pctl->work_fn = work_fn;
++	pctl->error = 0;
++	pctl->mp = mp;
++
++	return 0;
++}
++
++/* Queue some parallel work. */
++void
++xfs_pwork_queue(
++	struct xfs_pwork_ctl	*pctl,
++	struct xfs_pwork	*pwork)
++{
++	INIT_WORK(&pwork->work, xfs_pwork_work);
++	pwork->pctl = pctl;
++	queue_work(pctl->wq, &pwork->work);
++}
++
++/* Wait for the work to finish and tear down the control structure. */
++int
++xfs_pwork_destroy(
++	struct xfs_pwork_ctl	*pctl)
++{
++	destroy_workqueue(pctl->wq);
++	pctl->wq = NULL;
++	return pctl->error;
++}
++
++/*
++ * Return the amount of parallelism that the data device can handle, or 0 for
++ * no limit.
++ */
++unsigned int
++xfs_pwork_guess_datadev_parallelism(
++	struct xfs_mount	*mp)
++{
++	struct xfs_buftarg	*btp = mp->m_ddev_targp;
++	int			iomin;
++	int			ioopt;
++
++	if (blk_queue_nonrot(btp->bt_bdev->bd_queue))
++		return num_online_cpus();
++
++	if (mp->m_sb.sb_width && mp->m_sb.sb_unit)
++		return mp->m_sb.sb_width / mp->m_sb.sb_unit;
++
++	iomin = bdev_io_min(btp->bt_bdev);
++	ioopt = bdev_io_opt(btp->bt_bdev);
++	if (iomin && ioopt)
++		return ioopt / iomin;
++
++	return 1;
++}
+diff --git a/fs/xfs/xfs_pwork.h b/fs/xfs/xfs_pwork.h
+new file mode 100644
+index 000000000000..99a9d210d49e
+--- /dev/null
++++ b/fs/xfs/xfs_pwork.h
+@@ -0,0 +1,58 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (C) 2019 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ */
++#ifndef __XFS_PWORK_H__
++#define __XFS_PWORK_H__
++
++struct xfs_pwork;
++struct xfs_mount;
++
++typedef int (*xfs_pwork_work_fn)(struct xfs_mount *mp, struct xfs_pwork *pwork);
++
++/*
++ * Parallel work coordination structure.
++ */
++struct xfs_pwork_ctl {
++	struct workqueue_struct	*wq;
++	struct xfs_mount	*mp;
++	xfs_pwork_work_fn	work_fn;
++	int			error;
++};
++
++/*
++ * Embed this parallel work control item inside your own work structure,
++ * then queue work with it.
++ */
++struct xfs_pwork {
++	struct work_struct	work;
++	struct xfs_pwork_ctl	*pctl;
++};
++
++#define XFS_PWORK_SINGLE_THREADED	{ .pctl = NULL }
++
++/* Have we been told to abort? */
++static inline bool
++xfs_pwork_ctl_want_abort(
++	struct xfs_pwork_ctl	*pctl)
++{
++	return pctl && pctl->error;
++}
++
++/* Have we been told to abort? */
++static inline bool
++xfs_pwork_want_abort(
++	struct xfs_pwork	*pwork)
++{
++	return xfs_pwork_ctl_want_abort(pwork->pctl);
++}
++
++int xfs_pwork_init(struct xfs_mount *mp, struct xfs_pwork_ctl *pctl,
++		xfs_pwork_work_fn work_fn, const char *tag,
++		unsigned int nr_threads);
++void xfs_pwork_queue(struct xfs_pwork_ctl *pctl, struct xfs_pwork *pwork);
++int xfs_pwork_destroy(struct xfs_pwork_ctl *pctl);
++unsigned int xfs_pwork_guess_datadev_parallelism(struct xfs_mount *mp);
++
++#endif /* __XFS_PWORK_H__ */
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 52e8ec0aa064..8004c931c86e 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -1304,7 +1304,7 @@ xfs_qm_quotacheck(
+ 		flags |= XFS_PQUOTA_CHKD;
+ 	}
  
-@@ -692,8 +671,8 @@ const struct address_space_operations xfs_address_space_operations = {
- 	.writepage		= xfs_vm_writepage,
- 	.writepages		= xfs_vm_writepages,
- 	.set_page_dirty		= iomap_set_page_dirty,
--	.releasepage		= xfs_vm_releasepage,
--	.invalidatepage		= xfs_vm_invalidatepage,
-+	.releasepage		= iomap_releasepage,
-+	.invalidatepage		= iomap_invalidatepage,
- 	.bmap			= xfs_vm_bmap,
- 	.direct_IO		= noop_direct_IO,
- 	.migratepage		= iomap_migrate_page,
+-	error = xfs_iwalk(mp, NULL, 0, xfs_qm_dqusage_adjust, 0, NULL);
++	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, NULL);
+ 	if (error)
+ 		goto error_return;
+ 
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index ad7f9be13087..b555e045e2f4 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -37,6 +37,9 @@ typedef struct xfs_param {
+ 	xfs_sysctl_val_t fstrm_timer;	/* Filestream dir-AG assoc'n timeout. */
+ 	xfs_sysctl_val_t eofb_timer;	/* Interval between eofb scan wakeups */
+ 	xfs_sysctl_val_t cowb_timer;	/* Interval between cowb scan wakeups */
++#ifdef DEBUG
++	xfs_sysctl_val_t pwork_threads;	/* Parallel workqueue thread count */
++#endif
+ } xfs_param_t;
+ 
+ /*
+@@ -82,6 +85,9 @@ enum {
+ extern xfs_param_t	xfs_params;
+ 
+ struct xfs_globals {
++#ifdef DEBUG
++	int	pwork_threads;		/* parallel workqueue threads */
++#endif
+ 	int	log_recovery_delay;	/* log recovery delay (secs) */
+ 	int	mount_delay;		/* mount setup delay (secs) */
+ 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index cabda13f3c64..a146a2e61be2 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -206,11 +206,51 @@ always_cow_show(
+ }
+ XFS_SYSFS_ATTR_RW(always_cow);
+ 
++#ifdef DEBUG
++/*
++ * Override how many threads the parallel work queue is allowed to create.
++ * This has to be a debug-only global (instead of an errortag) because one of
++ * the main users of parallel workqueues is mount time quotacheck.
++ */
++STATIC ssize_t
++pwork_threads_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
++{
++	int		ret;
++	int		val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	if (val < 0 || val > num_possible_cpus())
++		return -EINVAL;
++
++	xfs_globals.pwork_threads = val;
++
++	return count;
++}
++
++STATIC ssize_t
++pwork_threads_show(
++	struct kobject	*kobject,
++	char		*buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.pwork_threads);
++}
++XFS_SYSFS_ATTR_RW(pwork_threads);
++#endif /* DEBUG */
++
+ static struct attribute *xfs_dbg_attrs[] = {
+ 	ATTR_LIST(bug_on_assert),
+ 	ATTR_LIST(log_recovery_delay),
+ 	ATTR_LIST(mount_delay),
+ 	ATTR_LIST(always_cow),
++#ifdef DEBUG
++	ATTR_LIST(pwork_threads),
++#endif
+ 	NULL,
+ };
+ 
 diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 65c920554b96..c44dadb6faba 100644
+index f9bb1d50bc0e..658cbade1998 100644
 --- a/fs/xfs/xfs_trace.h
 +++ b/fs/xfs/xfs_trace.h
-@@ -1153,71 +1153,6 @@ DEFINE_RW_EVENT(xfs_file_buffered_write);
- DEFINE_RW_EVENT(xfs_file_direct_write);
- DEFINE_RW_EVENT(xfs_file_dax_write);
+@@ -3556,6 +3556,24 @@ TRACE_EVENT(xfs_iwalk_ag_rec,
+ 		  __entry->startino, __entry->freemask)
+ )
  
--DECLARE_EVENT_CLASS(xfs_page_class,
--	TP_PROTO(struct inode *inode, struct page *page, unsigned long off,
--		 unsigned int len),
--	TP_ARGS(inode, page, off, len),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(pgoff_t, pgoff)
--		__field(loff_t, size)
--		__field(unsigned long, offset)
--		__field(unsigned int, length)
--	),
--	TP_fast_assign(
--		__entry->dev = inode->i_sb->s_dev;
--		__entry->ino = XFS_I(inode)->i_ino;
--		__entry->pgoff = page_offset(page);
--		__entry->size = i_size_read(inode);
--		__entry->offset = off;
--		__entry->length = len;
--	),
--	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
--		  "length %x",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->pgoff,
--		  __entry->size,
--		  __entry->offset,
--		  __entry->length)
--)
--
--#define DEFINE_PAGE_EVENT(name)		\
--DEFINE_EVENT(xfs_page_class, name,	\
--	TP_PROTO(struct inode *inode, struct page *page, unsigned long off, \
--		 unsigned int len),	\
--	TP_ARGS(inode, page, off, len))
--DEFINE_PAGE_EVENT(xfs_writepage);
--DEFINE_PAGE_EVENT(xfs_releasepage);
--DEFINE_PAGE_EVENT(xfs_invalidatepage);
--
--DECLARE_EVENT_CLASS(xfs_readpage_class,
--	TP_PROTO(struct inode *inode, int nr_pages),
--	TP_ARGS(inode, nr_pages),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(int, nr_pages)
--	),
--	TP_fast_assign(
--		__entry->dev = inode->i_sb->s_dev;
--		__entry->ino = inode->i_ino;
--		__entry->nr_pages = nr_pages;
--	),
--	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->nr_pages)
--)
--
--#define DEFINE_READPAGE_EVENT(name)		\
--DEFINE_EVENT(xfs_readpage_class, name,	\
--	TP_PROTO(struct inode *inode, int nr_pages), \
--	TP_ARGS(inode, nr_pages))
--DEFINE_READPAGE_EVENT(xfs_vm_readpage);
--DEFINE_READPAGE_EVENT(xfs_vm_readpages);
--
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
- 		 int whichfork, struct xfs_bmbt_irec *irec),
-diff --git a/include/trace/events/iomap.h b/include/trace/events/iomap.h
-new file mode 100644
-index 000000000000..1da90e743e6e
---- /dev/null
-+++ b/include/trace/events/iomap.h
-@@ -0,0 +1,85 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2009-2019, Christoph Hellwig
-+ * All Rights Reserved.
-+ *
-+ * NOTE: none of these tracepoints shall be consider a stable kernel ABI
-+ * as they can change at any time.
-+ */
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM iomap
-+
-+#if !defined(_TRACE_IOMAP_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_IOMAP_H
-+
-+#include <linux/tracepoint.h>
-+
-+DECLARE_EVENT_CLASS(iomap_page_class,
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned long off,
-+		 unsigned int len),
-+	TP_ARGS(inode, page, off, len),
++TRACE_EVENT(xfs_pwork_init,
++	TP_PROTO(struct xfs_mount *mp, unsigned int nr_threads, pid_t pid),
++	TP_ARGS(mp, nr_threads, pid),
 +	TP_STRUCT__entry(
 +		__field(dev_t, dev)
-+		__field(u64, ino)
-+		__field(pgoff_t, pgoff)
-+		__field(loff_t, size)
-+		__field(unsigned long, offset)
-+		__field(unsigned int, length)
++		__field(unsigned int, nr_threads)
++		__field(pid_t, pid)
 +	),
 +	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->pgoff = page_offset(page);
-+		__entry->size = i_size_read(inode);
-+		__entry->offset = off;
-+		__entry->length = len;
++		__entry->dev = mp->m_super->s_dev;
++		__entry->nr_threads = nr_threads;
++		__entry->pid = pid;
 +	),
-+	TP_printk("dev %d:%d ino 0x%llx pgoff 0x%lx size 0x%llx offset %lx "
-+		  "length %x",
++	TP_printk("dev %d:%d nr_threads %u pid %u",
 +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->pgoff,
-+		  __entry->size,
-+		  __entry->offset,
-+		  __entry->length)
++		  __entry->nr_threads, __entry->pid)
 +)
 +
-+#define DEFINE_PAGE_EVENT(name)		\
-+DEFINE_EVENT(iomap_page_class, name,	\
-+	TP_PROTO(struct inode *inode, struct page *page, unsigned long off, \
-+		 unsigned int len),	\
-+	TP_ARGS(inode, page, off, len))
-+DEFINE_PAGE_EVENT(iomap_writepage);
-+DEFINE_PAGE_EVENT(iomap_releasepage);
-+DEFINE_PAGE_EVENT(iomap_invalidatepage);
-+
-+DECLARE_EVENT_CLASS(iomap_readpage_class,
-+	TP_PROTO(struct inode *inode, int nr_pages),
-+	TP_ARGS(inode, nr_pages),
-+	TP_STRUCT__entry(
-+		__field(dev_t, dev)
-+		__field(u64, ino)
-+		__field(int, nr_pages)
-+	),
-+	TP_fast_assign(
-+		__entry->dev = inode->i_sb->s_dev;
-+		__entry->ino = inode->i_ino;
-+		__entry->nr_pages = nr_pages;
-+	),
-+	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
-+		  MAJOR(__entry->dev), MINOR(__entry->dev),
-+		  __entry->ino,
-+		  __entry->nr_pages)
-+)
-+
-+#define DEFINE_READPAGE_EVENT(name)		\
-+DEFINE_EVENT(iomap_readpage_class, name,	\
-+	TP_PROTO(struct inode *inode, int nr_pages), \
-+	TP_ARGS(inode, nr_pages))
-+DEFINE_READPAGE_EVENT(iomap_readpage);
-+DEFINE_READPAGE_EVENT(iomap_readpages);
-+
-+#endif /* _TRACE_IOMAP_H */
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
--- 
-2.20.1
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
