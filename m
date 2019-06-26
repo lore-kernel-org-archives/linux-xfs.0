@@ -1,47 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42134 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726239AbfFZWKw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 26 Jun 2019 18:10:52 -0400
-Subject: Re: XFS Repair Error
-References: <CAFVd4NsBRm_pbySuSc4U=a=G4wiowZ3gFBooLEQZGZJe9V748g@mail.gmail.com>
- <CAJCQCtRD2g1c5uyDurLbt7tedPM8g6f1-74ECAW9cA1Do1yNBQ@mail.gmail.com>
- <CAFVd4NszdvQ0P4KPo9pRqtRRJxebhtMBqGVAZTmGAPBWe25nFg@mail.gmail.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <660f9958-b10a-3bf4-6910-87a811b2a7c3@sandeen.net>
-Date: Wed, 26 Jun 2019 17:10:49 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:60604 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726104AbfFZPcL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 11:32:11 -0400
+Date: Wed, 26 Jun 2019 08:30:36 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 1/5] vfs: create a generic checking and prep function for
+ FS_IOC_SETFLAGS
+Message-ID: <20190626153036.GD5171@magnolia>
+References: <156151632209.2283456.3592379873620132456.stgit@magnolia>
+ <156151633004.2283456.4175543089138173586.stgit@magnolia>
+ <20190626040202.GA32272@ZenIV.linux.org.uk>
 MIME-Version: 1.0
-In-Reply-To: <CAFVd4NszdvQ0P4KPo9pRqtRRJxebhtMBqGVAZTmGAPBWe25nFg@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190626040202.GA32272@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Rich Otero <rotero@editshare.com>, Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>, Steve Alves <steve.alves@editshare.com>
+To: Al Viro <viro@zeniv.linux.org.uk>
+Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-btrfs@vger.kernel.org
 
-On 6/26/19 4:30 PM, Rich Otero wrote:
->> This applies
->> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
+On Wed, Jun 26, 2019 at 05:02:02AM +0100, Al Viro wrote:
+> On Tue, Jun 25, 2019 at 07:32:10PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a generic function to check incoming FS_IOC_SETFLAGS flag values
+> > and later prepare the inode for updates so that we can standardize the
+> > implementations that follow ext4's flag values.
 > 
-> kernel version: 3.12.17
+> Change in efivarfs behaviour deserves a note.  I'm not saying it's wrong,
+> but behaviour is changed there - no-op FS_IOC_SETFLAGS used to fail
+> without CAP_LINUX_IMMUTABLE...
 
-~6 years old :(
+Ok, will do.  FWIW I wondered about fixing the orangefs usage too (using
+an unsigned long uval to hold the contents of an unsigned int coming
+from userspace) but ... that's their decision.
 
-> xfsprogs version: 3.1.7
-
-8 years old :(  So, bug reports are not really useful here ;)
-
-the filesystem seems to be a disaster, probably due to bad disks - xfs_repair can't repair bad hardware, of course.
-
-current xfs_repair completes for me without error, after spitting out over 450,000 lines of detected corruption issues.
-
-so my suggestions going forward would be:
-
-1) fix storage
-2) get newer admin tools for next time
-
-I appreciate the report, but not much to do w/ such an old version (and it seems already fixed in any case).
-
--Eric
+--D
