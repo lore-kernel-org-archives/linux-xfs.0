@@ -1,14 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41122 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbfFZUpo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:45:44 -0400
-Subject: [PATCH 15/15] xfs: poll waiting for quotacheck
+Received: from userp2130.oracle.com ([156.151.31.86]:49186 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726293AbfFZUpu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:45:50 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKi9Mv012384
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:45:49 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2t9brtcmty-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:45:48 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKjSw6069370
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:45:48 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2tat7d1gph-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:45:48 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5QKjlVc004623
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:45:47 GMT
+Subject: [PATCH 2/9] xfs: rename bulkstat functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:45:31 -0700
-Message-ID: <156158193119.495087.10155662236989159029.stgit@magnolia>
-In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
-References: <156158183697.495087.5371839759804528321.stgit@magnolia>
+Date: Wed, 26 Jun 2019 13:45:45 -0700
+Message-ID: <156158194549.495715.11820133364251169894.stgit@magnolia>
+In-Reply-To: <156158193320.495715.6675123051075804739.stgit@magnolia>
+References: <156158193320.495715.6675123051075804739.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -16,149 +33,166 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Create a pwork destroy function that uses polling instead of
-uninterruptible sleep to wait for work items to finish so that we can
-touch the softlockup watchdog.  IOWs, gross hack.
+Rename the bulkstat functions to 'fsbulkstat' so that they match the
+ioctl names.  We will be introducing a new set of bulkstat/inumbers
+ioctls soon, and it will be important to keep the names straight.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/xfs_iwalk.c |    3 +++
- fs/xfs/xfs_iwalk.h |    3 ++-
- fs/xfs/xfs_pwork.c |   19 +++++++++++++++++++
- fs/xfs/xfs_pwork.h |    3 +++
- fs/xfs/xfs_qm.c    |    2 +-
- 5 files changed, 28 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_ioctl.c   |   14 +++++++-------
+ fs/xfs/xfs_ioctl.h   |    5 +++--
+ fs/xfs/xfs_ioctl32.c |   18 +++++++++---------
+ 3 files changed, 19 insertions(+), 18 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index f0277369e896..80c139aed264 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -588,6 +588,7 @@ xfs_iwalk_threaded(
- 	xfs_ino_t		startino,
- 	xfs_iwalk_fn		iwalk_fn,
- 	unsigned int		inode_records,
-+	bool			polled,
- 	void			*data)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 34b38d8e8dc9..5e0476003763 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -724,7 +724,7 @@ xfs_ioc_space(
+ 
+ /* Return 0 on success or positive error */
+ int
+-xfs_bulkstat_one_fmt(
++xfs_fsbulkstat_one_fmt(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_bstat	*bstat)
  {
- 	struct xfs_pwork_ctl	pctl;
-@@ -619,6 +620,8 @@ xfs_iwalk_threaded(
- 		startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
+@@ -734,7 +734,7 @@ xfs_bulkstat_one_fmt(
+ }
+ 
+ int
+-xfs_inumbers_fmt(
++xfs_fsinumbers_fmt(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_inogrp	*igrp)
+ {
+@@ -744,7 +744,7 @@ xfs_inumbers_fmt(
+ }
+ 
+ STATIC int
+-xfs_ioc_bulkstat(
++xfs_ioc_fsbulkstat(
+ 	xfs_mount_t		*mp,
+ 	unsigned int		cmd,
+ 	void			__user *arg)
+@@ -794,16 +794,16 @@ xfs_ioc_bulkstat(
+ 	 */
+ 	if (cmd == XFS_IOC_FSINUMBERS) {
+ 		breq.startino = lastino ? lastino + 1 : 0;
+-		error = xfs_inumbers(&breq, xfs_inumbers_fmt);
++		error = xfs_inumbers(&breq, xfs_fsinumbers_fmt);
+ 		lastino = breq.startino - 1;
+ 	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE) {
+ 		breq.startino = lastino;
+ 		breq.icount = 1;
+-		error = xfs_bulkstat_one(&breq, xfs_bulkstat_one_fmt);
++		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
+ 		lastino = breq.startino;
+ 	} else {	/* XFS_IOC_FSBULKSTAT */
+ 		breq.startino = lastino ? lastino + 1 : 0;
+-		error = xfs_bulkstat(&breq, xfs_bulkstat_one_fmt);
++		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
+ 		lastino = breq.startino - 1;
  	}
  
-+	if (polled)
-+		xfs_pwork_poll(&pctl);
- 	return xfs_pwork_destroy(&pctl);
+@@ -1983,7 +1983,7 @@ xfs_file_ioctl(
+ 	case XFS_IOC_FSBULKSTAT_SINGLE:
+ 	case XFS_IOC_FSBULKSTAT:
+ 	case XFS_IOC_FSINUMBERS:
+-		return xfs_ioc_bulkstat(mp, cmd, arg);
++		return xfs_ioc_fsbulkstat(mp, cmd, arg);
+ 
+ 	case XFS_IOC_FSGEOMETRY_V1:
+ 		return xfs_ioc_fsgeometry(mp, arg, 3);
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index fb303eaa8863..cb34bc821201 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -81,7 +81,8 @@ struct xfs_ibulk;
+ struct xfs_bstat;
+ struct xfs_inogrp;
+ 
+-int xfs_bulkstat_one_fmt(struct xfs_ibulk *breq, const struct xfs_bstat *bstat);
+-int xfs_inumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
++int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
++			   const struct xfs_bstat *bstat);
++int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
+ 
+ #endif
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index d7c5153e1b61..9e5cf3988d3e 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -86,7 +86,7 @@ xfs_compat_growfs_rt_copyin(
  }
  
-diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
-index 22c31763a9b8..67462861680c 100644
---- a/fs/xfs/xfs_iwalk.h
-+++ b/fs/xfs/xfs_iwalk.h
-@@ -16,7 +16,8 @@ typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
- int xfs_iwalk(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t startino,
- 		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, void *data);
- int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
--		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, void *data);
-+		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, bool poll,
-+		void *data);
- 
- /* Walk all inode btree records in the filesystem starting from @startino. */
- typedef int (*xfs_inobt_walk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
-diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
-index 779596ed9432..562ace9d5eb8 100644
---- a/fs/xfs/xfs_pwork.c
-+++ b/fs/xfs/xfs_pwork.c
-@@ -13,6 +13,7 @@
- #include "xfs_trace.h"
- #include "xfs_sysctl.h"
- #include "xfs_pwork.h"
-+#include <linux/nmi.h>
- 
- /*
-  * Parallel Work Queue
-@@ -46,6 +47,8 @@ xfs_pwork_work(
- 	error = pctl->work_fn(pctl->mp, pwork);
- 	if (error && !pctl->error)
- 		pctl->error = error;
-+	if (atomic_dec_and_test(&pctl->nr_work))
-+		wake_up(&pctl->poll_wait);
- }
- 
- /*
-@@ -74,6 +77,8 @@ xfs_pwork_init(
- 	pctl->work_fn = work_fn;
- 	pctl->error = 0;
- 	pctl->mp = mp;
-+	atomic_set(&pctl->nr_work, 0);
-+	init_waitqueue_head(&pctl->poll_wait);
- 
- 	return 0;
- }
-@@ -86,6 +91,7 @@ xfs_pwork_queue(
+ STATIC int
+-xfs_inumbers_fmt_compat(
++xfs_fsinumbers_fmt_compat(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_inogrp	*igrp)
  {
- 	INIT_WORK(&pwork->work, xfs_pwork_work);
- 	pwork->pctl = pctl;
-+	atomic_inc(&pctl->nr_work);
- 	queue_work(pctl->wq, &pwork->work);
+@@ -101,7 +101,7 @@ xfs_inumbers_fmt_compat(
  }
  
-@@ -99,6 +105,19 @@ xfs_pwork_destroy(
- 	return pctl->error;
- }
+ #else
+-#define xfs_inumbers_fmt_compat xfs_inumbers_fmt
++#define xfs_fsinumbers_fmt_compat xfs_fsinumbers_fmt
+ #endif	/* BROKEN_X86_ALIGNMENT */
  
-+/*
-+ * Wait for the work to finish by polling completion status and touch the soft
-+ * lockup watchdog.  This is for callers such as mount which hold locks.
-+ */
-+void
-+xfs_pwork_poll(
-+	struct xfs_pwork_ctl	*pctl)
-+{
-+	while (wait_event_timeout(pctl->poll_wait,
-+				atomic_read(&pctl->nr_work) == 0, HZ) == 0)
-+		touch_softlockup_watchdog();
-+}
-+
- /*
-  * Return the amount of parallelism that the data device can handle, or 0 for
-  * no limit.
-diff --git a/fs/xfs/xfs_pwork.h b/fs/xfs/xfs_pwork.h
-index 99a9d210d49e..8133124cf3bb 100644
---- a/fs/xfs/xfs_pwork.h
-+++ b/fs/xfs/xfs_pwork.h
-@@ -18,6 +18,8 @@ struct xfs_pwork_ctl {
- 	struct workqueue_struct	*wq;
- 	struct xfs_mount	*mp;
- 	xfs_pwork_work_fn	work_fn;
-+	struct wait_queue_head	poll_wait;
-+	atomic_t		nr_work;
- 	int			error;
- };
+ STATIC int
+@@ -171,7 +171,7 @@ xfs_bstime_store_compat(
  
-@@ -53,6 +55,7 @@ int xfs_pwork_init(struct xfs_mount *mp, struct xfs_pwork_ctl *pctl,
- 		unsigned int nr_threads);
- void xfs_pwork_queue(struct xfs_pwork_ctl *pctl, struct xfs_pwork *pwork);
- int xfs_pwork_destroy(struct xfs_pwork_ctl *pctl);
-+void xfs_pwork_poll(struct xfs_pwork_ctl *pctl);
- unsigned int xfs_pwork_guess_datadev_parallelism(struct xfs_mount *mp);
+ /* Return 0 on success or positive error (to xfs_bulkstat()) */
+ STATIC int
+-xfs_bulkstat_one_fmt_compat(
++xfs_fsbulkstat_one_fmt_compat(
+ 	struct xfs_ibulk	*breq,
+ 	const struct xfs_bstat	*buffer)
+ {
+@@ -206,7 +206,7 @@ xfs_bulkstat_one_fmt_compat(
  
- #endif /* __XFS_PWORK_H__ */
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 8004c931c86e..8bb902125403 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1304,7 +1304,7 @@ xfs_qm_quotacheck(
- 		flags |= XFS_PQUOTA_CHKD;
+ /* copied from xfs_ioctl.c */
+ STATIC int
+-xfs_compat_ioc_bulkstat(
++xfs_compat_ioc_fsbulkstat(
+ 	xfs_mount_t		  *mp,
+ 	unsigned int		  cmd,
+ 	struct compat_xfs_fsop_bulkreq __user *p32)
+@@ -226,8 +226,8 @@ xfs_compat_ioc_bulkstat(
+ 	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
+ 	 * functions and structure size are the correct ones to use ...
+ 	 */
+-	inumbers_fmt_pf		inumbers_func = xfs_inumbers_fmt_compat;
+-	bulkstat_one_fmt_pf	bs_one_func = xfs_bulkstat_one_fmt_compat;
++	inumbers_fmt_pf		inumbers_func = xfs_fsinumbers_fmt_compat;
++	bulkstat_one_fmt_pf	bs_one_func = xfs_fsbulkstat_one_fmt_compat;
+ 
+ #ifdef CONFIG_X86_X32
+ 	if (in_x32_syscall()) {
+@@ -239,8 +239,8 @@ xfs_compat_ioc_bulkstat(
+ 		 * the data written out in compat layout will not match what
+ 		 * x32 userspace expects.
+ 		 */
+-		inumbers_func = xfs_inumbers_fmt;
+-		bs_one_func = xfs_bulkstat_one_fmt;
++		inumbers_func = xfs_fsinumbers_fmt;
++		bs_one_func = xfs_fsbulkstat_one_fmt;
  	}
+ #endif
  
--	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, NULL);
-+	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, true, NULL);
- 	if (error)
- 		goto error_return;
- 
+@@ -669,7 +669,7 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_FSBULKSTAT_32:
+ 	case XFS_IOC_FSBULKSTAT_SINGLE_32:
+ 	case XFS_IOC_FSINUMBERS_32:
+-		return xfs_compat_ioc_bulkstat(mp, cmd, arg);
++		return xfs_compat_ioc_fsbulkstat(mp, cmd, arg);
+ 	case XFS_IOC_FD_TO_HANDLE_32:
+ 	case XFS_IOC_PATH_TO_HANDLE_32:
+ 	case XFS_IOC_PATH_TO_FSHANDLE_32: {
