@@ -1,31 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49342 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:49784 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726293AbfFZUqE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:04 -0400
+        with ESMTP id S1726487AbfFZUqn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:43 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKhw9t012242
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2t9brtcmv1-1
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKhsv5012188
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:42 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2t9brtcmy4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKjt0X016120
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2t99f4nw24-1
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:42 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKja7i148522
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:41 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2t9accwepv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5QKk1iv007605
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:01 GMT
-Subject: [PATCH 4/9] xfs: introduce v5 inode group structure
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:41 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5QKkexE005140
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:40 GMT
+Subject: [PATCH 1/6] xfs: remove more ondisk directory corruption asserts
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:45:58 -0700
-Message-ID: <156158195888.495715.17662104546912391174.stgit@magnolia>
-In-Reply-To: <156158193320.495715.6675123051075804739.stgit@magnolia>
-References: <156158193320.495715.6675123051075804739.stgit@magnolia>
+Date: Wed, 26 Jun 2019 13:46:40 -0700
+Message-ID: <156158199994.495944.4584531696054696463.stgit@magnolia>
+In-Reply-To: <156158199378.495944.4088787757066517679.stgit@magnolia>
+References: <156158199378.495944.4088787757066517679.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -33,159 +33,82 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Introduce a new "v5" inode group structure that fixes the alignment
-and padding problems of the existing structure.
+Continue our game of replacing ASSERTs for corrupt ondisk metadata with
+EFSCORRUPTED returns.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_fs.h |   11 +++++++++++
- fs/xfs/xfs_ioctl.c     |    9 ++++++---
- fs/xfs/xfs_ioctl.h     |    2 +-
- fs/xfs/xfs_ioctl32.c   |   10 +++++++---
- fs/xfs/xfs_itable.c    |   14 +++++++++++++-
- fs/xfs/xfs_itable.h    |    4 +++-
- fs/xfs/xfs_ondisk.h    |    1 +
- 7 files changed, 42 insertions(+), 9 deletions(-)
+ fs/xfs/libxfs/xfs_da_btree.c  |   19 ++++++++++++-------
+ fs/xfs/libxfs/xfs_dir2_node.c |    3 ++-
+ 2 files changed, 14 insertions(+), 8 deletions(-)
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 132e364eb141..8b8fe78511fb 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -445,6 +445,17 @@ struct xfs_inogrp {
- 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
- };
+diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+index e2737e2ac2ae..c914ae763113 100644
+--- a/fs/xfs/libxfs/xfs_da_btree.c
++++ b/fs/xfs/libxfs/xfs_da_btree.c
+@@ -493,10 +493,8 @@ xfs_da3_split(
+ 	ASSERT(state->path.active == 0);
+ 	oldblk = &state->path.blk[0];
+ 	error = xfs_da3_root_split(state, oldblk, addblk);
+-	if (error) {
+-		addblk->bp = NULL;
+-		return error;	/* GROT: dir is inconsistent */
+-	}
++	if (error)
++		goto out;
  
-+/* New inumbers structure that reports v5 features and fixes padding issues */
-+struct xfs_inumbers {
-+	uint64_t	xi_startino;	/* starting inode number	*/
-+	uint64_t	xi_allocmask;	/* mask of allocated inodes	*/
-+	uint8_t		xi_alloccount;	/* # bits set in allocmask	*/
-+	uint8_t		xi_version;	/* version			*/
-+	uint8_t		xi_padding[6];	/* zero				*/
-+};
-+
-+#define XFS_INUMBERS_VERSION_V1	(1)
-+#define XFS_INUMBERS_VERSION_V5	(5)
+ 	/*
+ 	 * Update pointers to the node which used to be block 0 and just got
+@@ -511,7 +509,10 @@ xfs_da3_split(
+ 	 */
+ 	node = oldblk->bp->b_addr;
+ 	if (node->hdr.info.forw) {
+-		ASSERT(be32_to_cpu(node->hdr.info.forw) == addblk->blkno);
++		if (be32_to_cpu(node->hdr.info.forw) != addblk->blkno) {
++			error = -EFSCORRUPTED;
++			goto out;
++		}
+ 		node = addblk->bp->b_addr;
+ 		node->hdr.info.back = cpu_to_be32(oldblk->blkno);
+ 		xfs_trans_log_buf(state->args->trans, addblk->bp,
+@@ -520,15 +521,19 @@ xfs_da3_split(
+ 	}
+ 	node = oldblk->bp->b_addr;
+ 	if (node->hdr.info.back) {
+-		ASSERT(be32_to_cpu(node->hdr.info.back) == addblk->blkno);
++		if (be32_to_cpu(node->hdr.info.back) != addblk->blkno) {
++			error = -EFSCORRUPTED;
++			goto out;
++		}
+ 		node = addblk->bp->b_addr;
+ 		node->hdr.info.forw = cpu_to_be32(oldblk->blkno);
+ 		xfs_trans_log_buf(state->args->trans, addblk->bp,
+ 				  XFS_DA_LOGRANGE(node, &node->hdr.info,
+ 				  sizeof(node->hdr.info)));
+ 	}
++out:
+ 	addblk->bp = NULL;
+-	return 0;
++	return error;
+ }
  
  /*
-  * Error injection.
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 0b8c631d53dd..47580762e154 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -738,10 +738,13 @@ xfs_fsbulkstat_one_fmt(
+diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+index 16731d2d684b..f7f3fb458019 100644
+--- a/fs/xfs/libxfs/xfs_dir2_node.c
++++ b/fs/xfs/libxfs/xfs_dir2_node.c
+@@ -743,7 +743,8 @@ xfs_dir2_leafn_lookup_for_entry(
+ 	ents = dp->d_ops->leaf_ents_p(leaf);
  
- int
- xfs_fsinumbers_fmt(
--	struct xfs_ibulk	*breq,
--	const struct xfs_inogrp	*igrp)
-+	struct xfs_ibulk		*breq,
-+	const struct xfs_inumbers	*igrp)
- {
--	if (copy_to_user(breq->ubuffer, igrp, sizeof(*igrp)))
-+	struct xfs_inogrp		ig1;
-+
-+	xfs_inumbers_to_inogrp(&ig1, igrp);
-+	if (copy_to_user(breq->ubuffer, &ig1, sizeof(struct xfs_inogrp)))
- 		return -EFAULT;
- 	return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
- }
-diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-index 514d3028a134..654c0bb1bcf8 100644
---- a/fs/xfs/xfs_ioctl.h
-+++ b/fs/xfs/xfs_ioctl.h
-@@ -83,6 +83,6 @@ struct xfs_inogrp;
+ 	xfs_dir3_leaf_check(dp, bp);
+-	ASSERT(leafhdr.count > 0);
++	if (leafhdr.count <= 0)
++		return -EFSCORRUPTED;
  
- int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
- 			   const struct xfs_bulkstat *bstat);
--int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
-+int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inumbers *igrp);
- 
- #endif
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index a97612927f9e..41485e2ed431 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -87,10 +87,14 @@ xfs_compat_growfs_rt_copyin(
- 
- STATIC int
- xfs_fsinumbers_fmt_compat(
--	struct xfs_ibulk	*breq,
--	const struct xfs_inogrp	*igrp)
-+	struct xfs_ibulk		*breq,
-+	const struct xfs_inumbers	*ig)
- {
--	struct compat_xfs_inogrp __user *p32 = breq->ubuffer;
-+	struct compat_xfs_inogrp __user	*p32 = breq->ubuffer;
-+	struct xfs_inogrp		ig1;
-+	struct xfs_inogrp		*igrp = &ig1;
-+
-+	xfs_inumbers_to_inogrp(&ig1, ig);
- 
- 	if (put_user(igrp->xi_startino,   &p32->xi_startino) ||
- 	    put_user(igrp->xi_alloccount, &p32->xi_alloccount) ||
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 50c2bb8e13c4..745b04f59132 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -331,10 +331,11 @@ xfs_inumbers_walk(
- 	const struct xfs_inobt_rec_incore *irec,
- 	void			*data)
- {
--	struct xfs_inogrp	inogrp = {
-+	struct xfs_inumbers	inogrp = {
- 		.xi_startino	= XFS_AGINO_TO_INO(mp, agno, irec->ir_startino),
- 		.xi_alloccount	= irec->ir_count - irec->ir_freecount,
- 		.xi_allocmask	= ~irec->ir_free,
-+		.xi_version	= XFS_INUMBERS_VERSION_V5,
- 	};
- 	struct xfs_inumbers_chunk *ic = data;
- 	xfs_agino_t		agino;
-@@ -381,3 +382,14 @@ xfs_inumbers(
- 
- 	return error;
- }
-+
-+/* Convert an inumbers (v5) struct to a inogrp (v1) struct. */
-+void
-+xfs_inumbers_to_inogrp(
-+	struct xfs_inogrp		*ig1,
-+	const struct xfs_inumbers	*ig)
-+{
-+	ig1->xi_startino = ig->xi_startino;
-+	ig1->xi_alloccount = ig->xi_alloccount;
-+	ig1->xi_allocmask = ig->xi_allocmask;
-+}
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 60e259192056..fa9fb9104c7f 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -46,8 +46,10 @@ void xfs_bulkstat_to_bstat(struct xfs_mount *mp, struct xfs_bstat *bs1,
- 		const struct xfs_bulkstat *bstat);
- 
- typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
--		const struct xfs_inogrp *igrp);
-+		const struct xfs_inumbers *igrp);
- 
- int xfs_inumbers(struct xfs_ibulk *breq, inumbers_fmt_pf formatter);
-+void xfs_inumbers_to_inogrp(struct xfs_inogrp *ig1,
-+		const struct xfs_inumbers *ig);
- 
- #endif	/* __XFS_ITABLE_H__ */
-diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-index 0b4cdda68524..d8f941b4d51c 100644
---- a/fs/xfs/xfs_ondisk.h
-+++ b/fs/xfs/xfs_ondisk.h
-@@ -148,6 +148,7 @@ xfs_check_ondisk_structs(void)
- 	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
- 
- 	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
-+	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
- }
- 
- #endif /* __XFS_ONDISK_H */
+ 	/*
+ 	 * Look up the hash value in the leaf entries.
