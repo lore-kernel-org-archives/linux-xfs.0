@@ -1,65 +1,98 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-56.freemail.mail.aliyun.com ([115.124.30.56]:33101 "EHLO
-        out30-56.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727273AbfFEMVv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 08:21:51 -0400
-Date: Wed, 05 Jun 2019 20:21:44 +0800
-From: "Alvin Zheng" <Alvin@linux.alibaba.com>
-Reply-To: "Alvin Zheng" <Alvin@linux.alibaba.com>
-Message-ID: <f9a7b0c4-178a-4a7c-8ac6-aec79b06b810.Alvin@linux.alibaba.com>
-Subject: =?UTF-8?B?W2J1ZyByZXBvcnRdW3N0YWJsZV0geGZzdGVzdHM6Z2VuZXJpYy81MzggZmFpbGVkIG9uIHhm?=
-  =?UTF-8?B?cw==?=
+Received: from sandeen.net ([63.231.237.45]:50768 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726239AbfFZSQa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jun 2019 14:16:30 -0400
+Subject: Re: [PATCH] xfs: short circuit xfs_get_acl() if no acl is possible
+References: <35128e32-d69b-316e-c8d6-8f109646390d@redhat.com>
+ <20190508201033.GW5207@magnolia> <20190509130535.GB41691@bfoster>
+ <20190626181206.GH5171@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <9146eab8-06e7-e85f-d624-aa03f4046540@sandeen.net>
+Date: Wed, 26 Jun 2019 13:16:27 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+In-Reply-To: <20190626181206.GH5171@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "darrick.wong" <darrick.wong@oracle.com>, axboe <axboe@kernel.dk>, gregkh <gregkh@linuxfoundation.org>, linux-block <linux-block@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc: caspar <caspar@linux.alibaba.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, David Valin <dvalin@redhat.com>
 
-SGksCiAgSSB3YXMgdXNpbmcga2VybmVsIHY0LjE5LjQ4IGFuZCBmb3VuZCB0aGF0IGl0IGNhbm5v
-dCBwYXNzIHRoZSBnZW5lcmljLzUzOCBvbiB4ZnMuIFRoZSBlcnJvciBvdXRwdXQgaXMgYXMgZm9s
-bG93czoKCiAgRlNUWVAgICAgICAgICAtLSB4ZnMgKG5vbi1kZWJ1ZykKICBQTEFURk9STSAgICAg
-IC0tIExpbnV4L3g4Nl82NCBhbGludXgyLTYgNC4xOS40OAogIE1LRlNfT1BUSU9OUyAgLS0gLWYg
-LWJzaXplPTQwOTYgL2Rldi92ZGMKICBNT1VOVF9PUFRJT05TIC0tIC9kZXYvdmRjIC9tbnQvdGVz
-dGFyZWEvc2NyYQogIGdlbmVyaWMvNTM4IDBzIC4uLiAtIG91dHB1dCBtaXNtYXRjaCAoc2VlIC9y
-b290L3Vzci9sb2NhbC9zcmMveGZzdGVzdHMvcmVzdWx0cy8vZ2VuZXJpYy81Mzgub3V0LmJhZCkK
-ICAgICAgLS0tIHRlc3RzL2dlbmVyaWMvNTM4Lm91dCAgIDIwMTktMDUtMjcgMTM6NTc6MDYuNTA1
-NjY2NDY1ICswODAwCiAgICAgICsrKyAvcm9vdC91c3IvbG9jYWwvc3JjL3hmc3Rlc3RzL3Jlc3Vs
-dHMvL2dlbmVyaWMvNTM4Lm91dC5iYWQgICAgICAgMjAxOS0wNi0wNSAxNjo0MzoxNC43MDIwMDIz
-MjYgKzA4MDAKICAgICAgQEAgLTEsMiArMSwxMCBAQAogICAgICAgUUEgb3V0cHV0IGNyZWF0ZWQg
-YnkgNTM4CiAgICAgICtEYXRhIHZlcmlmaWNhdGlvbiBmYWlscwogICAgICArRmluZCBjb3JydXB0
-aW9uCiAgICAgICswMDAwMDAwMCAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAgMDAg
-MDAgMDAgMDAgMDAgIC4uLi4uLi4uLi4uLi4uLi4KICAgICAgKyoKICAgICAgKzAwMDAwMjAwICA1
-YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSA1YSAgWlpaWlpaWlpa
-WlpaWlpaWgogICAgICArMDAwMDIwMDAKICAgICAgLi4uCiAgICAgIChSdW4gJ2RpZmYgLXUgL3Jv
-b3QvdXNyL2xvY2FsL3NyYy94ZnN0ZXN0cy90ZXN0cy9nZW5lcmljLzUzOC5vdXQgL3Jvb3QvdXNy
-L2xvY2FsL3NyYy94ZnN0ZXN0cy9yZXN1bHRzLy9nZW5lcmljLzUzOC5vdXQuYmFkJyAgdG8gc2Vl
-IHRoZSBlbnRpcmUgZGlmZikKICBSYW46IGdlbmVyaWMvNTM4CiAgRmFpbHVyZXM6IGdlbmVyaWMv
-NTM4CiAgRmFpbGVkIDEgb2YgMSB0ZXN0cwogIApJIGFsc28gZm91bmQgdGhhdCB0aGUgbGF0ZXN0
-IGtlcm5lbCAodjUuMi4wLXJjMikgb2YgdXBzdHJlYW0gY2FuIHBhc3MgdGhlIGdlbmVyaWMvNTM4
-IHRlc3QuIFRoZXJlZm9yZSwgSSBiaXNlY3RlZCBhbmQgZm91bmQgdGhlIGZpcnN0IGdvb2QgY29t
-bWl0IGlzIDMxMTBmYzc5NjA2LiBUaGlzIGNvbW1pdCBhZGRzIHRoZSBoYXJkd2FyZSBxdWV1ZSBp
-bnRvIHRoZSBzb3J0IGZ1bmN0aW9uLiBCZXNpZGVzLCB0aGUgc29ydCBmdW5jdGlvbiByZXR1cm5z
-IGEgbmVnYXRpdmUgdmFsdWUgd2hlbiB0aGUgb2Zmc2V0IGFuZCBxdWV1ZSAoc29mdHdhcmUgYW5k
-IGhhcmR3YXJlKSBvZiB0d28gSS9PIHJlcXVlc3RzIGFyZSBzYW1lLiBJIHRoaW5rIHRoZSBzZWNv
-bmQgcGFydCBvZiB0aGUgY2hhbmdlIG1ha2Ugc2Vuc2VzLiBUaGUga2VybmVsIHNob3VsZCBub3Qg
-Y2hhbmdlIHRoZSByZWxhdGl2ZSBwb3NpdGlvbiBvZiB0d28gSS9PIHJlcXVlc3RzIHdoZW4gdGhl
-aXIgb2Zmc2V0IGFuZCBxdWV1ZSBhcmUgc2FtZS4gU28gSSBtYWRlIHRoZSBmb2xsb3dpbmcgY2hh
-bmdlcyBhbmQgbWVyZ2VkIGl0IGludG8gdGhlIGtlcm5lbCA0LjE5LjQ4LiBBZnRlciB0aGUgbW9k
-aWZpY2F0aW9uLCB3ZSBjYW4gcGFzcyB0aGUgZ2VuZXJpYy81MzggdGVzdCBvbiB4ZnMuIFRoZSBz
-YW1lIGNhc2UgY2FuIGJlIHBhc3NlZCBvbiBleHQ0LCBzaW5jZSBleHQ0IGhhcyBjb3JyZXNwb25k
-aW5nIGZpeCAwZGIyNDEyMmJkN2YgKCJleHQ0OiBmaXggZGF0YSBjb3JydXB0aW9uIGNhdXNlZCBi
-eSBvdmVybGFwcGluZyB1bmFsaWduZWQgYW5kIGFsaWduZWQgSU8iKS4gVGhvdWdoIEkgdGhpbmsg
-eGZzIHNob3VsZCBiZSByZXNwb25zaWJsZSBmb3IgdGhpcyBpc3N1ZSwgdGhlIGJsb2NrIGxheWVy
-IGNvZGUgYmVsb3cgaXMgYWxzbyBwcm9ibGVtYXRpYy4gQW55IGlkZWFzPwoKZGlmZiAtLWdpdCBh
-L2Jsb2NrL2Jsay1tcS5jIGIvYmxvY2svYmxrLW1xLmMKaW5kZXggNGU1NjNlZS4uYTczMDljZCAx
-MDA2NDQKLS0tIGEvYmxvY2svYmxrLW1xLmMKKysrIGIvYmxvY2svYmxrLW1xLmMKQEAgLTE2MTAs
-NyArMTYxMCw3IEBAIHN0YXRpYyBpbnQgcGx1Z19jdHhfY21wKHZvaWQgKnByaXYsIHN0cnVjdCBs
-aXN0X2hlYWQgKmEsIHN0cnVjdCBsaXN0X2hlYWQgKmIpCgogICAgICAgIHJldHVybiAhKHJxYS0+
-bXFfY3R4IDwgcnFiLT5tcV9jdHggfHwKICAgICAgICAgICAgICAgICAocnFhLT5tcV9jdHggPT0g
-cnFiLT5tcV9jdHggJiYKLSAgICAgICAgICAgICAgICAgYmxrX3JxX3BvcyhycWEpIDwgYmxrX3Jx
-X3BvcyhycWIpKSk7CisgICAgICAgICAgICAgICAgIGJsa19ycV9wb3MocnFhKSA8PSBibGtfcnFf
-cG9zKHJxYikpKTsKIH0KCiB2b2lkIGJsa19tcV9mbHVzaF9wbHVnX2xpc3Qoc3RydWN0IGJsa19w
-bHVnICpwbHVnLCBib29sIGZyb21fc2NoZWR1bGUpCgpCZXN0IHJlZ2FyZHMsCkFsdmlu
+
+
+On 6/26/19 1:12 PM, Darrick J. Wong wrote:
+> On Thu, May 09, 2019 at 09:05:39AM -0400, Brian Foster wrote:
+>> On Wed, May 08, 2019 at 01:10:33PM -0700, Darrick J. Wong wrote:
+>>> On Wed, May 08, 2019 at 02:28:09PM -0500, Eric Sandeen wrote:
+>>>> If there are no attributes on the inode, don't go through the
+>>>> cost of memory allocation and callling xfs_attr_get when we
+>>>> already know we'll just get -ENOATTR.
+>>>>
+>>>> Reported-by: David Valin <dvalin@redhat.com>
+>>>> Suggested-by: Dave Chinner <david@fromorbit.com>
+>>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>>>> ---
+>>>>
+>>>> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+>>>> index 8039e35147dd..b469b44e9e71 100644
+>>>> --- a/fs/xfs/xfs_acl.c
+>>>> +++ b/fs/xfs/xfs_acl.c
+>>>> @@ -132,6 +132,9 @@ xfs_get_acl(struct inode *inode, int type)
+>>>>  		BUG();
+>>>>  	}
+>>>>  
+>>>> +	if (!xfs_inode_hasattr(ip))
+>>>> +		return NULL;
+>>>
+>>> This isn't going to cause problems if someone's adding an ACL to the
+>>> inode at the same time, right?
+>>>
+>>> I'm assuming that's the case since we only would load inodes when
+>>> setting up a vfs inode but before any userspace can get its sticky
+>>> fingers all over the inode, but it sure would be nice to know that
+>>> for sure. :)
+>>>
+>>
+>> Hmm, that's a good question. At first I was thinking it wouldn't matter,
+>> but then I remembered the fairly recent issue around writing back an
+>> empty leaf buffer on format conversion a bit too early. That has me
+>> wondering if that would be an issue here as well. For example, suppose a
+>> non-empty local format attr fork is being converted to extent format due
+>> to a concurrent (and unrelated) xattr set. That involves
+>> xfs_attr_shortform_to_leaf() -> xfs_bmap_local_to_extents_empty(), which
+>> looks like it creates a transient empty fork state. Might
+>> xfs_inode_hasattr() catch that as a false negative here? If so, that
+>> would certainly be a problem if the existing xattr was the ACL the
+>> caller happens to be interested in. It might be prudent to surround this
+>> check with ILOCK_SHARED...
+> 
+> <shrug> But xfs_inode_hasattr checks forkoff > 0, so as long as the
+
+It does do that ...
+
+int
+xfs_inode_hasattr(
+        struct xfs_inode        *ip)
+{
+        if (!XFS_IFORK_Q(ip) ||
+
+
+> shortform to leaf conversion doesn't zero forkoff we'd be fine, I think.
+> AFAICT it doesn't...?
+
+but there's that pesky || part :
+
+            (ip->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+             ip->i_d.di_anextents == 0))
+                return 0;
+        return 1;
+}
+
+and I think it's the latter state Brian was concerned about?
+
+I can play with sandwiching it in a shared lock...
+
+-Eric
