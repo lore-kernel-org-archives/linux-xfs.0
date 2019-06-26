@@ -1,49 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54832 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726334AbfFZCgu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:36:50 -0400
-Subject: [PATCH v4 00/10] xfsprogs-5.1: fix various problems
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Jun 2019 19:36:45 -0700
-Message-ID: <156151660523.2286979.13694849827562044045.stgit@magnolia>
+Received: from mail-yw1-f52.google.com ([209.85.161.52]:33855 "EHLO
+        mail-yw1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbfFZUcP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:32:15 -0400
+Received: by mail-yw1-f52.google.com with SMTP id q128so75764ywc.1
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 13:32:14 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+From: Rich Otero <rotero@editshare.com>
+Date: Wed, 26 Jun 2019 16:32:02 -0400
+Message-ID: <CAFVd4NsBRm_pbySuSc4U=a=G4wiowZ3gFBooLEQZGZJe9V748g@mail.gmail.com>
+Subject: XFS Repair Error
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: sandeen@sandeen.net, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: Steve Alves <steve.alves@editshare.com>
 
-Hi all,
+I have an XFS filesystem of approximately 56 TB on a RAID that has
+been experiencing some disk failures. The disk problems seem to have
+led to filesystem corruption, so I attempted to repair the filesystem
+with `xfs_repair -L <device>`. Xfs_repair finished with a message
+stating that an error occurred and to report the bug.
 
-Latest respin of patches fixing various problems in xfsprogs.
+The requested files are in my Google Drive (links below):
 
-Patches 1-6 refactor all utilities to use common libfrog functions to
-retrieve the filesystem geometry, bulkstat, and inumbers.  The helpers
-will make it easier for newer userspace to fall back to older versions
-of ioctls.
+xfs-repair-sdb1.txt: This is the output from `xfs_repair -L
+/dev/sdb1`. I could only save as much as was still in my `screen`
+buffer, so the beginning of the repair may be missing.
+https://drive.google.com/file/d/1CTm4hUumqPLW6FUSnc2ykU-hzH1w0Yug/view?usp=sharing
 
-Patch 7 fixes libxfs-diff to handle files that are in libxfs/ in xfsprogs
-but still in fs/xfs/ in the kernel.
+xfs-meta-sdb1.bin.tar.gz: This tar archive contains the file generated
+by `xfs_metadump -g /dev/sdb1`.
+https://drive.google.com/file/d/160If17YDVdk5_hEhajlMpFcTvGeIqZsd/view?usp=sharing
 
-Patch 8 removes the nearly empty "convert.h" file from db/ to eliminate
-the possibility of confusion with include/convert.h.
-
-Patch 9 adds a new "btheight" command to xfs_db so that we can calculate
-the size of each level of a theoretical btree.
-
-Patch 10 moves the topology function declarations into a separate header
-file since they're no longer libxcmd functionality.
-
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=xfsprogs-5.1-fixes
+Regards,
+Rich Otero
+EditShare
+rotero@editshare.com
+617-782-0479
