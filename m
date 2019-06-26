@@ -1,81 +1,47 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:59919 "EHLO
-        wout2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726462AbfF0Df7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 23:35:59 -0400
-Message-ID: <224f3629edfceb8e36a91b9451366b80aaef15cd.camel@themaw.net>
-Subject: Re: [PATCH 03/10] xfs: mount-api - add xfs_parse_param()
-From: Ian Kent <raven@themaw.net>
-Date: Thu, 27 Jun 2019 11:35:53 +0800
-In-Reply-To: <6dc984b1eb55d201c95314d146fbeafb45d71c03.camel@themaw.net>
-References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
-         <156134511636.2519.2203014992522713286.stgit@fedora-28>
-         <20190624172632.GU5387@magnolia>
-         <6dc984b1eb55d201c95314d146fbeafb45d71c03.camel@themaw.net>
-Content-Type: text/plain; charset="UTF-8"
+Received: from sandeen.net ([63.231.237.45]:42134 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726239AbfFZWKw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jun 2019 18:10:52 -0400
+Subject: Re: XFS Repair Error
+References: <CAFVd4NsBRm_pbySuSc4U=a=G4wiowZ3gFBooLEQZGZJe9V748g@mail.gmail.com>
+ <CAJCQCtRD2g1c5uyDurLbt7tedPM8g6f1-74ECAW9cA1Do1yNBQ@mail.gmail.com>
+ <CAFVd4NszdvQ0P4KPo9pRqtRRJxebhtMBqGVAZTmGAPBWe25nFg@mail.gmail.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <660f9958-b10a-3bf4-6910-87a811b2a7c3@sandeen.net>
+Date: Wed, 26 Jun 2019 17:10:49 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <CAFVd4NszdvQ0P4KPo9pRqtRRJxebhtMBqGVAZTmGAPBWe25nFg@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
+To: Rich Otero <rotero@editshare.com>, Chris Murphy <lists@colorremedies.com>
+Cc: xfs list <linux-xfs@vger.kernel.org>, Steve Alves <steve.alves@editshare.com>
 
-On Tue, 2019-06-25 at 07:47 +0800, Ian Kent wrote:
-> +	default:
-> > > +		return invalf(fc, "XFS: unknown mount option [%s].", param-
-> > > > key);
-> > 
-> > What do these messages end up looking like in dmesg?
-> > 
-> > The reason I ask is that today when mount option processing fails we log
-> > the device name in the error message:
-> > 
-> > # mount /dev/sda1 /mnt -o gribblegronk
-> > [64010.878477] XFS (sda1): unknown mount option [gribblegronk].
-> > 
-> > AFAICT using invalf (instead of xfs_warn) means that now we don't report
-> > the device name, and all you'd get is:
-> > 
-> > "[64010.878477] XFS: unknown mount option [gribblegronk]."
-> > 
-> > which is not as helpful...
+On 6/26/19 4:30 PM, Rich Otero wrote:
+>> This applies
+>> http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
 > 
-> Yes, I thought that might be seen as a problem.
-> 
-> The device name was obtained from the super block in the the
-> original code and the super block isn't available at this
-> point.
-> 
-> Not sure what to do about it but I'll have a look.
-> 
+> kernel version: 3.12.17
 
-It turns out that I also made a mistake with the error string.
+~6 years old :(
 
-The above would actually print (something like):
-[64010.878477] xfs: XFS: unknown mount option [gribblegronk]."
+> xfsprogs version: 3.1.7
 
-I can change the case of the struct fs_parameter_description
-.name and leave out the "XFS" in the error string to fix that.
+8 years old :(  So, bug reports are not really useful here ;)
 
-But, because the parameter parsing is done before super block
-creation, there's no bdev to get a device name from.
+the filesystem seems to be a disaster, probably due to bad disks - xfs_repair can't repair bad hardware, of course.
 
-There should be a source (block device path) filed set in
-the fs context and I could dup the last component of that
-or walk the path to resolve symlinks and dup the path
-dentry d_name which should give (something like) the
-device name.
+current xfs_repair completes for me without error, after spitting out over 450,000 lines of detected corruption issues.
 
-But the printk %pg format is a bit different in the way
-it constructs the name from the bdev so it could well be
-different.
+so my suggestions going forward would be:
 
-That could lead to confusion too.
+1) fix storage
+2) get newer admin tools for next time
 
-Also, if an error is occurs in the VFS the message won't
-have the device name either.
+I appreciate the report, but not much to do w/ such an old version (and it seems already fixed in any case).
 
-So I'm not sure what to do about this one, suggestions?
-
-Ian
+-Eric
