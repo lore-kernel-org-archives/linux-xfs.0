@@ -1,32 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50024 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:49342 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726271AbfFZUrI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:47:08 -0400
+        with ESMTP id S1726293AbfFZUqE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:04 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKhrv8012166
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:47:07 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2t9brtcn0p-1
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKhw9t012242
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 GMT
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2t9brtcmv1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:47:07 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKjSwP069370
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:47:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2tat7d1h7t-1
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKjt0X016120
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2t99f4nw24-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:47:06 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5QKl5vJ017765
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:47:05 GMT
-Subject: [PATCH 5/6] xfs: only allocate memory for scrubbing attributes when
- we need it
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:02 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5QKk1iv007605
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:01 GMT
+Subject: [PATCH 4/9] xfs: introduce v5 inode group structure
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:47:04 -0700
-Message-ID: <156158202408.495944.3341471232105593997.stgit@magnolia>
-In-Reply-To: <156158199378.495944.4088787757066517679.stgit@magnolia>
-References: <156158199378.495944.4088787757066517679.stgit@magnolia>
+Date: Wed, 26 Jun 2019 13:45:58 -0700
+Message-ID: <156158195888.495715.17662104546912391174.stgit@magnolia>
+In-Reply-To: <156158193320.495715.6675123051075804739.stgit@magnolia>
+References: <156158193320.495715.6675123051075804739.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -34,179 +33,159 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In examining a flame graph of time spent running xfs_scrub on various
-filesystems, I noticed that we spent nearly 7% of the total runtime on
-allocating a zeroed 65k buffer for every SCRUB_TYPE_XATTR invocation.
-We do this even if none of the attribute values were anywhere near 64k
-in size, even if there were no attribute blocks to check space on, and
-even if it just turns out there are no attributes at all.
-
-Therefore, rearrange the xattr buffer setup code to support reallocating
-with a bigger buffer and redistribute the callers of that function so
-that we only allocate memory just prior to needing it, and only allocate
-as much as we need.  If we can't get memory with the ILOCK held we'll
-bail out with EDEADLOCK which will allocate the maximum memory.
+Introduce a new "v5" inode group structure that fixes the alignment
+and padding problems of the existing structure.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/attr.c |   67 ++++++++++++++++++++++++++++++++++++++++++++-------
- fs/xfs/scrub/attr.h |    6 ++++-
- 2 files changed, 63 insertions(+), 10 deletions(-)
+ fs/xfs/libxfs/xfs_fs.h |   11 +++++++++++
+ fs/xfs/xfs_ioctl.c     |    9 ++++++---
+ fs/xfs/xfs_ioctl.h     |    2 +-
+ fs/xfs/xfs_ioctl32.c   |   10 +++++++---
+ fs/xfs/xfs_itable.c    |   14 +++++++++++++-
+ fs/xfs/xfs_itable.h    |    4 +++-
+ fs/xfs/xfs_ondisk.h    |    1 +
+ 7 files changed, 42 insertions(+), 9 deletions(-)
 
 
-diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
-index c20b6da1db84..09081d8ab34b 100644
---- a/fs/xfs/scrub/attr.c
-+++ b/fs/xfs/scrub/attr.c
-@@ -31,13 +31,19 @@
- #include <linux/posix_acl_xattr.h>
- #include <linux/xattr.h>
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 132e364eb141..8b8fe78511fb 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -445,6 +445,17 @@ struct xfs_inogrp {
+ 	__u64		xi_allocmask;	/* mask of allocated inodes	*/
+ };
  
--/* Allocate enough memory to hold an attr value and attr block bitmaps. */
-+/*
-+ * Allocate enough memory to hold an attr value and attr block bitmaps,
-+ * reallocating the buffer if necessary.  Buffer contents are not preserved
-+ * across a reallocation.
-+ */
++/* New inumbers structure that reports v5 features and fixes padding issues */
++struct xfs_inumbers {
++	uint64_t	xi_startino;	/* starting inode number	*/
++	uint64_t	xi_allocmask;	/* mask of allocated inodes	*/
++	uint8_t		xi_alloccount;	/* # bits set in allocmask	*/
++	uint8_t		xi_version;	/* version			*/
++	uint8_t		xi_padding[6];	/* zero				*/
++};
++
++#define XFS_INUMBERS_VERSION_V1	(1)
++#define XFS_INUMBERS_VERSION_V5	(5)
+ 
+ /*
+  * Error injection.
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 0b8c631d53dd..47580762e154 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -738,10 +738,13 @@ xfs_fsbulkstat_one_fmt(
+ 
  int
- xchk_setup_xattr_buf(
- 	struct xfs_scrub	*sc,
--	size_t			value_size)
-+	size_t			value_size,
-+	xfs_km_flags_t		flags)
+ xfs_fsinumbers_fmt(
+-	struct xfs_ibulk	*breq,
+-	const struct xfs_inogrp	*igrp)
++	struct xfs_ibulk		*breq,
++	const struct xfs_inumbers	*igrp)
  {
- 	size_t			sz;
-+	struct xchk_xattr_buf	*ab = sc->buf;
- 
- 	/*
- 	 * We need enough space to read an xattr value from the file or enough
-@@ -47,10 +53,23 @@ xchk_setup_xattr_buf(
- 	sz = 3 * sizeof(long) * BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
- 	sz = max_t(size_t, sz, value_size);
- 
--	sc->buf = kmem_zalloc_large(sz, KM_SLEEP);
--	if (!sc->buf)
-+	/*
-+	 * If there's already a buffer, figure out if we need to reallocate it
-+	 * to accomdate a larger size.
-+	 */
-+	if (ab) {
-+		if (sz <= ab->sz)
-+			return 0;
-+		kmem_free(ab);
-+		sc->buf = NULL;
-+	}
+-	if (copy_to_user(breq->ubuffer, igrp, sizeof(*igrp)))
++	struct xfs_inogrp		ig1;
 +
-+	ab = kmem_zalloc_large(sizeof(*ab) + sz, flags);
-+	if (!ab)
- 		return -ENOMEM;
- 
-+	ab->sz = sz;
-+	sc->buf = ab;
- 	return 0;
++	xfs_inumbers_to_inogrp(&ig1, igrp);
++	if (copy_to_user(breq->ubuffer, &ig1, sizeof(struct xfs_inogrp)))
+ 		return -EFAULT;
+ 	return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
  }
+diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+index 514d3028a134..654c0bb1bcf8 100644
+--- a/fs/xfs/xfs_ioctl.h
++++ b/fs/xfs/xfs_ioctl.h
+@@ -83,6 +83,6 @@ struct xfs_inogrp;
  
-@@ -62,9 +81,16 @@ xchk_setup_xattr(
+ int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
+ 			   const struct xfs_bulkstat *bstat);
+-int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
++int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inumbers *igrp);
+ 
+ #endif
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index a97612927f9e..41485e2ed431 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -87,10 +87,14 @@ xfs_compat_growfs_rt_copyin(
+ 
+ STATIC int
+ xfs_fsinumbers_fmt_compat(
+-	struct xfs_ibulk	*breq,
+-	const struct xfs_inogrp	*igrp)
++	struct xfs_ibulk		*breq,
++	const struct xfs_inumbers	*ig)
  {
- 	int			error;
+-	struct compat_xfs_inogrp __user *p32 = breq->ubuffer;
++	struct compat_xfs_inogrp __user	*p32 = breq->ubuffer;
++	struct xfs_inogrp		ig1;
++	struct xfs_inogrp		*igrp = &ig1;
++
++	xfs_inumbers_to_inogrp(&ig1, ig);
  
--	error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX);
--	if (error)
--		return error;
-+	/*
-+	 * We failed to get memory while checking attrs, so this time try to
-+	 * get all the memory we're ever going to need.  Allocate the buffer
-+	 * without the inode lock held, which means we can sleep.
-+	 */
-+	if (sc->flags & XCHK_TRY_HARDER) {
-+		error = xchk_setup_xattr_buf(sc, XATTR_SIZE_MAX, KM_SLEEP);
-+		if (error)
-+			return error;
-+	}
+ 	if (put_user(igrp->xi_startino,   &p32->xi_startino) ||
+ 	    put_user(igrp->xi_alloccount, &p32->xi_alloccount) ||
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index 50c2bb8e13c4..745b04f59132 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -331,10 +331,11 @@ xfs_inumbers_walk(
+ 	const struct xfs_inobt_rec_incore *irec,
+ 	void			*data)
+ {
+-	struct xfs_inogrp	inogrp = {
++	struct xfs_inumbers	inogrp = {
+ 		.xi_startino	= XFS_AGINO_TO_INO(mp, agno, irec->ir_startino),
+ 		.xi_alloccount	= irec->ir_count - irec->ir_freecount,
+ 		.xi_allocmask	= ~irec->ir_free,
++		.xi_version	= XFS_INUMBERS_VERSION_V5,
+ 	};
+ 	struct xfs_inumbers_chunk *ic = data;
+ 	xfs_agino_t		agino;
+@@ -381,3 +382,14 @@ xfs_inumbers(
  
- 	return xchk_setup_inode_contents(sc, ip, 0);
+ 	return error;
  }
-@@ -115,6 +141,19 @@ xchk_xattr_listent(
- 		return;
- 	}
- 
-+	/*
-+	 * Try to allocate enough memory to extrat the attr value.  If that
-+	 * doesn't work, we overload the seen_enough variable to convey
-+	 * the error message back to the main scrub function.
-+	 */
-+	error = xchk_setup_xattr_buf(sx->sc, valuelen, KM_MAYFAIL);
-+	if (error == -ENOMEM)
-+		error = -EDEADLOCK;
-+	if (error) {
-+		context->seen_enough = error;
-+		return;
-+	}
 +
- 	args.flags = ATTR_KERNOTIME;
- 	if (flags & XFS_ATTR_ROOT)
- 		args.flags |= ATTR_ROOT;
-@@ -128,7 +167,7 @@ xchk_xattr_listent(
- 	args.hashval = xfs_da_hashname(args.name, args.namelen);
- 	args.trans = context->tp;
- 	args.value = xchk_xattr_valuebuf(sx->sc);
--	args.valuelen = XATTR_SIZE_MAX;
-+	args.valuelen = valuelen;
++/* Convert an inumbers (v5) struct to a inogrp (v1) struct. */
++void
++xfs_inumbers_to_inogrp(
++	struct xfs_inogrp		*ig1,
++	const struct xfs_inumbers	*ig)
++{
++	ig1->xi_startino = ig->xi_startino;
++	ig1->xi_alloccount = ig->xi_alloccount;
++	ig1->xi_allocmask = ig->xi_allocmask;
++}
+diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+index 60e259192056..fa9fb9104c7f 100644
+--- a/fs/xfs/xfs_itable.h
++++ b/fs/xfs/xfs_itable.h
+@@ -46,8 +46,10 @@ void xfs_bulkstat_to_bstat(struct xfs_mount *mp, struct xfs_bstat *bs1,
+ 		const struct xfs_bulkstat *bstat);
  
- 	error = xfs_attr_get_ilocked(context->dp, &args);
- 	if (error == -EEXIST)
-@@ -281,16 +320,26 @@ xchk_xattr_block(
- 	struct xfs_attr_leafblock	*leaf = bp->b_addr;
- 	struct xfs_attr_leaf_entry	*ent;
- 	struct xfs_attr_leaf_entry	*entries;
--	unsigned long			*usedmap = xchk_xattr_usedmap(ds->sc);
-+	unsigned long			*usedmap;
- 	char				*buf_end;
- 	size_t				off;
- 	__u32				last_hashval = 0;
- 	unsigned int			usedbytes = 0;
- 	unsigned int			hdrsize;
- 	int				i;
-+	int				error;
+ typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
+-		const struct xfs_inogrp *igrp);
++		const struct xfs_inumbers *igrp);
  
- 	if (*last_checked == blk->blkno)
- 		return 0;
-+
-+	/* Allocate memory for block usage checking. */
-+	error = xchk_setup_xattr_buf(ds->sc, 0, KM_MAYFAIL);
-+	if (error == -ENOMEM)
-+		return -EDEADLOCK;
-+	if (error)
-+		return error;
-+	usedmap = xchk_xattr_usedmap(ds->sc);
-+
- 	*last_checked = blk->blkno;
- 	bitmap_zero(usedmap, mp->m_attr_geo->blksize);
+ int xfs_inumbers(struct xfs_ibulk *breq, inumbers_fmt_pf formatter);
++void xfs_inumbers_to_inogrp(struct xfs_inogrp *ig1,
++		const struct xfs_inumbers *ig);
  
-diff --git a/fs/xfs/scrub/attr.h b/fs/xfs/scrub/attr.h
-index 27e879aeaafc..13a1d2e8424d 100644
---- a/fs/xfs/scrub/attr.h
-+++ b/fs/xfs/scrub/attr.h
-@@ -10,6 +10,9 @@
-  * Temporary storage for online scrub and repair of extended attributes.
-  */
- struct xchk_xattr_buf {
-+	/* Size of @buf, in bytes. */
-+	size_t			sz;
-+
- 	/*
- 	 * Memory buffer -- either used for extracting attr values while
- 	 * walking the attributes; or for computing attr block bitmaps when
-@@ -62,6 +65,7 @@ xchk_xattr_dstmap(
- 			BITS_TO_LONGS(sc->mp->m_attr_geo->blksize);
+ #endif	/* __XFS_ITABLE_H__ */
+diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+index 0b4cdda68524..d8f941b4d51c 100644
+--- a/fs/xfs/xfs_ondisk.h
++++ b/fs/xfs/xfs_ondisk.h
+@@ -148,6 +148,7 @@ xfs_check_ondisk_structs(void)
+ 	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+ 
+ 	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
++	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
  }
  
--int xchk_setup_xattr_buf(struct xfs_scrub *sc, size_t value_size);
-+int xchk_setup_xattr_buf(struct xfs_scrub *sc, size_t value_size,
-+		xfs_km_flags_t flags);
- 
- #endif	/* __XFS_SCRUB_ATTR_H__ */
+ #endif /* __XFS_ONDISK_H */
