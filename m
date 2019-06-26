@@ -1,40 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60604 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726104AbfFZPcL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 11:32:11 -0400
-Date: Wed, 26 Jun 2019 08:30:36 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/5] vfs: create a generic checking and prep function for
- FS_IOC_SETFLAGS
-Message-ID: <20190626153036.GD5171@magnolia>
-References: <156151632209.2283456.3592379873620132456.stgit@magnolia>
- <156151633004.2283456.4175543089138173586.stgit@magnolia>
- <20190626040202.GA32272@ZenIV.linux.org.uk>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:51678 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726239AbfFZWVP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 18:21:15 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id E47C7289D7
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 22:21:14 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 203999] [xfstests xfs/442] kernel BUG at mm/swap_state.c:170!
+ RIP: 0010:__delete_from_swap_cache+0x45a/0x6c0
+Date: Wed, 26 Jun 2019 22:21:13 +0000
+Message-ID: <bug-203999-201763-8B3EHugRuG@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-203999-201763@https.bugzilla.kernel.org/>
+References: <bug-203999-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190626040202.GA32272@ZenIV.linux.org.uk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Al Viro <viro@zeniv.linux.org.uk>
-Cc: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, Christoph Hellwig <hch@lst.de>, linux-btrfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jun 26, 2019 at 05:02:02AM +0100, Al Viro wrote:
-> On Tue, Jun 25, 2019 at 07:32:10PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Create a generic function to check incoming FS_IOC_SETFLAGS flag values
-> > and later prepare the inode for updates so that we can standardize the
-> > implementations that follow ext4's flag values.
-> 
-> Change in efivarfs behaviour deserves a note.  I'm not saying it's wrong,
-> but behaviour is changed there - no-op FS_IOC_SETFLAGS used to fail
-> without CAP_LINUX_IMMUTABLE...
+https://bugzilla.kernel.org/show_bug.cgi?id=203999
 
-Ok, will do.  FWIW I wondered about fixing the orangefs usage too (using
-an unsigned long uval to hold the contents of an unsigned int coming
-from userspace) but ... that's their decision.
+Eric Sandeen (sandeen@sandeen.net) changed:
 
---D
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sandeen@sandeen.net
+
+--- Comment #1 from Eric Sandeen (sandeen@sandeen.net) ---
+It seems unlikely that this is an xfs problem.
+
+It's also been reported upstream at https://lkml.org/lkml/2019/5/29/1
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
