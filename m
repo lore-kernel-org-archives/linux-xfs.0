@@ -1,13 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:52552 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:52960 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726537AbfFZCdU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:33:20 -0400
-Subject: [PATCH 3/5] vfs: teach vfs_ioc_fssetxattr_check to check project id
- info
+        with ESMTP id S1726753AbfFZCdy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:33:54 -0400
+Subject: [PATCH 4/5] vfs: teach vfs_ioc_fssetxattr_check to check extent
+ size hints
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 25 Jun 2019 19:32:26 -0700
-Message-ID: <156151634648.2283456.13503181576369039474.stgit@magnolia>
+Date: Tue, 25 Jun 2019 19:32:34 -0700
+Message-ID: <156151635447.2283456.10360232786079330374.stgit@magnolia>
 In-Reply-To: <156151632209.2283456.3592379873620132456.stgit@magnolia>
 References: <156151632209.2283456.3592379873620132456.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,155 +21,148 @@ Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vg
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Standardize the project id checks for FSSETXATTR.
+Move the extent size hint checks that aren't xfs-specific to the vfs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/ext4/ioctl.c    |   27 ---------------------------
- fs/f2fs/file.c     |   27 ---------------------------
- fs/inode.c         |   13 +++++++++++++
- fs/xfs/xfs_ioctl.c |   15 ---------------
- 4 files changed, 13 insertions(+), 69 deletions(-)
+ fs/inode.c         |   18 +++++++++++++
+ fs/xfs/xfs_ioctl.c |   70 ++++++++++++++++++++++------------------------------
+ 2 files changed, 47 insertions(+), 41 deletions(-)
 
 
-diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
-index ebcc173d1e7d..1e88c3af9a8d 100644
---- a/fs/ext4/ioctl.c
-+++ b/fs/ext4/ioctl.c
-@@ -697,30 +697,6 @@ static long ext4_ioctl_group_add(struct file *file,
- 	return err;
- }
- 
--static int ext4_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
--{
--	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
--	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
--
--	if (__kprojid_val(EXT4_I(inode)->i_projid) != fa->fsx_projid)
--		return -EINVAL;
--
--	if (ext4_test_inode_flag(inode, EXT4_INODE_PROJINHERIT)) {
--		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
--			return -EINVAL;
--	} else {
--		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
--			return -EINVAL;
--	}
--
--	return 0;
--}
--
- static void ext4_fill_fsxattr(struct inode *inode, struct fsxattr *fa)
- {
- 	struct ext4_inode_info *ei = EXT4_I(inode);
-@@ -1133,9 +1109,6 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
- 
- 		inode_lock(inode);
- 		ext4_fill_fsxattr(inode, &old_fa);
--		err = ext4_ioctl_check_project(inode, &fa);
--		if (err)
--			goto out;
- 		err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
- 		if (err)
- 			goto out;
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index 555b970f7945..d6ed319388d6 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -2797,30 +2797,6 @@ static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
- 	return 0;
- }
- 
--static int f2fs_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
--{
--	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
--	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
--
--	if (__kprojid_val(F2FS_I(inode)->i_projid) != fa->fsx_projid)
--		return -EINVAL;
--
--	if (F2FS_I(inode)->i_flags & F2FS_PROJINHERIT_FL) {
--		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
--			return -EINVAL;
--	} else {
--		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
--			return -EINVAL;
--	}
--
--	return 0;
--}
--
- static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- {
- 	struct inode *inode = file_inode(filp);
-@@ -2848,9 +2824,6 @@ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- 		return err;
- 
- 	inode_lock(inode);
--	err = f2fs_ioctl_check_project(inode, &fa);
--	if (err)
--		goto out;
- 
- 	f2fs_fill_fsxattr(inode, &old_fa);
- 	err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
 diff --git a/fs/inode.c b/fs/inode.c
-index fdd6c5d3e48d..c4f8fb16f633 100644
+index c4f8fb16f633..670d5408d022 100644
 --- a/fs/inode.c
 +++ b/fs/inode.c
-@@ -2234,6 +2234,19 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
+@@ -2247,6 +2247,24 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
+ 			return -EINVAL;
+ 	}
  
-+	/*
-+	 * Project Quota ID state is only allowed to change from within the init
-+	 * namespace. Enforce that restriction only if we are trying to change
-+	 * the quota ID state. Everything else is allowed in user namespaces.
-+	 */
-+	if (current_user_ns() != &init_user_ns) {
-+		if (old_fa->fsx_projid != fa->fsx_projid)
-+			return -EINVAL;
-+		if ((old_fa->fsx_xflags ^ fa->fsx_xflags) &
-+				FS_XFLAG_PROJINHERIT)
-+			return -EINVAL;
-+	}
++	/* Check extent size hints. */
++	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(inode->i_mode))
++		return -EINVAL;
++
++	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
++			!S_ISDIR(inode->i_mode))
++		return -EINVAL;
++
++	if ((fa->fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
++	    !S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
++		return -EINVAL;
++
++	/* Extent size hints of zero turn off the flags. */
++	if (fa->fsx_extsize == 0)
++		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
++	if (fa->fsx_cowextsize == 0)
++		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
 +
  	return 0;
  }
  EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 08ec1e458865..d8c02b9905a7 100644
+index d8c02b9905a7..011657bd50ca 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1299,21 +1299,6 @@ xfs_ioctl_setattr_check_projid(
- 	if (fa->fsx_projid > (uint16_t)-1 &&
- 	    !xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
+@@ -1201,39 +1201,31 @@ xfs_ioctl_setattr_check_extsize(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
+-
+-	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(VFS_I(ip)->i_mode))
+-		return -EINVAL;
+-
+-	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
+-	    !S_ISDIR(VFS_I(ip)->i_mode))
+-		return -EINVAL;
++	xfs_extlen_t		size;
++	xfs_fsblock_t		extsize_fsb;
+ 
+ 	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_d.di_nextents &&
+ 	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
  		return -EINVAL;
+ 
+-	if (fa->fsx_extsize != 0) {
+-		xfs_extlen_t    size;
+-		xfs_fsblock_t   extsize_fsb;
 -
--	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
--	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
--
--	if (xfs_get_projid(ip) != fa->fsx_projid)
--		return -EINVAL;
--	if ((fa->fsx_xflags & FS_XFLAG_PROJINHERIT) !=
--	    (ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT))
--		return -EINVAL;
--
+-		extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
+-		if (extsize_fsb > MAXEXTLEN)
+-			return -EINVAL;
++	if (fa->fsx_extsize == 0)
++		return 0;
+ 
+-		if (XFS_IS_REALTIME_INODE(ip) ||
+-		    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
+-			size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
+-		} else {
+-			size = mp->m_sb.sb_blocksize;
+-			if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
+-				return -EINVAL;
+-		}
++	extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
++	if (extsize_fsb > MAXEXTLEN)
++		return -EINVAL;
+ 
+-		if (fa->fsx_extsize % size)
++	if (XFS_IS_REALTIME_INODE(ip) ||
++	    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
++		size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
++	} else {
++		size = mp->m_sb.sb_blocksize;
++		if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
+ 			return -EINVAL;
+-	} else
+-		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
++	}
++
++	if (fa->fsx_extsize % size)
++		return -EINVAL;
+ 
  	return 0;
  }
+@@ -1259,6 +1251,8 @@ xfs_ioctl_setattr_check_cowextsize(
+ 	struct fsxattr		*fa)
+ {
+ 	struct xfs_mount	*mp = ip->i_mount;
++	xfs_extlen_t		size;
++	xfs_fsblock_t		cowextsize_fsb;
  
+ 	if (!(fa->fsx_xflags & FS_XFLAG_COWEXTSIZE))
+ 		return 0;
+@@ -1267,25 +1261,19 @@ xfs_ioctl_setattr_check_cowextsize(
+ 	    ip->i_d.di_version != 3)
+ 		return -EINVAL;
+ 
+-	if (!S_ISREG(VFS_I(ip)->i_mode) && !S_ISDIR(VFS_I(ip)->i_mode))
+-		return -EINVAL;
+-
+-	if (fa->fsx_cowextsize != 0) {
+-		xfs_extlen_t    size;
+-		xfs_fsblock_t   cowextsize_fsb;
++	if (fa->fsx_cowextsize == 0)
++		return 0;
+ 
+-		cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
+-		if (cowextsize_fsb > MAXEXTLEN)
+-			return -EINVAL;
++	cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
++	if (cowextsize_fsb > MAXEXTLEN)
++		return -EINVAL;
+ 
+-		size = mp->m_sb.sb_blocksize;
+-		if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
+-			return -EINVAL;
++	size = mp->m_sb.sb_blocksize;
++	if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
++		return -EINVAL;
+ 
+-		if (fa->fsx_cowextsize % size)
+-			return -EINVAL;
+-	} else
+-		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
++	if (fa->fsx_cowextsize % size)
++		return -EINVAL;
+ 
+ 	return 0;
+ }
