@@ -1,38 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52018 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726382AbfF0Ksp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:48:45 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: lift the xfs writepage code into iomap v2
-Date: Thu, 27 Jun 2019 12:48:23 +0200
-Message-Id: <20190627104836.25446-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:53740 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726227AbfFZUKV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:10:21 -0400
+Date: Wed, 26 Jun 2019 13:09:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 3/3] iomap: fix page_done callback for short writes
+Message-ID: <20190626200946.GK5171@magnolia>
+References: <20190626132335.14809-1-agruenba@redhat.com>
+ <20190626132335.14809-3-agruenba@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190626132335.14809-3-agruenba@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com, linux-xfs@vger.kernel.org
 
-Hi all,
+On Wed, Jun 26, 2019 at 03:23:35PM +0200, Andreas Gruenbacher wrote:
+> When we truncate a short write to have it retried, pass the truncated
+> length to the page_done callback instead of the full length.
+> 
+> Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
 
-this series cleans up the xfs writepage code and then lifts it to
-fs/iomap.c so that it could be use by other file system.  I've been
-wanting to this for a while so that I could eventually convert gfs2
-over to it, but I never got to it.  Now Damien has a new zonefs
-file system for semi-raw access to zoned block devices that would
-like to use the iomap code instead of reinventing it, so I finally
-had to do the work.
+LGTM,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-This new version should have addressed all comments from the review,
-except that I haven't split iomap.c, which is a little too invasive
-with other pending changes to the file.  I do however offer to submit
-a split right at the end of the merge window when it is least invasive.
+--D
 
-Changes since v1:
- - rebased to the latest xfs for-next tree
- - keep the preallocated transactions for size updates
- - rename list_pop to list_pop_entry and related cleanups
- - better document the nofs context handling
- - document that the iomap tracepoints are not a stable API
+> ---
+>  fs/iomap.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 97569064faaa..9a9d016b2782 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -803,7 +803,7 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>  	if (old_size < pos)
+>  		pagecache_isize_extended(inode, old_size, pos);
+>  	if (page_ops && page_ops->page_done)
+> -		page_ops->page_done(inode, pos, copied, page, iomap);
+> +		page_ops->page_done(inode, pos, ret, page, iomap);
+>  	put_page(page);
+>  
+>  	if (ret < len)
+> -- 
+> 2.20.1
+> 
