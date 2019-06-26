@@ -1,135 +1,164 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:52140 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726829AbfF0KtK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:49:10 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/13] xfs: turn io_append_trans into an io_private void pointer
-Date: Thu, 27 Jun 2019 12:48:33 +0200
-Message-Id: <20190627104836.25446-11-hch@lst.de>
-In-Reply-To: <20190627104836.25446-1-hch@lst.de>
-References: <20190627104836.25446-1-hch@lst.de>
+Received: from userp2130.oracle.com ([156.151.31.86]:48810 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726271AbfFZUpS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:45:18 -0400
+Subject: [PATCH 11/15] xfs: refactor xfs_iwalk_grab_ichunk
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Wed, 26 Jun 2019 13:45:05 -0700
+Message-ID: <156158190541.495087.14922278008233001620.stgit@magnolia>
+In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
+References: <156158183697.495087.5371839759804528321.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J . Wong" <darrick.wong@oracle.com>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
 
-In preparation for moving the ioend structure to common code we need
-to get rid of the xfs-specific xfs_trans type.  Just make it a file
-system private void pointer instead.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+In preparation for reusing the iwalk code for the inogrp walking code
+(aka INUMBERS), move the initial inobt lookup and retrieval code out of
+xfs_iwalk_grab_ichunk so that we call the masking code only when we need
+to trim out the inodes that came before the cursor in the inobt record
+(aka BULKSTAT).
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_aops.c | 26 +++++++++++++-------------
- fs/xfs/xfs_aops.h |  2 +-
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ fs/xfs/xfs_iwalk.c |   79 ++++++++++++++++++++++++++--------------------------
+ 1 file changed, 39 insertions(+), 40 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f3b99b0a9999..5f77ac93e5ab 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -155,7 +155,7 @@ xfs_setfilesize_trans_alloc(
+
+diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
+index e0d13f5c9cf9..6d0fb11f84de 100644
+--- a/fs/xfs/xfs_iwalk.c
++++ b/fs/xfs/xfs_iwalk.c
+@@ -98,43 +98,17 @@ xfs_iwalk_ichunk_ra(
+ }
+ 
+ /*
+- * Lookup the inode chunk that the given @agino lives in and then get the
+- * record if we found the chunk.  Set the bits in @irec's free mask that
+- * correspond to the inodes before @agino so that we skip them.  This is how we
+- * restart an inode walk that was interrupted in the middle of an inode record.
++ * Set the bits in @irec's free mask that correspond to the inodes before
++ * @agino so that we skip them.  This is how we restart an inode walk that was
++ * interrupted in the middle of an inode record.
+  */
+-STATIC int
+-xfs_iwalk_grab_ichunk(
+-	struct xfs_btree_cur		*cur,	/* btree cursor */
++STATIC void
++xfs_iwalk_adjust_start(
+ 	xfs_agino_t			agino,	/* starting inode of chunk */
+-	int				*icount,/* return # of inodes grabbed */
+ 	struct xfs_inobt_rec_incore	*irec)	/* btree record */
+ {
+ 	int				idx;	/* index into inode chunk */
+-	int				stat;
+ 	int				i;
+-	int				error = 0;
+-
+-	/* Lookup the inode chunk that this inode lives in */
+-	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
+-	if (error)
+-		return error;
+-	if (!stat) {
+-		*icount = 0;
+-		return error;
+-	}
+-
+-	/* Get the record, should always work */
+-	error = xfs_inobt_get_rec(cur, irec, &stat);
+-	if (error)
+-		return error;
+-	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
+-
+-	/* Check if the record contains the inode in request */
+-	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
+-		*icount = 0;
+-		return 0;
+-	}
+ 
+ 	idx = agino - irec->ir_startino;
+ 
+@@ -149,8 +123,6 @@ xfs_iwalk_grab_ichunk(
+ 	}
+ 
+ 	irec->ir_free |= xfs_inobt_maskn(0, idx);
+-	*icount = irec->ir_count - irec->ir_freecount;
+-	return 0;
+ }
+ 
+ /* Allocate memory for a walk. */
+@@ -259,7 +231,7 @@ xfs_iwalk_ag_start(
+ {
+ 	struct xfs_mount	*mp = iwag->mp;
+ 	struct xfs_trans	*tp = iwag->tp;
+-	int			icount;
++	struct xfs_inobt_rec_incore *irec;
+ 	int			error;
+ 
+ 	/* Set up a fresh cursor and empty the inobt cache. */
+@@ -275,15 +247,40 @@ xfs_iwalk_ag_start(
+ 	/*
+ 	 * Otherwise, we have to grab the inobt record where we left off, stuff
+ 	 * the record into our cache, and then see if there are more records.
+-	 * We require a lookup cache of at least two elements so that we don't
+-	 * have to deal with tearing down the cursor to walk the records.
++	 * We require a lookup cache of at least two elements so that the
++	 * caller doesn't have to deal with tearing down the cursor to walk the
++	 * records.
+ 	 */
+-	error = xfs_iwalk_grab_ichunk(*curpp, agino, &icount,
+-			&iwag->recs[iwag->nr_recs]);
++	error = xfs_inobt_lookup(*curpp, agino, XFS_LOOKUP_LE, has_more);
++	if (error)
++		return error;
++
++	/*
++	 * If the LE lookup at @agino yields no records, jump ahead to the
++	 * inobt cursor increment to see if there are more records to process.
++	 */
++	if (!*has_more)
++		goto out_advance;
++
++	/* Get the record, should always work */
++	irec = &iwag->recs[iwag->nr_recs];
++	error = xfs_inobt_get_rec(*curpp, irec, has_more);
  	if (error)
  		return error;
- 
--	ioend->io_append_trans = tp;
-+	ioend->io_private = tp;
+-	if (icount)
+-		iwag->nr_recs++;
++	XFS_WANT_CORRUPTED_RETURN(mp, *has_more == 1);
++
++	/*
++	 * If the LE lookup yielded an inobt record before the cursor position,
++	 * skip it and see if there's another one after it.
++	 */
++	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino)
++		goto out_advance;
++
++	/*
++	 * If agino fell in the middle of the inode record, make it look like
++	 * the inodes up to agino are free so that we don't return them again.
++	 */
++	xfs_iwalk_adjust_start(agino, irec);
  
  	/*
- 	 * We may pass freeze protection with a transaction.  So tell lockdep
-@@ -222,7 +222,7 @@ xfs_setfilesize_ioend(
- 	int			error)
- {
- 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
--	struct xfs_trans	*tp = ioend->io_append_trans;
-+	struct xfs_trans	*tp = ioend->io_private;
+ 	 * The prefetch calculation is supposed to give us a large enough inobt
+@@ -291,8 +288,10 @@ xfs_iwalk_ag_start(
+ 	 * the loop body can cache a record without having to check for cache
+ 	 * space until after it reads an inobt record.
+ 	 */
++	iwag->nr_recs++;
+ 	ASSERT(iwag->nr_recs < iwag->sz_recs);
  
- 	/*
- 	 * The transaction may have been allocated in the I/O submission thread,
-@@ -287,10 +287,10 @@ xfs_end_ioend(
- 	else if (ioend->io_type == IOMAP_UNWRITTEN)
- 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
- 	else
--		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
-+		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
- 
- done:
--	if (ioend->io_append_trans)
-+	if (ioend->io_private)
- 		error = xfs_setfilesize_ioend(ioend, error);
- 	xfs_destroy_ioends(ioend, error);
- 	memalloc_nofs_restore(nofs_flag);
-@@ -323,13 +323,13 @@ xfs_ioend_can_merge(
-  * as it is guaranteed to be clean.
-  */
- static void
--xfs_ioend_merge_append_transactions(
-+xfs_ioend_merge_private(
- 	struct xfs_ioend	*ioend,
- 	struct xfs_ioend	*next)
- {
--	if (!ioend->io_append_trans) {
--		ioend->io_append_trans = next->io_append_trans;
--		next->io_append_trans = NULL;
-+	if (!ioend->io_private) {
-+		ioend->io_private = next->io_private;
-+		next->io_private = NULL;
- 	} else {
- 		xfs_setfilesize_ioend(next, -ECANCELED);
- 	}
-@@ -351,8 +351,8 @@ xfs_ioend_try_merge(
- 			break;
- 		list_move_tail(&next->io_list, &ioend->io_list);
- 		ioend->io_size += next->io_size;
--		if (next->io_append_trans)
--			xfs_ioend_merge_append_transactions(ioend, next);
-+		if (next->io_private)
-+			xfs_ioend_merge_private(ioend, next);
- 	}
++out_advance:
+ 	return xfs_btree_increment(*curpp, 0, has_more);
  }
  
-@@ -415,7 +415,7 @@ xfs_end_bio(
- 
- 	if (ioend->io_fork == XFS_COW_FORK ||
- 	    ioend->io_type == IOMAP_UNWRITTEN ||
--	    ioend->io_append_trans != NULL) {
-+	    ioend->io_private) {
- 		spin_lock_irqsave(&ip->i_ioend_lock, flags);
- 		if (list_empty(&ip->i_ioend_list))
- 			WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
-@@ -680,7 +680,7 @@ xfs_submit_ioend(
- 	    (ioend->io_fork == XFS_COW_FORK ||
- 	     ioend->io_type != IOMAP_UNWRITTEN) &&
- 	    xfs_ioend_is_append(ioend) &&
--	    !ioend->io_append_trans)
-+	    !ioend->io_private)
- 		status = xfs_setfilesize_trans_alloc(ioend);
- 
- 	memalloc_nofs_restore(nofs_flag);
-@@ -729,7 +729,7 @@ xfs_alloc_ioend(
- 	ioend->io_inode = inode;
- 	ioend->io_size = 0;
- 	ioend->io_offset = offset;
--	ioend->io_append_trans = NULL;
-+	ioend->io_private = NULL;
- 	ioend->io_bio = bio;
- 	return ioend;
- }
-diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-index 4af8ec0115cd..6a45d675dcba 100644
---- a/fs/xfs/xfs_aops.h
-+++ b/fs/xfs/xfs_aops.h
-@@ -18,7 +18,7 @@ struct xfs_ioend {
- 	struct inode		*io_inode;	/* file being written to */
- 	size_t			io_size;	/* size of the extent */
- 	xfs_off_t		io_offset;	/* offset in the file */
--	struct xfs_trans	*io_append_trans;/* xact. for size update */
-+	void			*io_private;	/* file system private data */
- 	struct bio		*io_bio;	/* bio being built */
- 	struct bio		io_inline_bio;	/* MUST BE LAST! */
- };
--- 
-2.20.1
