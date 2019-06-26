@@ -1,305 +1,246 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49604 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726271AbfFZUq3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:29 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKhrkq012158
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:28 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2t9brtcmx1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:27 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKjtxZ016092
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:27 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2t99f4nw85-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:27 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5QKkQSN017483
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:26 GMT
-Subject: [PATCH 8/9] xfs: specify AG in bulk req
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:46:25 -0700
-Message-ID: <156158198545.495715.13588754159200411056.stgit@magnolia>
-In-Reply-To: <156158193320.495715.6675123051075804739.stgit@magnolia>
-References: <156158193320.495715.6675123051075804739.stgit@magnolia>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:54716 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726470AbfFZSGQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 14:06:16 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id EA060289C4
+        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 18:06:13 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 203999] New: [xfstests xfs/442] kernel BUG at
+ mm/swap_state.c:170! RIP: 0010:__delete_from_swap_cache+0x45a/0x6c0
+Date: Wed, 26 Jun 2019 18:06:12 +0000
+Message-ID: <bug-203999-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=203999
 
-Add a new xfs_bulk_ireq flag to constrain the iteration to a single AG.
-If the passed-in startino value is zero then we start with the first
-inode in the AG that the user passes in; otherwise, we iterate only
-within the same AG as the passed-in inode.
+            Bug ID: 203999
+           Summary: [xfstests xfs/442] kernel BUG at mm/swap_state.c:170!
+                    RIP: 0010:__delete_from_swap_cache+0x45a/0x6c0
+           Product: File System
+           Version: 2.5
+    Kernel Version: 5.2.0-rc4 xfs-5.3-merge-2
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: XFS
+          Assignee: filesystem_xfs@kernel-bugs.kernel.org
+          Reporter: zlang@redhat.com
+        Regression: No
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
----
- fs/xfs/libxfs/xfs_fs.h |   10 ++++++++--
- fs/xfs/xfs_ioctl.c     |   25 ++++++++++++++++++++++++-
- fs/xfs/xfs_itable.c    |    6 +++---
- fs/xfs/xfs_itable.h    |    4 ++++
- fs/xfs/xfs_iwalk.c     |   12 ++++++++++++
- fs/xfs/xfs_iwalk.h     |   22 +++++++++++++++++-----
- fs/xfs/xfs_qm.c        |    3 ++-
- 7 files changed, 70 insertions(+), 12 deletions(-)
+xfstests xfs/442 hit a kernel panic[1]. I test with -b size=4k -m
+reflink=1,rmapbt=1, on kernel xfs-linux xfs-5.3-merge-2. The XFS info is:
+meta-data=/dev/sda2              isize=512    agcount=4, agsize=983040 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1
+data     =                       bsize=4096   blocks=3932160, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=3693, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
 
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index f9f35139d4b7..77c06850ac52 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -462,11 +462,17 @@ struct xfs_bulk_ireq {
- 	uint32_t	flags;		/* I/O: operation flags		*/
- 	uint32_t	icount;		/* I: count of entries in buffer */
- 	uint32_t	ocount;		/* O: count of entries filled out */
--	uint32_t	reserved32;	/* must be zero			*/
-+	uint32_t	agno;		/* I: see comment for IREQ_AGNO	*/
- 	uint64_t	reserved[5];	/* must be zero			*/
- };
- 
--#define XFS_BULK_IREQ_FLAGS_ALL	(0)
-+/*
-+ * Only return results from the specified @agno.  If @ino is zero, start
-+ * with the first inode of @agno.
-+ */
-+#define XFS_BULK_IREQ_AGNO	(1 << 0)
-+
-+#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO)
- 
- /* Header for a single inode request. */
- struct xfs_ireq {
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 2ac5e100b147..f71341cd8340 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -853,7 +853,6 @@ xfs_bulk_ireq_setup(
- {
- 	if (hdr->icount == 0 ||
- 	    (hdr->flags & ~XFS_BULK_IREQ_FLAGS_ALL) ||
--	    hdr->reserved32 ||
- 	    memchr_inv(hdr->reserved, 0, sizeof(hdr->reserved)))
- 		return -EINVAL;
- 
-@@ -861,6 +860,29 @@ xfs_bulk_ireq_setup(
- 	breq->ubuffer = ubuffer;
- 	breq->icount = hdr->icount;
- 	breq->ocount = 0;
-+	breq->flags = 0;
-+
-+	/*
-+	 * The IREQ_AGNO flag means that we only want results from a given AG.
-+	 * If @hdr->ino is zero, we start iterating in that AG.  If @hdr->ino is
-+	 * beyond the specified AG then we return no results.
-+	 */
-+	if (hdr->flags & XFS_BULK_IREQ_AGNO) {
-+		if (hdr->agno >= mp->m_sb.sb_agcount)
-+			return -EINVAL;
-+
-+		if (breq->startino == 0)
-+			breq->startino = XFS_AGINO_TO_INO(mp, hdr->agno, 0);
-+		else if (XFS_INO_TO_AGNO(mp, breq->startino) < hdr->agno)
-+			return -EINVAL;
-+
-+		breq->flags |= XFS_IBULK_SAME_AG;
-+
-+		/* Asking for an inode past the end of the AG?  We're done! */
-+		if (XFS_INO_TO_AGNO(mp, breq->startino) > hdr->agno)
-+			return XFS_ITER_ABORT;
-+	} else if (hdr->agno)
-+		return -EINVAL;
- 
- 	/* Asking for an inode past the end of the FS?  We're done! */
- 	if (XFS_INO_TO_AGNO(mp, breq->startino) >= mp->m_sb.sb_agcount)
-@@ -945,6 +967,7 @@ xfs_ireq_setup(
- 	breq->ubuffer = ubuffer;
- 	breq->icount = 1;
- 	breq->startino = hdr->ino;
-+	breq->flags = 0;
- 	return 0;
- }
- 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 745b04f59132..f92a1508a2bd 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -248,8 +248,8 @@ xfs_bulkstat(
- 	if (!bc.buf)
- 		return -ENOMEM;
- 
--	error = xfs_iwalk(breq->mp, NULL, breq->startino, xfs_bulkstat_iwalk,
--			breq->icount, &bc);
-+	error = xfs_iwalk(breq->mp, NULL, breq->startino, breq->flags,
-+			xfs_bulkstat_iwalk, breq->icount, &bc);
- 
- 	kmem_free(bc.buf);
- 
-@@ -367,7 +367,7 @@ xfs_inumbers(
- 	if (xfs_bulkstat_already_done(breq->mp, breq->startino))
- 		return 0;
- 
--	error = xfs_inobt_walk(breq->mp, NULL, breq->startino,
-+	error = xfs_inobt_walk(breq->mp, NULL, breq->startino, breq->flags,
- 			xfs_inumbers_walk, breq->icount, &ic);
- 
- 	/*
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index fa9fb9104c7f..e90c1fc5b981 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -12,8 +12,12 @@ struct xfs_ibulk {
- 	xfs_ino_t		startino; /* start with this inode */
- 	unsigned int		icount;   /* number of elements in ubuffer */
- 	unsigned int		ocount;   /* number of records returned */
-+	unsigned int		flags;    /* see XFS_IBULK_FLAG_* */
- };
- 
-+/* Only iterate within the same AG as startino */
-+#define XFS_IBULK_SAME_AG	(XFS_IWALK_SAME_AG)
-+
- /* Return value that means we want to abort the walk. */
- #define XFS_IBULK_ABORT		(XFS_IWALK_ABORT)
- 
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index 80c139aed264..d21d9fe71f3d 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -519,6 +519,7 @@ xfs_iwalk(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	xfs_ino_t		startino,
-+	unsigned int		flags,
- 	xfs_iwalk_fn		iwalk_fn,
- 	unsigned int		inode_records,
- 	void			*data)
-@@ -538,6 +539,7 @@ xfs_iwalk(
- 	int			error;
- 
- 	ASSERT(agno < mp->m_sb.sb_agcount);
-+	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
- 
- 	error = xfs_iwalk_alloc(&iwag);
- 	if (error)
-@@ -548,6 +550,8 @@ xfs_iwalk(
- 		if (error)
- 			break;
- 		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-+		if (flags & XFS_INOBT_WALK_SAME_AG)
-+			break;
- 	}
- 
- 	xfs_iwalk_free(&iwag);
-@@ -586,6 +590,7 @@ int
- xfs_iwalk_threaded(
- 	struct xfs_mount	*mp,
- 	xfs_ino_t		startino,
-+	unsigned int		flags,
- 	xfs_iwalk_fn		iwalk_fn,
- 	unsigned int		inode_records,
- 	bool			polled,
-@@ -597,6 +602,7 @@ xfs_iwalk_threaded(
- 	int			error;
- 
- 	ASSERT(agno < mp->m_sb.sb_agcount);
-+	ASSERT(!(flags & ~XFS_IWALK_FLAGS_ALL));
- 
- 	nr_threads = xfs_pwork_guess_datadev_parallelism(mp);
- 	error = xfs_pwork_init(mp, &pctl, xfs_iwalk_ag_work, "xfs_iwalk",
-@@ -618,6 +624,8 @@ xfs_iwalk_threaded(
- 		iwag->sz_recs = xfs_iwalk_prefetch(inode_records);
- 		xfs_pwork_queue(&pctl, &iwag->pwork);
- 		startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-+		if (flags & XFS_INOBT_WALK_SAME_AG)
-+			break;
- 	}
- 
- 	if (polled)
-@@ -674,6 +682,7 @@ xfs_inobt_walk(
- 	struct xfs_mount	*mp,
- 	struct xfs_trans	*tp,
- 	xfs_ino_t		startino,
-+	unsigned int		flags,
- 	xfs_inobt_walk_fn	inobt_walk_fn,
- 	unsigned int		inobt_records,
- 	void			*data)
-@@ -691,6 +700,7 @@ xfs_inobt_walk(
- 	int			error;
- 
- 	ASSERT(agno < mp->m_sb.sb_agcount);
-+	ASSERT(!(flags & ~XFS_INOBT_WALK_FLAGS_ALL));
- 
- 	error = xfs_iwalk_alloc(&iwag);
- 	if (error)
-@@ -701,6 +711,8 @@ xfs_inobt_walk(
- 		if (error)
- 			break;
- 		iwag.startino = XFS_AGINO_TO_INO(mp, agno + 1, 0);
-+		if (flags & XFS_INOBT_WALK_SAME_AG)
-+			break;
- 	}
- 
- 	xfs_iwalk_free(&iwag);
-diff --git a/fs/xfs/xfs_iwalk.h b/fs/xfs/xfs_iwalk.h
-index 67462861680c..6c960e10ed4d 100644
---- a/fs/xfs/xfs_iwalk.h
-+++ b/fs/xfs/xfs_iwalk.h
-@@ -14,10 +14,16 @@ typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
- #define XFS_IWALK_ABORT		(XFS_ITER_ABORT)
- 
- int xfs_iwalk(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t startino,
--		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, void *data);
-+		unsigned int flags, xfs_iwalk_fn iwalk_fn,
-+		unsigned int inode_records, void *data);
- int xfs_iwalk_threaded(struct xfs_mount *mp, xfs_ino_t startino,
--		xfs_iwalk_fn iwalk_fn, unsigned int inode_records, bool poll,
--		void *data);
-+		unsigned int flags, xfs_iwalk_fn iwalk_fn,
-+		unsigned int inode_records, bool poll, void *data);
-+
-+/* Only iterate inodes within the same AG as @startino. */
-+#define XFS_IWALK_SAME_AG	(0x1)
-+
-+#define XFS_IWALK_FLAGS_ALL	(XFS_IWALK_SAME_AG)
- 
- /* Walk all inode btree records in the filesystem starting from @startino. */
- typedef int (*xfs_inobt_walk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
-@@ -28,7 +34,13 @@ typedef int (*xfs_inobt_walk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
- #define XFS_INOBT_WALK_ABORT	(XFS_IWALK_ABORT)
- 
- int xfs_inobt_walk(struct xfs_mount *mp, struct xfs_trans *tp,
--		xfs_ino_t startino, xfs_inobt_walk_fn inobt_walk_fn,
--		unsigned int inobt_records, void *data);
-+		xfs_ino_t startino, unsigned int flags,
-+		xfs_inobt_walk_fn inobt_walk_fn, unsigned int inobt_records,
-+		void *data);
-+
-+/* Only iterate inobt records within the same AG as @startino. */
-+#define XFS_INOBT_WALK_SAME_AG	(XFS_IWALK_SAME_AG)
-+
-+#define XFS_INOBT_WALK_FLAGS_ALL (XFS_INOBT_WALK_SAME_AG)
- 
- #endif /* __XFS_IWALK_H__ */
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index 8bb902125403..a526c28662ae 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -1304,7 +1304,8 @@ xfs_qm_quotacheck(
- 		flags |= XFS_PQUOTA_CHKD;
- 	}
- 
--	error = xfs_iwalk_threaded(mp, 0, xfs_qm_dqusage_adjust, 0, true, NULL);
-+	error = xfs_iwalk_threaded(mp, 0, 0, xfs_qm_dqusage_adjust, 0, true,
-+			NULL);
- 	if (error)
- 		goto error_return;
- 
+
+[1]
+[17709.175853] run fstests xfs/442 at 2019-06-26 11:17:05 
+[17709.860178] XFS (sda3): Mounting V5 Filesystem 
+[17709.884929] XFS (sda3): Ending clean mount 
+[17709.917986] XFS (sda3): Unmounting Filesystem 
+[17710.250832] XFS (sda3): Mounting V5 Filesystem 
+[17710.277188] XFS (sda3): Ending clean mount 
+[17710.283564] XFS (sda3): Quotacheck needed: Please wait. 
+[17710.295348] XFS (sda3): Quotacheck: Done. 
+[17723.018312] restraintd[1307]: *** Current Time: Wed Jun 26 11:17:19 2019
+Localwatchdog at: Fri Jun 28 06:24:18 2019 
+[17783.077111] restraintd[1307]: *** Current Time: Wed Jun 26 11:18:19 2019
+Localwatchdog at: Fri Jun 28 06:24:18 2019 
+[17838.551564] page:ffffea00020a8000 refcount:3 mapcount:0
+mapping:ffff88810f1eb7b9 index:0x5644f2e00 
+[17838.561860] anon  
+[17838.561865] flags:
+0xfffffc008044c(uptodate|dirty|workingset|owner_priv_1|swapbacked) 
+[17838.574378] raw: 000fffffc008044c ffff888030b27600 ffff888030b27600
+ffff88810f1eb7b9 
+[17838.583586] raw: 00000005644f2e00 00000000000dea00 00000002ffffffff
+ffff888107314200 
+[17838.592820] page dumped because: VM_BUG_ON_PAGE(entry != page) 
+[17838.600145] page->mem_cgroup:ffff888107314200 
+[17838.606001] ------------[ cut here ]------------ 
+[17838.612124] kernel BUG at mm/swap_state.c:170! 
+[17838.618090] invalid opcode: 0000 [#1] SMP KASAN PTI 
+[17838.624493] CPU: 4 PID: 183 Comm: kswapd0 Tainted: G    B   W        
+5.2.0-rc4 #1 
+[17838.633631] Hardware name: Intel Corporation 2012 Client Platform/Emerald
+Lake 2, BIOS ACRVMBY1.86C.0078.P00.1201161002 01/16/2012 
+[17838.648697] RIP: 0010:__delete_from_swap_cache+0x45a/0x6c0 
+[17838.655912] Code: e8 a9 c2 b6 ff e9 d9 fe ff ff 48 c7 c6 40 65 73 8a 48 89
+ef e8 d7 73 f7 ff 0f 0b 48 c7 c6 00 66 73 8a 48 89 c7 e8 c6 73 f7 ff <0f> 0b 48
+b8 00 00 00 00 00 fc ff df 49 8d 
+7d 08 48 89 fa 48 c1 ea 
+[17838.678389] RSP: 0018:ffff888030b27228 EFLAGS: 00010082 
+[17838.685517] RAX: 0000000000000021 RBX: 0000000000000000 RCX:
+ffffffff88983f80 
+[17838.694592] RDX: 0000000000000000 RSI: 0000000000000008 RDI:
+ffff88810cfdffb0 
+[17838.703650] RBP: ffffea00020a8040 R08: ffffed10219fbff7 R09:
+ffffed10219fbff6 
+[17838.712741] R10: ffffed10219fbff6 R11: ffff88810cfdffb7 R12:
+dffffc0000000000 
+[17838.721859] R13: ffffea00020a8000 R14: ffff888030b272b0 R15:
+0000000000000001 
+[17838.730982] FS:  0000000000000000(0000) GS:ffff88810ce00000(0000)
+knlGS:0000000000000000 
+[17838.741066] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
+[17838.748790] CR2: 00007f5826bb0000 CR3: 000000002fa7a006 CR4:
+00000000001606e0 
+[17838.757943] Call Trace: 
+[17838.762405]  ? add_to_swap_cache+0x9f0/0x9f0 
+[17838.768727]  ? do_raw_spin_trylock+0xb2/0x180 
+[17838.775144]  delete_from_swap_cache+0x8c/0x170 
+[17838.781647]  try_to_free_swap+0x239/0x370 
+[17838.787721]  swap_writepage+0x12/0x70 
+[17838.793453]  pageout.isra.47+0x36b/0xa30 
+[17838.799446]  ? wake_up_page_bit+0x15e/0x1c0 
+[17838.805708]  ? __remove_mapping+0x750/0x750 
+[17838.811966]  ? memset+0x1f/0x40 
+[17838.817175]  ? page_mapped+0xed/0x270 
+[17838.822910]  shrink_page_list+0x169e/0x24d0 
+[17838.829195]  ? page_evictable+0x1b0/0x1b0 
+[17838.835295]  ? __isolate_lru_page+0x440/0x440 
+[17838.841761]  ? lock_downgrade+0x620/0x620 
+[17838.847868]  shrink_inactive_list+0x36c/0xbd0 
+[17838.854339]  ? move_pages_to_lru+0xee0/0xee0 
+[17838.860699]  ? lock_downgrade+0x620/0x620 
+[17838.866875]  ? xfs_perag_get_tag+0x5/0x500 [xfs] 
+[17838.873601]  ? lruvec_lru_size+0x163/0x270 
+[17838.879804]  ? lruvec_lru_size+0x163/0x270 
+[17838.885981]  shrink_node_memcg+0x4b2/0x1140 
+[17838.892252]  ? shrink_active_list+0xe10/0xe10 
+[17838.898658]  ? lock_downgrade+0x620/0x620 
+[17838.904669]  ? mem_cgroup_iter+0x418/0xa20 
+[17838.910739]  shrink_node+0x248/0x11d0 
+[17838.916357]  ? shrink_node_memcg+0x1140/0x1140 
+[17838.922722]  ? __count_memcg_events+0x10/0x10 
+[17838.928975]  ? inactive_list_is_low+0x241/0x5c0 
+[17838.935378]  balance_pgdat+0x4ef/0xa20 
+[17838.941003]  ? mem_cgroup_shrink_node+0x5f0/0x5f0 
+[17838.947589]  ? finish_task_switch+0x199/0x690 
+[17838.953821]  ? __switch_to_asm+0x34/0x70 
+[17838.959606]  ? __switch_to_asm+0x40/0x70 
+[17838.965285]  ? set_pgdat_percpu_threshold+0x1bb/0x280 
+[17838.972056]  ? vm_events_fold_cpu+0xa0/0xa0 
+[17838.977935]  kswapd+0x585/0xc50 
+[17838.982705]  ? balance_pgdat+0xa20/0xa20 
+[17838.988186]  ? lock_downgrade+0x620/0x620 
+[17838.993723]  ? firmware_map_remove+0x16d/0x16d 
+[17838.999662]  ? _raw_spin_unlock_irqrestore+0x43/0x50 
+[17839.006124]  ? finish_wait+0x280/0x280 
+[17839.011351]  ? __kthread_parkme+0xb6/0x180 
+[17839.016933]  ? balance_pgdat+0xa20/0xa20 
+[17839.022312]  kthread+0x326/0x3f0 
+[17839.026964]  ? kthread_create_on_node+0xc0/0xc0 
+[17839.032911]  ret_from_fork+0x3a/0x50 
+[17839.037883] Modules linked in: dm_delay dm_zero dm_log_writes dm_thin_pool
+dm_persistent_data dm_bio_prison dm_snapshot dm_bufio loop dm_flakey dm_mod
+intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel iTCO_wdt
+iTCO_vendor_support kvm mei_wdt sunrpc irqbypass crct10dif_pclmul crc32_pclmul
+ghash_clmulni_intel intel_cstate dax_pmem_compat intel_uncore device_dax mei_me
+sg dax_pmem_core pcspkr intel_rapl_perf nd_pmem mei i2c_i801 lpc_ich ext4
+mbcache jbd2 xfs libcrc32c sr_mod cdrom sd_mod i915 intel_gtt i2c_algo_bit
+drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm ahci libahci
+crc32c_intel serio_raw libata e1000e video [last unloaded: scsi_debug] 
+[17839.107642] ---[ end trace 01faf255ccde756c ]---
+[17839.114049] RIP: 0010:__delete_from_swap_cache+0x45a/0x6c0 
+[17839.121351] Code: e8 a9 c2 b6 ff e9 d9 fe ff ff 48 c7 c6 40 65 73 8a 48 89
+ef e8 d7 73 f7 ff 0f 0b 48 c7 c6 00 66 73 8a 48 89 c7 e8 c6 73 f7 ff <0f> 0b 48
+b8 00 00 00 00 00 fc ff df 49 8d 7d 08 48 89 fa 48 c1 ea 
+[17839.143978] RSP: 0018:ffff888030b27228 EFLAGS: 00010082 
+[17839.151181] RAX: 0000000000000021 RBX: 0000000000000000 RCX:
+ffffffff88983f80 
+[17839.160338] RDX: 0000000000000000 RSI: 0000000000000008 RDI:
+ffff88810cfdffb0 
+[17839.169495] RBP: ffffea00020a8040 R08: ffffed10219fbff7 R09:
+ffffed10219fbff6 
+[17839.178675] R10: ffffed10219fbff6 R11: ffff88810cfdffb7 R12:
+dffffc0000000000 
+[17839.187857] R13: ffffea00020a8000 R14: ffff888030b272b0 R15:
+0000000000000001 
+[17839.197039] FS:  0000000000000000(0000) GS:ffff88810ce00000(0000)
+knlGS:0000000000000000 
+[17839.207208] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033 
+[17839.215052] CR2: 00007f5826bb0000 CR3: 000000002fa7a006 CR4:
+00000000001606e0 
+[17839.224317] BUG: sleeping function called from invalid context at
+include/linux/percpu-rwsem.h:34 
+[17839.235371] in_atomic(): 1, irqs_disabled(): 1, pid: 183, name: kswapd0 
+[17839.244204] INFO: lockdep is turned off. 
+[17839.250351] irq event stamp: 40 
+[17839.255720] hardirqs last  enabled at (39): [<ffffffff8a0c9a73>]
+_raw_spin_unlock_irqrestore+0x43/0x50 
+[17839.267328] hardirqs last disabled at (40): [<ffffffff8a0b67c3>]
+__schedule+0x183/0x14f0 
+[17839.277749] softirqs last  enabled at (0): [<ffffffff885b04f7>]
+copy_process.part.33+0x1917/0x5e40 
+[17839.289055] softirqs last disabled at (0): [<0000000000000000>] 0x0 
+[17839.297689] CPU: 4 PID: 183 Comm: kswapd0 Tainted: G    B D W        
+5.2.0-rc4 #1 
+[17839.307656] Hardware name: Intel Corporation 2012 Client Platform/Emerald
+Lake 2, BIOS ACRVMBY1.86C.0078.P00.1201161002 01/16/2012 
+[17839.324336] Call Trace: 
+[17839.329247]  dump_stack+0x7c/0xc0 
+[17839.335020]  ___might_sleep.cold.75+0x10e/0x128 
+[17839.342020]  exit_signals+0x75/0x630 
+[17839.348080]  ? get_signal+0x2070/0x2070 
+[17839.354394]  ? vm_events_fold_cpu+0xa0/0xa0 
+[17839.361047]  ? __validate_process_creds+0x22e/0x350 
+[17839.368403]  do_exit+0x204/0x29f0 
+[17839.374203]  ? balance_pgdat+0xa20/0xa20 
+[17839.380624]  ? mm_update_next_owner+0x5e0/0x5e0 
+[17839.387664]  ? firmware_map_remove+0x16d/0x16d 
+[17839.394612]  ? _raw_spin_unlock_irqrestore+0x43/0x50 
+[17839.402053]  ? finish_wait+0x280/0x280 
+[17839.408291]  ? __kthread_parkme+0xb6/0x180 
+[17839.414901]  ? balance_pgdat+0xa20/0xa20 
+[17839.421311]  ? kthread+0x326/0x3f0 
+[17839.427186]  rewind_stack_do_exit+0x17/0x20 
+[17839.433930] note: kswapd0[183] exited with preempt_count 1 
+[17857.810741] NMI watchdog: Watchdog detected hard LOCKUP on cpu 1 
+[17857.810742] Modules linked in: dm_delay dm_zero dm_log_writes dm_thin_pool
+dm_persistent_data dm_bio_prison dm_snapshot dm_bufio loop dm_flakey dm_mod
+intel_rapl x86_pkg_temp_thermal intel_powerclamp coretemp kvm_intel iTCO_wdt
+iTCO_vendor_support kvm mei_wdt sunrpc irqbypass crct10dif_pclmul crc32_pclmul
+ghash_clmulni_intel intel_cstate dax_pmem_compat intel_uncore device_dax mei_me
+sg dax_pmem_core pcspkr intel_rapl_perf nd_pmem mei i2c_i801 lpc_ich ext4
+mbcache jbd2 xfs libcrc32c sr_mod cdrom sd_mod i915 intel_gtt i2c_algo_bit
+drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops drm ahci libahci
+crc32c_intel serio_raw libata e1000e video [last unloaded: scsi_debug] 
+[17857.810763] irq event stamp: 0 
+[17857.810763] hardirqs last  enabled at (0): [<0000000000000000>] 0x0 
+[17857.810764] hardirqs last disabled at (0): [<ffffffff885b045b>]
+copy_process.part.33+0x187b/0x5e40 
+[17857.810765] softirqs last  enabled at (0): [<ffffffff885b04f7>]
+copy_process.part.33+0x1917/0x5e40 
+[17857.810765] softirqs last disabled at (0): [<0000000000000000>] 0x0 
+[17857.810766] CPU: 1 PID: 2071 Comm: fsstress Tainted: G    B D W        
+5.2.0-rc4 #1 
+[17857.810767] Hardware name: Intel Corporation 2012 Client Platform/Emerald
+Lake 2, BIOS ACRVMBY1.86C.0078.P00.1201161002 01/16/2012 
+[17857.810767] RIP: 0010:native_queued_spin_lock_slowpath+0x1db/0x950
+...
+...
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
