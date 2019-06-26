@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48636 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:49732 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726360AbfFZUpG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:45:06 -0400
-Subject: [PATCH 08/15] xfs: move bulkstat ichunk helpers to iwalk code
+        with ESMTP id S1726487AbfFZUqk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:40 -0400
+Subject: [PATCH 03/15] xfs: convert quotacheck to use the new iwalk functions
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:44:47 -0700
-Message-ID: <156158188703.495087.3342103458889325673.stgit@magnolia>
+Date: Wed, 26 Jun 2019 13:44:15 -0700
+Message-ID: <156158185592.495087.13186738794490297341.stgit@magnolia>
 In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
 References: <156158183697.495087.5371839759804528321.stgit@magnolia>
 MIME-Version: 1.0
@@ -16,268 +16,149 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we've reworked the bulkstat code to use iwalk, we can move the
-old bulkstat ichunk helpers to xfs_iwalk.c.  No functional changes here.
+Convert quotacheck to use the new iwalk iterator to dig through the
+inodes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_itable.c |   93 -------------------------------------------------
- fs/xfs/xfs_itable.h |    8 ----
- fs/xfs/xfs_iwalk.c  |   96 +++++++++++++++++++++++++++++++++++++++++++++++++--
- 3 files changed, 93 insertions(+), 104 deletions(-)
+ fs/xfs/xfs_qm.c |   63 +++++++++++++++++--------------------------------------
+ 1 file changed, 20 insertions(+), 43 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-index 09ae33a88766..a0603e7ed5dd 100644
---- a/fs/xfs/xfs_itable.c
-+++ b/fs/xfs/xfs_itable.c
-@@ -189,99 +189,6 @@ xfs_bulkstat_one(
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index aa6b6db3db0e..52e8ec0aa064 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -14,7 +14,7 @@
+ #include "xfs_mount.h"
+ #include "xfs_inode.h"
+ #include "xfs_ialloc.h"
+-#include "xfs_itable.h"
++#include "xfs_iwalk.h"
+ #include "xfs_quota.h"
+ #include "xfs_error.h"
+ #include "xfs_bmap.h"
+@@ -1118,17 +1118,15 @@ xfs_qm_quotacheck_dqadjust(
+ /* ARGSUSED */
+ STATIC int
+ xfs_qm_dqusage_adjust(
+-	xfs_mount_t	*mp,		/* mount point for filesystem */
+-	xfs_ino_t	ino,		/* inode number to get data for */
+-	void		__user *buffer,	/* not used */
+-	int		ubsize,		/* not used */
+-	int		*ubused,	/* not used */
+-	int		*res)		/* result code value */
++	struct xfs_mount	*mp,
++	struct xfs_trans	*tp,
++	xfs_ino_t		ino,
++	void			*data)
+ {
+-	xfs_inode_t	*ip;
+-	xfs_qcnt_t	nblks;
+-	xfs_filblks_t	rtblks = 0;	/* total rt blks */
+-	int		error;
++	struct xfs_inode	*ip;
++	xfs_qcnt_t		nblks;
++	xfs_filblks_t		rtblks = 0;	/* total rt blks */
++	int			error;
+ 
+ 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
+ 
+@@ -1136,20 +1134,18 @@ xfs_qm_dqusage_adjust(
+ 	 * rootino must have its resources accounted for, not so with the quota
+ 	 * inodes.
+ 	 */
+-	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
+-		*res = BULKSTAT_RV_NOTHING;
+-		return -EINVAL;
+-	}
++	if (xfs_is_quota_inode(&mp->m_sb, ino))
++		return 0;
+ 
+ 	/*
+ 	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
+ 	 * at mount time and therefore nobody will be racing chown/chproj.
+ 	 */
+-	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
+-	if (error) {
+-		*res = BULKSTAT_RV_NOTHING;
++	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
++	if (error == -EINVAL || error == -ENOENT)
++		return 0;
++	if (error)
+ 		return error;
+-	}
+ 
+ 	ASSERT(ip->i_delayed_blks == 0);
+ 
+@@ -1157,7 +1153,7 @@ xfs_qm_dqusage_adjust(
+ 		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
+ 
+ 		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+-			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
++			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
+ 			if (error)
+ 				goto error0;
+ 		}
+@@ -1200,13 +1196,8 @@ xfs_qm_dqusage_adjust(
+ 			goto error0;
+ 	}
+ 
+-	xfs_irele(ip);
+-	*res = BULKSTAT_RV_DIDONE;
+-	return 0;
+-
+ error0:
+ 	xfs_irele(ip);
+-	*res = BULKSTAT_RV_GIVEUP;
  	return error;
  }
  
--/*
-- * Loop over all clusters in a chunk for a given incore inode allocation btree
-- * record.  Do a readahead if there are any allocated inodes in that cluster.
-- */
--void
--xfs_bulkstat_ichunk_ra(
--	struct xfs_mount		*mp,
--	xfs_agnumber_t			agno,
--	struct xfs_inobt_rec_incore	*irec)
--{
--	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
--	xfs_agblock_t			agbno;
--	struct blk_plug			plug;
--	int				i;	/* inode chunk index */
--
--	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
--
--	blk_start_plug(&plug);
--	for (i = 0;
--	     i < XFS_INODES_PER_CHUNK;
--	     i += igeo->inodes_per_cluster,
--			agbno += igeo->blocks_per_cluster) {
--		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
--		    ~irec->ir_free) {
--			xfs_btree_reada_bufs(mp, agno, agbno,
--					igeo->blocks_per_cluster,
--					&xfs_inode_buf_ops);
--		}
--	}
--	blk_finish_plug(&plug);
--}
--
--/*
-- * Lookup the inode chunk that the given inode lives in and then get the record
-- * if we found the chunk.  If the inode was not the last in the chunk and there
-- * are some left allocated, update the data for the pointed-to record as well as
-- * return the count of grabbed inodes.
-- */
--int
--xfs_bulkstat_grab_ichunk(
--	struct xfs_btree_cur		*cur,	/* btree cursor */
--	xfs_agino_t			agino,	/* starting inode of chunk */
--	int				*icount,/* return # of inodes grabbed */
--	struct xfs_inobt_rec_incore	*irec)	/* btree record */
--{
--	int				idx;	/* index into inode chunk */
--	int				stat;
--	int				error = 0;
--
--	/* Lookup the inode chunk that this inode lives in */
--	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
--	if (error)
--		return error;
--	if (!stat) {
--		*icount = 0;
--		return error;
--	}
--
--	/* Get the record, should always work */
--	error = xfs_inobt_get_rec(cur, irec, &stat);
--	if (error)
--		return error;
--	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
--
--	/* Check if the record contains the inode in request */
--	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
--		*icount = 0;
--		return 0;
--	}
--
--	idx = agino - irec->ir_startino + 1;
--	if (idx < XFS_INODES_PER_CHUNK &&
--	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
--		int	i;
--
--		/* We got a right chunk with some left inodes allocated at it.
--		 * Grab the chunk record.  Mark all the uninteresting inodes
--		 * free -- because they're before our start point.
+@@ -1270,18 +1261,13 @@ STATIC int
+ xfs_qm_quotacheck(
+ 	xfs_mount_t	*mp)
+ {
+-	int			done, count, error, error2;
+-	xfs_ino_t		lastino;
+-	size_t			structsz;
++	int			error, error2;
+ 	uint			flags;
+ 	LIST_HEAD		(buffer_list);
+ 	struct xfs_inode	*uip = mp->m_quotainfo->qi_uquotaip;
+ 	struct xfs_inode	*gip = mp->m_quotainfo->qi_gquotaip;
+ 	struct xfs_inode	*pip = mp->m_quotainfo->qi_pquotaip;
+ 
+-	count = INT_MAX;
+-	structsz = 1;
+-	lastino = 0;
+ 	flags = 0;
+ 
+ 	ASSERT(uip || gip || pip);
+@@ -1318,18 +1304,9 @@ xfs_qm_quotacheck(
+ 		flags |= XFS_PQUOTA_CHKD;
+ 	}
+ 
+-	do {
+-		/*
+-		 * Iterate thru all the inodes in the file system,
+-		 * adjusting the corresponding dquot counters in core.
 -		 */
--		for (i = 0; i < idx; i++) {
--			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
--				irec->ir_freecount++;
--		}
+-		error = xfs_bulkstat(mp, &lastino, &count,
+-				     xfs_qm_dqusage_adjust,
+-				     structsz, NULL, &done);
+-		if (error)
+-			break;
 -
--		irec->ir_free |= xfs_inobt_maskn(0, idx);
--		*icount = irec->ir_count - irec->ir_freecount;
--	}
--
--	return 0;
--}
--
--#define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
--
- static int
- xfs_bulkstat_iwalk(
- 	struct xfs_mount	*mp,
-diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-index 624ffbf8cd85..1db1cd30aa29 100644
---- a/fs/xfs/xfs_itable.h
-+++ b/fs/xfs/xfs_itable.h
-@@ -64,12 +64,4 @@ xfs_inumbers(
- 	void			__user *buffer, /* buffer with inode info */
- 	inumbers_fmt_pf		formatter);
- 
--/* Temporarily needed while we refactor functions. */
--struct xfs_btree_cur;
--struct xfs_inobt_rec_incore;
--void xfs_bulkstat_ichunk_ra(struct xfs_mount *mp, xfs_agnumber_t agno,
--		struct xfs_inobt_rec_incore *irec);
--int xfs_bulkstat_grab_ichunk(struct xfs_btree_cur *cur, xfs_agino_t agino,
--		int *icount, struct xfs_inobt_rec_incore *irec);
--
- #endif	/* __XFS_ITABLE_H__ */
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index 3e67d7702e16..99539421ee57 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -15,7 +15,6 @@
- #include "xfs_ialloc.h"
- #include "xfs_ialloc_btree.h"
- #include "xfs_iwalk.h"
--#include "xfs_itable.h"
- #include "xfs_error.h"
- #include "xfs_trace.h"
- #include "xfs_icache.h"
-@@ -66,6 +65,97 @@ struct xfs_iwalk_ag {
- 	void				*data;
- };
- 
-+/*
-+ * Loop over all clusters in a chunk for a given incore inode allocation btree
-+ * record.  Do a readahead if there are any allocated inodes in that cluster.
-+ */
-+STATIC void
-+xfs_iwalk_ichunk_ra(
-+	struct xfs_mount		*mp,
-+	xfs_agnumber_t			agno,
-+	struct xfs_inobt_rec_incore	*irec)
-+{
-+	struct xfs_ino_geometry		*igeo = M_IGEO(mp);
-+	xfs_agblock_t			agbno;
-+	struct blk_plug			plug;
-+	int				i;	/* inode chunk index */
-+
-+	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
-+
-+	blk_start_plug(&plug);
-+	for (i = 0;
-+	     i < XFS_INODES_PER_CHUNK;
-+	     i += igeo->inodes_per_cluster,
-+			agbno += igeo->blocks_per_cluster) {
-+		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
-+		    ~irec->ir_free) {
-+			xfs_btree_reada_bufs(mp, agno, agbno,
-+					igeo->blocks_per_cluster,
-+					&xfs_inode_buf_ops);
-+		}
-+	}
-+	blk_finish_plug(&plug);
-+}
-+
-+/*
-+ * Lookup the inode chunk that the given inode lives in and then get the record
-+ * if we found the chunk.  If the inode was not the last in the chunk and there
-+ * are some left allocated, update the data for the pointed-to record as well as
-+ * return the count of grabbed inodes.
-+ */
-+STATIC int
-+xfs_iwalk_grab_ichunk(
-+	struct xfs_btree_cur		*cur,	/* btree cursor */
-+	xfs_agino_t			agino,	/* starting inode of chunk */
-+	int				*icount,/* return # of inodes grabbed */
-+	struct xfs_inobt_rec_incore	*irec)	/* btree record */
-+{
-+	int				idx;	/* index into inode chunk */
-+	int				stat;
-+	int				error = 0;
-+
-+	/* Lookup the inode chunk that this inode lives in */
-+	error = xfs_inobt_lookup(cur, agino, XFS_LOOKUP_LE, &stat);
+-	} while (!done);
++	error = xfs_iwalk(mp, NULL, 0, xfs_qm_dqusage_adjust, 0, NULL);
 +	if (error)
-+		return error;
-+	if (!stat) {
-+		*icount = 0;
-+		return error;
-+	}
-+
-+	/* Get the record, should always work */
-+	error = xfs_inobt_get_rec(cur, irec, &stat);
-+	if (error)
-+		return error;
-+	XFS_WANT_CORRUPTED_RETURN(cur->bc_mp, stat == 1);
-+
-+	/* Check if the record contains the inode in request */
-+	if (irec->ir_startino + XFS_INODES_PER_CHUNK <= agino) {
-+		*icount = 0;
-+		return 0;
-+	}
-+
-+	idx = agino - irec->ir_startino + 1;
-+	if (idx < XFS_INODES_PER_CHUNK &&
-+	    (xfs_inobt_maskn(idx, XFS_INODES_PER_CHUNK - idx) & ~irec->ir_free)) {
-+		int	i;
-+
-+		/* We got a right chunk with some left inodes allocated at it.
-+		 * Grab the chunk record.  Mark all the uninteresting inodes
-+		 * free -- because they're before our start point.
-+		 */
-+		for (i = 0; i < idx; i++) {
-+			if (XFS_INOBT_MASK(i) & ~irec->ir_free)
-+				irec->ir_freecount++;
-+		}
-+
-+		irec->ir_free |= xfs_inobt_maskn(0, idx);
-+		*icount = irec->ir_count - irec->ir_freecount;
-+	}
-+
-+	return 0;
-+}
-+
- /* Allocate memory for a walk. */
- STATIC int
- xfs_iwalk_alloc(
-@@ -191,7 +281,7 @@ xfs_iwalk_ag_start(
- 	 * We require a lookup cache of at least two elements so that we don't
- 	 * have to deal with tearing down the cursor to walk the records.
- 	 */
--	error = xfs_bulkstat_grab_ichunk(*curpp, agino - 1, &icount,
-+	error = xfs_iwalk_grab_ichunk(*curpp, agino - 1, &icount,
- 			&iwag->recs[iwag->nr_recs]);
- 	if (error)
- 		return error;
-@@ -298,7 +388,7 @@ xfs_iwalk_ag(
- 		 * Start readahead for this inode chunk in anticipation of
- 		 * walking the inodes.
- 		 */
--		xfs_bulkstat_ichunk_ra(mp, agno, irec);
-+		xfs_iwalk_ichunk_ra(mp, agno, irec);
++		goto error_return;
  
- 		/*
- 		 * If there's space in the buffer for more records, increment
+ 	/*
+ 	 * We've made all the changes that we need to make incore.  Flush them
