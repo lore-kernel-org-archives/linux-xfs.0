@@ -1,149 +1,175 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:44668 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725379AbfFZGRU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 02:17:20 -0400
-From: Amir Goldstein <amir73il@gmail.com>
-Subject: [PATCH v2] xfs_io: allow passing an open file to copy_range
-Date: Wed, 26 Jun 2019 09:17:11 +0300
-Message-Id: <20190626061711.27690-1-amir73il@gmail.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:52552 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726537AbfFZCdU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 22:33:20 -0400
+Subject: [PATCH 3/5] vfs: teach vfs_ioc_fssetxattr_check to check project id
+ info
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 25 Jun 2019 19:32:26 -0700
+Message-ID: <156151634648.2283456.13503181576369039474.stgit@magnolia>
+In-Reply-To: <156151632209.2283456.3592379873620132456.stgit@magnolia>
+References: <156151632209.2283456.3592379873620132456.stgit@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
+Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-Commit 1a05efba ("io: open pipes in non-blocking mode")
-addressed a specific copy_range issue with pipes by always opening
-pipes in non-blocking mode.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This change takes a different approach and allows passing any
-open file as the source file to copy_range.  Besides providing
-more flexibility to the copy_range command, this allows xfstests
-to check if xfs_io supports passing an open file to copy_range.
+Standardize the project id checks for FSSETXATTR.
 
-The intended usage is:
-$ mkfifo fifo
-$ xfs_io -f -n -r -c "open -f dst" -C "copy_range -f 0" fifo
-
-Signed-off-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
 ---
+ fs/ext4/ioctl.c    |   27 ---------------------------
+ fs/f2fs/file.c     |   27 ---------------------------
+ fs/inode.c         |   13 +++++++++++++
+ fs/xfs/xfs_ioctl.c |   15 ---------------
+ 4 files changed, 13 insertions(+), 69 deletions(-)
 
-Eric,
 
-Re-posting this patch with Darrick's RVB, since it was missed last
-two for-next updates.
-This change is needed to implement the copy_range bounds test [1].
-
-The -f option is already available with sendfile command and
-we can make it available for reflink and dedupe commands if
-we want to. Too bad that these 4 commands have 3 different
-usage patterns to begin with...
-
-Thanks,
-Amir.
-
-[1] https://marc.info/?l=fstests&m=155910786017989&w=2
-
- io/copy_file_range.c | 30 ++++++++++++++++++++++++------
- man/man8/xfs_io.8    | 10 +++++++---
- 2 files changed, 31 insertions(+), 9 deletions(-)
-
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index d069e5bb..1f0d2713 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -26,6 +26,8 @@ copy_range_help(void)
- 					       file at offset 200\n\
-  'copy_range some_file' - copies all bytes from some_file into the open file\n\
-                           at position 0\n\
-+ 'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
-+                          at position 0\n\
- "));
+diff --git a/fs/ext4/ioctl.c b/fs/ext4/ioctl.c
+index ebcc173d1e7d..1e88c3af9a8d 100644
+--- a/fs/ext4/ioctl.c
++++ b/fs/ext4/ioctl.c
+@@ -697,30 +697,6 @@ static long ext4_ioctl_group_add(struct file *file,
+ 	return err;
  }
  
-@@ -82,11 +84,12 @@ copy_range_f(int argc, char **argv)
- 	int opt;
- 	int ret;
- 	int fd;
-+	int src_file_arg = 1;
- 	size_t fsblocksize, fssectsize;
- 
- 	init_cvtnum(&fsblocksize, &fssectsize);
- 
--	while ((opt = getopt(argc, argv, "s:d:l:")) != -1) {
-+	while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
- 		switch (opt) {
- 		case 's':
- 			src = cvtnum(fsblocksize, fssectsize, optarg);
-@@ -109,15 +112,30 @@ copy_range_f(int argc, char **argv)
- 				return 0;
- 			}
- 			break;
-+		case 'f':
-+			fd = atoi(argv[1]);
-+			if (fd < 0 || fd >= filecount) {
-+				printf(_("value %d is out of range (0-%d)\n"),
-+					fd, filecount-1);
-+				return 0;
-+			}
-+			fd = filetable[fd].fd;
-+			/* Expect no src_file arg */
-+			src_file_arg = 0;
-+			break;
- 		}
- 	}
- 
--	if (optind != argc - 1)
-+	if (optind != argc - src_file_arg) {
-+		fprintf(stderr, "optind=%d, argc=%d, src_file_arg=%d\n", optind, argc, src_file_arg);
- 		return command_usage(&copy_range_cmd);
-+	}
- 
--	fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
--	if (fd < 0)
+-static int ext4_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
+-{
+-	/*
+-	 * Project Quota ID state is only allowed to change from within the init
+-	 * namespace. Enforce that restriction only if we are trying to change
+-	 * the quota ID state. Everything else is allowed in user namespaces.
+-	 */
+-	if (current_user_ns() == &init_user_ns)
 -		return 0;
-+	if (src_file_arg) {
-+		fd = openfile(argv[optind], NULL, IO_READONLY, 0, NULL);
-+		if (fd < 0)
-+			return 0;
+-
+-	if (__kprojid_val(EXT4_I(inode)->i_projid) != fa->fsx_projid)
+-		return -EINVAL;
+-
+-	if (ext4_test_inode_flag(inode, EXT4_INODE_PROJINHERIT)) {
+-		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
+-			return -EINVAL;
+-	} else {
+-		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
+-			return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static void ext4_fill_fsxattr(struct inode *inode, struct fsxattr *fa)
+ {
+ 	struct ext4_inode_info *ei = EXT4_I(inode);
+@@ -1133,9 +1109,6 @@ long ext4_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+ 
+ 		inode_lock(inode);
+ 		ext4_fill_fsxattr(inode, &old_fa);
+-		err = ext4_ioctl_check_project(inode, &fa);
+-		if (err)
+-			goto out;
+ 		err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
+ 		if (err)
+ 			goto out;
+diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
+index 555b970f7945..d6ed319388d6 100644
+--- a/fs/f2fs/file.c
++++ b/fs/f2fs/file.c
+@@ -2797,30 +2797,6 @@ static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
+ 	return 0;
+ }
+ 
+-static int f2fs_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
+-{
+-	/*
+-	 * Project Quota ID state is only allowed to change from within the init
+-	 * namespace. Enforce that restriction only if we are trying to change
+-	 * the quota ID state. Everything else is allowed in user namespaces.
+-	 */
+-	if (current_user_ns() == &init_user_ns)
+-		return 0;
+-
+-	if (__kprojid_val(F2FS_I(inode)->i_projid) != fa->fsx_projid)
+-		return -EINVAL;
+-
+-	if (F2FS_I(inode)->i_flags & F2FS_PROJINHERIT_FL) {
+-		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
+-			return -EINVAL;
+-	} else {
+-		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
+-			return -EINVAL;
+-	}
+-
+-	return 0;
+-}
+-
+ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
+ {
+ 	struct inode *inode = file_inode(filp);
+@@ -2848,9 +2824,6 @@ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
+ 		return err;
+ 
+ 	inode_lock(inode);
+-	err = f2fs_ioctl_check_project(inode, &fa);
+-	if (err)
+-		goto out;
+ 
+ 	f2fs_fill_fsxattr(inode, &old_fa);
+ 	err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
+diff --git a/fs/inode.c b/fs/inode.c
+index fdd6c5d3e48d..c4f8fb16f633 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -2234,6 +2234,19 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
+ 	    !capable(CAP_LINUX_IMMUTABLE))
+ 		return -EPERM;
+ 
++	/*
++	 * Project Quota ID state is only allowed to change from within the init
++	 * namespace. Enforce that restriction only if we are trying to change
++	 * the quota ID state. Everything else is allowed in user namespaces.
++	 */
++	if (current_user_ns() != &init_user_ns) {
++		if (old_fa->fsx_projid != fa->fsx_projid)
++			return -EINVAL;
++		if ((old_fa->fsx_xflags ^ fa->fsx_xflags) &
++				FS_XFLAG_PROJINHERIT)
++			return -EINVAL;
 +	}
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 08ec1e458865..d8c02b9905a7 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1299,21 +1299,6 @@ xfs_ioctl_setattr_check_projid(
+ 	if (fa->fsx_projid > (uint16_t)-1 &&
+ 	    !xfs_sb_version_hasprojid32bit(&ip->i_mount->m_sb))
+ 		return -EINVAL;
+-
+-	/*
+-	 * Project Quota ID state is only allowed to change from within the init
+-	 * namespace. Enforce that restriction only if we are trying to change
+-	 * the quota ID state. Everything else is allowed in user namespaces.
+-	 */
+-	if (current_user_ns() == &init_user_ns)
+-		return 0;
+-
+-	if (xfs_get_projid(ip) != fa->fsx_projid)
+-		return -EINVAL;
+-	if ((fa->fsx_xflags & FS_XFLAG_PROJINHERIT) !=
+-	    (ip->i_d.di_flags & XFS_DIFLAG_PROJINHERIT))
+-		return -EINVAL;
+-
+ 	return 0;
+ }
  
- 	if (src == 0 && dst == 0 && len == 0) {
- 		off64_t	sz;
-@@ -150,7 +168,7 @@ copy_range_init(void)
- 	copy_range_cmd.argmin = 1;
- 	copy_range_cmd.argmax = 7;
- 	copy_range_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
--	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file");
-+	copy_range_cmd.args = _("[-s src_off] [-d dst_off] [-l len] src_file | -f N");
- 	copy_range_cmd.oneline = _("Copy a range of data between two files");
- 	copy_range_cmd.help = copy_range_help;
- 
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 980dcfd3..6e064bdd 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -660,12 +660,16 @@ Do not print timing statistics at all.
- .RE
- .PD
- .TP
--.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file"
-+.BI "copy_range [ -s " src_offset " ] [ -d " dst_offset " ] [ -l " length " ] src_file | \-f " N
- On filesystems that support the
- .BR copy_file_range (2)
--system call, copies data from the
-+system call, copies data from the source file into the current open file.
-+The source must be specified either by path
-+.RB ( src_file )
-+or as another open file
-+.RB ( \-f ).
-+If
- .I src_file
--into the open file.  If
- .IR src_offset ,
- .IR dst_offset ,
- and
--- 
-2.17.1
