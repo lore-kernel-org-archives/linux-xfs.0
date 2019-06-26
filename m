@@ -1,73 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:36515 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726320AbfFZDSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 25 Jun 2019 23:18:04 -0400
-Date: Wed, 26 Jun 2019 11:17:57 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] shared/011: run on all file system that support cgroup
- writeback
-Message-ID: <20190626031757.GB7943@desktop>
-References: <20190624134407.21365-1-hch@lst.de>
- <20190624150839.GB6350@mit.edu>
- <20190624151910.GJ5387@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:59914 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726104AbfFZMVP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 26 Jun 2019 08:21:15 -0400
+Date: Wed, 26 Jun 2019 08:20:42 -0400 (EDT)
+From: Bob Peterson <rpeterso@redhat.com>
+Message-ID: <868182386.37358699.1561551642881.JavaMail.zimbra@redhat.com>
+In-Reply-To: <156151633004.2283456.4175543089138173586.stgit@magnolia>
+References: <156151632209.2283456.3592379873620132456.stgit@magnolia> <156151633004.2283456.4175543089138173586.stgit@magnolia>
+Subject: Re: [Cluster-devel] [PATCH 1/5] vfs: create a generic checking and
+ prep function for FS_IOC_SETFLAGS
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190624151910.GJ5387@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Theodore Ts'o <tytso@mit.edu>, Christoph Hellwig <hch@lst.de>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: matthew garrett <matthew.garrett@nebula.com>, yuchao0@huawei.com, tytso@mit.edu, shaggy@kernel.org, ard biesheuvel <ard.biesheuvel@linaro.org>, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger kernel <adilger.kernel@dilger.ca>, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-ext4@vger.kernel.org, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, cluster-devel@redhat.com, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, linux-btrfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, Christoph Hellwig <hch@lst.de>, ocfs2-devel@oss.oracle.com
 
-On Mon, Jun 24, 2019 at 08:19:10AM -0700, Darrick J. Wong wrote:
-> On Mon, Jun 24, 2019 at 11:08:39AM -0400, Theodore Ts'o wrote:
-> > On Mon, Jun 24, 2019 at 03:44:07PM +0200, Christoph Hellwig wrote:
-> > > Run the cgroup writeback test on xfs, for which I've just posted
-> > > a patch to support cgroup writeback as well as ext2 and f2fs, which
-> > > have supported cgroup writeback for a while now.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  tests/shared/011 | 2 +-
-> > >  1 file changed, 1 insertion(+), 1 deletion(-)
-> > > 
-> > > diff --git a/tests/shared/011 b/tests/shared/011
-> > > index a0ac375d..96ce9d1c 100755
-> > > --- a/tests/shared/011
-> > > +++ b/tests/shared/011
-> > > @@ -39,7 +39,7 @@ rm -f $seqres.full
-> > >  # real QA test starts here
-> > >  
-> > >  # Modify as appropriate.
-> > > -_supported_fs ext4 btrfs
-> > > +_supported_fs ext2 ext4 f2fs btrfs xfs
-> > 
-> > Per my comments in another e-mail thread, given how many of the
-> > primary file systems support cgroup-aware writeback, maybe we should
-> > just remove the _supported_fs line and move this test to generic?
-> > 
-> > Whether we like it or not, there are more and more userspace tools
-> > which assume that cgroup-aware writeback is a thing.
-> > 
-> > Alternatively, maybe we should have some standardized way so the
-> > kernel can signal whether or not a particular mounted file system
-> > supports cgroup-aware writeback?
+----- Original Message -----
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I prefer this second option because I'd rather the test suite do the
-> work to figure out if cgroup aware writeback is enabled and therefore
-> worth testing rather than making everyone's QA department to add another
-> conditional known-failure entry for when they want to run new fstests on
-> some old LTS/distro kernel.
-
-Agreed, a standard way to query cgroup-aware writeback support status
-would be the best.
-
-Thanks,
-Eryu
-
+> Create a generic function to check incoming FS_IOC_SETFLAGS flag values
+> and later prepare the inode for updates so that we can standardize the
+> implementations that follow ext4's flag values.
 > 
-> --D
-> 
-> > 						- Ted
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Jan Kara <jack@suse.cz>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Acked-by: David Sterba <dsterba@suse.com>
+> ---
+>  fs/btrfs/ioctl.c    |   13 +++++--------
+>  fs/efivarfs/file.c  |   26 +++++++++++++++++---------
+>  fs/ext2/ioctl.c     |   16 ++++------------
+>  fs/ext4/ioctl.c     |   13 +++----------
+>  fs/f2fs/file.c      |    7 ++++---
+>  fs/gfs2/file.c      |   42 +++++++++++++++++++++++++++++-------------
+>  fs/hfsplus/ioctl.c  |   21 ++++++++++++---------
+>  fs/inode.c          |   24 ++++++++++++++++++++++++
+>  fs/jfs/ioctl.c      |   22 +++++++---------------
+>  fs/nilfs2/ioctl.c   |    9 ++-------
+>  fs/ocfs2/ioctl.c    |   13 +++----------
+>  fs/orangefs/file.c  |   35 ++++++++++++++++++++++++++---------
+>  fs/reiserfs/ioctl.c |   10 ++++------
+>  fs/ubifs/ioctl.c    |   13 +++----------
+>  include/linux/fs.h  |    3 +++
+>  15 files changed, 146 insertions(+), 121 deletions(-)
+
+The gfs2 portion looks correct.
+
+Reviewed-by: Bob Peterson <rpeterso@redhat.com>
+
+Regards,
+
+Bob Peterson
