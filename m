@@ -1,161 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f69.google.com ([209.85.166.69]:40518 "EHLO
-        mail-io1-f69.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726052AbfF0GuH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 02:50:07 -0400
-Received: by mail-io1-f69.google.com with SMTP id v11so1508136iop.7
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 23:50:06 -0700 (PDT)
+Received: from aserp2120.oracle.com ([141.146.126.78]:52444 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726042AbfFZSMn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 14:12:43 -0400
+Date: Wed, 26 Jun 2019 11:12:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: short circuit xfs_get_acl() if no acl is possible
+Message-ID: <20190626181206.GH5171@magnolia>
+References: <35128e32-d69b-316e-c8d6-8f109646390d@redhat.com>
+ <20190508201033.GW5207@magnolia>
+ <20190509130535.GB41691@bfoster>
 MIME-Version: 1.0
-Date: Wed, 26 Jun 2019 23:50:06 -0700
-Message-ID: <000000000000783d99058c489257@google.com>
-Subject: KASAN: use-after-free Read in xlog_alloc_log
-From: syzbot <syzbot+b75afdbe271a0d7ac4f6@syzkaller.appspotmail.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed; delsp=yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190509130535.GB41691@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, syzkaller-bugs@googlegroups.com
+To: Brian Foster <bfoster@redhat.com>
+Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, David Valin <dvalin@redhat.com>
 
-Hello,
+On Thu, May 09, 2019 at 09:05:39AM -0400, Brian Foster wrote:
+> On Wed, May 08, 2019 at 01:10:33PM -0700, Darrick J. Wong wrote:
+> > On Wed, May 08, 2019 at 02:28:09PM -0500, Eric Sandeen wrote:
+> > > If there are no attributes on the inode, don't go through the
+> > > cost of memory allocation and callling xfs_attr_get when we
+> > > already know we'll just get -ENOATTR.
+> > > 
+> > > Reported-by: David Valin <dvalin@redhat.com>
+> > > Suggested-by: Dave Chinner <david@fromorbit.com>
+> > > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> > > ---
+> > > 
+> > > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> > > index 8039e35147dd..b469b44e9e71 100644
+> > > --- a/fs/xfs/xfs_acl.c
+> > > +++ b/fs/xfs/xfs_acl.c
+> > > @@ -132,6 +132,9 @@ xfs_get_acl(struct inode *inode, int type)
+> > >  		BUG();
+> > >  	}
+> > >  
+> > > +	if (!xfs_inode_hasattr(ip))
+> > > +		return NULL;
+> > 
+> > This isn't going to cause problems if someone's adding an ACL to the
+> > inode at the same time, right?
+> > 
+> > I'm assuming that's the case since we only would load inodes when
+> > setting up a vfs inode but before any userspace can get its sticky
+> > fingers all over the inode, but it sure would be nice to know that
+> > for sure. :)
+> > 
+> 
+> Hmm, that's a good question. At first I was thinking it wouldn't matter,
+> but then I remembered the fairly recent issue around writing back an
+> empty leaf buffer on format conversion a bit too early. That has me
+> wondering if that would be an issue here as well. For example, suppose a
+> non-empty local format attr fork is being converted to extent format due
+> to a concurrent (and unrelated) xattr set. That involves
+> xfs_attr_shortform_to_leaf() -> xfs_bmap_local_to_extents_empty(), which
+> looks like it creates a transient empty fork state. Might
+> xfs_inode_hasattr() catch that as a false negative here? If so, that
+> would certainly be a problem if the existing xattr was the ACL the
+> caller happens to be interested in. It might be prudent to surround this
+> check with ILOCK_SHARED...
 
-syzbot found the following crash on:
+<shrug> But xfs_inode_hasattr checks forkoff > 0, so as long as the
+shortform to leaf conversion doesn't zero forkoff we'd be fine, I think.
+AFAICT it doesn't...?
 
-HEAD commit:    1dd45f17 Add linux-next specific files for 20190626
-git tree:       linux-next
-console output: https://syzkaller.appspot.com/x/log.txt?x=172479e9a00000
-kernel config:  https://syzkaller.appspot.com/x/.config?x=c1222640552e42a5
-dashboard link: https://syzkaller.appspot.com/bug?extid=b75afdbe271a0d7ac4f6
-compiler:       gcc (GCC) 9.0.0 20181231 (experimental)
+--D
 
-Unfortunately, I don't have any reproducer for this crash yet.
-
-IMPORTANT: if you fix the bug, please add the following tag to the commit:
-Reported-by: syzbot+b75afdbe271a0d7ac4f6@syzkaller.appspotmail.com
-
-XFS (loop5): Mounting V4 Filesystem
-==================================================================
-BUG: KASAN: use-after-free in xlog_alloc_log+0x1266/0x1380  
-fs/xfs/xfs_log.c:1478
-Read of size 8 at addr ffff8880693e2990 by task syz-executor.5/12241
-
-CPU: 1 PID: 12241 Comm: syz-executor.5 Not tainted 5.2.0-rc6-next-20190626  
-#23
-Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS  
-Google 01/01/2011
-Call Trace:
-  __dump_stack lib/dump_stack.c:77 [inline]
-  dump_stack+0x172/0x1f0 lib/dump_stack.c:113
-  print_address_description.cold+0xd4/0x306 mm/kasan/report.c:351
-  __kasan_report.cold+0x1b/0x36 mm/kasan/report.c:482
-  kasan_report+0x12/0x17 mm/kasan/common.c:614
-  __asan_report_load8_noabort+0x14/0x20 mm/kasan/generic_report.c:132
-  xlog_alloc_log+0x1266/0x1380 fs/xfs/xfs_log.c:1478
-  xfs_log_mount+0xdc/0x780 fs/xfs/xfs_log.c:580
-  xfs_mountfs+0xdb9/0x1be0 fs/xfs/xfs_mount.c:815
-  xfs_fs_fill_super+0xca6/0x16c0 fs/xfs/xfs_super.c:1740
-  mount_bdev+0x304/0x3c0 fs/super.c:1346
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1814
-  legacy_get_tree+0x108/0x220 fs/fs_context.c:661
-  vfs_get_tree+0x8e/0x390 fs/super.c:1476
-  do_new_mount fs/namespace.c:2791 [inline]
-  do_mount+0x138c/0x1c00 fs/namespace.c:3111
-  ksys_mount+0xdb/0x150 fs/namespace.c:3320
-  __do_sys_mount fs/namespace.c:3334 [inline]
-  __se_sys_mount fs/namespace.c:3331 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3331
-  do_syscall_64+0xfd/0x6a0 arch/x86/entry/common.c:301
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-RIP: 0033:0x45bf6a
-Code: b8 a6 00 00 00 0f 05 48 3d 01 f0 ff ff 0f 83 9d 8d fb ff c3 66 2e 0f  
-1f 84 00 00 00 00 00 66 90 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01 f0 ff  
-ff 0f 83 7a 8d fb ff c3 66 0f 1f 84 00 00 00 00 00
-RSP: 002b:00007fac99605a88 EFLAGS: 00000206 ORIG_RAX: 00000000000000a5
-RAX: ffffffffffffffda RBX: 00007fac99605b40 RCX: 000000000045bf6a
-RDX: 00007fac99605ae0 RSI: 0000000020000000 RDI: 00007fac99605b00
-RBP: 0000000000000001 R08: 00007fac99605b40 R09: 00007fac99605ae0
-R10: 0000000000000000 R11: 0000000000000206 R12: 0000000000000004
-R13: 00000000004c858e R14: 00000000004df0e0 R15: 00000000ffffffff
-
-Allocated by task 12241:
-  save_stack+0x23/0x90 mm/kasan/common.c:71
-  set_track mm/kasan/common.c:79 [inline]
-  __kasan_kmalloc mm/kasan/common.c:489 [inline]
-  __kasan_kmalloc.constprop.0+0xcf/0xe0 mm/kasan/common.c:462
-  kasan_kmalloc+0x9/0x10 mm/kasan/common.c:503
-  __do_kmalloc mm/slab.c:3656 [inline]
-  __kmalloc+0x163/0x770 mm/slab.c:3665
-  kmalloc include/linux/slab.h:556 [inline]
-  kmem_alloc+0xd2/0x200 fs/xfs/kmem.c:24
-  kmem_zalloc fs/xfs/kmem.h:73 [inline]
-  xlog_alloc_log+0xbf4/0x1380 fs/xfs/xfs_log.c:1420
-  xfs_log_mount+0xdc/0x780 fs/xfs/xfs_log.c:580
-  xfs_mountfs+0xdb9/0x1be0 fs/xfs/xfs_mount.c:815
-  xfs_fs_fill_super+0xca6/0x16c0 fs/xfs/xfs_super.c:1740
-  mount_bdev+0x304/0x3c0 fs/super.c:1346
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1814
-  legacy_get_tree+0x108/0x220 fs/fs_context.c:661
-  vfs_get_tree+0x8e/0x390 fs/super.c:1476
-  do_new_mount fs/namespace.c:2791 [inline]
-  do_mount+0x138c/0x1c00 fs/namespace.c:3111
-  ksys_mount+0xdb/0x150 fs/namespace.c:3320
-  __do_sys_mount fs/namespace.c:3334 [inline]
-  __se_sys_mount fs/namespace.c:3331 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3331
-  do_syscall_64+0xfd/0x6a0 arch/x86/entry/common.c:301
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-Freed by task 12241:
-  save_stack+0x23/0x90 mm/kasan/common.c:71
-  set_track mm/kasan/common.c:79 [inline]
-  __kasan_slab_free+0x102/0x150 mm/kasan/common.c:451
-  kasan_slab_free+0xe/0x10 mm/kasan/common.c:459
-  __cache_free mm/slab.c:3426 [inline]
-  kfree+0x10a/0x2c0 mm/slab.c:3757
-  kvfree+0x61/0x70 mm/util.c:488
-  kmem_free fs/xfs/kmem.h:66 [inline]
-  xlog_alloc_log+0xea9/0x1380 fs/xfs/xfs_log.c:1480
-  xfs_log_mount+0xdc/0x780 fs/xfs/xfs_log.c:580
-  xfs_mountfs+0xdb9/0x1be0 fs/xfs/xfs_mount.c:815
-  xfs_fs_fill_super+0xca6/0x16c0 fs/xfs/xfs_super.c:1740
-  mount_bdev+0x304/0x3c0 fs/super.c:1346
-  xfs_fs_mount+0x35/0x40 fs/xfs/xfs_super.c:1814
-  legacy_get_tree+0x108/0x220 fs/fs_context.c:661
-  vfs_get_tree+0x8e/0x390 fs/super.c:1476
-  do_new_mount fs/namespace.c:2791 [inline]
-  do_mount+0x138c/0x1c00 fs/namespace.c:3111
-  ksys_mount+0xdb/0x150 fs/namespace.c:3320
-  __do_sys_mount fs/namespace.c:3334 [inline]
-  __se_sys_mount fs/namespace.c:3331 [inline]
-  __x64_sys_mount+0xbe/0x150 fs/namespace.c:3331
-  do_syscall_64+0xfd/0x6a0 arch/x86/entry/common.c:301
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-The buggy address belongs to the object at ffff8880693e2900
-  which belongs to the cache kmalloc-1k of size 1024
-The buggy address is located 144 bytes inside of
-  1024-byte region [ffff8880693e2900, ffff8880693e2d00)
-The buggy address belongs to the page:
-page:ffffea0001a4f880 refcount:1 mapcount:0 mapping:ffff8880aa400c40  
-index:0x0 compound_mapcount: 0
-flags: 0x1fffc0000010200(slab|head)
-raw: 01fffc0000010200 ffffea00018ec788 ffffea0002473908 ffff8880aa400c40
-raw: 0000000000000000 ffff8880693e2000 0000000100000007 0000000000000000
-page dumped because: kasan: bad access detected
-
-Memory state around the buggy address:
-  ffff8880693e2880: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
-  ffff8880693e2900: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-> ffff8880693e2980: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-                          ^
-  ffff8880693e2a00: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-  ffff8880693e2a80: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
-==================================================================
-
-
----
-This bug is generated by a bot. It may contain errors.
-See https://goo.gl/tpsmEJ for more information about syzbot.
-syzbot engineers can be reached at syzkaller@googlegroups.com.
-
-syzbot will keep track of this bug report. See:
-https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+> Brian
+> 
+> > --D
+> > 
+> > > +
+> > >  	/*
+> > >  	 * If we have a cached ACLs value just return it, not need to
+> > >  	 * go out to the disk.
+> > > 
