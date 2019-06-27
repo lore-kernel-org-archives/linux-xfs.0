@@ -1,127 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53604 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728164AbfFCRaL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 3 Jun 2019 13:30:11 -0400
-Received: from 089144193064.atnat0002.highway.a1.net ([89.144.193.64] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hXqmg-0003gV-SU
-        for linux-xfs@vger.kernel.org; Mon, 03 Jun 2019 17:30:11 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/20] xfs: factor out iclog size calculation from xlog_sync
-Date: Mon,  3 Jun 2019 19:29:34 +0200
-Message-Id: <20190603172945.13819-10-hch@lst.de>
-In-Reply-To: <20190603172945.13819-1-hch@lst.de>
-References: <20190603172945.13819-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:33216 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726187AbfF0P1X (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 11:27:23 -0400
+Date: Thu, 27 Jun 2019 08:26:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH -next] xfs: remove duplicated include
+Message-ID: <20190627152638.GN5171@magnolia>
+References: <20190627073323.45516-1-yuehaibing@huawei.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190627073323.45516-1-yuehaibing@huawei.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: YueHaibing <yuehaibing@huawei.com>
+Cc: hch@lst.de, dchinner@redhat.com, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Split out another self-contained bit of code from xlog_sync.
+On Thu, Jun 27, 2019 at 03:33:23PM +0800, YueHaibing wrote:
+> Remove duplicated include.
+> 
+> Signed-off-by: YueHaibing <yuehaibing@huawei.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_log.c | 67 +++++++++++++++++++++++++++++-------------------
- 1 file changed, 41 insertions(+), 26 deletions(-)
+NAK, Eric Sandeen already sent this to the list.
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 0d8805c9570a..02e9ab3af5ee 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1830,6 +1830,39 @@ xlog_split_iclog(
- 	return split_offset;
- }
- 
-+static int
-+xlog_calc_iclog_size(
-+	struct xlog		*log,
-+	struct xlog_in_core	*iclog,
-+	uint32_t		*roundoff)
-+{
-+	uint32_t		count_init, count;
-+	bool			use_lsunit;
-+
-+	use_lsunit = xfs_sb_version_haslogv2(&log->l_mp->m_sb) &&
-+			log->l_mp->m_sb.sb_logsunit > 1;
-+
-+	/* Add for LR header */
-+	count_init = log->l_iclog_hsize + iclog->ic_offset;
-+
-+	/* Round out the log write size */
-+	if (use_lsunit) {
-+		/* we have a v2 stripe unit to use */
-+		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
-+	} else {
-+		count = BBTOB(BTOBB(count_init));
-+	}
-+
-+	ASSERT(count >= count_init);
-+	*roundoff = count - count_init;
-+
-+	if (use_lsunit)
-+		ASSERT(*roundoff < log->l_mp->m_sb.sb_logsunit);
-+	else
-+		ASSERT(*roundoff < BBTOB(1));
-+	return count;
-+}
-+
- /*
-  * Flush out the in-core log (iclog) to the on-disk log in an asynchronous 
-  * fashion.  Previously, we should have moved the current iclog
-@@ -1858,35 +1891,17 @@ xlog_sync(
- 	struct xlog		*log,
- 	struct xlog_in_core	*iclog)
- {
--	uint		count;		/* byte count of bwrite */
--	uint		count_init;	/* initial count before roundup */
--	int		roundoff;       /* roundoff to BB or stripe */
--	int		v2 = xfs_sb_version_haslogv2(&log->l_mp->m_sb);
--	uint64_t	bno;
--	unsigned int	split = 0;
--	int		size;
--	bool		need_flush = true;
-+	unsigned int		count;		/* byte count of bwrite */
-+	unsigned int		roundoff;       /* roundoff to BB or stripe */
-+	uint64_t		bno;
-+	unsigned int		split = 0;
-+	unsigned int		size;
-+	bool			need_flush = true;
- 
- 	XFS_STATS_INC(log->l_mp, xs_log_writes);
- 	ASSERT(atomic_read(&iclog->ic_refcnt) == 0);
- 
--	/* Add for LR header */
--	count_init = log->l_iclog_hsize + iclog->ic_offset;
--
--	/* Round out the log write size */
--	if (v2 && log->l_mp->m_sb.sb_logsunit > 1) {
--		/* we have a v2 stripe unit to use */
--		count = XLOG_LSUNITTOB(log, XLOG_BTOLSUNIT(log, count_init));
--	} else {
--		count = BBTOB(BTOBB(count_init));
--	}
--	roundoff = count - count_init;
--	ASSERT(roundoff >= 0);
--	ASSERT((v2 && log->l_mp->m_sb.sb_logsunit > 1 && 
--                roundoff < log->l_mp->m_sb.sb_logsunit)
--		|| 
--		(log->l_mp->m_sb.sb_logsunit <= 1 && 
--		 roundoff < BBTOB(1)));
-+	count = xlog_calc_iclog_size(log, iclog, &roundoff);
- 
- 	/* move grant heads by roundoff in sync */
- 	xlog_grant_add_space(log, &log->l_reserve_head.grant, roundoff);
-@@ -1897,7 +1912,7 @@ xlog_sync(
- 
- 	/* real byte length */
- 	size = iclog->ic_offset;
--	if (v2)
-+	if (xfs_sb_version_haslogv2(&log->l_mp->m_sb))
- 		size += roundoff;
- 	iclog->ic_header.h_len = cpu_to_be32(size);
- 
--- 
-2.20.1
+--D
+
+> ---
+>  fs/xfs/xfs_extfree_item.c | 1 -
+>  fs/xfs/xfs_filestream.c   | 1 -
+>  fs/xfs/xfs_pnfs.c         | 1 -
+>  3 files changed, 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
+> index 99fd40eb..e515506 100644
+> --- a/fs/xfs/xfs_extfree_item.c
+> +++ b/fs/xfs/xfs_extfree_item.c
+> @@ -13,7 +13,6 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_defer.h"
+>  #include "xfs_trans.h"
+> -#include "xfs_trans.h"
+>  #include "xfs_trans_priv.h"
+>  #include "xfs_buf_item.h"
+>  #include "xfs_extfree_item.h"
+> diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
+> index b1869ae..a6d228c 100644
+> --- a/fs/xfs/xfs_filestream.c
+> +++ b/fs/xfs/xfs_filestream.c
+> @@ -21,7 +21,6 @@
+>  #include "xfs_trace.h"
+>  #include "xfs_ag_resv.h"
+>  #include "xfs_trans.h"
+> -#include "xfs_shared.h"
+>  
+>  struct xfs_fstrm_item {
+>  	struct xfs_mru_cache_elem	mru;
+> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> index 2d95355..6018e1c 100644
+> --- a/fs/xfs/xfs_pnfs.c
+> +++ b/fs/xfs/xfs_pnfs.c
+> @@ -17,7 +17,6 @@
+>  #include "xfs_bmap_util.h"
+>  #include "xfs_error.h"
+>  #include "xfs_iomap.h"
+> -#include "xfs_shared.h"
+>  #include "xfs_bit.h"
+>  #include "xfs_pnfs.h"
+>  
+> -- 
+> 2.7.4
+> 
+> 
