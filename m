@@ -1,94 +1,75 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:51322 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726484AbfFZUqf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:35 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKht9m018308
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:34 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2t9cyqmh4q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:34 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5QKilWO012087
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:33 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2t9p6uyyt8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:33 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5QKkWoW017515
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 20:46:32 GMT
-Subject: [PATCH 9/9] xfs: allow bulkstat_single of special inodes
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:46:31 -0700
-Message-ID: <156158199168.495715.1433536766420003523.stgit@magnolia>
-In-Reply-To: <156158193320.495715.6675123051075804739.stgit@magnolia>
-References: <156158193320.495715.6675123051075804739.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:52062 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbfF0Ksx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:48:53 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 01/13] list.h: add list_pop and list_pop_entry helpers
+Date: Thu, 27 Jun 2019 12:48:24 +0200
+Message-Id: <20190627104836.25446-2-hch@lst.de>
+In-Reply-To: <20190627104836.25446-1-hch@lst.de>
+References: <20190627104836.25446-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+We have a very common pattern where we want to delete the first entry
+from a list and return it as the properly typed container structure.
 
-Create a new ireq flag (for single bulkstats) that enables userspace to
-ask us for a special inode number instead of interpreting @ino as a
-literal inode number.  This enables us to query the root inode easily.
+Add two helpers to implement this behavior.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/libxfs/xfs_fs.h |   11 ++++++++++-
- fs/xfs/xfs_ioctl.c     |   10 ++++++++++
- 2 files changed, 20 insertions(+), 1 deletion(-)
+ include/linux/list.h | 33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
 
-
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 77c06850ac52..1489bce07d66 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -482,7 +482,16 @@ struct xfs_ireq {
- 	uint64_t	reserved[2];	/* must be zero			*/
- };
+diff --git a/include/linux/list.h b/include/linux/list.h
+index e951228db4b2..ba6e27d2235a 100644
+--- a/include/linux/list.h
++++ b/include/linux/list.h
+@@ -500,6 +500,39 @@ static inline void list_splice_tail_init(struct list_head *list,
+ 	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
+ })
  
--#define XFS_IREQ_FLAGS_ALL	(0)
-+/*
-+ * The @ino value is a special value, not a literal inode number.  See the
-+ * XFS_IREQ_SPECIAL_* values below.
++/**
++ * list_pop - delete the first entry from a list and return it
++ * @list:	the list to take the element from.
++ *
++ * Return the list entry after @list.  If @list is empty return NULL.
 + */
-+#define XFS_IREQ_SPECIAL	(1 << 0)
++static inline struct list_head *list_pop(struct list_head *list)
++{
++	struct list_head *pos = READ_ONCE(list->next);
 +
-+#define XFS_IREQ_FLAGS_ALL	(XFS_IREQ_SPECIAL)
++	if (pos == list)
++		return NULL;
++	list_del(pos);
++	return pos;
++}
 +
-+/* Operate on the root directory inode. */
-+#define XFS_IREQ_SPECIAL_ROOT	(1)
- 
- /*
-  * ioctl structures for v5 bulkstat and inumbers requests
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index f71341cd8340..3bb5f980fabf 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -961,6 +961,16 @@ xfs_ireq_setup(
- 	    memchr_inv(hdr->reserved, 0, sizeof(hdr->reserved)))
- 		return -EINVAL;
- 
-+	if (hdr->flags & XFS_IREQ_SPECIAL) {
-+		switch (hdr->ino) {
-+		case XFS_IREQ_SPECIAL_ROOT:
-+			hdr->ino = mp->m_sb.sb_rootino;
-+			break;
-+		default:
-+			return -EINVAL;
-+		}
-+	}
++/**
++ * list_pop_entry - delete the first entry from a list and return the
++ *			containing structure
++ * @list:	the list to take the element from.
++ * @type:	the type of the struct this is embedded in.
++ * @member:	the name of the list_head within the struct.
++ *
++ * Return the containing structure for the list entry after @list.  If @list
++ * is empty return NULL.
++ */
++#define list_pop_entry(list, type, member)			\
++({								\
++	struct list_head *pos__ = list_pop(list);		\
++								\
++	pos__ ? list_entry(pos__, type, member) : NULL;		\
++})
 +
- 	if (XFS_INO_TO_AGNO(mp, hdr->ino) >= mp->m_sb.sb_agcount)
- 		return -EINVAL;
- 
+ /**
+  * list_next_entry - get the next element in list
+  * @pos:	the type * to cursor
+-- 
+2.20.1
