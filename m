@@ -1,48 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f46.google.com ([209.85.221.46]:44593 "EHLO
-        mail-wr1-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726289AbfFZVEU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 17:04:20 -0400
-Received: by mail-wr1-f46.google.com with SMTP id r16so4305510wrl.11
-        for <linux-xfs@vger.kernel.org>; Wed, 26 Jun 2019 14:04:18 -0700 (PDT)
+Received: from bombadil.infradead.org ([198.137.202.133]:52030 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726382AbfF0Kst (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:48:49 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/13] xfs: remove the unused xfs_count_page_state declaration
+Date: Thu, 27 Jun 2019 12:48:25 +0200
+Message-Id: <20190627104836.25446-3-hch@lst.de>
+In-Reply-To: <20190627104836.25446-1-hch@lst.de>
+References: <20190627104836.25446-1-hch@lst.de>
 MIME-Version: 1.0
-References: <CAFVd4NsBRm_pbySuSc4U=a=G4wiowZ3gFBooLEQZGZJe9V748g@mail.gmail.com>
-In-Reply-To: <CAFVd4NsBRm_pbySuSc4U=a=G4wiowZ3gFBooLEQZGZJe9V748g@mail.gmail.com>
-From: Chris Murphy <lists@colorremedies.com>
-Date: Wed, 26 Jun 2019 15:04:06 -0600
-Message-ID: <CAJCQCtRD2g1c5uyDurLbt7tedPM8g6f1-74ECAW9cA1Do1yNBQ@mail.gmail.com>
-Subject: Re: XFS Repair Error
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs list <linux-xfs@vger.kernel.org>
-Cc: Rich Otero <rotero@editshare.com>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jun 26, 2019 at 2:32 PM Rich Otero <rotero@editshare.com> wrote:
->
-> I have an XFS filesystem of approximately 56 TB on a RAID that has
-> been experiencing some disk failures. The disk problems seem to have
-> led to filesystem corruption, so I attempted to repair the filesystem
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_aops.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-This applies
-http://xfs.org/index.php/XFS_FAQ#Q:_What_information_should_I_include_when_reporting_a_problem.3F
-
-Also, are the disk failures fixed? Is the RAID happy? I'm very
-skeptical of writing anything, including repairs, let alone rw
-mounting, a file system that's one a busted or questionably working
-storage stack. The storage stack needs to be in working order first.
-Is it?
-
-> with `xfs_repair -L <device>`. Xfs_repair finished with a message
-> stating that an error occurred and to report the bug.
-
-OK why -L ? Was there a previous mount attempt and if so when kernel
-errors? Was there a previous repair attempt without -L? -L is a heavy
-hammer that shouldn't be needed unless the log is damaged and if the
-log is damaged or otherwise can't be replayed, you should get a kernel
-message about that.
-
-
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index f62b03186c62..45a1ea240cbb 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -28,7 +28,6 @@ extern const struct address_space_operations xfs_dax_aops;
+ 
+ int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
+ 
+-extern void xfs_count_page_state(struct page *, int *, int *);
+ extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
+ extern struct dax_device *xfs_find_daxdev_for_inode(struct inode *);
+ 
 -- 
-Chris Murphy
+2.20.1
