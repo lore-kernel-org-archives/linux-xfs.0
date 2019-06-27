@@ -1,51 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:44164 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726104AbfFZPKi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 11:10:38 -0400
-Date: Wed, 26 Jun 2019 08:09:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: xfs cgroup writeback support
-Message-ID: <20190626150958.GB5171@magnolia>
-References: <20190624134315.21307-1-hch@lst.de>
- <20190625032527.GF1611011@magnolia>
- <20190625100532.GE1462@lst.de>
- <20190626055701.GA5171@magnolia>
- <20190626055732.GA23631@lst.de>
+Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:59919 "EHLO
+        wout2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726462AbfF0Df7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 23:35:59 -0400
+Message-ID: <224f3629edfceb8e36a91b9451366b80aaef15cd.camel@themaw.net>
+Subject: Re: [PATCH 03/10] xfs: mount-api - add xfs_parse_param()
+From: Ian Kent <raven@themaw.net>
+Date: Thu, 27 Jun 2019 11:35:53 +0800
+In-Reply-To: <6dc984b1eb55d201c95314d146fbeafb45d71c03.camel@themaw.net>
+References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
+         <156134511636.2519.2203014992522713286.stgit@fedora-28>
+         <20190624172632.GU5387@magnolia>
+         <6dc984b1eb55d201c95314d146fbeafb45d71c03.camel@themaw.net>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190626055732.GA23631@lst.de>
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-xfs@vger.kernel.org, Stefan Priebe - Profihost AG <s.priebe@profihost.ag>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <dchinner@redhat.com>, David Howells <dhowells@redhat.com>, Al Viro <viro@ZenIV.linux.org.uk>
 
-On Wed, Jun 26, 2019 at 07:57:32AM +0200, Christoph Hellwig wrote:
-> On Tue, Jun 25, 2019 at 10:57:01PM -0700, Darrick J. Wong wrote:
-> > That may be, but I don't want to merge this patchset only to find out
-> > I've unleashed Pandora's box of untested cgroupwb hell... I /think/ they
-> > fixed all those problems, but it didn't take all that long tracing the
-> > blkg/blkcg object relationships for my brain to fall out. :/
+On Tue, 2019-06-25 at 07:47 +0800, Ian Kent wrote:
+> +	default:
+> > > +		return invalf(fc, "XFS: unknown mount option [%s].", param-
+> > > > key);
+> > 
+> > What do these messages end up looking like in dmesg?
+> > 
+> > The reason I ask is that today when mount option processing fails we log
+> > the device name in the error message:
+> > 
+> > # mount /dev/sda1 /mnt -o gribblegronk
+> > [64010.878477] XFS (sda1): unknown mount option [gribblegronk].
+> > 
+> > AFAICT using invalf (instead of xfs_warn) means that now we don't report
+> > the device name, and all you'd get is:
+> > 
+> > "[64010.878477] XFS: unknown mount option [gribblegronk]."
+> > 
+> > which is not as helpful...
 > 
-> c'mon.  We are adding handful of line patch to finally bring XFS in
-> line with everyone else.  That doesn't mean we want to take over
-> cgroup maintenance.
+> Yes, I thought that might be seen as a problem.
+> 
+> The device name was obtained from the super block in the the
+> original code and the super block isn't available at this
+> point.
+> 
+> Not sure what to do about it but I'll have a look.
+> 
 
-I didn't want us to take over maintenance of copy_file_range and the
-remap ioctls either, but now look.  /me burns out on cleaning up new
-features that haven't been adequately specified and tested and having to
-retrofit sane behavior into existing userspace ABI; and I wouldn't be
-shocked to hear Dave and Amir probably feel similarly.
+It turns out that I also made a mistake with the error string.
 
-<frown>
+The above would actually print (something like):
+[64010.878477] xfs: XFS: unknown mount option [gribblegronk]."
 
-That said, I did go digging further into how cgroup writeback accounting
-works and AFAICT the things people were complaining about in the last
-three attempts to add cgroupwb support to xfs have been solved, so I
-guess I'm fine with the series:
+I can change the case of the struct fs_parameter_description
+.name and leave out the "XFS" in the error string to fix that.
 
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+But, because the parameter parsing is done before super block
+creation, there's no bdev to get a device name from.
 
---D
+There should be a source (block device path) filed set in
+the fs context and I could dup the last component of that
+or walk the path to resolve symlinks and dup the path
+dentry d_name which should give (something like) the
+device name.
+
+But the printk %pg format is a bit different in the way
+it constructs the name from the bdev so it could well be
+different.
+
+That could lead to confusion too.
+
+Also, if an error is occurs in the VFS the message won't
+have the device name either.
+
+So I'm not sure what to do about this one, suggestions?
+
+Ian
