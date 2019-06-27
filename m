@@ -1,69 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f180.google.com ([209.85.219.180]:44922 "EHLO
-        mail-yb1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726445AbfF0QNA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 12:13:00 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:48560 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726523AbfF0SXk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 14:23:40 -0400
+Date: Thu, 27 Jun 2019 11:23:09 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 07/13] xfs: allow merging ioends over append boundaries
+Message-ID: <20190627182309.GP5171@magnolia>
+References: <20190627104836.25446-1-hch@lst.de>
+ <20190627104836.25446-8-hch@lst.de>
 MIME-Version: 1.0
-References: <155009104740.32028.193157199378698979.stgit@magnolia> <20190213205804.GE32253@magnolia>
-In-Reply-To: <20190213205804.GE32253@magnolia>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 27 Jun 2019 19:12:48 +0300
-Message-ID: <CAOQ4uximAfJjNdunY2xK_1DwC2G7v31XWbv64AdO9nYdExUsVw@mail.gmail.com>
-Subject: [STABLE 4.19] fixes for xfs memory and fs corruption
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190627104836.25446-8-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Sasha Levin <sashal@kernel.org>, Greg KH <gregkh@linuxfoundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, stable <stable@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Darrick,
+On Thu, Jun 27, 2019 at 12:48:30PM +0200, Christoph Hellwig wrote:
+> There is no real problem merging ioends that go beyond i_size into an
+> ioend that doesn't.  We just need to move the append transaction to the
+> base ioend.  Also use the opportunity to use a real error code instead
+> of the magic 1 to cancel the transactions, and write a comment
+> explaining the scheme.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Can I have your blessing on the choice of these upstream commits
-as stable candidates?
-I did not observe any xfstests regressions when testing v4.19.55
-with these patches applied.
+Reading through this patch, I have a feeling it fixes the crash that
+Zorro has been seeing occasionally with generic/475...
 
-Sasha,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can you run these patches though your xfstests setup?
-They fix nasty bugs.
+--D
 
-Make sure to update xfsprogs to very latest, because
-generic/530 used to blow up (OOM) my test machine...
-
->
-> The first patch fixes a memory corruption that syzkaller found in the
-> attr listent code;
-
-3b50086f0c0d xfs: don't overflow xattr listent buffer
-
-> see "generic: posix acl extended attribute memory
-> corruption test" for the relevant regression test.
-
-Fixed generic/529
-
->
-> Patches 2 fixes problems found in XFS's unlinked inode recovery code
-> that were unearthed by some new testcases.  We're logging nlink==1 temp
-> files on the iunlinked list (and then the vfs sets nlink to 0 without
-> telling us) which means that we leak them in recovery if we crash
-> immediately after the committing the creation of the temp file.
->
-> Patch 3 fixes the problem that ifree during recovery can expand the
-> finobt but we need to force the ifree code to reserve blocks for the
-> transaction because perag reservations aren't set up yet.
-
-e1f6ca113815 xfs: rename m_inotbt_nores to m_finobt_nores
-15a268d9f263 xfs: reserve blocks for ifree transaction during log recovery
-c4a6bf7f6cc7 xfs: don't ever put nlink > 0 inodes on the unlinked list
-
->
-> See "[PATCH v2 2/2] generic: check the behavior of programs opening a
-> lot of O_TMPFILE files" for the regression test.
->
-
-Fixes generic/530
-
-Thanks,
-Amir.
+> ---
+>  fs/xfs/xfs_aops.c | 28 +++++++++++++++++++++-------
+>  1 file changed, 21 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 8b3070a40245..4ef8343c3759 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -314,11 +314,28 @@ xfs_ioend_can_merge(
+>  		return false;
+>  	if (ioend->io_offset + ioend->io_size != next->io_offset)
+>  		return false;
+> -	if (xfs_ioend_is_append(ioend) != xfs_ioend_is_append(next))
+> -		return false;
+>  	return true;
+>  }
+>  
+> +/*
+> + * If the to be merged ioend has a preallocated transaction for file
+> + * size updates we need to ensure the ioend it is merged into also
+> + * has one.  If it already has one we can simply cancel the transaction
+> + * as it is guaranteed to be clean.
+> + */
+> +static void
+> +xfs_ioend_merge_append_transactions(
+> +	struct xfs_ioend	*ioend,
+> +	struct xfs_ioend	*next)
+> +{
+> +	if (!ioend->io_append_trans) {
+> +		ioend->io_append_trans = next->io_append_trans;
+> +		next->io_append_trans = NULL;
+> +	} else {
+> +		xfs_setfilesize_ioend(next, -ECANCELED);
+> +	}
+> +}
+> +
+>  /* Try to merge adjacent completions. */
+>  STATIC void
+>  xfs_ioend_try_merge(
+> @@ -327,7 +344,6 @@ xfs_ioend_try_merge(
+>  {
+>  	struct xfs_ioend	*next_ioend;
+>  	int			ioend_error;
+> -	int			error;
+>  
+>  	if (list_empty(more_ioends))
+>  		return;
+> @@ -341,10 +357,8 @@ xfs_ioend_try_merge(
+>  			break;
+>  		list_move_tail(&next_ioend->io_list, &ioend->io_list);
+>  		ioend->io_size += next_ioend->io_size;
+> -		if (ioend->io_append_trans) {
+> -			error = xfs_setfilesize_ioend(next_ioend, 1);
+> -			ASSERT(error == 1);
+> -		}
+> +		if (next_ioend->io_append_trans)
+> +			xfs_ioend_merge_append_transactions(ioend, next_ioend);
+>  	}
+>  }
+>  
+> -- 
+> 2.20.1
+> 
