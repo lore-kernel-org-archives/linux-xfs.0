@@ -1,82 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48416 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726271AbfFZUos (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:44:48 -0400
-Subject: [PATCH 05/15] xfs: remove unnecessary includes of xfs_itable.h
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:44:28 -0700
-Message-ID: <156158186815.495087.10995970602986192086.stgit@magnolia>
-In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
-References: <156158183697.495087.5371839759804528321.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:52112 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726786AbfF0KtE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:49:04 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 08/13] xfs: simplify xfs_ioend_can_merge
+Date: Thu, 27 Jun 2019 12:48:31 +0200
+Message-Id: <20190627104836.25446-9-hch@lst.de>
+In-Reply-To: <20190627104836.25446-1-hch@lst.de>
+References: <20190627104836.25446-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Compare the block layer status directly instead of converting it to
+an errno first.
 
-Don't include xfs_itable.h in files that don't need it.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/common.c |    1 -
- fs/xfs/scrub/dir.c    |    1 -
- fs/xfs/scrub/scrub.c  |    1 -
- fs/xfs/xfs_trace.c    |    1 -
- 4 files changed, 4 deletions(-)
+ fs/xfs/xfs_aops.c | 14 ++------------
+ 1 file changed, 2 insertions(+), 12 deletions(-)
 
-
-diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-index 973aa59975e3..561d7e818e8b 100644
---- a/fs/xfs/scrub/common.c
-+++ b/fs/xfs/scrub/common.c
-@@ -17,7 +17,6 @@
- #include "xfs_sb.h"
- #include "xfs_inode.h"
- #include "xfs_icache.h"
--#include "xfs_itable.h"
- #include "xfs_alloc.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_bmap.h"
-diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
-index a38a22785a1a..9018ca4aba64 100644
---- a/fs/xfs/scrub/dir.c
-+++ b/fs/xfs/scrub/dir.c
-@@ -17,7 +17,6 @@
- #include "xfs_sb.h"
- #include "xfs_inode.h"
- #include "xfs_icache.h"
--#include "xfs_itable.h"
- #include "xfs_da_format.h"
- #include "xfs_da_btree.h"
- #include "xfs_dir2.h"
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index f630389ee176..5689a33e999c 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -17,7 +17,6 @@
- #include "xfs_sb.h"
- #include "xfs_inode.h"
- #include "xfs_icache.h"
--#include "xfs_itable.h"
- #include "xfs_alloc.h"
- #include "xfs_alloc_btree.h"
- #include "xfs_bmap.h"
-diff --git a/fs/xfs/xfs_trace.c b/fs/xfs/xfs_trace.c
-index cb6489c22cad..f555a3c560b9 100644
---- a/fs/xfs/xfs_trace.c
-+++ b/fs/xfs/xfs_trace.c
-@@ -16,7 +16,6 @@
- #include "xfs_btree.h"
- #include "xfs_da_btree.h"
- #include "xfs_ialloc.h"
--#include "xfs_itable.h"
- #include "xfs_alloc.h"
- #include "xfs_bmap.h"
- #include "xfs_attr.h"
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 4ef8343c3759..cd839f24c7ef 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -299,13 +299,9 @@ xfs_end_ioend(
+ static bool
+ xfs_ioend_can_merge(
+ 	struct xfs_ioend	*ioend,
+-	int			ioend_error,
+ 	struct xfs_ioend	*next)
+ {
+-	int			next_error;
+-
+-	next_error = blk_status_to_errno(next->io_bio->bi_status);
+-	if (ioend_error != next_error)
++	if (ioend->io_bio->bi_status != next->io_bio->bi_status)
+ 		return false;
+ 	if ((ioend->io_fork == XFS_COW_FORK) ^ (next->io_fork == XFS_COW_FORK))
+ 		return false;
+@@ -343,17 +339,11 @@ xfs_ioend_try_merge(
+ 	struct list_head	*more_ioends)
+ {
+ 	struct xfs_ioend	*next_ioend;
+-	int			ioend_error;
+-
+-	if (list_empty(more_ioends))
+-		return;
+-
+-	ioend_error = blk_status_to_errno(ioend->io_bio->bi_status);
+ 
+ 	while (!list_empty(more_ioends)) {
+ 		next_ioend = list_first_entry(more_ioends, struct xfs_ioend,
+ 				io_list);
+-		if (!xfs_ioend_can_merge(ioend, ioend_error, next_ioend))
++		if (!xfs_ioend_can_merge(ioend, next_ioend))
+ 			break;
+ 		list_move_tail(&next_ioend->io_list, &ioend->io_list);
+ 		ioend->io_size += next_ioend->io_size;
+-- 
+2.20.1
