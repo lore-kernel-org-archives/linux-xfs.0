@@ -1,44 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from ms.lwn.net ([45.79.88.28]:41858 "EHLO ms.lwn.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726828AbfF2POw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 29 Jun 2019 11:14:52 -0400
-Date: Sat, 29 Jun 2019 09:14:49 -0600
-From: Jonathan Corbet <corbet@lwn.net>
-Subject: Re: [PATCH v1] Doc : fs : convert xfs.txt to ReST
-Message-ID: <20190629091449.18208b74@lwn.net>
-In-Reply-To: <20190629150155.GB10491@localhost>
-References: <20190628214302.GA12096@localhost>
-        <20190629010733.GA31770@localhost>
-        <20190629145433.GA10491@localhost>
-        <20190629150155.GB10491@localhost>
+Received: from bombadil.infradead.org ([198.137.202.133]:46288 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726431AbfF0Ojx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 10:39:53 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] xfs: fix iclog allocation size
+Date: Thu, 27 Jun 2019 16:39:50 +0200
+Message-Id: <20190627143950.19558-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sheriff Esseson <sheriffesseson@gmail.com>
-Cc: skhan@linuxfoundation.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org
+To: linux-xfs@vger.kernel.org
+Cc: syzbot+b75afdbe271a0d7ac4f6@syzkaller.appspotmail.com
 
-On Sat, 29 Jun 2019 16:01:55 +0100
-Sheriff Esseson <sheriffesseson@gmail.com> wrote:
+Properly allocate the space for the bio_vecs instead of just one byte
+per bio_vec.
 
-> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
-> ---
-> 
-> In v2.1:
-> cc mentees list.
+Fixes: 991fc1d2e65e ("xfs: use bios directly to write log buffers")
+Reported-by: syzbot+b75afdbe271a0d7ac4f6@syzkaller.appspotmail.com
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_log.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Please do us a favor?  
-
-1) Post each patch standalone, without quoted text, ready to be applied.
-
-2) Wait a little while between postings so that you can address more than
-one comment at a time.
-
-OK, two favors - off-by-one errors are my specialty...:)
-
-Thanks,
-
-jon
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 0f849b4095d6..e230f3c18ceb 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1415,7 +1415,8 @@ xlog_alloc_log(
+ 	 */
+ 	ASSERT(log->l_iclog_size >= 4096);
+ 	for (i = 0; i < log->l_iclog_bufs; i++) {
+-		size_t bvec_size = howmany(log->l_iclog_size, PAGE_SIZE);
++		size_t bvec_size = howmany(log->l_iclog_size, PAGE_SIZE) *
++				sizeof(struct bio_vec);
+ 
+ 		iclog = kmem_zalloc(sizeof(*iclog) + bvec_size, KM_MAYFAIL);
+ 		if (!iclog)
+-- 
+2.20.1
