@@ -1,64 +1,39 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:19086 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726059AbfF0Hd4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 27 Jun 2019 03:33:56 -0400
-From: YueHaibing <yuehaibing@huawei.com>
-Subject: [PATCH -next] xfs: remove duplicated include
-Date: Thu, 27 Jun 2019 15:33:23 +0800
-Message-ID: <20190627073323.45516-1-yuehaibing@huawei.com>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42020 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726405AbfF0Py6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 11:54:58 -0400
+Received: by mail-pg1-f195.google.com with SMTP id k13so1207209pgq.9
+        for <linux-xfs@vger.kernel.org>; Thu, 27 Jun 2019 08:54:58 -0700 (PDT)
+Date: Thu, 27 Jun 2019 15:54:55 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [backport request][stable] xfs: xfstests generic/538 failed on
+ xfs
+Message-ID: <20190627155455.GA30113@42.do-not-panic.com>
+References: <a665a93a-0bf8-aedb-2ba3-d4b2fb672970@linux.alibaba.com>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <a665a93a-0bf8-aedb-2ba3-d4b2fb672970@linux.alibaba.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com, hch@lst.de, dchinner@redhat.com
-Cc: linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, YueHaibing <yuehaibing@huawei.com>
+To: Alvin Zheng <Alvin@linux.alibaba.com>
+Cc: gregkh <gregkh@linuxfoundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, bfoster@redhat.com, "joseph.qi" <joseph.qi@linux.alibaba.com>, caspar <caspar@linux.alibaba.com>
 
-Remove duplicated include.
+On Thu, Jun 27, 2019 at 08:10:56PM +0800, Alvin Zheng wrote:
+> Hi,
+> 
+>     I  was using kernel v4.19.y and found that it cannot pass the
+> generic/538 due to data corruption. I notice that upstream has fix this
+> issue with commit 2032a8a27b5cc0f578d37fa16fa2494b80a0d00a. Will v4.19.y
+> backport this patch?
 
-Signed-off-by: YueHaibing <yuehaibing@huawei.com>
----
- fs/xfs/xfs_extfree_item.c | 1 -
- fs/xfs/xfs_filestream.c   | 1 -
- fs/xfs/xfs_pnfs.c         | 1 -
- 3 files changed, 3 deletions(-)
+Hey Alvin,
 
-diff --git a/fs/xfs/xfs_extfree_item.c b/fs/xfs/xfs_extfree_item.c
-index 99fd40eb..e515506 100644
---- a/fs/xfs/xfs_extfree_item.c
-+++ b/fs/xfs/xfs_extfree_item.c
-@@ -13,7 +13,6 @@
- #include "xfs_mount.h"
- #include "xfs_defer.h"
- #include "xfs_trans.h"
--#include "xfs_trans.h"
- #include "xfs_trans_priv.h"
- #include "xfs_buf_item.h"
- #include "xfs_extfree_item.h"
-diff --git a/fs/xfs/xfs_filestream.c b/fs/xfs/xfs_filestream.c
-index b1869ae..a6d228c 100644
---- a/fs/xfs/xfs_filestream.c
-+++ b/fs/xfs/xfs_filestream.c
-@@ -21,7 +21,6 @@
- #include "xfs_trace.h"
- #include "xfs_ag_resv.h"
- #include "xfs_trans.h"
--#include "xfs_shared.h"
- 
- struct xfs_fstrm_item {
- 	struct xfs_mru_cache_elem	mru;
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 2d95355..6018e1c 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -17,7 +17,6 @@
- #include "xfs_bmap_util.h"
- #include "xfs_error.h"
- #include "xfs_iomap.h"
--#include "xfs_shared.h"
- #include "xfs_bit.h"
- #include "xfs_pnfs.h"
- 
--- 
-2.7.4
+Thanks for Bringing this to attention.  I'll look into this a bit more.
+Time for a new set of stable fixes for v4.19.y. Of course, I welcome
+Briant's feedback, but if he's busy I'll still look into it.
+
+  Luis
