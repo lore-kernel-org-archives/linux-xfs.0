@@ -1,58 +1,135 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:50424 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726271AbfFZUpN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:45:13 -0400
-Subject: [PATCH 10/15] xfs: clean up long conditionals in xfs_iwalk_ichunk_ra
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:44:59 -0700
-Message-ID: <156158189928.495087.16212084141786646726.stgit@magnolia>
-In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
-References: <156158183697.495087.5371839759804528321.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:52140 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726829AbfF0KtK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:49:10 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 10/13] xfs: turn io_append_trans into an io_private void pointer
+Date: Thu, 27 Jun 2019 12:48:33 +0200
+Message-Id: <20190627104836.25446-11-hch@lst.de>
+In-Reply-To: <20190627104836.25446-1-hch@lst.de>
+References: <20190627104836.25446-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+In preparation for moving the ioend structure to common code we need
+to get rid of the xfs-specific xfs_trans type.  Just make it a file
+system private void pointer instead.
 
-Refactor xfs_iwalk_ichunk_ra to avoid long conditionals.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iwalk.c |   12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ fs/xfs/xfs_aops.c | 26 +++++++++++++-------------
+ fs/xfs/xfs_aops.h |  2 +-
+ 2 files changed, 14 insertions(+), 14 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-index 16744fa556c6..e0d13f5c9cf9 100644
---- a/fs/xfs/xfs_iwalk.c
-+++ b/fs/xfs/xfs_iwalk.c
-@@ -83,16 +83,16 @@ xfs_iwalk_ichunk_ra(
- 	agbno = XFS_AGINO_TO_AGBNO(mp, irec->ir_startino);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f3b99b0a9999..5f77ac93e5ab 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -155,7 +155,7 @@ xfs_setfilesize_trans_alloc(
+ 	if (error)
+ 		return error;
  
- 	blk_start_plug(&plug);
--	for (i = 0;
--	     i < XFS_INODES_PER_CHUNK;
--	     i += igeo->inodes_per_cluster,
--			agbno += igeo->blocks_per_cluster) {
--		if (xfs_inobt_maskn(i, igeo->inodes_per_cluster) &
--		    ~irec->ir_free) {
-+	for (i = 0; i < XFS_INODES_PER_CHUNK; i += igeo->inodes_per_cluster) {
-+		xfs_inofree_t	imask;
-+
-+		imask = xfs_inobt_maskn(i, igeo->inodes_per_cluster);
-+		if (imask & ~irec->ir_free) {
- 			xfs_btree_reada_bufs(mp, agno, agbno,
- 					igeo->blocks_per_cluster,
- 					&xfs_inode_buf_ops);
- 		}
-+		agbno += igeo->blocks_per_cluster;
+-	ioend->io_append_trans = tp;
++	ioend->io_private = tp;
+ 
+ 	/*
+ 	 * We may pass freeze protection with a transaction.  So tell lockdep
+@@ -222,7 +222,7 @@ xfs_setfilesize_ioend(
+ 	int			error)
+ {
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+-	struct xfs_trans	*tp = ioend->io_append_trans;
++	struct xfs_trans	*tp = ioend->io_private;
+ 
+ 	/*
+ 	 * The transaction may have been allocated in the I/O submission thread,
+@@ -287,10 +287,10 @@ xfs_end_ioend(
+ 	else if (ioend->io_type == IOMAP_UNWRITTEN)
+ 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+ 	else
+-		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_append_trans);
++		ASSERT(!xfs_ioend_is_append(ioend) || ioend->io_private);
+ 
+ done:
+-	if (ioend->io_append_trans)
++	if (ioend->io_private)
+ 		error = xfs_setfilesize_ioend(ioend, error);
+ 	xfs_destroy_ioends(ioend, error);
+ 	memalloc_nofs_restore(nofs_flag);
+@@ -323,13 +323,13 @@ xfs_ioend_can_merge(
+  * as it is guaranteed to be clean.
+  */
+ static void
+-xfs_ioend_merge_append_transactions(
++xfs_ioend_merge_private(
+ 	struct xfs_ioend	*ioend,
+ 	struct xfs_ioend	*next)
+ {
+-	if (!ioend->io_append_trans) {
+-		ioend->io_append_trans = next->io_append_trans;
+-		next->io_append_trans = NULL;
++	if (!ioend->io_private) {
++		ioend->io_private = next->io_private;
++		next->io_private = NULL;
+ 	} else {
+ 		xfs_setfilesize_ioend(next, -ECANCELED);
  	}
- 	blk_finish_plug(&plug);
+@@ -351,8 +351,8 @@ xfs_ioend_try_merge(
+ 			break;
+ 		list_move_tail(&next->io_list, &ioend->io_list);
+ 		ioend->io_size += next->io_size;
+-		if (next->io_append_trans)
+-			xfs_ioend_merge_append_transactions(ioend, next);
++		if (next->io_private)
++			xfs_ioend_merge_private(ioend, next);
+ 	}
  }
+ 
+@@ -415,7 +415,7 @@ xfs_end_bio(
+ 
+ 	if (ioend->io_fork == XFS_COW_FORK ||
+ 	    ioend->io_type == IOMAP_UNWRITTEN ||
+-	    ioend->io_append_trans != NULL) {
++	    ioend->io_private) {
+ 		spin_lock_irqsave(&ip->i_ioend_lock, flags);
+ 		if (list_empty(&ip->i_ioend_list))
+ 			WARN_ON_ONCE(!queue_work(mp->m_unwritten_workqueue,
+@@ -680,7 +680,7 @@ xfs_submit_ioend(
+ 	    (ioend->io_fork == XFS_COW_FORK ||
+ 	     ioend->io_type != IOMAP_UNWRITTEN) &&
+ 	    xfs_ioend_is_append(ioend) &&
+-	    !ioend->io_append_trans)
++	    !ioend->io_private)
+ 		status = xfs_setfilesize_trans_alloc(ioend);
+ 
+ 	memalloc_nofs_restore(nofs_flag);
+@@ -729,7 +729,7 @@ xfs_alloc_ioend(
+ 	ioend->io_inode = inode;
+ 	ioend->io_size = 0;
+ 	ioend->io_offset = offset;
+-	ioend->io_append_trans = NULL;
++	ioend->io_private = NULL;
+ 	ioend->io_bio = bio;
+ 	return ioend;
+ }
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 4af8ec0115cd..6a45d675dcba 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -18,7 +18,7 @@ struct xfs_ioend {
+ 	struct inode		*io_inode;	/* file being written to */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
+-	struct xfs_trans	*io_append_trans;/* xact. for size update */
++	void			*io_private;	/* file system private data */
+ 	struct bio		*io_bio;	/* bio being built */
+ 	struct bio		io_inline_bio;	/* MUST BE LAST! */
+ };
+-- 
+2.20.1
