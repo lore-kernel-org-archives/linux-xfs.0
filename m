@@ -1,164 +1,224 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49732 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726487AbfFZUqk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 26 Jun 2019 16:46:40 -0400
-Subject: [PATCH 03/15] xfs: convert quotacheck to use the new iwalk functions
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 26 Jun 2019 13:44:15 -0700
-Message-ID: <156158185592.495087.13186738794490297341.stgit@magnolia>
-In-Reply-To: <156158183697.495087.5371839759804528321.stgit@magnolia>
-References: <156158183697.495087.5371839759804528321.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:52092 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726711AbfF0Ks7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 06:48:59 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/13] xfs: remove XFS_TRANS_NOFS
+Date: Thu, 27 Jun 2019 12:48:29 +0200
+Message-Id: <20190627104836.25446-7-hch@lst.de>
+In-Reply-To: <20190627104836.25446-1-hch@lst.de>
+References: <20190627104836.25446-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, Dave Chinner <dchinner@redhat.com>
+To: "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Instead of a magic flag for xfs_trans_alloc, just ensure all callers
+that can't relclaim through the file system use memalloc_nofs_save to
+set the per-task nofs flag.
 
-Convert quotacheck to use the new iwalk iterator to dig through the
-inodes.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_qm.c |   63 +++++++++++++++++--------------------------------------
- 1 file changed, 20 insertions(+), 43 deletions(-)
+ fs/xfs/libxfs/xfs_shared.h |  1 -
+ fs/xfs/xfs_aops.c          | 35 ++++++++++++++++++++++-------------
+ fs/xfs/xfs_file.c          | 12 +++++++++---
+ fs/xfs/xfs_iomap.c         |  2 +-
+ fs/xfs/xfs_reflink.c       |  4 ++--
+ fs/xfs/xfs_trans.c         |  4 +---
+ 6 files changed, 35 insertions(+), 23 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index aa6b6db3db0e..52e8ec0aa064 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -14,7 +14,7 @@
- #include "xfs_mount.h"
- #include "xfs_inode.h"
- #include "xfs_ialloc.h"
--#include "xfs_itable.h"
-+#include "xfs_iwalk.h"
- #include "xfs_quota.h"
- #include "xfs_error.h"
- #include "xfs_bmap.h"
-@@ -1118,17 +1118,15 @@ xfs_qm_quotacheck_dqadjust(
- /* ARGSUSED */
- STATIC int
- xfs_qm_dqusage_adjust(
--	xfs_mount_t	*mp,		/* mount point for filesystem */
--	xfs_ino_t	ino,		/* inode number to get data for */
--	void		__user *buffer,	/* not used */
--	int		ubsize,		/* not used */
--	int		*ubused,	/* not used */
--	int		*res)		/* result code value */
-+	struct xfs_mount	*mp,
-+	struct xfs_trans	*tp,
-+	xfs_ino_t		ino,
-+	void			*data)
- {
--	xfs_inode_t	*ip;
--	xfs_qcnt_t	nblks;
--	xfs_filblks_t	rtblks = 0;	/* total rt blks */
--	int		error;
-+	struct xfs_inode	*ip;
-+	xfs_qcnt_t		nblks;
-+	xfs_filblks_t		rtblks = 0;	/* total rt blks */
-+	int			error;
+diff --git a/fs/xfs/libxfs/xfs_shared.h b/fs/xfs/libxfs/xfs_shared.h
+index b9094709bc79..c45acbd3add9 100644
+--- a/fs/xfs/libxfs/xfs_shared.h
++++ b/fs/xfs/libxfs/xfs_shared.h
+@@ -65,7 +65,6 @@ void	xfs_log_get_max_trans_res(struct xfs_mount *mp,
+ #define XFS_TRANS_DQ_DIRTY	0x10	/* at least one dquot in trx dirty */
+ #define XFS_TRANS_RESERVE	0x20    /* OK to use reserved data blocks */
+ #define XFS_TRANS_NO_WRITECOUNT 0x40	/* do not elevate SB writecount */
+-#define XFS_TRANS_NOFS		0x80	/* pass KM_NOFS to kmem_alloc */
+ /*
+  * LOWMODE is used by the allocator to activate the lowspace algorithm - when
+  * free space is running low the extent allocator may choose to allocate an
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 243548b9d0cc..8b3070a40245 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -138,8 +138,7 @@ xfs_setfilesize_trans_alloc(
+ 	struct xfs_trans	*tp;
+ 	int			error;
  
- 	ASSERT(XFS_IS_QUOTA_RUNNING(mp));
- 
-@@ -1136,20 +1134,18 @@ xfs_qm_dqusage_adjust(
- 	 * rootino must have its resources accounted for, not so with the quota
- 	 * inodes.
- 	 */
--	if (xfs_is_quota_inode(&mp->m_sb, ino)) {
--		*res = BULKSTAT_RV_NOTHING;
--		return -EINVAL;
--	}
-+	if (xfs_is_quota_inode(&mp->m_sb, ino))
-+		return 0;
- 
- 	/*
- 	 * We don't _need_ to take the ilock EXCL here because quotacheck runs
- 	 * at mount time and therefore nobody will be racing chown/chproj.
- 	 */
--	error = xfs_iget(mp, NULL, ino, XFS_IGET_DONTCACHE, 0, &ip);
--	if (error) {
--		*res = BULKSTAT_RV_NOTHING;
-+	error = xfs_iget(mp, tp, ino, XFS_IGET_DONTCACHE, 0, &ip);
-+	if (error == -EINVAL || error == -ENOENT)
-+		return 0;
-+	if (error)
+-	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0,
+-				XFS_TRANS_NOFS, &tp);
++	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_fsyncts, 0, 0, 0, &tp);
+ 	if (error)
  		return error;
--	}
  
- 	ASSERT(ip->i_delayed_blks == 0);
+@@ -240,8 +239,16 @@ xfs_end_ioend(
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	xfs_off_t		offset = ioend->io_offset;
+ 	size_t			size = ioend->io_size;
++	unsigned int		nofs_flag;
+ 	int			error;
  
-@@ -1157,7 +1153,7 @@ xfs_qm_dqusage_adjust(
- 		struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, XFS_DATA_FORK);
++	/*
++	 * We can do memory allocation here, but aren't in transactional
++	 * context.  To avoid memory allocation deadlocks set the task-wide
++	 * nofs context for the following operations.
++	 */
++	nofs_flag = memalloc_nofs_save();
++
+ 	/*
+ 	 * Just clean up the in-memory strutures if the fs has been shut down.
+ 	 */
+@@ -282,6 +289,8 @@ xfs_end_ioend(
+ 		list_del_init(&ioend->io_list);
+ 		xfs_destroy_ioend(ioend, error);
+ 	}
++
++	memalloc_nofs_restore(nofs_flag);
+ }
  
- 		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
--			error = xfs_iread_extents(NULL, ip, XFS_DATA_FORK);
-+			error = xfs_iread_extents(tp, ip, XFS_DATA_FORK);
- 			if (error)
- 				goto error0;
- 		}
-@@ -1200,13 +1196,8 @@ xfs_qm_dqusage_adjust(
- 			goto error0;
+ /*
+@@ -641,21 +650,19 @@ xfs_submit_ioend(
+ 	struct xfs_ioend	*ioend,
+ 	int			status)
+ {
++	unsigned int		nofs_flag;
++
++	/*
++	 * We can do memory allocation here, but aren't in transactional
++	 * context.  To avoid memory allocation deadlocks set the task-wide
++	 * nofs context for the following operations.
++	 */
++	nofs_flag = memalloc_nofs_save();
++
+ 	/* Convert CoW extents to regular */
+ 	if (!status && ioend->io_fork == XFS_COW_FORK) {
+-		/*
+-		 * Yuk. This can do memory allocation, but is not a
+-		 * transactional operation so everything is done in GFP_KERNEL
+-		 * context. That can deadlock, because we hold pages in
+-		 * writeback state and GFP_KERNEL allocations can block on them.
+-		 * Hence we must operate in nofs conditions here.
+-		 */
+-		unsigned nofs_flag;
+-
+-		nofs_flag = memalloc_nofs_save();
+ 		status = xfs_reflink_convert_cow(XFS_I(ioend->io_inode),
+ 				ioend->io_offset, ioend->io_size);
+-		memalloc_nofs_restore(nofs_flag);
  	}
  
--	xfs_irele(ip);
--	*res = BULKSTAT_RV_DIDONE;
--	return 0;
--
- error0:
- 	xfs_irele(ip);
--	*res = BULKSTAT_RV_GIVEUP;
+ 	/* Reserve log space if we might write beyond the on-disk inode size. */
+@@ -666,6 +673,8 @@ xfs_submit_ioend(
+ 	    !ioend->io_append_trans)
+ 		status = xfs_setfilesize_trans_alloc(ioend);
+ 
++	memalloc_nofs_restore(nofs_flag);
++
+ 	ioend->io_bio->bi_private = ioend;
+ 	ioend->io_bio->bi_end_io = xfs_end_bio;
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 916a35cae5e9..f2d806ef8f06 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -379,6 +379,7 @@ xfs_dio_write_end_io(
+ 	struct inode		*inode = file_inode(iocb->ki_filp);
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	loff_t			offset = iocb->ki_pos;
++	unsigned int		nofs_flag;
+ 	int			error = 0;
+ 
+ 	trace_xfs_end_io_direct_write(ip, offset, size);
+@@ -395,10 +396,11 @@ xfs_dio_write_end_io(
+ 	 */
+ 	XFS_STATS_ADD(ip->i_mount, xs_write_bytes, size);
+ 
++	nofs_flag = memalloc_nofs_save();
+ 	if (flags & IOMAP_DIO_COW) {
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 		if (error)
+-			return error;
++			goto out;
+ 	}
+ 
+ 	/*
+@@ -407,8 +409,10 @@ xfs_dio_write_end_io(
+ 	 * earlier allows a racing dio read to find unwritten extents before
+ 	 * they are converted.
+ 	 */
+-	if (flags & IOMAP_DIO_UNWRITTEN)
+-		return xfs_iomap_write_unwritten(ip, offset, size, true);
++	if (flags & IOMAP_DIO_UNWRITTEN) {
++		error = xfs_iomap_write_unwritten(ip, offset, size, true);
++		goto out;
++	}
+ 
+ 	/*
+ 	 * We need to update the in-core inode size here so that we don't end up
+@@ -430,6 +434,8 @@ xfs_dio_write_end_io(
+ 		spin_unlock(&ip->i_flags_lock);
+ 	}
+ 
++out:
++	memalloc_nofs_restore(nofs_flag);
  	return error;
  }
  
-@@ -1270,18 +1261,13 @@ STATIC int
- xfs_qm_quotacheck(
- 	xfs_mount_t	*mp)
- {
--	int			done, count, error, error2;
--	xfs_ino_t		lastino;
--	size_t			structsz;
-+	int			error, error2;
- 	uint			flags;
- 	LIST_HEAD		(buffer_list);
- 	struct xfs_inode	*uip = mp->m_quotainfo->qi_uquotaip;
- 	struct xfs_inode	*gip = mp->m_quotainfo->qi_gquotaip;
- 	struct xfs_inode	*pip = mp->m_quotainfo->qi_pquotaip;
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 6b29452bfba0..461ea023b910 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -782,7 +782,7 @@ xfs_iomap_write_unwritten(
+ 		 * complete here and might deadlock on the iolock.
+ 		 */
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+-				XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
++				XFS_TRANS_RESERVE, &tp);
+ 		if (error)
+ 			return error;
  
--	count = INT_MAX;
--	structsz = 1;
--	lastino = 0;
- 	flags = 0;
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index 680ae7662a78..0b23c2b29609 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -572,7 +572,7 @@ xfs_reflink_cancel_cow_range(
  
- 	ASSERT(uip || gip || pip);
-@@ -1318,18 +1304,9 @@ xfs_qm_quotacheck(
- 		flags |= XFS_PQUOTA_CHKD;
- 	}
+ 	/* Start a rolling transaction to remove the mappings */
+ 	error = xfs_trans_alloc(ip->i_mount, &M_RES(ip->i_mount)->tr_write,
+-			0, 0, XFS_TRANS_NOFS, &tp);
++			0, 0, 0, &tp);
+ 	if (error)
+ 		goto out;
  
--	do {
--		/*
--		 * Iterate thru all the inodes in the file system,
--		 * adjusting the corresponding dquot counters in core.
--		 */
--		error = xfs_bulkstat(mp, &lastino, &count,
--				     xfs_qm_dqusage_adjust,
--				     structsz, NULL, &done);
--		if (error)
--			break;
+@@ -631,7 +631,7 @@ xfs_reflink_end_cow_extent(
+ 
+ 	resblks = XFS_EXTENTADD_SPACE_RES(mp, XFS_DATA_FORK);
+ 	error = xfs_trans_alloc(mp, &M_RES(mp)->tr_write, resblks, 0,
+-			XFS_TRANS_RESERVE | XFS_TRANS_NOFS, &tp);
++			XFS_TRANS_RESERVE, &tp);
+ 	if (error)
+ 		return error;
+ 
+diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
+index b026f87608ce..2ad3faa12206 100644
+--- a/fs/xfs/xfs_trans.c
++++ b/fs/xfs/xfs_trans.c
+@@ -264,9 +264,7 @@ xfs_trans_alloc(
+ 	 * GFP_NOFS allocation context so that we avoid lockdep false positives
+ 	 * by doing GFP_KERNEL allocations inside sb_start_intwrite().
+ 	 */
+-	tp = kmem_zone_zalloc(xfs_trans_zone,
+-		(flags & XFS_TRANS_NOFS) ? KM_NOFS : KM_SLEEP);
 -
--	} while (!done);
-+	error = xfs_iwalk(mp, NULL, 0, xfs_qm_dqusage_adjust, 0, NULL);
-+	if (error)
-+		goto error_return;
++	tp = kmem_zone_zalloc(xfs_trans_zone, KM_SLEEP);
+ 	if (!(flags & XFS_TRANS_NO_WRITECOUNT))
+ 		sb_start_intwrite(mp->m_super);
  
- 	/*
- 	 * We've made all the changes that we need to make incore.  Flush them
+-- 
+2.20.1
