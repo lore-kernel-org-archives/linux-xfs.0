@@ -1,51 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:59398 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726280AbfFETPO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 5 Jun 2019 15:15:14 -0400
-Received: from 089144193064.atnat0002.highway.a1.net ([89.144.193.64] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.90_1 #2 (Red Hat Linux))
-        id 1hYbNR-0001sl-ES
-        for linux-xfs@vger.kernel.org; Wed, 05 Jun 2019 19:15:13 +0000
-From: Christoph Hellwig <hch@lst.de>
-Subject: use bios directly in the log code v4
-Date: Wed,  5 Jun 2019 21:14:47 +0200
-Message-Id: <20190605191511.32695-1-hch@lst.de>
+Received: from mail-yb1-f180.google.com ([209.85.219.180]:44922 "EHLO
+        mail-yb1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726445AbfF0QNA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 12:13:00 -0400
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <155009104740.32028.193157199378698979.stgit@magnolia> <20190213205804.GE32253@magnolia>
+In-Reply-To: <20190213205804.GE32253@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Thu, 27 Jun 2019 19:12:48 +0300
+Message-ID: <CAOQ4uximAfJjNdunY2xK_1DwC2G7v31XWbv64AdO9nYdExUsVw@mail.gmail.com>
+Subject: [STABLE 4.19] fixes for xfs memory and fs corruption
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Sasha Levin <sashal@kernel.org>, Greg KH <gregkh@linuxfoundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, stable <stable@vger.kernel.org>
 
-Hi all,
+Darrick,
 
-this series switches the log writing and log recovery code to use bios
-directly, and remove various special cases from the buffer cache code.
+Can I have your blessing on the choice of these upstream commits
+as stable candidates?
+I did not observe any xfstests regressions when testing v4.19.55
+with these patches applied.
 
-A git tree is available here:
+Sasha,
 
-    git://git.infradead.org/users/hch/xfs.git xfs-log-bio
+Can you run these patches though your xfstests setup?
+They fix nasty bugs.
 
-Gitweb:
+Make sure to update xfsprogs to very latest, because
+generic/530 used to blow up (OOM) my test machine...
 
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-log-bio
+>
+> The first patch fixes a memory corruption that syzkaller found in the
+> attr listent code;
 
-Chances since v3:
- - add a few additional cleanup patches
- - clean up iclog allocation
- - drop a not required vmap invalidation
- - better document the iclog size fields
- - fix vmap invalidation
+3b50086f0c0d xfs: don't overflow xattr listent buffer
 
-Changes since v2:
- - rename the 'flush' flag to 'need_flush'
- - spelling fixes
- - minor cleanups
+> see "generic: posix acl extended attribute memory
+> corruption test" for the relevant regression test.
 
-Changes since v1:
- - rebased to not required the log item series first
- - split the bio-related code out of xfs_log_recover.c into a new file
-   to ease using xfs_log_recover.c in xfsprogs
- - use kmem_alloc_large instead of vmalloc to allocate the buffer
- - additional minor cleanups
+Fixed generic/529
+
+>
+> Patches 2 fixes problems found in XFS's unlinked inode recovery code
+> that were unearthed by some new testcases.  We're logging nlink==1 temp
+> files on the iunlinked list (and then the vfs sets nlink to 0 without
+> telling us) which means that we leak them in recovery if we crash
+> immediately after the committing the creation of the temp file.
+>
+> Patch 3 fixes the problem that ifree during recovery can expand the
+> finobt but we need to force the ifree code to reserve blocks for the
+> transaction because perag reservations aren't set up yet.
+
+e1f6ca113815 xfs: rename m_inotbt_nores to m_finobt_nores
+15a268d9f263 xfs: reserve blocks for ifree transaction during log recovery
+c4a6bf7f6cc7 xfs: don't ever put nlink > 0 inodes on the unlinked list
+
+>
+> See "[PATCH v2 2/2] generic: check the behavior of programs opening a
+> lot of O_TMPFILE files" for the regression test.
+>
+
+Fixes generic/530
+
+Thanks,
+Amir.
