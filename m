@@ -1,218 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:37314 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726648AbfF1HEM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 03:04:12 -0400
-Date: Fri, 28 Jun 2019 15:04:05 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH] xfs: project quota ineritance flag test
-Message-ID: <20190628070405.GC7943@desktop>
-References: <20190619101047.3149-1-zlang@redhat.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:43878 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726657AbfF1O0c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 10:26:32 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 84CD028517
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 14:26:31 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 204015] New: BUG: KASAN: slab-out-of-bounds in
+ __bio_add_page+0x1ec/0x2b0
+Date: Fri, 28 Jun 2019 14:26:29 +0000
+Message-ID: <bug-204015-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190619101047.3149-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Zorro Lang <zlang@redhat.com>
-Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Wed, Jun 19, 2019 at 06:10:47PM +0800, Zorro Lang wrote:
-> This case is used to cover xfsprogs bug "b136f48b xfs_quota: fix
-> false error reporting of project inheritance flag is not set" at
-> first. Then test more behavior when project ineritance flag is
-> set or removed.
-> 
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=204015
 
-Test looks fine to me. Just some minor issues inline, and I've fixed
-them up on commit.
+            Bug ID: 204015
+           Summary: BUG: KASAN: slab-out-of-bounds in
+                    __bio_add_page+0x1ec/0x2b0
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: 5.2.0-rc4 with xfs-5.3-merge-2
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Block Layer
+          Assignee: axboe@kernel.dk
+          Reporter: zlang@redhat.com
+                CC: filesystem_xfs@kernel-bugs.kernel.org
+        Regression: No
 
-> ---
->  tests/xfs/507     | 117 ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/507.out |  23 +++++++++
->  tests/xfs/group   |   1 +
->  3 files changed, 141 insertions(+)
->  create mode 100755 tests/xfs/507
->  create mode 100644 tests/xfs/507.out
-> 
-> diff --git a/tests/xfs/507 b/tests/xfs/507
-> new file mode 100755
-> index 00000000..509da03e
-> --- /dev/null
-> +++ b/tests/xfs/507
-> @@ -0,0 +1,117 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> +#
-> +# FS QA Test 507
-> +#
-> +# Test project quota inheritance flag, uncover xfsprogs:
-> +#    b136f48b xfs_quota: fix false error reporting of project inheritance flag is not set
+I think a kasan warning several times when I built and installed 5.2-rc4
+kernel. CC XFS developers to check if XFS is related.
 
-Test project..., uncover xfsprogs bug fixed by commit b136f48b19a5
-("xfs_quota: fix false error reporting of project inheritance flag is
-not set").
+[   30.072839] SGI XFS with ACLs, security attributes, verbose warnings, no
+debug enabled 
+[   30.141472] XFS (sda7): Mounting V5 Filesystem 
+[   30.307363] XFS (sda7): Ending clean mount 
+[   30.327331]
+================================================================== 
+[   30.360891] BUG: KASAN: slab-out-of-bounds in __bio_add_page+0x1ec/0x2b0 
+[   30.391947] Write of size 4 at addr ffff8880321ddccc by task mount/748 
+[   30.421680]  
+[   30.428399] CPU: 7 PID: 748 Comm: mount Not tainted 5.2.0-rc4+ #1 
+[   30.456331] Hardware name: HP ProLiant DL388p Gen8, BIOS P70 09/18/2013 
+[   30.486318] Call Trace: 
+[   30.497284]  dump_stack+0x7c/0xc0 
+[   30.512213]  ? __bio_add_page+0x1ec/0x2b0 
+[   30.530389]  print_address_description+0x65/0x22e 
+[   30.551533]  ? __bio_add_page+0x1ec/0x2b0 
+[   30.569509]  ? __bio_add_page+0x1ec/0x2b0 
+[   30.587526]  __kasan_report.cold.3+0x37/0x77 
+[   30.607785]  ? __bio_add_page+0x1ec/0x2b0 
+[   30.625952]  kasan_report+0xe/0x20 
+[   30.641188]  __bio_add_page+0x1ec/0x2b0 
+[   30.658950]  bio_add_page+0x96/0xb0 
+[   30.674878]  xlog_write_iclog+0x4de/0x8e0 [xfs] 
+[   30.695564]  xlog_state_release_iclog+0x1d6/0x2e0 [xfs] 
+[   30.719506]  ? do_raw_spin_unlock+0x54/0x220 
+[   30.738973]  xfs_log_write_unmount_record+0x223/0x7b0 [xfs] 
+[   30.764214]  ? xfs_log_reserve+0xaa0/0xaa0 [xfs] 
+[   30.785399]  ? sched_clock+0x5/0x10 
+[   30.801308]  ? __lock_acquire+0x58d/0x2be0 
+[   30.821886]  ? sched_clock+0x5/0x10 
+[   30.838540]  ? sched_clock_cpu+0x18/0x170 
+[   30.858708]  ? do_raw_spin_unlock+0x54/0x220 
+[   30.878314]  ? _raw_spin_unlock+0x24/0x30 
+[   30.896358]  ? xfs_log_force+0x8c4/0xc30 [xfs] 
+[   30.916744]  ? xlog_commit_record+0x1a0/0x1a0 [xfs] 
+[   30.939319]  ? xfs_log_quiesce+0x148/0x570 [xfs] 
+[   30.960148]  ? rcu_read_lock_sched_held+0x114/0x130 
+[   30.982293]  xfs_log_quiesce+0x375/0x570 [xfs] 
+[   31.002708]  ? xfs_log_write_unmount_record+0x7b0/0x7b0 [xfs] 
+[   31.028934]  ? xfs_cowblocks_worker+0x40/0x40 [xfs] 
+[   31.050933]  xfs_mountfs+0x1385/0x1890 [xfs] 
+[   31.070237]  ? xfs_default_resblks+0x60/0x60 [xfs] 
+[   31.091730]  ? module_assert_mutex_or_preempt+0x41/0x70 
+[   31.116538]  ? __module_address+0x3f/0x360 
+[   31.135147]  ? xfs_filestream_get_ag+0x40/0x40 [xfs] 
+[   31.157601]  ? is_module_address+0x11/0x20 
+[   31.176822]  ? static_obj+0x2d/0x50 
+[   31.192637]  ? lockdep_init_map+0x1dc/0x620 
+[   31.211685]  ? xfs_filestream_get_ag+0x40/0x40 [xfs] 
+[   31.234488]  ? xfs_mru_cache_create+0x34d/0x560 [xfs] 
+[   31.257969]  xfs_fs_fill_super+0xb0e/0x13e0 [xfs] 
+[   31.279666]  ? xfs_test_remount_options+0x80/0x80 [xfs] 
+[   31.303804]  ? xfs_test_remount_options+0x80/0x80 [xfs] 
+[   31.327825]  mount_bdev+0x26e/0x330 
+[   31.343785]  ? xfs_finish_flags+0x310/0x310 [xfs] 
+[   31.365424]  legacy_get_tree+0x101/0x1f0 
+[   31.383731]  vfs_get_tree+0x89/0x350 
+[   31.399799]  do_mount+0xe78/0x15c0 
+[   31.415070]  ? copy_mount_string+0x20/0x20 
+[   31.433508]  ? lock_downgrade+0x620/0x620 
+[   31.452013]  ? _copy_from_user+0x93/0xd0 
+[   31.469783]  ? memdup_user+0x4b/0x70 
+[   31.486122]  ksys_mount+0xb6/0xd0 
+[   31.501100]  __x64_sys_mount+0xba/0x150 
+[   31.518965]  ? lockdep_hardirqs_on+0x37f/0x560 
+[   31.539285]  do_syscall_64+0x9f/0x4d0 
+[   31.555741]  entry_SYSCALL_64_after_hwframe+0x49/0xbe 
+[   31.578634] RIP: 0033:0x7fcb735d9fce 
+[   31.594282] Code: 48 8b 0d bd fe 2b 00 f7 d8 64 89 01 48 83 c8 ff c3 66 2e
+0f 1f 84 00 00 00 00 00 90 f3 0f 1e fa 49 89 ca b8 a5 00 00 00 0f 05 <48> 3d 01
+f0 ff ff 73 01 c3 48 8b 0d 8a fe 2b 00 f7 d8 64 89 01 48 
+[   31.680795] RSP: 002b:00007ffc8aaed448 EFLAGS: 00000246 ORIG_RAX:
+00000000000000a5 
+[   31.715737] RAX: ffffffffffffffda RBX: 0000559c77156ef0 RCX:
+00007fcb735d9fce 
+[   31.748298] RDX: 0000559c77165f30 RSI: 0000559c771570d0 RDI:
+0000559c77158dd0 
+[   31.780803] RBP: 00007fcb74385184 R08: 0000000000000000 R09:
+0000000000000000 
+[   31.813645] R10: 00000000c0ed0001 R11: 0000000000000246 R12:
+0000000000000000 
+[   31.846394] R13: 00000000c0ed0001 R14: 0000559c77158dd0 R15:
+0000559c77165f30 
+[   31.878830]  
+[   31.885488] Allocated by task 748: 
+[   31.901122]  save_stack+0x19/0x80 
+[   31.916029]  __kasan_kmalloc.constprop.6+0xc1/0xd0 
+[   31.937991]  __kmalloc+0x14e/0x310 
+[   31.953270]  kmem_alloc+0x5e/0x130 [xfs] 
+[   31.971366]  xlog_alloc_log+0xc87/0x12e0 [xfs] 
+[   31.991876]  xfs_log_mount+0xa2/0x650 [xfs] 
+[   32.010721]  xfs_mountfs+0xb5e/0x1890 [xfs] 
+[   32.030045]  xfs_fs_fill_super+0xb0e/0x13e0 [xfs] 
+[   32.051336]  mount_bdev+0x26e/0x330 
+[   32.067054]  legacy_get_tree+0x101/0x1f0 
+[   32.084747]  vfs_get_tree+0x89/0x350 
+[   32.100777]  do_mount+0xe78/0x15c0 
+[   32.116054]  ksys_mount+0xb6/0xd0 
+[   32.130906]  __x64_sys_mount+0xba/0x150 
+[   32.148949]  do_syscall_64+0x9f/0x4d0 
+[   32.165364]  entry_SYSCALL_64_after_hwframe+0x49/0xbe 
+[   32.188633]  
+[   32.195288] Freed by task 346: 
+[   32.209418]  save_stack+0x19/0x80 
+[   32.224277]  __kasan_slab_free+0x125/0x170 
+[   32.243142]  kfree+0xfa/0x2d0 
+[   32.256474]  rfc4106_set_hash_subkey+0xb3/0xe0 
+[   32.277138]  
+[   32.283789] The buggy address belongs to the object at ffff8880321dda00 
+[   32.283789]  which belongs to the cache kmalloc-1k of size 1024 
+[   32.340980] The buggy address is located 716 bytes inside of 
+[   32.340980]  1024-byte region [ffff8880321dda00, ffff8880321dde00) 
+[   32.395443] The buggy address belongs to the page: 
+[   32.416986] page:ffffea0000c87600 refcount:1 mapcount:0
+mapping:ffff888105016400 index:0x0 compound_mapcount: 0 
+[   32.463287] flags: 0xfffffc0010200(slab|head) 
+[   32.483036] raw: 000fffffc0010200 dead000000000100 dead000000000200
+ffff888105016400 
+[   32.518755] raw: 0000000000000000 00000000801c001c 00000001ffffffff
+0000000000000000 
+[   32.553632] page dumped because: kasan: bad access detected 
+[   32.579437]  
+[   32.586214] Memory state around the buggy address: 
+[   32.607839]  ffff8880321ddb80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 
+[   32.640419]  ffff8880321ddc00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+00 
+[   32.674436] >ffff8880321ddc80: 00 00 00 00 00 00 00 00 00 fc fc fc fc fc fc
+fc 
+[   32.707277]                                               ^ 
+[   32.732585]  ffff8880321ddd00: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+fc 
+[   32.765431]  ffff8880321ddd80: fc fc fc fc fc fc fc fc fc fc fc fc fc fc fc
+fc 
+[   32.798577]
+================================================================== 
+[   32.831699] Disabling lock debugging due to kernel taint 
+[   32.858427] random: crng init done 
+[   32.874609] random: 7 urandom warning(s) missed due to ratelimiting 
+[   32.907093] mount (748) used greatest stack depth: 24680 bytes left
 
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/quota
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch
-> +_require_xfs_quota
-> +
-> +cat >$tmp.projects <<EOF
-> +10:$SCRATCH_MNT/dir
-> +EOF
-> +
-> +cat >$tmp.projid <<EOF
-> +root:0
-> +test:10
-> +EOF
-> +
-> +QUOTA_CMD="$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid"
-> +
-> +filter_xfs_pquota()
-> +{
-> +        perl -ne "
-> +s,$tmp.projects,[PROJECTS_FILE],;
-> +s,$SCRATCH_MNT,[SCR_MNT],;
-> +s,$SCRATCH_DEV,[SCR_DEV],;
-> +        print;"
-> +}
-> +
-> +do_quota_nospc()
-> +{
-> +	local file=$1
-> +	local exp=$2
-> +
-> +	echo "Write $file, expect $exp:" | _filter_scratch
-> +
-> +	# replace the "pwrite64" which old xfs_io prints
-> +	$XFS_IO_PROG -t -f -c "pwrite 0 5m" $file 2>&1 >/dev/null | \
-> +		sed -e 's/pwrite64/pwrite/g'
-
-_filter_xfs_io_error does this job.
-
-> +	rm -f $file
-> +}
-> +
-> +_scratch_mkfs_xfs >>$seqres.full 2>&1
-> +_qmount_option "prjquota"
-> +_qmount
-> +_require_prjquota $SCRATCH_DEV
-> +
-> +mkdir $SCRATCH_MNT/dir
-> +$QUOTA_CMD -x -c 'project -s test' $SCRATCH_MNT >>$seqres.full 2>&1
-> +$QUOTA_CMD -x -c 'limit -p bsoft=1m bhard=2m test' $SCRATCH_MNT
-> +
-> +# test the Project inheritance bit is a directory only flag, and it's set on
-> +# directory by default
-
-I added comments here to state that we don't expect "project inheritance
-flag is not set" from xfs_quota.
-
-Thanks,
-Eryu
-
-> +echo "== The parent directory has Project inheritance bit by default =="
-> +touch $SCRATCH_MNT/dir/foo
-> +mkdir $SCRATCH_MNT/dir/dir_inherit
-> +touch $SCRATCH_MNT/dir/dir_inherit/foo
-> +$QUOTA_CMD -x -c 'project -c test' $SCRATCH_MNT | filter_xfs_pquota
-> +echo ""
-> +
-> +# test the quota and the project inheritance quota work well
-> +do_quota_nospc $SCRATCH_MNT/dir/foo ENOSPC
-> +do_quota_nospc $SCRATCH_MNT/dir/dir_inherit/foo ENOSPC
-> +echo ""
-> +
-> +# test the project quota won't be inherited, if removing the Project
-> +# inheritance bit
-> +echo "== After removing parent directory has Project inheritance bit =="
-> +$XFS_IO_PROG -x -c "chattr -P" $SCRATCH_MNT/dir
-> +touch $SCRATCH_MNT/dir/foo
-> +mkdir $SCRATCH_MNT/dir/dir_uninherit
-> +touch $SCRATCH_MNT/dir/dir_uninherit/foo
-> +$QUOTA_CMD -x -c 'project -c test' $SCRATCH_MNT | filter_xfs_pquota
-> +echo ""
-> +
-> +# after remove the Project inheritance bit of the original parent directory,
-> +# then verify:
-> +# 1) there's not any limit on the original parent directory and files under it
-> +# 2) the quota limit of sub-directory which has inherited still works
-> +# 3) there's not limit on the new sub-dirctory (not inherit from parent)
-> +do_quota_nospc $SCRATCH_MNT/dir/foo Success
-> +do_quota_nospc $SCRATCH_MNT/dir/dir_inherit/foo ENOSPC
-> +do_quota_nospc $SCRATCH_MNT/dir/dir_uninherit/foo Success
-> +
-> +_scratch_unmount
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/507.out b/tests/xfs/507.out
-> new file mode 100644
-> index 00000000..c8c09d3f
-> --- /dev/null
-> +++ b/tests/xfs/507.out
-> @@ -0,0 +1,23 @@
-> +QA output created by 507
-> +== The parent directory has Project inheritance bit by default ==
-> +Checking project test (path [SCR_MNT]/dir)...
-> +Processed 1 ([PROJECTS_FILE] and cmdline) paths for project test with recursion depth infinite (-1).
-> +
-> +Write SCRATCH_MNT/dir/foo, expect ENOSPC:
-> +pwrite: No space left on device
-> +Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
-> +pwrite: No space left on device
-> +
-> +== After removing parent directory has Project inheritance bit ==
-> +Checking project test (path [SCR_MNT]/dir)...
-> +[SCR_MNT]/dir - project inheritance flag is not set
-> +[SCR_MNT]/dir/foo - project identifier is not set (inode=0, tree=10)
-> +[SCR_MNT]/dir/dir_uninherit - project identifier is not set (inode=0, tree=10)
-> +[SCR_MNT]/dir/dir_uninherit - project inheritance flag is not set
-> +[SCR_MNT]/dir/dir_uninherit/foo - project identifier is not set (inode=0, tree=10)
-> +Processed 1 ([PROJECTS_FILE] and cmdline) paths for project test with recursion depth infinite (-1).
-> +
-> +Write SCRATCH_MNT/dir/foo, expect Success:
-> +Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
-> +pwrite: No space left on device
-> +Write SCRATCH_MNT/dir/dir_uninherit/foo, expect Success:
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index ffe4ae12..46200752 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -504,3 +504,4 @@
->  504 auto quick mkfs label
->  505 auto quick spaceman
->  506 auto quick health
-> +507 auto quick quota
-> -- 
-> 2.17.2
-> 
+-- 
+You are receiving this mail because:
+You are watching someone on the CC list of the bug.
