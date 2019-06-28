@@ -1,85 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:45079 "EHLO newverein.lst.de"
+Received: from verein.lst.de ([213.95.11.210]:45086 "EHLO newverein.lst.de"
         rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726816AbfF1Flx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 28 Jun 2019 01:41:53 -0400
-Date: Fri, 28 Jun 2019 07:33:20 +0200
+        id S1726867AbfF1Fmy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 28 Jun 2019 01:42:54 -0400
+Date: Fri, 28 Jun 2019 07:42:51 +0200
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 11/12] iomap: move the xfs writeback code to iomap.c
-Message-ID: <20190628053320.GA26902@lst.de>
-References: <20190624055253.31183-1-hch@lst.de> <20190624055253.31183-12-hch@lst.de> <20190624234304.GD7777@dread.disaster.area> <20190625101020.GI1462@lst.de> <20190628004542.GJ7777@dread.disaster.area>
+Subject: Re: lift the xfs writepage code into iomap v2
+Message-ID: <20190628054251.GC26902@lst.de>
+References: <20190627104836.25446-1-hch@lst.de> <20190628013256.GE5179@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190628004542.GJ7777@dread.disaster.area>
+In-Reply-To: <20190628013256.GE5179@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jun 28, 2019 at 10:45:42AM +1000, Dave Chinner wrote:
-> You've already mentioned two new users you want to add. I don't even
-> have zone capable hardware here to test one of the users you are
-> indicating will use this code, and I suspect that very few people
-> do.  That's a non-trivial increase in testing requirements for
-> filesystem developers and distro QA departments who will want to
-> change and/or validate this code path.
+On Thu, Jun 27, 2019 at 06:32:56PM -0700, Darrick J. Wong wrote:
+> I think Dave has voiced some valid concerns about our ability to support
+> this code over the long term once we start sharing it with other fses.
+> XFS has a longish history of sailing away from generic code so that we
+> can remove awkward abstractions which aren't working well for us.  If
+> we're going to continue to go our own way with things like file locking
+> and mapping I wonder how long we'd keep using the iomap ioends before
+> moving away again.  How well will that iomap code avoid bitrot once XFS
+> does that?
 
-Why do you assume you have to test it?  Back when we shared
-generic_file_read with everyone you also didn't test odd change to
-it with every possible fs.  If you change iomap.c, you'll test it
-with XFS, and Cc other maintainers so that they get a chance to
-also test it and comment on it, just like we do with other shared
-code in the kernel.
+As outlied in my mail to Dave I agree with the high level issue.
+But I very much thing that the writeback code is and should be generic.
+For one it is much more tightly integrated with other iomap code
+than with XFS.  And second the kernel doesn't have a sane generic
+writeback implementation.  We have like three different crappy buffer
+head ones, and anyone wanting to sanely implement writeback currently
+has to write their own, which is a major PITA.
 
-> Indeed, integrating gfs2 into the existing generic iomap code has
-> required quite a bit of munging and adding new code paths and so on.
-> That's mostly been straight forward because it's just been adding
-> flags and conditional code to the existing paths. The way we
-> regularly rewrite sections of the XFS writeback code is a very
-> different sort of modification, and one that will be much harder to
-> do if we have to make those changes to generic code.
+> How does that sound?  Who are the other potential users?
 
-As the person who has done a lot of the recent rewriting of the
-writeback code I disagree.  Most of it has been do divorce is from
-leftovers of the buffer_head based sinle page at a time design from
-stone age.  Very little is about XFS itself, most of it has been
-about not being stupid in a fairly generic way.  And every since
-I got rid of buffer heads xfs_aops.c has been intimately tied
-into the iomap infrastructure, and I'd rather keep those details in
-one place.  I.e. with this series now XFS doesn't even need to know
-about the details of the iomap_page structure and the uptodate
-bits.  If for example I'd want to add sub-page dirty bits (which I
-don't if I can avoid it) I can handle this entirely in iomap now
-instead of spreading around iomap, xfs and duplicating the thing
-in every copy of the XFS code that would otherwise show up.
-
-> i.e. shared code is good if it's simple and doesn't have a lot of
-> external dependencies that restrict the type and scope of
-> modifications that can be made easily. Shared code that is complex
-> and comes from code that was tightly integrated with a specific
-> subsystem architecture is going to carry all those architectural
-> foilbles into the new "generic" code. Once it gets sufficient
-> users it's going to end up with the same "we can't change this code"
-> problems that we had with the existing IO path, and we'll go back to
-> implementing our own writeback path....
-
->From the high level POV I agree with your stance.  But the point is
-that the writeback code is not tightly integrated with xfs, and that
-is why I don't want it in XFS.  It is on other other hand very
-tightly integrated with the iomap buffer read and write into pagecache
-code, which is why I want to keep it together with that.
-
-> I've been planning on taking it even closer to the extent tree to
-> give us lockless, modification range coherent extent map caching in
-> this path (e.g. write() can add new delalloc extents without
-> invalidating cached writeback maps).  This patchset re-introduces
-> the iomap abstraction over the bmbt - an abstraction we removed some
-> time ago - and that makes these sorts of improvements much harder
-> and more complex to implement....
-
-FYI, I had an earlier but not quite optimal implementation of lockless
-extent lookups using rcu updates in the btree.  And at least for that
-scheme all the details stay 100% in XFS in the split code, as the
-abstraction between iomap and xfs is very clear and allows for that.
+The immediate current user is Damiens zonefs, which is just a thin
+abstraction on top of zones in zoned block devices.  Then my plan has
+always been to convert gfs2 over to it, away from buffer heads.  With
+btrfs now joining iomap land I'd be really excited to move it over,
+but we'll see how feasily that is.  But with gfs2 done I think we
+also are ready to convert anything currently using plain old buffer
+heads over, so things like sysvfs, minix, jfs, etc.  While that isn't
+a priority and will take a while it will help with my grand overall
+scheme of killing buffer_heads, at least for the data path.
