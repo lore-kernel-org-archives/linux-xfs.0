@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:54224 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:54374 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727015AbfF1Sfh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 14:35:37 -0400
+        with ESMTP id S1727033AbfF1Sfn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 14:35:43 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SIYLol027892
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2t9c9q72ue-1
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SIYMgO027898
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:42 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2t9c9q72v0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SIYqFL152196
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2t9p6w23at-1
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:41 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SIZdmd082335
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:41 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2t9acdyemq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5SIZYVM029431
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:34 GMT
-Subject: [PATCH 1/3] xfs: refactor setflags to use setattr code directly
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:41 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5SIZeF3022313
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:40 GMT
+Subject: [PATCH 2/3] xfs: clean up xfs_merge_ioc_xflags
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 28 Jun 2019 11:35:33 -0700
-Message-ID: <156174693300.1557952.1660572699951099381.stgit@magnolia>
+Date: Fri, 28 Jun 2019 11:35:39 -0700
+Message-ID: <156174693930.1557952.9566025019367233702.stgit@magnolia>
 In-Reply-To: <156174692684.1557952.3770482995772643434.stgit@magnolia>
 References: <156174692684.1557952.3770482995772643434.stgit@magnolia>
 MIME-Version: 1.0
@@ -37,86 +37,74 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor the SETFLAGS implementation to use the SETXATTR code directly
-instead of partially constructing a struct fsxattr and calling bits and
-pieces of the setxattr code.  This reduces code size with no functional
-change.
+Clean up the calling convention since we're editing the fsxattr struct
+anyway.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_ioctl.c |   48 +++---------------------------------------------
- 1 file changed, 3 insertions(+), 45 deletions(-)
+ fs/xfs/xfs_ioctl.c |   32 ++++++++++++++------------------
+ 1 file changed, 14 insertions(+), 18 deletions(-)
 
 
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 552f18554c48..6f55cd7eb34f 100644
+index 6f55cd7eb34f..d2526d9070d2 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1490,11 +1490,8 @@ xfs_ioc_setxflags(
- 	struct file		*filp,
- 	void			__user *arg)
- {
--	struct xfs_trans	*tp;
- 	struct fsxattr		fa;
--	struct fsxattr		old_fa;
- 	unsigned int		flags;
--	int			join_flags = 0;
- 	int			error;
+@@ -829,35 +829,31 @@ xfs_ioc_ag_geometry(
+  * Linux extended inode flags interface.
+  */
  
- 	if (copy_from_user(&flags, arg, sizeof(flags)))
-@@ -1505,52 +1502,13 @@ xfs_ioc_setxflags(
- 		      FS_SYNC_FL))
+-STATIC unsigned int
++static inline void
+ xfs_merge_ioc_xflags(
+-	unsigned int	flags,
+-	unsigned int	start)
++	struct fsxattr	*fa,
++	unsigned int	flags)
+ {
+-	unsigned int	xflags = start;
+-
+ 	if (flags & FS_IMMUTABLE_FL)
+-		xflags |= FS_XFLAG_IMMUTABLE;
++		fa->fsx_xflags |= FS_XFLAG_IMMUTABLE;
+ 	else
+-		xflags &= ~FS_XFLAG_IMMUTABLE;
++		fa->fsx_xflags &= ~FS_XFLAG_IMMUTABLE;
+ 	if (flags & FS_APPEND_FL)
+-		xflags |= FS_XFLAG_APPEND;
++		fa->fsx_xflags |= FS_XFLAG_APPEND;
+ 	else
+-		xflags &= ~FS_XFLAG_APPEND;
++		fa->fsx_xflags &= ~FS_XFLAG_APPEND;
+ 	if (flags & FS_SYNC_FL)
+-		xflags |= FS_XFLAG_SYNC;
++		fa->fsx_xflags |= FS_XFLAG_SYNC;
+ 	else
+-		xflags &= ~FS_XFLAG_SYNC;
++		fa->fsx_xflags &= ~FS_XFLAG_SYNC;
+ 	if (flags & FS_NOATIME_FL)
+-		xflags |= FS_XFLAG_NOATIME;
++		fa->fsx_xflags |= FS_XFLAG_NOATIME;
+ 	else
+-		xflags &= ~FS_XFLAG_NOATIME;
++		fa->fsx_xflags &= ~FS_XFLAG_NOATIME;
+ 	if (flags & FS_NODUMP_FL)
+-		xflags |= FS_XFLAG_NODUMP;
++		fa->fsx_xflags |= FS_XFLAG_NODUMP;
+ 	else
+-		xflags &= ~FS_XFLAG_NODUMP;
+-
+-	return xflags;
++		fa->fsx_xflags &= ~FS_XFLAG_NODUMP;
+ }
+ 
+ STATIC unsigned int
+@@ -1503,7 +1499,7 @@ xfs_ioc_setxflags(
  		return -EOPNOTSUPP;
  
--	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
-+	xfs_fill_fsxattr(ip, false, &fa);
-+	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
+ 	xfs_fill_fsxattr(ip, false, &fa);
+-	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
++	xfs_merge_ioc_xflags(&fa, flags);
  
  	error = mnt_want_write_file(filp);
  	if (error)
- 		return error;
--
--	error = xfs_ioctl_setattr_drain_writes(ip, &fa, &join_flags);
--	if (error) {
--		xfs_iunlock(ip, join_flags);
--		goto out_drop_write;
--	}
--
--	/*
--	 * Changing DAX config may require inode locking for mapping
--	 * invalidation. These need to be held all the way to transaction commit
--	 * or cancel time, so need to be passed through to
--	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
--	 * appropriately.
--	 */
--	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
--	if (error) {
--		xfs_iunlock(ip, join_flags);
--		goto out_drop_write;
--	}
--
--	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
--	if (IS_ERR(tp)) {
--		error = PTR_ERR(tp);
--		goto out_drop_write;
--	}
--
--	xfs_fill_fsxattr(ip, false, &old_fa);
--	error = vfs_ioc_fssetxattr_check(VFS_I(ip), &old_fa, &fa);
--	if (error) {
--		xfs_trans_cancel(tp);
--		goto out_drop_write;
--	}
--
--	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
--	if (error) {
--		xfs_trans_cancel(tp);
--		goto out_drop_write;
--	}
--
--	error = xfs_trans_commit(tp);
--out_drop_write:
-+	error = xfs_ioctl_setattr(ip, &fa);
- 	mnt_drop_write_file(filp);
- 	return error;
- }
