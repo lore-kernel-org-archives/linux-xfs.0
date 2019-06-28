@@ -1,39 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:45164 "EHLO newverein.lst.de"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726572AbfF1Fvq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 28 Jun 2019 01:51:46 -0400
-Date: Fri, 28 Jun 2019 07:51:43 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 07/13] xfs: allow merging ioends over append boundaries
-Message-ID: <20190628055143.GB27187@lst.de>
-References: <20190627104836.25446-1-hch@lst.de> <20190627104836.25446-8-hch@lst.de> <20190627182309.GP5171@magnolia>
+Received: from zeniv.linux.org.uk ([195.92.253.2]:59474 "EHLO
+        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726572AbfF1GA3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 02:00:29 -0400
+Date: Fri, 28 Jun 2019 07:00:27 +0100
+From: Al Viro <viro@zeniv.linux.org.uk>
+Subject: [RFC] dget_parent() misuse in xfs_filestream_get_parent()
+Message-ID: <20190628060026.GR17978@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190627182309.GP5171@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Thu, Jun 27, 2019 at 11:23:09AM -0700, Darrick J. Wong wrote:
-> On Thu, Jun 27, 2019 at 12:48:30PM +0200, Christoph Hellwig wrote:
-> > There is no real problem merging ioends that go beyond i_size into an
-> > ioend that doesn't.  We just need to move the append transaction to the
-> > base ioend.  Also use the opportunity to use a real error code instead
-> > of the magic 1 to cancel the transactions, and write a comment
-> > explaining the scheme.
-> > 
-> > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> 
-> Reading through this patch, I have a feeling it fixes the crash that
-> Zorro has been seeing occasionally with generic/475...
+	dget_parent() never returns NULL.  So this
 
-So you think for some reason the disk i_size changes underneath and thus
-the xfs_ioend_is_append misfired vs the actual transaction allocations?
-I didn't even think of that, but using the different checks sure sounds
-dangerous.  So yes, we'd either need to backport my patch, or at least
-replace the checks in xfs_ioend_can_merge with direct checks of
-io_append_trans.
+        parent = dget_parent(dentry);
+        if (!parent)
+                goto out_dput;
+
+        dir = igrab(d_inode(parent));
+        dput(parent);
+
+out_dput:
+
+is obviously fishy.  What is that code trying to do?  Is that
+"dentry might be a root of disconnected tree, in which case
+we want xfs_filestream_get_parent() to return NULL"?  If so,
+that should be
+
+        parent = dget_parent(dentry);
+        if (parent != dentry)
+		dir = igrab(d_inode(parent));
+        dput(parent);
+
+If we want dentry itself, that dir = igrab(...) should be
+unconditional.  I'm not familiar enough with that code,
+and I'd rather not go into YAMassiveSideRTFS, so...
