@@ -1,153 +1,149 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57184 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726833AbfFYDzf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 24 Jun 2019 23:55:35 -0400
-Date: Tue, 25 Jun 2019 13:54:23 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/2] xfs: convert extents in place for ZERO_RANGE
-Message-ID: <20190625035423.GG7777@dread.disaster.area>
-References: <ace9a6b9-3833-ec15-e3df-b9d88985685e@redhat.com>
- <25a2ebbc-0ec9-f5dd-eba0-4101c80837dd@sandeen.net>
- <20190625023954.GF7777@dread.disaster.area>
- <2b135e00-3bfd-f41a-7c43-a0518fc756fe@sandeen.net>
- <20190625030018.GC5387@magnolia>
- <3f8037f0-08ff-98b2-6995-230e7bf33372@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:48664 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726565AbfF1Vuj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 17:50:39 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SLneog162765
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:37 GMT
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2t9c9q7n9e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:37 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SLo1Ji159068
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:37 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2t99f5t4f9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:36 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5SLoaQh012808
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:36 GMT
+Date: Fri, 28 Jun 2019 13:51:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: mysterious test failure when running xfstests on XFS
+Message-ID: <20190628205154.GF5179@magnolia>
+References: <20190628202117.GA15307@mit.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3f8037f0-08ff-98b2-6995-230e7bf33372@sandeen.net>
+In-Reply-To: <20190628202117.GA15307@mit.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Theodore Ts'o <tytso@mit.edu>
 
-On Mon, Jun 24, 2019 at 10:05:51PM -0500, Eric Sandeen wrote:
-> On 6/24/19 10:00 PM, Darrick J. Wong wrote:
-> > On Mon, Jun 24, 2019 at 09:52:03PM -0500, Eric Sandeen wrote:
-> >> On 6/24/19 9:39 PM, Dave Chinner wrote:
-> >>> On Mon, Jun 24, 2019 at 07:48:11PM -0500, Eric Sandeen wrote:
-> >>>> Rather than completely removing and re-allocating a range
-> >>>> during ZERO_RANGE fallocate calls, convert whole blocks in the
-> >>>> range using xfs_alloc_file_space(XFS_BMAPI_PREALLOC|XFS_BMAPI_CONVERT)
-> >>>> and then zero the edges with xfs_zero_range()
-> >>>
-> >>> That's what I originally used to implement ZERO_RANGE and that
-> >>> had problems with zeroing the partial blocks either side and
-> >>> unexpected inode size changes. See commit:
-> >>>
-> >>> 5d11fb4b9a1d xfs: rework zero range to prevent invalid i_size updates
-> >>
-> >> Yep I did see that.  It had a lot of hand-rolled partial block stuff
-> >> that seems more complex than this, no?  That commit didn't indicate
-> >> what the root cause of the failure actually was, AFAICT.
-> >>
-> >> (funny thought that I skimmed that commit just to see why we had
-> >> what we have, but didn't really intentionally re-implement it...
-> >> even though I guess I almost did...)
-> > 
-> > FWIW the complaint I had about the fragmentary behavior really only
-> > applied to fun and games when one fallocated an ext4 image and then ran
-> > mkfs.ext4 which uses zero range which fragmented the image...
-> > 
-> >>> I also remember discussion about zero range being inefficient on
-> >>> sparse files and fragmented files - the current implementation
-> >>> effectively defragments such files, whilst using XFS_BMAPI_CONVERT
-> >>> just leaves all the fragments behind.
-> >>
-> >> That's true - and it fragments unfragmented files.  Is ZERO_RANGE
-> >> supposed to be a defragmenter?
-> > 
-> > ...so please remember, the key point we were talking about when we
-> > discussed this a year ago was that if the /entire/ zero range maps to a
-> > single extent within eof then maybe we ought to just convert it to
-> > unwritten.
+On Fri, Jun 28, 2019 at 04:21:17PM -0400, Theodore Ts'o wrote:
+> When trying to make sure a change to a test works on other file
+> systems, I noticed the failure:
 > 
-> I remember you mentioning that, but honestly it seems like
-> overcomplication to say "ZERO_RANGE will also defragment extents
-> in the process, if it can..."
-
-Keep in mind that my original implementation of ZERO_RANGE was
-for someone who explicitly requested zeroing of preallocated VM
-image files without reallocating them. Hence the XFS_BMAPI_CONVERT
-implementation. They'd been careful about initial allocation, and
-they wanted to reuse image files for new VMs without perturbing
-their initial careful preallocation patterns.
-
-I think the punch+reallocate is a more generally useful behaviour
-because people are far less careful about image file layout (e.g.
-might be using extent size hints or discard within the VM) and so
-we're more likely to see somewhat fragmented files for zeroing than
-we are fully intact.
-
-SO, yeah, I can see arguments for both cases, and situations where
-one behaviour would be preferred over the other.
-
-Random thought: KEEP_SIZE == I know what I'm doing, just convert in
-place because the layout is as I want it. !KEEP_SIZE = punch and
-preallocate because we are likely changing the file size anyway?
-
-> >>> What prevents xfs_zero_range() from changing the file size if
-> >>> offset + len is beyond EOF and there are allocated extents (from
-> >>> delalloc conversion) beyond EOF? (i.e. FALLOC_FL_KEEP_SIZE is set by
-> >>> the caller).
-> >>
-> >> nothing, but AFAIK it does the same today... even w/o extents past
-> >> EOF:
-> >>
-> >> $ xfs_io -f -c "truncate 0" -c "fzero 0 1m" testfile
-> > 
-> > fzero -k ?
+> xfs_db: error - read only 0 of 32768 bytes
+> xfs_db: /tmp/1577.img is invalid (cannot read first 512 bytes)
 > 
-> $ xfs_io -f -c "truncate 0" -c "fzero -k 0 1m" testfile
+> When I tried tracking down where this failure was coming from, I found
+> this:
 > 
-> $ ls -lh testfile
-> -rw-------. 1 sandeen sandeen 0 Jun 24 22:02 testfile
+> ++ export 'XFS_IO_PROG=/root/xfstests/bin/xfs_io -i'
+> ++ XFS_IO_PROG='/root/xfstests/bin/xfs_io -i'
+> ++ '[' xfs == xfs ']'
+> ++ touch /tmp/10216.img
+> ++ /root/xfstests/bin/mkfs.xfs -d file,name=/tmp/10216.img,size=512m
+> ++ /root/xfstests/bin/xfs_db -x -c 'uuid generate' /tmp/10216.img
+> ++ grep -q 'invalid UUID\|supported on V5 fs'
+> xfs_db: error - read only 0 of 32768 bytes
+> xfs_db: /tmp/10216.img is invalid (cannot read first 512 bytes)
+> ++ rm -f /tmp/10216.img
 > 
-> with or without my patches.
+> Apparently the issue is that the mkfs.xfs is failing, but in init_rc
+> we redirect the output to /dev/null:
+> 
+> 		touch /tmp/$$.img
+> 		$MKFS_XFS_PROG -d file,name=/tmp/$$.img,size=512m >/dev/null 2>&1
+> 		# xfs_db will return 0 even if it can't generate a new uuid, so
+> 		# check the output to make sure if it can change UUID of V5 xfs
+> 		$XFS_DB_PROG -x -c "uuid generate" /tmp/$$.img \
+> 			| grep -q "invalid UUID\|supported on V5 fs" \
+> 			&& export XFS_COPY_PROG="$XFS_COPY_PROG -d"
+> 		rm -f /tmp/$$.img
+> 
+> From a test script:
+> 
+> rm -f $IMAGE
+> + rm -f /tmp/10216.img
+> touch $IMAGE
+> + touch /tmp/10216.img
+> ./xfsprogs-dev/mkfs/mkfs.xfs  -d file,name=$IMAGE,size=512m
+> + ./xfsprogs-dev/mkfs/mkfs.xfs -d file,name=/tmp/10216.img,size=512m
+> mkfs.xfs: Use the -f option to force overwrite.
 
-My concern was about files with pre-existing extents beyond EOF.
-i.e. something like this (on a vanilla kernel):
+Hmmm, mkfs.xfs always requires -f if it was built without blkid since it
+then won't have the ability to determine if there's already a filesystem
+on the device you're trying to format.  Was your xfsprogs was built
+without blkid?
 
-$ xfs_io -f -c "truncate 0"  -c "pwrite 0 16m" -c "fsync" -c "bmap -vp" -c "fzero -k 0 32m" -c "bmap -vp" -c "stat" testfile
-wrote 16777216/16777216 bytes at offset 0
-16 MiB, 4096 ops; 0.0000 sec (700.556 MiB/sec and 179342.3530 ops/sec)
-testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE            AG AG-OFFSET            TOTAL FLAGS
-   0: [0..65407]:      1145960728..1146026135 10 (47331608..47397015) 65408 000000
-testfile:
- EXT: FILE-OFFSET      BLOCK-RANGE            AG AG-OFFSET            TOTAL FLAGS
-   0: [0..65535]:      1146026136..1146091671 10 (47397016..47462551) 65536 010000
-fd.path = "testfile"
-fd.flags = non-sync,non-direct,read-write
-stat.ino = 1342366656
-stat.type = regular file
-stat.size = 16777216
-stat.blocks = 65536
-fsxattr.xflags = 0x2 [-p--------------]
-fsxattr.projid = 0
-fsxattr.extsize = 0
-fsxattr.cowextsize = 0
-fsxattr.nextents = 1
-fsxattr.naextents = 0
-dioattr.mem = 0x200
-dioattr.miniosz = 512
-dioattr.maxiosz = 2147483136
-$
+$ strings /opt/root/xfstests/bin/mkfs.xfs | grep blkid
+$ ldd /opt/root/xfstests/bin/mkfs.xfs
+        not a dynamic executable
 
-So you can see it is 16MiB in size, but has 32MB of blocks allocated
-to it, and it's a different 32MB of blocks that were allocated by
-the delalloc because we punched and reallocated it as an unwritten
-extent.
+Yep.  Rummaging through the xfstests-bld repo... aha!
 
-That's where I'm concerned - that range beyond EOF is no longer
-punched away by this new code, an dit's not unwritten so the
-zero_range is going to iterate and zero it, right?
+     export LOCAL_CONFIGURE_OPTIONS="$cross --prefix=/ --disable-lib64 --disable-gettext --disable-libicu --disable-blkid" ; \
 
-Cheers,
+/me traces it to this commit:
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+24c24367f36a36 ("build-all: disable blkid when building xfsprogs")
+
+2019-02-19, I guess nobody's updated their xfstests-bld repos since
+before then; I certainly hadn't. :)
+
+Hmm... these days xfsprogs really wants to be built with libblkid since
+(a) that's the configuration that most distros ship and (b) some of the
+online utilities (like xfs_scrub) really /do/ want blkid information to
+try to guess the level of parallelism of the device.
+
+What's less clear is how to proceed from here -- should kvm-xfstests
+download and build upstream libblkid and then point the xfsprogs build
+at it?
+
+I suppose we could change xfstests to detect if mkfs isn't linked
+against libblkid and inject a "-f" into XFS_MKFS_PROG, though that could
+cause other problems with tests that might not be expecting non-force
+mode.
+
+--D
+
+> 
+> A simple way to reproduce this:
+> 
+> 1)  Download the root_fs.img.amd64:
+> 
+> https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/kvm-xfstests/root_fs.img.amd64
+> 
+> 2)  Run the command:
+> 
+> 	kvm-xfstests -I /tmp/root_fs.img.amd64 -c xfs generic/001
+> 
+> 3)  Observe the failure:
+> 
+> generic/001 2s ... 	[16:15:48][    5.187808] run fstests generic/001 at 2019-06-28 16:15:48
+>  [16:15:51]- output mismatch (see /results/xfs/results-4k/generic/001.out.bad)
+>     --- tests/generic/001.out	2019-06-10 00:02:54.000000000 -0400
+>     +++ /results/xfs/results-4k/generic/001.out.bad	2019-06-28 16:15:51.631596912 -0400
+>     @@ -1,4 +1,6 @@
+>      QA output created by 001
+>     +xfs_db: error - read only 0 of 32768 bytes
+>     +xfs_db: /tmp/1577.img is invalid (cannot read first 512 bytes)
+>      cleanup
+>      setup ....................................
+>      iter 1 chain ... check ....................................
+>     ...
+>     (Run 'diff -u /root/xfstests/tests/generic/001.out /results/xfs/results-4k/generic/001.out.bad'  to)
+> Ran: generic/001
+> Failures: generic/001
+> 
+> I know this used to work, but I'm not sure at what point this started
+> failing for me.   Is there anything obvious?
+> 
+> 
+> 						- Ted
