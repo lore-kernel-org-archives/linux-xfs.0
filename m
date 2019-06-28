@@ -1,53 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-yb1-f196.google.com ([209.85.219.196]:41326 "EHLO
-        mail-yb1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726425AbfF0QSw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 12:18:52 -0400
-Received: by mail-yb1-f196.google.com with SMTP id y67so1852373yba.8
-        for <linux-xfs@vger.kernel.org>; Thu, 27 Jun 2019 09:18:51 -0700 (PDT)
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:42691 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725783AbfF1WC4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 18:02:56 -0400
+Received: by mail-pg1-f196.google.com with SMTP id k13so3155786pgq.9
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 15:02:55 -0700 (PDT)
+Date: Fri, 28 Jun 2019 22:02:53 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH] xfs: fix iclog allocation size
+Message-ID: <20190628220253.GF30113@42.do-not-panic.com>
+References: <20190627143950.19558-1-hch@lst.de>
 MIME-Version: 1.0
-References: <a665a93a-0bf8-aedb-2ba3-d4b2fb672970@linux.alibaba.com> <20190627155455.GA30113@42.do-not-panic.com>
-In-Reply-To: <20190627155455.GA30113@42.do-not-panic.com>
-From: Amir Goldstein <amir73il@gmail.com>
-Date: Thu, 27 Jun 2019 19:18:40 +0300
-Message-ID: <CAOQ4uxgqgDAdKZDYwmf0M35M3D6Ctn25-VVj3wu5XSj_4c-WdA@mail.gmail.com>
-Subject: Re: [backport request][stable] xfs: xfstests generic/538 failed on xfs
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190627143950.19558-1-hch@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Alvin Zheng <Alvin@linux.alibaba.com>, gregkh <gregkh@linuxfoundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>, caspar <caspar@linux.alibaba.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-xfs@vger.kernel.org, syzbot+b75afdbe271a0d7ac4f6@syzkaller.appspotmail.com
 
-On Thu, Jun 27, 2019 at 6:55 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
->
-> On Thu, Jun 27, 2019 at 08:10:56PM +0800, Alvin Zheng wrote:
-> > Hi,
-> >
-> >     I  was using kernel v4.19.y and found that it cannot pass the
-> > generic/538 due to data corruption. I notice that upstream has fix this
-> > issue with commit 2032a8a27b5cc0f578d37fa16fa2494b80a0d00a. Will v4.19.y
-> > backport this patch?
->
-> Hey Alvin,
->
-> Thanks for Bringing this to attention.  I'll look into this a bit more.
-> Time for a new set of stable fixes for v4.19.y. Of course, I welcome
-> Briant's feedback, but if he's busy I'll still look into it.
->
+On Thu, Jun 27, 2019 at 04:39:50PM +0200, Christoph Hellwig wrote:
+> Properly allocate the space for the bio_vecs instead of just one byte
+> per bio_vec.
+> 
+> Fixes: 991fc1d2e65e ("xfs: use bios directly to write log buffers")
 
-FWIW, I tested -g quick on xfs with reflink=1,rmapbt=1 and did not
-observe any regressions from v4.19.55.
+I cannot find 991fc1d2e65e on Linus' tree, nor can I find the subject
+name patch on Linus' tree. I'm probably missing some context here?
 
-Luis, sorry I forgot to CC you on a request I just sent to consider 4 xfs
-patches for stable to fix generic/529 and generic/530:
-
-3b50086f0c0d xfs: don't overflow xattr listent buffer
-e1f6ca113815 xfs: rename m_inotbt_nores to m_finobt_nores
-15a268d9f263 xfs: reserve blocks for ifree transaction during log recovery
-c4a6bf7f6cc7 xfs: don't ever put nlink > 0 inodes on the unlinked list
-
-If you can run those patches through your setup that would be great.
-
-Thanks,
-Amir.
+> Reported-by: syzbot+b75afdbe271a0d7ac4f6@syzkaller.appspotmail.com
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_log.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 0f849b4095d6..e230f3c18ceb 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1415,7 +1415,8 @@ xlog_alloc_log(
+>  	 */
+>  	ASSERT(log->l_iclog_size >= 4096);
+>  	for (i = 0; i < log->l_iclog_bufs; i++) {
+> -		size_t bvec_size = howmany(log->l_iclog_size, PAGE_SIZE);
+> +		size_t bvec_size = howmany(log->l_iclog_size, PAGE_SIZE) *
+> +				sizeof(struct bio_vec);
+>  
+>  		iclog = kmem_zalloc(sizeof(*iclog) + bvec_size, KM_MAYFAIL);
+>  		if (!iclog)
+> -- 
+> 2.20.1
+> 
