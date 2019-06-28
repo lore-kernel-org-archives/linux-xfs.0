@@ -1,215 +1,396 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bilbo.ozlabs.org ([203.11.71.1]:40221 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726040AbfGABGI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 30 Jun 2019 21:06:08 -0400
-Date: Mon, 1 Jul 2019 11:06:03 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: manual merge of the xfs tree with the f2fs tree
-Message-ID: <20190701110603.5abcbb2c@canb.auug.org.au>
+Received: from bombadil.infradead.org ([198.137.202.133]:52700 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726537AbfF1VvH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 17:51:07 -0400
+Date: Fri, 28 Jun 2019 14:51:06 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v1] Doc : fs : convert xfs.txt to ReST
+Message-ID: <20190628215106.GE4286@bombadil.infradead.org>
+References: <20190628214302.GA12096@localhost>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/WHgTUq_CIxHe8Gi/4qnrMHz"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190628214302.GA12096@localhost>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>
-Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Eric Biggers <ebiggers@google.com>
+To: Sheriff Esseson <sheriffesseson@gmail.com>
+Cc: skhan@linuxfoundation.org, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>
 
---Sig_/WHgTUq_CIxHe8Gi/4qnrMHz
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Fri, Jun 28, 2019 at 10:43:02PM +0100, Sheriff Esseson wrote:
+> 	Convert xfs.txt to ReST, markup and rename accordingly. Update
+> 	Documentation/index.rst.
 
-Hi all,
+Didn't get_maintainers.pl suggest that you cc the linux-xfs mailing list?
 
-Today's linux-next merge of the xfs tree got a conflict in:
+You also need to update MAINTAINERS.
 
-  fs/f2fs/file.c
+> 	While at it, make "value" in "option=value" form xfs options definable by
+> 	the user, by embedding in angle "<>" brackets, rather than something
+> 	predifined elsewhere. This is inline with the conventions in manuals.
+> 	
+> 	Also, make defaults of boolean options prefixed with "(*)". This is
+> 	so that options can be compressed to "[no]option" and on a single line, which renders
+> 	consistently and nicely in htmldocs.
+> 	lastly, enforce a "one option, one definition" policy to keep things
+> 	consistent and simple.
+> 
+> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
+> ---
+>  Documentation/filesystems/index.rst           |   1 +
+>  .../filesystems/{xfs.txt => xfs.rst}          | 190 ++++++++++--------
+>  2 files changed, 103 insertions(+), 88 deletions(-)
+>  rename Documentation/filesystems/{xfs.txt => xfs.rst} (74%)
+> 
+> diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+> index 1131c34d7..be91fe616 100644
+> --- a/Documentation/filesystems/index.rst
+> +++ b/Documentation/filesystems/index.rst
+> @@ -41,3 +41,4 @@ Documentation for individual filesystem types can be found here.
+>     :maxdepth: 2
+>  
+>     binderfs.rst
+> +   xfs.rst
 
-between commit:
+I believe the convention is to not include the .rst suffix (and yes,
+binderfs is wrong here).
 
-  360985573b55 ("f2fs: separate f2fs i_flags from fs_flags and ext4 i_flags=
-")
-
-from the f2fs tree and commits:
-
-  de2baa49bbae ("vfs: create a generic checking and prep function for FS_IO=
-C_SETFLAGS")
-  3dd3ba36a8ee ("vfs: create a generic checking function for FS_IOC_FSSETXA=
-TTR")
-
-from the xfs tree.
-
-I fixed it up (I think - see below) and can carry the fix as necessary.
-This is now fixed as far as linux-next is concerned, but any non trivial
-conflicts should be mentioned to your upstream maintainer when your tree
-is submitted for merging.  You may also want to consider cooperating
-with the maintainer of the conflicting tree to minimise any particularly
-complex conflicts.
-
---=20
-Cheers,
-Stephen Rothwell
-
-diff --cc fs/f2fs/file.c
-index e7c368db8185,8799468724f9..000000000000
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@@ -1645,22 -1648,45 +1645,23 @@@ static int f2fs_file_flush(struct file=20
-  	return 0;
-  }
- =20
- -static int f2fs_ioc_getflags(struct file *filp, unsigned long arg)
- -{
- -	struct inode *inode =3D file_inode(filp);
- -	struct f2fs_inode_info *fi =3D F2FS_I(inode);
- -	unsigned int flags =3D fi->i_flags;
- -
- -	if (IS_ENCRYPTED(inode))
- -		flags |=3D F2FS_ENCRYPT_FL;
- -	if (f2fs_has_inline_data(inode) || f2fs_has_inline_dentry(inode))
- -		flags |=3D F2FS_INLINE_DATA_FL;
- -	if (is_inode_flag_set(inode, FI_PIN_FILE))
- -		flags |=3D F2FS_NOCOW_FL;
- -
- -	flags &=3D F2FS_FL_USER_VISIBLE;
- -
- -	return put_user(flags, (int __user *)arg);
- -}
- -
- -static int __f2fs_ioc_setflags(struct inode *inode, unsigned int flags)
- +static int f2fs_setflags_common(struct inode *inode, u32 iflags, u32 mask)
-  {
-  	struct f2fs_inode_info *fi =3D F2FS_I(inode);
- -	unsigned int oldflags;
- +	u32 oldflags;
-+ 	int err;
- =20
-  	/* Is it quota file? Do not allow user to mess with it */
-  	if (IS_NOQUOTA(inode))
-  		return -EPERM;
- =20
- -	flags =3D f2fs_mask_flags(inode->i_mode, flags);
- -
-  	oldflags =3D fi->i_flags;
- =20
-- 	if ((iflags ^ oldflags) & (F2FS_APPEND_FL | F2FS_IMMUTABLE_FL))
-- 		if (!capable(CAP_LINUX_IMMUTABLE))
-- 			return -EPERM;
- -	err =3D vfs_ioc_setflags_prepare(inode, oldflags, flags);
-++	err =3D vfs_ioc_setflags_prepare(inode, oldflags, iflags);
-+ 	if (err)
-+ 		return err;
- =20
- -	flags =3D flags & F2FS_FL_USER_MODIFIABLE;
- -	flags |=3D oldflags & ~F2FS_FL_USER_MODIFIABLE;
- -	fi->i_flags =3D flags;
- +	fi->i_flags =3D iflags | (oldflags & ~mask);
- =20
-  	if (fi->i_flags & F2FS_PROJINHERIT_FL)
-  		set_inode_flag(inode, FI_PROJ_INHERIT);
-@@@ -2850,53 -2773,35 +2851,33 @@@ static inline u32 f2fs_xflags_to_iflags
-  	return iflags;
-  }
- =20
-- static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
-+ static void f2fs_fill_fsxattr(struct inode *inode, struct fsxattr *fa)
-  {
-- 	struct inode *inode =3D file_inode(filp);
-  	struct f2fs_inode_info *fi =3D F2FS_I(inode);
-- 	struct fsxattr fa;
- =20
-- 	memset(&fa, 0, sizeof(struct fsxattr));
-- 	fa.fsx_xflags =3D f2fs_iflags_to_xflags(fi->i_flags);
- -	simple_fill_fsxattr(fa, f2fs_iflags_to_xflags(fi->i_flags &
- -						      F2FS_FL_USER_VISIBLE));
-++	simple_fill_fsxattr(fa, f2fs_iflags_to_xflags(fi->i_flags));
- =20
-  	if (f2fs_sb_has_project_quota(F2FS_I_SB(inode)))
-- 		fa.fsx_projid =3D (__u32)from_kprojid(&init_user_ns,
-- 							fi->i_projid);
--=20
-- 	if (copy_to_user((struct fsxattr __user *)arg, &fa, sizeof(fa)))
-- 		return -EFAULT;
-- 	return 0;
-+ 		fa->fsx_projid =3D from_kprojid(&init_user_ns, fi->i_projid);
-  }
- =20
-- static int f2fs_ioctl_check_project(struct inode *inode, struct fsxattr *=
-fa)
-+ static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
-  {
-- 	/*
-- 	 * Project Quota ID state is only allowed to change from within the init
-- 	 * namespace. Enforce that restriction only if we are trying to change
-- 	 * the quota ID state. Everything else is allowed in user namespaces.
-- 	 */
-- 	if (current_user_ns() =3D=3D &init_user_ns)
-- 		return 0;
-+ 	struct inode *inode =3D file_inode(filp);
-+ 	struct fsxattr fa;
- =20
-- 	if (__kprojid_val(F2FS_I(inode)->i_projid) !=3D fa->fsx_projid)
-- 		return -EINVAL;
--=20
-- 	if (F2FS_I(inode)->i_flags & F2FS_PROJINHERIT_FL) {
-- 		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
-- 			return -EINVAL;
-- 	} else {
-- 		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
-- 			return -EINVAL;
-- 	}
-+ 	f2fs_fill_fsxattr(inode, &fa);
- =20
-+ 	if (copy_to_user((struct fsxattr __user *)arg, &fa, sizeof(fa)))
-+ 		return -EFAULT;
-  	return 0;
-  }
- =20
-  static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
-  {
-  	struct inode *inode =3D file_inode(filp);
-- 	struct fsxattr fa;
- -	struct f2fs_inode_info *fi =3D F2FS_I(inode);
-+ 	struct fsxattr fa, old_fa;
- -	unsigned int flags;
- +	u32 iflags;
-  	int err;
- =20
-  	if (copy_from_user(&fa, (struct fsxattr __user *)arg, sizeof(fa)))
-@@@ -2918,11 -2823,14 +2899,13 @@@
-  		return err;
- =20
-  	inode_lock(inode);
-- 	err =3D f2fs_ioctl_check_project(inode, &fa);
-+=20
-+ 	f2fs_fill_fsxattr(inode, &old_fa);
-+ 	err =3D vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
-  	if (err)
-  		goto out;
- -	flags =3D (fi->i_flags & ~F2FS_FL_XFLAG_VISIBLE) |
- -				(flags & F2FS_FL_XFLAG_VISIBLE);
- -	err =3D __f2fs_ioc_setflags(inode, flags);
- +	err =3D f2fs_setflags_common(inode, iflags,
- +			f2fs_xflags_to_iflags(F2FS_SUPPORTED_XFLAGS));
-  	if (err)
-  		goto out;
- =20
-
---Sig_/WHgTUq_CIxHe8Gi/4qnrMHz
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl0ZXHsACgkQAVBC80lX
-0GxP6gf+Pl8lwcBYH5ii6HdOz1bH6Ls00UO1G40zosKUfIRsQGgy086i+AS7C03a
-K6V0FA2ltt3FJFXi3st5jgGgEiuyqsVU5TCOmr4p0izz58IX59LVXOcf90MqEZN8
-md1iBOSmuIJyJ0/j3LrUV1d9xr8bj/vEgzI1HKLJy4LKzRyVx4fmHR4ooYMlQyCc
-HpNPF/4PiH4BHkZckOysU7gZ6TRIEcA2PWQHleIFxepU2SjsZ9YdtTISGqe9PRUY
-nh4l9d3+hQYIUBgg9F5LiuJEfJdWIuBkOAHQrYXJMDKkaPr9c7k3cwaLkD15rSYg
-AZQPzhJ5GrKBmB6azd3xy6KyC3nbiQ==
-=rEt8
------END PGP SIGNATURE-----
-
---Sig_/WHgTUq_CIxHe8Gi/4qnrMHz--
+> diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.rst
+> similarity index 74%
+> rename from Documentation/filesystems/xfs.txt
+> rename to Documentation/filesystems/xfs.rst
+> index a5cbb5e0e..5e29e1583 100644
+> --- a/Documentation/filesystems/xfs.txt
+> +++ b/Documentation/filesystems/xfs.rst
+> @@ -1,4 +1,4 @@
+> -
+> +======================
+>  The SGI XFS Filesystem
+>  ======================
+>  
+> @@ -18,10 +18,10 @@ Mount Options
+>  =============
+>  
+>  When mounting an XFS filesystem, the following options are accepted.
+> -For boolean mount options, the names with the (*) suffix is the
+> +For boolean mount options, the names with the "(*)" prefix is the
+>  default behaviour.
+>  
+> -  allocsize=size
+> +   allocsize=<size>
+>  	Sets the buffered I/O end-of-file preallocation size when
+>  	doing delayed allocation writeout (default size is 64KiB).
+>  	Valid values for this option are page size (typically 4KiB)
+> @@ -34,181 +34,195 @@ default behaviour.
+>  	to the file. Specifying a fixed allocsize value turns off
+>  	the dynamic behaviour.
+>  
+> -  attr2
+> -  noattr2
+> +   [no]attr2
+>  	The options enable/disable an "opportunistic" improvement to
+>  	be made in the way inline extended attributes are stored
+>  	on-disk.  When the new form is used for the first time when
+> -	attr2 is selected (either when setting or removing extended
+> +	``attr2`` is selected (either when setting or removing extended
+>  	attributes) the on-disk superblock feature bit field will be
+>  	updated to reflect this format being in use.
+>  
+>  	The default behaviour is determined by the on-disk feature
+> -	bit indicating that attr2 behaviour is active. If either
+> -	mount option it set, then that becomes the new default used
+> -	by the filesystem.
+> -
+> -	CRC enabled filesystems always use the attr2 format, and so
+> -	will reject the noattr2 mount option if it is set.
+> +	bit indicating that ``attr2`` behaviour is active. If either
+> +	mount options is set, then that becomes the new default used
+> +	by the filesystem. However on CRC enabled filesystems, the
+> +        ``attr2`` format is always used , and so
+> +	will reject the ``noattr2`` mount option if it is set.
+>  
+> -  discard
+> -  nodiscard (*)
+> +   (*)[no]discard
+>  	Enable/disable the issuing of commands to let the block
+>  	device reclaim space freed by the filesystem.  This is
+>  	useful for SSD devices, thinly provisioned LUNs and virtual
+>  	machine images, but may have a performance impact.
+>  
+> -	Note: It is currently recommended that you use the fstrim
+> -	application to discard unused blocks rather than the discard
+> +	Note: It is currently recommended that you use the ``fstrim``
+> +	application to discard unused blocks rather than the ``discard``
+>  	mount option because the performance impact of this option
+>  	is quite severe.
+>  
+> -  grpid/bsdgroups
+> -  nogrpid/sysvgroups (*)
+> +   grpid/bsdgroups
+> +   nogrpid/(*)sysvgroups
+>  	These options define what group ID a newly created file
+> -	gets.  When grpid is set, it takes the group ID of the
+> +	gets.  When ``grpid`` is set, it takes the group ID of the
+>  	directory in which it is created; otherwise it takes the
+> -	fsgid of the current process, unless the directory has the
+> -	setgid bit set, in which case it takes the gid from the
+> -	parent directory, and also gets the setgid bit set if it is
+> +	``fsgid`` of the current process, unless the directory has the
+> +	``setgid`` bit set, in which case it takes the ``gid`` from the
+> +	parent directory, and also gets the ``setgid`` bit set if it is
+>  	a directory itself.
+>  
+> -  filestreams
+> +   filestreams
+>  	Make the data allocator use the filestreams allocation mode
+>  	across the entire filesystem rather than just on directories
+>  	configured to use it.
+>  
+> -  ikeep
+> -  noikeep (*)
+> -	When ikeep is specified, XFS does not delete empty inode
+> -	clusters and keeps them around on disk.  When noikeep is
+> +   (*)[no]ikeep
+> +	When ``ikeep`` is specified, XFS does not delete empty inode
+> +	clusters and keeps them around on disk.  When ``noikeep`` is
+>  	specified, empty inode clusters are returned to the free
+>  	space pool.
+>  
+> -  inode32
+> -  inode64 (*)
+> -	When inode32 is specified, it indicates that XFS limits
+> +   inode32 | (*)inode64
+> +	When ``inode32`` is specified, it indicates that XFS limits
+>  	inode creation to locations which will not result in inode
+>  	numbers with more than 32 bits of significance.
+>  
+> -	When inode64 is specified, it indicates that XFS is allowed
+> +	When ``inode64`` is specified, it indicates that XFS is allowed
+>  	to create inodes at any location in the filesystem,
+>  	including those which will result in inode numbers occupying
+> -	more than 32 bits of significance. 
+> +	more than 32 bits of significance.
+>  
+> -	inode32 is provided for backwards compatibility with older
+> +	``inode32`` is provided for backwards compatibility with older
+>  	systems and applications, since 64 bits inode numbers might
+>  	cause problems for some applications that cannot handle
+>  	large inode numbers.  If applications are in use which do
+> -	not handle inode numbers bigger than 32 bits, the inode32
+> +	not handle inode numbers bigger than 32 bits, the ``inode32``
+>  	option should be specified.
+>  
+>  
+> -  largeio
+> -  nolargeio (*)
+> -	If "nolargeio" is specified, the optimal I/O reported in
+> -	st_blksize by stat(2) will be as small as possible to allow
+> +   (*)[no]largeio
+> +	If ``nolargeio`` is specified, the optimal I/O reported in
+> +	st_blksize by **stat(2)** will be as small as possible to allow
+>  	user applications to avoid inefficient read/modify/write
+>  	I/O.  This is typically the page size of the machine, as
+>  	this is the granularity of the page cache.
+>  
+> -	If "largeio" specified, a filesystem that was created with a
+> -	"swidth" specified will return the "swidth" value (in bytes)
+> -	in st_blksize. If the filesystem does not have a "swidth"
+> -	specified but does specify an "allocsize" then "allocsize"
+> +	If ``largeio`` specified, a filesystem that was created with a
+> +	``swidth`` specified will return the ``swidth`` value (in bytes)
+> +	in st_blksize. If the filesystem does not have a ``swidth``
+> +	specified but does specify an ``allocsize`` then ``allocsize``
+>  	(in bytes) will be returned instead. Otherwise the behaviour
+> -	is the same as if "nolargeio" was specified.
+> +	is the same as if ``nolargeio`` was specified.
+>  
+> -  logbufs=value
+> -	Set the number of in-memory log buffers.  Valid numbers
+> +   logbufs=<value>
+> +	Set the number of in-memory log buffers to ``value``.  Valid numbers
+>  	range from 2-8 inclusive.
+>  
+>  	The default value is 8 buffers.
+>  
+>  	If the memory cost of 8 log buffers is too high on small
+>  	systems, then it may be reduced at some cost to performance
+> -	on metadata intensive workloads. The logbsize option below
+> +	on metadata intensive workloads. The ``logbsize`` option below
+>  	controls the size of each buffer and so is also relevant to
+>  	this case.
+>  
+> -  logbsize=value
+> -	Set the size of each in-memory log buffer.  The size may be
+> -	specified in bytes, or in kilobytes with a "k" suffix.
+> +   logbsize=<value>
+> +	Set the size of each in-memory log buffer to ``value``.  The size
+> +        may be specified in bytes, or in kilobytes with a "k" suffix.
+>  	Valid sizes for version 1 and version 2 logs are 16384 (16k)
+>  	and 32768 (32k).  Valid sizes for version 2 logs also
+>  	include 65536 (64k), 131072 (128k) and 262144 (256k). The
+> -	logbsize must be an integer multiple of the log
+> -	stripe unit configured at mkfs time.
+> +	``logbsize`` must be an integer multiple of the
+> +        "log stripe unit" configured at mkfs time.
+>  
+>  	The default value for for version 1 logs is 32768, while the
+> -	default value for version 2 logs is MAX(32768, log_sunit).
+> +	default value for version 2 logs is ``MAX(32768, log_sunit)``.
+>  
+> -  logdev=device and rtdev=device
+> -	Use an external log (metadata journal) and/or real-time device.
+> -	An XFS filesystem has up to three parts: a data section, a log
+> -	section, and a real-time section.  The real-time section is
+> -	optional, and the log section can be separate from the data
+> -	section or contained within it.
+> +   logdev=<device>
+> +	Use ``device`` as an external log.
+> +	In an XFS filesystem, the log section can be separate from
+> +        the data section or contained within it.
+>  
+> -  noalign
+> +   rtdev=<device>
+> +        An XFS filesystem has up to three parts: a data section, a log
+> +	section, and a real-time section.  The real-time section is optional.
+> +        If enabled, ``rtdev`` sets ``device`` to be used as an
+> +        external real-time section, similar to ``logdev`` above.
+> +
+> +   noalign
+>  	Data allocations will not be aligned at stripe unit
+>  	boundaries. This is only relevant to filesystems created
+>  	with non-zero data alignment parameters (sunit, swidth) by
+>  	mkfs.
+>  
+> -  norecovery
+> +   norecovery
+>  	The filesystem will be mounted without running log recovery.
+>  	If the filesystem was not cleanly unmounted, it is likely to
+> -	be inconsistent when mounted in "norecovery" mode.
+> +	be inconsistent when mounted in ``norecovery`` mode.
+>  	Some files or directories may not be accessible because of this.
+> -	Filesystems mounted "norecovery" must be mounted read-only or
+> +	Filesystems mounted ``norecovery`` must be mounted read-only or
+>  	the mount will fail.
+>  
+> -  nouuid
+> +   nouuid
+>  	Don't check for double mounted file systems using the file
+>  	system uuid.  This is useful to mount LVM snapshot volumes,
+> -	and often used in combination with "norecovery" for mounting
+> +	and often used in combination with ``norecovery`` for mounting
+>  	read-only snapshots.
+>  
+> -  noquota
+> +   noquota
+>  	Forcibly turns off all quota accounting and enforcement
+>  	within the filesystem.
+>  
+> -  uquota/usrquota/uqnoenforce/quota
+> +   uquota/usrquota/uqnoenforce/quota
+>  	User disk quota accounting enabled, and limits (optionally)
+> -	enforced.  Refer to xfs_quota(8) for further details.
+> +	enforced.  Refer to **xfs_quota(8)** for further details.
+>  
+> -  gquota/grpquota/gqnoenforce
+> +   gquota/grpquota/gqnoenforce
+>  	Group disk quota accounting enabled and limits (optionally)
+> -	enforced.  Refer to xfs_quota(8) for further details.
+> +	enforced.  Refer to **xfs_quota(8)** for further details.
+>  
+> -  pquota/prjquota/pqnoenforce
+> +   pquota/prjquota/pqnoenforce
+>  	Project disk quota accounting enabled and limits (optionally)
+> -	enforced.  Refer to xfs_quota(8) for further details.
+> +	enforced.  Refer to **xfs_quota(8)** for further details.
+>  
+> -  sunit=value and swidth=value
+> -	Used to specify the stripe unit and width for a RAID device
+> -	or a stripe volume.  "value" must be specified in 512-byte
+> -	block units. These options are only relevant to filesystems
+> +   sunit=<value>
+> +	Used to specify the stripe unit for a RAID device
+> +	or (in conjunction with ``swidth`` below) a stripe volume.  ``value`` must be specified in 512-byte
+> +	block units. This option is only relevant to filesystems
+>  	that were created with non-zero data alignment parameters.
+>  
+> -	The sunit and swidth parameters specified must be compatible
+> +	The ``sunit`` parameter specified must be compatible
+>  	with the existing filesystem alignment characteristics.  In
+> -	general, that means the only valid changes to sunit are
+> -	increasing it by a power-of-2 multiple. Valid swidth values
+> -	are any integer multiple of a valid sunit value.
+> +	general, that means the only valid changes to ``sunit`` are
+> +	increasing it by a power-of-2 multiple.
+>  
+> -	Typically the only time these mount options are necessary if
+> -	after an underlying RAID device has had it's geometry
+> +	Typically, this mount option is necessary only
+> +	after an underlying RAID device has had its geometry
+>  	modified, such as adding a new disk to a RAID5 lun and
+>  	reshaping it.
+>  
+> -  swalloc
+> +   swidth=<value>
+> +        Used to specify the stripe width for a RAID device
+> +	or (in conjunction with ``sunit`` above) a stripe volume.  ``value`` must be specified in 512-byte
+> +	block units. This option, like ``sunit`` above, is only
+> +        relevant to filesystems that were created with non-zero data alignment parameters.
+> +
+> +	The ``swidth`` parameter specified must be compatible
+> +	with the existing filesystem alignment characteristics.  In
+> +	general, that means the only valid swidth values
+> +	are any integer multiple of a valid ``sunit`` value.
+> +
+> +	Typically, this mount option is necessary only
+> +	after an underlying RAID device has had its geometry
+> +	modified, such as adding a new disk to a RAID5 lun and
+> +	reshaping it.
+> +
+> +
+> +   swalloc
+>  	Data allocations will be rounded up to stripe width boundaries
+>  	when the current end of file is being extended and the file
+>  	size is larger than the stripe width size.
+>  
+> -  wsync
+> +   wsync
+>  	When specified, all filesystem namespace operations are
+>  	executed synchronously. This ensures that when the namespace
+>  	operation (create, unlink, etc) completes, the change to the
+> @@ -302,27 +316,27 @@ The following sysctls are available for the XFS filesystem:
+>  
+>    fs.xfs.inherit_sync		(Min: 0  Default: 1  Max: 1)
+>  	Setting this to "1" will cause the "sync" flag set
+> -	by the xfs_io(8) chattr command on a directory to be
+> +	by the **xfs_io(8)** chattr command on a directory to be
+>  	inherited by files in that directory.
+>  
+>    fs.xfs.inherit_nodump		(Min: 0  Default: 1  Max: 1)
+>  	Setting this to "1" will cause the "nodump" flag set
+> -	by the xfs_io(8) chattr command on a directory to be
+> +	by the **xfs_io(8)** chattr command on a directory to be
+>  	inherited by files in that directory.
+>  
+>    fs.xfs.inherit_noatime	(Min: 0  Default: 1  Max: 1)
+>  	Setting this to "1" will cause the "noatime" flag set
+> -	by the xfs_io(8) chattr command on a directory to be
+> +	by the **xfs_io(8)** chattr command on a directory to be
+>  	inherited by files in that directory.
+>  
+>    fs.xfs.inherit_nosymlinks	(Min: 0  Default: 1  Max: 1)
+>  	Setting this to "1" will cause the "nosymlinks" flag set
+> -	by the xfs_io(8) chattr command on a directory to be
+> +	by the **xfs_io(8)** chattr command on a directory to be
+>  	inherited by files in that directory.
+>  
+>    fs.xfs.inherit_nodefrag	(Min: 0  Default: 1  Max: 1)
+>  	Setting this to "1" will cause the "nodefrag" flag set
+> -	by the xfs_io(8) chattr command on a directory to be
+> +	by the **xfs_io(8)** chattr command on a directory to be
+>  	inherited by files in that directory.
+>  
+>    fs.xfs.rotorstep		(Min: 1  Default: 1  Max: 256)
+> -- 
+> 2.22.0
+> 
