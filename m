@@ -1,168 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39038 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726908AbfF1SfZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 14:35:25 -0400
-Subject: [PATCH 4/5] vfs: teach vfs_ioc_fssetxattr_check to check extent
- size hints
+Received: from aserp2120.oracle.com ([141.146.126.78]:54224 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727015AbfF1Sfh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 14:35:37 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SIYLol027892
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2t9c9q72ue-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SIYqFL152196
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2t9p6w23at-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:35 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x5SIZYVM029431
+        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 18:35:34 GMT
+Subject: [PATCH 1/3] xfs: refactor setflags to use setattr code directly
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Fri, 28 Jun 2019 11:34:23 -0700
-Message-ID: <156174686376.1557318.5574192602758705361.stgit@magnolia>
-In-Reply-To: <156174682897.1557318.14418894077683701275.stgit@magnolia>
-References: <156174682897.1557318.14418894077683701275.stgit@magnolia>
+Date: Fri, 28 Jun 2019 11:35:33 -0700
+Message-ID: <156174693300.1557952.1660572699951099381.stgit@magnolia>
+In-Reply-To: <156174692684.1557952.3770482995772643434.stgit@magnolia>
+References: <156174692684.1557952.3770482995772643434.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, darrick.wong@oracle.com, shaggy@kernel.org, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, jk@ozlabs.org, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, viro@zeniv.linux.org.uk
-Cc: cluster-devel@redhat.com, jfs-discussion@lists.sourceforge.net, linux-efi@vger.kernel.org, Jan Kara <jack@suse.cz>, reiserfs-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the extent size hint checks that aren't xfs-specific to the vfs.
+Refactor the SETFLAGS implementation to use the SETXATTR code directly
+instead of partially constructing a struct fsxattr and calling bits and
+pieces of the setxattr code.  This reduces code size with no functional
+change.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
 ---
- fs/inode.c         |   18 +++++++++++++
- fs/xfs/xfs_ioctl.c |   70 ++++++++++++++++++++++------------------------------
- 2 files changed, 47 insertions(+), 41 deletions(-)
+ fs/xfs/xfs_ioctl.c |   48 +++---------------------------------------------
+ 1 file changed, 3 insertions(+), 45 deletions(-)
 
 
-diff --git a/fs/inode.c b/fs/inode.c
-index c4f8fb16f633..670d5408d022 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2247,6 +2247,24 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 			return -EINVAL;
- 	}
- 
-+	/* Check extent size hints. */
-+	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(inode->i_mode))
-+		return -EINVAL;
-+
-+	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
-+			!S_ISDIR(inode->i_mode))
-+		return -EINVAL;
-+
-+	if ((fa->fsx_xflags & FS_XFLAG_COWEXTSIZE) &&
-+	    !S_ISREG(inode->i_mode) && !S_ISDIR(inode->i_mode))
-+		return -EINVAL;
-+
-+	/* Extent size hints of zero turn off the flags. */
-+	if (fa->fsx_extsize == 0)
-+		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
-+	if (fa->fsx_cowextsize == 0)
-+		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
-+
- 	return 0;
- }
- EXPORT_SYMBOL(vfs_ioc_fssetxattr_check);
 diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index f494c01342c6..fe29aa61293c 100644
+index 552f18554c48..6f55cd7eb34f 100644
 --- a/fs/xfs/xfs_ioctl.c
 +++ b/fs/xfs/xfs_ioctl.c
-@@ -1200,39 +1200,31 @@ xfs_ioctl_setattr_check_extsize(
- 	struct fsxattr		*fa)
+@@ -1490,11 +1490,8 @@ xfs_ioc_setxflags(
+ 	struct file		*filp,
+ 	void			__user *arg)
  {
- 	struct xfs_mount	*mp = ip->i_mount;
+-	struct xfs_trans	*tp;
+ 	struct fsxattr		fa;
+-	struct fsxattr		old_fa;
+ 	unsigned int		flags;
+-	int			join_flags = 0;
+ 	int			error;
+ 
+ 	if (copy_from_user(&flags, arg, sizeof(flags)))
+@@ -1505,52 +1502,13 @@ xfs_ioc_setxflags(
+ 		      FS_SYNC_FL))
+ 		return -EOPNOTSUPP;
+ 
+-	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, xfs_ip2xflags(ip));
++	xfs_fill_fsxattr(ip, false, &fa);
++	fa.fsx_xflags = xfs_merge_ioc_xflags(flags, fa.fsx_xflags);
+ 
+ 	error = mnt_want_write_file(filp);
+ 	if (error)
+ 		return error;
 -
--	if ((fa->fsx_xflags & FS_XFLAG_EXTSIZE) && !S_ISREG(VFS_I(ip)->i_mode))
--		return -EINVAL;
+-	error = xfs_ioctl_setattr_drain_writes(ip, &fa, &join_flags);
+-	if (error) {
+-		xfs_iunlock(ip, join_flags);
+-		goto out_drop_write;
+-	}
 -
--	if ((fa->fsx_xflags & FS_XFLAG_EXTSZINHERIT) &&
--	    !S_ISDIR(VFS_I(ip)->i_mode))
--		return -EINVAL;
-+	xfs_extlen_t		size;
-+	xfs_fsblock_t		extsize_fsb;
- 
- 	if (S_ISREG(VFS_I(ip)->i_mode) && ip->i_d.di_nextents &&
- 	    ((ip->i_d.di_extsize << mp->m_sb.sb_blocklog) != fa->fsx_extsize))
- 		return -EINVAL;
- 
--	if (fa->fsx_extsize != 0) {
--		xfs_extlen_t    size;
--		xfs_fsblock_t   extsize_fsb;
+-	/*
+-	 * Changing DAX config may require inode locking for mapping
+-	 * invalidation. These need to be held all the way to transaction commit
+-	 * or cancel time, so need to be passed through to
+-	 * xfs_ioctl_setattr_get_trans() so it can apply them to the join call
+-	 * appropriately.
+-	 */
+-	error = xfs_ioctl_setattr_dax_invalidate(ip, &fa, &join_flags);
+-	if (error) {
+-		xfs_iunlock(ip, join_flags);
+-		goto out_drop_write;
+-	}
 -
--		extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
--		if (extsize_fsb > MAXEXTLEN)
--			return -EINVAL;
-+	if (fa->fsx_extsize == 0)
-+		return 0;
- 
--		if (XFS_IS_REALTIME_INODE(ip) ||
--		    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
--			size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
--		} else {
--			size = mp->m_sb.sb_blocksize;
--			if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
--				return -EINVAL;
--		}
-+	extsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_extsize);
-+	if (extsize_fsb > MAXEXTLEN)
-+		return -EINVAL;
- 
--		if (fa->fsx_extsize % size)
-+	if (XFS_IS_REALTIME_INODE(ip) ||
-+	    (fa->fsx_xflags & FS_XFLAG_REALTIME)) {
-+		size = mp->m_sb.sb_rextsize << mp->m_sb.sb_blocklog;
-+	} else {
-+		size = mp->m_sb.sb_blocksize;
-+		if (extsize_fsb > mp->m_sb.sb_agblocks / 2)
- 			return -EINVAL;
--	} else
--		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
-+	}
-+
-+	if (fa->fsx_extsize % size)
-+		return -EINVAL;
- 
- 	return 0;
- }
-@@ -1258,6 +1250,8 @@ xfs_ioctl_setattr_check_cowextsize(
- 	struct fsxattr		*fa)
- {
- 	struct xfs_mount	*mp = ip->i_mount;
-+	xfs_extlen_t		size;
-+	xfs_fsblock_t		cowextsize_fsb;
- 
- 	if (!(fa->fsx_xflags & FS_XFLAG_COWEXTSIZE))
- 		return 0;
-@@ -1266,25 +1260,19 @@ xfs_ioctl_setattr_check_cowextsize(
- 	    ip->i_d.di_version != 3)
- 		return -EINVAL;
- 
--	if (!S_ISREG(VFS_I(ip)->i_mode) && !S_ISDIR(VFS_I(ip)->i_mode))
--		return -EINVAL;
+-	tp = xfs_ioctl_setattr_get_trans(ip, join_flags);
+-	if (IS_ERR(tp)) {
+-		error = PTR_ERR(tp);
+-		goto out_drop_write;
+-	}
 -
--	if (fa->fsx_cowextsize != 0) {
--		xfs_extlen_t    size;
--		xfs_fsblock_t   cowextsize_fsb;
-+	if (fa->fsx_cowextsize == 0)
-+		return 0;
- 
--		cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
--		if (cowextsize_fsb > MAXEXTLEN)
--			return -EINVAL;
-+	cowextsize_fsb = XFS_B_TO_FSB(mp, fa->fsx_cowextsize);
-+	if (cowextsize_fsb > MAXEXTLEN)
-+		return -EINVAL;
- 
--		size = mp->m_sb.sb_blocksize;
--		if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
--			return -EINVAL;
-+	size = mp->m_sb.sb_blocksize;
-+	if (cowextsize_fsb > mp->m_sb.sb_agblocks / 2)
-+		return -EINVAL;
- 
--		if (fa->fsx_cowextsize % size)
--			return -EINVAL;
--	} else
--		fa->fsx_xflags &= ~FS_XFLAG_COWEXTSIZE;
-+	if (fa->fsx_cowextsize % size)
-+		return -EINVAL;
- 
- 	return 0;
+-	xfs_fill_fsxattr(ip, false, &old_fa);
+-	error = vfs_ioc_fssetxattr_check(VFS_I(ip), &old_fa, &fa);
+-	if (error) {
+-		xfs_trans_cancel(tp);
+-		goto out_drop_write;
+-	}
+-
+-	error = xfs_ioctl_setattr_xflags(tp, ip, &fa);
+-	if (error) {
+-		xfs_trans_cancel(tp);
+-		goto out_drop_write;
+-	}
+-
+-	error = xfs_trans_commit(tp);
+-out_drop_write:
++	error = xfs_ioctl_setattr(ip, &fa);
+ 	mnt_drop_write_file(filp);
+ 	return error;
  }
