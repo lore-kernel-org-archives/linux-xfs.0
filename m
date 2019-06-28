@@ -1,149 +1,439 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:48664 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726565AbfF1Vuj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 17:50:39 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SLneog162765
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:37 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2t9c9q7n9e-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x5SLo1Ji159068
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:37 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2t99f5t4f9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:36 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x5SLoaQh012808
-        for <linux-xfs@vger.kernel.org>; Fri, 28 Jun 2019 21:50:36 GMT
-Date: Fri, 28 Jun 2019 13:51:54 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:37364 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726563AbfF1WSi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 18:18:38 -0400
+Date: Fri, 28 Jun 2019 15:18:19 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: mysterious test failure when running xfstests on XFS
-Message-ID: <20190628205154.GF5179@magnolia>
-References: <20190628202117.GA15307@mit.edu>
+Subject: Re: [PATCH v1] Doc : fs : convert xfs.txt to ReST
+Message-ID: <20190628221819.GG5179@magnolia>
+References: <20190628214302.GA12096@localhost>
+ <20190628215106.GE4286@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190628202117.GA15307@mit.edu>
+In-Reply-To: <20190628215106.GE4286@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Sheriff Esseson <sheriffesseson@gmail.com>, skhan@linuxfoundation.org, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Fri, Jun 28, 2019 at 04:21:17PM -0400, Theodore Ts'o wrote:
-> When trying to make sure a change to a test works on other file
-> systems, I noticed the failure:
+On Fri, Jun 28, 2019 at 02:51:06PM -0700, Matthew Wilcox wrote:
+> On Fri, Jun 28, 2019 at 10:43:02PM +0100, Sheriff Esseson wrote:
+> > 	Convert xfs.txt to ReST, markup and rename accordingly. Update
+> > 	Documentation/index.rst.
 > 
-> xfs_db: error - read only 0 of 32768 bytes
-> xfs_db: /tmp/1577.img is invalid (cannot read first 512 bytes)
+> Didn't get_maintainers.pl suggest that you cc the linux-xfs mailing list?
+
+No, because we suck. :(
+
+> You also need to update MAINTAINERS.
+
+Yes, please. :)
+
+> > 	While at it, make "value" in "option=value" form xfs options definable by
+> > 	the user, by embedding in angle "<>" brackets, rather than something
+> > 	predifined elsewhere. This is inline with the conventions in manuals.
+> > 	
+> > 	Also, make defaults of boolean options prefixed with "(*)". This is
+> > 	so that options can be compressed to "[no]option" and on a single line, which renders
+> > 	consistently and nicely in htmldocs.
+> > 	lastly, enforce a "one option, one definition" policy to keep things
+> > 	consistent and simple.
+> > 
+> > Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
+> > ---
+> >  Documentation/filesystems/index.rst           |   1 +
+> >  .../filesystems/{xfs.txt => xfs.rst}          | 190 ++++++++++--------
+> >  2 files changed, 103 insertions(+), 88 deletions(-)
+> >  rename Documentation/filesystems/{xfs.txt => xfs.rst} (74%)
+> > 
+> > diff --git a/Documentation/filesystems/index.rst b/Documentation/filesystems/index.rst
+> > index 1131c34d7..be91fe616 100644
+> > --- a/Documentation/filesystems/index.rst
+> > +++ b/Documentation/filesystems/index.rst
+> > @@ -41,3 +41,4 @@ Documentation for individual filesystem types can be found here.
+> >     :maxdepth: 2
+> >  
+> >     binderfs.rst
+> > +   xfs.rst
 > 
-> When I tried tracking down where this failure was coming from, I found
-> this:
-> 
-> ++ export 'XFS_IO_PROG=/root/xfstests/bin/xfs_io -i'
-> ++ XFS_IO_PROG='/root/xfstests/bin/xfs_io -i'
-> ++ '[' xfs == xfs ']'
-> ++ touch /tmp/10216.img
-> ++ /root/xfstests/bin/mkfs.xfs -d file,name=/tmp/10216.img,size=512m
-> ++ /root/xfstests/bin/xfs_db -x -c 'uuid generate' /tmp/10216.img
-> ++ grep -q 'invalid UUID\|supported on V5 fs'
-> xfs_db: error - read only 0 of 32768 bytes
-> xfs_db: /tmp/10216.img is invalid (cannot read first 512 bytes)
-> ++ rm -f /tmp/10216.img
-> 
-> Apparently the issue is that the mkfs.xfs is failing, but in init_rc
-> we redirect the output to /dev/null:
-> 
-> 		touch /tmp/$$.img
-> 		$MKFS_XFS_PROG -d file,name=/tmp/$$.img,size=512m >/dev/null 2>&1
-> 		# xfs_db will return 0 even if it can't generate a new uuid, so
-> 		# check the output to make sure if it can change UUID of V5 xfs
-> 		$XFS_DB_PROG -x -c "uuid generate" /tmp/$$.img \
-> 			| grep -q "invalid UUID\|supported on V5 fs" \
-> 			&& export XFS_COPY_PROG="$XFS_COPY_PROG -d"
-> 		rm -f /tmp/$$.img
-> 
-> From a test script:
-> 
-> rm -f $IMAGE
-> + rm -f /tmp/10216.img
-> touch $IMAGE
-> + touch /tmp/10216.img
-> ./xfsprogs-dev/mkfs/mkfs.xfs  -d file,name=$IMAGE,size=512m
-> + ./xfsprogs-dev/mkfs/mkfs.xfs -d file,name=/tmp/10216.img,size=512m
-> mkfs.xfs: Use the -f option to force overwrite.
+> I believe the convention is to not include the .rst suffix (and yes,
+> binderfs is wrong here).
+>
+> > diff --git a/Documentation/filesystems/xfs.txt b/Documentation/filesystems/xfs.rst
+> > similarity index 74%
+> > rename from Documentation/filesystems/xfs.txt
+> > rename to Documentation/filesystems/xfs.rst
+> > index a5cbb5e0e..5e29e1583 100644
+> > --- a/Documentation/filesystems/xfs.txt
+> > +++ b/Documentation/filesystems/xfs.rst
+> > @@ -1,4 +1,4 @@
+> > -
+> > +======================
+> >  The SGI XFS Filesystem
+> >  ======================
+> >  
+> > @@ -18,10 +18,10 @@ Mount Options
+> >  =============
+> >  
+> >  When mounting an XFS filesystem, the following options are accepted.
+> > -For boolean mount options, the names with the (*) suffix is the
+> > +For boolean mount options, the names with the "(*)" prefix is the
+> >  default behaviour.
+> >  
+> > -  allocsize=size
+> > +   allocsize=<size>
+> >  	Sets the buffered I/O end-of-file preallocation size when
+> >  	doing delayed allocation writeout (default size is 64KiB).
+> >  	Valid values for this option are page size (typically 4KiB)
+> > @@ -34,181 +34,195 @@ default behaviour.
+> >  	to the file. Specifying a fixed allocsize value turns off
+> >  	the dynamic behaviour.
+> >  
+> > -  attr2
+> > -  noattr2
+> > +   [no]attr2
+> >  	The options enable/disable an "opportunistic" improvement to
+> >  	be made in the way inline extended attributes are stored
+> >  	on-disk.  When the new form is used for the first time when
+> > -	attr2 is selected (either when setting or removing extended
+> > +	``attr2`` is selected (either when setting or removing extended
+> >  	attributes) the on-disk superblock feature bit field will be
+> >  	updated to reflect this format being in use.
+> >  
+> >  	The default behaviour is determined by the on-disk feature
+> > -	bit indicating that attr2 behaviour is active. If either
+> > -	mount option it set, then that becomes the new default used
+> > -	by the filesystem.
+> > -
+> > -	CRC enabled filesystems always use the attr2 format, and so
+> > -	will reject the noattr2 mount option if it is set.
+> > +	bit indicating that ``attr2`` behaviour is active. If either
+> > +	mount options is set, then that becomes the new default used
 
-Hmmm, mkfs.xfs always requires -f if it was built without blkid since it
-then won't have the ability to determine if there's already a filesystem
-on the device you're trying to format.  Was your xfsprogs was built
-without blkid?
+"If either mount option is set..."
 
-$ strings /opt/root/xfstests/bin/mkfs.xfs | grep blkid
-$ ldd /opt/root/xfstests/bin/mkfs.xfs
-        not a dynamic executable
+> > +	by the filesystem. However on CRC enabled filesystems, the
+> > +        ``attr2`` format is always used , and so
+> > +	will reject the ``noattr2`` mount option if it is set.
+> >  
+> > -  discard
+> > -  nodiscard (*)
+> > +   (*)[no]discard
+> >  	Enable/disable the issuing of commands to let the block
+> >  	device reclaim space freed by the filesystem.  This is
+> >  	useful for SSD devices, thinly provisioned LUNs and virtual
+> >  	machine images, but may have a performance impact.
+> >  
+> > -	Note: It is currently recommended that you use the fstrim
+> > -	application to discard unused blocks rather than the discard
+> > +	Note: It is currently recommended that you use the ``fstrim``
+> > +	application to discard unused blocks rather than the ``discard``
+> >  	mount option because the performance impact of this option
+> >  	is quite severe.
+> >  
+> > -  grpid/bsdgroups
+> > -  nogrpid/sysvgroups (*)
+> > +   grpid/bsdgroups
+> > +   nogrpid/(*)sysvgroups
+> >  	These options define what group ID a newly created file
+> > -	gets.  When grpid is set, it takes the group ID of the
+> > +	gets.  When ``grpid`` is set, it takes the group ID of the
+> >  	directory in which it is created; otherwise it takes the
+> > -	fsgid of the current process, unless the directory has the
+> > -	setgid bit set, in which case it takes the gid from the
+> > -	parent directory, and also gets the setgid bit set if it is
+> > +	``fsgid`` of the current process, unless the directory has the
+> > +	``setgid`` bit set, in which case it takes the ``gid`` from the
+> > +	parent directory, and also gets the ``setgid`` bit set if it is
+> >  	a directory itself.
+> >  
+> > -  filestreams
+> > +   filestreams
+> >  	Make the data allocator use the filestreams allocation mode
+> >  	across the entire filesystem rather than just on directories
+> >  	configured to use it.
+> >  
+> > -  ikeep
+> > -  noikeep (*)
+> > -	When ikeep is specified, XFS does not delete empty inode
+> > -	clusters and keeps them around on disk.  When noikeep is
+> > +   (*)[no]ikeep
+> > +	When ``ikeep`` is specified, XFS does not delete empty inode
+> > +	clusters and keeps them around on disk.  When ``noikeep`` is
+> >  	specified, empty inode clusters are returned to the free
+> >  	space pool.
+> >  
+> > -  inode32
+> > -  inode64 (*)
+> > -	When inode32 is specified, it indicates that XFS limits
+> > +   inode32 | (*)inode64
+> > +	When ``inode32`` is specified, it indicates that XFS limits
+> >  	inode creation to locations which will not result in inode
+> >  	numbers with more than 32 bits of significance.
+> >  
+> > -	When inode64 is specified, it indicates that XFS is allowed
+> > +	When ``inode64`` is specified, it indicates that XFS is allowed
+> >  	to create inodes at any location in the filesystem,
+> >  	including those which will result in inode numbers occupying
+> > -	more than 32 bits of significance. 
+> > +	more than 32 bits of significance.
+> >  
+> > -	inode32 is provided for backwards compatibility with older
+> > +	``inode32`` is provided for backwards compatibility with older
+> >  	systems and applications, since 64 bits inode numbers might
+> >  	cause problems for some applications that cannot handle
+> >  	large inode numbers.  If applications are in use which do
+> > -	not handle inode numbers bigger than 32 bits, the inode32
+> > +	not handle inode numbers bigger than 32 bits, the ``inode32``
+> >  	option should be specified.
+> >  
+> >  
+> > -  largeio
+> > -  nolargeio (*)
+> > -	If "nolargeio" is specified, the optimal I/O reported in
+> > -	st_blksize by stat(2) will be as small as possible to allow
+> > +   (*)[no]largeio
+> > +	If ``nolargeio`` is specified, the optimal I/O reported in
+> > +	st_blksize by **stat(2)** will be as small as possible to allow
+> >  	user applications to avoid inefficient read/modify/write
+> >  	I/O.  This is typically the page size of the machine, as
+> >  	this is the granularity of the page cache.
+> >  
+> > -	If "largeio" specified, a filesystem that was created with a
+> > -	"swidth" specified will return the "swidth" value (in bytes)
+> > -	in st_blksize. If the filesystem does not have a "swidth"
+> > -	specified but does specify an "allocsize" then "allocsize"
+> > +	If ``largeio`` specified, a filesystem that was created with a
 
-Yep.  Rummaging through the xfstests-bld repo... aha!
+"If ``largeio`` is specified..."
 
-     export LOCAL_CONFIGURE_OPTIONS="$cross --prefix=/ --disable-lib64 --disable-gettext --disable-libicu --disable-blkid" ; \
+> > +	``swidth`` specified will return the ``swidth`` value (in bytes)
+> > +	in st_blksize. If the filesystem does not have a ``swidth``
+> > +	specified but does specify an ``allocsize`` then ``allocsize``
+> >  	(in bytes) will be returned instead. Otherwise the behaviour
+> > -	is the same as if "nolargeio" was specified.
+> > +	is the same as if ``nolargeio`` was specified.
+> >  
+> > -  logbufs=value
+> > -	Set the number of in-memory log buffers.  Valid numbers
+> > +   logbufs=<value>
+> > +	Set the number of in-memory log buffers to ``value``.  Valid numbers
+> >  	range from 2-8 inclusive.
+> >  
+> >  	The default value is 8 buffers.
+> >  
+> >  	If the memory cost of 8 log buffers is too high on small
+> >  	systems, then it may be reduced at some cost to performance
+> > -	on metadata intensive workloads. The logbsize option below
+> > +	on metadata intensive workloads. The ``logbsize`` option below
+> >  	controls the size of each buffer and so is also relevant to
+> >  	this case.
+> >  
+> > -  logbsize=value
+> > -	Set the size of each in-memory log buffer.  The size may be
+> > -	specified in bytes, or in kilobytes with a "k" suffix.
+> > +   logbsize=<value>
+> > +	Set the size of each in-memory log buffer to ``value``.  The size
+> > +        may be specified in bytes, or in kilobytes with a "k" suffix.
 
-/me traces it to this commit:
+Why the indentation here?
 
-24c24367f36a36 ("build-all: disable blkid when building xfsprogs")
+> >  	Valid sizes for version 1 and version 2 logs are 16384 (16k)
+> >  	and 32768 (32k).  Valid sizes for version 2 logs also
+> >  	include 65536 (64k), 131072 (128k) and 262144 (256k). The
+> > -	logbsize must be an integer multiple of the log
+> > -	stripe unit configured at mkfs time.
+> > +	``logbsize`` must be an integer multiple of the
+> > +        "log stripe unit" configured at mkfs time.
 
-2019-02-19, I guess nobody's updated their xfstests-bld repos since
-before then; I certainly hadn't. :)
+Or here?
 
-Hmm... these days xfsprogs really wants to be built with libblkid since
-(a) that's the configuration that most distros ship and (b) some of the
-online utilities (like xfs_scrub) really /do/ want blkid information to
-try to guess the level of parallelism of the device.
+> >  
+> >  	The default value for for version 1 logs is 32768, while the
+> > -	default value for version 2 logs is MAX(32768, log_sunit).
+> > +	default value for version 2 logs is ``MAX(32768, log_sunit)``.
+> >  
+> > -  logdev=device and rtdev=device
+> > -	Use an external log (metadata journal) and/or real-time device.
+> > -	An XFS filesystem has up to three parts: a data section, a log
+> > -	section, and a real-time section.  The real-time section is
+> > -	optional, and the log section can be separate from the data
+> > -	section or contained within it.
+> > +   logdev=<device>
+> > +	Use ``device`` as an external log.
 
-What's less clear is how to proceed from here -- should kvm-xfstests
-download and build upstream libblkid and then point the xfsprogs build
-at it?
+"...as an external log (metadata journal)."
 
-I suppose we could change xfstests to detect if mkfs isn't linked
-against libblkid and inject a "-f" into XFS_MKFS_PROG, though that could
-cause other problems with tests that might not be expecting non-force
-mode.
+> > +	In an XFS filesystem, the log section can be separate from
+> > +        the data section or contained within it.
+
+s/section/device/
+
+Hmm, maybe it's time to just call them devices like everyone else on
+Linux does.  I'd guess "section" is a holdover from IRIX(?)
+
+> >  
+> > -  noalign
+> > +   rtdev=<device>
+> > +        An XFS filesystem has up to three parts: a data section, a log
+> > +	section, and a real-time section.  The real-time section is optional.
+> > +        If enabled, ``rtdev`` sets ``device`` to be used as an
+> > +        external real-time section, similar to ``logdev`` above.
+
+Why indent here?
+
+> > +   noalign
+> >  	Data allocations will not be aligned at stripe unit
+> >  	boundaries. This is only relevant to filesystems created
+> >  	with non-zero data alignment parameters (sunit, swidth) by
+> >  	mkfs.
+> >  
+> > -  norecovery
+> > +   norecovery
+> >  	The filesystem will be mounted without running log recovery.
+> >  	If the filesystem was not cleanly unmounted, it is likely to
+> > -	be inconsistent when mounted in "norecovery" mode.
+> > +	be inconsistent when mounted in ``norecovery`` mode.
+> >  	Some files or directories may not be accessible because of this.
+> > -	Filesystems mounted "norecovery" must be mounted read-only or
+> > +	Filesystems mounted ``norecovery`` must be mounted read-only or
+> >  	the mount will fail.
+> >  
+> > -  nouuid
+> > +   nouuid
+> >  	Don't check for double mounted file systems using the file
+> >  	system uuid.  This is useful to mount LVM snapshot volumes,
+> > -	and often used in combination with "norecovery" for mounting
+> > +	and often used in combination with ``norecovery`` for mounting
+> >  	read-only snapshots.
+> >  
+> > -  noquota
+> > +   noquota
+> >  	Forcibly turns off all quota accounting and enforcement
+> >  	within the filesystem.
+> >  
+> > -  uquota/usrquota/uqnoenforce/quota
+> > +   uquota/usrquota/uqnoenforce/quota
+> >  	User disk quota accounting enabled, and limits (optionally)
+> > -	enforced.  Refer to xfs_quota(8) for further details.
+> > +	enforced.  Refer to **xfs_quota(8)** for further details.
+> >  
+> > -  gquota/grpquota/gqnoenforce
+> > +   gquota/grpquota/gqnoenforce
+> >  	Group disk quota accounting enabled and limits (optionally)
+> > -	enforced.  Refer to xfs_quota(8) for further details.
+> > +	enforced.  Refer to **xfs_quota(8)** for further details.
+> >  
+> > -  pquota/prjquota/pqnoenforce
+> > +   pquota/prjquota/pqnoenforce
+> >  	Project disk quota accounting enabled and limits (optionally)
+> > -	enforced.  Refer to xfs_quota(8) for further details.
+> > +	enforced.  Refer to **xfs_quota(8)** for further details.
+> >  
+> > -  sunit=value and swidth=value
+> > -	Used to specify the stripe unit and width for a RAID device
+> > -	or a stripe volume.  "value" must be specified in 512-byte
+> > -	block units. These options are only relevant to filesystems
+> > +   sunit=<value>
+> > +	Used to specify the stripe unit for a RAID device
+> > +	or (in conjunction with ``swidth`` below) a stripe volume.  ``value`` must be specified in 512-byte
+
+Long line?
+
+> > +	block units. This option is only relevant to filesystems
+> >  	that were created with non-zero data alignment parameters.
+> >  
+> > -	The sunit and swidth parameters specified must be compatible
+> > +	The ``sunit`` parameter specified must be compatible
+> >  	with the existing filesystem alignment characteristics.  In
+> > -	general, that means the only valid changes to sunit are
+> > -	increasing it by a power-of-2 multiple. Valid swidth values
+> > -	are any integer multiple of a valid sunit value.
+> > +	general, that means the only valid changes to ``sunit`` are
+> > +	increasing it by a power-of-2 multiple.
+> >  
+> > -	Typically the only time these mount options are necessary if
+> > -	after an underlying RAID device has had it's geometry
+> > +	Typically, this mount option is necessary only
+> > +	after an underlying RAID device has had its geometry
+> >  	modified, such as adding a new disk to a RAID5 lun and
+> >  	reshaping it.
+> >  
+> > -  swalloc
+> > +   swidth=<value>
+> > +        Used to specify the stripe width for a RAID device
+> > +	or (in conjunction with ``sunit`` above) a stripe volume.  ``value`` must be specified in 512-byte
+
+Line too long.
+
+> > +	block units. This option, like ``sunit`` above, is only
+> > +        relevant to filesystems that were created with non-zero data alignment parameters.
+
+Why indent here?
+
+> > +
+> > +	The ``swidth`` parameter specified must be compatible
+> > +	with the existing filesystem alignment characteristics.  In
+> > +	general, that means the only valid swidth values
+> > +	are any integer multiple of a valid ``sunit`` value.
+> > +
+> > +	Typically, this mount option is necessary only
+> > +	after an underlying RAID device has had its geometry
+> > +	modified, such as adding a new disk to a RAID5 lun and
+> > +	reshaping it.
+> > +
+> > +
+> > +   swalloc
+> >  	Data allocations will be rounded up to stripe width boundaries
+> >  	when the current end of file is being extended and the file
+> >  	size is larger than the stripe width size.
+> >  
+> > -  wsync
+> > +   wsync
+> >  	When specified, all filesystem namespace operations are
+> >  	executed synchronously. This ensures that when the namespace
+> >  	operation (create, unlink, etc) completes, the change to the
+> > @@ -302,27 +316,27 @@ The following sysctls are available for the XFS filesystem:
+> >  
+> >    fs.xfs.inherit_sync		(Min: 0  Default: 1  Max: 1)
+> >  	Setting this to "1" will cause the "sync" flag set
+> > -	by the xfs_io(8) chattr command on a directory to be
+> > +	by the **xfs_io(8)** chattr command on a directory to be
+> >  	inherited by files in that directory.
+> >  
+> >    fs.xfs.inherit_nodump		(Min: 0  Default: 1  Max: 1)
+> >  	Setting this to "1" will cause the "nodump" flag set
+> > -	by the xfs_io(8) chattr command on a directory to be
+> > +	by the **xfs_io(8)** chattr command on a directory to be
+> >  	inherited by files in that directory.
+> >  
+> >    fs.xfs.inherit_noatime	(Min: 0  Default: 1  Max: 1)
+> >  	Setting this to "1" will cause the "noatime" flag set
+> > -	by the xfs_io(8) chattr command on a directory to be
+> > +	by the **xfs_io(8)** chattr command on a directory to be
+> >  	inherited by files in that directory.
+> >  
+> >    fs.xfs.inherit_nosymlinks	(Min: 0  Default: 1  Max: 1)
+> >  	Setting this to "1" will cause the "nosymlinks" flag set
+> > -	by the xfs_io(8) chattr command on a directory to be
+> > +	by the **xfs_io(8)** chattr command on a directory to be
+> >  	inherited by files in that directory.
+> >  
+> >    fs.xfs.inherit_nodefrag	(Min: 0  Default: 1  Max: 1)
+> >  	Setting this to "1" will cause the "nodefrag" flag set
+> > -	by the xfs_io(8) chattr command on a directory to be
+> > +	by the **xfs_io(8)** chattr command on a directory to be
+> >  	inherited by files in that directory.
+
+Otherwise, this looks good.  Thank you for taking on this conversion!
 
 --D
 
-> 
-> A simple way to reproduce this:
-> 
-> 1)  Download the root_fs.img.amd64:
-> 
-> https://mirrors.edge.kernel.org/pub/linux/kernel/people/tytso/kvm-xfstests/root_fs.img.amd64
-> 
-> 2)  Run the command:
-> 
-> 	kvm-xfstests -I /tmp/root_fs.img.amd64 -c xfs generic/001
-> 
-> 3)  Observe the failure:
-> 
-> generic/001 2s ... 	[16:15:48][    5.187808] run fstests generic/001 at 2019-06-28 16:15:48
->  [16:15:51]- output mismatch (see /results/xfs/results-4k/generic/001.out.bad)
->     --- tests/generic/001.out	2019-06-10 00:02:54.000000000 -0400
->     +++ /results/xfs/results-4k/generic/001.out.bad	2019-06-28 16:15:51.631596912 -0400
->     @@ -1,4 +1,6 @@
->      QA output created by 001
->     +xfs_db: error - read only 0 of 32768 bytes
->     +xfs_db: /tmp/1577.img is invalid (cannot read first 512 bytes)
->      cleanup
->      setup ....................................
->      iter 1 chain ... check ....................................
->     ...
->     (Run 'diff -u /root/xfstests/tests/generic/001.out /results/xfs/results-4k/generic/001.out.bad'  to)
-> Ran: generic/001
-> Failures: generic/001
-> 
-> I know this used to work, but I'm not sure at what point this started
-> failing for me.   Is there anything obvious?
-> 
-> 
-> 						- Ted
+> >  
+> >    fs.xfs.rotorstep		(Min: 1  Default: 1  Max: 256)
+> > -- 
+> > 2.22.0
+> > 
