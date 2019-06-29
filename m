@@ -1,100 +1,49 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:8244 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726839AbfF2Jf2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 29 Jun 2019 05:35:28 -0400
-Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
-References: <20190629073020.22759-1-yuchao0@huawei.com>
-From: Gao Xiang <gaoxiang25@huawei.com>
-Message-ID: <afda5702-1d88-7634-d943-0c413ae3b28f@huawei.com>
-Date: Sat, 29 Jun 2019 17:34:43 +0800
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:52150 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726849AbfF2Rb6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Jun 2019 13:31:58 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 6C5BD28735
+        for <linux-xfs@vger.kernel.org>; Sat, 29 Jun 2019 17:31:57 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 203947] [xfstests generic/475]: general protection fault: 0000
+ [#1] RIP: 0010:xfs_setfilesize_ioend+0xb1/0x220 [xfs]
+Date: Sat, 29 Jun 2019 17:31:56 +0000
+Message-ID: <bug-203947-201763-3bw6dZMvJI@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-203947-201763@https.bugzilla.kernel.org/>
+References: <bug-203947-201763@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-In-Reply-To: <20190629073020.22759-1-yuchao0@huawei.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chao Yu <yuchao0@huawei.com>
-Cc: hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, chao@kernel.org
+To: linux-xfs@vger.kernel.org
 
-Hi Chao,
+https://bugzilla.kernel.org/show_bug.cgi?id=203947
 
-On 2019/6/29 15:30, Chao Yu wrote:
-> Some filesystems like erofs/reiserfs have the ability to pack tail
-> data into metadata, however iomap framework can only support mapping
-> inline data with IOMAP_INLINE type, it restricts that:
-> - inline data should be locating at page #0.
-> - inline size should equal to .i_size
-> So we can not use IOMAP_INLINE to handle tail-packing case.
-> 
-> This patch introduces new mapping type IOMAP_TAIL to map tail-packed
-> data for further use of erofs.
-> 
-> Signed-off-by: Chao Yu <yuchao0@huawei.com>
-> ---
->  fs/iomap.c            | 22 ++++++++++++++++++++++
->  include/linux/iomap.h |  1 +
->  2 files changed, 23 insertions(+)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 12654c2e78f8..ae7777ce77d0 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
->  	SetPageUptodate(page);
->  }
->  
-> +static void
-> +iomap_read_tail_data(struct inode *inode, struct page *page,
-> +		struct iomap *iomap)
-> +{
-> +	size_t size = i_size_read(inode) & (PAGE_SIZE - 1);
-> +	void *addr;
-> +
-> +	if (PageUptodate(page))
-> +		return;
-> +
-> +	addr = kmap_atomic(page);
-> +	memcpy(addr, iomap->inline_data, size);
-> +	memset(addr + size, 0, PAGE_SIZE - size);
+--- Comment #8 from Darrick J. Wong (djwong+kernel@djwong.org) ---
+Ok, so I reproduced it locally and tracked the crash to this part of
+xfs_bmapi_read() where we dereference *ifp:
 
-need flush_dcache_page(page) here for new page cache page since
-it's generic iomap code (althrough not necessary for x86, arm), I am not sure...
-see commit d2b2c6dd227b and c01778001a4f...
+        if (!(ifp->if_flags & XFS_IFEXTENTS)) {                                 
+                error = xfs_iread_extents(NULL, ip, whichfork);                 
+                if (error)                                                      
+                        return error;                                           
+        }                                                                       
 
-Thanks,
-Gao Xiang
+Looking at xfs_iformat_fork(), it seems that if there's any kind of error
+formatting the attr fork it'll free ip->i_afp and set it to NULL, so I think
+the fix is to add an "if (!afp) return -EIO;" somewhere.
 
-> +	kunmap_atomic(addr);
-> +	SetPageUptodate(page);
-> +}
-> +
->  static loff_t
->  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  		struct iomap *iomap)
-> @@ -298,6 +315,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  		return PAGE_SIZE;
->  	}
->  
-> +	if (iomap->type == IOMAP_TAIL) {
-> +		iomap_read_tail_data(inode, page, iomap);
-> +		return PAGE_SIZE;
-> +	}
-> +
->  	/* zero post-eof blocks as the page may be mapped */
->  	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
->  	if (plen == 0)
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 2103b94cb1bf..7e1ee48e3db7 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -25,6 +25,7 @@ struct vm_fault;
->  #define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
->  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
->  #define IOMAP_INLINE	0x05	/* data inline in the inode */
-> +#define IOMAP_TAIL	0x06	/* tail data packed in metdata */
->  
->  /*
->   * Flags for all iomap mappings:
-> 
+Not sure how we actually get to this place, though.  fsstress is running
+bulkstat, which is inactivating an inode with i_nlink == 0 and a corrupt attr
+fork that won't load.  Maybe we hit an inode that had previously gone through
+unlinked processing after log recovery but was lurking on the mru waiting to be
+inactivated, but then bulkstat showed up (with its IGET_DONTCACHE) which forced
+immediate inactivation?
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
