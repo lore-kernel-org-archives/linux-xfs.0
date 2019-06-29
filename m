@@ -1,65 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:41704 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726586AbfF1W17 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 18:27:59 -0400
-Date: Fri, 28 Jun 2019 22:27:56 +0000
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [PATCH 11/12] iomap: move the xfs writeback code to iomap.c
-Message-ID: <20190628222756.GM19023@42.do-not-panic.com>
-References: <20190624055253.31183-1-hch@lst.de>
- <20190624055253.31183-12-hch@lst.de>
- <20190624234304.GD7777@dread.disaster.area>
- <20190625101020.GI1462@lst.de>
- <20190628004542.GJ7777@dread.disaster.area>
+Received: from bombadil.infradead.org ([198.137.202.133]:42214 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726682AbfF2Blj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 28 Jun 2019 21:41:39 -0400
+Date: Fri, 28 Jun 2019 18:41:36 -0700
+From: Matthew Wilcox <willy@infradead.org>
+Subject: Re: [PATCH v1] Doc : fs : convert xfs.txt to ReST
+Message-ID: <20190629014136.GF4286@bombadil.infradead.org>
+References: <20190628214302.GA12096@localhost>
+ <20190629010733.GA31770@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190628004542.GJ7777@dread.disaster.area>
+In-Reply-To: <20190629010733.GA31770@localhost>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Brendan Higgins <brendanhiggins@google.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sheriff Esseson <sheriffesseson@gmail.com>
+Cc: skhan@linuxfoundation.org, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org
 
-On Fri, Jun 28, 2019 at 10:45:42AM +1000, Dave Chinner wrote:
-> On Tue, Jun 25, 2019 at 12:10:20PM +0200, Christoph Hellwig wrote:
-> > On Tue, Jun 25, 2019 at 09:43:04AM +1000, Dave Chinner wrote:
-> > > I'm a little concerned this is going to limit what we can do
-> > > with the XFS IO path because now we can't change this code without
-> > > considering the direct impact on other filesystems. The QA burden of
-> > > changing the XFS writeback code goes through the roof with this
-> > > change (i.e. we can break multiple filesystems, not just XFS).
-> > 
-> > Going through the roof is a little exaggerated.
+On Sat, Jun 29, 2019 at 02:25:08AM +0100, Sheriff Esseson wrote:
+> On Fri, Jun 28, 2019 at 10:43:24PM +0100, Sheriff Esseson wrote:
+> > 	Convert xfs.txt to ReST, markup and rename accordingly. Update
+> > 	Documentation/index.rst.
+
+Don't quote the entire previous patch when submitting a new one.
+
+> Rid Documentation/filesystems/index.rst of ".rst" in toc-tree references.
 > 
-> You've already mentioned two new users you want to add. I don't even
-> have zone capable hardware here to test one of the users you are
-> indicating will use this code, and I suspect that very few people
-> do.  That's a non-trivial increase in testing requirements for
-> filesystem developers and distro QA departments who will want to
-> change and/or validate this code path.
+> CC xfs-list.
+> 
+> Correct email indentation.
 
-A side topic here:
+This text should be below the --- line, and it should be marked as "v2:"
 
-Looking towards the future of prosects here with regards to helping QA
-and developers with more confidence in API changes (kunit is one
-prospect we're evaluating)...
+And you didn't update the MAINTAINERS file.
 
-If... we could somehow... codify what XFS *requires* from the API
-precisely...  would that help alleviate concerns or bring confidence in
-the prospect of sharing code?
+> +For boolean mount options, the names with the "(*)" prefix is the
+> +default behaviour. For example, take an behaviour enabled by default to be a one (1) or,
 
-Or is it simply an *impossibility* to address these concerns in question by
-codifying tests for the promised API?
+This line is too long.  Doesn't checkpatch.pl complain?
 
-Ie, are the concerns something which could be addressed with strict
-testing on adherence to an API, or are the concerns *unknown* side
-dependencies which could not possibly be codified?
+> +   rtdev=<device>
+> +        An XFS filesystem has up to three parts: a data section, a log
+> +	section, and a real-time section.  The real-time section is optional.
+> +        If enabled, ``rtdev`` sets ``device`` to be used as an
+> +        external real-time section, similar to ``logdev`` above.
 
-As an example of the extent possible to codify API promise (although
-I beleive it was unintentional at first), see:
+Darrick mentioned the indentation was weird here, and you haven't fixed that.
 
-http://lkml.kernel.org/r/20190626021744.GU19023@42.do-not-panic.com
+> +   sunit=<value>
+> +	Used to specify the stripe unit for a RAID device
+> +	or (in conjunction with ``swidth`` below) a stripe volume.  ``value`` must be specified in 512-byte
+> +	block units. This option is only relevant to filesystems
 
-  Luis
+line length
