@@ -1,29 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-43.freemail.mail.aliyun.com ([115.124.30.43]:48673 "EHLO
-        out30-43.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726375AbfF0MLC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 27 Jun 2019 08:11:02 -0400
-From: Alvin Zheng <Alvin@linux.alibaba.com>
-Subject: [backport request][stable] xfs: xfstests generic/538 failed on xfs
-Message-ID: <a665a93a-0bf8-aedb-2ba3-d4b2fb672970@linux.alibaba.com>
-Date: Thu, 27 Jun 2019 20:10:56 +0800
+Received: from szxga01-in.huawei.com ([45.249.212.187]:2960 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726527AbfF2Hao (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 29 Jun 2019 03:30:44 -0400
+From: Chao Yu <yuchao0@huawei.com>
+Subject: [PATCH RFC] iomap: introduce IOMAP_TAIL
+Date: Sat, 29 Jun 2019 15:30:20 +0800
+Message-ID: <20190629073020.22759-1-yuchao0@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: gregkh <gregkh@linuxfoundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, bfoster@redhat.com
-Cc: "joseph.qi" <joseph.qi@linux.alibaba.com>, caspar <caspar@linux.alibaba.com>
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, gaoxiang25@huawei.com, chao@kernel.org, Chao Yu <yuchao0@huawei.com>
 
-Hi,
+Some filesystems like erofs/reiserfs have the ability to pack tail
+data into metadata, however iomap framework can only support mapping
+inline data with IOMAP_INLINE type, it restricts that:
+- inline data should be locating at page #0.
+- inline size should equal to .i_size
+So we can not use IOMAP_INLINE to handle tail-packing case.
 
-     I  was using kernel v4.19.y and found that it cannot pass the 
-generic/538 due to data corruption. I notice that upstream has fix this 
-issue with commit 2032a8a27b5cc0f578d37fa16fa2494b80a0d00a. Will v4.19.y 
-backport this patch?
+This patch introduces new mapping type IOMAP_TAIL to map tail-packed
+data for further use of erofs.
 
-Best regards,
+Signed-off-by: Chao Yu <yuchao0@huawei.com>
+---
+ fs/iomap.c            | 22 ++++++++++++++++++++++
+ include/linux/iomap.h |  1 +
+ 2 files changed, 23 insertions(+)
 
-Alvin
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 12654c2e78f8..ae7777ce77d0 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+ 	SetPageUptodate(page);
+ }
+ 
++static void
++iomap_read_tail_data(struct inode *inode, struct page *page,
++		struct iomap *iomap)
++{
++	size_t size = i_size_read(inode) & (PAGE_SIZE - 1);
++	void *addr;
++
++	if (PageUptodate(page))
++		return;
++
++	addr = kmap_atomic(page);
++	memcpy(addr, iomap->inline_data, size);
++	memset(addr + size, 0, PAGE_SIZE - size);
++	kunmap_atomic(addr);
++	SetPageUptodate(page);
++}
++
+ static loff_t
+ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap)
+@@ -298,6 +315,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		return PAGE_SIZE;
+ 	}
+ 
++	if (iomap->type == IOMAP_TAIL) {
++		iomap_read_tail_data(inode, page, iomap);
++		return PAGE_SIZE;
++	}
++
+ 	/* zero post-eof blocks as the page may be mapped */
+ 	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
+ 	if (plen == 0)
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 2103b94cb1bf..7e1ee48e3db7 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -25,6 +25,7 @@ struct vm_fault;
+ #define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
+ #define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
+ #define IOMAP_INLINE	0x05	/* data inline in the inode */
++#define IOMAP_TAIL	0x06	/* tail data packed in metdata */
+ 
+ /*
+  * Flags for all iomap mappings:
+-- 
+2.18.0.rc1
