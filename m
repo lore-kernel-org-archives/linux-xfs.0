@@ -1,49 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:52150 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726849AbfF2Rb6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 29 Jun 2019 13:31:58 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 6C5BD28735
-        for <linux-xfs@vger.kernel.org>; Sat, 29 Jun 2019 17:31:57 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 203947] [xfstests generic/475]: general protection fault: 0000
- [#1] RIP: 0010:xfs_setfilesize_ioend+0xb1/0x220 [xfs]
-Date: Sat, 29 Jun 2019 17:31:56 +0000
-Message-ID: <bug-203947-201763-3bw6dZMvJI@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-203947-201763@https.bugzilla.kernel.org/>
-References: <bug-203947-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from userp2130.oracle.com ([156.151.31.86]:43954 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726514AbfF3PkF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Jun 2019 11:40:05 -0400
+Date: Sun, 30 Jun 2019 08:39:55 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: Include 'xfs: speed up large directory modifications' in 5.3?
+Message-ID: <20190630153955.GF1404256@magnolia>
+References: <56158aa8-c07a-f90f-a166-b2eeb226bb4a@applied-asynchrony.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <56158aa8-c07a-f90f-a166-b2eeb226bb4a@applied-asynchrony.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>, Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=203947
+On Sun, Jun 30, 2019 at 01:28:09PM +0200, Holger Hoffstätte wrote:
+> Hi,
+> 
+> I have been running with Dave's series for faster directory inserts since
+> forever without any issues, and the last revision [1] still applies cleanly
+> to current5.2-rc (not sure about xfs-next though).
+> Any chance this can be included in 5.3? IMHO it would be a shame if this
+> fell through the cracks again.
+> 
+> Thanks,
+> Holger
+> 
+> [1] https://patchwork.kernel.org/project/xfs/list/?series=34713
 
---- Comment #8 from Darrick J. Wong (djwong+kernel@djwong.org) ---
-Ok, so I reproduced it locally and tracked the crash to this part of
-xfs_bmapi_read() where we dereference *ifp:
+Christoph reviewed most of the series, but it looked like he and Dave
+went back and forth a bit on the second to last patch and Dave never
+sent a v2 series or a request to just merge it as is, so I didn't take
+any action.  Hey Dave, are you still working on a resubmission for this
+series?
 
-        if (!(ifp->if_flags & XFS_IFEXTENTS)) {                                 
-                error = xfs_iread_extents(NULL, ip, whichfork);                 
-                if (error)                                                      
-                        return error;                                           
-        }                                                                       
-
-Looking at xfs_iformat_fork(), it seems that if there's any kind of error
-formatting the attr fork it'll free ip->i_afp and set it to NULL, so I think
-the fix is to add an "if (!afp) return -EIO;" somewhere.
-
-Not sure how we actually get to this place, though.  fsstress is running
-bulkstat, which is inactivating an inode with i_nlink == 0 and a corrupt attr
-fork that won't load.  Maybe we hit an inode that had previously gone through
-unlinked processing after log recovery but was lurking on the mru waiting to be
-inactivated, but then bulkstat showed up (with its IGET_DONTCACHE) which forced
-immediate inactivation?
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+--D
