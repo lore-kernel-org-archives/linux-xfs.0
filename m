@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:59040 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:59102 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729374AbfGARC2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:02:28 -0400
-Subject: [PATCH 03/11] iomap: move the file mapping reporting code into a
- separate file
+        with ESMTP id S1729374AbfGARCe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:02:34 -0400
+Subject: [PATCH 04/11] iomap: move the SEEK_HOLE code into a separate file
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Jul 2019 10:02:19 -0700
-Message-ID: <156200053964.1790352.14719190843587972058.stgit@magnolia>
+Date: Mon, 01 Jul 2019 10:02:26 -0700
+Message-ID: <156200054604.1790352.7931842977738227442.stgit@magnolia>
 In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
 References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,188 +20,250 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the file mapping reporting code (FIEMAP/FIBMAP) into a separate
-file so that we can group related functions in a single file instead of
-having a single enormous source file.
+Move the SEEK_HOLE/SEEK_DATA code into a separate file so that we can
+group related functions in a single file instead of having a single
+enormous source file.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c        |  136 -------------------------------------------------
- fs/iomap/Makefile |    3 +
- fs/iomap/fiemap.c |  147 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 150 insertions(+), 136 deletions(-)
- create mode 100644 fs/iomap/fiemap.c
+ fs/iomap.c        |  201 --------------------------------------------------
+ fs/iomap/Makefile |    3 -
+ fs/iomap/seek.c   |  214 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 216 insertions(+), 202 deletions(-)
+ create mode 100644 fs/iomap/seek.c
 
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index b0887e94d4ce..21a1300fc5b8 100644
+index 21a1300fc5b8..471fcb8170e6 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -1145,108 +1145,6 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+@@ -1145,207 +1145,6 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
  }
  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
  
--struct fiemap_ctx {
--	struct fiemap_extent_info *fi;
--	struct iomap prev;
--};
--
--static int iomap_to_fiemap(struct fiemap_extent_info *fi,
--		struct iomap *iomap, u32 flags)
+-/*
+- * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
+- * Returns true if found and updates @lastoff to the offset in file.
+- */
+-static bool
+-page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
+-		int whence)
 -{
--	switch (iomap->type) {
--	case IOMAP_HOLE:
--		/* skip holes */
--		return 0;
--	case IOMAP_DELALLOC:
--		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
--		break;
--	case IOMAP_MAPPED:
--		break;
--	case IOMAP_UNWRITTEN:
--		flags |= FIEMAP_EXTENT_UNWRITTEN;
--		break;
--	case IOMAP_INLINE:
--		flags |= FIEMAP_EXTENT_DATA_INLINE;
--		break;
+-	const struct address_space_operations *ops = inode->i_mapping->a_ops;
+-	unsigned int bsize = i_blocksize(inode), off;
+-	bool seek_data = whence == SEEK_DATA;
+-	loff_t poff = page_offset(page);
+-
+-	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
+-		return false;
+-
+-	if (*lastoff < poff) {
+-		/*
+-		 * Last offset smaller than the start of the page means we found
+-		 * a hole:
+-		 */
+-		if (whence == SEEK_HOLE)
+-			return true;
+-		*lastoff = poff;
 -	}
 -
--	if (iomap->flags & IOMAP_F_MERGED)
--		flags |= FIEMAP_EXTENT_MERGED;
--	if (iomap->flags & IOMAP_F_SHARED)
--		flags |= FIEMAP_EXTENT_SHARED;
+-	/*
+-	 * Just check the page unless we can and should check block ranges:
+-	 */
+-	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate)
+-		return PageUptodate(page) == seek_data;
 -
--	return fiemap_fill_next_extent(fi, iomap->offset,
--			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
--			iomap->length, flags);
+-	lock_page(page);
+-	if (unlikely(page->mapping != inode->i_mapping))
+-		goto out_unlock_not_found;
+-
+-	for (off = 0; off < PAGE_SIZE; off += bsize) {
+-		if (offset_in_page(*lastoff) >= off + bsize)
+-			continue;
+-		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
+-			unlock_page(page);
+-			return true;
+-		}
+-		*lastoff = poff + off + bsize;
+-	}
+-
+-out_unlock_not_found:
+-	unlock_page(page);
+-	return false;
 -}
+-
+-/*
+- * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
+- *
+- * Within unwritten extents, the page cache determines which parts are holes
+- * and which are data: uptodate buffer heads count as data; everything else
+- * counts as a hole.
+- *
+- * Returns the resulting offset on successs, and -ENOENT otherwise.
+- */
+-static loff_t
+-page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
+-		int whence)
+-{
+-	pgoff_t index = offset >> PAGE_SHIFT;
+-	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
+-	loff_t lastoff = offset;
+-	struct pagevec pvec;
+-
+-	if (length <= 0)
+-		return -ENOENT;
+-
+-	pagevec_init(&pvec);
+-
+-	do {
+-		unsigned nr_pages, i;
+-
+-		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping, &index,
+-						end - 1);
+-		if (nr_pages == 0)
+-			break;
+-
+-		for (i = 0; i < nr_pages; i++) {
+-			struct page *page = pvec.pages[i];
+-
+-			if (page_seek_hole_data(inode, page, &lastoff, whence))
+-				goto check_range;
+-			lastoff = page_offset(page) + PAGE_SIZE;
+-		}
+-		pagevec_release(&pvec);
+-	} while (index < end);
+-
+-	/* When no page at lastoff and we are not done, we found a hole. */
+-	if (whence != SEEK_HOLE)
+-		goto not_found;
+-
+-check_range:
+-	if (lastoff < offset + length)
+-		goto out;
+-not_found:
+-	lastoff = -ENOENT;
+-out:
+-	pagevec_release(&pvec);
+-	return lastoff;
+-}
+-
 -
 -static loff_t
--iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
--		struct iomap *iomap)
+-iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
+-		      void *data, struct iomap *iomap)
 -{
--	struct fiemap_ctx *ctx = data;
--	loff_t ret = length;
--
--	if (iomap->type == IOMAP_HOLE)
--		return length;
--
--	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
--	ctx->prev = *iomap;
--	switch (ret) {
--	case 0:		/* success */
--		return length;
--	case 1:		/* extent array full */
+-	switch (iomap->type) {
+-	case IOMAP_UNWRITTEN:
+-		offset = page_cache_seek_hole_data(inode, offset, length,
+-						   SEEK_HOLE);
+-		if (offset < 0)
+-			return length;
+-		/* fall through */
+-	case IOMAP_HOLE:
+-		*(loff_t *)data = offset;
 -		return 0;
 -	default:
--		return ret;
+-		return length;
 -	}
 -}
 -
--int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
--		loff_t start, loff_t len, const struct iomap_ops *ops)
+-loff_t
+-iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
 -{
--	struct fiemap_ctx ctx;
+-	loff_t size = i_size_read(inode);
+-	loff_t length = size - offset;
 -	loff_t ret;
 -
--	memset(&ctx, 0, sizeof(ctx));
--	ctx.fi = fi;
--	ctx.prev.type = IOMAP_HOLE;
+-	/* Nothing to be found before or beyond the end of the file. */
+-	if (offset < 0 || offset >= size)
+-		return -ENXIO;
 -
--	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
--	if (ret)
--		return ret;
--
--	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
--		ret = filemap_write_and_wait(inode->i_mapping);
--		if (ret)
--			return ret;
--	}
--
--	while (len > 0) {
--		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
--				iomap_fiemap_actor);
--		/* inode with no (attribute) mapping will give ENOENT */
--		if (ret == -ENOENT)
--			break;
+-	while (length > 0) {
+-		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+-				  &offset, iomap_seek_hole_actor);
 -		if (ret < 0)
 -			return ret;
 -		if (ret == 0)
 -			break;
 -
--		start += ret;
--		len -= ret;
+-		offset += ret;
+-		length -= ret;
 -	}
 -
--	if (ctx.prev.type != IOMAP_HOLE) {
--		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
--		if (ret < 0)
--			return ret;
--	}
--
--	return 0;
+-	return offset;
 -}
--EXPORT_SYMBOL_GPL(iomap_fiemap);
--
- /*
-  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-  * Returns true if found and updates @lastoff to the offset in file.
-@@ -2001,37 +1899,3 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
+-EXPORT_SYMBOL_GPL(iomap_seek_hole);
 -
 -static loff_t
--iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
--		void *data, struct iomap *iomap)
+-iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
+-		      void *data, struct iomap *iomap)
 -{
--	sector_t *bno = data, addr;
--
--	if (iomap->type == IOMAP_MAPPED) {
--		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
--		if (addr > INT_MAX)
--			WARN(1, "would truncate bmap result\n");
--		else
--			*bno = addr;
--	}
--	return 0;
--}
--
--/* legacy ->bmap interface.  0 is the error return (!) */
--sector_t
--iomap_bmap(struct address_space *mapping, sector_t bno,
--		const struct iomap_ops *ops)
--{
--	struct inode *inode = mapping->host;
--	loff_t pos = bno << inode->i_blkbits;
--	unsigned blocksize = i_blocksize(inode);
--
--	if (filemap_write_and_wait(mapping))
+-	switch (iomap->type) {
+-	case IOMAP_HOLE:
+-		return length;
+-	case IOMAP_UNWRITTEN:
+-		offset = page_cache_seek_hole_data(inode, offset, length,
+-						   SEEK_DATA);
+-		if (offset < 0)
+-			return length;
+-		/*FALLTHRU*/
+-	default:
+-		*(loff_t *)data = offset;
 -		return 0;
--
--	bno = 0;
--	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
--	return bno;
+-	}
 -}
--EXPORT_SYMBOL_GPL(iomap_bmap);
+-
+-loff_t
+-iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
+-{
+-	loff_t size = i_size_read(inode);
+-	loff_t length = size - offset;
+-	loff_t ret;
+-
+-	/* Nothing to be found before or beyond the end of the file. */
+-	if (offset < 0 || offset >= size)
+-		return -ENXIO;
+-
+-	while (length > 0) {
+-		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
+-				  &offset, iomap_seek_data_actor);
+-		if (ret < 0)
+-			return ret;
+-		if (ret == 0)
+-			break;
+-
+-		offset += ret;
+-		length -= ret;
+-	}
+-
+-	if (length <= 0)
+-		return -ENXIO;
+-	return offset;
+-}
+-EXPORT_SYMBOL_GPL(iomap_seek_data);
+-
+ /*
+  * Private flags for iomap_dio, must not overlap with the public ones in
+  * iomap.h:
 diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-index e38061f2b901..861c07137792 100644
+index 861c07137792..12dc7f844bbd 100644
 --- a/fs/iomap/Makefile
 +++ b/fs/iomap/Makefile
-@@ -8,4 +8,7 @@ ccflags-y += -I $(srctree)/$(src)/..
- 
+@@ -9,6 +9,7 @@ ccflags-y += -I $(srctree)/$(src)/..
  obj-$(CONFIG_FS_IOMAP)		+= iomap.o
  
-+iomap-y				+= \
-+					fiemap.o
-+
+ iomap-y				+= \
+-					fiemap.o
++					fiemap.o \
++					seek.o
+ 
  iomap-$(CONFIG_SWAP)		+= swapfile.o
-diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
 new file mode 100644
-index 000000000000..42ed9ef56699
+index 000000000000..0c36bef46522
 --- /dev/null
-+++ b/fs/iomap/fiemap.c
-@@ -0,0 +1,147 @@
++++ b/fs/iomap/seek.c
+@@ -0,0 +1,214 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
 + * Copyright (C) 2010 Red Hat, Inc.
@@ -212,141 +273,208 @@ index 000000000000..42ed9ef56699
 +#include <linux/compiler.h>
 +#include <linux/fs.h>
 +#include <linux/iomap.h>
++#include <linux/pagemap.h>
++#include <linux/pagevec.h>
 +
 +#include "internal.h"
 +
-+struct fiemap_ctx {
-+	struct fiemap_extent_info *fi;
-+	struct iomap prev;
-+};
-+
-+static int iomap_to_fiemap(struct fiemap_extent_info *fi,
-+		struct iomap *iomap, u32 flags)
++/*
++ * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
++ * Returns true if found and updates @lastoff to the offset in file.
++ */
++static bool
++page_seek_hole_data(struct inode *inode, struct page *page, loff_t *lastoff,
++		int whence)
 +{
-+	switch (iomap->type) {
-+	case IOMAP_HOLE:
-+		/* skip holes */
-+		return 0;
-+	case IOMAP_DELALLOC:
-+		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
-+		break;
-+	case IOMAP_MAPPED:
-+		break;
-+	case IOMAP_UNWRITTEN:
-+		flags |= FIEMAP_EXTENT_UNWRITTEN;
-+		break;
-+	case IOMAP_INLINE:
-+		flags |= FIEMAP_EXTENT_DATA_INLINE;
-+		break;
++	const struct address_space_operations *ops = inode->i_mapping->a_ops;
++	unsigned int bsize = i_blocksize(inode), off;
++	bool seek_data = whence == SEEK_DATA;
++	loff_t poff = page_offset(page);
++
++	if (WARN_ON_ONCE(*lastoff >= poff + PAGE_SIZE))
++		return false;
++
++	if (*lastoff < poff) {
++		/*
++		 * Last offset smaller than the start of the page means we found
++		 * a hole:
++		 */
++		if (whence == SEEK_HOLE)
++			return true;
++		*lastoff = poff;
 +	}
 +
-+	if (iomap->flags & IOMAP_F_MERGED)
-+		flags |= FIEMAP_EXTENT_MERGED;
-+	if (iomap->flags & IOMAP_F_SHARED)
-+		flags |= FIEMAP_EXTENT_SHARED;
++	/*
++	 * Just check the page unless we can and should check block ranges:
++	 */
++	if (bsize == PAGE_SIZE || !ops->is_partially_uptodate)
++		return PageUptodate(page) == seek_data;
 +
-+	return fiemap_fill_next_extent(fi, iomap->offset,
-+			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
-+			iomap->length, flags);
++	lock_page(page);
++	if (unlikely(page->mapping != inode->i_mapping))
++		goto out_unlock_not_found;
++
++	for (off = 0; off < PAGE_SIZE; off += bsize) {
++		if (offset_in_page(*lastoff) >= off + bsize)
++			continue;
++		if (ops->is_partially_uptodate(page, off, bsize) == seek_data) {
++			unlock_page(page);
++			return true;
++		}
++		*lastoff = poff + off + bsize;
++	}
++
++out_unlock_not_found:
++	unlock_page(page);
++	return false;
 +}
++
++/*
++ * Seek for SEEK_DATA / SEEK_HOLE in the page cache.
++ *
++ * Within unwritten extents, the page cache determines which parts are holes
++ * and which are data: uptodate buffer heads count as data; everything else
++ * counts as a hole.
++ *
++ * Returns the resulting offset on successs, and -ENOENT otherwise.
++ */
++static loff_t
++page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
++		int whence)
++{
++	pgoff_t index = offset >> PAGE_SHIFT;
++	pgoff_t end = DIV_ROUND_UP(offset + length, PAGE_SIZE);
++	loff_t lastoff = offset;
++	struct pagevec pvec;
++
++	if (length <= 0)
++		return -ENOENT;
++
++	pagevec_init(&pvec);
++
++	do {
++		unsigned nr_pages, i;
++
++		nr_pages = pagevec_lookup_range(&pvec, inode->i_mapping, &index,
++						end - 1);
++		if (nr_pages == 0)
++			break;
++
++		for (i = 0; i < nr_pages; i++) {
++			struct page *page = pvec.pages[i];
++
++			if (page_seek_hole_data(inode, page, &lastoff, whence))
++				goto check_range;
++			lastoff = page_offset(page) + PAGE_SIZE;
++		}
++		pagevec_release(&pvec);
++	} while (index < end);
++
++	/* When no page at lastoff and we are not done, we found a hole. */
++	if (whence != SEEK_HOLE)
++		goto not_found;
++
++check_range:
++	if (lastoff < offset + length)
++		goto out;
++not_found:
++	lastoff = -ENOENT;
++out:
++	pagevec_release(&pvec);
++	return lastoff;
++}
++
 +
 +static loff_t
-+iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
-+		struct iomap *iomap)
++iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
 +{
-+	struct fiemap_ctx *ctx = data;
-+	loff_t ret = length;
-+
-+	if (iomap->type == IOMAP_HOLE)
-+		return length;
-+
-+	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
-+	ctx->prev = *iomap;
-+	switch (ret) {
-+	case 0:		/* success */
-+		return length;
-+	case 1:		/* extent array full */
++	switch (iomap->type) {
++	case IOMAP_UNWRITTEN:
++		offset = page_cache_seek_hole_data(inode, offset, length,
++						   SEEK_HOLE);
++		if (offset < 0)
++			return length;
++		/* fall through */
++	case IOMAP_HOLE:
++		*(loff_t *)data = offset;
 +		return 0;
 +	default:
-+		return ret;
++		return length;
 +	}
 +}
 +
-+int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
-+		loff_t start, loff_t len, const struct iomap_ops *ops)
++loff_t
++iomap_seek_hole(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
 +{
-+	struct fiemap_ctx ctx;
++	loff_t size = i_size_read(inode);
++	loff_t length = size - offset;
 +	loff_t ret;
 +
-+	memset(&ctx, 0, sizeof(ctx));
-+	ctx.fi = fi;
-+	ctx.prev.type = IOMAP_HOLE;
++	/* Nothing to be found before or beyond the end of the file. */
++	if (offset < 0 || offset >= size)
++		return -ENXIO;
 +
-+	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-+	if (ret)
-+		return ret;
-+
-+	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
-+		ret = filemap_write_and_wait(inode->i_mapping);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
-+				iomap_fiemap_actor);
-+		/* inode with no (attribute) mapping will give ENOENT */
-+		if (ret == -ENOENT)
-+			break;
++	while (length > 0) {
++		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
++				  &offset, iomap_seek_hole_actor);
 +		if (ret < 0)
 +			return ret;
 +		if (ret == 0)
 +			break;
 +
-+		start += ret;
-+		len -= ret;
++		offset += ret;
++		length -= ret;
 +	}
 +
-+	if (ctx.prev.type != IOMAP_HOLE) {
-+		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
-+		if (ret < 0)
-+			return ret;
-+	}
-+
-+	return 0;
++	return offset;
 +}
-+EXPORT_SYMBOL_GPL(iomap_fiemap);
++EXPORT_SYMBOL_GPL(iomap_seek_hole);
 +
 +static loff_t
-+iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-+		void *data, struct iomap *iomap)
++iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
++		      void *data, struct iomap *iomap)
 +{
-+	sector_t *bno = data, addr;
-+
-+	if (iomap->type == IOMAP_MAPPED) {
-+		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
-+		if (addr > INT_MAX)
-+			WARN(1, "would truncate bmap result\n");
-+		else
-+			*bno = addr;
-+	}
-+	return 0;
-+}
-+
-+/* legacy ->bmap interface.  0 is the error return (!) */
-+sector_t
-+iomap_bmap(struct address_space *mapping, sector_t bno,
-+		const struct iomap_ops *ops)
-+{
-+	struct inode *inode = mapping->host;
-+	loff_t pos = bno << inode->i_blkbits;
-+	unsigned blocksize = i_blocksize(inode);
-+
-+	if (filemap_write_and_wait(mapping))
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		return length;
++	case IOMAP_UNWRITTEN:
++		offset = page_cache_seek_hole_data(inode, offset, length,
++						   SEEK_DATA);
++		if (offset < 0)
++			return length;
++		/*FALLTHRU*/
++	default:
++		*(loff_t *)data = offset;
 +		return 0;
-+
-+	bno = 0;
-+	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
-+	return bno;
++	}
 +}
-+EXPORT_SYMBOL_GPL(iomap_bmap);
++
++loff_t
++iomap_seek_data(struct inode *inode, loff_t offset, const struct iomap_ops *ops)
++{
++	loff_t size = i_size_read(inode);
++	loff_t length = size - offset;
++	loff_t ret;
++
++	/* Nothing to be found before or beyond the end of the file. */
++	if (offset < 0 || offset >= size)
++		return -ENXIO;
++
++	while (length > 0) {
++		ret = iomap_apply(inode, offset, length, IOMAP_REPORT, ops,
++				  &offset, iomap_seek_data_actor);
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		offset += ret;
++		length -= ret;
++	}
++
++	if (length <= 0)
++		return -ENXIO;
++	return offset;
++}
++EXPORT_SYMBOL_GPL(iomap_seek_data);
