@@ -1,64 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:46092 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726827AbfF3XLi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 30 Jun 2019 19:11:38 -0400
-Date: Sun, 30 Jun 2019 16:11:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Include 'xfs: speed up large directory modifications' in 5.3?
-Message-ID: <20190630231130.GA1654093@magnolia>
-References: <56158aa8-c07a-f90f-a166-b2eeb226bb4a@applied-asynchrony.com>
- <20190630153955.GF1404256@magnolia>
- <20190630223605.GK7777@dread.disaster.area>
+Received: from bilbo.ozlabs.org ([203.11.71.1]:49557 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726040AbfGABMM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 30 Jun 2019 21:12:12 -0400
+Date: Mon, 1 Jul 2019 11:12:09 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: build failure after merge of the xfs tree
+Message-ID: <20190701111209.699082b7@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190630223605.GK7777@dread.disaster.area>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/GiBgqkQeV_Fn=xa4769+.=9"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Mon, Jul 01, 2019 at 08:36:05AM +1000, Dave Chinner wrote:
-> On Sun, Jun 30, 2019 at 08:39:55AM -0700, Darrick J. Wong wrote:
-> > On Sun, Jun 30, 2019 at 01:28:09PM +0200, Holger Hoffstätte wrote:
-> > > Hi,
-> > > 
-> > > I have been running with Dave's series for faster directory inserts since
-> > > forever without any issues, and the last revision [1] still applies cleanly
-> > > to current5.2-rc (not sure about xfs-next though).
-> > > Any chance this can be included in 5.3? IMHO it would be a shame if this
-> > > fell through the cracks again.
-> > > 
-> > > Thanks,
-> > > Holger
-> > > 
-> > > [1] https://patchwork.kernel.org/project/xfs/list/?series=34713
-> > 
-> > Christoph reviewed most of the series, but it looked like he and Dave
-> > went back and forth a bit on the second to last patch and Dave never
-> > sent a v2 series or a request to just merge it as is, so I didn't take
-> > any action.  Hey Dave, are you still working on a resubmission for this
-> > series?
-> 
-> It's in my stack somewhere. Not for this cycle. Can't even remember
-> what was the issue with it.  I'm pretty sure that was about when the
-> whole copy file range debacle exploded in our faces, which was why
-> there was no followup back then...
+--Sig_/GiBgqkQeV_Fn=xa4769+.=9
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-I vague recollection is that I looked at it and remember thinking it was
-fine except maybe for the tweaks hch suggested, and then copyfilerange
-blew up and that was it, everything got derailed. :(
+Hi all,
 
-/me shakes fist at crAPIs....
+After merging the xfs tree, today's linux-next build (x86_64 allmodconfig)
+failed like this:
 
---D
+fs/orangefs/file.c: In function 'orangefs_getflags':
+fs/orangefs/file.c:372:7: warning: assignment to 'long unsigned int *' from=
+ '__u64' {aka 'long long unsigned int'} makes pointer from integer without =
+a cast [-Wint-conversion]
+  uval =3D val;
+       ^
+fs/orangefs/file.c: In function 'orangefs_ioctl':
+fs/orangefs/file.c:381:24: error: implicit declaration of function 'file_io=
+ctl'; did you mean 'file_path'? [-Werror=3Dimplicit-function-declaration]
+  struct inode *inode =3D file_ioctl(file);
+                        ^~~~~~~~~~
+                        file_path
+fs/orangefs/file.c:381:24: warning: initialization of 'struct inode *' from=
+ 'int' makes pointer from integer without a cast [-Wint-conversion]
+fs/orangefs/file.c:418:35: error: 'old_uval' undeclared (first use in this =
+function); did you mean 'p4d_val'?
+   ret =3D orangefs_getflags(inode, &old_uval);
+                                   ^~~~~~~~
+                                   p4d_val
+fs/orangefs/file.c:418:35: note: each undeclared identifier is reported onl=
+y once for each function it appears in
 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Caused by commit
+
+  de2baa49bbae ("vfs: create a generic checking and prep function for FS_IO=
+C_SETFLAGS")
+
+I have used the xfs tree from next-20190628 for today.
+
+--=20
+Cheers,
+Stephen Rothwell
+
+--Sig_/GiBgqkQeV_Fn=xa4769+.=9
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl0ZXekACgkQAVBC80lX
+0GwDoAf+ORrfhB4XavC2KJUhXgoqhs75kuRhvoxtnUb0j15p++q00JVuAoKXDF0e
+AGuNMqTt0+nWCBwe0Ds6Vky/m20YsdT0PccVl2V3UXEDUiNShsNSVtEGuaFkqrIW
+4bJUVNji3kU95lox7L8Rm6wMo1xZazCHvaeAMMMi4MmeoP4Y8oZT63MNJE0je21j
+YOq9QEZiZIdeQ/hud8icxUapL8UMPLgpsOLrcV15NqTM9z+vurqRpKLJlFR9421c
+XAbSX5WIlMBIfWbFCPqP2zuSng/fRJwA6/dSvNiFPDOjG8LNXIb1agCfhk/kqZdM
+aNVbi57y4KdLYYHAo9skpCaHbr91AA==
+=NGNr
+-----END PGP SIGNATURE-----
+
+--Sig_/GiBgqkQeV_Fn=xa4769+.=9--
