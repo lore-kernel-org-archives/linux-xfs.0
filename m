@@ -1,87 +1,182 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44796 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726439AbfGAV4G (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:56:06 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 10/15] gfs2: merge gfs2_writepage_common into gfs2_writepage
-Date: Mon,  1 Jul 2019 23:54:34 +0200
-Message-Id: <20190701215439.19162-11-hch@lst.de>
-In-Reply-To: <20190701215439.19162-1-hch@lst.de>
-References: <20190701215439.19162-1-hch@lst.de>
+Received: from userp2120.oracle.com ([156.151.31.85]:41296 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729518AbfGARDT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:03:19 -0400
+Subject: [PATCH 11/11] iomap: move internal declarations into fs/iomap/
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 01 Jul 2019 10:03:12 -0700
+Message-ID: <156200059214.1790352.12180565717959385551.stgit@magnolia>
+In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-No need to keep these two functions separate.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Move internal function declarations out of fs/internal.h into
+fs/iomap/iomap_internal.h so that our transition is complete.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/gfs2/aops.c | 32 ++++++--------------------------
- 1 file changed, 6 insertions(+), 26 deletions(-)
+ fs/dax.c                  |    2 +-
+ fs/internal.h             |   10 ----------
+ fs/iomap/fiemap.c         |    2 +-
+ fs/iomap/iomap.c          |    1 -
+ fs/iomap/iomap_internal.h |   10 ++++++++++
+ fs/iomap/migrate.c        |    1 -
+ fs/iomap/page.c           |    2 +-
+ fs/iomap/read.c           |    1 -
+ fs/iomap/seek.c           |    2 +-
+ fs/iomap/swapfile.c       |    2 +-
+ 10 files changed, 15 insertions(+), 18 deletions(-)
 
-diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-index 3b3043332e5a..d78b5778fca7 100644
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -82,15 +82,11 @@ static int gfs2_get_block_noalloc(struct inode *inode, sector_t lblock,
- }
+
+diff --git a/fs/dax.c b/fs/dax.c
+index 2e48c7ebb973..86f4138c5695 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -26,7 +26,7 @@
+ #include <linux/mmu_notifier.h>
+ #include <linux/iomap.h>
+ #include <asm/pgalloc.h>
+-#include "internal.h"
++#include "iomap/iomap_internal.h"
  
- /**
-- * gfs2_writepage_common - Common bits of writepage
-- * @page: The page to be written
-+ * gfs2_writepage - Write page for writeback mappings
-+ * @page: The page
-  * @wbc: The writeback control
-- *
-- * Returns: 1 if writepage is ok, otherwise an error code or zero if no error.
-  */
--
--static int gfs2_writepage_common(struct page *page,
--				 struct writeback_control *wbc)
-+static int gfs2_writepage(struct page *page, struct writeback_control *wbc)
- {
- 	struct inode *inode = page->mapping->host;
- 	struct gfs2_inode *ip = GFS2_I(inode);
-@@ -109,7 +105,9 @@ static int gfs2_writepage_common(struct page *page,
- 		page->mapping->a_ops->invalidatepage(page, 0, PAGE_SIZE);
- 		goto out;
- 	}
--	return 1;
-+
-+	return nobh_writepage(page, gfs2_get_block_noalloc, wbc);
-+
- redirty:
- 	redirty_page_for_writepage(wbc, page);
- out:
-@@ -117,24 +115,6 @@ static int gfs2_writepage_common(struct page *page,
- 	return 0;
- }
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/fs_dax.h>
+diff --git a/fs/internal.h b/fs/internal.h
+index 2f3c3de51fad..2b0bebd67904 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -182,15 +182,5 @@ extern const struct dentry_operations ns_dentry_operations;
+ extern int do_vfs_ioctl(struct file *file, unsigned int fd, unsigned int cmd,
+ 		    unsigned long arg);
  
--/**
-- * gfs2_writepage - Write page for writeback mappings
-- * @page: The page
-- * @wbc: The writeback control
-- *
+-/*
+- * iomap support:
 - */
+-typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+-		void *data, struct iomap *iomap);
 -
--static int gfs2_writepage(struct page *page, struct writeback_control *wbc)
--{
--	int ret;
+-loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+-		unsigned flags, const struct iomap_ops *ops, void *data,
+-		iomap_actor_t actor);
 -
--	ret = gfs2_writepage_common(page, wbc);
--	if (ret <= 0)
--		return ret;
--
--	return nobh_writepage(page, gfs2_get_block_noalloc, wbc);
--}
--
- /* This is the same as calling block_write_full_page, but it also
-  * writes pages outside of i_size
-  */
--- 
-2.20.1
+ /* direct-io.c: */
+ int sb_init_dio_done_wq(struct super_block *sb);
+diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+index 42ed9ef56699..4616e7fdbf0e 100644
+--- a/fs/iomap/fiemap.c
++++ b/fs/iomap/fiemap.c
+@@ -8,7 +8,7 @@
+ #include <linux/fs.h>
+ #include <linux/iomap.h>
+ 
+-#include "internal.h"
++#include "iomap_internal.h"
+ 
+ struct fiemap_ctx {
+ 	struct fiemap_extent_info *fi;
+diff --git a/fs/iomap/iomap.c b/fs/iomap/iomap.c
+index bdaa6d07b354..8d31daf7e696 100644
+--- a/fs/iomap/iomap.c
++++ b/fs/iomap/iomap.c
+@@ -9,7 +9,6 @@
+ #include <linux/iomap.h>
+ #include <linux/blkdev.h>
+ 
+-#include "internal.h"
+ #include "iomap_internal.h"
+ 
+ /*
+diff --git a/fs/iomap/iomap_internal.h b/fs/iomap/iomap_internal.h
+index defaa4d4b9e6..cee558386955 100644
+--- a/fs/iomap/iomap_internal.h
++++ b/fs/iomap/iomap_internal.h
+@@ -6,6 +6,16 @@
+ #ifndef _IOMAP_INTERNAL_H_
+ #define _IOMAP_INTERNAL_H_
+ 
++/*
++ * iomap support:
++ */
++typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
++		void *data, struct iomap *iomap);
++
++loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
++		unsigned flags, const struct iomap_ops *ops, void *data,
++		iomap_actor_t actor);
++
+ sector_t iomap_sector(struct iomap *iomap, loff_t pos);
+ void iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len);
+ struct iomap_page *iomap_page_create(struct inode *inode, struct page *page);
+diff --git a/fs/iomap/migrate.c b/fs/iomap/migrate.c
+index 5fd58a868c80..a25874700f95 100644
+--- a/fs/iomap/migrate.c
++++ b/fs/iomap/migrate.c
+@@ -9,7 +9,6 @@
+ #include <linux/iomap.h>
+ #include <linux/migrate.h>
+ 
+-#include "internal.h"
+ #include "iomap_internal.h"
+ 
+ int
+diff --git a/fs/iomap/page.c b/fs/iomap/page.c
+index 1de513d5b1f7..0c18a88f4366 100644
+--- a/fs/iomap/page.c
++++ b/fs/iomap/page.c
+@@ -10,7 +10,7 @@
+ #include <linux/memcontrol.h>
+ #include <linux/blkdev.h>
+ 
+-#include "internal.h"
++#include "iomap_internal.h"
+ 
+ struct iomap_page *
+ iomap_page_create(struct inode *inode, struct page *page)
+diff --git a/fs/iomap/read.c b/fs/iomap/read.c
+index 237516d0af8b..117626cd7ead 100644
+--- a/fs/iomap/read.c
++++ b/fs/iomap/read.c
+@@ -11,7 +11,6 @@
+ #include <linux/pagemap.h>
+ #include <linux/blkdev.h>
+ 
+-#include "internal.h"
+ #include "iomap_internal.h"
+ 
+ /*
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+index 0c36bef46522..4d2e6b668a9a 100644
+--- a/fs/iomap/seek.c
++++ b/fs/iomap/seek.c
+@@ -10,7 +10,7 @@
+ #include <linux/pagemap.h>
+ #include <linux/pagevec.h>
+ 
+-#include "internal.h"
++#include "iomap_internal.h"
+ 
+ /*
+  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
+diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+index 4ca214d1e88d..543bb6e90a39 100644
+--- a/fs/iomap/swapfile.c
++++ b/fs/iomap/swapfile.c
+@@ -9,7 +9,7 @@
+ #include <linux/iomap.h>
+ #include <linux/swap.h>
+ 
+-#include "internal.h"
++#include "iomap_internal.h"
+ 
+ /* Swapfile activation */
+ 
