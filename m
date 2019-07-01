@@ -1,238 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:35622 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728021AbfGAQbw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 12:31:52 -0400
-Received: by mail-pg1-f195.google.com with SMTP id s27so6302835pgl.2
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2019 09:31:52 -0700 (PDT)
-Date: Mon, 1 Jul 2019 09:31:46 -0700
-From: Eric Biggers <ebiggers@google.com>
-Subject: Re: linux-next: manual merge of the xfs tree with the f2fs tree
-Message-ID: <20190701163146.GA195588@google.com>
-References: <20190701110603.5abcbb2c@canb.auug.org.au>
+Received: from bombadil.infradead.org ([198.137.202.133]:44868 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbfGAV4e (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:56:34 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 14/15] gfs2: don't use buffer_heads in gfs2_allocate_page_backing
+Date: Mon,  1 Jul 2019 23:54:38 +0200
+Message-Id: <20190701215439.19162-15-hch@lst.de>
+In-Reply-To: <20190701215439.19162-1-hch@lst.de>
+References: <20190701215439.19162-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190701110603.5abcbb2c@canb.auug.org.au>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stephen Rothwell <sfr@canb.auug.org.au>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, Jaegeuk Kim <jaegeuk@kernel.org>, linux-f2fs-devel@lists.sourceforge.net, Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
 
-[+f2fs mailing list]
+Rewrite gfs2_allocate_page_backing to call gfs2_iomap_get_alloc and
+operate on struct iomap directly.
 
-On Mon, Jul 01, 2019 at 11:06:03AM +1000, Stephen Rothwell wrote:
-> Hi all,
-> 
-> Today's linux-next merge of the xfs tree got a conflict in:
-> 
->   fs/f2fs/file.c
-> 
-> between commit:
-> 
->   360985573b55 ("f2fs: separate f2fs i_flags from fs_flags and ext4 i_flags")
-> 
-> from the f2fs tree and commits:
-> 
->   de2baa49bbae ("vfs: create a generic checking and prep function for FS_IOC_SETFLAGS")
->   3dd3ba36a8ee ("vfs: create a generic checking function for FS_IOC_FSSETXATTR")
-> 
-> from the xfs tree.
-> 
-> I fixed it up (I think - see below) and can carry the fix as necessary.
-> This is now fixed as far as linux-next is concerned, but any non trivial
-> conflicts should be mentioned to your upstream maintainer when your tree
-> is submitted for merging.  You may also want to consider cooperating
-> with the maintainer of the conflicting tree to minimise any particularly
-> complex conflicts.
-> 
-> -- 
-> Cheers,
-> Stephen Rothwell
-> 
-> diff --cc fs/f2fs/file.c
-> index e7c368db8185,8799468724f9..000000000000
-> --- a/fs/f2fs/file.c
-> +++ b/fs/f2fs/file.c
-> @@@ -1645,22 -1648,45 +1645,23 @@@ static int f2fs_file_flush(struct file 
->   	return 0;
->   }
->   
->  -static int f2fs_ioc_getflags(struct file *filp, unsigned long arg)
->  -{
->  -	struct inode *inode = file_inode(filp);
->  -	struct f2fs_inode_info *fi = F2FS_I(inode);
->  -	unsigned int flags = fi->i_flags;
->  -
->  -	if (IS_ENCRYPTED(inode))
->  -		flags |= F2FS_ENCRYPT_FL;
->  -	if (f2fs_has_inline_data(inode) || f2fs_has_inline_dentry(inode))
->  -		flags |= F2FS_INLINE_DATA_FL;
->  -	if (is_inode_flag_set(inode, FI_PIN_FILE))
->  -		flags |= F2FS_NOCOW_FL;
->  -
->  -	flags &= F2FS_FL_USER_VISIBLE;
->  -
->  -	return put_user(flags, (int __user *)arg);
->  -}
->  -
->  -static int __f2fs_ioc_setflags(struct inode *inode, unsigned int flags)
->  +static int f2fs_setflags_common(struct inode *inode, u32 iflags, u32 mask)
->   {
->   	struct f2fs_inode_info *fi = F2FS_I(inode);
->  -	unsigned int oldflags;
->  +	u32 oldflags;
-> + 	int err;
->   
->   	/* Is it quota file? Do not allow user to mess with it */
->   	if (IS_NOQUOTA(inode))
->   		return -EPERM;
->   
->  -	flags = f2fs_mask_flags(inode->i_mode, flags);
->  -
->   	oldflags = fi->i_flags;
->   
-> - 	if ((iflags ^ oldflags) & (F2FS_APPEND_FL | F2FS_IMMUTABLE_FL))
-> - 		if (!capable(CAP_LINUX_IMMUTABLE))
-> - 			return -EPERM;
->  -	err = vfs_ioc_setflags_prepare(inode, oldflags, flags);
-> ++	err = vfs_ioc_setflags_prepare(inode, oldflags, iflags);
-> + 	if (err)
-> + 		return err;
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/gfs2/file.c | 33 ++++++++++++++++-----------------
+ 1 file changed, 16 insertions(+), 17 deletions(-)
 
-I don't think this is the correct resolution.  Now f2fs_setflags_common() is
-meant to take the f2fs on-disk i_flags, which aren't necessarily the same as the
-flags passed to the FS_IOC_SETFLAGS ioctl.  So it's not appropriate to call
-vfs_ioc_setflags_prepare() in it.  It should be in f2fs_ioc_setflags() instead.
-
-I've pushed up what I think is the correct resolution to
-https://git.kernel.org/pub/scm/linux/kernel/git/ebiggers/linux.git/log/?h=f2fs-setflags-resolved
-
-Here is my diff of fs/f2fs/file.c from f2fs/dev.  Darrick, can you check that
-this is what you would have done if you had patched f2fs/dev instead of v5.2?
-
-diff --git a/fs/f2fs/file.c b/fs/f2fs/file.c
-index e7c368db81851f..64f157f2e8d5e4 100644
---- a/fs/f2fs/file.c
-+++ b/fs/f2fs/file.c
-@@ -1648,19 +1648,12 @@ static int f2fs_file_flush(struct file *file, fl_owner_t id)
- static int f2fs_setflags_common(struct inode *inode, u32 iflags, u32 mask)
- {
- 	struct f2fs_inode_info *fi = F2FS_I(inode);
--	u32 oldflags;
+diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
+index 282a4aaab900..8c72e4cecd89 100644
+--- a/fs/gfs2/file.c
++++ b/fs/gfs2/file.c
+@@ -379,31 +379,30 @@ static void gfs2_size_hint(struct file *filep, loff_t offset, size_t size)
+ }
  
- 	/* Is it quota file? Do not allow user to mess with it */
- 	if (IS_NOQUOTA(inode))
- 		return -EPERM;
- 
--	oldflags = fi->i_flags;
+ /**
+- * gfs2_allocate_page_backing - Use bmap to allocate blocks
++ * gfs2_allocate_page_backing - Allocate blocks for a write fault
+  * @page: The (locked) page to allocate backing for
+  *
+- * We try to allocate all the blocks required for the page in
+- * one go. This might fail for various reasons, so we keep
+- * trying until all the blocks to back this page are allocated.
+- * If some of the blocks are already allocated, thats ok too.
++ * We try to allocate all the blocks required for the page in one go.  This
++ * might fail for various reasons, so we keep trying until all the blocks to
++ * back this page are allocated.  If some of the blocks are already allocated,
++ * that is ok too.
+  */
 -
--	if ((iflags ^ oldflags) & (F2FS_APPEND_FL | F2FS_IMMUTABLE_FL))
--		if (!capable(CAP_LINUX_IMMUTABLE))
--			return -EPERM;
--
--	fi->i_flags = iflags | (oldflags & ~mask);
-+	fi->i_flags = iflags | (fi->i_flags & ~mask);
- 
- 	if (fi->i_flags & F2FS_PROJINHERIT_FL)
- 		set_inode_flag(inode, FI_PROJ_INHERIT);
-@@ -1765,7 +1758,8 @@ static int f2fs_ioc_getflags(struct file *filp, unsigned long arg)
- static int f2fs_ioc_setflags(struct file *filp, unsigned long arg)
+ static int gfs2_allocate_page_backing(struct page *page)
  {
- 	struct inode *inode = file_inode(filp);
--	u32 fsflags;
-+	struct f2fs_inode_info *fi = F2FS_I(inode);
-+	u32 fsflags, old_fsflags;
- 	u32 iflags;
- 	int ret;
+-	struct inode *inode = page->mapping->host;
+-	struct buffer_head bh;
+-	unsigned long size = PAGE_SIZE;
+-	u64 lblock = page->index << (PAGE_SHIFT - inode->i_blkbits);
++	u64 pos = page_offset(page);
++	u64 size = PAGE_SIZE;
  
-@@ -1789,8 +1783,14 @@ static int f2fs_ioc_setflags(struct file *filp, unsigned long arg)
- 
- 	inode_lock(inode);
- 
-+	old_fsflags = f2fs_iflags_to_fsflags(fi->i_flags);
-+	ret = vfs_ioc_setflags_prepare(inode, old_fsflags, fsflags);
-+	if (ret)
-+		goto out;
+ 	do {
+-		bh.b_state = 0;
+-		bh.b_size = size;
+-		gfs2_block_map(inode, lblock, &bh, 1);
+-		if (!buffer_mapped(&bh))
++		struct iomap iomap = { };
 +
- 	ret = f2fs_setflags_common(inode, iflags,
- 			f2fs_fsflags_to_iflags(F2FS_SETTABLE_FS_FL));
-+out:
- 	inode_unlock(inode);
- 	mnt_drop_write_file(filp);
- 	return ret;
-@@ -2850,52 +2850,32 @@ static inline u32 f2fs_xflags_to_iflags(u32 xflags)
- 	return iflags;
- }
- 
--static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
-+static void f2fs_fill_fsxattr(struct inode *inode, struct fsxattr *fa)
- {
--	struct inode *inode = file_inode(filp);
- 	struct f2fs_inode_info *fi = F2FS_I(inode);
--	struct fsxattr fa;
- 
--	memset(&fa, 0, sizeof(struct fsxattr));
--	fa.fsx_xflags = f2fs_iflags_to_xflags(fi->i_flags);
-+	simple_fill_fsxattr(fa, f2fs_iflags_to_xflags(fi->i_flags));
- 
- 	if (f2fs_sb_has_project_quota(F2FS_I_SB(inode)))
--		fa.fsx_projid = (__u32)from_kprojid(&init_user_ns,
--							fi->i_projid);
--
--	if (copy_to_user((struct fsxattr __user *)arg, &fa, sizeof(fa)))
--		return -EFAULT;
--	return 0;
-+		fa->fsx_projid = from_kprojid(&init_user_ns, fi->i_projid);
- }
- 
--static int f2fs_ioctl_check_project(struct inode *inode, struct fsxattr *fa)
-+static int f2fs_ioc_fsgetxattr(struct file *filp, unsigned long arg)
- {
--	/*
--	 * Project Quota ID state is only allowed to change from within the init
--	 * namespace. Enforce that restriction only if we are trying to change
--	 * the quota ID state. Everything else is allowed in user namespaces.
--	 */
--	if (current_user_ns() == &init_user_ns)
--		return 0;
-+	struct inode *inode = file_inode(filp);
-+	struct fsxattr fa;
- 
--	if (__kprojid_val(F2FS_I(inode)->i_projid) != fa->fsx_projid)
--		return -EINVAL;
--
--	if (F2FS_I(inode)->i_flags & F2FS_PROJINHERIT_FL) {
--		if (!(fa->fsx_xflags & FS_XFLAG_PROJINHERIT))
--			return -EINVAL;
--	} else {
--		if (fa->fsx_xflags & FS_XFLAG_PROJINHERIT)
--			return -EINVAL;
--	}
-+	f2fs_fill_fsxattr(inode, &fa);
- 
-+	if (copy_to_user((struct fsxattr __user *)arg, &fa, sizeof(fa)))
-+		return -EFAULT;
++		if (gfs2_iomap_get_alloc(page->mapping->host, pos, 1, &iomap))
+ 			return -EIO;
+-		size -= bh.b_size;
+-		lblock += (bh.b_size >> inode->i_blkbits);
+-	} while(size > 0);
++
++		iomap.length = min(iomap.length, size);
++		size -= iomap.length;
++		pos += iomap.length;
++	} while (size > 0);
++
  	return 0;
  }
  
- static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- {
- 	struct inode *inode = file_inode(filp);
--	struct fsxattr fa;
-+	struct fsxattr fa, old_fa;
- 	u32 iflags;
- 	int err;
- 
-@@ -2918,7 +2898,9 @@ static int f2fs_ioc_fssetxattr(struct file *filp, unsigned long arg)
- 		return err;
- 
- 	inode_lock(inode);
--	err = f2fs_ioctl_check_project(inode, &fa);
-+
-+	f2fs_fill_fsxattr(inode, &old_fa);
-+	err = vfs_ioc_fssetxattr_check(inode, &old_fa, &fa);
- 	if (err)
- 		goto out;
- 	err = f2fs_setflags_common(inode, iflags,
+-- 
+2.20.1
