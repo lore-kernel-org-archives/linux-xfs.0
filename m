@@ -1,44 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44608 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726439AbfGAVy6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:54:58 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/15] FOLD: iomap: make the discard_page method optional
-Date: Mon,  1 Jul 2019 23:54:25 +0200
-Message-Id: <20190701215439.19162-2-hch@lst.de>
-In-Reply-To: <20190701215439.19162-1-hch@lst.de>
-References: <20190701215439.19162-1-hch@lst.de>
+Received: from mail-io1-f65.google.com ([209.85.166.65]:40796 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727080AbfGAJtQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 05:49:16 -0400
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20190629073020.22759-1-yuchao0@huawei.com> <afda5702-1d88-7634-d943-0c413ae3b28f@huawei.com>
+ <a27e3502-db75-22fa-4545-e588abbbfbf2@huawei.com> <58511d64-aa7a-8ac2-0255-affe0e8d49de@huawei.com>
+In-Reply-To: <58511d64-aa7a-8ac2-0255-affe0e8d49de@huawei.com>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Mon, 1 Jul 2019 11:49:04 +0200
+Message-ID: <CAHpGcMK4ihE1nv7ME0yKKUdBj+Rdr9nBMnxAtQfFFOmK9aEY_A@mail.gmail.com>
+Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
+To: Gao Xiang <gaoxiang25@huawei.com>
+Cc: Chao Yu <yuchao0@huawei.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, chao@kernel.org
 
-For file system that do not support delayed allocations there is
-nothing to discard here, so don't require them to implement the
-method.
+Am Mo., 1. Juli 2019 um 10:04 Uhr schrieb Gao Xiang <gaoxiang25@huawei.com>:
+> On 2019/7/1 14:40, Chao Yu wrote:
+> > Hi Xiang,
+> >
+> > On 2019/6/29 17:34, Gao Xiang wrote:
+> >> Hi Chao,
+> >>
+> >> On 2019/6/29 15:30, Chao Yu wrote:
+> >>> Some filesystems like erofs/reiserfs have the ability to pack tail
+> >>> data into metadata, however iomap framework can only support mapping
+> >>> inline data with IOMAP_INLINE type, it restricts that:
+> >>> - inline data should be locating at page #0.
+> >>> - inline size should equal to .i_size
+> >>> So we can not use IOMAP_INLINE to handle tail-packing case.
+> >>>
+> >>> This patch introduces new mapping type IOMAP_TAIL to map tail-packed
+> >>> data for further use of erofs.
+> >>>
+> >>> Signed-off-by: Chao Yu <yuchao0@huawei.com>
+> >>> ---
+> >>>  fs/iomap.c            | 22 ++++++++++++++++++++++
+> >>>  include/linux/iomap.h |  1 +
+> >>>  2 files changed, 23 insertions(+)
+> >>>
+> >>> diff --git a/fs/iomap.c b/fs/iomap.c
+> >>> index 12654c2e78f8..ae7777ce77d0 100644
+> >>> --- a/fs/iomap.c
+> >>> +++ b/fs/iomap.c
+> >>> @@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+> >>>     SetPageUptodate(page);
+> >>>  }
+> >>>
+> >>> +static void
+> >>> +iomap_read_tail_data(struct inode *inode, struct page *page,
+> >>> +           struct iomap *iomap)
+> >>> +{
+> >>> +   size_t size = i_size_read(inode) & (PAGE_SIZE - 1);
+> >>> +   void *addr;
+> >>> +
+> >>> +   if (PageUptodate(page))
+> >>> +           return;
+> >>> +
+> >>> +   addr = kmap_atomic(page);
+> >>> +   memcpy(addr, iomap->inline_data, size);
+> >>> +   memset(addr + size, 0, PAGE_SIZE - size);
+> >>
+> >> need flush_dcache_page(page) here for new page cache page since
+> >> it's generic iomap code (althrough not necessary for x86, arm), I am not sure...
+> >> see commit d2b2c6dd227b and c01778001a4f...
+> >
+> > Thanks for your reminding, these all codes were copied from
+> > iomap_read_inline_data(), so I think we need a separated patch to fix this issue
+> > if necessary.
+>
+> Yes, just a reminder, it is good as it-is.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Not sure if that means that IOMAP_INLINE as is works for you now. In
+any case, if the inline data isn't transparently copied into the page
+cache at index 0, memory-mapped I/O isn't going to work.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index 72ba3962acf3..ebfff663b2a9 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -2545,7 +2545,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
- 	 */
- 	if (unlikely(error)) {
- 		if (!count) {
--			wpc->ops->discard_page(page);
-+			if (wpc->ops->discard_page)
-+				wpc->ops->discard_page(page);
- 			ClearPageUptodate(page);
- 			unlock_page(page);
- 			goto done;
--- 
-2.20.1
+The code further assumes that "packed" files consist of exactly one
+IOMAP_INLINE mapping; no IOMAP_MAPPED or other mappings may follow. Is
+it that assumption that's causing you trouble? If so, what's the
+layout at the filesystem level you want to support?
+
+Thanks,
+Andreas
+
+> Thanks,
+> Gao Xiang
+>
+> >
+> > Thanks,
+> >
+> >>
+> >> Thanks,
+> >> Gao Xiang
+> >>
+> >>> +   kunmap_atomic(addr);
+> >>> +   SetPageUptodate(page);
+> >>> +}
+> >>> +
+> >>>  static loff_t
+> >>>  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> >>>             struct iomap *iomap)
+> >>> @@ -298,6 +315,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> >>>             return PAGE_SIZE;
+> >>>     }
+> >>>
+> >>> +   if (iomap->type == IOMAP_TAIL) {
+> >>> +           iomap_read_tail_data(inode, page, iomap);
+> >>> +           return PAGE_SIZE;
+> >>> +   }
+> >>> +
+> >>>     /* zero post-eof blocks as the page may be mapped */
+> >>>     iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
+> >>>     if (plen == 0)
+> >>> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> >>> index 2103b94cb1bf..7e1ee48e3db7 100644
+> >>> --- a/include/linux/iomap.h
+> >>> +++ b/include/linux/iomap.h
+> >>> @@ -25,6 +25,7 @@ struct vm_fault;
+> >>>  #define IOMAP_MAPPED       0x03    /* blocks allocated at @addr */
+> >>>  #define IOMAP_UNWRITTEN    0x04    /* blocks allocated at @addr in unwritten state */
+> >>>  #define IOMAP_INLINE       0x05    /* data inline in the inode */
+> >>> +#define IOMAP_TAIL 0x06    /* tail data packed in metdata */
+> >>>
+> >>>  /*
+> >>>   * Flags for all iomap mappings:
+> >>>
+> >> .
+> >>
