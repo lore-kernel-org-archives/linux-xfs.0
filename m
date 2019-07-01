@@ -1,64 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bilbo.ozlabs.org ([203.11.71.1]:58993 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727279AbfGAPmV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Jul 2019 11:42:21 -0400
-Date: Tue, 2 Jul 2019 01:42:10 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: Adding some trees to linux-next?
-Message-ID: <20190702014210.1c95f9f1@canb.auug.org.au>
-In-Reply-To: <20190701153552.GJ1404256@magnolia>
-References: <20190701110603.5abcbb2c@canb.auug.org.au>
-        <20190701153552.GJ1404256@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:44854 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbfGAV41 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:56:27 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 13/15] gfs2: implement gfs2_block_zero_range using iomap_zero_range
+Date: Mon,  1 Jul 2019 23:54:37 +0200
+Message-Id: <20190701215439.19162-14-hch@lst.de>
+In-Reply-To: <20190701215439.19162-1-hch@lst.de>
+References: <20190701215439.19162-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/UN5Vxl1AFy.bml=FS8LPM8+"; protocol="application/pgp-signature"
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
 
---Sig_/UN5Vxl1AFy.bml=FS8LPM8+
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+iomap handles all the nitty-gritty details of zeroing a file
+range for us, so use the proper helper.
 
-Hi Darrick,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/gfs2/bmap.c | 68 +-------------------------------------------------
+ 1 file changed, 1 insertion(+), 67 deletions(-)
 
-On Mon, 1 Jul 2019 08:35:52 -0700 "Darrick J. Wong" <darrick.wong@oracle.co=
-m> wrote:
->
-> Could you add my iomap-for-next and vfs-for-next branches to linux-next,
-> please?  They can be found here:
->=20
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git#iomap-for-next
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git#vfs-for-next
->=20
-> I've decided that trying to munge all that through the xfs for-next
-> branch is too much insanity and splitting them up will help me prevent
-> my head from falling off.
-
-Just out of interest, do you intend to send these directly to Linus, or
-via another tree?
-
---=20
-Cheers,
-Stephen Rothwell
-
---Sig_/UN5Vxl1AFy.bml=FS8LPM8+
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl0aKdIACgkQAVBC80lX
-0Gznawf9HG3yAIa9ql5EEFzHWdjd0niap4Jw2Djgfi/AQ028W2dQ/j1Q86Vqw8Yi
-enXmApWWoNL+SACY4chSua3MBE3s5VvZaaFbljtZVtUb7q7zAeDQCTG2SKBC99jW
-4NB5XYMQKakDk1cPqmil6i+RrKQVolPPIH5AL/TunugCZ2dBcDPFk1RW4QO/8Vo+
-DpIk1Bg3kWePgnmnmiyA8bx7PRuv9ftL35G/GCjdl2iGxySx/tpVkZONZ+QketqE
-9bJSC5DMEpYE7opI/JBs9R8OSQmGNx0m2aYYaU5GCon60oQChZ97ebga9YME6zjZ
-CSOaZHOZWut8qZSWDlT6HZxOkTkd8Q==
-=cb/6
------END PGP SIGNATURE-----
-
---Sig_/UN5Vxl1AFy.bml=FS8LPM8+--
+diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+index 8e8768685264..b7bd811872cb 100644
+--- a/fs/gfs2/bmap.c
++++ b/fs/gfs2/bmap.c
+@@ -1281,76 +1281,10 @@ int gfs2_extent_map(struct inode *inode, u64 lblock, int *new, u64 *dblock, unsi
+ 	return ret;
+ }
+ 
+-/**
+- * gfs2_block_zero_range - Deal with zeroing out data
+- *
+- * This is partly borrowed from ext3.
+- */
+ static int gfs2_block_zero_range(struct inode *inode, loff_t from,
+ 				 unsigned int length)
+ {
+-	struct address_space *mapping = inode->i_mapping;
+-	struct gfs2_inode *ip = GFS2_I(inode);
+-	unsigned long index = from >> PAGE_SHIFT;
+-	unsigned offset = from & (PAGE_SIZE-1);
+-	unsigned blocksize, iblock, pos;
+-	struct buffer_head *bh;
+-	struct page *page;
+-	int err;
+-
+-	page = find_or_create_page(mapping, index, GFP_NOFS);
+-	if (!page)
+-		return 0;
+-
+-	blocksize = inode->i_sb->s_blocksize;
+-	iblock = index << (PAGE_SHIFT - inode->i_sb->s_blocksize_bits);
+-
+-	if (!page_has_buffers(page))
+-		create_empty_buffers(page, blocksize, 0);
+-
+-	/* Find the buffer that contains "offset" */
+-	bh = page_buffers(page);
+-	pos = blocksize;
+-	while (offset >= pos) {
+-		bh = bh->b_this_page;
+-		iblock++;
+-		pos += blocksize;
+-	}
+-
+-	err = 0;
+-
+-	if (!buffer_mapped(bh)) {
+-		gfs2_block_map(inode, iblock, bh, 0);
+-		/* unmapped? It's a hole - nothing to do */
+-		if (!buffer_mapped(bh))
+-			goto unlock;
+-	}
+-
+-	/* Ok, it's mapped. Make sure it's up-to-date */
+-	if (PageUptodate(page))
+-		set_buffer_uptodate(bh);
+-
+-	if (!buffer_uptodate(bh)) {
+-		err = -EIO;
+-		ll_rw_block(REQ_OP_READ, 0, 1, &bh);
+-		wait_on_buffer(bh);
+-		/* Uhhuh. Read error. Complain and punt. */
+-		if (!buffer_uptodate(bh))
+-			goto unlock;
+-		err = 0;
+-	}
+-
+-	if (gfs2_is_jdata(ip))
+-		gfs2_trans_add_data(ip->i_gl, bh);
+-	else
+-		gfs2_ordered_add_inode(ip);
+-
+-	zero_user(page, offset, length);
+-	mark_buffer_dirty(bh);
+-unlock:
+-	unlock_page(page);
+-	put_page(page);
+-	return err;
++	return iomap_zero_range(inode, from, length, NULL, &gfs2_iomap_ops);
+ }
+ 
+ #define GFS2_JTRUNC_REVOKES 8192
+-- 
+2.20.1
