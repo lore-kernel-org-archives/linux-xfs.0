@@ -1,81 +1,352 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44868 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726439AbfGAV4e (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:56:34 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 14/15] gfs2: don't use buffer_heads in gfs2_allocate_page_backing
-Date: Mon,  1 Jul 2019 23:54:38 +0200
-Message-Id: <20190701215439.19162-15-hch@lst.de>
-In-Reply-To: <20190701215439.19162-1-hch@lst.de>
-References: <20190701215439.19162-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:59040 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729374AbfGARC2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:02:28 -0400
+Subject: [PATCH 03/11] iomap: move the file mapping reporting code into a
+ separate file
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 01 Jul 2019 10:02:19 -0700
+Message-ID: <156200053964.1790352.14719190843587972058.stgit@magnolia>
+In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Rewrite gfs2_allocate_page_backing to call gfs2_iomap_get_alloc and
-operate on struct iomap directly.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Move the file mapping reporting code (FIEMAP/FIBMAP) into a separate
+file so that we can group related functions in a single file instead of
+having a single enormous source file.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/gfs2/file.c | 33 ++++++++++++++++-----------------
- 1 file changed, 16 insertions(+), 17 deletions(-)
+ fs/iomap.c        |  136 -------------------------------------------------
+ fs/iomap/Makefile |    3 +
+ fs/iomap/fiemap.c |  147 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 150 insertions(+), 136 deletions(-)
+ create mode 100644 fs/iomap/fiemap.c
 
-diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-index 282a4aaab900..8c72e4cecd89 100644
---- a/fs/gfs2/file.c
-+++ b/fs/gfs2/file.c
-@@ -379,31 +379,30 @@ static void gfs2_size_hint(struct file *filep, loff_t offset, size_t size)
+
+diff --git a/fs/iomap.c b/fs/iomap.c
+index b0887e94d4ce..21a1300fc5b8 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1145,108 +1145,6 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
  }
+ EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
  
- /**
-- * gfs2_allocate_page_backing - Use bmap to allocate blocks
-+ * gfs2_allocate_page_backing - Allocate blocks for a write fault
-  * @page: The (locked) page to allocate backing for
-  *
-- * We try to allocate all the blocks required for the page in
-- * one go. This might fail for various reasons, so we keep
-- * trying until all the blocks to back this page are allocated.
-- * If some of the blocks are already allocated, thats ok too.
-+ * We try to allocate all the blocks required for the page in one go.  This
-+ * might fail for various reasons, so we keep trying until all the blocks to
-+ * back this page are allocated.  If some of the blocks are already allocated,
-+ * that is ok too.
-  */
+-struct fiemap_ctx {
+-	struct fiemap_extent_info *fi;
+-	struct iomap prev;
+-};
 -
- static int gfs2_allocate_page_backing(struct page *page)
- {
--	struct inode *inode = page->mapping->host;
--	struct buffer_head bh;
--	unsigned long size = PAGE_SIZE;
--	u64 lblock = page->index << (PAGE_SHIFT - inode->i_blkbits);
-+	u64 pos = page_offset(page);
-+	u64 size = PAGE_SIZE;
- 
- 	do {
--		bh.b_state = 0;
--		bh.b_size = size;
--		gfs2_block_map(inode, lblock, &bh, 1);
--		if (!buffer_mapped(&bh))
-+		struct iomap iomap = { };
-+
-+		if (gfs2_iomap_get_alloc(page->mapping->host, pos, 1, &iomap))
- 			return -EIO;
--		size -= bh.b_size;
--		lblock += (bh.b_size >> inode->i_blkbits);
--	} while(size > 0);
-+
-+		iomap.length = min(iomap.length, size);
-+		size -= iomap.length;
-+		pos += iomap.length;
-+	} while (size > 0);
-+
- 	return 0;
+-static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+-		struct iomap *iomap, u32 flags)
+-{
+-	switch (iomap->type) {
+-	case IOMAP_HOLE:
+-		/* skip holes */
+-		return 0;
+-	case IOMAP_DELALLOC:
+-		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
+-		break;
+-	case IOMAP_MAPPED:
+-		break;
+-	case IOMAP_UNWRITTEN:
+-		flags |= FIEMAP_EXTENT_UNWRITTEN;
+-		break;
+-	case IOMAP_INLINE:
+-		flags |= FIEMAP_EXTENT_DATA_INLINE;
+-		break;
+-	}
+-
+-	if (iomap->flags & IOMAP_F_MERGED)
+-		flags |= FIEMAP_EXTENT_MERGED;
+-	if (iomap->flags & IOMAP_F_SHARED)
+-		flags |= FIEMAP_EXTENT_SHARED;
+-
+-	return fiemap_fill_next_extent(fi, iomap->offset,
+-			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
+-			iomap->length, flags);
+-}
+-
+-static loff_t
+-iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+-		struct iomap *iomap)
+-{
+-	struct fiemap_ctx *ctx = data;
+-	loff_t ret = length;
+-
+-	if (iomap->type == IOMAP_HOLE)
+-		return length;
+-
+-	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
+-	ctx->prev = *iomap;
+-	switch (ret) {
+-	case 0:		/* success */
+-		return length;
+-	case 1:		/* extent array full */
+-		return 0;
+-	default:
+-		return ret;
+-	}
+-}
+-
+-int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+-		loff_t start, loff_t len, const struct iomap_ops *ops)
+-{
+-	struct fiemap_ctx ctx;
+-	loff_t ret;
+-
+-	memset(&ctx, 0, sizeof(ctx));
+-	ctx.fi = fi;
+-	ctx.prev.type = IOMAP_HOLE;
+-
+-	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
+-	if (ret)
+-		return ret;
+-
+-	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
+-		ret = filemap_write_and_wait(inode->i_mapping);
+-		if (ret)
+-			return ret;
+-	}
+-
+-	while (len > 0) {
+-		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
+-				iomap_fiemap_actor);
+-		/* inode with no (attribute) mapping will give ENOENT */
+-		if (ret == -ENOENT)
+-			break;
+-		if (ret < 0)
+-			return ret;
+-		if (ret == 0)
+-			break;
+-
+-		start += ret;
+-		len -= ret;
+-	}
+-
+-	if (ctx.prev.type != IOMAP_HOLE) {
+-		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(iomap_fiemap);
+-
+ /*
+  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
+  * Returns true if found and updates @lastoff to the offset in file.
+@@ -2001,37 +1899,3 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return ret;
  }
+ EXPORT_SYMBOL_GPL(iomap_dio_rw);
+-
+-static loff_t
+-iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+-		void *data, struct iomap *iomap)
+-{
+-	sector_t *bno = data, addr;
+-
+-	if (iomap->type == IOMAP_MAPPED) {
+-		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
+-		if (addr > INT_MAX)
+-			WARN(1, "would truncate bmap result\n");
+-		else
+-			*bno = addr;
+-	}
+-	return 0;
+-}
+-
+-/* legacy ->bmap interface.  0 is the error return (!) */
+-sector_t
+-iomap_bmap(struct address_space *mapping, sector_t bno,
+-		const struct iomap_ops *ops)
+-{
+-	struct inode *inode = mapping->host;
+-	loff_t pos = bno << inode->i_blkbits;
+-	unsigned blocksize = i_blocksize(inode);
+-
+-	if (filemap_write_and_wait(mapping))
+-		return 0;
+-
+-	bno = 0;
+-	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
+-	return bno;
+-}
+-EXPORT_SYMBOL_GPL(iomap_bmap);
+diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
+index e38061f2b901..861c07137792 100644
+--- a/fs/iomap/Makefile
++++ b/fs/iomap/Makefile
+@@ -8,4 +8,7 @@ ccflags-y += -I $(srctree)/$(src)/..
  
--- 
-2.20.1
+ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
+ 
++iomap-y				+= \
++					fiemap.o
++
+ iomap-$(CONFIG_SWAP)		+= swapfile.o
+diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+new file mode 100644
+index 000000000000..42ed9ef56699
+--- /dev/null
++++ b/fs/iomap/fiemap.c
+@@ -0,0 +1,147 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2010 Red Hat, Inc.
++ * Copyright (c) 2016-2018 Christoph Hellwig.
++ */
++#include <linux/module.h>
++#include <linux/compiler.h>
++#include <linux/fs.h>
++#include <linux/iomap.h>
++
++#include "internal.h"
++
++struct fiemap_ctx {
++	struct fiemap_extent_info *fi;
++	struct iomap prev;
++};
++
++static int iomap_to_fiemap(struct fiemap_extent_info *fi,
++		struct iomap *iomap, u32 flags)
++{
++	switch (iomap->type) {
++	case IOMAP_HOLE:
++		/* skip holes */
++		return 0;
++	case IOMAP_DELALLOC:
++		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
++		break;
++	case IOMAP_MAPPED:
++		break;
++	case IOMAP_UNWRITTEN:
++		flags |= FIEMAP_EXTENT_UNWRITTEN;
++		break;
++	case IOMAP_INLINE:
++		flags |= FIEMAP_EXTENT_DATA_INLINE;
++		break;
++	}
++
++	if (iomap->flags & IOMAP_F_MERGED)
++		flags |= FIEMAP_EXTENT_MERGED;
++	if (iomap->flags & IOMAP_F_SHARED)
++		flags |= FIEMAP_EXTENT_SHARED;
++
++	return fiemap_fill_next_extent(fi, iomap->offset,
++			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
++			iomap->length, flags);
++}
++
++static loff_t
++iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
++{
++	struct fiemap_ctx *ctx = data;
++	loff_t ret = length;
++
++	if (iomap->type == IOMAP_HOLE)
++		return length;
++
++	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
++	ctx->prev = *iomap;
++	switch (ret) {
++	case 0:		/* success */
++		return length;
++	case 1:		/* extent array full */
++		return 0;
++	default:
++		return ret;
++	}
++}
++
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
++		loff_t start, loff_t len, const struct iomap_ops *ops)
++{
++	struct fiemap_ctx ctx;
++	loff_t ret;
++
++	memset(&ctx, 0, sizeof(ctx));
++	ctx.fi = fi;
++	ctx.prev.type = IOMAP_HOLE;
++
++	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
++	if (ret)
++		return ret;
++
++	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
++		ret = filemap_write_and_wait(inode->i_mapping);
++		if (ret)
++			return ret;
++	}
++
++	while (len > 0) {
++		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
++				iomap_fiemap_actor);
++		/* inode with no (attribute) mapping will give ENOENT */
++		if (ret == -ENOENT)
++			break;
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		start += ret;
++		len -= ret;
++	}
++
++	if (ctx.prev.type != IOMAP_HOLE) {
++		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_fiemap);
++
++static loff_t
++iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	sector_t *bno = data, addr;
++
++	if (iomap->type == IOMAP_MAPPED) {
++		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
++		if (addr > INT_MAX)
++			WARN(1, "would truncate bmap result\n");
++		else
++			*bno = addr;
++	}
++	return 0;
++}
++
++/* legacy ->bmap interface.  0 is the error return (!) */
++sector_t
++iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops)
++{
++	struct inode *inode = mapping->host;
++	loff_t pos = bno << inode->i_blkbits;
++	unsigned blocksize = i_blocksize(inode);
++
++	if (filemap_write_and_wait(mapping))
++		return 0;
++
++	bno = 0;
++	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
++	return bno;
++}
++EXPORT_SYMBOL_GPL(iomap_bmap);
