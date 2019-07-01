@@ -1,414 +1,66 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41998 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727578AbfGAREV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:04:21 -0400
-Subject: [PATCH 02/11] iomap: move the swapfile code into a separate file
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Jul 2019 10:02:13 -0700
-Message-ID: <156200053326.1790352.12592337513023365627.stgit@magnolia>
-In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Received: from userp2130.oracle.com ([156.151.31.86]:34318 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727130AbfGARfr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:35:47 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x61HYLKs025255
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Jul 2019 17:35:45 GMT
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2te61dy0rq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2019 17:35:45 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x61HXE8f076599
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Jul 2019 17:35:45 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2tebqg24hn-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2019 17:35:45 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x61HZiR4020847
+        for <linux-xfs@vger.kernel.org>; Mon, 1 Jul 2019 17:35:44 GMT
+From: Allison Collins <allison.henderson@oracle.com>
+Subject: [PATCH 1/1] xfsprogs: Fix uninitialized cfg->lsunit
+Date: Mon,  1 Jul 2019 10:35:38 -0700
+Message-Id: <20190701173538.29710-1-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+While investigating another mkfs bug, noticed that cfg->lsunit is sometimes
+left uninitialized when it should not.  This is because calc_stripe_factors
+in some cases needs cfg->loginternal to be set first.  This is done in
+validate_logdev. So move calc_stripe_factors below validate_logdev while
+parsing configs.
 
-Move the swapfile activation code into a separate file so that we can
-group related functions in a single file instead of having a single
-enormous source file.
+Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c          |  170 ------------------------------------------------
- fs/iomap/Makefile   |    4 +
- fs/iomap/swapfile.c |  180 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 184 insertions(+), 170 deletions(-)
- create mode 100644 fs/iomap/swapfile.c
+ mkfs/xfs_mkfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-diff --git a/fs/iomap.c b/fs/iomap.c
-index f15c705c5a93..b0887e94d4ce 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -2002,176 +2002,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index ddb25ec..f4a5e4b 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3995,7 +3995,6 @@ main(
+ 	cfg.rtblocks = calc_dev_size(cli.rtsize, &cfg, &ropts, R_SIZE, "rt");
  
--/* Swapfile activation */
--
--#ifdef CONFIG_SWAP
--struct iomap_swapfile_info {
--	struct iomap iomap;		/* accumulated iomap */
--	struct swap_info_struct *sis;
--	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
--	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
--	unsigned long nr_pages;		/* number of pages collected */
--	int nr_extents;			/* extent count */
--};
--
--/*
-- * Collect physical extents for this swap file.  Physical extents reported to
-- * the swap code must be trimmed to align to a page boundary.  The logical
-- * offset within the file is irrelevant since the swapfile code maps logical
-- * page numbers of the swap device to the physical page-aligned extents.
-- */
--static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
--{
--	struct iomap *iomap = &isi->iomap;
--	unsigned long nr_pages;
--	uint64_t first_ppage;
--	uint64_t first_ppage_reported;
--	uint64_t next_ppage;
--	int error;
--
--	/*
--	 * Round the start up and the end down so that the physical
--	 * extent aligns to a page boundary.
--	 */
--	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
--	next_ppage = ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
--			PAGE_SHIFT;
--
--	/* Skip too-short physical extents. */
--	if (first_ppage >= next_ppage)
--		return 0;
--	nr_pages = next_ppage - first_ppage;
--
--	/*
--	 * Calculate how much swap space we're adding; the first page contains
--	 * the swap header and doesn't count.  The mm still wants that first
--	 * page fed to add_swap_extent, however.
--	 */
--	first_ppage_reported = first_ppage;
--	if (iomap->offset == 0)
--		first_ppage_reported++;
--	if (isi->lowest_ppage > first_ppage_reported)
--		isi->lowest_ppage = first_ppage_reported;
--	if (isi->highest_ppage < (next_ppage - 1))
--		isi->highest_ppage = next_ppage - 1;
--
--	/* Add extent, set up for the next call. */
--	error = add_swap_extent(isi->sis, isi->nr_pages, nr_pages, first_ppage);
--	if (error < 0)
--		return error;
--	isi->nr_extents += error;
--	isi->nr_pages += nr_pages;
--	return 0;
--}
--
--/*
-- * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
-- * swap only cares about contiguous page-aligned physical extents and makes no
-- * distinction between written and unwritten extents.
-- */
--static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
--		loff_t count, void *data, struct iomap *iomap)
--{
--	struct iomap_swapfile_info *isi = data;
--	int error;
--
--	switch (iomap->type) {
--	case IOMAP_MAPPED:
--	case IOMAP_UNWRITTEN:
--		/* Only real or unwritten extents. */
--		break;
--	case IOMAP_INLINE:
--		/* No inline data. */
--		pr_err("swapon: file is inline\n");
--		return -EINVAL;
--	default:
--		pr_err("swapon: file has unallocated extents\n");
--		return -EINVAL;
--	}
--
--	/* No uncommitted metadata or shared blocks. */
--	if (iomap->flags & IOMAP_F_DIRTY) {
--		pr_err("swapon: file is not committed\n");
--		return -EINVAL;
--	}
--	if (iomap->flags & IOMAP_F_SHARED) {
--		pr_err("swapon: file has shared extents\n");
--		return -EINVAL;
--	}
--
--	/* Only one bdev per swap file. */
--	if (iomap->bdev != isi->sis->bdev) {
--		pr_err("swapon: file is on multiple devices\n");
--		return -EINVAL;
--	}
--
--	if (isi->iomap.length == 0) {
--		/* No accumulated extent, so just store it. */
--		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
--	} else if (isi->iomap.addr + isi->iomap.length == iomap->addr) {
--		/* Append this to the accumulated extent. */
--		isi->iomap.length += iomap->length;
--	} else {
--		/* Otherwise, add the retained iomap and store this one. */
--		error = iomap_swapfile_add_extent(isi);
--		if (error)
--			return error;
--		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
--	}
--	return count;
--}
--
--/*
-- * Iterate a swap file's iomaps to construct physical extents that can be
-- * passed to the swapfile subsystem.
-- */
--int iomap_swapfile_activate(struct swap_info_struct *sis,
--		struct file *swap_file, sector_t *pagespan,
--		const struct iomap_ops *ops)
--{
--	struct iomap_swapfile_info isi = {
--		.sis = sis,
--		.lowest_ppage = (sector_t)-1ULL,
--	};
--	struct address_space *mapping = swap_file->f_mapping;
--	struct inode *inode = mapping->host;
--	loff_t pos = 0;
--	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
--	loff_t ret;
--
--	/*
--	 * Persist all file mapping metadata so that we won't have any
--	 * IOMAP_F_DIRTY iomaps.
--	 */
--	ret = vfs_fsync(swap_file, 1);
--	if (ret)
--		return ret;
--
--	while (len > 0) {
--		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
--				ops, &isi, iomap_swapfile_activate_actor);
--		if (ret <= 0)
--			return ret;
--
--		pos += ret;
--		len -= ret;
--	}
--
--	if (isi.iomap.length) {
--		ret = iomap_swapfile_add_extent(&isi);
--		if (ret)
--			return ret;
--	}
--
--	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
--	sis->max = isi.nr_pages;
--	sis->pages = isi.nr_pages - 1;
--	sis->highest_bit = isi.nr_pages - 1;
--	return isi.nr_extents;
--}
--EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
--#endif /* CONFIG_SWAP */
--
- static loff_t
- iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
- 		void *data, struct iomap *iomap)
-diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-index b778a05acac3..e38061f2b901 100644
---- a/fs/iomap/Makefile
-+++ b/fs/iomap/Makefile
-@@ -5,3 +5,7 @@
- #
+ 	validate_rtextsize(&cfg, &cli, &ft);
+-	calc_stripe_factors(&cfg, &cli, &ft);
  
- ccflags-y += -I $(srctree)/$(src)/..
-+
-+obj-$(CONFIG_FS_IOMAP)		+= iomap.o
-+
-+iomap-$(CONFIG_SWAP)		+= swapfile.o
-diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-new file mode 100644
-index 000000000000..4ca214d1e88d
---- /dev/null
-+++ b/fs/iomap/swapfile.c
-@@ -0,0 +1,180 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2010 Red Hat, Inc.
-+ * Copyright (c) 2016-2018 Christoph Hellwig.
-+ */
-+#include <linux/module.h>
-+#include <linux/compiler.h>
-+#include <linux/fs.h>
-+#include <linux/iomap.h>
-+#include <linux/swap.h>
-+
-+#include "internal.h"
-+
-+/* Swapfile activation */
-+
-+struct iomap_swapfile_info {
-+	struct iomap iomap;		/* accumulated iomap */
-+	struct swap_info_struct *sis;
-+	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-+	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-+	unsigned long nr_pages;		/* number of pages collected */
-+	int nr_extents;			/* extent count */
-+};
-+
-+/*
-+ * Collect physical extents for this swap file.  Physical extents reported to
-+ * the swap code must be trimmed to align to a page boundary.  The logical
-+ * offset within the file is irrelevant since the swapfile code maps logical
-+ * page numbers of the swap device to the physical page-aligned extents.
-+ */
-+static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
-+{
-+	struct iomap *iomap = &isi->iomap;
-+	unsigned long nr_pages;
-+	uint64_t first_ppage;
-+	uint64_t first_ppage_reported;
-+	uint64_t next_ppage;
-+	int error;
-+
-+	/*
-+	 * Round the start up and the end down so that the physical
-+	 * extent aligns to a page boundary.
-+	 */
-+	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
-+	next_ppage = ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
-+			PAGE_SHIFT;
-+
-+	/* Skip too-short physical extents. */
-+	if (first_ppage >= next_ppage)
-+		return 0;
-+	nr_pages = next_ppage - first_ppage;
-+
-+	/*
-+	 * Calculate how much swap space we're adding; the first page contains
-+	 * the swap header and doesn't count.  The mm still wants that first
-+	 * page fed to add_swap_extent, however.
-+	 */
-+	first_ppage_reported = first_ppage;
-+	if (iomap->offset == 0)
-+		first_ppage_reported++;
-+	if (isi->lowest_ppage > first_ppage_reported)
-+		isi->lowest_ppage = first_ppage_reported;
-+	if (isi->highest_ppage < (next_ppage - 1))
-+		isi->highest_ppage = next_ppage - 1;
-+
-+	/* Add extent, set up for the next call. */
-+	error = add_swap_extent(isi->sis, isi->nr_pages, nr_pages, first_ppage);
-+	if (error < 0)
-+		return error;
-+	isi->nr_extents += error;
-+	isi->nr_pages += nr_pages;
-+	return 0;
-+}
-+
-+/*
-+ * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
-+ * swap only cares about contiguous page-aligned physical extents and makes no
-+ * distinction between written and unwritten extents.
-+ */
-+static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-+		loff_t count, void *data, struct iomap *iomap)
-+{
-+	struct iomap_swapfile_info *isi = data;
-+	int error;
-+
-+	switch (iomap->type) {
-+	case IOMAP_MAPPED:
-+	case IOMAP_UNWRITTEN:
-+		/* Only real or unwritten extents. */
-+		break;
-+	case IOMAP_INLINE:
-+		/* No inline data. */
-+		pr_err("swapon: file is inline\n");
-+		return -EINVAL;
-+	default:
-+		pr_err("swapon: file has unallocated extents\n");
-+		return -EINVAL;
-+	}
-+
-+	/* No uncommitted metadata or shared blocks. */
-+	if (iomap->flags & IOMAP_F_DIRTY) {
-+		pr_err("swapon: file is not committed\n");
-+		return -EINVAL;
-+	}
-+	if (iomap->flags & IOMAP_F_SHARED) {
-+		pr_err("swapon: file has shared extents\n");
-+		return -EINVAL;
-+	}
-+
-+	/* Only one bdev per swap file. */
-+	if (iomap->bdev != isi->sis->bdev) {
-+		pr_err("swapon: file is on multiple devices\n");
-+		return -EINVAL;
-+	}
-+
-+	if (isi->iomap.length == 0) {
-+		/* No accumulated extent, so just store it. */
-+		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-+	} else if (isi->iomap.addr + isi->iomap.length == iomap->addr) {
-+		/* Append this to the accumulated extent. */
-+		isi->iomap.length += iomap->length;
-+	} else {
-+		/* Otherwise, add the retained iomap and store this one. */
-+		error = iomap_swapfile_add_extent(isi);
-+		if (error)
-+			return error;
-+		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-+	}
-+	return count;
-+}
-+
-+/*
-+ * Iterate a swap file's iomaps to construct physical extents that can be
-+ * passed to the swapfile subsystem.
-+ */
-+int iomap_swapfile_activate(struct swap_info_struct *sis,
-+		struct file *swap_file, sector_t *pagespan,
-+		const struct iomap_ops *ops)
-+{
-+	struct iomap_swapfile_info isi = {
-+		.sis = sis,
-+		.lowest_ppage = (sector_t)-1ULL,
-+	};
-+	struct address_space *mapping = swap_file->f_mapping;
-+	struct inode *inode = mapping->host;
-+	loff_t pos = 0;
-+	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
-+	loff_t ret;
-+
-+	/*
-+	 * Persist all file mapping metadata so that we won't have any
-+	 * IOMAP_F_DIRTY iomaps.
-+	 */
-+	ret = vfs_fsync(swap_file, 1);
-+	if (ret)
-+		return ret;
-+
-+	while (len > 0) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
-+				ops, &isi, iomap_swapfile_activate_actor);
-+		if (ret <= 0)
-+			return ret;
-+
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	if (isi.iomap.length) {
-+		ret = iomap_swapfile_add_extent(&isi);
-+		if (ret)
-+			return ret;
-+	}
-+
-+	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
-+	sis->max = isi.nr_pages;
-+	sis->pages = isi.nr_pages - 1;
-+	sis->highest_bit = isi.nr_pages - 1;
-+	return isi.nr_extents;
-+}
-+EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+ 	/*
+ 	 * Open and validate the device configurations
+@@ -4005,6 +4004,7 @@ main(
+ 	validate_datadev(&cfg, &cli);
+ 	validate_logdev(&cfg, &cli, &logfile);
+ 	validate_rtdev(&cfg, &cli, &rtfile);
++	calc_stripe_factors(&cfg, &cli, &ft);
+ 
+ 	/*
+ 	 * At this point when know exactly what size all the devices are,
+-- 
+2.7.4
