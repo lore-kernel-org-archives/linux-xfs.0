@@ -1,91 +1,114 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:42710 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729907AbfGAOy0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Jul 2019 10:54:26 -0400
-Subject: Re: [linux-kernel-mentees] [PATCH v1] Doc : fs : convert xfs.txt to
- ReST
-References: <20190630165046.GB5193@localhost>
- <20190630113243.7265c33e@lwn.net>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <7251234a-9469-68a6-8a23-c023bd01c637@sandeen.net>
-Date: Mon, 1 Jul 2019 09:54:23 -0500
+Received: from szxga04-in.huawei.com ([45.249.212.190]:7683 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725616AbfGAGkl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Jul 2019 02:40:41 -0400
+Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
+References: <20190629073020.22759-1-yuchao0@huawei.com>
+ <afda5702-1d88-7634-d943-0c413ae3b28f@huawei.com>
+From: Chao Yu <yuchao0@huawei.com>
+Message-ID: <a27e3502-db75-22fa-4545-e588abbbfbf2@huawei.com>
+Date: Mon, 1 Jul 2019 14:40:28 +0800
 MIME-Version: 1.0
-In-Reply-To: <20190630113243.7265c33e@lwn.net>
-Content-Type: text/plain; charset=utf-8
+In-Reply-To: <afda5702-1d88-7634-d943-0c413ae3b28f@huawei.com>
+Content-Type: text/plain; charset="utf-8"
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jonathan Corbet <corbet@lwn.net>, Sheriff Esseson <sheriffesseson@gmail.com>
-Cc: skhan@linuxfoundation.org, linux-kernel-mentees@lists.linuxfoundation.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Gao Xiang <gaoxiang25@huawei.com>
+Cc: hch@infradead.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, chao@kernel.org
 
+Hi Xiang,
 
-
-On 6/30/19 12:32 PM, Jonathan Corbet wrote:
-> On Sun, 30 Jun 2019 17:50:46 +0100
-> Sheriff Esseson <sheriffesseson@gmail.com> wrote:
+On 2019/6/29 17:34, Gao Xiang wrote:
+> Hi Chao,
 > 
->> On Sat, Jun 29, 2019 at 09:57:59PM +0100, Sheriff Esseson wrote:
->>> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
->>> ---
->>>
->>> In v3:
->>> Update MAINTAINERS. Fix Indentation/long line issues. Insert Sphinx tag.
->>>
->>> -- 
->>> 2.22.0
->>>   
+> On 2019/6/29 15:30, Chao Yu wrote:
+>> Some filesystems like erofs/reiserfs have the ability to pack tail
+>> data into metadata, however iomap framework can only support mapping
+>> inline data with IOMAP_INLINE type, it restricts that:
+>> - inline data should be locating at page #0.
+>> - inline size should equal to .i_size
+>> So we can not use IOMAP_INLINE to handle tail-packing case.
 >>
->> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
+>> This patch introduces new mapping type IOMAP_TAIL to map tail-packed
+>> data for further use of erofs.
+>>
+>> Signed-off-by: Chao Yu <yuchao0@huawei.com>
 >> ---
+>>  fs/iomap.c            | 22 ++++++++++++++++++++++
+>>  include/linux/iomap.h |  1 +
+>>  2 files changed, 23 insertions(+)
 >>
->> In v4:
->> dax.txt : 
->> 	fix broken reference to xfs.rst
+>> diff --git a/fs/iomap.c b/fs/iomap.c
+>> index 12654c2e78f8..ae7777ce77d0 100644
+>> --- a/fs/iomap.c
+>> +++ b/fs/iomap.c
+>> @@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+>>  	SetPageUptodate(page);
+>>  }
+>>  
+>> +static void
+>> +iomap_read_tail_data(struct inode *inode, struct page *page,
+>> +		struct iomap *iomap)
+>> +{
+>> +	size_t size = i_size_read(inode) & (PAGE_SIZE - 1);
+>> +	void *addr;
+>> +
+>> +	if (PageUptodate(page))
+>> +		return;
+>> +
+>> +	addr = kmap_atomic(page);
+>> +	memcpy(addr, iomap->inline_data, size);
+>> +	memset(addr + size, 0, PAGE_SIZE - size);
 > 
-> I will now repeat what I said yesterday:
-> 
->> Please do us a favor?  
->>
->> 1) Post each patch standalone, without quoted text, ready to be applied.
+> need flush_dcache_page(page) here for new page cache page since
+> it's generic iomap code (althrough not necessary for x86, arm), I am not sure...
+> see commit d2b2c6dd227b and c01778001a4f...
 
-To be maybe more explicit,
-
-While we appreciate the eagerness here I'd like to reiterate that the
-followup V2, V3, ... patches should each be a standalone, self-contained
-email, without any quoted text and with updated subject lines, i.e.
-
-Subject: [PATCH] Doc : fs : convert xfs.txt to ReST
-
-followed by:
-
-Subject: [PATCH V2] Doc : fs : convert xfs.txt to ReST
-
-followed by:
-
-Subject: [PATCH V3] Doc : fs : convert xfs.txt to ReST
-
-so it's trivial to see from subject lines when a new version has been
-sent.
-
-Also, what Jonathan said about time between iterations.  ;)
+Thanks for your reminding, these all codes were copied from
+iomap_read_inline_data(), so I think we need a separated patch to fix this issue
+if necessary.
 
 Thanks,
--Eric
 
-
->> 2) Wait a little while between postings so that you can address more than
->> one comment at a time.
->>
->> OK, two favors - off-by-one errors are my specialty...:)
-> 
-> I did actually mean that.  For "a little while" I meant "a few days or
-> so".  Please slow down a little.  In any case, we're getting closer to the
-> merge window, so this patch won't be applied for a while regardless.
 > 
 > Thanks,
+> Gao Xiang
 > 
-> jon
+>> +	kunmap_atomic(addr);
+>> +	SetPageUptodate(page);
+>> +}
+>> +
+>>  static loff_t
+>>  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>>  		struct iomap *iomap)
+>> @@ -298,6 +315,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>>  		return PAGE_SIZE;
+>>  	}
+>>  
+>> +	if (iomap->type == IOMAP_TAIL) {
+>> +		iomap_read_tail_data(inode, page, iomap);
+>> +		return PAGE_SIZE;
+>> +	}
+>> +
+>>  	/* zero post-eof blocks as the page may be mapped */
+>>  	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
+>>  	if (plen == 0)
+>> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+>> index 2103b94cb1bf..7e1ee48e3db7 100644
+>> --- a/include/linux/iomap.h
+>> +++ b/include/linux/iomap.h
+>> @@ -25,6 +25,7 @@ struct vm_fault;
+>>  #define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
+>>  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
+>>  #define IOMAP_INLINE	0x05	/* data inline in the inode */
+>> +#define IOMAP_TAIL	0x06	/* tail data packed in metdata */
+>>  
+>>  /*
+>>   * Flags for all iomap mappings:
+>>
+> .
 > 
