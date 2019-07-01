@@ -1,50 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-io1-f67.google.com ([209.85.166.67]:35409 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729457AbfGAOOL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 10:14:11 -0400
-Received: by mail-io1-f67.google.com with SMTP id m24so29193316ioo.2
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2019 07:14:10 -0700 (PDT)
-Subject: Re: [PATCH V2] block: fix .bi_size overflow
-From: Jens Axboe <axboe@kernel.dk>
-References: <20190701071446.22028-1-ming.lei@redhat.com>
- <8db73c5d-a0e2-00c9-59ab-64314097db26@kernel.dk>
-Message-ID: <bd45842a-e0fd-28a7-ac79-96f7cb9b66e4@kernel.dk>
-Date: Mon, 1 Jul 2019 08:14:08 -0600
+Received: from userp2120.oracle.com ([156.151.31.85]:43626 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727784AbfGAOOi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 10:14:38 -0400
+Date: Mon, 1 Jul 2019 07:14:32 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/6] mkfs: use libxfs to write out new AGs
+Message-ID: <20190701141432.GB1654093@magnolia>
+References: <156114701371.1643538.316410894576032261.stgit@magnolia>
+ <156114705924.1643538.6635085530435538461.stgit@magnolia>
+ <20190701122504.GM7777@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <8db73c5d-a0e2-00c9-59ab-64314097db26@kernel.dk>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190701122504.GM7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, Liu Yiding <liuyd.fnst@cn.fujitsu.com>, kernel test robot <rong.a.chen@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: sandeen@sandeen.net, linux-xfs@vger.kernel.org
 
-On 7/1/19 8:05 AM, Jens Axboe wrote:
-> On 7/1/19 1:14 AM, Ming Lei wrote:
->> 'bio->bi_iter.bi_size' is 'unsigned int', which at most hold 4G - 1
->> bytes.
->>
->> Before 07173c3ec276 ("block: enable multipage bvecs"), one bio can
->> include very limited pages, and usually at most 256, so the fs bio
->> size won't be bigger than 1M bytes most of times.
->>
->> Since we support multi-page bvec, in theory one fs bio really can
->> be added > 1M pages, especially in case of hugepage, or big writeback
->> with too many dirty pages. Then there is chance in which .bi_size
->> is overflowed.
->>
->> Fixes this issue by using bio_full() to check if the added segment may
->> overflow .bi_size.
+On Mon, Jul 01, 2019 at 10:25:04PM +1000, Dave Chinner wrote:
+> On Fri, Jun 21, 2019 at 12:57:39PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Use the libxfs AG initialization functions to write out the new
+> > filesystem instead of open-coding everything.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> .....
+> > @@ -4087,8 +3770,16 @@ main(
+> >  	/*
+> >  	 * Initialise all the static on disk metadata.
+> >  	 */
+> > +	INIT_LIST_HEAD(&buffer_list);
+> >  	for (agno = 0; agno < cfg.agcount; agno++)
+> > -		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist);
+> > +		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist,
+> > +				&buffer_list);
+> > +
+> > +	if (libxfs_buf_delwri_submit(&buffer_list)) {
+> > +		fprintf(stderr, _("%s: writing AG headers failed\n"),
+> > +				progname);
+> > +		exit(1);
+> > +	}
 > 
-> Any objections to queuing this up for 5.3? It's not a new regression
-> this series.
+> The problem I came across with this "one big delwri list" construct
+> when adding delwri lists for batched AIO processing is that the
+> memory footprint for high AG count filesystems really blows out. Did
+> you check what happens when you create a filesystem with a few tens
+> of thousands of AGs? 
 
-I took a closer look, and applied for 5.3 and removed the stable tag.
-We'll need to apply your patch for stable, and I added an adapted
-one for 5.3. I don't want a huge merge hassle because of this.
+I did, and then amended this patch to delwri_submit every ~16 or so AGs.
 
--- 
-Jens Axboe
+:)
+
+I haven't resent the patch since I figure xfsprogs 5.3 is a ways off...
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
