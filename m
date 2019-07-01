@@ -1,86 +1,410 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44702 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726439AbfGAVz3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:55:29 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 05/15] iomap: move struct iomap_page to iomap.c
-Date: Mon,  1 Jul 2019 23:54:29 +0200
-Message-Id: <20190701215439.19162-6-hch@lst.de>
-In-Reply-To: <20190701215439.19162-1-hch@lst.de>
-References: <20190701215439.19162-1-hch@lst.de>
+Received: from aserp2120.oracle.com ([141.146.126.78]:59462 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727261AbfGARDC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:03:02 -0400
+Subject: [PATCH 08/11] iomap: move the page management code into a separate
+ file
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 01 Jul 2019 10:02:51 -0700
+Message-ID: <156200057155.1790352.957552724701420093.stgit@magnolia>
+In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-Now that all the writepage code is in the iomap code there is no
-need to keep this structure public.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Move the page management code into a separate file so that we can group
+related functions in a single file instead of having a single enormous
+source file.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c            | 17 +++++++++++++++++
- include/linux/iomap.h | 17 -----------------
- 2 files changed, 17 insertions(+), 17 deletions(-)
+ fs/iomap.c        |  164 -------------------------------------------------
+ fs/iomap/Makefile |    1 
+ fs/iomap/page.c   |  177 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 178 insertions(+), 164 deletions(-)
+ create mode 100644 fs/iomap/page.c
+
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index ea5b8e7c8903..63952a7b1c05 100644
+index f339fb5fde43..b946418cb8b4 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -100,6 +100,23 @@ iomap_sector(struct iomap *iomap, loff_t pos)
+@@ -97,131 +97,6 @@ iomap_sector(struct iomap *iomap, loff_t pos)
  	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
  }
  
-+/*
-+ * Structure allocate for each page when block size < PAGE_SIZE to track
-+ * sub-page uptodate status and I/O completions.
-+ */
-+struct iomap_page {
-+	atomic_t		read_count;
-+	atomic_t		write_count;
-+	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-+};
-+
-+static inline struct iomap_page *to_iomap_page(struct page *page)
-+{
-+	if (page_has_private(page))
-+		return (struct iomap_page *)page_private(page);
-+	return NULL;
-+}
-+
- static struct iomap_page *
- iomap_page_create(struct inode *inode, struct page *page)
- {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index f9fb716e60ab..a5f0565210a0 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -117,23 +117,6 @@ struct iomap_ops {
- 			ssize_t written, unsigned flags, struct iomap *iomap);
- };
- 
--/*
-- * Structure allocate for each page when block size < PAGE_SIZE to track
-- * sub-page uptodate status and I/O completions.
-- */
--struct iomap_page {
--	atomic_t		read_count;
--	atomic_t		write_count;
--	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
--};
--
--static inline struct iomap_page *to_iomap_page(struct page *page)
+-struct iomap_page *
+-iomap_page_create(struct inode *inode, struct page *page)
 -{
--	if (page_has_private(page))
--		return (struct iomap_page *)page_private(page);
--	return NULL;
+-	struct iomap_page *iop = to_iomap_page(page);
+-
+-	if (iop || i_blocksize(inode) == PAGE_SIZE)
+-		return iop;
+-
+-	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
+-	atomic_set(&iop->read_count, 0);
+-	atomic_set(&iop->write_count, 0);
+-	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
+-
+-	/*
+-	 * migrate_page_move_mapping() assumes that pages with private data have
+-	 * their count elevated by 1.
+-	 */
+-	get_page(page);
+-	set_page_private(page, (unsigned long)iop);
+-	SetPagePrivate(page);
+-	return iop;
 -}
 -
- ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- 		const struct iomap_ops *ops);
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
--- 
-2.20.1
+-static void
+-iomap_page_release(struct page *page)
+-{
+-	struct iomap_page *iop = to_iomap_page(page);
+-
+-	if (!iop)
+-		return;
+-	WARN_ON_ONCE(atomic_read(&iop->read_count));
+-	WARN_ON_ONCE(atomic_read(&iop->write_count));
+-	ClearPagePrivate(page);
+-	set_page_private(page, 0);
+-	put_page(page);
+-	kfree(iop);
+-}
+-
+-void
+-iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+-{
+-	struct iomap_page *iop = to_iomap_page(page);
+-	struct inode *inode = page->mapping->host;
+-	unsigned first = off >> inode->i_blkbits;
+-	unsigned last = (off + len - 1) >> inode->i_blkbits;
+-	unsigned int i;
+-	bool uptodate = true;
+-
+-	if (iop) {
+-		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
+-			if (i >= first && i <= last)
+-				set_bit(i, iop->uptodate);
+-			else if (!test_bit(i, iop->uptodate))
+-				uptodate = false;
+-		}
+-	}
+-
+-	if (uptodate && !PageError(page))
+-		SetPageUptodate(page);
+-}
+-
+-/*
+- * iomap_is_partially_uptodate checks whether blocks within a page are
+- * uptodate or not.
+- *
+- * Returns true if all blocks which correspond to a file portion
+- * we want to read within the page are uptodate.
+- */
+-int
+-iomap_is_partially_uptodate(struct page *page, unsigned long from,
+-		unsigned long count)
+-{
+-	struct iomap_page *iop = to_iomap_page(page);
+-	struct inode *inode = page->mapping->host;
+-	unsigned len, first, last;
+-	unsigned i;
+-
+-	/* Limit range to one page */
+-	len = min_t(unsigned, PAGE_SIZE - from, count);
+-
+-	/* First and last blocks in range within page */
+-	first = from >> inode->i_blkbits;
+-	last = (from + len - 1) >> inode->i_blkbits;
+-
+-	if (iop) {
+-		for (i = first; i <= last; i++)
+-			if (!test_bit(i, iop->uptodate))
+-				return 0;
+-		return 1;
+-	}
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
+-
+-int
+-iomap_releasepage(struct page *page, gfp_t gfp_mask)
+-{
+-	/*
+-	 * mm accommodates an old ext3 case where clean pages might not have had
+-	 * the dirty bit cleared. Thus, it can send actual dirty pages to
+-	 * ->releasepage() via shrink_active_list(), skip those here.
+-	 */
+-	if (PageDirty(page) || PageWriteback(page))
+-		return 0;
+-	iomap_page_release(page);
+-	return 1;
+-}
+-EXPORT_SYMBOL_GPL(iomap_releasepage);
+-
+-void
+-iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
+-{
+-	/*
+-	 * If we are invalidating the entire page, clear the dirty state from it
+-	 * and release it to avoid unnecessary buildup of the LRU.
+-	 */
+-	if (offset == 0 && len == PAGE_SIZE) {
+-		WARN_ON_ONCE(PageWriteback(page));
+-		cancel_dirty_page(page);
+-		iomap_page_release(page);
+-	}
+-}
+-EXPORT_SYMBOL_GPL(iomap_invalidatepage);
+-
+ #ifdef CONFIG_MIGRATION
+ int
+ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+@@ -250,42 +125,3 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+ }
+ EXPORT_SYMBOL_GPL(iomap_migrate_page);
+ #endif /* CONFIG_MIGRATION */
+-
+-int
+-iomap_set_page_dirty(struct page *page)
+-{
+-	struct address_space *mapping = page_mapping(page);
+-	int newly_dirty;
+-
+-	if (unlikely(!mapping))
+-		return !TestSetPageDirty(page);
+-
+-	/*
+-	 * Lock out page->mem_cgroup migration to keep PageDirty
+-	 * synchronized with per-memcg dirty page counters.
+-	 */
+-	lock_page_memcg(page);
+-	newly_dirty = !TestSetPageDirty(page);
+-	if (newly_dirty)
+-		__set_page_dirty(page, mapping, 0);
+-	unlock_page_memcg(page);
+-
+-	if (newly_dirty)
+-		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
+-	return newly_dirty;
+-}
+-EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
+-
+-int
+-iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+-		const struct iomap_ops *ops)
+-{
+-	unsigned int blocksize = i_blocksize(inode);
+-	unsigned int off = pos & (blocksize - 1);
+-
+-	/* Block boundary? Nothing to do */
+-	if (!off)
+-		return 0;
+-	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
+-}
+-EXPORT_SYMBOL_GPL(iomap_truncate_page);
+diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
+index 651bd66bfce7..754eea00ac79 100644
+--- a/fs/iomap/Makefile
++++ b/fs/iomap/Makefile
+@@ -11,6 +11,7 @@ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
+ iomap-y				+= \
+ 					direct-io.o \
+ 					fiemap.o \
++					page.o \
+ 					read.o \
+ 					seek.o \
+ 					write.o
+diff --git a/fs/iomap/page.c b/fs/iomap/page.c
+new file mode 100644
+index 000000000000..1de513d5b1f7
+--- /dev/null
++++ b/fs/iomap/page.c
+@@ -0,0 +1,177 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (C) 2010 Red Hat, Inc.
++ * Copyright (c) 2016-2018 Christoph Hellwig.
++ */
++#include <linux/module.h>
++#include <linux/compiler.h>
++#include <linux/fs.h>
++#include <linux/iomap.h>
++#include <linux/memcontrol.h>
++#include <linux/blkdev.h>
++
++#include "internal.h"
++
++struct iomap_page *
++iomap_page_create(struct inode *inode, struct page *page)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++
++	if (iop || i_blocksize(inode) == PAGE_SIZE)
++		return iop;
++
++	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
++	atomic_set(&iop->read_count, 0);
++	atomic_set(&iop->write_count, 0);
++	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
++
++	/*
++	 * migrate_page_move_mapping() assumes that pages with private data have
++	 * their count elevated by 1.
++	 */
++	get_page(page);
++	set_page_private(page, (unsigned long)iop);
++	SetPagePrivate(page);
++	return iop;
++}
++
++static void
++iomap_page_release(struct page *page)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++
++	if (!iop)
++		return;
++	WARN_ON_ONCE(atomic_read(&iop->read_count));
++	WARN_ON_ONCE(atomic_read(&iop->write_count));
++	ClearPagePrivate(page);
++	set_page_private(page, 0);
++	put_page(page);
++	kfree(iop);
++}
++
++void
++iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++	struct inode *inode = page->mapping->host;
++	unsigned first = off >> inode->i_blkbits;
++	unsigned last = (off + len - 1) >> inode->i_blkbits;
++	unsigned int i;
++	bool uptodate = true;
++
++	if (iop) {
++		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++			if (i >= first && i <= last)
++				set_bit(i, iop->uptodate);
++			else if (!test_bit(i, iop->uptodate))
++				uptodate = false;
++		}
++	}
++
++	if (uptodate && !PageError(page))
++		SetPageUptodate(page);
++}
++
++/*
++ * iomap_is_partially_uptodate checks whether blocks within a page are
++ * uptodate or not.
++ *
++ * Returns true if all blocks which correspond to a file portion
++ * we want to read within the page are uptodate.
++ */
++int
++iomap_is_partially_uptodate(struct page *page, unsigned long from,
++		unsigned long count)
++{
++	struct iomap_page *iop = to_iomap_page(page);
++	struct inode *inode = page->mapping->host;
++	unsigned len, first, last;
++	unsigned i;
++
++	/* Limit range to one page */
++	len = min_t(unsigned, PAGE_SIZE - from, count);
++
++	/* First and last blocks in range within page */
++	first = from >> inode->i_blkbits;
++	last = (from + len - 1) >> inode->i_blkbits;
++
++	if (iop) {
++		for (i = first; i <= last; i++)
++			if (!test_bit(i, iop->uptodate))
++				return 0;
++		return 1;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(iomap_is_partially_uptodate);
++
++int
++iomap_releasepage(struct page *page, gfp_t gfp_mask)
++{
++	/*
++	 * mm accommodates an old ext3 case where clean pages might not have had
++	 * the dirty bit cleared. Thus, it can send actual dirty pages to
++	 * ->releasepage() via shrink_active_list(), skip those here.
++	 */
++	if (PageDirty(page) || PageWriteback(page))
++		return 0;
++	iomap_page_release(page);
++	return 1;
++}
++EXPORT_SYMBOL_GPL(iomap_releasepage);
++
++void
++iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
++{
++	/*
++	 * If we are invalidating the entire page, clear the dirty state from it
++	 * and release it to avoid unnecessary buildup of the LRU.
++	 */
++	if (offset == 0 && len == PAGE_SIZE) {
++		WARN_ON_ONCE(PageWriteback(page));
++		cancel_dirty_page(page);
++		iomap_page_release(page);
++	}
++}
++EXPORT_SYMBOL_GPL(iomap_invalidatepage);
++
++int
++iomap_set_page_dirty(struct page *page)
++{
++	struct address_space *mapping = page_mapping(page);
++	int newly_dirty;
++
++	if (unlikely(!mapping))
++		return !TestSetPageDirty(page);
++
++	/*
++	 * Lock out page->mem_cgroup migration to keep PageDirty
++	 * synchronized with per-memcg dirty page counters.
++	 */
++	lock_page_memcg(page);
++	newly_dirty = !TestSetPageDirty(page);
++	if (newly_dirty)
++		__set_page_dirty(page, mapping, 0);
++	unlock_page_memcg(page);
++
++	if (newly_dirty)
++		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
++	return newly_dirty;
++}
++EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
++
++int
++iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
++		const struct iomap_ops *ops)
++{
++	unsigned int blocksize = i_blocksize(inode);
++	unsigned int off = pos & (blocksize - 1);
++
++	/* Block boundary? Nothing to do */
++	if (!off)
++		return 0;
++	return iomap_zero_range(inode, pos, blocksize - off, did_zero, ops);
++}
++EXPORT_SYMBOL_GPL(iomap_truncate_page);
