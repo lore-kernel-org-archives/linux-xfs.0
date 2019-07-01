@@ -1,78 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:38790 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727373AbfGAPpy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 11:45:54 -0400
-Date: Mon, 1 Jul 2019 08:42:00 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 4/4] vfs: don't allow most setxattr to immutable files
-Message-ID: <20190701154200.GK1404256@magnolia>
-References: <156174687561.1557469.7505651950825460767.stgit@magnolia>
- <156174690758.1557469.9258105121276292687.stgit@magnolia>
+Received: from ozlabs.org ([203.11.71.1]:47459 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727373AbfGAPtu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Jul 2019 11:49:50 -0400
+Date: Tue, 2 Jul 2019 01:49:44 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: Re: Adding some trees to linux-next?
+Message-ID: <20190702014944.79bd326a@canb.auug.org.au>
+In-Reply-To: <20190701153552.GJ1404256@magnolia>
+References: <20190701110603.5abcbb2c@canb.auug.org.au>
+        <20190701153552.GJ1404256@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156174690758.1557469.9258105121276292687.stgit@magnolia>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ boundary="Sig_/fev+fzqjHW.N7FIhhlClsrz"; protocol="application/pgp-signature"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
-Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+--Sig_/fev+fzqjHW.N7FIhhlClsrz
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-The chattr manpage has this to say about immutable files:
+Hi Darrick,
 
-"A file with the 'i' attribute cannot be modified: it cannot be deleted
-or renamed, no link can be created to this file, most of the file's
-metadata can not be modified, and the file can not be opened in write
-mode."
+On Mon, 1 Jul 2019 08:35:52 -0700 "Darrick J. Wong" <darrick.wong@oracle.co=
+m> wrote:
+>
+> Could you add my iomap-for-next and vfs-for-next branches to linux-next,
+> please?  They can be found here:
+>=20
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git#iomap-for-next
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git#vfs-for-next
+>=20
+> I've decided that trying to munge all that through the xfs for-next
+> branch is too much insanity and splitting them up will help me prevent
+> my head from falling off.
 
-However, we don't actually check the immutable flag in the setattr code,
-which means that we can update inode flags and project ids and extent
-size hints on supposedly immutable files.  Therefore, reject setflags
-and fssetxattr calls on an immutable file if the file is immutable and
-will remain that way.
+Added from today.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: use memcmp instead of open coding a bunch of checks
----
- fs/inode.c |   17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Thanks for adding your subsystem tree as a participant of linux-next.  As
+you may know, this is not a judgement of your code.  The purpose of
+linux-next is for integration testing and to lower the impact of
+conflicts between subsystems in the next merge window.=20
 
-diff --git a/fs/inode.c b/fs/inode.c
-index cf07378e5731..31f694e405fe 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -2214,6 +2214,14 @@ int vfs_ioc_setflags_prepare(struct inode *inode, unsigned int oldflags,
- 	    !capable(CAP_LINUX_IMMUTABLE))
- 		return -EPERM;
- 
-+	/*
-+	 * We aren't allowed to change any other flags if the immutable flag is
-+	 * already set and is not being unset.
-+	 */
-+	if ((oldflags & FS_IMMUTABLE_FL) && (flags & FS_IMMUTABLE_FL) &&
-+	    oldflags != flags)
-+		return -EPERM;
-+
- 	/*
- 	 * Now that we're done checking the new flags, flush all pending IO and
- 	 * dirty mappings before setting S_IMMUTABLE on an inode via
-@@ -2284,6 +2292,15 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
- 	    !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
- 		return -EINVAL;
- 
-+	/*
-+	 * We aren't allowed to change any fields if the immutable flag is
-+	 * already set and is not being unset.
-+	 */
-+	if ((old_fa->fsx_xflags & FS_XFLAG_IMMUTABLE) &&
-+	    (fa->fsx_xflags & FS_XFLAG_IMMUTABLE) &&
-+	    memcmp(fa, old_fa, offsetof(struct fsxattr, fsx_pad)))
-+		return -EPERM;
-+
- 	/* Extent size hints of zero turn off the flags. */
- 	if (fa->fsx_extsize == 0)
- 		fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
+You will need to ensure that the patches/commits in your tree/series have
+been:
+     * submitted under GPL v2 (or later) and include the Contributor's
+        Signed-off-by,
+     * posted to the relevant mailing list,
+     * reviewed by you (or another maintainer of your subsystem tree),
+     * successfully unit tested, and=20
+     * destined for the current or next Linux merge window.
+
+Basically, this should be just what you would send to Linus (or ask him
+to fetch).  It is allowed to be rebased if you deem it necessary.
+
+--=20
+Cheers,
+Stephen Rothwell=20
+sfr@canb.auug.org.au
+
+--Sig_/fev+fzqjHW.N7FIhhlClsrz
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl0aK5gACgkQAVBC80lX
+0GwmMQf8CnI5xnqYrX8x9t5LBtRJq5gPcLukCc+FjM8GkphUoE/T8Xa2yPMyxnGs
+6vpp/nGVX+UyYmvOkRbRNZfnIWY9WlBaXAfxK+If2jHjJy34Dmdm/yTu4WWgcCZu
+Ji+/GSpH02b9J/Zn4DuVYymLtVLEPFgaWEVjWxm5nbYMgwrq6b+wMKvn2ybPHuOU
+IDNFkRv33y1XN1o6m/AiMNK1J0ywcAJX3D4/qkUz4lAReQTPCZmWjAHbEBAVkOaL
+2tdJcV03DFORsoiIzxYqEX5Sict5+r4Dph2nw5ysVPJ8Mz8DrZrj8btjhGJcXUq8
+G+me/aG3McL+Js3NfdbaE/J25d8VqQ==
+=lykB
+-----END PGP SIGNATURE-----
+
+--Sig_/fev+fzqjHW.N7FIhhlClsrz--
