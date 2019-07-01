@@ -1,62 +1,84 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53402 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730024AbfGAR7O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:59:14 -0400
-Date: Mon, 1 Jul 2019 10:59:05 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH RFC 00/11] iomap: regroup code by functional area
-Message-ID: <20190701175905.GC1654093@magnolia>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
- <20190701174129.GA3315@mit.edu>
+Received: from bombadil.infradead.org ([198.137.202.133]:44778 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbfGAVz7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:55:59 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 09/15] gfs2: merge gfs2_writeback_aops and gfs2_ordered_aops
+Date: Mon,  1 Jul 2019 23:54:33 +0200
+Message-Id: <20190701215439.19162-10-hch@lst.de>
+In-Reply-To: <20190701215439.19162-1-hch@lst.de>
+References: <20190701215439.19162-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190701174129.GA3315@mit.edu>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
 
-On Mon, Jul 01, 2019 at 01:41:29PM -0400, Theodore Ts'o wrote:
-> On Mon, Jul 01, 2019 at 10:01:59AM -0700, Darrick J. Wong wrote:
-> > Note that this is not the final format of the patches, because I intend
-> > to pick a point towards the end of the merge window (after everyone
-> > else's merges have landed), rebase this series atop that, and push it
-> > back to Linus.
-> 
-> So normally Linus isn't psyched about pulling branches that were
-> rebased at the last minute.  I guess we could ask him ahead of time if
-> he's OK with this plan.  Or have you done that already?
+The only difference between the two is that gfs2_ordered_aops sets the
+set_page_dirty method to __set_page_dirty_buffers, but given that
+__set_page_dirty_buffers is the default if no method is set there is
+no need to to do that.  Merge the two sets of operations into one.
 
-I've not done so yet, since this is the first time this cleanup has been
-posted.  Assuming I don't hear any loud complaining from anyone, I was
-going to send the existing iomap 5.3 patches (all three of them) to
-Linus at the start of the merge window and let him know that I'd like
-to do the quick cleanup during the second week.  I've done tree cleanups
-this way before without hearing any complaints, though they've never
-gone outside the xfs tree.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/gfs2/aops.c | 28 +++-------------------------
+ 1 file changed, 3 insertions(+), 25 deletions(-)
 
-> Alternatively you could rebase this on top of v5.3-rc2, after the
-> merge window closes, and get agreement from the 4 file systems which
-> are currently iomap users: ext2, ext4, gfs2, and xfs to start their
-> development trees on top of that common branch for the 5.4 merge
-> window.  After all, it's just moving code around and there are no
-> substantive changes in this patch series, right?  So there's no rush
-> as I understand things for this to hit mainline.
-
-<shrug> I prefer to get this done quickly at the end of the 5.3 merge
-window to reduce the risk that I'll have to reconcile the cleanup with
-whatever iomap fixes land during -rc1 to -rc7.
-
-I don't know if you've been following the "lift xfs writeback to iomap"
-thread lately but I've also been thinking about putting out a work
-branch for 5.4 with the sample writeback code in fs/iomap/writeback.c
-to see if anyone bites, so we're likely to get such a tree anyway.
-
---D
-
-> Cheers,
-> 
-> 						- Ted
+diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
+index 3c58b40c93eb..3b3043332e5a 100644
+--- a/fs/gfs2/aops.c
++++ b/fs/gfs2/aops.c
+@@ -847,7 +847,7 @@ int gfs2_releasepage(struct page *page, gfp_t gfp_mask)
+ 	return 0;
+ }
+ 
+-static const struct address_space_operations gfs2_writeback_aops = {
++static const struct address_space_operations gfs2_aops = {
+ 	.writepage = gfs2_writepage,
+ 	.writepages = gfs2_writepages,
+ 	.readpage = gfs2_readpage,
+@@ -861,21 +861,6 @@ static const struct address_space_operations gfs2_writeback_aops = {
+ 	.error_remove_page = generic_error_remove_page,
+ };
+ 
+-static const struct address_space_operations gfs2_ordered_aops = {
+-	.writepage = gfs2_writepage,
+-	.writepages = gfs2_writepages,
+-	.readpage = gfs2_readpage,
+-	.readpages = gfs2_readpages,
+-	.set_page_dirty = __set_page_dirty_buffers,
+-	.bmap = gfs2_bmap,
+-	.invalidatepage = gfs2_invalidatepage,
+-	.releasepage = gfs2_releasepage,
+-	.direct_IO = noop_direct_IO,
+-	.migratepage = buffer_migrate_page,
+-	.is_partially_uptodate = block_is_partially_uptodate,
+-	.error_remove_page = generic_error_remove_page,
+-};
+-
+ static const struct address_space_operations gfs2_jdata_aops = {
+ 	.writepage = gfs2_jdata_writepage,
+ 	.writepages = gfs2_jdata_writepages,
+@@ -891,15 +876,8 @@ static const struct address_space_operations gfs2_jdata_aops = {
+ 
+ void gfs2_set_aops(struct inode *inode)
+ {
+-	struct gfs2_inode *ip = GFS2_I(inode);
+-	struct gfs2_sbd *sdp = GFS2_SB(inode);
+-
+-	if (gfs2_is_jdata(ip))
++	if (gfs2_is_jdata(GFS2_I(inode)))
+ 		inode->i_mapping->a_ops = &gfs2_jdata_aops;
+-	else if (gfs2_is_writeback(sdp))
+-		inode->i_mapping->a_ops = &gfs2_writeback_aops;
+-	else if (gfs2_is_ordered(sdp))
+-		inode->i_mapping->a_ops = &gfs2_ordered_aops;
+ 	else
+-		BUG();
++		inode->i_mapping->a_ops = &gfs2_aops;
+ }
+-- 
+2.20.1
