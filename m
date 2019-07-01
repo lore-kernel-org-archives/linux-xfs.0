@@ -1,58 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:34540 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728053AbfGAPvv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 11:51:51 -0400
-Date: Mon, 1 Jul 2019 08:49:44 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:54216 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727381AbfGAQHA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 12:07:00 -0400
+Date: Mon, 1 Jul 2019 09:06:56 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: Adding some trees to linux-next?
-Message-ID: <20190701154944.GL1404256@magnolia>
-References: <20190701110603.5abcbb2c@canb.auug.org.au>
- <20190701153552.GJ1404256@magnolia>
- <20190702014210.1c95f9f1@canb.auug.org.au>
+Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to 36a7347de097
+Message-ID: <20190701160656.GM1404256@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190702014210.1c95f9f1@canb.auug.org.au>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-xfs@vger.kernel.org, Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Tue, Jul 02, 2019 at 01:42:10AM +1000, Stephen Rothwell wrote:
-> Hi Darrick,
-> 
-> On Mon, 1 Jul 2019 08:35:52 -0700 "Darrick J. Wong" <darrick.wong@oracle.com> wrote:
-> >
-> > Could you add my iomap-for-next and vfs-for-next branches to linux-next,
-> > please?  They can be found here:
-> > 
-> > git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git#iomap-for-next
-> > git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git#vfs-for-next
-> > 
-> > I've decided that trying to munge all that through the xfs for-next
-> > branch is too much insanity and splitting them up will help me prevent
-> > my head from falling off.
-> 
-> Just out of interest, do you intend to send these directly to Linus, or
-> via another tree?
+Hi folks,
 
-The iomap stuff I'd definitely send directly to Linus.
+The iomap-for-next branch of the xfs-linux repository at:
 
-For vfs stuff, it depends.  For work in the core vfs I'll probably just
-keep sending patches through Al, but for treewide things like ioctl
-cleanups I suspect it'll be easier to let them soak in -next and then
-send them directly.
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-I also dropped the f2fs parts of the setflags/fssetxattr patches because
-while I think your fix from yesterday's for-next is correct, I prefer to
-let Eric Biggers' cleanup land through the f2fs tree before I try to
-clean up f2fs again.  There shouldn't be any harm in letting that lag a
-little while longer.
+has just been updated.
 
---D
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-fsdevel@vger.kernel.org so they can be picked up
+in the next update.
 
-> -- 
-> Cheers,
-> Stephen Rothwell
+The new head of the iomap-for-next branch is commit:
+
+36a7347de097 iomap: fix page_done callback for short writes
+
+New Commits:
+
+Andreas Gruenbacher (2):
+      [8d3e72a180b4] iomap: don't mark the inode dirty in iomap_write_end
+      [36a7347de097] iomap: fix page_done callback for short writes
+
+Christoph Hellwig (1):
+      [8af54f291e5c] fs: fold __generic_write_end back into generic_write_end
+
+
+Code Diffstat:
+
+ fs/buffer.c           | 62 ++++++++++++++++++++++++---------------------------
+ fs/gfs2/bmap.c        |  2 ++
+ fs/internal.h         |  2 --
+ fs/iomap.c            | 17 ++++++++++++--
+ include/linux/iomap.h |  1 +
+ 5 files changed, 47 insertions(+), 37 deletions(-)
