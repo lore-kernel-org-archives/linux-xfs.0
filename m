@@ -1,182 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:41296 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729518AbfGARDT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:03:19 -0400
-Subject: [PATCH 11/11] iomap: move internal declarations into fs/iomap/
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Jul 2019 10:03:12 -0700
-Message-ID: <156200059214.1790352.12180565717959385551.stgit@magnolia>
-In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+Received: from mail-wm1-f68.google.com ([209.85.128.68]:35233 "EHLO
+        mail-wm1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728592AbfGARU7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:20:59 -0400
+Received: by mail-wm1-f68.google.com with SMTP id c6so359275wml.0
+        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2019 10:20:57 -0700 (PDT)
+Subject: Re: [PATCH v6 0/4] vfs: make immutable files actually immutable
+References: <156174687561.1557469.7505651950825460767.stgit@magnolia>
+From: Boaz Harrosh <boaz@plexistor.com>
+Message-ID: <72f01c73-a1eb-efde-58fa-7667221255c7@plexistor.com>
+Date: Mon, 1 Jul 2019 20:20:51 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+In-Reply-To: <156174687561.1557469.7505651950825460767.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-MW
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, matthew.garrett@nebula.com, yuchao0@huawei.com, tytso@mit.edu, ard.biesheuvel@linaro.org, josef@toxicpanda.com, hch@infradead.org, clm@fb.com, adilger.kernel@dilger.ca, viro@zeniv.linux.org.uk, jack@suse.com, dsterba@suse.com, jaegeuk@kernel.org, jk@ozlabs.org
+Cc: reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org, linux-btrfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 28/06/2019 21:34, Darrick J. Wong wrote:
+> Hi all,
+> 
+> The chattr(1) manpage has this to say about the immutable bit that
+> system administrators can set on files:
+> 
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+> 
+> Given the clause about how the file 'cannot be modified', it is
+> surprising that programs holding writable file descriptors can continue
+> to write to and truncate files after the immutable flag has been set,
+> but they cannot call other things such as utimes, fallocate, unlink,
+> link, setxattr, or reflink.
+> 
+> Since the immutable flag is only settable by administrators, resolve
+> this inconsistent behavior in favor of the documented behavior -- once
+> the flag is set, the file cannot be modified, period.  We presume that
+> administrators must be trusted to know what they're doing, and that
+> cutting off programs with writable fds will probably break them.
+> 
 
-Move internal function declarations out of fs/internal.h into
-fs/iomap/iomap_internal.h so that our transition is complete.
+This effort sounds very logical to me and sound. But are we allowed to
+do it? IE: Is it not breaking ABI. I do agree previous ABI was evil but
+are we allowed to break it?
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/dax.c                  |    2 +-
- fs/internal.h             |   10 ----------
- fs/iomap/fiemap.c         |    2 +-
- fs/iomap/iomap.c          |    1 -
- fs/iomap/iomap_internal.h |   10 ++++++++++
- fs/iomap/migrate.c        |    1 -
- fs/iomap/page.c           |    2 +-
- fs/iomap/read.c           |    1 -
- fs/iomap/seek.c           |    2 +-
- fs/iomap/swapfile.c       |    2 +-
- 10 files changed, 15 insertions(+), 18 deletions(-)
+I would not mind breaking it if %99.99 of the time the immutable bit
+was actually set manually by a human administrator. But what if there
+are automated systems that set it relying on the current behaviour?
 
+For example I have a very distant and vague recollection of a massive
+camera capture system, that was DMAing directly to file (splice). And setting
+the immutable bit right away on start. Then once the capture is done
+(capture file recycled) the file becomes immutable. Such program is now
+broken. Who's fault is it?
 
-diff --git a/fs/dax.c b/fs/dax.c
-index 2e48c7ebb973..86f4138c5695 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -26,7 +26,7 @@
- #include <linux/mmu_notifier.h>
- #include <linux/iomap.h>
- #include <asm/pgalloc.h>
--#include "internal.h"
-+#include "iomap/iomap_internal.h"
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/fs_dax.h>
-diff --git a/fs/internal.h b/fs/internal.h
-index 2f3c3de51fad..2b0bebd67904 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -182,15 +182,5 @@ extern const struct dentry_operations ns_dentry_operations;
- extern int do_vfs_ioctl(struct file *file, unsigned int fd, unsigned int cmd,
- 		    unsigned long arg);
- 
--/*
-- * iomap support:
-- */
--typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
--		void *data, struct iomap *iomap);
--
--loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
--		unsigned flags, const struct iomap_ops *ops, void *data,
--		iomap_actor_t actor);
--
- /* direct-io.c: */
- int sb_init_dio_done_wq(struct super_block *sb);
-diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
-index 42ed9ef56699..4616e7fdbf0e 100644
---- a/fs/iomap/fiemap.c
-+++ b/fs/iomap/fiemap.c
-@@ -8,7 +8,7 @@
- #include <linux/fs.h>
- #include <linux/iomap.h>
- 
--#include "internal.h"
-+#include "iomap_internal.h"
- 
- struct fiemap_ctx {
- 	struct fiemap_extent_info *fi;
-diff --git a/fs/iomap/iomap.c b/fs/iomap/iomap.c
-index bdaa6d07b354..8d31daf7e696 100644
---- a/fs/iomap/iomap.c
-+++ b/fs/iomap/iomap.c
-@@ -9,7 +9,6 @@
- #include <linux/iomap.h>
- #include <linux/blkdev.h>
- 
--#include "internal.h"
- #include "iomap_internal.h"
- 
- /*
-diff --git a/fs/iomap/iomap_internal.h b/fs/iomap/iomap_internal.h
-index defaa4d4b9e6..cee558386955 100644
---- a/fs/iomap/iomap_internal.h
-+++ b/fs/iomap/iomap_internal.h
-@@ -6,6 +6,16 @@
- #ifndef _IOMAP_INTERNAL_H_
- #define _IOMAP_INTERNAL_H_
- 
-+/*
-+ * iomap support:
-+ */
-+typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-+		void *data, struct iomap *iomap);
-+
-+loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
-+		unsigned flags, const struct iomap_ops *ops, void *data,
-+		iomap_actor_t actor);
-+
- sector_t iomap_sector(struct iomap *iomap, loff_t pos);
- void iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len);
- struct iomap_page *iomap_page_create(struct inode *inode, struct page *page);
-diff --git a/fs/iomap/migrate.c b/fs/iomap/migrate.c
-index 5fd58a868c80..a25874700f95 100644
---- a/fs/iomap/migrate.c
-+++ b/fs/iomap/migrate.c
-@@ -9,7 +9,6 @@
- #include <linux/iomap.h>
- #include <linux/migrate.h>
- 
--#include "internal.h"
- #include "iomap_internal.h"
- 
- int
-diff --git a/fs/iomap/page.c b/fs/iomap/page.c
-index 1de513d5b1f7..0c18a88f4366 100644
---- a/fs/iomap/page.c
-+++ b/fs/iomap/page.c
-@@ -10,7 +10,7 @@
- #include <linux/memcontrol.h>
- #include <linux/blkdev.h>
- 
--#include "internal.h"
-+#include "iomap_internal.h"
- 
- struct iomap_page *
- iomap_page_create(struct inode *inode, struct page *page)
-diff --git a/fs/iomap/read.c b/fs/iomap/read.c
-index 237516d0af8b..117626cd7ead 100644
---- a/fs/iomap/read.c
-+++ b/fs/iomap/read.c
-@@ -11,7 +11,6 @@
- #include <linux/pagemap.h>
- #include <linux/blkdev.h>
- 
--#include "internal.h"
- #include "iomap_internal.h"
- 
- /*
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index 0c36bef46522..4d2e6b668a9a 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -10,7 +10,7 @@
- #include <linux/pagemap.h>
- #include <linux/pagevec.h>
- 
--#include "internal.h"
-+#include "iomap_internal.h"
- 
- /*
-  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-index 4ca214d1e88d..543bb6e90a39 100644
---- a/fs/iomap/swapfile.c
-+++ b/fs/iomap/swapfile.c
-@@ -9,7 +9,7 @@
- #include <linux/iomap.h>
- #include <linux/swap.h>
- 
--#include "internal.h"
-+#include "iomap_internal.h"
- 
- /* Swapfile activation */
- 
+I'm totally not sure and maybe you are right. But have you made a
+survey of the majority of immutable uses, and are positive that
+the guys are not broken after this change?
+
+For me this is kind of scary. Yes I am known to be a SW coward ;-)
+
+Thanks
+Boaz
