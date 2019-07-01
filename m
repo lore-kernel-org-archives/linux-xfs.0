@@ -1,42 +1,38 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:44836 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:47506 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726439AbfGAV4U (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:56:20 -0400
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/15] gfs2: use iomap_bmap instead of generic_block_bmap
-Date: Mon,  1 Jul 2019 23:54:36 +0200
-Message-Id: <20190701215439.19162-13-hch@lst.de>
-In-Reply-To: <20190701215439.19162-1-hch@lst.de>
-References: <20190701215439.19162-1-hch@lst.de>
+        with ESMTP id S1727280AbfGAGI6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 02:08:58 -0400
+Date: Sun, 30 Jun 2019 23:08:47 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
+Message-ID: <20190701060847.GA24797@infradead.org>
+References: <20190629073020.22759-1-yuchao0@huawei.com>
+ <20190630231932.GI1404256@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190630231932.GI1404256@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Chao Yu <yuchao0@huawei.com>, hch@infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, gaoxiang25@huawei.com, chao@kernel.org, Andreas Gruenbacher <agruenba@redhat.com>
 
-No need to indirect through get_blocks and buffer_heads when we can
-just use the iomap version.
+On Sun, Jun 30, 2019 at 04:19:32PM -0700, Darrick J. Wong wrote:
+> On Sat, Jun 29, 2019 at 03:30:20PM +0800, Chao Yu wrote:
+> > Some filesystems like erofs/reiserfs have the ability to pack tail
+> > data into metadata, however iomap framework can only support mapping
+> > inline data with IOMAP_INLINE type, it restricts that:
+> > - inline data should be locating at page #0.
+> > - inline size should equal to .i_size
+> 
+> Wouldn't it be easier simply to fix the meaning of IOMAP_INLINE so that
+> it can be used at something other than offset 0 and length == isize?
+> IOWs, make it mean "use the *inline_data pointer to read/write data
+> as a direct memory access"?
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/gfs2/aops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/gfs2/aops.c b/fs/gfs2/aops.c
-index 030210f1430b..15a234fb8f88 100644
---- a/fs/gfs2/aops.c
-+++ b/fs/gfs2/aops.c
-@@ -697,7 +697,7 @@ static sector_t gfs2_bmap(struct address_space *mapping, sector_t lblock)
- 		return 0;
- 
- 	if (!gfs2_is_stuffed(ip))
--		dblock = generic_block_bmap(mapping, lblock, gfs2_block_map);
-+		dblock = iomap_bmap(mapping, lblock, &gfs2_iomap_ops);
- 
- 	gfs2_glock_dq_uninit(&i_gh);
- 
--- 
-2.20.1
+Yes.  I vaguely remember Andreas pointed out some issues with a
+general scheme, which is why we put the limits in.  If that is not just
+me making things up we'll need to address them.  Either way just copy
+and pasting code isn't very helpful.
