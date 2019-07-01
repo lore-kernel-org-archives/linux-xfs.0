@@ -1,153 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:8246 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727387AbfGAKHm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Jul 2019 06:07:42 -0400
-Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
-References: <20190629073020.22759-1-yuchao0@huawei.com>
- <afda5702-1d88-7634-d943-0c413ae3b28f@huawei.com>
- <a27e3502-db75-22fa-4545-e588abbbfbf2@huawei.com>
- <58511d64-aa7a-8ac2-0255-affe0e8d49de@huawei.com>
- <CAHpGcMK4ihE1nv7ME0yKKUdBj+Rdr9nBMnxAtQfFFOmK9aEY_A@mail.gmail.com>
-From: Chao Yu <yuchao0@huawei.com>
-Message-ID: <aa64b0cf-94e8-aa23-9271-66c7b506abc2@huawei.com>
-Date: Mon, 1 Jul 2019 18:07:28 +0800
+Received: from mail-io1-f65.google.com ([209.85.166.65]:46114 "EHLO
+        mail-io1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727707AbfGAKOC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 06:14:02 -0400
 MIME-Version: 1.0
-In-Reply-To: <CAHpGcMK4ihE1nv7ME0yKKUdBj+Rdr9nBMnxAtQfFFOmK9aEY_A@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <20190629073020.22759-1-yuchao0@huawei.com> <afda5702-1d88-7634-d943-0c413ae3b28f@huawei.com>
+ <a27e3502-db75-22fa-4545-e588abbbfbf2@huawei.com> <58511d64-aa7a-8ac2-0255-affe0e8d49de@huawei.com>
+ <CAHpGcMK4ihE1nv7ME0yKKUdBj+Rdr9nBMnxAtQfFFOmK9aEY_A@mail.gmail.com> <aa64b0cf-94e8-aa23-9271-66c7b506abc2@huawei.com>
+In-Reply-To: <aa64b0cf-94e8-aa23-9271-66c7b506abc2@huawei.com>
+From: =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date: Mon, 1 Jul 2019 12:13:50 +0200
+Message-ID: <CAHpGcMJHYkHN65jLG_CxWf1Ei6MxdUORu61jZ3_ERPmxsu6A0Q@mail.gmail.com>
+Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?Q?Andreas_Gr=c3=bcnbacher?= <andreas.gruenbacher@gmail.com>, Gao Xiang <gaoxiang25@huawei.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, chao@kernel.org
+To: Chao Yu <yuchao0@huawei.com>
+Cc: Gao Xiang <gaoxiang25@huawei.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, chao@kernel.org
 
-On 2019/7/1 17:49, Andreas Grünbacher wrote:
-> Am Mo., 1. Juli 2019 um 10:04 Uhr schrieb Gao Xiang <gaoxiang25@huawei.com>:
->> On 2019/7/1 14:40, Chao Yu wrote:
->>> Hi Xiang,
->>>
->>> On 2019/6/29 17:34, Gao Xiang wrote:
->>>> Hi Chao,
->>>>
->>>> On 2019/6/29 15:30, Chao Yu wrote:
->>>>> Some filesystems like erofs/reiserfs have the ability to pack tail
->>>>> data into metadata, however iomap framework can only support mapping
->>>>> inline data with IOMAP_INLINE type, it restricts that:
->>>>> - inline data should be locating at page #0.
->>>>> - inline size should equal to .i_size
->>>>> So we can not use IOMAP_INLINE to handle tail-packing case.
->>>>>
->>>>> This patch introduces new mapping type IOMAP_TAIL to map tail-packed
->>>>> data for further use of erofs.
->>>>>
->>>>> Signed-off-by: Chao Yu <yuchao0@huawei.com>
->>>>> ---
->>>>>  fs/iomap.c            | 22 ++++++++++++++++++++++
->>>>>  include/linux/iomap.h |  1 +
->>>>>  2 files changed, 23 insertions(+)
->>>>>
->>>>> diff --git a/fs/iomap.c b/fs/iomap.c
->>>>> index 12654c2e78f8..ae7777ce77d0 100644
->>>>> --- a/fs/iomap.c
->>>>> +++ b/fs/iomap.c
->>>>> @@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
->>>>>     SetPageUptodate(page);
->>>>>  }
->>>>>
->>>>> +static void
->>>>> +iomap_read_tail_data(struct inode *inode, struct page *page,
->>>>> +           struct iomap *iomap)
->>>>> +{
->>>>> +   size_t size = i_size_read(inode) & (PAGE_SIZE - 1);
->>>>> +   void *addr;
->>>>> +
->>>>> +   if (PageUptodate(page))
->>>>> +           return;
->>>>> +
->>>>> +   addr = kmap_atomic(page);
->>>>> +   memcpy(addr, iomap->inline_data, size);
->>>>> +   memset(addr + size, 0, PAGE_SIZE - size);
->>>>
->>>> need flush_dcache_page(page) here for new page cache page since
->>>> it's generic iomap code (althrough not necessary for x86, arm), I am not sure...
->>>> see commit d2b2c6dd227b and c01778001a4f...
->>>
->>> Thanks for your reminding, these all codes were copied from
->>> iomap_read_inline_data(), so I think we need a separated patch to fix this issue
->>> if necessary.
->>
->> Yes, just a reminder, it is good as it-is.
-> 
-> Not sure if that means that IOMAP_INLINE as is works for you now. In
-> any case, if the inline data isn't transparently copied into the page
-> cache at index 0, memory-mapped I/O isn't going to work.
-> 
-> The code further assumes that "packed" files consist of exactly one
-> IOMAP_INLINE mapping; no IOMAP_MAPPED or other mappings may follow. Is
-> it that assumption that's causing you trouble? If so, what's the
+Am Mo., 1. Juli 2019 um 12:09 Uhr schrieb Chao Yu <yuchao0@huawei.com>:
+> On 2019/7/1 17:49, Andreas Gr=C3=BCnbacher wrote:
+> > Am Mo., 1. Juli 2019 um 10:04 Uhr schrieb Gao Xiang <gaoxiang25@huawei.=
+com>:
+> >> On 2019/7/1 14:40, Chao Yu wrote:
+> >>> Hi Xiang,
+> >>>
+> >>> On 2019/6/29 17:34, Gao Xiang wrote:
+> >>>> Hi Chao,
+> >>>>
+> >>>> On 2019/6/29 15:30, Chao Yu wrote:
+> >>>>> Some filesystems like erofs/reiserfs have the ability to pack tail
+> >>>>> data into metadata, however iomap framework can only support mappin=
+g
+> >>>>> inline data with IOMAP_INLINE type, it restricts that:
+> >>>>> - inline data should be locating at page #0.
+> >>>>> - inline size should equal to .i_size
+> >>>>> So we can not use IOMAP_INLINE to handle tail-packing case.
+> >>>>>
+> >>>>> This patch introduces new mapping type IOMAP_TAIL to map tail-packe=
+d
+> >>>>> data for further use of erofs.
+> >>>>>
+> >>>>> Signed-off-by: Chao Yu <yuchao0@huawei.com>
+> >>>>> ---
+> >>>>>  fs/iomap.c            | 22 ++++++++++++++++++++++
+> >>>>>  include/linux/iomap.h |  1 +
+> >>>>>  2 files changed, 23 insertions(+)
+> >>>>>
+> >>>>> diff --git a/fs/iomap.c b/fs/iomap.c
+> >>>>> index 12654c2e78f8..ae7777ce77d0 100644
+> >>>>> --- a/fs/iomap.c
+> >>>>> +++ b/fs/iomap.c
+> >>>>> @@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, st=
+ruct page *page,
+> >>>>>     SetPageUptodate(page);
+> >>>>>  }
+> >>>>>
+> >>>>> +static void
+> >>>>> +iomap_read_tail_data(struct inode *inode, struct page *page,
+> >>>>> +           struct iomap *iomap)
+> >>>>> +{
+> >>>>> +   size_t size =3D i_size_read(inode) & (PAGE_SIZE - 1);
+> >>>>> +   void *addr;
+> >>>>> +
+> >>>>> +   if (PageUptodate(page))
+> >>>>> +           return;
+> >>>>> +
+> >>>>> +   addr =3D kmap_atomic(page);
+> >>>>> +   memcpy(addr, iomap->inline_data, size);
+> >>>>> +   memset(addr + size, 0, PAGE_SIZE - size);
+> >>>>
+> >>>> need flush_dcache_page(page) here for new page cache page since
+> >>>> it's generic iomap code (althrough not necessary for x86, arm), I am=
+ not sure...
+> >>>> see commit d2b2c6dd227b and c01778001a4f...
+> >>>
+> >>> Thanks for your reminding, these all codes were copied from
+> >>> iomap_read_inline_data(), so I think we need a separated patch to fix=
+ this issue
+> >>> if necessary.
+> >>
+> >> Yes, just a reminder, it is good as it-is.
+> >
+> > Not sure if that means that IOMAP_INLINE as is works for you now. In
+> > any case, if the inline data isn't transparently copied into the page
+> > cache at index 0, memory-mapped I/O isn't going to work.
+> >
+> > The code further assumes that "packed" files consist of exactly one
+> > IOMAP_INLINE mapping; no IOMAP_MAPPED or other mappings may follow. Is
+> > it that assumption that's causing you trouble? If so, what's the
+>
+> Yes, that's the problem we met.
+>
+> > layout at the filesystem level you want to support?
+>
+> The layout which can support tail-merge one, it means if the data locatin=
+g at
+> the tail of file has small enough size, we can inline the tail data into
+> metadata area. e.g.:
+>
+> IOMAP_MAPPED [0, 8192]
+> IOMAP_INLINE (or maybe IOMAP_TAIL) [8192, 8200]
 
-Yes, that's the problem we met.
-
-> layout at the filesystem level you want to support?
-
-The layout which can support tail-merge one, it means if the data locating at
-the tail of file has small enough size, we can inline the tail data into
-metadata area. e.g.:
-
-IOMAP_MAPPED [0, 8192]
-IOMAP_INLINE (or maybe IOMAP_TAIL) [8192, 8200]
+Ah, now I see. Let's generalize the IOMAP_INLINE code to support that
+and rename it to IOMAP_TAIL then.
 
 Thanks,
-
-> 
-> Thanks,
-> Andreas
-> 
->> Thanks,
->> Gao Xiang
->>
->>>
->>> Thanks,
->>>
->>>>
->>>> Thanks,
->>>> Gao Xiang
->>>>
->>>>> +   kunmap_atomic(addr);
->>>>> +   SetPageUptodate(page);
->>>>> +}
->>>>> +
->>>>>  static loff_t
->>>>>  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->>>>>             struct iomap *iomap)
->>>>> @@ -298,6 +315,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->>>>>             return PAGE_SIZE;
->>>>>     }
->>>>>
->>>>> +   if (iomap->type == IOMAP_TAIL) {
->>>>> +           iomap_read_tail_data(inode, page, iomap);
->>>>> +           return PAGE_SIZE;
->>>>> +   }
->>>>> +
->>>>>     /* zero post-eof blocks as the page may be mapped */
->>>>>     iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
->>>>>     if (plen == 0)
->>>>> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
->>>>> index 2103b94cb1bf..7e1ee48e3db7 100644
->>>>> --- a/include/linux/iomap.h
->>>>> +++ b/include/linux/iomap.h
->>>>> @@ -25,6 +25,7 @@ struct vm_fault;
->>>>>  #define IOMAP_MAPPED       0x03    /* blocks allocated at @addr */
->>>>>  #define IOMAP_UNWRITTEN    0x04    /* blocks allocated at @addr in unwritten state */
->>>>>  #define IOMAP_INLINE       0x05    /* data inline in the inode */
->>>>> +#define IOMAP_TAIL 0x06    /* tail data packed in metdata */
->>>>>
->>>>>  /*
->>>>>   * Flags for all iomap mappings:
->>>>>
->>>> .
->>>>
-> .
-> 
+Andreas
