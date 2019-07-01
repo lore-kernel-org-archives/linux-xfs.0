@@ -1,129 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:59562 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729822AbfGARDH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:03:07 -0400
-Subject: [PATCH 09/11] iomap: move the page migration code into a separate
- file
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Jul 2019 10:02:59 -0700
-Message-ID: <156200057959.1790352.8764969968089533689.stgit@magnolia>
-In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54707 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726486AbfGAXKp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 19:10:45 -0400
+Date: Tue, 2 Jul 2019 09:09:32 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 11/12] iomap: move the xfs writeback code to iomap.c
+Message-ID: <20190701230932.GN7777@dread.disaster.area>
+References: <20190624055253.31183-1-hch@lst.de>
+ <20190624055253.31183-12-hch@lst.de>
+ <20190624234304.GD7777@dread.disaster.area>
+ <20190625101020.GI1462@lst.de>
+ <20190628004542.GJ7777@dread.disaster.area>
+ <20190628053320.GA26902@lst.de>
+ <20190701000859.GL7777@dread.disaster.area>
+ <20190701064333.GA20778@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190701064333.GA20778@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jul 01, 2019 at 08:43:33AM +0200, Christoph Hellwig wrote:
+> On Mon, Jul 01, 2019 at 10:08:59AM +1000, Dave Chinner wrote:
+> > > Why do you assume you have to test it?  Back when we shared
+> > > generic_file_read with everyone you also didn't test odd change to
+> > > it with every possible fs.
+> > 
+> > I'm not sure what function you are referring to here. Can you
+> > clarify?
+> 
+> Right now it is generic_file_read_iter(), but before iter it was
+> generic_file_readv, generic_file_read, etc.
 
-Move the page migration code into a separate file so that we can group
-related functions in a single file instead of having a single enormous
-source file.
+This generic code never came from XFS, so I'm still not sure what
+you are refering to here? Some pointers to commits would help me
+remember. :/
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/iomap.c         |   29 -----------------------------
- fs/iomap/Makefile  |    1 +
- fs/iomap/migrate.c |   40 ++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 41 insertions(+), 29 deletions(-)
- create mode 100644 fs/iomap/migrate.c
+> > > If you change iomap.c, you'll test it
+> > > with XFS, and Cc other maintainers so that they get a chance to
+> > > also test it and comment on it, just like we do with other shared
+> > > code in the kernel.
+> > 
+> > Which is why we've had problems with the generic code paths in the
+> > past and other filesystems just copy and paste then before making
+> > signficant modifications. e.g. both ext4 and btrfs re-implement
+> > write_cache_pages() rather than use the generic writeback code
+> > because they have slightly different requirements and those
+> > developers don't want to have to worry about other filesystems every
+> > time there is an internal filesystem change that affects their
+> > writeback constraints...
+> > 
+> > That's kinda what I'm getting at here: writeback isn't being shared
+> > by any of the major filesystems for good reasons...
+> 
+> I very fundamentally disagree.  It is not shared for a bad reasons,
+> and that is people not understanding the mess that the buffer head
+> based code is, and not wanting to understand it. 
 
+The problem with heavily shared code is that it requires far more
+expertise, knowledge, capability and time to modify it. The code
+essentially ossifies, because changing something fundamental risks
+breaking other stuff that nobody actually understands anymore and is
+unwilling to risk changing.
 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index b946418cb8b4..885e2021b4d0 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -96,32 +96,3 @@ iomap_sector(struct iomap *iomap, loff_t pos)
- {
- 	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
- }
--
--#ifdef CONFIG_MIGRATION
--int
--iomap_migrate_page(struct address_space *mapping, struct page *newpage,
--		struct page *page, enum migrate_mode mode)
--{
--	int ret;
--
--	ret = migrate_page_move_mapping(mapping, newpage, page, mode, 0);
--	if (ret != MIGRATEPAGE_SUCCESS)
--		return ret;
--
--	if (page_has_private(page)) {
--		ClearPagePrivate(page);
--		get_page(newpage);
--		set_page_private(newpage, page_private(page));
--		set_page_private(page, 0);
--		put_page(page);
--		SetPagePrivate(newpage);
--	}
--
--	if (mode != MIGRATE_SYNC_NO_COPY)
--		migrate_page_copy(newpage, page);
--	else
--		migrate_page_states(newpage, page);
--	return MIGRATEPAGE_SUCCESS;
--}
--EXPORT_SYMBOL_GPL(iomap_migrate_page);
--#endif /* CONFIG_MIGRATION */
-diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-index 754eea00ac79..c88888795e12 100644
---- a/fs/iomap/Makefile
-+++ b/fs/iomap/Makefile
-@@ -16,4 +16,5 @@ iomap-y				+= \
- 					seek.o \
- 					write.o
- 
-+iomap-$(CONFIG_MIGRATION)	+= migrate.o
- iomap-$(CONFIG_SWAP)		+= swapfile.o
-diff --git a/fs/iomap/migrate.c b/fs/iomap/migrate.c
-new file mode 100644
-index 000000000000..5fd58a868c80
---- /dev/null
-+++ b/fs/iomap/migrate.c
-@@ -0,0 +1,40 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (C) 2010 Red Hat, Inc.
-+ * Copyright (c) 2016-2018 Christoph Hellwig.
-+ */
-+#include <linux/module.h>
-+#include <linux/compiler.h>
-+#include <linux/fs.h>
-+#include <linux/iomap.h>
-+#include <linux/migrate.h>
-+
-+#include "internal.h"
-+#include "iomap_internal.h"
-+
-+int
-+iomap_migrate_page(struct address_space *mapping, struct page *newpage,
-+		struct page *page, enum migrate_mode mode)
-+{
-+	int ret;
-+
-+	ret = migrate_page_move_mapping(mapping, newpage, page, mode, 0);
-+	if (ret != MIGRATEPAGE_SUCCESS)
-+		return ret;
-+
-+	if (page_has_private(page)) {
-+		ClearPagePrivate(page);
-+		get_page(newpage);
-+		set_page_private(newpage, page_private(page));
-+		set_page_private(page, 0);
-+		put_page(page);
-+		SetPagePrivate(newpage);
-+	}
-+
-+	if (mode != MIGRATE_SYNC_NO_COPY)
-+		migrate_page_copy(newpage, page);
-+	else
-+		migrate_page_states(newpage, page);
-+	return MIGRATEPAGE_SUCCESS;
-+}
-+EXPORT_SYMBOL_GPL(iomap_migrate_page);
+That's not a problem with bufferheads - that's a problem of widely
+shared code that has been slowly hacked to pieces to "fix' random
+problems that show up from different users of the shared code.
+
+When the shared code ossifies like this, the only way to make
+progress is to either copy it and do whatever you need privately,
+or re-implement it completely. ext4 and btrfs have taken the route
+of "copy and modify privately", whereas XFS has taken the
+"re-implement it completely" path.
+
+We're now starting down the "share the XFS re-implementation" and
+we're slowly adding more complexity to the iomap code to handle the
+different things each filesystem that is converted needs. With each
+new fs adding their own little quirks, it gets harder to make
+significant modifications without unknowingly breaking something in
+some other filesystem.
+
+It takes highly capable developers to make serious modifications
+across highly shared code and the reality is that there are very few
+of them around. most developers simply aren't capable of taking on
+such a task, especially given that they see capable, experienced
+developers who won't even try because of past experiences akin to
+a game of Running Man(*)....
+
+Shared code is good, up to the point where the sharing gets so
+complex that even people with the capability are not willing to
+touch/fix the code. That's what happened to bufferheads and it's a
+pattern repeated across lots of kernel infrastructure code. Just
+because you can handle these modifications doesn't mean everyone
+else can or even wants to.
+
+> And I'd much rather fix this than going down the copy an paste and
+> slightly tweak it while fucking up something else route.
+
+The copy-n-paste is a result of developers who have little knowledge
+of things outside their domain of interest/expertise making the sane
+decision to minimise risk of breaking something they know nothing
+about. From an individual subsystem perspective, that's a -good
+decision- to make, and that's the point I was trying to make.
+
+You see that as a bad decision, because you equating "shared code"
+with "high quality" code. The reality is that shared code is often
+poor quality because people get too scared to touch it. That's
+exactly the situation I don't want us to get stuck with, and why I
+want to see how multiple implementations of this abstracted writeback
+path change what we have now before we start moving code about...
+
+i.e. I'm not saying "we shouldn't do this", I'm just saying that "we
+should do this because shared code is good" fundamentally conflicts
+with the fact we've just re-implemented a bunch of stuff because
+the *shared code was really bad*. And taking the same path that lead
+to really bad shared code (i.e. organic growth without planning or
+design) is likely to end up in the same place....
+
+Cheers,
+
+Dave.
+
+(*) https://www.imdb.com/title/tt0093894/
+
+"A wrongly convicted man must try to survive a public execution
+gauntlet staged as a game show."
+
+-- 
+Dave Chinner
+david@fromorbit.com
