@@ -1,71 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:37748 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729374AbfGARCR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:02:17 -0400
-Subject: [PATCH 01/11] iomap: start moving code to fs/iomap/
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 01 Jul 2019 10:02:05 -0700
-Message-ID: <156200052577.1790352.9825618388583583693.stgit@magnolia>
-In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:44668 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbfGAVzV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:55:21 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 04/15] iomap: warn on inline maps iomap_writepage_map
+Date: Mon,  1 Jul 2019 23:54:28 +0200
+Message-Id: <20190701215439.19162-5-hch@lst.de>
+In-Reply-To: <20190701215439.19162-1-hch@lst.de>
+References: <20190701215439.19162-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+And inline mapping should never mark the page dirty and thus never end up
+in writepages.  Add a check for that condition and warn if it happens.
 
-Create the build infrastructure we need to start migrating iomap code to
-fs/iomap/ from fs/iomap.c.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- MAINTAINERS       |    1 +
- fs/Makefile       |    1 +
- fs/iomap/Makefile |    7 +++++++
- 3 files changed, 9 insertions(+)
- create mode 100644 fs/iomap/Makefile
+ fs/iomap.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 57f496cff999..8ce7d57e4d30 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8222,6 +8222,7 @@ L:	linux-fsdevel@vger.kernel.org
- T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
- S:	Supported
- F:	fs/iomap.c
-+F:	fs/iomap/
- F:	include/linux/iomap.h
- 
- IOMMU DRIVERS
-diff --git a/fs/Makefile b/fs/Makefile
-index c9aea23aba56..8e61bdf9f330 100644
---- a/fs/Makefile
-+++ b/fs/Makefile
-@@ -53,6 +53,7 @@ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
- 
- obj-$(CONFIG_FHANDLE)		+= fhandle.o
- obj-$(CONFIG_FS_IOMAP)		+= iomap.o
-+obj-y				+= iomap/
- 
- obj-y				+= quota/
- 
-diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-new file mode 100644
-index 000000000000..b778a05acac3
---- /dev/null
-+++ b/fs/iomap/Makefile
-@@ -0,0 +1,7 @@
-+# SPDX-License-Identifier: GPL-2.0-or-newer
-+#
-+# Copyright (c) 2019 Oracle.
-+# All Rights Reserved.
-+#
-+
-+ccflags-y += -I $(srctree)/$(src)/..
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 0a86aaee961f..ea5b8e7c8903 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -2541,6 +2541,8 @@ iomap_writepage_map(struct iomap_writepage_ctx *wpc,
+ 		error = wpc->ops->map_blocks(wpc, inode, file_offset);
+ 		if (error)
+ 			break;
++		if (WARN_ON_ONCE(wpc->iomap.type == IOMAP_INLINE))
++			continue;
+ 		if (wpc->iomap.type == IOMAP_HOLE)
+ 			continue;
+ 		iomap_add_to_ioend(inode, file_offset, page, iop, wpc, wbc,
+-- 
+2.20.1
