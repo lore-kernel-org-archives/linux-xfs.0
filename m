@@ -1,138 +1,48 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga04-in.huawei.com ([45.249.212.190]:7684 "EHLO huawei.com"
+Received: from szxga06-in.huawei.com ([45.249.212.32]:40684 "EHLO huawei.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727224AbfGAH3I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Jul 2019 03:29:08 -0400
+        id S1727282AbfGAHic (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Jul 2019 03:38:32 -0400
 Subject: Re: [PATCH RFC] iomap: introduce IOMAP_TAIL
 References: <20190629073020.22759-1-yuchao0@huawei.com>
- <20190630231932.GI1404256@magnolia>
+ <20190630231932.GI1404256@magnolia> <20190701060847.GA24797@infradead.org>
 From: Chao Yu <yuchao0@huawei.com>
-Message-ID: <d19c48ad-5a4c-e2e3-e5cc-22c78757334f@huawei.com>
-Date: Mon, 1 Jul 2019 15:28:55 +0800
+Message-ID: <93d85b90-1323-f0b7-bed3-60b3131cad00@huawei.com>
+Date: Mon, 1 Jul 2019 15:38:20 +0800
 MIME-Version: 1.0
-In-Reply-To: <20190630231932.GI1404256@magnolia>
+In-Reply-To: <20190701060847.GA24797@infradead.org>
 Content-Type: text/plain; charset="windows-1252"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, gaoxiang25@huawei.com, chao@kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, gaoxiang25@huawei.com, chao@kernel.org
 
-On 2019/7/1 7:19, Darrick J. Wong wrote:
-> On Sat, Jun 29, 2019 at 03:30:20PM +0800, Chao Yu wrote:
->> Some filesystems like erofs/reiserfs have the ability to pack tail
->> data into metadata, however iomap framework can only support mapping
->> inline data with IOMAP_INLINE type, it restricts that:
->> - inline data should be locating at page #0.
->> - inline size should equal to .i_size
+On 2019/7/1 14:08, Christoph Hellwig wrote:
+> On Sun, Jun 30, 2019 at 04:19:32PM -0700, Darrick J. Wong wrote:
+>> On Sat, Jun 29, 2019 at 03:30:20PM +0800, Chao Yu wrote:
+>>> Some filesystems like erofs/reiserfs have the ability to pack tail
+>>> data into metadata, however iomap framework can only support mapping
+>>> inline data with IOMAP_INLINE type, it restricts that:
+>>> - inline data should be locating at page #0.
+>>> - inline size should equal to .i_size
+>>
+>> Wouldn't it be easier simply to fix the meaning of IOMAP_INLINE so that
+>> it can be used at something other than offset 0 and length == isize?
+>> IOWs, make it mean "use the *inline_data pointer to read/write data
+>> as a direct memory access"?
 > 
-> Wouldn't it be easier simply to fix the meaning of IOMAP_INLINE so that
-> it can be used at something other than offset 0 and length == isize?
-> IOWs, make it mean "use the *inline_data pointer to read/write data
-> as a direct memory access"?
+> Yes.  I vaguely remember Andreas pointed out some issues with a
 
-I thought about that, finally I implemented this by adding a new type because:
--  I checked fs.h, noticing that there are two separated flags:
-FS_INLINE_DATA_FL and FS_NOTAIL_FL, I guess they are separated features, but not
-sure about it...
-- If we keep those restriction of inline data, maybe we can help to do sanity
-check on inline data for most inline function callers additionally, since most
-filesystems implement inline_data feature with restriction by default.
-
-Anyway, I can change IOMAP_INLINE's restriction, and adjust erofs to use it if
-there is no further concern on those restrictions.
-
-> 
-> I also don't really like the idea of leaving the write paths
-> unimplemented in core code, though I suppose as an erofs developer
-> you're not likely to have a good means for testing... :/
-
-Yes, I don't like it too, but previously I didn't add it because I'm not sure
-that, recently we have potential user of IOMAP_TAIL's write path except
-reiserfs, it may be out-of-{maintain,test} due to lack of user later....
-
-> 
-> /me starts wondering if a better solution would be to invent iomaptestfs
-> which exists solely to test all iomap code with as little other
-> intelligence as possible...
-
-Good idea, any plan on this fs? :)
-
-Now, for erofs, as we don't support mapping hole, so I just inject code to force
-covering IOMAP_HOLE path. :P
+@Andreas, could you please help to explain which issue we may encounter without
+those limits?
 
 Thanks,
 
-> 
-> --D
-> 
->> So we can not use IOMAP_INLINE to handle tail-packing case.
->>
->> This patch introduces new mapping type IOMAP_TAIL to map tail-packed
->> data for further use of erofs.
->>
->> Signed-off-by: Chao Yu <yuchao0@huawei.com>
->> ---
->>  fs/iomap.c            | 22 ++++++++++++++++++++++
->>  include/linux/iomap.h |  1 +
->>  2 files changed, 23 insertions(+)
->>
->> diff --git a/fs/iomap.c b/fs/iomap.c
->> index 12654c2e78f8..ae7777ce77d0 100644
->> --- a/fs/iomap.c
->> +++ b/fs/iomap.c
->> @@ -280,6 +280,23 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
->>  	SetPageUptodate(page);
->>  }
->>  
->> +static void
->> +iomap_read_tail_data(struct inode *inode, struct page *page,
->> +		struct iomap *iomap)
->> +{
->> +	size_t size = i_size_read(inode) & (PAGE_SIZE - 1);
->> +	void *addr;
->> +
->> +	if (PageUptodate(page))
->> +		return;
->> +
->> +	addr = kmap_atomic(page);
->> +	memcpy(addr, iomap->inline_data, size);
->> +	memset(addr + size, 0, PAGE_SIZE - size);
->> +	kunmap_atomic(addr);
->> +	SetPageUptodate(page);
->> +}
->> +
->>  static loff_t
->>  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->>  		struct iomap *iomap)
->> @@ -298,6 +315,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->>  		return PAGE_SIZE;
->>  	}
->>  
->> +	if (iomap->type == IOMAP_TAIL) {
->> +		iomap_read_tail_data(inode, page, iomap);
->> +		return PAGE_SIZE;
->> +	}
->> +
->>  	/* zero post-eof blocks as the page may be mapped */
->>  	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
->>  	if (plen == 0)
->> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
->> index 2103b94cb1bf..7e1ee48e3db7 100644
->> --- a/include/linux/iomap.h
->> +++ b/include/linux/iomap.h
->> @@ -25,6 +25,7 @@ struct vm_fault;
->>  #define IOMAP_MAPPED	0x03	/* blocks allocated at @addr */
->>  #define IOMAP_UNWRITTEN	0x04	/* blocks allocated at @addr in unwritten state */
->>  #define IOMAP_INLINE	0x05	/* data inline in the inode */
->> +#define IOMAP_TAIL	0x06	/* tail data packed in metdata */
->>  
->>  /*
->>   * Flags for all iomap mappings:
->> -- 
->> 2.18.0.rc1
->>
+> general scheme, which is why we put the limits in.  If that is not just
+> me making things up we'll need to address them.  Either way just copy
+> and pasting code isn't very helpful.
 > .
 > 
