@@ -1,70 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga06-in.huawei.com ([45.249.212.32]:34880 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726105AbfGHCMl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 7 Jul 2019 22:12:41 -0400
-Subject: Re: [RFC PATCH] iomap: generalize IOMAP_INLINE to cover tail-packing
- case
-References: <20190703075502.79782-1-yuchao0@huawei.com>
-From: Chao Yu <yuchao0@huawei.com>
-Message-ID: <a6d61ef9-0822-e5f4-cf06-a03151390958@huawei.com>
-Date: Mon, 8 Jul 2019 10:12:29 +0800
+Received: from verein.lst.de ([213.95.11.211]:58608 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725616AbfGAGgR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Jul 2019 02:36:17 -0400
+Date: Mon, 1 Jul 2019 08:36:13 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] block: fix .bi_size overflow
+Message-ID: <20190701063613.GA20733@lst.de>
+References: <20190701041644.16052-1-ming.lei@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20190703075502.79782-1-yuchao0@huawei.com>
-Content-Type: text/plain; charset="windows-1252"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190701041644.16052-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, andreas.gruenbacher@gmail.com, gaoxiang25@huawei.com, chao@kernel.org
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Liu Yiding <liuyd.fnst@cn.fujitsu.com>, kernel test robot <rong.a.chen@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 
-Ping, any comments on this patch?
+On Mon, Jul 01, 2019 at 12:16:44PM +0800, Ming Lei wrote:
+> 'bio->bi_iter.bi_size' is 'unsigned int', which at most hold 4G - 1
+> bytes.
+> 
+> Before 07173c3ec276 ("block: enable multipage bvecs"), one bio can
+> include very limited pages, and usually at most 256, so the fs bio
+> size won't be bigger than 1M bytes most of times.
+> 
+> Since we support multi-page bvec, in theory one fs bio really can
+> be added > 1M pages, especially in case of hugepage, or big writeback
+> in case of huge dirty pages. Then there is chance in which .bi_size
+> is overflowed.
+> 
+> Fixes this issue by adding bio_will_full() which checks if the added
+> segment may overflow .bi_size.
 
-On 2019/7/3 15:55, Chao Yu wrote:
-> Some filesystems like erofs/reiserfs have the ability to pack tail
-> data into metadata, e.g.:
-> IOMAP_MAPPED [0, 8192]
-> IOMAP_INLINE [8192, 8200]
-> 
-> However current IOMAP_INLINE type has assumption that:
-> - inline data should be locating at page #0.
-> - inline size should equal to .i_size
-> Those restriction fail to convert to use iomap IOMAP_INLINE in erofs,
-> so this patch tries to relieve above limits to make IOMAP_INLINE more
-> generic to cover tail-packing case.
-> 
-> Signed-off-by: Chao Yu <yuchao0@huawei.com>
-> ---
->  fs/iomap.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 12654c2e78f8..d1c16b692d31 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -264,13 +264,12 @@ static void
->  iomap_read_inline_data(struct inode *inode, struct page *page,
->  		struct iomap *iomap)
->  {
-> -	size_t size = i_size_read(inode);
-> +	size_t size = iomap->length;
->  	void *addr;
->  
->  	if (PageUptodate(page))
->  		return;
->  
-> -	BUG_ON(page->index);
->  	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
->  
->  	addr = kmap_atomic(page);
-> @@ -293,7 +292,6 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  	sector_t sector;
->  
->  	if (iomap->type == IOMAP_INLINE) {
-> -		WARN_ON_ONCE(pos);
->  		iomap_read_inline_data(inode, page, iomap);
->  		return PAGE_SIZE;
->  	}
-> 
+Can you please just add the argument to bio_full?  bio_will_full sounds
+rather odd.
+
+Maybe also add a kerneldoc comment to the new bio_full to explain
+it.  Otherwise this looks fine to me.
