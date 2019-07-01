@@ -1,41 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:48885 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727130AbfGARm4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 13:42:56 -0400
-Date: Mon, 1 Jul 2019 13:41:29 -0400
-From: "Theodore Ts'o" <tytso@mit.edu>
-Subject: Re: [PATCH RFC 00/11] iomap: regroup code by functional area
-Message-ID: <20190701174129.GA3315@mit.edu>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:44720 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726439AbfGAVzm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 17:55:42 -0400
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 06/15] HACK: disable lockdep annotation in iomap_dio_rw
+Date: Mon,  1 Jul 2019 23:54:30 +0200
+Message-Id: <20190701215439.19162-7-hch@lst.de>
+In-Reply-To: <20190701215439.19162-1-hch@lst.de>
+References: <20190701215439.19162-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156200051933.1790352.5147420943973755350.stgit@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+To: Andreas Gruenbacher <agruenba@redhat.com>
+Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
 
-On Mon, Jul 01, 2019 at 10:01:59AM -0700, Darrick J. Wong wrote:
-> Note that this is not the final format of the patches, because I intend
-> to pick a point towards the end of the merge window (after everyone
-> else's merges have landed), rebase this series atop that, and push it
-> back to Linus.
+gfs2 seems to never calls this with i_rwsem held, disable for testing.
 
-So normally Linus isn't psyched about pulling branches that were
-rebased at the last minute.  I guess we could ask him ahead of time if
-he's OK with this plan.  Or have you done that already?
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/iomap.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Alternatively you could rebase this on top of v5.3-rc2, after the
-merge window closes, and get agreement from the 4 file systems which
-are currently iomap users: ext2, ext4, gfs2, and xfs to start their
-development trees on top of that common branch for the 5.4 merge
-window.  After all, it's just moving code around and there are no
-substantive changes in this patch series, right?  So there's no rush
-as I understand things for this to hit mainline.
-
-Cheers,
-
-						- Ted
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 63952a7b1c05..264cfb2e796f 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -1885,7 +1885,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	struct blk_plug plug;
+ 	struct iomap_dio *dio;
+ 
+-	lockdep_assert_held(&inode->i_rwsem);
++//	lockdep_assert_held(&inode->i_rwsem);
+ 
+ 	if (!count)
+ 		return 0;
+-- 
+2.20.1
