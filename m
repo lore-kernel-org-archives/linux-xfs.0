@@ -1,65 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:48028 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727289AbfGDPIA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jul 2019 11:08:00 -0400
-Date: Thu, 4 Jul 2019 08:07:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE RESEND] xfs-linux: vfs-for-next updated to 7e328e5930ad
-Message-ID: <20190704150758.GD5164@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:35476 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726430AbfGBBip (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 1 Jul 2019 21:38:45 -0400
+Date: Tue, 2 Jul 2019 09:38:30 +0800
+From: Ming Lei <ming.lei@redhat.com>
+Subject: Re: [PATCH V2] block: fix .bi_size overflow
+Message-ID: <20190702013829.GB8356@ming.t460p>
+References: <20190701071446.22028-1-ming.lei@redhat.com>
+ <8db73c5d-a0e2-00c9-59ab-64314097db26@kernel.dk>
+ <bd45842a-e0fd-28a7-ac79-96f7cb9b66e4@kernel.dk>
+ <8b8dc953-e663-e3d8-b991-9d8dba9270be@kernel.dk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <8b8dc953-e663-e3d8-b991-9d8dba9270be@kernel.dk>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel <linux-fsdevel@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, Liu Yiding <liuyd.fnst@cn.fujitsu.com>, kernel test robot <rong.a.chen@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 
-Hi folks,
+On Mon, Jul 01, 2019 at 08:20:13AM -0600, Jens Axboe wrote:
+> On 7/1/19 8:14 AM, Jens Axboe wrote:
+> > On 7/1/19 8:05 AM, Jens Axboe wrote:
+> >> On 7/1/19 1:14 AM, Ming Lei wrote:
+> >>> 'bio->bi_iter.bi_size' is 'unsigned int', which at most hold 4G - 1
+> >>> bytes.
+> >>>
+> >>> Before 07173c3ec276 ("block: enable multipage bvecs"), one bio can
+> >>> include very limited pages, and usually at most 256, so the fs bio
+> >>> size won't be bigger than 1M bytes most of times.
+> >>>
+> >>> Since we support multi-page bvec, in theory one fs bio really can
+> >>> be added > 1M pages, especially in case of hugepage, or big writeback
+> >>> with too many dirty pages. Then there is chance in which .bi_size
+> >>> is overflowed.
+> >>>
+> >>> Fixes this issue by using bio_full() to check if the added segment may
+> >>> overflow .bi_size.
+> >>
+> >> Any objections to queuing this up for 5.3? It's not a new regression
+> >> this series.
+> > 
+> > I took a closer look, and applied for 5.3 and removed the stable tag.
+> > We'll need to apply your patch for stable, and I added an adapted
+> > one for 5.3. I don't want a huge merge hassle because of this.
+> 
+> OK, so we still get conflicts with that, due to both the same page
+> merge fix, and Christophs 5.3 changes.
+> 
+> I ended up pulling in 5.2-rc6 in for-5.3/block, which resolves at
+> least most of it, and kept the stable tag since now it's possible
+> to backport without too much trouble.
 
-The vfs-for-next branch of the xfs-linux repository at:
+Thanks for merging it.
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+BTW, we need the -stable tag, since Yiding has test case to reproduce
+the issue reliably, which just needs one big machine with enough memory,
+and fast storage, I guess.
 
-has (not) been updated.  This is a resend of previous announcements
-about the SETFLAGS and FSSETXATTR refactoring that I've started for 5.3
-and will continue for 5.4 so that these ioctls will have more consistent
-behavior with the filesystems that originally created them.
-
-The new head of the vfs-for-next branch is commit:
-
-7e328e5930ad mm/fs: don't allow writes to immutable files
-
-New Commits:
-
-Darrick J. Wong (6):
-      [5aca284210ce] vfs: create a generic checking and prep function for FS_IOC_SETFLAGS
-      [7b0e492e6b80] vfs: create a generic checking function for FS_IOC_FSSETXATTR
-      [f991492ed110] vfs: teach vfs_ioc_fssetxattr_check to check project id info
-      [ca29be753445] vfs: teach vfs_ioc_fssetxattr_check to check extent size hints
-      [dbc77f31e58b] vfs: only allow FSSETXATTR to set DAX flag on files and dirs
-      [7e328e5930ad] mm/fs: don't allow writes to immutable files
-
-
-Code Diffstat:
-
- fs/attr.c           |  13 ++---
- fs/btrfs/ioctl.c    |  30 ++++------
- fs/efivarfs/file.c  |  26 ++++++---
- fs/ext2/ioctl.c     |  16 ++----
- fs/ext4/ioctl.c     |  51 +++++------------
- fs/gfs2/file.c      |  42 +++++++++-----
- fs/hfsplus/ioctl.c  |  21 ++++---
- fs/inode.c          |  86 +++++++++++++++++++++++++++++
- fs/jfs/ioctl.c      |  22 +++-----
- fs/nilfs2/ioctl.c   |   9 +--
- fs/ocfs2/ioctl.c    |  13 +----
- fs/orangefs/file.c  |  37 ++++++++++---
- fs/reiserfs/ioctl.c |  10 ++--
- fs/ubifs/ioctl.c    |  13 +----
- fs/xfs/xfs_ioctl.c  | 154 +++++++++++++++++++++++-----------------------------
- include/linux/fs.h  |  12 ++++
- mm/filemap.c        |   3 +
- mm/memory.c         |   4 ++
- mm/mmap.c           |   8 ++-
- 19 files changed, 319 insertions(+), 251 deletions(-)
+thanks, 
+Ming
