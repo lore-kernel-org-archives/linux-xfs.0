@@ -1,162 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:46994 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725791AbfGEQCm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jul 2019 12:02:42 -0400
-Subject: Re: [PATCH 7/9] man: create a separate RESBLKS ioctl manpage
-References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
- <156104949681.1174403.3533354992259074908.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5427356a-122e-3c7f-08ba-29fdb53b6179@sandeen.net>
-Date: Fri, 5 Jul 2019 11:02:40 -0500
+Received: from mail-yb1-f193.google.com ([209.85.219.193]:41634 "EHLO
+        mail-yb1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725780AbfGBKpp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jul 2019 06:45:45 -0400
 MIME-Version: 1.0
-In-Reply-To: <156104949681.1174403.3533354992259074908.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+References: <156174687561.1557469.7505651950825460767.stgit@magnolia>
+ <156174690758.1557469.9258105121276292687.stgit@magnolia> <20190701154200.GK1404256@magnolia>
+In-Reply-To: <20190701154200.GK1404256@magnolia>
+From: Amir Goldstein <amir73il@gmail.com>
+Date: Tue, 2 Jul 2019 13:45:32 +0300
+Message-ID: <CAOQ4uxizFXgSa4KzkwxmoPAvpiENg=y0=fsxEC1PkCX5J1ybag@mail.gmail.com>
+Subject: Re: [PATCH v2 4/4] vfs: don't allow most setxattr to immutable files
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: matthew.garrett@nebula.com, Chao Yu <yuchao0@huawei.com>, Theodore Tso <tytso@mit.edu>, Ard Biesheuvel <ard.biesheuvel@linaro.org>, Josef Bacik <josef@toxicpanda.com>, Christoph Hellwig <hch@infradead.org>, Chris Mason <clm@fb.com>, Andreas Dilger <adilger.kernel@dilger.ca>, Al Viro <viro@zeniv.linux.org.uk>, Jan Kara <jack@suse.com>, David Sterba <dsterba@suse.com>, Jaegeuk Kim <jaegeuk@kernel.org>, jk@ozlabs.org, reiserfs-devel@vger.kernel.org, linux-efi@vger.kernel.org, devel@lists.orangefs.org, linux-kernel <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-xfs <linux-xfs@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-nilfs@vger.kernel.org, linux-mtd@lists.infradead.org, ocfs2-devel@oss.oracle.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Ext4 <linux-ext4@vger.kernel.org>, Linux Btrfs <linux-btrfs@vger.kernel.org>
 
-On 6/20/19 11:51 AM, Darrick J. Wong wrote:
+On Mon, Jul 1, 2019 at 7:31 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
+>
 > From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Create a separate manual page for the xfs RESBLKS ioctls so we can
-> document how it works.
-> 
+>
+> The chattr manpage has this to say about immutable files:
+>
+> "A file with the 'i' attribute cannot be modified: it cannot be deleted
+> or renamed, no link can be created to this file, most of the file's
+> metadata can not be modified, and the file can not be opened in write
+> mode."
+>
+> However, we don't actually check the immutable flag in the setattr code,
+> which means that we can update inode flags and project ids and extent
+> size hints on supposedly immutable files.  Therefore, reject setflags
+> and fssetxattr calls on an immutable file if the file is immutable and
+> will remain that way.
+>
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  man/man2/ioctl_xfs_getresblks.2 |   65 +++++++++++++++++++++++++++++++++++++++
->  man/man2/ioctl_xfs_setresblks.2 |    1 +
->  man/man3/xfsctl.3               |   14 +++++++-
->  3 files changed, 78 insertions(+), 2 deletions(-)
->  create mode 100644 man/man2/ioctl_xfs_getresblks.2
->  create mode 100644 man/man2/ioctl_xfs_setresblks.2
-> 
-> 
-> diff --git a/man/man2/ioctl_xfs_getresblks.2 b/man/man2/ioctl_xfs_getresblks.2
-> new file mode 100644
-> index 00000000..694b4496
-> --- /dev/null
-> +++ b/man/man2/ioctl_xfs_getresblks.2
-> @@ -0,0 +1,65 @@
-> +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> +.\"
-> +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> +.\" SPDX-License-Identifier: GPL-2.0+
-> +.\" %%%LICENSE_END
-> +.TH IOCTL-XFS-GETRESBLKS 2 2019-06-17 "XFS"
-> +.SH NAME
-> +ioctl_xfs_getresblks \- query XFS summary counter information
-                                     ^^^^^^^^^^^^^^^
+> v2: use memcmp instead of open coding a bunch of checks
 
-"query and set XFS free space reservation information"
 
-> +.SH SYNOPSIS
-> +.br
-> +.B #include <xfs/xfs_fs.h>
-> +.PP
-> +.BI "int ioctl(int " fd ", XFS_IOC_GET_RESBLKS, struct xfs_fsop_resblks *" arg );
-> +.br
-> +.BI "int ioctl(int " fd ", XFS_IOC_SET_RESBLKS, struct xfs_fsop_resblks *" arg );
-> +.SH DESCRIPTION
+Thanks,
 
-I wonder if starting with a "don't use" right here would be wise, something like:
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 
-"Note: This is a[n] test/debug ioctl intended only for use by XFS filesystem developers."
 
-> +Query or set the free space reservation information.
-> +These blocks are reserved by the filesystem as a final attempt to prevent
-> +metadata update failures due to insufficient space.
-> +Only the system administrator can call these ioctls, because overriding the
-> +defaults is extremely dangerous and should never be tried by anyone.
-> +.PP
-> +The reservation information is conveyed in a structure of the following form:
-> +.PP
-> +.in +4n
-> +.nf
-> +struct xfs_fsop_resblks {
-> +	__u64  resblks;
-> +	__u64  resblks_avail;
-> +};
-> +.fi
-> +.in
-> +.PP
-> +.I resblks
-> +is the number of blocks that the filesystem will try to maintain to prevent
-> +critical out of space situations.
-> +.PP
-> +.I resblks_avail
-> +is the number of reserved blocks remaining.
-> +.SH RETURN VALUE
-> +On error, \-1 is returned, and
-> +.I errno
-> +is set to indicate the error.
-> +.PP
-> +.SH ERRORS
-> +Error codes can be one of, but are not limited to, the following:
-> +.TP
-> +.B EFSBADCRC
-> +Metadata checksum validation failed while performing the query.
-> +.TP
-> +.B EFSCORRUPTED
-> +Metadata corruption was encountered while performing the query.
-> +.TP
-> +.B EINVAL
-> +The specified allocation group number is not valid for this filesystem.
-> +.TP
-> +.B EIO
-> +An I/O error was encountered while performing the query.
-> +.TP
-> +.B EPERM
-> +Caller does not have permission to call this ioctl.
-> +.SH CONFORMING TO
-> +This API is specific to XFS filesystem on the Linux kernel.
-> +.SH SEE ALSO
-> +.BR ioctl (2)
-> diff --git a/man/man2/ioctl_xfs_setresblks.2 b/man/man2/ioctl_xfs_setresblks.2
-> new file mode 100644
-> index 00000000..209bc0a8
-> --- /dev/null
-> +++ b/man/man2/ioctl_xfs_setresblks.2
-> @@ -0,0 +1 @@
-> +.so man2/ioctl_xfs_getresblks.2
-> diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> index ee3188ec..89975a3c 100644
-> --- a/man/man3/xfsctl.3
-> +++ b/man/man3/xfsctl.3
-> @@ -396,12 +396,21 @@ See
->  .BR ioctl_xfs_fscounts (2)
->  for more information.
->  
-> +.TP
-> +.nf
-> +.B XFS_IOC_GET_RESBLKS
-> +.fi
-> +.TP
-> +.B XFS_IOC_SET_RESBLKS
-> +See
-> +.BR ioctl_xfs_getresblks (2)
-> +for more information.
-> +Save yourself a lot of frustration and avoid these ioctls.
+> ---
+>  fs/inode.c |   17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+>
+> diff --git a/fs/inode.c b/fs/inode.c
+> index cf07378e5731..31f694e405fe 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -2214,6 +2214,14 @@ int vfs_ioc_setflags_prepare(struct inode *inode, unsigned int oldflags,
+>             !capable(CAP_LINUX_IMMUTABLE))
+>                 return -EPERM;
+>
+> +       /*
+> +        * We aren't allowed to change any other flags if the immutable flag is
+> +        * already set and is not being unset.
+> +        */
+> +       if ((oldflags & FS_IMMUTABLE_FL) && (flags & FS_IMMUTABLE_FL) &&
+> +           oldflags != flags)
+> +               return -EPERM;
 > +
->  .PP
->  .nf
->  .B XFS_IOC_THAW
->  .B XFS_IOC_FREEZE
-> -.B XFS_IOC_GET_RESBLKS
-> -.B XFS_IOC_SET_RESBLKS
->  .B XFS_IOC_FSGROWFSDATA
->  .B XFS_IOC_FSGROWFSLOG
->  .fi
-> @@ -419,6 +428,7 @@ as they are not of general use to applications.
->  .BR ioctl_xfs_scrub_metadata (2),
->  .BR ioctl_xfs_fsinumbers (2),
->  .BR ioctl_xfs_fscounts (2),
-> +.BR ioctl_xfs_getresblks (2),
->  .BR fstatfs (2),
->  .BR statfs (2),
->  .BR xfs (5),
-> 
+>         /*
+>          * Now that we're done checking the new flags, flush all pending IO and
+>          * dirty mappings before setting S_IMMUTABLE on an inode via
+> @@ -2284,6 +2292,15 @@ int vfs_ioc_fssetxattr_check(struct inode *inode, const struct fsxattr *old_fa,
+>             !(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+>                 return -EINVAL;
+>
+> +       /*
+> +        * We aren't allowed to change any fields if the immutable flag is
+> +        * already set and is not being unset.
+> +        */
+> +       if ((old_fa->fsx_xflags & FS_XFLAG_IMMUTABLE) &&
+> +           (fa->fsx_xflags & FS_XFLAG_IMMUTABLE) &&
+> +           memcmp(fa, old_fa, offsetof(struct fsxattr, fsx_pad)))
+> +               return -EPERM;
+> +
+>         /* Extent size hints of zero turn off the flags. */
+>         if (fa->fsx_extsize == 0)
+>                 fa->fsx_xflags &= ~(FS_XFLAG_EXTSIZE | FS_XFLAG_EXTSZINHERIT);
