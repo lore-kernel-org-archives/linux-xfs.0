@@ -1,714 +1,239 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43250 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:57260 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725780AbfGBPeS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jul 2019 11:34:18 -0400
-Date: Tue, 2 Jul 2019 08:33:28 -0700
+        with ESMTP id S1726473AbfGBPv7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jul 2019 11:51:59 -0400
+Date: Tue, 2 Jul 2019 08:51:38 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 06/14] xfs: convert bulkstat to new iwalk infrastructure
-Message-ID: <20190702153328.GQ1404256@magnolia>
-References: <156032205136.3774243.15725828509940520561.stgit@magnolia>
- <156032208948.3774243.13794437416373501819.stgit@magnolia>
- <20190613163151.GD21773@bfoster>
- <20190613181206.GH3773859@magnolia>
- <20190613230358.GJ3773859@magnolia>
- <20190614111012.GA26586@bfoster>
- <20190614164510.GK3773859@magnolia>
- <20190702114204.GB2866@bfoster>
+Subject: Re: [PATCH 14/15] xfs: multithreaded iwalk implementation
+Message-ID: <20190702155138.GR1404256@magnolia>
+References: <156158183697.495087.5371839759804528321.stgit@magnolia>
+ <156158192497.495087.5608242533988384883.stgit@magnolia>
+ <20190702143320.GE2866@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190702114204.GB2866@bfoster>
+In-Reply-To: <20190702143320.GE2866@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Brian Foster <bfoster@redhat.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Tue, Jul 02, 2019 at 07:42:05AM -0400, Brian Foster wrote:
-> On Fri, Jun 14, 2019 at 09:45:10AM -0700, Darrick J. Wong wrote:
-> > On Fri, Jun 14, 2019 at 07:10:12AM -0400, Brian Foster wrote:
-> > > On Thu, Jun 13, 2019 at 04:03:58PM -0700, Darrick J. Wong wrote:
-> > > > On Thu, Jun 13, 2019 at 11:12:06AM -0700, Darrick J. Wong wrote:
-> > > > > On Thu, Jun 13, 2019 at 12:31:54PM -0400, Brian Foster wrote:
-> > > > > > On Tue, Jun 11, 2019 at 11:48:09PM -0700, Darrick J. Wong wrote:
-> > > > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > > 
-> > > > > > > Create a new ibulk structure incore to help us deal with bulk inode stat
-> > > > > > > state tracking and then convert the bulkstat code to use the new iwalk
-> > > > > > > iterator.  This disentangles inode walking from bulk stat control for
-> > > > > > > simpler code and enables us to isolate the formatter functions to the
-> > > > > > > ioctl handling code.
-> > > > > > > 
-> > > > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > > > ---
-> > > > > > >  fs/xfs/xfs_ioctl.c   |   70 ++++++--
-> > > > > > >  fs/xfs/xfs_ioctl.h   |    5 +
-> > > > > > >  fs/xfs/xfs_ioctl32.c |   93 ++++++-----
-> > > > > > >  fs/xfs/xfs_itable.c  |  431 ++++++++++++++++----------------------------------
-> > > > > > >  fs/xfs/xfs_itable.h  |   79 ++++-----
-> > > > > > >  5 files changed, 272 insertions(+), 406 deletions(-)
-> > > > > > > 
-> > > > > > > 
-> > > > > > ...
-> > > > > > > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> > > > > > > index 814ffe6fbab7..5d1c143bac18 100644
-> > > > > > > --- a/fs/xfs/xfs_ioctl32.c
-> > > > > > > +++ b/fs/xfs/xfs_ioctl32.c
-> > > > > > ...
-> > > > > > > @@ -284,38 +266,59 @@ xfs_compat_ioc_bulkstat(
-> > > > > > >  		return -EFAULT;
-> > > > > > >  	bulkreq.ocount = compat_ptr(addr);
-> > > > > > >  
-> > > > > > > -	if (copy_from_user(&inlast, bulkreq.lastip, sizeof(__s64)))
-> > > > > > > +	if (copy_from_user(&lastino, bulkreq.lastip, sizeof(__s64)))
-> > > > > > >  		return -EFAULT;
-> > > > > > > +	breq.startino = lastino + 1;
-> > > > > > >  
-> > > > > > 
-> > > > > > Spurious assignment?
-> > > > > 
-> > > > > Fixed.
-> > > > > 
-> > > > > > > -	if ((count = bulkreq.icount) <= 0)
-> > > > > > > +	if (bulkreq.icount <= 0)
-> > > > > > >  		return -EINVAL;
-> > > > > > >  
-> > > > > > >  	if (bulkreq.ubuffer == NULL)
-> > > > > > >  		return -EINVAL;
-> > > > > > >  
-> > > > > > > +	breq.ubuffer = bulkreq.ubuffer;
-> > > > > > > +	breq.icount = bulkreq.icount;
-> > > > > > > +
-> > > > > > ...
-> > > > > > > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> > > > > > > index 3ca1c454afe6..58e411e11d6c 100644
-> > > > > > > --- a/fs/xfs/xfs_itable.c
-> > > > > > > +++ b/fs/xfs/xfs_itable.c
-> > > > > > > @@ -14,47 +14,68 @@
-> > > > > > ...
-> > > > > > > +STATIC int
-> > > > > > >  xfs_bulkstat_one_int(
-> > > > > > > -	struct xfs_mount	*mp,		/* mount point for filesystem */
-> > > > > > > -	xfs_ino_t		ino,		/* inode to get data for */
-> > > > > > > -	void __user		*buffer,	/* buffer to place output in */
-> > > > > > > -	int			ubsize,		/* size of buffer */
-> > > > > > > -	bulkstat_one_fmt_pf	formatter,	/* formatter, copy to user */
-> > > > > > > -	int			*ubused,	/* bytes used by me */
-> > > > > > > -	int			*stat)		/* BULKSTAT_RV_... */
-> > > > > > > +	struct xfs_mount	*mp,
-> > > > > > > +	struct xfs_trans	*tp,
-> > > > > > > +	xfs_ino_t		ino,
-> > > > > > > +	void			*data)
-> > > > > > 
-> > > > > > There's no need for a void pointer here given the current usage. We
-> > > > > > might as well pass this as bc (and let the caller cast it, if
-> > > > > > necessary).
-> > > > > > 
-> > > > > > That said, it also looks like the only reason we have the
-> > > > > > xfs_bulkstat_iwalk wrapper caller of this function is to filter out
-> > > > > > certain error values. If those errors are needed for the single inode
-> > > > > > case, we could stick something in the bc to toggle that invalid inode
-> > > > > > filtering behavior and eliminate the need for the wrapper entirely
-> > > > > > (which would pass _one_int() into the iwalk infra directly and require
-> > > > > > retaining the void pointer).
-> > > > > 
-> > > > > Ok, will do.  That'll help declutter the source file.
-> > > > 
-> > > > ...or I won't, because gcc complains that the function pointer passed
-> > > > into xfs_iwalk() has to have a (void *) as the 4th parameter.  It's not
-> > > > willing to accept one with a (struct xfs_bstat_chunk *).
-> > > > 
-> > > 
-> > > Hm I don't follow, this function already takes a void *data parameter
-> > > and we pass bc into xfs_iwalk() as a void*. What am I missing?
+On Tue, Jul 02, 2019 at 10:33:20AM -0400, Brian Foster wrote:
+> On Wed, Jun 26, 2019 at 01:45:25PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > typedef int (*xfs_iwalk_fn)(struct xfs_mount *mp, struct xfs_trans *tp,
-> > 			    xfs_ino_t ino, void *data);
+> > Create a parallel iwalk implementation and switch quotacheck to use it.
 > > 
-> > gcc doesn't like it if the signature of bulkstat_one_int doesn't match
-> > xfs_iwalk_fn exactly, even if the only difference is a void pointer vs.
-> > a structure pointer.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/Makefile      |    1 
+> >  fs/xfs/xfs_globals.c |    3 +
+> >  fs/xfs/xfs_iwalk.c   |   82 +++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_iwalk.h   |    2 +
+> >  fs/xfs/xfs_pwork.c   |  126 ++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  fs/xfs/xfs_pwork.h   |   58 +++++++++++++++++++++++
+> >  fs/xfs/xfs_qm.c      |    2 -
+> >  fs/xfs/xfs_sysctl.h  |    6 ++
+> >  fs/xfs/xfs_sysfs.c   |   40 ++++++++++++++++
+> >  fs/xfs/xfs_trace.h   |   18 +++++++
+> >  10 files changed, 337 insertions(+), 1 deletion(-)
+> >  create mode 100644 fs/xfs/xfs_pwork.c
+> >  create mode 100644 fs/xfs/xfs_pwork.h
 > > 
+> > 
+> > diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> > index 74d30ef0dbce..48940a27d4aa 100644
+> > --- a/fs/xfs/Makefile
+> > +++ b/fs/xfs/Makefile
+> > @@ -84,6 +84,7 @@ xfs-y				+= xfs_aops.o \
+> >  				   xfs_message.o \
+> >  				   xfs_mount.o \
+> >  				   xfs_mru_cache.o \
+> > +				   xfs_pwork.o \
+> >  				   xfs_reflink.o \
+> >  				   xfs_stats.o \
+> >  				   xfs_super.o \
+> > diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+> > index d0d377384120..a44b564871b5 100644
+> > --- a/fs/xfs/xfs_globals.c
+> > +++ b/fs/xfs/xfs_globals.c
+> > @@ -31,6 +31,9 @@ xfs_param_t xfs_params = {
+> >  	.fstrm_timer	= {	1,		30*100,		3600*100},
+> >  	.eofb_timer	= {	1,		300,		3600*24},
+> >  	.cowb_timer	= {	1,		1800,		3600*24},
+> > +#ifdef DEBUG
+> > +	.pwork_threads	= {	-1,		-1,		NR_CPUS	},
 > 
-> Sure, but I was just suggesting to do one or the other. There's no
-> reason for _one_int() to have a void pointer in the current code, but
-> the better cleanup IMO is to find a way to just pass _one_int() (with
-> its current signature) to xfs_iwalk().
+> So I noticed that /sys/fs/xfs/debug/pwork_threads was still 0 by default
+> with this patch, then realized that we've only initialized it in
+> xfs_params and not xfs_globals. The sysfs handlers added by this patch
+> use the latter whereas the former looks related to /proc. It looks like
+> this should be fixed up to init the global field to -1 and probably drop
+> the xfs_params bits since we don't expose the value via /proc.
 
-Hmm, yeah, xfs_bstat_chunk just needs to grow a skip_missing flag that
-would mask the EINVAL/ENOENT return from _one_int.  Ok, I'll work on
-that.
+Oh, you're right.  I'll drop the xfs_params bits.
+
+> 
+> > +#endif
+> >  };
+> >  
+> >  struct xfs_globals xfs_globals = {
+> ...
+> > diff --git a/fs/xfs/xfs_pwork.c b/fs/xfs/xfs_pwork.c
+> > new file mode 100644
+> > index 000000000000..779596ed9432
+> > --- /dev/null
+> > +++ b/fs/xfs/xfs_pwork.c
+> > @@ -0,0 +1,126 @@
+> ...
+> > +/*
+> > + * Return the amount of parallelism that the data device can handle, or 0 for
+> > + * no limit.
+> > + */
+> > +unsigned int
+> > +xfs_pwork_guess_datadev_parallelism(
+> > +	struct xfs_mount	*mp)
+> > +{
+> > +	struct xfs_buftarg	*btp = mp->m_ddev_targp;
+> > +	int			iomin;
+> > +	int			ioopt;
+> > +
+> > +	if (blk_queue_nonrot(btp->bt_bdev->bd_queue))
+> > +		return num_online_cpus();
+> > +
+> > +	if (mp->m_sb.sb_width && mp->m_sb.sb_unit)
+> > +		return mp->m_sb.sb_width / mp->m_sb.sb_unit;
+> > +
+> > +	iomin = bdev_io_min(btp->bt_bdev);
+> > +	ioopt = bdev_io_opt(btp->bt_bdev);
+> > +	if (iomin && ioopt)
+> > +		return ioopt / iomin;
+> > +
+> > +	return 1;
+> > +}
+> 
+> I may have lost track of where we left off with this but IIRC we still
+> needed some numbers with regard to multi-device storage where
+> sb_width/sb_unit doesn't necessarily describe parallelism (i.e.
+> RAID5/6). I'm not sure what your goal is for this patch vs. the rest of
+> the series, but I'd be fine with merging this with just the
+> non-rotational bit for now if we add some kind of conservative maximum
+> (4? 8?) to the heuristic. It seems kind of risky to me to parallelize
+> 100s of AGs just because we might have that many CPUs/AGs on a
+> particular storage setup (we may also generate warning messages if a
+> system has a CPU count that exceeds the workqueue limit).
+
+Hm, how about the most conservative threading that I can think of?
+
+unsigned int
+xfs_pwork_guess_datadev_parallelism(
+	struct xfs_mount	*mp)
+{
+	return blk_queue_nonrot(...) ? 2 : 1;
+}
+
+Since that did seem to yield speedups for everything except the dumb USB
+mass storage case.  Then I can work on building a case for more threads
+(and figuring out the maximums) for 5.4...
+
+--D
+
+> 
+> ...
+> > diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+> > index cabda13f3c64..a146a2e61be2 100644
+> > --- a/fs/xfs/xfs_sysfs.c
+> > +++ b/fs/xfs/xfs_sysfs.c
+> > @@ -206,11 +206,51 @@ always_cow_show(
+> >  }
+> >  XFS_SYSFS_ATTR_RW(always_cow);
+> >  
+> > +#ifdef DEBUG
+> > +/*
+> > + * Override how many threads the parallel work queue is allowed to create.
+> > + * This has to be a debug-only global (instead of an errortag) because one of
+> > + * the main users of parallel workqueues is mount time quotacheck.
+> > + */
+> > +STATIC ssize_t
+> > +pwork_threads_store(
+> > +	struct kobject	*kobject,
+> > +	const char	*buf,
+> > +	size_t		count)
+> > +{
+> > +	int		ret;
+> > +	int		val;
+> > +
+> > +	ret = kstrtoint(buf, 0, &val);
+> > +	if (ret)
+> > +		return ret;
+> > +
+> > +	if (val < 0 || val > num_possible_cpus())
+> > +		return -EINVAL;
+> > +
+> 
+> We need to allow assignment of -1 now too.
+
+<nod>
 
 --D
 
 > Brian
 > 
-> > --D
+> > +	xfs_globals.pwork_threads = val;
+> > +
+> > +	return count;
+> > +}
+> > +
+> > +STATIC ssize_t
+> > +pwork_threads_show(
+> > +	struct kobject	*kobject,
+> > +	char		*buf)
+> > +{
+> > +	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.pwork_threads);
+> > +}
+> > +XFS_SYSFS_ATTR_RW(pwork_threads);
+> > +#endif /* DEBUG */
+> > +
+> >  static struct attribute *xfs_dbg_attrs[] = {
+> >  	ATTR_LIST(bug_on_assert),
+> >  	ATTR_LIST(log_recovery_delay),
+> >  	ATTR_LIST(mount_delay),
+> >  	ATTR_LIST(always_cow),
+> > +#ifdef DEBUG
+> > +	ATTR_LIST(pwork_threads),
+> > +#endif
+> >  	NULL,
+> >  };
+> >  
+> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> > index f9bb1d50bc0e..658cbade1998 100644
+> > --- a/fs/xfs/xfs_trace.h
+> > +++ b/fs/xfs/xfs_trace.h
+> > @@ -3556,6 +3556,24 @@ TRACE_EVENT(xfs_iwalk_ag_rec,
+> >  		  __entry->startino, __entry->freemask)
+> >  )
+> >  
+> > +TRACE_EVENT(xfs_pwork_init,
+> > +	TP_PROTO(struct xfs_mount *mp, unsigned int nr_threads, pid_t pid),
+> > +	TP_ARGS(mp, nr_threads, pid),
+> > +	TP_STRUCT__entry(
+> > +		__field(dev_t, dev)
+> > +		__field(unsigned int, nr_threads)
+> > +		__field(pid_t, pid)
+> > +	),
+> > +	TP_fast_assign(
+> > +		__entry->dev = mp->m_super->s_dev;
+> > +		__entry->nr_threads = nr_threads;
+> > +		__entry->pid = pid;
+> > +	),
+> > +	TP_printk("dev %d:%d nr_threads %u pid %u",
+> > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > +		  __entry->nr_threads, __entry->pid)
+> > +)
+> > +
+> >  #endif /* _TRACE_XFS_H */
+> >  
+> >  #undef TRACE_INCLUDE_PATH
 > > 
-> > > 
-> > > Brian
-> > > 
-> > > > Sorry about that. :(
-> > > > 
-> > > > --D
-> > > > 
-> > > > > > 
-> > > > > > >  {
-> > > > > > > +	struct xfs_bstat_chunk	*bc = data;
-> > > > > > >  	struct xfs_icdinode	*dic;		/* dinode core info pointer */
-> > > > > > >  	struct xfs_inode	*ip;		/* incore inode pointer */
-> > > > > > >  	struct inode		*inode;
-> > > > > > > -	struct xfs_bstat	*buf;		/* return buffer */
-> > > > > > > -	int			error = 0;	/* error value */
-> > > > > > > +	struct xfs_bstat	*buf = bc->buf;
-> > > > > > > +	int			error = -EINVAL;
-> > > > > > >  
-> > > > > > > -	*stat = BULKSTAT_RV_NOTHING;
-> > > > > > > +	if (xfs_internal_inum(mp, ino))
-> > > > > > > +		goto out_advance;
-> > > > > > >  
-> > > > > > > -	if (!buffer || xfs_internal_inum(mp, ino))
-> > > > > > > -		return -EINVAL;
-> > > > > > > -
-> > > > > > > -	buf = kmem_zalloc(sizeof(*buf), KM_SLEEP | KM_MAYFAIL);
-> > > > > > > -	if (!buf)
-> > > > > > > -		return -ENOMEM;
-> > > > > > > -
-> > > > > > > -	error = xfs_iget(mp, NULL, ino,
-> > > > > > > +	error = xfs_iget(mp, tp, ino,
-> > > > > > >  			 (XFS_IGET_DONTCACHE | XFS_IGET_UNTRUSTED),
-> > > > > > >  			 XFS_ILOCK_SHARED, &ip);
-> > > > > > > +	if (error == -ENOENT || error == -EINVAL)
-> > > > > > > +		goto out_advance;
-> > > > > > >  	if (error)
-> > > > > > > -		goto out_free;
-> > > > > > > +		goto out;
-> > > > > > >  
-> > > > > > >  	ASSERT(ip != NULL);
-> > > > > > >  	ASSERT(ip->i_imap.im_blkno != 0);
-> > > > > > > @@ -119,43 +140,56 @@ xfs_bulkstat_one_int(
-> > > > > > >  	xfs_iunlock(ip, XFS_ILOCK_SHARED);
-> > > > > > >  	xfs_irele(ip);
-> > > > > > >  
-> > > > > > > -	error = formatter(buffer, ubsize, ubused, buf);
-> > > > > > > -	if (!error)
-> > > > > > > -		*stat = BULKSTAT_RV_DIDONE;
-> > > > > > > +	error = bc->formatter(bc->breq, buf);
-> > > > > > > +	if (error == XFS_IBULK_BUFFER_FULL) {
-> > > > > > > +		error = XFS_IWALK_ABORT;
-> > > > > > 
-> > > > > > Related to the earlier patch.. is there a need for IBULK_BUFFER_FULL if
-> > > > > > the only user converts it to the generic abort error?
-> > > > > 
-> > > > > <shrug> I wasn't sure if there was ever going to be a case where the
-> > > > > formatter function wanted to abort for a reason that wasn't a full
-> > > > > buffer... though looking at the bulkstat-v5 patches there aren't any.
-> > > > > I guess I'll just remove BUFFER_FULL, then.
-> > > > > 
-> > > > > --D
-> > > > > 
-> > > > > > Most of these comments are minor/aesthetic, so:
-> > > > > > 
-> > > > > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > > > > 
-> > > > > > > +		goto out_advance;
-> > > > > > > +	}
-> > > > > > > +	if (error)
-> > > > > > > +		goto out;
-> > > > > > >  
-> > > > > > > - out_free:
-> > > > > > > -	kmem_free(buf);
-> > > > > > > +out_advance:
-> > > > > > > +	/*
-> > > > > > > +	 * Advance the cursor to the inode that comes after the one we just
-> > > > > > > +	 * looked at.  We want the caller to move along if the bulkstat
-> > > > > > > +	 * information was copied successfully; if we tried to grab the inode
-> > > > > > > +	 * but it's no longer allocated; or if it's internal metadata.
-> > > > > > > +	 */
-> > > > > > > +	bc->breq->startino = ino + 1;
-> > > > > > > +out:
-> > > > > > >  	return error;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > > -/* Return 0 on success or positive error */
-> > > > > > > -STATIC int
-> > > > > > > -xfs_bulkstat_one_fmt(
-> > > > > > > -	void			__user *ubuffer,
-> > > > > > > -	int			ubsize,
-> > > > > > > -	int			*ubused,
-> > > > > > > -	const xfs_bstat_t	*buffer)
-> > > > > > > -{
-> > > > > > > -	if (ubsize < sizeof(*buffer))
-> > > > > > > -		return -ENOMEM;
-> > > > > > > -	if (copy_to_user(ubuffer, buffer, sizeof(*buffer)))
-> > > > > > > -		return -EFAULT;
-> > > > > > > -	if (ubused)
-> > > > > > > -		*ubused = sizeof(*buffer);
-> > > > > > > -	return 0;
-> > > > > > > -}
-> > > > > > > -
-> > > > > > > +/* Bulkstat a single inode. */
-> > > > > > >  int
-> > > > > > >  xfs_bulkstat_one(
-> > > > > > > -	xfs_mount_t	*mp,		/* mount point for filesystem */
-> > > > > > > -	xfs_ino_t	ino,		/* inode number to get data for */
-> > > > > > > -	void		__user *buffer,	/* buffer to place output in */
-> > > > > > > -	int		ubsize,		/* size of buffer */
-> > > > > > > -	int		*ubused,	/* bytes used by me */
-> > > > > > > -	int		*stat)		/* BULKSTAT_RV_... */
-> > > > > > > +	struct xfs_ibulk	*breq,
-> > > > > > > +	bulkstat_one_fmt_pf	formatter)
-> > > > > > >  {
-> > > > > > > -	return xfs_bulkstat_one_int(mp, ino, buffer, ubsize,
-> > > > > > > -				    xfs_bulkstat_one_fmt, ubused, stat);
-> > > > > > > +	struct xfs_bstat_chunk	bc = {
-> > > > > > > +		.formatter	= formatter,
-> > > > > > > +		.breq		= breq,
-> > > > > > > +	};
-> > > > > > > +	int			error;
-> > > > > > > +
-> > > > > > > +	ASSERT(breq->icount == 1);
-> > > > > > > +
-> > > > > > > +	bc.buf = kmem_zalloc(sizeof(struct xfs_bstat), KM_SLEEP | KM_MAYFAIL);
-> > > > > > > +	if (!bc.buf)
-> > > > > > > +		return -ENOMEM;
-> > > > > > > +
-> > > > > > > +	error = xfs_bulkstat_one_int(breq->mp, NULL, breq->startino, &bc);
-> > > > > > > +
-> > > > > > > +	kmem_free(bc.buf);
-> > > > > > > +
-> > > > > > > +	/*
-> > > > > > > +	 * If we reported one inode to userspace then we abort because we hit
-> > > > > > > +	 * the end of the buffer.  Don't leak that back to userspace.
-> > > > > > > +	 */
-> > > > > > > +	if (error == XFS_IWALK_ABORT)
-> > > > > > > +		error = 0;
-> > > > > > > +
-> > > > > > > +	return error;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > >  /*
-> > > > > > > @@ -251,256 +285,69 @@ xfs_bulkstat_grab_ichunk(
-> > > > > > >  
-> > > > > > >  #define XFS_BULKSTAT_UBLEFT(ubleft)	((ubleft) >= statstruct_size)
-> > > > > > >  
-> > > > > > > -struct xfs_bulkstat_agichunk {
-> > > > > > > -	char		__user **ac_ubuffer;/* pointer into user's buffer */
-> > > > > > > -	int		ac_ubleft;	/* bytes left in user's buffer */
-> > > > > > > -	int		ac_ubelem;	/* spaces used in user's buffer */
-> > > > > > > -};
-> > > > > > > -
-> > > > > > > -/*
-> > > > > > > - * Process inodes in chunk with a pointer to a formatter function
-> > > > > > > - * that will iget the inode and fill in the appropriate structure.
-> > > > > > > - */
-> > > > > > >  static int
-> > > > > > > -xfs_bulkstat_ag_ichunk(
-> > > > > > > -	struct xfs_mount		*mp,
-> > > > > > > -	xfs_agnumber_t			agno,
-> > > > > > > -	struct xfs_inobt_rec_incore	*irbp,
-> > > > > > > -	bulkstat_one_pf			formatter,
-> > > > > > > -	size_t				statstruct_size,
-> > > > > > > -	struct xfs_bulkstat_agichunk	*acp,
-> > > > > > > -	xfs_agino_t			*last_agino)
-> > > > > > > +xfs_bulkstat_iwalk(
-> > > > > > > +	struct xfs_mount	*mp,
-> > > > > > > +	struct xfs_trans	*tp,
-> > > > > > > +	xfs_ino_t		ino,
-> > > > > > > +	void			*data)
-> > > > > > >  {
-> > > > > > > -	char				__user **ubufp = acp->ac_ubuffer;
-> > > > > > > -	int				chunkidx;
-> > > > > > > -	int				error = 0;
-> > > > > > > -	xfs_agino_t			agino = irbp->ir_startino;
-> > > > > > > -
-> > > > > > > -	for (chunkidx = 0; chunkidx < XFS_INODES_PER_CHUNK;
-> > > > > > > -	     chunkidx++, agino++) {
-> > > > > > > -		int		fmterror;
-> > > > > > > -		int		ubused;
-> > > > > > > -
-> > > > > > > -		/* inode won't fit in buffer, we are done */
-> > > > > > > -		if (acp->ac_ubleft < statstruct_size)
-> > > > > > > -			break;
-> > > > > > > -
-> > > > > > > -		/* Skip if this inode is free */
-> > > > > > > -		if (XFS_INOBT_MASK(chunkidx) & irbp->ir_free)
-> > > > > > > -			continue;
-> > > > > > > -
-> > > > > > > -		/* Get the inode and fill in a single buffer */
-> > > > > > > -		ubused = statstruct_size;
-> > > > > > > -		error = formatter(mp, XFS_AGINO_TO_INO(mp, agno, agino),
-> > > > > > > -				  *ubufp, acp->ac_ubleft, &ubused, &fmterror);
-> > > > > > > -
-> > > > > > > -		if (fmterror == BULKSTAT_RV_GIVEUP ||
-> > > > > > > -		    (error && error != -ENOENT && error != -EINVAL)) {
-> > > > > > > -			acp->ac_ubleft = 0;
-> > > > > > > -			ASSERT(error);
-> > > > > > > -			break;
-> > > > > > > -		}
-> > > > > > > -
-> > > > > > > -		/* be careful not to leak error if at end of chunk */
-> > > > > > > -		if (fmterror == BULKSTAT_RV_NOTHING || error) {
-> > > > > > > -			error = 0;
-> > > > > > > -			continue;
-> > > > > > > -		}
-> > > > > > > -
-> > > > > > > -		*ubufp += ubused;
-> > > > > > > -		acp->ac_ubleft -= ubused;
-> > > > > > > -		acp->ac_ubelem++;
-> > > > > > > -	}
-> > > > > > > -
-> > > > > > > -	/*
-> > > > > > > -	 * Post-update *last_agino. At this point, agino will always point one
-> > > > > > > -	 * inode past the last inode we processed successfully. Hence we
-> > > > > > > -	 * substract that inode when setting the *last_agino cursor so that we
-> > > > > > > -	 * return the correct cookie to userspace. On the next bulkstat call,
-> > > > > > > -	 * the inode under the lastino cookie will be skipped as we have already
-> > > > > > > -	 * processed it here.
-> > > > > > > -	 */
-> > > > > > > -	*last_agino = agino - 1;
-> > > > > > > +	int			error;
-> > > > > > >  
-> > > > > > > +	error = xfs_bulkstat_one_int(mp, tp, ino, data);
-> > > > > > > +	/* bulkstat just skips over missing inodes */
-> > > > > > > +	if (error == -ENOENT || error == -EINVAL)
-> > > > > > > +		return 0;
-> > > > > > >  	return error;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > >  /*
-> > > > > > > - * Return stat information in bulk (by-inode) for the filesystem.
-> > > > > > > + * Check the incoming lastino parameter.
-> > > > > > > + *
-> > > > > > > + * We allow any inode value that could map to physical space inside the
-> > > > > > > + * filesystem because if there are no inodes there, bulkstat moves on to the
-> > > > > > > + * next chunk.  In other words, the magic agino value of zero takes us to the
-> > > > > > > + * first chunk in the AG, and an agino value past the end of the AG takes us to
-> > > > > > > + * the first chunk in the next AG.
-> > > > > > > + *
-> > > > > > > + * Therefore we can end early if the requested inode is beyond the end of the
-> > > > > > > + * filesystem or doesn't map properly.
-> > > > > > >   */
-> > > > > > > -int					/* error status */
-> > > > > > > -xfs_bulkstat(
-> > > > > > > -	xfs_mount_t		*mp,	/* mount point for filesystem */
-> > > > > > > -	xfs_ino_t		*lastinop, /* last inode returned */
-> > > > > > > -	int			*ubcountp, /* size of buffer/count returned */
-> > > > > > > -	bulkstat_one_pf		formatter, /* func that'd fill a single buf */
-> > > > > > > -	size_t			statstruct_size, /* sizeof struct filling */
-> > > > > > > -	char			__user *ubuffer, /* buffer with inode stats */
-> > > > > > > -	int			*done)	/* 1 if there are more stats to get */
-> > > > > > > +static inline bool
-> > > > > > > +xfs_bulkstat_already_done(
-> > > > > > > +	struct xfs_mount	*mp,
-> > > > > > > +	xfs_ino_t		startino)
-> > > > > > >  {
-> > > > > > > -	xfs_buf_t		*agbp;	/* agi header buffer */
-> > > > > > > -	xfs_agino_t		agino;	/* inode # in allocation group */
-> > > > > > > -	xfs_agnumber_t		agno;	/* allocation group number */
-> > > > > > > -	xfs_btree_cur_t		*cur;	/* btree cursor for ialloc btree */
-> > > > > > > -	xfs_inobt_rec_incore_t	*irbuf;	/* start of irec buffer */
-> > > > > > > -	int			nirbuf;	/* size of irbuf */
-> > > > > > > -	int			ubcount; /* size of user's buffer */
-> > > > > > > -	struct xfs_bulkstat_agichunk ac;
-> > > > > > > -	int			error = 0;
-> > > > > > > +	xfs_agnumber_t		agno = XFS_INO_TO_AGNO(mp, startino);
-> > > > > > > +	xfs_agino_t		agino = XFS_INO_TO_AGINO(mp, startino);
-> > > > > > >  
-> > > > > > > -	/*
-> > > > > > > -	 * Get the last inode value, see if there's nothing to do.
-> > > > > > > -	 */
-> > > > > > > -	agno = XFS_INO_TO_AGNO(mp, *lastinop);
-> > > > > > > -	agino = XFS_INO_TO_AGINO(mp, *lastinop);
-> > > > > > > -	if (agno >= mp->m_sb.sb_agcount ||
-> > > > > > > -	    *lastinop != XFS_AGINO_TO_INO(mp, agno, agino)) {
-> > > > > > > -		*done = 1;
-> > > > > > > -		*ubcountp = 0;
-> > > > > > > -		return 0;
-> > > > > > > -	}
-> > > > > > > +	return agno >= mp->m_sb.sb_agcount ||
-> > > > > > > +	       startino != XFS_AGINO_TO_INO(mp, agno, agino);
-> > > > > > > +}
-> > > > > > >  
-> > > > > > > -	ubcount = *ubcountp; /* statstruct's */
-> > > > > > > -	ac.ac_ubuffer = &ubuffer;
-> > > > > > > -	ac.ac_ubleft = ubcount * statstruct_size; /* bytes */;
-> > > > > > > -	ac.ac_ubelem = 0;
-> > > > > > > +/* Return stat information in bulk (by-inode) for the filesystem. */
-> > > > > > > +int
-> > > > > > > +xfs_bulkstat(
-> > > > > > > +	struct xfs_ibulk	*breq,
-> > > > > > > +	bulkstat_one_fmt_pf	formatter)
-> > > > > > > +{
-> > > > > > > +	struct xfs_bstat_chunk	bc = {
-> > > > > > > +		.formatter	= formatter,
-> > > > > > > +		.breq		= breq,
-> > > > > > > +	};
-> > > > > > > +	int			error;
-> > > > > > >  
-> > > > > > > -	*ubcountp = 0;
-> > > > > > > -	*done = 0;
-> > > > > > > +	if (xfs_bulkstat_already_done(breq->mp, breq->startino))
-> > > > > > > +		return 0;
-> > > > > > >  
-> > > > > > > -	irbuf = kmem_zalloc_large(PAGE_SIZE * 4, KM_SLEEP);
-> > > > > > > -	if (!irbuf)
-> > > > > > > +	bc.buf = kmem_zalloc(sizeof(struct xfs_bstat), KM_SLEEP | KM_MAYFAIL);
-> > > > > > > +	if (!bc.buf)
-> > > > > > >  		return -ENOMEM;
-> > > > > > > -	nirbuf = (PAGE_SIZE * 4) / sizeof(*irbuf);
-> > > > > > >  
-> > > > > > > -	/*
-> > > > > > > -	 * Loop over the allocation groups, starting from the last
-> > > > > > > -	 * inode returned; 0 means start of the allocation group.
-> > > > > > > -	 */
-> > > > > > > -	while (agno < mp->m_sb.sb_agcount) {
-> > > > > > > -		struct xfs_inobt_rec_incore	*irbp = irbuf;
-> > > > > > > -		struct xfs_inobt_rec_incore	*irbufend = irbuf + nirbuf;
-> > > > > > > -		bool				end_of_ag = false;
-> > > > > > > -		int				icount = 0;
-> > > > > > > -		int				stat;
-> > > > > > > +	error = xfs_iwalk(breq->mp, NULL, breq->startino, xfs_bulkstat_iwalk,
-> > > > > > > +			breq->icount, &bc);
-> > > > > > >  
-> > > > > > > -		error = xfs_ialloc_read_agi(mp, NULL, agno, &agbp);
-> > > > > > > -		if (error)
-> > > > > > > -			break;
-> > > > > > > -		/*
-> > > > > > > -		 * Allocate and initialize a btree cursor for ialloc btree.
-> > > > > > > -		 */
-> > > > > > > -		cur = xfs_inobt_init_cursor(mp, NULL, agbp, agno,
-> > > > > > > -					    XFS_BTNUM_INO);
-> > > > > > > -		if (agino > 0) {
-> > > > > > > -			/*
-> > > > > > > -			 * In the middle of an allocation group, we need to get
-> > > > > > > -			 * the remainder of the chunk we're in.
-> > > > > > > -			 */
-> > > > > > > -			struct xfs_inobt_rec_incore	r;
-> > > > > > > -
-> > > > > > > -			error = xfs_bulkstat_grab_ichunk(cur, agino, &icount, &r);
-> > > > > > > -			if (error)
-> > > > > > > -				goto del_cursor;
-> > > > > > > -			if (icount) {
-> > > > > > > -				irbp->ir_startino = r.ir_startino;
-> > > > > > > -				irbp->ir_holemask = r.ir_holemask;
-> > > > > > > -				irbp->ir_count = r.ir_count;
-> > > > > > > -				irbp->ir_freecount = r.ir_freecount;
-> > > > > > > -				irbp->ir_free = r.ir_free;
-> > > > > > > -				irbp++;
-> > > > > > > -			}
-> > > > > > > -			/* Increment to the next record */
-> > > > > > > -			error = xfs_btree_increment(cur, 0, &stat);
-> > > > > > > -		} else {
-> > > > > > > -			/* Start of ag.  Lookup the first inode chunk */
-> > > > > > > -			error = xfs_inobt_lookup(cur, 0, XFS_LOOKUP_GE, &stat);
-> > > > > > > -		}
-> > > > > > > -		if (error || stat == 0) {
-> > > > > > > -			end_of_ag = true;
-> > > > > > > -			goto del_cursor;
-> > > > > > > -		}
-> > > > > > > -
-> > > > > > > -		/*
-> > > > > > > -		 * Loop through inode btree records in this ag,
-> > > > > > > -		 * until we run out of inodes or space in the buffer.
-> > > > > > > -		 */
-> > > > > > > -		while (irbp < irbufend && icount < ubcount) {
-> > > > > > > -			struct xfs_inobt_rec_incore	r;
-> > > > > > > -
-> > > > > > > -			error = xfs_inobt_get_rec(cur, &r, &stat);
-> > > > > > > -			if (error || stat == 0) {
-> > > > > > > -				end_of_ag = true;
-> > > > > > > -				goto del_cursor;
-> > > > > > > -			}
-> > > > > > > -
-> > > > > > > -			/*
-> > > > > > > -			 * If this chunk has any allocated inodes, save it.
-> > > > > > > -			 * Also start read-ahead now for this chunk.
-> > > > > > > -			 */
-> > > > > > > -			if (r.ir_freecount < r.ir_count) {
-> > > > > > > -				xfs_bulkstat_ichunk_ra(mp, agno, &r);
-> > > > > > > -				irbp->ir_startino = r.ir_startino;
-> > > > > > > -				irbp->ir_holemask = r.ir_holemask;
-> > > > > > > -				irbp->ir_count = r.ir_count;
-> > > > > > > -				irbp->ir_freecount = r.ir_freecount;
-> > > > > > > -				irbp->ir_free = r.ir_free;
-> > > > > > > -				irbp++;
-> > > > > > > -				icount += r.ir_count - r.ir_freecount;
-> > > > > > > -			}
-> > > > > > > -			error = xfs_btree_increment(cur, 0, &stat);
-> > > > > > > -			if (error || stat == 0) {
-> > > > > > > -				end_of_ag = true;
-> > > > > > > -				goto del_cursor;
-> > > > > > > -			}
-> > > > > > > -			cond_resched();
-> > > > > > > -		}
-> > > > > > > -
-> > > > > > > -		/*
-> > > > > > > -		 * Drop the btree buffers and the agi buffer as we can't hold any
-> > > > > > > -		 * of the locks these represent when calling iget. If there is a
-> > > > > > > -		 * pending error, then we are done.
-> > > > > > > -		 */
-> > > > > > > -del_cursor:
-> > > > > > > -		xfs_btree_del_cursor(cur, error);
-> > > > > > > -		xfs_buf_relse(agbp);
-> > > > > > > -		if (error)
-> > > > > > > -			break;
-> > > > > > > -		/*
-> > > > > > > -		 * Now format all the good inodes into the user's buffer. The
-> > > > > > > -		 * call to xfs_bulkstat_ag_ichunk() sets up the agino pointer
-> > > > > > > -		 * for the next loop iteration.
-> > > > > > > -		 */
-> > > > > > > -		irbufend = irbp;
-> > > > > > > -		for (irbp = irbuf;
-> > > > > > > -		     irbp < irbufend && ac.ac_ubleft >= statstruct_size;
-> > > > > > > -		     irbp++) {
-> > > > > > > -			error = xfs_bulkstat_ag_ichunk(mp, agno, irbp,
-> > > > > > > -					formatter, statstruct_size, &ac,
-> > > > > > > -					&agino);
-> > > > > > > -			if (error)
-> > > > > > > -				break;
-> > > > > > > -
-> > > > > > > -			cond_resched();
-> > > > > > > -		}
-> > > > > > > -
-> > > > > > > -		/*
-> > > > > > > -		 * If we've run out of space or had a formatting error, we
-> > > > > > > -		 * are now done
-> > > > > > > -		 */
-> > > > > > > -		if (ac.ac_ubleft < statstruct_size || error)
-> > > > > > > -			break;
-> > > > > > > -
-> > > > > > > -		if (end_of_ag) {
-> > > > > > > -			agno++;
-> > > > > > > -			agino = 0;
-> > > > > > > -		}
-> > > > > > > -	}
-> > > > > > > -	/*
-> > > > > > > -	 * Done, we're either out of filesystem or space to put the data.
-> > > > > > > -	 */
-> > > > > > > -	kmem_free(irbuf);
-> > > > > > > -	*ubcountp = ac.ac_ubelem;
-> > > > > > > +	kmem_free(bc.buf);
-> > > > > > >  
-> > > > > > >  	/*
-> > > > > > >  	 * We found some inodes, so clear the error status and return them.
-> > > > > > > @@ -509,17 +356,9 @@ xfs_bulkstat(
-> > > > > > >  	 * triggered again and propagated to userspace as there will be no
-> > > > > > >  	 * formatted inodes in the buffer.
-> > > > > > >  	 */
-> > > > > > > -	if (ac.ac_ubelem)
-> > > > > > > +	if (breq->ocount > 0)
-> > > > > > >  		error = 0;
-> > > > > > >  
-> > > > > > > -	/*
-> > > > > > > -	 * If we ran out of filesystem, lastino will point off the end of
-> > > > > > > -	 * the filesystem so the next call will return immediately.
-> > > > > > > -	 */
-> > > > > > > -	*lastinop = XFS_AGINO_TO_INO(mp, agno, agino);
-> > > > > > > -	if (agno >= mp->m_sb.sb_agcount)
-> > > > > > > -		*done = 1;
-> > > > > > > -
-> > > > > > >  	return error;
-> > > > > > >  }
-> > > > > > >  
-> > > > > > > diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
-> > > > > > > index 369e3f159d4e..7c5f1df360e6 100644
-> > > > > > > --- a/fs/xfs/xfs_itable.h
-> > > > > > > +++ b/fs/xfs/xfs_itable.h
-> > > > > > > @@ -5,63 +5,46 @@
-> > > > > > >  #ifndef __XFS_ITABLE_H__
-> > > > > > >  #define	__XFS_ITABLE_H__
-> > > > > > >  
-> > > > > > > -/*
-> > > > > > > - * xfs_bulkstat() is used to fill in xfs_bstat structures as well as dm_stat
-> > > > > > > - * structures (by the dmi library). This is a pointer to a formatter function
-> > > > > > > - * that will iget the inode and fill in the appropriate structure.
-> > > > > > > - * see xfs_bulkstat_one() and xfs_dm_bulkstat_one() in dmapi_xfs.c
-> > > > > > > - */
-> > > > > > > -typedef int (*bulkstat_one_pf)(struct xfs_mount	*mp,
-> > > > > > > -			       xfs_ino_t	ino,
-> > > > > > > -			       void		__user *buffer,
-> > > > > > > -			       int		ubsize,
-> > > > > > > -			       int		*ubused,
-> > > > > > > -			       int		*stat);
-> > > > > > > +/* In-memory representation of a userspace request for batch inode data. */
-> > > > > > > +struct xfs_ibulk {
-> > > > > > > +	struct xfs_mount	*mp;
-> > > > > > > +	void __user		*ubuffer; /* user output buffer */
-> > > > > > > +	xfs_ino_t		startino; /* start with this inode */
-> > > > > > > +	unsigned int		icount;   /* number of elements in ubuffer */
-> > > > > > > +	unsigned int		ocount;   /* number of records returned */
-> > > > > > > +};
-> > > > > > > +
-> > > > > > > +/* Return value that means we want to abort the walk. */
-> > > > > > > +#define XFS_IBULK_ABORT		(XFS_IWALK_ABORT)
-> > > > > > > +
-> > > > > > > +/* Return value that means the formatting buffer is now full. */
-> > > > > > > +#define XFS_IBULK_BUFFER_FULL	(XFS_IBULK_ABORT + 1)
-> > > > > > >  
-> > > > > > >  /*
-> > > > > > > - * Values for stat return value.
-> > > > > > > + * Advance the user buffer pointer by one record of the given size.  If the
-> > > > > > > + * buffer is now full, return the appropriate error code.
-> > > > > > >   */
-> > > > > > > -#define BULKSTAT_RV_NOTHING	0
-> > > > > > > -#define BULKSTAT_RV_DIDONE	1
-> > > > > > > -#define BULKSTAT_RV_GIVEUP	2
-> > > > > > > +static inline int
-> > > > > > > +xfs_ibulk_advance(
-> > > > > > > +	struct xfs_ibulk	*breq,
-> > > > > > > +	size_t			bytes)
-> > > > > > > +{
-> > > > > > > +	char __user		*b = breq->ubuffer;
-> > > > > > > +
-> > > > > > > +	breq->ubuffer = b + bytes;
-> > > > > > > +	breq->ocount++;
-> > > > > > > +	return breq->ocount == breq->icount ? XFS_IBULK_BUFFER_FULL : 0;
-> > > > > > > +}
-> > > > > > >  
-> > > > > > >  /*
-> > > > > > >   * Return stat information in bulk (by-inode) for the filesystem.
-> > > > > > >   */
-> > > > > > > -int					/* error status */
-> > > > > > > -xfs_bulkstat(
-> > > > > > > -	xfs_mount_t	*mp,		/* mount point for filesystem */
-> > > > > > > -	xfs_ino_t	*lastino,	/* last inode returned */
-> > > > > > > -	int		*count,		/* size of buffer/count returned */
-> > > > > > > -	bulkstat_one_pf formatter,	/* func that'd fill a single buf */
-> > > > > > > -	size_t		statstruct_size,/* sizeof struct that we're filling */
-> > > > > > > -	char		__user *ubuffer,/* buffer with inode stats */
-> > > > > > > -	int		*done);		/* 1 if there are more stats to get */
-> > > > > > >  
-> > > > > > > -typedef int (*bulkstat_one_fmt_pf)(  /* used size in bytes or negative error */
-> > > > > > > -	void			__user *ubuffer, /* buffer to write to */
-> > > > > > > -	int			ubsize,		 /* remaining user buffer sz */
-> > > > > > > -	int			*ubused,	 /* bytes used by formatter */
-> > > > > > > -	const xfs_bstat_t	*buffer);        /* buffer to read from */
-> > > > > > > +typedef int (*bulkstat_one_fmt_pf)(struct xfs_ibulk *breq,
-> > > > > > > +		const struct xfs_bstat *bstat);
-> > > > > > >  
-> > > > > > > -int
-> > > > > > > -xfs_bulkstat_one_int(
-> > > > > > > -	xfs_mount_t		*mp,
-> > > > > > > -	xfs_ino_t		ino,
-> > > > > > > -	void			__user *buffer,
-> > > > > > > -	int			ubsize,
-> > > > > > > -	bulkstat_one_fmt_pf	formatter,
-> > > > > > > -	int			*ubused,
-> > > > > > > -	int			*stat);
-> > > > > > > -
-> > > > > > > -int
-> > > > > > > -xfs_bulkstat_one(
-> > > > > > > -	xfs_mount_t		*mp,
-> > > > > > > -	xfs_ino_t		ino,
-> > > > > > > -	void			__user *buffer,
-> > > > > > > -	int			ubsize,
-> > > > > > > -	int			*ubused,
-> > > > > > > -	int			*stat);
-> > > > > > > +int xfs_bulkstat_one(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
-> > > > > > > +int xfs_bulkstat(struct xfs_ibulk *breq, bulkstat_one_fmt_pf formatter);
-> > > > > > >  
-> > > > > > >  typedef int (*inumbers_fmt_pf)(
-> > > > > > >  	void			__user *ubuffer, /* buffer to write to */
-> > > > > > > 
