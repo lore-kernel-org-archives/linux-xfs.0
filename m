@@ -1,187 +1,180 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52148 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:37132 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725830AbfGCNWW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jul 2019 09:22:22 -0400
-Date: Wed, 3 Jul 2019 09:22:19 -0400
+        id S1726621AbfGCNYB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 3 Jul 2019 09:24:01 -0400
+Date: Wed, 3 Jul 2019 09:23:58 -0400
 From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 2/9] xfs: rename bulkstat functions
-Message-ID: <20190703132219.GB26057@bfoster>
+Subject: Re: [PATCH 4/9] xfs: introduce v5 inode group structure
+Message-ID: <20190703132357.GD26057@bfoster>
 References: <156158193320.495715.6675123051075804739.stgit@magnolia>
- <156158194549.495715.11820133364251169894.stgit@magnolia>
+ <156158195888.495715.17662104546912391174.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156158194549.495715.11820133364251169894.stgit@magnolia>
+In-Reply-To: <156158195888.495715.17662104546912391174.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
-On Wed, Jun 26, 2019 at 01:45:45PM -0700, Darrick J. Wong wrote:
+On Wed, Jun 26, 2019 at 01:45:58PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Rename the bulkstat functions to 'fsbulkstat' so that they match the
-> ioctl names.  We will be introducing a new set of bulkstat/inumbers
-> ioctls soon, and it will be important to keep the names straight.
+> Introduce a new "v5" inode group structure that fixes the alignment
+> and padding problems of the existing structure.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 > ---
 
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 
->  fs/xfs/xfs_ioctl.c   |   14 +++++++-------
->  fs/xfs/xfs_ioctl.h   |    5 +++--
->  fs/xfs/xfs_ioctl32.c |   18 +++++++++---------
->  3 files changed, 19 insertions(+), 18 deletions(-)
+>  fs/xfs/libxfs/xfs_fs.h |   11 +++++++++++
+>  fs/xfs/xfs_ioctl.c     |    9 ++++++---
+>  fs/xfs/xfs_ioctl.h     |    2 +-
+>  fs/xfs/xfs_ioctl32.c   |   10 +++++++---
+>  fs/xfs/xfs_itable.c    |   14 +++++++++++++-
+>  fs/xfs/xfs_itable.h    |    4 +++-
+>  fs/xfs/xfs_ondisk.h    |    1 +
+>  7 files changed, 42 insertions(+), 9 deletions(-)
 > 
 > 
+> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+> index 132e364eb141..8b8fe78511fb 100644
+> --- a/fs/xfs/libxfs/xfs_fs.h
+> +++ b/fs/xfs/libxfs/xfs_fs.h
+> @@ -445,6 +445,17 @@ struct xfs_inogrp {
+>  	__u64		xi_allocmask;	/* mask of allocated inodes	*/
+>  };
+>  
+> +/* New inumbers structure that reports v5 features and fixes padding issues */
+> +struct xfs_inumbers {
+> +	uint64_t	xi_startino;	/* starting inode number	*/
+> +	uint64_t	xi_allocmask;	/* mask of allocated inodes	*/
+> +	uint8_t		xi_alloccount;	/* # bits set in allocmask	*/
+> +	uint8_t		xi_version;	/* version			*/
+> +	uint8_t		xi_padding[6];	/* zero				*/
+> +};
+> +
+> +#define XFS_INUMBERS_VERSION_V1	(1)
+> +#define XFS_INUMBERS_VERSION_V5	(5)
+>  
+>  /*
+>   * Error injection.
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 34b38d8e8dc9..5e0476003763 100644
+> index 0b8c631d53dd..47580762e154 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -724,7 +724,7 @@ xfs_ioc_space(
->  
->  /* Return 0 on success or positive error */
->  int
-> -xfs_bulkstat_one_fmt(
-> +xfs_fsbulkstat_one_fmt(
->  	struct xfs_ibulk	*breq,
->  	const struct xfs_bstat	*bstat)
->  {
-> @@ -734,7 +734,7 @@ xfs_bulkstat_one_fmt(
->  }
+> @@ -738,10 +738,13 @@ xfs_fsbulkstat_one_fmt(
 >  
 >  int
-> -xfs_inumbers_fmt(
-> +xfs_fsinumbers_fmt(
->  	struct xfs_ibulk	*breq,
->  	const struct xfs_inogrp	*igrp)
+>  xfs_fsinumbers_fmt(
+> -	struct xfs_ibulk	*breq,
+> -	const struct xfs_inogrp	*igrp)
+> +	struct xfs_ibulk		*breq,
+> +	const struct xfs_inumbers	*igrp)
 >  {
-> @@ -744,7 +744,7 @@ xfs_inumbers_fmt(
+> -	if (copy_to_user(breq->ubuffer, igrp, sizeof(*igrp)))
+> +	struct xfs_inogrp		ig1;
+> +
+> +	xfs_inumbers_to_inogrp(&ig1, igrp);
+> +	if (copy_to_user(breq->ubuffer, &ig1, sizeof(struct xfs_inogrp)))
+>  		return -EFAULT;
+>  	return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
 >  }
->  
->  STATIC int
-> -xfs_ioc_bulkstat(
-> +xfs_ioc_fsbulkstat(
->  	xfs_mount_t		*mp,
->  	unsigned int		cmd,
->  	void			__user *arg)
-> @@ -794,16 +794,16 @@ xfs_ioc_bulkstat(
->  	 */
->  	if (cmd == XFS_IOC_FSINUMBERS) {
->  		breq.startino = lastino ? lastino + 1 : 0;
-> -		error = xfs_inumbers(&breq, xfs_inumbers_fmt);
-> +		error = xfs_inumbers(&breq, xfs_fsinumbers_fmt);
->  		lastino = breq.startino - 1;
->  	} else if (cmd == XFS_IOC_FSBULKSTAT_SINGLE) {
->  		breq.startino = lastino;
->  		breq.icount = 1;
-> -		error = xfs_bulkstat_one(&breq, xfs_bulkstat_one_fmt);
-> +		error = xfs_bulkstat_one(&breq, xfs_fsbulkstat_one_fmt);
->  		lastino = breq.startino;
->  	} else {	/* XFS_IOC_FSBULKSTAT */
->  		breq.startino = lastino ? lastino + 1 : 0;
-> -		error = xfs_bulkstat(&breq, xfs_bulkstat_one_fmt);
-> +		error = xfs_bulkstat(&breq, xfs_fsbulkstat_one_fmt);
->  		lastino = breq.startino - 1;
->  	}
->  
-> @@ -1983,7 +1983,7 @@ xfs_file_ioctl(
->  	case XFS_IOC_FSBULKSTAT_SINGLE:
->  	case XFS_IOC_FSBULKSTAT:
->  	case XFS_IOC_FSINUMBERS:
-> -		return xfs_ioc_bulkstat(mp, cmd, arg);
-> +		return xfs_ioc_fsbulkstat(mp, cmd, arg);
->  
->  	case XFS_IOC_FSGEOMETRY_V1:
->  		return xfs_ioc_fsgeometry(mp, arg, 3);
 > diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
-> index fb303eaa8863..cb34bc821201 100644
+> index 514d3028a134..654c0bb1bcf8 100644
 > --- a/fs/xfs/xfs_ioctl.h
 > +++ b/fs/xfs/xfs_ioctl.h
-> @@ -81,7 +81,8 @@ struct xfs_ibulk;
->  struct xfs_bstat;
->  struct xfs_inogrp;
+> @@ -83,6 +83,6 @@ struct xfs_inogrp;
 >  
-> -int xfs_bulkstat_one_fmt(struct xfs_ibulk *breq, const struct xfs_bstat *bstat);
-> -int xfs_inumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
-> +int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
-> +			   const struct xfs_bstat *bstat);
-> +int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
+>  int xfs_fsbulkstat_one_fmt(struct xfs_ibulk *breq,
+>  			   const struct xfs_bulkstat *bstat);
+> -int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inogrp *igrp);
+> +int xfs_fsinumbers_fmt(struct xfs_ibulk *breq, const struct xfs_inumbers *igrp);
 >  
 >  #endif
 > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index d7c5153e1b61..9e5cf3988d3e 100644
+> index a97612927f9e..41485e2ed431 100644
 > --- a/fs/xfs/xfs_ioctl32.c
 > +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -86,7 +86,7 @@ xfs_compat_growfs_rt_copyin(
+> @@ -87,10 +87,14 @@ xfs_compat_growfs_rt_copyin(
+>  
+>  STATIC int
+>  xfs_fsinumbers_fmt_compat(
+> -	struct xfs_ibulk	*breq,
+> -	const struct xfs_inogrp	*igrp)
+> +	struct xfs_ibulk		*breq,
+> +	const struct xfs_inumbers	*ig)
+>  {
+> -	struct compat_xfs_inogrp __user *p32 = breq->ubuffer;
+> +	struct compat_xfs_inogrp __user	*p32 = breq->ubuffer;
+> +	struct xfs_inogrp		ig1;
+> +	struct xfs_inogrp		*igrp = &ig1;
+> +
+> +	xfs_inumbers_to_inogrp(&ig1, ig);
+>  
+>  	if (put_user(igrp->xi_startino,   &p32->xi_startino) ||
+>  	    put_user(igrp->xi_alloccount, &p32->xi_alloccount) ||
+> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> index 50c2bb8e13c4..745b04f59132 100644
+> --- a/fs/xfs/xfs_itable.c
+> +++ b/fs/xfs/xfs_itable.c
+> @@ -331,10 +331,11 @@ xfs_inumbers_walk(
+>  	const struct xfs_inobt_rec_incore *irec,
+>  	void			*data)
+>  {
+> -	struct xfs_inogrp	inogrp = {
+> +	struct xfs_inumbers	inogrp = {
+>  		.xi_startino	= XFS_AGINO_TO_INO(mp, agno, irec->ir_startino),
+>  		.xi_alloccount	= irec->ir_count - irec->ir_freecount,
+>  		.xi_allocmask	= ~irec->ir_free,
+> +		.xi_version	= XFS_INUMBERS_VERSION_V5,
+>  	};
+>  	struct xfs_inumbers_chunk *ic = data;
+>  	xfs_agino_t		agino;
+> @@ -381,3 +382,14 @@ xfs_inumbers(
+>  
+>  	return error;
+>  }
+> +
+> +/* Convert an inumbers (v5) struct to a inogrp (v1) struct. */
+> +void
+> +xfs_inumbers_to_inogrp(
+> +	struct xfs_inogrp		*ig1,
+> +	const struct xfs_inumbers	*ig)
+> +{
+> +	ig1->xi_startino = ig->xi_startino;
+> +	ig1->xi_alloccount = ig->xi_alloccount;
+> +	ig1->xi_allocmask = ig->xi_allocmask;
+> +}
+> diff --git a/fs/xfs/xfs_itable.h b/fs/xfs/xfs_itable.h
+> index 60e259192056..fa9fb9104c7f 100644
+> --- a/fs/xfs/xfs_itable.h
+> +++ b/fs/xfs/xfs_itable.h
+> @@ -46,8 +46,10 @@ void xfs_bulkstat_to_bstat(struct xfs_mount *mp, struct xfs_bstat *bs1,
+>  		const struct xfs_bulkstat *bstat);
+>  
+>  typedef int (*inumbers_fmt_pf)(struct xfs_ibulk *breq,
+> -		const struct xfs_inogrp *igrp);
+> +		const struct xfs_inumbers *igrp);
+>  
+>  int xfs_inumbers(struct xfs_ibulk *breq, inumbers_fmt_pf formatter);
+> +void xfs_inumbers_to_inogrp(struct xfs_inogrp *ig1,
+> +		const struct xfs_inumbers *ig);
+>  
+>  #endif	/* __XFS_ITABLE_H__ */
+> diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
+> index 0b4cdda68524..d8f941b4d51c 100644
+> --- a/fs/xfs/xfs_ondisk.h
+> +++ b/fs/xfs/xfs_ondisk.h
+> @@ -148,6 +148,7 @@ xfs_check_ondisk_structs(void)
+>  	XFS_CHECK_OFFSET(struct xfs_attr3_leafblock, hdr.info.hdr, 0);
+>  
+>  	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
+> +	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
 >  }
 >  
->  STATIC int
-> -xfs_inumbers_fmt_compat(
-> +xfs_fsinumbers_fmt_compat(
->  	struct xfs_ibulk	*breq,
->  	const struct xfs_inogrp	*igrp)
->  {
-> @@ -101,7 +101,7 @@ xfs_inumbers_fmt_compat(
->  }
->  
->  #else
-> -#define xfs_inumbers_fmt_compat xfs_inumbers_fmt
-> +#define xfs_fsinumbers_fmt_compat xfs_fsinumbers_fmt
->  #endif	/* BROKEN_X86_ALIGNMENT */
->  
->  STATIC int
-> @@ -171,7 +171,7 @@ xfs_bstime_store_compat(
->  
->  /* Return 0 on success or positive error (to xfs_bulkstat()) */
->  STATIC int
-> -xfs_bulkstat_one_fmt_compat(
-> +xfs_fsbulkstat_one_fmt_compat(
->  	struct xfs_ibulk	*breq,
->  	const struct xfs_bstat	*buffer)
->  {
-> @@ -206,7 +206,7 @@ xfs_bulkstat_one_fmt_compat(
->  
->  /* copied from xfs_ioctl.c */
->  STATIC int
-> -xfs_compat_ioc_bulkstat(
-> +xfs_compat_ioc_fsbulkstat(
->  	xfs_mount_t		  *mp,
->  	unsigned int		  cmd,
->  	struct compat_xfs_fsop_bulkreq __user *p32)
-> @@ -226,8 +226,8 @@ xfs_compat_ioc_bulkstat(
->  	 * to userpace memory via bulkreq.ubuffer.  Normally the compat
->  	 * functions and structure size are the correct ones to use ...
->  	 */
-> -	inumbers_fmt_pf		inumbers_func = xfs_inumbers_fmt_compat;
-> -	bulkstat_one_fmt_pf	bs_one_func = xfs_bulkstat_one_fmt_compat;
-> +	inumbers_fmt_pf		inumbers_func = xfs_fsinumbers_fmt_compat;
-> +	bulkstat_one_fmt_pf	bs_one_func = xfs_fsbulkstat_one_fmt_compat;
->  
->  #ifdef CONFIG_X86_X32
->  	if (in_x32_syscall()) {
-> @@ -239,8 +239,8 @@ xfs_compat_ioc_bulkstat(
->  		 * the data written out in compat layout will not match what
->  		 * x32 userspace expects.
->  		 */
-> -		inumbers_func = xfs_inumbers_fmt;
-> -		bs_one_func = xfs_bulkstat_one_fmt;
-> +		inumbers_func = xfs_fsinumbers_fmt;
-> +		bs_one_func = xfs_fsbulkstat_one_fmt;
->  	}
->  #endif
->  
-> @@ -669,7 +669,7 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_FSBULKSTAT_32:
->  	case XFS_IOC_FSBULKSTAT_SINGLE_32:
->  	case XFS_IOC_FSINUMBERS_32:
-> -		return xfs_compat_ioc_bulkstat(mp, cmd, arg);
-> +		return xfs_compat_ioc_fsbulkstat(mp, cmd, arg);
->  	case XFS_IOC_FD_TO_HANDLE_32:
->  	case XFS_IOC_PATH_TO_HANDLE_32:
->  	case XFS_IOC_PATH_TO_FSHANDLE_32: {
+>  #endif /* __XFS_ONDISK_H */
 > 
