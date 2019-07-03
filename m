@@ -1,116 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43078 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726621AbfGCRrI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 3 Jul 2019 13:47:08 -0400
-Subject: Re: [PATCH v2 1/1] xfsprogs: Fix uninitialized cfg->lsunit
-References: <20190702232746.22516-1-allison.henderson@oracle.com>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <6a2dd675-f392-dc72-4c8c-7061b9222b89@sandeen.net>
-Date: Wed, 3 Jul 2019 12:47:06 -0500
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:37621 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727252AbfGCOiD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jul 2019 10:38:03 -0400
+Received: by mail-wr1-f65.google.com with SMTP id v14so3121507wrr.4
+        for <linux-xfs@vger.kernel.org>; Wed, 03 Jul 2019 07:38:02 -0700 (PDT)
+Date: Wed, 3 Jul 2019 16:37:59 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] fs: xfs: xfs_log: Change return type from int to void
+Message-ID: <20190703143759.qczx4dnjhslh3gys@pegasus.maiolino.io>
+References: <20190702181547.GA11316@hari-Inspiron-1545>
 MIME-Version: 1.0
-In-Reply-To: <20190702232746.22516-1-allison.henderson@oracle.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190702181547.GA11316@hari-Inspiron-1545>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Collins <allison.henderson@oracle.com>, linux-xfs@vger.kernel.org
+To: Hariprasad Kelam <hariprasad.kelam@gmail.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 7/2/19 6:27 PM, Allison Collins wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
+On Tue, Jul 02, 2019 at 11:45:47PM +0530, Hariprasad Kelam wrote:
+> Change return types of below functions as they never fails
+> xfs_log_mount_cancel
+> xlog_recover_cancel
+> xlog_recover_cancel_intents
 > 
-> While investigating another mkfs bug, noticed that cfg->lsunit is sometimes
-> left uninitialized when it should not.  This is because calc_stripe_factors
-> in some cases needs cfg->loginternal to be set first.  This is done in
-> validate_logdev. So move calc_stripe_factors below validate_logdev while
-> parsing configs.
+> fix below issue reported by coccicheck
+> fs/xfs/xfs_log_recover.c:4886:7-12: Unneeded variable: "error". Return
+> "0" on line 4926
 > 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Signed-off-by: Hariprasad Kelam <hariprasad.kelam@gmail.com>
 
-Ok, while I appreciate you taking Carlos's input, the patch now does
-far more than the commit log says, with no explanation of why it's doing
-so.  (and there's no indication of what actually changed in V2: - putting
-that info below the "---" line is helpful)
 
-I'd prefer to take the original patch and if we really want to change
-how we initialize empty structures, that should be a separate patch, and
-should hit everywhere we do it, not just mkfs.
+Looks ok.
 
-But to Carlos's point, cfg->lsunit isn't exactly "uninitialized"
-(to me, uninitialized means that it was never set, when in fact it was
-initialized, to zero, right?)
+You can add:
 
-So it's not quite clear to me what's happening here; I guess this test:
-
-        /*
-         * check that log sunit is modulo fsblksize or default it to dsunit.
-         */
-        if (lsunit) {
-                /* convert from 512 byte blocks to fs blocks */
-                cfg->lsunit = DTOBT(lsunit, cfg->blocklog);
-        } else if (cfg->sb_feat.log_version == 2 &&
-                   cfg->loginternal && cfg->dsunit) {
-                /* lsunit and dsunit now in fs blocks */
-                cfg->lsunit = cfg->dsunit;
-        }
-
-is doing the wrong thing because cfg->loginternal hasn't actually been
-evaluated yet?  Is there a mkfs command that demonstrates the problem
-which could be included in the changelog?  Does it only happen with
-external logs?  If you can provide a bit more information about when and
-how this actually fails, that would improve the changelog for future
-generations.
-
-(also agreeing w/ darrick that these seem like little time bombs...)
-
-Thanks,
--Eric
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 
 > ---
->  mkfs/xfs_mkfs.c | 8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
+>  fs/xfs/xfs_log.c         |  8 ++------
+>  fs/xfs/xfs_log.h         |  2 +-
+>  fs/xfs/xfs_log_priv.h    |  2 +-
+>  fs/xfs/xfs_log_recover.c | 12 +++---------
+>  4 files changed, 7 insertions(+), 17 deletions(-)
 > 
-> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-> index 468b8fd..6e32403 100644
-> --- a/mkfs/xfs_mkfs.c
-> +++ b/mkfs/xfs_mkfs.c
-> @@ -3861,15 +3861,15 @@ main(
->  		.isdirect = LIBXFS_DIRECT,
->  		.isreadonly = LIBXFS_EXCLUSIVELY,
->  	};
-> -	struct xfs_mount	mbuf = {};
-> +	struct xfs_mount	mbuf = {0};
->  	struct xfs_mount	*mp = &mbuf;
->  	struct xfs_sb		*sbp = &mp->m_sb;
-> -	struct fs_topology	ft = {};
-> +	struct fs_topology	ft = {0};
->  	struct cli_params	cli = {
->  		.xi = &xi,
->  		.loginternal = 1,
->  	};
-> -	struct mkfs_params	cfg = {};
-> +	struct mkfs_params	cfg = {0};
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index cbaf348..00e9f5c 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -769,16 +769,12 @@ xfs_log_mount_finish(
+>   * The mount has failed. Cancel the recovery if it hasn't completed and destroy
+>   * the log.
+>   */
+> -int
+> +void
+>  xfs_log_mount_cancel(
+>  	struct xfs_mount	*mp)
+>  {
+> -	int			error;
+> -
+> -	error = xlog_recover_cancel(mp->m_log);
+> +	xlog_recover_cancel(mp->m_log);
+>  	xfs_log_unmount(mp);
+> -
+> -	return error;
+>  }
 >  
->  	/* build time defaults */
->  	struct mkfs_default_params	dft = {
-> @@ -4008,7 +4008,6 @@ main(
->  	cfg.rtblocks = calc_dev_size(cli.rtsize, &cfg, &ropts, R_SIZE, "rt");
+>  /*
+> diff --git a/fs/xfs/xfs_log.h b/fs/xfs/xfs_log.h
+> index f27b1cb..84e0680 100644
+> --- a/fs/xfs/xfs_log.h
+> +++ b/fs/xfs/xfs_log.h
+> @@ -117,7 +117,7 @@ int	  xfs_log_mount(struct xfs_mount	*mp,
+>  			xfs_daddr_t		start_block,
+>  			int		 	num_bblocks);
+>  int	  xfs_log_mount_finish(struct xfs_mount *mp);
+> -int	xfs_log_mount_cancel(struct xfs_mount *);
+> +void	xfs_log_mount_cancel(struct xfs_mount *);
+>  xfs_lsn_t xlog_assign_tail_lsn(struct xfs_mount *mp);
+>  xfs_lsn_t xlog_assign_tail_lsn_locked(struct xfs_mount *mp);
+>  void	  xfs_log_space_wake(struct xfs_mount *mp);
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 8acacbc..b880c23 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -418,7 +418,7 @@ xlog_recover(
+>  extern int
+>  xlog_recover_finish(
+>  	struct xlog		*log);
+> -extern int
+> +extern void
+>  xlog_recover_cancel(struct xlog *);
 >  
->  	validate_rtextsize(&cfg, &cli, &ft);
-> -	calc_stripe_factors(&cfg, &cli, &ft);
+>  extern __le32	 xlog_cksum(struct xlog *log, struct xlog_rec_header *rhead,
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 1fc70ac..13d1d3e 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -4875,12 +4875,11 @@ xlog_recover_process_intents(
+>   * A cancel occurs when the mount has failed and we're bailing out.
+>   * Release all pending log intent items so they don't pin the AIL.
+>   */
+> -STATIC int
+> +STATIC void
+>  xlog_recover_cancel_intents(
+>  	struct xlog		*log)
+>  {
+>  	struct xfs_log_item	*lip;
+> -	int			error = 0;
+>  	struct xfs_ail_cursor	cur;
+>  	struct xfs_ail		*ailp;
 >  
->  	/*
->  	 * Open and validate the device configurations
-> @@ -4018,6 +4017,7 @@ main(
->  	validate_datadev(&cfg, &cli);
->  	validate_logdev(&cfg, &cli, &logfile);
->  	validate_rtdev(&cfg, &cli, &rtfile);
-> +	calc_stripe_factors(&cfg, &cli, &ft);
+> @@ -4920,7 +4919,6 @@ xlog_recover_cancel_intents(
 >  
->  	/*
->  	 * At this point when know exactly what size all the devices are,
+>  	xfs_trans_ail_cursor_done(&cur);
+>  	spin_unlock(&ailp->ail_lock);
+> -	return error;
+>  }
+>  
+>  /*
+> @@ -5779,16 +5777,12 @@ xlog_recover_finish(
+>  	return 0;
+>  }
+>  
+> -int
+> +void
+>  xlog_recover_cancel(
+>  	struct xlog	*log)
+>  {
+> -	int		error = 0;
+> -
+>  	if (log->l_flags & XLOG_RECOVERY_NEEDED)
+> -		error = xlog_recover_cancel_intents(log);
+> -
+> -	return error;
+> +		xlog_recover_cancel_intents(log);
+>  }
+>  
+>  #if defined(DEBUG)
+> -- 
+> 2.7.4
 > 
+
+-- 
+Carlos
