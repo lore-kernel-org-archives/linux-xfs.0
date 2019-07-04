@@ -1,129 +1,118 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:60992 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726283AbfGBOuJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jul 2019 10:50:09 -0400
-Date: Tue, 2 Jul 2019 07:49:26 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:58610 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725879AbfGDGvb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jul 2019 02:51:31 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x646mja0153935
+        for <linux-xfs@vger.kernel.org>; Thu, 4 Jul 2019 06:51:29 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2te5tbw4c4-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Jul 2019 06:51:29 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x646m43l118858
+        for <linux-xfs@vger.kernel.org>; Thu, 4 Jul 2019 06:51:28 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2tebbks85c-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 04 Jul 2019 06:51:28 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x646pR8e027039
+        for <linux-xfs@vger.kernel.org>; Thu, 4 Jul 2019 06:51:27 GMT
+Date: Wed, 3 Jul 2019 23:51:24 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 07/15] xfs: calculate inode walk prefetch more carefully
-Message-ID: <20190702144926.GD1654093@magnolia>
-References: <156158183697.495087.5371839759804528321.stgit@magnolia>
- <156158188075.495087.14228436478786857410.stgit@magnolia>
- <20190702142403.GD2866@bfoster>
+Subject: [PATCH v3 9/9] xfs: allow bulkstat_single of special inodes
+Message-ID: <20190704065124.GZ1404256@magnolia>
+References: <156158193320.495715.6675123051075804739.stgit@magnolia>
+ <156158199168.495715.1433536766420003523.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190702142403.GD2866@bfoster>
+In-Reply-To: <156158199168.495715.1433536766420003523.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
 
-On Tue, Jul 02, 2019 at 10:24:03AM -0400, Brian Foster wrote:
-> On Wed, Jun 26, 2019 at 01:44:40PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > The existing inode walk prefetch is based on the old bulkstat code,
-> > which simply allocated 4 pages worth of memory and prefetched that many
-> > inobt records, regardless of however many inodes the caller requested.
-> > 65536 inodes is a lot to prefetch (~32M on x64, ~512M on arm64) so let's
-> > scale things down a little more intelligently based on the number of
-> > inodes requested, etc.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> 
-> A few nits..
-> 
-> >  fs/xfs/xfs_iwalk.c |   46 ++++++++++++++++++++++++++++++++++++++++++++--
-> >  1 file changed, 44 insertions(+), 2 deletions(-)
-> > 
-> > 
-> > diff --git a/fs/xfs/xfs_iwalk.c b/fs/xfs/xfs_iwalk.c
-> > index 304c41e6ed1d..3e67d7702e16 100644
-> > --- a/fs/xfs/xfs_iwalk.c
-> > +++ b/fs/xfs/xfs_iwalk.c
-> > @@ -333,16 +333,58 @@ xfs_iwalk_ag(
-> >  	return error;
-> >  }
-> >  
-> > +/*
-> > + * We experimentally determined that the reduction in ioctl call overhead
-> > + * diminishes when userspace asks for more than 2048 inodes, so we'll cap
-> > + * prefetch at this point.
-> > + */
-> > +#define MAX_IWALK_PREFETCH	(2048U)
-> > +
-> 
-> Something like IWALK_MAX_INODE_PREFETCH is a bit more clear IMO.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-<nod>
+Create a new bulk ireq flag that enables userspace to ask us for a
+special inode number instead of interpreting @ino as a literal inode
+number.  This enables us to query the root inode easily.
 
-> >  /*
-> >   * Given the number of inodes to prefetch, set the number of inobt records that
-> >   * we cache in memory, which controls the number of inodes we try to read
-> > - * ahead.
-> > + * ahead.  Set the maximum if @inode_records == 0.
-> >   */
-> >  static inline unsigned int
-> >  xfs_iwalk_prefetch(
-> >  	unsigned int		inode_records)
-> 
-> Perhaps this should be called 'inodes' since the function converts this
-> value to inode records?
+The reason for adding the ability to query specifically the root
+directory inode is that certain programs (xfsdump and xfsrestore) want
+to confirm when they've been pointed to the root directory.  The
+userspace code assumes the root directory is always the first result
+from calling bulkstat with lastino == 0, but this isn't true if the
+(initial btree roots + initial AGFL + inode alignment padding) is itself
+long enough to be allocated to new inodes if all of those blocks should
+happen to be free at the same time.  Rather than make userspace guess
+at internal filesystem state, we provide a direct query.
 
-ok, I see how that could be a little confusing.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+---
+v3: attach to the bulkstat ioctl having dropped bulkstat_single
+v2: elaborate on why we are adding this new ireq flag
+---
+ fs/xfs/libxfs/xfs_fs.h |   13 ++++++++++++-
+ fs/xfs/xfs_ioctl.c     |   19 +++++++++++++++++++
+ 2 files changed, 31 insertions(+), 1 deletion(-)
 
-> >  {
-> > -	return PAGE_SIZE * 4 / sizeof(struct xfs_inobt_rec_incore);
-> > +	unsigned int		inobt_records;
-> > +
-> > +	/*
-> > +	 * If the caller didn't tell us the number of inodes they wanted,
-> > +	 * assume the maximum prefetch possible for best performance.
-> > +	 * Otherwise, cap prefetch at that maximum so that we don't start an
-> > +	 * absurd amount of prefetch.
-> > +	 */
-> > +	if (inode_records == 0)
-> > +		inode_records = MAX_IWALK_PREFETCH;
-> > +	inode_records = min(inode_records, MAX_IWALK_PREFETCH);
-> > +
-> > +	/* Round the inode count up to a full chunk. */
-> > +	inode_records = round_up(inode_records, XFS_INODES_PER_CHUNK);
-> > +
-> > +	/*
-> > +	 * In order to convert the number of inodes to prefetch into an
-> > +	 * estimate of the number of inobt records to cache, we require a
-> > +	 * conversion factor that reflects our expectations of the average
-> > +	 * loading factor of an inode chunk.  Based on data gathered, most
-> > +	 * (but not all) filesystems manage to keep the inode chunks totally
-> > +	 * full, so we'll underestimate slightly so that our readahead will
-> > +	 * still deliver the performance we want on aging filesystems:
-> > +	 *
-> > +	 * inobt = inodes / (INODES_PER_CHUNK * (4 / 5));
-> > +	 *
-> > +	 * The funny math is to avoid division.
-> > +	 */
-> 
-> The last bit of this comment is unclear. What do you mean by "avoid
-> division?"
-
-"..to avoid 64-bit integer division."
-
-> With those nits fixed up:
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > +	inobt_records = (inode_records * 5) / (4 * XFS_INODES_PER_CHUNK);
-> > +
-> > +	/*
-> > +	 * Allocate enough space to prefetch at least two inobt records so that
-> > +	 * we can cache both the record where the iwalk started and the next
-> > +	 * record.  This simplifies the AG inode walk loop setup code.
-> > +	 */
-> > +	return max(inobt_records, 2U);
-> >  }
-> >  
-> >  /*
-> > 
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index d7b3b712b279..52d03a3a02a4 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -472,7 +472,18 @@ struct xfs_bulk_ireq {
+  */
+ #define XFS_BULK_IREQ_AGNO	(1 << 0)
+ 
+-#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO)
++/*
++ * Return bulkstat information for a single inode, where @ino value is a
++ * special value, not a literal inode number.  See the XFS_BULK_IREQ_SPECIAL_*
++ * values below.  Not compatible with XFS_BULK_IREQ_AGNO.
++ */
++#define XFS_BULK_IREQ_SPECIAL	(1 << 1)
++
++#define XFS_BULK_IREQ_FLAGS_ALL	(XFS_BULK_IREQ_AGNO | \
++				 XFS_BULK_IREQ_SPECIAL)
++
++/* Operate on the root directory inode. */
++#define XFS_BULK_IREQ_SPECIAL_ROOT	(1)
+ 
+ /*
+  * ioctl structures for v5 bulkstat and inumbers requests
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index e1e1d9d6c16d..6bf04e71325b 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -853,6 +853,25 @@ xfs_bulk_ireq_setup(
+ 	breq->ocount = 0;
+ 	breq->flags = 0;
+ 
++	/*
++	 * The @ino parameter is a special value, so we must look it up here.
++	 * We're not allowed to have IREQ_AGNO, and we only return one inode
++	 * worth of data.
++	 */
++	if (hdr->flags & XFS_BULK_IREQ_SPECIAL) {
++		if (hdr->flags & XFS_BULK_IREQ_AGNO)
++			return -EINVAL;
++
++		switch (hdr->ino) {
++		case XFS_BULK_IREQ_SPECIAL_ROOT:
++			hdr->ino = mp->m_sb.sb_rootino;
++			break;
++		default:
++			return -EINVAL;
++		}
++		breq->icount = 1;
++	}
++
+ 	/*
+ 	 * The IREQ_AGNO flag means that we only want results from a given AG.
+ 	 * If @hdr->ino is zero, we start iterating in that AG.  If @hdr->ino is
