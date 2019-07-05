@@ -1,64 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ed1-f65.google.com ([209.85.208.65]:42523 "EHLO
-        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726930AbfGCAbe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 2 Jul 2019 20:31:34 -0400
-Subject: Re: pagecache locking
-References: <20190612162144.GA7619@kmo-pixel>
- <20190612230224.GJ14308@dread.disaster.area>
- <20190613183625.GA28171@kmo-pixel>
- <20190613235524.GK14363@dread.disaster.area>
- <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
- <CAHk-=wgz+7O0pdn8Wfxc5EQKNy44FTtf4LAPO1WgCidNjxbWzg@mail.gmail.com>
- <20190617224714.GR14363@dread.disaster.area>
- <CAHk-=wiR3a7+b0cUN45hGp1dvFh=s1i1OkVhoP7CivJxKqsLFQ@mail.gmail.com>
- <CAOQ4uxjqQjrCCt=ixgdUYjBJvKLhw4R9NeMZOB_s2rrWvoDMBw@mail.gmail.com>
- <20190619103838.GB32409@quack2.suse.cz>
- <20190619223756.GC26375@dread.disaster.area>
-From: Boaz Harrosh <openosd@gmail.com>
-Message-ID: <3f394239-f532-23eb-9ff1-465f7d1f3cb4@gmail.com>
-Date: Wed, 3 Jul 2019 03:04:45 +0300
+Received: from sandeen.net ([63.231.237.45]:47500 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725763AbfGEQI4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 12:08:56 -0400
+Subject: Re: [PATCH 9/9] man: create a separate xfs shutdown ioctl manpage
+References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
+ <156104950912.1174403.4990641877651635072.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <d00e8961-c6f0-4adb-9b83-4750a15e97b1@sandeen.net>
+Date: Fri, 5 Jul 2019 11:08:54 -0500
 MIME-Version: 1.0
-In-Reply-To: <20190619223756.GC26375@dread.disaster.area>
+In-Reply-To: <156104950912.1174403.4990641877651635072.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>
-Cc: Amir Goldstein <amir73il@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 20/06/2019 01:37, Dave Chinner wrote:
-<>
+On 6/20/19 11:51 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I'd prefer it doesn't get lifted to the VFS because I'm planning on
-> getting rid of it in XFS with range locks. i.e. the XFS_MMAPLOCK is
-> likely to go away in the near term because a range lock can be
-> taken on either side of the mmap_sem in the page fault path.
+> Create a separate manual page for the xfs shutdown ioctl so we can
+> document how it works.
 > 
-<>
-Sir Dave
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  man/man2/ioctl_xfs_goingdown.2 |   63 ++++++++++++++++++++++++++++++++++++++++
+>  man/man3/xfsctl.3              |    7 ++++
+>  2 files changed, 70 insertions(+)
+>  create mode 100644 man/man2/ioctl_xfs_goingdown.2
+> 
+> 
+> diff --git a/man/man2/ioctl_xfs_goingdown.2 b/man/man2/ioctl_xfs_goingdown.2
+> new file mode 100644
+> index 00000000..bedc85c8
+> --- /dev/null
+> +++ b/man/man2/ioctl_xfs_goingdown.2
+> @@ -0,0 +1,63 @@
+> +.\" Copyright (c) 2019, Oracle.  All rights reserved.
+> +.\"
+> +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+> +.\" SPDX-License-Identifier: GPL-2.0+
+> +.\" %%%LICENSE_END
+> +.TH IOCTL-XFS-GOINGDOWN 2 2019-06-17 "XFS"
+> +.SH NAME
+> +ioctl_xfs_goingdown \- shut down an XFS filesystem
+> +.SH SYNOPSIS
+> +.br
+> +.B #include <xfs/xfs_fs.h>
+> +.PP
+> +.BI "int ioctl(int " fd ", XFS_IOC_GOINGDOWN, uint32_t " flags );
+> +.SH DESCRIPTION
+> +Shuts down a live XFS filesystem.
+> +This is a software initiated hard shutdown and should be avoided whenever
+> +possible.
+> +After this call completes, the filesystem will be totally unusable and must be
+> +unmounted.
 
-Sorry if this was answered before. I am please very curious. In the zufs
-project I have an equivalent rw_MMAPLOCK that I _read_lock on page_faults.
-(Read & writes all take read-locks ...)
-The only reason I have it is because of lockdep actually.
+That almost sounds permanently destructive.  Perhaps:
 
-Specifically for those xfstests that mmap a buffer then direct_IO in/out
-of that buffer from/to another file in the same FS or the same file.
-(For lockdep its the same case).
-I would be perfectly happy to recursively _read_lock both from the top
-of the page_fault at the DIO path, and under in the page_fault. I'm
-_read_locking after all. But lockdep is hard to convince. So I stole the
-xfs idea of having an rw_MMAPLOCK. And grab yet another _write_lock at
-truncate/punch/clone time when all mapping traversal needs to stop for
-the destructive change to take place. (Allocations are done another way
-and are race safe with traversal)
+"... will be totally unusable until the filesystem has been unmounted and remounted."
 
-How do you intend to address this problem with range-locks? ie recursively
-taking the same "lock"? because if not for the recursive-ity and lockdep I would
-not need the extra lock-object per inode.
+?
 
-Thanks
-Boaz
+> +
+> +.PP
+> +.I flags
+> +can be one of the following:
+> +.RS 0.4i
+> +.TP
+> +.B XFS_FSOP_GOING_FLAGS_DEFAULT
+> +Flush all dirty data and in-core state to disk, flush pending transactions to
+> +the log, and shut down.
+
+What exactly do we mean by "in-core state" here?  I'm not sure the average
+reader will know (I'm not sure I know)
+
+> +.TP
+> +.B XFS_FSOP_GOING_FLAGS_LOGFLUSH
+> +Flush all pending transactions to the log and shut down, leaving all dirty
+> +data unwritten.
+> +.TP
+> +.B XFS_FSOP_GOING_FLAGS_NOLOGFLUSH
+> +Shut down immediately, without writing pending transactions or dirty data
+> +to disk.
+> +
+> +.SH RETURN VALUE
+> +On error, \-1 is returned, and
+> +.I errno
+> +is set to indicate the error.
+> +.PP
+> +.SH ERRORS
+> +Error codes can be one of, but are not limited to, the following:
+
+Hm crud, now I wonder about auditing all your stated error codes.
+EPERM, EFAULT, and EINVAL seem to be the only options for this
+particular call.  Maybe that can be a 2nd cleanup, documenting
+an error code that won't happen is harmless...
+
+> +.TP
+> +.B EFSBADCRC
+> +Metadata checksum validation failed while performing the query.
+> +.TP
+> +.B EFSCORRUPTED
+> +Metadata corruption was encountered while performing the query.
+> +.TP
+> +.B EINVAL
+> +The specified allocation group number is not valid for this filesystem.
+> +.TP
+> +.B EIO
+> +An I/O error was encountered while performing the query.
+> +.TP
+> +.B EPERM
+> +Caller did not have permission to shut down the filesystem.
+> +.SH CONFORMING TO
+> +This API is specific to XFS filesystem on the Linux kernel.
+> +.SH SEE ALSO
+> +.BR ioctl (2)
+> diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+> index 077dd411..7e6588b8 100644
+> --- a/man/man3/xfsctl.3
+> +++ b/man/man3/xfsctl.3
+> @@ -365,6 +365,12 @@ See
+>  for more information.
+>  Save yourself a lot of frustration and avoid these ioctls.
+>  
+> +.TP
+> +.B XFS_IOC_GOINGDOWN
+> +See
+> +.BR ioctl_xfs_goingdown (2)
+> +for more information.
+> +
+>  .PP
+>  .nf
+>  .B XFS_IOC_THAW
+> @@ -388,6 +394,7 @@ as they are not of general use to applications.
+>  .BR ioctl_xfs_fscounts (2),
+>  .BR ioctl_xfs_getresblks (2),
+>  .BR ioctl_xfs_getbmap (2),
+> +.BR ioctl_xfs_goingdown (2),
+>  .BR fstatfs (2),
+>  .BR statfs (2),
+>  .BR xfs (5),
+> 
