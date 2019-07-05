@@ -1,72 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:33516 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727066AbfGDPDA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 4 Jul 2019 11:03:00 -0400
-Date: Thu, 4 Jul 2019 08:02:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [ANNOUNCE] xfs-linux: vfs-for-next updated to 7e328e5930ad
-Message-ID: <20190704150258.GA1404256@magnolia>
-References: <20190701160656.GM1404256@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:45628 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726978AbfGEOws (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 10:52:48 -0400
+Date: Fri, 5 Jul 2019 10:52:46 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 6/6] xfs: online scrub needn't bother zeroing its
+ temporary buffer
+Message-ID: <20190705145246.GH37448@bfoster>
+References: <156158199378.495944.4088787757066517679.stgit@magnolia>
+ <156158203074.495944.13142136337107091755.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190701160656.GM1404256@magnolia>
+In-Reply-To: <156158203074.495944.13142136337107091755.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-ext4 <linux-ext4@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Wed, Jun 26, 2019 at 01:47:10PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> The xattr scrubber functions use the temporary memory buffer either for
+> storing bitmaps or for testing if attribute value extraction works.  The
+> bitmap code always zeroes what it needs and the value extraction merely
+> sets the buffer contents (we never read the contents, we just look for
+> return codes), so it's not necessary to waste CPU time zeroing on
+> allocation.
+> 
 
-The vfs-for-next branch of the xfs-linux repository at:
+If we don't need to zero the buffer because we never look at the result,
+that suggests we don't need to populate it in the first place right?
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> A flame graph analysis showed that we were spending 7% of a xfs_scrub
+> run (the whole program, not just the attr scrubber itself) allocating
+> and zeroing 64k segments needlessly.
+> 
 
-has just been updated.
+How much does this patch help?
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is a resend of an earlier announcement about the
-SETFLAGS and FSSETXATTR refactoring that I've started for 5.3 and will
-continue for 5.4 so that these ioctls will have more consistent
-behavior with the filesystems that originally created them.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/attr.c |    7 ++++++-
+>  1 file changed, 6 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+> index 09081d8ab34b..d3a6f3dacf0d 100644
+> --- a/fs/xfs/scrub/attr.c
+> +++ b/fs/xfs/scrub/attr.c
+> @@ -64,7 +64,12 @@ xchk_setup_xattr_buf(
+>  		sc->buf = NULL;
+>  	}
+>  
+> -	ab = kmem_zalloc_large(sizeof(*ab) + sz, flags);
+> +	/*
+> +	 * Allocate the big buffer.  We skip zeroing it because that added 7%
+> +	 * to the scrub runtime and all the users were careful never to read
+> +	 * uninitialized contents.
+> +	 */
 
-The new head of the vfs-for-next branch is commit:
+Ok, that suggests the 7% hit was due to zeroing (where the commit log
+says "allocating and zeroing"). Either way, we probably don't need such
+details in the code. Can we tweak the comment to something like:
 
-7e328e5930ad mm/fs: don't allow writes to immutable files
+/*
+ * Don't zero the buffer on allocation to avoid runtime overhead. All
+ * users must be careful never to read uninitialized contents.
+ */ 
 
-New Commits:
+With that:
 
-Darrick J. Wong (6):
-      [5aca284210ce] vfs: create a generic checking and prep function for FS_IOC_SETFLAGS
-      [7b0e492e6b80] vfs: create a generic checking function for FS_IOC_FSSETXATTR
-      [f991492ed110] vfs: teach vfs_ioc_fssetxattr_check to check project id info
-      [ca29be753445] vfs: teach vfs_ioc_fssetxattr_check to check extent size hints
-      [dbc77f31e58b] vfs: only allow FSSETXATTR to set DAX flag on files and dirs
-      [7e328e5930ad] mm/fs: don't allow writes to immutable files
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-
-Code Diffstat:
-
- fs/attr.c           |  13 ++---
- fs/btrfs/ioctl.c    |  30 ++++------
- fs/efivarfs/file.c  |  26 ++++++---
- fs/ext2/ioctl.c     |  16 ++----
- fs/ext4/ioctl.c     |  51 +++++------------
- fs/gfs2/file.c      |  42 +++++++++-----
- fs/hfsplus/ioctl.c  |  21 ++++---
- fs/inode.c          |  86 +++++++++++++++++++++++++++++
- fs/jfs/ioctl.c      |  22 +++-----
- fs/nilfs2/ioctl.c   |   9 +--
- fs/ocfs2/ioctl.c    |  13 +----
- fs/orangefs/file.c  |  37 ++++++++++---
- fs/reiserfs/ioctl.c |  10 ++--
- fs/ubifs/ioctl.c    |  13 +----
- fs/xfs/xfs_ioctl.c  | 154 +++++++++++++++++++++++-----------------------------
- include/linux/fs.h  |  12 ++++
- mm/filemap.c        |   3 +
- mm/memory.c         |   4 ++
- mm/mmap.c           |   8 ++-
- 19 files changed, 319 insertions(+), 251 deletions(-)
+> +	ab = kmem_alloc_large(sizeof(*ab) + sz, flags);
+>  	if (!ab)
+>  		return -ENOMEM;
+>  
+> 
