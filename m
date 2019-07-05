@@ -1,77 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:33108 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726951AbfGBBym (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 1 Jul 2019 21:54:42 -0400
-Received: by mail-pg1-f195.google.com with SMTP id m4so6878490pgk.0
-        for <linux-xfs@vger.kernel.org>; Mon, 01 Jul 2019 18:54:42 -0700 (PDT)
-Subject: Re: [PATCH V2] block: fix .bi_size overflow
-References: <20190701071446.22028-1-ming.lei@redhat.com>
- <8db73c5d-a0e2-00c9-59ab-64314097db26@kernel.dk>
- <bd45842a-e0fd-28a7-ac79-96f7cb9b66e4@kernel.dk>
- <8b8dc953-e663-e3d8-b991-9d8dba9270be@kernel.dk>
- <20190702013829.GB8356@ming.t460p>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <7c3987b1-ac39-276b-da6d-511bfc4485bf@kernel.dk>
-Date: Mon, 1 Jul 2019 19:54:38 -0600
+Received: from mx1.redhat.com ([209.132.183.28]:45966 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726324AbfGEOtT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 10:49:19 -0400
+Date: Fri, 5 Jul 2019 10:49:17 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/6] xfs: attribute scrub should use seen_enough to pass
+ error values
+Message-ID: <20190705144917.GD37448@bfoster>
+References: <156158199378.495944.4088787757066517679.stgit@magnolia>
+ <156158200593.495944.1612838829393872431.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190702013829.GB8356@ming.t460p>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156158200593.495944.1612838829393872431.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, Liu Yiding <liuyd.fnst@cn.fujitsu.com>, kernel test robot <rong.a.chen@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 7/1/19 7:38 PM, Ming Lei wrote:
-> On Mon, Jul 01, 2019 at 08:20:13AM -0600, Jens Axboe wrote:
->> On 7/1/19 8:14 AM, Jens Axboe wrote:
->>> On 7/1/19 8:05 AM, Jens Axboe wrote:
->>>> On 7/1/19 1:14 AM, Ming Lei wrote:
->>>>> 'bio->bi_iter.bi_size' is 'unsigned int', which at most hold 4G - 1
->>>>> bytes.
->>>>>
->>>>> Before 07173c3ec276 ("block: enable multipage bvecs"), one bio can
->>>>> include very limited pages, and usually at most 256, so the fs bio
->>>>> size won't be bigger than 1M bytes most of times.
->>>>>
->>>>> Since we support multi-page bvec, in theory one fs bio really can
->>>>> be added > 1M pages, especially in case of hugepage, or big writeback
->>>>> with too many dirty pages. Then there is chance in which .bi_size
->>>>> is overflowed.
->>>>>
->>>>> Fixes this issue by using bio_full() to check if the added segment may
->>>>> overflow .bi_size.
->>>>
->>>> Any objections to queuing this up for 5.3? It's not a new regression
->>>> this series.
->>>
->>> I took a closer look, and applied for 5.3 and removed the stable tag.
->>> We'll need to apply your patch for stable, and I added an adapted
->>> one for 5.3. I don't want a huge merge hassle because of this.
->>
->> OK, so we still get conflicts with that, due to both the same page
->> merge fix, and Christophs 5.3 changes.
->>
->> I ended up pulling in 5.2-rc6 in for-5.3/block, which resolves at
->> least most of it, and kept the stable tag since now it's possible
->> to backport without too much trouble.
+On Wed, Jun 26, 2019 at 01:46:45PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Thanks for merging it.
+> When we're iterating all the attributes using the built-in xattr
+> iterator, we can use the seen_enough variable to pass error codes back
+> to the main scrub function instead of flattening them into 0/1.  This
+> will be used in a more exciting fashion in upcoming patches.
 > 
-> BTW, we need the -stable tag, since Yiding has test case to reproduce
-> the issue reliably, which just needs one big machine with enough memory,
-> and fast storage, I guess.
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/attr.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/fs/xfs/scrub/attr.c b/fs/xfs/scrub/attr.c
+> index dce74ec57038..f0fd26abd39d 100644
+> --- a/fs/xfs/scrub/attr.c
+> +++ b/fs/xfs/scrub/attr.c
+> @@ -83,7 +83,7 @@ xchk_xattr_listent(
+>  	sx = container_of(context, struct xchk_xattr, context);
+>  
+>  	if (xchk_should_terminate(sx->sc, &error)) {
+> -		context->seen_enough = 1;
+> +		context->seen_enough = error;
 
-Just to be clear, I wasn't saying it shouldn't go to stable. But it's
-pointless to mark something for stable if you know it'll reject, and
-won't be easily fixable by the person applying it. For that case, it's
-better to NOT CC stable, and just send in an appropriate patch instead.
+It might be appropriate to update the xfs_attr_list_context structure
+definition comment since 'seen_enough' is not self explanatory as an
+error code..? Otherwise looks fine:
 
-But that's all moot now, as per last section in the email you are
-replying to.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
--- 
-Jens Axboe
+>  		return;
+>  	}
+>  
+> @@ -125,7 +125,7 @@ xchk_xattr_listent(
+>  					     args.blkno);
+>  fail_xref:
+>  	if (sx->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> -		context->seen_enough = 1;
+> +		context->seen_enough = XFS_ITER_ABORT;
+>  	return;
+>  }
+>  
+> @@ -464,6 +464,10 @@ xchk_xattr(
+>  	error = xfs_attr_list_int_ilocked(&sx.context);
+>  	if (!xchk_fblock_process_error(sc, XFS_ATTR_FORK, 0, &error))
+>  		goto out;
+> +
+> +	/* Did our listent function try to return any errors? */
+> +	if (sx.context.seen_enough < 0)
+> +		error = sx.context.seen_enough;
+>  out:
+>  	return error;
+>  }
+> 
