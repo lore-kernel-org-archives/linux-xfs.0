@@ -1,62 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:49156 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:56660 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726436AbfGEOtH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jul 2019 10:49:07 -0400
-Date: Fri, 5 Jul 2019 10:49:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 1/6] xfs: remove more ondisk directory corruption asserts
-Message-ID: <20190705144904.GC37448@bfoster>
-References: <156158199378.495944.4088787757066517679.stgit@magnolia>
- <156158199994.495944.4584531696054696463.stgit@magnolia>
+        id S1726061AbfGER6O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 13:58:14 -0400
+Subject: Re: [PATCH 9/9] man: create a separate xfs shutdown ioctl manpage
+References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
+ <156104950912.1174403.4990641877651635072.stgit@magnolia>
+ <d00e8961-c6f0-4adb-9b83-4750a15e97b1@sandeen.net>
+ <20190705171303.GJ1404256@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <cfdfb9f9-be9d-a73e-6373-12c4db82588a@sandeen.net>
+Date: Fri, 5 Jul 2019 12:58:12 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156158199994.495944.4584531696054696463.stgit@magnolia>
+In-Reply-To: <20190705171303.GJ1404256@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On Wed, Jun 26, 2019 at 01:46:40PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Continue our game of replacing ASSERTs for corrupt ondisk metadata with
-> EFSCORRUPTED returns.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_da_btree.c  |   19 ++++++++++++-------
->  fs/xfs/libxfs/xfs_dir2_node.c |    3 ++-
->  2 files changed, 14 insertions(+), 8 deletions(-)
-> 
-> 
+On 7/5/19 12:13 PM, Darrick J. Wong wrote:
+> On Fri, Jul 05, 2019 at 11:08:54AM -0500, Eric Sandeen wrote:
+>> On 6/20/19 11:51 AM, Darrick J. Wong wrote:
+>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+
 ...
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 16731d2d684b..f7f3fb458019 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -743,7 +743,8 @@ xfs_dir2_leafn_lookup_for_entry(
->  	ents = dp->d_ops->leaf_ents_p(leaf);
->  
->  	xfs_dir3_leaf_check(dp, bp);
-> -	ASSERT(leafhdr.count > 0);
-> +	if (leafhdr.count <= 0)
-> +		return -EFSCORRUPTED;
 
-This error return bubbles up to xfs_dir2_leafn_lookup_int() and
-xfs_da3_node_lookup_int(). The latter has a direct return value as well
-as a *result return parameter, which unconditionally carries the return
-value from xfs_dir2_leafn_lookup_int(). xfs_da3_node_lookup_int() has
-multiple callers, but a quick look at one (xfs_attr_node_addname())
-suggests we might not handle corruption errors properly via the *result
-parameter. Perhaps we also need to fix up xfs_da3_node_lookup_int() to
-return particular errors directly?
-
-Brian
-
->  
->  	/*
->  	 * Look up the hash value in the leaf entries.
+ 
+>>> +
+>>> +.PP
+>>> +.I flags
+>>> +can be one of the following:
+>>> +.RS 0.4i
+>>> +.TP
+>>> +.B XFS_FSOP_GOING_FLAGS_DEFAULT
+>>> +Flush all dirty data and in-core state to disk, flush pending transactions to
+>>> +the log, and shut down.
+>>
+>> What exactly do we mean by "in-core state" here?  I'm not sure the average
+>> reader will know (I'm not sure I know)
 > 
+> Hm... really it's any dirty cached state, like ... unflushed inodes and
+> dquots, dirty file data, etc.  I didn't want to commit to that level of
+> specificity though.
+
+"Flush all dirty data and metadata to disk, flush pending transactions
+to the log, and shut down." ?
+
+>>> +.TP
+>>> +.B XFS_FSOP_GOING_FLAGS_LOGFLUSH
+>>> +Flush all pending transactions to the log and shut down, leaving all dirty
+>>> +data unwritten.
+>>> +.TP
+>>> +.B XFS_FSOP_GOING_FLAGS_NOLOGFLUSH
+>>> +Shut down immediately, without writing pending transactions or dirty data
+>>> +to disk.
+>>> +
+>>> +.SH RETURN VALUE
+>>> +On error, \-1 is returned, and
+>>> +.I errno
+>>> +is set to indicate the error.
+>>> +.PP
+>>> +.SH ERRORS
+>>> +Error codes can be one of, but are not limited to, the following:
+>>
+>> Hm crud, now I wonder about auditing all your stated error codes.
+>> EPERM, EFAULT, and EINVAL seem to be the only options for this
+>> particular call.  Maybe that can be a 2nd cleanup, documenting
+>> an error code that won't happen is harmless...
+> 
+> <urk> Ok, I'll go do that. :)
+> 
+>>> +.TP
+>>> +.B EFSBADCRC
+>>> +Metadata checksum validation failed while performing the query.
+>>> +.TP
+>>> +.B EFSCORRUPTED
+>>> +Metadata corruption was encountered while performing the query.
+>>> +.TP
+>>> +.B EINVAL
+>>> +The specified allocation group number is not valid for this filesystem.
+> 
+> This one definitely was copypasta error. :(
+
+Oh oopsies.  Ok that's worth fixing ....
+
+-Eric
