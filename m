@@ -1,554 +1,459 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:57390 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726736AbfGDCEn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 3 Jul 2019 22:04:43 -0400
-Date: Wed, 3 Jul 2019 19:04:34 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/9] man: create a separate GETXATTR/SETXATTR ioctl
- manpage
-Message-ID: <20190704020434.GE1654093@magnolia>
-References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
- <156104945493.1174403.4930583691574810947.stgit@magnolia>
- <82a5ede1-7b80-92a6-d3b0-4d09642e4015@sandeen.net>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <82a5ede1-7b80-92a6-d3b0-4d09642e4015@sandeen.net>
+Received: from mx1.redhat.com ([209.132.183.28]:43414 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725681AbfGEOHB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 10:07:01 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v15 2/7] virtio-pmem: Add virtio pmem driver
+Date: Fri,  5 Jul 2019 19:33:23 +0530
+Message-Id: <20190705140328.20190-3-pagupta@redhat.com>
+In-Reply-To: <20190705140328.20190-1-pagupta@redhat.com>
+References: <20190705140328.20190-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: linux-xfs@vger.kernel.org
+To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
 
-On Wed, Jul 03, 2019 at 05:48:15PM -0500, Eric Sandeen wrote:
-> On 6/20/19 11:50 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Break out the xfs file attribute get and set ioctls into a separate
-> > manpage to reduce clutter in xfsctl.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  man/man2/ioctl_xfs_fsgetxattr.2  |  245 ++++++++++++++++++++++++++++++++++++++
-> >  man/man2/ioctl_xfs_fsgetxattra.2 |    1 
-> >  man/man2/ioctl_xfs_fssetxattr.2  |    1 
-> >  man/man3/xfsctl.3                |  159 +------------------------
-> >  4 files changed, 255 insertions(+), 151 deletions(-)
-> >  create mode 100644 man/man2/ioctl_xfs_fsgetxattr.2
-> >  create mode 100644 man/man2/ioctl_xfs_fsgetxattra.2
-> >  create mode 100644 man/man2/ioctl_xfs_fssetxattr.2
-> > 
-> 
-> Ok I started nitpicking again but realized that lots of this is inherited;
-> perhaps we should have just done a 100% pure move, followed by an improvement
-> patch.  So anything bothersome that was just inherited here I'll...
-> try to ignore, and focus on stuff that is new and unclear or incorrect.
-> 
-> If I get acks for the suggestions below I'll just do it on the way in.
+This patch adds virtio-pmem driver for KVM guest.
 
-Ok.
+Guest reads the persistent memory range information from
+Qemu over VIRTIO and registers it on nvdimm_bus. It also
+creates a nd_region object with the persistent memory
+range information so that existing 'nvdimm/pmem' driver
+can reserve this into system memory map. This way
+'virtio-pmem' driver uses existing functionality of pmem
+driver to register persistent memory compatible for DAX
+capable filesystems.
 
-> > diff --git a/man/man2/ioctl_xfs_fsgetxattr.2 b/man/man2/ioctl_xfs_fsgetxattr.2
-> > new file mode 100644
-> > index 00000000..7462c46c
-> > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_fsgetxattr.2
-> > @@ -0,0 +1,245 @@
-> > +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> > +.\" SPDX-License-Identifier: GPL-2.0+
-> > +.\" %%%LICENSE_END
-> > +.TH IOCTL-XFS-FSGETXATTR 2 2019-06-17 "XFS"
-> > +.SH NAME
-> > +ioctl_xfs_fsgetxattr \- query information for an open file
-> > +.SH SYNOPSIS
-> > +.br
-> > +.B #include <linux/fs.h>
-> > +.PP
-> > +.BI "int ioctl(int " fd ", XFS_IOC_FSGETXATTR, struct fsxattr *" arg );
-> > +.br
-> > +.BI "int ioctl(int " fd ", XFS_IOC_FSGETXATTRA, struct fsxattr *" arg );
-> > +.br
-> > +.BI "int ioctl(int " fd ", XFS_IOC_FSSETXATTR, struct fsxattr *" arg );
-> > +.SH DESCRIPTION
-> > +Query or set additional attributes associated with files in various file
-> > +systems.
-> > +The attributes are conveyed in a structure of the form:
-> > +.PP
-> > +.in +4n
-> > +.nf
-> > +struct fsxattr {
-> > +	__u32         fsx_xflags;
-> > +	__u32         fsx_extsize;
-> > +	__u32         fsx_nextents;
-> > +	__u32         fsx_projid;
-> > +	__u32         fsx_cowextsize;
-> > +	unsigned char fsx_pad[8];
-> > +};
-> > +.fi
-> > +.in
-> > +.PP
-> > +.I fsx_xflags
-> > +are extended flags that apply to this file.
-> > +Refer to the section
-> > +.B XFS INODE FLAGS
-> > +below for more information.
-> > +
-> > +.PP
-> > +.I fsx_extsize
-> > +is the preferred extent allocation size for data blocks mapped to this file,
-> > +in units of filesystem blocks.
-> > +If this value is zero, the filesystem will choose a default option, which
-> > +is currently zero.
-> > +If
-> > +.B XFS_IOC_FSSETXATTR
-> > +is called with
-> > +.B XFS_XFLAG_EXTSIZE
-> > +set in
-> > +.I fsx_xflags
-> > +and this field is zero, the XFLAG will be cleared instead.
-> 
-> "instead" implies that the value is ignored, I think, so:
-> 
-> "and this field set to zero, the XFLAG will also be cleared."
+This also provides function to perform guest flush over
+VIRTIO from 'pmem' driver when userspace performs flush
+on DAX memory range.
 
-LGTM
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
+Acked-by: Michael S. Tsirkin <mst@redhat.com>
+Acked-by: Jakub Staron <jstaron@google.com>
+Tested-by: Jakub Staron <jstaron@google.com>
+Reviewed-by: Cornelia Huck <cohuck@redhat.com>
+---
+ drivers/nvdimm/Makefile          |   1 +
+ drivers/nvdimm/nd_virtio.c       | 125 +++++++++++++++++++++++++++++++
+ drivers/nvdimm/virtio_pmem.c     | 122 ++++++++++++++++++++++++++++++
+ drivers/nvdimm/virtio_pmem.h     |  55 ++++++++++++++
+ drivers/virtio/Kconfig           |  11 +++
+ include/uapi/linux/virtio_ids.h  |   1 +
+ include/uapi/linux/virtio_pmem.h |  34 +++++++++
+ 7 files changed, 349 insertions(+)
+ create mode 100644 drivers/nvdimm/nd_virtio.c
+ create mode 100644 drivers/nvdimm/virtio_pmem.c
+ create mode 100644 drivers/nvdimm/virtio_pmem.h
+ create mode 100644 include/uapi/linux/virtio_pmem.h
 
-> > +.PP
-> > +.I fsx_nextents
-> > +is the number of data extents in this file.
-> > +If
-> > +.B XFS_IOC_FSGETXATTRA
-> > +was used, then this is the number of extended attribute extents in the file.
-> > +.PP
-> > +.I fsx_projid
-> > +is the project ID of this file.
-> > +.PP
-> > +.I fsx_cowextsize
-> > +is the preferred extent allocation size for copy on write operations
-> > +targeting this file, in units of filesystem blocks.
-> > +If this field is zero, the filesystem will choose a default option,
-> > +which is currently 128 filesystem blocks.
-> > +If
-> > +.B XFS_IOC_FSSETXATTR
-> > +is called with
-> > +.B XFS_XFLAG_COWEXTSIZE
-> > +set in
-> > +.I fsx_xflags
-> > +and this field is zero, the XFLAG will be cleared instead.
-> 
-> "and this field set to zero, the XFLAG will also be cleared."
-
-LGTM
-
-> > +
-> > +.PP
-> > +.I fsx_pad
-> > +must be zeroed.
-> > +
-> > +.SH XFS INODE FLAGS
-> > +This field can be a combination of the following:
-> > +
-> > +.TP
-> > +.B XFS_XFLAG_REALTIME
-> > +The file is a realtime file.
-> > +This bit can only be changed when the file is empty.
-> > +.TP
-> > +.B XFS_XFLAG_PREALLOC
-> > +The file has preallocated space.
-> 
-> > +.TP
-> > +.B XFS_XFLAG_IMMUTABLE
-> > +The file is immutable - it cannot be modified, deleted or renamed,
-> > +no link can be created to this file and no data can be written to the
-> > +file.
-> > +Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
-> > +capability can set or clear this flag.
-> > +If this flag is set before a
-> > +.B XFS_IOC_FSSETXATTR
-> > +call and would not be cleared by the call, then no other attributes can be
-> > +changed and
-> > +.B EPERM
-> > +will be returned.
-> > +.TP
-> > +.B XFS_XFLAG_APPEND
-> > +The file is append-only - it can only be open in append mode for
-> 
-> opened?
-
-Yes.
-
-> > +writing.
-> > +Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
-> > +capability can set or clear this flag.
-> > +.TP
-> > +.B XFS_XFLAG_SYNC
-> > +All writes to the file are synchronous.
-> > +If set on a directory and the
-> > +.B /proc/sys/fs/xfs/inherit_sync
-> > +knob is set, new files and subdirectories created in the directory
-> 
-> Ok ignoring the colloquial knob for now ;)
-
-What's the colloquialism?  "subdirectory"?
-
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_NOATIME
-> > +When the file is accessed, its atime record is not modified.
-> > +If set on a directory and the
-> > +.B /proc/sys/fs/xfs/inherit_noatime
-> > +knob is set, new files and subdirectories created in the directory
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_NODUMP
-> > +The file should be skipped by backup utilities.
-> > +If set on a directory and the
-> > +.B /proc/sys/fs/xfs/inherit_nodump
-> > +knob is set, new files and subdirectories created in the directory
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_RTINHERIT
-> > +Realtime inheritance bit - new files created in the directory
-> > +will be automatically as realtime times.
-> 
-> "will be automatically created as realtime files."
-
-Ok.
-
-> > +If set on a directory, new subdirectories created in the directory will also
-> > +have the inheritance flag set.
-> (I almost wonder if we should just group the inheritable flags together
-> and mention it once.  "For the following flags, if the flag is set on
-> a directory ...") ((I'll worry about that later))
-
-Yeah, that would be a nice cleanup.
-
-> > +.TP
-> > +.B XFS_XFLAG_PROJINHERIT
-> > +Project inheritance bit - new files and directories created in
-> > +this directory will inherit the project ID of this directory.
-> > +If set on a directory, new subdirectories created in the directory will also
-> > +have the inheritance flag set.> +.TP
-> > +.B XFS_XFLAG_NOSYMLINKS
-> > +Disallows creation of symbolic links in the directory.
-> > +This flag can only be set on a directory.
-> > +If set on a directory and the
-> > +.B /proc/sys/fs/xfs/inherit_nosymlinks
-> > +knob is set, new files and subdirectories created in the directory
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_EXTSIZE
-> > +Extent size bit - if a basic extent size value is set on the file
-> > +then the allocator will allocate in multiples of the set size for
-> > +this file (see
-> > +.B fsx_extsize
-> > +below).
-> > +This flag can only be set on a file if it is empty.
-> 
-> I feel like "set" is ambiguous, it can mean "toggled from unset to set"
-> or "is currently set" - if interpreted on the latter, it sounds like a
-> GET operation should never see the flag unless it is empty. so:
-> 
-> "This flag can only be initially set on a file when it is empty" ?
-
-AFAICT it can be set if the file is truncated back to empty.
-
-"This flag can only be enabled on a file when it is empty"?
-
-> > +.TP
-> > +.B XFS_XFLAG_EXTSZINHERIT
-> > +Extent size inheritance bit - new files and directories created in
-> > +the directory will inherit the extent size value (see
-> > +.B fsx_extsize
-> > +below) of the parent directory.
-> > +New subdirectories created in the directory will inherit the extent size
-> > +inheritance bit.
-> > +.TP
-> > +.B XFS_XFLAG_NODEFRAG
-> > +No defragment file bit - the file should be skipped during a defragmentation
-> > +operation.
-> > +If set on a directory and the
-> > +.B /proc/sys/fs/xfs/inherit_nodefrag
-> > +knob is set, new files and subdirectories created in the directory
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_FILESTREAM
-> > +Filestream allocator bit - allows a directory to reserve an allocation group
-> > +for exclusive use by files created within that directory.
-> > +Files being written in other directories will not use the same allocation group
-> > +and so files within different directories will not interleave extents on disk.
-> > +The reservation is only active while files are being created and written into
-> > +the directory.
-> > +If set on a directory, new files and subdirectories created in the directory
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_DAX
-> > +If the filesystem lives on directly accessible persistent memory, reads and
-> > +writes to this file will go straight to the persistent memory, bypassing the
-> > +page cache.
-> > +A file cannot be reflinked and have the
-> > +.BR XFS_XFLAG_DAX
-> > +set at the same time.
-> > +That is to say that DAX files cannot share blocks.
-> 
-> Should we just say that this flag cannot be set on filesystems with the 
-> reflink feature enabled?
-
-Yes.
-
-Thanks for picking this up, sorry I was sloppy. :( :(
-
-Happy Independence Day!~!
-
---D
-
-> > +If set on a directory, new files and subdirectories created in the directory
-> > +will also have the flag set.
-> > +.TP
-> > +.B XFS_XFLAG_COWEXTSIZE
-> > +Copy on Write Extent size bit - if a CoW extent size value is set on the file,
-> > +the allocator will allocate extents for staging a copy on write operation
-> > +in multiples of the set size for this file (see
-> > +.B fsx_cowextsize
-> > +below).
-> > +If set on a directory, new files and subdirectories created in the directory
-> > +will have both the flag and the CoW extent size value set.
-> > +.TP
-> > +.B XFS_XFLAG_HASATTR
-> > +The file has extended attributes associated with it.
-> > +
-> > +.SH RETURN VALUE
-> > +On error, \-1 is returned, and
-> > +.I errno
-> > +is set to indicate the error.
-> > +.PP
-> > +.SH ERRORS
-> > +Error codes can be one of, but are not limited to, the following:
-> > +.TP
-> > +.B EACCESS
-> > +Caller does not have sufficient access to change the attributes.
-> > +.TP
-> > +.B EFAULT
-> > +The kernel was not able to copy into the userspace buffer.
-> > +.TP
-> > +.B EFSBADCRC
-> > +Metadata checksum validation failed while performing the query.
-> > +.TP
-> > +.B EFSCORRUPTED
-> > +Metadata corruption was encountered while performing the query.
-> > +.TP
-> > +.B EINVAL
-> > +One of the arguments was not valid.
-> > +.TP
-> > +.B EIO
-> > +An I/O error was encountered while performing the query.
-> > +.TP
-> > +.B ENOMEM
-> > +There was insufficient memory to perform the query.
-> > +.TP
-> > +.B EPERM
-> > +Caller did not have permission to change the attributes.
-> > +.SH CONFORMING TO
-> > +This API is implemented by the ext4, xfs, btrfs, and f2fs filesystems on the
-> > +Linux kernel.
-> > +Not all fields may be understood by filesystems other than xfs.
-> > +.SH SEE ALSO
-> > +.BR ioctl (2),
-> > +.BR ioctl_iflags (2)
-> > diff --git a/man/man2/ioctl_xfs_fsgetxattra.2 b/man/man2/ioctl_xfs_fsgetxattra.2
-> > new file mode 100644
-> > index 00000000..9bd595ae
-> > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_fsgetxattra.2
-> > @@ -0,0 +1 @@
-> > +.so man2/ioctl_xfs_fsgetxattr.2
-> > diff --git a/man/man2/ioctl_xfs_fssetxattr.2 b/man/man2/ioctl_xfs_fssetxattr.2
-> > new file mode 100644
-> > index 00000000..9bd595ae
-> > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_fssetxattr.2
-> > @@ -0,0 +1 @@
-> > +.so man2/ioctl_xfs_fsgetxattr.2
-> > diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> > index 462ccbd8..2992b5be 100644
-> > --- a/man/man3/xfsctl.3
-> > +++ b/man/man3/xfsctl.3
-> > @@ -132,161 +132,17 @@ will fail with EINVAL.
-> >  All I/O requests are kept consistent with any data brought into
-> >  the cache with an access through a non-direct I/O file descriptor.
-> >  
-> > -.TP
-> > -.B XFS_IOC_FSGETXATTR
-> > -Get additional attributes associated with files in XFS file systems.
-> > -The final argument points to a variable of type
-> > -.BR "struct fsxattr" ,
-> > -whose fields include:
-> > -.B fsx_xflags
-> > -(extended flag bits),
-> > -.B fsx_extsize
-> > -(nominal extent size in file system blocks),
-> > -.B fsx_nextents
-> > -(number of data extents in the file).
-> > -A
-> > -.B fsx_extsize
-> > -value returned indicates that a preferred extent size was previously
-> > -set on the file, a
-> > -.B fsx_extsize
-> > -of zero indicates that the defaults for that filesystem will be used.
-> > -A
-> > -.B fsx_cowextsize
-> > -value returned indicates that a preferred copy on write extent size was
-> > -previously set on the file, whereas a
-> > -.B fsx_cowextsize
-> > -of zero indicates that the defaults for that filesystem will be used.
-> > -The current default for
-> > -.B fsx_cowextsize
-> > -is 128 blocks.
-> > -Currently the meaningful bits for the
-> > -.B fsx_xflags
-> > -field are:
-> > -.PD 0
-> > -.RS
-> > -.TP 1.0i
-> > -.SM "Bit 0 (0x1) \- XFS_XFLAG_REALTIME"
-> > -The file is a realtime file.
-> > -.TP
-> > -.SM "Bit 1 (0x2) \- XFS_XFLAG_PREALLOC"
-> > -The file has preallocated space.
-> > -.TP
-> > -.SM "Bit 3 (0x8) \- XFS_XFLAG_IMMUTABLE"
-> > -The file is immutable - it cannot be modified, deleted or renamed,
-> > -no link can be created to this file and no data can be written to the
-> > -file.
-> > -Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
-> > -capability can set or clear this flag.
-> > -.TP
-> > -.SM "Bit 4 (0x10) \- XFS_XFLAG_APPEND"
-> > -The file is append-only - it can only be open in append mode for
-> > -writing.
-> > -Only the superuser or a process possessing the CAP_LINUX_IMMUTABLE
-> > -capability can set or clear this flag.
-> > -.TP
-> > -.SM "Bit 5 (0x20) \- XFS_XFLAG_SYNC"
-> > -All writes to the file are synchronous.
-> > -.TP
-> > -.SM "Bit 6 (0x40) \- XFS_XFLAG_NOATIME"
-> > -When the file is accessed, its atime record is not modified.
-> > -.TP
-> > -.SM "Bit 7 (0x80) \- XFS_XFLAG_NODUMP"
-> > -The file should be skipped by backup utilities.
-> > -.TP
-> > -.SM "Bit 8 (0x100) \- XFS_XFLAG_RTINHERIT"
-> > -Realtime inheritance bit - new files created in the directory
-> > -will be automatically realtime, and new directories created in
-> > -the directory will inherit the inheritance bit.
-> > -.TP
-> > -.SM "Bit 9 (0x200) \- XFS_XFLAG_PROJINHERIT"
-> > -Project inheritance bit - new files and directories created in
-> > -the directory will inherit the parents project ID.  New
-> > -directories also inherit the project inheritance bit.
-> > -.TP
-> > -.SM "Bit 10 (0x400) \- XFS_XFLAG_NOSYMLINKS"
-> > -Can only be set on a directory and disallows creation of
-> > -symbolic links in that directory.
-> > -.TP
-> > -.SM "Bit 11 (0x800) \- XFS_XFLAG_EXTSIZE"
-> > -Extent size bit - if a basic extent size value is set on the file
-> > -then the allocator will allocate in multiples of the set size for
-> > -this file (see
-> > -.B XFS_IOC_FSSETXATTR
-> > -below).
-> > -.TP
-> > -.SM "Bit 12 (0x1000) \- XFS_XFLAG_EXTSZINHERIT"
-> > -Extent size inheritance bit - new files and directories created in
-> > -the directory will inherit the parents basic extent size value (see
-> > -.B XFS_IOC_FSSETXATTR
-> > -below).
-> > -Can only be set on a directory.
-> > -.TP
-> > -.SM "Bit 13 (0x2000) \- XFS_XFLAG_NODEFRAG"
-> > -No defragment file bit - the file should be skipped during a defragmentation
-> > -operation. When applied to a directory, new files and directories created will
-> > -inherit the no\-defrag bit.
-> > -.TP
-> > -.SM "Bit 14 (0x4000) \- XFS_XFLAG_FILESTREAM"
-> > -Filestream allocator bit - allows a directory to reserve an allocation
-> > -group for exclusive use by files created within that directory. Files
-> > -being written in other directories will not use the same allocation
-> > -group and so files within different directories will not interleave
-> > -extents on disk. The reservation is only active while files are being
-> > -created and written into the directory.
-> > -.TP
-> > -.SM "Bit 15 (0x8000) \- XFS_XFLAG_DAX"
-> > -If the filesystem lives on directly accessible persistent memory, reads and
-> > -writes to this file will go straight to the persistent memory, bypassing the
-> > -page cache.
-> > -A file cannot be reflinked and have the
-> > -.BR XFS_XFLAG_DAX
-> > -set at the same time.
-> > -That is to say that DAX files cannot share blocks.
-> > -.TP
-> > -.SM "Bit 16 (0x10000) \- XFS_XFLAG_COWEXTSIZE"
-> > -Copy on Write Extent size bit - if a CoW extent size value is set on the file,
-> > -the allocator will allocate extents for staging a copy on write operation
-> > -in multiples of the set size for this file (see
-> > -.B XFS_IOC_FSSETXATTR
-> > -below).
-> > -If the CoW extent size is set on a directory, then new file and directories
-> > -created in the directory will inherit the parent's CoW extent size value.
-> > -.TP
-> > -.SM "Bit 31 (0x80000000) \- XFS_XFLAG_HASATTR"
-> > -The file has extended attributes associated with it.
-> > -.RE
-> >  .PP
-> > -.PD
-> > -
-> > -.TP
-> > -.B XFS_IOC_FSGETXATTRA
-> > -Identical to
-> > +.nf
-> >  .B XFS_IOC_FSGETXATTR
-> > -except that the
-> > -.B fsx_nextents
-> > -field contains the number of attribute extents in the file.
-> > -
-> > +.B XFS_IOC_FSGETXATTRA
-> > +.fi
-> > +.PD 0
-> >  .TP
-> >  .B XFS_IOC_FSSETXATTR
-> > -Set additional attributes associated with files in XFS file systems.
-> > -The final argument points to a variable of type
-> > -.BR "struct fsxattr" ,
-> > -but only the following fields are used in this call:
-> > -.BR fsx_xflags ,
-> > -.BR fsx_extsize ,
-> > -.BR fsx_cowextsize ,
-> > -and
-> > -.BR fsx_projid .
-> > -The
-> > -.B fsx_xflags
-> > -realtime file bit and the file's extent size may be changed only
-> > -when the file is empty, except in the case of a directory where
-> > -the extent size can be set at any time (this value is only used
-> > -for regular file allocations, so should only be set on a directory
-> > -in conjunction with the XFS_XFLAG_EXTSZINHERIT flag).
-> > -The copy on write extent size,
-> > -.BR fsx_cowextsize ,
-> > -can be set at any time.
-> > +See
-> > +.BR ioctl_xfs_fsgetxattr (2)
-> > +for more information.
-> >  
-> >  .TP
-> >  .B XFS_IOC_GETBMAP
-> > @@ -649,6 +505,7 @@ The remainder of these operations will not be described further
-> >  as they are not of general use to applications.
-> >  
-> >  .SH SEE ALSO
-> > +.BR ioctl_xfs_fsgetxattr (2),
-> >  .BR fstatfs (2),
-> >  .BR statfs (2),
-> >  .BR xfs (5),
-> > 
+diff --git a/drivers/nvdimm/Makefile b/drivers/nvdimm/Makefile
+index 6f2a088afad6..cefe233e0b52 100644
+--- a/drivers/nvdimm/Makefile
++++ b/drivers/nvdimm/Makefile
+@@ -5,6 +5,7 @@ obj-$(CONFIG_ND_BTT) += nd_btt.o
+ obj-$(CONFIG_ND_BLK) += nd_blk.o
+ obj-$(CONFIG_X86_PMEM_LEGACY) += nd_e820.o
+ obj-$(CONFIG_OF_PMEM) += of_pmem.o
++obj-$(CONFIG_VIRTIO_PMEM) += virtio_pmem.o nd_virtio.o
+ 
+ nd_pmem-y := pmem.o
+ 
+diff --git a/drivers/nvdimm/nd_virtio.c b/drivers/nvdimm/nd_virtio.c
+new file mode 100644
+index 000000000000..8645275c08c2
+--- /dev/null
++++ b/drivers/nvdimm/nd_virtio.c
+@@ -0,0 +1,125 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * virtio_pmem.c: Virtio pmem Driver
++ *
++ * Discovers persistent memory range information
++ * from host and provides a virtio based flushing
++ * interface.
++ */
++#include "virtio_pmem.h"
++#include "nd.h"
++
++ /* The interrupt handler */
++void virtio_pmem_host_ack(struct virtqueue *vq)
++{
++	struct virtio_pmem *vpmem = vq->vdev->priv;
++	struct virtio_pmem_request *req_data, *req_buf;
++	unsigned long flags;
++	unsigned int len;
++
++	spin_lock_irqsave(&vpmem->pmem_lock, flags);
++	while ((req_data = virtqueue_get_buf(vq, &len)) != NULL) {
++		req_data->done = true;
++		wake_up(&req_data->host_acked);
++
++		if (!list_empty(&vpmem->req_list)) {
++			req_buf = list_first_entry(&vpmem->req_list,
++					struct virtio_pmem_request, list);
++			req_buf->wq_buf_avail = true;
++			wake_up(&req_buf->wq_buf);
++			list_del(&req_buf->list);
++		}
++	}
++	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
++}
++EXPORT_SYMBOL_GPL(virtio_pmem_host_ack);
++
++ /* The request submission function */
++static int virtio_pmem_flush(struct nd_region *nd_region)
++{
++	struct virtio_device *vdev = nd_region->provider_data;
++	struct virtio_pmem *vpmem  = vdev->priv;
++	struct virtio_pmem_request *req_data;
++	struct scatterlist *sgs[2], sg, ret;
++	unsigned long flags;
++	int err, err1;
++
++	might_sleep();
++	req_data = kmalloc(sizeof(*req_data), GFP_KERNEL);
++	if (!req_data)
++		return -ENOMEM;
++
++	req_data->done = false;
++	init_waitqueue_head(&req_data->host_acked);
++	init_waitqueue_head(&req_data->wq_buf);
++	INIT_LIST_HEAD(&req_data->list);
++	req_data->req.type = cpu_to_virtio32(vdev, VIRTIO_PMEM_REQ_TYPE_FLUSH);
++	sg_init_one(&sg, &req_data->req, sizeof(req_data->req));
++	sgs[0] = &sg;
++	sg_init_one(&ret, &req_data->resp.ret, sizeof(req_data->resp));
++	sgs[1] = &ret;
++
++	spin_lock_irqsave(&vpmem->pmem_lock, flags);
++	 /*
++	  * If virtqueue_add_sgs returns -ENOSPC then req_vq virtual
++	  * queue does not have free descriptor. We add the request
++	  * to req_list and wait for host_ack to wake us up when free
++	  * slots are available.
++	  */
++	while ((err = virtqueue_add_sgs(vpmem->req_vq, sgs, 1, 1, req_data,
++					GFP_ATOMIC)) == -ENOSPC) {
++
++		dev_info(&vdev->dev, "failed to send command to virtio pmem device, no free slots in the virtqueue\n");
++		req_data->wq_buf_avail = false;
++		list_add_tail(&req_data->list, &vpmem->req_list);
++		spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
++
++		/* A host response results in "host_ack" getting called */
++		wait_event(req_data->wq_buf, req_data->wq_buf_avail);
++		spin_lock_irqsave(&vpmem->pmem_lock, flags);
++	}
++	err1 = virtqueue_kick(vpmem->req_vq);
++	spin_unlock_irqrestore(&vpmem->pmem_lock, flags);
++	/*
++	 * virtqueue_add_sgs failed with error different than -ENOSPC, we can't
++	 * do anything about that.
++	 */
++	if (err || !err1) {
++		dev_info(&vdev->dev, "failed to send command to virtio pmem device\n");
++		err = -EIO;
++	} else {
++		/* A host repsonse results in "host_ack" getting called */
++		wait_event(req_data->host_acked, req_data->done);
++		err = virtio32_to_cpu(vdev, req_data->resp.ret);
++	}
++
++	kfree(req_data);
++	return err;
++};
++
++/* The asynchronous flush callback function */
++int async_pmem_flush(struct nd_region *nd_region, struct bio *bio)
++{
++	/*
++	 * Create child bio for asynchronous flush and chain with
++	 * parent bio. Otherwise directly call nd_region flush.
++	 */
++	if (bio && bio->bi_iter.bi_sector != -1) {
++		struct bio *child = bio_alloc(GFP_ATOMIC, 0);
++
++		if (!child)
++			return -ENOMEM;
++		bio_copy_dev(child, bio);
++		child->bi_opf = REQ_PREFLUSH;
++		child->bi_iter.bi_sector = -1;
++		bio_chain(child, bio);
++		submit_bio(child);
++		return 0;
++	}
++	if (virtio_pmem_flush(nd_region))
++		return -EIO;
++
++	return 0;
++};
++EXPORT_SYMBOL_GPL(async_pmem_flush);
++MODULE_LICENSE("GPL");
+diff --git a/drivers/nvdimm/virtio_pmem.c b/drivers/nvdimm/virtio_pmem.c
+new file mode 100644
+index 000000000000..5e3d07b47e0c
+--- /dev/null
++++ b/drivers/nvdimm/virtio_pmem.c
+@@ -0,0 +1,122 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * virtio_pmem.c: Virtio pmem Driver
++ *
++ * Discovers persistent memory range information
++ * from host and registers the virtual pmem device
++ * with libnvdimm core.
++ */
++#include "virtio_pmem.h"
++#include "nd.h"
++
++static struct virtio_device_id id_table[] = {
++	{ VIRTIO_ID_PMEM, VIRTIO_DEV_ANY_ID },
++	{ 0 },
++};
++
++ /* Initialize virt queue */
++static int init_vq(struct virtio_pmem *vpmem)
++{
++	/* single vq */
++	vpmem->req_vq = virtio_find_single_vq(vpmem->vdev,
++					virtio_pmem_host_ack, "flush_queue");
++	if (IS_ERR(vpmem->req_vq))
++		return PTR_ERR(vpmem->req_vq);
++
++	spin_lock_init(&vpmem->pmem_lock);
++	INIT_LIST_HEAD(&vpmem->req_list);
++
++	return 0;
++};
++
++static int virtio_pmem_probe(struct virtio_device *vdev)
++{
++	struct nd_region_desc ndr_desc = {};
++	int nid = dev_to_node(&vdev->dev);
++	struct nd_region *nd_region;
++	struct virtio_pmem *vpmem;
++	struct resource res;
++	int err = 0;
++
++	if (!vdev->config->get) {
++		dev_err(&vdev->dev, "%s failure: config access disabled\n",
++			__func__);
++		return -EINVAL;
++	}
++
++	vpmem = devm_kzalloc(&vdev->dev, sizeof(*vpmem), GFP_KERNEL);
++	if (!vpmem) {
++		err = -ENOMEM;
++		goto out_err;
++	}
++
++	vpmem->vdev = vdev;
++	vdev->priv = vpmem;
++	err = init_vq(vpmem);
++	if (err) {
++		dev_err(&vdev->dev, "failed to initialize virtio pmem vq's\n");
++		goto out_err;
++	}
++
++	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
++			start, &vpmem->start);
++	virtio_cread(vpmem->vdev, struct virtio_pmem_config,
++			size, &vpmem->size);
++
++	res.start = vpmem->start;
++	res.end   = vpmem->start + vpmem->size - 1;
++	vpmem->nd_desc.provider_name = "virtio-pmem";
++	vpmem->nd_desc.module = THIS_MODULE;
++
++	vpmem->nvdimm_bus = nvdimm_bus_register(&vdev->dev,
++						&vpmem->nd_desc);
++	if (!vpmem->nvdimm_bus) {
++		dev_err(&vdev->dev, "failed to register device with nvdimm_bus\n");
++		err = -ENXIO;
++		goto out_vq;
++	}
++
++	dev_set_drvdata(&vdev->dev, vpmem->nvdimm_bus);
++
++	ndr_desc.res = &res;
++	ndr_desc.numa_node = nid;
++	ndr_desc.flush = async_pmem_flush;
++	set_bit(ND_REGION_PAGEMAP, &ndr_desc.flags);
++	set_bit(ND_REGION_ASYNC, &ndr_desc.flags);
++	nd_region = nvdimm_pmem_region_create(vpmem->nvdimm_bus, &ndr_desc);
++	if (!nd_region) {
++		dev_err(&vdev->dev, "failed to create nvdimm region\n");
++		err = -ENXIO;
++		goto out_nd;
++	}
++	nd_region->provider_data = dev_to_virtio(nd_region->dev.parent->parent);
++	return 0;
++out_nd:
++	nvdimm_bus_unregister(vpmem->nvdimm_bus);
++out_vq:
++	vdev->config->del_vqs(vdev);
++out_err:
++	return err;
++}
++
++static void virtio_pmem_remove(struct virtio_device *vdev)
++{
++	struct nvdimm_bus *nvdimm_bus = dev_get_drvdata(&vdev->dev);
++
++	nvdimm_bus_unregister(nvdimm_bus);
++	vdev->config->del_vqs(vdev);
++	vdev->config->reset(vdev);
++}
++
++static struct virtio_driver virtio_pmem_driver = {
++	.driver.name		= KBUILD_MODNAME,
++	.driver.owner		= THIS_MODULE,
++	.id_table		= id_table,
++	.probe			= virtio_pmem_probe,
++	.remove			= virtio_pmem_remove,
++};
++
++module_virtio_driver(virtio_pmem_driver);
++MODULE_DEVICE_TABLE(virtio, id_table);
++MODULE_DESCRIPTION("Virtio pmem driver");
++MODULE_LICENSE("GPL");
+diff --git a/drivers/nvdimm/virtio_pmem.h b/drivers/nvdimm/virtio_pmem.h
+new file mode 100644
+index 000000000000..0dddefe594c4
+--- /dev/null
++++ b/drivers/nvdimm/virtio_pmem.h
+@@ -0,0 +1,55 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * virtio_pmem.h: virtio pmem Driver
++ *
++ * Discovers persistent memory range information
++ * from host and provides a virtio based flushing
++ * interface.
++ **/
++
++#ifndef _LINUX_VIRTIO_PMEM_H
++#define _LINUX_VIRTIO_PMEM_H
++
++#include <linux/module.h>
++#include <uapi/linux/virtio_pmem.h>
++#include <linux/libnvdimm.h>
++#include <linux/spinlock.h>
++
++struct virtio_pmem_request {
++	struct virtio_pmem_req req;
++	struct virtio_pmem_resp resp;
++
++	/* Wait queue to process deferred work after ack from host */
++	wait_queue_head_t host_acked;
++	bool done;
++
++	/* Wait queue to process deferred work after virt queue buffer avail */
++	wait_queue_head_t wq_buf;
++	bool wq_buf_avail;
++	struct list_head list;
++};
++
++struct virtio_pmem {
++	struct virtio_device *vdev;
++
++	/* Virtio pmem request queue */
++	struct virtqueue *req_vq;
++
++	/* nvdimm bus registers virtio pmem device */
++	struct nvdimm_bus *nvdimm_bus;
++	struct nvdimm_bus_descriptor nd_desc;
++
++	/* List to store deferred work if virtqueue is full */
++	struct list_head req_list;
++
++	/* Synchronize virtqueue data */
++	spinlock_t pmem_lock;
++
++	/* Memory region information */
++	__u64 start;
++	__u64 size;
++};
++
++void virtio_pmem_host_ack(struct virtqueue *vq);
++int async_pmem_flush(struct nd_region *nd_region, struct bio *bio);
++#endif
+diff --git a/drivers/virtio/Kconfig b/drivers/virtio/Kconfig
+index 023fc3bc01c6..078615cf2afc 100644
+--- a/drivers/virtio/Kconfig
++++ b/drivers/virtio/Kconfig
+@@ -43,6 +43,17 @@ config VIRTIO_PCI_LEGACY
+ 
+ 	  If unsure, say Y.
+ 
++config VIRTIO_PMEM
++	tristate "Support for virtio pmem driver"
++	depends on VIRTIO
++	depends on LIBNVDIMM
++	help
++	  This driver provides access to virtio-pmem devices, storage devices
++	  that are mapped into the physical address space - similar to NVDIMMs
++	   - with a virtio-based flushing interface.
++
++	  If unsure, say Y.
++
+ config VIRTIO_BALLOON
+ 	tristate "Virtio balloon driver"
+ 	depends on VIRTIO
+diff --git a/include/uapi/linux/virtio_ids.h b/include/uapi/linux/virtio_ids.h
+index 6d5c3b2d4f4d..32b2f94d1f58 100644
+--- a/include/uapi/linux/virtio_ids.h
++++ b/include/uapi/linux/virtio_ids.h
+@@ -43,5 +43,6 @@
+ #define VIRTIO_ID_INPUT        18 /* virtio input */
+ #define VIRTIO_ID_VSOCK        19 /* virtio vsock transport */
+ #define VIRTIO_ID_CRYPTO       20 /* virtio crypto */
++#define VIRTIO_ID_PMEM         27 /* virtio pmem */
+ 
+ #endif /* _LINUX_VIRTIO_IDS_H */
+diff --git a/include/uapi/linux/virtio_pmem.h b/include/uapi/linux/virtio_pmem.h
+new file mode 100644
+index 000000000000..efcd72f2d20d
+--- /dev/null
++++ b/include/uapi/linux/virtio_pmem.h
+@@ -0,0 +1,34 @@
++/* SPDX-License-Identifier: GPL-2.0 OR BSD-3-Clause */
++/*
++ * Definitions for virtio-pmem devices.
++ *
++ * Copyright (C) 2019 Red Hat, Inc.
++ *
++ * Author(s): Pankaj Gupta <pagupta@redhat.com>
++ */
++
++#ifndef _UAPI_LINUX_VIRTIO_PMEM_H
++#define _UAPI_LINUX_VIRTIO_PMEM_H
++
++#include <linux/types.h>
++#include <linux/virtio_ids.h>
++#include <linux/virtio_config.h>
++
++struct virtio_pmem_config {
++	__u64 start;
++	__u64 size;
++};
++
++#define VIRTIO_PMEM_REQ_TYPE_FLUSH      0
++
++struct virtio_pmem_resp {
++	/* Host return status corresponding to flush request */
++	__u32 ret;
++};
++
++struct virtio_pmem_req {
++	/* command type */
++	__u32 type;
++};
++
++#endif
+-- 
+2.20.1
