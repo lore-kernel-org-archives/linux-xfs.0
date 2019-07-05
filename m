@@ -1,56 +1,222 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52808 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:43188 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725983AbfGEOKU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jul 2019 10:10:20 -0400
-From: Pankaj Gupta <pagupta@redhat.com>
-Subject: [PATCH v15 6/7] ext4: disable map_sync for async flush
-Date: Fri,  5 Jul 2019 19:33:27 +0530
-Message-Id: <20190705140328.20190-7-pagupta@redhat.com>
-In-Reply-To: <20190705140328.20190-1-pagupta@redhat.com>
-References: <20190705140328.20190-1-pagupta@redhat.com>
+        id S1726851AbfGEPQ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 11:16:57 -0400
+Subject: Re: [PATCH 5/9] man: create a separate INUMBERS ioctl manpage
+References: <156104944877.1174403.14568482035189263260.stgit@magnolia>
+ <156104948000.1174403.11692931049872468663.stgit@magnolia>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <ba312282-189d-df3c-72f6-53d93781e7b1@sandeen.net>
+Date: Fri, 5 Jul 2019 10:16:56 -0500
+MIME-Version: 1.0
+In-Reply-To: <156104948000.1174403.11692931049872468663.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-Dont support 'MAP_SYNC' with non-DAX files and DAX files
-with asynchronous dax_device. Virtio pmem provides
-asynchronous host page cache flush mechanism. We don't
-support 'MAP_SYNC' with virtio pmem and ext4.
+On 6/20/19 11:51 AM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Create a separate manual page for the xfs INUMBERS ioctl so we can
+> document how it works.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
----
- fs/ext4/file.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+modulo small change to move "last inode". to "last inode."
 
-diff --git a/fs/ext4/file.c b/fs/ext4/file.c
-index 98ec11f69cd4..dee549339e13 100644
---- a/fs/ext4/file.c
-+++ b/fs/ext4/file.c
-@@ -360,15 +360,17 @@ static const struct vm_operations_struct ext4_file_vm_ops = {
- static int ext4_file_mmap(struct file *file, struct vm_area_struct *vma)
- {
- 	struct inode *inode = file->f_mapping->host;
-+	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
-+	struct dax_device *dax_dev = sbi->s_daxdev;
- 
--	if (unlikely(ext4_forced_shutdown(EXT4_SB(inode->i_sb))))
-+	if (unlikely(ext4_forced_shutdown(sbi)))
- 		return -EIO;
- 
- 	/*
--	 * We don't support synchronous mappings for non-DAX files. At least
--	 * until someone comes with a sensible use case.
-+	 * We don't support synchronous mappings for non-DAX files and
-+	 * for DAX files if underneath dax_device is not synchronous.
- 	 */
--	if (!IS_DAX(file_inode(file)) && (vma->vm_flags & VM_SYNC))
-+	if (!daxdev_mapping_supported(vma, dax_dev))
- 		return -EOPNOTSUPP;
- 
- 	file_accessed(file);
--- 
-2.20.1
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
+> ---
+>  man/man2/ioctl_xfs_fsinumbers.2 |  122 +++++++++++++++++++++++++++++++++++++++
+>  man/man3/xfsctl.3               |   34 +----------
+>  2 files changed, 126 insertions(+), 30 deletions(-)
+>  create mode 100644 man/man2/ioctl_xfs_fsinumbers.2
+> 
+> 
+> diff --git a/man/man2/ioctl_xfs_fsinumbers.2 b/man/man2/ioctl_xfs_fsinumbers.2
+> new file mode 100644
+> index 00000000..04f32109
+> --- /dev/null
+> +++ b/man/man2/ioctl_xfs_fsinumbers.2
+> @@ -0,0 +1,122 @@
+> +.\" Copyright (c) 2019, Oracle.  All rights reserved.
+> +.\"
+> +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
+> +.\" SPDX-License-Identifier: GPL-2.0+
+> +.\" %%%LICENSE_END
+> +.TH IOCTL-XFS-FSINUMBERS 2 2019-06-17 "XFS"
+> +.SH NAME
+> +ioctl_xfs_fsinumbers \- extract a list of valid inode numbers from an XFS filesystem
+> +.SH SYNOPSIS
+> +.br
+> +.B #include <xfs/xfs_fs.h>
+> +.PP
+> +.BI "int ioctl(int " fd ", XFS_IOC_FSINUMBERS, struct xfs_fsop_bulkreq *" arg );
+> +.SH DESCRIPTION
+> +Queries inode allocation information from an XFS filesystem.
+> +It is intended to be called iteratively to obtain the entire set of inodes.
+> +These ioctls use
+> +.B struct xfs_fsop_bulkreq
+> +to set up a bulk transfer with the kernel:
+> +.PP
+> +.in +4n
+> +.nf
+> +struct xfs_fsop_bulkreq {
+> +	__u64   *lastip;
+> +	__s32   count;
+> +	void    *ubuffer;
+> +	__s32   *ocount;
+> +};
+> +.fi
+> +.in
+> +.PP
+> +.I lastip
+> +points to a value that will receive the number of the "last inode".
+> +This should be set to one less than the number of the first inode for which the
+> +caller wants information, or zero to start with the first inode in the
+> +filesystem.
+> +After the call, this value will be set to the number of the last inode for
+> +which information is supplied.
+> +This field will not be updated if
+> +.I ocount
+> +is NULL.
+> +.PP
+> +.I count
+> +is the number of elements in the
+> +.B ubuffer
+> +array and therefore the number of inode groups for which to return allocation
+> +information.
+> +.PP
+> +.I ocount
+> +points to a value that will receive the number of records returned.
+> +An output value of zero means that there are no more inode groups left to
+> +enumerate.
+> +If this value is NULL, then neither
+> +.I ocount
+> +nor
+> +.I lastip
+> +will be updated.
+> +.PP
+> +.I ubuffer
+> +points to a memory buffer where inode group information will be copied.
+> +This buffer must be an array of
+> +.B struct xfs_inogrp
+> +which is described below.
+> +The array must have at least
+> +.I count
+> +elements.
+> +.PP
+> +.in +4n
+> +.nf
+> +struct xfs_inogrp {
+> +	__u64   xi_startino;
+> +	__s32   xi_alloccount;
+> +	__u64   xi_allocmask;
+> +}
+> +.fi
+> +.in
+> +.PP
+> +This structure describes inode usage information for a group of 64 consecutive
+> +inode numbers.
+> +The fields are as follows:
+> +.PP
+> +.I xi_startino
+> +is the first inode number of this group.
+> +.PP
+> +.I xi_alloccount
+> +is the number of bits that are set in
+> +.IR xi_allocmask .
+> +This is the number of inodes allocated in this group.
+> +.PP
+> +.I xi_allocmask
+> +is a bitmask of inodes that are allocated in this inode group.
+> +The bitmask is 64 bits long, and the least significant bit corresponds to inode
+> +.BR xi_startino .
+> +.SH RETURN VALUE
+> +On error, \-1 is returned, and
+> +.I errno
+> +is set to indicate the error.
+> +.PP
+> +.SH ERRORS
+> +Error codes can be one of, but are not limited to, the following:
+> +.TP
+> +.B EFAULT
+> +The kernel was not able to copy into the userspace buffer.
+> +.TP
+> +.B EFSBADCRC
+> +Metadata checksum validation failed while performing the query.
+> +.TP
+> +.B EFSCORRUPTED
+> +Metadata corruption was encountered while performing the query.
+> +.TP
+> +.B EINVAL
+> +One of the arguments was not valid.
+> +.TP
+> +.B EIO
+> +An I/O error was encountered while performing the query.
+> +.TP
+> +.B ENOMEM
+> +There was insufficient memory to perform the query.
+> +.SH CONFORMING TO
+> +This API is specific to XFS filesystem on the Linux kernel.
+> +.SH SEE ALSO
+> +.BR ioctl (2)
+> diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
+> index 78fad975..c14f7d33 100644
+> --- a/man/man3/xfsctl.3
+> +++ b/man/man3/xfsctl.3
+> @@ -368,36 +368,9 @@ can be any open file in the XFS filesystem in question.
+>  .PP
+>  .TP
+>  .B XFS_IOC_FSINUMBERS
+> -This interface is used to extract a list of valid inode numbers from an
+> -XFS filesystem.
+> -It is intended to be called iteratively, to obtain the entire set of inodes.
+> -The information is passed in and out via a structure of type
+> -.B xfs_fsop_bulkreq_t
+> -pointed to by the final argument.
+> -.B lastip
+> -is a pointer to a variable containing the last inode number returned,
+> -initially it should be zero.
+> -.B icount
+> -is the size of the array of structures specified by
+> -.BR ubuffer .
+> -.B ubuffer
+> -is the address of an array of structures, of type
+> -.BR xfs_inogrp_t .
+> -This structure has the following elements:
+> -.B xi_startino
+> -(starting inode number),
+> -.B xi_alloccount
+> -(count of bits set in xi_allocmask), and
+> -.B xi_allocmask
+> -(mask of allocated inodes in this group).
+> -The bitmask is 64 bits long, and the least significant bit corresponds to inode
+> -.B xi_startino.
+> -Each bit is set if the corresponding inode is in use.
+> -.B ocount
+> -is a pointer to a count of returned values, filled in by the call.
+> -An output
+> -.B ocount
+> -value of zero means that the inode table has been exhausted.
+> +See
+> +.BR ioctl_xfs_fsinumbers (2)
+> +for more information.
+>  
+>  .TP
+>  .B XFS_IOC_FSGEOMETRY
+> @@ -443,6 +416,7 @@ as they are not of general use to applications.
+>  .BR ioctl_xfs_fsop_geometry (2),
+>  .BR ioctl_xfs_fsbulkstat (2),
+>  .BR ioctl_xfs_scrub_metadata (2),
+> +.BR ioctl_xfs_fsinumbers (2),
+>  .BR fstatfs (2),
+>  .BR statfs (2),
+>  .BR xfs (5),
+> 
