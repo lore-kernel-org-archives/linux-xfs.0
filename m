@@ -1,42 +1,96 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:60834 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728887AbfGISMO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 14:12:14 -0400
-Date: Tue, 9 Jul 2019 11:12:14 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH RFC 00/11] iomap: regroup code by functional area
-Message-ID: <20190709181214.GA31130@infradead.org>
-References: <156200051933.1790352.5147420943973755350.stgit@magnolia>
- <20190708184652.GB20670@infradead.org>
- <20190709164952.GT1404256@magnolia>
+Received: from mx1.redhat.com ([209.132.183.28]:42024 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728047AbfGER1E (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 13:27:04 -0400
+Date: Fri, 5 Jul 2019 13:27:01 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/6] xfs: remove more ondisk directory corruption asserts
+Message-ID: <20190705172701.GK37448@bfoster>
+References: <156158199378.495944.4088787757066517679.stgit@magnolia>
+ <156158199994.495944.4584531696054696463.stgit@magnolia>
+ <20190705144904.GC37448@bfoster>
+ <20190705170345.GH1404256@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190709164952.GT1404256@magnolia>
+In-Reply-To: <20190705170345.GH1404256@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org
 
-I looked over it and while some of the small files seem very tiny
-they are reasonably split.
+On Fri, Jul 05, 2019 at 10:03:45AM -0700, Darrick J. Wong wrote:
+> On Fri, Jul 05, 2019 at 10:49:05AM -0400, Brian Foster wrote:
+> > On Wed, Jun 26, 2019 at 01:46:40PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Continue our game of replacing ASSERTs for corrupt ondisk metadata with
+> > > EFSCORRUPTED returns.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/libxfs/xfs_da_btree.c  |   19 ++++++++++++-------
+> > >  fs/xfs/libxfs/xfs_dir2_node.c |    3 ++-
+> > >  2 files changed, 14 insertions(+), 8 deletions(-)
+> > > 
+> > > 
+> > ...
+> > > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > index 16731d2d684b..f7f3fb458019 100644
+> > > --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> > > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> > > @@ -743,7 +743,8 @@ xfs_dir2_leafn_lookup_for_entry(
+> > >  	ents = dp->d_ops->leaf_ents_p(leaf);
+> > >  
+> > >  	xfs_dir3_leaf_check(dp, bp);
+> > > -	ASSERT(leafhdr.count > 0);
+> > > +	if (leafhdr.count <= 0)
+> > > +		return -EFSCORRUPTED;
+> > 
+> > This error return bubbles up to xfs_dir2_leafn_lookup_int() and
+> > xfs_da3_node_lookup_int(). The latter has a direct return value as well
+> > as a *result return parameter, which unconditionally carries the return
+> > value from xfs_dir2_leafn_lookup_int(). xfs_da3_node_lookup_int() has
+> > multiple callers, but a quick look at one (xfs_attr_node_addname())
+> > suggests we might not handle corruption errors properly via the *result
+> > parameter. Perhaps we also need to fix up xfs_da3_node_lookup_int() to
+> > return particular errors directly?
+> 
+> It would be a good idea to clean up the whole return value/*retval mess
+> in that function (and xfs_da3_path_shift where *retval came from) but
+> that quickly turned into a bigger cleanup of magic values and dual
+> returns, particularly since the dabtree shrinking code turns the
+> _path_shift *retval into yet another series of magic int numbers...
+> 
 
-What rather annoys me is the page.c/read.c/write.c split.  All these
-really belong mostly together, except maybe the super highlevel
-write code that then either calls into the buffer_head vs iomap_page
-based code.  By keeping them together we can eliminate most of
-iomap_internal.h and once the writeback code moves also keep
-iomap_page private to that bigger read.c file.
+Hm.. sure, but in the meantime couldn't this patch just insert a check
+for the obvious -EFSCORRUPTED error in xfs_da3_node_lookup_int() and
+return that directly as opposed to via *result? That function already
+returns -EFSCORRUPTED directly in other places.
 
-A few other minor notes:
+As it is, this hunk is kind of strange because it inserts an error
+return in a place where it seems more likely than not to be either
+ignored or misinterpreted if it ever occurs. I'm fine with putting this
+off as a broader cleanup, but in that case I'd prefer to just drop this
+hunk for now and change the assert over when we know the return will be
+handled correctly.
 
- - I think iomap_sector() should move to linux/iomap.h as an inline
-   helper.
- - iomap_actor_t / iomap_apply should probaby just move to linux/iomap.h
-   as well, which would avoid needing the awkward subdir include in
-   dax.c
- - some of the copyrights for the small files seem totally wrong.
-   e.g. all the swapfile code was written by you, so it should not have
-   my or rh copyright notices on it
+Either option seems reasonable (and FWIW the other bits in this patch
+look fine to me)...
+
+Brian
+
+> ...so in the meantime this at least fixes the asserts I see when running
+> fuzz testing.  I'll look at the broader cleanup for 5.4.
+> 
+> --D
+> 
+> > 
+> > Brian
+> > 
+> > >  
+> > >  	/*
+> > >  	 * Look up the hash value in the leaf entries.
+> > > 
