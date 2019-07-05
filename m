@@ -1,285 +1,262 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53956 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:57589 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727459AbfGELFg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 5 Jul 2019 07:05:36 -0400
-Date: Fri, 5 Jul 2019 07:05:33 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 6/9] xfs: wire up the new v5 bulkstat_single ioctl
-Message-ID: <20190705110533.GB36577@bfoster>
-References: <156158193320.495715.6675123051075804739.stgit@magnolia>
- <156158197298.495715.10824532259700709632.stgit@magnolia>
- <20190703132441.GF26057@bfoster>
- <20190703145256.GU1404256@magnolia>
- <20190703161135.GL26057@bfoster>
- <20190703200143.GY1404256@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190703200143.GY1404256@magnolia>
+        id S1725778AbfGEOFp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 5 Jul 2019 10:05:45 -0400
+From: Pankaj Gupta <pagupta@redhat.com>
+Subject: [PATCH v15 1/7] libnvdimm: nd_region flush callback support
+Date: Fri,  5 Jul 2019 19:33:22 +0530
+Message-Id: <20190705140328.20190-2-pagupta@redhat.com>
+In-Reply-To: <20190705140328.20190-1-pagupta@redhat.com>
+References: <20190705140328.20190-1-pagupta@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, allison.henderson@oracle.com
+To: dm-devel@redhat.com, linux-nvdimm@lists.01.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kvm@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-acpi@vger.kernel.org, qemu-devel@nongnu.org, linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc: dan.j.williams@intel.com, zwisler@kernel.org, vishal.l.verma@intel.com, dave.jiang@intel.com, mst@redhat.com, jasowang@redhat.com, willy@infradead.org, rjw@rjwysocki.net, hch@infradead.org, lenb@kernel.org, jack@suse.cz, tytso@mit.edu, adilger.kernel@dilger.ca, darrick.wong@oracle.com, lcapitulino@redhat.com, kwolf@redhat.com, imammedo@redhat.com, jmoyer@redhat.com, nilal@redhat.com, riel@surriel.com, stefanha@redhat.com, aarcange@redhat.com, david@redhat.com, david@fromorbit.com, cohuck@redhat.com, xiaoguangrong.eric@gmail.com, pagupta@redhat.com, pbonzini@redhat.com, yuval.shaia@oracle.com, kilobyte@angband.pl, jstaron@google.com, rdunlap@infradead.org, snitzer@redhat.com
 
-On Wed, Jul 03, 2019 at 01:01:43PM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 03, 2019 at 12:11:36PM -0400, Brian Foster wrote:
-> > On Wed, Jul 03, 2019 at 07:52:56AM -0700, Darrick J. Wong wrote:
-> > > On Wed, Jul 03, 2019 at 09:24:41AM -0400, Brian Foster wrote:
-> > > > On Wed, Jun 26, 2019 at 01:46:13PM -0700, Darrick J. Wong wrote:
-> > > > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > 
-> > > > > Wire up the V5 BULKSTAT_SINGLE ioctl and rename the old one V1.
-> > > > > 
-> > > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > > > ---
-> > > > >  fs/xfs/libxfs/xfs_fs.h |   16 ++++++++++
-> > > > >  fs/xfs/xfs_ioctl.c     |   79 ++++++++++++++++++++++++++++++++++++++++++++++++
-> > > > >  fs/xfs/xfs_ioctl32.c   |    1 +
-> > > > >  fs/xfs/xfs_ondisk.h    |    1 +
-> > > > >  4 files changed, 97 insertions(+)
-> > > > > 
-> > > > > 
-> > > > > diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> > > > > index 960f3542e207..95d0411dae9b 100644
-> > > > > --- a/fs/xfs/libxfs/xfs_fs.h
-> > > > > +++ b/fs/xfs/libxfs/xfs_fs.h
-> > > > > @@ -468,6 +468,16 @@ struct xfs_bulk_ireq {
-> > > > >  
-> > > > >  #define XFS_BULK_IREQ_FLAGS_ALL	(0)
-> > > > >  
-> > > > > +/* Header for a single inode request. */
-> > > > > +struct xfs_ireq {
-> > > > > +	uint64_t	ino;		/* I/O: start with this inode	*/
-> > > > > +	uint32_t	flags;		/* I/O: operation flags		*/
-> > > > > +	uint32_t	reserved32;	/* must be zero			*/
-> > > > > +	uint64_t	reserved[2];	/* must be zero			*/
-> > > > > +};
-> > > > > +
-> > > > > +#define XFS_IREQ_FLAGS_ALL	(0)
-> > > > > +
-> > > > >  /*
-> > > > >   * ioctl structures for v5 bulkstat and inumbers requests
-> > > > >   */
-> > > > > @@ -478,6 +488,11 @@ struct xfs_bulkstat_req {
-> > > > >  #define XFS_BULKSTAT_REQ_SIZE(nr)	(sizeof(struct xfs_bulkstat_req) + \
-> > > > >  					 (nr) * sizeof(struct xfs_bulkstat))
-> > > > >  
-> > > > > +struct xfs_bulkstat_single_req {
-> > > > > +	struct xfs_ireq		hdr;
-> > > > > +	struct xfs_bulkstat	bulkstat;
-> > > > > +};
-> > > > > +
-> > > > 
-> > > > What's the reasoning for separate data structures when the single
-> > > > command is basically a subset of standard bulkstat (similar to the older
-> > > > interface)?
-> > > 
-> > > I split them up to avoid having irrelevant bulk_req fields (specifically
-> > > icount and ocount) cluttering up the single_req header.  In patch 9 the
-> > > bulkstat single command grows the ability to request the root inode to
-> > > fix xfsdump's inability to correctly guess the root directory.
-> > > 
-> > 
-> > Ok, figured as much once I got to the magic inode flag patch. It's
-> > probably reasonable either way, the tradeoff to this approach is the
-> > extra boilerplate code associated with processing the separate data
-> > structure.
-> 
-> <nod>
-> 
-> > Thinking about it a bit more.. what was the purpose of the separate
-> > BULKSTAT_SINGLE command in the first place? AFAICT it just toggles the
-> > hacky ->lastip semantic. If we've addressed that with an entirely new
-> > data structure, do we need the separate ioctl at all anymore?
-> 
-> At the moment, somewhat simpler setup in userspace:
-> 
-> 	struct xfs_bulkstat_single_req b = { 0 };
-> 	int ret;
-> 
-> 	b.hdr.ino = some_ino;
-> 	ret = ioctl(fd, XFS_IOC_BULKSTAT_SINGLE, &b);
-> 	if (ret)
-> 		abort();
-> 
-> 	printf("%d\n", b.bulkstat.bs_ino);
-> 
-> vs. a single-inode bulkstat:
-> 
-> 	struct xfs_bulkstat_req *b;
-> 	int ret;
-> 
-> 	b = calloc(1, XFS_BULKSTAT_REQ_SIZE(1));
-> 	if (!b)
-> 		abort();
-> 
-> 	b->hdr.ino = some_ino;
-> 	ret = ioctl(fd, XFS_IOC_BULKSTAT, b);
-> 	if (ret)
-> 		abort();
-> 
-> 	if (b->hdr.ocount)
-> 		printf("%d\n", b->bulkstat[0].bs_ino);
-> 
-> 	free(b);
-> 
-> AFAICT, the main advantages are (1) replacing the heap allocation with a
-> stack allocation and (2) not cluttering the regular bulkstat with the
-> "just grab this one symbolic inode" interface.  We could very well just
-> drop this one, particularly since I'm in the process of wrapping most of
-> the ioctl invocation complexity in libfrog wrapper functions anyway...
-> 
+This patch adds functionality to perform flush from guest
+to host over VIRTIO. We are registering a callback based
+on 'nd_region' type. virtio_pmem driver requires this special
+flush function. For rest of the region types we are registering
+existing flush function. Report error returned by host fsync
+failure to userspace.
 
-That seems preferable to me. I'm not that invested in the semantics
-between bulkstat and bulkstat_single, but if the only reason we
-originally had the latter as a separate ioctl was to deal with the
-->lastip interface wart then I think it would be unfortunate to
-unnecessarily carry that mess forward through another generation of the
-interface that doesn't have the original problem. Userspace should be
-able to easily abstract the single case.
+Signed-off-by: Pankaj Gupta <pagupta@redhat.com>
+---
+ drivers/acpi/nfit/core.c     |  4 ++--
+ drivers/nvdimm/claim.c       |  6 ++++--
+ drivers/nvdimm/nd.h          |  1 +
+ drivers/nvdimm/pmem.c        | 13 ++++++++-----
+ drivers/nvdimm/region_devs.c | 26 ++++++++++++++++++++++++--
+ include/linux/libnvdimm.h    |  9 ++++++++-
+ 6 files changed, 47 insertions(+), 12 deletions(-)
 
-Brian
-
-> --D
-> 
-> > Brian
-> > 
-> > > --D
-> > > 
-> > > > Brian
-> > > > 
-> > > > >  /*
-> > > > >   * Error injection.
-> > > > >   */
-> > > > > @@ -780,6 +795,7 @@ struct xfs_scrub_metadata {
-> > > > >  #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
-> > > > >  #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
-> > > > >  #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
-> > > > > +#define XFS_IOC_BULKSTAT_SINGLE	     _IOR ('X', 128, struct xfs_bulkstat_single_req)
-> > > > >  /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
-> > > > >  
-> > > > >  
-> > > > > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > > > > index cf6a38c2a3ed..2c821fa601a4 100644
-> > > > > --- a/fs/xfs/xfs_ioctl.c
-> > > > > +++ b/fs/xfs/xfs_ioctl.c
-> > > > > @@ -922,6 +922,83 @@ xfs_ioc_bulkstat(
-> > > > >  	return 0;
-> > > > >  }
-> > > > >  
-> > > > > +/*
-> > > > > + * Check the incoming singleton request @hdr from userspace and initialize the
-> > > > > + * internal @breq bulk request appropriately.  Returns 0 if the bulk request
-> > > > > + * should proceed; or the usual negative error code.
-> > > > > + */
-> > > > > +static int
-> > > > > +xfs_ireq_setup(
-> > > > > +	struct xfs_mount	*mp,
-> > > > > +	struct xfs_ireq		*hdr,
-> > > > > +	struct xfs_ibulk	*breq,
-> > > > > +	void __user		*ubuffer)
-> > > > > +{
-> > > > > +	if ((hdr->flags & ~XFS_IREQ_FLAGS_ALL) ||
-> > > > > +	    hdr->reserved32 ||
-> > > > > +	    memchr_inv(hdr->reserved, 0, sizeof(hdr->reserved)))
-> > > > > +		return -EINVAL;
-> > > > > +
-> > > > > +	if (XFS_INO_TO_AGNO(mp, hdr->ino) >= mp->m_sb.sb_agcount)
-> > > > > +		return -EINVAL;
-> > > > > +
-> > > > > +	breq->ubuffer = ubuffer;
-> > > > > +	breq->icount = 1;
-> > > > > +	breq->startino = hdr->ino;
-> > > > > +	return 0;
-> > > > > +}
-> > > > > +
-> > > > > +/*
-> > > > > + * Update the userspace singleton request @hdr to reflect the end state of the
-> > > > > + * internal bulk request @breq.  If @error is negative then we return just
-> > > > > + * that; otherwise we copy the state so that userspace can discover what
-> > > > > + * happened.
-> > > > > + */
-> > > > > +static void
-> > > > > +xfs_ireq_teardown(
-> > > > > +	struct xfs_ireq		*hdr,
-> > > > > +	struct xfs_ibulk	*breq)
-> > > > > +{
-> > > > > +	hdr->ino = breq->startino;
-> > > > > +}
-> > > > > +
-> > > > > +/* Handle the v5 bulkstat_single ioctl. */
-> > > > > +STATIC int
-> > > > > +xfs_ioc_bulkstat_single(
-> > > > > +	struct xfs_mount	*mp,
-> > > > > +	unsigned int		cmd,
-> > > > > +	struct xfs_bulkstat_single_req __user *arg)
-> > > > > +{
-> > > > > +	struct xfs_ireq		hdr;
-> > > > > +	struct xfs_ibulk	breq = {
-> > > > > +		.mp		= mp,
-> > > > > +	};
-> > > > > +	int			error;
-> > > > > +
-> > > > > +	if (!capable(CAP_SYS_ADMIN))
-> > > > > +		return -EPERM;
-> > > > > +
-> > > > > +	if (XFS_FORCED_SHUTDOWN(mp))
-> > > > > +		return -EIO;
-> > > > > +
-> > > > > +	if (copy_from_user(&hdr, &arg->hdr, sizeof(hdr)))
-> > > > > +		return -EFAULT;
-> > > > > +
-> > > > > +	error = xfs_ireq_setup(mp, &hdr, &breq, &arg->bulkstat);
-> > > > > +	if (error)
-> > > > > +		return error;
-> > > > > +
-> > > > > +	error = xfs_bulkstat_one(&breq, xfs_bulkstat_fmt);
-> > > > > +	if (error)
-> > > > > +		return error;
-> > > > > +
-> > > > > +	xfs_ireq_teardown(&hdr, &breq);
-> > > > > +	if (copy_to_user(&arg->hdr, &hdr, sizeof(hdr)))
-> > > > > +		return -EFAULT;
-> > > > > +
-> > > > > +	return 0;
-> > > > > +}
-> > > > > +
-> > > > >  STATIC int
-> > > > >  xfs_ioc_fsgeometry(
-> > > > >  	struct xfs_mount	*mp,
-> > > > > @@ -2088,6 +2165,8 @@ xfs_file_ioctl(
-> > > > >  
-> > > > >  	case XFS_IOC_BULKSTAT:
-> > > > >  		return xfs_ioc_bulkstat(mp, cmd, arg);
-> > > > > +	case XFS_IOC_BULKSTAT_SINGLE:
-> > > > > +		return xfs_ioc_bulkstat_single(mp, cmd, arg);
-> > > > >  
-> > > > >  	case XFS_IOC_FSGEOMETRY_V1:
-> > > > >  		return xfs_ioc_fsgeometry(mp, arg, 3);
-> > > > > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> > > > > index df107adbdbf3..6fa0f41dbae5 100644
-> > > > > --- a/fs/xfs/xfs_ioctl32.c
-> > > > > +++ b/fs/xfs/xfs_ioctl32.c
-> > > > > @@ -581,6 +581,7 @@ xfs_file_compat_ioctl(
-> > > > >  	case FS_IOC_GETFSMAP:
-> > > > >  	case XFS_IOC_SCRUB_METADATA:
-> > > > >  	case XFS_IOC_BULKSTAT:
-> > > > > +	case XFS_IOC_BULKSTAT_SINGLE:
-> > > > >  		return xfs_file_ioctl(filp, cmd, p);
-> > > > >  #if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
-> > > > >  	/*
-> > > > > diff --git a/fs/xfs/xfs_ondisk.h b/fs/xfs/xfs_ondisk.h
-> > > > > index 954484c6eb96..fa1252657b08 100644
-> > > > > --- a/fs/xfs/xfs_ondisk.h
-> > > > > +++ b/fs/xfs/xfs_ondisk.h
-> > > > > @@ -150,6 +150,7 @@ xfs_check_ondisk_structs(void)
-> > > > >  	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat,		192);
-> > > > >  	XFS_CHECK_STRUCT_SIZE(struct xfs_inumbers,		24);
-> > > > >  	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_req,		64);
-> > > > > +	XFS_CHECK_STRUCT_SIZE(struct xfs_bulkstat_single_req,	224);
-> > > > >  }
-> > > > >  
-> > > > >  #endif /* __XFS_ONDISK_H */
-> > > > > 
+diff --git a/drivers/acpi/nfit/core.c b/drivers/acpi/nfit/core.c
+index f1ed0befe303..9ddd8667153e 100644
+--- a/drivers/acpi/nfit/core.c
++++ b/drivers/acpi/nfit/core.c
+@@ -2434,7 +2434,7 @@ static void write_blk_ctl(struct nfit_blk *nfit_blk, unsigned int bw,
+ 		offset = to_interleave_offset(offset, mmio);
+ 
+ 	writeq(cmd, mmio->addr.base + offset);
+-	nvdimm_flush(nfit_blk->nd_region);
++	nvdimm_flush(nfit_blk->nd_region, NULL);
+ 
+ 	if (nfit_blk->dimm_flags & NFIT_BLK_DCR_LATCH)
+ 		readq(mmio->addr.base + offset);
+@@ -2483,7 +2483,7 @@ static int acpi_nfit_blk_single_io(struct nfit_blk *nfit_blk,
+ 	}
+ 
+ 	if (rw)
+-		nvdimm_flush(nfit_blk->nd_region);
++		nvdimm_flush(nfit_blk->nd_region, NULL);
+ 
+ 	rc = read_blk_stat(nfit_blk, lane) ? -EIO : 0;
+ 	return rc;
+diff --git a/drivers/nvdimm/claim.c b/drivers/nvdimm/claim.c
+index fb667bf469c7..13510bae1e6f 100644
+--- a/drivers/nvdimm/claim.c
++++ b/drivers/nvdimm/claim.c
+@@ -263,7 +263,7 @@ static int nsio_rw_bytes(struct nd_namespace_common *ndns,
+ 	struct nd_namespace_io *nsio = to_nd_namespace_io(&ndns->dev);
+ 	unsigned int sz_align = ALIGN(size + (offset & (512 - 1)), 512);
+ 	sector_t sector = offset >> 9;
+-	int rc = 0;
++	int rc = 0, ret = 0;
+ 
+ 	if (unlikely(!size))
+ 		return 0;
+@@ -301,7 +301,9 @@ static int nsio_rw_bytes(struct nd_namespace_common *ndns,
+ 	}
+ 
+ 	memcpy_flushcache(nsio->addr + offset, buf, size);
+-	nvdimm_flush(to_nd_region(ndns->dev.parent));
++	ret = nvdimm_flush(to_nd_region(ndns->dev.parent), NULL);
++	if (ret)
++		rc = ret;
+ 
+ 	return rc;
+ }
+diff --git a/drivers/nvdimm/nd.h b/drivers/nvdimm/nd.h
+index a5ac3b240293..0c74d2428bd7 100644
+--- a/drivers/nvdimm/nd.h
++++ b/drivers/nvdimm/nd.h
+@@ -159,6 +159,7 @@ struct nd_region {
+ 	struct badblocks bb;
+ 	struct nd_interleave_set *nd_set;
+ 	struct nd_percpu_lane __percpu *lane;
++	int (*flush)(struct nd_region *nd_region, struct bio *bio);
+ 	struct nd_mapping mapping[0];
+ };
+ 
+diff --git a/drivers/nvdimm/pmem.c b/drivers/nvdimm/pmem.c
+index 0279eb1da3ef..c757a47183b8 100644
+--- a/drivers/nvdimm/pmem.c
++++ b/drivers/nvdimm/pmem.c
+@@ -192,6 +192,7 @@ static blk_status_t pmem_do_bvec(struct pmem_device *pmem, struct page *page,
+ 
+ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ {
++	int ret = 0;
+ 	blk_status_t rc = 0;
+ 	bool do_acct;
+ 	unsigned long start;
+@@ -201,7 +202,7 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 	struct nd_region *nd_region = to_region(pmem);
+ 
+ 	if (bio->bi_opf & REQ_PREFLUSH)
+-		nvdimm_flush(nd_region);
++		ret = nvdimm_flush(nd_region, bio);
+ 
+ 	do_acct = nd_iostat_start(bio, &start);
+ 	bio_for_each_segment(bvec, bio, iter) {
+@@ -216,7 +217,10 @@ static blk_qc_t pmem_make_request(struct request_queue *q, struct bio *bio)
+ 		nd_iostat_end(bio, start);
+ 
+ 	if (bio->bi_opf & REQ_FUA)
+-		nvdimm_flush(nd_region);
++		ret = nvdimm_flush(nd_region, bio);
++
++	if (ret)
++		bio->bi_status = errno_to_blk_status(ret);
+ 
+ 	bio_endio(bio);
+ 	return BLK_QC_T_NONE;
+@@ -469,7 +473,6 @@ static int pmem_attach_disk(struct device *dev,
+ 	}
+ 	dax_write_cache(dax_dev, nvdimm_has_cache(nd_region));
+ 	pmem->dax_dev = dax_dev;
+-
+ 	gendev = disk_to_dev(disk);
+ 	gendev->groups = pmem_attribute_groups;
+ 
+@@ -527,14 +530,14 @@ static int nd_pmem_remove(struct device *dev)
+ 		sysfs_put(pmem->bb_state);
+ 		pmem->bb_state = NULL;
+ 	}
+-	nvdimm_flush(to_nd_region(dev->parent));
++	nvdimm_flush(to_nd_region(dev->parent), NULL);
+ 
+ 	return 0;
+ }
+ 
+ static void nd_pmem_shutdown(struct device *dev)
+ {
+-	nvdimm_flush(to_nd_region(dev->parent));
++	nvdimm_flush(to_nd_region(dev->parent), NULL);
+ }
+ 
+ static void nd_pmem_notify(struct device *dev, enum nvdimm_event event)
+diff --git a/drivers/nvdimm/region_devs.c b/drivers/nvdimm/region_devs.c
+index b4ef7d9ff22e..e5b59708865e 100644
+--- a/drivers/nvdimm/region_devs.c
++++ b/drivers/nvdimm/region_devs.c
+@@ -295,7 +295,9 @@ static ssize_t deep_flush_store(struct device *dev, struct device_attribute *att
+ 		return rc;
+ 	if (!flush)
+ 		return -EINVAL;
+-	nvdimm_flush(nd_region);
++	rc = nvdimm_flush(nd_region, NULL);
++	if (rc)
++		return rc;
+ 
+ 	return len;
+ }
+@@ -1085,6 +1087,11 @@ static struct nd_region *nd_region_create(struct nvdimm_bus *nvdimm_bus,
+ 	dev->of_node = ndr_desc->of_node;
+ 	nd_region->ndr_size = resource_size(ndr_desc->res);
+ 	nd_region->ndr_start = ndr_desc->res->start;
++	if (ndr_desc->flush)
++		nd_region->flush = ndr_desc->flush;
++	else
++		nd_region->flush = NULL;
++
+ 	nd_device_register(dev);
+ 
+ 	return nd_region;
+@@ -1125,11 +1132,24 @@ struct nd_region *nvdimm_volatile_region_create(struct nvdimm_bus *nvdimm_bus,
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_volatile_region_create);
+ 
++int nvdimm_flush(struct nd_region *nd_region, struct bio *bio)
++{
++	int rc = 0;
++
++	if (!nd_region->flush)
++		rc = generic_nvdimm_flush(nd_region);
++	else {
++		if (nd_region->flush(nd_region, bio))
++			rc = -EIO;
++	}
++
++	return rc;
++}
+ /**
+  * nvdimm_flush - flush any posted write queues between the cpu and pmem media
+  * @nd_region: blk or interleaved pmem region
+  */
+-void nvdimm_flush(struct nd_region *nd_region)
++int generic_nvdimm_flush(struct nd_region *nd_region)
+ {
+ 	struct nd_region_data *ndrd = dev_get_drvdata(&nd_region->dev);
+ 	int i, idx;
+@@ -1153,6 +1173,8 @@ void nvdimm_flush(struct nd_region *nd_region)
+ 		if (ndrd_get_flush_wpq(ndrd, i, 0))
+ 			writeq(1, ndrd_get_flush_wpq(ndrd, i, idx));
+ 	wmb();
++
++	return 0;
+ }
+ EXPORT_SYMBOL_GPL(nvdimm_flush);
+ 
+diff --git a/include/linux/libnvdimm.h b/include/linux/libnvdimm.h
+index feb342d026f2..5a4f7b13574d 100644
+--- a/include/linux/libnvdimm.h
++++ b/include/linux/libnvdimm.h
+@@ -19,6 +19,7 @@
+ #include <linux/types.h>
+ #include <linux/uuid.h>
+ #include <linux/spinlock.h>
++#include <linux/bio.h>
+ 
+ struct badrange_entry {
+ 	u64 start;
+@@ -65,6 +66,9 @@ enum {
+ 	 */
+ 	ND_REGION_PERSIST_MEMCTRL = 2,
+ 
++	/* Platform provides asynchronous flush mechanism */
++	ND_REGION_ASYNC = 3,
++
+ 	/* mark newly adjusted resources as requiring a label update */
+ 	DPA_RESOURCE_ADJUSTED = 1 << 0,
+ };
+@@ -121,6 +125,7 @@ struct nd_mapping_desc {
+ 	int position;
+ };
+ 
++struct nd_region;
+ struct nd_region_desc {
+ 	struct resource *res;
+ 	struct nd_mapping_desc *mapping;
+@@ -133,6 +138,7 @@ struct nd_region_desc {
+ 	int target_node;
+ 	unsigned long flags;
+ 	struct device_node *of_node;
++	int (*flush)(struct nd_region *nd_region, struct bio *bio);
+ };
+ 
+ struct device;
+@@ -260,7 +266,8 @@ unsigned long nd_blk_memremap_flags(struct nd_blk_region *ndbr);
+ unsigned int nd_region_acquire_lane(struct nd_region *nd_region);
+ void nd_region_release_lane(struct nd_region *nd_region, unsigned int lane);
+ u64 nd_fletcher64(void *addr, size_t len, bool le);
+-void nvdimm_flush(struct nd_region *nd_region);
++int nvdimm_flush(struct nd_region *nd_region, struct bio *bio);
++int generic_nvdimm_flush(struct nd_region *nd_region);
+ int nvdimm_has_flush(struct nd_region *nd_region);
+ int nvdimm_has_cache(struct nd_region *nd_region);
+ int nvdimm_in_overwrite(struct nvdimm *nvdimm);
+-- 
+2.20.1
