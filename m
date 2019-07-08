@@ -1,57 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:47714 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726592AbfGISp7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 14:45:59 -0400
-Date: Tue, 9 Jul 2019 11:45:59 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [linux-kernel-mentees] [PATCH v6] Doc : fs : convert xfs.txt to
- ReST
-Message-ID: <20190709184559.GL32320@bombadil.infradead.org>
-References: <20190709124859.GA21503@localhost>
+Received: from verein.lst.de ([213.95.11.211]:34828 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728118AbfGHQTP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jul 2019 12:19:15 -0400
+Date: Mon, 8 Jul 2019 18:19:12 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: RFC: use the iomap writepage path in gfs2
+Message-ID: <20190708161912.GA10233@lst.de>
+References: <20190701215439.19162-1-hch@lst.de> <20190708000103.GH7689@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190709124859.GA21503@localhost>
+In-Reply-To: <20190708000103.GH7689@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sheriff Esseson <sheriffesseson@gmail.com>
-Cc: skhan@linuxfoundation.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, Andreas Gruenbacher <agruenba@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, cluster-devel@redhat.com
 
-On Tue, Jul 09, 2019 at 01:48:59PM +0100, Sheriff Esseson wrote:
-> Convert xfs.txt to ReST, rename and fix broken references, consequently.
+On Mon, Jul 08, 2019 at 10:01:03AM +1000, Dave Chinner wrote:
+> Ok, this doesn't look too bad from the iomap perspective, though it
+> does raise more questions. :)
 > 
-> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
-> ---
-> 
-> Changes in v6:
-> 	- undo text reflow from v5.
-> 	- fix a typo.
-> 	- change indication of defaults , as suggested by Darrick J. Wong, to
-> 	  keep the read simple.
-> 	- change delimiter of boolean option from a newline to an "or" (clue
-> 	  from something like "<option> and <another option>" in the text)
-> 	  because the former does not render well in html.
-> 
->  Documentation/filesystems/dax.txt             |   2 +-
->  Documentation/filesystems/index.rst           |   1 +
->  .../filesystems/{xfs.txt => xfs.rst}          | 123 +++++++++---------
->  MAINTAINERS                                   |   2 +-
->  4 files changed, 61 insertions(+), 67 deletions(-)
->  rename Documentation/filesystems/{xfs.txt => xfs.rst} (81%)
+> gfs2 now has two iopaths, right? One that uses bufferheads for
+> journalled data, and the other that uses iomap? That seems like it's
+> only a partial conversion - what needs to be done to iomap and gfs2
+> to support the journalled data path so there's a single data IO
+> path?
 
-Documentation/{filesystem/xfs.txt => admin-guide/xfs.rst}.
-
-> -	If "largeio" specified, a filesystem that was created with a
-> -	"swidth" specified will return the "swidth" value (in bytes)
-> -	in st_blksize. If the filesystem does not have a "swidth"
-> -	specified but does specify an "allocsize" then "allocsize"
-> +	If ``largeio`` specified, a filesystem that was created with a
-
-surely 'If ``largeio`` is specified' here?
-
-> +	``swidth`` specified will return the ``swidth`` value (in bytes)
-> +	in ``st_blksize``. If the filesystem does not have a ``swidth``
-> +	specified but does specify an ``allocsize`` then ``allocsize``
->  	(in bytes) will be returned instead. Otherwise the behaviour
+gfs2 always had to very different writeback I/O paths, including a copy
+and pasted versiom of write_cache_pages for journaled data, they just
+diverge a little bit more now. In the longer run I'd also like to add
+journaled data support to iomap for use with XFS, and then also switch
+gfs2 to it. 
