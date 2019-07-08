@@ -1,39 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40672 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731783AbfGHT7H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jul 2019 15:59:07 -0400
-Date: Mon, 8 Jul 2019 12:59:06 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [Linux-kernel-mentees] [PATCH] Doc : fs : move xfs.txt to
- admin-guide
-Message-ID: <20190708195906.GH32320@bombadil.infradead.org>
-References: <20190705190412.GB32320@bombadil.infradead.org>
- <20190705193329.GA20933@localhost>
+Received: from verein.lst.de ([213.95.11.211]:37247 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2404695AbfGHVfR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jul 2019 17:35:17 -0400
+Date: Mon, 8 Jul 2019 23:35:15 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: memory leaks from xfs_rw_bdev()
+Message-ID: <20190708213515.GB18177@lst.de>
+References: <1562616489.8510.15.camel@lca.pw>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190705193329.GA20933@localhost>
+In-Reply-To: <1562616489.8510.15.camel@lca.pw>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sheriff Esseson <sheriffesseson@gmail.com>
-Cc: linux-kernel-mentees@lists.linuxfoundation.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org
+To: Qian Cai <cai@lca.pw>
+Cc: hch@lst.de, darrick.wong@oracle.com, david@fromorbit.com, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Jul 05, 2019 at 08:41:48PM +0100, Sheriff Esseson wrote:
-> On Fri, Jul 05, 2019 at 12:04:12PM -0700, Matthew Wilcox wrote:
-> > On Fri, Jul 05, 2019 at 02:14:46PM +0100, Sheriff Esseson wrote:
-> > > As suggested by Matthew Wilcox, xfs.txt is primarily a guide on available
-> > > options when setting up an XFS. This makes it appropriate to be placed under
-> > > the admin-guide tree.
-> > > 
-> > > Thus, move xfs.txt to admin-guide and fix broken references.
-> > 
-> > What happened to the conversion to xfs.rst?
-> 
-> Okay, I was thinking placing the file properly should come first before the
-> conversion.
+We actually have a discussion on that in another thread, but if you
+can easily reproduce the issue, can you test the patch below?
 
-But if you move it, then rename it, you have to change all these places
-again.  The minimal conversion you did the first time was quite a nice diff
-to read.
+diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+index 757c1d9293eb..e2148f2d5d6b 100644
+--- a/fs/xfs/xfs_bio_io.c
++++ b/fs/xfs/xfs_bio_io.c
+@@ -43,7 +43,7 @@ xfs_rw_bdev(
+ 			bio_copy_dev(bio, prev);
+ 			bio->bi_iter.bi_sector = bio_end_sector(prev);
+ 			bio->bi_opf = prev->bi_opf;
+-			bio_chain(bio, prev);
++			bio_chain(prev, bio);
+ 
+ 			submit_bio(prev);
+ 		}
