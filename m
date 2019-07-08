@@ -1,157 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga05-in.huawei.com ([45.249.212.191]:2251 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726281AbfGJKaV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 10 Jul 2019 06:30:21 -0400
-Subject: Re: [RFC PATCH] iomap: generalize IOMAP_INLINE to cover tail-packing
- case
-References: <20190703075502.79782-1-yuchao0@huawei.com>
- <CAHpGcM+s77hKMXo=66nWNF7YKa3qhLY9bZrdb4-Lkspyg2CCDw@mail.gmail.com>
-From: Chao Yu <yuchao0@huawei.com>
-Message-ID: <39944e50-5888-f900-1954-91be2b12ea5b@huawei.com>
-Date: Wed, 10 Jul 2019 18:30:06 +0800
+Received: from mx1.redhat.com ([209.132.183.28]:59052 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727795AbfGHMPK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 8 Jul 2019 08:15:10 -0400
+Date: Mon, 8 Jul 2019 08:15:00 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] mm, memcg: support memory.{min, low} protection in
+ cgroup v1
+Message-ID: <20190708121459.GB51396@bfoster>
+References: <1562310330-16074-1-git-send-email-laoar.shao@gmail.com>
+ <20190705090902.GF8231@dhcp22.suse.cz>
+ <CALOAHbAw5mmpYJb4KRahsjO-Jd0nx1CE+m0LOkciuL6eJtavzQ@mail.gmail.com>
+ <20190705111043.GJ8231@dhcp22.suse.cz>
+ <CALOAHbA3PL6-sBqdy-sGKC8J9QGe_vn4-QU8J1HG-Pgn60WFJA@mail.gmail.com>
+ <20190705151045.GI37448@bfoster>
+ <20190705235222.GE7689@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <CAHpGcM+s77hKMXo=66nWNF7YKa3qhLY9bZrdb4-Lkspyg2CCDw@mail.gmail.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190705235222.GE7689@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: =?UTF-8?Q?Andreas_Gr=c3=bcnbacher?= <andreas.gruenbacher@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Gao Xiang <gaoxiang25@huawei.com>, chao@kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Yafang Shao <laoar.shao@gmail.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Shakeel Butt <shakeelb@google.com>, Yafang Shao <shaoyafang@didiglobal.com>, linux-xfs@vger.kernel.org
 
-Hi Andreas,
+On Sat, Jul 06, 2019 at 09:52:22AM +1000, Dave Chinner wrote:
+> On Fri, Jul 05, 2019 at 11:10:45AM -0400, Brian Foster wrote:
+> > cc linux-xfs
+> > 
+> > On Fri, Jul 05, 2019 at 10:33:04PM +0800, Yafang Shao wrote:
+> > > On Fri, Jul 5, 2019 at 7:10 PM Michal Hocko <mhocko@kernel.org> wrote:
+> > > >
+> > > > On Fri 05-07-19 17:41:44, Yafang Shao wrote:
+> > > > > On Fri, Jul 5, 2019 at 5:09 PM Michal Hocko <mhocko@kernel.org> wrote:
+> > > > [...]
+> > > > > > Why cannot you move over to v2 and have to stick with v1?
+> > > > > Because the interfaces between cgroup v1 and cgroup v2 are changed too
+> > > > > much, which is unacceptable by our customer.
+> > > >
+> > > > Could you be more specific about obstacles with respect to interfaces
+> > > > please?
+> > > >
+> > > 
+> > > Lots of applications will be changed.
+> > > Kubernetes, Docker and some other applications which are using cgroup v1,
+> > > that will be a trouble, because they are not maintained by us.
+> > > 
+> > > > > It may take long time to use cgroup v2 in production envrioment, per
+> > > > > my understanding.
+> > > > > BTW, the filesystem on our servers is XFS, but the cgroup  v2
+> > > > > writeback throttle is not supported on XFS by now, that is beyond my
+> > > > > comprehension.
+> > > >
+> > > > Are you sure? I would be surprised if v1 throttling would work while v2
+> > > > wouldn't. As far as I remember it is v2 writeback throttling which
+> > > > actually works. The only throttling we have for v1 is reclaim based one
+> > > > which is a huge hammer.
+> > > > --
+> > > 
+> > > We did it in cgroup v1 in our kernel.
+> > > But the upstream still don't support it in cgroup v2.
+> > > So my real question is why upstream can't support such an import file system ?
+> > > Do you know which companies  besides facebook are using cgroup v2  in
+> > > their product enviroment?
+> > > 
+> > 
+> > I think the original issue with regard to XFS cgroupv2 writeback
+> > throttling support was that at the time the XFS patch was proposed,
+> > there wasn't any test coverage to prove that the code worked (and the
+> > original author never followed up). That has since been resolved and
+> > Christoph has recently posted a new patch [1], which appears to have
+> > been accepted by the maintainer.
+> 
+> I don't think the validation issue has been resolved.
+> 
+> i.e. we still don't have regression tests that ensure it keeps
+> working it in future, or that it works correctly in any specific
+> distro setting/configuration. The lack of repeatable QoS validation
+> infrastructure was the reason I never merged support for this in the
+> first place.
+> 
+> So while the (simple) patch to support it has been merged now,
+> there's no guarantee that it will work as expected or continue to do
+> so over the long run as nobody upstream or in distro land has a way
+> of validating that it is working correctly.
+> 
+> From that perspective, it is still my opinion that one-off "works
+> for me" testing isn't sufficient validation for a QoS feature that
+> people will use to implement SLAs with $$$ penalities attached to
+> QoS failures....
+> 
 
-Thanks for your review in advance. :)
+We do have an fstest to cover the accounting bits (which is what the fs
+is responsible for). Christoph also sent a patch[1] to enable that on
+XFS. I'm sure there's plenty of room for additional/broader test
+coverage, of course...
 
-On 2019/7/10 7:32, Andreas Grünbacher wrote:
-> Hi Chao,
-> 
-> Am Mi., 3. Juli 2019 um 09:55 Uhr schrieb Chao Yu <yuchao0@huawei.com>:
->> Some filesystems like erofs/reiserfs have the ability to pack tail
->> data into metadata, e.g.:
->> IOMAP_MAPPED [0, 8192]
->> IOMAP_INLINE [8192, 8200]
->>
->> However current IOMAP_INLINE type has assumption that:
->> - inline data should be locating at page #0.
->> - inline size should equal to .i_size
->> Those restriction fail to convert to use iomap IOMAP_INLINE in erofs,
->> so this patch tries to relieve above limits to make IOMAP_INLINE more
->> generic to cover tail-packing case.
-> 
-> this patch suffers from the following problems:
-> 
-> * Fiemap distinguishes between FIEMAP_EXTENT_DATA_INLINE and
-> FIEMAP_EXTENT_DATA_TAIL. Someone will sooner or later inevitably use
-> iomap_fiemap on a filesystem with tail packing, so if we don't make
-> the same distinction in iomap, iomap_fiemap will silently produce the
-> wrong result. This means that IOMAP_TAIL should become a separate
-> mapping type.
+Brian
 
-I'm a little confused, IIUC, IOMAP_TAIL and FIEMAP_EXTENT_DATA_TAIL are with
-different semantics:
+[1] https://marc.info/?l=fstests&m=156138385006173&w=2
 
-- IOMAP_TAIl:
-  we may introduce this flag to cover tail-packing case, in where we merge
-small-sized data in the tail of file into free space of its metadata.
-- FIEMAP_EXTENT_DATA_TAIL:
-quoted from Documentation/filesystems/fiemap.txt
-"  This will also set FIEMAP_EXTENT_NOT_ALIGNED
-Data is packed into a block with data from other files."
-It looks like this flag indicates that blocks from different files stores into
-one common block.
-
-I'm not familiar with fiemap flags' history, but maybe FIEMAP_EXTENT_DATA_TAIL
-should be better to rename to FIEMAP_EXTENT_DATA_PACKING to avoid ambiguity. And
-then FIEMAP_EXTENT_DATA_INLINE will be enough to cover normal inline case and
-tail-packing case?
-
+> Cheers,
 > 
-> * IOMAP_INLINE mappings always start at offset 0 and span an entire
-> page, so they are always page aligned. IOMAP_TAIL mappings only need
-
-Why can't #0 page consist of more than one block/mapping? I didn't get what's
-difference here.
-
-> to be block aligned. If the block size is smaller than the page size,
-
-- reiserfs tries to find last page's content, if the size of that page's valid
-content is smaller than threshold (at least less than one block), reiserfs can
-do the packing.
-
-- erofs' block size is 4kb which is the same as page size.
-
-Actually, for IOMAP_TAIL, there is no users who need to map more than one block
-into metadata, so I'm not sure that we should support that, or we just need to
-let code preparing for that to those potential users?
-
-Thanks,
-
-> a tail page can consist of more than one mapping. So
-> iomap_read_inline_data needs to be changed to only copy a single block
-> out of iomap->inline_data, and we need to adjust iomap_write_begin and
-> iomap_readpage_actor accordingly.
-> 
-> * Functions iomap_read_inline_data, iomap_write_end_inline, and
-> iomap_dio_inline_actor currently all assume that we are operating on
-> page 0, and that iomap->inline_data points at the data at offset 0.
-> That's no longer the case for IOMAP_TAIL mappings. We need to look
-> only at the offset within the page / block there.
-> 
-> * There are some asserts like the following int he code:
-> 
->   BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
-> 
-> Those should probably be tightened to check for block boundaries
-> instead of page boundaries, i.e. something like:
-> 
->   BUG_ON(size > i_blocksize(inode) -
-> offset_in_block(iomap->inline_data, inode));
-> 
->> Signed-off-by: Chao Yu <yuchao0@huawei.com>
->> ---
->>  fs/iomap.c | 4 +---
->>  1 file changed, 1 insertion(+), 3 deletions(-)
->>
->> diff --git a/fs/iomap.c b/fs/iomap.c
->> index 12654c2e78f8..d1c16b692d31 100644
->> --- a/fs/iomap.c
->> +++ b/fs/iomap.c
->> @@ -264,13 +264,12 @@ static void
->>  iomap_read_inline_data(struct inode *inode, struct page *page,
->>                 struct iomap *iomap)
->>  {
->> -       size_t size = i_size_read(inode);
->> +       size_t size = iomap->length;
-> 
-> Function iomap_read_inline_data fills the entire page here, not only
-> the iomap->length part, so this is wrong. But see my comment above
-> about changing iomap_read_inline_data to read a single block above as
-> well.
-> 
->>         void *addr;
->>
->>         if (PageUptodate(page))
->>                 return;
->>
->> -       BUG_ON(page->index);
->>         BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
->>
->>         addr = kmap_atomic(page);
->> @@ -293,7 +292,6 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->>         sector_t sector;
->>
->>         if (iomap->type == IOMAP_INLINE) {
->> -               WARN_ON_ONCE(pos);
->>                 iomap_read_inline_data(inode, page, iomap);
->>                 return PAGE_SIZE;
->>         }
-> 
-> Those last two changes look right to me.
-> 
-> Thanks,
-> Andreas
-> .
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
 > 
