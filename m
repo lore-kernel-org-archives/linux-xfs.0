@@ -1,32 +1,35 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49396 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725818AbfGIEk4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 00:40:56 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 31EB2284C3
-        for <linux-xfs@vger.kernel.org>; Tue,  9 Jul 2019 04:40:56 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 204031] [xfstests generic/475]: general protection fault: 0000
- [#1] RIP: 0010:xfs_bmapi_read+0x311/0xb00 [xfs]
-Date: Tue, 09 Jul 2019 04:40:55 +0000
-Message-ID: <bug-204031-201763-gHzs97LnrS@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-204031-201763@https.bugzilla.kernel.org/>
-References: <bug-204031-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from verein.lst.de ([213.95.11.211]:43715 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726133AbfGIPXc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jul 2019 11:23:32 -0400
+Date: Tue, 9 Jul 2019 17:23:30 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 19/24] xfs: use bios directly to read and write the log
+ recovery buffers
+Message-ID: <20190709152330.GA3945@lst.de>
+References: <20190605191511.32695-1-hch@lst.de> <20190605191511.32695-20-hch@lst.de> <20190708073740.GI7689@dread.disaster.area> <20190708161919.GN1404256@magnolia> <20190708213423.GA18177@lst.de> <20190708221508.GJ7689@dread.disaster.area>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190708221508.GJ7689@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=204031
+On Tue, Jul 09, 2019 at 08:15:08AM +1000, Dave Chinner wrote:
+> That fixes the problem I saw, but I think bio_chain() needs some
+> more checks to prevent this happening in future. It's trivially
+> easy to chain the bios in the wrong order, very difficult to spot
+> in review, and difficult to trigger in testing as it requires
+> chain nesting and adverse IO timing to expose....
 
---- Comment #1 from Zorro Lang (zlang@redhat.com) ---
-Updata: By merging above patches, I can't reproduce this bug by running
-generic/475 on six different machines 3 days.
+Not sure how we can better check it.  At best we can set a flag for a
+bio that is a chain "child" and complain if someone is calling
+submit_bio_wait, but that would only really cover the wait case.
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+But one thing I planned to do is to lift xfs_chain_bio to the block
+layer so that people can use it for any kind of continuation bio
+instead of duplicating the logic.
