@@ -1,83 +1,68 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48665 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726038AbfGEXdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jul 2019 19:33:12 -0400
-Date: Sat, 6 Jul 2019 09:31:57 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: pagecache locking
-Message-ID: <20190705233157.GD7689@dread.disaster.area>
-References: <20190613183625.GA28171@kmo-pixel>
- <20190613235524.GK14363@dread.disaster.area>
- <CAHk-=whMHtg62J2KDKnyOTaoLs9GxcNz1hN9QKqpxoO=0bJqdQ@mail.gmail.com>
- <CAHk-=wgz+7O0pdn8Wfxc5EQKNy44FTtf4LAPO1WgCidNjxbWzg@mail.gmail.com>
- <20190617224714.GR14363@dread.disaster.area>
- <CAHk-=wiR3a7+b0cUN45hGp1dvFh=s1i1OkVhoP7CivJxKqsLFQ@mail.gmail.com>
- <CAOQ4uxjqQjrCCt=ixgdUYjBJvKLhw4R9NeMZOB_s2rrWvoDMBw@mail.gmail.com>
- <20190619103838.GB32409@quack2.suse.cz>
- <20190619223756.GC26375@dread.disaster.area>
- <3f394239-f532-23eb-9ff1-465f7d1f3cb4@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:31371 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729155AbfGIUJB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jul 2019 16:09:01 -0400
+From: Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] mkfs: don't use xfs_verify_fsbno() before m_sb is fully set
+ up
+Message-ID: <d04c688e-4d67-83f4-8401-d064d13bdc33@redhat.com>
+Date: Tue, 9 Jul 2019 15:09:00 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <3f394239-f532-23eb-9ff1-465f7d1f3cb4@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Boaz Harrosh <openosd@gmail.com>
-Cc: Jan Kara <jack@suse.cz>, Amir Goldstein <amir73il@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Kent Overstreet <kent.overstreet@gmail.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Matthew Wilcox <willy@infradead.org>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Josef Bacik <josef@toxicpanda.com>, Alexander Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Wed, Jul 03, 2019 at 03:04:45AM +0300, Boaz Harrosh wrote:
-> On 20/06/2019 01:37, Dave Chinner wrote:
-> <>
-> > 
-> > I'd prefer it doesn't get lifted to the VFS because I'm planning on
-> > getting rid of it in XFS with range locks. i.e. the XFS_MMAPLOCK is
-> > likely to go away in the near term because a range lock can be
-> > taken on either side of the mmap_sem in the page fault path.
-> > 
-> <>
-> Sir Dave
-> 
-> Sorry if this was answered before. I am please very curious. In the zufs
-> project I have an equivalent rw_MMAPLOCK that I _read_lock on page_faults.
-> (Read & writes all take read-locks ...)
-> The only reason I have it is because of lockdep actually.
-> 
-> Specifically for those xfstests that mmap a buffer then direct_IO in/out
-> of that buffer from/to another file in the same FS or the same file.
-> (For lockdep its the same case).
+Commit 8da5298 mkfs: validate start and end of aligned logs stopped
+open-coding log end block checks, and used xfs_verify_fsbno() instead.
+It also used xfs_verify_fsbno() to validate the log start.  This
+seemed to make sense, but then xfs/306 started failing on 4k sector
+filesystems, which leads to a log striep unite being set on a single
+AG filesystem.
 
-Which can deadlock if the same inode rwsem is taken on both sides of
-the mmap_sem, as lockdep tells you...
+As it turns out, if xfs_verify_fsbno() is testing a block in the
+last AG, it needs to have mp->m_sb.sb_dblocks set, which isn't done
+until later.  With sb_dblocks unset we can't know how many blocks
+are in the last AG, and hence can't validate it.
 
-> I would be perfectly happy to recursively _read_lock both from the top
-> of the page_fault at the DIO path, and under in the page_fault. I'm
-> _read_locking after all. But lockdep is hard to convince. So I stole the
-> xfs idea of having an rw_MMAPLOCK. And grab yet another _write_lock at
-> truncate/punch/clone time when all mapping traversal needs to stop for
-> the destructive change to take place. (Allocations are done another way
-> and are race safe with traversal)
-> 
-> How do you intend to address this problem with range-locks? ie recursively
-> taking the same "lock"? because if not for the recursive-ity and lockdep I would
-> not need the extra lock-object per inode.
+To fix all this, go back to open-coding the checks; note that this
+/does/ rely on m_sb.sb_agblklog being set, but that /is/ already
+done in the early call to start_superblock_setup().
 
-As long as the IO ranges to the same file *don't overlap*, it should
-be perfectly safe to take separate range locks (in read or write
-mode) on either side of the mmap_sem as non-overlapping range locks
-can be nested and will not self-deadlock.
+Fixes: 8da5298 ("mkfs: validate start and end of aligned logs")
+Reported-by: Dave Chinner <david@fromorbit.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-The "recursive lock problem" still arises with DIO and page faults
-inside gup, but it only occurs when the user buffer range overlaps
-the DIO range to the same file. IOWs, the application is trying to
-do something that has an undefined result and is likely to result in
-data corruption. So, in that case I plan to have the gup page faults
-fail and the DIO return -EDEADLOCK to userspace....
+Sorry for missing this one in regression testing :/
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 468b8fde..4e576a5c 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -3040,7 +3040,7 @@ align_internal_log(
+ 		cfg->logstart = ((cfg->logstart + (sunit - 1)) / sunit) * sunit;
+ 
+ 	/* If our log start overlaps the next AG's metadata, fail. */
+-	if (!xfs_verify_fsbno(mp, cfg->logstart)) {
++	if (XFS_FSB_TO_AGBNO(mp, cfg->logstart) <= XFS_AGFL_BLOCK(mp)) {
+ 			fprintf(stderr,
+ _("Due to stripe alignment, the internal log start (%lld) cannot be aligned\n"
+   "within an allocation group.\n"),
+@@ -3051,10 +3051,9 @@ _("Due to stripe alignment, the internal log start (%lld) cannot be aligned\n"
+ 	/* round up/down the log size now */
+ 	align_log_size(cfg, sunit);
+ 
+-	/* check the aligned log still fits in an AG. */
++	/* check the aligned log still starts and ends in the same AG. */
+ 	logend = cfg->logstart + cfg->logblocks - 1;
+-	if (XFS_FSB_TO_AGNO(mp, cfg->logstart) != XFS_FSB_TO_AGNO(mp, logend) ||
+-	    !xfs_verify_fsbno(mp, logend)) {
++	if (XFS_FSB_TO_AGNO(mp, cfg->logstart) != XFS_FSB_TO_AGNO(mp, logend)) {
+ 		fprintf(stderr,
+ _("Due to stripe alignment, the internal log size (%lld) is too large.\n"
+   "Must fit within an allocation group.\n"),
