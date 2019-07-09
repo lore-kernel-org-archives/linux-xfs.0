@@ -1,52 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:36570 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387506AbfGHR3d (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 8 Jul 2019 13:29:33 -0400
-Received: by mail-ot1-f67.google.com with SMTP id r6so17028103oti.3
-        for <linux-xfs@vger.kernel.org>; Mon, 08 Jul 2019 10:29:33 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:50960 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726055AbfGIOZl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jul 2019 10:25:41 -0400
+Date: Tue, 9 Jul 2019 10:25:38 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH] xfs: bump INUMBERS cursor correctly in xfs_inumbers_walk
+Message-ID: <20190709142538.GA58362@bfoster>
+References: <20190709135943.GF5167@magnolia>
+ <20190709142226.GP1404256@magnolia>
 MIME-Version: 1.0
-References: <20190701215439.19162-1-hch@lst.de> <CAHc6FU5MHCdXENW_Y++hO_qhtCh4XtAHYOaTLzk+1KU=JNpPww@mail.gmail.com>
- <20190708160351.GA9871@lst.de>
-In-Reply-To: <20190708160351.GA9871@lst.de>
-From: Andreas Gruenbacher <agruenba@redhat.com>
-Date: Mon, 8 Jul 2019 19:29:21 +0200
-Message-ID: <CAHc6FU5942i0XrCjUAhR9NCmfLuu7_CoPXNDsdF0X+gCpF1cDQ@mail.gmail.com>
-Subject: Re: RFC: use the iomap writepage path in gfs2
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190709142226.GP1404256@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, cluster-devel <cluster-devel@redhat.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: xfs <linux-xfs@vger.kernel.org>
 
-On Mon, 8 Jul 2019 at 18:04, Christoph Hellwig <hch@lst.de> wrote:
-> On Thu, Jul 04, 2019 at 12:35:41AM +0200, Andreas Gruenbacher wrote:
-> > Patch "gfs2: implement gfs2_block_zero_range using iomap_zero_range"
-> > isn't quite ready: the gfs2 iomap operations don't handle IOMAP_ZERO
-> > correctly so far, and that needs to be fixed first.
->
-> What is the issue with IOMAP_ZERO on gfs2?  Zeroing never does block
-> allocations except when on COW extents, which gfs2 doesn't support,
-> so there shouldn't really be any need for additional handling.
+On Tue, Jul 09, 2019 at 07:22:26AM -0700, Darrick J. Wong wrote:
+> On Tue, Jul 09, 2019 at 06:59:43AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > There's a subtle unit conversion error when we increment the INUMBERS
+> > cursor at the end of xfs_inumbers_walk.  If there's an inode chunk at
+> > the very end of the AG /and/ the AG size is a perfect power of two, that
+> > means we can have inodes, that means that the startino of that last
+> 
+> "...is a perfect power of two, the startino of that last chunk..."
+> 
 
-We still want to set iomap->page_ops for journalled data files on gfs2.
+Yeah, was going to point out this looked like some stale/spurious
+text... :P
 
-Also, if we go through the existing gfs2_iomap_begin_write /
-__gfs2_iomap_begin logic for iomap_zero_range, it will work for
-stuffed files as well, and so we can replace stuffed_zero_range with
-iomap_zero_range.
+> --D
+> 
+> > chunk (which is in units of AG inodes) will be 63 less than (1 <<
+> > agino_log).  If we add XFS_INODES_PER_CHUNK to the startino, we end up
+> > with a startino that's larger than (1 << agino_log) and when we convert
+> > that back to fs inode units we'll rip off that upper bit and wind up
+> > back at the start of the AG.
+> > 
+> > Fix this by converting to units of fs inodes before adding
+> > XFS_INODES_PER_CHUNK so that we'll harmlessly end up pointing to the
+> > next AG.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
 
-> > Some of the tests assume that the filesystem supports unwritten
-> > extents, trusted xattrs, the usrquota / grpquota / prjquota mount
-> > options. There shouldn't be a huge number of failing tests beyond
-> > that, but I know things aren't perfect.
->
-> In general xfstests is supposed to have tests for that and not run
-> the tests if not supported.  In most cases this is automatic, but
-> in case a feature can't be autodetect we have a few manual overrides.
 
-Yes, that needs a bit of work. Let's see.
+Otherwise looks good:
 
-Thanks,
-Andreas
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> >  fs/xfs/xfs_itable.c |    5 ++---
+> >  1 file changed, 2 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+> > index cda8ae94480c..a8a06bb78ea8 100644
+> > --- a/fs/xfs/xfs_itable.c
+> > +++ b/fs/xfs/xfs_itable.c
+> > @@ -338,15 +338,14 @@ xfs_inumbers_walk(
+> >  		.xi_version	= XFS_INUMBERS_VERSION_V5,
+> >  	};
+> >  	struct xfs_inumbers_chunk *ic = data;
+> > -	xfs_agino_t		agino;
+> >  	int			error;
+> >  
+> >  	error = ic->formatter(ic->breq, &inogrp);
+> >  	if (error && error != XFS_IBULK_ABORT)
+> >  		return error;
+> >  
+> > -	agino = irec->ir_startino + XFS_INODES_PER_CHUNK;
+> > -	ic->breq->startino = XFS_AGINO_TO_INO(mp, agno, agino);
+> > +	ic->breq->startino = XFS_AGINO_TO_INO(mp, agno, irec->ir_startino) +
+> > +			XFS_INODES_PER_CHUNK;
+> >  	return error;
+> >  }
+> >  
