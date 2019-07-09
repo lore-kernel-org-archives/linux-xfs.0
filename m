@@ -1,60 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33414 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726055AbfGIPoz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 11:44:55 -0400
-Date: Tue, 9 Jul 2019 08:44:47 -0700
+Received: from userp2120.oracle.com ([156.151.31.85]:45242 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726813AbfGIRt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 13:49:58 -0400
+Subject: [PATCH 3/3] xfs/119: fix MKFS_OPTIONS exporting
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 19/24] xfs: use bios directly to read and write the log
- recovery buffers
-Message-ID: <20190709154447.GR1404256@magnolia>
-References: <20190605191511.32695-1-hch@lst.de>
- <20190605191511.32695-20-hch@lst.de>
- <20190708073740.GI7689@dread.disaster.area>
- <20190708161919.GN1404256@magnolia>
- <20190708213423.GA18177@lst.de>
- <20190708221508.GJ7689@dread.disaster.area>
- <20190709152330.GA3945@lst.de>
+Date: Tue, 09 Jul 2019 10:49:53 -0700
+Message-ID: <156269459341.3039184.4748822543516667568.stgit@magnolia>
+In-Reply-To: <156269457497.3039184.4886490143800432410.stgit@magnolia>
+References: <156269457497.3039184.4886490143800432410.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190709152330.GA3945@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, Allison Collins <allison.henderson@oracle.com>, fstests@vger.kernel.org
 
-On Tue, Jul 09, 2019 at 05:23:30PM +0200, Christoph Hellwig wrote:
-> On Tue, Jul 09, 2019 at 08:15:08AM +1000, Dave Chinner wrote:
-> > That fixes the problem I saw, but I think bio_chain() needs some
-> > more checks to prevent this happening in future. It's trivially
-> > easy to chain the bios in the wrong order, very difficult to spot
-> > in review, and difficult to trigger in testing as it requires
-> > chain nesting and adverse IO timing to expose....
-> 
-> Not sure how we can better check it.  At best we can set a flag for a
-> bio that is a chain "child" and complain if someone is calling
-> submit_bio_wait, but that would only really cover the wait case.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I think submit_bio_wait ought to at least WARN_ON_ONCE if it was fed a
-bio with bi_end_io already set, which at least would have made it more
-obvious that we'd screwed something up in this case, even if the
-detection was after we'd already done bio_chain in the wrong order.
+This test originally exported its own MKFS_OPTIONS to force the tested
+filesystem config to the mkfs defaults + test-specific log size options.
+This overrides whatever the test runner might have set in MKFS_OPTIONS.
 
-Granted IIRC Dave sent a fix for a zeroout integer overflow a while ago
-and Jens committed the patch with the debugging assertions removed, so
-... yay?
+In commit 2fd273886b525 ("xfs: refactor minimum log size formatting
+code") we fail to export our test-specific MKFS_OPTIONS before
+calculating the minimum log size, which leads to the wrong min log size
+being calculated once we fixed the helper to be smarter about mkfs options.
 
-Maybe we just need CONFIG_BLK_DEBUG for these kinds of assertions so
-that ignorant clods like me have another line of defense against bugs
-and the growing crowd of people who care about performance above
-correctness can crash faster. <grumble>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+---
+ tests/xfs/119 |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-> But one thing I planned to do is to lift xfs_chain_bio to the block
-> layer so that people can use it for any kind of continuation bio
-> instead of duplicating the logic.
 
-That'll help, I suspect. :)
-
---D
+diff --git a/tests/xfs/119 b/tests/xfs/119
+index 8825a5c3..f245a0a6 100755
+--- a/tests/xfs/119
++++ b/tests/xfs/119
+@@ -38,7 +38,8 @@ _require_scratch
+ # this may hang
+ sync
+ 
+-logblks=$(_scratch_find_xfs_min_logblocks -l version=2,su=64k)
++export MKFS_OPTIONS="-l version=2,su=64k"
++logblks=$(_scratch_find_xfs_min_logblocks)
+ export MKFS_OPTIONS="-l version=2,size=${logblks}b,su=64k"
+ export MOUNT_OPTIONS="-o logbsize=64k"
+ _scratch_mkfs_xfs >/dev/null
