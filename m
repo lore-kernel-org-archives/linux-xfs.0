@@ -1,97 +1,77 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44237 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726069AbfGEXxf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 5 Jul 2019 19:53:35 -0400
-Date: Sat, 6 Jul 2019 09:52:22 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] mm, memcg: support memory.{min, low} protection in
- cgroup v1
-Message-ID: <20190705235222.GE7689@dread.disaster.area>
-References: <1562310330-16074-1-git-send-email-laoar.shao@gmail.com>
- <20190705090902.GF8231@dhcp22.suse.cz>
- <CALOAHbAw5mmpYJb4KRahsjO-Jd0nx1CE+m0LOkciuL6eJtavzQ@mail.gmail.com>
- <20190705111043.GJ8231@dhcp22.suse.cz>
- <CALOAHbA3PL6-sBqdy-sGKC8J9QGe_vn4-QU8J1HG-Pgn60WFJA@mail.gmail.com>
- <20190705151045.GI37448@bfoster>
+Received: from sandeen.net ([63.231.237.45]:55796 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726401AbfGIUde (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 9 Jul 2019 16:33:34 -0400
+Subject: Re: [PATCH] mkfs: don't use xfs_verify_fsbno() before m_sb is fully
+ set up
+References: <d04c688e-4d67-83f4-8401-d064d13bdc33@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <2f2379dd-3b08-7f6d-c38a-5880aeb9d6cb@sandeen.net>
+Date: Tue, 9 Jul 2019 15:33:31 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190705151045.GI37448@bfoster>
+In-Reply-To: <d04c688e-4d67-83f4-8401-d064d13bdc33@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Yafang Shao <laoar.shao@gmail.com>, Michal Hocko <mhocko@kernel.org>, Andrew Morton <akpm@linux-foundation.org>, Linux MM <linux-mm@kvack.org>, Johannes Weiner <hannes@cmpxchg.org>, Vladimir Davydov <vdavydov.dev@gmail.com>, Shakeel Butt <shakeelb@google.com>, Yafang Shao <shaoyafang@didiglobal.com>, linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
 
-On Fri, Jul 05, 2019 at 11:10:45AM -0400, Brian Foster wrote:
-> cc linux-xfs
+On 7/9/19 3:09 PM, Eric Sandeen wrote:
+> Commit 8da5298 mkfs: validate start and end of aligned logs stopped
+> open-coding log end block checks, and used xfs_verify_fsbno() instead.
+> It also used xfs_verify_fsbno() to validate the log start.  This
+> seemed to make sense, but then xfs/306 started failing on 4k sector
+> filesystems, which leads to a log striep unite being set on a single
+> AG filesystem.
+
+Uh, "... which leads to a log stripe unit being set on a single AG
+filesystem, with subsequent failures in align_internal_log()."
+
+-Eric
+
+> As it turns out, if xfs_verify_fsbno() is testing a block in the
+> last AG, it needs to have mp->m_sb.sb_dblocks set, which isn't done
+> until later.  With sb_dblocks unset we can't know how many blocks
+> are in the last AG, and hence can't validate it.
 > 
-> On Fri, Jul 05, 2019 at 10:33:04PM +0800, Yafang Shao wrote:
-> > On Fri, Jul 5, 2019 at 7:10 PM Michal Hocko <mhocko@kernel.org> wrote:
-> > >
-> > > On Fri 05-07-19 17:41:44, Yafang Shao wrote:
-> > > > On Fri, Jul 5, 2019 at 5:09 PM Michal Hocko <mhocko@kernel.org> wrote:
-> > > [...]
-> > > > > Why cannot you move over to v2 and have to stick with v1?
-> > > > Because the interfaces between cgroup v1 and cgroup v2 are changed too
-> > > > much, which is unacceptable by our customer.
-> > >
-> > > Could you be more specific about obstacles with respect to interfaces
-> > > please?
-> > >
-> > 
-> > Lots of applications will be changed.
-> > Kubernetes, Docker and some other applications which are using cgroup v1,
-> > that will be a trouble, because they are not maintained by us.
-> > 
-> > > > It may take long time to use cgroup v2 in production envrioment, per
-> > > > my understanding.
-> > > > BTW, the filesystem on our servers is XFS, but the cgroup  v2
-> > > > writeback throttle is not supported on XFS by now, that is beyond my
-> > > > comprehension.
-> > >
-> > > Are you sure? I would be surprised if v1 throttling would work while v2
-> > > wouldn't. As far as I remember it is v2 writeback throttling which
-> > > actually works. The only throttling we have for v1 is reclaim based one
-> > > which is a huge hammer.
-> > > --
-> > 
-> > We did it in cgroup v1 in our kernel.
-> > But the upstream still don't support it in cgroup v2.
-> > So my real question is why upstream can't support such an import file system ?
-> > Do you know which companies  besides facebook are using cgroup v2  in
-> > their product enviroment?
-> > 
+> To fix all this, go back to open-coding the checks; note that this
+> /does/ rely on m_sb.sb_agblklog being set, but that /is/ already
+> done in the early call to start_superblock_setup().
 > 
-> I think the original issue with regard to XFS cgroupv2 writeback
-> throttling support was that at the time the XFS patch was proposed,
-> there wasn't any test coverage to prove that the code worked (and the
-> original author never followed up). That has since been resolved and
-> Christoph has recently posted a new patch [1], which appears to have
-> been accepted by the maintainer.
-
-I don't think the validation issue has been resolved.
-
-i.e. we still don't have regression tests that ensure it keeps
-working it in future, or that it works correctly in any specific
-distro setting/configuration. The lack of repeatable QoS validation
-infrastructure was the reason I never merged support for this in the
-first place.
-
-So while the (simple) patch to support it has been merged now,
-there's no guarantee that it will work as expected or continue to do
-so over the long run as nobody upstream or in distro land has a way
-of validating that it is working correctly.
-
->From that perspective, it is still my opinion that one-off "works
-for me" testing isn't sufficient validation for a QoS feature that
-people will use to implement SLAs with $$$ penalities attached to
-QoS failures....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Fixes: 8da5298 ("mkfs: validate start and end of aligned logs")
+> Reported-by: Dave Chinner <david@fromorbit.com>
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> Sorry for missing this one in regression testing :/
+> 
+> diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+> index 468b8fde..4e576a5c 100644
+> --- a/mkfs/xfs_mkfs.c
+> +++ b/mkfs/xfs_mkfs.c
+> @@ -3040,7 +3040,7 @@ align_internal_log(
+>  		cfg->logstart = ((cfg->logstart + (sunit - 1)) / sunit) * sunit;
+>  
+>  	/* If our log start overlaps the next AG's metadata, fail. */
+> -	if (!xfs_verify_fsbno(mp, cfg->logstart)) {
+> +	if (XFS_FSB_TO_AGBNO(mp, cfg->logstart) <= XFS_AGFL_BLOCK(mp)) {
+>  			fprintf(stderr,
+>  _("Due to stripe alignment, the internal log start (%lld) cannot be aligned\n"
+>    "within an allocation group.\n"),
+> @@ -3051,10 +3051,9 @@ _("Due to stripe alignment, the internal log start (%lld) cannot be aligned\n"
+>  	/* round up/down the log size now */
+>  	align_log_size(cfg, sunit);
+>  
+> -	/* check the aligned log still fits in an AG. */
+> +	/* check the aligned log still starts and ends in the same AG. */
+>  	logend = cfg->logstart + cfg->logblocks - 1;
+> -	if (XFS_FSB_TO_AGNO(mp, cfg->logstart) != XFS_FSB_TO_AGNO(mp, logend) ||
+> -	    !xfs_verify_fsbno(mp, logend)) {
+> +	if (XFS_FSB_TO_AGNO(mp, cfg->logstart) != XFS_FSB_TO_AGNO(mp, logend)) {
+>  		fprintf(stderr,
+>  _("Due to stripe alignment, the internal log size (%lld) is too large.\n"
+>    "Must fit within an allocation group.\n"),
+> 
