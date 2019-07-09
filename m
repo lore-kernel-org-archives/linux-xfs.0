@@ -1,41 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58608 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725616AbfGAGgR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 1 Jul 2019 02:36:17 -0400
-Date: Mon, 1 Jul 2019 08:36:13 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] block: fix .bi_size overflow
-Message-ID: <20190701063613.GA20733@lst.de>
-References: <20190701041644.16052-1-ming.lei@redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:45394 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726060AbfGIOA1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 10:00:27 -0400
+Date: Tue, 9 Jul 2019 06:59:43 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: [PATCH] xfs: bump INUMBERS cursor correctly in xfs_inumbers_walk
+Message-ID: <20190709135943.GF5167@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190701041644.16052-1-ming.lei@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ming Lei <ming.lei@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, Liu Yiding <liuyd.fnst@cn.fujitsu.com>, kernel test robot <rong.a.chen@intel.com>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
+To: xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>
 
-On Mon, Jul 01, 2019 at 12:16:44PM +0800, Ming Lei wrote:
-> 'bio->bi_iter.bi_size' is 'unsigned int', which at most hold 4G - 1
-> bytes.
-> 
-> Before 07173c3ec276 ("block: enable multipage bvecs"), one bio can
-> include very limited pages, and usually at most 256, so the fs bio
-> size won't be bigger than 1M bytes most of times.
-> 
-> Since we support multi-page bvec, in theory one fs bio really can
-> be added > 1M pages, especially in case of hugepage, or big writeback
-> in case of huge dirty pages. Then there is chance in which .bi_size
-> is overflowed.
-> 
-> Fixes this issue by adding bio_will_full() which checks if the added
-> segment may overflow .bi_size.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Can you please just add the argument to bio_full?  bio_will_full sounds
-rather odd.
+There's a subtle unit conversion error when we increment the INUMBERS
+cursor at the end of xfs_inumbers_walk.  If there's an inode chunk at
+the very end of the AG /and/ the AG size is a perfect power of two, that
+means we can have inodes, that means that the startino of that last
+chunk (which is in units of AG inodes) will be 63 less than (1 <<
+agino_log).  If we add XFS_INODES_PER_CHUNK to the startino, we end up
+with a startino that's larger than (1 << agino_log) and when we convert
+that back to fs inode units we'll rip off that upper bit and wind up
+back at the start of the AG.
 
-Maybe also add a kerneldoc comment to the new bio_full to explain
-it.  Otherwise this looks fine to me.
+Fix this by converting to units of fs inodes before adding
+XFS_INODES_PER_CHUNK so that we'll harmlessly end up pointing to the
+next AG.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_itable.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
+index cda8ae94480c..a8a06bb78ea8 100644
+--- a/fs/xfs/xfs_itable.c
++++ b/fs/xfs/xfs_itable.c
+@@ -338,15 +338,14 @@ xfs_inumbers_walk(
+ 		.xi_version	= XFS_INUMBERS_VERSION_V5,
+ 	};
+ 	struct xfs_inumbers_chunk *ic = data;
+-	xfs_agino_t		agino;
+ 	int			error;
+ 
+ 	error = ic->formatter(ic->breq, &inogrp);
+ 	if (error && error != XFS_IBULK_ABORT)
+ 		return error;
+ 
+-	agino = irec->ir_startino + XFS_INODES_PER_CHUNK;
+-	ic->breq->startino = XFS_AGINO_TO_INO(mp, agno, agino);
++	ic->breq->startino = XFS_AGINO_TO_INO(mp, agno, irec->ir_startino) +
++			XFS_INODES_PER_CHUNK;
+ 	return error;
+ }
+ 
