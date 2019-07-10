@@ -1,52 +1,41 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:45242 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726813AbfGIRt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 13:49:58 -0400
-Subject: [PATCH 3/3] xfs/119: fix MKFS_OPTIONS exporting
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 09 Jul 2019 10:49:53 -0700
-Message-ID: <156269459341.3039184.4748822543516667568.stgit@magnolia>
-In-Reply-To: <156269457497.3039184.4886490143800432410.stgit@magnolia>
-References: <156269457497.3039184.4886490143800432410.stgit@magnolia>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:38847 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726098AbfGJOau (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jul 2019 10:30:50 -0400
+Received: by mail-wr1-f66.google.com with SMTP id g17so2719771wrr.5
+        for <linux-xfs@vger.kernel.org>; Wed, 10 Jul 2019 07:30:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <958316946.20190710124710@a-j.ru>
+In-Reply-To: <958316946.20190710124710@a-j.ru>
+From: Chris Murphy <lists@colorremedies.com>
+Date: Wed, 10 Jul 2019 08:30:37 -0600
+Message-ID: <CAJCQCtTpdGxB4r04wPNE+PRV5Jx_m95kShwvLJ5zxdmfw2fnEw@mail.gmail.com>
+Subject: Re: Need help to recover root filesystem after a power supply issue
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, Allison Collins <allison.henderson@oracle.com>, fstests@vger.kernel.org
+To: Andrey Zhunev <a-j@a-j.ru>
+Cc: xfs list <linux-xfs@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Jul 10, 2019 at 3:52 AM Andrey Zhunev <a-j@a-j.ru> wrote:
+>
+> [root@tftp ~]# xfs_repair /dev/centos/root
+> Phase 1 - find and verify superblock...
+> superblock read failed, offset 53057945600, size 131072, ag 2, rval -1
+>
+> fatal error -- Input/output error
+> [root@tftp ~]#
 
-This test originally exported its own MKFS_OPTIONS to force the tested
-filesystem config to the mkfs defaults + test-specific log size options.
-This overrides whatever the test runner might have set in MKFS_OPTIONS.
+# smartctl -l scterc /dev/
 
-In commit 2fd273886b525 ("xfs: refactor minimum log size formatting
-code") we fail to export our test-specific MKFS_OPTIONS before
-calculating the minimum log size, which leads to the wrong min log size
-being calculated once we fixed the helper to be smarter about mkfs options.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
----
- tests/xfs/119 |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Point it to the physical device. If it's a consumer drive, it might
+support a configurable SCT ERC. Also need to see the kernel messages
+at the time of the i/o error. There's some chance if a deep recover
+read is possible, it'll recover the data. But I don't see how this is
+related to power supply failure.
 
 
-diff --git a/tests/xfs/119 b/tests/xfs/119
-index 8825a5c3..f245a0a6 100755
---- a/tests/xfs/119
-+++ b/tests/xfs/119
-@@ -38,7 +38,8 @@ _require_scratch
- # this may hang
- sync
- 
--logblks=$(_scratch_find_xfs_min_logblocks -l version=2,su=64k)
-+export MKFS_OPTIONS="-l version=2,su=64k"
-+logblks=$(_scratch_find_xfs_min_logblocks)
- export MKFS_OPTIONS="-l version=2,size=${logblks}b,su=64k"
- export MOUNT_OPTIONS="-o logbsize=64k"
- _scratch_mkfs_xfs >/dev/null
+-- 
+Chris Murphy
