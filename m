@@ -1,92 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53222 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727024AbfGLRuu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jul 2019 13:50:50 -0400
-Date: Fri, 12 Jul 2019 10:50:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 1/3] mm: Handle MADV_WILLNEED through vfs_fadvise()
-Message-ID: <20190712175040.GY1404256@magnolia>
-References: <20190711140012.1671-1-jack@suse.cz>
- <20190711140012.1671-2-jack@suse.cz>
+Received: from bonobo.elm.relay.mailchannels.net ([23.83.212.22]:55539 "EHLO
+        bonobo.elm.relay.mailchannels.net" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727674AbfGJPCs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jul 2019 11:02:48 -0400
+Date: Wed, 10 Jul 2019 18:02:30 +0300
+From: Andrey Zhunev <a-j@a-j.ru>
+Message-ID: <15810023599.20190710180230@a-j.ru>
+Subject: Re: Need help to recover root filesystem after a power supply issue
+In-Reply-To: <8bef8d1e-2f5f-a8bd-08d3-fff0dce1256e@sandeen.net>
+References: <871210488.20190710125617@a-j.ru>
+  <fcbcd66e-0c78-f13b-e7aa-1487090d1dfd@sandeen.net>
+  <433120592.20190710165841@a-j.ru>
+  <8bef8d1e-2f5f-a8bd-08d3-fff0dce1256e@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190711140012.1671-2-jack@suse.cz>
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, Boaz Harrosh <boaz@plexistor.com>, stable@vger.kernel.org
+To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
 
-On Thu, Jul 11, 2019 at 04:00:10PM +0200, Jan Kara wrote:
-> Currently handling of MADV_WILLNEED hint calls directly into readahead
-> code. Handle it by calling vfs_fadvise() instead so that filesystem can
-> use its ->fadvise() callback to acquire necessary locks or otherwise
-> prepare for the request.
-> 
-> Suggested-by: Amir Goldstein <amir73il@gmail.com>
-> CC: stable@vger.kernel.org # Needed by "xfs: Fix stale data exposure
-> 					when readahead races with hole punch"
-> Signed-off-by: Jan Kara <jack@suse.cz>
+Wednesday, July 10, 2019, 5:23:41 PM, you wrote:
 
-Looks reasonable to me, though is this race between readahead and
-truncate severe enough to try to push it as a fix for 5.3 or are you
-targetting 5.4?
 
---D
 
-> ---
->  mm/madvise.c | 22 ++++++++++++++++------
->  1 file changed, 16 insertions(+), 6 deletions(-)
-> 
-> diff --git a/mm/madvise.c b/mm/madvise.c
-> index 628022e674a7..ae56d0ef337d 100644
-> --- a/mm/madvise.c
-> +++ b/mm/madvise.c
-> @@ -14,6 +14,7 @@
->  #include <linux/userfaultfd_k.h>
->  #include <linux/hugetlb.h>
->  #include <linux/falloc.h>
-> +#include <linux/fadvise.h>
->  #include <linux/sched.h>
->  #include <linux/ksm.h>
->  #include <linux/fs.h>
-> @@ -275,6 +276,7 @@ static long madvise_willneed(struct vm_area_struct *vma,
->  			     unsigned long start, unsigned long end)
->  {
->  	struct file *file = vma->vm_file;
-> +	loff_t offset;
->  
->  	*prev = vma;
->  #ifdef CONFIG_SWAP
-> @@ -298,12 +300,20 @@ static long madvise_willneed(struct vm_area_struct *vma,
->  		return 0;
->  	}
->  
-> -	start = ((start - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
-> -	if (end > vma->vm_end)
-> -		end = vma->vm_end;
-> -	end = ((end - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
-> -
-> -	force_page_cache_readahead(file->f_mapping, file, start, end - start);
-> +	/*
-> +	 * Filesystem's fadvise may need to take various locks.  We need to
-> +	 * explicitly grab a reference because the vma (and hence the
-> +	 * vma's reference to the file) can go away as soon as we drop
-> +	 * mmap_sem.
-> +	 */
-> +	*prev = NULL;	/* tell sys_madvise we drop mmap_sem */
-> +	get_file(file);
-> +	up_read(&current->mm->mmap_sem);
-> +	offset = (loff_t)(start - vma->vm_start)
-> +			+ ((loff_t)vma->vm_pgoff << PAGE_SHIFT);
-> +	vfs_fadvise(file, offset, end - start, POSIX_FADV_WILLNEED);
-> +	fput(file);
-> +	down_read(&current->mm->mmap_sem);
->  	return 0;
->  }
->  
-> -- 
-> 2.16.4
-> 
+> On 7/10/19 8:58 AM, Andrey Zhunev wrote:
+>> Wednesday, July 10, 2019, 4:26:14 PM, you wrote:
+>> 
+>>> On 7/10/19 4:56 AM, Andrey Zhunev wrote:
+>>>> Hello All,
+>>>>
+>>>> I am struggling to recover my system after a PSU failure, and I was
+>>>> suggested to ask here for support.
+>>>>
+>>>> One of the hard drives throws some read errors, and that happen to be
+>>>> my root drive...
+>>>> My system is CentOS 7, and the root partition is a part of LVM.
+>>>>
+>>>> [root@mgmt ~]# lvscan
+>>>>   ACTIVE            '/dev/centos/root' [<98.83 GiB] inherit
+>>>>   ACTIVE            '/dev/centos/home' [<638.31 GiB] inherit
+>>>>   ACTIVE            '/dev/centos/swap' [<7.52 GiB] inherit
+>>>> [root@mgmt ~]#
+>>>>
+>>>> [root@tftp ~]# file -s /dev/centos/root
+>>>> /dev/centos/root: symbolic link to `../dm-3'
+>>>> [root@tftp ~]# file -s /dev/centos/home
+>>>> /dev/centos/home: symbolic link to `../dm-4'
+>>>> [root@tftp ~]# file -s /dev/dm-3
+>>>> /dev/dm-3: SGI XFS filesystem data (blksz 4096, inosz 256, v2 dirs)
+>>>> [root@tftp ~]# file -s /dev/dm-4
+>>>> /dev/dm-4: SGI XFS filesystem data (blksz 4096, inosz 256, v2 dirs)
+>>>>
+>>>>
+>>>> [root@tftp ~]# xfs_repair /dev/centos/root
+>>>> Phase 1 - find and verify superblock...
+>>>> superblock read failed, offset 53057945600, size 131072, ag 2, rval -1
+>>>>
+>>>> fatal error -- Input/output error
+>> 
+>>> look at dmesg, see what the kernel says about the read failure.
+>> 
+>>> You might be able to use https://www.gnu.org/software/ddrescue/ 
+>>> to read as many sectors off the device into an image file as possible,
+>>> and that image might be enough to work with for recovery.  That would be
+>>> my first approach:
+>> 
+>>> 1) use dd-rescue to create an image file of the device
+>>> 2) make a copy of that image file
+>>> 3) run xfs_repair -n on the copy to see what it would do
+>>> 4) if that looks reasonable run xfs_repair on the copy
+>>> 5) mount the copy and see what you get
+>> 
+>>> But if your drive simply cannot be read at all, this is not a filesystem
+>>> problem, it is a hardware problem. If this is critical data you may wish
+>>> to hire a data recovery service.
+>> 
+>>> -Eric
+>> 
+>> 
+>> Hi Eric,
+>> 
+>> Thanks for your message!
+>> I already started to copy the failing drive with ddrescue. This is a
+>> large drive, so it takes some time to complete...
+>> 
+>> When I tried to run xfs_repair on the original (failing) drive, the
+>> xfs_repair was unable to read the superblock and then just quitted
+>> with an 'io error'.
+>> Do you think it can behave differently on a copied image ?
+
+> As I said, look at dmesg to see what failed on the original drive read
+> attempt.
+
+> ddrescue will fill unreadable sectors with 0, and then of course that
+> can be read from the image file.
+
+
+Ooops, I forgot to paste the error message from dmesg.
+Here it is:
+
+Jul 10 11:48:05 mgmt kernel: ata1.00: exception Emask 0x0 SAct 0x180000 SErr 0x0 action 0x0
+Jul 10 11:48:05 mgmt kernel: ata1.00: irq_stat 0x40000008
+Jul 10 11:48:05 mgmt kernel: ata1.00: failed command: READ FPDMA QUEUED
+Jul 10 11:48:05 mgmt kernel: ata1.00: cmd 60/00:98:28:ac:3e/01:00:03:00:00/40 tag 19 ncq 131072 in#012         res 41/40:00:08:ad:3e/00:00:03:00:00/40 Emask 0x409 (media error) <F>
+Jul 10 11:48:05 mgmt kernel: ata1.00: status: { DRDY ERR }
+Jul 10 11:48:05 mgmt kernel: ata1.00: error: { UNC }
+Jul 10 11:48:05 mgmt kernel: ata1.00: configured for UDMA/133
+Jul 10 11:48:05 mgmt kernel: sd 0:0:0:0: [sda] tag#19 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+Jul 10 11:48:05 mgmt kernel: sd 0:0:0:0: [sda] tag#19 Sense Key : Medium Error [current] [descriptor]
+Jul 10 11:48:05 mgmt kernel: sd 0:0:0:0: [sda] tag#19 Add. Sense: Unrecovered read error - auto reallocate failed
+Jul 10 11:48:05 mgmt kernel: sd 0:0:0:0: [sda] tag#19 CDB: Read(16) 88 00 00 00 00 00 03 3e ac 28 00 00 01 00 00 00
+Jul 10 11:48:05 mgmt kernel: blk_update_request: I/O error, dev sda, sector 54439176
+Jul 10 11:48:05 mgmt kernel: ata1: EH complete
+
+There are several of these.
+At the moment ddrescue reports 22 read errors (with 35% of the data
+copied to a new storage). If I remember correctly, the LVM with my
+root partition is at the end of the drive. This means more errors will
+likely come... :( 
+
+The way I interpret the dmesg message, that's just a read error. I'm
+not sure, but maybe a complete wipe of the drive will even overwrite /
+clear these unreadable sectors.
+Well, that's something to be checked after the copy process finishes.
+
+
+---
+Best regards,
+ Andrey
