@@ -1,176 +1,157 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44504 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726813AbfGIRtv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 9 Jul 2019 13:49:51 -0400
-Subject: [PATCH 2/3] xfs/016: calculate minimum log size and end locations
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 09 Jul 2019 10:49:47 -0700
-Message-ID: <156269458726.3039184.17039026702574378051.stgit@magnolia>
-In-Reply-To: <156269457497.3039184.4886490143800432410.stgit@magnolia>
-References: <156269457497.3039184.4886490143800432410.stgit@magnolia>
+Received: from szxga05-in.huawei.com ([45.249.212.191]:2251 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726281AbfGJKaV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 10 Jul 2019 06:30:21 -0400
+Subject: Re: [RFC PATCH] iomap: generalize IOMAP_INLINE to cover tail-packing
+ case
+References: <20190703075502.79782-1-yuchao0@huawei.com>
+ <CAHpGcM+s77hKMXo=66nWNF7YKa3qhLY9bZrdb4-Lkspyg2CCDw@mail.gmail.com>
+From: Chao Yu <yuchao0@huawei.com>
+Message-ID: <39944e50-5888-f900-1954-91be2b12ea5b@huawei.com>
+Date: Wed, 10 Jul 2019 18:30:06 +0800
 MIME-Version: 1.0
+In-Reply-To: <CAHpGcM+s77hKMXo=66nWNF7YKa3qhLY9bZrdb4-Lkspyg2CCDw@mail.gmail.com>
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: =?UTF-8?Q?Andreas_Gr=c3=bcnbacher?= <andreas.gruenbacher@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Gao Xiang <gaoxiang25@huawei.com>, chao@kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi Andreas,
 
-xfs/016 looks for corruption in the log when the log wraps.  However,
-it hardcodes the minimum log size and the "95%" point where it wants to
-start the "nudge and check for corruption" part of the test.  New
-features require larger logs, which causes the test to fail when it
-can't mkfs with the smaller log size and when that 95% point doesn't put
-us within 20x "_log_traffic 2"s of the end of the log.
+Thanks for your review in advance. :)
 
-Fix the first problem by using the new min log size helper and replace
-the 95% figure with an estimate of where we need to be to guarantee that
-the 20x loop wraps the log.
+On 2019/7/10 7:32, Andreas Grünbacher wrote:
+> Hi Chao,
+> 
+> Am Mi., 3. Juli 2019 um 09:55 Uhr schrieb Chao Yu <yuchao0@huawei.com>:
+>> Some filesystems like erofs/reiserfs have the ability to pack tail
+>> data into metadata, e.g.:
+>> IOMAP_MAPPED [0, 8192]
+>> IOMAP_INLINE [8192, 8200]
+>>
+>> However current IOMAP_INLINE type has assumption that:
+>> - inline data should be locating at page #0.
+>> - inline size should equal to .i_size
+>> Those restriction fail to convert to use iomap IOMAP_INLINE in erofs,
+>> so this patch tries to relieve above limits to make IOMAP_INLINE more
+>> generic to cover tail-packing case.
+> 
+> this patch suffers from the following problems:
+> 
+> * Fiemap distinguishes between FIEMAP_EXTENT_DATA_INLINE and
+> FIEMAP_EXTENT_DATA_TAIL. Someone will sooner or later inevitably use
+> iomap_fiemap on a filesystem with tail packing, so if we don't make
+> the same distinction in iomap, iomap_fiemap will silently produce the
+> wrong result. This means that IOMAP_TAIL should become a separate
+> mapping type.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/016     |   66 +++++++++++++++++++++++++++++++++++++++++++----------
- tests/xfs/016.out |    1 +
- 2 files changed, 54 insertions(+), 13 deletions(-)
+I'm a little confused, IIUC, IOMAP_TAIL and FIEMAP_EXTENT_DATA_TAIL are with
+different semantics:
 
+- IOMAP_TAIl:
+  we may introduce this flag to cover tail-packing case, in where we merge
+small-sized data in the tail of file into free space of its metadata.
+- FIEMAP_EXTENT_DATA_TAIL:
+quoted from Documentation/filesystems/fiemap.txt
+"  This will also set FIEMAP_EXTENT_NOT_ALIGNED
+Data is packed into a block with data from other files."
+It looks like this flag indicates that blocks from different files stores into
+one common block.
 
-diff --git a/tests/xfs/016 b/tests/xfs/016
-index 3407a4b1..2b41127e 100755
---- a/tests/xfs/016
-+++ b/tests/xfs/016
-@@ -44,10 +44,21 @@ _block_filter()
- 
- _init()
- {
-+    echo "*** determine log size"
-+    local sz_mb=50
-+    local dsize="-d size=${sz_mb}m"
-+    local lsize="-l size=$(_scratch_find_xfs_min_logblocks $dsize)b"
-+    local force_opts="$dsize $lsize"
-+    _scratch_mkfs_xfs $force_opts >> $seqres.full 2>&1
-+
-+    # set log_size and log_size_bb globally
-+    log_size_bb=`_log_size`
-+    log_size=$((log_size_bb * 512))
-+    echo "log_size_bb = $log_size_bb log_size = $log_size" >> $seqres.full
-+
-     echo "*** reset partition"
--    $here/src/devzero -b 2048 -n 50 -v 198 $SCRATCH_DEV
-+    $here/src/devzero -b 2048 -n $sz_mb -v 198 $SCRATCH_DEV # write 0xc6
-     echo "*** mkfs"
--    force_opts="-dsize=50m -lsize=$log_size"
-     #
-     # Do not discard blocks as we check for patterns in free space.
-     # 
-@@ -65,6 +76,9 @@ _init()
-     . $tmp.mkfs
-     [ $logsunit -ne 0 ] && \
-         _notrun "Cannot run this test using log MKFS_OPTIONS specified"
-+
-+    # quotas generate extra log traffic so force it off
-+    _qmount_option noquota
- }
- 
- _log_traffic()
-@@ -157,6 +171,7 @@ _check_corrupt()
- # get standard environment, filters and checks
- . ./common/rc
- . ./common/filter
-+. ./common/quota
- 
- # real QA test starts here
- _supported_fs xfs
-@@ -164,10 +179,6 @@ _supported_os Linux
- 
- rm -f $seqres.full
- 
--# mkfs sizes
--log_size=3493888
--log_size_bb=`expr $log_size / 512`
--
- _require_scratch
- _init
- 
-@@ -188,18 +199,30 @@ echo "log sunit = $lsunit"			>>$seqres.full
- [ $head -eq 2 -o $head -eq $((lsunit/512)) ] || \
-     _fail "!!! unexpected initial log position $head vs. $((lsunit/512))"
- 
--# find how how many blocks per op for 100 ops
--# ignore the fact that it will also include an unmount record etc...
--# this should be small overall
-+# Step 1: Run 200 ops to estimate how how many log blocks are used for each op.
-+# Ignore the fact that it will also include an unmount record; this should be
-+# small overall.
- echo "    lots of traffic for sampling" >>$seqres.full
--sample_size_ops=100
-+sample_size_ops=200
- _log_traffic $sample_size_ops
- head1=`_log_head`
- num_blocks=`expr $head1 - $head`
- blocks_per_op=`echo "scale=3; $num_blocks / $sample_size_ops" | bc`
-+echo "log position = $head1; old log position: $head" >> $seqres.full
- echo "blocks_per_op = $blocks_per_op" >>$seqres.full
--num_expected_ops=`echo "$log_size_bb / $blocks_per_op" | bc`
-+
-+# Step 2: Quickly advance the log from wherever step 1 left us to the point
-+# where the log is now 80% full on its first cycle.
-+
-+# Estimate the number of ops needed to get the log head close to but not past
-+# near_end_min for a single mount.  We'd rather fall short and have to step our
-+# way closer to the end than run past the end, so our target for this second
-+# step is to fill 80% of the first cycle of the log.
-+num_expected_ops=$(( 8 * $(echo "$log_size_bb / $blocks_per_op" | bc) / 10))
- echo "num_expected_ops = $num_expected_ops" >>$seqres.full
-+
-+# Compute the number of ops needed to get from wherever we are right now in
-+# the log cycle to the 80% point.
- num_expected_to_go=`echo "$num_expected_ops - $sample_size_ops" | bc`
- echo "num_expected_to_go = $num_expected_to_go" >>$seqres.full
- 
-@@ -208,13 +231,30 @@ _log_traffic $num_expected_to_go
- head=`_log_head`
- echo "log position = $head"                     >>$seqres.full
- 
--# e.g. 3891
--near_end_min=`echo "0.95 * $log_size_bb" | bc | sed 's/\..*//'`
-+# Step 3: Gradually advance log traffic to get us from wherever step 2 left us
-+# to the point where the log is within approximately 20 ops of wrapping into
-+# the second cycle.
-+
-+# Since this is a log wrapping test, it's critical to push the log head to the
-+# point where it will wrap around within twenty rounds of ops.  Compute the
-+# expected value of the log head when we get to this point.  This "/ 1" piece
-+# tricks bc into printing integer numbers.
-+near_end_min=$(echo "$log_size_bb - (20 * $blocks_per_op / 1)" | bc)
- echo "near_end_min = $near_end_min" >>$seqres.full
- 
-+# Step us (in batches of 10 ops) to our goal.
-+while [ $head -lt $near_end_min ]; do
-+	echo "    bump traffic from $head towards $near_end_min" >> $seqres.full
-+	_log_traffic 10 > /dev/null 2>&1
-+	head=$(_log_head)
-+done
-+
- [ $head -gt $near_end_min -a $head -lt $log_size_bb ] || \
-     _fail "!!! unexpected near end log position $head"
- 
-+# Step 4: Try to wrap the log, checking for corruption with each advance.
-+# This is the functionality that we're actually trying to test.  We will try
-+# 40 ops (in batches of 2) to try to wrap the log.
- for c in `seq 0 20`
- do
-     echo "   little traffic"            >>$seqres.full
-diff --git a/tests/xfs/016.out b/tests/xfs/016.out
-index f7844cdf..f4c8f88d 100644
---- a/tests/xfs/016.out
-+++ b/tests/xfs/016.out
-@@ -1,4 +1,5 @@
- QA output created by 016
-+*** determine log size
- *** reset partition
- Wrote 51200.00Kb (value 0xc6)
- *** mkfs
+I'm not familiar with fiemap flags' history, but maybe FIEMAP_EXTENT_DATA_TAIL
+should be better to rename to FIEMAP_EXTENT_DATA_PACKING to avoid ambiguity. And
+then FIEMAP_EXTENT_DATA_INLINE will be enough to cover normal inline case and
+tail-packing case?
+
+> 
+> * IOMAP_INLINE mappings always start at offset 0 and span an entire
+> page, so they are always page aligned. IOMAP_TAIL mappings only need
+
+Why can't #0 page consist of more than one block/mapping? I didn't get what's
+difference here.
+
+> to be block aligned. If the block size is smaller than the page size,
+
+- reiserfs tries to find last page's content, if the size of that page's valid
+content is smaller than threshold (at least less than one block), reiserfs can
+do the packing.
+
+- erofs' block size is 4kb which is the same as page size.
+
+Actually, for IOMAP_TAIL, there is no users who need to map more than one block
+into metadata, so I'm not sure that we should support that, or we just need to
+let code preparing for that to those potential users?
+
+Thanks,
+
+> a tail page can consist of more than one mapping. So
+> iomap_read_inline_data needs to be changed to only copy a single block
+> out of iomap->inline_data, and we need to adjust iomap_write_begin and
+> iomap_readpage_actor accordingly.
+> 
+> * Functions iomap_read_inline_data, iomap_write_end_inline, and
+> iomap_dio_inline_actor currently all assume that we are operating on
+> page 0, and that iomap->inline_data points at the data at offset 0.
+> That's no longer the case for IOMAP_TAIL mappings. We need to look
+> only at the offset within the page / block there.
+> 
+> * There are some asserts like the following int he code:
+> 
+>   BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
+> 
+> Those should probably be tightened to check for block boundaries
+> instead of page boundaries, i.e. something like:
+> 
+>   BUG_ON(size > i_blocksize(inode) -
+> offset_in_block(iomap->inline_data, inode));
+> 
+>> Signed-off-by: Chao Yu <yuchao0@huawei.com>
+>> ---
+>>  fs/iomap.c | 4 +---
+>>  1 file changed, 1 insertion(+), 3 deletions(-)
+>>
+>> diff --git a/fs/iomap.c b/fs/iomap.c
+>> index 12654c2e78f8..d1c16b692d31 100644
+>> --- a/fs/iomap.c
+>> +++ b/fs/iomap.c
+>> @@ -264,13 +264,12 @@ static void
+>>  iomap_read_inline_data(struct inode *inode, struct page *page,
+>>                 struct iomap *iomap)
+>>  {
+>> -       size_t size = i_size_read(inode);
+>> +       size_t size = iomap->length;
+> 
+> Function iomap_read_inline_data fills the entire page here, not only
+> the iomap->length part, so this is wrong. But see my comment above
+> about changing iomap_read_inline_data to read a single block above as
+> well.
+> 
+>>         void *addr;
+>>
+>>         if (PageUptodate(page))
+>>                 return;
+>>
+>> -       BUG_ON(page->index);
+>>         BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
+>>
+>>         addr = kmap_atomic(page);
+>> @@ -293,7 +292,6 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>>         sector_t sector;
+>>
+>>         if (iomap->type == IOMAP_INLINE) {
+>> -               WARN_ON_ONCE(pos);
+>>                 iomap_read_inline_data(inode, page, iomap);
+>>                 return PAGE_SIZE;
+>>         }
+> 
+> Those last two changes look right to me.
+> 
+> Thanks,
+> Andreas
+> .
+> 
