@@ -1,94 +1,132 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bilbo.ozlabs.org ([203.11.71.1]:45429 "EHLO ozlabs.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727874AbfGKFEO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jul 2019 01:04:14 -0400
-Date: Thu, 11 Jul 2019 15:04:09 +1000
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: linux-next: build failure after merge of the block tree
-Message-ID: <20190711150409.2455206a@canb.auug.org.au>
+Received: from userp2120.oracle.com ([156.151.31.85]:35926 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726722AbfGKPt0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jul 2019 11:49:26 -0400
+Date: Thu, 11 Jul 2019 08:49:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] xfs: Fix stale data exposure when readahead races
+ with hole punch
+Message-ID: <20190711154917.GW1404256@magnolia>
+References: <20190711140012.1671-1-jack@suse.cz>
+ <20190711140012.1671-4-jack@suse.cz>
+ <CAOQ4uxh-xpwgF-wQf1ozaZ3yg8nWuBvSyLr_ZFQpkA=coW1dxA@mail.gmail.com>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- boundary="Sig_/B5NooziqED55ovJZ4cwZzQ."; protocol="application/pgp-signature"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAOQ4uxh-xpwgF-wQf1ozaZ3yg8nWuBvSyLr_ZFQpkA=coW1dxA@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Axboe <axboe@kernel.dk>, "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tejun Heo <tj@kernel.org>, Christoph Hellwig <hch@lst.de>
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-xfs <linux-xfs@vger.kernel.org>, Boaz Harrosh <boaz@plexistor.com>, stable <stable@vger.kernel.org>
 
---Sig_/B5NooziqED55ovJZ4cwZzQ.
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: quoted-printable
+On Thu, Jul 11, 2019 at 06:28:54PM +0300, Amir Goldstein wrote:
+> On Thu, Jul 11, 2019 at 5:00 PM Jan Kara <jack@suse.cz> wrote:
+> >
+> > Hole puching currently evicts pages from page cache and then goes on to
+> > remove blocks from the inode. This happens under both XFS_IOLOCK_EXCL
+> > and XFS_MMAPLOCK_EXCL which provides appropriate serialization with
+> > racing reads or page faults. However there is currently nothing that
+> > prevents readahead triggered by fadvise() or madvise() from racing with
+> > the hole punch and instantiating page cache page after hole punching has
+> > evicted page cache in xfs_flush_unmap_range() but before it has removed
+> > blocks from the inode. This page cache page will be mapping soon to be
+> > freed block and that can lead to returning stale data to userspace or
+> > even filesystem corruption.
+> >
+> > Fix the problem by protecting handling of readahead requests by
+> > XFS_IOLOCK_SHARED similarly as we protect reads.
+> >
+> > CC: stable@vger.kernel.org
+> > Link: https://lore.kernel.org/linux-fsdevel/CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com/
+> > Reported-by: Amir Goldstein <amir73il@gmail.com>
+> > Signed-off-by: Jan Kara <jack@suse.cz>
+> > ---
+> 
+> Looks sane. (I'll let xfs developers offer reviewed-by tags)
+> 
+> >  fs/xfs/xfs_file.c | 20 ++++++++++++++++++++
+> >  1 file changed, 20 insertions(+)
+> >
+> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+> > index 76748255f843..88fe3dbb3ba2 100644
+> > --- a/fs/xfs/xfs_file.c
+> > +++ b/fs/xfs/xfs_file.c
+> > @@ -33,6 +33,7 @@
+> >  #include <linux/pagevec.h>
+> >  #include <linux/backing-dev.h>
+> >  #include <linux/mman.h>
+> > +#include <linux/fadvise.h>
+> >
+> >  static const struct vm_operations_struct xfs_file_vm_ops;
+> >
+> > @@ -939,6 +940,24 @@ xfs_file_fallocate(
+> >         return error;
+> >  }
+> >
+> > +STATIC int
+> > +xfs_file_fadvise(
+> > +       struct file *file,
+> > +       loff_t start,
+> > +       loff_t end,
+> > +       int advice)
 
-Hi all,
+Indentation needs fixing here.
 
-After merging the block tree, today's linux-next build (powerpc
-ppc64_defconfig) failed like this:
+> > +{
+> > +       struct xfs_inode *ip = XFS_I(file_inode(file));
+> > +       int ret;
+> > +
+> > +       /* Readahead needs protection from hole punching and similar ops */
+> > +       if (advice == POSIX_FADV_WILLNEED)
+> > +               xfs_ilock(ip, XFS_IOLOCK_SHARED);
 
-fs/xfs/xfs_aops.c: In function 'xfs_add_to_ioend':
-fs/xfs/xfs_aops.c:799:2: error: implicit declaration of function 'wbc_accou=
-nt_io'; did you mean 'blk_account_rq'? [-Werror=3Dimplicit-function-declara=
-tion]
-  wbc_account_io(wbc, page, len);
-  ^~~~~~~~~~~~~~
-  blk_account_rq
+It's good to fix this race, but at the same time I wonder what's the
+impact to processes writing to one part of a file waiting on IOLOCK_EXCL
+while readahead holds IOLOCK_SHARED?
 
-Caused by commit
+(bluh bluh range locks ftw bluh bluh)
 
-  34e51a5e1a6e ("blkcg, writeback: Rename wbc_account_io() to wbc_account_c=
-group_owner()")
+Do we need a lock for DONTNEED?  I think the answer is that you have to
+lock the page to drop it and that will protect us from <myriad punch and
+truncate spaghetti> ... ?
 
-interacting with commit
+> > +       ret = generic_fadvise(file, start, end, advice);
+> > +       if (advice == POSIX_FADV_WILLNEED)
+> > +               xfs_iunlock(ip, XFS_IOLOCK_SHARED);
 
-  adfb5fb46af0 ("xfs: implement cgroup aware writeback")
+Maybe it'd be better to do:
 
-from the xfs tree.
+	int	lockflags = 0;
 
-I have applied the following merge fix patch:
+	if (advice == POSIX_FADV_WILLNEED) {
+		lockflags = XFS_IOLOCK_SHARED;
+		xfs_ilock(ip, lockflags);
+	}
 
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Date: Thu, 11 Jul 2019 15:01:54 +1000
-Subject: [PATCH] xfs: fix up for wbc_account_io rename
+	ret = generic_fadvise(file, start, end, advice);
 
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
- fs/xfs/xfs_aops.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	if (lockflags)
+		xfs_iunlock(ip, lockflags);
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 761248ee2778..f16d5f196c6b 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -796,7 +796,7 @@ xfs_add_to_ioend(
- 	}
-=20
- 	wpc->ioend->io_size +=3D len;
--	wbc_account_io(wbc, page, len);
-+	wbc_account_cgroup_owner(wbc, page, len);
- }
-=20
- STATIC void
---=20
-2.20.1
+Just in case we some day want more or different types of inode locks?
 
---=20
-Cheers,
-Stephen Rothwell
+--D
 
---Sig_/B5NooziqED55ovJZ4cwZzQ.
-Content-Type: application/pgp-signature
-Content-Description: OpenPGP digital signature
-
------BEGIN PGP SIGNATURE-----
-
-iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl0mw0kACgkQAVBC80lX
-0Gzj6ggAoP4l5jKOrhf+ZYoxXF2wQNPz4FfAT31AaniMR/4ElvqovcKvbGrTSRRs
-CY2k3XkFEjxjVLmL/tXSeJsxjn1L9E4DEOVP56vRZ7/9xKHFKio/5o7Qbi2vxcLH
-jLGqPV+dwQFXMf4uPp8+z9xUrdJUmiOamoM9jOTMDFw5yjUoaeikqjsWc0QzwBbh
-4D4xUv+qKCiTWJZCjCV6UsE0wJ+cP118k9ozuVpRThXw4IxjVzVB7HLEXIpzs0C1
-uyigm8Nr3zloqhq/TNT62tCnsbHZA1Z053YxJfJPICX/YVYfjDZFFXoh9nVYj4+z
-y+eWN4mmzSx20x3Y55wqmUKhViKNpA==
-=HzFB
------END PGP SIGNATURE-----
-
---Sig_/B5NooziqED55ovJZ4cwZzQ.--
+> > +       return ret;
+> > +}
+> >
+> >  STATIC loff_t
+> >  xfs_file_remap_range(
+> > @@ -1235,6 +1254,7 @@ const struct file_operations xfs_file_operations = {
+> >         .fsync          = xfs_file_fsync,
+> >         .get_unmapped_area = thp_get_unmapped_area,
+> >         .fallocate      = xfs_file_fallocate,
+> > +       .fadvise        = xfs_file_fadvise,
+> >         .remap_file_range = xfs_file_remap_range,
+> >  };
+> >
+> > --
+> > 2.16.4
+> >
