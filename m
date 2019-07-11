@@ -1,91 +1,136 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from out30-42.freemail.mail.aliyun.com ([115.124.30.42]:57498 "EHLO
-        out30-42.freemail.mail.aliyun.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725977AbfGKCpk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jul 2019 22:45:40 -0400
-Subject: Re: [PATCH] Fix the inconsistency between the code and the manual
- page of mkfs.xfs.
-References: <1560421580-22920-1-git-send-email-Alvin@linux.alibaba.com>
- <aa442f3b-e0ee-ea55-efcd-9aa3a499fdec@sandeen.net>
- <821e1d22-06ef-9ec9-f1ff-155792f8beb9@sandeen.net>
-From: Alvin Zheng <Alvin@linux.alibaba.com>
-Message-ID: <e7b0a106-8b74-ee19-977c-0888f15516c8@linux.alibaba.com>
-Date: Thu, 11 Jul 2019 10:45:36 +0800
+Received: from relayout04-q02.e.movistar.es ([86.109.101.172]:16021 "EHLO
+        relayout04-q02.e.movistar.es" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727315AbfGKCrr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jul 2019 22:47:47 -0400
+Received: from relayout04-redir.e.movistar.es (unknown [86.109.101.204])
+        by relayout04-out.e.movistar.es (Postfix) with ESMTP id 45kgTG10Cgz24hB
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2019 04:47:46 +0200 (CEST)
+Received: from Telcontar.valinor (70.red-88-9-30.dynamicip.rima-tde.net [88.9.30.70])
+        (using TLSv1.2 with cipher ADH-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: robin.listas2@telefonica.net)
+        by relayout04.e.movistar.es (Postfix) with ESMTPSA id 45kgTF4TxTz127t
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2019 04:47:45 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 1D020320B3B
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2019 04:47:45 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+        by localhost (telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id arXaM1poLxbI for <linux-xfs@vger.kernel.org>;
+        Thu, 11 Jul 2019 04:47:44 +0200 (CEST)
+Received: from [127.0.0.1] (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 8A3A1320B2A
+        for <linux-xfs@vger.kernel.org>; Thu, 11 Jul 2019 04:47:44 +0200 (CEST)
+Subject: Re: Need help to recover root filesystem after a power supply issue
+References: <958316946.20190710124710@a-j.ru>
+ <CAJCQCtTpdGxB4r04wPNE+PRV5Jx_m95kShwvLJ5zxdmfw2fnEw@mail.gmail.com>
+ <1373677058.20190710182851@a-j.ru>
+ <CAJCQCtSpkAS086zSDCfB1jMQXZuacfE-SfyqQ2td4Ven4GwAzg@mail.gmail.com>
+ <1015034894.20190710190746@a-j.ru>
+ <CAJCQCtSTPaor-Wo6b1NF3QT_Pi2rO7B9QMbfudZS=9TEt-Oemw@mail.gmail.com>
+ <CAJCQCtQn17ktjatXU5vvFjfsfEJx8EDrq1+b8+O1yvAf7ij96w@mail.gmail.com>
+ <816157686.20190710201614@a-j.ru>
+ <CAJCQCtQ08-hu7Cr2Li4v07r8v1isxZu=_hP3aQpHqJw4D2jCmg@mail.gmail.com>
+ <e1dea87a-a2d8-4f4c-8807-4027a1a03a41@telefonica.net>
+ <CAJCQCtS0EfAghBGoL-YVTEANfAXV4Oy7Q+4Q0Jp3xOF-uQhixA@mail.gmail.com>
+ <18310556842.20190711024340@a-j.ru>
+From: "Carlos E. R." <robin.listas@telefonica.net>
+Message-ID: <cebdb77b-e175-06a8-a78d-525f86d10457@telefonica.net>
+Date: Thu, 11 Jul 2019 04:47:36 +0200
 MIME-Version: 1.0
-In-Reply-To: <821e1d22-06ef-9ec9-f1ff-155792f8beb9@sandeen.net>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+In-Reply-To: <18310556842.20190711024340@a-j.ru>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="hf0BluAzSr5j7lnhSidIiFznuRzzbUlvS"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org, sandeen@redhat.com
-Cc: caspar@linux.alibaba.com
+To: xfs list <linux-xfs@vger.kernel.org>
+
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--hf0BluAzSr5j7lnhSidIiFznuRzzbUlvS
+Content-Type: multipart/mixed; boundary="bO7A8J4h2o6V54vpuvUin2fXs7wglRs3m";
+ protected-headers="v1"
+From: "Carlos E. R." <robin.listas@telefonica.net>
+To: xfs list <linux-xfs@vger.kernel.org>
+Message-ID: <cebdb77b-e175-06a8-a78d-525f86d10457@telefonica.net>
+Subject: Re: Need help to recover root filesystem after a power supply issue
+References: <958316946.20190710124710@a-j.ru>
+ <CAJCQCtTpdGxB4r04wPNE+PRV5Jx_m95kShwvLJ5zxdmfw2fnEw@mail.gmail.com>
+ <1373677058.20190710182851@a-j.ru>
+ <CAJCQCtSpkAS086zSDCfB1jMQXZuacfE-SfyqQ2td4Ven4GwAzg@mail.gmail.com>
+ <1015034894.20190710190746@a-j.ru>
+ <CAJCQCtSTPaor-Wo6b1NF3QT_Pi2rO7B9QMbfudZS=9TEt-Oemw@mail.gmail.com>
+ <CAJCQCtQn17ktjatXU5vvFjfsfEJx8EDrq1+b8+O1yvAf7ij96w@mail.gmail.com>
+ <816157686.20190710201614@a-j.ru>
+ <CAJCQCtQ08-hu7Cr2Li4v07r8v1isxZu=_hP3aQpHqJw4D2jCmg@mail.gmail.com>
+ <e1dea87a-a2d8-4f4c-8807-4027a1a03a41@telefonica.net>
+ <CAJCQCtS0EfAghBGoL-YVTEANfAXV4Oy7Q+4Q0Jp3xOF-uQhixA@mail.gmail.com>
+ <18310556842.20190711024340@a-j.ru>
+In-Reply-To: <18310556842.20190711024340@a-j.ru>
+
+--bO7A8J4h2o6V54vpuvUin2fXs7wglRs3m
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-CA
+Content-Transfer-Encoding: quoted-printable
+
+On 11/07/2019 01.43, Andrey Zhunev wrote:
+>=20
+> Ok, the ddrescue finished copying whatever it was able to recover.
+> There were many unreadable sectors near the end of the drive.
+> In total, there were over 170 pending sectors reported by SMART.
+>=20
+> I then ran the following commands:
+>=20
+> # smartctl -l scterc,900,100 /dev/sda
+> # echo 180 > /sys/block/sda/device/timeout
+>=20
+> But this didn't help at all. The unreadable sectors still remained
+> unreadable.
+>=20
+> So I wiped them with hdparm:
+> # hdparm --yes-i-know-what-i-am-doing --write-sector <sector_number> /d=
+ev/sda
+
+This has always eluded me. How did you know the sector numbers?
+
+At this point, I typically take the brutal approach of overwriting the
+entire partition (or disk) with zeroes using dd, which works as a
+destructive write test ;-)
+
+Previous to that, I attempt to create an image with ddrescue, of course.
+
+>=20
+> I then re-read all these sectors, and they were all read correctly.
+>=20
+> The number of pending sectors reported by SMART dropped down to 7.
+> Interestingly, there are still NO reallocated sectors reported.
+
+I suspect that the figure SMART reports only starts to rise after some
+unknown amount of sectors have been remapped, so when the numbers
+actually appear there, it is serious.
 
 
-On 2019/7/11 5:49, Eric Sandeen wrote:
-> To save time, I'll merge this with my edits if you agree:
+--=20
+Cheers / Saludos,
 
-Please merge it with your edits, thanks.
+		Carlos E. R.
+		(from 15.0 x86_64 at Telcontar)
 
-Best regards,
 
-Alvin
+--bO7A8J4h2o6V54vpuvUin2fXs7wglRs3m--
 
->
->
-> mkfs.xfs.8: Fix an inconsistency between the code and the man page.
->
-> From: Alvin Zheng <Alvin@linux.alibaba.com>
->
-> The man page currently states that block and sector size units cannot
-> be used for other option values unless they are explicitly specified,
-> when in fact the default sizes will be used in that case.
->
-> Change the man page to clarify this.
->
-> Signed-off-by: Alvin Zheng <Alvin@linux.alibaba.com>
-> [sandeen: sector/block values do not need to be specified first]
-> Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-> Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
-> ---
->
-> diff --git a/man/man8/mkfs.xfs.8 b/man/man8/mkfs.xfs.8
-> index 78b15015..9d762a43 100644
-> --- a/man/man8/mkfs.xfs.8
-> +++ b/man/man8/mkfs.xfs.8
-> @@ -115,9 +115,9 @@ When specifying parameters in units of sectors or filesystem blocks, the
->   .B \-s
->   option or the
->   .B \-b
-> -option first needs to be added to the command line.
-> -Failure to specify the size of the units will result in illegal value errors
-> -when parameters are quantified in those units.
-> +option may be used to specify the size of the sector or block.
-> +If the size of the block or sector is not specified, the default sizes
-> +(block: 4KiB, sector: 512B) will be used.
->   .PP
->   Many feature options allow an optional argument of 0 or 1, to explicitly
->   disable or enable the functionality.
-> @@ -136,10 +136,6 @@ The filesystem block size is specified with a
->   in bytes. The default value is 4096 bytes (4 KiB), the minimum is 512, and the
->   maximum is 65536 (64 KiB).
->   .IP
-> -To specify any options on the command line in units of filesystem blocks, this
-> -option must be specified first so that the filesystem block size is
-> -applied consistently to all options.
-> -.IP
->   Although
->   .B mkfs.xfs
->   will accept any of these values and create a valid filesystem,
-> @@ -901,10 +897,6 @@ is 512 bytes. The minimum value for sector size is
->   .I sector_size
->   must be a power of 2 size and cannot be made larger than the
->   filesystem block size.
-> -.IP
-> -To specify any options on the command line in units of sectors, this
-> -option must be specified first so that the sector size is
-> -applied consistently to all options.
->   .RE
->   .TP
->   .BI \-L " label"
+--hf0BluAzSr5j7lnhSidIiFznuRzzbUlvS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iF0EARECAB0WIQQZEb51mJKK1KpcU/W1MxgcbY1H1QUCXSajSAAKCRC1MxgcbY1H
+1Z38AJ0UAEfjQ/eYzkWwTOD4HFzhyKf4EwCeK9STu67OXg8gRhXGi8RnKjubWa0=
+=XNca
+-----END PGP SIGNATURE-----
+
+--hf0BluAzSr5j7lnhSidIiFznuRzzbUlvS--
