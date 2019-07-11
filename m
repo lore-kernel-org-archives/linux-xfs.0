@@ -1,76 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53598 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728421AbfGKOS0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jul 2019 10:18:26 -0400
-Date: Thu, 11 Jul 2019 07:18:25 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] vfs: standardize parameter checking for
- SETFLAGS/FSSETXATTR ioctls
-Message-ID: <20190711141825.GV1404256@magnolia>
+Received: from userp2130.oracle.com ([156.151.31.86]:47188 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728466AbfGKOhf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 11 Jul 2019 10:37:35 -0400
+Date: Thu, 11 Jul 2019 07:35:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: project quota ineritance flag test
+Message-ID: <20190711143516.GG5167@magnolia>
+References: <20190619101047.3149-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190619101047.3149-1-zlang@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-kernel@vger.kernel.org, sandeen@sandeen.net, hch@lst.de, linux-ext4 <linux-ext4@vger.kernel.org>, Theodore Ts'o <tytso@mit.edu>
+To: Zorro Lang <zlang@redhat.com>
+Cc: fstests@vger.kernel.org, linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Wed, Jun 19, 2019 at 06:10:47PM +0800, Zorro Lang wrote:
+> This case is used to cover xfsprogs bug "b136f48b xfs_quota: fix
+> false error reporting of project inheritance flag is not set" at
+> first. Then test more behavior when project ineritance flag is
+> set or removed.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
 
-Here's a patch series that sets up common parameter checking functions
-for the FS_IOC_SETFLAGS and FS_IOC_FSSETXATTR ioctl implementations.
-The goal here is to reduce the amount of behaviorial variance between
-the filesystems where those ioctls originated (ext2 and XFS,
-respectively) and everybody else.
+<skipping to the good part>
 
-The branch merges cleanly against this morning's HEAD and survived an
-overnight run of xfstests.  The merge was completely straightforward, so
-please let me know if you run into anything weird.
+> diff --git a/tests/xfs/507.out b/tests/xfs/507.out
+> new file mode 100644
+> index 00000000..c8c09d3f
+> --- /dev/null
+> +++ b/tests/xfs/507.out
+> @@ -0,0 +1,23 @@
+> +QA output created by 507
+> +== The parent directory has Project inheritance bit by default ==
+> +Checking project test (path [SCR_MNT]/dir)...
+> +Processed 1 ([PROJECTS_FILE] and cmdline) paths for project test with recursion depth infinite (-1).
+> +
+> +Write SCRATCH_MNT/dir/foo, expect ENOSPC:
+> +pwrite: No space left on device
+> +Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
+> +pwrite: No space left on device
+> +
+> +== After removing parent directory has Project inheritance bit ==
+> +Checking project test (path [SCR_MNT]/dir)...
+> +[SCR_MNT]/dir - project inheritance flag is not set
+> +[SCR_MNT]/dir/foo - project identifier is not set (inode=0, tree=10)
+> +[SCR_MNT]/dir/dir_uninherit - project identifier is not set (inode=0, tree=10)
+> +[SCR_MNT]/dir/dir_uninherit - project inheritance flag is not set
+> +[SCR_MNT]/dir/dir_uninherit/foo - project identifier is not set (inode=0, tree=10)
+> +Processed 1 ([PROJECTS_FILE] and cmdline) paths for project test with recursion depth infinite (-1).
+> +
+> +Write SCRATCH_MNT/dir/foo, expect Success:
+> +Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
+> +pwrite: No space left on device
+
+I keep seeing this test failure:
+
+--- a/xfs/508.out      2019-06-30 08:32:32.216174715 -0700
++++ b/xfs/508.out.bad    2019-07-11 07:32:30.488000000 -0700
+@@ -19,5 +19,5 @@
+ 
+ Write SCRATCH_MNT/dir/foo, expect Success:
+ Write SCRATCH_MNT/dir/dir_inherit/foo, expect ENOSPC:
+-pwrite: No space left on device
++/opt/dir/dir_inherit/foo: Disk quota exceeded
+ Write SCRATCH_MNT/dir/dir_uninherit/foo, expect Success:
+
+IIRC EDQUOT is the correct error code for running out of /project/
+quota (and I tried with a modern V5 fs and a V4 fs too) both with
+setting no quota options at all and turning on every quota type
+supported by the fs.
+
+Under what circumstances does xfs_io spit out ENOSPC?
 
 --D
 
-The following changes since commit d1fdb6d8f6a4109a4263176c84b899076a5f8008:
-
-  Linux 5.2-rc4 (2019-06-08 20:24:46 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-fix-ioctl-checking-3
-
-for you to fetch changes up to dbc77f31e58b2902a5e7643761c04bf69f57a32a:
-
-  vfs: only allow FSSETXATTR to set DAX flag on files and dirs (2019-07-01 08:25:36 -0700)
-
-----------------------------------------------------------------
-New for 5.3:
-- Standardize parameter checking for the SETFLAGS and FSSETXATTR ioctls
-  (which were the file attribute setters for ext4 and xfs and have now
-  been hoisted to the vfs)
-- Only allow the DAX flag to be set on files and directories.
-
-----------------------------------------------------------------
-Darrick J. Wong (5):
-      vfs: create a generic checking and prep function for FS_IOC_SETFLAGS
-      vfs: create a generic checking function for FS_IOC_FSSETXATTR
-      vfs: teach vfs_ioc_fssetxattr_check to check project id info
-      vfs: teach vfs_ioc_fssetxattr_check to check extent size hints
-      vfs: only allow FSSETXATTR to set DAX flag on files and dirs
-
- fs/btrfs/ioctl.c    |  30 ++++------
- fs/efivarfs/file.c  |  26 ++++++---
- fs/ext2/ioctl.c     |  16 ++----
- fs/ext4/ioctl.c     |  51 +++++------------
- fs/gfs2/file.c      |  42 +++++++++-----
- fs/hfsplus/ioctl.c  |  21 ++++---
- fs/inode.c          |  86 +++++++++++++++++++++++++++++
- fs/jfs/ioctl.c      |  22 +++-----
- fs/nilfs2/ioctl.c   |   9 +--
- fs/ocfs2/ioctl.c    |  13 +----
- fs/orangefs/file.c  |  37 ++++++++++---
- fs/reiserfs/ioctl.c |  10 ++--
- fs/ubifs/ioctl.c    |  13 +----
- fs/xfs/xfs_ioctl.c  | 154 +++++++++++++++++++++++-----------------------------
- include/linux/fs.h  |  12 ++++
- 15 files changed, 300 insertions(+), 242 deletions(-)
+> +Write SCRATCH_MNT/dir/dir_uninherit/foo, expect Success:
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index ffe4ae12..46200752 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -504,3 +504,4 @@
+>  504 auto quick mkfs label
+>  505 auto quick spaceman
+>  506 auto quick health
+> +507 auto quick quota
+> -- 
+> 2.17.2
+> 
