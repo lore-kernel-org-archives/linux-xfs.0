@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:51088 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:51084 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726116AbfGKOAT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1728415AbfGKOAT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 11 Jul 2019 10:00:19 -0400
 From: Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/3] mm: Handle MADV_WILLNEED through vfs_fadvise()
-Date: Thu, 11 Jul 2019 16:00:10 +0200
-Message-Id: <20190711140012.1671-2-jack@suse.cz>
+Subject: [PATCH 2/3] fs: Export generic_fadvise()
+Date: Thu, 11 Jul 2019 16:00:11 +0200
+Message-Id: <20190711140012.1671-3-jack@suse.cz>
 In-Reply-To: <20190711140012.1671-1-jack@suse.cz>
 References: <20190711140012.1671-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -15,65 +15,50 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, Boaz Harrosh <boaz@plexistor.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org
 
-Currently handling of MADV_WILLNEED hint calls directly into readahead
-code. Handle it by calling vfs_fadvise() instead so that filesystem can
-use its ->fadvise() callback to acquire necessary locks or otherwise
-prepare for the request.
+Filesystems will need to call this function from their fadvise handlers.
 
-Suggested-by: Amir Goldstein <amir73il@gmail.com>
-CC: stable@vger.kernel.org # Needed by "xfs: Fix stale data exposure
-					when readahead races with hole punch"
+CC: stable@vger.kernel.org # Needed by "xfs: Fix stale data exposure when
+					readahead races with hole punch"
 Signed-off-by: Jan Kara <jack@suse.cz>
 ---
- mm/madvise.c | 22 ++++++++++++++++------
- 1 file changed, 16 insertions(+), 6 deletions(-)
+ include/linux/fs.h | 2 ++
+ mm/fadvise.c       | 4 ++--
+ 2 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 628022e674a7..ae56d0ef337d 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -14,6 +14,7 @@
- #include <linux/userfaultfd_k.h>
- #include <linux/hugetlb.h>
- #include <linux/falloc.h>
-+#include <linux/fadvise.h>
- #include <linux/sched.h>
- #include <linux/ksm.h>
- #include <linux/fs.h>
-@@ -275,6 +276,7 @@ static long madvise_willneed(struct vm_area_struct *vma,
- 			     unsigned long start, unsigned long end)
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index f7fdfe93e25d..2666862ff00d 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -3536,6 +3536,8 @@ extern void inode_nohighmem(struct inode *inode);
+ /* mm/fadvise.c */
+ extern int vfs_fadvise(struct file *file, loff_t offset, loff_t len,
+ 		       int advice);
++extern int generic_fadvise(struct file *file, loff_t offset, loff_t len,
++			   int advice);
+ 
+ #if defined(CONFIG_IO_URING)
+ extern struct sock *io_uring_get_socket(struct file *file);
+diff --git a/mm/fadvise.c b/mm/fadvise.c
+index 467bcd032037..4f17c83db575 100644
+--- a/mm/fadvise.c
++++ b/mm/fadvise.c
+@@ -27,8 +27,7 @@
+  * deactivate the pages and clear PG_Referenced.
+  */
+ 
+-static int generic_fadvise(struct file *file, loff_t offset, loff_t len,
+-			   int advice)
++int generic_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
  {
- 	struct file *file = vma->vm_file;
-+	loff_t offset;
- 
- 	*prev = vma;
- #ifdef CONFIG_SWAP
-@@ -298,12 +300,20 @@ static long madvise_willneed(struct vm_area_struct *vma,
- 		return 0;
+ 	struct inode *inode;
+ 	struct address_space *mapping;
+@@ -178,6 +177,7 @@ static int generic_fadvise(struct file *file, loff_t offset, loff_t len,
  	}
- 
--	start = ((start - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
--	if (end > vma->vm_end)
--		end = vma->vm_end;
--	end = ((end - vma->vm_start) >> PAGE_SHIFT) + vma->vm_pgoff;
--
--	force_page_cache_readahead(file->f_mapping, file, start, end - start);
-+	/*
-+	 * Filesystem's fadvise may need to take various locks.  We need to
-+	 * explicitly grab a reference because the vma (and hence the
-+	 * vma's reference to the file) can go away as soon as we drop
-+	 * mmap_sem.
-+	 */
-+	*prev = NULL;	/* tell sys_madvise we drop mmap_sem */
-+	get_file(file);
-+	up_read(&current->mm->mmap_sem);
-+	offset = (loff_t)(start - vma->vm_start)
-+			+ ((loff_t)vma->vm_pgoff << PAGE_SHIFT);
-+	vfs_fadvise(file, offset, end - start, POSIX_FADV_WILLNEED);
-+	fput(file);
-+	down_read(&current->mm->mmap_sem);
  	return 0;
  }
++EXPORT_SYMBOL(generic_fadvise);
  
+ int vfs_fadvise(struct file *file, loff_t offset, loff_t len, int advice)
+ {
 -- 
 2.16.4
