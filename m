@@ -1,100 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from szxga07-in.huawei.com ([45.249.212.35]:35228 "EHLO huawei.com"
+Received: from mx2.suse.de ([195.135.220.15]:51082 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726722AbfGKNym (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 11 Jul 2019 09:54:42 -0400
-Subject: Re: [RFC PATCH] iomap: generalize IOMAP_INLINE to cover tail-packing
- case
-References: <20190703075502.79782-1-yuchao0@huawei.com>
- <CAHpGcM+s77hKMXo=66nWNF7YKa3qhLY9bZrdb4-Lkspyg2CCDw@mail.gmail.com>
- <39944e50-5888-f900-1954-91be2b12ea5b@huawei.com>
- <CAHpGcMJ_wPJf8KtF3xMP_28pe4Vq4XozFtmd2EuZ+RTqZKQxLA@mail.gmail.com>
- <1506e523-109d-7253-ee4b-961c4264781d@aol.com>
- <20190711130649.GQ32320@bombadil.infradead.org>
-From: Gao Xiang <gaoxiang25@huawei.com>
-Message-ID: <e2c3f973-8000-869e-a2bf-867631c64ab4@huawei.com>
-Date: Thu, 11 Jul 2019 21:54:17 +0800
-MIME-Version: 1.0
-In-Reply-To: <20190711130649.GQ32320@bombadil.infradead.org>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+        id S1728102AbfGKOAS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 11 Jul 2019 10:00:18 -0400
+From: Jan Kara <jack@suse.cz>
+Subject: [PATCH 3/3] xfs: Fix stale data exposure when readahead races with hole punch
+Date: Thu, 11 Jul 2019 16:00:12 +0200
+Message-Id: <20190711140012.1671-4-jack@suse.cz>
+In-Reply-To: <20190711140012.1671-1-jack@suse.cz>
+References: <20190711140012.1671-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Gao Xiang <hsiangkao@aol.com>, =?UTF-8?Q?Andreas_Gr=c3=bcnbacher?= <andreas.gruenbacher@gmail.com>, Chao Yu <yuchao0@huawei.com>, Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, chao@kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-xfs@vger.kernel.org, Amir Goldstein <amir73il@gmail.com>, Boaz Harrosh <boaz@plexistor.com>, Jan Kara <jack@suse.cz>, stable@vger.kernel.org
 
+Hole puching currently evicts pages from page cache and then goes on to
+remove blocks from the inode. This happens under both XFS_IOLOCK_EXCL
+and XFS_MMAPLOCK_EXCL which provides appropriate serialization with
+racing reads or page faults. However there is currently nothing that
+prevents readahead triggered by fadvise() or madvise() from racing with
+the hole punch and instantiating page cache page after hole punching has
+evicted page cache in xfs_flush_unmap_range() but before it has removed
+blocks from the inode. This page cache page will be mapping soon to be
+freed block and that can lead to returning stale data to userspace or
+even filesystem corruption.
 
+Fix the problem by protecting handling of readahead requests by
+XFS_IOLOCK_SHARED similarly as we protect reads.
 
-On 2019/7/11 21:06, Matthew Wilcox wrote:
-> On Thu, Jul 11, 2019 at 07:42:20AM +0800, Gao Xiang wrote:
->>
->> At 2019/7/11 ??????5:50, Andreas Gr??nbacher Wrote:
->>> At this point, can I ask how important this packing mechanism is to
->>> you? I can see a point in implementing inline files, which help
->>> because there tends to be a large number of very small files. But for
->>> not-so-small files, is saving an extra block really worth the trouble,
->>> especially given how cheap storage has become?
->>
->> I would try to answer the above. I think there are several advantages by
->> using tail-end packing inline:
->> 1) It is more cache-friendly. Considering a file "A" accessed by user
->> now or recently, we
->> ?????? tend to (1) get more data about "A" (2) leave more data about "A"
->> according to LRU-like assumption
->> ?????? because it is more likely to be used than the metadata of some other
->> files "X", especially for files whose
->> ?????? tail-end block is relatively small enough (less than a threshold,
->> e.g. < 100B just for example);
->>
->> 2) for directories files, tail-end packing will boost up those traversal
->> performance;
->>
->> 3) I think tail-end packing is a more generic inline, it saves I/Os for
->> generic cases not just to
->> ?????? save the storage space;
->>
->> "is saving an extra block really worth the trouble" I dont understand
->> what exact the trouble is...
-> 
-> "the trouble" is adding code complexity and additional things to test.
-> 
-> I'm not sure you really understood Andreas' question.  He's saying that he
-> understands the performance and space gain from packing short files
-> (eg files less than 100 bytes).  But how many files are there between
-> 4096 and 4196 bytes in size, let alone between 8192 and 8292, 12384 and
-> 12484 ...
-> 
-> Is optimising for _those_ files worth it?
+CC: stable@vger.kernel.org
+Link: https://lore.kernel.org/linux-fsdevel/CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com/
+Reported-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Jan Kara <jack@suse.cz>
+---
+ fs/xfs/xfs_file.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-Hi Willy,
-
-Thanks for your kindly explanation.. I get it :) I try to express my thoughts in
-the following aspects...
-
-1) In my thought, I personally think Chao's first patch which adds an additional
-   type could be better for now, maybe we can reduce duplicate code based on that
-   patch even further. What EROFS needs is only a read-only tail-end packing,
-   I think for write we actually need to rethink more carefully (but it doesn't
-   mean complex I think, but I don't do research on this.. I have to be silent...)
-   and maybe we could leave it until a really fs user switching to iomap and mix
-   INLINE and TAIL at that time...
-
-2) EROFS actually has an unfinished feature which supports tail-end packing
-   compresssed data, which means decompressed data could not be so small...
-   and I know that is another matter... So to direct answer the question is
-   that it depends on the userdata and user. For EROFS, tail-end packing
-   inline is easy to implement, and it's a per-file optional feature (not
-   mandatory) and the threshold (< 100B) is not a hardcoded limit as well,
-   which is configured by mkfs users and only help mkfs decide whether the
-   file should enable it or not. it should be useful for all directories
-   at least, and I think it is more cache-friendly for regular files as well
-   so a large range of files configured by users (not just < 100B) can be
-   benefited from this...
-
-Sorry about my English...
-
-Thanks,
-Gao Xiang
-
-> 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 76748255f843..88fe3dbb3ba2 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -33,6 +33,7 @@
+ #include <linux/pagevec.h>
+ #include <linux/backing-dev.h>
+ #include <linux/mman.h>
++#include <linux/fadvise.h>
+ 
+ static const struct vm_operations_struct xfs_file_vm_ops;
+ 
+@@ -939,6 +940,24 @@ xfs_file_fallocate(
+ 	return error;
+ }
+ 
++STATIC int
++xfs_file_fadvise(
++	struct file *file,
++	loff_t start,
++	loff_t end,
++	int advice)
++{
++	struct xfs_inode *ip = XFS_I(file_inode(file));
++	int ret;
++
++	/* Readahead needs protection from hole punching and similar ops */
++	if (advice == POSIX_FADV_WILLNEED)
++		xfs_ilock(ip, XFS_IOLOCK_SHARED);
++	ret = generic_fadvise(file, start, end, advice);
++	if (advice == POSIX_FADV_WILLNEED)
++		xfs_iunlock(ip, XFS_IOLOCK_SHARED);
++	return ret;
++}
+ 
+ STATIC loff_t
+ xfs_file_remap_range(
+@@ -1235,6 +1254,7 @@ const struct file_operations xfs_file_operations = {
+ 	.fsync		= xfs_file_fsync,
+ 	.get_unmapped_area = thp_get_unmapped_area,
+ 	.fallocate	= xfs_file_fallocate,
++	.fadvise	= xfs_file_fadvise,
+ 	.remap_file_range = xfs_file_remap_range,
+ };
+ 
+-- 
+2.16.4
