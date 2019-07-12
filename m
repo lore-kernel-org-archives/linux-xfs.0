@@ -1,41 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f54.google.com ([209.85.167.54]:43340 "EHLO
-        mail-lf1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727995AbfGNBRu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jul 2019 21:17:50 -0400
-Received: by mail-lf1-f54.google.com with SMTP id c19so8736104lfm.10
-        for <linux-xfs@vger.kernel.org>; Sat, 13 Jul 2019 18:17:49 -0700 (PDT)
-Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com. [209.85.208.169])
-        by smtp.gmail.com with ESMTPSA id q1sm2253003ljb.87.2019.07.13.18.17.46
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Sat, 13 Jul 2019 18:17:46 -0700 (PDT)
-Received: by mail-lj1-f169.google.com with SMTP id v24so12777962ljg.13
-        for <linux-xfs@vger.kernel.org>; Sat, 13 Jul 2019 18:17:46 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190712180205.GA5347@magnolia> <CAHk-=wiK8_nYEM2B8uvPELdUziFhp_+DqPN=cNSharQqpBZ6qg@mail.gmail.com>
- <20190713040728.GB5347@magnolia>
-In-Reply-To: <20190713040728.GB5347@magnolia>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 13 Jul 2019 18:17:30 -0700
-Message-ID: <CAHk-=wgEsUC1uLdYCX6rxGxRcgzKS64e3Y8h5HVLvnpGSj5pJA@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: new features for 5.3
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:58886 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726610AbfGLE1K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jul 2019 00:27:10 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 987BD28BAF
+        for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2019 04:27:09 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 203947] [xfstests generic/475]: general protection fault: 0000
+ [#1] RIP: 0010:xfs_setfilesize_ioend+0xb1/0x220 [xfs]
+Date: Fri, 12 Jul 2019 04:27:08 +0000
+Message-ID: <bug-203947-201763-A5Yvtlh7W1@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-203947-201763@https.bugzilla.kernel.org/>
+References: <bug-203947-201763@https.bugzilla.kernel.org/>
 Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
+MIME-Version: 1.0
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 12, 2019 at 9:07 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> Doh, it turns out I was merging against the same HEAD as my last two
-> pull requests because I forgot to re-pull.  Sorry about that.  It's been
-> too long of a week. :/
+https://bugzilla.kernel.org/show_bug.cgi?id=203947
 
-Heh, no problem, I was just surprised when my merge result didn't
-match expectations.
+--- Comment #13 from Zorro Lang (zlang@redhat.com) ---
+(In reply to Luis Chamberlain from comment #12)
+> (In reply to Zorro Lang from comment #11)
+> > (In reply to Zorro Lang from comment #10)
+> > > (In reply to Darrick J. Wong from comment #9)
+> > > > Zorro,
+> > > > 
+> > > > If you get a chance, can you try this debugging patch, please?
+> > > 
+> > > Sure, I'll give it a try. With this bug together ... they both triggered
+> by
+> > > g/475. You really write a nice case :)
+> > > 
+> > > Both these two bugs are too hard to reproduce, so I only can try my best
+> to
+> > > test it, but I can't 100% verify they're fixed even if all test pass,
+> I'll
+> > > try to approach 99% :-P
+> > > 
+> > > BTW, if this's a separate bug, I'd like to report a new bug to track it,
+> to
+> > > avoid confusion.
+> > > 
+> > > Thanks,
+> > > Zorro
+> > 
+> > Updata: By merging the patches in comment 2 and comment 9, I can't
+> reproduce
+> > this bug and https://bugzilla.kernel.org/show_bug.cgi?id=204031, after
+> > running generic/475 on six different machines 3 days.
+> 
+> Can you try with just the patch in comment 2? Also it doesn't seem clear to
+> me yet if this is a regression or not. Did this used to work? If not sure
+> can you try with v4.19 and see if the issue also appears there?
 
-As mentioned, it wasn't like the conflict was complicated, only unexpected.
+I didn't try to make sure if it's a regression or not. Due to
+1. This bug is very hard to be reproduced.
+2. The reproducer(generic/475) might easily to trigger some other issues on old
+kernel.
 
-                     Linus
+Any way, I'll give it a try on v4.19, but I can't promise that I can find out
+if it's a regression:)
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
