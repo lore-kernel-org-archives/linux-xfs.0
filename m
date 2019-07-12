@@ -1,52 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lf1-f53.google.com ([209.85.167.53]:36379 "EHLO
-        mail-lf1-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727525AbfGMA1f (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jul 2019 20:27:35 -0400
-Received: by mail-lf1-f53.google.com with SMTP id q26so7550316lfc.3
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2019 17:27:34 -0700 (PDT)
-Received: from mail-lf1-f49.google.com (mail-lf1-f49.google.com. [209.85.167.49])
-        by smtp.gmail.com with ESMTPSA id p76sm1684558ljb.49.2019.07.12.17.27.31
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Fri, 12 Jul 2019 17:27:31 -0700 (PDT)
-Received: by mail-lf1-f49.google.com with SMTP id q26so7550290lfc.3
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2019 17:27:31 -0700 (PDT)
+Received: from userp2120.oracle.com ([156.151.31.85]:39766 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727024AbfGLR4y (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jul 2019 13:56:54 -0400
+Date: Fri, 12 Jul 2019 10:56:44 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 3/3] xfs: Fix stale data exposure when readahead races
+ with hole punch
+Message-ID: <20190712175644.GQ1654093@magnolia>
+References: <20190711140012.1671-1-jack@suse.cz>
+ <20190711140012.1671-4-jack@suse.cz>
+ <CAOQ4uxh-xpwgF-wQf1ozaZ3yg8nWuBvSyLr_ZFQpkA=coW1dxA@mail.gmail.com>
+ <20190711154917.GW1404256@magnolia>
+ <20190712120004.GB24009@quack2.suse.cz>
 MIME-Version: 1.0
-References: <20190712180205.GA5347@magnolia>
-In-Reply-To: <20190712180205.GA5347@magnolia>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Fri, 12 Jul 2019 17:27:15 -0700
-Message-ID: <CAHk-=wiK8_nYEM2B8uvPELdUziFhp_+DqPN=cNSharQqpBZ6qg@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: new features for 5.3
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190712120004.GB24009@quack2.suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>
+To: Jan Kara <jack@suse.cz>
+Cc: Amir Goldstein <amir73il@gmail.com>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, Linux MM <linux-mm@kvack.org>, linux-xfs <linux-xfs@vger.kernel.org>, Boaz Harrosh <boaz@plexistor.com>, stable <stable@vger.kernel.org>
 
-On Fri, Jul 12, 2019 at 11:02 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> The branch merges cleanly against this morning's HEAD and survived an
-> overnight run of xfstests.  The merge was completely straightforward, so
-> please let me know if you run into anything weird.
+On Fri, Jul 12, 2019 at 02:00:04PM +0200, Jan Kara wrote:
+> On Thu 11-07-19 08:49:17, Darrick J. Wong wrote:
+> > On Thu, Jul 11, 2019 at 06:28:54PM +0300, Amir Goldstein wrote:
+> > > > +{
+> > > > +       struct xfs_inode *ip = XFS_I(file_inode(file));
+> > > > +       int ret;
+> > > > +
+> > > > +       /* Readahead needs protection from hole punching and similar ops */
+> > > > +       if (advice == POSIX_FADV_WILLNEED)
+> > > > +               xfs_ilock(ip, XFS_IOLOCK_SHARED);
+> > 
+> > It's good to fix this race, but at the same time I wonder what's the
+> > impact to processes writing to one part of a file waiting on IOLOCK_EXCL
+> > while readahead holds IOLOCK_SHARED?
+> > 
+> > (bluh bluh range locks ftw bluh bluh)
+> 
+> Yeah, with range locks this would have less impact. Also note that we hold
+> the lock only during page setup and IO submission. IO itself will already
+> happen without IOLOCK, only under page lock. But that's enough to stop the
+> race.
 
-Hmm. I don't know what you merged against, but it got a (fairly
-trivial) conflict for me due to
+> > Do we need a lock for DONTNEED?  I think the answer is that you have to
+> > lock the page to drop it and that will protect us from <myriad punch and
+> > truncate spaghetti> ... ?
+> 
+> Yeah, DONTNEED is just page writeback + invalidate. So page lock is enough
+> to protect from anything bad. Essentially we need IOLOCK only to protect
+> the places that creates new pages in page cache.
+> 
+> > > > +       ret = generic_fadvise(file, start, end, advice);
+> > > > +       if (advice == POSIX_FADV_WILLNEED)
+> > > > +               xfs_iunlock(ip, XFS_IOLOCK_SHARED);
+> > 
+> > Maybe it'd be better to do:
+> > 
+> > 	int	lockflags = 0;
+> > 
+> > 	if (advice == POSIX_FADV_WILLNEED) {
+> > 		lockflags = XFS_IOLOCK_SHARED;
+> > 		xfs_ilock(ip, lockflags);
+> > 	}
+> > 
+> > 	ret = generic_fadvise(file, start, end, advice);
+> > 
+> > 	if (lockflags)
+> > 		xfs_iunlock(ip, lockflags);
+> > 
+> > Just in case we some day want more or different types of inode locks?
+> 
+> OK, will do. Just I'll get to testing this only after I return from
+> vacation.
 
-  79d08f89bb1b ("block: fix .bi_size overflow")
+<nod>
 
-from the block merge (from Tuesday) touching a line next to one changed by
-
-  a24737359667 ("xfs: simplify xfs_chain_bio")
-
-from this pull.
-
-So it wasn't an entirely clean merge for me.
-
-Was it a complex merge conflict? No. I'm just confused by the "merges
-cleanly against this morning's HEAD", which makes me wonder what you
-tried to merge against..
-
-            Linus
+--D
+> 
+> 								Honza
+> 
+> -- 
+> Jan Kara <jack@suse.com>
+> SUSE Labs, CR
