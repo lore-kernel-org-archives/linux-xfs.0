@@ -1,524 +1,224 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:57928 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726449AbfGLNOL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 Jul 2019 09:14:11 -0400
-Subject: Re: [PATCH 01/10] libfrog: refactor online geometry queries
-References: <156151660523.2286979.13694849827562044045.stgit@magnolia>
- <156151661143.2286979.2427399743977199397.stgit@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4b0f0074-b509-1a98-dc0b-9f21be4f95ae@sandeen.net>
-Date: Fri, 12 Jul 2019 08:14:08 -0500
+Received: from mx2.suse.de ([195.135.220.15]:36336 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726047AbfGLIAZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 Jul 2019 04:00:25 -0400
+Date: Fri, 12 Jul 2019 10:00:22 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH RFC] fs: New zonefs file system
+Message-ID: <20190712080022.GA16276@x250.microfocus.com>
+References: <20190712030017.14321-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
-In-Reply-To: <156151661143.2286979.2427399743977199397.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190712030017.14321-1-damien.lemoal@wdc.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 
-On 6/25/19 9:36 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor all the open-coded XFS_IOC_FSGEOMETRY queries into a single
-> helper that we can use to standardize behaviors across mixed xfslibs
-> versions.  This is the prelude to introducing a new FSGEOMETRY version
-> in 5.2 and needing to fix the (relatively few) client programs.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Jul 12, 2019 at 12:00:17PM +0900, Damien Le Moal wrote:
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Hi Daminen,
 
+Thanks for submitting zonefs.
+
+Please find my first few comments, I'll have a second look later as well.
+
+[...]
+
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 > ---
->  Makefile            |    1 +
->  fsr/xfs_fsr.c       |   26 ++++----------------------
->  growfs/xfs_growfs.c |   25 +++++++++----------------
->  include/xfrog.h     |   22 ++++++++++++++++++++++
->  io/bmap.c           |    3 ++-
->  io/fsmap.c          |    3 ++-
->  io/open.c           |    3 ++-
->  io/stat.c           |    5 +++--
->  libfrog/fsgeom.c    |   18 ++++++++++++++++++
->  quota/free.c        |    6 +++---
->  repair/xfs_repair.c |    5 +++--
->  rtcp/Makefile       |    3 +++
->  rtcp/xfs_rtcp.c     |    7 ++++---
->  scrub/phase1.c      |    5 +++--
->  spaceman/file.c     |    3 ++-
->  spaceman/info.c     |   27 +++++++++------------------
->  16 files changed, 90 insertions(+), 72 deletions(-)
->  create mode 100644 include/xfrog.h
+>  fs/Kconfig                 |    2 +
+>  fs/Makefile                |    1 +
+>  fs/zonefs/Kconfig          |    9 +
+>  fs/zonefs/Makefile         |    4 +
+>  fs/zonefs/super.c          | 1004 ++++++++++++++++++++++++++++++++++++
+>  fs/zonefs/zonefs.h         |  190 +++++++
+>  include/uapi/linux/magic.h |    1 +
+>  7 files changed, 1211 insertions(+)
+>  create mode 100644 fs/zonefs/Kconfig
+>  create mode 100644 fs/zonefs/Makefile
+>  create mode 100644 fs/zonefs/super.c
+>  create mode 100644 fs/zonefs/zonefs.h
+
+It'll probably be good to add yourself as a maitainer in MAINTAINERS, so
+people see there's a go-to person for patches. Also a list (fsdevel@) and a
+git tree won't harm.
+
 > 
-> 
-> diff --git a/Makefile b/Makefile
-> index 9204bed8..0edc2700 100644
-> --- a/Makefile
-> +++ b/Makefile
-> @@ -107,6 +107,7 @@ copy: libxlog
->  mkfs: libxcmd
->  spaceman: libxcmd
->  scrub: libhandle libxcmd
-> +rtcp: libfrog
+> diff --git a/fs/Kconfig b/fs/Kconfig
+> index f1046cf6ad85..e48cc0e0efbb 100644
+> --- a/fs/Kconfig
+> +++ b/fs/Kconfig
+> @@ -41,6 +41,7 @@ source "fs/ocfs2/Kconfig"
+>  source "fs/btrfs/Kconfig"
+>  source "fs/nilfs2/Kconfig"
+>  source "fs/f2fs/Kconfig"
+> +source "fs/zonefs/Kconfig"
 >  
->  ifeq ($(HAVE_BUILDDEFS), yes)
->  include $(BUILDRULES)
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index fef6262c..0bfecf37 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -11,6 +11,7 @@
->  #include "xfs_bmap_btree.h"
->  #include "xfs_attr_sf.h"
->  #include "path.h"
-> +#include "xfrog.h"
+>  config FS_DAX
+>  	bool "Direct Access (DAX) support"
+> @@ -262,6 +263,7 @@ source "fs/romfs/Kconfig"
+>  source "fs/pstore/Kconfig"
+>  source "fs/sysv/Kconfig"
+>  source "fs/ufs/Kconfig"
+> +source "fs/ufs/Kconfig"
 >  
->  #include <fcntl.h>
->  #include <errno.h>
-> @@ -83,9 +84,8 @@ int cmp(const void *, const void *);
->  static void tmp_init(char *mnt);
->  static char * tmp_next(char *mnt);
->  static void tmp_close(char *mnt);
-> -int xfs_getgeom(int , xfs_fsop_geom_v1_t * );
+
+This hunk looks wrong.
+
+>  endif # MISC_FILESYSTEMS
 >  
-> -static xfs_fsop_geom_v1_t fsgeom;	/* geometry of active mounted system */
-> +static struct xfs_fsop_geom fsgeom;	/* geometry of active mounted system */
->  
->  #define NMOUNT 64
->  static int numfs;
-> @@ -102,12 +102,6 @@ static int	nfrags = 0;	/* Debug option: Coerse into specific number
->  				 * of extents */
->  static int	openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
->  
-> -static int
-> -xfs_fsgeometry(int fd, xfs_fsop_geom_v1_t *geom)
-> -{
-> -    return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, geom);
-> -}
-> -
->  static int
->  xfs_bulkstat_single(int fd, xfs_ino_t *lastip, xfs_bstat_t *ubuffer)
->  {
-> @@ -630,7 +624,7 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
->  		return -1;
->  	}
->  
-> -	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
-> +	if (xfrog_geometry(fsfd, &fsgeom) < 0 ) {
->  		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
->  			  mntdir);
->  		close(fsfd);
-> @@ -772,7 +766,7 @@ fsrfile(char *fname, xfs_ino_t ino)
->  	}
->  
->  	/* Get the fs geometry */
-> -	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
-> +	if (xfrog_geometry(fsfd, &fsgeom) < 0 ) {
->  		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
->  		goto out;
->  	}
-> @@ -1612,18 +1606,6 @@ getnextents(int fd)
->  	return(nextents);
->  }
->  
-> -/*
-> - * Get the fs geometry
-> - */
-> -int
-> -xfs_getgeom(int fd, xfs_fsop_geom_v1_t * fsgeom)
-> -{
-> -	if (xfs_fsgeometry(fd, fsgeom) < 0) {
-> -		return -1;
-> -	}
-> -	return 0;
-> -}
-> -
->  /*
->   * Get xfs realtime space information
->   */
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 20089d2b..86b1d542 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -7,6 +7,7 @@
->  #include "libxfs.h"
->  #include "path.h"
->  #include "fsgeom.h"
-> +#include "xfrog.h"
->  
->  static void
->  usage(void)
-> @@ -165,22 +166,14 @@ main(int argc, char **argv)
->  	}
->  
->  	/* get the current filesystem size & geometry */
-> -	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
-> -		/*
-> -		 * OK, new xfsctl barfed - back off and try earlier version
-> -		 * as we're probably running an older kernel version.
-> -		 * Only field added in the v2 geometry xfsctl is "logsunit"
-> -		 * so we'll zero that out for later display (as zero).
-> -		 */
-> -		geo.logsunit = 0;
-> -		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
-> -			fprintf(stderr, _(
-> -				"%s: cannot determine geometry of filesystem"
-> -				" mounted at %s: %s\n"),
-> -				progname, fname, strerror(errno));
-> -			exit(1);
-> -		}
-> +	if (xfrog_geometry(ffd, &geo) < 0) {
-> +		fprintf(stderr, _(
-> +			"%s: cannot determine geometry of filesystem"
-> +			" mounted at %s: %s\n"),
-> +			progname, fname, strerror(errno));
-> +		exit(1);
->  	}
+
+[...]
+
+> +	/*
+> +	 * Note: The first zone contains the super block: skip it.
+> +	 */
+
+I know I've been advocating for having on-disk metadata, but do we really
+sacrifice a whole zone per default? I thought we'll have on-disk metadata
+optional (I might be completely off the track here and need more coffee to
+wake up though).
+
+> +	end = zones + sbi->s_nr_zones[ZONEFS_ZTYPE_ALL];
+> +	for (zone = &zones[1]; zone < end; zone = next) {
+
+[...]
+
 > +
->  	isint = geo.logstart > 0;
->  
->  	/*
-> @@ -359,7 +352,7 @@ main(int argc, char **argv)
->  		}
->  	}
->  
-> -	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &ngeo) < 0) {
-> +	if (xfrog_geometry(ffd, &ngeo) < 0) {
->  		fprintf(stderr, _("%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"),
->  			progname, strerror(errno));
->  		exit(1);
-> diff --git a/include/xfrog.h b/include/xfrog.h
-> new file mode 100644
-> index 00000000..5420b47c
-> --- /dev/null
-> +++ b/include/xfrog.h
-> @@ -0,0 +1,22 @@
-> +// SPDX-License-Identifier: GPL-2.0
+> +	/* Set defaults */
+> +	sbi->s_uid = GLOBAL_ROOT_UID;
+> +	sbi->s_gid = GLOBAL_ROOT_GID;
+> +	sbi->s_perm = S_IRUSR | S_IWUSR | S_IRGRP; /* 0640 */
+> +
+> +
+> +	ret = zonefs_read_super(sb);
+> +	if (ret)
+> +		return ret;
+
+That would be cool to be controllable via a mount option and have it:
+	sbi->s_uid = opt.uid;
+	sbi->s_gid = opt.gid;
+	sbi->s_perm = opt.mode;
+
+or pass these mount options to zonefs_read_super() and they can be set after
+the feature validation.
+
+> +
+> +	zones = zonefs_get_zone_info(sb);
+> +	if (IS_ERR(zones))
+> +		return PTR_ERR(zones);
+> +
+> +	pr_info("zonefs: Mounting %s, %u zones",
+> +		sb->s_id, sbi->s_nr_zones[ZONEFS_ZTYPE_ALL]);
+> +
+> +	/* Create root directory inode */
+> +	ret = -ENOMEM;
+> +	inode = new_inode(sb);
+> +	if (!inode)
+> +		goto out;
+
+Nit: please add a blank line after the goto.
+
+> +	inode->i_ino = get_next_ino();
+> +	inode->i_mode = S_IFDIR | 0755;
+> +	inode->i_ctime = inode->i_mtime = inode->i_atime = current_time(inode);
+> +	inode->i_op = &simple_dir_inode_operations;
+> +	inode->i_fop = &simple_dir_operations;
+> +	inode->i_size = sizeof(struct dentry) * 2;
+> +	set_nlink(inode, 2);
+
+Nit: please add a blank line here as well.
+
+> +	sb->s_root = d_make_root(inode);
+> +	if (!sb->s_root)
+> +		goto out;
+
+[...]
+
 > +/*
-> + * Copyright (c) 2000-2002 Silicon Graphics, Inc.
-> + * All Rights Reserved.
-> + */
-> +#ifndef __XFROG_H__
-> +#define __XFROG_H__
+> + * Maximum length of file names: this only needs to be large enough to fit
+> + * the zone group directory names and a decimal value of the start sector of
+> + * the zones for file names. 16 characterse is plenty.
+                           characters ^
+
+[...]
+
+> +struct zonefs_super {
+> +
+> +	/* Magic number */
+> +	__le32		s_magic;		/*    4 */
+> +
+> +	/* Metadata version number */
+> +	__le32		s_version;		/*    8 */
+> +
+> +	/* Features */
+> +	__le64		s_features;		/*   16 */
+> +
+> +	/* 128-bit uuid */
+> +	__u8		s_uuid[16];		/*   32 */
+> +
+> +	/* UID/GID to use for files */
+> +	__le32		s_uid;			/*   36 */
+> +	__le32		s_gid;			/*   40 */
+> +
+> +	/* File permissions */
+> +	__le32		s_perm;			/*   44 */
+> +
+> +	/* Padding to 4K */
+> +	__u8		s_reserved[4052];	/* 4096 */
+> +
+> +} __attribute__ ((packed));
+
+I'm not sure the (end)offset comments are of any value here, it's nothing that
+can't be obtained from pahole or gdb (or even by hand).
+
 > +
 > +/*
-> + * XFS Filesystem Random Online Gluecode
-> + * =====================================
-> + *
-> + * These support functions wrap the more complex xfs ioctls so that xfs
-> + * utilities can take advantage of them without having to deal with graceful
-> + * degradation in the face of new ioctls.  They will also provide higher level
-> + * abstractions when possible.
+> + * Metadata version.
 > + */
+> +#define ZONEFS_VERSION	1
 > +
-> +struct xfs_fsop_geom;
-> +int xfrog_geometry(int fd, struct xfs_fsop_geom *fsgeo);
-> +
-> +#endif	/* __XFROG_H__ */
-> diff --git a/io/bmap.c b/io/bmap.c
-> index d408826a..5f0d12ca 100644
-> --- a/io/bmap.c
-> +++ b/io/bmap.c
-> @@ -9,6 +9,7 @@
->  #include "input.h"
->  #include "init.h"
->  #include "io.h"
-> +#include "xfrog.h"
->  
->  static cmdinfo_t bmap_cmd;
->  
-> @@ -105,7 +106,7 @@ bmap_f(
->  		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
->  
->  	if (vflag) {
-> -		c = xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo);
-> +		c = xfrog_geometry(file->fd, &fsgeo);
->  		if (c < 0) {
->  			fprintf(stderr,
->  				_("%s: can't get geometry [\"%s\"]: %s\n"),
-> diff --git a/io/fsmap.c b/io/fsmap.c
-> index 477c36fc..d3ff7dea 100644
-> --- a/io/fsmap.c
-> +++ b/io/fsmap.c
-> @@ -9,6 +9,7 @@
->  #include "path.h"
->  #include "io.h"
->  #include "input.h"
-> +#include "xfrog.h"
->  
->  static cmdinfo_t	fsmap_cmd;
->  static dev_t		xfs_data_dev;
-> @@ -447,7 +448,7 @@ fsmap_f(
->  	}
->  
->  	if (vflag) {
-> -		c = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &fsgeo);
-> +		c = xfrog_geometry(file->fd, &fsgeo);
->  		if (c < 0) {
->  			fprintf(stderr,
->  				_("%s: can't get geometry [\"%s\"]: %s\n"),
-> diff --git a/io/open.c b/io/open.c
-> index c7f5248a..e70c8cb0 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -9,6 +9,7 @@
->  #include "init.h"
->  #include "io.h"
->  #include "libxfs.h"
-> +#include "xfrog.h"
->  
->  #ifndef __O_TMPFILE
->  #if defined __alpha__
-> @@ -118,7 +119,7 @@ openfile(
->  	if (flags & IO_PATH) {
->  		/* Can't call ioctl() on O_PATH fds */
->  		memset(geom, 0, sizeof(*geom));
-> -	} else if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
-> +	} else if (xfrog_geometry(fd, geom) < 0) {
->  		perror("XFS_IOC_FSGEOMETRY");
->  		close(fd);
->  		return -1;
-> diff --git a/io/stat.c b/io/stat.c
-> index 37c0b2e8..f7bbe08b 100644
-> --- a/io/stat.c
-> +++ b/io/stat.c
-> @@ -12,6 +12,7 @@
->  #include "io.h"
->  #include "statx.h"
->  #include "libxfs.h"
-> +#include "xfrog.h"
->  
->  #include <fcntl.h>
->  
-> @@ -194,8 +195,8 @@ statfs_f(
->  	}
->  	if (file->flags & IO_FOREIGN)
->  		return 0;
-> -	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
-> -		perror("XFS_IOC_FSGEOMETRY_V1");
-> +	if (xfrog_geometry(file->fd, &fsgeo) < 0) {
-> +		perror("XFS_IOC_FSGEOMETRY");
->  	} else {
->  		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
->  		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
-> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-> index 8879d161..a6dab3a8 100644
-> --- a/libfrog/fsgeom.c
-> +++ b/libfrog/fsgeom.c
-> @@ -4,6 +4,7 @@
->   */
->  #include "libxfs.h"
->  #include "fsgeom.h"
-> +#include "xfrog.h"
->  
->  void
->  xfs_report_geom(
-> @@ -67,3 +68,20 @@ xfs_report_geom(
->  		geo->rtextsize * geo->blocksize, (unsigned long long)geo->rtblocks,
->  			(unsigned long long)geo->rtextents);
->  }
-> +
-> +/* Try to obtain the xfs geometry. */
-> +int
-> +xfrog_geometry(
-> +	int			fd,
-> +	struct xfs_fsop_geom	*fsgeo)
-> +{
-> +	int			ret;
-> +
-> +	memset(fsgeo, 0, sizeof(*fsgeo));
-> +
-> +	ret = ioctl(fd, XFS_IOC_FSGEOMETRY, fsgeo);
-> +	if (!ret)
-> +		return 0;
-> +
-> +	return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, fsgeo);
-> +}
-> diff --git a/quota/free.c b/quota/free.c
-> index 1d13006e..5432b6a8 100644
-> --- a/quota/free.c
-> +++ b/quota/free.c
-> @@ -8,6 +8,7 @@
->  #include "command.h"
->  #include "init.h"
->  #include "quota.h"
-> +#include "xfrog.h"
->  
->  static cmdinfo_t free_cmd;
->  
-> @@ -67,9 +68,8 @@ mount_free_space_data(
->  	}
->  
->  	if (!(mount->fs_flags & FS_FOREIGN)) {
-> -		if ((xfsctl(mount->fs_dir, fd, XFS_IOC_FSGEOMETRY_V1,
-> -							&fsgeo)) < 0) {
-> -			perror("XFS_IOC_FSGEOMETRY_V1");
-> +		if (xfrog_geometry(fd, &fsgeo) < 0) {
-> +			perror("XFS_IOC_FSGEOMETRY");
->  			close(fd);
->  			return 0;
->  		}
-> diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
-> index 9657503f..2efeff2d 100644
-> --- a/repair/xfs_repair.c
-> +++ b/repair/xfs_repair.c
-> @@ -22,6 +22,7 @@
->  #include "dinode.h"
->  #include "slab.h"
->  #include "rmap.h"
-> +#include "xfrog.h"
->  
->  /*
->   * option tables for getsubopt calls
-> @@ -636,11 +637,11 @@ check_fs_vs_host_sectsize(
->  {
->  	int	fd;
->  	long	old_flags;
-> -	struct xfs_fsop_geom_v1 geom = { 0 };
-> +	struct xfs_fsop_geom	geom = { 0 };
->  
->  	fd = libxfs_device_to_fd(x.ddev);
->  
-> -	if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
-> +	if (xfrog_geometry(fd, &geom) < 0) {
->  		do_log(_("Cannot get host filesystem geometry.\n"
->  	"Repair may fail if there is a sector size mismatch between\n"
->  	"the image and the host filesystem.\n"));
-> diff --git a/rtcp/Makefile b/rtcp/Makefile
-> index 808b5378..264b4f27 100644
-> --- a/rtcp/Makefile
-> +++ b/rtcp/Makefile
-> @@ -9,6 +9,9 @@ LTCOMMAND = xfs_rtcp
->  CFILES = xfs_rtcp.c
->  LLDFLAGS = -static
->  
-> +LLDLIBS = $(LIBFROG)
-> +LTDEPENDENCIES = $(LIBFROG)
-> +
->  default: depend $(LTCOMMAND)
->  
->  include $(BUILDRULES)
-> diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
-> index f928a86a..0b37ee89 100644
-> --- a/rtcp/xfs_rtcp.c
-> +++ b/rtcp/xfs_rtcp.c
-> @@ -5,6 +5,7 @@
->   */
->  
->  #include "libxfs.h"
-> +#include "xfrog.h"
->  
->  int rtcp(char *, char *, int);
->  int xfsrtextsize(char *path);
-> @@ -368,8 +369,8 @@ rtcp( char *source, char *target, int fextsize)
->  int
->  xfsrtextsize( char *path)
->  {
-> -	int fd, rval, rtextsize;
-> -	xfs_fsop_geom_v1_t geo;
-> +	struct xfs_fsop_geom	geo;
-> +	int			fd, rval, rtextsize;
->  
->  	fd = open( path, O_RDONLY );
->  	if ( fd < 0 ) {
-> @@ -377,7 +378,7 @@ xfsrtextsize( char *path)
->  			progname, path, strerror(errno));
->  		return -1;
->  	}
-> -	rval = xfsctl( path, fd, XFS_IOC_FSGEOMETRY_V1, &geo );
-> +	rval = xfrog_geometry(fd, &geo);
->  	close(fd);
->  	if ( rval < 0 )
->  		return -1;
-> diff --git a/scrub/phase1.c b/scrub/phase1.c
-> index 04a5f4a9..bd7c9fee 100644
-> --- a/scrub/phase1.c
-> +++ b/scrub/phase1.c
-> @@ -26,6 +26,7 @@
->  #include "disk.h"
->  #include "scrub.h"
->  #include "repair.h"
-> +#include "xfrog.h"
->  
->  /* Phase 1: Find filesystem geometry (and clean up after) */
->  
-> @@ -129,8 +130,8 @@ _("Does not appear to be an XFS filesystem!"));
->  	}
->  
->  	/* Retrieve XFS geometry. */
-> -	error = ioctl(ctx->mnt_fd, XFS_IOC_FSGEOMETRY, &ctx->geo);
-> -	if (error) {
-> +	error = xfrog_geometry(ctx->mnt_fd, &ctx->geo);
-> +	if (error < 0) {
->  		str_errno(ctx, ctx->mntpoint);
->  		return false;
->  	}
-> diff --git a/spaceman/file.c b/spaceman/file.c
-> index 7e33e07e..ef627fdb 100644
-> --- a/spaceman/file.c
-> +++ b/spaceman/file.c
-> @@ -6,6 +6,7 @@
->   */
->  
->  #include "libxfs.h"
-> +#include "xfrog.h"
->  #include <sys/mman.h>
->  #include "command.h"
->  #include "input.h"
-> @@ -56,7 +57,7 @@ openfile(
->  		return -1;
->  	}
->  
-> -	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
-> +	if (xfrog_geometry(fd, geom) < 0) {
->  		if (errno == ENOTTY)
->  			fprintf(stderr,
->  _("%s: Not on a mounted XFS filesystem.\n"),
-> diff --git a/spaceman/info.c b/spaceman/info.c
-> index 01d0744a..5357b430 100644
-> --- a/spaceman/info.c
-> +++ b/spaceman/info.c
-> @@ -4,6 +4,7 @@
->   * Author: Darrick J. Wong <darrick.wong@oracle.com>
->   */
->  #include "libxfs.h"
-> +#include "xfrog.h"
->  #include "command.h"
->  #include "init.h"
->  #include "path.h"
-> @@ -37,24 +38,14 @@ info_f(
->  	}
->  
->  	/* get the current filesystem size & geometry */
-> -	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
-> -	if (error) {
-> -		/*
-> -		 * OK, new xfsctl barfed - back off and try earlier version
-> -		 * as we're probably running an older kernel version.
-> -		 * Only field added in the v2 geometry xfsctl is "logsunit"
-> -		 * so we'll zero that out for later display (as zero).
-> -		 */
-> -		geo.logsunit = 0;
-> -		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
-> -		if (error) {
-> -			fprintf(stderr, _(
-> -				"%s: cannot determine geometry of filesystem"
-> -				" mounted at %s: %s\n"),
-> -				progname, file->name, strerror(errno));
-> -			exitcode = 1;
-> -			return 0;
-> -		}
-> +	error = xfrog_geometry(file->fd, &geo);
-> +	if (error < 0) {
-> +		fprintf(stderr, _(
-> +			"%s: cannot determine geometry of filesystem"
-> +			" mounted at %s: %s\n"),
-> +			progname, file->name, strerror(errno));
-> +		exitcode = 1;
-> +		return 0;
->  	}
->  
->  	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
-> 
+> +/*
+> + * Feature flags.
+> + */
+> +enum zonefs_features {
+> +	/*
+> +	 * Use a zone start sector value as file name.
+> +	 */
+> +	ZONEFS_F_STARTSECT_NAME,
+> +	/*
+> +	 * Aggregate contiguous conventional zones into a single file.
+> +	 */
+> +	ZONEFS_F_AGRCNV,
+> +	/*
+> +	 * Use super block specified UID for files instead of default.
+> +	 */
+> +	ZONEFS_F_UID,
+> +	/*
+> +	 * Use super block specified GID for files instead of default.
+> +	 */
+> +	ZONEFS_F_GID,
+> +	/*
+> +	 * Use super block specified file permissions instead of default 640.
+> +	 */
+> +	ZONEFS_F_PERM,
+> +};
+
+I'd rather not write the uid, gid, permissions and startsect name to the
+superblock but have it controllable via a mount option. Just write the feature
+to the superblock so we know we _can_ control this per mount.
+
+Byte,
+	Johannes
+-- 
+Johannes Thumshirn                            SUSE Labs Filesystems
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
