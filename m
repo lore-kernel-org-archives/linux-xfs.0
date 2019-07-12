@@ -1,57 +1,110 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44112 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726993AbfGLRov (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 12 Jul 2019 13:44:51 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 45AD2309B15B
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2019 17:44:51 +0000 (UTC)
-Subject: [PATCH 1/2] xfs: move xfs_trans_inode.c to libxfs/
-References: <68ef2df9-3f8e-6547-4e2b-181bce30ca3c@redhat.com>
-From: Eric Sandeen <sandeen@redhat.com>
-Message-ID: <eb65b33a-1104-6be9-530b-390a050b831e@redhat.com>
-Date: Fri, 12 Jul 2019 12:44:48 -0500
+Received: from mx2.suse.de ([195.135.220.15]:48444 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1725877AbfGLIrV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 Jul 2019 04:47:21 -0400
+Date: Fri, 12 Jul 2019 10:47:18 +0200
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH RFC] fs: New zonefs file system
+Message-ID: <20190712084718.GB16276@x250.microfocus.com>
+References: <20190712030017.14321-1-damien.lemoal@wdc.com>
+ <20190712080022.GA16276@x250.microfocus.com>
+ <BN8PR04MB581241A65E81F79882508F4BE7F20@BN8PR04MB5812.namprd04.prod.outlook.com>
 MIME-Version: 1.0
-In-Reply-To: <68ef2df9-3f8e-6547-4e2b-181bce30ca3c@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <BN8PR04MB581241A65E81F79882508F4BE7F20@BN8PR04MB5812.namprd04.prod.outlook.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
 
-Userspace now has an identical xfs_trans_inode.c which it has already
-moved to libxfs/ so do the same move for kernelspace.
+On Fri, Jul 12, 2019 at 08:31:32AM +0000, Damien Le Moal wrote:
+[...]
+> > I know I've been advocating for having on-disk metadata, but do we really
+> > sacrifice a whole zone per default? I thought we'll have on-disk metadata
+> > optional (I might be completely off the track here and need more coffee to
+> > wake up though).
+> 
+> Yes, indeed we do not really need the super block for now. But it is still super
+> useful to have so that:
+> 1) libblkid and other such userland tools can probe the disk to see its format,
+> and preserve the usual "use -force option if you really want to overwrite"
+> behavior of all format tools.
+> 2) Still related to previous point, the super block allows commands like:
+> mount /dev/sdX /mnt
+> and
+> mount -t zonefs /dev/sdX /mnt
+> to have the same result. That is, without the super block, if the drive was
+> previously formatted for btrfs or f2fs, the first command will mount that old
+> format, while the second will mount zonefs without necessarily erasing the old
+> FS super block.
+> 3) Having the super block with a version number will allow in the future to add
+> more metadata (e.g. file names as decided by the application) while allowing
+> backward compatibility of the code.
+> 
+> >> +	end = zones + sbi->s_nr_zones[ZONEFS_ZTYPE_ALL];
+> >> +	for (zone = &zones[1]; zone < end; zone = next) {
+> > 
+> > [...]
+> > 
+> >> +
+> >> +	/* Set defaults */
+> >> +	sbi->s_uid = GLOBAL_ROOT_UID;
+> >> +	sbi->s_gid = GLOBAL_ROOT_GID;
+> >> +	sbi->s_perm = S_IRUSR | S_IWUSR | S_IRGRP; /* 0640 */
+> >> +
+> >> +
+> >> +	ret = zonefs_read_super(sb);
+> >> +	if (ret)
+> >> +		return ret;
+> > 
+> > That would be cool to be controllable via a mount option and have it:
+> > 	sbi->s_uid = opt.uid;
+> > 	sbi->s_gid = opt.gid;
+> > 	sbi->s_perm = opt.mode;
+> > 
+> > or pass these mount options to zonefs_read_super() and they can be set after
+> > the feature validation.
+> 
+> Yes, I thought of that and even had that implemented in a previous version. I
+> switched to the static format time definition only so that the resulting
+> operation of the FS is a little more like a normal file system, namely, mounting
+> the device does not change file attributes and so can be mounted and seen with
+> the same attribute no matter where it is mounted, regardless of the mount options.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
+[...]
 
-diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index b74a47169297..06b68b6115bc 100644
---- a/fs/xfs/Makefile
-+++ b/fs/xfs/Makefile
-@@ -49,6 +49,7 @@ xfs-y				+= $(addprefix libxfs/, \
- 				   xfs_refcount_btree.o \
- 				   xfs_sb.o \
- 				   xfs_symlink_remote.o \
-+				   xfs_trans_inode.o \
- 				   xfs_trans_resv.o \
- 				   xfs_types.o \
- 				   )
-@@ -107,8 +108,7 @@ xfs-y				+= xfs_log.o \
- 				   xfs_rmap_item.o \
- 				   xfs_log_recover.o \
- 				   xfs_trans_ail.o \
--				   xfs_trans_buf.o \
--				   xfs_trans_inode.o
-+				   xfs_trans_buf.o
- 
- # optional features
- xfs-$(CONFIG_XFS_QUOTA)		+= xfs_dquot.o \
-diff --git a/fs/xfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-similarity index 100%
-rename from fs/xfs/xfs_trans_inode.c
-rename to fs/xfs/libxfs/xfs_trans_inode.c
+> > I'd rather not write the uid, gid, permissions and startsect name to the
+> > superblock but have it controllable via a mount option. Just write the feature
+> > to the superblock so we know we _can_ control this per mount.
+> 
+> This is another view. See my thinking above. Thoughts ?
+
+Hm, both a valid views and I'm not sure which is better for the production use
+cases either.
+
+With the approach I had in mind one could pre-format dozens of drives and
+deploy them in the field. The admins then can decide what
+UID/GID/Permission/etc.. the application layer needs for a particular drive
+and supply these parameters on mount time.
+
+With the approach you implemented here we don't have the surprises if someone
+accidentally (or maliciously) passed the wrong parameters.
+
+A combined approach is also not 100% discussion free, as what has preference,
+on-disk or mount time.
+
+I'll be thinking about it and come back once I have an idea.
+
+Byte,
+	Johannes
+-- 
+Johannes Thumshirn                            SUSE Labs Filesystems
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Mary Higgins, Sri Rasiah
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
