@@ -1,57 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bonobo.elm.relay.mailchannels.net ([23.83.212.22]:4646 "EHLO
-        bonobo.elm.relay.mailchannels.net" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728107AbfGJQIB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 10 Jul 2019 12:08:01 -0400
-Date: Wed, 10 Jul 2019 19:07:46 +0300
-From: Andrey Zhunev <a-j@a-j.ru>
-Message-ID: <1015034894.20190710190746@a-j.ru>
-Subject: Re: Need help to recover root filesystem after a power supply issue
-In-Reply-To: <CAJCQCtSpkAS086zSDCfB1jMQXZuacfE-SfyqQ2td4Ven4GwAzg@mail.gmail.com>
-References: <958316946.20190710124710@a-j.ru>
-  <CAJCQCtTpdGxB4r04wPNE+PRV5Jx_m95kShwvLJ5zxdmfw2fnEw@mail.gmail.com>
-  <1373677058.20190710182851@a-j.ru>
-  <CAJCQCtSpkAS086zSDCfB1jMQXZuacfE-SfyqQ2td4Ven4GwAzg@mail.gmail.com>
+Received: from sandeen.net ([63.231.237.45]:52578 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727226AbfGLRbn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 12 Jul 2019 13:31:43 -0400
+Subject: Re: [PATCH] xfs: remove flags argument from xfs_getsb
+References: <6a2da6f7-8c5c-7e10-3a5c-01e175f3382d@redhat.com>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5d8b5439-15b9-4177-33f2-0e2dfb46bbce@sandeen.net>
+Date: Fri, 12 Jul 2019 12:31:41 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <6a2da6f7-8c5c-7e10-3a5c-01e175f3382d@redhat.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Murphy <lists@colorremedies.com>
-Cc: xfs list <linux-xfs@vger.kernel.org>
+To: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
 
+On 7/12/19 12:03 PM, Eric Sandeen wrote:
+> The flags argument is only checked for XBF_TRYLOCK, and no callers have
+> used this flag for nearly 10 years.
 
-Wednesday, July 10, 2019, 6:45:28 PM, you wrote:
+Uh I already sent this and Darrick already merged it so yay me.
 
-> On Wed, Jul 10, 2019 at 9:29 AM Andrey Zhunev <a-j@a-j.ru> wrote:
->>
->> Well, this machine is always online (24/7, with a UPS backup power).
->> Yesterday we found it switched OFF, without any signs of life. Trying
->> to switch it on, the PSU made a humming noise and the machine didn't
->> even try to start. So we replaced the PSU. After that, the machine
->> powered on - but refused to boot... Something tells me these two
->> failures are likely related...
+Had my tree checked out to 5.1, derp.  :)
 
-> Most likely the drive is dying and the spin down from power failure
-> and subsequent spin up has increased the rate of degradation, and
-> that's why they seem related.
-
-> What do you get for:
-
-> # smarctl -x /dev/sda
-
-
-The '-x' option gives a lot of output.
-It's pasted here: https://pastebin.com/raw/yW3yDuSF
-
-
-Well, if there are evidnces the drive is really dying - so be it...
-I just need to recover the data, if possible.
-On the other hand, if the drive will work further - I will find some
-unimportant files to store...
-
-
----
-Best regards,
- Andrey
+Sorry for the noise,
+-Eric
