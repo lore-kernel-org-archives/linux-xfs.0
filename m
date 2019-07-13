@@ -1,62 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:42477 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726811AbfGLRKS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 12 Jul 2019 13:10:18 -0400
-Received: by mail-pg1-f195.google.com with SMTP id t132so4796600pgb.9
-        for <linux-xfs@vger.kernel.org>; Fri, 12 Jul 2019 10:10:18 -0700 (PDT)
-Message-ID: <1562951415.2741.18.camel@dubeyko.com>
-Subject: Re: [PATCH RFC] fs: New zonefs file system
-From: Viacheslav Dubeyko <slava@dubeyko.com>
-Date: Fri, 12 Jul 2019 10:10:15 -0700
-In-Reply-To: <20190712030017.14321-1-damien.lemoal@wdc.com>
-References: <20190712030017.14321-1-damien.lemoal@wdc.com>
-Content-Type: text/plain; charset="UTF-8"
-Mime-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Received: from userp2130.oracle.com ([156.151.31.86]:42692 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725782AbfGMEHp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 13 Jul 2019 00:07:45 -0400
+Date: Fri, 12 Jul 2019 21:07:28 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [GIT PULL] xfs: new features for 5.3
+Message-ID: <20190713040728.GB5347@magnolia>
+References: <20190712180205.GA5347@magnolia>
+ <CAHk-=wiK8_nYEM2B8uvPELdUziFhp_+DqPN=cNSharQqpBZ6qg@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wiK8_nYEM2B8uvPELdUziFhp_+DqPN=cNSharQqpBZ6qg@mail.gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Damien Le Moal <damien.lemoal@wdc.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>
 
-On Fri, 2019-07-12 at 12:00 +0900, Damien Le Moal wrote:
-> zonefs is a very simple file system exposing each zone of a zoned
-> block device as a file. This is intended to simplify implementation 
+On Fri, Jul 12, 2019 at 05:27:15PM -0700, Linus Torvalds wrote:
+> On Fri, Jul 12, 2019 at 11:02 AM Darrick J. Wong <djwong@kernel.org> wrote:
+> >
+> > The branch merges cleanly against this morning's HEAD and survived an
+> > overnight run of xfstests.  The merge was completely straightforward, so
+> > please let me know if you run into anything weird.
+> 
+> Hmm. I don't know what you merged against, but it got a (fairly
+> trivial) conflict for me due to
+> 
+>   79d08f89bb1b ("block: fix .bi_size overflow")
+> 
+> from the block merge (from Tuesday) touching a line next to one changed by
+> 
+>   a24737359667 ("xfs: simplify xfs_chain_bio")
+> 
+> from this pull.
+> 
+> So it wasn't an entirely clean merge for me.
+> 
+> Was it a complex merge conflict? No. I'm just confused by the "merges
+> cleanly against this morning's HEAD", which makes me wonder what you
+> tried to merge against..
 
-As far as I can see, a zone usually is pretty big in size (for example,
-256MB). But [1, 2] showed that about 60% of files on a file system
-volume has size about 4KB - 128KB. Also [3] showed that modern
-application uses a very complex files' structures that are updated in
-random order. Moreover, [4] showed that 90% of all files are not used
-after initial creation, those that are used are normally short-lived,
-and that if a file is not used in some manner the day after it is
-created, it will probably never be used; 1% of all files are used
-daily.
+Doh, it turns out I was merging against the same HEAD as my last two
+pull requests because I forgot to re-pull.  Sorry about that.  It's been
+too long of a week. :/
 
-It sounds for me that mostly this approach will lead to waste of zones'
-space. Also, the necessity to update data of the same file will be
-resulted in frequent moving of files' data from one zone to another
-one. If we are talking about SSDs then it sounds like quick and easy
-way to kill this device fast.
+--D
 
-Do you have in mind some special use-case?
-
-Thanks,
-Viacheslav Dubeyko.
-
-
-[1] Agrawal, et al., “A Five-Year Study of File-System Metadata,” ACM
-Transactions on Storage (TOS), vol. 3 Issue 3, Oct. 2007, Article No.
-9.
-[2] Douceur, et al., “A Large-Scale Study of File-System Contents,”
-SIGMETRICS '99 Proceedings of the 1999 ACM SIGMETRICS international
-conference on Measurement and modeling of computer systems, pp. 59-70,
-May 1-4, 1999.
-[3] Tyler Harter, Chris Dragga, Michael Vaughn, Andrea C. Arpaci-
-Dusseau, and Remzi H. Arpaci-Dusseau, “A file is not a file:
-understanding the I/O behavior of Apple desktop applications.” In
-Proceedings of the Twenty-Third ACM Symposium on Operating Systems
-Principles (SOSP '11). ACM, New York, NY, USA, 71-83.
-[4] Tim Gibson, Ethan L. Miller, Darrell D. E. Long, “Long-term File
-Activity and Inter-Reference Patterns.”
+>             Linus
