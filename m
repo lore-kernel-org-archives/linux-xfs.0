@@ -1,69 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:34882 "EHLO mail.kernel.org"
+Received: from mx1.redhat.com ([209.132.183.28]:43508 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727685AbfGRQSZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 18 Jul 2019 12:18:25 -0400
-Date: Thu, 18 Jul 2019 09:18:24 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: cleanups for 5.3
-Message-ID: <20190718161824.GE7093@magnolia>
+        id S1729725AbfGOLaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 15 Jul 2019 07:30:12 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7C80630842AF
+        for <linux-xfs@vger.kernel.org>; Mon, 15 Jul 2019 11:30:12 +0000 (UTC)
+Date: Mon, 15 Jul 2019 07:30:08 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 2/2] xfs: sync up xfs_trans_inode with userspace
+Message-ID: <20190715113007.GB23406@bfoster>
+References: <68ef2df9-3f8e-6547-4e2b-181bce30ca3c@redhat.com>
+ <112d2e52-c96c-af83-7e53-5fca12448c76@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <112d2e52-c96c-af83-7e53-5fca12448c76@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-kernel@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-Hi Linus,
+On Fri, Jul 12, 2019 at 12:46:17PM -0500, Eric Sandeen wrote:
+> Add an XFS_ICHGTIME_CREATE case to xfs_trans_ichgtime() to keep in
+> sync with userspace.  (Currently no kernel caller sends this flag.)
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
+> index 93d14e47269d..a9ad90926b87 100644
+> --- a/fs/xfs/libxfs/xfs_trans_inode.c
+> +++ b/fs/xfs/libxfs/xfs_trans_inode.c
+> @@ -66,6 +66,10 @@ xfs_trans_ichgtime(
+>  		inode->i_mtime = tv;
+>  	if (flags & XFS_ICHGTIME_CHG)
+>  		inode->i_ctime = tv;
+> +	if (flags & XFS_ICHGTIME_CREATE) {
+> +		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
+> +		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
+> +	}
 
-We had a few more lateish cleanup patches come in for 5.3 -- a couple of
-syncups with the userspace libxfs code and a conversion of the XFS
-administrator's guide to ReST format.
+Could we add a "for libxfs" or some such one liner comment to this so
+long as this is unused in the kernel? With that:
 
-The branch does /not/ merge cleanly against this morning's HEAD due to a
-conflict in Documentation/admin-guide/index.rst.  The conflict can be
-resolved by adding the "xfs" line after "binderfs".  The series survived
-an overnight run of xfstests.
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Please let me know if you run into anything weird, I promise I drank two
-cups of coffee this time around. :)
-
---D
-
-The following changes since commit 488ca3d8d088ec4658c87aaec6a91e98acccdd54:
-
-  xfs: chain bios the right way around in xfs_rw_bdev (2019-07-10 10:04:16 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.3-merge-13
-
-for you to fetch changes up to 89b408a68b9dd163b2705b6f73d8e3cc3579b457:
-
-  Documentation: filesystem: Convert xfs.txt to ReST (2019-07-15 09:15:09 -0700)
-
-----------------------------------------------------------------
-Also new for 5.3:
-- Bring fs/xfs/libxfs/xfs_trans_inode.c in sync with userspace libxfs.
-- Convert the xfs administrator guide to rst and move it into the
-  official admin guide under Documentation
-
-----------------------------------------------------------------
-Eric Sandeen (2):
-      xfs: move xfs_trans_inode.c to libxfs/
-      xfs: sync up xfs_trans_inode with userspace
-
-Sheriff Esseson (1):
-      Documentation: filesystem: Convert xfs.txt to ReST
-
- Documentation/admin-guide/index.rst                |   1 +
- .../{filesystems/xfs.txt => admin-guide/xfs.rst}   | 132 ++++++++++-----------
- Documentation/filesystems/dax.txt                  |   2 +-
- MAINTAINERS                                        |   3 +-
- fs/xfs/Makefile                                    |   4 +-
- fs/xfs/{ => libxfs}/xfs_trans_inode.c              |   4 +
- 6 files changed, 73 insertions(+), 73 deletions(-)
- rename Documentation/{filesystems/xfs.txt => admin-guide/xfs.rst} (80%)
- rename fs/xfs/{ => libxfs}/xfs_trans_inode.c (96%)
+>  }
+>  
+>  /*
+> 
+> 
