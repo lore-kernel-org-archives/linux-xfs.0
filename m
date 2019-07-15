@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42026 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726074AbfGOR7x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jul 2019 13:59:53 -0400
-Subject: [PATCH 2/9] iomap: move the swapfile code into a separate file
+Received: from userp2120.oracle.com ([156.151.31.85]:37456 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726074AbfGOSAD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jul 2019 14:00:03 -0400
+Subject: [PATCH 3/9] iomap: move the file mapping reporting code into a
+ separate file
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 15 Jul 2019 10:59:33 -0700
-Message-ID: <156321357313.148361.12301737644937245852.stgit@magnolia>
+Date: Mon, 15 Jul 2019 10:59:39 -0700
+Message-ID: <156321357958.148361.3663936110731905790.stgit@magnolia>
 In-Reply-To: <156321356040.148361.7463881761568794395.stgit@magnolia>
 References: <156321356040.148361.7463881761568794395.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,395 +21,331 @@ Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, agruenba@redhat.co
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move the swapfile activation code into a separate file so that we can
-group related functions in a single file instead of having a single
-enormous source file.
+Move the file mapping reporting code (FIEMAP/FIBMAP) into a separate
+file so that we can group related functions in a single file instead of
+having a single enormous source file.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap.c          |  170 ------------------------------------------------
- fs/iomap/Makefile   |    4 +
- fs/iomap/swapfile.c |  180 +++++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 184 insertions(+), 170 deletions(-)
- create mode 100644 fs/iomap/swapfile.c
+ fs/iomap.c        |  136 -------------------------------------------------
+ fs/iomap/Makefile |    3 +
+ fs/iomap/fiemap.c |  146 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 149 insertions(+), 136 deletions(-)
+ create mode 100644 fs/iomap/fiemap.c
 
 
 diff --git a/fs/iomap.c b/fs/iomap.c
-index 217c3e5a13d6..521e90825dbe 100644
+index 521e90825dbe..d14d75a97ab3 100644
 --- a/fs/iomap.c
 +++ b/fs/iomap.c
-@@ -2000,176 +2000,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+@@ -1149,108 +1149,6 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
  }
- EXPORT_SYMBOL_GPL(iomap_dio_rw);
+ EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
  
--/* Swapfile activation */
--
--#ifdef CONFIG_SWAP
--struct iomap_swapfile_info {
--	struct iomap iomap;		/* accumulated iomap */
--	struct swap_info_struct *sis;
--	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
--	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
--	unsigned long nr_pages;		/* number of pages collected */
--	int nr_extents;			/* extent count */
+-struct fiemap_ctx {
+-	struct fiemap_extent_info *fi;
+-	struct iomap prev;
 -};
 -
--/*
-- * Collect physical extents for this swap file.  Physical extents reported to
-- * the swap code must be trimmed to align to a page boundary.  The logical
-- * offset within the file is irrelevant since the swapfile code maps logical
-- * page numbers of the swap device to the physical page-aligned extents.
-- */
--static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+-static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+-		struct iomap *iomap, u32 flags)
 -{
--	struct iomap *iomap = &isi->iomap;
--	unsigned long nr_pages;
--	uint64_t first_ppage;
--	uint64_t first_ppage_reported;
--	uint64_t next_ppage;
--	int error;
--
--	/*
--	 * Round the start up and the end down so that the physical
--	 * extent aligns to a page boundary.
--	 */
--	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
--	next_ppage = ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
--			PAGE_SHIFT;
--
--	/* Skip too-short physical extents. */
--	if (first_ppage >= next_ppage)
--		return 0;
--	nr_pages = next_ppage - first_ppage;
--
--	/*
--	 * Calculate how much swap space we're adding; the first page contains
--	 * the swap header and doesn't count.  The mm still wants that first
--	 * page fed to add_swap_extent, however.
--	 */
--	first_ppage_reported = first_ppage;
--	if (iomap->offset == 0)
--		first_ppage_reported++;
--	if (isi->lowest_ppage > first_ppage_reported)
--		isi->lowest_ppage = first_ppage_reported;
--	if (isi->highest_ppage < (next_ppage - 1))
--		isi->highest_ppage = next_ppage - 1;
--
--	/* Add extent, set up for the next call. */
--	error = add_swap_extent(isi->sis, isi->nr_pages, nr_pages, first_ppage);
--	if (error < 0)
--		return error;
--	isi->nr_extents += error;
--	isi->nr_pages += nr_pages;
--	return 0;
--}
--
--/*
-- * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
-- * swap only cares about contiguous page-aligned physical extents and makes no
-- * distinction between written and unwritten extents.
-- */
--static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
--		loff_t count, void *data, struct iomap *iomap)
--{
--	struct iomap_swapfile_info *isi = data;
--	int error;
--
 -	switch (iomap->type) {
+-	case IOMAP_HOLE:
+-		/* skip holes */
+-		return 0;
+-	case IOMAP_DELALLOC:
+-		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
+-		break;
 -	case IOMAP_MAPPED:
+-		break;
 -	case IOMAP_UNWRITTEN:
--		/* Only real or unwritten extents. */
+-		flags |= FIEMAP_EXTENT_UNWRITTEN;
 -		break;
 -	case IOMAP_INLINE:
--		/* No inline data. */
--		pr_err("swapon: file is inline\n");
--		return -EINVAL;
--	default:
--		pr_err("swapon: file has unallocated extents\n");
--		return -EINVAL;
+-		flags |= FIEMAP_EXTENT_DATA_INLINE;
+-		break;
 -	}
 -
--	/* No uncommitted metadata or shared blocks. */
--	if (iomap->flags & IOMAP_F_DIRTY) {
--		pr_err("swapon: file is not committed\n");
--		return -EINVAL;
--	}
--	if (iomap->flags & IOMAP_F_SHARED) {
--		pr_err("swapon: file has shared extents\n");
--		return -EINVAL;
--	}
+-	if (iomap->flags & IOMAP_F_MERGED)
+-		flags |= FIEMAP_EXTENT_MERGED;
+-	if (iomap->flags & IOMAP_F_SHARED)
+-		flags |= FIEMAP_EXTENT_SHARED;
 -
--	/* Only one bdev per swap file. */
--	if (iomap->bdev != isi->sis->bdev) {
--		pr_err("swapon: file is on multiple devices\n");
--		return -EINVAL;
--	}
--
--	if (isi->iomap.length == 0) {
--		/* No accumulated extent, so just store it. */
--		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
--	} else if (isi->iomap.addr + isi->iomap.length == iomap->addr) {
--		/* Append this to the accumulated extent. */
--		isi->iomap.length += iomap->length;
--	} else {
--		/* Otherwise, add the retained iomap and store this one. */
--		error = iomap_swapfile_add_extent(isi);
--		if (error)
--			return error;
--		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
--	}
--	return count;
+-	return fiemap_fill_next_extent(fi, iomap->offset,
+-			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
+-			iomap->length, flags);
 -}
 -
--/*
-- * Iterate a swap file's iomaps to construct physical extents that can be
-- * passed to the swapfile subsystem.
-- */
--int iomap_swapfile_activate(struct swap_info_struct *sis,
--		struct file *swap_file, sector_t *pagespan,
--		const struct iomap_ops *ops)
+-static loff_t
+-iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+-		struct iomap *iomap)
 -{
--	struct iomap_swapfile_info isi = {
--		.sis = sis,
--		.lowest_ppage = (sector_t)-1ULL,
--	};
--	struct address_space *mapping = swap_file->f_mapping;
--	struct inode *inode = mapping->host;
--	loff_t pos = 0;
--	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
+-	struct fiemap_ctx *ctx = data;
+-	loff_t ret = length;
+-
+-	if (iomap->type == IOMAP_HOLE)
+-		return length;
+-
+-	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
+-	ctx->prev = *iomap;
+-	switch (ret) {
+-	case 0:		/* success */
+-		return length;
+-	case 1:		/* extent array full */
+-		return 0;
+-	default:
+-		return ret;
+-	}
+-}
+-
+-int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+-		loff_t start, loff_t len, const struct iomap_ops *ops)
+-{
+-	struct fiemap_ctx ctx;
 -	loff_t ret;
 -
--	/*
--	 * Persist all file mapping metadata so that we won't have any
--	 * IOMAP_F_DIRTY iomaps.
--	 */
--	ret = vfs_fsync(swap_file, 1);
+-	memset(&ctx, 0, sizeof(ctx));
+-	ctx.fi = fi;
+-	ctx.prev.type = IOMAP_HOLE;
+-
+-	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
 -	if (ret)
 -		return ret;
 -
--	while (len > 0) {
--		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
--				ops, &isi, iomap_swapfile_activate_actor);
--		if (ret <= 0)
--			return ret;
--
--		pos += ret;
--		len -= ret;
--	}
--
--	if (isi.iomap.length) {
--		ret = iomap_swapfile_add_extent(&isi);
+-	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
+-		ret = filemap_write_and_wait(inode->i_mapping);
 -		if (ret)
 -			return ret;
 -	}
 -
--	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
--	sis->max = isi.nr_pages;
--	sis->pages = isi.nr_pages - 1;
--	sis->highest_bit = isi.nr_pages - 1;
--	return isi.nr_extents;
--}
--EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
--#endif /* CONFIG_SWAP */
+-	while (len > 0) {
+-		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
+-				iomap_fiemap_actor);
+-		/* inode with no (attribute) mapping will give ENOENT */
+-		if (ret == -ENOENT)
+-			break;
+-		if (ret < 0)
+-			return ret;
+-		if (ret == 0)
+-			break;
 -
- static loff_t
- iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
- 		void *data, struct iomap *iomap)
+-		start += ret;
+-		len -= ret;
+-	}
+-
+-	if (ctx.prev.type != IOMAP_HOLE) {
+-		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL_GPL(iomap_fiemap);
+-
+ /*
+  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
+  * Returns true if found and updates @lastoff to the offset in file.
+@@ -1999,37 +1897,3 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(iomap_dio_rw);
+-
+-static loff_t
+-iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+-		void *data, struct iomap *iomap)
+-{
+-	sector_t *bno = data, addr;
+-
+-	if (iomap->type == IOMAP_MAPPED) {
+-		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
+-		if (addr > INT_MAX)
+-			WARN(1, "would truncate bmap result\n");
+-		else
+-			*bno = addr;
+-	}
+-	return 0;
+-}
+-
+-/* legacy ->bmap interface.  0 is the error return (!) */
+-sector_t
+-iomap_bmap(struct address_space *mapping, sector_t bno,
+-		const struct iomap_ops *ops)
+-{
+-	struct inode *inode = mapping->host;
+-	loff_t pos = bno << inode->i_blkbits;
+-	unsigned blocksize = i_blocksize(inode);
+-
+-	if (filemap_write_and_wait(mapping))
+-		return 0;
+-
+-	bno = 0;
+-	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
+-	return bno;
+-}
+-EXPORT_SYMBOL_GPL(iomap_bmap);
 diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-index b778a05acac3..e38061f2b901 100644
+index e38061f2b901..861c07137792 100644
 --- a/fs/iomap/Makefile
 +++ b/fs/iomap/Makefile
-@@ -5,3 +5,7 @@
- #
+@@ -8,4 +8,7 @@ ccflags-y += -I $(srctree)/$(src)/..
  
- ccflags-y += -I $(srctree)/$(src)/..
+ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
+ 
++iomap-y				+= \
++					fiemap.o
 +
-+obj-$(CONFIG_FS_IOMAP)		+= iomap.o
-+
-+iomap-$(CONFIG_SWAP)		+= swapfile.o
-diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+ iomap-$(CONFIG_SWAP)		+= swapfile.o
+diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
 new file mode 100644
-index 000000000000..0bd578b580bb
+index 000000000000..1f43315468b7
 --- /dev/null
-+++ b/fs/iomap/swapfile.c
-@@ -0,0 +1,180 @@
++++ b/fs/iomap/fiemap.c
+@@ -0,0 +1,146 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Copyright (C) 2018 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
++ * Copyright (c) 2016-2018 Christoph Hellwig.
 + */
 +#include <linux/module.h>
 +#include <linux/compiler.h>
 +#include <linux/fs.h>
 +#include <linux/iomap.h>
-+#include <linux/swap.h>
 +
 +#include "internal.h"
 +
-+/* Swapfile activation */
-+
-+struct iomap_swapfile_info {
-+	struct iomap iomap;		/* accumulated iomap */
-+	struct swap_info_struct *sis;
-+	uint64_t lowest_ppage;		/* lowest physical addr seen (pages) */
-+	uint64_t highest_ppage;		/* highest physical addr seen (pages) */
-+	unsigned long nr_pages;		/* number of pages collected */
-+	int nr_extents;			/* extent count */
++struct fiemap_ctx {
++	struct fiemap_extent_info *fi;
++	struct iomap prev;
 +};
 +
-+/*
-+ * Collect physical extents for this swap file.  Physical extents reported to
-+ * the swap code must be trimmed to align to a page boundary.  The logical
-+ * offset within the file is irrelevant since the swapfile code maps logical
-+ * page numbers of the swap device to the physical page-aligned extents.
-+ */
-+static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
++static int iomap_to_fiemap(struct fiemap_extent_info *fi,
++		struct iomap *iomap, u32 flags)
 +{
-+	struct iomap *iomap = &isi->iomap;
-+	unsigned long nr_pages;
-+	uint64_t first_ppage;
-+	uint64_t first_ppage_reported;
-+	uint64_t next_ppage;
-+	int error;
-+
-+	/*
-+	 * Round the start up and the end down so that the physical
-+	 * extent aligns to a page boundary.
-+	 */
-+	first_ppage = ALIGN(iomap->addr, PAGE_SIZE) >> PAGE_SHIFT;
-+	next_ppage = ALIGN_DOWN(iomap->addr + iomap->length, PAGE_SIZE) >>
-+			PAGE_SHIFT;
-+
-+	/* Skip too-short physical extents. */
-+	if (first_ppage >= next_ppage)
-+		return 0;
-+	nr_pages = next_ppage - first_ppage;
-+
-+	/*
-+	 * Calculate how much swap space we're adding; the first page contains
-+	 * the swap header and doesn't count.  The mm still wants that first
-+	 * page fed to add_swap_extent, however.
-+	 */
-+	first_ppage_reported = first_ppage;
-+	if (iomap->offset == 0)
-+		first_ppage_reported++;
-+	if (isi->lowest_ppage > first_ppage_reported)
-+		isi->lowest_ppage = first_ppage_reported;
-+	if (isi->highest_ppage < (next_ppage - 1))
-+		isi->highest_ppage = next_ppage - 1;
-+
-+	/* Add extent, set up for the next call. */
-+	error = add_swap_extent(isi->sis, isi->nr_pages, nr_pages, first_ppage);
-+	if (error < 0)
-+		return error;
-+	isi->nr_extents += error;
-+	isi->nr_pages += nr_pages;
-+	return 0;
-+}
-+
-+/*
-+ * Accumulate iomaps for this swap file.  We have to accumulate iomaps because
-+ * swap only cares about contiguous page-aligned physical extents and makes no
-+ * distinction between written and unwritten extents.
-+ */
-+static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
-+		loff_t count, void *data, struct iomap *iomap)
-+{
-+	struct iomap_swapfile_info *isi = data;
-+	int error;
-+
 +	switch (iomap->type) {
++	case IOMAP_HOLE:
++		/* skip holes */
++		return 0;
++	case IOMAP_DELALLOC:
++		flags |= FIEMAP_EXTENT_DELALLOC | FIEMAP_EXTENT_UNKNOWN;
++		break;
 +	case IOMAP_MAPPED:
++		break;
 +	case IOMAP_UNWRITTEN:
-+		/* Only real or unwritten extents. */
++		flags |= FIEMAP_EXTENT_UNWRITTEN;
 +		break;
 +	case IOMAP_INLINE:
-+		/* No inline data. */
-+		pr_err("swapon: file is inline\n");
-+		return -EINVAL;
-+	default:
-+		pr_err("swapon: file has unallocated extents\n");
-+		return -EINVAL;
++		flags |= FIEMAP_EXTENT_DATA_INLINE;
++		break;
 +	}
 +
-+	/* No uncommitted metadata or shared blocks. */
-+	if (iomap->flags & IOMAP_F_DIRTY) {
-+		pr_err("swapon: file is not committed\n");
-+		return -EINVAL;
-+	}
-+	if (iomap->flags & IOMAP_F_SHARED) {
-+		pr_err("swapon: file has shared extents\n");
-+		return -EINVAL;
-+	}
++	if (iomap->flags & IOMAP_F_MERGED)
++		flags |= FIEMAP_EXTENT_MERGED;
++	if (iomap->flags & IOMAP_F_SHARED)
++		flags |= FIEMAP_EXTENT_SHARED;
 +
-+	/* Only one bdev per swap file. */
-+	if (iomap->bdev != isi->sis->bdev) {
-+		pr_err("swapon: file is on multiple devices\n");
-+		return -EINVAL;
-+	}
-+
-+	if (isi->iomap.length == 0) {
-+		/* No accumulated extent, so just store it. */
-+		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-+	} else if (isi->iomap.addr + isi->iomap.length == iomap->addr) {
-+		/* Append this to the accumulated extent. */
-+		isi->iomap.length += iomap->length;
-+	} else {
-+		/* Otherwise, add the retained iomap and store this one. */
-+		error = iomap_swapfile_add_extent(isi);
-+		if (error)
-+			return error;
-+		memcpy(&isi->iomap, iomap, sizeof(isi->iomap));
-+	}
-+	return count;
++	return fiemap_fill_next_extent(fi, iomap->offset,
++			iomap->addr != IOMAP_NULL_ADDR ? iomap->addr : 0,
++			iomap->length, flags);
 +}
 +
-+/*
-+ * Iterate a swap file's iomaps to construct physical extents that can be
-+ * passed to the swapfile subsystem.
-+ */
-+int iomap_swapfile_activate(struct swap_info_struct *sis,
-+		struct file *swap_file, sector_t *pagespan,
-+		const struct iomap_ops *ops)
++static loff_t
++iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++		struct iomap *iomap)
 +{
-+	struct iomap_swapfile_info isi = {
-+		.sis = sis,
-+		.lowest_ppage = (sector_t)-1ULL,
-+	};
-+	struct address_space *mapping = swap_file->f_mapping;
-+	struct inode *inode = mapping->host;
-+	loff_t pos = 0;
-+	loff_t len = ALIGN_DOWN(i_size_read(inode), PAGE_SIZE);
++	struct fiemap_ctx *ctx = data;
++	loff_t ret = length;
++
++	if (iomap->type == IOMAP_HOLE)
++		return length;
++
++	ret = iomap_to_fiemap(ctx->fi, &ctx->prev, 0);
++	ctx->prev = *iomap;
++	switch (ret) {
++	case 0:		/* success */
++		return length;
++	case 1:		/* extent array full */
++		return 0;
++	default:
++		return ret;
++	}
++}
++
++int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
++		loff_t start, loff_t len, const struct iomap_ops *ops)
++{
++	struct fiemap_ctx ctx;
 +	loff_t ret;
 +
-+	/*
-+	 * Persist all file mapping metadata so that we won't have any
-+	 * IOMAP_F_DIRTY iomaps.
-+	 */
-+	ret = vfs_fsync(swap_file, 1);
++	memset(&ctx, 0, sizeof(ctx));
++	ctx.fi = fi;
++	ctx.prev.type = IOMAP_HOLE;
++
++	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
 +	if (ret)
 +		return ret;
 +
-+	while (len > 0) {
-+		ret = iomap_apply(inode, pos, len, IOMAP_REPORT,
-+				ops, &isi, iomap_swapfile_activate_actor);
-+		if (ret <= 0)
-+			return ret;
-+
-+		pos += ret;
-+		len -= ret;
-+	}
-+
-+	if (isi.iomap.length) {
-+		ret = iomap_swapfile_add_extent(&isi);
++	if (fi->fi_flags & FIEMAP_FLAG_SYNC) {
++		ret = filemap_write_and_wait(inode->i_mapping);
 +		if (ret)
 +			return ret;
 +	}
 +
-+	*pagespan = 1 + isi.highest_ppage - isi.lowest_ppage;
-+	sis->max = isi.nr_pages;
-+	sis->pages = isi.nr_pages - 1;
-+	sis->highest_bit = isi.nr_pages - 1;
-+	return isi.nr_extents;
++	while (len > 0) {
++		ret = iomap_apply(inode, start, len, IOMAP_REPORT, ops, &ctx,
++				iomap_fiemap_actor);
++		/* inode with no (attribute) mapping will give ENOENT */
++		if (ret == -ENOENT)
++			break;
++		if (ret < 0)
++			return ret;
++		if (ret == 0)
++			break;
++
++		start += ret;
++		len -= ret;
++	}
++
++	if (ctx.prev.type != IOMAP_HOLE) {
++		ret = iomap_to_fiemap(fi, &ctx.prev, FIEMAP_EXTENT_LAST);
++		if (ret < 0)
++			return ret;
++	}
++
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
++EXPORT_SYMBOL_GPL(iomap_fiemap);
++
++static loff_t
++iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
++		void *data, struct iomap *iomap)
++{
++	sector_t *bno = data, addr;
++
++	if (iomap->type == IOMAP_MAPPED) {
++		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
++		if (addr > INT_MAX)
++			WARN(1, "would truncate bmap result\n");
++		else
++			*bno = addr;
++	}
++	return 0;
++}
++
++/* legacy ->bmap interface.  0 is the error return (!) */
++sector_t
++iomap_bmap(struct address_space *mapping, sector_t bno,
++		const struct iomap_ops *ops)
++{
++	struct inode *inode = mapping->host;
++	loff_t pos = bno << inode->i_blkbits;
++	unsigned blocksize = i_blocksize(inode);
++
++	if (filemap_write_and_wait(mapping))
++		return 0;
++
++	bno = 0;
++	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
++	return bno;
++}
++EXPORT_SYMBOL_GPL(iomap_bmap);
