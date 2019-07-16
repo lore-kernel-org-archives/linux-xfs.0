@@ -1,79 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:33156 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725800AbfGYRCf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 13:02:35 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6PGtgqe088184
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2019 17:02:33 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2tx61c5a40-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2019 17:02:33 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6PFwGI5078818
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2019 17:02:32 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2tx60yedbm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2019 17:02:32 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x6PH2VJ9013592
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2019 17:02:32 GMT
-Date: Thu, 25 Jul 2019 10:02:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: fix stack contents leakage in the v1
- bulkstat/inumbers ioctls
-Message-ID: <20190725170230.GD1561054@magnolia>
-References: <20190724153545.GC1561054@magnolia>
- <20190725065216.GI3089@kadam>
+Received: from mail.kernel.org ([198.145.29.99]:44572 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728124AbfGPROF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 16 Jul 2019 13:14:05 -0400
+Received: from mail-vs1-f43.google.com (mail-vs1-f43.google.com [209.85.217.43])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 3A948206C2
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jul 2019 17:14:04 +0000 (UTC)
+Received: by mail-vs1-f43.google.com with SMTP id h28so14424490vsl.12
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jul 2019 10:14:04 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190725065216.GI3089@kadam>
+References: <a665a93a-0bf8-aedb-2ba3-d4b2fb672970@linux.alibaba.com>
+ <20190627155455.GA30113@42.do-not-panic.com> <CAOQ4uxgqgDAdKZDYwmf0M35M3D6Ctn25-VVj3wu5XSj_4c-WdA@mail.gmail.com>
+ <20190627213520.GG19023@42.do-not-panic.com> <CAOQ4uxht-inVEjRWXtkbRPXTA9DvRNTLSPNEZ0Eh=nUhEhNO-A@mail.gmail.com>
+ <20190628215051.GE30113@42.do-not-panic.com> <CAOQ4uxgU_Ad50ZJLhmfY0mGHWutNXJU1DhEkA++-Jak2PgkUcA@mail.gmail.com>
+ <20190702193449.GQ19023@42.do-not-panic.com>
+In-Reply-To: <20190702193449.GQ19023@42.do-not-panic.com>
+From: Luis Chamberlain <mcgrof@kernel.org>
+Date: Tue, 16 Jul 2019 10:13:49 -0700
+Message-ID: <CAB=NE6Vtu0rKx8=ChrHE4W8o42xP5=b7Xz3q=5fmaa1MNAH9=A@mail.gmail.com>
+Subject: Re: [backport request][stable] xfs: xfstests generic/538 failed on xfs
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Amir Goldstein <amir73il@gmail.com>
+Cc: Alvin Zheng <Alvin@linux.alibaba.com>, gregkh <gregkh@linuxfoundation.org>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, "joseph.qi" <joseph.qi@linux.alibaba.com>, caspar <caspar@linux.alibaba.com>, Sasha Levin <sashal@kernel.org>
 
-On Thu, Jul 25, 2019 at 09:52:17AM +0300, Dan Carpenter wrote:
-> On Wed, Jul 24, 2019 at 08:35:45AM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Explicitly initialize the onstack structures to zero so we don't leak
-> > kernel memory into userspace when converting the in-core structure to
-> > the v1 ioctl structure.
-> > 
-> > Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  fs/xfs/xfs_ioctl.c |    4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index f193f7b288ca..44e1a290f053 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -719,7 +719,7 @@ xfs_fsbulkstat_one_fmt(
-> >  	struct xfs_ibulk		*breq,
-> >  	const struct xfs_bulkstat	*bstat)
-> >  {
-> > -	struct xfs_bstat		bs1;
-> > +	struct xfs_bstat		bs1 = { 0 };
-> 
-> This sort of initialization is potentially problematic because some
-> versions of GCC will change it as a series of assignments (which doesn't
-> clear the struct hole).  It's not clear to me the rules where GCC does
-> this and also I wish there were an option to disable that feature.
+On Tue, Jul 2, 2019 at 12:34 PM Luis Chamberlain <mcgrof@kernel.org> wrote:
+> On Sat, Jun 29, 2019 at 10:41:35AM +0300, Amir Goldstein wrote:
+> that'd be great. How long does your full run take?
+>
+> Not long, its just I wanted to also add xunit processing support onto
+> oscheck as well. I'll start on that now, hopefully it'll all be done
+> and tested by end of next week.
 
-And poor maintainers like me didn't even /know/ that.... ok, I'll go
-with an explicit memset like Eric suggested in the patch review.
+I'm now at a point where oscheck .. is looking sharp, and has xunit
+processing and even an automatic way to expand our expunge list.... :)
 
---D
+So it will be super easy for me to test this now, in about two days
+max I should have results.
 
-> [ I am still out of office until the end of the month ]
-> 
-> regards,
-> dan carpenter
-> 
+  Luis
