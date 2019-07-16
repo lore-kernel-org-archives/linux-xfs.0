@@ -1,139 +1,372 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58284 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726536AbfGPJf7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 16 Jul 2019 05:35:59 -0400
-From: Zorro Lang <zlang@redhat.com>
-Subject: [PATCH v2] xfs: test statfs on project quota directory
-Date: Tue, 16 Jul 2019 17:35:50 +0800
-Message-Id: <20190716093550.23059-1-zlang@redhat.com>
+Received: from mail-wm1-f67.google.com ([209.85.128.67]:50651 "EHLO
+        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733067AbfGPLaw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 16 Jul 2019 07:30:52 -0400
+Received: by mail-wm1-f67.google.com with SMTP id v15so18310633wml.0
+        for <linux-xfs@vger.kernel.org>; Tue, 16 Jul 2019 04:30:50 -0700 (PDT)
+Date: Tue, 16 Jul 2019 13:30:46 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 1/4] xfsprogs: reorder functions in libxfs/trans.c
+Message-ID: <20190716113046.daozxtrv7ycj5fok@pegasus.maiolino.io>
+References: <a40115ca-93e2-6dd2-7940-5911988f8fe4@redhat.com>
+ <5cfffec2-092e-5409-e89f-48b5fd905ac2@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5cfffec2-092e-5409-e89f-48b5fd905ac2@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: fstests@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: Eric Sandeen <sandeen@redhat.com>
+Cc: linux-xfs <linux-xfs@vger.kernel.org>
 
-There's a bug on xfs cause statfs get negative f_ffree value from
-a project quota directory. It's fixed by "de7243057 fs/xfs: fix
-f_ffree value for statfs when project quota is set". So add statfs
-testing on project quota block and inode count limit.
+On Fri, Jul 12, 2019 at 04:34:20PM -0500, Eric Sandeen wrote:
+> This puts these functions in libxfs/trans.c in the same order as
+> they appear in kernelspace xfs_trans_buf.c for easier comparison.
+> 
+> No functional changes.
+> 
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+Looks good,
 
-Hi,
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+> 
+> diff --git a/libxfs/trans.c b/libxfs/trans.c
+> index 5c56b4fe..8954f0fe 100644
+> --- a/libxfs/trans.c
+> +++ b/libxfs/trans.c
+> @@ -330,80 +330,6 @@ libxfs_trans_cancel(
+>  	xfs_trans_free(tp);
+>  }
+>  
+> -void
+> -libxfs_trans_inode_alloc_buf(
+> -	xfs_trans_t		*tp,
+> -	xfs_buf_t		*bp)
+> -{
+> -	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> -
+> -	ASSERT(bp->b_transp == tp);
+> -	ASSERT(bip != NULL);
+> -	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
+> -	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+> -}
+> -
+> -/*
+> - * Mark a buffer dirty in the transaction.
+> - */
+> -void
+> -libxfs_trans_dirty_buf(
+> -	struct xfs_trans	*tp,
+> -	struct xfs_buf		*bp)
+> -{
+> -	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> -
+> -	ASSERT(bp->b_transp == tp);
+> -	ASSERT(bip != NULL);
+> -
+> -	tp->t_flags |= XFS_TRANS_DIRTY;
+> -	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> -}
+> -
+> -/*
+> - * This is called to mark bytes first through last inclusive of the given
+> - * buffer as needing to be logged when the transaction is committed.
+> - * The buffer must already be associated with the given transaction.
+> - *
+> - * First and last are numbers relative to the beginning of this buffer,
+> - * so the first byte in the buffer is numbered 0 regardless of the
+> - * value of b_blkno.
+> - */
+> -void
+> -libxfs_trans_log_buf(
+> -	struct xfs_trans	*tp,
+> -	struct xfs_buf		*bp,
+> -	uint			first,
+> -	uint			last)
+> -{
+> -	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> -
+> -	ASSERT((first <= last) && (last < bp->b_bcount));
+> -
+> -	xfs_trans_dirty_buf(tp, bp);
+> -	xfs_buf_item_log(bip, first, last);
+> -}
+> -
+> -/*
+> - * For userspace, ordered buffers just need to be marked dirty so
+> - * the transaction commit will write them and mark them up-to-date.
+> - * In essence, they are just like any other logged buffer in userspace.
+> - *
+> - * If the buffer is already dirty, trigger the "already logged" return condition.
+> - */
+> -bool
+> -libxfs_trans_ordered_buf(
+> -	struct xfs_trans	*tp,
+> -	struct xfs_buf		*bp)
+> -{
+> -	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> -	bool			ret;
+> -
+> -	ret = test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> -	libxfs_trans_log_buf(tp, bp, 0, bp->b_bcount);
+> -	return ret;
+> -}
+> -
+>  static void
+>  xfs_buf_item_put(
+>  	struct xfs_buf_log_item	*bip)
+> @@ -414,63 +340,7 @@ xfs_buf_item_put(
+>  	kmem_zone_free(xfs_buf_item_zone, bip);
+>  }
+>  
+> -void
+> -libxfs_trans_brelse(
+> -	xfs_trans_t		*tp,
+> -	xfs_buf_t		*bp)
+> -{
+> -	xfs_buf_log_item_t	*bip;
+> -
+> -	if (tp == NULL) {
+> -		ASSERT(bp->b_transp == NULL);
+> -		libxfs_putbuf(bp);
+> -		return;
+> -	}
+> -
+> -	trace_xfs_trans_brelse(bip);
+> -	ASSERT(bp->b_transp == tp);
+> -	bip = bp->b_log_item;
+> -	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+> -	if (bip->bli_recur > 0) {
+> -		bip->bli_recur--;
+> -		return;
+> -	}
+> -	/* If dirty/stale, can't release till transaction committed */
+> -	if (bip->bli_flags & XFS_BLI_STALE)
+> -		return;
+> -	if (test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags))
+> -		return;
+> -	xfs_trans_del_item(&bip->bli_item);
+> -	if (bip->bli_flags & XFS_BLI_HOLD)
+> -		bip->bli_flags &= ~XFS_BLI_HOLD;
+> -	xfs_buf_item_put(bip);
+> -	bp->b_transp = NULL;
+> -	libxfs_putbuf(bp);
+> -}
+> -
+> -void
+> -libxfs_trans_binval(
+> -	xfs_trans_t		*tp,
+> -	xfs_buf_t		*bp)
+> -{
+> -	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> -
+> -	ASSERT(bp->b_transp == tp);
+> -	ASSERT(bip != NULL);
+> -
+> -	trace_xfs_trans_binval(bip);
+> -
+> -	if (bip->bli_flags & XFS_BLI_STALE)
+> -		return;
+> -	XFS_BUF_UNDELAYWRITE(bp);
+> -	xfs_buf_stale(bp);
+> -	bip->bli_flags |= XFS_BLI_STALE;
+> -	bip->bli_flags &= ~XFS_BLI_DIRTY;
+> -	bip->__bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
+> -	bip->__bli_format.blf_flags |= XFS_BLF_CANCEL;
+> -	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> -	tp->t_flags |= XFS_TRANS_DIRTY;
+> -}
+> +/* from xfs_trans_buf.c */
+>  
+>  /*
+>   * Add the locked buffer to the transaction.
+> @@ -519,20 +389,6 @@ libxfs_trans_bjoin(
+>  	trace_xfs_trans_bjoin(bp->b_log_item);
+>  }
+>  
+> -void
+> -libxfs_trans_bhold(
+> -	xfs_trans_t		*tp,
+> -	xfs_buf_t		*bp)
+> -{
+> -	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> -
+> -	ASSERT(bp->b_transp == tp);
+> -	ASSERT(bip != NULL);
+> -
+> -	bip->bli_flags |= XFS_BLI_HOLD;
+> -	trace_xfs_trans_bhold(bip);
+> -}
+> -
+>  xfs_buf_t *
+>  libxfs_trans_get_buf_map(
+>  	xfs_trans_t		*tp,
+> @@ -651,6 +507,160 @@ out_relse:
+>  	return error;
+>  }
+>  
+> +void
+> +libxfs_trans_brelse(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+> +{
+> +	xfs_buf_log_item_t	*bip;
+> +
+> +	if (tp == NULL) {
+> +		ASSERT(bp->b_transp == NULL);
+> +		libxfs_putbuf(bp);
+> +		return;
+> +	}
+> +
+> +	trace_xfs_trans_brelse(bip);
+> +	ASSERT(bp->b_transp == tp);
+> +	bip = bp->b_log_item;
+> +	ASSERT(bip->bli_item.li_type == XFS_LI_BUF);
+> +	if (bip->bli_recur > 0) {
+> +		bip->bli_recur--;
+> +		return;
+> +	}
+> +	/* If dirty/stale, can't release till transaction committed */
+> +	if (bip->bli_flags & XFS_BLI_STALE)
+> +		return;
+> +	if (test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags))
+> +		return;
+> +	xfs_trans_del_item(&bip->bli_item);
+> +	if (bip->bli_flags & XFS_BLI_HOLD)
+> +		bip->bli_flags &= ~XFS_BLI_HOLD;
+> +	xfs_buf_item_put(bip);
+> +	bp->b_transp = NULL;
+> +	libxfs_putbuf(bp);
+> +}
+> +
+> +/*
+> + * Mark the buffer as not needing to be unlocked when the buf item's
+> + * iop_unlock() routine is called.  The buffer must already be locked
+> + * and associated with the given transaction.
+> + */
+> +/* ARGSUSED */
+> +void
+> +libxfs_trans_bhold(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+> +{
+> +	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> +
+> +	ASSERT(bp->b_transp == tp);
+> +	ASSERT(bip != NULL);
+> +
+> +	bip->bli_flags |= XFS_BLI_HOLD;
+> +	trace_xfs_trans_bhold(bip);
+> +}
+> +
+> +/*
+> + * Mark a buffer dirty in the transaction.
+> + */
+> +void
+> +libxfs_trans_dirty_buf(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> +
+> +	ASSERT(bp->b_transp == tp);
+> +	ASSERT(bip != NULL);
+> +
+> +	tp->t_flags |= XFS_TRANS_DIRTY;
+> +	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> +}
+> +
+> +/*
+> + * This is called to mark bytes first through last inclusive of the given
+> + * buffer as needing to be logged when the transaction is committed.
+> + * The buffer must already be associated with the given transaction.
+> + *
+> + * First and last are numbers relative to the beginning of this buffer,
+> + * so the first byte in the buffer is numbered 0 regardless of the
+> + * value of b_blkno.
+> + */
+> +void
+> +libxfs_trans_log_buf(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp,
+> +	uint			first,
+> +	uint			last)
+> +{
+> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> +
+> +	ASSERT((first <= last) && (last < bp->b_bcount));
+> +
+> +	xfs_trans_dirty_buf(tp, bp);
+> +	xfs_buf_item_log(bip, first, last);
+> +}
+> +
+> +void
+> +libxfs_trans_binval(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+> +{
+> +	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> +
+> +	ASSERT(bp->b_transp == tp);
+> +	ASSERT(bip != NULL);
+> +
+> +	trace_xfs_trans_binval(bip);
+> +
+> +	if (bip->bli_flags & XFS_BLI_STALE)
+> +		return;
+> +	XFS_BUF_UNDELAYWRITE(bp);
+> +	xfs_buf_stale(bp);
+> +	bip->bli_flags |= XFS_BLI_STALE;
+> +	bip->bli_flags &= ~XFS_BLI_DIRTY;
+> +	bip->__bli_format.blf_flags &= ~XFS_BLF_INODE_BUF;
+> +	bip->__bli_format.blf_flags |= XFS_BLF_CANCEL;
+> +	set_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> +	tp->t_flags |= XFS_TRANS_DIRTY;
+> +}
+> +
+> +void
+> +libxfs_trans_inode_alloc_buf(
+> +	xfs_trans_t		*tp,
+> +	xfs_buf_t		*bp)
+> +{
+> +	xfs_buf_log_item_t	*bip = bp->b_log_item;
+> +
+> +	ASSERT(bp->b_transp == tp);
+> +	ASSERT(bip != NULL);
+> +	bip->bli_flags |= XFS_BLI_INODE_ALLOC_BUF;
+> +	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_DINO_BUF);
+> +}
+> +
+> +/*
+> + * For userspace, ordered buffers just need to be marked dirty so
+> + * the transaction commit will write them and mark them up-to-date.
+> + * In essence, they are just like any other logged buffer in userspace.
+> + *
+> + * If the buffer is already dirty, trigger the "already logged" return condition.
+> + */
+> +bool
+> +libxfs_trans_ordered_buf(
+> +	struct xfs_trans	*tp,
+> +	struct xfs_buf		*bp)
+> +{
+> +	struct xfs_buf_log_item	*bip = bp->b_log_item;
+> +	bool			ret;
+> +
+> +	ret = test_bit(XFS_LI_DIRTY, &bip->bli_item.li_flags);
+> +	libxfs_trans_log_buf(tp, bp, 0, bp->b_bcount);
+> +	return ret;
+> +}
+> +
+> +/* end of xfs_trans_buf.c */
+> +
+>  /*
+>   * Record the indicated change to the given field for application
+>   * to the file system's superblock when the transaction commits.
+> 
 
-This V2 patch changes this case from a generic case to a xfs only case, due to
-ext4 has different behavior.
-
-V1 history:
-https://marc.info/?l=linux-xfs&m=156048436902910&w=2
-
-Thanks,
-Zorro
-
- tests/xfs/509     | 72 +++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/509.out |  3 ++
- tests/xfs/group   |  1 +
- 3 files changed, 76 insertions(+)
- create mode 100755 tests/xfs/509
- create mode 100644 tests/xfs/509.out
-
-diff --git a/tests/xfs/509 b/tests/xfs/509
-new file mode 100755
-index 00000000..d2e40bf3
---- /dev/null
-+++ b/tests/xfs/509
-@@ -0,0 +1,72 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-+#
-+# FS QA Test No. 509
-+#
-+# Test statfs when project quota is set.
-+# Uncover de7243057 fs/xfs: fix f_ffree value for statfs when project quota is set
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	_scratch_unmount
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/quota
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_scratch
-+_require_xfs_quota
-+
-+_scratch_mkfs >/dev/null 2>&1
-+_scratch_enable_pquota
-+_qmount_option "prjquota"
-+_qmount
-+_require_prjquota $SCRATCH_DEV
-+
-+# Create a directory to be project object, and create a file to take 64k space
-+mkdir $SCRATCH_MNT/t
-+$XFS_IO_PROG -f -c "pwrite 0 65536" -c sync $SCRATCH_MNT/t/file >>$seqres.full
-+
-+# Setup temporary replacements for /etc/projects and /etc/projid
-+cat >$tmp.projects <<EOF
-+42:$SCRATCH_MNT/t
-+EOF
-+
-+cat >$tmp.projid <<EOF
-+answer:42
-+EOF
-+
-+quota_cmd="$XFS_QUOTA_PROG -D $tmp.projects -P $tmp.projid"
-+$quota_cmd -x -c 'project -s answer' $SCRATCH_MNT >/dev/null 2>&1
-+$quota_cmd -x -c 'limit -p isoft=53 bsoft=100m answer' $SCRATCH_MNT
-+
-+# The itotal and size should be 53 and 102400(k), as above project quota limit.
-+# The isued and used should be 2 and 64(k), as this case takes. But ext4 always
-+# shows more 4k 'used' space than XFS, it prints 68k at here. So filter the
-+# 6[48] at the end.
-+df -k --output=file,itotal,iused,size,used $SCRATCH_MNT/t | \
-+	_filter_scratch | _filter_spaces
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/509.out b/tests/xfs/509.out
-new file mode 100644
-index 00000000..418b2dd7
---- /dev/null
-+++ b/tests/xfs/509.out
-@@ -0,0 +1,3 @@
-+QA output created by 509
-+File Inodes IUsed 1K-blocks Used
-+SCRATCH_MNT/t 53 2 102400 64
-diff --git a/tests/xfs/group b/tests/xfs/group
-index 270d82ff..364a7ed5 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -506,3 +506,4 @@
- 506 auto quick health
- 507 clone
- 508 auto quick quota
-+509 auto quick quota
 -- 
-2.17.2
+Carlos
