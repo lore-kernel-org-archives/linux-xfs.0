@@ -1,24 +1,142 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:50624 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725799AbfGQFFw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jul 2019 01:05:52 -0400
-Date: Tue, 16 Jul 2019 22:05:51 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 9/9] iomap: move internal declarations into fs/iomap/
-Message-ID: <20190717050551.GI7113@infradead.org>
-References: <156321356040.148361.7463881761568794395.stgit@magnolia>
- <156321361878.148361.6616574884425585291.stgit@magnolia>
+Received: from aserp2120.oracle.com ([141.146.126.78]:45336 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726796AbfGQGAK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jul 2019 02:00:10 -0400
+Subject: [PATCH 8/8] iomap: move internal declarations into fs/iomap/
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 16 Jul 2019 22:59:48 -0700
+Message-ID: <156334318826.360395.9686513875631453909.stgit@magnolia>
+In-Reply-To: <156334313527.360395.511547592522547578.stgit@magnolia>
+References: <156334313527.360395.511547592522547578.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156321361878.148361.6616574884425585291.stgit@magnolia>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, agruenba@redhat.com
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, agruenba@redhat.com
 
-Looks good,
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Move internal function declarations out of fs/internal.h into
+include/linux/iomap.h so that our transition is complete.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/dax.c              |    1 -
+ fs/internal.h         |   10 ----------
+ fs/iomap/apply.c      |    2 --
+ fs/iomap/fiemap.c     |    2 --
+ fs/iomap/seek.c       |    2 --
+ fs/iomap/swapfile.c   |    2 --
+ include/linux/iomap.h |   10 ++++++++++
+ 7 files changed, 10 insertions(+), 19 deletions(-)
+
+
+diff --git a/fs/dax.c b/fs/dax.c
+index fe5e33810cd4..cb53f9bd6fd7 100644
+--- a/fs/dax.c
++++ b/fs/dax.c
+@@ -26,7 +26,6 @@
+ #include <linux/mmu_notifier.h>
+ #include <linux/iomap.h>
+ #include <asm/pgalloc.h>
+-#include "internal.h"
+ 
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/fs_dax.h>
+diff --git a/fs/internal.h b/fs/internal.h
+index 2f3c3de51fad..2b0bebd67904 100644
+--- a/fs/internal.h
++++ b/fs/internal.h
+@@ -182,15 +182,5 @@ extern const struct dentry_operations ns_dentry_operations;
+ extern int do_vfs_ioctl(struct file *file, unsigned int fd, unsigned int cmd,
+ 		    unsigned long arg);
+ 
+-/*
+- * iomap support:
+- */
+-typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+-		void *data, struct iomap *iomap);
+-
+-loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+-		unsigned flags, const struct iomap_ops *ops, void *data,
+-		iomap_actor_t actor);
+-
+ /* direct-io.c: */
+ int sb_init_dio_done_wq(struct super_block *sb);
+diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+index 9f956cf23867..54c02aecf3cd 100644
+--- a/fs/iomap/apply.c
++++ b/fs/iomap/apply.c
+@@ -8,8 +8,6 @@
+ #include <linux/fs.h>
+ #include <linux/iomap.h>
+ 
+-#include "../internal.h"
+-
+ /*
+  * Execute a iomap write on a segment of the mapping that spans a
+  * contiguous range of pages that have identical block mapping state.
+diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+index 1fc88ec1584d..f26fdd36e383 100644
+--- a/fs/iomap/fiemap.c
++++ b/fs/iomap/fiemap.c
+@@ -7,8 +7,6 @@
+ #include <linux/fs.h>
+ #include <linux/iomap.h>
+ 
+-#include "../internal.h"
+-
+ struct fiemap_ctx {
+ 	struct fiemap_extent_info *fi;
+ 	struct iomap prev;
+diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+index 342b6d8ede67..ece71fd3519a 100644
+--- a/fs/iomap/seek.c
++++ b/fs/iomap/seek.c
+@@ -10,8 +10,6 @@
+ #include <linux/pagemap.h>
+ #include <linux/pagevec.h>
+ 
+-#include "../internal.h"
+-
+ /*
+  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
+  * Returns true if found and updates @lastoff to the offset in file.
+diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+index b79c33631263..152a230f668d 100644
+--- a/fs/iomap/swapfile.c
++++ b/fs/iomap/swapfile.c
+@@ -9,8 +9,6 @@
+ #include <linux/iomap.h>
+ #include <linux/swap.h>
+ 
+-#include "../internal.h"
+-
+ /* Swapfile activation */
+ 
+ struct iomap_swapfile_info {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index baa1e2d31f05..bc499ceae392 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -122,6 +122,16 @@ struct iomap_ops {
+ 			ssize_t written, unsigned flags, struct iomap *iomap);
+ };
+ 
++/*
++ * Main iomap iterator function.
++ */
++typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
++		void *data, struct iomap *iomap);
++
++loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
++		unsigned flags, const struct iomap_ops *ops, void *data,
++		iomap_actor_t actor);
++
+ /*
+  * Structure allocate for each page when block size < PAGE_SIZE to track
+  * sub-page uptodate status and I/O completions.
