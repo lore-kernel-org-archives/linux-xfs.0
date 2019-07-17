@@ -1,28 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:35993 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730641AbfGOW1k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jul 2019 18:27:40 -0400
-Date: Mon, 15 Jul 2019 23:27:31 +0100
-From: Sheriff Esseson <sheriffesseson@gmail.com>
-Subject: Re: [PATCH v8] Documentation: filesystem: Convert xfs.txt to ReST
-Message-ID: <20190715222727.GA27635@sheriff-Aspire-5735>
-References: <20190714125831.GA19200@localhost>
+Received: from aserp2120.oracle.com ([141.146.126.78]:44522 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725890AbfGQF7T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jul 2019 01:59:19 -0400
+Subject: [PATCH 1/8] iomap: start moving code to fs/iomap/
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 16 Jul 2019 22:59:01 -0700
+Message-ID: <156334314167.360395.8240505366577542787.stgit@magnolia>
+In-Reply-To: <156334313527.360395.511547592522547578.stgit@magnolia>
+References: <156334313527.360395.511547592522547578.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190714125831.GA19200@localhost>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: skhan@linuxfoundation.org, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linuxfoundation.org
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, agruenba@redhat.com
 
-On Sun, Jul 14, 2019 at 01:58:31PM +0100, Sheriff Esseson wrote:
-> Move xfs.txt to admin-guide, convert xfs.txt to ReST and broken references
-> 
-> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
->Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Create the build infrastructure we need to start migrating iomap code to
+fs/iomap/ from fs/iomap.c.
 
-Sorry, I missed something. Will fix in v9.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ MAINTAINERS       |    1 +
+ fs/Makefile       |    1 +
+ fs/iomap/Makefile |    5 +++++
+ 3 files changed, 7 insertions(+)
+ create mode 100644 fs/iomap/Makefile
+
+
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f5533d1bda2e..1086ac7b0f05 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8362,6 +8362,7 @@ L:	linux-fsdevel@vger.kernel.org
+ T:	git git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+ S:	Supported
+ F:	fs/iomap.c
++F:	fs/iomap/
+ F:	include/linux/iomap.h
+ 
+ IOMMU DRIVERS
+diff --git a/fs/Makefile b/fs/Makefile
+index c9aea23aba56..8e61bdf9f330 100644
+--- a/fs/Makefile
++++ b/fs/Makefile
+@@ -53,6 +53,7 @@ obj-$(CONFIG_SYSCTL)		+= drop_caches.o
+ 
+ obj-$(CONFIG_FHANDLE)		+= fhandle.o
+ obj-$(CONFIG_FS_IOMAP)		+= iomap.o
++obj-y				+= iomap/
+ 
+ obj-y				+= quota/
+ 
+diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
+new file mode 100644
+index 000000000000..de5a1f914b2c
+--- /dev/null
++++ b/fs/iomap/Makefile
+@@ -0,0 +1,5 @@
++# SPDX-License-Identifier: GPL-2.0-or-newer
++#
++# Copyright (c) 2019 Oracle.
++# All Rights Reserved.
++#
