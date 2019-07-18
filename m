@@ -1,91 +1,106 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:40993 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728502AbfGSTah (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jul 2019 15:30:37 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:39194 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728524AbfGRXGd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:33 -0400
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH] xfs: don't trip over uninitialized buffer on extent read of corrupted inode
-Date: Fri, 19 Jul 2019 19:30:32 +0000
-Message-Id: <20190719193032.11096-1-mcgrof@kernel.org>
-In-Reply-To: <20190718230617.7439-1-mcgrof>
-References: <20190718230617.7439-1-mcgrof>
+Subject: [PATCH 8/9] xfs: serialize unaligned dio writes against all other dio writes
+Date: Thu, 18 Jul 2019 23:06:16 +0000
+Message-Id: <20190718230617.7439-9-mcgrof@kernel.org>
+In-Reply-To: <20190718230617.7439-1-mcgrof@kernel.org>
+References: <20190718230617.7439-1-mcgrof@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
+Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, Brian Foster <bfoster@redhat.com>, Allison Henderson <allison.henderson@oracle.com>, Dave Chinner <dchinner@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
 
 From: Brian Foster <bfoster@redhat.com>
 
-commit 6958d11f77d45db80f7e22a21a74d4d5f44dc667 upstream.
+commit 2032a8a27b5cc0f578d37fa16fa2494b80a0d00a upstream.
 
-We've had rather rare reports of bmap btree block corruption where
-the bmap root block has a level count of zero. The root cause of the
-corruption is so far unknown. We do have verifier checks to detect
-this form of on-disk corruption, but this doesn't cover a memory
-corruption variant of the problem. The latter is a reasonable
-possibility because the root block is part of the inode fork and can
-reside in-core for some time before inode extents are read.
-
-If this occurs, it leads to a system crash such as the following:
-
- BUG: unable to handle kernel paging request at ffffffff00000221
- PF error: [normal kernel read fault]
- ...
- RIP: 0010:xfs_trans_brelse+0xf/0x200 [xfs]
- ...
- Call Trace:
-  xfs_iread_extents+0x379/0x540 [xfs]
-  xfs_file_iomap_begin_delay+0x11a/0xb40 [xfs]
-  ? xfs_attr_get+0xd1/0x120 [xfs]
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  xfs_file_iomap_begin+0x4c4/0x6d0 [xfs]
-  ? __vfs_getxattr+0x53/0x70
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  iomap_apply+0x63/0x130
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  iomap_file_buffered_write+0x62/0x90
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  xfs_file_buffered_aio_write+0xe4/0x3b0 [xfs]
-  __vfs_write+0x150/0x1b0
-  vfs_write+0xba/0x1c0
-  ksys_pwrite64+0x64/0xa0
-  do_syscall_64+0x5a/0x1d0
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-The crash occurs because xfs_iread_extents() attempts to release an
-uninitialized buffer pointer as the level == 0 value prevented the
-buffer from ever being allocated or read. Change the level > 0
-assert to an explicit error check in xfs_iread_extents() to avoid
-crashing the kernel in the event of localized, in-core inode
+XFS applies more strict serialization constraints to unaligned
+direct writes to accommodate things like direct I/O layer zeroing,
+unwritten extent conversion, etc. Unaligned submissions acquire the
+exclusive iolock and wait for in-flight dio to complete to ensure
+multiple submissions do not race on the same block and cause data
 corruption.
 
+This generally works in the case of an aligned dio followed by an
+unaligned dio, but the serialization is lost if I/Os occur in the
+opposite order. If an unaligned write is submitted first and
+immediately followed by an overlapping, aligned write, the latter
+submits without the typical unaligned serialization barriers because
+there is no indication of an unaligned dio still in-flight. This can
+lead to unpredictable results.
+
+To provide proper unaligned dio serialization, require that such
+direct writes are always the only dio allowed in-flight at one time
+for a particular inode. We already acquire the exclusive iolock and
+drain pending dio before submitting the unaligned dio. Wait once
+more after the dio submission to hold the iolock across the I/O and
+prevent further submissions until the unaligned I/O completes. This
+is heavy handed, but consistent with the current pre-submission
+serialization for unaligned direct writes.
+
 Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-[mcgrof: fixes kz#204223 ]
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_file.c | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3a496ffe6551..ab2465bc413a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1178,7 +1178,10 @@ xfs_iread_extents(
- 	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 61a5ad2600e8..10f75965243c 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -529,18 +529,17 @@ xfs_file_dio_aio_write(
+ 	count = iov_iter_count(from);
+ 
+ 	/*
+-	 * If we are doing unaligned IO, wait for all other IO to drain,
+-	 * otherwise demote the lock if we had to take the exclusive lock
+-	 * for other reasons in xfs_file_aio_write_checks.
++	 * If we are doing unaligned IO, we can't allow any other overlapping IO
++	 * in-flight at the same time or we risk data corruption. Wait for all
++	 * other IO to drain before we submit. If the IO is aligned, demote the
++	 * iolock if we had to take the exclusive lock in
++	 * xfs_file_aio_write_checks() for other reasons.
  	 */
- 	level = be16_to_cpu(block->bb_level);
--	ASSERT(level > 0);
-+	if (unlikely(level == 0)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-+		return -EFSCORRUPTED;
-+	}
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
- 	bno = be64_to_cpu(*pp);
+ 	if (unaligned_io) {
+-		/* If we are going to wait for other DIO to finish, bail */
+-		if (iocb->ki_flags & IOCB_NOWAIT) {
+-			if (atomic_read(&inode->i_dio_count))
+-				return -EAGAIN;
+-		} else {
+-			inode_dio_wait(inode);
+-		}
++		/* unaligned dio always waits, bail */
++		if (iocb->ki_flags & IOCB_NOWAIT)
++			return -EAGAIN;
++		inode_dio_wait(inode);
+ 	} else if (iolock == XFS_IOLOCK_EXCL) {
+ 		xfs_ilock_demote(ip, XFS_IOLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_SHARED;
+@@ -548,6 +547,14 @@ xfs_file_dio_aio_write(
+ 
+ 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
+ 	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
++
++	/*
++	 * If unaligned, this is the only IO in-flight. If it has not yet
++	 * completed, wait on it before we release the iolock to prevent
++	 * subsequent overlapping IO.
++	 */
++	if (ret == -EIOCBQUEUED && unaligned_io)
++		inode_dio_wait(inode);
+ out:
+ 	xfs_iunlock(ip, iolock);
  
 -- 
-2.18.0
+2.20.1
