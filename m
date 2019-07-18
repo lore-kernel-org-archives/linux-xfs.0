@@ -1,63 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:49814 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730888AbfGPADT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 15 Jul 2019 20:03:19 -0400
-Date: Mon, 15 Jul 2019 17:03:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfs: sync up xfs_trans_inode with userspace
-Message-ID: <20190716000303.GD6147@magnolia>
-References: <68ef2df9-3f8e-6547-4e2b-181bce30ca3c@redhat.com>
- <112d2e52-c96c-af83-7e53-5fca12448c76@redhat.com>
- <20190715222209.GN7689@dread.disaster.area>
+Received: from mail-lj1-f196.google.com ([209.85.208.196]:44702 "EHLO
+        mail-lj1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728129AbfGRSTs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 14:19:48 -0400
+Received: by mail-lj1-f196.google.com with SMTP id k18so28281573ljc.11
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jul 2019 11:19:47 -0700 (PDT)
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com. [209.85.167.51])
+        by smtp.gmail.com with ESMTPSA id r68sm4105691lff.52.2019.07.18.11.19.44
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Thu, 18 Jul 2019 11:19:45 -0700 (PDT)
+Received: by mail-lf1-f51.google.com with SMTP id x3so19980200lfc.0
+        for <linux-xfs@vger.kernel.org>; Thu, 18 Jul 2019 11:19:44 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190715222209.GN7689@dread.disaster.area>
+References: <20190718161824.GE7093@magnolia>
+In-Reply-To: <20190718161824.GE7093@magnolia>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 18 Jul 2019 11:19:28 -0700
+Message-ID: <CAHk-=whewBiKzpsO73Y38SAPSktxD6gUuEr2ANC8Z_3JPiqk3w@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: cleanups for 5.3
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Eric Sandeen <sandeen@redhat.com>, linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>
 
-On Tue, Jul 16, 2019 at 08:22:09AM +1000, Dave Chinner wrote:
-> On Fri, Jul 12, 2019 at 12:46:17PM -0500, Eric Sandeen wrote:
-> > Add an XFS_ICHGTIME_CREATE case to xfs_trans_ichgtime() to keep in
-> > sync with userspace.  (Currently no kernel caller sends this flag.)
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> > ---
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_trans_inode.c b/fs/xfs/libxfs/xfs_trans_inode.c
-> > index 93d14e47269d..a9ad90926b87 100644
-> > --- a/fs/xfs/libxfs/xfs_trans_inode.c
-> > +++ b/fs/xfs/libxfs/xfs_trans_inode.c
-> > @@ -66,6 +66,10 @@ xfs_trans_ichgtime(
-> >  		inode->i_mtime = tv;
-> >  	if (flags & XFS_ICHGTIME_CHG)
-> >  		inode->i_ctime = tv;
-> > +	if (flags & XFS_ICHGTIME_CREATE) {
-> > +		ip->i_d.di_crtime.t_sec = (int32_t)tv.tv_sec;
-> > +		ip->i_d.di_crtime.t_nsec = (int32_t)tv.tv_nsec;
-> > +	}
-> 
-> Please use the same format as the rest of the function. i.e.
-> 
-> 	if (flags & XFS_ICHGTIME_CREATE)
-> 		ip->i_d.di_crtime = tv;
-> 
-> And convert userspace over to the same :P
+On Thu, Jul 18, 2019 at 9:18 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> Please let me know if you run into anything weird, I promise I drank two
+> cups of coffee this time around. :)
 
-How about promoting crtime to struct inode while we're at it?
+Apparently two cups is just the right amount.
 
-(That said I think Eric was going for the quick resync now to keep
-kernel libxfs in sync with xfsprogs libxfs...)
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+                 Linus
