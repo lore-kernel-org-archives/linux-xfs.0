@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:35141 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391508AbfGRXGX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:23 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42931 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728524AbfGRXGY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:24 -0400
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 3/9] xfs: don't overflow xattr listent buffer
-Date: Thu, 18 Jul 2019 23:06:11 +0000
-Message-Id: <20190718230617.7439-4-mcgrof@kernel.org>
+Subject: [PATCH 4/9] xfs: rename m_inotbt_nores to m_finobt_nores
+Date: Thu, 18 Jul 2019 23:06:12 +0000
+Message-Id: <20190718230617.7439-5-mcgrof@kernel.org>
 In-Reply-To: <20190718230617.7439-1-mcgrof@kernel.org>
 References: <20190718230617.7439-1-mcgrof@kernel.org>
 MIME-Version: 1.0
@@ -15,78 +15,88 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Luis Chamberlain <mcgrof@kernel.org>
+Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>, Luis Chamberlain <mcgrof@kernel.org>
 
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-commit 3b50086f0c0d78c144d9483fa292c1509c931b70 upstream.
+commit e1f6ca11381588e3ef138c10de60eeb34cb8466a upstream.
 
-For VFS listxattr calls, xfs_xattr_put_listent calls
-__xfs_xattr_put_listent twice if it sees an attribute
-"trusted.SGI_ACL_FILE": once for that name, and again for
-"system.posix_acl_access".  Unfortunately, if we happen to run out of
-buffer space while emitting the first name, we set count to -1 (so that
-we can feed ERANGE to the caller).  The second invocation doesn't check that
-the context parameters make sense and overwrites the byte before the
-buffer, triggering a KASAN report:
-
-==================================================================
-BUG: KASAN: slab-out-of-bounds in strncpy+0xb3/0xd0
-Write of size 1 at addr ffff88807fbd317f by task syz/1113
-
-CPU: 3 PID: 1113 Comm: syz Not tainted 5.0.0-rc6-xfsx #rc6
-Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1 04/01/2014
-Call Trace:
- dump_stack+0xcc/0x180
- print_address_description+0x6c/0x23c
- kasan_report.cold.3+0x1c/0x35
- strncpy+0xb3/0xd0
- __xfs_xattr_put_listent+0x1a9/0x2c0 [xfs]
- xfs_attr_list_int_ilocked+0x11af/0x1800 [xfs]
- xfs_attr_list_int+0x20c/0x2e0 [xfs]
- xfs_vn_listxattr+0x225/0x320 [xfs]
- listxattr+0x11f/0x1b0
- path_listxattr+0xbd/0x130
- do_syscall_64+0x139/0x560
-
-While we're at it we add an assert to the other put_listent to avoid
-this sort of thing ever happening to the attrlist_by_handle code.
+Rename this flag variable to imply more strongly that it's related to
+the free inode btree (finobt) operation.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 Suggested-by: Amir Goldstein <amir73il@gmail.com>
 Reviewed-by: Amir Goldstein <amir73il@gmail.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/xfs_attr_list.c | 1 +
- fs/xfs/xfs_xattr.c     | 3 +++
- 2 files changed, 4 insertions(+)
+ fs/xfs/libxfs/xfs_ag_resv.c      | 2 +-
+ fs/xfs/libxfs/xfs_ialloc_btree.c | 4 ++--
+ fs/xfs/xfs_inode.c               | 2 +-
+ fs/xfs/xfs_mount.h               | 2 +-
+ 4 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index a58034049995..3d213a7394c5 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -555,6 +555,7 @@ xfs_attr_put_listent(
- 	attrlist_ent_t *aep;
- 	int arraytop;
+diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
+index e701ebc36c06..e2ba2a3b63b2 100644
+--- a/fs/xfs/libxfs/xfs_ag_resv.c
++++ b/fs/xfs/libxfs/xfs_ag_resv.c
+@@ -281,7 +281,7 @@ xfs_ag_resv_init(
+ 			 */
+ 			ask = used = 0;
  
-+	ASSERT(!context->seen_enough);
- 	ASSERT(!(context->flags & ATTR_KERNOVAL));
- 	ASSERT(context->count >= 0);
- 	ASSERT(context->count < (ATTR_MAX_VALUELEN/8));
-diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-index 63ee1d5bf1d7..9a63016009a1 100644
---- a/fs/xfs/xfs_xattr.c
-+++ b/fs/xfs/xfs_xattr.c
-@@ -129,6 +129,9 @@ __xfs_xattr_put_listent(
- 	char *offset;
- 	int arraytop;
+-			mp->m_inotbt_nores = true;
++			mp->m_finobt_nores = true;
  
-+	if (context->count < 0 || context->seen_enough)
-+		return;
-+
- 	if (!context->alist)
- 		goto compute_size;
- 
+ 			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
+ 					&used);
+diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
+index 86c50208a143..adb2f6df5a11 100644
+--- a/fs/xfs/libxfs/xfs_ialloc_btree.c
++++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
+@@ -124,7 +124,7 @@ xfs_finobt_alloc_block(
+ 	union xfs_btree_ptr	*new,
+ 	int			*stat)
+ {
+-	if (cur->bc_mp->m_inotbt_nores)
++	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_alloc_block(cur, start, new, stat);
+ 	return __xfs_inobt_alloc_block(cur, start, new, stat,
+ 			XFS_AG_RESV_METADATA);
+@@ -157,7 +157,7 @@ xfs_finobt_free_block(
+ 	struct xfs_btree_cur	*cur,
+ 	struct xfs_buf		*bp)
+ {
+-	if (cur->bc_mp->m_inotbt_nores)
++	if (cur->bc_mp->m_finobt_nores)
+ 		return xfs_inobt_free_block(cur, bp);
+ 	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
+ }
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 05db9540e459..ae07baa7bdbf 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -1754,7 +1754,7 @@ xfs_inactive_ifree(
+ 	 * now remains allocated and sits on the unlinked list until the fs is
+ 	 * repaired.
+ 	 */
+-	if (unlikely(mp->m_inotbt_nores)) {
++	if (unlikely(mp->m_finobt_nores)) {
+ 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
+ 				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
+ 				&tp);
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 7964513c3128..7e0bf952e087 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -127,7 +127,7 @@ typedef struct xfs_mount {
+ 	struct mutex		m_growlock;	/* growfs mutex */
+ 	int			m_fixedfsid[2];	/* unchanged for life of FS */
+ 	uint64_t		m_flags;	/* global mount flags */
+-	bool			m_inotbt_nores; /* no per-AG finobt resv. */
++	bool			m_finobt_nores; /* no per-AG finobt resv. */
+ 	int			m_ialloc_inos;	/* inodes in inode allocation */
+ 	int			m_ialloc_blks;	/* blocks in inode allocation */
+ 	int			m_ialloc_min_blks;/* min blocks in sparse inode
 -- 
 2.20.1
