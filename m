@@ -1,101 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:53446 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388475AbfGWPLR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jul 2019 11:11:17 -0400
-Date: Tue, 23 Jul 2019 08:11:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: Do not free xfs_extent_busy from inside a spinlock
-Message-ID: <20190723151102.GA1561054@magnolia>
-References: <20190723150017.31891-1-cmaiolino@redhat.com>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:35141 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391508AbfGRXGX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:23 -0400
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH 3/9] xfs: don't overflow xattr listent buffer
+Date: Thu, 18 Jul 2019 23:06:11 +0000
+Message-Id: <20190718230617.7439-4-mcgrof@kernel.org>
+In-Reply-To: <20190718230617.7439-1-mcgrof@kernel.org>
+References: <20190718230617.7439-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190723150017.31891-1-cmaiolino@redhat.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
+Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Luis Chamberlain <mcgrof@kernel.org>
 
-On Tue, Jul 23, 2019 at 05:00:17PM +0200, Carlos Maiolino wrote:
-> xfs_extent_busy_clear_one() calls kmem_free() with the pag spinlock
-> locked.
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
 
-Er, what problem does this solve?  Does holding on to the pag spinlock
-too long while memory freeing causes everything else to stall?  When is
-memory freeing slow enough to cause a noticeable impact?
+commit 3b50086f0c0d78c144d9483fa292c1509c931b70 upstream.
 
-> Fix this by adding a new temporary list, and, make
-> xfs_extent_busy_clear_one() to move the extent_busy items to this new
-> list, instead of freeing them.
-> 
-> Free the objects in the temporary list after we drop the pagb_lock
-> 
-> Reported-by: Jeff Layton <jlayton@kernel.org>
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
->  fs/xfs/xfs_extent_busy.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-> index 0ed68379e551..0a7dcf03340b 100644
-> --- a/fs/xfs/xfs_extent_busy.c
-> +++ b/fs/xfs/xfs_extent_busy.c
-> @@ -523,7 +523,8 @@ STATIC void
->  xfs_extent_busy_clear_one(
->  	struct xfs_mount	*mp,
->  	struct xfs_perag	*pag,
-> -	struct xfs_extent_busy	*busyp)
-> +	struct xfs_extent_busy	*busyp,
-> +	struct list_head	*list)
->  {
->  	if (busyp->length) {
->  		trace_xfs_extent_busy_clear(mp, busyp->agno, busyp->bno,
-> @@ -531,8 +532,7 @@ xfs_extent_busy_clear_one(
->  		rb_erase(&busyp->rb_node, &pag->pagb_tree);
->  	}
->  
-> -	list_del_init(&busyp->list);
-> -	kmem_free(busyp);
-> +	list_move(&busyp->list, list);
->  }
->  
->  static void
-> @@ -565,6 +565,7 @@ xfs_extent_busy_clear(
->  	struct xfs_perag	*pag = NULL;
->  	xfs_agnumber_t		agno = NULLAGNUMBER;
->  	bool			wakeup = false;
-> +	LIST_HEAD(busy_list);
->  
->  	list_for_each_entry_safe(busyp, n, list, list) {
->  		if (busyp->agno != agno) {
-> @@ -580,13 +581,18 @@ xfs_extent_busy_clear(
->  		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
->  			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
->  		} else {
-> -			xfs_extent_busy_clear_one(mp, pag, busyp);
-> +			xfs_extent_busy_clear_one(mp, pag, busyp, &busy_list);
+For VFS listxattr calls, xfs_xattr_put_listent calls
+__xfs_xattr_put_listent twice if it sees an attribute
+"trusted.SGI_ACL_FILE": once for that name, and again for
+"system.posix_acl_access".  Unfortunately, if we happen to run out of
+buffer space while emitting the first name, we set count to -1 (so that
+we can feed ERANGE to the caller).  The second invocation doesn't check that
+the context parameters make sense and overwrites the byte before the
+buffer, triggering a KASAN report:
 
-...and why not just put the busyp on the busy_list here so you don't
-have to pass the list_head pointer around?
+==================================================================
+BUG: KASAN: slab-out-of-bounds in strncpy+0xb3/0xd0
+Write of size 1 at addr ffff88807fbd317f by task syz/1113
 
---D
+CPU: 3 PID: 1113 Comm: syz Not tainted 5.0.0-rc6-xfsx #rc6
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.10.2-1ubuntu1 04/01/2014
+Call Trace:
+ dump_stack+0xcc/0x180
+ print_address_description+0x6c/0x23c
+ kasan_report.cold.3+0x1c/0x35
+ strncpy+0xb3/0xd0
+ __xfs_xattr_put_listent+0x1a9/0x2c0 [xfs]
+ xfs_attr_list_int_ilocked+0x11af/0x1800 [xfs]
+ xfs_attr_list_int+0x20c/0x2e0 [xfs]
+ xfs_vn_listxattr+0x225/0x320 [xfs]
+ listxattr+0x11f/0x1b0
+ path_listxattr+0xbd/0x130
+ do_syscall_64+0x139/0x560
 
->  			wakeup = true;
->  		}
->  	}
->  
->  	if (pag)
->  		xfs_extent_busy_put_pag(pag, wakeup);
-> +
-> +	list_for_each_entry_safe(busyp, n, &busy_list, list) {
-> +		list_del_init(&busyp->list);
-> +		kmem_free(busyp);
-> +	}
->  }
->  
->  /*
-> -- 
-> 2.20.1
-> 
+While we're at it we add an assert to the other put_listent to avoid
+this sort of thing ever happening to the attrlist_by_handle code.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Suggested-by: Amir Goldstein <amir73il@gmail.com>
+Reviewed-by: Amir Goldstein <amir73il@gmail.com>
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ fs/xfs/xfs_attr_list.c | 1 +
+ fs/xfs/xfs_xattr.c     | 3 +++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
+index a58034049995..3d213a7394c5 100644
+--- a/fs/xfs/xfs_attr_list.c
++++ b/fs/xfs/xfs_attr_list.c
+@@ -555,6 +555,7 @@ xfs_attr_put_listent(
+ 	attrlist_ent_t *aep;
+ 	int arraytop;
+ 
++	ASSERT(!context->seen_enough);
+ 	ASSERT(!(context->flags & ATTR_KERNOVAL));
+ 	ASSERT(context->count >= 0);
+ 	ASSERT(context->count < (ATTR_MAX_VALUELEN/8));
+diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+index 63ee1d5bf1d7..9a63016009a1 100644
+--- a/fs/xfs/xfs_xattr.c
++++ b/fs/xfs/xfs_xattr.c
+@@ -129,6 +129,9 @@ __xfs_xattr_put_listent(
+ 	char *offset;
+ 	int arraytop;
+ 
++	if (context->count < 0 || context->seen_enough)
++		return;
++
+ 	if (!context->alist)
+ 		goto compute_size;
+ 
+-- 
+2.20.1
