@@ -1,142 +1,45 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:45336 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726796AbfGQGAK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jul 2019 02:00:10 -0400
-Subject: [PATCH 8/8] iomap: move internal declarations into fs/iomap/
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 16 Jul 2019 22:59:48 -0700
-Message-ID: <156334318826.360395.9686513875631453909.stgit@magnolia>
-In-Reply-To: <156334313527.360395.511547592522547578.stgit@magnolia>
-References: <156334313527.360395.511547592522547578.stgit@magnolia>
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:45863 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390481AbfGRNDe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 09:03:34 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+References: <20190718125509.775525-1-arnd@arndb.de> <20190718125703.GA28332@lst.de>
+In-Reply-To: <20190718125703.GA28332@lst.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 18 Jul 2019 15:03:15 +0200
+Message-ID: <CAK8P3a2k3ddUD-b+OskpDfAkm6KGAGAOBabkXk3Uek1dShTiUA@mail.gmail.com>
+Subject: Re: [PATCH] iomap: hide iomap_sector with CONFIG_BLOCK=n
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, agruenba@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>, Hannes Reinecke <hare@suse.com>, Souptick Joarder <jrdr.linux@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Jani Nikula <jani.nikula@intel.com>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jul 18, 2019 at 2:57 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Thu, Jul 18, 2019 at 02:55:01PM +0200, Arnd Bergmann wrote:
+> > When CONFIG_BLOCK is disabled, SECTOR_SHIFT is unknown:
+> >
+> > In file included from <built-in>:3:
+> > include/linux/iomap.h:76:48: error: use of undeclared identifier 'SECTOR_SHIFT'
+> >         return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+> >
+> > Since there are no callers in this case, just hide the function in
+> > the same ifdef.
+> >
+> > Fixes: db074436f421 ("iomap: move the direct IO code into a separate file")
+> > Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+>
+> Can we just not include iomap.c when CONFIG_BLOCK is not set?
+> Which file do you see this with?
 
-Move internal function declarations out of fs/internal.h into
-include/linux/iomap.h so that our transition is complete.
+The inclusion comes from the recently added header check in commit
+c93a0368aaa2 ("kbuild: do not create wrappers for header-test-y").
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/dax.c              |    1 -
- fs/internal.h         |   10 ----------
- fs/iomap/apply.c      |    2 --
- fs/iomap/fiemap.c     |    2 --
- fs/iomap/seek.c       |    2 --
- fs/iomap/swapfile.c   |    2 --
- include/linux/iomap.h |   10 ++++++++++
- 7 files changed, 10 insertions(+), 19 deletions(-)
+This just tries to include every header by itself to see if there are build
+failures from missing indirect includes. We probably don't want to
+add an exception for iomap.h there.
 
-
-diff --git a/fs/dax.c b/fs/dax.c
-index fe5e33810cd4..cb53f9bd6fd7 100644
---- a/fs/dax.c
-+++ b/fs/dax.c
-@@ -26,7 +26,6 @@
- #include <linux/mmu_notifier.h>
- #include <linux/iomap.h>
- #include <asm/pgalloc.h>
--#include "internal.h"
- 
- #define CREATE_TRACE_POINTS
- #include <trace/events/fs_dax.h>
-diff --git a/fs/internal.h b/fs/internal.h
-index 2f3c3de51fad..2b0bebd67904 100644
---- a/fs/internal.h
-+++ b/fs/internal.h
-@@ -182,15 +182,5 @@ extern const struct dentry_operations ns_dentry_operations;
- extern int do_vfs_ioctl(struct file *file, unsigned int fd, unsigned int cmd,
- 		    unsigned long arg);
- 
--/*
-- * iomap support:
-- */
--typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
--		void *data, struct iomap *iomap);
--
--loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
--		unsigned flags, const struct iomap_ops *ops, void *data,
--		iomap_actor_t actor);
--
- /* direct-io.c: */
- int sb_init_dio_done_wq(struct super_block *sb);
-diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
-index 9f956cf23867..54c02aecf3cd 100644
---- a/fs/iomap/apply.c
-+++ b/fs/iomap/apply.c
-@@ -8,8 +8,6 @@
- #include <linux/fs.h>
- #include <linux/iomap.h>
- 
--#include "../internal.h"
--
- /*
-  * Execute a iomap write on a segment of the mapping that spans a
-  * contiguous range of pages that have identical block mapping state.
-diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
-index 1fc88ec1584d..f26fdd36e383 100644
---- a/fs/iomap/fiemap.c
-+++ b/fs/iomap/fiemap.c
-@@ -7,8 +7,6 @@
- #include <linux/fs.h>
- #include <linux/iomap.h>
- 
--#include "../internal.h"
--
- struct fiemap_ctx {
- 	struct fiemap_extent_info *fi;
- 	struct iomap prev;
-diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
-index 342b6d8ede67..ece71fd3519a 100644
---- a/fs/iomap/seek.c
-+++ b/fs/iomap/seek.c
-@@ -10,8 +10,6 @@
- #include <linux/pagemap.h>
- #include <linux/pagevec.h>
- 
--#include "../internal.h"
--
- /*
-  * Seek for SEEK_DATA / SEEK_HOLE within @page, starting at @lastoff.
-  * Returns true if found and updates @lastoff to the offset in file.
-diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
-index b79c33631263..152a230f668d 100644
---- a/fs/iomap/swapfile.c
-+++ b/fs/iomap/swapfile.c
-@@ -9,8 +9,6 @@
- #include <linux/iomap.h>
- #include <linux/swap.h>
- 
--#include "../internal.h"
--
- /* Swapfile activation */
- 
- struct iomap_swapfile_info {
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index baa1e2d31f05..bc499ceae392 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -122,6 +122,16 @@ struct iomap_ops {
- 			ssize_t written, unsigned flags, struct iomap *iomap);
- };
- 
-+/*
-+ * Main iomap iterator function.
-+ */
-+typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
-+		void *data, struct iomap *iomap);
-+
-+loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
-+		unsigned flags, const struct iomap_ops *ops, void *data,
-+		iomap_actor_t actor);
-+
- /*
-  * Structure allocate for each page when block size < PAGE_SIZE to track
-  * sub-page uptodate status and I/O completions.
+      Arnd
