@@ -1,32 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:55602 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725799AbfGQGWc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 17 Jul 2019 02:22:32 -0400
-Date: Tue, 16 Jul 2019 23:22:31 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 8/8] iomap: move internal declarations into fs/iomap/
-Message-ID: <20190717062231.GB27285@infradead.org>
-References: <156334313527.360395.511547592522547578.stgit@magnolia>
- <156334318826.360395.9686513875631453909.stgit@magnolia>
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:40105 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727685AbfGROtC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 10:49:02 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156334318826.360395.9686513875631453909.stgit@magnolia>
+References: <20190718125509.775525-1-arnd@arndb.de> <20190718125703.GA28332@lst.de>
+ <CAK8P3a2k3ddUD-b+OskpDfAkm6KGAGAOBabkXk3Uek1dShTiUA@mail.gmail.com> <20190718130835.GA28520@lst.de>
+In-Reply-To: <20190718130835.GA28520@lst.de>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 18 Jul 2019 16:48:44 +0200
+Message-ID: <CAK8P3a1W03RiWmUmgprAODeUBXZOF-OUyCBJKmufadpKivbQWg@mail.gmail.com>
+Subject: Re: [PATCH] iomap: hide iomap_sector with CONFIG_BLOCK=n
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: hch@infradead.org, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, agruenba@redhat.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>, Hannes Reinecke <hare@suse.com>, Souptick Joarder <jrdr.linux@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Masahiro Yamada <yamada.masahiro@socionext.com>, Jani Nikula <jani.nikula@intel.com>
 
-On Tue, Jul 16, 2019 at 10:59:48PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move internal function declarations out of fs/internal.h into
-> include/linux/iomap.h so that our transition is complete.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Jul 18, 2019 at 3:08 PM Christoph Hellwig <hch@lst.de> wrote:
+>
+> On Thu, Jul 18, 2019 at 03:03:15PM +0200, Arnd Bergmann wrote:
+> > The inclusion comes from the recently added header check in commit
+> > c93a0368aaa2 ("kbuild: do not create wrappers for header-test-y").
+> >
+> > This just tries to include every header by itself to see if there are build
+> > failures from missing indirect includes. We probably don't want to
+> > add an exception for iomap.h there.
+>
+> I very much disagree with that check.  We don't need to make every
+> header compilable with a setup where it should not be included.
 
-Didn't I ack this earlier?
+I do like the extra check there, and it did not seem to need too many
+fixes to get it working in the first place.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> That being said if you feel this is worth fixing I'd rather define
+> SECTOR_SIZE/SECTOR_SHIFT unconditionally.
+
+I'll give that a try and send a replacement patch after build testing
+succeeds for a number of randconfig builds.
+
+      Arnd
