@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:45893 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728524AbfGRXG1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:27 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:41336 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728524AbfGRXG2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:28 -0400
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 2/9] xfs: flush removing page cache in xfs_reflink_remap_prep
-Date: Thu, 18 Jul 2019 23:06:10 +0000
-Message-Id: <20190718230617.7439-3-mcgrof@kernel.org>
+Subject: [PATCH 7/9] xfs: fix reporting supported extra file attributes for statx()
+Date: Thu, 18 Jul 2019 23:06:15 +0000
+Message-Id: <20190718230617.7439-8-mcgrof@kernel.org>
 In-Reply-To: <20190718230617.7439-1-mcgrof@kernel.org>
 References: <20190718230617.7439-1-mcgrof@kernel.org>
 MIME-Version: 1.0
@@ -15,102 +15,56 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, Dave Chinner <dchinner@redhat.com>, Christoph Hellwig <hch@lst.de>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
+Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, "Luis R. Rodriguez" <mcgrof@kernel.org>, "Darrick J . Wong" <darrick.wong@oracle.com>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: "Luis R. Rodriguez" <mcgrof@kernel.org>
 
-commit 2c307174ab77e34645e75e12827646e044d273c3 upstream.
+commit 1b9598c8fb9965fff901c4caa21fed9644c34df3 upstream.
 
-On a sub-page block size filesystem, fsx is failing with a data
-corruption after a series of operations involving copying a file
-with the destination offset beyond EOF of the destination of the file:
+statx(2) notes that any attribute that is not indicated as supported by
+stx_attributes_mask has no usable value. Commit 5f955f26f3d42d ("xfs: report
+crtime and attribute flags to statx") added support for informing userspace
+of extra file attributes but forgot to list these flags as supported
+making reporting them rather useless for the pedantic userspace author.
 
-8093(157 mod 256): TRUNCATE DOWN        from 0x7a120 to 0x50000 ******WWWW
-8094(158 mod 256): INSERT 0x25000 thru 0x25fff  (0x1000 bytes)
-8095(159 mod 256): COPY 0x18000 thru 0x1afff    (0x3000 bytes) to 0x2f400
-8096(160 mod 256): WRITE    0x5da00 thru 0x651ff        (0x7800 bytes) HOLE
-8097(161 mod 256): COPY 0x2000 thru 0x5fff      (0x4000 bytes) to 0x6fc00
+$ git describe --contains 5f955f26f3d42d04aba65590a32eb70eedb7f37d
+v4.11-rc6~5^2^2~2
 
-The second copy here is beyond EOF, and it is to sub-page (4k) but
-block aligned (1k) offset. The clone runs the EOF zeroing, landing
-in a pre-existing post-eof delalloc extent. This zeroes the post-eof
-extents in the page cache just fine, dirtying the pages correctly.
-
-The problem is that xfs_reflink_remap_prep() now truncates the page
-cache over the range that it is copying it to, and rounds that down
-to cover the entire start page. This removes the dirty page over the
-delalloc extent from the page cache without having written it back.
-Hence later, when the page cache is flushed, the page at offset
-0x6f000 has not been written back and hence exposes stale data,
-which fsx trips over less than 10 operations later.
-
-Fix this by changing xfs_reflink_remap_prep() to use
-xfs_flush_unmap_range().
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Fixes: 5f955f26f3d42d ("xfs: report crtime and attribute flags to statx")
+Signed-off-by: Luis R. Rodriguez <mcgrof@kernel.org>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+[darrick: add a comment reminding people to keep attributes_mask up to date]
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/xfs_bmap_util.c |  2 +-
- fs/xfs/xfs_bmap_util.h |  2 ++
- fs/xfs/xfs_reflink.c   | 17 +++++++++++++----
- 3 files changed, 16 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_iops.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 211b06e4702e..41ad9eaab6ce 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1080,7 +1080,7 @@ xfs_adjust_extent_unmap_boundaries(
- 	return 0;
- }
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 1efef69a7f1c..74047bd0c1ae 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -531,6 +531,10 @@ xfs_vn_getattr(
+ 		}
+ 	}
  
--static int
-+int
- xfs_flush_unmap_range(
- 	struct xfs_inode	*ip,
- 	xfs_off_t		offset,
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 87363d136bb6..9c73d012f56a 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -76,6 +76,8 @@ int	xfs_swap_extents(struct xfs_inode *ip, struct xfs_inode *tip,
- xfs_daddr_t xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb);
- 
- xfs_extnum_t xfs_bmap_count_leaves(struct xfs_ifork *ifp, xfs_filblks_t *count);
-+int   xfs_flush_unmap_range(struct xfs_inode *ip, xfs_off_t offset,
-+			    xfs_off_t len);
- int xfs_bmap_count_blocks(struct xfs_trans *tp, struct xfs_inode *ip,
- 			  int whichfork, xfs_extnum_t *nextents,
- 			  xfs_filblks_t *count);
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index 38ea08a3dd1d..f3c393f309e1 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1368,10 +1368,19 @@ xfs_reflink_remap_prep(
- 	if (ret)
- 		goto out_unlock;
- 
--	/* Zap any page cache for the destination file's range. */
--	truncate_inode_pages_range(&inode_out->i_data,
--			round_down(pos_out, PAGE_SIZE),
--			round_up(pos_out + *len, PAGE_SIZE) - 1);
 +	/*
-+	 * If pos_out > EOF, we may have dirtied blocks between EOF and
-+	 * pos_out. In that case, we need to extend the flush and unmap to cover
-+	 * from EOF to the end of the copy length.
++	 * Note: If you add another clause to set an attribute flag, please
++	 * update attributes_mask below.
 +	 */
-+	if (pos_out > XFS_ISIZE(dest)) {
-+		loff_t	flen = *len + (pos_out - XFS_ISIZE(dest));
-+		ret = xfs_flush_unmap_range(dest, XFS_ISIZE(dest), flen);
-+	} else {
-+		ret = xfs_flush_unmap_range(dest, pos_out, *len);
-+	}
-+	if (ret)
-+		goto out_unlock;
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_IMMUTABLE)
+ 		stat->attributes |= STATX_ATTR_IMMUTABLE;
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_APPEND)
+@@ -538,6 +542,10 @@ xfs_vn_getattr(
+ 	if (ip->i_d.di_flags & XFS_DIFLAG_NODUMP)
+ 		stat->attributes |= STATX_ATTR_NODUMP;
  
- 	/* If we're altering the file contents... */
- 	if (!is_dedupe) {
++	stat->attributes_mask |= (STATX_ATTR_IMMUTABLE |
++				  STATX_ATTR_APPEND |
++				  STATX_ATTR_NODUMP);
++
+ 	switch (inode->i_mode & S_IFMT) {
+ 	case S_IFBLK:
+ 	case S_IFCHR:
 -- 
 2.20.1
