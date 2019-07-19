@@ -1,41 +1,105 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58088 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726513AbfGWRIo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jul 2019 13:08:44 -0400
-Date: Tue, 23 Jul 2019 10:08:43 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Do not free xfs_extent_busy from inside a spinlock
-Message-ID: <20190723170843.GA1952@infradead.org>
-References: <20190723150017.31891-1-cmaiolino@redhat.com>
- <20190723151102.GA1561054@magnolia>
- <20190723153133.wqt3p3dqaghxbkpr@orion.maiolino.org>
- <20190723155135.GA16481@infradead.org>
- <c2f3542bd06860ecf33f1785b9c146a09a155bf7.camel@kernel.org>
+Received: from sandeen.net ([63.231.237.45]:35890 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729465AbfGSSeB (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Jul 2019 14:34:01 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 1927E2A9C
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2019 13:33:39 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.1.0 released
+Message-ID: <bb99bdcc-13f5-467b-3e6d-c789f428fb2b@sandeen.net>
+Date: Fri, 19 Jul 2019 13:33:58 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c2f3542bd06860ecf33f1785b9c146a09a155bf7.camel@kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="TSyZMTCpRbNvfBBge4H2RRqoQcOme6YNQ"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jeff Layton <jlayton@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Al Viro <viro@zeniv.linux.org.uk>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Jul 23, 2019 at 01:07:00PM -0400, Jeff Layton wrote:
-> Note that those places are already broken. AIUI, the basic issue is that
-> vmalloc/vfree have to fix up page tables and that requires being able to
-> sleep. This patch just makes this situation more evident. If that patch
-> gets merged, I imagine we'll have a lot of places to clean up (not just
-> in xfs).
-> 
-> Anyway, in the case of being in an interrupt, we currently queue the
-> freeing to a workqueue. Al mentioned that we could create a new
-> kvfree_atomic that we could use from atomic contexts like this. That may
-> be another option (though Carlos' patch looked reasonable to me and
-> would probably be more efficient).
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--TSyZMTCpRbNvfBBge4H2RRqoQcOme6YNQ
+Content-Type: multipart/mixed; boundary="9UsKH62KHiuG6YCFikBlNmfc2pb01SEv1";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <bb99bdcc-13f5-467b-3e6d-c789f428fb2b@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.1.0 released
 
-The point is for XFS we generally only use kmem_free for pure kmalloc
-allocations under spinlocks.  But yes, the interfac is a little
-suboptimal and a kmem_free_large would be nicer and then warnings like
-this that might be pretty useful could be added.
+--9UsKH62KHiuG6YCFikBlNmfc2pb01SEv1
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+xfsprogs-5.1.0 has been released.
+
+The xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated and tagged with v5.1.0, with tarballs
+available at:
+
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.1.0.tar=
+=2Egz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.1.0.tar=
+=2Exz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.1.0.tar=
+=2Esign
+
+Highlights of changes since last release:
+
+xfsprogs-5.1.0 (19 Jul 2019)
+        - No further changes
+
+xfsprogs-5.1.0-rc1 (11 Jul 2019)
+        - mkfs: enable reflink by default (Darrick Wong)
+        - mkfs: fix stripe unit handling (Allison Collins)
+        - mkfs: remove useless log options in usage() (Yang Xu)
+        - mkfs: validate start and end of aligned logs (Darrick Wong)
+        - xfs_quota: fix built-in help for project setup (Eric Sandeen)
+        - xfs_io: allow passing an open file to copy_range (Amir Goldstei=
+n)
+        - xfs_info: limit findmnt to mounted xfs filesystems (Amir Goldst=
+ein)
+        - man: break out several ioctl man pages (Darrick Wong)
+        - man: Fix an inconsistency in the mkfs man page (Alvin Zheng)
+        - xfs_scrub: fix background-mode sleep throttling (Darrick Wong)
+        - libxfs: sync up xfs_trans_inode.c with the kernel (Eric Sandeen=
+)
+        - libfrog: fix bitmap return values (Darrick Wong)
+        - libfrog: don't set negative errno in conversion f'ns (Darrick W=
+ong)
+
+
+
+--9UsKH62KHiuG6YCFikBlNmfc2pb01SEv1--
+
+--TSyZMTCpRbNvfBBge4H2RRqoQcOme6YNQ
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl0yDRcACgkQIK4WkuE9
+3uAjLQ//cbsn/wDkJedz4EoPnR1ZIiU5/xJEb3/iAqL9YRZNuUfjQyQvSU0Qaqjd
+6xGnh1NQ+ER0QYH27rfdjWnOfV1rdSo8lOLTEw6sflwKPJwZVsSsfRlrgLOF/FMw
+qYYN3euolFjQ5oiW8uKlzYBe7pTHduh6TyzxNx5laPuNAKWTUWdc/ji1TPl5LypY
+hzEGZTkPZtiYaCQl/rj/XHwNbyudKhTRDMYHFJlXY6YEWUYQEeKPU+2ea9mEaoGr
+foFxLthvaIQjGM8a7tmdR3yW3nOvBGeDOvy9hL+JbuUSuwh1EudSK45e9T4j1liN
+gLxvtHq4Aw5vs3xtabk8NpqIjJ3tPqrorvy6DlVoTzxlDLMQVwwax1QSPQyt2tZK
+KMcqy/ElEqaFyKOuAvpOoz5QYavFevOC+4yxd+pB+XMGK7cnFeRIkGe1wmwGFloV
+3hcqhCOLg9PIgC4w2d2HRPHIAIxCIpTUzlbJ7GO+dZVzMEKn8CKl271oVtbYE5D9
+cUygm5go2uNs30S2f0eCaByMjdIyauuUgOoZdSctQC4cmktsMyAn+T4k0hTSqdbP
+huAYq2UvU7VoDruW+EF8UnwpTTs00sKagQVswJ4NMO6WChs1l38ok5bXVRVQFmSw
+UuO9BPWy3+BAGk7PMpeKqwfuG79pAIFvuWwgw20X7okiDQb+x/M=
+=564f
+-----END PGP SIGNATURE-----
+
+--TSyZMTCpRbNvfBBge4H2RRqoQcOme6YNQ--
