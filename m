@@ -1,27 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38514 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727528AbfGSVhm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Jul 2019 17:37:42 -0400
-Date: Fri, 19 Jul 2019 16:37:40 -0500
-From: Bill O'Donnell <billodo@redhat.com>
-Subject: Re: [Bug 204049] [xfstests generic/388]: XFS: Assertion failed:
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:47998 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727528AbfGSVpl (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jul 2019 17:45:41 -0400
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 981B9289BF
+        for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2019 21:45:40 +0000 (UTC)
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 204049] [xfstests generic/388]: XFS: Assertion failed:
  ip->i_d.di_format != XFS_DINODE_FMT_BTREE || ip->i_d.di_nextents >
  XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK), file: fs/xfs/xfs_inode.c, line: 3646
-Message-ID: <20190719213740.GA31263@redhat.com>
+Date: Fri, 19 Jul 2019 21:45:39 +0000
+Message-ID: <bug-204049-201763-TJ6zasqvKj@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-204049-201763@https.bugzilla.kernel.org/>
 References: <bug-204049-201763@https.bugzilla.kernel.org/>
- <bug-204049-201763-eo3Tgqh1ro@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <bug-204049-201763-eo3Tgqh1ro@https.bugzilla.kernel.org/>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: bugzilla-daemon@bugzilla.kernel.org
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
 
-On Fri, Jul 19, 2019 at 09:29:04PM +0000, bugzilla-daemon@bugzilla.kernel.org wrote:
+https://bugzilla.kernel.org/show_bug.cgi?id=204049
+
+--- Comment #6 from billodo@redhat.com ---
+On Fri, Jul 19, 2019 at 09:29:04PM +0000, bugzilla-daemon@bugzilla.kernel.org
+wrote:
 > https://bugzilla.kernel.org/show_bug.cgi?id=204049
 > 
 > --- Comment #5 from Luis Chamberlain (mcgrof@kernel.org) ---
@@ -50,3 +55,7 @@ It's sometimes tough to distinguish between real problems and abheritions.
 > -- 
 > You are receiving this mail because:
 > You are watching the assignee of the bug.
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
