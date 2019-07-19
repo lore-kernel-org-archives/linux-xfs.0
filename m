@@ -2,122 +2,74 @@ Return-Path: <SRS0=I0PM=VQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26920C76188
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jul 2019 14:25:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C63BEC7618F
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jul 2019 19:45:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 061CE20873
-	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jul 2019 14:25:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A02AE21880
+	for <linux-xfs@archiver.kernel.org>; Fri, 19 Jul 2019 19:45:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1563565514;
+	bh=AjkeX1/9njlH2GZEKu5i9tUHylTBdJ3HoQAtY022+5I=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
+	b=dSFszzMltxPqgETbjN9TOfmuK3kEu1ok+++q2Rg/qmxPOjPXXRATkkYmx+RvmBiIM
+	 +L0agCmGvr9nPTq6GPusDd3BDHEC7qY7aQIUD1Dz/TiyBJR5iaiRB/mwt1VtsD18xx
+	 olXEi9VUi1QSZBR9NACuaZrx5wFRTfbwFq1t2kKc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729390AbfGSOZb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 19 Jul 2019 10:25:31 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51200 "EHLO mx1.redhat.com"
+        id S1733223AbfGSTpI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 19 Jul 2019 15:45:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:34312 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728431AbfGSOZb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 19 Jul 2019 10:25:31 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A825730655E3;
-        Fri, 19 Jul 2019 14:25:30 +0000 (UTC)
-Received: from segfault.boston.devel.redhat.com (segfault.boston.devel.redhat.com [10.19.60.26])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 93BE81C94C;
-        Fri, 19 Jul 2019 14:25:29 +0000 (UTC)
-From:   Jeff Moyer <jmoyer@redhat.com>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "linux-fsdevel\@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs\@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Hannes Reinecke <hare@suse.de>,
-        Ting Yao <d201577678@hust.edu.cn>
-Subject: Re: [PATCH RFC] fs: New zonefs file system
-References: <20190712030017.14321-1-damien.lemoal@wdc.com>
-        <x49zhlbe8li.fsf@segfault.boston.devel.redhat.com>
-        <BYAPR04MB5816B59932372E2D97330308E7C80@BYAPR04MB5816.namprd04.prod.outlook.com>
-X-PGP-KeyID: 1F78E1B4
-X-PGP-CertKey: F6FE 280D 8293 F72C 65FD  5A58 1FF8 A7CA 1F78 E1B4
-Date:   Fri, 19 Jul 2019 10:25:28 -0400
-In-Reply-To: <BYAPR04MB5816B59932372E2D97330308E7C80@BYAPR04MB5816.namprd04.prod.outlook.com>
-        (Damien Le Moal's message of "Thu, 18 Jul 2019 23:02:43 +0000")
-Message-ID: <x49h87iqexz.fsf@segfault.boston.devel.redhat.com>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/26.1 (gnu/linux)
-MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.47]); Fri, 19 Jul 2019 14:25:30 +0000 (UTC)
+        id S1733285AbfGSTpH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 19 Jul 2019 15:45:07 -0400
+Subject: Re: [GIT PULL] iomap: cleanups for 5.3 (part 2)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1563565506;
+        bh=AjkeX1/9njlH2GZEKu5i9tUHylTBdJ3HoQAtY022+5I=;
+        h=From:In-Reply-To:References:Date:To:Cc:From;
+        b=oNvioO0AyHC5kfH0Rx8UoFpkg3m8AWmabEj7fsNBS4XTtiD7yycdc8EjQU1W4Agp9
+         B9+KfmnyoM1RBs5BZmU7oWmicoQrxZpzJ7+0CYrdlk1+vT/sh7/2/VYO/hSoIP+Rrb
+         Wn0GzEjCH070ys+CgsoRqO2MmE8jssOHBsCvx8mg=
+From:   pr-tracker-bot@kernel.org
+In-Reply-To: <20190719162221.GF7093@magnolia>
+References: <20190719162221.GF7093@magnolia>
+X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
+X-PR-Tracked-Message-Id: <20190719162221.GF7093@magnolia>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+ tags/iomap-5.3-merge-4
+X-PR-Tracked-Commit-Id: 5d907307adc14cd5148b07629c2b4535acd06062
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: 26473f83703e6bc56114ce4b045000de6efcfff7
+Message-Id:
+ <156356550679.25668.5508035864440295283.pr-tracker-bot@kernel.org>
+Date:   Fri, 19 Jul 2019 19:45:06 +0000
+To:     "Darrick J. Wong" <djwong@kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        david@fromorbit.com, linux-kernel@vger.kernel.org,
+        sandeen@sandeen.net, hch@lst.de, agruenba@redhat.com,
+        rpeterso@redhat.com, cluster-devel@redhat.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190719142528.HZkJk-iK8N9Y_QymrdlsYYy38cFGHzFV6YuE14F4iAQ@z>
+Content-Type: text/plain; charset="UTF-8"
+Message-ID: <20190719194506.QjxILnbLQRGXe3YLZ9zzUaHu3u_4GotEx6VJWsDAihA@z>
 
-Hi, Damien,
+The pull request you sent on Fri, 19 Jul 2019 09:22:21 -0700:
 
-Thanks for your well-considered response.
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/iomap-5.3-merge-4
 
-Damien Le Moal <Damien.LeMoal@wdc.com> writes:
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/26473f83703e6bc56114ce4b045000de6efcfff7
 
-> Jeff,
->
-> On 2019/07/18 23:11, Jeff Moyer wrote:
->> Hi, Damien,
->> 
->> Did you consider creating a shared library?  I bet that would also
->> ease application adoption for the use cases you're interested in, and
->> would have similar performance.
->> 
->> -Jeff
->
-> Yes, it would, but to a lesser extent since system calls would need to be
-> replaced with library calls. Earlier work on LevelDB by Ting used the library
-> approach with libzbc, not quite a "libzonefs" but close enough. Working with
-> LevelDB code gave me the idea for zonefs. Compared to a library, the added
-> benefits are that specific language bindings are not a problem and further
-> simplify the code changes needed to support zoned block devices. In the case of
-> LevelDB for instance, C++ is used and file accesses are using streams, which
-> makes using a library a little difficult, and necessitates more changes just for
-> the internal application API itself. The needed changes spread beyond the device
-> access API.
->
-> This is I think the main advantage of this simple in-kernel FS over a library:
-> the developer can focus on zone block device specific needs (write sequential
-> pattern and garbage collection) and forget about the device access parts as the
-> standard system calls API can be used.
+Thank you!
 
-OK, I can see how a file system eases adoption across multiple
-languages, and may, in some cases, be easier to adopt by applications.
-However, I'm not a fan of the file system interface for this usage.
-Once you present a file system, there are certain expectations from
-users, and this fs breaks most of them.
-
-I'll throw out another suggestion that may or may not work (I haven't
-given it much thought).  Would it be possible to create a device mapper
-target that would export each zone as a separate block device?  I
-understand that wouldn't help with the write pointer management, but it
-would allow you to create a single "file" for each zone.
-
-> Another approach I considered is using FUSE, but went for a regular (albeit
-> simple) in-kernel approach due to performance concerns. While any difference in
-> performance for SMR HDDs would probably not be noticeable, performance would
-> likely be lower for upcoming NVMe zonenamespace devices compared to the
-> in-kernel approach.
->
-> But granted, most of the arguments I can put forward for an in-kernel FS
-> solution vs a user shared library solution are mostly subjective. I think though
-> that having support directly provided by the kernel brings zoned block devices
-> into the "mainstream storage options" rather than having them perceived as
-> fringe solutions that need additional libraries to work correctly. Zoned block
-> devices are not going away and may in fact become more mainstream as
-> implementing higher capacities more and more depends on the sequential write
-> interface.
-
-A file system like this would further cement in my mind that zoned block
-devices are not maintstream storage options.  I guess this part is
-highly subjective.  :)
-
-Cheers,
-Jeff
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.wiki.kernel.org/userdoc/prtracker
