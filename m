@@ -1,93 +1,31 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:47016 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730674AbfGWPAW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Jul 2019 11:00:22 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id F1A4C307D9CE
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2019 15:00:21 +0000 (UTC)
-Received: from pegasus.maiolino.com (ovpn-204-213.brq.redhat.com [10.40.204.213])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 60BD8104B4FC
-        for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2019 15:00:21 +0000 (UTC)
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH] xfs: Do not free xfs_extent_busy from inside a spinlock
-Date: Tue, 23 Jul 2019 17:00:17 +0200
-Message-Id: <20190723150017.31891-1-cmaiolino@redhat.com>
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:40352 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728247AbfGSTXO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jul 2019 15:23:14 -0400
+Date: Fri, 19 Jul 2019 19:23:11 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: [PATCH 0/9] xfs: stable fixes for v4.19.y - circa ~ v4.19.58
+Message-ID: <20190719192311.GP30113@42.do-not-panic.com>
+References: <20190718230617.7439-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190718230617.7439-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
+Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com
 
-xfs_extent_busy_clear_one() calls kmem_free() with the pag spinlock
-locked.
+On Thu, Jul 18, 2019 at 11:06:08PM +0000, Luis Chamberlain wrote:
+> There is a stable bug tracking this, kz#204223 [1], and a respective bug
+> also present on upstream via kz#204049 [2] which Zorro reported. But,
+> again, nothing changes from the baseline.
 
-Fix this by adding a new temporary list, and, make
-xfs_extent_busy_clear_one() to move the extent_busy items to this new
-list, instead of freeing them.
+The crash is fixed by Brian's commit 6958d11f77d ("xfs: don't trip over
+uninitialized buffer on extent read of corrupted inode") merged on v5.1.
 
-Free the objects in the temporary list after we drop the pagb_lock
+As such I'll extend this series to include one more patch.
 
-Reported-by: Jeff Layton <jlayton@kernel.org>
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
- fs/xfs/xfs_extent_busy.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
-
-diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
-index 0ed68379e551..0a7dcf03340b 100644
---- a/fs/xfs/xfs_extent_busy.c
-+++ b/fs/xfs/xfs_extent_busy.c
-@@ -523,7 +523,8 @@ STATIC void
- xfs_extent_busy_clear_one(
- 	struct xfs_mount	*mp,
- 	struct xfs_perag	*pag,
--	struct xfs_extent_busy	*busyp)
-+	struct xfs_extent_busy	*busyp,
-+	struct list_head	*list)
- {
- 	if (busyp->length) {
- 		trace_xfs_extent_busy_clear(mp, busyp->agno, busyp->bno,
-@@ -531,8 +532,7 @@ xfs_extent_busy_clear_one(
- 		rb_erase(&busyp->rb_node, &pag->pagb_tree);
- 	}
- 
--	list_del_init(&busyp->list);
--	kmem_free(busyp);
-+	list_move(&busyp->list, list);
- }
- 
- static void
-@@ -565,6 +565,7 @@ xfs_extent_busy_clear(
- 	struct xfs_perag	*pag = NULL;
- 	xfs_agnumber_t		agno = NULLAGNUMBER;
- 	bool			wakeup = false;
-+	LIST_HEAD(busy_list);
- 
- 	list_for_each_entry_safe(busyp, n, list, list) {
- 		if (busyp->agno != agno) {
-@@ -580,13 +581,18 @@ xfs_extent_busy_clear(
- 		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
- 			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
- 		} else {
--			xfs_extent_busy_clear_one(mp, pag, busyp);
-+			xfs_extent_busy_clear_one(mp, pag, busyp, &busy_list);
- 			wakeup = true;
- 		}
- 	}
- 
- 	if (pag)
- 		xfs_extent_busy_put_pag(pag, wakeup);
-+
-+	list_for_each_entry_safe(busyp, n, &busy_list, list) {
-+		list_del_init(&busyp->list);
-+		kmem_free(busyp);
-+	}
- }
- 
- /*
--- 
-2.20.1
+  Luis
