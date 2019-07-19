@@ -1,38 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:36396 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728613AbfGSThz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jul 2019 15:37:55 -0400
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 1A9ED285D6
-        for <linux-xfs@vger.kernel.org>; Fri, 19 Jul 2019 19:37:55 +0000 (UTC)
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 204049] [xfstests generic/388]: XFS: Assertion failed:
- ip->i_d.di_format != XFS_DINODE_FMT_BTREE || ip->i_d.di_nextents >
- XFS_IFORK_MAXEXT(ip, XFS_DATA_FORK), file: fs/xfs/xfs_inode.c, line: 3646
-Date: Fri, 19 Jul 2019 19:37:53 +0000
-Message-ID: <bug-204049-201763-DY0Q4hjoKv@https.bugzilla.kernel.org/>
-In-Reply-To: <bug-204049-201763@https.bugzilla.kernel.org/>
-References: <bug-204049-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:40993 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728502AbfGSTah (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jul 2019 15:30:37 -0400
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH] xfs: don't trip over uninitialized buffer on extent read of corrupted inode
+Date: Fri, 19 Jul 2019 19:30:32 +0000
+Message-Id: <20190719193032.11096-1-mcgrof@kernel.org>
+In-Reply-To: <20190718230617.7439-1-mcgrof>
+References: <20190718230617.7439-1-mcgrof>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
+Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=204049
+From: Brian Foster <bfoster@redhat.com>
 
---- Comment #4 from Luis Chamberlain (mcgrof@kernel.org) ---
-The crash observed on stable kernels can be fixed with commit 6958d11f77 ("xfs:
-don't trip over uninitialized buffer on extent read of corrupted inode") merged
-on v5.1.
+commit 6958d11f77d45db80f7e22a21a74d4d5f44dc667 upstream.
 
-I can't reproduce the immediate panic on v5.1 with the "xfs_reflink_normapbt"
-anymore, as such I believe this seems like a regression, and you should be able
-to bisect to v5.1 as the good kernel.
+We've had rather rare reports of bmap btree block corruption where
+the bmap root block has a level count of zero. The root cause of the
+corruption is so far unknown. We do have verifier checks to detect
+this form of on-disk corruption, but this doesn't cover a memory
+corruption variant of the problem. The latter is a reasonable
+possibility because the root block is part of the inode fork and can
+reside in-core for some time before inode extents are read.
 
+If this occurs, it leads to a system crash such as the following:
+
+ BUG: unable to handle kernel paging request at ffffffff00000221
+ PF error: [normal kernel read fault]
+ ...
+ RIP: 0010:xfs_trans_brelse+0xf/0x200 [xfs]
+ ...
+ Call Trace:
+  xfs_iread_extents+0x379/0x540 [xfs]
+  xfs_file_iomap_begin_delay+0x11a/0xb40 [xfs]
+  ? xfs_attr_get+0xd1/0x120 [xfs]
+  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
+  xfs_file_iomap_begin+0x4c4/0x6d0 [xfs]
+  ? __vfs_getxattr+0x53/0x70
+  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
+  iomap_apply+0x63/0x130
+  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
+  iomap_file_buffered_write+0x62/0x90
+  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
+  xfs_file_buffered_aio_write+0xe4/0x3b0 [xfs]
+  __vfs_write+0x150/0x1b0
+  vfs_write+0xba/0x1c0
+  ksys_pwrite64+0x64/0xa0
+  do_syscall_64+0x5a/0x1d0
+  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+
+The crash occurs because xfs_iread_extents() attempts to release an
+uninitialized buffer pointer as the level == 0 value prevented the
+buffer from ever being allocated or read. Change the level > 0
+assert to an explicit error check in xfs_iread_extents() to avoid
+crashing the kernel in the event of localized, in-core inode
+corruption.
+
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[mcgrof: fixes kz#204223 ]
+Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
+---
+ fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 3a496ffe6551..ab2465bc413a 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1178,7 +1178,10 @@ xfs_iread_extents(
+ 	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+ 	 */
+ 	level = be16_to_cpu(block->bb_level);
+-	ASSERT(level > 0);
++	if (unlikely(level == 0)) {
++		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
++		return -EFSCORRUPTED;
++	}
+ 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+ 	bno = be64_to_cpu(*pp);
+ 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.18.0
