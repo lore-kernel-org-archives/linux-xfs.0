@@ -1,43 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:53170 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730008AbfGWPvg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jul 2019 11:51:36 -0400
-Date: Tue, 23 Jul 2019 08:51:35 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: Do not free xfs_extent_busy from inside a spinlock
-Message-ID: <20190723155135.GA16481@infradead.org>
-References: <20190723150017.31891-1-cmaiolino@redhat.com>
- <20190723151102.GA1561054@magnolia>
- <20190723153133.wqt3p3dqaghxbkpr@orion.maiolino.org>
+Received: from merlin.infradead.org ([205.233.59.134]:47944 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726015AbfGSCYq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 22:24:46 -0400
+Subject: Re: [PATCH] iomap: hide iomap_sector with CONFIG_BLOCK=n
+References: <20190718125509.775525-1-arnd@arndb.de>
+ <20190718125703.GA28332@lst.de>
+ <CAK8P3a2k3ddUD-b+OskpDfAkm6KGAGAOBabkXk3Uek1dShTiUA@mail.gmail.com>
+ <20190718130835.GA28520@lst.de> <20190718142525.GE7116@magnolia>
+ <CAK7LNASN5d_ppx6wJSm+fcf9HiX9i6zX4fxiR5_WuF6QUOExXQ@mail.gmail.com>
+From: Randy Dunlap <rdunlap@infradead.org>
+Message-ID: <d63adfdf-7ac2-bc42-38c6-db1404a87d47@infradead.org>
+Date: Thu, 18 Jul 2019 19:24:33 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190723153133.wqt3p3dqaghxbkpr@orion.maiolino.org>
+In-Reply-To: <CAK7LNASN5d_ppx6wJSm+fcf9HiX9i6zX4fxiR5_WuF6QUOExXQ@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, jlayton@kernel.org
+To: Masahiro Yamada <yamada.masahiro@socionext.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Arnd Bergmann <arnd@arndb.de>, Christoph Hellwig <hch@infradead.org>, linux-xfs <linux-xfs@vger.kernel.org>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Andreas Gruenbacher <agruenba@redhat.com>, Hannes Reinecke <hare@suse.com>, Souptick Joarder <jrdr.linux@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jani Nikula <jani.nikula@intel.com>
 
-On Tue, Jul 23, 2019 at 05:31:33PM +0200, Carlos Maiolino wrote:
-> CC'ing Jeff so he can maybe chime in too.
+On 7/18/19 7:19 PM, Masahiro Yamada wrote:
+> Hi.
+> 
+> On Thu, Jul 18, 2019 at 11:28 PM Darrick J. Wong
+> <darrick.wong@oracle.com> wrote:
+>>
+>> On Thu, Jul 18, 2019 at 03:08:35PM +0200, Christoph Hellwig wrote:
+>>> On Thu, Jul 18, 2019 at 03:03:15PM +0200, Arnd Bergmann wrote:
+>>>> The inclusion comes from the recently added header check in commit
+>>>> c93a0368aaa2 ("kbuild: do not create wrappers for header-test-y").
+>>>>
+>>>> This just tries to include every header by itself to see if there are build
+>>>> failures from missing indirect includes. We probably don't want to
+>>>> add an exception for iomap.h there.
+>>>
+>>> I very much disagree with that check.  We don't need to make every
+>>> header compilable with a setup where it should not be included.
+>>
+>> Seconded, unless there's some scenario where someone needs iomap when
+>> CONFIG_BLOCK=n (???)
+> 
+> I agree.
+> 
+> There is no situation that iomap.h is included when CONFIG_BLOCK=n.
+> So, it is pointless to surround offending code with #ifdef
+> just for the purpose of satisfying the header-test.
 > 
 > 
-> > Er, what problem does this solve?  Does holding on to the pag spinlock
-> > too long while memory freeing causes everything else to stall?  When is
-> > memory freeing slow enough to cause a noticeable impact?
+> I started to think
+> compiling all headers is more painful than useful.
 > 
-> Jeff detected it when using this patch:
 > 
-> https://marc.info/?l=linux-mm&m=156388753722881&w=2
+> MW is closing, so I am thinking of disabling it for now
+> to take time to re-think.
 > 
-> At first I don't see any specific problem, but I don't think we are supposed to
-> use kmem_free() inside interrupt context anyway. So, even though there is no
-> visible side effect, it should be fixed IMHO. With the patch above, the side
-> effect is a bunch of warnings :P
+> 
+> diff --git a/init/Kconfig b/init/Kconfig
+> index bd7d650d4a99..cbb31d134f7e 100644
+> --- a/init/Kconfig
+> +++ b/init/Kconfig
+> @@ -111,6 +111,7 @@ config HEADER_TEST
+>  config KERNEL_HEADER_TEST
+>         bool "Compile test kernel headers"
+>         depends on HEADER_TEST
+> +       depends on BROKEN
+>         help
+>           Headers in include/ are used to build external moduls.
+>           Compile test them to ensure they are self-contained, i.e.
+> 
+> 
+> 
+> Maybe, we should compile-test headers
+> only when it is reasonable to do so.
 
-This is going to break lots of places in xfs.  While we have separate
-allocation side wrappers for plain kmalloc vs using a vmalloc fallback we
-always use the same free side wrapper.  We could fix this by adding a
-kmem_free_large and switch all places that allocated using
-kmem_alloc_large to that, but it will require a bit of work.
+Maybe.  But I would find it easier to use if it were a make target
+instead of a Kconfig symbol, so someone could do
+$ make compile_test_headers
+
+for example.  Then it would be done only on demand (or command).
+
+-- 
+~Randy
