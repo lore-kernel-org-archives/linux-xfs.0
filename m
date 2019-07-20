@@ -1,31 +1,46 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:46787 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728747AbfGSXHc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 19 Jul 2019 19:07:32 -0400
-Date: Fri, 19 Jul 2019 23:07:29 +0000
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [PATCH] xfs: don't trip over uninitialized buffer on extent read
- of corrupted inode
-Message-ID: <20190719230729.GS19023@42.do-not-panic.com>
-References: <20190718230617.7439-1-mcgrof>
- <20190719193032.11096-1-mcgrof@kernel.org>
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:44302 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726200AbfGTRag (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 20 Jul 2019 13:30:36 -0400
+Date: Sat, 20 Jul 2019 18:29:15 +0100
+From: Sheriff Esseson <sheriffesseson@gmail.com>
+Subject: [PATCH] Documentation: filesystem: fix "Removed Sysctls" table
+Message-ID: <20190720172857.GA24988@localhost>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190719193032.11096-1-mcgrof@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>
+To: skhan@linuxfoundation.org
+Cc: linux-kernel-mentees@lists.linuxfoundation.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-On Fri, Jul 19, 2019 at 07:30:32PM +0000, Luis Chamberlain wrote:
-> [mcgrof: fixes kz#204223 ]
+the "Removed Sysctls" section is a table - bring it alive with ReST.
 
-This patch can be ingored for now for stable. It does not actually
-fix the issue, just delays it a bit. Once I stress test over 1000
-runs with some other fixes I have I'll send a new set of stable
-fixes.
+Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
+---
+ Documentation/admin-guide/xfs.rst | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-  Luis
+diff --git a/Documentation/admin-guide/xfs.rst b/Documentation/admin-guide/xfs.rst
+index e76665a8f2f2..fb5b39f73059 100644
+--- a/Documentation/admin-guide/xfs.rst
++++ b/Documentation/admin-guide/xfs.rst
+@@ -337,11 +337,12 @@ None at present.
+ Removed Sysctls
+ ===============
+ 
++=============================	=======
+   Name				Removed
+-  ----				-------
++=============================	=======
+   fs.xfs.xfsbufd_centisec	v4.0
+   fs.xfs.age_buffer_centisecs	v4.0
+-
++=============================	=======
+ 
+ Error handling
+ ==============
+-- 
+2.22.0
