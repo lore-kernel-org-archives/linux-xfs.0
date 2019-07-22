@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:40642 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.133]:40368 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729418AbfGVJvA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jul 2019 05:51:00 -0400
+        with ESMTP id S1729381AbfGVJuw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jul 2019 05:50:52 -0400
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 12/12] iomap: zero newly allocated mapped blocks
-Date: Mon, 22 Jul 2019 11:50:24 +0200
-Message-Id: <20190722095024.19075-13-hch@lst.de>
+Subject: [PATCH 09/12] iomap: move struct iomap_page out of iomap.h
+Date: Mon, 22 Jul 2019 11:50:21 +0200
+Message-Id: <20190722095024.19075-10-hch@lst.de>
 In-Reply-To: <20190722095024.19075-1-hch@lst.de>
 References: <20190722095024.19075-1-hch@lst.de>
 MIME-Version: 1.0
@@ -17,52 +17,70 @@ List-Id: xfs
 To: "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
 
-File systems like gfs2 don't support delayed allocations or unwritten
-extents and thus allocate normal mapped blocks to fill holes.  To
-cover the case of such file systems allocating new blocks to fill holes
-also zero out mapped blocks with the new flag.
+Now that all the writepage code is in the iomap code there is no
+need to keep this structure public.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ fs/iomap/buffered-io.c | 17 +++++++++++++++++
+ include/linux/iomap.h  | 17 -----------------
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 91a9796f8a7c..ba0511131868 100644
+index 21b50e8cb9f2..16f2ea46a238 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -226,6 +226,14 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
- 	SetPageUptodate(page);
- }
+@@ -23,6 +23,23 @@
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/iomap.h>
  
-+static inline bool iomap_block_needs_zeroing(struct inode *inode,
-+		struct iomap *iomap, loff_t pos)
++/*
++ * Structure allocated for each page when block size < PAGE_SIZE to track
++ * sub-page uptodate status and I/O completions.
++ */
++struct iomap_page {
++	atomic_t		read_count;
++	atomic_t		write_count;
++	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
++};
++
++static inline struct iomap_page *to_iomap_page(struct page *page)
 +{
-+	return iomap->type != IOMAP_MAPPED ||
-+		(iomap->flags & IOMAP_F_NEW) ||
-+		pos >= i_size_read(inode);
++	if (page_has_private(page))
++		return (struct iomap_page *)page_private(page);
++	return NULL;
 +}
 +
- static loff_t
- iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap)
-@@ -249,7 +257,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	if (plen == 0)
- 		goto done;
+ static struct bio_set iomap_ioend_bioset;
  
--	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
-+	if (iomap_block_needs_zeroing(inode, iomap, pos)) {
- 		zero_user(page, poff, plen);
- 		iomap_set_range_uptodate(page, poff, plen);
- 		goto done;
-@@ -563,7 +571,7 @@ iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
- 	struct bio_vec bvec;
- 	struct bio bio;
+ static struct iomap_page *
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 834d3923e2f2..38464b8f34b9 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -134,23 +134,6 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+ 		unsigned flags, const struct iomap_ops *ops, void *data,
+ 		iomap_actor_t actor);
  
--	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-+	if (iomap_block_needs_zeroing(inode, iomap, block_start)) {
- 		zero_user_segments(page, poff, from, to, poff + plen);
- 		iomap_set_range_uptodate(page, poff, plen);
- 		return 0;
+-/*
+- * Structure allocate for each page when block size < PAGE_SIZE to track
+- * sub-page uptodate status and I/O completions.
+- */
+-struct iomap_page {
+-	atomic_t		read_count;
+-	atomic_t		write_count;
+-	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
+-};
+-
+-static inline struct iomap_page *to_iomap_page(struct page *page)
+-{
+-	if (page_has_private(page))
+-		return (struct iomap_page *)page_private(page);
+-	return NULL;
+-}
+-
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
+ int iomap_readpage(struct page *page, const struct iomap_ops *ops);
 -- 
 2.20.1
