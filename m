@@ -1,58 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:54663 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57411 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726130AbfGVAFg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jul 2019 20:05:36 -0400
-Date: Mon, 22 Jul 2019 10:04:24 +1000
+        by vger.kernel.org with ESMTP id S1725904AbfGVAN0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jul 2019 20:13:26 -0400
+Date: Mon, 22 Jul 2019 10:12:00 +1000
 From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH RFC] fs: New zonefs file system
-Message-ID: <20190722000424.GP7689@dread.disaster.area>
+Message-ID: <20190722001200.GQ7689@dread.disaster.area>
 References: <20190712030017.14321-1-damien.lemoal@wdc.com>
  <x49zhlbe8li.fsf@segfault.boston.devel.redhat.com>
  <BYAPR04MB5816B59932372E2D97330308E7C80@BYAPR04MB5816.namprd04.prod.outlook.com>
  <x49h87iqexz.fsf@segfault.boston.devel.redhat.com>
- <BYAPR04MB58164A7ACFD3B6331404ECA3E7CA0@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <BYAPR04MB5816A2630B1EBC0696CBEC71E7CA0@BYAPR04MB5816.namprd04.prod.outlook.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <BYAPR04MB58164A7ACFD3B6331404ECA3E7CA0@BYAPR04MB5816.namprd04.prod.outlook.com>
+In-Reply-To: <BYAPR04MB5816A2630B1EBC0696CBEC71E7CA0@BYAPR04MB5816.namprd04.prod.outlook.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Damien Le Moal <Damien.LeMoal@wdc.com>
 Cc: Jeff Moyer <jmoyer@redhat.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Ting Yao <d201577678@hust.edu.cn>
 
-On Sat, Jul 20, 2019 at 07:15:26AM +0000, Damien Le Moal wrote:
-> Jeff,
-> 
+On Sat, Jul 20, 2019 at 01:07:25AM +0000, Damien Le Moal wrote:
 > On 2019/07/19 23:25, Jeff Moyer wrote:
-> > OK, I can see how a file system eases adoption across multiple
-> > languages, and may, in some cases, be easier to adopt by applications.
-> > However, I'm not a fan of the file system interface for this usage.
-> > Once you present a file system, there are certain expectations from
-> > users, and this fs breaks most of them.
+> > I'll throw out another suggestion that may or may not work (I haven't
+> > given it much thought).  Would it be possible to create a device mapper
+> > target that would export each zone as a separate block device?  I
+> > understand that wouldn't help with the write pointer management, but it
+> > would allow you to create a single "file" for each zone.
 > 
-> Your comments got me thinking more about zonefs specifications/features and I am
-> now wondering if I am not pushing this too far in terms of simplicity. So here
-> is a new RFC/Question to chew on... While keeping as a target the concept of
-> "file == zone" or as close to it as possible, what do you think zonefs minimal
-> feature set should be ?
-> 
-> One idea I have since a while back now is this:
-> 1) If a zone is unused, do not show a file for it. This means adding a dynamic
-> "zone allocation" code and supporting O_CREAT on open, unlink, etc. So have more
-> normal file system calls behave as with a normal FS.
-> 2) Allow file names to be decided by the user instead of using a fixed names.
-> Again, have O_CREAT behave as expected
+> Well, I do not think you need a new device mapper for this. dm-linear supports
+> zoned block devices and will happily allow mapping a single zone and expose a
+> block device file for it. My problem with this approach is that SMR drives are
+> huge, and getting bigger. A 15 TB drive has 55380 zones of 256 MB. Upcoming 20
+> TB drives have more than 75000 zones. Using dm-linear or any per-zone device
+> mapper target would create a huge resources pressure as the amount of memory
+> alone that would be used per zone would be much higher than with a file system
+> and the setup would also take far longer to complete compared to zonefs mount.
 
-So now you have to implement a persistent directory structure,
-atomic/transactional updates, etc. You've just added at least 2
-orders of magnitude complexity to zonefs and a very substantial
-amount of additional, ongoing QA to ensure it works correctly.
+Right, it's kinda insane to expect userspace to manage tens of
+thousands of "block devices" like this. You go run blkid on one of
+these devices, and what happens? Then there's stuff like udev
+overhead, grub os-probing that walks all block devices it can find,
+etc. Then consider putting hundreds of SMR drives into a machine
+that has multiple paths to each drive....
 
-I think keeping it simple by exposing all zones to userspace and
-leaving it to the application to track/index what zones it is
-using is the simplest way forward for everyone.
+As such, I just don't think this block device approach is feasible,
+especially as Managing tens of thousands of individual small data
+regions in a storage device is exactly what filesystems are for.
 
 Cheers,
 
