@@ -1,201 +1,201 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:49244 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727600AbfHAD7z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 23:59:55 -0400
-Date: Wed, 31 Jul 2019 20:59:55 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 1/2] iomap: Support large pages
-Message-ID: <20190801035955.GI4700@bombadil.infradead.org>
-References: <20190731171734.21601-1-willy@infradead.org>
- <20190731171734.21601-2-willy@infradead.org>
- <20190731230315.GJ7777@dread.disaster.area>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45233 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727157AbfGVXe5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jul 2019 19:34:57 -0400
+Received: from dread.disaster.area (pa49-195-139-63.pa.nsw.optusnet.com.au [49.195.139.63])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5C3411ACFF0
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2019 09:34:53 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1hphoQ-0001SP-5a
+        for linux-xfs@vger.kernel.org; Tue, 23 Jul 2019 09:33:46 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1hphpU-00087e-3a
+        for linux-xfs@vger.kernel.org; Tue, 23 Jul 2019 09:34:52 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH] xfs: add kmem allocation trace points
+Date: Tue, 23 Jul 2019 09:34:52 +1000
+Message-Id: <20190722233452.31183-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190731230315.GJ7777@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: linux-xfs@vger.kernel.org
 
-On Thu, Aug 01, 2019 at 09:03:15AM +1000, Dave Chinner wrote:
-> > -	if (iop || i_blocksize(inode) == PAGE_SIZE)
-> > +	if (iop || i_blocksize(inode) == page_size(page))
-> >  		return iop;
-> >  
-> > -	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
-> > +	nbits = BITS_TO_LONGS(page_size(page) / SECTOR_SIZE);
-> 
-> nbits = BITS_TO_LONGS(page_size(page) / i_blocksize(inode));
+From: Dave Chinner <dchinner@redhat.com>
 
-Ah, yes, that's better.  When it's statically allocated, you have to assume
-512-byte blocks, but when it's dynamically allocated, you can use the
-actual inode blocksize.
+When trying to correlate XFS kernel allocations to memory reclaim
+behaviour, it is useful to know what allocations XFS is actually
+attempting. This information is not directly available from
+tracepoints in the generic memory allocation and reclaim
+tracepoints, so these new trace points provide a high level
+indication of what the XFS memory demand actually is.
 
-> > +	iop = kmalloc(struct_size(iop, uptodate, nbits),
-> > +			GFP_NOFS | __GFP_NOFAIL);
-> >  	atomic_set(&iop->read_count, 0);
-> >  	atomic_set(&iop->write_count, 0);
-> > -	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
-> > +	bitmap_zero(iop->uptodate, nbits);
+There is no per-filesystem context in this code, so we just trace
+the type of allocation, the size and the iallocation constraints.
+The kmem code alos doesn't include much of the common XFS headers,
+so there are a few definitions that need to be added to the trace
+headers and a couple of types that need to be made common to avoid
+needing to include the whole world in the kmem code.
 
-Also, I confused myself by using nbits.  And, really, why do all this
-initialisation by hand?
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/kmem.c             | 11 +++++++++--
+ fs/xfs/libxfs/xfs_types.h |  8 ++++++++
+ fs/xfs/xfs_mount.h        |  7 -------
+ fs/xfs/xfs_trace.h        | 33 +++++++++++++++++++++++++++++++++
+ 4 files changed, 50 insertions(+), 9 deletions(-)
 
-@@ -23,17 +23,14 @@ static struct iomap_page *
- iomap_page_create(struct inode *inode, struct page *page)
- {
-        struct iomap_page *iop = to_iomap_page(page);
--       unsigned int nbits;
-+       unsigned int n;
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 16bb9a328678..edcf393c8fd9 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -3,10 +3,10 @@
+  * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+  * All Rights Reserved.
+  */
+-#include <linux/sched/mm.h>
++#include "xfs.h"
+ #include <linux/backing-dev.h>
+-#include "kmem.h"
+ #include "xfs_message.h"
++#include "xfs_trace.h"
  
-        if (iop || i_blocksize(inode) == page_size(page))
-                return iop;
+ void *
+ kmem_alloc(size_t size, xfs_km_flags_t flags)
+@@ -15,6 +15,8 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ 	gfp_t	lflags = kmem_flags_convert(flags);
+ 	void	*ptr;
  
--       nbits = BITS_TO_LONGS(page_size(page) / SECTOR_SIZE);
--       iop = kmalloc(struct_size(iop, uptodate, nbits),
--                       GFP_NOFS | __GFP_NOFAIL);
--       atomic_set(&iop->read_count, 0);
--       atomic_set(&iop->write_count, 0);
--       bitmap_zero(iop->uptodate, nbits);
-+       n = BITS_TO_LONGS(page_size(page) >> inode->i_blkbits);
-+       iop = kmalloc(struct_size(iop, uptodate, n),
-+                       GFP_NOFS | __GFP_NOFAIL | __GFP_ZERO);
++	trace_kmem_alloc(size, flags, _RET_IP_);
++
+ 	do {
+ 		ptr = kmalloc(size, lflags);
+ 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+@@ -35,6 +37,8 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+ 	void	*ptr;
+ 	gfp_t	lflags;
  
-        /*
-         * migrate_page_move_mapping() assumes that pages with private data have
-
-> > -	unsigned poff = offset_in_page(*pos);
-> > -	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
-> > +	unsigned poff = *pos & (page_size(page) - 1);
-> > +	unsigned plen = min_t(loff_t, page_size(page) - poff, length);
-> >  	unsigned first = poff >> block_bits;
-> >  	unsigned last = (poff + plen - 1) >> block_bits;
-> 
-> This all kinda looks familar. In my block size > page size patch
-> set, I was trying to wrap these sorts of things in helpers as they
-> ge repeated over and over again. e.g:
-> 
-> /*
->  * Return the block size we should use for page cache based operations.
->  * This will return the inode block size for block size < PAGE_SIZE,
->  * otherwise it will return PAGE_SIZE.
->  */
-> static inline unsigned
-> iomap_chunk_size(struct inode *inode)
-> {
-> 	return min_t(unsigned, PAGE_SIZE, i_blocksize(inode));
-> }
-> 
-> "chunk" being the name that Christoph suggested as the size of the
-> region we need to operate over in this function.
-> 
-> IOws, if we have a normal page, it's as per the above, but if
-> we have block size > PAGE_SIZE, it's the block size we need to work
-> from, and if it's a huge page, is the huge page size we need to
-> use....
-> 
-> So starting by wrapping a bunch of these common length/size/offset
-> calculations will make this code much easier to understand, follow,
-> maintain as we explode the number of combinations of page and block
-> size it supports in the near future...
-> 
-> FYI, the blocksize > pagesize patchset was first posted here:
-> 
-> https://lore.kernel.org/linux-fsdevel/20181107063127.3902-1-david@fromorbit.com/
-> 
-> [ Bad memories, this patchset is what lead us to discover how 
-> horribly broken copy_file_range and friends were. ]
-
-Thanks.  I'll take a look at that and come back with a refreshed patch
-tomorrow that wraps a bunch of these things.
-
-> > -		unsigned end = offset_in_page(isize - 1) >> block_bits;
-> > +		unsigned end = (isize - 1) & (page_size(page) - 1) >>
-> > +				block_bits;
-> 
-> iomap_offset_in_page()....
-
-It has applications outside iomap, so I've been thinking about
-offset_in_this_page(page, thing).  I don't like it, but page_offset()
-is taken and offset_in_page() doesn't take a page parameter.
-
-> > @@ -194,11 +199,12 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
-> >  		return;
-> >  
-> >  	BUG_ON(page->index);
-> > -	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
-> > +	BUG_ON(size > page_size(page) - ((unsigned long)iomap->inline_data &
-> > +						(page_size(page) - 1)));
-> 
-> Inline data should never use a huge page - it's a total waste of
-> 2MB of memory because inline data is intended for very small data
-> files that fit inside an inode. If anyone ever needs inline data
-> larger than PAGE_SIZE then we can worry about how to support that
-> at that time. Right now it should just refuse to use a huge page...
-
-I kind of agree, but ...
-
-This isn't just about supporting huge pages.  It's about supporting
-large pages too (and by large pages, I mean arbitrary-order pages,
-rather than ones which match a particular CPU's PMD/PGD hierarchy).
-We might well decide that we want to switch to always at least trying
-to allocate 16kB pages in the page cache, and so we might end up here
-with a page larger than the base page size.
-
-And yes, we could say it's the responsibility of that person to do this
-work, but it's done now.
-
-> > -		int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
-> > +		int nr_vecs = (length + page_size(page) - 1) >> page_shift(page);
-> 
-> iomap_nr_pages(page)?
-
-Do you mean iomap_nr_pages(page, length)?
-
-Actually, I'm not sure this is right.  It assumes the pages all have the same
-length, so if we do a call to readpages() which has a 2MB page followed by
-a raft of 4kB pages, it'll allocate a BIO with 2 vectors, when it should
-really allocate many more.  I think I'll change this one back to operating
-on PAGE_SIZE and if we fill in fewer vecs than we allocated, that's fine.
-
-> > @@ -355,9 +361,14 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
-> >  {
-> >  	struct iomap_readpage_ctx *ctx = data;
-> >  	loff_t done, ret;
-> > +	size_t pg_left = 0;
-> > +
-> > +	if (ctx->cur_page)
-> > +		pg_left = page_size(ctx->cur_page) -
-> > +					(pos & (page_size(ctx->cur_page) - 1));
-> 
-> What's this unreadable magic do?
-
-Calculates the number of bytes left in this page.
-
-> > @@ -1047,11 +1069,11 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
-> >  		goto out_unlock;
-> >  	}
-> >  
-> > -	/* page is wholly or partially inside EOF */
-> > -	if (((page->index + 1) << PAGE_SHIFT) > size)
-> > -		length = offset_in_page(size);
-> > +	/* page is wholly or partially beyond EOF */
-> > +	if (((page->index + compound_nr(page)) << PAGE_SHIFT) > size)
-> > +		length = size & (page_size(page) - 1);
-> >  	else
-> > -		length = PAGE_SIZE;
-> > +		length = page_size(page);
-> 
-> Yeah, that needs some help :)
-> 
-> Basically, I'd love to have all the things that end up being
-> variable because of block size or page size or a combination of both
-> moved into helpers. That way we end up the the code that does the
-> work being clean and easy to maintain, and all the nastiness
-> inherent to variable size objects is isolated to the helper
-> functions...
-
-I'm on board with the overall plan; just the details to quibble over.
++	trace_kmem_alloc_large(size, flags, _RET_IP_);
++
+ 	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
+ 	if (ptr)
+ 		return ptr;
+@@ -65,6 +69,8 @@ kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
+ 	gfp_t	lflags = kmem_flags_convert(flags);
+ 	void	*ptr;
+ 
++	trace_kmem_realloc(newsize, flags, _RET_IP_);
++
+ 	do {
+ 		ptr = krealloc(old, newsize, lflags);
+ 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+@@ -85,6 +91,7 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ 	gfp_t	lflags = kmem_flags_convert(flags);
+ 	void	*ptr;
+ 
++	trace_kmem_zone_alloc(0, flags, _RET_IP_);
+ 	do {
+ 		ptr = kmem_cache_alloc(zone, lflags);
+ 		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+index 802b34cd10fe..300b3e91ca3a 100644
+--- a/fs/xfs/libxfs/xfs_types.h
++++ b/fs/xfs/libxfs/xfs_types.h
+@@ -169,6 +169,14 @@ typedef struct xfs_bmbt_irec
+ 	xfs_exntst_t	br_state;	/* extent state */
+ } xfs_bmbt_irec_t;
+ 
++/* per-AG block reservation types */
++enum xfs_ag_resv_type {
++	XFS_AG_RESV_NONE = 0,
++	XFS_AG_RESV_AGFL,
++	XFS_AG_RESV_METADATA,
++	XFS_AG_RESV_RMAPBT,
++};
++
+ /*
+  * Type verifier functions
+  */
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index 4adb6837439a..fdb60e09a9c5 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -327,13 +327,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+ }
+ 
+ /* per-AG block reservation data structures*/
+-enum xfs_ag_resv_type {
+-	XFS_AG_RESV_NONE = 0,
+-	XFS_AG_RESV_AGFL,
+-	XFS_AG_RESV_METADATA,
+-	XFS_AG_RESV_RMAPBT,
+-};
+-
+ struct xfs_ag_resv {
+ 	/* number of blocks originally reserved here */
+ 	xfs_extlen_t			ar_orig_reserved;
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 8094b1920eef..8bb8b4704a00 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -23,6 +23,7 @@ struct xlog;
+ struct xlog_ticket;
+ struct xlog_recover;
+ struct xlog_recover_item;
++struct xlog_rec_header;
+ struct xfs_buf_log_format;
+ struct xfs_inode_log_format;
+ struct xfs_bmbt_irec;
+@@ -30,6 +31,10 @@ struct xfs_btree_cur;
+ struct xfs_refcount_irec;
+ struct xfs_fsmap;
+ struct xfs_rmap_irec;
++struct xfs_icreate_log;
++struct xfs_owner_info;
++struct xfs_trans_res;
++struct xfs_inobt_rec_incore;
+ 
+ DECLARE_EVENT_CLASS(xfs_attr_list_class,
+ 	TP_PROTO(struct xfs_attr_list_context *ctx),
+@@ -3575,6 +3580,34 @@ TRACE_EVENT(xfs_pwork_init,
+ 		  __entry->nr_threads, __entry->pid)
+ )
+ 
++DECLARE_EVENT_CLASS(xfs_kmem_class,
++	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip),
++	TP_ARGS(size, flags, caller_ip),
++	TP_STRUCT__entry(
++		__field(ssize_t, size)
++		__field(int, flags)
++		__field(unsigned long, caller_ip)
++	),
++	TP_fast_assign(
++		__entry->size = size;
++		__entry->flags = flags;
++		__entry->caller_ip = caller_ip;
++	),
++	TP_printk("size %zd flags 0x%x caller %pS",
++		  __entry->size,
++		  __entry->flags,
++		  (char *)__entry->caller_ip)
++)
++
++#define DEFINE_KMEM_EVENT(name) \
++DEFINE_EVENT(xfs_kmem_class, name, \
++	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
++	TP_ARGS(size, flags, caller_ip))
++DEFINE_KMEM_EVENT(kmem_alloc);
++DEFINE_KMEM_EVENT(kmem_alloc_large);
++DEFINE_KMEM_EVENT(kmem_realloc);
++DEFINE_KMEM_EVENT(kmem_zone_alloc);
++
+ #endif /* _TRACE_XFS_H */
+ 
+ #undef TRACE_INCLUDE_PATH
+-- 
+2.22.0
