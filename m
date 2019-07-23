@@ -1,114 +1,201 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:42985 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728524AbfGRXGZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:25 -0400
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 0/9] xfs: stable fixes for v4.19.y - circa ~ v4.19.58
-Date: Thu, 18 Jul 2019 23:06:08 +0000
-Message-Id: <20190718230617.7439-1-mcgrof@kernel.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:54568 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727643AbfGWAGg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 22 Jul 2019 20:06:36 -0400
+Date: Mon, 22 Jul 2019 17:06:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: add kmem allocation trace points
+Message-ID: <20190723000629.GG7093@magnolia>
+References: <20190722233452.31183-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190722233452.31183-1-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, Luis Chamberlain <mcgrof@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org
 
-"Oyez Oyez..." its time for a stable update of fixes for XFS. 4 out of the
-9 fixes here were recommended by Amir, and tested by both Amir and Sasha.
-I've found a few other fixes, and have tested all these changes with
-fstests against the following configurations in fstests sections as per
-oscheck [0] and found no regressions in comparsin to v4.19.58 and by
-running the full set of tests 3 times completely:
+On Tue, Jul 23, 2019 at 09:34:52AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When trying to correlate XFS kernel allocations to memory reclaim
+> behaviour, it is useful to know what allocations XFS is actually
+> attempting. This information is not directly available from
+> tracepoints in the generic memory allocation and reclaim
+> tracepoints, so these new trace points provide a high level
+> indication of what the XFS memory demand actually is.
+> 
+> There is no per-filesystem context in this code, so we just trace
+> the type of allocation, the size and the iallocation constraints.
+> The kmem code alos doesn't include much of the common XFS headers,
+> so there are a few definitions that need to be added to the trace
+> headers and a couple of types that need to be made common to avoid
+> needing to include the whole world in the kmem code.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/kmem.c             | 11 +++++++++--
+>  fs/xfs/libxfs/xfs_types.h |  8 ++++++++
+>  fs/xfs/xfs_mount.h        |  7 -------
+>  fs/xfs/xfs_trace.h        | 33 +++++++++++++++++++++++++++++++++
+>  4 files changed, 50 insertions(+), 9 deletions(-)
+> 
+> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+> index 16bb9a328678..edcf393c8fd9 100644
+> --- a/fs/xfs/kmem.c
+> +++ b/fs/xfs/kmem.c
+> @@ -3,10 +3,10 @@
+>   * Copyright (c) 2000-2005 Silicon Graphics, Inc.
+>   * All Rights Reserved.
+>   */
+> -#include <linux/sched/mm.h>
+> +#include "xfs.h"
+>  #include <linux/backing-dev.h>
+> -#include "kmem.h"
+>  #include "xfs_message.h"
+> +#include "xfs_trace.h"
+>  
+>  void *
+>  kmem_alloc(size_t size, xfs_km_flags_t flags)
+> @@ -15,6 +15,8 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+>  	gfp_t	lflags = kmem_flags_convert(flags);
+>  	void	*ptr;
+>  
+> +	trace_kmem_alloc(size, flags, _RET_IP_);
+> +
+>  	do {
+>  		ptr = kmalloc(size, lflags);
+>  		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+> @@ -35,6 +37,8 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
+>  	void	*ptr;
+>  	gfp_t	lflags;
+>  
+> +	trace_kmem_alloc_large(size, flags, _RET_IP_);
+> +
+>  	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
+>  	if (ptr)
+>  		return ptr;
+> @@ -65,6 +69,8 @@ kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
+>  	gfp_t	lflags = kmem_flags_convert(flags);
+>  	void	*ptr;
+>  
+> +	trace_kmem_realloc(newsize, flags, _RET_IP_);
+> +
+>  	do {
+>  		ptr = krealloc(old, newsize, lflags);
+>  		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+> @@ -85,6 +91,7 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+>  	gfp_t	lflags = kmem_flags_convert(flags);
+>  	void	*ptr;
+>  
+> +	trace_kmem_zone_alloc(0, flags, _RET_IP_);
+>  	do {
+>  		ptr = kmem_cache_alloc(zone, lflags);
+>  		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
+> diff --git a/fs/xfs/libxfs/xfs_types.h b/fs/xfs/libxfs/xfs_types.h
+> index 802b34cd10fe..300b3e91ca3a 100644
+> --- a/fs/xfs/libxfs/xfs_types.h
+> +++ b/fs/xfs/libxfs/xfs_types.h
+> @@ -169,6 +169,14 @@ typedef struct xfs_bmbt_irec
+>  	xfs_exntst_t	br_state;	/* extent state */
+>  } xfs_bmbt_irec_t;
+>  
+> +/* per-AG block reservation types */
+> +enum xfs_ag_resv_type {
+> +	XFS_AG_RESV_NONE = 0,
+> +	XFS_AG_RESV_AGFL,
+> +	XFS_AG_RESV_METADATA,
+> +	XFS_AG_RESV_RMAPBT,
+> +};
+> +
+>  /*
+>   * Type verifier functions
+>   */
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 4adb6837439a..fdb60e09a9c5 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -327,13 +327,6 @@ xfs_daddr_to_agbno(struct xfs_mount *mp, xfs_daddr_t d)
+>  }
+>  
+>  /* per-AG block reservation data structures*/
+> -enum xfs_ag_resv_type {
+> -	XFS_AG_RESV_NONE = 0,
+> -	XFS_AG_RESV_AGFL,
+> -	XFS_AG_RESV_METADATA,
+> -	XFS_AG_RESV_RMAPBT,
+> -};
+> -
 
-  * xfs
-  * xfs_nocrc
-  * xfs_nocrc_512
-  * xfs_reflink
-  * xfs_reflink_1024
-  * xfs_logdev
-  * xfs_realtimedev
+Hmm, what does moving this chunk enable?  I don't see the immediate
+relevants to the added tracepoints...?  (insofar as "ZOMG MACROS OH MY EYES")
 
-Known issues are listed on the expunges files, but its no different than
-the current baseline.
+--D
 
-Worth noting is a now known generic/388 crash on xfs_nocrc, xfs_reflink,
-and what may be a new section we should consider to track:
-"xfs_reflink_normapbt" with the following resulting filesystem:
-
-# xfs_info /dev/loop5
-meta-data=/dev/loop5             isize=512    agcount=4, agsize=1310720 blks
-         =                       sectsz=512   attr=2, projid32bit=1
-         =                       crc=1        finobt=1, sparse=1, rmapbt=0
-         =                       reflink=1
-data     =                       bsize=4096   blocks=5242880, imaxpct=25
-         =                       sunit=0      swidth=0 blks
-naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
-log      =internal log           bsize=4096   blocks=2560, version=2
-         =                       sectsz=512   sunit=0 blks, lazy-count=1
-realtime =none                   extsz=4096   blocks=0, rtextents=0
-
-Do we want to create a baseline and track this configuration for stable
-as well?
-
-There is a stable bug tracking this, kz#204223 [1], and a respective bug
-also present on upstream via kz#204049 [2] which Zorro reported. But,
-again, nothing changes from the baseline.
-
-I'd appreciate further reviews from the patches.
-
-I have some other fixes in mind as well, but I'd rather not delay this
-set and think this is a first good batch.
-
-This also goes out as the first set of stable fixes using oscheck's
-new devops infrastructure built on ansible / vagrant / terraform [3].
-For this release I've used vagrant with KVM, perhaps the next one
-I'll try terraform on whatever cloud solution someone is willing
-to let me use.
-
-You can also find these changes on my 20190718-linux-xfs-4.19.y-v1
-branch on kernel.org [4].
-
-Lemme know if you see any issues or have any questions.
-
-[0] https://gitlab.com/mcgrof/oscheck/blob/master/fstests-configs/xfs.config
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=204223
-[2] https://bugzilla.kernel.org/show_bug.cgi?id=204049
-[3] https://gitlab.com/mcgrof/kdevops
-[4] https://git.kernel.org/pub/scm/linux/kernel/git/mcgrof/linux-stable.git/log/?h=20190718-linux-xfs-4.19.y-v1
-
-Brian Foster (1):
-  xfs: serialize unaligned dio writes against all other dio writes
-
-Darrick J. Wong (6):
-  xfs: fix pagecache truncation prior to reflink
-  xfs: don't overflow xattr listent buffer
-  xfs: rename m_inotbt_nores to m_finobt_nores
-  xfs: don't ever put nlink > 0 inodes on the unlinked list
-  xfs: reserve blocks for ifree transaction during log recovery
-  xfs: abort unaligned nowait directio early
-
-Dave Chinner (1):
-  xfs: flush removing page cache in xfs_reflink_remap_prep
-
-Luis R. Rodriguez (1):
-  xfs: fix reporting supported extra file attributes for statx()
-
- fs/xfs/libxfs/xfs_ag_resv.c      |  2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c |  4 ++--
- fs/xfs/xfs_attr_list.c           |  1 +
- fs/xfs/xfs_bmap_util.c           |  2 +-
- fs/xfs/xfs_bmap_util.h           |  2 ++
- fs/xfs/xfs_file.c                | 27 +++++++++++++++++----------
- fs/xfs/xfs_fsops.c               |  1 +
- fs/xfs/xfs_inode.c               | 18 +++++++-----------
- fs/xfs/xfs_iops.c                | 21 +++++++++++++++++++--
- fs/xfs/xfs_mount.h               |  2 +-
- fs/xfs/xfs_reflink.c             | 16 +++++++++++++---
- fs/xfs/xfs_super.c               |  7 +++++++
- fs/xfs/xfs_xattr.c               |  3 +++
- 13 files changed, 75 insertions(+), 31 deletions(-)
-
--- 
-2.20.1
+>  struct xfs_ag_resv {
+>  	/* number of blocks originally reserved here */
+>  	xfs_extlen_t			ar_orig_reserved;
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 8094b1920eef..8bb8b4704a00 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -23,6 +23,7 @@ struct xlog;
+>  struct xlog_ticket;
+>  struct xlog_recover;
+>  struct xlog_recover_item;
+> +struct xlog_rec_header;
+>  struct xfs_buf_log_format;
+>  struct xfs_inode_log_format;
+>  struct xfs_bmbt_irec;
+> @@ -30,6 +31,10 @@ struct xfs_btree_cur;
+>  struct xfs_refcount_irec;
+>  struct xfs_fsmap;
+>  struct xfs_rmap_irec;
+> +struct xfs_icreate_log;
+> +struct xfs_owner_info;
+> +struct xfs_trans_res;
+> +struct xfs_inobt_rec_incore;
+>  
+>  DECLARE_EVENT_CLASS(xfs_attr_list_class,
+>  	TP_PROTO(struct xfs_attr_list_context *ctx),
+> @@ -3575,6 +3580,34 @@ TRACE_EVENT(xfs_pwork_init,
+>  		  __entry->nr_threads, __entry->pid)
+>  )
+>  
+> +DECLARE_EVENT_CLASS(xfs_kmem_class,
+> +	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip),
+> +	TP_ARGS(size, flags, caller_ip),
+> +	TP_STRUCT__entry(
+> +		__field(ssize_t, size)
+> +		__field(int, flags)
+> +		__field(unsigned long, caller_ip)
+> +	),
+> +	TP_fast_assign(
+> +		__entry->size = size;
+> +		__entry->flags = flags;
+> +		__entry->caller_ip = caller_ip;
+> +	),
+> +	TP_printk("size %zd flags 0x%x caller %pS",
+> +		  __entry->size,
+> +		  __entry->flags,
+> +		  (char *)__entry->caller_ip)
+> +)
+> +
+> +#define DEFINE_KMEM_EVENT(name) \
+> +DEFINE_EVENT(xfs_kmem_class, name, \
+> +	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
+> +	TP_ARGS(size, flags, caller_ip))
+> +DEFINE_KMEM_EVENT(kmem_alloc);
+> +DEFINE_KMEM_EVENT(kmem_alloc_large);
+> +DEFINE_KMEM_EVENT(kmem_realloc);
+> +DEFINE_KMEM_EVENT(kmem_zone_alloc);
+> +
+>  #endif /* _TRACE_XFS_H */
+>  
+>  #undef TRACE_INCLUDE_PATH
+> -- 
+> 2.22.0
+> 
