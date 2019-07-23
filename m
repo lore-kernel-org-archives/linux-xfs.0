@@ -1,102 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:42931 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728524AbfGRXGY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 18 Jul 2019 19:06:24 -0400
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 4/9] xfs: rename m_inotbt_nores to m_finobt_nores
-Date: Thu, 18 Jul 2019 23:06:12 +0000
-Message-Id: <20190718230617.7439-5-mcgrof@kernel.org>
-In-Reply-To: <20190718230617.7439-1-mcgrof@kernel.org>
-References: <20190718230617.7439-1-mcgrof@kernel.org>
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:38927 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731731AbfGWPNX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jul 2019 11:13:23 -0400
+Received: by mail-wr1-f68.google.com with SMTP id x4so43561180wrt.6
+        for <linux-xfs@vger.kernel.org>; Tue, 23 Jul 2019 08:13:22 -0700 (PDT)
+Date: Tue, 23 Jul 2019 17:13:19 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH] xfs: Do not free xfs_extent_busy from inside a spinlock
+Message-ID: <20190723151319.j7ynrn2zt4uztby6@orion.maiolino.org>
+References: <20190723150017.31891-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190723150017.31891-1-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, gregkh@linuxfoundation.org, Alexander.Levin@microsoft.com
-Cc: stable@vger.kernel.org, amir73il@gmail.com, hch@infradead.org, zlang@redhat.com, "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Chinner <dchinner@redhat.com>, Luis Chamberlain <mcgrof@kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: jlayton@kernel.org
 
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+I forgot to Cc Jeff on the patch.
 
-commit e1f6ca11381588e3ef138c10de60eeb34cb8466a upstream.
+Sorry Jeff, cc'ing now.
 
-Rename this flag variable to imply more strongly that it's related to
-the free inode btree (finobt) operation.  No functional changes.
+On Tue, Jul 23, 2019 at 05:00:17PM +0200, Carlos Maiolino wrote:
+> xfs_extent_busy_clear_one() calls kmem_free() with the pag spinlock
+> locked.
+> 
+> Fix this by adding a new temporary list, and, make
+> xfs_extent_busy_clear_one() to move the extent_busy items to this new
+> list, instead of freeing them.
+> 
+> Free the objects in the temporary list after we drop the pagb_lock
+> 
+> Reported-by: Jeff Layton <jlayton@kernel.org>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
+>  fs/xfs/xfs_extent_busy.c | 14 ++++++++++----
+>  1 file changed, 10 insertions(+), 4 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_extent_busy.c b/fs/xfs/xfs_extent_busy.c
+> index 0ed68379e551..0a7dcf03340b 100644
+> --- a/fs/xfs/xfs_extent_busy.c
+> +++ b/fs/xfs/xfs_extent_busy.c
+> @@ -523,7 +523,8 @@ STATIC void
+>  xfs_extent_busy_clear_one(
+>  	struct xfs_mount	*mp,
+>  	struct xfs_perag	*pag,
+> -	struct xfs_extent_busy	*busyp)
+> +	struct xfs_extent_busy	*busyp,
+> +	struct list_head	*list)
+>  {
+>  	if (busyp->length) {
+>  		trace_xfs_extent_busy_clear(mp, busyp->agno, busyp->bno,
+> @@ -531,8 +532,7 @@ xfs_extent_busy_clear_one(
+>  		rb_erase(&busyp->rb_node, &pag->pagb_tree);
+>  	}
+>  
+> -	list_del_init(&busyp->list);
+> -	kmem_free(busyp);
+> +	list_move(&busyp->list, list);
+>  }
+>  
+>  static void
+> @@ -565,6 +565,7 @@ xfs_extent_busy_clear(
+>  	struct xfs_perag	*pag = NULL;
+>  	xfs_agnumber_t		agno = NULLAGNUMBER;
+>  	bool			wakeup = false;
+> +	LIST_HEAD(busy_list);
+>  
+>  	list_for_each_entry_safe(busyp, n, list, list) {
+>  		if (busyp->agno != agno) {
+> @@ -580,13 +581,18 @@ xfs_extent_busy_clear(
+>  		    !(busyp->flags & XFS_EXTENT_BUSY_SKIP_DISCARD)) {
+>  			busyp->flags = XFS_EXTENT_BUSY_DISCARDED;
+>  		} else {
+> -			xfs_extent_busy_clear_one(mp, pag, busyp);
+> +			xfs_extent_busy_clear_one(mp, pag, busyp, &busy_list);
+>  			wakeup = true;
+>  		}
+>  	}
+>  
+>  	if (pag)
+>  		xfs_extent_busy_put_pag(pag, wakeup);
+> +
+> +	list_for_each_entry_safe(busyp, n, &busy_list, list) {
+> +		list_del_init(&busyp->list);
+> +		kmem_free(busyp);
+> +	}
+>  }
+>  
+>  /*
+> -- 
+> 2.20.1
+> 
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-Suggested-by: Amir Goldstein <amir73il@gmail.com>
-Reviewed-by: Amir Goldstein <amir73il@gmail.com>
-Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
----
- fs/xfs/libxfs/xfs_ag_resv.c      | 2 +-
- fs/xfs/libxfs/xfs_ialloc_btree.c | 4 ++--
- fs/xfs/xfs_inode.c               | 2 +-
- fs/xfs/xfs_mount.h               | 2 +-
- 4 files changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_ag_resv.c b/fs/xfs/libxfs/xfs_ag_resv.c
-index e701ebc36c06..e2ba2a3b63b2 100644
---- a/fs/xfs/libxfs/xfs_ag_resv.c
-+++ b/fs/xfs/libxfs/xfs_ag_resv.c
-@@ -281,7 +281,7 @@ xfs_ag_resv_init(
- 			 */
- 			ask = used = 0;
- 
--			mp->m_inotbt_nores = true;
-+			mp->m_finobt_nores = true;
- 
- 			error = xfs_refcountbt_calc_reserves(mp, tp, agno, &ask,
- 					&used);
-diff --git a/fs/xfs/libxfs/xfs_ialloc_btree.c b/fs/xfs/libxfs/xfs_ialloc_btree.c
-index 86c50208a143..adb2f6df5a11 100644
---- a/fs/xfs/libxfs/xfs_ialloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_ialloc_btree.c
-@@ -124,7 +124,7 @@ xfs_finobt_alloc_block(
- 	union xfs_btree_ptr	*new,
- 	int			*stat)
- {
--	if (cur->bc_mp->m_inotbt_nores)
-+	if (cur->bc_mp->m_finobt_nores)
- 		return xfs_inobt_alloc_block(cur, start, new, stat);
- 	return __xfs_inobt_alloc_block(cur, start, new, stat,
- 			XFS_AG_RESV_METADATA);
-@@ -157,7 +157,7 @@ xfs_finobt_free_block(
- 	struct xfs_btree_cur	*cur,
- 	struct xfs_buf		*bp)
- {
--	if (cur->bc_mp->m_inotbt_nores)
-+	if (cur->bc_mp->m_finobt_nores)
- 		return xfs_inobt_free_block(cur, bp);
- 	return __xfs_inobt_free_block(cur, bp, XFS_AG_RESV_METADATA);
- }
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 05db9540e459..ae07baa7bdbf 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -1754,7 +1754,7 @@ xfs_inactive_ifree(
- 	 * now remains allocated and sits on the unlinked list until the fs is
- 	 * repaired.
- 	 */
--	if (unlikely(mp->m_inotbt_nores)) {
-+	if (unlikely(mp->m_finobt_nores)) {
- 		error = xfs_trans_alloc(mp, &M_RES(mp)->tr_ifree,
- 				XFS_IFREE_SPACE_RES(mp), 0, XFS_TRANS_RESERVE,
- 				&tp);
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index 7964513c3128..7e0bf952e087 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -127,7 +127,7 @@ typedef struct xfs_mount {
- 	struct mutex		m_growlock;	/* growfs mutex */
- 	int			m_fixedfsid[2];	/* unchanged for life of FS */
- 	uint64_t		m_flags;	/* global mount flags */
--	bool			m_inotbt_nores; /* no per-AG finobt resv. */
-+	bool			m_finobt_nores; /* no per-AG finobt resv. */
- 	int			m_ialloc_inos;	/* inodes in inode allocation */
- 	int			m_ialloc_blks;	/* blocks in inode allocation */
- 	int			m_ialloc_min_blks;/* min blocks in sparse inode
 -- 
-2.20.1
+Carlos
