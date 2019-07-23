@@ -1,142 +1,165 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:43576 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389035AbfGXUVz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 24 Jul 2019 16:21:55 -0400
-Subject: Re: Sanity check - need a second pair of eyes ;-)
-References: <alpine.LSU.2.21.1907241443520.12992@Telcontar.valinor>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <4a352054-9a04-433f-979c-d28584e13b4c@sandeen.net>
-Date: Wed, 24 Jul 2019 15:21:52 -0500
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:34630 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725884AbfGWXMX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jul 2019 19:12:23 -0400
+Date: Wed, 24 Jul 2019 09:11:12 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH] xfs: allocate xattr buffer on demand
+Message-ID: <20190723231112.GT7689@dread.disaster.area>
+References: <20190722230518.19078-1-david@fromorbit.com>
+ <20190723125205.GA59587@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LSU.2.21.1907241443520.12992@Telcontar.valinor>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="TrjTLOPH2oBLcBUNHZc3SfzY0o5JPCsnc"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190723125205.GA59587@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Carlos E. R." <robin.listas@telefonica.net>, Linux-XFS mailing list <linux-xfs@vger.kernel.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---TrjTLOPH2oBLcBUNHZc3SfzY0o5JPCsnc
-Content-Type: multipart/mixed; boundary="QVt4k46B3sAbU71396fCJeaCFLqBrMVXG";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: "Carlos E. R." <robin.listas@telefonica.net>,
- Linux-XFS mailing list <linux-xfs@vger.kernel.org>
-Message-ID: <4a352054-9a04-433f-979c-d28584e13b4c@sandeen.net>
-Subject: Re: Sanity check - need a second pair of eyes ;-)
-References: <alpine.LSU.2.21.1907241443520.12992@Telcontar.valinor>
-In-Reply-To: <alpine.LSU.2.21.1907241443520.12992@Telcontar.valinor>
+On Tue, Jul 23, 2019 at 08:52:05AM -0400, Brian Foster wrote:
+> On Tue, Jul 23, 2019 at 09:05:18AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > When doing file lookups and checking for permissions, we end up in
+> > xfs_get_acl() to see if there are any ACLs on the inode. This
+> > requires and xattr lookup, and to do that we have to supply a buffer
+> > large enough to hold an maximum sized xattr.
+> > 
+> > On workloads were we are accessing a wide range of cache cold files
+> > under memory pressure (e.g. NFS fileservers) we end up spending a
+> > lot of time allocating the buffer. The buffer is 64k in length, so
+> > is a contiguous multi-page allocation, and if that then fails we
+> > fall back to vmalloc(). Hence the allocation here is /expensive/
+> > when we are looking up hundreds of thousands of files a second.
+> > 
+> > Initial numbers from a bpf trace show average time in xfs_get_acl()
+> > is ~32us, with ~19us of that in the memory allocation. Note these
+> > are average times, so there are going to be affected by the worst
+> > case allocations more than the common fast case...
+> > 
+> > To avoid this, we could just do a "null"  lookup to see if the ACL
+> > xattr exists and then only do the allocation if it exists. This,
+> > however, optimises the path for the "no ACL present" case at the
+> > expense of the "acl present" case. i.e. we can halve the time in
+> > xfs_get_acl() for the no acl case (i.e down to ~10-15us), but that
+> > then increases the ACL case by 30% (i.e. up to 40-45us).
+> > 
+> > To solve this and speed up both cases, drive the xattr buffer
+> > allocation into the attribute code once we know what the actual
+> > xattr length is. For the no-xattr case, we avoid the allocation
+> > completely, speeding up that case. For the common ACL case, we'll
+> > end up with a fast heap allocation (because it'll be smaller than a
+> > page), and only for the rarer "we have a remote xattr" will we have
+> > a multi-page allocation occur. Hence the common ACL case will be
+> > much faster, too.
+> > 
+> > The down side of this is the buffer allocation is now a GFP_NOFS
+> > allocation. This isn't a big deal for small allocations, though it
+> > might cause large xattrs (which are out of line and doing
+> > substantial GFP_NOFS allocations already) to have to do another
+> > large allocation in this context. I think, however, this is rare
+> > enough that it won't matter for the ACL path, and the common xattr
+> > paths can still provide and external buffer...
+> > 
+> 
+> Where's the NOFS allocation coming from?
 
---QVt4k46B3sAbU71396fCJeaCFLqBrMVXG
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+As I mentioned to Darrick on #xfs, this is a stale comment from
+development of the original prototype. When I reworked the code this
+problem went away, but I forgot to remove it from the commit
+message.
 
->=20
->=20
-> Hi,
->=20
-> I'm trying to create an XFS image to be written on a Blue Ray disk, enc=
-rypted. I'm told that DVDs have a sector size of 2 KiB, thus it is beter =
-to tell the formatting utility of that, because when creating the image f=
-ile it is on a hard disk where sector size is 512B.
->=20
-> Basic procedure:
->=20
-> truncate -s 50050629632 image_1_50.img
-> losetup -f image_1_50.img
-> cryptsetup luksFormat --type luks2 --label blueray50img /dev/loop0
-> cryptsetup luksOpen /dev/loop0 cr_nombre
->=20
->=20
-> So now I have the image file loop mounted on /dev/mapper/cr_nombre, and=
- I do (this is the step I ask about):
->=20
-> Telcontar:/home_aux/BLUERAY_OPS # mkfs.xfs -L ANameUnseen -b size=3D204=
-8 /dev/mapper/cr_nombre
-                                                             ^^^ block si=
-ze
+> 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_attr.c      | 23 ++++------
+> >  fs/xfs/libxfs/xfs_attr.h      |  6 ++-
+> >  fs/xfs/libxfs/xfs_attr_leaf.c | 85 +++++++++++++++++++++--------------
+> >  fs/xfs/libxfs/xfs_da_btree.h  |  4 +-
+> >  fs/xfs/xfs_acl.c              | 14 ++----
+> >  fs/xfs/xfs_ioctl.c            |  2 +-
+> >  fs/xfs/xfs_xattr.c            |  2 +-
+> >  7 files changed, 72 insertions(+), 64 deletions(-)
+> > 
+> ...
+> > diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
+> > index cbda40d40326..cba1ea9d6d0a 100644
+> > --- a/fs/xfs/xfs_acl.c
+> > +++ b/fs/xfs/xfs_acl.c
+> ...
+> > @@ -130,17 +130,9 @@ xfs_get_acl(struct inode *inode, int type)
+> >  		BUG();
+> >  	}
+> >  
+> > -	/*
+> > -	 * If we have a cached ACLs value just return it, not need to
+> > -	 * go out to the disk.
+> > -	 */
+> >  	len = XFS_ACL_MAX_SIZE(ip->i_mount);
+> > -	xfs_acl = kmem_zalloc_large(len, KM_SLEEP);
+> > -	if (!xfs_acl)
+> > -		return ERR_PTR(-ENOMEM);
+> > -
+> > -	error = xfs_attr_get(ip, ea_name, (unsigned char *)xfs_acl,
+> > -							&len, ATTR_ROOT);
+> > +	error = xfs_attr_get(ip, ea_name, (unsigned char **)&xfs_acl, &len,
+> > +				ATTR_ALLOC|ATTR_ROOT);
+> 
+> This looks mostly fine to me aside from an interface nit. I find it
+> strange that we need to specify a max value in len for an xattr of
+> unknown length.
 
-> meta-data=3D/dev/mapper/cr_nombre  isize=3D512    agcount=3D4, agsize=3D=
-6109184 blks
->          =3D                       sectsz=3D512   attr=3D2, projid32bit=
-=3D1
->          =3D                       crc=3D1        finobt=3D1, sparse=3D=
-0, rmapbt=3D0
->          =3D                       reflink=3D0
-> data     =3D                       bsize=3D2048   blocks=3D24436736, im=
-axpct=3D25
-                                   ^^^ block size
->          =3D                       sunit=3D0      swidth=3D0 blks
-> naming   =3Dversion 2              bsize=3D4096   ascii-ci=3D0, ftype=3D=
-1
-> log      =3Dinternal log           bsize=3D2048   blocks=3D11932, versi=
-on=3D2
->          =3D                       sectsz=3D512   sunit=3D0 blks, lazy-=
-count=3D1
-> realtime =3Dnone                   extsz=3D4096   blocks=3D0, rtextents=
-=3D0
-> Telcontar:/home_aux/BLUERAY_OPS #
->=20
->=20
-> Is that the correct command line to achieve written sectors of 2 KiB?
+That's a quirk of the on-disk format. i.e. v4 filesystems only have
+25 ACLs at most, so if we find an xattr that contains 200 ACLs we've
+got an oversized xattr and it should return an error. The existing
+code will return a -ERANGE for this case, and the size of the buffer
+required would be returned in &len. This patch does not change that
+behaviour.
 
-If you want to set the sector size, the instructions are in the man page =
-for
-mkfs.xfs ;)
+Capping the maximum length to what is valid for the given context
+also prevents corruption from triggering a massive allocation size
+that might cause other problems....
 
-       -s sector_size
-              This  option  specifies  the  fundamental  sector  size  of=
-  the
-              filesystem.  The sector_size is specified either as a  valu=
-e  in
-              bytes  with  size=3Dvalue  or  as  a base two logarithm val=
-ue with
-              log=3Dvalue.  The default sector_size is 512  bytes.  The  =
-minimum
-              value for sector size is 512; the maximum is 32768 (32 KiB)=
-=2E The
-              sector_size must be a power of 2 size and cannot be made  l=
-arger
-              than the filesystem block size.
+> Even if we wanted to provide the caller the option to
+> specify a max, I think we should be able to pass zero here and not fail
+> with -ERANGE down in xfs_attr_copy_value().
 
--Eric
+We can change this behaviour if we even need such functionality. I
+don't see any point in changing API behaviour for things we don't
+actually need or use right now.
 
-> I ask because I see isize=3D512 and sectsz=3D512 and I wonder.
->=20
->=20
-> -- Cheers,
->        Carlos E. R.
->        (from openSUSE 15.0 x86_64 at Telcontar)
->=20
+> Of course, we can and should
+> still check the on-disk value length (against XFS_XATTR_SIZE_MAX for
+> example) to protect against overtly large allocation attempts if on-disk
+> data happens to bogus.
 
+The max size of the xattr is context dependent, so given we have
+always passed this down into xfs_attr_get() for it to determine
+validity of the xattr that is found, I just don't see any
+reason to change it...
 
---QVt4k46B3sAbU71396fCJeaCFLqBrMVXG--
+> Somewhat related on the interface topic... should we ever return an
+> allocated buffer on error, or should the xattr layer unwind such
+> operations before it returns?
 
---TrjTLOPH2oBLcBUNHZc3SfzY0o5JPCsnc
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+Errors can occur in different layers, having every layer know how to
+handle unwinding/freeing adds unnecessary complexity to the error
+handling. Having the top level code direct that the buffer must be
+allocated, and that if it was allocated it will free it regardless
+of success/failure greatly simplifies the rest of the code....
 
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
+It largely makes no difference if it's handled by xfs_attr_get()
+of the callers of that function. The only difference it makes if
+we push it into xfs_attr_get() is that if we specify
+XFS_DA_OP_ALLOCVAL the we have to unconditionally free anything in
+args.value. i.e. it just pushes the same semantics in one layer...
 
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl04veAACgkQIK4WkuE9
-3uB+XxAAk2YrFN9/mx8zQHyrQwWdJtVHGjjUPX+MRHSFO3eRlX8FSVdw7cTx2GOe
-QFfwDe2o7tHUGhXx+z1r2gq+JbxBri577VyAsRXil5DJxXNj77pYluKEpF8v+HFZ
-QQ2mGgX+aCvzmff338DCVpuzgm9YbWZX0c+A52DrpoAqEyZn+NvF/8hfAJUbq1mL
-c0XLFC0k/2+UB/1M4dU8UIyCaifKjXWO+bNEANOkdCzrYxddrO3eEgBslPIR08ux
-I7Xlqy0YhlivrXwd73AmOvpXLtHEAxbwUJvJBJ762cCDomrDTpP9gz+QC0FNewyk
-lcnhR8DPxZv3OhCPG7r+97yhgznA0YmkRkDShh+B01ocDELnvn293cCvKivckk3F
-y7+a2JACdwrD6tE7U1PElCsb5Po3t+NXvwxeO+k4dWMu/GeLcezEz1Uro6fYFVEu
-tX/jO2sFY7oPHVVAHbzfIEYvdQwUIN1El2osJFpm772lxk0AfeYKa1EjRKf3BSNr
-VGrQqmqPQ0JDkIRbz4+rDwiIduu7kQgFFWe/qB6vR7zYlh2yrdFlFBMR0YhYRX9Z
-gayHO84+SrFbWC4aF4jFmfYWJUyWJ4ZBE0B28zT/n0DI9bhbic4kc7lIKbt9badO
-ZxeQ3ijo8ZX3w9+RntDzyj+H8vvmJNFJxs2H1m+yE45smV/znKY=
-=HJWD
------END PGP SIGNATURE-----
+Cheers,
 
---TrjTLOPH2oBLcBUNHZc3SfzY0o5JPCsnc--
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
