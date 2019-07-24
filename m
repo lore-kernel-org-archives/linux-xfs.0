@@ -1,12 +1,13 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:53562 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725829AbfGXENb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 00:13:31 -0400
-Subject: [PATCH 2/4] xfs/122: mask wonky ioctls
+Received: from aserp2120.oracle.com ([141.146.126.78]:51492 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725823AbfGXENk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 00:13:40 -0400
+Subject: [PATCH 3/4] xfs/122: add the new v5 bulkstat/inumbers ioctl
+ structures
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 23 Jul 2019 21:13:26 -0700
-Message-ID: <156394160665.1850833.14349327556274532970.stgit@magnolia>
+Date: Tue, 23 Jul 2019 21:13:32 -0700
+Message-ID: <156394161274.1850833.4300015313269610610.stgit@magnolia>
 In-Reply-To: <156394159426.1850833.16316913520596851191.stgit@magnolia>
 References: <156394159426.1850833.16316913520596851191.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,33 +21,38 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't check the structure size of the inogrp/bstat/fsop_bulkreq
-structures because they're incorrectly padded.  When we remove the
-old typdefs the old filter stops working.
+The new v5 bulkstat and inumbers structures are correctly padded so that
+no format changes are necessary across platforms, so add them to the
+output.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/122 |    3 +++
- 1 file changed, 3 insertions(+)
+ tests/xfs/122.out |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
 
-diff --git a/tests/xfs/122 b/tests/xfs/122
-index 89a39a23..64b63cb1 100755
---- a/tests/xfs/122
-+++ b/tests/xfs/122
-@@ -148,12 +148,15 @@ xfs_growfs_data_t
- xfs_growfs_rt_t
- xfs_bstime_t
- xfs_bstat_t
-+struct xfs_bstat
- xfs_fsop_bulkreq_t
-+struct xfs_fsop_bulkreq
- xfs_icsb_cnts_t
- xfs_icdinode_t
- xfs_ictimestamp_t
- xfs_inobt_rec_incore_t
- xfs_inogrp_t
-+struct xfs_inogrp
- xfs_fid2_t
- xfs_fsop_handlereq_t
- xfs_fsop_setdm_handlereq_t
+diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+index cf9ac9e2..e2f346eb 100644
+--- a/tests/xfs/122.out
++++ b/tests/xfs/122.out
+@@ -66,6 +66,10 @@ sizeof(struct xfs_btree_block_lhdr) = 64
+ sizeof(struct xfs_btree_block_shdr) = 48
+ sizeof(struct xfs_bud_log_format) = 16
+ sizeof(struct xfs_bui_log_format) = 16
++sizeof(struct xfs_bulk_ireq) = 64
++sizeof(struct xfs_bulkstat) = 192
++sizeof(struct xfs_bulkstat_req) = 64
++sizeof(struct xfs_bulkstat_single_req) = 224
+ sizeof(struct xfs_clone_args) = 32
+ sizeof(struct xfs_cud_log_format) = 16
+ sizeof(struct xfs_cui_log_format) = 16
+@@ -89,6 +93,9 @@ sizeof(struct xfs_fsop_geom_v4) = 112
+ sizeof(struct xfs_icreate_log) = 28
+ sizeof(struct xfs_inode_log_format) = 56
+ sizeof(struct xfs_inode_log_format_32) = 52
++sizeof(struct xfs_inumbers) = 24
++sizeof(struct xfs_inumbers_req) = 64
++sizeof(struct xfs_ireq) = 32
+ sizeof(struct xfs_log_dinode) = 176
+ sizeof(struct xfs_map_extent) = 32
+ sizeof(struct xfs_phys_extent) = 16
