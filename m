@@ -1,35 +1,54 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:43226 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726323AbfGUQns (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 21 Jul 2019 12:43:48 -0400
-Date: Mon, 22 Jul 2019 00:43:38 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH v4 2/3] generic: copy_file_range bounds test
-Message-ID: <20190721164338.GJ7943@desktop>
-References: <20190715125516.7367-1-amir73il@gmail.com>
- <20190715125516.7367-3-amir73il@gmail.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:43780 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725823AbfGXEM7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 00:12:59 -0400
+Subject: [PATCH 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Tue, 23 Jul 2019 21:12:54 -0700
+Message-ID: <156394157450.1850719.464315342783936237.stgit@magnolia>
+In-Reply-To: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190715125516.7367-3-amir73il@gmail.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Amir Goldstein <amir73il@gmail.com>
-Cc: "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Olga Kornievskaia <olga.kornievskaia@gmail.com>, fstests@vger.kernel.org, linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Jul 15, 2019 at 03:55:15PM +0300, Amir Goldstein wrote:
-> Test that copy_file_range will return the correct errors for various
-> error conditions and boundary constraints.
-> 
-> This is a regression test for kernel commit:
-> 
->   5dae222a5ff0 vfs: allow copy_file_range to copy across devices
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This seems like refering to the wrong commit, I've changed it to
+Since the iomap code are moving to fs/iomap/ we have to add new entries
+to the aiodio dmesg filter to reflect this.
 
-96e6e8f4a68d ("vfs: add missing checks to copy_file_range")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/filter |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Thanks,
-Eryu
+
+diff --git a/common/filter b/common/filter
+index ed082d24..26fc2132 100644
+--- a/common/filter
++++ b/common/filter
+@@ -555,6 +555,7 @@ _filter_aiodio_dmesg()
+ 	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+ 	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+ 	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
++	local warn10="WARNING:.*fs/iomap/direct-io\.c:.*iomap_dio_actor.*"
+ 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+ 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+ 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+@@ -563,7 +564,8 @@ _filter_aiodio_dmesg()
+ 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+ 	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+ 	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+-	    -e "s#$warn9#Intentional warnings in dio_complete#"
++	    -e "s#$warn9#Intentional warnings in dio_complete#" \
++	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+ }
+ 
+ # We generate assert related WARNINGs on purpose and make sure test doesn't fail
