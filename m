@@ -1,153 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:50126 "EHLO mx1.redhat.com"
+Received: from sandeen.net ([63.231.237.45]:43890 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732432AbfGWMwI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 23 Jul 2019 08:52:08 -0400
-Date: Tue, 23 Jul 2019 08:52:05 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH] xfs: allocate xattr buffer on demand
-Message-ID: <20190723125205.GA59587@bfoster>
-References: <20190722230518.19078-1-david@fromorbit.com>
+        id S2387897AbfGXU1S (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 24 Jul 2019 16:27:18 -0400
+Subject: Re: [PATCH] xfs: fix stack contents leakage in the v1
+ bulkstat/inumbers ioctls
+From: Eric Sandeen <sandeen@sandeen.net>
+References: <20190724153545.GC1561054@magnolia>
+ <5158a525-6153-b27f-2d19-c6eb3fbf609e@sandeen.net>
+Message-ID: <630545c3-711f-f5e5-e644-88a1ec777397@sandeen.net>
+Date: Wed, 24 Jul 2019 15:27:16 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190722230518.19078-1-david@fromorbit.com>
+In-Reply-To: <5158a525-6153-b27f-2d19-c6eb3fbf609e@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
 
-On Tue, Jul 23, 2019 at 09:05:18AM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On 7/24/19 3:19 PM, Eric Sandeen wrote:
+> On 7/24/19 10:35 AM, Darrick J. Wong wrote:
+>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Explicitly initialize the onstack structures to zero so we don't leak
+>> kernel memory into userspace when converting the in-core structure to
+>> the v1 ioctl structure.
+>>
+>> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When doing file lookups and checking for permissions, we end up in
-> xfs_get_acl() to see if there are any ACLs on the inode. This
-> requires and xattr lookup, and to do that we have to supply a buffer
-> large enough to hold an maximum sized xattr.
+>> ---
+>>  fs/xfs/xfs_ioctl.c |    4 ++--
+>>  1 file changed, 2 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+>> index f193f7b288ca..44e1a290f053 100644
+>> --- a/fs/xfs/xfs_ioctl.c
+>> +++ b/fs/xfs/xfs_ioctl.c
+>> @@ -719,7 +719,7 @@ xfs_fsbulkstat_one_fmt(
+>>  	struct xfs_ibulk		*breq,
+>>  	const struct xfs_bulkstat	*bstat)
+>>  {
+>> -	struct xfs_bstat		bs1;
+>> +	struct xfs_bstat		bs1 = { 0 };
+>>  
+>>  	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
 > 
-> On workloads were we are accessing a wide range of cache cold files
-> under memory pressure (e.g. NFS fileservers) we end up spending a
-> lot of time allocating the buffer. The buffer is 64k in length, so
-> is a contiguous multi-page allocation, and if that then fails we
-> fall back to vmalloc(). Hence the allocation here is /expensive/
-> when we are looking up hundreds of thousands of files a second.
+> Confused.  the first thing xfs_bulkstat_to_bstat does is...
 > 
-> Initial numbers from a bpf trace show average time in xfs_get_acl()
-> is ~32us, with ~19us of that in the memory allocation. Note these
-> are average times, so there are going to be affected by the worst
-> case allocations more than the common fast case...
+> void
+> xfs_bulkstat_to_bstat(
+>         struct xfs_mount                *mp,
+>         struct xfs_bstat                *bs1,
+>         const struct xfs_bulkstat       *bstat)
+> {
+>         memset(bs1, 0, sizeof(struct xfs_bstat));
 > 
-> To avoid this, we could just do a "null"  lookup to see if the ACL
-> xattr exists and then only do the allocation if it exists. This,
-> however, optimises the path for the "no ACL present" case at the
-> expense of the "acl present" case. i.e. we can halve the time in
-> xfs_get_acl() for the no acl case (i.e down to ~10-15us), but that
-> then increases the ACL case by 30% (i.e. up to 40-45us).
+> so what's leaking here?
 > 
-> To solve this and speed up both cases, drive the xattr buffer
-> allocation into the attribute code once we know what the actual
-> xattr length is. For the no-xattr case, we avoid the allocation
-> completely, speeding up that case. For the common ACL case, we'll
-> end up with a fast heap allocation (because it'll be smaller than a
-> page), and only for the rarer "we have a remote xattr" will we have
-> a multi-page allocation occur. Hence the common ACL case will be
-> much faster, too.
+>>  	if (copy_to_user(breq->ubuffer, &bs1, sizeof(bs1)))
+>> @@ -732,7 +732,7 @@ xfs_fsinumbers_fmt(
+>>  	struct xfs_ibulk		*breq,
+>>  	const struct xfs_inumbers	*igrp)
+>>  {
+>> -	struct xfs_inogrp		ig1;
+>> +	struct xfs_inogrp		ig1 = { 0 };
+>>  
+>>  	xfs_inumbers_to_inogrp(&ig1, igrp);
 > 
-> The down side of this is the buffer allocation is now a GFP_NOFS
-> allocation. This isn't a big deal for small allocations, though it
-> might cause large xattrs (which are out of line and doing
-> substantial GFP_NOFS allocations already) to have to do another
-> large allocation in this context. I think, however, this is rare
-> enough that it won't matter for the ACL path, and the common xattr
-> paths can still provide and external buffer...
+> ... and this function initializes all elements of xfs_inogrp ig1 AFAICT.
 > 
+> Maybe I need more coffee?
 
-Where's the NOFS allocation coming from?
+or I need to read mail in order.  o_O  Ok, struct packing/ hole issues.
 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 23 ++++------
->  fs/xfs/libxfs/xfs_attr.h      |  6 ++-
->  fs/xfs/libxfs/xfs_attr_leaf.c | 85 +++++++++++++++++++++--------------
->  fs/xfs/libxfs/xfs_da_btree.h  |  4 +-
->  fs/xfs/xfs_acl.c              | 14 ++----
->  fs/xfs/xfs_ioctl.c            |  2 +-
->  fs/xfs/xfs_xattr.c            |  2 +-
->  7 files changed, 72 insertions(+), 64 deletions(-)
-> 
-...
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index cbda40d40326..cba1ea9d6d0a 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-...
-> @@ -130,17 +130,9 @@ xfs_get_acl(struct inode *inode, int type)
->  		BUG();
->  	}
->  
-> -	/*
-> -	 * If we have a cached ACLs value just return it, not need to
-> -	 * go out to the disk.
-> -	 */
->  	len = XFS_ACL_MAX_SIZE(ip->i_mount);
-> -	xfs_acl = kmem_zalloc_large(len, KM_SLEEP);
-> -	if (!xfs_acl)
-> -		return ERR_PTR(-ENOMEM);
-> -
-> -	error = xfs_attr_get(ip, ea_name, (unsigned char *)xfs_acl,
-> -							&len, ATTR_ROOT);
-> +	error = xfs_attr_get(ip, ea_name, (unsigned char **)&xfs_acl, &len,
-> +				ATTR_ALLOC|ATTR_ROOT);
+But let's be consistent, do we zero it out in the conversion function or
+rely on the caller?  (I prefer the former, as is done in xfs_bulkstat_to_bstat,
+but we surely don't need to do both).
 
-This looks mostly fine to me aside from an interface nit. I find it
-strange that we need to specify a max value in len for an xattr of
-unknown length. Even if we wanted to provide the caller the option to
-specify a max, I think we should be able to pass zero here and not fail
-with -ERANGE down in xfs_attr_copy_value(). Of course, we can and should
-still check the on-disk value length (against XFS_XATTR_SIZE_MAX for
-example) to protect against overtly large allocation attempts if on-disk
-data happens to bogus.
+Also, Fixes: tag please?
 
-Somewhat related on the interface topic... should we ever return an
-allocated buffer on error, or should the xattr layer unwind such
-operations before it returns? This patch handles the value buffer fine
-from a functional perspective, but the latter seems more consistent with
-our general design practice. A future ATTR_ALLOC caller might not know
-to free args.value unconditionally (and as a reviewer I probably
-wouldn't expect it).
-
-Brian
-
->  	if (error) {
->  		/*
->  		 * If the attribute doesn't exist make sure we have a negative
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 6f7848cd5527..5f73feb40384 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -438,7 +438,7 @@ xfs_attrmulti_attr_get(
->  	if (!kbuf)
->  		return -ENOMEM;
->  
-> -	error = xfs_attr_get(XFS_I(inode), name, kbuf, (int *)len, flags);
-> +	error = xfs_attr_get(XFS_I(inode), name, &kbuf, (int *)len, flags);
->  	if (error)
->  		goto out_kfree;
->  
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index 3123b5aaad2a..cb895b1df5e4 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -30,7 +30,7 @@ xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
->  		value = NULL;
->  	}
->  
-> -	error = xfs_attr_get(ip, (unsigned char *)name, value, &asize, xflags);
-> +	error = xfs_attr_get(ip, name, (unsigned char **)&value, &asize, xflags);
->  	if (error)
->  		return error;
->  	return asize;
-> -- 
-> 2.22.0
-> 
+-Eric
