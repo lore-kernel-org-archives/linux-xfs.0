@@ -1,14 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:44116 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725823AbfGXENV (ORCPT
+Received: from userp2120.oracle.com ([156.151.31.85]:53436 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725829AbfGXENV (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 00:13:21 -0400
-Subject: [PATCH 3/3] generic/561: kill duperemove after sleep_time
+Subject: [PATCH 0/4] xfs: fixes and new tests for bulkstat v5
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 23 Jul 2019 21:13:06 -0700
-Message-ID: <156394158687.1850719.7335587409056156645.stgit@magnolia>
-In-Reply-To: <156394156831.1850719.2997473679130010771.stgit@magnolia>
-References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+Date: Tue, 23 Jul 2019 21:13:14 -0700
+Message-ID: <156394159426.1850833.16316913520596851191.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
@@ -18,33 +16,26 @@ List-Id: xfs
 To: guaneryu@gmail.com, darrick.wong@oracle.com
 Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-generic/561 can take a very long time to run on XFS (45+ minutes)
-because it kicks off fsstress and a lot of duperemove processes, waits
-50 seconds, and then waits for the duperemove processes to finish.
-duperemove, however, fights with fsstress for file locks and can take
-a very long time to make even a single pass over the filesystem and
-exit, which means the test just takes forever to run.
+Fix some problems introduced by the creation of the V5 bulkstat ioctl,
+and then add some new tests to make sure the new libxfrog bulkstat
+wrappers work fine with both the new v5 ioctl and emulating it with the
+old v1 ioctl.
 
-Once we've decided to tear down the duperemove processes let's just send
-them SIGINT and then wait for them to exit.
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/561 |    1 +
- 1 file changed, 1 insertion(+)
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
+--D
 
-diff --git a/tests/generic/561 b/tests/generic/561
-index c11d5bfa..2f3eff3c 100755
---- a/tests/generic/561
-+++ b/tests/generic/561
-@@ -47,6 +47,7 @@ function end_test()
- 	# stop duperemove running
- 	if [ -e $dupe_run ]; then
- 		rm -f $dupe_run
-+		kill -INT $dedup_pids
- 		wait $dedup_pids
- 	fi
- 
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bulkstat-v5
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bulkstat-v5
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=bulkstat-v5
