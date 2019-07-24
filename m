@@ -1,60 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:39958 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728593AbfG3U5N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 16:57:13 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH v4 3/3] net/xdp: convert put_page() to put_user_page*()
-Date: Tue, 30 Jul 2019 13:57:05 -0700
-Message-Id: <20190730205705.9018-4-jhubbard@nvidia.com>
-In-Reply-To: <20190730205705.9018-1-jhubbard@nvidia.com>
-References: <20190730205705.9018-1-jhubbard@nvidia.com>
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:44339 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725900AbfGXGfB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 02:35:01 -0400
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: [PATCH 0/6] xfs: stable fixes for v4.19.y - circa v4.19.60
+Date: Wed, 24 Jul 2019 06:34:45 +0000
+Message-Id: <20190724063451.26190-1-mcgrof@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?Bj=C3=B6rn=20T=C3=B6pel?= <bjorn.topel@intel.com>, Magnus Karlsson <magnus.karlsson@intel.com>, "David S . Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+To: linux-xfs@vger.kernel.org, Alexander.Levin@microsoft.com
+Cc: gregkh@linuxfoundation.org, stable@vger.kernel.org, amir73il@gmail.com, Luis Chamberlain <mcgrof@kernel.org>
 
-From: John Hubbard <jhubbard@nvidia.com>
+Sasha,
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+you merged my last set of XFS fixes. I asked for one patch to not be
+merged yet as one issue was not yet properly fixed. After some further
+review I have identified commits which do fix the kernel crash reported
+on kz#204223 [0] with generic/388, this patch set applies on top of the
+last one I sent you.
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
+These commits do quite a bit of code refactoring, and the actual fix
+lies hidden in the last commit by Darrick. Due to the amount of changes
+trying to extract the fix is riskier than just carring the code
+refactoring. If we're OK with the code refactor for stable, its my
+recommendation we keep the changes to match more with upstream and
+benefit from other fixes. The code refactoring was merged on v4.20 and
+Darrick's fix is the only fix upstream since the code was merged.
 
-Cc: Björn Töpel <bjorn.topel@intel.com>
-Cc: Magnus Karlsson <magnus.karlsson@intel.com>
-Cc: David S. Miller <davem@davemloft.net>
-Cc: netdev@vger.kernel.org
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- net/xdp/xdp_umem.c | 9 +--------
- 1 file changed, 1 insertion(+), 8 deletions(-)
+If others disagree with this approach please speak up.
 
-diff --git a/net/xdp/xdp_umem.c b/net/xdp/xdp_umem.c
-index 83de74ca729a..17c4b3d3dc34 100644
---- a/net/xdp/xdp_umem.c
-+++ b/net/xdp/xdp_umem.c
-@@ -166,14 +166,7 @@ void xdp_umem_clear_dev(struct xdp_umem *umem)
- 
- static void xdp_umem_unpin_pages(struct xdp_umem *umem)
- {
--	unsigned int i;
--
--	for (i = 0; i < umem->npgs; i++) {
--		struct page *page = umem->pgs[i];
--
--		set_page_dirty_lock(page);
--		put_page(page);
--	}
-+	put_user_pages_dirty_lock(umem->pgs, umem->npgs, true);
- 
- 	kfree(umem->pgs);
- 	umem->pgs = NULL;
+I've run a full set of fstests against the following sections 12 times and
+have found no regressions against the baseline:
+
+xfs
+xfs_logdev
+xfs_nocrc_512
+xfs_nocrc
+xfs_realtimedev
+xfs_reflink_1024
+xfs_reflink_dev
+
+Review from others is appreciated.
+
+[0] https://bugzilla.kernel.org/show_bug.cgi?id=204223
+
+Allison Henderson (4):
+  xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
+  xfs: Add helper function xfs_attr_try_sf_addname
+  xfs: Add attibute set and helper functions
+  xfs: Add attibute remove and helper functions
+
+Brian Foster (1):
+  xfs: don't trip over uninitialized buffer on extent read of corrupted
+    inode
+
+Darrick J. Wong (1):
+  xfs: always rejoin held resources during defer roll
+
+ fs/xfs/libxfs/xfs_attr.c       | 231 ++++++++++++++++++---------------
+ fs/xfs/{ => libxfs}/xfs_attr.h |   2 +
+ fs/xfs/libxfs/xfs_bmap.c       |  54 +++++---
+ fs/xfs/libxfs/xfs_bmap.h       |   1 +
+ fs/xfs/libxfs/xfs_defer.c      |  14 +-
+ fs/xfs/xfs_dquot.c             |  17 +--
+ 6 files changed, 183 insertions(+), 136 deletions(-)
+ rename fs/xfs/{ => libxfs}/xfs_attr.h (98%)
+
 -- 
-2.22.0
+2.18.0
