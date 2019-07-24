@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:35710 "EHLO
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:33979 "EHLO
         mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725900AbfGXGfE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 02:35:04 -0400
+        with ESMTP id S1725900AbfGXGfG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 02:35:06 -0400
 From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: [PATCH 1/6] xfs: don't trip over uninitialized buffer on extent read of corrupted inode
-Date: Wed, 24 Jul 2019 06:34:46 +0000
-Message-Id: <20190724063451.26190-2-mcgrof@kernel.org>
+Subject: [PATCH 5/6] xfs: Add attibute remove and helper functions
+Date: Wed, 24 Jul 2019 06:34:50 +0000
+Message-Id: <20190724063451.26190-6-mcgrof@kernel.org>
 In-Reply-To: <20190724063451.26190-1-mcgrof@kernel.org>
 References: <20190724063451.26190-1-mcgrof@kernel.org>
 MIME-Version: 1.0
@@ -15,76 +15,90 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org, Alexander.Levin@microsoft.com
-Cc: gregkh@linuxfoundation.org, stable@vger.kernel.org, amir73il@gmail.com, Brian Foster <bfoster@redhat.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>
+Cc: gregkh@linuxfoundation.org, stable@vger.kernel.org, amir73il@gmail.com, Allison Henderson <allison.henderson@oracle.com>, Dave Chinner <dchinner@redhat.com>, Dave Chinner <david@fromorbit.com>, Luis Chamberlain <mcgrof@kernel.org>
 
-From: Brian Foster <bfoster@redhat.com>
+From: Allison Henderson <allison.henderson@oracle.com>
 
-commit 6958d11f77d45db80f7e22a21a74d4d5f44dc667 upstream.
+commit 068f985a9e5ec70fde58d8f679994fdbbd093a36 upstream.
 
-We've had rather rare reports of bmap btree block corruption where
-the bmap root block has a level count of zero. The root cause of the
-corruption is so far unknown. We do have verifier checks to detect
-this form of on-disk corruption, but this doesn't cover a memory
-corruption variant of the problem. The latter is a reasonable
-possibility because the root block is part of the inode fork and can
-reside in-core for some time before inode extents are read.
+This patch adds xfs_attr_remove_args. These sub-routines remove
+the attributes specified in @args. We will use this later for setting
+parent pointers as a deferred attribute operation.
 
-If this occurs, it leads to a system crash such as the following:
-
- BUG: unable to handle kernel paging request at ffffffff00000221
- PF error: [normal kernel read fault]
- ...
- RIP: 0010:xfs_trans_brelse+0xf/0x200 [xfs]
- ...
- Call Trace:
-  xfs_iread_extents+0x379/0x540 [xfs]
-  xfs_file_iomap_begin_delay+0x11a/0xb40 [xfs]
-  ? xfs_attr_get+0xd1/0x120 [xfs]
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  xfs_file_iomap_begin+0x4c4/0x6d0 [xfs]
-  ? __vfs_getxattr+0x53/0x70
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  iomap_apply+0x63/0x130
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  iomap_file_buffered_write+0x62/0x90
-  ? iomap_write_begin.constprop.40+0x2d0/0x2d0
-  xfs_file_buffered_aio_write+0xe4/0x3b0 [xfs]
-  __vfs_write+0x150/0x1b0
-  vfs_write+0xba/0x1c0
-  ksys_pwrite64+0x64/0xa0
-  do_syscall_64+0x5a/0x1d0
-  entry_SYSCALL_64_after_hwframe+0x49/0xbe
-
-The crash occurs because xfs_iread_extents() attempts to release an
-uninitialized buffer pointer as the level == 0 value prevented the
-buffer from ever being allocated or read. Change the level > 0
-assert to an explicit error check in xfs_iread_extents() to avoid
-crashing the kernel in the event of localized, in-core inode
-corruption.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Signed-off-by: Dave Chinner <david@fromorbit.com>
 Signed-off-by: Luis Chamberlain <mcgrof@kernel.org>
 ---
- fs/xfs/libxfs/xfs_bmap.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ fs/xfs/libxfs/xfs_attr.c | 36 +++++++++++++++++++++++++-----------
+ fs/xfs/libxfs/xfs_attr.h |  1 +
+ 2 files changed, 26 insertions(+), 11 deletions(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 3a496ffe6551..ab2465bc413a 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -1178,7 +1178,10 @@ xfs_iread_extents(
- 	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
- 	 */
- 	level = be16_to_cpu(block->bb_level);
--	ASSERT(level > 0);
-+	if (unlikely(level == 0)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
-+		return -EFSCORRUPTED;
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 25431ddba1fa..844ed87b1900 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -289,6 +289,30 @@ xfs_attr_set_args(
+ 	return error;
+ }
+ 
++/*
++ * Remove the attribute specified in @args.
++ */
++int
++xfs_attr_remove_args(
++	struct xfs_da_args      *args)
++{
++	struct xfs_inode	*dp = args->dp;
++	int			error;
++
++	if (!xfs_inode_hasattr(dp)) {
++		error = -ENOATTR;
++	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
++		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
++		error = xfs_attr_shortform_remove(args);
++	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
++		error = xfs_attr_leaf_removename(args);
++	} else {
++		error = xfs_attr_node_removename(args);
 +	}
- 	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
- 	bno = be64_to_cpu(*pp);
++
++	return error;
++}
++
+ int
+ xfs_attr_set(
+ 	struct xfs_inode	*dp,
+@@ -445,17 +469,7 @@ xfs_attr_remove(
+ 	 */
+ 	xfs_trans_ijoin(args.trans, dp, 0);
+ 
+-	if (!xfs_inode_hasattr(dp)) {
+-		error = -ENOATTR;
+-	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+-		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+-		error = xfs_attr_shortform_remove(&args);
+-	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+-		error = xfs_attr_leaf_removename(&args);
+-	} else {
+-		error = xfs_attr_node_removename(&args);
+-	}
+-
++	error = xfs_attr_remove_args(&args);
+ 	if (error)
+ 		goto out;
+ 
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index f608ac8f306f..bdf52a333f3f 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -142,6 +142,7 @@ int xfs_attr_set(struct xfs_inode *dp, const unsigned char *name,
+ 		 unsigned char *value, int valuelen, int flags);
+ int xfs_attr_set_args(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
+ int xfs_attr_remove(struct xfs_inode *dp, const unsigned char *name, int flags);
++int xfs_attr_remove_args(struct xfs_da_args *args);
+ int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+ 		  int flags, struct attrlist_cursor_kern *cursor);
  
 -- 
 2.18.0
