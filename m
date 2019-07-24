@@ -1,56 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38250 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbfG3BSb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:31 -0400
-Subject: [PATCH 5/6] xfs: set IOMAP_F_NEW more carefully
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jul 2019 18:18:12 -0700
-Message-ID: <156444949222.2682261.18443282354059824172.stgit@magnolia>
-In-Reply-To: <156444945993.2682261.3926017251626679029.stgit@magnolia>
-References: <156444945993.2682261.3926017251626679029.stgit@magnolia>
+Received: from relayout02-q01.e.movistar.es ([86.109.101.151]:31229 "EHLO
+        relayout02-q01.e.movistar.es" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725883AbfGXMzR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 08:55:17 -0400
+Received: from relayout02-redir.e.movistar.es (unknown [86.109.101.202])
+        by relayout02-out.e.movistar.es (Postfix) with ESMTP id 45twL93VCszhYVy
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 14:55:13 +0200 (CEST)
+Received: from Telcontar.valinor (70.red-88-9-30.dynamicip.rima-tde.net [88.9.30.70])
+        (using TLSv1.2 with cipher ADH-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        (Authenticated sender: robin.listas2@telefonica.net)
+        by relayout02.e.movistar.es (Postfix) with ESMTPSA id 45twL90W1GzdbVy
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 14:55:12 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 8A359320B3E
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 14:55:12 +0200 (CEST)
+Received: from Telcontar.valinor ([127.0.0.1])
+        by localhost (telcontar.valinor [127.0.0.1]) (amavisd-new, port 10024)
+        with LMTP id pqDlZLn6pPt5 for <linux-xfs@vger.kernel.org>;
+        Wed, 24 Jul 2019 14:55:11 +0200 (CEST)
+Received: from localhost (localhost [127.0.0.1])
+        by Telcontar.valinor (Postfix) with ESMTP id 8BA1C3206C6
+        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 14:55:11 +0200 (CEST)
+Date: Wed, 24 Jul 2019 14:55:05 +0200 (CEST)
+From: "Carlos E. R." <robin.listas@telefonica.net>
+Subject: Sanity check - need a second pair of eyes ;-)
+Message-ID: <alpine.LSU.2.21.1907241443520.12992@Telcontar.valinor>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; format=flowed; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Damien.LeMoal@wdc.com, Christoph Hellwig <hch@lst.de>, agruenba@redhat.com
+To: Linux-XFS mailing list <linux-xfs@vger.kernel.org>
 
-From: Christoph Hellwig <hch@lst.de>
-
-Don't set IOMAP_F_NEW if we COW over and existing allocated range, as
-these aren't strictly new allocations.  This is required to be able to
-use IOMAP_F_NEW to zero newly allocated blocks, which is required for
-the iomap code to fully support file systems that don't do delayed
-allocations or use unwritten extents.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iomap.c |    9 ++++++---
- 1 file changed, 6 insertions(+), 3 deletions(-)
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
 
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index 3a4310d7cb59..434ff589f0fc 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -707,9 +707,12 @@ xfs_file_iomap_begin_delay(
- 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
- 	 * them out if the write happens to fail.
- 	 */
--	iomap->flags |= IOMAP_F_NEW;
--	trace_xfs_iomap_alloc(ip, offset, count, whichfork,
--			whichfork == XFS_DATA_FORK ? &imap : &cmap);
-+	if (whichfork == XFS_DATA_FORK) {
-+		iomap->flags |= IOMAP_F_NEW;
-+		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
-+	} else {
-+		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &cmap);
-+	}
- done:
- 	if (whichfork == XFS_COW_FORK) {
- 		if (imap.br_startoff > offset_fsb) {
+
+Hi,
+
+I'm trying to create an XFS image to be written on a Blue Ray disk, 
+encrypted. I'm told that DVDs have a sector size of 2 KiB, thus it is 
+beter to tell the formatting utility of that, because when creating the 
+image file it is on a hard disk where sector size is 512B.
+
+Basic procedure:
+
+truncate -s 50050629632 image_1_50.img
+losetup -f image_1_50.img
+cryptsetup luksFormat --type luks2 --label blueray50img /dev/loop0
+cryptsetup luksOpen /dev/loop0 cr_nombre
+
+
+So now I have the image file loop mounted on /dev/mapper/cr_nombre, and I 
+do (this is the step I ask about):
+
+Telcontar:/home_aux/BLUERAY_OPS # mkfs.xfs -L ANameUnseen -b size=2048 
+/dev/mapper/cr_nombre
+meta-data=/dev/mapper/cr_nombre  isize=512    agcount=4, agsize=6109184 blks
+          =                       sectsz=512   attr=2, projid32bit=1
+          =                       crc=1        finobt=1, sparse=0, rmapbt=0
+          =                       reflink=0
+data     =                       bsize=2048   blocks=24436736, imaxpct=25
+          =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=2048   blocks=11932, version=2
+          =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+Telcontar:/home_aux/BLUERAY_OPS #
+
+
+Is that the correct command line to achieve written sectors of 2 KiB?
+
+I ask because I see isize=512 and sectsz=512 and I wonder.
+
+
+- -- 
+Cheers,
+        Carlos E. R.
+        (from openSUSE 15.0 x86_64 at Telcontar)
+-----BEGIN PGP SIGNATURE-----
+
+iHoEARECADoWIQQZEb51mJKK1KpcU/W1MxgcbY1H1QUCXThVKRwccm9iaW4ubGlz
+dGFzQHRlbGVmb25pY2EubmV0AAoJELUzGBxtjUfVwjkAn2q9VguiYTMF82FiN73c
+p2HXDpo7AJ0ahR27m9vhfI0NYVePM6h91CtH8w==
+=uH+3
+-----END PGP SIGNATURE-----
