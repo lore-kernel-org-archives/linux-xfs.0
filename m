@@ -1,13 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43780 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725823AbfGXEM7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 00:12:59 -0400
-Subject: [PATCH 1/3] common: filter aiodio dmesg after fs/iomap.c to
- fs/iomap/ move
+Received: from userp2120.oracle.com ([156.151.31.85]:53140 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725823AbfGXENG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 00:13:06 -0400
+Subject: [PATCH 2/3] xfs/504: fix bogus test description
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Tue, 23 Jul 2019 21:12:54 -0700
-Message-ID: <156394157450.1850719.464315342783936237.stgit@magnolia>
+Date: Tue, 23 Jul 2019 21:13:00 -0700
+Message-ID: <156394158077.1850719.2222567081675874481.stgit@magnolia>
 In-Reply-To: <156394156831.1850719.2997473679130010771.stgit@magnolia>
 References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
 MIME-Version: 1.0
@@ -21,34 +20,30 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since the iomap code are moving to fs/iomap/ we have to add new entries
-to the aiodio dmesg filter to reflect this.
+Fix the description of this test to reflect what it actually checks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/filter |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ tests/xfs/504 |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 
-diff --git a/common/filter b/common/filter
-index ed082d24..26fc2132 100644
---- a/common/filter
-+++ b/common/filter
-@@ -555,6 +555,7 @@ _filter_aiodio_dmesg()
- 	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
- 	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
- 	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
-+	local warn10="WARNING:.*fs/iomap/direct-io\.c:.*iomap_dio_actor.*"
- 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
- 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
- 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
-@@ -563,7 +564,8 @@ _filter_aiodio_dmesg()
- 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
- 	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
- 	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
--	    -e "s#$warn9#Intentional warnings in dio_complete#"
-+	    -e "s#$warn9#Intentional warnings in dio_complete#" \
-+	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
- }
- 
- # We generate assert related WARNINGs on purpose and make sure test doesn't fail
+diff --git a/tests/xfs/504 b/tests/xfs/504
+index cc6088d1..c6435117 100755
+--- a/tests/xfs/504
++++ b/tests/xfs/504
+@@ -4,10 +4,10 @@
+ #
+ # FS QA Test No. 504
+ #
+-# Create a directory with multiple filenames that all appear the same
+-# (in unicode, anyway) but point to different inodes.  In theory all
+-# Linux filesystems should allow this (filenames are a sequence of
+-# arbitrary bytes) even if the user implications are horrifying.
++# Create a filesystem label with emoji and confusing unicode characters
++# to make sure that these special things actually work on xfs.  In
++# theory it should allow this (labels are a sequence of arbitrary bytes)
++# even if the user implications are horrifying.
+ #
+ seq=`basename "$0"`
+ seqres="$RESULT_DIR/$seq"
