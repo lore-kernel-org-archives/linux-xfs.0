@@ -1,80 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:32954 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbfG3BSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:04 -0400
-Subject: [PATCH 1/6] list.h: add list_pop and list_pop_entry helpers
+Received: from userp2130.oracle.com ([156.151.31.86]:42502 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbfGYSDf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 14:03:35 -0400
+Date: Thu, 25 Jul 2019 11:03:30 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jul 2019 18:17:46 -0700
-Message-ID: <156444946635.2682261.14776328020249327506.stgit@magnolia>
-In-Reply-To: <156444945993.2682261.3926017251626679029.stgit@magnolia>
-References: <156444945993.2682261.3926017251626679029.stgit@magnolia>
+Subject: [PATCH v2 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+Message-ID: <20190725180330.GH1561054@magnolia>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <156394157450.1850719.464315342783936237.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156394157450.1850719.464315342783936237.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: Damien.LeMoal@wdc.com, agruenba@redhat.com, "Matthew Wilcox (Oracle)" <willy@infradead.org>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+To: guaneryu@gmail.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Christoph Hellwig <hch@lst.de>
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-We have a very common pattern where we want to delete the first entry
-from a list and return it as the properly typed container structure.
+Since the iomap code are moving to fs/iomap/ we have to add new entries
+to the aiodio dmesg filter to reflect this.
 
-Add two helpers to implement this behavior.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/linux/list.h |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+v2: fix all the iomap regexes
+---
+ common/filter |    9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 85c92555e31f..d3b00267446a 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -514,6 +514,39 @@ static inline void list_splice_tail_init(struct list_head *list,
- 	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
- })
+diff --git a/common/filter b/common/filter
+index ed082d24..2e32ab10 100644
+--- a/common/filter
++++ b/common/filter
+@@ -550,10 +550,10 @@ _filter_aiodio_dmesg()
+ 	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
+ 	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
+ 	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+-	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
++	local warn5="WARNING:.*fs/iomap.*:.*iomap_dio_rw.*"
+ 	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+-	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+-	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
++	local warn7="WARNING:.*fs/iomap.*:.*iomap_dio_actor.*"
++	local warn8="WARNING:.*fs/iomap.*:.*iomap_dio_complete.*"
+ 	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
+ 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+ 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+@@ -563,7 +563,8 @@ _filter_aiodio_dmesg()
+ 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+ 	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+ 	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+-	    -e "s#$warn9#Intentional warnings in dio_complete#"
++	    -e "s#$warn9#Intentional warnings in dio_complete#" \
++	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+ }
  
-+/**
-+ * list_pop - delete the first entry from a list and return it
-+ * @list:	the list to take the element from.
-+ *
-+ * Return the list entry after @list.  If @list is empty return NULL.
-+ */
-+static inline struct list_head *list_pop(struct list_head *list)
-+{
-+	struct list_head *pos = READ_ONCE(list->next);
-+
-+	if (pos == list)
-+		return NULL;
-+	list_del(pos);
-+	return pos;
-+}
-+
-+/**
-+ * list_pop_entry - delete the first entry from a list and return the
-+ *			containing structure
-+ * @list:	the list to take the element from.
-+ * @type:	the type of the struct this is embedded in.
-+ * @member:	the name of the list_head within the struct.
-+ *
-+ * Return the containing structure for the list entry after @list.  If @list
-+ * is empty return NULL.
-+ */
-+#define list_pop_entry(list, type, member)			\
-+({								\
-+	struct list_head *pos__ = list_pop(list);		\
-+								\
-+	pos__ ? list_entry(pos__, type, member) : NULL;		\
-+})
-+
- /**
-  * list_next_entry - get the next element in list
-  * @pos:	the type * to cursor
+ # We generate assert related WARNINGs on purpose and make sure test doesn't fail
