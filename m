@@ -1,56 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:38546 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729551AbfG3BSp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:45 -0400
-Subject: [PATCH v4 0/2] xfs: use new list helpers in writeback code
+Received: from userp2120.oracle.com ([156.151.31.85]:55982 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725842AbfGYSDr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 14:03:47 -0400
+Date: Thu, 25 Jul 2019 11:03:42 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Mon, 29 Jul 2019 18:18:21 -0700
-Message-ID: <156444950159.2682436.1669088240015553674.stgit@magnolia>
+Subject: Re: [PATCH 7/3] xfs/194: unmount forced v4 fs during cleanup
+Message-ID: <20190725180342.GI1561054@magnolia>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <20190724155656.GH7084@magnolia>
+ <20190724232259.GC7777@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190724232259.GC7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: hch@infradead.org, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Damien.LeMoal@wdc.com, agruenba@redhat.com
+To: Dave Chinner <david@fromorbit.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hi all,
+On Thu, Jul 25, 2019 at 09:22:59AM +1000, Dave Chinner wrote:
+> On Wed, Jul 24, 2019 at 08:56:56AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Unmount the V4 filesystem we forcibly created to run this test during
+> > test cleanup so that the post-test wrapup checks won't try to remount
+> > the filesystem with different MOUNT_OPTIONS (specifically, the ones
+> > that get screened out by _force_xfsv4_mount_options) and fail.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  tests/xfs/194 |    1 +
+> >  1 file changed, 1 insertion(+)
+> > 
+> > diff --git a/tests/xfs/194 b/tests/xfs/194
+> > index 3e186528..1f46d403 100755
+> > --- a/tests/xfs/194
+> > +++ b/tests/xfs/194
+> > @@ -18,6 +18,7 @@ trap "_cleanup; exit \$status" 0 1 2 3 15
+> >  _cleanup()
+> >  {
+> >      cd /
+> > +    _scratch_unmount
+> 
+> Comment as to why this is necessary here so we don't go and remove
+> it because unmounting in cleanup should generally be unnecessary....
 
->From Christoph:
-
-This series cleans up the xfs writepage code and then lifts it to
-fs/iomap/ so that it could be use by other file systems.  I've been
-wanting to [do] this for a while so that I could eventually convert gfs2
-over to it, but I never got to it.  Now Damien has a new zonefs file
-system for semi-raw access to zoned block devices that would like to use
-the iomap code instead of reinventing it, so I finally had to do the
-work.
-
->From Darrick:
-
-For v4, split the series into smaller pieces.  This second part
-refactors some of XFS's writeback code to use the new helpers introduced
-in the first part.
-
-Changes since v2:
- - rebased to v5.3-rc1
- - folded in a few changes from the gfs2 enablement series
-
-Changes since v1:
- - rebased to the latest xfs for-next tree
- - keep the preallocated transactions for size updates
- - rename list_pop to list_pop_entry and related cleanups
- - better document the nofs context handling
- - document that the iomap tracepoints are not a stable API
-This series breaks up fs/iomap.c by grouping the functions by major
-functional area (swapfiles, fiemap, seek hole/data, directio, buffered
-io, and page migration) in separate source code files under fs/iomap/.
-No functional changes have been made.  Please check the copyrights to
-make sure the attribution is correct.
-
-This has been lightly tested with fstests.  Enjoy!
-Comments and questions are, as always, welcome.
+Ok.
 
 --D
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
