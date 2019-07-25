@@ -1,51 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:60318 "EHLO
+Received: from aserp2120.oracle.com ([141.146.126.78]:58336 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbfG3BRX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:17:23 -0400
-Date: Mon, 29 Jul 2019 18:17:05 -0700
+        with ESMTP id S1726645AbfGYSCT (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 14:02:19 -0400
+Date: Thu, 25 Jul 2019 11:02:13 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: lift the xfs writepage code into iomap v3
-Message-ID: <20190730011705.GO1561054@magnolia>
-References: <20190722095024.19075-1-hch@lst.de>
+Subject: Re: [PATCH 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+Message-ID: <20190725180213.GG1561054@magnolia>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <156394157450.1850719.464315342783936237.stgit@magnolia>
+ <20190724232117.GB7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190722095024.19075-1-hch@lst.de>
+In-Reply-To: <20190724232117.GB7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Christoph Hellwig <hch@lst.de>
-Cc: Damien Le Moal <Damien.LeMoal@wdc.com>, Andreas Gruenbacher <agruenba@redhat.com>, linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Mon, Jul 22, 2019 at 11:50:12AM +0200, Christoph Hellwig wrote:
-> Hi all,
+On Thu, Jul 25, 2019 at 09:21:17AM +1000, Dave Chinner wrote:
+> On Tue, Jul 23, 2019 at 09:12:54PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Since the iomap code are moving to fs/iomap/ we have to add new entries
+> > to the aiodio dmesg filter to reflect this.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  common/filter |    4 +++-
+> >  1 file changed, 3 insertions(+), 1 deletion(-)
+> > 
+> > 
+> > diff --git a/common/filter b/common/filter
+> > index ed082d24..26fc2132 100644
+> > --- a/common/filter
+> > +++ b/common/filter
+> > @@ -555,6 +555,7 @@ _filter_aiodio_dmesg()
+> >  	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+> >  	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
 > 
-> this series cleans up the xfs writepage code and then lifts it to
-> fs/iomap.c so that it could be use by other file system.  I've been
-> wanting to this for a while so that I could eventually convert gfs2
-> over to it, but I never got to it.  Now Damien has a new zonefs
-> file system for semi-raw access to zoned block devices that would
-> like to use the iomap code instead of reinventing it, so I finally
-> had to do the work.
+> There's two different warnings that need capturing here.
 
-I've posted a branch against -rc2 for us all to work from:
+DOH, missed that.
 
-https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=iomap-writeback
+> >  	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
+> > +	local warn10="WARNING:.*fs/iomap/direct-io\.c:.*iomap_dio_actor.*"
+> >  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+> >  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+> >  	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+> > @@ -563,7 +564,8 @@ _filter_aiodio_dmesg()
+> >  	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+> >  	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+> >  	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+> > -	    -e "s#$warn9#Intentional warnings in dio_complete#"
+> > +	    -e "s#$warn9#Intentional warnings in dio_complete#" \
+> > +	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+> 
+> Why not just change the regex in warn7/warn8 just to catch anything
+> under fs/iomap rather than explictly specifying fs/iomap.c?
 
-and will be emailing the patches shortly to the list for completeness.
+Ok I'll do that.
 
 --D
 
+> Cheers,
 > 
-> 
-> Changes since v2:
->  - rebased to v5.3-rc1
->  - folded in a few changes from the gfs2 enablement series
-> 
-> Changes since v1:
->  - rebased to the latest xfs for-next tree
->  - keep the preallocated transactions for size updates
->  - rename list_pop to list_pop_entry and related cleanups
->  - better document the nofs context handling
->  - document that the iomap tracepoints are not a stable API
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
