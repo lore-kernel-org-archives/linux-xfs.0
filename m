@@ -1,124 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f174.google.com ([209.85.214.174]:34959 "EHLO
-        mail-pl1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727031AbfGXJn0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 05:43:26 -0400
-Received: by mail-pl1-f174.google.com with SMTP id w24so21798421plp.2
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 02:43:26 -0700 (PDT)
-Date: Wed, 24 Jul 2019 17:43:17 +0800
-From: Murphy Zhou <jencce.kernel@gmail.com>
-Subject: xfs quota test xfs/050 fails with dax mount option and "-d
- su=2m,sw=1" mkfs option
-Message-ID: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33398 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388479AbfGYLdm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 07:33:42 -0400
+Date: Thu, 25 Jul 2019 21:32:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfs: garbage file data inclusion bug under memory pressure
+Message-ID: <20190725113231.GV7689@dread.disaster.area>
+References: <f7c3d69e-bbd4-244c-41d7-b03c923c5344@i-love.sakura.ne.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <f7c3d69e-bbd4-244c-41d7-b03c923c5344@i-love.sakura.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: linux-xfs@vger.kernel.org
 
-Hi,
+On Thu, Jul 25, 2019 at 07:06:24PM +0900, Tetsuo Handa wrote:
+> Hello.
+> 
+> I noticed that a file includes data from deleted files when
+> 
+>   XFS (sda1): writeback error on sector XXXXX
+> 
+> messages are printed (due to close to OOM).
+> 
+> So far I confirmed that this bug exists at least from 4.18 till 5.3-rc1.
+> I haven't tried 4.17 and earlier kernels. I haven't tried other filesystems.
+> 
+> 
+> 
+> Steps to test:
+> 
+> (1) Run the disk space filler (source code is shown below).
+> 
+>   # ./fillspace > file &
+>   # unlink file
+>   # fg
+> 
+> (2) Wait until the disk space filler completes.
+> 
+> (3) Start the reproducer (source code is shown below).
+> 
+>   # ./oom-torture
+> 
+> (4) Stop the reproducer using Ctrl-C after "writeback error on sector"
+>     message was printed.
+> 
+>   [ 1410.792467] XFS (sda1): writeback error on sector 159883016
+>   [ 1410.822127] XFS (sda1): writeback error on sector 187138128
+>   [ 1410.951357] XFS (sda1): writeback error on sector 162195392
+>   [ 1410.952527] XFS (sda1): writeback error on sector 95210384
+>   [ 1410.953870] XFS (sda1): writeback error on sector 95539264
+> 
+> (5) Examine files written by the reproducer for file data
+>     written by the disk space filler.
+> 
+>   # grep -F XXXXX /tmp/file.*
+>   Binary file /tmp/file.10111 matches
+>   Binary file /tmp/file.10122 matches
+>   Binary file /tmp/file.10143 matches
+>   Binary file /tmp/file.10162 matches
+>   Binary file /tmp/file.10179 matches
 
-As subject.
+You've had writeback errors. This is somewhat expected behaviour for
+most filesystems when there are write errors - space has been
+allocated, but whatever was to be written into that allocated space
+failed for some reason so it remains in an uninitialised state....
 
--d su=2m,sw=1     && -o dax  fail
--d su=2m,sw=1     && NO dax  pass
-no su mkfs option && -o dax  pass
-no su mkfs option && NO dax  pass
+For XFS and sequential writes, the on-disk file size is not extended
+on an IO error, hence it should not expose stale data.  However,
+your test code is not checking for errors - that's a bug in your
+test code - and that's why writeback errors are resulting in stale
+data exposure.  i.e. by ignoring the fsync() error,
+the test continues writing at the next offset and the fsync() for
+that new data write exposes the region of stale data in the
+file where the previous data write failed by extending the on-disk
+EOF past it....
 
-On latest Linus tree. Reproduce every time.
+So in this case stale data exposure is a side effect of not
+handling writeback errors appropriately in the application.
 
-Testing on older kernels are going on to see if it's a regression.
+But I have to ask: what is causing the IO to fail? OOM conditions
+should not cause writeback errors - XFS will retry memory
+allocations until they succeed, and the block layer is supposed to
+be resilient against memory shortages, too. Hence I'd be interested
+to know what is actually failing here...
 
-Is this failure expected ?
+Cheers,
 
-Thanks,
-M
-
-# fail with 2m su mkfs option and dax mount option:
-
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 7u 5.3.0-rc1-master-ad5e427+ #126 SMP Wed Jul 24 14:46:09 CST 2019
-MKFS_OPTIONS  -- -f -f -b size=4096 -d su=2m,sw=1 /dev/pmem1
-MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:root_t:s0 /dev/pmem1 /test1
-
-xfs/050 4s ...  [05:30:52] [05:30:56]- output mismatch (see /root/xfstests-dev/results//xfs/050.out.bad)
-    --- tests/xfs/050.out       2019-05-07 02:34:03.391107482 -0400
-    +++ /root/xfstests-dev/results//xfs/050.out.bad     2019-07-24 05:30:56.483044548 -0400
-    @@ -29,6 +29,7 @@
-     *** push past the hard block limit (expect EDQUOT)
-     [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
-     [NAME] =OK= 200 1000 0 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-    + URK 99: 2097152 is out of range! [3481600,4096000]
-
-     *** unmount
-     *** group
-    ...
-    (Run 'diff -u /root/xfstests-dev/tests/xfs/050.out /root/xfstests-dev/results//xfs/050.out.bad'  to see the entire diff)
-Ran: xfs/050
-Failures: xfs/050
-Failed 1 of 1 tests
-
-~
-[root@7u ~]# diff -u /root/xfstests-dev/tests/xfs/050.out /root/xfstests-dev/results//xfs/050.out.bad
---- /root/xfstests-dev/tests/xfs/050.out        2019-05-07 02:34:03.391107482 -0400
-+++ /root/xfstests-dev/results//xfs/050.out.bad 2019-07-24 05:30:56.483044548 -0400
-@@ -29,6 +29,7 @@
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
- [NAME] =OK= 200 1000 0 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-+ URK 99: 2097152 is out of range! [3481600,4096000]
-
- *** unmount
- *** group
-@@ -61,6 +62,7 @@
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
- [NAME] =OK= 200 1000 0 [7 days] 10 4 10 00 [7 days] 0 0 0 00 [--------]
-+ URK 99: 2097152 is out of range! [3481600,4096000]
-
- *** unmount
- *** uqnoenforce
-@@ -157,6 +159,7 @@
- *** push past the hard block limit (expect EDQUOT)
- [ROOT] 0 0 0 00 [--------] 3 0 0 00 [--------] 0 0 0 00 [--------]
- [NAME] =OK= 200 1000 0 [7 days] 9 4 10 00 [7 days] 0 0 0 00 [--------]
-+ URK 1: 2097152 is out of range! [3481600,4096000]
-
- *** unmount
- *** pqnoenforce
-
-
-#Pass without dax:
-
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 7u 5.3.0-rc1-master-ad5e427+ #126 SMP Wed Jul 24 14:46:09 CST 2019
-MKFS_OPTIONS  -- -f -f -b size=4096 /dev/pmem1
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem1 /test1
-
-xfs/050         [05:30:35] [05:30:39] 4s
-Ran: xfs/050
-Passed all 1 tests
-
-#Pass without 2m su mkfs option and with dax option:
-
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 7u 5.3.0-rc1-master-ad5e427+ #126 SMP Wed Jul 24 14:46:09 CST 2019
-MKFS_OPTIONS  -- -f -f -b size=4096 /dev/pmem1
-MOUNT_OPTIONS -- -o dax -o context=system_u:object_r:root_t:s0 /dev/pmem1 /test1
-
-xfs/050 4s ...  [05:34:13] [05:34:17] 4s
-Ran: xfs/050
-Passed all 1 tests
-
-# Pass with 2m su mkfs option and without dax mount option:
-
-FSTYP         -- xfs (debug)
-PLATFORM      -- Linux/x86_64 7u 5.3.0-rc1-master-ad5e427+ #126 SMP Wed Jul 24 14:46:09 CST 2019
-MKFS_OPTIONS  -- -f -f -b size=4096 -d su=2m,sw=1 /dev/pmem1
-MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/pmem1 /test1
-
-xfs/050 4s ...  [05:36:08] [05:36:12] 4s
-Ran: xfs/050
-Passed all 1 tests
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
