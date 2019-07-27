@@ -1,62 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42502 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725842AbfGYSDf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 14:03:35 -0400
-Date: Thu, 25 Jul 2019 11:03:30 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH v2 1/3] common: filter aiodio dmesg after fs/iomap.c to
- fs/iomap/ move
-Message-ID: <20190725180330.GH1561054@magnolia>
-References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
- <156394157450.1850719.464315342783936237.stgit@magnolia>
+Received: from mail-ot1-f65.google.com ([209.85.210.65]:42730 "EHLO
+        mail-ot1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387649AbfG0Nd1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 27 Jul 2019 09:33:27 -0400
+Received: by mail-ot1-f65.google.com with SMTP id l15so58113658otn.9
+        for <linux-xfs@vger.kernel.org>; Sat, 27 Jul 2019 06:33:26 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156394157450.1850719.464315342783936237.stgit@magnolia>
+References: <20190722095024.19075-1-hch@lst.de> <20190726233753.GD2166993@magnolia>
+In-Reply-To: <20190726233753.GD2166993@magnolia>
+From: Andreas Gruenbacher <agruenba@redhat.com>
+Date: Sat, 27 Jul 2019 15:33:14 +0200
+Message-ID: <CAHc6FU7L52soLiRafnOiTsaMYp4X_NmjjimpMMzdaoSH_afT+A@mail.gmail.com>
+Subject: Re: lift the xfs writepage code into iomap v3
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com
-Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Sat, 27 Jul 2019 at 01:38, Darrick J. Wong <darrick.wong@oracle.com> wrote:
+> On Mon, Jul 23, 2019 at 11:50:12AM +0200, Christoph Hellwig wrote:
+> > Hi all,
+> >
+> > this series cleans up the xfs writepage code and then lifts it to
+> > fs/iomap.c so that it could be use by other file system.  I've been
+> > wanting to this for a while so that I could eventually convert gfs2
+> > over to it, but I never got to it.  Now Damien has a new zonefs
+> > file system for semi-raw access to zoned block devices that would
+> > like to use the iomap code instead of reinventing it, so I finally
+> > had to do the work.
+>
+> Hmm... I don't like how there are xfs changes mixed in with the iomap
+> changes, because were I to take this series as-is then I'd have to
+> commit both to adding iomap writeback code /and/ converting xfs at the
+> same time.
+>
+> I think I'd be more comfortable creating a branch to merge the changes
+> to list.h and fs/iomap/, and then gfs2/zonefs/xfs can sprout their own
+> branches from there to do whatever conversions are necessary.
+>
+> To me what that means is splitting patch 7 into 7a which does the iomap
+> changes and 7b which does the xfs changes.  To get there, I'd create a
+> iomap-writeback branch containing:
+>
+> 1 7a 8 9 10 11 12
+>
+> and then a new xfs-iomap-writeback branch containing:
+>
+> 2 4 7b
+>
+> This eliminates the need for patches 3, 5, and 6, though the cost is
+> that it's less clear from the history that we did some reorganizing of
+> the xfs writeback code and then moved it over to iomap.  OTOH, I also
+> see this as a way to lower risk because if some patch in the
+> xfs-iomap-writeback branch shakes loose a bug that doesn't affect gfs2
+> or zonedfs we don't have to hold them up.
+>
+> I'll try to restructure this series along those lines and report back
+> how it went.
 
-Since the iomap code are moving to fs/iomap/ we have to add new entries
-to the aiodio dmesg filter to reflect this.
+Keeping the infrastructure changes in separate commits would certainly
+make the patches easier to work with for me. Keeping the commits
+interleaved should be fine though: patch "iomap: zero newly allocated
+mapped blocks" depends on "xfs: set IOMAP_F_NEW more carefully", so a
+pure infrastructure branch without "xfs: set IOMAP_F_NEW more
+carefully" probably wouldn't be correct.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v2: fix all the iomap regexes
----
- common/filter |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
-
-diff --git a/common/filter b/common/filter
-index ed082d24..2e32ab10 100644
---- a/common/filter
-+++ b/common/filter
-@@ -550,10 +550,10 @@ _filter_aiodio_dmesg()
- 	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
- 	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
- 	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
--	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
-+	local warn5="WARNING:.*fs/iomap.*:.*iomap_dio_rw.*"
- 	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
--	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
--	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
-+	local warn7="WARNING:.*fs/iomap.*:.*iomap_dio_actor.*"
-+	local warn8="WARNING:.*fs/iomap.*:.*iomap_dio_complete.*"
- 	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
- 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
- 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
-@@ -563,7 +563,8 @@ _filter_aiodio_dmesg()
- 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
- 	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
- 	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
--	    -e "s#$warn9#Intentional warnings in dio_complete#"
-+	    -e "s#$warn9#Intentional warnings in dio_complete#" \
-+	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
- }
- 
- # We generate assert related WARNINGs on purpose and make sure test doesn't fail
+Thanks,
+Andreas
