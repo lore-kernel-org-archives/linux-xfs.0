@@ -1,70 +1,57 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:39966 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726591AbfGXPft (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 11:35:49 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6OFUJwS132701
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 15:35:48 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2tx61bx9k2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 15:35:47 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6OFMaff145920
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 15:35:47 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2tx60y27hv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 15:35:47 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x6OFZkf5014778
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 15:35:47 GMT
-Date: Wed, 24 Jul 2019 08:35:45 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: [PATCH] xfs: fix stack contents leakage in the v1 bulkstat/inumbers
- ioctls
-Message-ID: <20190724153545.GC1561054@magnolia>
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:36473 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725977AbfG1L0m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Jul 2019 07:26:42 -0400
+Date: Sun, 28 Jul 2019 19:26:35 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH 0/4] xfs: fixes and new tests for bulkstat v5
+Message-ID: <20190728112635.GN7943@desktop>
+References: <156394159426.1850833.16316913520596851191.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <156394159426.1850833.16316913520596851191.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi XFS folks,
 
-Explicitly initialize the onstack structures to zero so we don't leak
-kernel memory into userspace when converting the in-core structure to
-the v1 ioctl structure.
+On Tue, Jul 23, 2019 at 09:13:14PM -0700, Darrick J. Wong wrote:
+> Hi all,
+> 
+> Fix some problems introduced by the creation of the V5 bulkstat ioctl,
+> and then add some new tests to make sure the new libxfrog bulkstat
+> wrappers work fine with both the new v5 ioctl and emulating it with the
+> old v1 ioctl.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_ioctl.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I may need some help on reviewing this patchset, especially the new
+bulkstat tests :) Thanks in advance!
 
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index f193f7b288ca..44e1a290f053 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -719,7 +719,7 @@ xfs_fsbulkstat_one_fmt(
- 	struct xfs_ibulk		*breq,
- 	const struct xfs_bulkstat	*bstat)
- {
--	struct xfs_bstat		bs1;
-+	struct xfs_bstat		bs1 = { 0 };
- 
- 	xfs_bulkstat_to_bstat(breq->mp, &bs1, bstat);
- 	if (copy_to_user(breq->ubuffer, &bs1, sizeof(bs1)))
-@@ -732,7 +732,7 @@ xfs_fsinumbers_fmt(
- 	struct xfs_ibulk		*breq,
- 	const struct xfs_inumbers	*igrp)
- {
--	struct xfs_inogrp		ig1;
-+	struct xfs_inogrp		ig1 = { 0 };
- 
- 	xfs_inumbers_to_inogrp(&ig1, igrp);
- 	if (copy_to_user(breq->ubuffer, &ig1, sizeof(struct xfs_inogrp)))
+But I'd suggest split the last patch into two patches, one introduces &
+uses the new helper, the other one adds new tests. Also, it misses a new
+entry in .gitignore file.
+
+Thanks,
+Eryu
+
+> 
+> If you're going to start using this mess, you probably ought to just
+> pull from my git trees, which are linked below.
+> 
+> This is an extraordinary way to destroy everything.  Enjoy!
+> Comments and questions are, as always, welcome.
+> 
+> --D
+> 
+> kernel git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bulkstat-v5
+> 
+> xfsprogs git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bulkstat-v5
+> 
+> fstests git tree:
+> https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=bulkstat-v5
