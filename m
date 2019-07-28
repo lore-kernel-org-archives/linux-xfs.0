@@ -1,97 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:47080 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726747AbfGYV4o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Jul 2019 17:56:44 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 171192B08
-        for <linux-xfs@vger.kernel.org>; Thu, 25 Jul 2019 16:56:13 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 3a3f5b14
-Message-ID: <087b7894-93a6-0af0-0278-0c6c45c9db8c@sandeen.net>
-Date: Thu, 25 Jul 2019 16:56:42 -0500
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:38865 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726001AbfG1Lam (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Jul 2019 07:30:42 -0400
+Date: Sun, 28 Jul 2019 19:30:36 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH v2 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+Message-ID: <20190728113036.GO7943@desktop>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <156394157450.1850719.464315342783936237.stgit@magnolia>
+ <20190725180330.GH1561054@magnolia>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="WFGR4ke8nTZnWsGWkRWE9JuXoG5WXTAzb"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190725180330.GH1561054@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---WFGR4ke8nTZnWsGWkRWE9JuXoG5WXTAzb
-Content-Type: multipart/mixed; boundary="WjxYvlLoVtI3OE3WUtMAOS1ThBXoRle01";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <087b7894-93a6-0af0-0278-0c6c45c9db8c@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs for-next updated to 3a3f5b14
+On Thu, Jul 25, 2019 at 11:03:30AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Since the iomap code are moving to fs/iomap/ we have to add new entries
+> to the aiodio dmesg filter to reflect this.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: fix all the iomap regexes
+> ---
+>  common/filter |    9 +++++----
+>  1 file changed, 5 insertions(+), 4 deletions(-)
+> 
+> diff --git a/common/filter b/common/filter
+> index ed082d24..2e32ab10 100644
+> --- a/common/filter
+> +++ b/common/filter
+> @@ -550,10 +550,10 @@ _filter_aiodio_dmesg()
+>  	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
+>  	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
+>  	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+> -	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+> +	local warn5="WARNING:.*fs/iomap.*:.*iomap_dio_rw.*"
+>  	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+> -	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+> -	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+> +	local warn7="WARNING:.*fs/iomap.*:.*iomap_dio_actor.*"
+> +	local warn8="WARNING:.*fs/iomap.*:.*iomap_dio_complete.*"
 
---WjxYvlLoVtI3OE3WUtMAOS1ThBXoRle01
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I don't think we need new filters anymore, as commit 5a9d929d6e13
+("iomap: report collisions between directio and buffered writes to
+userspace") replaced the WARN_ON with a pr_crit(). These filters are
+there only for old kernels.
 
-Hi folks,
+Thanks,
+Eryu
 
-The for-next branch of the xfsprogs repository at:
-
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
-
-has just been updated.
-
-This is just my gratuitous modifications of libxfs/trans.c to
-more closely resemble kernelspace code.
-
-The new head of the for-next branch is commit:
-
-3a3f5b14 libxfs: don't use enum for buffer flags
-
-New Commits:
-
-Eric Sandeen (4):
-      [e6afdab6] libxfs: reorder functions in libxfs/trans.c
-      [9c64b9b3] libxfs: cosmetic changes to libxfs/trans.c
-      [42b85f55] libxfs: trivial changes to libxfs/trans.c
-      [3a3f5b14] libxfs: don't use enum for buffer flags
-
-
-Code Diffstat:
-
- include/xfs_trace.h |   2 +
- include/xfs_trans.h |   6 +-
- libxfs/libxfs_io.h  |  17 ++-
- libxfs/trans.c      | 414 ++++++++++++++++++++++++++++++----------------=
-------
- 4 files changed, 253 insertions(+), 186 deletions(-)
-
-
---WjxYvlLoVtI3OE3WUtMAOS1ThBXoRle01--
-
---WFGR4ke8nTZnWsGWkRWE9JuXoG5WXTAzb
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl06JZoACgkQIK4WkuE9
-3uChIhAAntL4jdtuUXfFDuoZ2MeGCZAsbAxKZMCJtAR4ip/htS1kpfLv38LtDeN5
-vzyE+r8DKRPZrqPvTDRkIppEL0/Q72gmabr732qBUW81TiWaDyylbEqCEcaiG1e9
-j7LSjgWUXO7d7N3xG+mf6TwToBjq35coQuqIhnuDAkW78QRNY2wYhfsNf0iWho+i
-tVnT3sG3vOlStgv8RqEu8o7xCHZtn5MDD0gv73cDKnja8+UiEmL+nfAJbE6thBus
-v6Czz1L7VPq1hdG9/RofywHUok6QDKG9T6BA/oX9c1Rg7qdF2wLjxZ+TNZYj3bs1
-a2x3ERB+EKs9HQMqlEuiv0fVmvT2804eSdyI0C3PZpU5CdmlW2nkzsMHf/2V0VLu
-ApgFQr2yLtXW31XkrOsxbM9ZnmLj7c2ZELalMVkeTXk5pDEs6at8CVCYJL9sQVGx
-/7d7ay2lapmp0JxYfl0lJHi9TGSXkt5wzI3OHSr6vgaux4kp3c3wWLNDT2a4uv2m
-bMGywA/bH6EkaNqCwveRKj+oIczHKjy10q4OABVN0G7JuQQehq7FNQm/9mrYo3pL
-FeK9yzmbxYabAUgS89vGiUqcvT0KwI87N/xF5oVZUZnhlR0zWurL3h9qmxIeM/lr
-I27QLdEHzShQ+FT9uUXSG5VFMgyXPZ0k9KPsZ0DgMmlntM83AMQ=
-=E1St
------END PGP SIGNATURE-----
-
---WFGR4ke8nTZnWsGWkRWE9JuXoG5WXTAzb--
+>  	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
+>  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+>  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+> @@ -563,7 +563,8 @@ _filter_aiodio_dmesg()
+>  	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+>  	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+>  	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+> -	    -e "s#$warn9#Intentional warnings in dio_complete#"
+> +	    -e "s#$warn9#Intentional warnings in dio_complete#" \
+> +	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+>  }
+>  
+>  # We generate assert related WARNINGs on purpose and make sure test doesn't fail
