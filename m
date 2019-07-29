@@ -1,97 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33007 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726635AbfGYWIh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 25 Jul 2019 18:08:37 -0400
-Date: Fri, 26 Jul 2019 08:07:26 +1000
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53596 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726247AbfG2AOR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Jul 2019 20:14:17 -0400
+Date: Mon, 29 Jul 2019 10:13:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs: garbage file data inclusion bug under memory pressure
-Message-ID: <20190725220726.GW7689@dread.disaster.area>
-References: <f7c3d69e-bbd4-244c-41d7-b03c923c5344@i-love.sakura.ne.jp>
- <20190725113231.GV7689@dread.disaster.area>
- <804d24cb-5b7c-4620-5a5f-4ec039472086@i-love.sakura.ne.jp>
+Subject: Re: xfs quota test xfs/050 fails with dax mount option and "-d
+ su=2m,sw=1" mkfs option
+Message-ID: <20190729001308.GX7689@dread.disaster.area>
+References: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <804d24cb-5b7c-4620-5a5f-4ec039472086@i-love.sakura.ne.jp>
+In-Reply-To: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc: linux-xfs@vger.kernel.org
+To: Murphy Zhou <jencce.kernel@gmail.com>
+Cc: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
 
-On Thu, Jul 25, 2019 at 09:44:35PM +0900, Tetsuo Handa wrote:
-> On 2019/07/25 20:32, Dave Chinner wrote:
-> > You've had writeback errors. This is somewhat expected behaviour for
-> > most filesystems when there are write errors - space has been
-> > allocated, but whatever was to be written into that allocated space
-> > failed for some reason so it remains in an uninitialised state....
+On Wed, Jul 24, 2019 at 05:43:17PM +0800, Murphy Zhou wrote:
+> Hi,
 > 
-> This is bad for security perspective. The data I found are e.g. random
-> source file, /var/log/secure , SQL database server's access log
-> containing secret values...
-
-The results of a read after a write error are undefined. In this
-case, the test is doing enough IO to evict the cached pages that
-failed the write so the followup read is pulling them from disk, not
-from the page cache. i.e. if the test read back immediately after
-the failure, it would get whatever the write put into the page cache
-but writeback failed to write to disk....
-
-Perhaps we need the write retry mechanisms we use for metadata in
-the data IO path, too, so that a single writeback failure doesn't
-cause this sort of thing to occur.
-
-> > For XFS and sequential writes, the on-disk file size is not extended
-> > on an IO error, hence it should not expose stale data.  However,
-> > your test code is not checking for errors - that's a bug in your
-> > test code - and that's why writeback errors are resulting in stale
-> > data exposure.  i.e. by ignoring the fsync() error,
-> > the test continues writing at the next offset and the fsync() for
-> > that new data write exposes the region of stale data in the
-> > file where the previous data write failed by extending the on-disk
-> > EOF past it....
-> > 
-> > So in this case stale data exposure is a side effect of not
-> > handling writeback errors appropriately in the application.
+> As subject.
 > 
-> But blaming users regarding not handling writeback errors is pointless
-> when thinking from security perspective.
-
-I'm not blaming anyone. I'm just explaining how the problem was
-exposed and pointing out that the responsibility for writing data
-correctly falls on *both* the filesystem and userspace applications.
-i.e. when the kernel fails it is userspace's responsibility to clean
-up the mess to ensure the /application's data/ is correctly on
-stable storage and not corrupt, missing, stale, etc.
-
-So forget security - fsync is a data integrity operation. Not
-checking that that it failed is extremely poor behaviour from a data
-integrity point of view. Fix the data integrity problems in the
-application and the security issues that data integrity failures
-/may/ expose are very effectively mitigated.
-
-> A bad guy might be trying to
-> steal data from inaccessible files.
-
-Which won't happen if user-triggered OOM does not cause writeback
-failures. i.e. the bug we need to find and fix is whatever is
-causing writeback to error out under OOM conditions.
-Writeback is a key component of memory reclaim, and it it fails
-under memory pressure we have much bigger problems...
-
-> > But I have to ask: what is causing the IO to fail? OOM conditions
-> > should not cause writeback errors - XFS will retry memory
-> > allocations until they succeed, and the block layer is supposed to
-> > be resilient against memory shortages, too. Hence I'd be interested
-> > to know what is actually failing here...
+> -d su=2m,sw=1     && -o dax  fail
+> -d su=2m,sw=1     && NO dax  pass
+> no su mkfs option && -o dax  pass
+> no su mkfs option && NO dax  pass
 > 
-> Yeah. It is strange that this problem occurs when close-to-OOM.
-> But no failure messages at all (except OOM killer messages and writeback
-> error messages).
+> On latest Linus tree. Reproduce every time.
+> 
+> Testing on older kernels are going on to see if it's a regression.
+> 
+> Is this failure expected ?
 
-Perhaps using things like trace_kmalloc and friends to isolate the
-location of memory allocation failures would help....
+I'm not sure it's actually a failure at all. DAX does not do delayed
+allocation, so if the write is aligned to sunit and at EOF it will
+round the allocation up to a full stripe unit. IOWs, for this test
+once the file size gets beyond sunit on DAX, writes will allocate in
+sunit chunks.
+
+And, well, xfs/050 has checks in it for extent size hints, and
+notruns if:
+
+        [ $extsize -ge 512000 ] && \
+                _notrun "Extent size hint is too large ($extsize bytes)"
+
+Because EDQUOT occurs when:
+
+>     + URK 99: 2097152 is out of range! [3481600,4096000]
+
+the file has less than 3.5MB or > 4MB allocated to it, and for a
+stripe unit of > 512k, EDQUOT will occur at  <3.5MB. That's what
+we are seeing here - a 2MB allocation at offset 2MB is > 4096000
+bytes, and so it gets EDQUOT at that point....
+
+IOWs, this looks like a test problem, not a code failure...
 
 Cheers,
 
