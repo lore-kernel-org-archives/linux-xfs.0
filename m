@@ -1,53 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:45286 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:49548 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729908AbfG3Ol4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 10:41:56 -0400
-Date: Tue, 30 Jul 2019 07:41:51 -0700
+        with ESMTP id S1726197AbfG2O6s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 10:58:48 -0400
+Date: Mon, 29 Jul 2019 07:58:38 -0700
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: design: Fix typo
-Message-ID: <20190730144151.GQ1561054@magnolia>
-References: <20190730123648.GA20126@localhost>
+Subject: Re: [PATCH] fs: xfs: Fix possible null-pointer dereferences in
+ xchk_da_btree_block_check_sibling()
+Message-ID: <20190729145838.GN1561054@magnolia>
+References: <20190729032401.28081-1-baijiaju1990@gmail.com>
+ <20190729042034.GM1561054@magnolia>
+ <efa37544-0402-af92-c94e-cec49701dca2@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20190730123648.GA20126@localhost>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <efa37544-0402-af92-c94e-cec49701dca2@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Sheriff Esseson <sheriffesseson@gmail.com>
-Cc: linux-xfs@vger.kernel.org
+To: Jia-Ju Bai <baijiaju1990@gmail.com>
+Cc: bfoster@redhat.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jul 30, 2019 at 01:36:48PM +0100, Sheriff Esseson wrote:
-> Replace "possible" with "possibly" and improve the flow of the phrase.
+On Mon, Jul 29, 2019 at 03:25:04PM +0800, Jia-Ju Bai wrote:
 > 
-> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
+> 
+> On 2019/7/29 12:20, Darrick J. Wong wrote:
+> > On Mon, Jul 29, 2019 at 11:24:01AM +0800, Jia-Ju Bai wrote:
+> > > In xchk_da_btree_block_check_sibling(), there is an if statement on
+> > > line 274 to check whether ds->state->altpath.blk[level].bp is NULL:
+> > >      if (ds->state->altpath.blk[level].bp)
+> > > 
+> > > When ds->state->altpath.blk[level].bp is NULL, it is used on line 281:
+> > >      xfs_trans_brelse(..., ds->state->altpath.blk[level].bp);
+> > >          struct xfs_buf_log_item	*bip = bp->b_log_item;
+> > >          ASSERT(bp->b_transp == tp);
+> > > 
+> > > Thus, possible null-pointer dereferences may occur.
+> > > 
+> > > To fix these bugs, ds->state->altpath.blk[level].bp is checked before
+> > > being used.
+> > > 
+> > > These bugs are found by a static analysis tool STCheck written by us.
+> > > 
+> > > Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
+> > > ---
+> > >   fs/xfs/scrub/dabtree.c | 4 +++-
+> > >   1 file changed, 3 insertions(+), 1 deletion(-)
+> > > 
+> > > diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
+> > > index 94c4f1de1922..33ff90c0dd70 100644
+> > > --- a/fs/xfs/scrub/dabtree.c
+> > > +++ b/fs/xfs/scrub/dabtree.c
+> > > @@ -278,7 +278,9 @@ xchk_da_btree_block_check_sibling(
+> > >   	/* Compare upper level pointer to sibling pointer. */
+> > >   	if (ds->state->altpath.blk[level].blkno != sibling)
+> > >   		xchk_da_set_corrupt(ds, level);
+> > > -	xfs_trans_brelse(ds->dargs.trans, ds->state->altpath.blk[level].bp);
+> > > +	if (ds->state->altpath.blk[level].bp)
+> > > +		xfs_trans_brelse(ds->dargs.trans,
+> > > +						ds->state->altpath.blk[level].bp);
+> > Indentation here (in xfs we use two spaces)
+> 
+> Okay, I will fix this.
+> 
+> > 
+> > Also, uh, shouldn't we set ds->state->altpath.blk[level].bp to NULL
+> > since we've released the buffer?
+> 
+> So I should set ds->state->altpath.blk[level].bp to NULL at the end of the
+> function xchk_da_btree_block_check_sibling()?
+> Like:
+>     if (ds->state->altpath.blk[level].bp)
+>         xfs_trans_brelse(ds->dargs.trans,
+>                 ds->state->altpath.blk[level].bp);
+>     ds->state->altpath.blk[level].bp = NULL;
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+You could put the whole thing in a single if clause, e.g.
+
+	if (ds->state->altpath.blk[level].bp) {
+		xfs_trans_brelse(ds->dargs.trans,
+				 ds->state->altpath.blk[level].bp);
+		ds->state->altpath.blk[level].bp = NULL;
+	}
 
 --D
 
-> ---
->  design/XFS_Filesystem_Structure/overview.asciidoc | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->  mode change 100644 => 100755 design/XFS_Filesystem_Structure/overview.asciidoc
 > 
-> diff --git a/design/XFS_Filesystem_Structure/overview.asciidoc b/design/XFS_Filesystem_Structure/overview.asciidoc
-> old mode 100644
-> new mode 100755
-> index d15b50a..7628a7d
-> --- a/design/XFS_Filesystem_Structure/overview.asciidoc
-> +++ b/design/XFS_Filesystem_Structure/overview.asciidoc
-> @@ -28,7 +28,7 @@ record.  Both forks associate a logical offset with an extent of physical
->  blocks, which makes sparse files and directories possible.  Directory entries
->  and extended attributes are contained inside a second-level data structure
->  within the blocks that are mapped by the forks.  This structure consists of
-> -variable-length directory or attribute records and possible a second B+tree to
-> +variable-length directory or attribute records and, possibly, a second B+tree to
->  index these records.
->  
->  XFS employs a journalling log in which metadata changes are collected so that
-> -- 
-> 2.22.0
 > 
+> Best wishes,
+> Jia-Ju Bai
