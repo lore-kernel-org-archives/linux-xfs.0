@@ -1,66 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53751 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726314AbfGXXW2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 19:22:28 -0400
-Date: Thu, 25 Jul 2019 09:21:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 1/3] common: filter aiodio dmesg after fs/iomap.c to
- fs/iomap/ move
-Message-ID: <20190724232117.GB7777@dread.disaster.area>
-References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
- <156394157450.1850719.464315342783936237.stgit@magnolia>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:38291 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726305AbfG2I2u (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 04:28:50 -0400
+Received: by mail-pg1-f194.google.com with SMTP id f5so19044972pgu.5
+        for <linux-xfs@vger.kernel.org>; Mon, 29 Jul 2019 01:28:49 -0700 (PDT)
+Date: Mon, 29 Jul 2019 16:28:41 +0800
+From: Murphy Zhou <jencce.kernel@gmail.com>
+Subject: Re: xfs quota test xfs/050 fails with dax mount option and "-d
+ su=2m,sw=1" mkfs option
+Message-ID: <20190729082841.6uiroqyygnb3ngls@XZHOUW.usersys.redhat.com>
+References: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
+ <20190729001308.GX7689@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156394157450.1850719.464315342783936237.stgit@magnolia>
+In-Reply-To: <20190729001308.GX7689@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Murphy Zhou <jencce.kernel@gmail.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
 
-On Tue, Jul 23, 2019 at 09:12:54PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Jul 29, 2019 at 10:13:08AM +1000, Dave Chinner wrote:
+> On Wed, Jul 24, 2019 at 05:43:17PM +0800, Murphy Zhou wrote:
+> > Hi,
+> > 
+> > As subject.
+> > 
+> > -d su=2m,sw=1     && -o dax  fail
+> > -d su=2m,sw=1     && NO dax  pass
+> > no su mkfs option && -o dax  pass
+> > no su mkfs option && NO dax  pass
+> > 
+> > On latest Linus tree. Reproduce every time.
+> > 
+> > Testing on older kernels are going on to see if it's a regression.
+> > 
+> > Is this failure expected ?
 > 
-> Since the iomap code are moving to fs/iomap/ we have to add new entries
-> to the aiodio dmesg filter to reflect this.
+> I'm not sure it's actually a failure at all. DAX does not do delayed
+> allocation, so if the write is aligned to sunit and at EOF it will
+> round the allocation up to a full stripe unit. IOWs, for this test
+> once the file size gets beyond sunit on DAX, writes will allocate in
+> sunit chunks.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  common/filter |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> And, well, xfs/050 has checks in it for extent size hints, and
+> notruns if:
 > 
+>         [ $extsize -ge 512000 ] && \
+>                 _notrun "Extent size hint is too large ($extsize bytes)"
 > 
-> diff --git a/common/filter b/common/filter
-> index ed082d24..26fc2132 100644
-> --- a/common/filter
-> +++ b/common/filter
-> @@ -555,6 +555,7 @@ _filter_aiodio_dmesg()
->  	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
->  	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+> Because EDQUOT occurs when:
+> 
+> >     + URK 99: 2097152 is out of range! [3481600,4096000]
+> 
+> the file has less than 3.5MB or > 4MB allocated to it, and for a
+> stripe unit of > 512k, EDQUOT will occur at  <3.5MB. That's what
+> we are seeing here - a 2MB allocation at offset 2MB is > 4096000
+> bytes, and so it gets EDQUOT at that point....
+> 
+> IOWs, this looks like a test problem, not a code failure...
 
-There's two different warnings that need capturing here.
+Got it. Thanks Dave!
 
->  	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
-> +	local warn10="WARNING:.*fs/iomap/direct-io\.c:.*iomap_dio_actor.*"
->  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
->  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
->  	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
-> @@ -563,7 +564,8 @@ _filter_aiodio_dmesg()
->  	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
->  	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
->  	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
-> -	    -e "s#$warn9#Intentional warnings in dio_complete#"
-> +	    -e "s#$warn9#Intentional warnings in dio_complete#" \
-> +	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
-
-Why not just change the regex in warn7/warn8 just to catch anything
-under fs/iomap rather than explictly specifying fs/iomap.c?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
