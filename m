@@ -1,66 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53596 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726247AbfG2AOR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Jul 2019 20:14:17 -0400
-Date: Mon, 29 Jul 2019 10:13:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfs quota test xfs/050 fails with dax mount option and "-d
- su=2m,sw=1" mkfs option
-Message-ID: <20190729001308.GX7689@dread.disaster.area>
-References: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
+Received: from userp2120.oracle.com ([156.151.31.85]:33088 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728845AbfG3AtW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 20:49:22 -0400
+Date: Mon, 29 Jul 2019 17:49:17 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 0/4] xfs: fixes and new tests for bulkstat v5
+Message-ID: <20190730004917.GB2345316@magnolia>
+References: <156394159426.1850833.16316913520596851191.stgit@magnolia>
+ <20190728112635.GN7943@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
+In-Reply-To: <20190728112635.GN7943@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Murphy Zhou <jencce.kernel@gmail.com>
-Cc: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Wed, Jul 24, 2019 at 05:43:17PM +0800, Murphy Zhou wrote:
-> Hi,
+On Sun, Jul 28, 2019 at 07:26:35PM +0800, Eryu Guan wrote:
+> Hi XFS folks,
 > 
-> As subject.
+> On Tue, Jul 23, 2019 at 09:13:14PM -0700, Darrick J. Wong wrote:
+> > Hi all,
+> > 
+> > Fix some problems introduced by the creation of the V5 bulkstat ioctl,
+> > and then add some new tests to make sure the new libxfrog bulkstat
+> > wrappers work fine with both the new v5 ioctl and emulating it with the
+> > old v1 ioctl.
 > 
-> -d su=2m,sw=1     && -o dax  fail
-> -d su=2m,sw=1     && NO dax  pass
-> no su mkfs option && -o dax  pass
-> no su mkfs option && NO dax  pass
+> I may need some help on reviewing this patchset, especially the new
+> bulkstat tests :) Thanks in advance!
+
+Let me know if you have any questions. :)
+
+> But I'd suggest split the last patch into two patches, one introduces &
+> uses the new helper, the other one adds new tests. Also, it misses a new
+> entry in .gitignore file.
+
+Oops, will fix.
+
+--D
+
+> Thanks,
+> Eryu
 > 
-> On latest Linus tree. Reproduce every time.
-> 
-> Testing on older kernels are going on to see if it's a regression.
-> 
-> Is this failure expected ?
-
-I'm not sure it's actually a failure at all. DAX does not do delayed
-allocation, so if the write is aligned to sunit and at EOF it will
-round the allocation up to a full stripe unit. IOWs, for this test
-once the file size gets beyond sunit on DAX, writes will allocate in
-sunit chunks.
-
-And, well, xfs/050 has checks in it for extent size hints, and
-notruns if:
-
-        [ $extsize -ge 512000 ] && \
-                _notrun "Extent size hint is too large ($extsize bytes)"
-
-Because EDQUOT occurs when:
-
->     + URK 99: 2097152 is out of range! [3481600,4096000]
-
-the file has less than 3.5MB or > 4MB allocated to it, and for a
-stripe unit of > 512k, EDQUOT will occur at  <3.5MB. That's what
-we are seeing here - a 2MB allocation at offset 2MB is > 4096000
-bytes, and so it gets EDQUOT at that point....
-
-IOWs, this looks like a test problem, not a code failure...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > 
+> > If you're going to start using this mess, you probably ought to just
+> > pull from my git trees, which are linked below.
+> > 
+> > This is an extraordinary way to destroy everything.  Enjoy!
+> > Comments and questions are, as always, welcome.
+> > 
+> > --D
+> > 
+> > kernel git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bulkstat-v5
+> > 
+> > xfsprogs git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bulkstat-v5
+> > 
+> > fstests git tree:
+> > https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=bulkstat-v5
