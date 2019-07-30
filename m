@@ -1,79 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:36552 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725917AbfG2HZF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 03:25:05 -0400
-Subject: Re: [PATCH] fs: xfs: Fix possible null-pointer dereferences in
- xchk_da_btree_block_check_sibling()
-References: <20190729032401.28081-1-baijiaju1990@gmail.com>
- <20190729042034.GM1561054@magnolia>
-From: Jia-Ju Bai <baijiaju1990@gmail.com>
-Message-ID: <efa37544-0402-af92-c94e-cec49701dca2@gmail.com>
-Date: Mon, 29 Jul 2019 15:25:04 +0800
+Received: from userp2130.oracle.com ([156.151.31.86]:38250 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbfG3BSb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:31 -0400
+Subject: [PATCH 5/6] xfs: set IOMAP_F_NEW more carefully
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 29 Jul 2019 18:18:12 -0700
+Message-ID: <156444949222.2682261.18443282354059824172.stgit@magnolia>
+In-Reply-To: <156444945993.2682261.3926017251626679029.stgit@magnolia>
+References: <156444945993.2682261.3926017251626679029.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190729042034.GM1561054@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: bfoster@redhat.com, sandeen@sandeen.net, linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Damien.LeMoal@wdc.com, Christoph Hellwig <hch@lst.de>, agruenba@redhat.com
+
+From: Christoph Hellwig <hch@lst.de>
+
+Don't set IOMAP_F_NEW if we COW over and existing allocated range, as
+these aren't strictly new allocations.  This is required to be able to
+use IOMAP_F_NEW to zero newly allocated blocks, which is required for
+the iomap code to fully support file systems that don't do delayed
+allocations or use unwritten extents.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iomap.c |    9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 
-
-On 2019/7/29 12:20, Darrick J. Wong wrote:
-> On Mon, Jul 29, 2019 at 11:24:01AM +0800, Jia-Ju Bai wrote:
->> In xchk_da_btree_block_check_sibling(), there is an if statement on
->> line 274 to check whether ds->state->altpath.blk[level].bp is NULL:
->>      if (ds->state->altpath.blk[level].bp)
->>
->> When ds->state->altpath.blk[level].bp is NULL, it is used on line 281:
->>      xfs_trans_brelse(..., ds->state->altpath.blk[level].bp);
->>          struct xfs_buf_log_item	*bip = bp->b_log_item;
->>          ASSERT(bp->b_transp == tp);
->>
->> Thus, possible null-pointer dereferences may occur.
->>
->> To fix these bugs, ds->state->altpath.blk[level].bp is checked before
->> being used.
->>
->> These bugs are found by a static analysis tool STCheck written by us.
->>
->> Signed-off-by: Jia-Ju Bai <baijiaju1990@gmail.com>
->> ---
->>   fs/xfs/scrub/dabtree.c | 4 +++-
->>   1 file changed, 3 insertions(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
->> index 94c4f1de1922..33ff90c0dd70 100644
->> --- a/fs/xfs/scrub/dabtree.c
->> +++ b/fs/xfs/scrub/dabtree.c
->> @@ -278,7 +278,9 @@ xchk_da_btree_block_check_sibling(
->>   	/* Compare upper level pointer to sibling pointer. */
->>   	if (ds->state->altpath.blk[level].blkno != sibling)
->>   		xchk_da_set_corrupt(ds, level);
->> -	xfs_trans_brelse(ds->dargs.trans, ds->state->altpath.blk[level].bp);
->> +	if (ds->state->altpath.blk[level].bp)
->> +		xfs_trans_brelse(ds->dargs.trans,
->> +						ds->state->altpath.blk[level].bp);
-> Indentation here (in xfs we use two spaces)
-
-Okay, I will fix this.
-
->
-> Also, uh, shouldn't we set ds->state->altpath.blk[level].bp to NULL
-> since we've released the buffer?
-
-So I should set ds->state->altpath.blk[level].bp to NULL at the end of 
-the function xchk_da_btree_block_check_sibling()?
-Like:
-     if (ds->state->altpath.blk[level].bp)
-         xfs_trans_brelse(ds->dargs.trans,
-                 ds->state->altpath.blk[level].bp);
-     ds->state->altpath.blk[level].bp = NULL;
-
-
-Best wishes,
-Jia-Ju Bai
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 3a4310d7cb59..434ff589f0fc 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -707,9 +707,12 @@ xfs_file_iomap_begin_delay(
+ 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+ 	 * them out if the write happens to fail.
+ 	 */
+-	iomap->flags |= IOMAP_F_NEW;
+-	trace_xfs_iomap_alloc(ip, offset, count, whichfork,
+-			whichfork == XFS_DATA_FORK ? &imap : &cmap);
++	if (whichfork == XFS_DATA_FORK) {
++		iomap->flags |= IOMAP_F_NEW;
++		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
++	} else {
++		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &cmap);
++	}
+ done:
+ 	if (whichfork == XFS_COW_FORK) {
+ 		if (imap.br_startoff > offset_fsb) {
