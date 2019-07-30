@@ -1,62 +1,89 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:40098 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:40094 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725826AbfGXILx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 24 Jul 2019 04:11:53 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6O896Xd122348
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 08:11:51 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2tx61bunmx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 08:11:51 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6O88Br5145826
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 08:11:50 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2tx60x389n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 08:11:50 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x6O8BnN3011508
-        for <linux-xfs@vger.kernel.org>; Wed, 24 Jul 2019 08:11:49 GMT
-Date: Wed, 24 Jul 2019 11:11:43 +0300
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] xfs: introduce v5 inode group structure
-Message-ID: <20190724081143.GA30722@mwanda>
+        with ESMTP id S1727590AbfG3AzL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 20:55:11 -0400
+Date: Mon, 29 Jul 2019 17:55:06 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+Message-ID: <20190730005506.GC2345316@magnolia>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <156394157450.1850719.464315342783936237.stgit@magnolia>
+ <20190725180330.GH1561054@magnolia>
+ <20190728113036.GO7943@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190728113036.GO7943@desktop>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-Hello Darrick J. Wong,
+On Sun, Jul 28, 2019 at 07:30:36PM +0800, Eryu Guan wrote:
+> On Thu, Jul 25, 2019 at 11:03:30AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Since the iomap code are moving to fs/iomap/ we have to add new entries
+> > to the aiodio dmesg filter to reflect this.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: fix all the iomap regexes
+> > ---
+> >  common/filter |    9 +++++----
+> >  1 file changed, 5 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/common/filter b/common/filter
+> > index ed082d24..2e32ab10 100644
+> > --- a/common/filter
+> > +++ b/common/filter
+> > @@ -550,10 +550,10 @@ _filter_aiodio_dmesg()
+> >  	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
+> >  	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
+> >  	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+> > -	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+> > +	local warn5="WARNING:.*fs/iomap.*:.*iomap_dio_rw.*"
+> >  	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+> > -	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+> > -	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+> > +	local warn7="WARNING:.*fs/iomap.*:.*iomap_dio_actor.*"
+> > +	local warn8="WARNING:.*fs/iomap.*:.*iomap_dio_complete.*"
+> 
+> I don't think we need new filters anymore, as commit 5a9d929d6e13
+> ("iomap: report collisions between directio and buffered writes to
+> userspace") replaced the WARN_ON with a pr_crit(). These filters are
+> there only for old kernels.
 
-The patch 5f19c7fc6873: "xfs: introduce v5 inode group structure"
-from Jul 3, 2019, leads to the following static checker warning:
+Aaaaahh... but I /did/ write this patch because I kept hitting a WARNING
+somewhere in the iomap directio code, and you know what?  It's one of the
+warnings about a bogus iomap type in iomap_dio_actor.
 
-	fs/xfs/xfs_ioctl.c:738 xfs_fsinumbers_fmt()
-	warn: check that 'ig1' doesn't leak information (struct has a hole after 'xi_alloccount')
+I /think/ this is what happens when a buffered write sneaks in and
+creates a delalloc reservation after the directio write has zapped the
+page cache but before it actually starts iterating extents.
+Consequently iomap_dio_actor sees the delalloc extent and WARNs.
 
-fs/xfs/xfs_ioctl.c
-   730  int
-   731  xfs_fsinumbers_fmt(
-   732          struct xfs_ibulk                *breq,
-   733          const struct xfs_inumbers       *igrp)
-   734  {
-   735          struct xfs_inogrp               ig1;
-   736  
-   737          xfs_inumbers_to_inogrp(&ig1, igrp);
+Will have to recheck this, but maybe the kernel needs to deploy that
+helper that 5a9d929d6e13 for that case.
 
-The xfs_inumbers_to_inogrp() call doesn't clear the struct hole.
+--D
 
-   738          if (copy_to_user(breq->ubuffer, &ig1, sizeof(struct xfs_inogrp)))
-   739                  return -EFAULT;
-   740          return xfs_ibulk_advance(breq, sizeof(struct xfs_inogrp));
-   741  }
-
-regards,
-dan carpenter
+> Thanks,
+> Eryu
+> 
+> >  	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
+> >  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+> >  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+> > @@ -563,7 +563,8 @@ _filter_aiodio_dmesg()
+> >  	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+> >  	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+> >  	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+> > -	    -e "s#$warn9#Intentional warnings in dio_complete#"
+> > +	    -e "s#$warn9#Intentional warnings in dio_complete#" \
+> > +	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+> >  }
+> >  
+> >  # We generate assert related WARNINGs on purpose and make sure test doesn't fail
