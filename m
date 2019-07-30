@@ -1,87 +1,131 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:41306 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726277AbfG2AIa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 28 Jul 2019 20:08:30 -0400
-Date: Sun, 28 Jul 2019 17:06:03 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: lift the xfs writepage code into iomap v3
-Message-ID: <20190729000603.GL1561054@magnolia>
-References: <20190722095024.19075-1-hch@lst.de>
- <20190726233753.GD2166993@magnolia>
- <CAHc6FU7L52soLiRafnOiTsaMYp4X_NmjjimpMMzdaoSH_afT+A@mail.gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:39626 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726267AbfG3LaF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 30 Jul 2019 07:30:05 -0400
+Date: Tue, 30 Jul 2019 07:30:02 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: xfs: garbage file data inclusion bug under memory pressure
+Message-ID: <20190730112953.GA28875@bfoster>
+References: <804d24cb-5b7c-4620-5a5f-4ec039472086@i-love.sakura.ne.jp>
+ <20190725220726.GW7689@dread.disaster.area>
+ <201907290350.x6T3oBpj009459@www262.sakura.ne.jp>
+ <20190729112335.GA23942@bfoster>
+ <20190729215657.GI7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHc6FU7L52soLiRafnOiTsaMYp4X_NmjjimpMMzdaoSH_afT+A@mail.gmail.com>
+In-Reply-To: <20190729215657.GI7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andreas Gruenbacher <agruenba@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Damien Le Moal <Damien.LeMoal@wdc.com>, linux-xfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>, linux-xfs@vger.kernel.org
 
-On Sat, Jul 27, 2019 at 03:33:14PM +0200, Andreas Gruenbacher wrote:
-> On Sat, 27 Jul 2019 at 01:38, Darrick J. Wong <darrick.wong@oracle.com> wrote:
-> > On Mon, Jul 23, 2019 at 11:50:12AM +0200, Christoph Hellwig wrote:
-> > > Hi all,
-> > >
-> > > this series cleans up the xfs writepage code and then lifts it to
-> > > fs/iomap.c so that it could be use by other file system.  I've been
-> > > wanting to this for a while so that I could eventually convert gfs2
-> > > over to it, but I never got to it.  Now Damien has a new zonefs
-> > > file system for semi-raw access to zoned block devices that would
-> > > like to use the iomap code instead of reinventing it, so I finally
-> > > had to do the work.
-> >
-> > Hmm... I don't like how there are xfs changes mixed in with the iomap
-> > changes, because were I to take this series as-is then I'd have to
-> > commit both to adding iomap writeback code /and/ converting xfs at the
-> > same time.
-> >
-> > I think I'd be more comfortable creating a branch to merge the changes
-> > to list.h and fs/iomap/, and then gfs2/zonefs/xfs can sprout their own
-> > branches from there to do whatever conversions are necessary.
-> >
-> > To me what that means is splitting patch 7 into 7a which does the iomap
-> > changes and 7b which does the xfs changes.  To get there, I'd create a
-> > iomap-writeback branch containing:
-> >
-> > 1 7a 8 9 10 11 12
-> >
-> > and then a new xfs-iomap-writeback branch containing:
-> >
-> > 2 4 7b
-> >
-> > This eliminates the need for patches 3, 5, and 6, though the cost is
-> > that it's less clear from the history that we did some reorganizing of
-> > the xfs writeback code and then moved it over to iomap.  OTOH, I also
-> > see this as a way to lower risk because if some patch in the
-> > xfs-iomap-writeback branch shakes loose a bug that doesn't affect gfs2
-> > or zonedfs we don't have to hold them up.
-> >
-> > I'll try to restructure this series along those lines and report back
-> > how it went.
+On Tue, Jul 30, 2019 at 07:56:57AM +1000, Dave Chinner wrote:
+> On Mon, Jul 29, 2019 at 07:23:35AM -0400, Brian Foster wrote:
+> > On Mon, Jul 29, 2019 at 12:50:11PM +0900, Tetsuo Handa wrote:
+> > > Dave Chinner wrote:
+> > > > > > But I have to ask: what is causing the IO to fail? OOM conditions
+> > > > > > should not cause writeback errors - XFS will retry memory
+> > > > > > allocations until they succeed, and the block layer is supposed to
+> > > > > > be resilient against memory shortages, too. Hence I'd be interested
+> > > > > > to know what is actually failing here...
+> > > > > 
+> > > > > Yeah. It is strange that this problem occurs when close-to-OOM.
+> > > > > But no failure messages at all (except OOM killer messages and writeback
+> > > > > error messages).
+> > > > 
+> > > > Perhaps using things like trace_kmalloc and friends to isolate the
+> > > > location of memory allocation failures would help....
+> > > > 
+> > > 
+> > > I checked using below diff, and confirmed that XFS writeback failure is triggered by ENOMEM.
+> > > 
+> > > When fsync() is called, xfs_submit_ioend() is called. xfs_submit_ioend() invokes
+> > > xfs_setfilesize_trans_alloc(), but xfs_trans_alloc() fails with -ENOMEM because
+> > > xfs_log_reserve() from xfs_trans_reserve() fails with -ENOMEM because
+> > > xlog_ticket_alloc() is using KM_SLEEP | KM_MAYFAIL which is mapped to
+> > > GFP_NOFS|__GFP_NOWARN|__GFP_RETRY_MAYFAIL|__GFP_COMP which will fail under close-to-OOM.
+> > > 
+> > > As a result, bio_endio() is immediately called due to -ENOMEM, and
+> > > xfs_destroy_ioend() from xfs_end_bio() from bio_endio() is printing
+> > > writeback error message due to -ENOMEM error.
+> > > (By the way, why not to print error code when printing writeback error message?)
+> > > 
+> > > ----------------------------------------
+> > 
+> > Ah, that makes sense. Thanks for tracking that down Tetsuo. For context,
+> > it looks like that flag goes back to commit eb01c9cd87 ("[XFS] Remove
+> > the xlog_ticket allocator") that replaces some old internal ticket
+> > allocation mechanism (that I'm not familiar with) with a standard kmem
+> > cache.
+> > 
+> > ISTM we can just remove that KM_MAYFAIL from ticket allocation. We're
+> > already in NOFS context in this particular caller (writeback), though
+> > that's probably not the case for most other transaction allocations. If
+> > we had a reason to get more elaborate, I suppose we could conditionalize
+> > use of the KM_MAYFAIL flag and/or lift bits of ticket allocation to
+> > earlier in xfs_trans_alloc(), but it's not clear to me that's necessary.
+> > Dave?
 > 
-> Keeping the infrastructure changes in separate commits would certainly
-> make the patches easier to work with for me. Keeping the commits
-> interleaved should be fine though: patch "iomap: zero newly allocated
-> mapped blocks" depends on "xfs: set IOMAP_F_NEW more carefully", so a
-> pure infrastructure branch without "xfs: set IOMAP_F_NEW more
-> carefully" probably wouldn't be correct.
+> That's a long time ago, and it predates the pre-allocation of
+> transactions for file size updates in IO submission. The log ticket
+> rework is irrelevant - it was just an open-coded slab allocator - it
+> was the fact it handled allocation failure that mattered. That was
+> done at the time because we were slowly reducing the number of
+> blocking allocations at the time - trying to reduce the reliance on
+> looping until allocation succeeds - so MAYFAIL was used for quite a
+> lot of new allocations at the time.
+> 
+> This is perfectly fine for transactions in syscall context - if we
+> don't have memory available for the log ticket, we may as well give
+> up now before we really start creating memory demand and getting
+> into a state where we are half way through a transaction and
+> completely out of memory and can't go forwards or backwards.
+> 
+> The trans alloc/trans reserve/log reserve code was somewhat
+> different back then, as was the writeback code. I suspect it dates
+> back to when we had trylock semantics in writeback and so memory
+> allocation errors like this would have simply redirtied the page and
+> it was tried again later. Hence, historically, I don't think this
+> was an issue, either.
+> 
+> Hence the code has morphed so much since then I don't think we can
+> "blame" this commit for introducing this problem. I looks more like
+> we have removed all the protection it had as we've simplified the
+> writeback and transaction allocation/reservation code over time, and
+> now it's exposed directly in writeback.
+> 
 
-<nod> In the end I went with:
+To be clear, I'm not blaming this commit for a bug or anything. I posted
+it for reference because the context has changed so much over such a
+long period of time that it wasn't clear to me if there was some other
+reason for having this flag that might not be obvious from the current
+code. Thanks for the background/context, that pretty much clears that
+question up...
 
-iomap: 1 7a 8 9 10 11 12
+> ----
+> 
+> As for how to fix it, I'd just remove KM_MAYFAIL. We've just done a
+> transaction allocation with just KM_SLEEP, so we may as well do the
+> same for the log ticket....
+> 
 
-and then atop that:
+... and it sounds like we're on the same page. ;)
 
-xfs: 2 4 3 5 6 7b
+Tetsuo,
 
-Because xfs can merge the refactoring in patches 2 & 4 without needing
-to take patches 3-7b.  Will retest overnight with -rc2 (now that scsi
-works again <cough>).
+That's a pretty straightforward change. Care to try your workload
+against a change to remove the flag, confirm it behaves as we anticipate
+and if so perhaps send a patch?
 
---D
+Brian
 
-> Thanks,
-> Andreas
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
