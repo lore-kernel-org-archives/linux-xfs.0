@@ -1,63 +1,53 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:34056 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725800AbfGYSRA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 25 Jul 2019 14:17:00 -0400
-Subject: Re: [PATCH v2] xfs: fix stack contents leakage in the v1 inumber
- ioctls
-References: <20190725175346.GF1561054@magnolia>
-From: Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <49a64f95-7bf1-7434-8fdb-a5463b995149@sandeen.net>
-Date: Thu, 25 Jul 2019 13:16:58 -0500
+Received: from userp2130.oracle.com ([156.151.31.86]:45286 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729908AbfG3Ol4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 10:41:56 -0400
+Date: Tue, 30 Jul 2019 07:41:51 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH] xfs: design: Fix typo
+Message-ID: <20190730144151.GQ1561054@magnolia>
+References: <20190730123648.GA20126@localhost>
 MIME-Version: 1.0
-In-Reply-To: <20190725175346.GF1561054@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190730123648.GA20126@localhost>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, Eric Sandeen <sandeen@redhat.com>
+To: Sheriff Esseson <sheriffesseson@gmail.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 7/25/19 12:53 PM, Darrick J. Wong wrote:
-> Explicitly initialize the onstack structures to zero so we don't leak
-> kernel memory into userspace when converting the in-core inumbers
-> structure to the v1 inogrp ioctl structure.  Add a comment about why we
-> have to use memset to ensure that the padding holes in the structures
-> are set to zero.
+On Tue, Jul 30, 2019 at 01:36:48PM +0100, Sheriff Esseson wrote:
+> Replace "possible" with "possibly" and improve the flow of the phrase.
 > 
-> Fixes: 5f19c7fc6873351 ("xfs: introduce v5 inode group structure")
-> Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
 
 > ---
-> v2: add comments, use memset this time
-> ---
->  fs/xfs/xfs_itable.c |    3 +++
->  1 file changed, 3 insertions(+)
+>  design/XFS_Filesystem_Structure/overview.asciidoc | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>  mode change 100644 => 100755 design/XFS_Filesystem_Structure/overview.asciidoc
 > 
-> diff --git a/fs/xfs/xfs_itable.c b/fs/xfs/xfs_itable.c
-> index 30fe17d25518..39374c680c49 100644
-> --- a/fs/xfs/xfs_itable.c
-> +++ b/fs/xfs/xfs_itable.c
-> @@ -283,6 +283,7 @@ xfs_bulkstat_to_bstat(
->  	struct xfs_bstat		*bs1,
->  	const struct xfs_bulkstat	*bstat)
->  {
-> +	/* memset is needed here because of padding holes in the structure. */
->  	memset(bs1, 0, sizeof(struct xfs_bstat));
->  	bs1->bs_ino = bstat->bs_ino;
->  	bs1->bs_mode = bstat->bs_mode;
-> @@ -399,6 +400,8 @@ xfs_inumbers_to_inogrp(
->  	struct xfs_inogrp		*ig1,
->  	const struct xfs_inumbers	*ig)
->  {
-> +	/* memset is needed here because of padding holes in the structure. */
-> +	memset(ig1, 0, sizeof(struct xfs_inogrp));
->  	ig1->xi_startino = ig->xi_startino;
->  	ig1->xi_alloccount = ig->xi_alloccount;
->  	ig1->xi_allocmask = ig->xi_allocmask;
+> diff --git a/design/XFS_Filesystem_Structure/overview.asciidoc b/design/XFS_Filesystem_Structure/overview.asciidoc
+> old mode 100644
+> new mode 100755
+> index d15b50a..7628a7d
+> --- a/design/XFS_Filesystem_Structure/overview.asciidoc
+> +++ b/design/XFS_Filesystem_Structure/overview.asciidoc
+> @@ -28,7 +28,7 @@ record.  Both forks associate a logical offset with an extent of physical
+>  blocks, which makes sparse files and directories possible.  Directory entries
+>  and extended attributes are contained inside a second-level data structure
+>  within the blocks that are mapped by the forks.  This structure consists of
+> -variable-length directory or attribute records and possible a second B+tree to
+> +variable-length directory or attribute records and, possibly, a second B+tree to
+>  index these records.
+>  
+>  XFS employs a journalling log in which metadata changes are collected so that
+> -- 
+> 2.22.0
 > 
