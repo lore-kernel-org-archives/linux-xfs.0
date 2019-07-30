@@ -1,71 +1,69 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60876 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728500AbfHACSB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:01 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 11/24] xfs:: account for memory freed from metadata buffers
-Date: Thu,  1 Aug 2019 12:17:39 +1000
-Message-Id: <20190801021752.4986-12-david@fromorbit.com>
-In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
-References: <20190801021752.4986-1-david@fromorbit.com>
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:34693 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728588AbfG3U5L (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 16:57:11 -0400
+From: john.hubbard@gmail.com
+Subject: [PATCH v4 2/3] drivers/gpu/drm/via: convert put_page() to put_user_page*()
+Date: Tue, 30 Jul 2019 13:57:04 -0700
+Message-Id: <20190730205705.9018-3-jhubbard@nvidia.com>
+In-Reply-To: <20190730205705.9018-1-jhubbard@nvidia.com>
+References: <20190730205705.9018-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, dri-devel@lists.freedesktop.org
 
-From: Dave Chinner <dchinner@redhat.com>
+From: John Hubbard <jhubbard@nvidia.com>
 
-The buffer cache shrinker frees more than just the xfs_buf slab
-objects - it also frees the pages attached to the buffers. Make sure
-the memory reclaim code accounts for this memory being freed
-correctly, similar to how the inode shrinker accounts for pages
-freed from the page cache due to mapping invalidation.
+For pages that were retained via get_user_pages*(), release those pages
+via the new put_user_page*() routines, instead of via put_page() or
+release_pages().
 
-We also need to make sure that the mm subsystem knows these are
-reclaimable objects. We provide the memory reclaim subsystem with a
-a shrinker to reclaim xfs_bufs, so we should really mark the slab
-that way.
+This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+("mm: introduce put_user_page*(), placeholder versions").
 
-We also have a lot of xfs_bufs in a busy system, spread them around
-like we do inodes.
+Also reverse the order of a comparison, in order to placate
+checkpatch.pl.
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Cc: David Airlie <airlied@linux.ie>
+Cc: Daniel Vetter <daniel@ffwll.ch>
+Cc: dri-devel@lists.freedesktop.org
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- fs/xfs/xfs_buf.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/gpu/drm/via/via_dmablit.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 6e0f76532535..beb816cd54d6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -1667,6 +1667,14 @@ xfs_buftarg_shrink_scan(
- 		struct xfs_buf *bp;
- 		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
- 		list_del_init(&bp->b_lru);
-+
-+		/*
-+		 * Account for the buffer memory freed here so memory reclaim
-+		 * sees this and not just the xfs_buf slab entry being freed.
-+		 */
-+		if (current->reclaim_state)
-+			current->reclaim_state->reclaimed_pages += bp->b_page_count;
-+
- 		xfs_buf_rele(bp);
- 	}
- 
-@@ -2057,7 +2065,8 @@ int __init
- xfs_buf_init(void)
+diff --git a/drivers/gpu/drm/via/via_dmablit.c b/drivers/gpu/drm/via/via_dmablit.c
+index 062067438f1d..b5b5bf0ba65e 100644
+--- a/drivers/gpu/drm/via/via_dmablit.c
++++ b/drivers/gpu/drm/via/via_dmablit.c
+@@ -171,7 +171,6 @@ via_map_blit_for_device(struct pci_dev *pdev,
+ static void
+ via_free_sg_info(struct pci_dev *pdev, drm_via_sg_info_t *vsg)
  {
- 	xfs_buf_zone = kmem_zone_init_flags(sizeof(xfs_buf_t), "xfs_buf",
--						KM_ZONE_HWALIGN, NULL);
-+			KM_ZONE_HWALIGN | KM_ZONE_SPREAD | KM_ZONE_RECLAIM,
-+			NULL);
- 	if (!xfs_buf_zone)
- 		goto out;
+-	struct page *page;
+ 	int i;
  
+ 	switch (vsg->state) {
+@@ -186,13 +185,8 @@ via_free_sg_info(struct pci_dev *pdev, drm_via_sg_info_t *vsg)
+ 		kfree(vsg->desc_pages);
+ 		/* fall through */
+ 	case dr_via_pages_locked:
+-		for (i = 0; i < vsg->num_pages; ++i) {
+-			if (NULL != (page = vsg->pages[i])) {
+-				if (!PageReserved(page) && (DMA_FROM_DEVICE == vsg->direction))
+-					SetPageDirty(page);
+-				put_page(page);
+-			}
+-		}
++		put_user_pages_dirty_lock(vsg->pages, vsg->num_pages,
++					  (vsg->direction == DMA_FROM_DEVICE));
+ 		/* fall through */
+ 	case dr_via_pages_alloc:
+ 		vfree(vsg->pages);
 -- 
 2.22.0
