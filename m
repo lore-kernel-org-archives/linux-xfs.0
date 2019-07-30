@@ -1,73 +1,56 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:38291 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726305AbfG2I2u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 04:28:50 -0400
-Received: by mail-pg1-f194.google.com with SMTP id f5so19044972pgu.5
-        for <linux-xfs@vger.kernel.org>; Mon, 29 Jul 2019 01:28:49 -0700 (PDT)
-Date: Mon, 29 Jul 2019 16:28:41 +0800
-From: Murphy Zhou <jencce.kernel@gmail.com>
-Subject: Re: xfs quota test xfs/050 fails with dax mount option and "-d
- su=2m,sw=1" mkfs option
-Message-ID: <20190729082841.6uiroqyygnb3ngls@XZHOUW.usersys.redhat.com>
-References: <20190724094317.4yjm4smk2z47cwmv@XZHOUW.usersys.redhat.com>
- <20190729001308.GX7689@dread.disaster.area>
+Received: from userp2130.oracle.com ([156.151.31.86]:38546 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729551AbfG3BSp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:45 -0400
+Subject: [PATCH v4 0/2] xfs: use new list helpers in writeback code
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Mon, 29 Jul 2019 18:18:21 -0700
+Message-ID: <156444950159.2682436.1669088240015553674.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190729001308.GX7689@dread.disaster.area>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Murphy Zhou <jencce.kernel@gmail.com>, linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Damien.LeMoal@wdc.com, agruenba@redhat.com
 
-On Mon, Jul 29, 2019 at 10:13:08AM +1000, Dave Chinner wrote:
-> On Wed, Jul 24, 2019 at 05:43:17PM +0800, Murphy Zhou wrote:
-> > Hi,
-> > 
-> > As subject.
-> > 
-> > -d su=2m,sw=1     && -o dax  fail
-> > -d su=2m,sw=1     && NO dax  pass
-> > no su mkfs option && -o dax  pass
-> > no su mkfs option && NO dax  pass
-> > 
-> > On latest Linus tree. Reproduce every time.
-> > 
-> > Testing on older kernels are going on to see if it's a regression.
-> > 
-> > Is this failure expected ?
-> 
-> I'm not sure it's actually a failure at all. DAX does not do delayed
-> allocation, so if the write is aligned to sunit and at EOF it will
-> round the allocation up to a full stripe unit. IOWs, for this test
-> once the file size gets beyond sunit on DAX, writes will allocate in
-> sunit chunks.
-> 
-> And, well, xfs/050 has checks in it for extent size hints, and
-> notruns if:
-> 
->         [ $extsize -ge 512000 ] && \
->                 _notrun "Extent size hint is too large ($extsize bytes)"
-> 
-> Because EDQUOT occurs when:
-> 
-> >     + URK 99: 2097152 is out of range! [3481600,4096000]
-> 
-> the file has less than 3.5MB or > 4MB allocated to it, and for a
-> stripe unit of > 512k, EDQUOT will occur at  <3.5MB. That's what
-> we are seeing here - a 2MB allocation at offset 2MB is > 4096000
-> bytes, and so it gets EDQUOT at that point....
-> 
-> IOWs, this looks like a test problem, not a code failure...
+Hi all,
 
-Got it. Thanks Dave!
+>From Christoph:
 
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+This series cleans up the xfs writepage code and then lifts it to
+fs/iomap/ so that it could be use by other file systems.  I've been
+wanting to [do] this for a while so that I could eventually convert gfs2
+over to it, but I never got to it.  Now Damien has a new zonefs file
+system for semi-raw access to zoned block devices that would like to use
+the iomap code instead of reinventing it, so I finally had to do the
+work.
+
+>From Darrick:
+
+For v4, split the series into smaller pieces.  This second part
+refactors some of XFS's writeback code to use the new helpers introduced
+in the first part.
+
+Changes since v2:
+ - rebased to v5.3-rc1
+ - folded in a few changes from the gfs2 enablement series
+
+Changes since v1:
+ - rebased to the latest xfs for-next tree
+ - keep the preallocated transactions for size updates
+ - rename list_pop to list_pop_entry and related cleanups
+ - better document the nofs context handling
+ - document that the iomap tracepoints are not a stable API
+This series breaks up fs/iomap.c by grouping the functions by major
+functional area (swapfiles, fiemap, seek hole/data, directio, buffered
+io, and page migration) in separate source code files under fs/iomap/.
+No functional changes have been made.  Please check the copyrights to
+make sure the attribution is correct.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
