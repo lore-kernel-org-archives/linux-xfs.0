@@ -2,144 +2,91 @@ Return-Path: <SRS0=ZiIX=V3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DCFC76186
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jul 2019 01:18:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9158EC433FF
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jul 2019 08:40:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9980A2070D
-	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jul 2019 01:18:05 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yTYIwKoR"
+	by mail.kernel.org (Postfix) with ESMTP id 65B21206A2
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jul 2019 08:40:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728245AbfG3BSF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 29 Jul 2019 21:18:05 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:32954 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725878AbfG3BSE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:04 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6U18aVI095483;
-        Tue, 30 Jul 2019 01:17:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2018-07-02;
- bh=g9c2RncZ7+p19tL7qo1Ya21k4WOi7/ov7/QwLqXzV6A=;
- b=yTYIwKoR5mIzYeuT4zpkrEvCb9//jDDnTafQopVWPtbkccVsmJ9m8fk/pBT0YlKXVZ2Z
- 7NAbX/t7zvcRYEArm1MoS1SpO2fk5hAZh8F2SKT1e5TYgK4xD6rXsasa+pZCLVHivYsl
- O6X0odK6zslYED4e30QHGNBVNMUSP65t+ap3WsqjAbgZUk4v8i+bVGAQZs4IqtS7pcAG
- GihsLjdKogp+U6+t5l7OZm0D/dXfB7H3zBxy50+2A55scxlZ3h53ZJMBVLgtHup1w8Ve
- EYfDCh2uM4VNa7AW0gNZTEaKSoAi+fYLUqbFz48L1dKWGrIt74z0eijHA+gjqq2/HAfj RQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2u0ejpb0eu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 30 Jul 2019 01:17:50 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6U1D9dl033949;
-        Tue, 30 Jul 2019 01:17:49 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2u0dxqmrfc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 30 Jul 2019 01:17:49 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x6U1HlbI011963;
-        Tue, 30 Jul 2019 01:17:47 GMT
-Received: from localhost (/10.159.132.41)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 29 Jul 2019 18:17:46 -0700
-Subject: [PATCH 1/6] list.h: add list_pop and list_pop_entry helpers
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     hch@infradead.org, darrick.wong@oracle.com
-Cc:     Damien.LeMoal@wdc.com, agruenba@redhat.com,
-        "Matthew Wilcox \(Oracle\)" <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>
-Date:   Mon, 29 Jul 2019 18:17:46 -0700
-Message-ID: <156444946635.2682261.14776328020249327506.stgit@magnolia>
-In-Reply-To: <156444945993.2682261.3926017251626679029.stgit@magnolia>
-References: <156444945993.2682261.3926017251626679029.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        id S1730945AbfG3IkS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 30 Jul 2019 04:40:18 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:35739 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728354AbfG3IkR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 04:40:17 -0400
+X-IronPort-AV: E=Sophos;i="5.64,326,1559491200"; 
+   d="scan'208";a="72514497"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 30 Jul 2019 16:40:15 +0800
+Received: from G08CNEXCHPEKD01.g08.fujitsu.local (unknown [10.167.33.80])
+        by cn.fujitsu.com (Postfix) with ESMTP id 2675A4CDD99E;
+        Tue, 30 Jul 2019 16:40:20 +0800 (CST)
+Received: from iridescent.g08.fujitsu.local (10.167.225.140) by
+ G08CNEXCHPEKD01.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
+ (TLS) id 14.3.439.0; Tue, 30 Jul 2019 16:40:23 +0800
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+To:     <guaneryu@gmail.com>, <darrick.wong@oracle.com>
+CC:     <ruansy.fnst@cn.fujitsu.com>, <fstests@vger.kernel.org>,
+        <linux-xfs@vger.kernel.org>
+Subject: [PATCH] common/rc: check 'chattr +/-x' on dax device.
+Date:   Tue, 30 Jul 2019 16:40:09 +0800
+Message-ID: <20190730084009.26257-1-ruansy.fnst@cn.fujitsu.com>
+X-Mailer: git-send-email 2.17.0
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9333 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1907300010
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9333 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1907300010
+X-Originating-IP: [10.167.225.140]
+X-yoursite-MailScanner-ID: 2675A4CDD99E.A732C
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190730011746.xMTQJgjkMfjeby_Hs_PuuoSg99vB6aqIvDzGo1Wh-N0@z>
+Message-ID: <20190730084009.7KSVDjqUpHHmo8CADm7Lh1CK86WyfvMoibHfRRT9Llw@z>
 
-From: Christoph Hellwig <hch@lst.de>
+'chattr +/-x' only works on a dax device.  When checking if the 'x'
+attribute is supported by XFS_IO_PROG:
+    _require_xfs_io_command "chattr" "x"    (called by xfs/260)
+it's better to do the check on a dax device mounted with dax option.
 
-We have a very common pattern where we want to delete the first entry
-from a list and return it as the properly typed container structure.
-
-Add two helpers to implement this behavior.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
 ---
- include/linux/list.h |   33 +++++++++++++++++++++++++++++++++
- 1 file changed, 33 insertions(+)
+ common/rc | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/common/rc b/common/rc
+index e0b087c1..73ee5563 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2094,11 +2094,22 @@ _require_xfs_io_command()
+ 		if [ -z "$param" ]; then
+ 			param=s
+ 		fi
++
++		# Attribute "x" should be tested on a dax device
++		if [ "$param" == "x" ]; then
++			_scratch_mount "-o dax"
++			testfile=$SCRATCH_MNT/$$.xfs_io
++		fi
++
+ 		# Test xfs_io chattr support AND
+ 		# filesystem FS_IOC_FSSETXATTR support
+ 		testio=`$XFS_IO_PROG -F -f -c "chattr +$param" $testfile 2>&1`
+ 		$XFS_IO_PROG -F -f -r -c "chattr -$param" $testfile 2>&1
+ 		param_checked="+$param"
++
++		if [ "$param" == "x" ]; then
++			_scratch_unmount
++		fi
+ 		;;
+ 	"chproj")
+ 		testio=`$XFS_IO_PROG -F -f -c "chproj 0" $testfile 2>&1`
+-- 
+2.17.0
 
 
-diff --git a/include/linux/list.h b/include/linux/list.h
-index 85c92555e31f..d3b00267446a 100644
---- a/include/linux/list.h
-+++ b/include/linux/list.h
-@@ -514,6 +514,39 @@ static inline void list_splice_tail_init(struct list_head *list,
- 	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
- })
- 
-+/**
-+ * list_pop - delete the first entry from a list and return it
-+ * @list:	the list to take the element from.
-+ *
-+ * Return the list entry after @list.  If @list is empty return NULL.
-+ */
-+static inline struct list_head *list_pop(struct list_head *list)
-+{
-+	struct list_head *pos = READ_ONCE(list->next);
-+
-+	if (pos == list)
-+		return NULL;
-+	list_del(pos);
-+	return pos;
-+}
-+
-+/**
-+ * list_pop_entry - delete the first entry from a list and return the
-+ *			containing structure
-+ * @list:	the list to take the element from.
-+ * @type:	the type of the struct this is embedded in.
-+ * @member:	the name of the list_head within the struct.
-+ *
-+ * Return the containing structure for the list entry after @list.  If @list
-+ * is empty return NULL.
-+ */
-+#define list_pop_entry(list, type, member)			\
-+({								\
-+	struct list_head *pos__ = list_pop(list);		\
-+								\
-+	pos__ ? list_entry(pos__, type, member) : NULL;		\
-+})
-+
- /**
-  * list_next_entry - get the next element in list
-  * @pos:	the type * to cursor
 
