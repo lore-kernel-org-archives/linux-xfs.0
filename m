@@ -1,99 +1,145 @@
-Return-Path: <SRS0=q3sy=VU=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=ZiIX=V3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FEFAC7618B
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jul 2019 14:52:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C5DCFC76186
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jul 2019 01:18:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E1BD0218EA
-	for <linux-xfs@archiver.kernel.org>; Tue, 23 Jul 2019 14:52:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9980A2070D
+	for <linux-xfs@archiver.kernel.org>; Tue, 30 Jul 2019 01:18:05 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aukX6NjY"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="yTYIwKoR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731109AbfGWOwL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 23 Jul 2019 10:52:11 -0400
-Received: from mail-wr1-f68.google.com ([209.85.221.68]:43708 "EHLO
-        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729058AbfGWOwL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 23 Jul 2019 10:52:11 -0400
-Received: by mail-wr1-f68.google.com with SMTP id p13so43484972wru.10;
-        Tue, 23 Jul 2019 07:52:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=kYSaq/H0a1K5O6GgVQzeldJnwoS+ik7bLUeJy2mAJ1A=;
-        b=aukX6NjY5vGXcUMBB7dCljUvzTQzh3KCQ2SsVn4v4prgUDICht9MtYvmKH0taCJILB
-         Qx7krhdvRr84zDCfJ0YoBYkHbyFxT9T7R+0390Ib53rvGYIVdAoU4ukd6T54zwDgFhXf
-         kURlWc2HSpFdNz0eW+lDZ5c+PqgGo8CKmHpO5GL4TZGiyTql3rylP4hDxUWcObDdeeao
-         /AG6a+NawBkABpAV71zqHa4SErX4S9AzbJWlObwK+3R4P3vn/p2zMIgDwHzdwi5tR2JY
-         MCX3OIjhTDn5/sMtwm3fmWWZEu6J1nNF2JpNROAUXgRDGtxt789Kmc2H4lZTbCDqIf+E
-         teIg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=kYSaq/H0a1K5O6GgVQzeldJnwoS+ik7bLUeJy2mAJ1A=;
-        b=Ke+/BGvX+a+5W1Cd+PLjbvdoSP8DLclhYo+Zwc1aytp0EaiSbkt2Gp5yXf+CBeFyAs
-         y/RUFv0d/hr44TIFD6clc6wn4rAqUn8m1PGpPSCDAfbRv2AIUumkAlYZM3il8gr2y9qb
-         IqLoWbHuviv9DBXpwiAaAxNTXvM92Ua0iZsu2DFKHeNSMgSYogPQlkax4V0Zdc8URWT3
-         zCWwL0GNoPZ5PPlCtXawUnJlU9a2ecP/QZLPf2UfxtBfYNvKOGZfGssQ4D+b4wKHZ5pV
-         DFWJNtqazxeOTUdhysRpr0vdCcecKsmvdz5NUEz3cLKMy34WrYH7qqL/vLkuRvScFQJr
-         Veow==
-X-Gm-Message-State: APjAAAXHGrgD+vsIIS6Np8cHRrzj2zUu5DbDl0oU1ii9o9j3ZIs2jF9+
-        ilfEXgVWJoLEv4j2BWAg7VvIZuGLYwQ=
-X-Google-Smtp-Source: APXvYqwq0DLfDr/GEx8Ioo9rXYOVzEw+HqTLlypdVOTwN/scxJ1hlwnITW1gc8tynJDxNVNwzem68Q==
-X-Received: by 2002:a5d:4090:: with SMTP id o16mr7929232wrp.292.1563893529374;
-        Tue, 23 Jul 2019 07:52:09 -0700 (PDT)
-Received: from localhost ([197.211.57.129])
-        by smtp.gmail.com with ESMTPSA id c78sm62424451wmd.16.2019.07.23.07.52.06
-        (version=TLS1_3 cipher=AEAD-AES256-GCM-SHA384 bits=256/256);
-        Tue, 23 Jul 2019 07:52:08 -0700 (PDT)
-Date:   Tue, 23 Jul 2019 15:52:01 +0100
-From:   Sheriff Esseson <sheriffesseson@gmail.com>
-To:     Jonathan Corbet <corbet@lwn.net>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        "supporter:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        "open list:DOCUMENTATION" <linux-doc@vger.kernel.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        skhan@linuxfoundation.org,
-        linux-kernel-mentees@lists.linuxfoundation.org
-Subject: Re: [PATCH] Documentation: filesystem: fix "Removed Sysctls" table
-Message-ID: <20190723145201.GA20658@localhost>
-References: <20190723114813.GA14870@localhost>
- <20190723074218.4532737f@lwn.net>
+        id S1728245AbfG3BSF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 29 Jul 2019 21:18:05 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:32954 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbfG3BSE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6U18aVI095483;
+        Tue, 30 Jul 2019 01:17:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2018-07-02;
+ bh=g9c2RncZ7+p19tL7qo1Ya21k4WOi7/ov7/QwLqXzV6A=;
+ b=yTYIwKoR5mIzYeuT4zpkrEvCb9//jDDnTafQopVWPtbkccVsmJ9m8fk/pBT0YlKXVZ2Z
+ 7NAbX/t7zvcRYEArm1MoS1SpO2fk5hAZh8F2SKT1e5TYgK4xD6rXsasa+pZCLVHivYsl
+ O6X0odK6zslYED4e30QHGNBVNMUSP65t+ap3WsqjAbgZUk4v8i+bVGAQZs4IqtS7pcAG
+ GihsLjdKogp+U6+t5l7OZm0D/dXfB7H3zBxy50+2A55scxlZ3h53ZJMBVLgtHup1w8Ve
+ EYfDCh2uM4VNa7AW0gNZTEaKSoAi+fYLUqbFz48L1dKWGrIt74z0eijHA+gjqq2/HAfj RQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2u0ejpb0eu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 30 Jul 2019 01:17:50 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x6U1D9dl033949;
+        Tue, 30 Jul 2019 01:17:49 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2u0dxqmrfc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 30 Jul 2019 01:17:49 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x6U1HlbI011963;
+        Tue, 30 Jul 2019 01:17:47 GMT
+Received: from localhost (/10.159.132.41)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 29 Jul 2019 18:17:46 -0700
+Subject: [PATCH 1/6] list.h: add list_pop and list_pop_entry helpers
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     hch@infradead.org, darrick.wong@oracle.com
+Cc:     Damien.LeMoal@wdc.com, agruenba@redhat.com,
+        "Matthew Wilcox \(Oracle\)" <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>
+Date:   Mon, 29 Jul 2019 18:17:46 -0700
+Message-ID: <156444946635.2682261.14776328020249327506.stgit@magnolia>
+In-Reply-To: <156444945993.2682261.3926017251626679029.stgit@magnolia>
+References: <156444945993.2682261.3926017251626679029.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Disposition: inline
-In-Reply-To: <20190723074218.4532737f@lwn.net>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9333 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1907300010
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9333 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1907300010
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190723145201.X0pzY4paLiPAc3AYbKMoYJZ6-GGGN4dbD4CsHb8t1eI@z>
+Message-ID: <20190730011746.xMTQJgjkMfjeby_Hs_PuuoSg99vB6aqIvDzGo1Wh-N0@z>
 
-On Tue, Jul 23, 2019 at 07:42:18AM -0600, Jonathan Corbet wrote:
-> On Tue, 23 Jul 2019 12:48:13 +0100
-> Sheriff Esseson <sheriffesseson@gmail.com> wrote:
-> 
-> > the "Removed Sysctls" section is a table - bring it alive with ReST.
-> > 
-> > Signed-off-by: Sheriff Esseson <sheriffesseson@gmail.com>
-> 
-> So this appears to be identical to the patch you sent three days ago; is
-> there a reason why you are sending it again now?
-> 
-> Thanks,
-> 
-> jon
+From: Christoph Hellwig <hch@lst.de>
 
-Sorry, I was think the patch went unnoticed during the merge window - I could
-not find a response.
+We have a very common pattern where we want to delete the first entry
+from a list and return it as the properly typed container structure.
+
+Add two helpers to implement this behavior.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ include/linux/list.h |   33 +++++++++++++++++++++++++++++++++
+ 1 file changed, 33 insertions(+)
+
+
+diff --git a/include/linux/list.h b/include/linux/list.h
+index 85c92555e31f..d3b00267446a 100644
+--- a/include/linux/list.h
++++ b/include/linux/list.h
+@@ -514,6 +514,39 @@ static inline void list_splice_tail_init(struct list_head *list,
+ 	pos__ != head__ ? list_entry(pos__, type, member) : NULL; \
+ })
+ 
++/**
++ * list_pop - delete the first entry from a list and return it
++ * @list:	the list to take the element from.
++ *
++ * Return the list entry after @list.  If @list is empty return NULL.
++ */
++static inline struct list_head *list_pop(struct list_head *list)
++{
++	struct list_head *pos = READ_ONCE(list->next);
++
++	if (pos == list)
++		return NULL;
++	list_del(pos);
++	return pos;
++}
++
++/**
++ * list_pop_entry - delete the first entry from a list and return the
++ *			containing structure
++ * @list:	the list to take the element from.
++ * @type:	the type of the struct this is embedded in.
++ * @member:	the name of the list_head within the struct.
++ *
++ * Return the containing structure for the list entry after @list.  If @list
++ * is empty return NULL.
++ */
++#define list_pop_entry(list, type, member)			\
++({								\
++	struct list_head *pos__ = list_pop(list);		\
++								\
++	pos__ ? list_entry(pos__, type, member) : NULL;		\
++})
++
+ /**
+  * list_next_entry - get the next element in list
+  * @pos:	the type * to cursor
+
