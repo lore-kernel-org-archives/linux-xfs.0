@@ -1,102 +1,301 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33599 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729496AbfHACSO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:14 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 21/24] xfs: remove mode from xfs_reclaim_inodes()
-Date: Thu,  1 Aug 2019 12:17:49 +1000
-Message-Id: <20190801021752.4986-22-david@fromorbit.com>
-In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
-References: <20190801021752.4986-1-david@fromorbit.com>
+Received: from mail-pf1-f196.google.com ([209.85.210.196]:41012 "EHLO
+        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727903AbfG3U5K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 16:57:10 -0400
+From: john.hubbard@gmail.com
+Subject: [PATCH v4 1/3] mm/gup: add make_dirty arg to put_user_pages_dirty_lock()
+Date: Tue, 30 Jul 2019 13:57:03 -0700
+Message-Id: <20190730205705.9018-2-jhubbard@nvidia.com>
+In-Reply-To: <20190730205705.9018-1-jhubbard@nvidia.com>
+References: <20190730205705.9018-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>, Christoph Hellwig <hch@lst.de>
 
-From: Dave Chinner <dchinner@redhat.com>
+From: John Hubbard <jhubbard@nvidia.com>
 
-Because it's always SYNC_WAIT now.
+Provide more capable variation of put_user_pages_dirty_lock(),
+and delete put_user_pages_dirty(). This is based on the
+following:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+1. Lots of call sites become simpler if a bool is passed
+into put_user_page*(), instead of making the call site
+choose which put_user_page*() variant to call.
+
+2. Christoph Hellwig's observation that set_page_dirty_lock()
+is usually correct, and set_page_dirty() is usually a
+bug, or at least questionable, within a put_user_page*()
+calling chain.
+
+This leads to the following API choices:
+
+    * put_user_pages_dirty_lock(page, npages, make_dirty)
+
+    * There is no put_user_pages_dirty(). You have to
+      hand code that, in the rare case that it's
+      required.
+
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Jan Kara <jack@suse.cz>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ira Weiny <ira.weiny@intel.com>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- fs/xfs/xfs_icache.c | 7 +++----
- fs/xfs/xfs_icache.h | 2 +-
- fs/xfs/xfs_mount.c  | 4 ++--
- fs/xfs/xfs_super.c  | 3 +--
- 4 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/infiniband/core/umem.c             |   5 +-
+ drivers/infiniband/hw/hfi1/user_pages.c    |   5 +-
+ drivers/infiniband/hw/qib/qib_user_pages.c |   5 +-
+ drivers/infiniband/hw/usnic/usnic_uiom.c   |   5 +-
+ drivers/infiniband/sw/siw/siw_mem.c        |  10 +-
+ include/linux/mm.h                         |   5 +-
+ mm/gup.c                                   | 115 +++++++++------------
+ 7 files changed, 58 insertions(+), 92 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 4c4c5bc12147..aaa1f840a86c 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1294,12 +1294,11 @@ xfs_reclaim_inodes_ag(
- 	return freed;
- }
+diff --git a/drivers/infiniband/core/umem.c b/drivers/infiniband/core/umem.c
+index 08da840ed7ee..965cf9dea71a 100644
+--- a/drivers/infiniband/core/umem.c
++++ b/drivers/infiniband/core/umem.c
+@@ -54,10 +54,7 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
  
--int
-+void
- xfs_reclaim_inodes(
--	xfs_mount_t	*mp,
--	int		mode)
-+	struct xfs_mount	*mp)
+ 	for_each_sg_page(umem->sg_head.sgl, &sg_iter, umem->sg_nents, 0) {
+ 		page = sg_page_iter_page(&sg_iter);
+-		if (umem->writable && dirty)
+-			put_user_pages_dirty_lock(&page, 1);
+-		else
+-			put_user_page(page);
++		put_user_pages_dirty_lock(&page, 1, umem->writable && dirty);
+ 	}
+ 
+ 	sg_free_table(&umem->sg_head);
+diff --git a/drivers/infiniband/hw/hfi1/user_pages.c b/drivers/infiniband/hw/hfi1/user_pages.c
+index b89a9b9aef7a..469acb961fbd 100644
+--- a/drivers/infiniband/hw/hfi1/user_pages.c
++++ b/drivers/infiniband/hw/hfi1/user_pages.c
+@@ -118,10 +118,7 @@ int hfi1_acquire_user_pages(struct mm_struct *mm, unsigned long vaddr, size_t np
+ void hfi1_release_user_pages(struct mm_struct *mm, struct page **p,
+ 			     size_t npages, bool dirty)
  {
--	return xfs_reclaim_inodes_ag(mp, mode, INT_MAX);
-+	xfs_reclaim_inodes_ag(mp, SYNC_WAIT, INT_MAX);
+-	if (dirty)
+-		put_user_pages_dirty_lock(p, npages);
+-	else
+-		put_user_pages(p, npages);
++	put_user_pages_dirty_lock(p, npages, dirty);
+ 
+ 	if (mm) { /* during close after signal, mm can be NULL */
+ 		atomic64_sub(npages, &mm->pinned_vm);
+diff --git a/drivers/infiniband/hw/qib/qib_user_pages.c b/drivers/infiniband/hw/qib/qib_user_pages.c
+index bfbfbb7e0ff4..6bf764e41891 100644
+--- a/drivers/infiniband/hw/qib/qib_user_pages.c
++++ b/drivers/infiniband/hw/qib/qib_user_pages.c
+@@ -40,10 +40,7 @@
+ static void __qib_release_user_pages(struct page **p, size_t num_pages,
+ 				     int dirty)
+ {
+-	if (dirty)
+-		put_user_pages_dirty_lock(p, num_pages);
+-	else
+-		put_user_pages(p, num_pages);
++	put_user_pages_dirty_lock(p, num_pages, dirty);
  }
  
- /*
-diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 4c0d8920cc54..1c9b9edb2986 100644
---- a/fs/xfs/xfs_icache.h
-+++ b/fs/xfs/xfs_icache.h
-@@ -49,7 +49,7 @@ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
- struct xfs_inode * xfs_inode_alloc(struct xfs_mount *mp, xfs_ino_t ino);
- void xfs_inode_free(struct xfs_inode *ip);
+ /**
+diff --git a/drivers/infiniband/hw/usnic/usnic_uiom.c b/drivers/infiniband/hw/usnic/usnic_uiom.c
+index 0b0237d41613..62e6ffa9ad78 100644
+--- a/drivers/infiniband/hw/usnic/usnic_uiom.c
++++ b/drivers/infiniband/hw/usnic/usnic_uiom.c
+@@ -75,10 +75,7 @@ static void usnic_uiom_put_pages(struct list_head *chunk_list, int dirty)
+ 		for_each_sg(chunk->page_list, sg, chunk->nents, i) {
+ 			page = sg_page(sg);
+ 			pa = sg_phys(sg);
+-			if (dirty)
+-				put_user_pages_dirty_lock(&page, 1);
+-			else
+-				put_user_page(page);
++			put_user_pages_dirty_lock(&page, 1, dirty);
+ 			usnic_dbg("pa: %pa\n", &pa);
+ 		}
+ 		kfree(chunk);
+diff --git a/drivers/infiniband/sw/siw/siw_mem.c b/drivers/infiniband/sw/siw/siw_mem.c
+index 67171c82b0c4..ab83a9cec562 100644
+--- a/drivers/infiniband/sw/siw/siw_mem.c
++++ b/drivers/infiniband/sw/siw/siw_mem.c
+@@ -63,15 +63,7 @@ struct siw_mem *siw_mem_id2obj(struct siw_device *sdev, int stag_index)
+ static void siw_free_plist(struct siw_page_chunk *chunk, int num_pages,
+ 			   bool dirty)
+ {
+-	struct page **p = chunk->plist;
+-
+-	while (num_pages--) {
+-		if (!PageDirty(*p) && dirty)
+-			put_user_pages_dirty_lock(p, 1);
+-		else
+-			put_user_page(*p);
+-		p++;
+-	}
++	put_user_pages_dirty_lock(chunk->plist, num_pages, dirty);
+ }
  
--int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
-+void xfs_reclaim_inodes(struct xfs_mount *mp);
- int xfs_reclaim_inodes_count(struct xfs_mount *mp);
- long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+ void siw_umem_release(struct siw_umem *umem, bool dirty)
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index 0334ca97c584..9759b6a24420 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1057,8 +1057,9 @@ static inline void put_user_page(struct page *page)
+ 	put_page(page);
+ }
  
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index bcf8f64d1b1f..e851b9cfbabd 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -984,7 +984,7 @@ xfs_mountfs(
- 	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
- 	 * quota inodes.
- 	 */
--	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+	xfs_reclaim_inodes(mp);
- 	xfs_health_unmount(mp);
-  out_log_dealloc:
- 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
-@@ -1066,7 +1066,7 @@ xfs_unmountfs(
- 	 * reclaim just to be sure. We can stop background inode reclaim
- 	 * here as well if it is still running.
- 	 */
--	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+	xfs_reclaim_inodes(mp);
- 	xfs_health_unmount(mp);
+-void put_user_pages_dirty(struct page **pages, unsigned long npages);
+-void put_user_pages_dirty_lock(struct page **pages, unsigned long npages);
++void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
++			       bool make_dirty);
++
+ void put_user_pages(struct page **pages, unsigned long npages);
  
- 	xfs_qm_unmount(mp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 09e41c6c1794..a59d3a21be5c 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1179,8 +1179,7 @@ xfs_quiesce_attr(
- 	xfs_log_force(mp, XFS_LOG_SYNC);
+ #if defined(CONFIG_SPARSEMEM) && !defined(CONFIG_SPARSEMEM_VMEMMAP)
+diff --git a/mm/gup.c b/mm/gup.c
+index 98f13ab37bac..7fefd7ab02c4 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -29,85 +29,70 @@ struct follow_page_context {
+ 	unsigned int page_mask;
+ };
  
- 	/* reclaim inodes to do any IO before the freeze completes */
--	xfs_reclaim_inodes(mp, 0);
--	xfs_reclaim_inodes(mp, SYNC_WAIT);
-+	xfs_reclaim_inodes(mp);
+-typedef int (*set_dirty_func_t)(struct page *page);
+-
+-static void __put_user_pages_dirty(struct page **pages,
+-				   unsigned long npages,
+-				   set_dirty_func_t sdf)
+-{
+-	unsigned long index;
+-
+-	for (index = 0; index < npages; index++) {
+-		struct page *page = compound_head(pages[index]);
+-
+-		/*
+-		 * Checking PageDirty at this point may race with
+-		 * clear_page_dirty_for_io(), but that's OK. Two key cases:
+-		 *
+-		 * 1) This code sees the page as already dirty, so it skips
+-		 * the call to sdf(). That could happen because
+-		 * clear_page_dirty_for_io() called page_mkclean(),
+-		 * followed by set_page_dirty(). However, now the page is
+-		 * going to get written back, which meets the original
+-		 * intention of setting it dirty, so all is well:
+-		 * clear_page_dirty_for_io() goes on to call
+-		 * TestClearPageDirty(), and write the page back.
+-		 *
+-		 * 2) This code sees the page as clean, so it calls sdf().
+-		 * The page stays dirty, despite being written back, so it
+-		 * gets written back again in the next writeback cycle.
+-		 * This is harmless.
+-		 */
+-		if (!PageDirty(page))
+-			sdf(page);
+-
+-		put_user_page(page);
+-	}
+-}
+-
+ /**
+- * put_user_pages_dirty() - release and dirty an array of gup-pinned pages
+- * @pages:  array of pages to be marked dirty and released.
++ * put_user_pages_dirty_lock() - release and optionally dirty gup-pinned pages
++ * @pages:  array of pages to be maybe marked dirty, and definitely released.
+  * @npages: number of pages in the @pages array.
++ * @make_dirty: whether to mark the pages dirty
+  *
+  * "gup-pinned page" refers to a page that has had one of the get_user_pages()
+  * variants called on that page.
+  *
+  * For each page in the @pages array, make that page (or its head page, if a
+- * compound page) dirty, if it was previously listed as clean. Then, release
+- * the page using put_user_page().
++ * compound page) dirty, if @make_dirty is true, and if the page was previously
++ * listed as clean. In any case, releases all pages using put_user_page(),
++ * possibly via put_user_pages(), for the non-dirty case.
+  *
+  * Please see the put_user_page() documentation for details.
+  *
+- * set_page_dirty(), which does not lock the page, is used here.
+- * Therefore, it is the caller's responsibility to ensure that this is
+- * safe. If not, then put_user_pages_dirty_lock() should be called instead.
++ * set_page_dirty_lock() is used internally. If instead, set_page_dirty() is
++ * required, then the caller should a) verify that this is really correct,
++ * because _lock() is usually required, and b) hand code it:
++ * set_page_dirty_lock(), put_user_page().
+  *
+  */
+-void put_user_pages_dirty(struct page **pages, unsigned long npages)
++void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
++			       bool make_dirty)
+ {
+-	__put_user_pages_dirty(pages, npages, set_page_dirty);
+-}
+-EXPORT_SYMBOL(put_user_pages_dirty);
++	unsigned long index;
  
- 	/* Push the superblock and write an unmount record */
- 	error = xfs_log_sbcount(mp);
+-/**
+- * put_user_pages_dirty_lock() - release and dirty an array of gup-pinned pages
+- * @pages:  array of pages to be marked dirty and released.
+- * @npages: number of pages in the @pages array.
+- *
+- * For each page in the @pages array, make that page (or its head page, if a
+- * compound page) dirty, if it was previously listed as clean. Then, release
+- * the page using put_user_page().
+- *
+- * Please see the put_user_page() documentation for details.
+- *
+- * This is just like put_user_pages_dirty(), except that it invokes
+- * set_page_dirty_lock(), instead of set_page_dirty().
+- *
+- */
+-void put_user_pages_dirty_lock(struct page **pages, unsigned long npages)
+-{
+-	__put_user_pages_dirty(pages, npages, set_page_dirty_lock);
++	/*
++	 * TODO: this can be optimized for huge pages: if a series of pages is
++	 * physically contiguous and part of the same compound page, then a
++	 * single operation to the head page should suffice.
++	 */
++
++	if (!make_dirty) {
++		put_user_pages(pages, npages);
++		return;
++	}
++
++	for (index = 0; index < npages; index++) {
++		struct page *page = compound_head(pages[index]);
++		/*
++		 * Checking PageDirty at this point may race with
++		 * clear_page_dirty_for_io(), but that's OK. Two key
++		 * cases:
++		 *
++		 * 1) This code sees the page as already dirty, so it
++		 * skips the call to set_page_dirty(). That could happen
++		 * because clear_page_dirty_for_io() called
++		 * page_mkclean(), followed by set_page_dirty().
++		 * However, now the page is going to get written back,
++		 * which meets the original intention of setting it
++		 * dirty, so all is well: clear_page_dirty_for_io() goes
++		 * on to call TestClearPageDirty(), and write the page
++		 * back.
++		 *
++		 * 2) This code sees the page as clean, so it calls
++		 * set_page_dirty(). The page stays dirty, despite being
++		 * written back, so it gets written back again in the
++		 * next writeback cycle. This is harmless.
++		 */
++		if (!PageDirty(page))
++			set_page_dirty_lock(page);
++		put_user_page(page);
++	}
+ }
+ EXPORT_SYMBOL(put_user_pages_dirty_lock);
+ 
 -- 
 2.22.0
