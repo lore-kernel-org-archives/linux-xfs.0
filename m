@@ -1,56 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:43372 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726185AbfHABnN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 21:43:13 -0400
-Subject: [PATCH 3/5] xfs/122: add the new v5 bulkstat/inumbers ioctl
- structures
+Received: from aserp2120.oracle.com ([141.146.126.78]:34116 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729703AbfG3BS7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 29 Jul 2019 21:18:59 -0400
+Subject: [PATCH v4 0/5] xfs: use the iomap writeback code
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 31 Jul 2019 18:42:57 -0700
-Message-ID: <156462377790.2945299.5915136628365061851.stgit@magnolia>
-In-Reply-To: <156462375516.2945299.16564635037236083118.stgit@magnolia>
-References: <156462375516.2945299.16564635037236083118.stgit@magnolia>
+Date: Mon, 29 Jul 2019 18:18:37 -0700
+Message-ID: <156444951713.2682520.8109813555788585092.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, fstests@vger.kernel.org
+To: hch@infradead.org, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org, Damien.LeMoal@wdc.com, agruenba@redhat.com
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-The new v5 bulkstat and inumbers structures are correctly padded so that
-no format changes are necessary across platforms, so add them to the
-output.
+>From Christoph:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/xfs/122.out |    5 +++++
- 1 file changed, 5 insertions(+)
+This series cleans up the xfs writepage code and then lifts it to
+fs/iomap/ so that it could be use by other file systems.  I've been
+wanting to [do] this for a while so that I could eventually convert gfs2
+over to it, but I never got to it.  Now Damien has a new zonefs file
+system for semi-raw access to zoned block devices that would like to use
+the iomap code instead of reinventing it, so I finally had to do the
+work.
 
+>From Darrick:
 
-diff --git a/tests/xfs/122.out b/tests/xfs/122.out
-index cf9ac9e2..d2d5a184 100644
---- a/tests/xfs/122.out
-+++ b/tests/xfs/122.out
-@@ -66,6 +66,9 @@ sizeof(struct xfs_btree_block_lhdr) = 64
- sizeof(struct xfs_btree_block_shdr) = 48
- sizeof(struct xfs_bud_log_format) = 16
- sizeof(struct xfs_bui_log_format) = 16
-+sizeof(struct xfs_bulk_ireq) = 64
-+sizeof(struct xfs_bulkstat) = 192
-+sizeof(struct xfs_bulkstat_req) = 64
- sizeof(struct xfs_clone_args) = 32
- sizeof(struct xfs_cud_log_format) = 16
- sizeof(struct xfs_cui_log_format) = 16
-@@ -89,6 +92,8 @@ sizeof(struct xfs_fsop_geom_v4) = 112
- sizeof(struct xfs_icreate_log) = 28
- sizeof(struct xfs_inode_log_format) = 56
- sizeof(struct xfs_inode_log_format_32) = 52
-+sizeof(struct xfs_inumbers) = 24
-+sizeof(struct xfs_inumbers_req) = 64
- sizeof(struct xfs_log_dinode) = 176
- sizeof(struct xfs_map_extent) = 32
- sizeof(struct xfs_phys_extent) = 16
+For v4, split the series into smaller pieces.  This third part converts
+XFS to use the iomap writeback code.
+
+Changes since v2:
+ - rebased to v5.3-rc1
+ - folded in a few changes from the gfs2 enablement series
+
+Changes since v1:
+ - rebased to the latest xfs for-next tree
+ - keep the preallocated transactions for size updates
+ - rename list_pop to list_pop_entry and related cleanups
+ - better document the nofs context handling
+ - document that the iomap tracepoints are not a stable API
+This series breaks up fs/iomap.c by grouping the functions by major
+functional area (swapfiles, fiemap, seek hole/data, directio, buffered
+io, and page migration) in separate source code files under fs/iomap/.
+No functional changes have been made.  Please check the copyrights to
+make sure the attribution is correct.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This has been lightly tested with fstests.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=xfs-iomap-writeback
