@@ -1,209 +1,302 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51562 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726079AbfGaRMv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jul 2019 13:12:51 -0400
-Date: Wed, 31 Jul 2019 13:12:48 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 4/4] xfs: test new v5 bulkstat commands
-Message-ID: <20190731171248.GG34040@bfoster>
-References: <156394159426.1850833.16316913520596851191.stgit@magnolia>
- <156394161882.1850833.4351446431166375360.stgit@magnolia>
- <20190731114306.GC34040@bfoster>
- <20190731164419.GU1561054@magnolia>
+Received: from bombadil.infradead.org ([198.137.202.133]:44920 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728718AbfGaRRj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 13:17:39 -0400
+From: Matthew Wilcox <willy@infradead.org>
+Subject: [PATCH 1/2] iomap: Support large pages
+Date: Wed, 31 Jul 2019 10:17:33 -0700
+Message-Id: <20190731171734.21601-2-willy@infradead.org>
+In-Reply-To: <20190731171734.21601-1-willy@infradead.org>
+References: <20190731171734.21601-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190731164419.GU1561054@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: "Matthew Wilcox (Oracle)" <willy@infradead.org>, hch@lst.de, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Wed, Jul 31, 2019 at 09:44:19AM -0700, Darrick J. Wong wrote:
-> On Wed, Jul 31, 2019 at 07:43:07AM -0400, Brian Foster wrote:
-> > On Tue, Jul 23, 2019 at 09:13:38PM -0700, Darrick J. Wong wrote:
-> > > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > > 
-> > > Check that the new v5 bulkstat commands do everything the old one do,
-> > > and then make sure the new functionality actually works.
-> > > 
-> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > ---
-> > >  common/xfs                 |    6 +
-> > >  src/Makefile               |    2 
-> > >  src/bulkstat_null_ocount.c |   61 +++++++++
-> > >  tests/xfs/085              |    2 
-> > >  tests/xfs/086              |    2 
-> > >  tests/xfs/087              |    2 
-> > >  tests/xfs/088              |    2 
-> > >  tests/xfs/089              |    2 
-> > >  tests/xfs/091              |    2 
-> > >  tests/xfs/093              |    2 
-> > >  tests/xfs/097              |    2 
-> > >  tests/xfs/130              |    2 
-> > >  tests/xfs/235              |    2 
-> > >  tests/xfs/271              |    2 
-> > >  tests/xfs/744              |  212 +++++++++++++++++++++++++++++++
-> > >  tests/xfs/744.out          |  297 ++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/745              |   44 +++++++
-> > >  tests/xfs/745.out          |    2 
-> > >  tests/xfs/group            |    2 
-> > >  19 files changed, 636 insertions(+), 12 deletions(-)
-> > >  create mode 100644 src/bulkstat_null_ocount.c
-> > >  create mode 100755 tests/xfs/744
-> > >  create mode 100644 tests/xfs/744.out
-> > >  create mode 100755 tests/xfs/745
-> > >  create mode 100644 tests/xfs/745.out
-> > > 
-> > > 
-...
-> > > +# print the number of inodes counted by inumbers
-> > > +inumbers_count()
-> > > +{
-> > > +	local expect="$1"
-> > > +
-> > > +	# There probably aren't more than 10 hidden inodes, right?
-> > > +	local tolerance=10
-> > > +
-> > > +	# Force all background inode cleanup
-> > 
-> > Comment took me a second to grok. This refers to unlinked inode cleanup,
-> > right?
-> 
-> Yes.  I think it's only needed to force deferred inode inactivation to
-> run... which means that we don't necessarily need it now, but it doesn't
-> hurt to have it.
-> 
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Yep, could we just clarify the comment then to refer to cleaning up
-unlinked inodes?
+Change iomap_page from a statically sized uptodate bitmap to a
+dynamically allocated uptodate bitmap, allowing an arbitrarily large page.
 
-> > > +	_scratch_cycle_mount
-> > > +
-> > > +	bstat_versions | while read v_tag v_flag; do
-> > > +		echo -n "inumbers all($v_tag): "
-> > > +		nr=$(inumbers_fs $SCRATCH_MNT $v_flag)
-> > > +		_within_tolerance "inumbers" $nr $expect $tolerance -v
-> > > +
-> > > +		local agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
-> > > +		for batchsize in 64 2 1; do
-> > 
-> > Perhaps we should stuff a value > than the per-record inode count in
-> > here as well.
-> 
-> I'm confused about this comment -- inumbers returns (cooked) inobt
-> records, not inode records themselves.  The 64>2>1 sequence here asks
-> inumbers to return 64 inobt records per call, then 2 per call, then 1.
-> 
-> Maybe this should be 71 or some other prime number...
-> 
+Calculate the size of the page everywhere instead of using a base
+PAGE_SIZE.
 
-Er, disregard.. I was thinking in terms of inode count when I read this.
+Based on a patch from Christoph Hellwig.
 
-Brian
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ fs/iomap/buffered-io.c | 82 ++++++++++++++++++++++++++----------------
+ include/linux/iomap.h  |  2 +-
+ 2 files changed, 53 insertions(+), 31 deletions(-)
 
-> > > +			echo -n "inumbers $batchsize($v_tag): "
-> > > +			nr=$(inumbers_ag $agcount $batchsize $SCRATCH_MNT $v_flag)
-> > > +			_within_tolerance "inumbers" $nr $expect $tolerance -v
-> > > +		done
-> > > +	done
-> > > +}
-> > > +
-> > > +# compare the src/bstat output against the xfs_io bstat output
-> > 
-> > This compares actual inode numbers, right? If so, I'd point that out in
-> > the comment.
-> 
-> Ok.
-> 
-> > > +bstat_compare()
-> > > +{
-> > > +	bstat_versions | while read v_tag v_flag; do
-> > > +		diff -u <(./src/bstat $SCRATCH_MNT | grep ino | awk '{print $2}') \
-> > > +			<($XFS_IO_PROG -c "bulkstat $v_flag" $SCRATCH_MNT | grep ino | awk '{print $3}')
-> > > +	done
-> > > +}
-> > > +
-> > ...
-> > > diff --git a/tests/xfs/745 b/tests/xfs/745
-> > > new file mode 100755
-> > > index 00000000..6931d46b
-> > > --- /dev/null
-> > > +++ b/tests/xfs/745
-> > > @@ -0,0 +1,44 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0+
-> > > +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test No. 745
-> > > +#
-> > > +# Regression test for a long-standing bug in BULKSTAT and INUMBERS where
-> > > +# the kernel fails to write thew new @lastip value back to userspace if
-> > > +# @ocount is NULL.
-> > > +#
-> > 
-> > I think it would be helpful to reference the upstream fix here, which
-> > IIRC is commit f16fe3ecde62 ("xfs: bulkstat should copy lastip whenever
-> > userspace supplies one"). Otherwise this test looks fine to me.
-> 
-> Ok, will update.
-> 
-> --D
-> 
-> > Brian
-> > 
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1	# failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +    cd /
-> > > +    rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/filter
-> > > +
-> > > +_require_test_program "bulkstat_null_ocount"
-> > > +
-> > > +# real QA test starts here
-> > > +
-> > > +_supported_fs xfs
-> > > +_supported_os Linux
-> > > +
-> > > +rm -f $seqres.full
-> > > +
-> > > +echo "Silence is golden."
-> > > +src/bulkstat_null_ocount $TEST_DIR
-> > > +
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/745.out b/tests/xfs/745.out
-> > > new file mode 100644
-> > > index 00000000..ce947de2
-> > > --- /dev/null
-> > > +++ b/tests/xfs/745.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 745
-> > > +Silence is golden.
-> > > diff --git a/tests/xfs/group b/tests/xfs/group
-> > > index 270d82ff..ef0cf92c 100644
-> > > --- a/tests/xfs/group
-> > > +++ b/tests/xfs/group
-> > > @@ -506,3 +506,5 @@
-> > >  506 auto quick health
-> > >  507 clone
-> > >  508 auto quick quota
-> > > +744 auto ioctl quick
-> > > +745 auto ioctl quick
-> > > 
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index e25901ae3ff4..4d56b8060b6c 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -23,14 +23,17 @@ static struct iomap_page *
+ iomap_page_create(struct inode *inode, struct page *page)
+ {
+ 	struct iomap_page *iop = to_iomap_page(page);
++	unsigned int nbits;
+ 
+-	if (iop || i_blocksize(inode) == PAGE_SIZE)
++	if (iop || i_blocksize(inode) == page_size(page))
+ 		return iop;
+ 
+-	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
++	nbits = BITS_TO_LONGS(page_size(page) / SECTOR_SIZE);
++	iop = kmalloc(struct_size(iop, uptodate, nbits),
++			GFP_NOFS | __GFP_NOFAIL);
+ 	atomic_set(&iop->read_count, 0);
+ 	atomic_set(&iop->write_count, 0);
+-	bitmap_zero(iop->uptodate, PAGE_SIZE / SECTOR_SIZE);
++	bitmap_zero(iop->uptodate, nbits);
+ 
+ 	/*
+ 	 * migrate_page_move_mapping() assumes that pages with private data have
+@@ -61,15 +64,16 @@ iomap_page_release(struct page *page)
+  * Calculate the range inside the page that we actually need to read.
+  */
+ static void
+-iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
++iomap_adjust_read_range(struct inode *inode, struct page *page,
+ 		loff_t *pos, loff_t length, unsigned *offp, unsigned *lenp)
+ {
++	struct iomap_page *iop = to_iomap_page(page);
+ 	loff_t orig_pos = *pos;
+ 	loff_t isize = i_size_read(inode);
+ 	unsigned block_bits = inode->i_blkbits;
+ 	unsigned block_size = (1 << block_bits);
+-	unsigned poff = offset_in_page(*pos);
+-	unsigned plen = min_t(loff_t, PAGE_SIZE - poff, length);
++	unsigned poff = *pos & (page_size(page) - 1);
++	unsigned plen = min_t(loff_t, page_size(page) - poff, length);
+ 	unsigned first = poff >> block_bits;
+ 	unsigned last = (poff + plen - 1) >> block_bits;
+ 
+@@ -107,7 +111,8 @@ iomap_adjust_read_range(struct inode *inode, struct iomap_page *iop,
+ 	 * page cache for blocks that are entirely outside of i_size.
+ 	 */
+ 	if (orig_pos <= isize && orig_pos + length > isize) {
+-		unsigned end = offset_in_page(isize - 1) >> block_bits;
++		unsigned end = (isize - 1) & (page_size(page) - 1) >>
++				block_bits;
+ 
+ 		if (first <= end && last > end)
+ 			plen -= (last - end) * block_size;
+@@ -128,7 +133,7 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ 	bool uptodate = true;
+ 
+ 	if (iop) {
+-		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++		for (i = 0; i < page_size(page) / i_blocksize(inode); i++) {
+ 			if (i >= first && i <= last)
+ 				set_bit(i, iop->uptodate);
+ 			else if (!test_bit(i, iop->uptodate))
+@@ -194,11 +199,12 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+ 		return;
+ 
+ 	BUG_ON(page->index);
+-	BUG_ON(size > PAGE_SIZE - offset_in_page(iomap->inline_data));
++	BUG_ON(size > page_size(page) - ((unsigned long)iomap->inline_data &
++						(page_size(page) - 1)));
+ 
+ 	addr = kmap_atomic(page);
+ 	memcpy(addr, iomap->inline_data, size);
+-	memset(addr + size, 0, PAGE_SIZE - size);
++	memset(addr + size, 0, page_size(page) - size);
+ 	kunmap_atomic(addr);
+ 	SetPageUptodate(page);
+ }
+@@ -218,11 +224,11 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	if (iomap->type == IOMAP_INLINE) {
+ 		WARN_ON_ONCE(pos);
+ 		iomap_read_inline_data(inode, page, iomap);
+-		return PAGE_SIZE;
++		return page_size(page);
+ 	}
+ 
+ 	/* zero post-eof blocks as the page may be mapped */
+-	iomap_adjust_read_range(inode, iop, &pos, length, &poff, &plen);
++	iomap_adjust_read_range(inode, page, &pos, length, &poff, &plen);
+ 	if (plen == 0)
+ 		goto done;
+ 
+@@ -258,7 +264,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 
+ 	if (!ctx->bio || !is_contig || bio_full(ctx->bio, plen)) {
+ 		gfp_t gfp = mapping_gfp_constraint(page->mapping, GFP_KERNEL);
+-		int nr_vecs = (length + PAGE_SIZE - 1) >> PAGE_SHIFT;
++		int nr_vecs = (length + page_size(page) - 1) >> page_shift(page);
+ 
+ 		if (ctx->bio)
+ 			submit_bio(ctx->bio);
+@@ -293,9 +299,9 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
+ 	unsigned poff;
+ 	loff_t ret;
+ 
+-	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
++	for (poff = 0; poff < page_size(page); poff += ret) {
+ 		ret = iomap_apply(inode, page_offset(page) + poff,
+-				PAGE_SIZE - poff, 0, ops, &ctx,
++				page_size(page) - poff, 0, ops, &ctx,
+ 				iomap_readpage_actor);
+ 		if (ret <= 0) {
+ 			WARN_ON_ONCE(ret == 0);
+@@ -342,7 +348,7 @@ iomap_next_page(struct inode *inode, struct list_head *pages, loff_t pos,
+ 		 * readpages call itself as every page gets checked again once
+ 		 * actually needed.
+ 		 */
+-		*done += PAGE_SIZE;
++		*done += page_size(page);
+ 		put_page(page);
+ 	}
+ 
+@@ -355,9 +361,14 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+ {
+ 	struct iomap_readpage_ctx *ctx = data;
+ 	loff_t done, ret;
++	size_t pg_left = 0;
++
++	if (ctx->cur_page)
++		pg_left = page_size(ctx->cur_page) -
++					(pos & (page_size(ctx->cur_page) - 1));
+ 
+ 	for (done = 0; done < length; done += ret) {
+-		if (ctx->cur_page && offset_in_page(pos + done) == 0) {
++		if (ctx->cur_page && pg_left == 0) {
+ 			if (!ctx->cur_page_in_bio)
+ 				unlock_page(ctx->cur_page);
+ 			put_page(ctx->cur_page);
+@@ -369,9 +380,11 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+ 			if (!ctx->cur_page)
+ 				break;
+ 			ctx->cur_page_in_bio = false;
++			pg_left = page_size(ctx->cur_page);
+ 		}
+ 		ret = iomap_readpage_actor(inode, pos + done, length - done,
+ 				ctx, iomap);
++		pg_left -= ret;
+ 	}
+ 
+ 	return done;
+@@ -386,8 +399,9 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
+ 		.is_readahead	= true,
+ 	};
+ 	loff_t pos = page_offset(list_entry(pages->prev, struct page, lru));
+-	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
+-	loff_t length = last - pos + PAGE_SIZE, ret = 0;
++	struct page *last_page = list_entry(pages->next, struct page, lru);
++	loff_t length = page_offset(last_page) - pos + page_size(last_page);
++	loff_t ret = 0;
+ 
+ 	while (length > 0) {
+ 		ret = iomap_apply(mapping->host, pos, length, 0, ops,
+@@ -435,7 +449,7 @@ iomap_is_partially_uptodate(struct page *page, unsigned long from,
+ 	unsigned i;
+ 
+ 	/* Limit range to one page */
+-	len = min_t(unsigned, PAGE_SIZE - from, count);
++	len = min_t(unsigned, page_size(page) - from, count);
+ 
+ 	/* First and last blocks in range within page */
+ 	first = from >> inode->i_blkbits;
+@@ -474,7 +488,7 @@ iomap_invalidatepage(struct page *page, unsigned int offset, unsigned int len)
+ 	 * If we are invalidating the entire page, clear the dirty state from it
+ 	 * and release it to avoid unnecessary buildup of the LRU.
+ 	 */
+-	if (offset == 0 && len == PAGE_SIZE) {
++	if (offset == 0 && len == page_size(page)) {
+ 		WARN_ON_ONCE(PageWriteback(page));
+ 		cancel_dirty_page(page);
+ 		iomap_page_release(page);
+@@ -550,18 +564,20 @@ static int
+ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
+ 		struct page *page, struct iomap *iomap)
+ {
+-	struct iomap_page *iop = iomap_page_create(inode, page);
+ 	loff_t block_size = i_blocksize(inode);
+ 	loff_t block_start = pos & ~(block_size - 1);
+ 	loff_t block_end = (pos + len + block_size - 1) & ~(block_size - 1);
+-	unsigned from = offset_in_page(pos), to = from + len, poff, plen;
++	unsigned from = pos & (page_size(page) - 1);
++	unsigned to = from + len;
++	unsigned poff, plen;
+ 	int status = 0;
+ 
+ 	if (PageUptodate(page))
+ 		return 0;
++	iomap_page_create(inode, page);
+ 
+ 	do {
+-		iomap_adjust_read_range(inode, iop, &block_start,
++		iomap_adjust_read_range(inode, page, &block_start,
+ 				block_end - block_start, &poff, &plen);
+ 		if (plen == 0)
+ 			break;
+@@ -673,7 +689,7 @@ __iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+ 	 */
+ 	if (unlikely(copied < len && !PageUptodate(page)))
+ 		return 0;
+-	iomap_set_range_uptodate(page, offset_in_page(pos), len);
++	iomap_set_range_uptodate(page, pos & (page_size(page) - 1), len);
+ 	iomap_set_page_dirty(page);
+ 	return copied;
+ }
+@@ -685,7 +701,9 @@ iomap_write_end_inline(struct inode *inode, struct page *page,
+ 	void *addr;
+ 
+ 	WARN_ON_ONCE(!PageUptodate(page));
+-	BUG_ON(pos + copied > PAGE_SIZE - offset_in_page(iomap->inline_data));
++	BUG_ON(pos + copied > page_size(page) -
++			((unsigned long)iomap->inline_data &
++			 (page_size(page) - 1)));
+ 
+ 	addr = kmap_atomic(page);
+ 	memcpy(iomap->inline_data + pos, addr + pos, copied);
+@@ -749,6 +767,10 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		unsigned long bytes;	/* Bytes to write to page */
+ 		size_t copied;		/* Bytes copied from user */
+ 
++		/*
++		 * XXX: We don't know what size page we'll find in the
++		 * page cache, so only copy up to a regular page boundary.
++		 */
+ 		offset = offset_in_page(pos);
+ 		bytes = min_t(unsigned long, PAGE_SIZE - offset,
+ 						iov_iter_count(i));
+@@ -1047,11 +1069,11 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+ 		goto out_unlock;
+ 	}
+ 
+-	/* page is wholly or partially inside EOF */
+-	if (((page->index + 1) << PAGE_SHIFT) > size)
+-		length = offset_in_page(size);
++	/* page is wholly or partially beyond EOF */
++	if (((page->index + compound_nr(page)) << PAGE_SHIFT) > size)
++		length = size & (page_size(page) - 1);
+ 	else
+-		length = PAGE_SIZE;
++		length = page_size(page);
+ 
+ 	offset = page_offset(page);
+ 	while (length > 0) {
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index bc499ceae392..86be24a8259b 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -139,7 +139,7 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+ struct iomap_page {
+ 	atomic_t		read_count;
+ 	atomic_t		write_count;
+-	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
++	unsigned long		uptodate[];
+ };
+ 
+ static inline struct iomap_page *to_iomap_page(struct page *page)
+-- 
+2.20.1
