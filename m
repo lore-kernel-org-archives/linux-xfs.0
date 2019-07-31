@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43152 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:49454 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726125AbfGaONJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jul 2019 10:13:09 -0400
+        id S1726125AbfGaONL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Jul 2019 10:13:11 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 3/9] ecryptfs: drop direct calls to ->bmap
-Date: Wed, 31 Jul 2019 16:12:39 +0200
-Message-Id: <20190731141245.7230-4-cmaiolino@redhat.com>
+Subject: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in ioctl_fibmap
+Date: Wed, 31 Jul 2019 16:12:40 +0200
+Message-Id: <20190731141245.7230-5-cmaiolino@redhat.com>
 In-Reply-To: <20190731141245.7230-1-cmaiolino@redhat.com>
 References: <20190731141245.7230-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
@@ -17,40 +17,70 @@ List-Id: xfs
 To: linux-fsdevel@vger.kernel.org
 Cc: hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-Replace direct ->bmap calls by bmap() method.
+Now we have the possibility of proper error return in bmap, use bmap()
+function in ioctl_fibmap() instead of calling ->bmap method directly.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 ---
- fs/ecryptfs/mmap.c | 16 ++++++----------
- 1 file changed, 6 insertions(+), 10 deletions(-)
 
-diff --git a/fs/ecryptfs/mmap.c b/fs/ecryptfs/mmap.c
-index cdf358b209d9..ff323dccef36 100644
---- a/fs/ecryptfs/mmap.c
-+++ b/fs/ecryptfs/mmap.c
-@@ -538,16 +538,12 @@ static int ecryptfs_write_end(struct file *file,
+Changelog:
+
+V4:
+	- Ensure ioctl_fibmap() returns 0 in case of error returned from
+	  bmap(). Otherwise we'll be changing the user interface (which
+	  returns 0 in case of error)
+V3:
+	- Rename usr_blk to ur_block
+
+V2:
+	- Use a local sector_t variable to asign the block number
+	  instead of using direct casting.
+
+ fs/ioctl.c | 29 +++++++++++++++++++----------
+ 1 file changed, 19 insertions(+), 10 deletions(-)
+
+diff --git a/fs/ioctl.c b/fs/ioctl.c
+index fef3a6bf7c78..6b589c873bc2 100644
+--- a/fs/ioctl.c
++++ b/fs/ioctl.c
+@@ -53,19 +53,28 @@ EXPORT_SYMBOL(vfs_ioctl);
  
- static sector_t ecryptfs_bmap(struct address_space *mapping, sector_t block)
+ static int ioctl_fibmap(struct file *filp, int __user *p)
  {
--	int rc = 0;
--	struct inode *inode;
--	struct inode *lower_inode;
--
--	inode = (struct inode *)mapping->host;
--	lower_inode = ecryptfs_inode_to_lower(inode);
--	if (lower_inode->i_mapping->a_ops->bmap)
--		rc = lower_inode->i_mapping->a_ops->bmap(lower_inode->i_mapping,
--							 block);
--	return rc;
-+	struct inode *lower_inode = ecryptfs_inode_to_lower(mapping->host);
-+	int ret = bmap(lower_inode, &block);
+-	struct address_space *mapping = filp->f_mapping;
+-	int res, block;
++	struct inode *inode = file_inode(filp);
++	int error, ur_block;
++	sector_t block;
+ 
+-	/* do we support this mess? */
+-	if (!mapping->a_ops->bmap)
+-		return -EINVAL;
+ 	if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+-	res = get_user(block, p);
+-	if (res)
+-		return res;
+-	res = mapping->a_ops->bmap(mapping, block);
+-	return put_user(res, p);
 +
-+	if (ret)
-+		return 0;
-+	return block;
++	error = get_user(ur_block, p);
++	if (error)
++		return error;
++
++	block = ur_block;
++	error = bmap(inode, &block);
++
++	if (error)
++		ur_block = 0;
++	else
++		ur_block = block;
++
++	error = put_user(ur_block, p);
++
++	return error;
  }
  
- const struct address_space_operations ecryptfs_aops = {
+ /**
 -- 
 2.20.1
