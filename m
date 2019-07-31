@@ -1,430 +1,317 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55502 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728480AbfGaONV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jul 2019 10:13:21 -0400
-From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 8/9] Use FIEMAP for FIBMAP calls
-Date: Wed, 31 Jul 2019 16:12:44 +0200
-Message-Id: <20190731141245.7230-9-cmaiolino@redhat.com>
-In-Reply-To: <20190731141245.7230-1-cmaiolino@redhat.com>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:37310 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726448AbfGaPbi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 11:31:38 -0400
+Date: Wed, 31 Jul 2019 08:28:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 06/20] fs: Fill in max and min timestamps in superblock
+Message-ID: <20190731152829.GS1561054@magnolia>
+References: <20190730014924.2193-1-deepa.kernel@gmail.com>
+ <20190730014924.2193-7-deepa.kernel@gmail.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190730014924.2193-7-deepa.kernel@gmail.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org
-Cc: hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: Deepa Dinamani <deepa.kernel@gmail.com>
+Cc: viro@zeniv.linux.org.uk, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, arnd@arndb.de, y2038@lists.linaro.org, aivazian.tigran@gmail.com, al@alarsen.net, coda@cs.cmu.edu, dushistov@mail.ru, dwmw2@infradead.org, hch@infradead.org, jack@suse.com, jaharkes@cs.cmu.edu, luisbg@kernel.org, nico@fluxnic.net, phillip@squashfs.org.uk, richard@nod.at, salah.triki@gmail.com, shaggy@kernel.org, linux-xfs@vger.kernel.org, codalist@telemann.coda.cs.cmu.edu, linux-ext4@vger.kernel.org, linux-mtd@lists.infradead.org, jfs-discussion@lists.sourceforge.net, reiserfs-devel@vger.kernel.org
 
-Enables the usage of FIEMAP ioctl infrastructure to handle FIBMAP calls.
->From now on, ->bmap() methods can start to be removed from filesystems
-which already provides ->fiemap().
+On Mon, Jul 29, 2019 at 06:49:10PM -0700, Deepa Dinamani wrote:
+> Fill in the appropriate limits to avoid inconsistencies
+> in the vfs cached inode times when timestamps are
+> outside the permitted range.
+> 
+> Even though some filesystems are read-only, fill in the
+> timestamps to reflect the on-disk representation.
+> 
+> Signed-off-by: Deepa Dinamani <deepa.kernel@gmail.com>
+> Cc: aivazian.tigran@gmail.com
+> Cc: al@alarsen.net
+> Cc: coda@cs.cmu.edu
+> Cc: darrick.wong@oracle.com
+> Cc: dushistov@mail.ru
+> Cc: dwmw2@infradead.org
+> Cc: hch@infradead.org
+> Cc: jack@suse.com
+> Cc: jaharkes@cs.cmu.edu
+> Cc: luisbg@kernel.org
+> Cc: nico@fluxnic.net
+> Cc: phillip@squashfs.org.uk
+> Cc: richard@nod.at
+> Cc: salah.triki@gmail.com
+> Cc: shaggy@kernel.org
+> Cc: linux-xfs@vger.kernel.org
+> Cc: codalist@coda.cs.cmu.edu
+> Cc: linux-ext4@vger.kernel.org
+> Cc: linux-mtd@lists.infradead.org
+> Cc: jfs-discussion@lists.sourceforge.net
+> Cc: reiserfs-devel@vger.kernel.org
+> ---
+>  fs/befs/linuxvfs.c       | 2 ++
+>  fs/bfs/inode.c           | 2 ++
+>  fs/coda/inode.c          | 3 +++
+>  fs/cramfs/inode.c        | 2 ++
+>  fs/efs/super.c           | 2 ++
+>  fs/ext2/super.c          | 2 ++
+>  fs/freevxfs/vxfs_super.c | 2 ++
+>  fs/jffs2/fs.c            | 3 +++
+>  fs/jfs/super.c           | 2 ++
+>  fs/minix/inode.c         | 2 ++
+>  fs/qnx4/inode.c          | 2 ++
+>  fs/qnx6/inode.c          | 2 ++
+>  fs/reiserfs/super.c      | 3 +++
+>  fs/romfs/super.c         | 2 ++
+>  fs/squashfs/super.c      | 2 ++
+>  fs/ufs/super.c           | 7 +++++++
+>  fs/xfs/xfs_super.c       | 2 ++
+>  17 files changed, 42 insertions(+)
+> 
+> diff --git a/fs/befs/linuxvfs.c b/fs/befs/linuxvfs.c
+> index 462d096ff3e9..64cdf4d8e424 100644
+> --- a/fs/befs/linuxvfs.c
+> +++ b/fs/befs/linuxvfs.c
+> @@ -893,6 +893,8 @@ befs_fill_super(struct super_block *sb, void *data, int silent)
+>  	sb_set_blocksize(sb, (ulong) befs_sb->block_size);
+>  	sb->s_op = &befs_sops;
+>  	sb->s_export_op = &befs_export_operations;
+> +	sb->s_time_min = 0;
+> +	sb->s_time_max = 0xffffffffffffll;
+>  	root = befs_iget(sb, iaddr2blockno(sb, &(befs_sb->root_dir)));
+>  	if (IS_ERR(root)) {
+>  		ret = PTR_ERR(root);
+> diff --git a/fs/bfs/inode.c b/fs/bfs/inode.c
+> index 5e97bed073d7..f8ce1368218b 100644
+> --- a/fs/bfs/inode.c
+> +++ b/fs/bfs/inode.c
+> @@ -324,6 +324,8 @@ static int bfs_fill_super(struct super_block *s, void *data, int silent)
+>  		return -ENOMEM;
+>  	mutex_init(&info->bfs_lock);
+>  	s->s_fs_info = info;
+> +	s->s_time_min = 0;
+> +	s->s_time_max = U32_MAX;
+>  
+>  	sb_set_blocksize(s, BFS_BSIZE);
+>  
+> diff --git a/fs/coda/inode.c b/fs/coda/inode.c
+> index 321f56e487cb..b1c70e2b9b1e 100644
+> --- a/fs/coda/inode.c
+> +++ b/fs/coda/inode.c
+> @@ -188,6 +188,9 @@ static int coda_fill_super(struct super_block *sb, void *data, int silent)
+>  	sb->s_magic = CODA_SUPER_MAGIC;
+>  	sb->s_op = &coda_super_operations;
+>  	sb->s_d_op = &coda_dentry_operations;
+> +	sb->s_time_gran = 1;
+> +	sb->s_time_min = S64_MIN;
+> +	sb->s_time_max = S64_MAX;
+>  
+>  	error = super_setup_bdi(sb);
+>  	if (error)
+> diff --git a/fs/cramfs/inode.c b/fs/cramfs/inode.c
+> index 9352487bd0fc..4d1d8b7761ed 100644
+> --- a/fs/cramfs/inode.c
+> +++ b/fs/cramfs/inode.c
+> @@ -597,6 +597,8 @@ static int cramfs_finalize_super(struct super_block *sb,
+>  
+>  	/* Set it all up.. */
+>  	sb->s_flags |= SB_RDONLY;
+> +	sb->s_time_min = 0;
+> +	sb->s_time_max = 0;
+>  	sb->s_op = &cramfs_ops;
+>  	root = get_cramfs_inode(sb, cramfs_root, 0);
+>  	if (IS_ERR(root))
+> diff --git a/fs/efs/super.c b/fs/efs/super.c
+> index 867fc24dee20..4a6ebff2af76 100644
+> --- a/fs/efs/super.c
+> +++ b/fs/efs/super.c
+> @@ -257,6 +257,8 @@ static int efs_fill_super(struct super_block *s, void *d, int silent)
+>  	if (!sb)
+>  		return -ENOMEM;
+>  	s->s_fs_info = sb;
+> +	s->s_time_min = 0;
+> +	s->s_time_max = U32_MAX;
+>   
+>  	s->s_magic		= EFS_SUPER_MAGIC;
+>  	if (!sb_set_blocksize(s, EFS_BLOCKSIZE)) {
+> diff --git a/fs/ext2/super.c b/fs/ext2/super.c
+> index 44eb6e7eb492..baa36c6fb71e 100644
+> --- a/fs/ext2/super.c
+> +++ b/fs/ext2/super.c
+> @@ -1002,6 +1002,8 @@ static int ext2_fill_super(struct super_block *sb, void *data, int silent)
+>  
+>  	sb->s_maxbytes = ext2_max_size(sb->s_blocksize_bits);
+>  	sb->s_max_links = EXT2_LINK_MAX;
+> +	sb->s_time_min = S32_MIN;
+> +	sb->s_time_max = S32_MAX;
+>  
+>  	if (le32_to_cpu(es->s_rev_level) == EXT2_GOOD_OLD_REV) {
+>  		sbi->s_inode_size = EXT2_GOOD_OLD_INODE_SIZE;
+> diff --git a/fs/freevxfs/vxfs_super.c b/fs/freevxfs/vxfs_super.c
+> index a89f68c3cbed..578a5062706e 100644
+> --- a/fs/freevxfs/vxfs_super.c
+> +++ b/fs/freevxfs/vxfs_super.c
+> @@ -229,6 +229,8 @@ static int vxfs_fill_super(struct super_block *sbp, void *dp, int silent)
+>  
+>  	sbp->s_op = &vxfs_super_ops;
+>  	sbp->s_fs_info = infp;
+> +	sbp->s_time_min = 0;
+> +	sbp->s_time_max = U32_MAX;
+>  
+>  	if (!vxfs_try_sb_magic(sbp, silent, 1,
+>  			(__force __fs32)cpu_to_le32(VXFS_SUPER_MAGIC))) {
+> diff --git a/fs/jffs2/fs.c b/fs/jffs2/fs.c
+> index 8a20ddd25f2d..d0b59d03a7a9 100644
+> --- a/fs/jffs2/fs.c
+> +++ b/fs/jffs2/fs.c
+> @@ -590,6 +590,9 @@ int jffs2_do_fill_super(struct super_block *sb, void *data, int silent)
+>  	sb->s_blocksize = PAGE_SIZE;
+>  	sb->s_blocksize_bits = PAGE_SHIFT;
+>  	sb->s_magic = JFFS2_SUPER_MAGIC;
+> +	sb->s_time_min = 0;
+> +	sb->s_time_max = U32_MAX;
+> +
+>  	if (!sb_rdonly(sb))
+>  		jffs2_start_garbage_collect_thread(c);
+>  	return 0;
+> diff --git a/fs/jfs/super.c b/fs/jfs/super.c
+> index f4e10cb9f734..b2dc4d1f9dcc 100644
+> --- a/fs/jfs/super.c
+> +++ b/fs/jfs/super.c
+> @@ -503,6 +503,8 @@ static int jfs_fill_super(struct super_block *sb, void *data, int silent)
+>  
+>  	sb->s_fs_info = sbi;
+>  	sb->s_max_links = JFS_LINK_MAX;
+> +	sb->s_time_min = 0;
+> +	sb->s_time_max = U32_MAX;
+>  	sbi->sb = sb;
+>  	sbi->uid = INVALID_UID;
+>  	sbi->gid = INVALID_GID;
+> diff --git a/fs/minix/inode.c b/fs/minix/inode.c
+> index f96073f25432..7cb5fd38eb14 100644
+> --- a/fs/minix/inode.c
+> +++ b/fs/minix/inode.c
+> @@ -277,6 +277,8 @@ static int minix_fill_super(struct super_block *s, void *data, int silent)
+>  
+>  	/* set up enough so that it can read an inode */
+>  	s->s_op = &minix_sops;
+> +	s->s_time_min = 0;
+> +	s->s_time_max = U32_MAX;
+>  	root_inode = minix_iget(s, MINIX_ROOT_INO);
+>  	if (IS_ERR(root_inode)) {
+>  		ret = PTR_ERR(root_inode);
+> diff --git a/fs/qnx4/inode.c b/fs/qnx4/inode.c
+> index 922d083bbc7c..e8da1cde87b9 100644
+> --- a/fs/qnx4/inode.c
+> +++ b/fs/qnx4/inode.c
+> @@ -201,6 +201,8 @@ static int qnx4_fill_super(struct super_block *s, void *data, int silent)
+>  	s->s_op = &qnx4_sops;
+>  	s->s_magic = QNX4_SUPER_MAGIC;
+>  	s->s_flags |= SB_RDONLY;	/* Yup, read-only yet */
+> +	s->s_time_min = 0;
+> +	s->s_time_max = U32_MAX;
+>  
+>  	/* Check the superblock signature. Since the qnx4 code is
+>  	   dangerous, we should leave as quickly as possible
+> diff --git a/fs/qnx6/inode.c b/fs/qnx6/inode.c
+> index 0f8b0ff1ba43..345db56c98fd 100644
+> --- a/fs/qnx6/inode.c
+> +++ b/fs/qnx6/inode.c
+> @@ -429,6 +429,8 @@ static int qnx6_fill_super(struct super_block *s, void *data, int silent)
+>  	s->s_op = &qnx6_sops;
+>  	s->s_magic = QNX6_SUPER_MAGIC;
+>  	s->s_flags |= SB_RDONLY;        /* Yup, read-only yet */
+> +	s->s_time_min = 0;
+> +	s->s_time_max = U32_MAX;
+>  
+>  	/* ease the later tree level calculations */
+>  	sbi = QNX6_SB(s);
+> diff --git a/fs/reiserfs/super.c b/fs/reiserfs/super.c
+> index ab028ea0e561..d69b4ac0ae2f 100644
+> --- a/fs/reiserfs/super.c
+> +++ b/fs/reiserfs/super.c
+> @@ -1976,6 +1976,9 @@ static int reiserfs_fill_super(struct super_block *s, void *data, int silent)
+>  		goto error_unlocked;
+>  	}
+>  
+> +	s->s_time_min = 0;
+> +	s->s_time_max = U32_MAX;
+> +
+>  	rs = SB_DISK_SUPER_BLOCK(s);
+>  	/*
+>  	 * Let's do basic sanity check to verify that underlying device is not
+> diff --git a/fs/romfs/super.c b/fs/romfs/super.c
+> index 7d580f7c3f1d..a42c0e3079dc 100644
+> --- a/fs/romfs/super.c
+> +++ b/fs/romfs/super.c
+> @@ -478,6 +478,8 @@ static int romfs_fill_super(struct super_block *sb, void *data, int silent)
+>  	sb->s_maxbytes = 0xFFFFFFFF;
+>  	sb->s_magic = ROMFS_MAGIC;
+>  	sb->s_flags |= SB_RDONLY | SB_NOATIME;
+> +	sb->s_time_min = 0;
+> +	sb->s_time_max = 0;
+>  	sb->s_op = &romfs_super_ops;
+>  
+>  #ifdef CONFIG_ROMFS_ON_MTD
+> diff --git a/fs/squashfs/super.c b/fs/squashfs/super.c
+> index effa638d6d85..a9e9837617a9 100644
+> --- a/fs/squashfs/super.c
+> +++ b/fs/squashfs/super.c
+> @@ -183,6 +183,8 @@ static int squashfs_fill_super(struct super_block *sb, void *data, int silent)
+>  		(u64) le64_to_cpu(sblk->id_table_start));
+>  
+>  	sb->s_maxbytes = MAX_LFS_FILESIZE;
+> +	sb->s_time_min = 0;
+> +	sb->s_time_max = U32_MAX;
+>  	sb->s_flags |= SB_RDONLY;
+>  	sb->s_op = &squashfs_super_ops;
+>  
+> diff --git a/fs/ufs/super.c b/fs/ufs/super.c
+> index 4ed0dca52ec8..1da0be667409 100644
+> --- a/fs/ufs/super.c
+> +++ b/fs/ufs/super.c
+> @@ -843,6 +843,10 @@ static int ufs_fill_super(struct super_block *sb, void *data, int silent)
+>  
+>  	sb->s_maxbytes = MAX_LFS_FILESIZE;
+>  
+> +	sb->s_time_gran = NSEC_PER_SEC;
+> +	sb->s_time_min = S32_MIN;
+> +	sb->s_time_max = S32_MAX;
+> +
+>  	switch (sbi->s_mount_opt & UFS_MOUNT_UFSTYPE) {
+>  	case UFS_MOUNT_UFSTYPE_44BSD:
+>  		UFSD("ufstype=44bsd\n");
+> @@ -861,6 +865,9 @@ static int ufs_fill_super(struct super_block *sb, void *data, int silent)
+>  		uspi->s_fshift = 9;
+>  		uspi->s_sbsize = super_block_size = 1536;
+>  		uspi->s_sbbase =  0;
+> +		sb->s_time_gran = 1;
+> +		sb->s_time_min = S64_MIN;
+> +		sb->s_time_max = S64_MAX;
+>  		flags |= UFS_TYPE_UFS2 | UFS_DE_44BSD | UFS_UID_44BSD | UFS_ST_44BSD | UFS_CG_44BSD;
+>  		break;
+>  		
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index a14d11d78bd8..1a0daf46bae8 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -1685,6 +1685,8 @@ xfs_fs_fill_super(
+>  	sb->s_maxbytes = xfs_max_file_offset(sb->s_blocksize_bits);
+>  	sb->s_max_links = XFS_MAXLINK;
+>  	sb->s_time_gran = 1;
+> +	sb->s_time_min = S32_MIN;
+> +	sb->s_time_max = S32_MAX;
 
-This adds a new helper - bmap_fiemap() - which is used to fill in the
-fiemap request, call into the underlying filesystem and check the flags
-set in the extent requested.
+For the XFS part,
 
-Add a new fiemap fill extent callback to handle the in-kernel only
-fiemap_extent structure used for FIBMAP.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-The new FIEMAP_KERNEL_FIBMAP flag, is used to tell the filesystem
-->fiemap interface, that the call is coming from ioctl_fibmap. The
-addition of this new flag, requires an update to fiemap_check_flags(),
-so it doesn't treat FIBMAP requests as invalid.
+--D
 
-Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
----
-
-Changelog:
-
-V4:
-	- Fix if conditional in bmap()
-	- Add filesystem-specific modifications
-V3:
-	- Add FIEMAP_EXTENT_SHARED to the list of invalid extents in
-	  bmap_fiemap()
-	- Rename fi_extents_start to fi_cb_data
-	- Use if conditional instead of ternary operator
-	- Make fiemap_fill_* callbacks static (which required the
-	  removal of some macros
-	- Set FIEMAP_FLAG_SYNC when calling in ->fiemap method from
-	  fibmap
-	- Add FIEMAP_KERNEL_FIBMAP flag, to identify the usage of fiemap
-	  infrastructure for fibmap calls, defined in fs.h so it's not
-	  exported to userspace.
-	- Update fiemap_check_flags() to understand FIEMAP_KERNEL_FIBMAP
-	- Update filesystems supporting both FIBMAP and FIEMAP, which
-	  need extra checks on FIBMAP calls
-
-V2:
-	- Now based on the updated fiemap_extent_info,
-	- move the fiemap call itself to a new helper
-
- fs/ext4/extents.c     |  7 +++-
- fs/f2fs/data.c        | 10 +++++-
- fs/gfs2/inode.c       |  6 +++-
- fs/inode.c            | 81 +++++++++++++++++++++++++++++++++++++++++--
- fs/ioctl.c            | 40 ++++++++++++++-------
- fs/iomap.c            |  2 +-
- fs/ocfs2/extent_map.c |  8 ++++-
- fs/xfs/xfs_iops.c     |  5 +++
- include/linux/fs.h    |  4 +++
- 9 files changed, 144 insertions(+), 19 deletions(-)
-
-diff --git a/fs/ext4/extents.c b/fs/ext4/extents.c
-index 436e564ebdd6..093b6a07067f 100644
---- a/fs/ext4/extents.c
-+++ b/fs/ext4/extents.c
-@@ -5001,7 +5001,9 @@ static int ext4_find_delayed_extent(struct inode *inode,
- 	return next_del;
- }
- /* fiemap flags we can handle specified here */
--#define EXT4_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
-+#define EXT4_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC | \
-+				 FIEMAP_FLAG_XATTR| \
-+				 FIEMAP_KERNEL_FIBMAP)
- 
- static int ext4_xattr_fiemap(struct inode *inode,
- 				struct fiemap_extent_info *fieinfo)
-@@ -5048,6 +5050,9 @@ int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- 	if (ext4_has_inline_data(inode)) {
- 		int has_inline = 1;
- 
-+		if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP)
-+			return -EINVAL;
-+
- 		error = ext4_inline_data_fiemap(inode, fieinfo, &has_inline,
- 						start, len);
- 
-diff --git a/fs/f2fs/data.c b/fs/f2fs/data.c
-index 2979ca40d192..29b6c48fb6cc 100644
---- a/fs/f2fs/data.c
-+++ b/fs/f2fs/data.c
-@@ -1409,6 +1409,9 @@ static int f2fs_xattr_fiemap(struct inode *inode,
- 	return (err < 0 ? err : 0);
- }
- 
-+#define F2FS_FIEMAP_COMPAT	(FIEMAP_FLAG_SYNC | \
-+				 FIEMAP_FLAG_XATTR| \
-+				 FIEMAP_KERNEL_FIBMAP)
- int f2fs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- {
- 	u64 start = fieinfo->fi_start;
-@@ -1426,7 +1429,7 @@ int f2fs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- 			return ret;
- 	}
- 
--	ret = fiemap_check_flags(fieinfo, FIEMAP_FLAG_SYNC | FIEMAP_FLAG_XATTR);
-+	ret = fiemap_check_flags(fieinfo, F2FS_FIEMAP_COMPAT);
- 	if (ret)
- 		return ret;
- 
-@@ -1438,6 +1441,11 @@ int f2fs_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- 	}
- 
- 	if (f2fs_has_inline_data(inode)) {
-+
-+		ret = -EINVAL;
-+		if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP)
-+			goto out;
-+
- 		ret = f2fs_inline_data_fiemap(inode, fieinfo, start, len);
- 		if (ret != -EAGAIN)
- 			goto out;
-diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
-index df31bd8ecf6f..30554b4f49c3 100644
---- a/fs/gfs2/inode.c
-+++ b/fs/gfs2/inode.c
-@@ -2016,7 +2016,11 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- 	if (ret)
- 		goto out;
- 
--	ret = iomap_fiemap(inode, fieinfo, &gfs2_iomap_ops);
-+	if (gfs2_is_stuffed(ip) &&
-+	    (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP))
-+		ret = -EINVAL;
-+	else
-+		ret = iomap_fiemap(inode, fieinfo, &gfs2_iomap_ops);
- 
- 	gfs2_glock_dq_uninit(&gh);
- 
-diff --git a/fs/inode.c b/fs/inode.c
-index 824fa54d393d..02552b09e77f 100644
---- a/fs/inode.c
-+++ b/fs/inode.c
-@@ -1575,6 +1575,78 @@ void iput(struct inode *inode)
- }
- EXPORT_SYMBOL(iput);
- 
-+static int fiemap_fill_kernel_extent(struct fiemap_extent_info *fieinfo,
-+			u64 logical, u64 phys, u64 len, u32 flags)
-+{
-+	struct fiemap_extent *extent = fieinfo->fi_cb_data;
-+
-+	/* only count the extents */
-+	if (fieinfo->fi_cb_data == 0) {
-+		fieinfo->fi_extents_mapped++;
-+		goto out;
-+	}
-+
-+	if (fieinfo->fi_extents_mapped >= fieinfo->fi_extents_max)
-+		return 1;
-+
-+	if (flags & FIEMAP_EXTENT_DELALLOC)
-+		flags |= FIEMAP_EXTENT_UNKNOWN;
-+	if (flags & FIEMAP_EXTENT_DATA_ENCRYPTED)
-+		flags |= FIEMAP_EXTENT_ENCODED;
-+	if (flags & (FIEMAP_EXTENT_DATA_TAIL | FIEMAP_EXTENT_DATA_INLINE))
-+		flags |= FIEMAP_EXTENT_NOT_ALIGNED;
-+
-+	extent->fe_logical = logical;
-+	extent->fe_physical = phys;
-+	extent->fe_length = len;
-+	extent->fe_flags = flags;
-+
-+	fieinfo->fi_extents_mapped++;
-+
-+	if (fieinfo->fi_extents_mapped == fieinfo->fi_extents_max)
-+		return 1;
-+
-+out:
-+	if (flags & FIEMAP_EXTENT_LAST)
-+		return 1;
-+	return 0;
-+}
-+
-+static int bmap_fiemap(struct inode *inode, sector_t *block)
-+{
-+	struct fiemap_extent_info fieinfo = { 0, };
-+	struct fiemap_extent fextent;
-+	u64 start = *block << inode->i_blkbits;
-+	int error = -EINVAL;
-+
-+	fextent.fe_logical = 0;
-+	fextent.fe_physical = 0;
-+	fieinfo.fi_extents_max = 1;
-+	fieinfo.fi_extents_mapped = 0;
-+	fieinfo.fi_cb_data = &fextent;
-+	fieinfo.fi_start = start;
-+	fieinfo.fi_len = 1 << inode->i_blkbits;
-+	fieinfo.fi_cb = fiemap_fill_kernel_extent;
-+	fieinfo.fi_flags = (FIEMAP_KERNEL_FIBMAP | FIEMAP_FLAG_SYNC);
-+
-+	error = inode->i_op->fiemap(inode, &fieinfo);
-+
-+	if (error)
-+		return error;
-+
-+	if (fieinfo.fi_flags & (FIEMAP_EXTENT_UNKNOWN |
-+				FIEMAP_EXTENT_ENCODED |
-+				FIEMAP_EXTENT_DATA_INLINE |
-+				FIEMAP_EXTENT_UNWRITTEN |
-+				FIEMAP_EXTENT_SHARED))
-+		return -EINVAL;
-+
-+	*block = (fextent.fe_physical +
-+		  (start - fextent.fe_logical)) >> inode->i_blkbits;
-+
-+	return error;
-+}
-+
- /**
-  *	bmap	- find a block number in a file
-  *	@inode:  inode owning the block number being requested
-@@ -1591,10 +1663,15 @@ EXPORT_SYMBOL(iput);
-  */
- int bmap(struct inode *inode, sector_t *block)
- {
--	if (!inode->i_mapping->a_ops->bmap)
-+	if (inode->i_op->fiemap)
-+		return bmap_fiemap(inode, block);
-+
-+	if (inode->i_mapping->a_ops->bmap)
-+		*block = inode->i_mapping->a_ops->bmap(inode->i_mapping,
-+						       *block);
-+	else
- 		return -EINVAL;
- 
--	*block = inode->i_mapping->a_ops->bmap(inode->i_mapping, *block);
- 	return 0;
- }
- EXPORT_SYMBOL(bmap);
-diff --git a/fs/ioctl.c b/fs/ioctl.c
-index d72696c222de..0759ac6e4c7e 100644
---- a/fs/ioctl.c
-+++ b/fs/ioctl.c
-@@ -77,11 +77,8 @@ static int ioctl_fibmap(struct file *filp, int __user *p)
- 	return error;
- }
- 
--#define SET_UNKNOWN_FLAGS	(FIEMAP_EXTENT_DELALLOC)
--#define SET_NO_UNMOUNTED_IO_FLAGS	(FIEMAP_EXTENT_DATA_ENCRYPTED)
--#define SET_NOT_ALIGNED_FLAGS	(FIEMAP_EXTENT_DATA_TAIL|FIEMAP_EXTENT_DATA_INLINE)
--int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo, u64 logical,
--			    u64 phys, u64 len, u32 flags)
-+static int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo,
-+			u64 logical, u64 phys, u64 len, u32 flags)
- {
- 	struct fiemap_extent extent;
- 	struct fiemap_extent __user *dest = fieinfo->fi_cb_data;
-@@ -89,17 +86,17 @@ int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo, u64 logical,
- 	/* only count the extents */
- 	if (fieinfo->fi_extents_max == 0) {
- 		fieinfo->fi_extents_mapped++;
--		return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
-+		goto out;
- 	}
- 
- 	if (fieinfo->fi_extents_mapped >= fieinfo->fi_extents_max)
- 		return 1;
- 
--	if (flags & SET_UNKNOWN_FLAGS)
-+	if (flags & FIEMAP_EXTENT_DELALLOC)
- 		flags |= FIEMAP_EXTENT_UNKNOWN;
--	if (flags & SET_NO_UNMOUNTED_IO_FLAGS)
-+	if (flags & FIEMAP_EXTENT_DATA_ENCRYPTED)
- 		flags |= FIEMAP_EXTENT_ENCODED;
--	if (flags & SET_NOT_ALIGNED_FLAGS)
-+	if (flags & (FIEMAP_EXTENT_DATA_TAIL | FIEMAP_EXTENT_DATA_INLINE))
- 		flags |= FIEMAP_EXTENT_NOT_ALIGNED;
- 
- 	memset(&extent, 0, sizeof(extent));
-@@ -115,7 +112,11 @@ int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo, u64 logical,
- 	fieinfo->fi_extents_mapped++;
- 	if (fieinfo->fi_extents_mapped == fieinfo->fi_extents_max)
- 		return 1;
--	return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
-+
-+out:
-+	if (flags & FIEMAP_EXTENT_LAST)
-+		return 1;
-+	return 0;
- }
- 
- /**
-@@ -151,13 +152,23 @@ EXPORT_SYMBOL(fiemap_fill_next_extent);
-  * flags, the invalid values will be written into the fieinfo structure, and
-  * -EBADR is returned, which tells ioctl_fiemap() to return those values to
-  * userspace. For this reason, a return code of -EBADR should be preserved.
-+ * In case ->fiemap is being used for FIBMAP calls, and the filesystem does not
-+ * support it, return -EINVAL.
-  *
-- * Returns 0 on success, -EBADR on bad flags.
-+ * Returns 0 on success, -EBADR on bad flags, -EINVAL for an unsupported FIBMAP
-+ * request.
-  */
- int fiemap_check_flags(struct fiemap_extent_info *fieinfo, u32 fs_flags)
- {
- 	u32 incompat_flags;
- 
-+	if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP) {
-+		if (fs_flags & FIEMAP_KERNEL_FIBMAP)
-+			return 0;
-+
-+		return -EINVAL;
-+	}
-+
- 	incompat_flags = fieinfo->fi_flags & ~(FIEMAP_FLAGS_COMPAT & fs_flags);
- 	if (incompat_flags) {
- 		fieinfo->fi_flags = incompat_flags;
-@@ -208,6 +219,10 @@ static int ioctl_fiemap(struct file *filp, unsigned long arg)
- 	if (fiemap.fm_extent_count > FIEMAP_MAX_EXTENTS)
- 		return -EINVAL;
- 
-+	/* Userspace has no access to this flag */
-+	if (fiemap.fm_flags & FIEMAP_KERNEL_FIBMAP)
-+		return -EINVAL;
-+
- 	error = fiemap_check_ranges(sb, fiemap.fm_start, fiemap.fm_length,
- 				    &len);
- 	if (error)
-@@ -318,7 +333,8 @@ int __generic_block_fiemap(struct inode *inode,
- 	bool past_eof = false, whole_file = false;
- 	int ret = 0;
- 
--	ret = fiemap_check_flags(fieinfo, FIEMAP_FLAG_SYNC);
-+	ret = fiemap_check_flags(fieinfo,
-+				 FIEMAP_FLAG_SYNC | FIEMAP_KERNEL_FIBMAP);
- 	if (ret)
- 		return ret;
- 
-diff --git a/fs/iomap.c b/fs/iomap.c
-index b1e88722e10b..2b182abd18e8 100644
---- a/fs/iomap.c
-+++ b/fs/iomap.c
-@@ -1195,7 +1195,7 @@ int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
- 	ctx.fi = fi;
- 	ctx.prev.type = IOMAP_HOLE;
- 
--	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC);
-+	ret = fiemap_check_flags(fi, FIEMAP_FLAG_SYNC | FIEMAP_KERNEL_FIBMAP);
- 	if (ret)
- 		return ret;
- 
-diff --git a/fs/ocfs2/extent_map.c b/fs/ocfs2/extent_map.c
-index e01fd38ea935..2884395f3972 100644
---- a/fs/ocfs2/extent_map.c
-+++ b/fs/ocfs2/extent_map.c
-@@ -747,7 +747,7 @@ static int ocfs2_fiemap_inline(struct inode *inode, struct buffer_head *di_bh,
- 	return 0;
- }
- 
--#define OCFS2_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC)
-+#define OCFS2_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC | FIEMAP_KERNEL_FIBMAP)
- 
- int ocfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- {
-@@ -756,6 +756,7 @@ int ocfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- 	unsigned int hole_size;
- 	struct ocfs2_super *osb = OCFS2_SB(inode->i_sb);
- 	u64 len_bytes, phys_bytes, virt_bytes;
-+
- 	struct buffer_head *di_bh = NULL;
- 	struct ocfs2_extent_rec rec;
- 	u64 map_start = fieinfo->fi_start;
-@@ -765,6 +766,11 @@ int ocfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
- 	if (ret)
- 		return ret;
- 
-+	if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP) {
-+		if (ocfs2_is_refcount_inode(inode))
-+			return -EINVAL;
-+	}
-+
- 	ret = ocfs2_inode_lock(inode, &di_bh, 0);
- 	if (ret) {
- 		mlog_errno(ret);
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index b485190b7ecd..18a798e9076b 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -1113,6 +1113,11 @@ xfs_vn_fiemap(
- 	struct fiemap_extent_info *fieinfo)
- {
- 	int	error;
-+	struct	xfs_inode	*ip = XFS_I(inode);
-+
-+	if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP)
-+		if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
-+			return -EINVAL;
- 
- 	xfs_ilock(XFS_I(inode), XFS_IOLOCK_SHARED);
- 	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR) {
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index a8bd3c4f6d86..233e12ccb6d3 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1709,6 +1709,10 @@ extern bool may_open_dev(const struct path *path);
- typedef int (*fiemap_fill_cb)(struct fiemap_extent_info *fieinfo, u64 logical,
- 			      u64 phys, u64 len, u32 flags);
- 
-+#define FIEMAP_KERNEL_FIBMAP 0x10000000		/* FIBMAP call through FIEMAP
-+						   interface. This is a kernel
-+						   only flag */
-+
- struct fiemap_extent_info {
- 	unsigned int	fi_flags;		/* Flags as passed from user */
- 	u64		fi_start;
--- 
-2.20.1
+>  	set_posix_acl_flag(sb);
+>  
+>  	/* version 5 superblocks support inode version counters. */
+> -- 
+> 2.17.1
+> 
