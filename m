@@ -1,41 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:42370 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726595AbfHABmt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 21:42:49 -0400
-Subject: [PATCH v2 0/5] xfs: fixes and new tests for bulkstat v5
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Wed, 31 Jul 2019 18:42:35 -0700
-Message-ID: <156462375516.2945299.16564635037236083118.stgit@magnolia>
+Received: from mga05.intel.com ([192.55.52.43]:12322 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726369AbfGaGJH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Jul 2019 02:09:07 -0400
+Subject: Re: [PATCH v4 3/3] net/xdp: convert put_page() to put_user_page*()
+References: <20190730205705.9018-1-jhubbard@nvidia.com>
+ <20190730205705.9018-4-jhubbard@nvidia.com>
+From: =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn.topel@intel.com>
+Message-ID: <c1c7b6cd-8f08-0e3f-2f66-557228edabcf@intel.com>
+Date: Wed, 31 Jul 2019 08:08:59 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <20190730205705.9018-4-jhubbard@nvidia.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: guaneryu@gmail.com, darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org, bfoster@redhat.com, fstests@vger.kernel.org
+To: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
+Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>, Magnus Karlsson <magnus.karlsson@intel.com>, "David S . Miller" <davem@davemloft.net>, netdev@vger.kernel.org
 
-Hi all,
+On 2019-07-30 22:57, john.hubbard@gmail.com wrote:
+> From: John Hubbard <jhubbard@nvidia.com>
+> 
+> For pages that were retained via get_user_pages*(), release those pages
+> via the new put_user_page*() routines, instead of via put_page() or
+> release_pages().
+> 
+> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+> ("mm: introduce put_user_page*(), placeholder versions").
+> 
+> Cc: Björn Töpel <bjorn.topel@intel.com>
+> Cc: Magnus Karlsson <magnus.karlsson@intel.com>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 
-Fix some problems introduced by the creation of the V5 bulkstat ioctl,
-and then add some new tests to make sure the new libxfrog bulkstat
-wrappers work fine with both the new v5 ioctl and emulating it with the
-old v1 ioctl.
+Acked-by: Björn Töpel <bjorn.topel@intel.com>
 
-If you're going to start using this mess, you probably ought to just
-pull from my git trees, which are linked below.
-
-This is an extraordinary way to destroy everything.  Enjoy!
-Comments and questions are, as always, welcome.
-
---D
-
-kernel git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=bulkstat-v5
-
-xfsprogs git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=bulkstat-v5
-
-fstests git tree:
-https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=bulkstat-v5
+> ---
+>   net/xdp/xdp_umem.c | 9 +--------
+>   1 file changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/net/xdp/xdp_umem.c b/net/xdp/xdp_umem.c
+> index 83de74ca729a..17c4b3d3dc34 100644
+> --- a/net/xdp/xdp_umem.c
+> +++ b/net/xdp/xdp_umem.c
+> @@ -166,14 +166,7 @@ void xdp_umem_clear_dev(struct xdp_umem *umem)
+>   
+>   static void xdp_umem_unpin_pages(struct xdp_umem *umem)
+>   {
+> -	unsigned int i;
+> -
+> -	for (i = 0; i < umem->npgs; i++) {
+> -		struct page *page = umem->pgs[i];
+> -
+> -		set_page_dirty_lock(page);
+> -		put_page(page);
+> -	}
+> +	put_user_pages_dirty_lock(umem->pgs, umem->npgs, true);
+>   
+>   	kfree(umem->pgs);
+>   	umem->pgs = NULL;
+> 
