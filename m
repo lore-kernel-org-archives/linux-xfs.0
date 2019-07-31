@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:55517 "EHLO
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:55532 "EHLO
         heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727125AbfGaLty (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 07:49:54 -0400
+        with ESMTP id S1727125AbfGaLuA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 07:50:00 -0400
 From: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Subject: [RFC PATCH 3/7] dax: replace mmap entry in case of CoW
-Date: Wed, 31 Jul 2019 19:49:31 +0800
-Message-ID: <20190731114935.11030-4-ruansy.fnst@cn.fujitsu.com>
+Subject: [RFC PATCH 5/7] dax: memcpy before zeroing range
+Date: Wed, 31 Jul 2019 19:49:33 +0800
+Message-ID: <20190731114935.11030-6-ruansy.fnst@cn.fujitsu.com>
 In-Reply-To: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
 References: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
 MIME-Version: 1.0
@@ -19,154 +19,143 @@ Cc: linux-kernel@vger.kernel.org, rgoldwyn@suse.de, gujx@cn.fujitsu.com, david@f
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-We replace the existing entry to the newly allocated one
-in case of CoW. Also, we mark the entry as PAGECACHE_TAG_TOWRITE
-so writeback marks this entry as writeprotected. This
-helps us snapshots so new write pagefaults after snapshots
-trigger a CoW.
+However, this needed more iomap fields, so it was easier
+to pass iomap and compute inside the function rather
+than passing a log of arguments.
 
-btrfs does not support hugepages so we don't handle PMD.
+Note, there is subtle difference between iomap_sector and
+dax_iomap_sector(). Can we replace dax_iomap_sector with
+iomap_sector()? It would need pos & PAGE_MASK though or else
+bdev_dax_pgoff() return -EINVAL.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- fs/dax.c | 36 ++++++++++++++++++++++++++++--------
- 1 file changed, 28 insertions(+), 8 deletions(-)
+ fs/dax.c              | 17 ++++++++++++-----
+ fs/iomap.c            |  9 +--------
+ include/linux/dax.h   | 11 +++++------
+ include/linux/iomap.h |  6 ++++++
+ 4 files changed, 24 insertions(+), 19 deletions(-)
 
 diff --git a/fs/dax.c b/fs/dax.c
-index 084cc21d47a4..8eb065a1ec51 100644
+index 8111ba93f4d3..c92111950612 100644
 --- a/fs/dax.c
 +++ b/fs/dax.c
-@@ -700,6 +700,9 @@ static int copy_user_dax(struct block_device *bdev, struct dax_device *dax_dev,
- 	return 0;
+@@ -1071,11 +1071,16 @@ static bool dax_range_is_aligned(struct block_device *bdev,
+ 	return true;
  }
  
-+#define DAX_IF_DIRTY		(1ULL << 0)
-+#define DAX_IF_COW		(1ULL << 1)
-+
- /*
-  * By this point grab_mapping_entry() has ensured that we have a locked entry
-  * of the appropriate size so we don't have to worry about downgrading PMDs to
-@@ -709,14 +712,17 @@ static int copy_user_dax(struct block_device *bdev, struct dax_device *dax_dev,
-  */
- static void *dax_insert_entry(struct xa_state *xas,
- 		struct address_space *mapping, struct vm_fault *vmf,
--		void *entry, pfn_t pfn, unsigned long flags, bool dirty)
-+		void *entry, pfn_t pfn, unsigned long flags,
-+		unsigned int insert_flags)
+-int __dax_zero_page_range(struct block_device *bdev,
+-		struct dax_device *dax_dev, sector_t sector,
+-		unsigned int offset, unsigned int size)
++int __dax_zero_page_range(struct iomap *iomap, loff_t pos,
++			  unsigned int offset, unsigned int size)
  {
- 	void *new_entry = dax_make_entry(pfn, flags);
-+	bool dirty = insert_flags & DAX_IF_DIRTY;
-+	bool cow = insert_flags & DAX_IF_COW;
+-	if (dax_range_is_aligned(bdev, offset, size)) {
++	sector_t sector = dax_iomap_sector(iomap, pos & PAGE_MASK);
++	struct block_device *bdev = iomap->bdev;
++	struct dax_device *dax_dev = iomap->dax_dev;
++	int ret = 0;
++
++	if (!(iomap->type == IOMAP_COW) &&
++	    dax_range_is_aligned(bdev, offset, size)) {
+ 		sector_t start_sector = sector + (offset >> 9);
  
- 	if (dirty)
- 		__mark_inode_dirty(mapping->host, I_DIRTY_PAGES);
- 
--	if (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE)) {
-+	if (cow || (dax_is_zero_entry(entry) && !(flags & DAX_ZERO_PAGE))) {
- 		unsigned long index = xas->xa_index;
- 		/* we are replacing a zero page with block mapping */
- 		if (dax_is_pmd_entry(entry))
-@@ -728,12 +734,12 @@ static void *dax_insert_entry(struct xa_state *xas,
- 
- 	xas_reset(xas);
- 	xas_lock_irq(xas);
--	if (dax_entry_size(entry) != dax_entry_size(new_entry)) {
-+	if (cow || (dax_entry_size(entry) != dax_entry_size(new_entry))) {
- 		dax_disassociate_entry(entry, mapping, false);
- 		dax_associate_entry(new_entry, mapping, vmf->vma, vmf->address);
+ 		return blkdev_issue_zeroout(bdev, start_sector,
+@@ -1095,11 +1100,13 @@ int __dax_zero_page_range(struct block_device *bdev,
+ 			dax_read_unlock(id);
+ 			return rc;
+ 		}
++		if (iomap->type == IOMAP_COW)
++			ret = memcpy_mcsafe(kaddr, iomap->inline_data, offset);
+ 		memset(kaddr + offset, 0, size);
+ 		dax_flush(dax_dev, kaddr + offset, size);
+ 		dax_read_unlock(id);
  	}
- 
--	if (dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
-+	if (cow || dax_is_zero_entry(entry) || dax_is_empty_entry(entry)) {
- 		/*
- 		 * Only swap our new entry into the page cache if the current
- 		 * entry is a zero page or an empty entry.  If a normal PTE or
-@@ -753,6 +759,9 @@ static void *dax_insert_entry(struct xa_state *xas,
- 	if (dirty)
- 		xas_set_mark(xas, PAGECACHE_TAG_DIRTY);
- 
-+	if (cow)
-+		xas_set_mark(xas, PAGECACHE_TAG_TOWRITE);
-+
- 	xas_unlock_irq(xas);
- 	return entry;
+-	return 0;
++	return ret;
  }
-@@ -1040,7 +1049,7 @@ static vm_fault_t dax_load_hole(struct xa_state *xas,
- 	vm_fault_t ret;
+ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
  
- 	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn,
--			DAX_ZERO_PAGE, false);
-+			DAX_ZERO_PAGE, 0);
+diff --git a/fs/iomap.c b/fs/iomap.c
+index 3377a7ec5b7d..b5662b5bac26 100644
+--- a/fs/iomap.c
++++ b/fs/iomap.c
+@@ -99,12 +99,6 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+ 	return written ? written : ret;
+ }
  
- 	ret = vmf_insert_mixed(vmf->vma, vaddr, pfn);
- 	trace_dax_load_hole(inode, vmf, ret);
-@@ -1310,6 +1319,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	void *entry;
- 	pfn_t pfn;
- 	void *kaddr;
-+	unsigned long insert_flags = 0;
+-static sector_t
+-iomap_sector(struct iomap *iomap, loff_t pos)
+-{
+-	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
+-}
+-
+ static struct iomap_page *
+ iomap_page_create(struct inode *inode, struct page *page)
+ {
+@@ -993,8 +987,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+ 		struct iomap *iomap)
+ {
+-	return __dax_zero_page_range(iomap->bdev, iomap->dax_dev,
+-			iomap_sector(iomap, pos & PAGE_MASK), offset, bytes);
++	return __dax_zero_page_range(iomap, pos, offset, bytes);
+ }
  
- 	trace_dax_pte_fault(inode, vmf, ret);
- 	/*
-@@ -1371,6 +1381,8 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 			error = copy_user_dax(iomap.bdev, iomap.dax_dev,
- 					sector, PAGE_SIZE, vmf->cow_page, vaddr);
- 			break;
-+		case IOMAP_COW:
-+			/* Should not be setting this - fallthrough */
- 		default:
- 			WARN_ON_ONCE(1);
- 			error = -EIO;
-@@ -1391,6 +1403,8 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+ static loff_t
+diff --git a/include/linux/dax.h b/include/linux/dax.h
+index 1370d39c91b6..c469d9ff54b4 100644
+--- a/include/linux/dax.h
++++ b/include/linux/dax.h
+@@ -9,6 +9,7 @@
  
- 	switch (iomap.type) {
- 	case IOMAP_COW:
-+		insert_flags |= DAX_IF_COW;
-+		/* fallthrough */
- 	case IOMAP_MAPPED:
- 		if (iomap.flags & IOMAP_F_NEW) {
- 			count_vm_event(PGMAJFAULT);
-@@ -1401,8 +1415,10 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		if (error < 0)
- 			goto error_finish_iomap;
+ typedef unsigned long dax_entry_t;
  
-+		if (write && !sync)
-+			insert_flags |= DAX_IF_DIRTY;
- 		entry = dax_insert_entry(&xas, mapping, vmf, entry, pfn,
--						 0, write && !sync);
-+						 0, insert_flags);
++struct iomap;
+ struct iomap_ops;
+ struct dax_device;
+ struct dax_operations {
+@@ -163,13 +164,11 @@ int dax_file_range_compare(struct inode *src, loff_t srcoff,
+ 			   const struct iomap_ops *ops);
  
- 		if (iomap.type == IOMAP_COW) {
- 			error = dax_copy_edges(inode, pos, PAGE_SIZE, &srcmap,
-@@ -1490,7 +1506,7 @@ static vm_fault_t dax_pmd_load_hole(struct xa_state *xas, struct vm_fault *vmf,
+ #ifdef CONFIG_FS_DAX
+-int __dax_zero_page_range(struct block_device *bdev,
+-		struct dax_device *dax_dev, sector_t sector,
+-		unsigned int offset, unsigned int length);
++int __dax_zero_page_range(struct iomap *iomap, loff_t pos,
++		unsigned int offset, unsigned int size);
+ #else
+-static inline int __dax_zero_page_range(struct block_device *bdev,
+-		struct dax_device *dax_dev, sector_t sector,
+-		unsigned int offset, unsigned int length)
++static inline int __dax_zero_page_range(struct iomap *iomap, loff_t pos,
++		unsigned int offset, unsigned int size)
+ {
+ 	return -ENXIO;
+ }
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 75b78dd91c3c..3628e57954c6 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -7,6 +7,7 @@
+ #include <linux/mm.h>
+ #include <linux/types.h>
+ #include <linux/mm_types.h>
++#include <linux/blkdev.h>
  
- 	pfn = page_to_pfn_t(zero_page);
- 	*entry = dax_insert_entry(xas, mapping, vmf, *entry, pfn,
--			DAX_PMD | DAX_ZERO_PAGE, false);
-+			DAX_PMD | DAX_ZERO_PAGE, 0);
+ struct address_space;
+ struct fiemap_extent_info;
+@@ -122,6 +123,11 @@ static inline struct iomap_page *to_iomap_page(struct page *page)
+ 	return NULL;
+ }
  
- 	if (arch_needs_pgtable_deposit()) {
- 		pgtable = pte_alloc_one(vma->vm_mm);
-@@ -1542,6 +1558,7 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 	int error;
- 	pfn_t pfn;
- 	void *kaddr;
-+	unsigned long insert_flags = 0;
- 
- 	/*
- 	 * Check whether offset isn't beyond end of file now. Caller is
-@@ -1627,8 +1644,11 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
- 		if (error < 0)
- 			goto finish_iomap;
- 
-+		if (write && !sync)
-+			insert_flags |= DAX_IF_DIRTY;
++static inline sector_t iomap_sector(struct iomap *iomap, loff_t pos)
++{
++	return (iomap->addr + pos - iomap->offset) >> SECTOR_SHIFT;
++}
 +
- 		entry = dax_insert_entry(&xas, mapping, vmf, entry, pfn,
--						DAX_PMD, write && !sync);
-+						DAX_PMD, insert_flags);
- 
- 		if (iomap.type == IOMAP_COW) {
- 			error = dax_copy_edges(inode, pos, PMD_SIZE, &srcmap,
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
+ int iomap_readpage(struct page *page, const struct iomap_ops *ops);
 -- 
 2.17.0
