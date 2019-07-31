@@ -1,70 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:34930 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728388AbfHACSB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:01 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 09/24] xfs: don't allow log IO to be throttled
-Date: Thu,  1 Aug 2019 12:17:37 +1000
-Message-Id: <20190801021752.4986-10-david@fromorbit.com>
-In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
-References: <20190801021752.4986-1-david@fromorbit.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:59178 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728774AbfGaXZH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 19:25:07 -0400
+Date: Wed, 31 Jul 2019 16:24:47 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 6/9] iomap: Remove length and start fields from
+ iomap_fiemap
+Message-ID: <20190731232447.GX1561054@magnolia>
+References: <20190731141245.7230-1-cmaiolino@redhat.com>
+ <20190731141245.7230-7-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190731141245.7230-7-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Wed, Jul 31, 2019 at 04:12:42PM +0200, Carlos Maiolino wrote:
+> fiemap_extent_info now embeds start and length parameters, users of
+> iomap_fiemap() doesn't need to pass it individually anymore.
+> 
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 
-Running metadata intensive workloads, I've been seeing the AIL
-pushing getting stuck on pinned buffers and triggering log forces.
-The log force is taking a long time to run because the log IO is
-getting throttled by wbt_wait() - the block layer writeback
-throttle. It's being throttled because there is a huge amount of
-metadata writeback going on which is filling the request queue.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-IOWs, we have a priority inversion problem here.
+--D
 
-Mark the log IO bios with REQ_IDLE so they don't get throttled
-by the block layer writeback throttle. When we are forcing the CIL,
-we are likely to need to to tens of log IOs, and they are issued as
-fast as they can be build and IO completed. Hence REQ_IDLE is
-appropriate - it's an indication that more IO will follow shortly.
-
-And because we also set REQ_SYNC, the writeback throttle will no
-treat log IO the same way it treats direct IO writes - it will not
-throttle them at all. Hence we solve the priority inversion problem
-caused by the writeback throttle being unable to distinguish between
-high priority log IO and background metadata writeback.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_log.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 00e9f5c388d3..7bdea629e749 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1723,7 +1723,15 @@ xlog_write_iclog(
- 	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
- 	iclog->ic_bio.bi_end_io = xlog_bio_end_io;
- 	iclog->ic_bio.bi_private = iclog;
--	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_FUA;
-+
-+	/*
-+	 * We use REQ_SYNC | REQ_IDLE here to tell the block layer the are more
-+	 * IOs coming immediately after this one. This prevents the block layer
-+	 * writeback throttle from throttling log writes behind background
-+	 * metadata writeback and causing priority inversions.
-+	 */
-+	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC |
-+				REQ_IDLE | REQ_FUA;
- 	if (need_flush)
- 		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
- 
--- 
-2.22.0
+> ---
+>  fs/gfs2/inode.c       | 4 +---
+>  fs/iomap.c            | 4 +++-
+>  fs/xfs/xfs_iops.c     | 8 ++------
+>  include/linux/iomap.h | 2 +-
+>  4 files changed, 7 insertions(+), 11 deletions(-)
+> 
+> diff --git a/fs/gfs2/inode.c b/fs/gfs2/inode.c
+> index 5e84d5963506..df31bd8ecf6f 100644
+> --- a/fs/gfs2/inode.c
+> +++ b/fs/gfs2/inode.c
+> @@ -2006,8 +2006,6 @@ static int gfs2_getattr(const struct path *path, struct kstat *stat,
+>  
+>  static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
+>  {
+> -	u64 start = fieinfo->fi_start;
+> -	u64 len = fieinfo->fi_len;
+>  	struct gfs2_inode *ip = GFS2_I(inode);
+>  	struct gfs2_holder gh;
+>  	int ret;
+> @@ -2018,7 +2016,7 @@ static int gfs2_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
+>  	if (ret)
+>  		goto out;
+>  
+> -	ret = iomap_fiemap(inode, fieinfo, start, len, &gfs2_iomap_ops);
+> +	ret = iomap_fiemap(inode, fieinfo, &gfs2_iomap_ops);
+>  
+>  	gfs2_glock_dq_uninit(&gh);
+>  
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 97cb9d486a7d..b1e88722e10b 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1184,9 +1184,11 @@ iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  }
+>  
+>  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fi,
+> -		loff_t start, loff_t len, const struct iomap_ops *ops)
+> +		 const struct iomap_ops *ops)
+>  {
+>  	struct fiemap_ctx ctx;
+> +	loff_t start = fi->fi_start;
+> +	loff_t len = fi->fi_len;
+>  	loff_t ret;
+>  
+>  	memset(&ctx, 0, sizeof(ctx));
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 1f4354fa989b..b485190b7ecd 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1112,18 +1112,14 @@ xfs_vn_fiemap(
+>  	struct inode		  *inode,
+>  	struct fiemap_extent_info *fieinfo)
+>  {
+> -	u64	start = fieinfo->fi_start;
+> -	u64	length = fieinfo->fi_len;
+>  	int	error;
+>  
+>  	xfs_ilock(XFS_I(inode), XFS_IOLOCK_SHARED);
+>  	if (fieinfo->fi_flags & FIEMAP_FLAG_XATTR) {
+>  		fieinfo->fi_flags &= ~FIEMAP_FLAG_XATTR;
+> -		error = iomap_fiemap(inode, fieinfo, start, length,
+> -				&xfs_xattr_iomap_ops);
+> +		error = iomap_fiemap(inode, fieinfo, &xfs_xattr_iomap_ops);
+>  	} else {
+> -		error = iomap_fiemap(inode, fieinfo, start, length,
+> -				&xfs_iomap_ops);
+> +		error = iomap_fiemap(inode, fieinfo, &xfs_iomap_ops);
+>  	}
+>  	xfs_iunlock(XFS_I(inode), XFS_IOLOCK_SHARED);
+>  
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 0fefb5455bda..bc4c421ee822 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -145,7 +145,7 @@ int iomap_truncate_page(struct inode *inode, loff_t pos, bool *did_zero,
+>  vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf,
+>  			const struct iomap_ops *ops);
+>  int iomap_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo,
+> -		loff_t start, loff_t len, const struct iomap_ops *ops);
+> +		const struct iomap_ops *ops);
+>  loff_t iomap_seek_hole(struct inode *inode, loff_t offset,
+>  		const struct iomap_ops *ops);
+>  loff_t iomap_seek_data(struct inode *inode, loff_t offset,
+> -- 
+> 2.20.1
+> 
