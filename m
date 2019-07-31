@@ -1,83 +1,148 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56414 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727872AbfGaUd2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jul 2019 16:33:28 -0400
-Date: Wed, 31 Jul 2019 15:33:24 -0500
-From: Goldwyn Rodrigues <rgoldwyn@suse.de>
-Subject: Re: [RFC PATCH 0/7] xfs: add reflink & dedupe support for fsdax.
-Message-ID: <20190731203324.7vjwlejmwpghpvqi@fiona>
-References: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:46512 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730702AbfGaXah (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 19:30:37 -0400
+Date: Wed, 31 Jul 2019 16:30:07 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 9/9] xfs: Get rid of ->bmap
+Message-ID: <20190731233007.GA1561054@magnolia>
+References: <20190731141245.7230-1-cmaiolino@redhat.com>
+ <20190731141245.7230-10-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <20190731141245.7230-10-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, darrick.wong@oracle.com, linux-kernel@vger.kernel.org, gujx@cn.fujitsu.com, david@fromorbit.com, qi.fuli@fujitsu.com, caoj.fnst@cn.fujitsu.com
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On 19:49 31/07, Shiyang Ruan wrote:
-> This patchset aims to take care of this issue to make reflink and dedupe
-> work correctly in XFS.
+On Wed, Jul 31, 2019 at 04:12:45PM +0200, Carlos Maiolino wrote:
+> We don't need ->bmap anymore, only usage for it was FIBMAP, which is now
+> gone.
 > 
-> It is based on Goldwyn's patchsets: "v4 Btrfs dax support" and "Btrfs
-> iomap".  I picked up some patches related and made a few fix to make it
-> basically works fine.
+> Also kill iomap_bmap() and iomap_bmap_actor once it has no users anymore.
 > 
-> For dax framework: 
->   1. adapt to the latest change in iomap.
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 > 
-> For XFS:
->   1. report the source address and set IOMAP_COW type for those write
->      operations that need COW.
->   2. update extent list at the end.
->   3. add file contents comparison function based on dax framework.
->   4. use xfs_break_layouts() to support dax.
+> Changelog:
+> 
+> V2:
+> 	- Kill iomap_bmap() and iomap_bmap_actor()
+> 
+>  fs/iomap.c         | 34 ----------------------------------
+>  fs/xfs/xfs_aops.c  | 24 ------------------------
+>  fs/xfs/xfs_trace.h |  1 -
+>  3 files changed, 59 deletions(-)
+> 
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 2b182abd18e8..12e6a575feb4 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
 
-Shiyang,
+Needs rebasing against 5.3-rc1.
 
-I think you used the older patches which does not contain the iomap changes
-which would call iomap_begin() with two iomaps. I have it in the btrfs-iomap
-branch and plan to update it today. It is built on v5.3-rcX, so it should
-contain the changes which moves the iomap code to the different directory.
-I will build the dax patches on top of that.
-However, we are making a big dependency chain here :(
+> @@ -2153,37 +2153,3 @@ int iomap_swapfile_activate(struct swap_info_struct *sis,
+>  }
+>  EXPORT_SYMBOL_GPL(iomap_swapfile_activate);
+>  #endif /* CONFIG_SWAP */
+> -
+> -static loff_t
+> -iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> -{
+> -	sector_t *bno = data, addr;
+> -
+> -	if (iomap->type == IOMAP_MAPPED) {
+> -		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
+> -		if (addr > INT_MAX)
+> -			WARN(1, "would truncate bmap result\n");
+> -		else
+> -			*bno = addr;
+> -	}
+> -	return 0;
+> -}
+> -
+> -/* legacy ->bmap interface.  0 is the error return (!) */
+> -sector_t
+> -iomap_bmap(struct address_space *mapping, sector_t bno,
+> -		const struct iomap_ops *ops)
+> -{
+> -	struct inode *inode = mapping->host;
+> -	loff_t pos = bno << inode->i_blkbits;
+> -	unsigned blocksize = i_blocksize(inode);
+> -
+> -	if (filemap_write_and_wait(mapping))
+> -		return 0;
+> -
+> -	bno = 0;
+> -	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
+> -	return bno;
+> -}
+> -EXPORT_SYMBOL_GPL(iomap_bmap);
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index 3619e9e8d359..76ee495eba1a 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1006,29 +1006,6 @@ xfs_vm_releasepage(
+>  	return iomap_releasepage(page, gfp_mask);
+>  }
+>  
+> -STATIC sector_t
+> -xfs_vm_bmap(
+> -	struct address_space	*mapping,
+> -	sector_t		block)
+> -{
+> -	struct xfs_inode	*ip = XFS_I(mapping->host);
+> -
+> -	trace_xfs_vm_bmap(ip);
+> -
+> -	/*
+> -	 * The swap code (ab-)uses ->bmap to get a block mapping and then
+> -	 * bypasses the file system for actual I/O.  We really can't allow
+> -	 * that on reflinks inodes, so we have to skip out here.  And yes,
+> -	 * 0 is the magic code for a bmap error.
+> -	 *
+> -	 * Since we don't pass back blockdev info, we can't return bmap
+> -	 * information for rt files either.
+> -	 */
+> -	if (xfs_is_cow_inode(ip) || XFS_IS_REALTIME_INODE(ip))
 
--- 
-Goldwyn
+Wait, this isn't the same check that was added to the xfs fiemap
+implementation.
 
-> 
-> 
-> Goldwyn Rodrigues (3):
->   dax: replace mmap entry in case of CoW
->   fs: dedup file range to use a compare function
->   dax: memcpy before zeroing range
-> 
-> Shiyang Ruan (4):
->   dax: Introduce dax_copy_edges() for COW.
->   dax: copy data before write.
->   xfs: Add COW handle for fsdax.
->   xfs: Add dedupe support for fsdax.
-> 
->  fs/btrfs/ioctl.c      |  11 ++-
->  fs/dax.c              | 203 ++++++++++++++++++++++++++++++++++++++----
->  fs/iomap.c            |   9 +-
->  fs/ocfs2/file.c       |   2 +-
->  fs/read_write.c       |  11 +--
->  fs/xfs/xfs_iomap.c    |  42 +++++----
->  fs/xfs/xfs_reflink.c  |  84 +++++++++--------
->  include/linux/dax.h   |  15 ++--
->  include/linux/fs.h    |   8 +-
->  include/linux/iomap.h |   6 ++
->  10 files changed, 294 insertions(+), 97 deletions(-)
-> 
+--D
+
+> -		return 0;
+> -	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+> -}
+> -
+>  STATIC int
+>  xfs_vm_readpage(
+>  	struct file		*unused,
+> @@ -1067,7 +1044,6 @@ const struct address_space_operations xfs_address_space_operations = {
+>  	.set_page_dirty		= iomap_set_page_dirty,
+>  	.releasepage		= xfs_vm_releasepage,
+>  	.invalidatepage		= xfs_vm_invalidatepage,
+> -	.bmap			= xfs_vm_bmap,
+>  	.direct_IO		= noop_direct_IO,
+>  	.migratepage		= iomap_migrate_page,
+>  	.is_partially_uptodate  = iomap_is_partially_uptodate,
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index 47fb07d86efd..3a45a3971dce 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -621,7 +621,6 @@ DEFINE_INODE_EVENT(xfs_readdir);
+>  #ifdef CONFIG_XFS_POSIX_ACL
+>  DEFINE_INODE_EVENT(xfs_get_acl);
+>  #endif
+> -DEFINE_INODE_EVENT(xfs_vm_bmap);
+>  DEFINE_INODE_EVENT(xfs_file_ioctl);
+>  DEFINE_INODE_EVENT(xfs_file_compat_ioctl);
+>  DEFINE_INODE_EVENT(xfs_ioctl_setattr);
 > -- 
-> 2.17.0
+> 2.20.1
 > 
-> 
-> 
-
--- 
-Goldwyn
