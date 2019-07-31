@@ -1,65 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:12322 "EHLO mga05.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:6036 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726369AbfGaGJH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 31 Jul 2019 02:09:07 -0400
-Subject: Re: [PATCH v4 3/3] net/xdp: convert put_page() to put_user_page*()
-References: <20190730205705.9018-1-jhubbard@nvidia.com>
- <20190730205705.9018-4-jhubbard@nvidia.com>
-From: =?UTF-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn.topel@intel.com>
-Message-ID: <c1c7b6cd-8f08-0e3f-2f66-557228edabcf@intel.com>
-Date: Wed, 31 Jul 2019 08:08:59 +0200
+        id S1727123AbfGaLkW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Jul 2019 07:40:22 -0400
+Date: Wed, 31 Jul 2019 07:40:20 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 3/4] xfs/122: add the new v5 bulkstat/inumbers ioctl
+ structures
+Message-ID: <20190731114019.GB34040@bfoster>
+References: <156394159426.1850833.16316913520596851191.stgit@magnolia>
+ <156394161274.1850833.4300015313269610610.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190730205705.9018-4-jhubbard@nvidia.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156394161274.1850833.4300015313269610610.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>, Magnus Karlsson <magnus.karlsson@intel.com>, "David S . Miller" <davem@davemloft.net>, netdev@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 2019-07-30 22:57, john.hubbard@gmail.com wrote:
-> From: John Hubbard <jhubbard@nvidia.com>
+On Tue, Jul 23, 2019 at 09:13:32PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> For pages that were retained via get_user_pages*(), release those pages
-> via the new put_user_page*() routines, instead of via put_page() or
-> release_pages().
+> The new v5 bulkstat and inumbers structures are correctly padded so that
+> no format changes are necessary across platforms, so add them to the
+> output.
 > 
-> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-> ("mm: introduce put_user_page*(), placeholder versions").
-> 
-> Cc: Björn Töpel <bjorn.topel@intel.com>
-> Cc: Magnus Karlsson <magnus.karlsson@intel.com>
-> Cc: David S. Miller <davem@davemloft.net>
-> Cc: netdev@vger.kernel.org
-> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
-
-Acked-by: Björn Töpel <bjorn.topel@intel.com>
-
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->   net/xdp/xdp_umem.c | 9 +--------
->   1 file changed, 1 insertion(+), 8 deletions(-)
+>  tests/xfs/122.out |    7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> diff --git a/net/xdp/xdp_umem.c b/net/xdp/xdp_umem.c
-> index 83de74ca729a..17c4b3d3dc34 100644
-> --- a/net/xdp/xdp_umem.c
-> +++ b/net/xdp/xdp_umem.c
-> @@ -166,14 +166,7 @@ void xdp_umem_clear_dev(struct xdp_umem *umem)
->   
->   static void xdp_umem_unpin_pages(struct xdp_umem *umem)
->   {
-> -	unsigned int i;
-> -
-> -	for (i = 0; i < umem->npgs; i++) {
-> -		struct page *page = umem->pgs[i];
-> -
-> -		set_page_dirty_lock(page);
-> -		put_page(page);
-> -	}
-> +	put_user_pages_dirty_lock(umem->pgs, umem->npgs, true);
->   
->   	kfree(umem->pgs);
->   	umem->pgs = NULL;
+> 
+> diff --git a/tests/xfs/122.out b/tests/xfs/122.out
+> index cf9ac9e2..e2f346eb 100644
+> --- a/tests/xfs/122.out
+> +++ b/tests/xfs/122.out
+> @@ -66,6 +66,10 @@ sizeof(struct xfs_btree_block_lhdr) = 64
+>  sizeof(struct xfs_btree_block_shdr) = 48
+>  sizeof(struct xfs_bud_log_format) = 16
+>  sizeof(struct xfs_bui_log_format) = 16
+> +sizeof(struct xfs_bulk_ireq) = 64
+> +sizeof(struct xfs_bulkstat) = 192
+> +sizeof(struct xfs_bulkstat_req) = 64
+> +sizeof(struct xfs_bulkstat_single_req) = 224
+>  sizeof(struct xfs_clone_args) = 32
+>  sizeof(struct xfs_cud_log_format) = 16
+>  sizeof(struct xfs_cui_log_format) = 16
+> @@ -89,6 +93,9 @@ sizeof(struct xfs_fsop_geom_v4) = 112
+>  sizeof(struct xfs_icreate_log) = 28
+>  sizeof(struct xfs_inode_log_format) = 56
+>  sizeof(struct xfs_inode_log_format_32) = 52
+> +sizeof(struct xfs_inumbers) = 24
+> +sizeof(struct xfs_inumbers_req) = 64
+> +sizeof(struct xfs_ireq) = 32
+
+I don't see xfs_bulkstat_single_req or xfs_ireq in the latest kernel
+headers. Do we still have those? Otherwise looks fine.
+
+Brian
+
+>  sizeof(struct xfs_log_dinode) = 176
+>  sizeof(struct xfs_map_extent) = 32
+>  sizeof(struct xfs_phys_extent) = 16
 > 
