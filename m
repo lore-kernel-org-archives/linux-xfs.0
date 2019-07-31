@@ -1,94 +1,301 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33333 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729211AbfHACSM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:12 -0400
-From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 08/24] mm: kswapd backoff for shrinkers
-Date: Thu,  1 Aug 2019 12:17:36 +1000
-Message-Id: <20190801021752.4986-9-david@fromorbit.com>
-In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
-References: <20190801021752.4986-1-david@fromorbit.com>
+Received: from mx1.redhat.com ([209.132.183.28]:44068 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725935AbfGaLnK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 31 Jul 2019 07:43:10 -0400
+Date: Wed, 31 Jul 2019 07:43:07 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 4/4] xfs: test new v5 bulkstat commands
+Message-ID: <20190731114306.GC34040@bfoster>
+References: <156394159426.1850833.16316913520596851191.stgit@magnolia>
+ <156394161882.1850833.4351446431166375360.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156394161882.1850833.4351446431166375360.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Jul 23, 2019 at 09:13:38PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Check that the new v5 bulkstat commands do everything the old one do,
+> and then make sure the new functionality actually works.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  common/xfs                 |    6 +
+>  src/Makefile               |    2 
+>  src/bulkstat_null_ocount.c |   61 +++++++++
+>  tests/xfs/085              |    2 
+>  tests/xfs/086              |    2 
+>  tests/xfs/087              |    2 
+>  tests/xfs/088              |    2 
+>  tests/xfs/089              |    2 
+>  tests/xfs/091              |    2 
+>  tests/xfs/093              |    2 
+>  tests/xfs/097              |    2 
+>  tests/xfs/130              |    2 
+>  tests/xfs/235              |    2 
+>  tests/xfs/271              |    2 
+>  tests/xfs/744              |  212 +++++++++++++++++++++++++++++++
+>  tests/xfs/744.out          |  297 ++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/745              |   44 +++++++
+>  tests/xfs/745.out          |    2 
+>  tests/xfs/group            |    2 
+>  19 files changed, 636 insertions(+), 12 deletions(-)
+>  create mode 100644 src/bulkstat_null_ocount.c
+>  create mode 100755 tests/xfs/744
+>  create mode 100644 tests/xfs/744.out
+>  create mode 100755 tests/xfs/745
+>  create mode 100644 tests/xfs/745.out
+> 
+> 
+> diff --git a/common/xfs b/common/xfs
+> index 2b38e94b..1bce3c18 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -878,3 +878,9 @@ _force_xfsv4_mount_options()
+>  	fi
+>  	echo "MOUNT_OPTIONS = $MOUNT_OPTIONS" >>$seqres.full
+>  }
+> +
+> +# Find AG count of mounted filesystem
+> +_xfs_mount_agcount()
+> +{
+> +	$XFS_INFO_PROG "$1" | grep agcount= | sed -e 's/^.*agcount=\([0-9]*\),.*$/\1/g'
+> +}
 
-When kswapd reaches the end of the page LRU and starts hitting dirty
-pages, the logic in shrink_node() allows it to back off and wait for
-IO to complete, thereby preventing kswapd from scanning excessively
-and driving the system into swap thrashing and OOM conditions.
+This and the associated changes to existing tests should probably be a
+separate patch.
 
-When we have inode cache heavy workloads on XFS, we have exactly the
-same problem with reclaim inodes. The non-blocking kswapd reclaim
-will keep putting pressure onto the inode cache which is unable to
-make progress. When the system gets to the point where there is no
-pages in the LRU to free, there is no swap left and there are no
-clean inodes that can be freed, it will OOM. This has a specific
-signature in OOM:
+...
+> diff --git a/tests/xfs/744 b/tests/xfs/744
+> new file mode 100755
+> index 00000000..ef605301
+> --- /dev/null
+> +++ b/tests/xfs/744
+> @@ -0,0 +1,212 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0
+> +# Copyright (c) 2014 Red Hat, Inc.  All Rights Reserved.
+> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 744
+> +#
+> +# Use the xfs_io bulkstat utility to verify bulkstat finds all inodes in a
+> +# filesystem.  Test under various inode counts, inobt record layouts and
+> +# bulkstat batch sizes.  Test v1 and v5 ioctls explicitly, as well as the
+> +# ioctl version autodetection code in libfrog.
+> +#
 
-[  110.841987] Mem-Info:
-[  110.842816] active_anon:241 inactive_anon:82 isolated_anon:1
-                active_file:168 inactive_file:143 isolated_file:0
-                unevictable:2621523 dirty:1 writeback:8 unstable:0
-                slab_reclaimable:564445 slab_unreclaimable:420046
-                mapped:1042 shmem:11 pagetables:6509 bounce:0
-                free:77626 free_pcp:2 free_cma:0
+Apparently I don't have xfs_io bulkstat support. Is that posted
+somewhere? At a glance the test looks mostly fine..
 
-In this case, we have about 500-600 pages left in teh LRUs, but we
-have ~565000 reclaimable slab pages still available for reclaim.
-Unfortunately, they are mostly dirty inodes, and so we really need
-to be able to throttle kswapd when shrinker progress is limited due
-to reaching the dirty end of the LRU...
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +	cd /
+> +	rm -f $tmp.*
+> +}
+> +
+> +bstat_versions()
+> +{
+> +	echo "default"
+> +	echo "v1 -v1"
+> +	if [ -n "$has_v5" ]; then
+> +		echo "v5 -v5"
+> +	else
+> +		echo "v5"
+> +	fi
+> +}
+> +
+> +# print the number of inodes counted by bulkstat
+> +bstat_count()
+> +{
+> +	local batchsize="$1"
+> +	local tag="$2"
+> +
+> +	bstat_versions | while read v_tag v_flag; do
+> +		echo "$tag($v_tag): passing \"$v_flag\" to bulkstat" >> $seqres.full
+> +		echo -n "bulkstat $tag($v_tag): "
+> +		$XFS_IO_PROG -c "bulkstat -n $batchsize $vflag" $SCRATCH_MNT | grep ino | wc -l
 
-So, add a flag into the reclaim_state so if the shrinker decides it
-needs kswapd to back off and wait for a while (for whatever reason)
-it can do so.
+s/vflag/v_flag/ ?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- include/linux/swap.h |  1 +
- mm/vmscan.c          | 10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+> +	done
+> +}
+> +
+> +# print the number of inodes counted by per-ag bulkstat
+> +bstat_perag_count()
+> +{
+> +	local batchsize="$1"
+> +	local tag="$2"
+> +
+> +	local agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
+> +
+> +	bstat_versions | while read v_tag v_flag; do
+> +		echo -n "bulkstat $tag($v_tag): "
+> +		seq 0 $((agcount - 1)) | while read ag; do
+> +			$XFS_IO_PROG -c "bulkstat -a $ag -n $batchsize $v_flag" $SCRATCH_MNT
+> +		done | grep ino | wc -l
+> +	done
+> +}
+> +
+> +# Sum the number of allocated inodes in each AG in a fs.
+> +inumbers_ag()
+> +{
+> +	local agcount="$1"
+> +	local batchsize="$2"
+> +	local mount="$3"
+> +	local v_flag="$4"
+> +
+> +	seq 0 $((agcount - 1)) | while read ag; do
+> +		$XFS_IO_PROG -c "inumbers -a $ag -n $batchsize $v_flag" $mount
+> +	done | grep alloccount | awk '{x += $3} END { print(x) }'
+> +}
+> +
+> +# Sum the number of allocated inodes in the whole fs all at once.
+> +inumbers_fs()
+> +{
+> +	local dir="$1"
+> +	local v_flag="$2"
+> +
+> +	$XFS_IO_PROG -c "inumbers $v_flag" "$dir" | grep alloccount | \
+> +		awk '{x += $3} END { print(x) }'
+> +}
+> +
+> +# print the number of inodes counted by inumbers
+> +inumbers_count()
+> +{
+> +	local expect="$1"
+> +
+> +	# There probably aren't more than 10 hidden inodes, right?
+> +	local tolerance=10
+> +
+> +	# Force all background inode cleanup
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 1a3502a9bc1f..416680b1bf0c 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -133,6 +133,7 @@ struct reclaim_state {
- 	unsigned long	reclaimed_pages;	/* pages freed by shrinkers */
- 	unsigned long	scanned_objects;	/* quantity of work done */ 
- 	unsigned long	deferred_objects;	/* work that wasn't done */
-+	bool		need_backoff;		/* tell kswapd to slow down */
- };
- 
- #ifdef __KERNEL__
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 4dc8e333f2c6..029dba76ee5a 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2844,8 +2844,16 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 			 * implies that pages are cycling through the LRU
- 			 * faster than they are written so also forcibly stall.
- 			 */
--			if (sc->nr.immediate)
-+			if (sc->nr.immediate) {
- 				congestion_wait(BLK_RW_ASYNC, HZ/10);
-+			} else if (reclaim_state && reclaim_state->need_backoff) {
-+				/*
-+				 * Ditto, but it's a slab cache that is cycling
-+				 * through the LRU faster than they are written
-+				 */
-+				congestion_wait(BLK_RW_ASYNC, HZ/10);
-+				reclaim_state->need_backoff = false;
-+			}
- 		}
- 
- 		/*
--- 
-2.22.0
+Comment took me a second to grok. This refers to unlinked inode cleanup,
+right?
+
+> +	_scratch_cycle_mount
+> +
+> +	bstat_versions | while read v_tag v_flag; do
+> +		echo -n "inumbers all($v_tag): "
+> +		nr=$(inumbers_fs $SCRATCH_MNT $v_flag)
+> +		_within_tolerance "inumbers" $nr $expect $tolerance -v
+> +
+> +		local agcount=$(_xfs_mount_agcount $SCRATCH_MNT)
+> +		for batchsize in 64 2 1; do
+
+Perhaps we should stuff a value > than the per-record inode count in
+here as well.
+
+> +			echo -n "inumbers $batchsize($v_tag): "
+> +			nr=$(inumbers_ag $agcount $batchsize $SCRATCH_MNT $v_flag)
+> +			_within_tolerance "inumbers" $nr $expect $tolerance -v
+> +		done
+> +	done
+> +}
+> +
+> +# compare the src/bstat output against the xfs_io bstat output
+
+This compares actual inode numbers, right? If so, I'd point that out in
+the comment.
+
+> +bstat_compare()
+> +{
+> +	bstat_versions | while read v_tag v_flag; do
+> +		diff -u <(./src/bstat $SCRATCH_MNT | grep ino | awk '{print $2}') \
+> +			<($XFS_IO_PROG -c "bulkstat $v_flag" $SCRATCH_MNT | grep ino | awk '{print $3}')
+> +	done
+> +}
+> +
+...
+> diff --git a/tests/xfs/745 b/tests/xfs/745
+> new file mode 100755
+> index 00000000..6931d46b
+> --- /dev/null
+> +++ b/tests/xfs/745
+> @@ -0,0 +1,44 @@
+> +#! /bin/bash
+> +# SPDX-License-Identifier: GPL-2.0+
+> +# Copyright (c) 2019 Oracle, Inc.  All Rights Reserved.
+> +#
+> +# FS QA Test No. 745
+> +#
+> +# Regression test for a long-standing bug in BULKSTAT and INUMBERS where
+> +# the kernel fails to write thew new @lastip value back to userspace if
+> +# @ocount is NULL.
+> +#
+
+I think it would be helpful to reference the upstream fix here, which
+IIRC is commit f16fe3ecde62 ("xfs: bulkstat should copy lastip whenever
+userspace supplies one"). Otherwise this test looks fine to me.
+
+Brian
+
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
+> +echo "QA output created by $seq"
+> +
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1	# failure is the default!
+> +trap "_cleanup; exit \$status" 0 1 2 3 15
+> +
+> +_cleanup()
+> +{
+> +    cd /
+> +    rm -f $tmp.*
+> +}
+> +
+> +# get standard environment, filters and checks
+> +. ./common/rc
+> +. ./common/filter
+> +
+> +_require_test_program "bulkstat_null_ocount"
+> +
+> +# real QA test starts here
+> +
+> +_supported_fs xfs
+> +_supported_os Linux
+> +
+> +rm -f $seqres.full
+> +
+> +echo "Silence is golden."
+> +src/bulkstat_null_ocount $TEST_DIR
+> +
+> +# success, all done
+> +status=0
+> +exit
+> diff --git a/tests/xfs/745.out b/tests/xfs/745.out
+> new file mode 100644
+> index 00000000..ce947de2
+> --- /dev/null
+> +++ b/tests/xfs/745.out
+> @@ -0,0 +1,2 @@
+> +QA output created by 745
+> +Silence is golden.
+> diff --git a/tests/xfs/group b/tests/xfs/group
+> index 270d82ff..ef0cf92c 100644
+> --- a/tests/xfs/group
+> +++ b/tests/xfs/group
+> @@ -506,3 +506,5 @@
+>  506 auto quick health
+>  507 clone
+>  508 auto quick quota
+> +744 auto ioctl quick
+> +745 auto ioctl quick
+> 
