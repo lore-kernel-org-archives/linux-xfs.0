@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35254 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729354AbfHACSL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:11 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33331 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729026AbfHACSK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:10 -0400
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 01/24] mm: directed shrinker work deferral
-Date: Thu,  1 Aug 2019 12:17:29 +1000
-Message-Id: <20190801021752.4986-2-david@fromorbit.com>
+Subject: [PATCH 06/24] mm: reclaim_state records pages reclaimed, not slabs
+Date: Thu,  1 Aug 2019 12:17:34 +1000
+Message-Id: <20190801021752.4986-7-david@fromorbit.com>
 In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
 References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -19,65 +19,102 @@ Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Introduce a mechanism for ->count_objects() to indicate to the
-shrinker infrastructure that the reclaim context will not allow
-scanning work to be done and so the work it decides is necessary
-needs to be deferred.
-
-This simplifies the code by separating out the accounting of
-deferred work from the actual doing of the work, and allows better
-decisions to be made by the shrinekr control logic on what action it
-can take.
+Name change only, no logic changes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/shrinker.h | 7 +++++++
- mm/vmscan.c              | 8 ++++++++
- 2 files changed, 15 insertions(+)
+ fs/inode.c           | 2 +-
+ include/linux/swap.h | 5 +++--
+ mm/slab.c            | 2 +-
+ mm/slob.c            | 2 +-
+ mm/slub.c            | 2 +-
+ mm/vmscan.c          | 4 ++--
+ 6 files changed, 9 insertions(+), 8 deletions(-)
 
-diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-index 9443cafd1969..af78c475fc32 100644
---- a/include/linux/shrinker.h
-+++ b/include/linux/shrinker.h
-@@ -31,6 +31,13 @@ struct shrink_control {
+diff --git a/fs/inode.c b/fs/inode.c
+index 0f1e3b563c47..8c70f0643218 100644
+--- a/fs/inode.c
++++ b/fs/inode.c
+@@ -762,7 +762,7 @@ static enum lru_status inode_lru_isolate(struct list_head *item,
+ 			else
+ 				__count_vm_events(PGINODESTEAL, reap);
+ 			if (current->reclaim_state)
+-				current->reclaim_state->reclaimed_slab += reap;
++				current->reclaim_state->reclaimed_pages += reap;
+ 		}
+ 		iput(inode);
+ 		spin_lock(lru_lock);
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index de2c67a33b7e..978e6cd5c05a 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -126,10 +126,11 @@ union swap_header {
  
- 	/* current memcg being shrunk (for memcg aware shrinkers) */
- 	struct mem_cgroup *memcg;
-+
-+	/*
-+	 * set by ->count_objects if reclaim context prevents reclaim from
-+	 * occurring. This allows the shrinker to immediately defer all the
-+	 * work and not even attempt to scan the cache.
-+	 */
-+	bool will_defer;
+ /*
+  * current->reclaim_state points to one of these when a task is running
+- * memory reclaim
++ * memory reclaim. It is typically used by shrinkers to return reclaim
++ * information back to the main vmscan loop.
+  */
+ struct reclaim_state {
+-	unsigned long reclaimed_slab;
++	unsigned long	reclaimed_pages;	/* pages freed by shrinkers */
  };
  
- #define SHRINK_STOP (~0UL)
+ #ifdef __KERNEL__
+diff --git a/mm/slab.c b/mm/slab.c
+index 9df370558e5d..abc97e340f6d 100644
+--- a/mm/slab.c
++++ b/mm/slab.c
+@@ -1396,7 +1396,7 @@ static void kmem_freepages(struct kmem_cache *cachep, struct page *page)
+ 	page->mapping = NULL;
+ 
+ 	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += 1 << order;
++		current->reclaim_state->reclaimed_pages += 1 << order;
+ 	uncharge_slab_page(page, order, cachep);
+ 	__free_pages(page, order);
+ }
+diff --git a/mm/slob.c b/mm/slob.c
+index 7f421d0ca9ab..c46ce297805e 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -208,7 +208,7 @@ static void *slob_new_pages(gfp_t gfp, int order, int node)
+ static void slob_free_pages(void *b, int order)
+ {
+ 	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += 1 << order;
++		current->reclaim_state->reclaimed_pages += 1 << order;
+ 	free_pages((unsigned long)b, order);
+ }
+ 
+diff --git a/mm/slub.c b/mm/slub.c
+index e6c030e47364..a3e4bc62383b 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -1743,7 +1743,7 @@ static void __free_slab(struct kmem_cache *s, struct page *page)
+ 
+ 	page->mapping = NULL;
+ 	if (current->reclaim_state)
+-		current->reclaim_state->reclaimed_slab += pages;
++		current->reclaim_state->reclaimed_pages += pages;
+ 	uncharge_slab_page(page, order, s);
+ 	__free_pages(page, order);
+ }
 diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 44df66a98f2a..ae3035fe94bc 100644
+index d5ce26b4d49d..231ddcfcd046 100644
 --- a/mm/vmscan.c
 +++ b/mm/vmscan.c
-@@ -541,6 +541,13 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
- 	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
- 				   freeable, delta, total_scan, priority);
+@@ -2765,8 +2765,8 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 		} while ((memcg = mem_cgroup_iter(root, memcg, &reclaim)));
  
-+	/*
-+	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
-+	 * defer the work to a context that can scan the cache.
-+	 */
-+	if (shrinkctl->will_defer)
-+		goto done;
-+
- 	/*
- 	 * Normally, we should not scan less than batch_size objects in one
- 	 * pass to avoid too frequent shrinker calls, but if the slab has less
-@@ -575,6 +582,7 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
- 		cond_resched();
- 	}
+ 		if (reclaim_state) {
+-			sc->nr_reclaimed += reclaim_state->reclaimed_slab;
+-			reclaim_state->reclaimed_slab = 0;
++			sc->nr_reclaimed += reclaim_state->reclaimed_pages;
++			reclaim_state->reclaimed_pages = 0;
+ 		}
  
-+done:
- 	if (next_deferred >= scanned)
- 		next_deferred -= scanned;
- 	else
+ 		/* Record the subtree's reclaim efficiency */
 -- 
 2.22.0
