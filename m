@@ -2,99 +2,164 @@ Return-Path: <SRS0=GEJR=V5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1F457C433FF
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Aug 2019 01:37:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B021BC19759
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Aug 2019 07:01:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EBCD5206A2
-	for <linux-xfs@archiver.kernel.org>; Thu,  1 Aug 2019 01:37:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71CBA2089E
+	for <linux-xfs@archiver.kernel.org>; Thu,  1 Aug 2019 07:01:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="BE/FS0Mg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729251AbfHABhN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 31 Jul 2019 21:37:13 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:43990 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728014AbfHABhN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 21:37:13 -0400
-X-IronPort-AV: E=Sophos;i="5.64,332,1559491200"; 
-   d="scan'208";a="72632467"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 01 Aug 2019 09:37:11 +0800
-Received: from G08CNEXCHPEKD01.g08.fujitsu.local (unknown [10.167.33.80])
-        by cn.fujitsu.com (Postfix) with ESMTP id 330514CDD99E;
-        Thu,  1 Aug 2019 09:37:07 +0800 (CST)
-Received: from [10.167.225.140] (10.167.225.140) by
- G08CNEXCHPEKD01.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
- (TLS) id 14.3.439.0; Thu, 1 Aug 2019 09:37:15 +0800
-Subject: Re: [RFC PATCH 0/7] xfs: add reflink & dedupe support for fsdax.
-To:     Goldwyn Rodrigues <rgoldwyn@suse.de>
-CC:     <linux-xfs@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
-        <darrick.wong@oracle.com>, <linux-kernel@vger.kernel.org>,
-        <gujx@cn.fujitsu.com>, <david@fromorbit.com>,
-        <qi.fuli@fujitsu.com>, <caoj.fnst@cn.fujitsu.com>
-References: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
- <20190731203324.7vjwlejmwpghpvqi@fiona>
-From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Message-ID: <800ff77a-7cd1-5fa1-fcf7-e41264a3f189@cn.fujitsu.com>
-Date:   Thu, 1 Aug 2019 09:37:04 +0800
+        id S1730420AbfHAHBs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 1 Aug 2019 03:01:48 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:10207 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730306AbfHAHBs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 03:01:48 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d428e5c0000>; Thu, 01 Aug 2019 00:01:48 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate101.nvidia.com (PGP Universal service);
+  Thu, 01 Aug 2019 00:01:47 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate101.nvidia.com on Thu, 01 Aug 2019 00:01:47 -0700
+Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 1 Aug
+ 2019 07:01:46 +0000
+Subject: Re: [PATCH v4 1/3] mm/gup: add make_dirty arg to
+ put_user_pages_dirty_lock()
+To:     Christoph Hellwig <hch@lst.de>, <john.hubbard@gmail.com>
+CC:     Andrew Morton <akpm@linux-foundation.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Christian Benvenuti <benve@cisco.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>,
+        Jerome Glisse <jglisse@redhat.com>,
+        "Kirill A . Shutemov" <kirill@shutemov.name>,
+        Matthew Wilcox <willy@infradead.org>,
+        Michal Hocko <mhocko@kernel.org>,
+        Mike Marciniszyn <mike.marciniszyn@intel.com>,
+        Mike Rapoport <rppt@linux.ibm.com>,
+        <linux-block@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-mm@kvack.org>, <linux-xfs@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>
+References: <20190730205705.9018-1-jhubbard@nvidia.com>
+ <20190730205705.9018-2-jhubbard@nvidia.com> <20190801060755.GA14893@lst.de>
+From:   John Hubbard <jhubbard@nvidia.com>
+X-Nvconfidentiality: public
+Message-ID: <36713a8a-ac94-8af7-bedf-a3da6c6132a7@nvidia.com>
+Date:   Thu, 1 Aug 2019 00:01:46 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.2.1
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190731203324.7vjwlejmwpghpvqi@fiona>
-Content-Type: text/plain; charset="UTF-8"; format="flowed"
+In-Reply-To: <20190801060755.GA14893@lst.de>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="UTF-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.225.140]
-X-yoursite-MailScanner-ID: 330514CDD99E.AAB55
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1564642908; bh=my/85jeGWSZJHtRlBuXzE4k0EyRLwJrmf2kurssg82c=;
+        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=BE/FS0MgD5AYk51ouyHNs4X8FqW/AlJFw51Q8R1TRI2GD6IOdn/1tc0f8d17PnQuR
+         0Z29vU6LNM4vLOhRI1ICsnxx9CJbaK67B4+P50dZEZC3TKrxh+CbRgPy1II2gJN1Ox
+         sgjPcluxAyQuF8zD1tmNbaF3orKKsCLf8LGjBkZ2Dd6uk8L1cJZx0sa6gjml9A/pvl
+         l8lHfekfgfuMtiHYmcIuX2d5w4E0873CGNZaTN60cvh/hpRl524bvtSwNb0l1RblrJ
+         aYJKWtVExKSnCUM8qF6X0x0Cyxcn7j9MhMPGq1/IrqL8k30zP0Fu0rWtpPEmGYGs7S
+         JL5/+DN+tFZeQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190801013704.CiAb-8Vbc_UHo6TcwdPGuKoPIr3IqD9VnSvCRboJe8o@z>
+Message-ID: <20190801070146.cMw71GUwyN4kEs9xMm4H4-ppUODh5W_ne7ma6K36Niw@z>
 
-
-
-On 8/1/19 4:33 AM, Goldwyn Rodrigues wrote:
-> On 19:49 31/07, Shiyang Ruan wrote:
->> This patchset aims to take care of this issue to make reflink and dedupe
->> work correctly in XFS.
->>
->> It is based on Goldwyn's patchsets: "v4 Btrfs dax support" and "Btrfs
->> iomap".  I picked up some patches related and made a few fix to make it
->> basically works fine.
->>
->> For dax framework:
->>    1. adapt to the latest change in iomap.
->>
->> For XFS:
->>    1. report the source address and set IOMAP_COW type for those write
->>       operations that need COW.
->>    2. update extent list at the end.
->>    3. add file contents comparison function based on dax framework.
->>    4. use xfs_break_layouts() to support dax.
+On 7/31/19 11:07 PM, Christoph Hellwig wrote:
+> On Tue, Jul 30, 2019 at 01:57:03PM -0700, john.hubbard@gmail.com wrote:
+>> @@ -40,10 +40,7 @@
+>>  static void __qib_release_user_pages(struct page **p, size_t num_pages,
+>>  				     int dirty)
+>>  {
+>> -	if (dirty)
+>> -		put_user_pages_dirty_lock(p, num_pages);
+>> -	else
+>> -		put_user_pages(p, num_pages);
+>> +	put_user_pages_dirty_lock(p, num_pages, dirty);
+>>  }
 > 
-> Shiyang,
-> 
-> I think you used the older patches which does not contain the iomap changes
-> which would call iomap_begin() with two iomaps. I have it in the btrfs-iomap
+> __qib_release_user_pages should be removed now as a direct call to
+> put_user_pages_dirty_lock is a lot more clear.
 
-Oh, Sorry for my carelessness.  This patchset is built on your "Btrfs 
-iomap".  I didn't point it out in cover letter.
-
-> branch and plan to update it today. It is built on v5.3-rcX, so it should
-> contain the changes which moves the iomap code to the different directory.
-> I will build the dax patches on top of that.
-> However, we are making a big dependency chain here 
-Don't worry.  It's fine for me.  I'll follow your updates.
+OK.
 
 > 
+>> index 0b0237d41613..62e6ffa9ad78 100644
+>> --- a/drivers/infiniband/hw/usnic/usnic_uiom.c
+>> +++ b/drivers/infiniband/hw/usnic/usnic_uiom.c
+>> @@ -75,10 +75,7 @@ static void usnic_uiom_put_pages(struct list_head *chunk_list, int dirty)
+>>  		for_each_sg(chunk->page_list, sg, chunk->nents, i) {
+>>  			page = sg_page(sg);
+>>  			pa = sg_phys(sg);
+>> -			if (dirty)
+>> -				put_user_pages_dirty_lock(&page, 1);
+>> -			else
+>> -				put_user_page(page);
+>> +			put_user_pages_dirty_lock(&page, 1, dirty);
+>>  			usnic_dbg("pa: %pa\n", &pa);
+> 
+> There is a pre-existing bug here, as this needs to use the sg_page
+> iterator.  Probably worth throwing in a fix into your series while you
+> are at it.
 
+The amount of scatterlist code I've written is approximately zero lines,
++/- a few lines. :)  I thought for_each_sg() *was* the sg_page iterator...
+
+I'll be glad to post a fix, but I'm not yet actually spotting the bug! heh
+
+> 
+>> @@ -63,15 +63,7 @@ struct siw_mem *siw_mem_id2obj(struct siw_device *sdev, int stag_index)
+>>  static void siw_free_plist(struct siw_page_chunk *chunk, int num_pages,
+>>  			   bool dirty)
+>>  {
+>> -	struct page **p = chunk->plist;
+>> -
+>> -	while (num_pages--) {
+>> -		if (!PageDirty(*p) && dirty)
+>> -			put_user_pages_dirty_lock(p, 1);
+>> -		else
+>> -			put_user_page(*p);
+>> -		p++;
+>> -	}
+>> +	put_user_pages_dirty_lock(chunk->plist, num_pages, dirty);
+> 
+> siw_free_plist should just go away now.
+
+OK, yes.
+
+> 
+> Otherwise this looks good to me.
+> 
+
+Great, I'll make the above changes and post an updated series with your
+Reviewed-by, and Bjorn's ACK for patch #3.
+
+Next: I've just finished sweeping through a bunch of patches and applying this
+where applicable, so now that this API seems acceptable, I'll post another
+chunk of put_user_page*() conversions.
+
+thanks,
 -- 
-Thanks,
-Shiyang Ruan.
-
-
+John Hubbard
+NVIDIA
