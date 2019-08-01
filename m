@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60926 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:32913 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728398AbfHACSC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:02 -0400
+        by vger.kernel.org with ESMTP id S1728677AbfHACSE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:04 -0400
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 16/24] xfs: Lower CIL flush limit for large logs
-Date: Thu,  1 Aug 2019 12:17:44 +1000
-Message-Id: <20190801021752.4986-17-david@fromorbit.com>
+Subject: [PATCH 02/24] shrinkers: use will_defer for GFP_NOFS sensitive shrinkers
+Date: Thu,  1 Aug 2019 12:17:30 +1000
+Message-Id: <20190801021752.4986-3-david@fromorbit.com>
 In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
 References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -19,68 +19,213 @@ Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-The current CIL size aggregation limit is 1/8th the log size. This
-means for large logs we might be aggregating at least 250MB of dirty objects
-in memory before the CIL is flushed to the journal. With CIL shadow
-buffers sitting around, this means the CIL is often consuming >500MB
-of temporary memory that is all allocated under GFP_NOFS conditions.
+For shrinkers that currently avoid scanning when called under
+GFP_NOFS contexts, conver them to use the new ->will_defer flag
+rather than checking and returning errors during scans.
 
-FLushing the CIL can take some time to do if there is other IO
-ongoing, and can introduce substantial log force latency by itself.
-It also pins the memory until the objects are in the AIL and can be
-written back and reclaimed by shrinkers. Hence this threshold also
-tends to determine the minimum amount of memory XFS can operate in
-under heavy modification without triggering the OOM killer.
-
-Modify the CIL space limit to prevent such huge amounts of pinned
-metadata from aggregating. We can 2MB of log IO in flight at once,
-so limit aggregation to 8x this size (arbitrary). This has some
-impact on performance (5-10% decrease on 16-way fsmark) and
-increases the amount of log traffic (~50% on same workload) but it
-is necessary to prevent rampant OOM killing under iworkloads that
-modify large amounts of metadata under heavy memory pressure.
-
-This was found via trace analysis or AIL behaviour. e.g. insertion
-from a single CIL flush:
-
-xfs_ail_insert: old lsn 0/0 new lsn 1/3033090 type XFS_LI_INODE flags IN_AIL
-
-$ grep xfs_ail_insert /mnt/scratch/s.t |grep "new lsn 1/3033090" |wc -l
-1721823
-$
-
-So there were 1.7 million objects inserted into the AIL from this
-CIL checkpoint, the first at 2323.392108, the last at 2325.667566 which
-was the end of the trace (i.e. it hadn't finished). Clearly a major
-problem.
-
-XXX: Need to try bigger sizes to see where the performance/stability
-boundary lies to see if some of the losses can be regained and log
-bandwidth increases minimised.
-
-XXX: Ideally this threshold should slide with memory pressure. We
-can allow large amounts of metadata to build up when there is no
-memory pressure, but then close the window as memory pressure builds
-up to reduce the footprint of the CIL until memory pressure passes.
+This makes it very clear that these shrinkers are not doing any work
+because of the context limitations, not because there is no work
+that can be done.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_priv.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/staging/android/ashmem.c |  8 ++++----
+ fs/gfs2/glock.c                  |  5 +++--
+ fs/gfs2/quota.c                  |  6 +++---
+ fs/nfs/dir.c                     |  6 +++---
+ fs/super.c                       |  6 +++---
+ fs/xfs/xfs_buf.c                 |  4 ++++
+ fs/xfs/xfs_qm.c                  | 11 ++++++++---
+ net/sunrpc/auth.c                |  5 ++---
+ 8 files changed, 30 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index b880c23cb6e4..87c6191daef7 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -329,7 +329,8 @@ struct xfs_cil {
-  * enforced to ensure we stay within our maximum checkpoint size bounds.
-  * threshold, yet give us plenty of space for aggregation on large logs.
-  */
--#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
-+#define XLOG_CIL_SPACE_LIMIT(log)	\
-+	min_t(int, (log)->l_logsize >> 3, XLOG_TOTAL_REC_SHIFT(log) << 3)
+diff --git a/drivers/staging/android/ashmem.c b/drivers/staging/android/ashmem.c
+index 74d497d39c5a..fd9027dbd28c 100644
+--- a/drivers/staging/android/ashmem.c
++++ b/drivers/staging/android/ashmem.c
+@@ -438,10 +438,6 @@ ashmem_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ {
+ 	unsigned long freed = 0;
  
- /*
-  * ticket grant locks, queues and accounting have their own cachlines
+-	/* We might recurse into filesystem code, so bail out if necessary */
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+-
+ 	if (!mutex_trylock(&ashmem_mutex))
+ 		return -1;
+ 
+@@ -478,6 +474,10 @@ ashmem_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ static unsigned long
+ ashmem_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+ {
++	/* We might recurse into filesystem code, so bail out if necessary */
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->will_defer = true;
++
+ 	/*
+ 	 * note that lru_count is count of pages on the lru, not a count of
+ 	 * objects on the list. This means the scan function needs to return the
+diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
+index e23fb8b7b020..08c95172d0e5 100644
+--- a/fs/gfs2/glock.c
++++ b/fs/gfs2/glock.c
+@@ -1517,14 +1517,15 @@ static long gfs2_scan_glock_lru(int nr)
+ static unsigned long gfs2_glock_shrink_scan(struct shrinker *shrink,
+ 					    struct shrink_control *sc)
+ {
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+ 	return gfs2_scan_glock_lru(sc->nr_to_scan);
+ }
+ 
+ static unsigned long gfs2_glock_shrink_count(struct shrinker *shrink,
+ 					     struct shrink_control *sc)
+ {
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->will_defer = true;
++
+ 	return vfs_pressure_ratio(atomic_read(&lru_count));
+ }
+ 
+diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+index 69c4b77f127b..d35beda906e8 100644
+--- a/fs/gfs2/quota.c
++++ b/fs/gfs2/quota.c
+@@ -166,9 +166,6 @@ static unsigned long gfs2_qd_shrink_scan(struct shrinker *shrink,
+ 	LIST_HEAD(dispose);
+ 	unsigned long freed;
+ 
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+-
+ 	freed = list_lru_shrink_walk(&gfs2_qd_lru, sc,
+ 				     gfs2_qd_isolate, &dispose);
+ 
+@@ -180,6 +177,9 @@ static unsigned long gfs2_qd_shrink_scan(struct shrinker *shrink,
+ static unsigned long gfs2_qd_shrink_count(struct shrinker *shrink,
+ 					  struct shrink_control *sc)
+ {
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->will_defer = true;
++
+ 	return vfs_pressure_ratio(list_lru_shrink_count(&gfs2_qd_lru, sc));
+ }
+ 
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index 8d501093660f..73735ab1d623 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -2202,10 +2202,7 @@ unsigned long
+ nfs_access_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+ {
+ 	int nr_to_scan = sc->nr_to_scan;
+-	gfp_t gfp_mask = sc->gfp_mask;
+ 
+-	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
+-		return SHRINK_STOP;
+ 	return nfs_do_access_cache_scan(nr_to_scan);
+ }
+ 
+@@ -2213,6 +2210,9 @@ nfs_access_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+ unsigned long
+ nfs_access_cache_count(struct shrinker *shrink, struct shrink_control *sc)
+ {
++	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
++		sc->will_defer = true;
++
+ 	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
+ }
+ 
+diff --git a/fs/super.c b/fs/super.c
+index 113c58f19425..66dd2af6cfde 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -73,9 +73,6 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+ 	 * Deadlock avoidance.  We may hold various FS locks, and we don't want
+ 	 * to recurse into the FS that called us in clear_inode() and friends..
+ 	 */
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+-
+ 	if (!trylock_super(sb))
+ 		return SHRINK_STOP;
+ 
+@@ -140,6 +137,9 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+ 		return 0;
+ 	smp_rmb();
+ 
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->will_defer = true;
++
+ 	if (sb->s_op && sb->s_op->nr_cached_objects)
+ 		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index ca0849043f54..6e0f76532535 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1680,6 +1680,10 @@ xfs_buftarg_shrink_count(
+ {
+ 	struct xfs_buftarg	*btp = container_of(shrink,
+ 					struct xfs_buftarg, bt_shrinker);
++
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->will_defer = true;
++
+ 	return list_lru_shrink_count(&btp->bt_lru, sc);
+ }
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index 5e7a37f0cf84..13c842e8f13b 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -502,9 +502,6 @@ xfs_qm_shrink_scan(
+ 	unsigned long		freed;
+ 	int			error;
+ 
+-	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) != (__GFP_FS|__GFP_DIRECT_RECLAIM))
+-		return 0;
+-
+ 	INIT_LIST_HEAD(&isol.buffers);
+ 	INIT_LIST_HEAD(&isol.dispose);
+ 
+@@ -534,6 +531,14 @@ xfs_qm_shrink_count(
+ 	struct xfs_quotainfo	*qi = container_of(shrink,
+ 					struct xfs_quotainfo, qi_shrinker);
+ 
++	/*
++	 * __GFP_DIRECT_RECLAIM is used here to avoid blocking kswapd
++	 */
++	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) !=
++					(__GFP_FS|__GFP_DIRECT_RECLAIM)) {
++		sc->will_defer = true;
++	}
++
+ 	return list_lru_shrink_count(&qi->qi_lru, sc);
+ }
+ 
+diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
+index cdb05b48de44..6babcbac4a00 100644
+--- a/net/sunrpc/auth.c
++++ b/net/sunrpc/auth.c
+@@ -527,9 +527,6 @@ static unsigned long
+ rpcauth_cache_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ 
+ {
+-	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
+-		return SHRINK_STOP;
+-
+ 	/* nothing left, don't come back */
+ 	if (list_empty(&cred_unused))
+ 		return SHRINK_STOP;
+@@ -541,6 +538,8 @@ static unsigned long
+ rpcauth_cache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+ 
+ {
++	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
++		sc->will_defer = true;
+ 	return number_cred_unused * sysctl_vfs_cache_pressure / 100;
+ }
+ 
 -- 
 2.22.0
