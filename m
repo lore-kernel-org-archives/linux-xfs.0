@@ -1,76 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:33432 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730502AbfHAOCH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 10:02:07 -0400
-Date: Thu, 1 Aug 2019 07:01:46 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 5/5] xfs: test new v5 bulkstat commands
-Message-ID: <20190801140146.GC1561054@magnolia>
-References: <156462375516.2945299.16564635037236083118.stgit@magnolia>
- <156462379043.2945299.17354996626313190310.stgit@magnolia>
- <20190801104814.GC59093@bfoster>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190801104814.GC59093@bfoster>
+Received: from www262.sakura.ne.jp ([202.181.97.72]:50487 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725379AbfHAKGx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 06:06:53 -0400
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: [PATCH] fs: xfs: xfs_log: Don't use KM_MAYFAIL at xfs_log_reserve().
+Date: Thu,  1 Aug 2019 19:06:35 +0900
+Message-Id: <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
+In-Reply-To: <20190729215657.GI7777@dread.disaster.area>
+References: <20190729215657.GI7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+To: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-On Thu, Aug 01, 2019 at 06:48:15AM -0400, Brian Foster wrote:
-> On Wed, Jul 31, 2019 at 06:43:10PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Check that the new v5 bulkstat commands do everything the old one do,
-> > and then make sure the new functionality actually works.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  .gitignore                 |    1 
-> >  src/Makefile               |    2 
-> >  src/bulkstat_null_ocount.c |   61 +++++++++
-> >  tests/xfs/744              |  215 ++++++++++++++++++++++++++++++++
-> >  tests/xfs/744.out          |  297 ++++++++++++++++++++++++++++++++++++++++++++
-> >  tests/xfs/745              |   47 +++++++
-> >  tests/xfs/745.out          |    2 
-> >  tests/xfs/group            |    2 
-> >  8 files changed, 626 insertions(+), 1 deletion(-)
-> >  create mode 100644 src/bulkstat_null_ocount.c
-> >  create mode 100755 tests/xfs/744
-> >  create mode 100644 tests/xfs/744.out
-> >  create mode 100755 tests/xfs/745
-> >  create mode 100644 tests/xfs/745.out
-> > 
-> > 
-> ...
-> > diff --git a/tests/xfs/group b/tests/xfs/group
-> > index 270d82ff..ef0cf92c 100644
-> > --- a/tests/xfs/group
-> > +++ b/tests/xfs/group
-> > @@ -506,3 +506,5 @@
-> >  506 auto quick health
-> >  507 clone
-> >  508 auto quick quota
-> > +744 auto ioctl quick
-> > +745 auto ioctl quick
-> > 
-> 
-> One quick note that xfs/744 runs in ~68 seconds in my (low resource)
-> test VM. Not a problem in and of itself, but it seems slightly long for
-> the quick group. Can somebody remind me of the quick group criteria?
-> 
-> FWIW if I kick off a quick group run, the first 10-15 tests complete in
-> 10s or so or less with the exception of generic/013, which takes over a
-> minute. So perhaps anything under a minute or so is fine..? Either way,
-> that can be easily changed on merge if appropriate:
+When the system is close-to-OOM, fsync() may fail due to -ENOMEM because
+xfs_log_reserve() is using KM_MAYFAIL. It is a bad thing to fail writeback
+operation due to user-triggerable OOM condition. Since we are not using
+KM_MAYFAIL at xfs_trans_alloc() before calling xfs_log_reserve(), let's
+use the same flags at xfs_log_reserve().
 
-Hmm, yeah, that's probably too slow for quick...
+  oom-torture: page allocation failure: order:0, mode:0x46c40(GFP_NOFS|__GFP_NOWARN|__GFP_RETRY_MAYFAIL|__GFP_COMP), nodemask=(null)
+  CPU: 7 PID: 1662 Comm: oom-torture Kdump: loaded Not tainted 5.3.0-rc2+ #925
+  Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00
+  Call Trace:
+   dump_stack+0x67/0x95
+   warn_alloc+0xa9/0x140
+   __alloc_pages_slowpath+0x9a8/0xbce
+   __alloc_pages_nodemask+0x372/0x3b0
+   alloc_slab_page+0x3a/0x8d0
+   new_slab+0x330/0x420
+   ___slab_alloc.constprop.94+0x879/0xb00
+   __slab_alloc.isra.89.constprop.93+0x43/0x6f
+   kmem_cache_alloc+0x331/0x390
+   kmem_zone_alloc+0x9f/0x110 [xfs]
+   kmem_zone_alloc+0x9f/0x110 [xfs]
+   xlog_ticket_alloc+0x33/0xd0 [xfs]
+   xfs_log_reserve+0xb4/0x410 [xfs]
+   xfs_trans_reserve+0x1d1/0x2b0 [xfs]
+   xfs_trans_alloc+0xc9/0x250 [xfs]
+   xfs_setfilesize_trans_alloc.isra.27+0x44/0xc0 [xfs]
+   xfs_submit_ioend.isra.28+0xa5/0x180 [xfs]
+   xfs_vm_writepages+0x76/0xa0 [xfs]
+   do_writepages+0x17/0x80
+   __filemap_fdatawrite_range+0xc1/0xf0
+   file_write_and_wait_range+0x53/0xa0
+   xfs_file_fsync+0x87/0x290 [xfs]
+   vfs_fsync_range+0x37/0x80
+   do_fsync+0x38/0x60
+   __x64_sys_fsync+0xf/0x20
+   do_syscall_64+0x4a/0x1c0
+   entry_SYSCALL_64_after_hwframe+0x49/0xbe
 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+ fs/xfs/xfs_log.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-Thanks for the review!
-
---D
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 00e9f5c388d3..7fc3c1ad36bc 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -429,10 +429,7 @@ xfs_log_reserve(
+ 
+ 	ASSERT(*ticp == NULL);
+ 	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent,
+-				KM_SLEEP | KM_MAYFAIL);
+-	if (!tic)
+-		return -ENOMEM;
+-
++				KM_SLEEP);
+ 	*ticp = tic;
+ 
+ 	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
+-- 
+2.16.5
