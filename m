@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33327 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729137AbfHACSL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:11 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:34930 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728388AbfHACSB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:01 -0400
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 07/24] mm: back off direct reclaim on excessive shrinker deferral
-Date: Thu,  1 Aug 2019 12:17:35 +1000
-Message-Id: <20190801021752.4986-8-david@fromorbit.com>
+Subject: [PATCH 09/24] xfs: don't allow log IO to be throttled
+Date: Thu,  1 Aug 2019 12:17:37 +1000
+Message-Id: <20190801021752.4986-10-david@fromorbit.com>
 In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
 References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -19,101 +19,52 @@ Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When the majority of possible shrinker reclaim work is deferred by
-the shrinkers (e.g. due to GFP_NOFS context), and there is more work
-defered than LRU pages were scanned, back off reclaim if there are
-large amounts of IO in progress.
+Running metadata intensive workloads, I've been seeing the AIL
+pushing getting stuck on pinned buffers and triggering log forces.
+The log force is taking a long time to run because the log IO is
+getting throttled by wbt_wait() - the block layer writeback
+throttle. It's being throttled because there is a huge amount of
+metadata writeback going on which is filling the request queue.
 
-This tends to occur when there are inode cache heavy workloads that
-have little page cache or application memory pressure on filesytems
-like XFS. Inode cache heavy workloads involve lots of IO, so if we
-are getting device congestion it is indicative of memory reclaim
-running up against an IO throughput limitation. in this situation
-we need to throttle direct reclaim as we nee dto wait for kswapd to
-get some of the deferred work done.
+IOWs, we have a priority inversion problem here.
 
-However, if there is no device congestion, then the system is
-keeping up with both the workload and memory reclaim and so there's
-no need to throttle.
+Mark the log IO bios with REQ_IDLE so they don't get throttled
+by the block layer writeback throttle. When we are forcing the CIL,
+we are likely to need to to tens of log IOs, and they are issued as
+fast as they can be build and IO completed. Hence REQ_IDLE is
+appropriate - it's an indication that more IO will follow shortly.
 
-Hence we should only back off scanning for a bit if we see this
-condition and there is block device congestion present.
+And because we also set REQ_SYNC, the writeback throttle will no
+treat log IO the same way it treats direct IO writes - it will not
+throttle them at all. Hence we solve the priority inversion problem
+caused by the writeback throttle being unable to distinguish between
+high priority log IO and background metadata writeback.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/linux/swap.h |  2 ++
- mm/vmscan.c          | 30 +++++++++++++++++++++++++++++-
- 2 files changed, 31 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index 978e6cd5c05a..1a3502a9bc1f 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -131,6 +131,8 @@ union swap_header {
-  */
- struct reclaim_state {
- 	unsigned long	reclaimed_pages;	/* pages freed by shrinkers */
-+	unsigned long	scanned_objects;	/* quantity of work done */ 
-+	unsigned long	deferred_objects;	/* work that wasn't done */
- };
- 
- #ifdef __KERNEL__
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 231ddcfcd046..4dc8e333f2c6 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -569,8 +569,11 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
- 	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
- 	 * defer the work to a context that can scan the cache.
- 	 */
--	if (shrinkctl->will_defer)
-+	if (shrinkctl->will_defer) {
-+		if (current->reclaim_state)
-+			current->reclaim_state->deferred_objects += scan_count;
- 		goto done;
-+	}
- 
- 	/*
- 	 * Normally, we should not scan less than batch_size objects in one
-@@ -605,6 +608,8 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
- 
- 		cond_resched();
- 	}
-+	if (current->reclaim_state)
-+		current->reclaim_state->scanned_objects += scanned_objects;
- 
- done:
- 	/*
-@@ -2766,7 +2771,30 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 
- 		if (reclaim_state) {
- 			sc->nr_reclaimed += reclaim_state->reclaimed_pages;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 00e9f5c388d3..7bdea629e749 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1723,7 +1723,15 @@ xlog_write_iclog(
+ 	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
+ 	iclog->ic_bio.bi_end_io = xlog_bio_end_io;
+ 	iclog->ic_bio.bi_private = iclog;
+-	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_FUA;
 +
-+			/*
-+			 * If we are deferring more work than we are actually
-+			 * doing in the shrinkers, and we are scanning more
-+			 * objects than we are pages, the we have a large amount
-+			 * of slab caches we are deferring work to kswapd for.
-+			 * We better back off here for a while, otherwise
-+			 * we risk priority windup, swap storms and OOM kills
-+			 * once we empty the page lists but still can't make
-+			 * progress on the shrinker memory.
-+			 *
-+			 * kswapd won't ever defer work as it's run under a
-+			 * GFP_KERNEL context and can always do work.
-+			 */
-+			if ((reclaim_state->deferred_objects >
-+					sc->nr_scanned - nr_scanned) &&
-+			    (reclaim_state->deferred_objects >
-+					reclaim_state->scanned_objects)) {
-+				wait_iff_congested(BLK_RW_ASYNC, HZ/50);
-+			}
-+
- 			reclaim_state->reclaimed_pages = 0;
-+			reclaim_state->deferred_objects = 0;
-+			reclaim_state->scanned_objects = 0;
- 		}
++	/*
++	 * We use REQ_SYNC | REQ_IDLE here to tell the block layer the are more
++	 * IOs coming immediately after this one. This prevents the block layer
++	 * writeback throttle from throttling log writes behind background
++	 * metadata writeback and causing priority inversions.
++	 */
++	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC |
++				REQ_IDLE | REQ_FUA;
+ 	if (need_flush)
+ 		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
  
- 		/* Record the subtree's reclaim efficiency */
 -- 
 2.22.0
