@@ -1,85 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:40238 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390785AbfHBCUb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:31 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH 12/34] vmci: convert put_page() to put_user_page*()
-Date: Thu,  1 Aug 2019 19:19:43 -0700
-Message-Id: <20190802022005.5117-13-jhubbard@nvidia.com>
-In-Reply-To: <20190802022005.5117-1-jhubbard@nvidia.com>
-References: <20190802022005.5117-1-jhubbard@nvidia.com>
+Received: from userp2130.oracle.com ([156.151.31.86]:33432 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730502AbfHAOCH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 10:02:07 -0400
+Date: Thu, 1 Aug 2019 07:01:46 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 5/5] xfs: test new v5 bulkstat commands
+Message-ID: <20190801140146.GC1561054@magnolia>
+References: <156462375516.2945299.16564635037236083118.stgit@magnolia>
+ <156462379043.2945299.17354996626313190310.stgit@magnolia>
+ <20190801104814.GC59093@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190801104814.GC59093@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Arnd Bergmann <arnd@arndb.de>, Al Viro <viro@zeniv.linux.org.uk>, "Gustavo A. R. Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
+To: Brian Foster <bfoster@redhat.com>
+Cc: guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: John Hubbard <jhubbard@nvidia.com>
+On Thu, Aug 01, 2019 at 06:48:15AM -0400, Brian Foster wrote:
+> On Wed, Jul 31, 2019 at 06:43:10PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Check that the new v5 bulkstat commands do everything the old one do,
+> > and then make sure the new functionality actually works.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  .gitignore                 |    1 
+> >  src/Makefile               |    2 
+> >  src/bulkstat_null_ocount.c |   61 +++++++++
+> >  tests/xfs/744              |  215 ++++++++++++++++++++++++++++++++
+> >  tests/xfs/744.out          |  297 ++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/745              |   47 +++++++
+> >  tests/xfs/745.out          |    2 
+> >  tests/xfs/group            |    2 
+> >  8 files changed, 626 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/bulkstat_null_ocount.c
+> >  create mode 100755 tests/xfs/744
+> >  create mode 100644 tests/xfs/744.out
+> >  create mode 100755 tests/xfs/745
+> >  create mode 100644 tests/xfs/745.out
+> > 
+> > 
+> ...
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index 270d82ff..ef0cf92c 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -506,3 +506,5 @@
+> >  506 auto quick health
+> >  507 clone
+> >  508 auto quick quota
+> > +744 auto ioctl quick
+> > +745 auto ioctl quick
+> > 
+> 
+> One quick note that xfs/744 runs in ~68 seconds in my (low resource)
+> test VM. Not a problem in and of itself, but it seems slightly long for
+> the quick group. Can somebody remind me of the quick group criteria?
+> 
+> FWIW if I kick off a quick group run, the first 10-15 tests complete in
+> 10s or so or less with the exception of generic/013, which takes over a
+> minute. So perhaps anything under a minute or so is fine..? Either way,
+> that can be easily changed on merge if appropriate:
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+Hmm, yeah, that's probably too slow for quick...
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Note that this effectively changes the code's behavior in
-qp_release_pages(): it now ultimately calls set_page_dirty_lock(),
-instead of set_page_dirty(). This is probably more accurate.
+Thanks for the review!
 
-As Christophe Hellwig put it, "set_page_dirty() is only safe if we are
-dealing with a file backed page where we have reference on the inode it
-hangs off." [1]
-
-[1] https://lore.kernel.org/r/20190723153640.GB720@lst.de
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-Cc: Kees Cook <keescook@chromium.org>
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- drivers/misc/vmw_vmci/vmci_context.c    |  2 +-
- drivers/misc/vmw_vmci/vmci_queue_pair.c | 11 ++---------
- 2 files changed, 3 insertions(+), 10 deletions(-)
-
-diff --git a/drivers/misc/vmw_vmci/vmci_context.c b/drivers/misc/vmw_vmci/vmci_context.c
-index 16695366ec92..9daa52ee63b7 100644
---- a/drivers/misc/vmw_vmci/vmci_context.c
-+++ b/drivers/misc/vmw_vmci/vmci_context.c
-@@ -587,7 +587,7 @@ void vmci_ctx_unset_notify(struct vmci_ctx *context)
- 
- 	if (notify_page) {
- 		kunmap(notify_page);
--		put_page(notify_page);
-+		put_user_page(notify_page);
- 	}
- }
- 
-diff --git a/drivers/misc/vmw_vmci/vmci_queue_pair.c b/drivers/misc/vmw_vmci/vmci_queue_pair.c
-index 8531ae781195..e5434551d0ef 100644
---- a/drivers/misc/vmw_vmci/vmci_queue_pair.c
-+++ b/drivers/misc/vmw_vmci/vmci_queue_pair.c
-@@ -626,15 +626,8 @@ static void qp_release_queue_mutex(struct vmci_queue *queue)
- static void qp_release_pages(struct page **pages,
- 			     u64 num_pages, bool dirty)
- {
--	int i;
--
--	for (i = 0; i < num_pages; i++) {
--		if (dirty)
--			set_page_dirty(pages[i]);
--
--		put_page(pages[i]);
--		pages[i] = NULL;
--	}
-+	put_user_pages_dirty_lock(pages, num_pages, dirty);
-+	memset(pages, 0, num_pages * sizeof(struct page *));
- }
- 
- /*
--- 
-2.22.0
+--D
