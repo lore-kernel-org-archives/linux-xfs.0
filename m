@@ -1,69 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:34693 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728588AbfG3U5L (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 16:57:11 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH v4 2/3] drivers/gpu/drm/via: convert put_page() to put_user_page*()
-Date: Tue, 30 Jul 2019 13:57:04 -0700
-Message-Id: <20190730205705.9018-3-jhubbard@nvidia.com>
-In-Reply-To: <20190730205705.9018-1-jhubbard@nvidia.com>
-References: <20190730205705.9018-1-jhubbard@nvidia.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33599 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729496AbfHACSO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:14 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 21/24] xfs: remove mode from xfs_reclaim_inodes()
+Date: Thu,  1 Aug 2019 12:17:49 +1000
+Message-Id: <20190801021752.4986-22-david@fromorbit.com>
+In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
+References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>, David Airlie <airlied@linux.ie>, Daniel Vetter <daniel@ffwll.ch>, dri-devel@lists.freedesktop.org
+To: linux-xfs@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-From: John Hubbard <jhubbard@nvidia.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+Because it's always SYNC_WAIT now.
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
-
-Also reverse the order of a comparison, in order to placate
-checkpatch.pl.
-
-Cc: David Airlie <airlied@linux.ie>
-Cc: Daniel Vetter <daniel@ffwll.ch>
-Cc: dri-devel@lists.freedesktop.org
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- drivers/gpu/drm/via/via_dmablit.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ fs/xfs/xfs_icache.c | 7 +++----
+ fs/xfs/xfs_icache.h | 2 +-
+ fs/xfs/xfs_mount.c  | 4 ++--
+ fs/xfs/xfs_super.c  | 3 +--
+ 4 files changed, 7 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/gpu/drm/via/via_dmablit.c b/drivers/gpu/drm/via/via_dmablit.c
-index 062067438f1d..b5b5bf0ba65e 100644
---- a/drivers/gpu/drm/via/via_dmablit.c
-+++ b/drivers/gpu/drm/via/via_dmablit.c
-@@ -171,7 +171,6 @@ via_map_blit_for_device(struct pci_dev *pdev,
- static void
- via_free_sg_info(struct pci_dev *pdev, drm_via_sg_info_t *vsg)
- {
--	struct page *page;
- 	int i;
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index 4c4c5bc12147..aaa1f840a86c 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1294,12 +1294,11 @@ xfs_reclaim_inodes_ag(
+ 	return freed;
+ }
  
- 	switch (vsg->state) {
-@@ -186,13 +185,8 @@ via_free_sg_info(struct pci_dev *pdev, drm_via_sg_info_t *vsg)
- 		kfree(vsg->desc_pages);
- 		/* fall through */
- 	case dr_via_pages_locked:
--		for (i = 0; i < vsg->num_pages; ++i) {
--			if (NULL != (page = vsg->pages[i])) {
--				if (!PageReserved(page) && (DMA_FROM_DEVICE == vsg->direction))
--					SetPageDirty(page);
--				put_page(page);
--			}
--		}
-+		put_user_pages_dirty_lock(vsg->pages, vsg->num_pages,
-+					  (vsg->direction == DMA_FROM_DEVICE));
- 		/* fall through */
- 	case dr_via_pages_alloc:
- 		vfree(vsg->pages);
+-int
++void
+ xfs_reclaim_inodes(
+-	xfs_mount_t	*mp,
+-	int		mode)
++	struct xfs_mount	*mp)
+ {
+-	return xfs_reclaim_inodes_ag(mp, mode, INT_MAX);
++	xfs_reclaim_inodes_ag(mp, SYNC_WAIT, INT_MAX);
+ }
+ 
+ /*
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 4c0d8920cc54..1c9b9edb2986 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -49,7 +49,7 @@ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
+ struct xfs_inode * xfs_inode_alloc(struct xfs_mount *mp, xfs_ino_t ino);
+ void xfs_inode_free(struct xfs_inode *ip);
+ 
+-int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
++void xfs_reclaim_inodes(struct xfs_mount *mp);
+ int xfs_reclaim_inodes_count(struct xfs_mount *mp);
+ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index bcf8f64d1b1f..e851b9cfbabd 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -984,7 +984,7 @@ xfs_mountfs(
+ 	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
+ 	 * quota inodes.
+ 	 */
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_reclaim_inodes(mp);
+ 	xfs_health_unmount(mp);
+  out_log_dealloc:
+ 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+@@ -1066,7 +1066,7 @@ xfs_unmountfs(
+ 	 * reclaim just to be sure. We can stop background inode reclaim
+ 	 * here as well if it is still running.
+ 	 */
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_reclaim_inodes(mp);
+ 	xfs_health_unmount(mp);
+ 
+ 	xfs_qm_unmount(mp);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 09e41c6c1794..a59d3a21be5c 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1179,8 +1179,7 @@ xfs_quiesce_attr(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 
+ 	/* reclaim inodes to do any IO before the freeze completes */
+-	xfs_reclaim_inodes(mp, 0);
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_reclaim_inodes(mp);
+ 
+ 	/* Push the superblock and write an unmount record */
+ 	error = xfs_log_sbcount(mp);
 -- 
 2.22.0
