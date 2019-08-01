@@ -1,57 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:12807 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725209AbfGaGFC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 02:05:02 -0400
-From: Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: Re: lift the xfs writepage code into iomap v3
-Date: Wed, 31 Jul 2019 06:04:59 +0000
-Message-ID: <BYAPR04MB5816C29CC419B748F03BF5BAE7DF0@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190722095024.19075-1-hch@lst.de>
- <20190730011705.GO1561054@magnolia>
-Content-Language: en-US
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33333 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729211AbfHACSM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:12 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 08/24] mm: kswapd backoff for shrinkers
+Date: Thu,  1 Aug 2019 12:17:36 +1000
+Message-Id: <20190801021752.4986-9-david@fromorbit.com>
+In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
+References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>, Christoph Hellwig <hch@lst.de>
-Cc: Andreas Gruenbacher <agruenba@redhat.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-Darrick,=0A=
-=0A=
-On 2019/07/30 10:17, Darrick J. Wong wrote:=0A=
-> On Mon, Jul 22, 2019 at 11:50:12AM +0200, Christoph Hellwig wrote:=0A=
->> Hi all,=0A=
->>=0A=
->> this series cleans up the xfs writepage code and then lifts it to=0A=
->> fs/iomap.c so that it could be use by other file system.  I've been=0A=
->> wanting to this for a while so that I could eventually convert gfs2=0A=
->> over to it, but I never got to it.  Now Damien has a new zonefs=0A=
->> file system for semi-raw access to zoned block devices that would=0A=
->> like to use the iomap code instead of reinventing it, so I finally=0A=
->> had to do the work.=0A=
-> =0A=
-> I've posted a branch against -rc2 for us all to work from:=0A=
-> =0A=
-> https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=3Diomap-writeb=
-ack=0A=
-> =0A=
-> and will be emailing the patches shortly to the list for completeness.=0A=
-=0A=
-I rebased zonefs on this branch and all tests passed, no compilation proble=
-ms=0A=
-either. I will send a v2 of zonefs patch with all of Dave's comments addres=
-sed=0A=
-shortly.=0A=
-=0A=
-Thank you.=0A=
-=0A=
-Best regards.=0A=
-=0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+From: Dave Chinner <dchinner@redhat.com>
+
+When kswapd reaches the end of the page LRU and starts hitting dirty
+pages, the logic in shrink_node() allows it to back off and wait for
+IO to complete, thereby preventing kswapd from scanning excessively
+and driving the system into swap thrashing and OOM conditions.
+
+When we have inode cache heavy workloads on XFS, we have exactly the
+same problem with reclaim inodes. The non-blocking kswapd reclaim
+will keep putting pressure onto the inode cache which is unable to
+make progress. When the system gets to the point where there is no
+pages in the LRU to free, there is no swap left and there are no
+clean inodes that can be freed, it will OOM. This has a specific
+signature in OOM:
+
+[  110.841987] Mem-Info:
+[  110.842816] active_anon:241 inactive_anon:82 isolated_anon:1
+                active_file:168 inactive_file:143 isolated_file:0
+                unevictable:2621523 dirty:1 writeback:8 unstable:0
+                slab_reclaimable:564445 slab_unreclaimable:420046
+                mapped:1042 shmem:11 pagetables:6509 bounce:0
+                free:77626 free_pcp:2 free_cma:0
+
+In this case, we have about 500-600 pages left in teh LRUs, but we
+have ~565000 reclaimable slab pages still available for reclaim.
+Unfortunately, they are mostly dirty inodes, and so we really need
+to be able to throttle kswapd when shrinker progress is limited due
+to reaching the dirty end of the LRU...
+
+So, add a flag into the reclaim_state so if the shrinker decides it
+needs kswapd to back off and wait for a while (for whatever reason)
+it can do so.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ include/linux/swap.h |  1 +
+ mm/vmscan.c          | 10 +++++++++-
+ 2 files changed, 10 insertions(+), 1 deletion(-)
+
+diff --git a/include/linux/swap.h b/include/linux/swap.h
+index 1a3502a9bc1f..416680b1bf0c 100644
+--- a/include/linux/swap.h
++++ b/include/linux/swap.h
+@@ -133,6 +133,7 @@ struct reclaim_state {
+ 	unsigned long	reclaimed_pages;	/* pages freed by shrinkers */
+ 	unsigned long	scanned_objects;	/* quantity of work done */ 
+ 	unsigned long	deferred_objects;	/* work that wasn't done */
++	bool		need_backoff;		/* tell kswapd to slow down */
+ };
+ 
+ #ifdef __KERNEL__
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index 4dc8e333f2c6..029dba76ee5a 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -2844,8 +2844,16 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 			 * implies that pages are cycling through the LRU
+ 			 * faster than they are written so also forcibly stall.
+ 			 */
+-			if (sc->nr.immediate)
++			if (sc->nr.immediate) {
+ 				congestion_wait(BLK_RW_ASYNC, HZ/10);
++			} else if (reclaim_state && reclaim_state->need_backoff) {
++				/*
++				 * Ditto, but it's a slab cache that is cycling
++				 * through the LRU faster than they are written
++				 */
++				congestion_wait(BLK_RW_ASYNC, HZ/10);
++				reclaim_state->need_backoff = false;
++			}
+ 		}
+ 
+ 		/*
+-- 
+2.22.0
