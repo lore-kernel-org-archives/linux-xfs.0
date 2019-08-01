@@ -1,13 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41114 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725804AbfHAK4b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 1 Aug 2019 06:56:31 -0400
-Date: Thu, 1 Aug 2019 06:56:29 -0400
-From: Brian Foster <bfoster@redhat.com>
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:43231 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727899AbfHASvB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 14:51:01 -0400
+Received: by mail-pg1-f195.google.com with SMTP id r22so7092203pgk.10
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Aug 2019 11:51:00 -0700 (PDT)
+Date: Thu, 1 Aug 2019 18:50:57 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
 Subject: Re: [PATCH] fs: xfs: xfs_log: Don't use KM_MAYFAIL at
  xfs_log_reserve().
-Message-ID: <20190801105629.GA60054@bfoster>
+Message-ID: <20190801185057.GT30113@42.do-not-panic.com>
 References: <20190729215657.GI7777@dread.disaster.area>
  <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
 MIME-Version: 1.0
@@ -17,8 +19,8 @@ In-Reply-To: <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.j
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+To: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
 
 On Thu, Aug 01, 2019 at 07:06:35PM +0900, Tetsuo Handa wrote:
 > When the system is close-to-OOM, fsync() may fail due to -ENOMEM because
@@ -60,33 +62,20 @@ On Thu, Aug 01, 2019 at 07:06:35PM +0900, Tetsuo Handa wrote:
 >    entry_SYSCALL_64_after_hwframe+0x49/0xbe
 > 
 > Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-> ---
 
-I assume this survived your test scenario?
+That's quite an opaque commit log for what started off as a severe email
+thread of potential leak of information. As such, can you expand on this
+commit log considerably to explain the situation a bit better? Your
+initial thread here provided much clearer evidence of the issue. As-is
+this commit log tells the reader *nothing* about the potential harm in
+not applying this patch.
 
-If so, the change looks fine to me. Thanks for the patch.
+You had mentioned you identified this issue present on at least
+4.18 till 5.3-rc1. So, I'm at least inclined to consider this for
+stable for at least v4.19.
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+However, what about older kernels? Now that you have identified
+a fix, were the flag changed in prior commits, is it a regression
+that perhaps added KM_MAYFAIL at some point?
 
->  fs/xfs/xfs_log.c | 5 +----
->  1 file changed, 1 insertion(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 00e9f5c388d3..7fc3c1ad36bc 100644
-> --- a/fs/xfs/xfs_log.c
-> +++ b/fs/xfs/xfs_log.c
-> @@ -429,10 +429,7 @@ xfs_log_reserve(
->  
->  	ASSERT(*ticp == NULL);
->  	tic = xlog_ticket_alloc(log, unit_bytes, cnt, client, permanent,
-> -				KM_SLEEP | KM_MAYFAIL);
-> -	if (!tic)
-> -		return -ENOMEM;
-> -
-> +				KM_SLEEP);
->  	*ticp = tic;
->  
->  	xlog_grant_push_ail(log, tic->t_cnt ? tic->t_unit_res * tic->t_cnt
-> -- 
-> 2.16.5
-> 
+  Luis
