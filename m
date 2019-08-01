@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:32911 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33329 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728880AbfHACSH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:07 -0400
+        by vger.kernel.org with ESMTP id S1729186AbfHACSK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:10 -0400
 From: Dave Chinner <david@fromorbit.com>
-Subject: [PATCH 10/24] xfs: fix missed wakeup on l_flush_wait
-Date: Thu,  1 Aug 2019 12:17:38 +1000
-Message-Id: <20190801021752.4986-11-david@fromorbit.com>
+Subject: [PATCH 03/24] mm: factor shrinker work calculations
+Date: Thu,  1 Aug 2019 12:17:31 +1000
+Message-Id: <20190801021752.4986-4-david@fromorbit.com>
 In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
 References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
@@ -17,79 +17,150 @@ List-Id: xfs
 To: linux-xfs@vger.kernel.org
 Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-From: Rik van Riel <riel@surriel.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-The code in xlog_wait uses the spinlock to make adding the task to
-the wait queue, and setting the task state to UNINTERRUPTIBLE atomic
-with respect to the waker.
+Start to clean up the shrinker code by factoring out the calculation
+that determines how much work to do. This separates the calculation
+from clamping and other adjustments that are done before the
+shrinker work is run.
 
-Doing the wakeup after releasing the spinlock opens up the following
-race condition:
+Also convert the calculation for the amount of work to be done to
+use 64 bit logic so we don't have to keep jumping through hoops to
+keep calculations within 32 bits on 32 bit systems.
 
-Task 1					task 2
-add task to wait queue
-					wake up task
-set task state to UNINTERRUPTIBLE
-
-This issue was found through code inspection as a result of kworkers
-being observed stuck in UNINTERRUPTIBLE state with an empty
-wait queue. It is rare and largely unreproducable.
-
-Simply moving the spin_unlock to after the wake_up_all results
-in the waker not being able to see a task on the waitqueue before
-it has set its state to UNINTERRUPTIBLE.
-
-This bug dates back to the conversion of this code to generic
-waitqueue infrastructure from a counting semaphore back in 2008
-which didn't place the wakeups consistently w.r.t. to the relevant
-spin locks.
-
-[dchinner: Also fix a similar issue in the shutdown path on
-xc_commit_wait. Update commit log with more details of the issue.]
-
-Fixes: d748c62367eb ("[XFS] Convert l_flushsema to a sv_t")
-Reported-by: Chris Mason <clm@fb.com>
-Signed-off-by: Rik van Riel <riel@surriel.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ mm/vmscan.c | 74 ++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 47 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 7bdea629e749..b78c5e95bbba 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2630,7 +2630,6 @@ xlog_state_do_callback(
- 	int		   funcdidcallbacks; /* flag: function did callbacks */
- 	int		   repeats;	/* for issuing console warnings if
- 					 * looping too many times */
--	int		   wake = 0;
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index ae3035fe94bc..b7472953b0e6 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -464,13 +464,45 @@ EXPORT_SYMBOL(unregister_shrinker);
  
- 	spin_lock(&log->l_icloglock);
- 	first_iclog = iclog = log->l_iclog;
-@@ -2826,11 +2825,9 @@ xlog_state_do_callback(
- #endif
+ #define SHRINK_BATCH 128
  
- 	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR))
--		wake = 1;
--	spin_unlock(&log->l_icloglock);
--
--	if (wake)
- 		wake_up_all(&log->l_flush_wait);
++/*
++ * Calculate the number of new objects to scan this time around. Return
++ * the work to be done. If there are freeable objects, return that number in
++ * @freeable_objects.
++ */
++static int64_t shrink_scan_count(struct shrink_control *shrinkctl,
++			    struct shrinker *shrinker, int priority,
++			    int64_t *freeable_objects)
++{
++	uint64_t delta;
++	uint64_t freeable;
 +
-+	spin_unlock(&log->l_icloglock);
- }
++	freeable = shrinker->count_objects(shrinker, shrinkctl);
++	if (freeable == 0 || freeable == SHRINK_EMPTY)
++		return freeable;
++
++	if (shrinker->seeks) {
++		delta = freeable >> (priority - 2);
++		do_div(delta, shrinker->seeks);
++	} else {
++		/*
++		 * These objects don't require any IO to create. Trim
++		 * them aggressively under memory pressure to keep
++		 * them from causing refetches in the IO caches.
++		 */
++		delta = freeable / 2;
++	}
++
++	*freeable_objects = freeable;
++	return delta > 0 ? delta : 0;
++}
++
+ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 				    struct shrinker *shrinker, int priority)
+ {
+ 	unsigned long freed = 0;
+-	unsigned long long delta;
+ 	long total_scan;
+-	long freeable;
++	int64_t freeable_objects = 0;
++	int64_t scan_count;
+ 	long nr;
+ 	long new_nr;
+ 	int nid = shrinkctl->nid;
+@@ -481,9 +513,10 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	if (!(shrinker->flags & SHRINKER_NUMA_AWARE))
+ 		nid = 0;
  
+-	freeable = shrinker->count_objects(shrinker, shrinkctl);
+-	if (freeable == 0 || freeable == SHRINK_EMPTY)
+-		return freeable;
++	scan_count = shrink_scan_count(shrinkctl, shrinker, priority,
++					&freeable_objects);
++	if (scan_count == 0 || scan_count == SHRINK_EMPTY)
++		return scan_count;
  
-@@ -3930,7 +3927,9 @@ xfs_log_force_umount(
- 	 * item committed callback functions will do this again under lock to
- 	 * avoid races.
+ 	/*
+ 	 * copy the current shrinker scan count into a local variable
+@@ -492,25 +525,11 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
  	 */
-+	spin_lock(&log->l_cilp->xc_push_lock);
- 	wake_up_all(&log->l_cilp->xc_commit_wait);
-+	spin_unlock(&log->l_cilp->xc_push_lock);
- 	xlog_state_do_callback(log, true, NULL);
+ 	nr = atomic_long_xchg(&shrinker->nr_deferred[nid], 0);
  
- #ifdef XFSERRORDEBUG
+-	total_scan = nr;
+-	if (shrinker->seeks) {
+-		delta = freeable >> priority;
+-		delta *= 4;
+-		do_div(delta, shrinker->seeks);
+-	} else {
+-		/*
+-		 * These objects don't require any IO to create. Trim
+-		 * them aggressively under memory pressure to keep
+-		 * them from causing refetches in the IO caches.
+-		 */
+-		delta = freeable / 2;
+-	}
+-
+-	total_scan += delta;
++	total_scan = nr + scan_count;
+ 	if (total_scan < 0) {
+ 		pr_err("shrink_slab: %pS negative objects to delete nr=%ld\n",
+ 		       shrinker->scan_objects, total_scan);
+-		total_scan = freeable;
++		total_scan = scan_count;
+ 		next_deferred = nr;
+ 	} else
+ 		next_deferred = total_scan;
+@@ -527,19 +546,20 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	 * Hence only allow the shrinker to scan the entire cache when
+ 	 * a large delta change is calculated directly.
+ 	 */
+-	if (delta < freeable / 4)
+-		total_scan = min(total_scan, freeable / 2);
++	if (scan_count < freeable_objects / 4)
++		total_scan = min_t(long, total_scan, freeable_objects / 2);
+ 
+ 	/*
+ 	 * Avoid risking looping forever due to too large nr value:
+ 	 * never try to free more than twice the estimate number of
+ 	 * freeable entries.
+ 	 */
+-	if (total_scan > freeable * 2)
+-		total_scan = freeable * 2;
++	if (total_scan > freeable_objects * 2)
++		total_scan = freeable_objects * 2;
+ 
+ 	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+-				   freeable, delta, total_scan, priority);
++				   freeable_objects, scan_count,
++				   total_scan, priority);
+ 
+ 	/*
+ 	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+@@ -564,7 +584,7 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	 * possible.
+ 	 */
+ 	while (total_scan >= batch_size ||
+-	       total_scan >= freeable) {
++	       total_scan >= freeable_objects) {
+ 		unsigned long ret;
+ 		unsigned long nr_to_scan = min(batch_size, total_scan);
+ 
 -- 
 2.22.0
