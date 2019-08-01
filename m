@@ -1,58 +1,101 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53362 "EHLO
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56173 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730419AbfHAV4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 17:56:19 -0400
-Date: Fri, 2 Aug 2019 07:55:08 +1000
+        by vger.kernel.org with ESMTP id S1731376AbfHBAAC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 20:00:02 -0400
+Date: Fri, 2 Aug 2019 09:58:49 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] fs: xfs: xfs_log: Don't use KM_MAYFAIL at
- xfs_log_reserve().
-Message-ID: <20190801215508.GN7777@dread.disaster.area>
-References: <20190729215657.GI7777@dread.disaster.area>
- <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
- <20190801185057.GT30113@42.do-not-panic.com>
- <e901d22d-18b5-abde-15d1-777a6417f6c8@i-love.sakura.ne.jp>
+Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
+Message-ID: <20190801235849.GO7777@dread.disaster.area>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-10-david@fromorbit.com>
+ <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e901d22d-18b5-abde-15d1-777a6417f6c8@i-love.sakura.ne.jp>
+In-Reply-To: <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
+To: Chris Mason <clm@fb.com>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Fri, Aug 02, 2019 at 06:13:12AM +0900, Tetsuo Handa wrote:
-> On 2019/08/02 3:50, Luis Chamberlain wrote:
-> > That's quite an opaque commit log for what started off as a severe email
-> > thread of potential leak of information. As such, can you expand on this
-> > commit log considerably to explain the situation a bit better? Your
-> > initial thread here provided much clearer evidence of the issue. As-is
-> > this commit log tells the reader *nothing* about the potential harm in
-> > not applying this patch.
-> > 
-> > You had mentioned you identified this issue present on at least
-> > 4.18 till 5.3-rc1. So, I'm at least inclined to consider this for
-> > stable for at least v4.19.
-> > 
-> > However, what about older kernels? Now that you have identified
-> > a fix, were the flag changed in prior commits, is it a regression
-> > that perhaps added KM_MAYFAIL at some point?
+On Thu, Aug 01, 2019 at 01:39:34PM +0000, Chris Mason wrote:
+> On 31 Jul 2019, at 22:17, Dave Chinner wrote:
 > 
-> I only checked 4.18+ so that RHEL8 will backport this patch. According to
-> Brian Foster, commit eb01c9cd87 ("[XFS] Remove the xlog_ticket allocator")
-> ( https://git.kernel.org/linus/eb01c9cd87 ) which dates back to April 2008
-> added KM_MAYFAIL flag for this allocation
+> > From: Dave Chinner <dchinner@redhat.com>
+> >
+> > Running metadata intensive workloads, I've been seeing the AIL
+> > pushing getting stuck on pinned buffers and triggering log forces.
+> > The log force is taking a long time to run because the log IO is
+> > getting throttled by wbt_wait() - the block layer writeback
+> > throttle. It's being throttled because there is a huge amount of
+> > metadata writeback going on which is filling the request queue.
+> >
+> > IOWs, we have a priority inversion problem here.
+> >
+> > Mark the log IO bios with REQ_IDLE so they don't get throttled
+> > by the block layer writeback throttle. When we are forcing the CIL,
+> > we are likely to need to to tens of log IOs, and they are issued as
+> > fast as they can be build and IO completed. Hence REQ_IDLE is
+> > appropriate - it's an indication that more IO will follow shortly.
+> >
+> > And because we also set REQ_SYNC, the writeback throttle will no
+> > treat log IO the same way it treats direct IO writes - it will not
+> > throttle them at all. Hence we solve the priority inversion problem
+> > caused by the writeback throttle being unable to distinguish between
+> > high priority log IO and background metadata writeback.
+> >
+>   [ cc Jens ]
 > 
-> -	buf = (xfs_caddr_t) kmem_zalloc(PAGE_SIZE, KM_SLEEP);
-> +	tic = kmem_zone_zalloc(xfs_log_ticket_zone, KM_SLEEP|KM_MAYFAIL);
-> 
-> though Dave Chinner thinks that the log ticket rework is irrelevant.
-> Do we need to find which commit made this problem visible?
+> We spent a lot of time getting rid of these inversions in io.latency 
+> (and the new io.cost), where REQ_META just blows through the throttling 
+> and goes into back charging instead.
 
-No.
+Which simply reinforces the fact that that request type based
+throttling is a fundamentally broken architecture.
 
--Dave.
+> It feels awkward to have one set of prio inversion workarounds for io.* 
+> and another for wbt.  Jens, should we make an explicit one that doesn't 
+> rely on magic side effects, or just decide that metadata is meta enough 
+> to break all the rules?
+
+The problem isn't REQ_META blows throw the throttling, the problem
+is that different REQ_META IOs have different priority.
+
+IOWs, the problem here is that we are trying to infer priority from
+the request type rather than an actual priority assigned by the
+submitter. There is no way direct IO has higher priority in a
+filesystem than log IO tagged with REQ_META as direct IO can require
+log IO to make progress. Priority is a policy determined by the
+submitter, not the mechanism doing the throttling.
+
+Can we please move this all over to priorites based on
+bio->b_ioprio? And then document how the range of priorities are
+managed, such as:
+
+(99 = highest prio to 0 = lowest)
+
+swap out
+swap in				>90
+User hard RT max		89
+User hard RT min		80
+filesystem max			79
+ionice max			60
+background data writeback	40
+ionice min			20
+filesystem min			10
+idle				0
+
+So that we can appropriately prioritise different types of kernel
+internal IO w.r.t user controlled IO priorities? This way we can
+still tag the bios with the type of data they contain, but we
+no longer use that to determine whether to throttle that IO or not -
+throttling/scheduling should be done entirely on a priority basis.
+
+Cheers,
+
+Dave.
 -- 
 Dave Chinner
 david@fromorbit.com
