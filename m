@@ -1,92 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:51831 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725379AbfHAKHv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 06:07:51 -0400
-From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
-Subject: [PATCH] fs: xfs: Remove unused KM_NOSLEEP, change KM_SLEEP to 0.
-Date: Thu,  1 Aug 2019 19:07:22 +0900
-Message-Id: <1564654042-9088-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
+Received: from mail-qt1-f194.google.com ([209.85.160.194]:42295 "EHLO
+        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731914AbfHAOTI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 10:19:08 -0400
+Received: by mail-qt1-f194.google.com with SMTP id h18so70385729qtm.9
+        for <linux-xfs@vger.kernel.org>; Thu, 01 Aug 2019 07:19:08 -0700 (PDT)
+Date: Thu, 1 Aug 2019 11:19:06 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [PATCH v4 1/3] mm/gup: add make_dirty arg to
+ put_user_pages_dirty_lock()
+Message-ID: <20190801141906.GC23899@ziepe.ca>
+References: <20190730205705.9018-1-jhubbard@nvidia.com>
+ <20190730205705.9018-2-jhubbard@nvidia.com>
+ <20190801060755.GA14893@lst.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190801060755.GA14893@lst.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+To: Christoph Hellwig <hch@lst.de>
+Cc: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>, Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>
 
-Since no caller is using KM_NOSLEEP and no callee branches on KM_SLEEP,
-but removing KM_SLEEP requires modification of 97 locations, let's remove
-KM_NOSLEEP branch and (for now) change KM_SLEEP to 0.
+On Thu, Aug 01, 2019 at 08:07:55AM +0200, Christoph Hellwig wrote:
+> On Tue, Jul 30, 2019 at 01:57:03PM -0700, john.hubbard@gmail.com wrote:
+> > @@ -40,10 +40,7 @@
+> >  static void __qib_release_user_pages(struct page **p, size_t num_pages,
+> >  				     int dirty)
+> >  {
+> > -	if (dirty)
+> > -		put_user_pages_dirty_lock(p, num_pages);
+> > -	else
+> > -		put_user_pages(p, num_pages);
+> > +	put_user_pages_dirty_lock(p, num_pages, dirty);
+> >  }
+> 
+> __qib_release_user_pages should be removed now as a direct call to
+> put_user_pages_dirty_lock is a lot more clear.
+> 
+> > index 0b0237d41613..62e6ffa9ad78 100644
+> > +++ b/drivers/infiniband/hw/usnic/usnic_uiom.c
+> > @@ -75,10 +75,7 @@ static void usnic_uiom_put_pages(struct list_head *chunk_list, int dirty)
+> >  		for_each_sg(chunk->page_list, sg, chunk->nents, i) {
+> >  			page = sg_page(sg);
+> >  			pa = sg_phys(sg);
+> > -			if (dirty)
+> > -				put_user_pages_dirty_lock(&page, 1);
+> > -			else
+> > -				put_user_page(page);
+> > +			put_user_pages_dirty_lock(&page, 1, dirty);
+> >  			usnic_dbg("pa: %pa\n", &pa);
+> 
+> There is a pre-existing bug here, as this needs to use the sg_page
+> iterator.  Probably worth throwing in a fix into your series while you
+> are at it.
 
-Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
----
- fs/xfs/kmem.c |  6 +++---
- fs/xfs/kmem.h | 15 +++++----------
- 2 files changed, 8 insertions(+), 13 deletions(-)
+Sadly usnic does not use the core rdma umem abstraction but open codes
+an old version of it.
 
-diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-index 16bb9a328678..7cd315ad937e 100644
---- a/fs/xfs/kmem.c
-+++ b/fs/xfs/kmem.c
-@@ -17,7 +17,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
- 
- 	do {
- 		ptr = kmalloc(size, lflags);
--		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-+		if (ptr || (flags & KM_MAYFAIL))
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
-@@ -67,7 +67,7 @@ kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
- 
- 	do {
- 		ptr = krealloc(old, newsize, lflags);
--		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-+		if (ptr || (flags & KM_MAYFAIL))
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
-@@ -87,7 +87,7 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
- 
- 	do {
- 		ptr = kmem_cache_alloc(zone, lflags);
--		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
-+		if (ptr || (flags & KM_MAYFAIL))
- 			return ptr;
- 		if (!(++retries % 100))
- 			xfs_err(NULL,
-diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-index 267655acd426..f74a7d6d40dc 100644
---- a/fs/xfs/kmem.h
-+++ b/fs/xfs/kmem.h
-@@ -16,8 +16,7 @@
-  */
- 
- typedef unsigned __bitwise xfs_km_flags_t;
--#define KM_SLEEP	((__force xfs_km_flags_t)0x0001u)
--#define KM_NOSLEEP	((__force xfs_km_flags_t)0x0002u)
-+#define KM_SLEEP	((__force xfs_km_flags_t)0x0000u)
- #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
- #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
- #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
-@@ -32,15 +31,11 @@ kmem_flags_convert(xfs_km_flags_t flags)
- {
- 	gfp_t	lflags;
- 
--	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
-+	BUG_ON(flags & ~(KM_SLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
- 
--	if (flags & KM_NOSLEEP) {
--		lflags = GFP_ATOMIC | __GFP_NOWARN;
--	} else {
--		lflags = GFP_KERNEL | __GFP_NOWARN;
--		if (flags & KM_NOFS)
--			lflags &= ~__GFP_FS;
--	}
-+	lflags = GFP_KERNEL | __GFP_NOWARN;
-+	if (flags & KM_NOFS)
-+		lflags &= ~__GFP_FS;
- 
- 	/*
- 	 * Default page/slab allocator behavior is to retry for ever
--- 
-2.16.5
+In this version each sge in the sgl is exactly one page. See
+usnic_uiom_get_pages - so I think this loop is not a bug?
+
+Jason
