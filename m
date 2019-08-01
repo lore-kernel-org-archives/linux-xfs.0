@@ -1,95 +1,58 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:42360 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725846AbfHAUsb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 16:48:31 -0400
-Date: Thu, 1 Aug 2019 13:46:14 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53362 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730419AbfHAV4T (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 17:56:19 -0400
+Date: Fri, 2 Aug 2019 07:55:08 +1000
+From: Dave Chinner <david@fromorbit.com>
 Subject: Re: [PATCH] fs: xfs: xfs_log: Don't use KM_MAYFAIL at
  xfs_log_reserve().
-Message-ID: <20190801204614.GD7138@magnolia>
+Message-ID: <20190801215508.GN7777@dread.disaster.area>
 References: <20190729215657.GI7777@dread.disaster.area>
  <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
  <20190801185057.GT30113@42.do-not-panic.com>
+ <e901d22d-18b5-abde-15d1-777a6417f6c8@i-love.sakura.ne.jp>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190801185057.GT30113@42.do-not-panic.com>
+In-Reply-To: <e901d22d-18b5-abde-15d1-777a6417f6c8@i-love.sakura.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>, linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+To: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Cc: Luis Chamberlain <mcgrof@kernel.org>, linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>
 
-On Thu, Aug 01, 2019 at 06:50:57PM +0000, Luis Chamberlain wrote:
-> On Thu, Aug 01, 2019 at 07:06:35PM +0900, Tetsuo Handa wrote:
-> > When the system is close-to-OOM, fsync() may fail due to -ENOMEM because
-> > xfs_log_reserve() is using KM_MAYFAIL. It is a bad thing to fail writeback
-> > operation due to user-triggerable OOM condition. Since we are not using
-> > KM_MAYFAIL at xfs_trans_alloc() before calling xfs_log_reserve(), let's
-> > use the same flags at xfs_log_reserve().
+On Fri, Aug 02, 2019 at 06:13:12AM +0900, Tetsuo Handa wrote:
+> On 2019/08/02 3:50, Luis Chamberlain wrote:
+> > That's quite an opaque commit log for what started off as a severe email
+> > thread of potential leak of information. As such, can you expand on this
+> > commit log considerably to explain the situation a bit better? Your
+> > initial thread here provided much clearer evidence of the issue. As-is
+> > this commit log tells the reader *nothing* about the potential harm in
+> > not applying this patch.
 > > 
-> >   oom-torture: page allocation failure: order:0, mode:0x46c40(GFP_NOFS|__GFP_NOWARN|__GFP_RETRY_MAYFAIL|__GFP_COMP), nodemask=(null)
-> >   CPU: 7 PID: 1662 Comm: oom-torture Kdump: loaded Not tainted 5.3.0-rc2+ #925
-> >   Hardware name: VMware, Inc. VMware Virtual Platform/440BX Desktop Reference Platform, BIOS 6.00
-> >   Call Trace:
-> >    dump_stack+0x67/0x95
-> >    warn_alloc+0xa9/0x140
-> >    __alloc_pages_slowpath+0x9a8/0xbce
-> >    __alloc_pages_nodemask+0x372/0x3b0
-> >    alloc_slab_page+0x3a/0x8d0
-> >    new_slab+0x330/0x420
-> >    ___slab_alloc.constprop.94+0x879/0xb00
-> >    __slab_alloc.isra.89.constprop.93+0x43/0x6f
-> >    kmem_cache_alloc+0x331/0x390
-> >    kmem_zone_alloc+0x9f/0x110 [xfs]
-> >    kmem_zone_alloc+0x9f/0x110 [xfs]
-> >    xlog_ticket_alloc+0x33/0xd0 [xfs]
-> >    xfs_log_reserve+0xb4/0x410 [xfs]
-> >    xfs_trans_reserve+0x1d1/0x2b0 [xfs]
-> >    xfs_trans_alloc+0xc9/0x250 [xfs]
-> >    xfs_setfilesize_trans_alloc.isra.27+0x44/0xc0 [xfs]
-> >    xfs_submit_ioend.isra.28+0xa5/0x180 [xfs]
-> >    xfs_vm_writepages+0x76/0xa0 [xfs]
-> >    do_writepages+0x17/0x80
-> >    __filemap_fdatawrite_range+0xc1/0xf0
-> >    file_write_and_wait_range+0x53/0xa0
-> >    xfs_file_fsync+0x87/0x290 [xfs]
-> >    vfs_fsync_range+0x37/0x80
-> >    do_fsync+0x38/0x60
-> >    __x64_sys_fsync+0xf/0x20
-> >    do_syscall_64+0x4a/0x1c0
-> >    entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> > You had mentioned you identified this issue present on at least
+> > 4.18 till 5.3-rc1. So, I'm at least inclined to consider this for
+> > stable for at least v4.19.
 > > 
-> > Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+> > However, what about older kernels? Now that you have identified
+> > a fix, were the flag changed in prior commits, is it a regression
+> > that perhaps added KM_MAYFAIL at some point?
 > 
-> That's quite an opaque commit log for what started off as a severe email
-> thread of potential leak of information. As such, can you expand on this
-> commit log considerably to explain the situation a bit better?
-
-I'm pretty sure this didn't solve the underlying stale data exposure
-problem, which might be why you think this is "opaque".  It fixes a bug
-that causes data writeback failure (which was the exposure vector this
-time) but I think the ultimate fix for the exposure problem are the two
-patches I linked to quite a ways back in this discussion....
-
---D
-
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?id=bd012b434a56d9fac3cbc33062b8e2cd6e1ad0a0
-https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?id=adcf7c0c87191fd3616813c8ce9790f89a9a8eba
-
-
-> Your
-> initial thread here provided much clearer evidence of the issue. As-is
-> this commit log tells the reader *nothing* about the potential harm in
-> not applying this patch.
+> I only checked 4.18+ so that RHEL8 will backport this patch. According to
+> Brian Foster, commit eb01c9cd87 ("[XFS] Remove the xlog_ticket allocator")
+> ( https://git.kernel.org/linus/eb01c9cd87 ) which dates back to April 2008
+> added KM_MAYFAIL flag for this allocation
 > 
-> You had mentioned you identified this issue present on at least
-> 4.18 till 5.3-rc1. So, I'm at least inclined to consider this for
-> stable for at least v4.19.
+> -	buf = (xfs_caddr_t) kmem_zalloc(PAGE_SIZE, KM_SLEEP);
+> +	tic = kmem_zone_zalloc(xfs_log_ticket_zone, KM_SLEEP|KM_MAYFAIL);
 > 
-> However, what about older kernels? Now that you have identified
-> a fix, were the flag changed in prior commits, is it a regression
-> that perhaps added KM_MAYFAIL at some point?
-> 
->   Luis
+> though Dave Chinner thinks that the log ticket rework is irrelevant.
+> Do we need to find which commit made this problem visible?
+
+No.
+
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
