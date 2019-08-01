@@ -1,47 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qk1-f196.google.com ([209.85.222.196]:45618 "EHLO
-        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726300AbfGaRuw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 13:50:52 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:43990 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728014AbfHABhN (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 21:37:13 -0400
+Subject: Re: [RFC PATCH 0/7] xfs: add reflink & dedupe support for fsdax.
+References: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
+ <20190731203324.7vjwlejmwpghpvqi@fiona>
+From: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <800ff77a-7cd1-5fa1-fcf7-e41264a3f189@cn.fujitsu.com>
+Date: Thu, 1 Aug 2019 09:37:04 +0800
 MIME-Version: 1.0
-References: <20190731171734.21601-1-willy@infradead.org>
-In-Reply-To: <20190731171734.21601-1-willy@infradead.org>
-From: Song Liu <liu.song.a23@gmail.com>
-Date: Wed, 31 Jul 2019 10:50:40 -0700
-Message-ID: <CAPhsuW66e=7g+rPhi3NU8jQRGqQEz0oQ5XJerg6ds=oxMz8U1g@mail.gmail.com>
-Subject: Re: [RFC 0/2] iomap & xfs support for large pages
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20190731203324.7vjwlejmwpghpvqi@fiona>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>, William Kucharski <william.kucharski@oracle.com>
-Cc: Linux-Fsdevel <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org, Linux-MM <linux-mm@kvack.org>
+To: Goldwyn Rodrigues <rgoldwyn@suse.de>
+Cc: linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org, darrick.wong@oracle.com, linux-kernel@vger.kernel.org, gujx@cn.fujitsu.com, david@fromorbit.com, qi.fuli@fujitsu.com, caoj.fnst@cn.fujitsu.com
 
-On Wed, Jul 31, 2019 at 10:17 AM Matthew Wilcox <willy@infradead.org> wrote:
->
-> From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
->
-> Christoph sent me a patch a few months ago called "XFS THP wip".
-> I've redone it based on current linus tree, plus the page_size() /
-> compound_nr() / page_shift() patches currently found in -mm.  I fixed
-> the logic bugs that I noticed in his patch and may have introduced some
-> of my own.  I have only compile tested this code.
 
-Would Bill's set work on XFS with this set?
 
+On 8/1/19 4:33 AM, Goldwyn Rodrigues wrote:
+> On 19:49 31/07, Shiyang Ruan wrote:
+>> This patchset aims to take care of this issue to make reflink and dedupe
+>> work correctly in XFS.
+>>
+>> It is based on Goldwyn's patchsets: "v4 Btrfs dax support" and "Btrfs
+>> iomap".  I picked up some patches related and made a few fix to make it
+>> basically works fine.
+>>
+>> For dax framework:
+>>    1. adapt to the latest change in iomap.
+>>
+>> For XFS:
+>>    1. report the source address and set IOMAP_COW type for those write
+>>       operations that need COW.
+>>    2. update extent list at the end.
+>>    3. add file contents comparison function based on dax framework.
+>>    4. use xfs_break_layouts() to support dax.
+> 
+> Shiyang,
+> 
+> I think you used the older patches which does not contain the iomap changes
+> which would call iomap_begin() with two iomaps. I have it in the btrfs-iomap
+
+Oh, Sorry for my carelessness.  This patchset is built on your "Btrfs 
+iomap".  I didn't point it out in cover letter.
+
+> branch and plan to update it today. It is built on v5.3-rcX, so it should
+> contain the changes which moves the iomap code to the different directory.
+> I will build the dax patches on top of that.
+> However, we are making a big dependency chain here 
+Don't worry.  It's fine for me.  I'll follow your updates.
+
+> 
+
+-- 
 Thanks,
-Song
-
->
-> Matthew Wilcox (Oracle) (2):
->   iomap: Support large pages
->   xfs: Support large pages
->
->  fs/iomap/buffered-io.c | 82 ++++++++++++++++++++++++++----------------
->  fs/xfs/xfs_aops.c      | 37 +++++++++----------
->  include/linux/iomap.h  |  2 +-
->  3 files changed, 72 insertions(+), 49 deletions(-)
->
-> --
-> 2.20.1
->
+Shiyang Ruan.
