@@ -1,59 +1,92 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:33058 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725804AbfHANjs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 09:39:48 -0400
-From: Chris Mason <clm@fb.com>
-Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
-Date: Thu, 1 Aug 2019 13:39:34 +0000
-Message-ID: <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-10-david@fromorbit.com>
-In-Reply-To: <20190801021752.4986-10-david@fromorbit.com>
-Content-Language: en-US
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-MIME-Version: 1.0
+Received: from www262.sakura.ne.jp ([202.181.97.72]:51831 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725379AbfHAKHv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 06:07:51 -0400
+From: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+Subject: [PATCH] fs: xfs: Remove unused KM_NOSLEEP, change KM_SLEEP to 0.
+Date: Thu,  1 Aug 2019 19:07:22 +0900
+Message-Id: <1564654042-9088-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: linux-xfs@vger.kernel.org
+Cc: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-On 31 Jul 2019, at 22:17, Dave Chinner wrote:
+Since no caller is using KM_NOSLEEP and no callee branches on KM_SLEEP,
+but removing KM_SLEEP requires modification of 97 locations, let's remove
+KM_NOSLEEP branch and (for now) change KM_SLEEP to 0.
 
-> From: Dave Chinner <dchinner@redhat.com>
->
-> Running metadata intensive workloads, I've been seeing the AIL
-> pushing getting stuck on pinned buffers and triggering log forces.
-> The log force is taking a long time to run because the log IO is
-> getting throttled by wbt_wait() - the block layer writeback
-> throttle. It's being throttled because there is a huge amount of
-> metadata writeback going on which is filling the request queue.
->
-> IOWs, we have a priority inversion problem here.
->
-> Mark the log IO bios with REQ_IDLE so they don't get throttled
-> by the block layer writeback throttle. When we are forcing the CIL,
-> we are likely to need to to tens of log IOs, and they are issued as
-> fast as they can be build and IO completed. Hence REQ_IDLE is
-> appropriate - it's an indication that more IO will follow shortly.
->
-> And because we also set REQ_SYNC, the writeback throttle will no
-> treat log IO the same way it treats direct IO writes - it will not
-> throttle them at all. Hence we solve the priority inversion problem
-> caused by the writeback throttle being unable to distinguish between
-> high priority log IO and background metadata writeback.
->
-  [ cc Jens ]
+Signed-off-by: Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
+---
+ fs/xfs/kmem.c |  6 +++---
+ fs/xfs/kmem.h | 15 +++++----------
+ 2 files changed, 8 insertions(+), 13 deletions(-)
 
-We spent a lot of time getting rid of these inversions in io.latency=20
-(and the new io.cost), where REQ_META just blows through the throttling=20
-and goes into back charging instead.
-
-It feels awkward to have one set of prio inversion workarounds for io.*=20
-and another for wbt.  Jens, should we make an explicit one that doesn't=20
-rely on magic side effects, or just decide that metadata is meta enough=20
-to break all the rules?
-
--chris
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index 16bb9a328678..7cd315ad937e 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -17,7 +17,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ 
+ 	do {
+ 		ptr = kmalloc(size, lflags);
+-		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
++		if (ptr || (flags & KM_MAYFAIL))
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+@@ -67,7 +67,7 @@ kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
+ 
+ 	do {
+ 		ptr = krealloc(old, newsize, lflags);
+-		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
++		if (ptr || (flags & KM_MAYFAIL))
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+@@ -87,7 +87,7 @@ kmem_zone_alloc(kmem_zone_t *zone, xfs_km_flags_t flags)
+ 
+ 	do {
+ 		ptr = kmem_cache_alloc(zone, lflags);
+-		if (ptr || (flags & (KM_MAYFAIL|KM_NOSLEEP)))
++		if (ptr || (flags & KM_MAYFAIL))
+ 			return ptr;
+ 		if (!(++retries % 100))
+ 			xfs_err(NULL,
+diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
+index 267655acd426..f74a7d6d40dc 100644
+--- a/fs/xfs/kmem.h
++++ b/fs/xfs/kmem.h
+@@ -16,8 +16,7 @@
+  */
+ 
+ typedef unsigned __bitwise xfs_km_flags_t;
+-#define KM_SLEEP	((__force xfs_km_flags_t)0x0001u)
+-#define KM_NOSLEEP	((__force xfs_km_flags_t)0x0002u)
++#define KM_SLEEP	((__force xfs_km_flags_t)0x0000u)
+ #define KM_NOFS		((__force xfs_km_flags_t)0x0004u)
+ #define KM_MAYFAIL	((__force xfs_km_flags_t)0x0008u)
+ #define KM_ZERO		((__force xfs_km_flags_t)0x0010u)
+@@ -32,15 +31,11 @@ kmem_flags_convert(xfs_km_flags_t flags)
+ {
+ 	gfp_t	lflags;
+ 
+-	BUG_ON(flags & ~(KM_SLEEP|KM_NOSLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
++	BUG_ON(flags & ~(KM_SLEEP|KM_NOFS|KM_MAYFAIL|KM_ZERO));
+ 
+-	if (flags & KM_NOSLEEP) {
+-		lflags = GFP_ATOMIC | __GFP_NOWARN;
+-	} else {
+-		lflags = GFP_KERNEL | __GFP_NOWARN;
+-		if (flags & KM_NOFS)
+-			lflags &= ~__GFP_FS;
+-	}
++	lflags = GFP_KERNEL | __GFP_NOWARN;
++	if (flags & KM_NOFS)
++		lflags &= ~__GFP_FS;
+ 
+ 	/*
+ 	 * Default page/slab allocator behavior is to retry for ever
+-- 
+2.16.5
