@@ -1,85 +1,71 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:39966 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727903AbfG3U5J (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 30 Jul 2019 16:57:09 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH v4 0/3] mm/gup: add make_dirty arg to put_user_pages_dirty_lock()
-Date: Tue, 30 Jul 2019 13:57:02 -0700
-Message-Id: <20190730205705.9018-1-jhubbard@nvidia.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60876 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728500AbfHACSB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 31 Jul 2019 22:18:01 -0400
+From: Dave Chinner <david@fromorbit.com>
+Subject: [PATCH 11/24] xfs:: account for memory freed from metadata buffers
+Date: Thu,  1 Aug 2019 12:17:39 +1000
+Message-Id: <20190801021752.4986-12-david@fromorbit.com>
+In-Reply-To: <20190801021752.4986-1-david@fromorbit.com>
+References: <20190801021752.4986-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, Christian Benvenuti <benve@cisco.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, "Darrick J . Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, Jerome Glisse <jglisse@redhat.com>, "Kirill A . Shutemov" <kirill@shutemov.name>, Matthew Wilcox <willy@infradead.org>, Michal Hocko <mhocko@kernel.org>, Mike Marciniszyn <mike.marciniszyn@intel.com>, Mike Rapoport <rppt@linux.ibm.com>, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-mm@kvack.org, linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, John Hubbard <jhubbard@nvidia.com>
+To: linux-xfs@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-From: John Hubbard <jhubbard@nvidia.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-Changes since v3:
+The buffer cache shrinker frees more than just the xfs_buf slab
+objects - it also frees the pages attached to the buffers. Make sure
+the memory reclaim code accounts for this memory being freed
+correctly, similar to how the inode shrinker accounts for pages
+freed from the page cache due to mapping invalidation.
 
-* Fixed an unused variable warning in siw_mem.c
+We also need to make sure that the mm subsystem knows these are
+reclaimable objects. We provide the memory reclaim subsystem with a
+a shrinker to reclaim xfs_bufs, so we should really mark the slab
+that way.
 
-Changes since v2:
+We also have a lot of xfs_bufs in a busy system, spread them around
+like we do inodes.
 
-* Critical bug fix: remove a stray "break;" from the new routine.
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_buf.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
 
-Changes since v1:
-
-* Instead of providing __put_user_pages(), add an argument to
-  put_user_pages_dirty_lock(), and delete put_user_pages_dirty().
-  This is based on the following points:
-
-    1. Lots of call sites become simpler if a bool is passed
-    into put_user_page*(), instead of making the call site
-    choose which put_user_page*() variant to call.
-
-    2. Christoph Hellwig's observation that set_page_dirty_lock()
-    is usually correct, and set_page_dirty() is usually a
-    bug, or at least questionable, within a put_user_page*()
-    calling chain.
-
-* Added the Infiniband driver back to the patch series, because it is
-  a caller of put_user_pages_dirty_lock().
-
-Unchanged parts from the v1 cover letter (except for the diffstat):
-
-Notes about the remaining patches to come:
-
-There are about 50+ patches in my tree [2], and I'll be sending out the
-remaining ones in a few more groups:
-
-    * The block/bio related changes (Jerome mostly wrote those, but I've
-      had to move stuff around extensively, and add a little code)
-
-    * mm/ changes
-
-    * other subsystem patches
-
-    * an RFC that shows the current state of the tracking patch set. That
-      can only be applied after all call sites are converted, but it's
-      good to get an early look at it.
-
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
-
-John Hubbard (3):
-  mm/gup: add make_dirty arg to put_user_pages_dirty_lock()
-  drivers/gpu/drm/via: convert put_page() to put_user_page*()
-  net/xdp: convert put_page() to put_user_page*()
-
- drivers/gpu/drm/via/via_dmablit.c          |  10 +-
- drivers/infiniband/core/umem.c             |   5 +-
- drivers/infiniband/hw/hfi1/user_pages.c    |   5 +-
- drivers/infiniband/hw/qib/qib_user_pages.c |   5 +-
- drivers/infiniband/hw/usnic/usnic_uiom.c   |   5 +-
- drivers/infiniband/sw/siw/siw_mem.c        |  10 +-
- include/linux/mm.h                         |   5 +-
- mm/gup.c                                   | 115 +++++++++------------
- net/xdp/xdp_umem.c                         |   9 +-
- 9 files changed, 61 insertions(+), 108 deletions(-)
-
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 6e0f76532535..beb816cd54d6 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1667,6 +1667,14 @@ xfs_buftarg_shrink_scan(
+ 		struct xfs_buf *bp;
+ 		bp = list_first_entry(&dispose, struct xfs_buf, b_lru);
+ 		list_del_init(&bp->b_lru);
++
++		/*
++		 * Account for the buffer memory freed here so memory reclaim
++		 * sees this and not just the xfs_buf slab entry being freed.
++		 */
++		if (current->reclaim_state)
++			current->reclaim_state->reclaimed_pages += bp->b_page_count;
++
+ 		xfs_buf_rele(bp);
+ 	}
+ 
+@@ -2057,7 +2065,8 @@ int __init
+ xfs_buf_init(void)
+ {
+ 	xfs_buf_zone = kmem_zone_init_flags(sizeof(xfs_buf_t), "xfs_buf",
+-						KM_ZONE_HWALIGN, NULL);
++			KM_ZONE_HWALIGN | KM_ZONE_SPREAD | KM_ZONE_RECLAIM,
++			NULL);
+ 	if (!xfs_buf_zone)
+ 		goto out;
+ 
 -- 
 2.22.0
