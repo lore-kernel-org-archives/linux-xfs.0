@@ -1,73 +1,37 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50830 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726164AbfHBI14 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Aug 2019 04:27:56 -0400
-Date: Fri, 2 Aug 2019 10:27:53 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/2] iomap: Support large pages
-Message-ID: <20190802082753.GA10664@lst.de>
-References: <20190731171734.21601-1-willy@infradead.org> <20190731171734.21601-2-willy@infradead.org> <20190731230315.GJ7777@dread.disaster.area> <20190801035955.GI4700@bombadil.infradead.org> <20190801162147.GB25871@lst.de> <20190801174500.GL4700@bombadil.infradead.org>
+Received: from mx2.suse.de ([195.135.220.15]:54294 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727127AbfHBJMu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Aug 2019 05:12:50 -0400
+Date: Fri, 2 Aug 2019 11:12:44 +0200
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 00/34] put_user_pages(): miscellaneous call sites
+Message-ID: <20190802091244.GD6461@dhcp22.suse.cz>
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190801174500.GL4700@bombadil.infradead.org>
+In-Reply-To: <20190802022005.5117-1-jhubbard@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
+To: john.hubbard@gmail.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>
 
-On Thu, Aug 01, 2019 at 10:45:00AM -0700, Matthew Wilcox wrote:
-> On Thu, Aug 01, 2019 at 06:21:47PM +0200, Christoph Hellwig wrote:
-> > On Wed, Jul 31, 2019 at 08:59:55PM -0700, Matthew Wilcox wrote:
-> > > -       nbits = BITS_TO_LONGS(page_size(page) / SECTOR_SIZE);
-> > > -       iop = kmalloc(struct_size(iop, uptodate, nbits),
-> > > -                       GFP_NOFS | __GFP_NOFAIL);
-> > > -       atomic_set(&iop->read_count, 0);
-> > > -       atomic_set(&iop->write_count, 0);
-> > > -       bitmap_zero(iop->uptodate, nbits);
-> > > +       n = BITS_TO_LONGS(page_size(page) >> inode->i_blkbits);
-> > > +       iop = kmalloc(struct_size(iop, uptodate, n),
-> > > +                       GFP_NOFS | __GFP_NOFAIL | __GFP_ZERO);
-> > 
-> > I am really worried about potential very large GFP_NOFS | __GFP_NOFAIL
-> > allocations here.
-> 
-> I don't think it gets _very_ large here.  Assuming a 4kB block size
-> filesystem, that's 512 bits (64 bytes, plus 16 bytes for the two counters)
-> for a 2MB page.  For machines with an 8MB PMD page, it's 272 bytes.
-> Not a very nice fraction of a page size, so probably rounded up to a 512
-> byte allocation, but well under the one page that the MM is supposed to
-> guarantee being able to allocate.
+On Thu 01-08-19 19:19:31, john.hubbard@gmail.com wrote:
+[...]
+> 2) Convert all of the call sites for get_user_pages*(), to
+> invoke put_user_page*(), instead of put_page(). This involves dozens of
+> call sites, and will take some time.
 
-And if we use GB pages?
+How do we make sure this is the case and it will remain the case in the
+future? There must be some automagic to enforce/check that. It is simply
+not manageable to do it every now and then because then 3) will simply
+be never safe.
 
-Or 512-byte blocks or at least 1k blocks, which we need to handle even
-if they are not preferred by any means.  The real issue here is not just
-the VMs capability to allocate these by some means, but that we do
-__GFP_NOFAIL allocations in nofs context.
-
-> > And thinking about this a bit more while walking
-> > at the beach I wonder if a better option is to just allocate one
-> > iomap per tail page if needed rather than blowing the head page one
-> > up.  We'd still always use the read_count and write_count in the
-> > head page, but the bitmaps in the tail pages, which should be pretty
-> > easily doable.
-> 
-> We wouldn't need to allocate an iomap per tail page, even.  We could
-> just use one bit of tail-page->private per block.  That'd work except
-> for 512-byte block size on machines with a 64kB page.  I doubt many
-> people expect that combination to work well.
-
-We'd still need to deal with the T10 PI tuples for a case like that,
-though.
-
-> 
-> One of my longer-term ambitions is to do away with tail pages under
-> certain situations; eg partition the memory between allocatable-as-4kB
-> pages and allocatable-as-2MB pages.  We'd need a different solution for
-> that, but it's a bit of a pipe dream right now anyway.
-
-Yes, lets focus on that.  Maybe at some point we'll also get extent
-based VM instead of pages ;-)
+Have you considered coccinele or some other scripted way to do the
+transition? I have no idea how to deal with future changes that would
+break the balance though.
+-- 
+Michal Hocko
+SUSE Labs
