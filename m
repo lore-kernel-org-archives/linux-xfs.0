@@ -2,113 +2,155 @@ Return-Path: <SRS0=vbm7=V6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 698A7C433FF
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Aug 2019 02:39:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B234C433FF
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Aug 2019 05:50:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 40C5620665
-	for <linux-xfs@archiver.kernel.org>; Fri,  2 Aug 2019 02:39:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D549A2073D
+	for <linux-xfs@archiver.kernel.org>; Fri,  2 Aug 2019 05:50:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="aftmkmmN"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="g4+wbBM5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728834AbfHBCjE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 1 Aug 2019 22:39:04 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:11756 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726654AbfHBCjE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:39:04 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d43a24e0000>; Thu, 01 Aug 2019 19:39:10 -0700
+        id S2388007AbfHBFt5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 2 Aug 2019 01:49:57 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:2974 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728714AbfHBFt4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 01:49:56 -0400
+Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d43cf030000>; Thu, 01 Aug 2019 22:49:55 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate101.nvidia.com (PGP Universal service);
-  Thu, 01 Aug 2019 19:39:01 -0700
+  Thu, 01 Aug 2019 22:49:54 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Thu, 01 Aug 2019 19:39:01 -0700
-Received: from [10.110.48.28] (172.20.13.39) by HQMAIL107.nvidia.com
+        by hqpgpgate101.nvidia.com on Thu, 01 Aug 2019 22:49:54 -0700
+Received: from [10.2.171.217] (10.124.1.5) by HQMAIL107.nvidia.com
  (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Fri, 2 Aug
- 2019 02:39:00 +0000
-Subject: Re: [PATCH 00/34] put_user_pages(): miscellaneous call sites
-To:     <john.hubbard@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
-CC:     Christoph Hellwig <hch@infradead.org>,
+ 2019 05:49:53 +0000
+Subject: Re: [PATCH 20/34] xen: convert put_page() to put_user_page*()
+To:     Juergen Gross <jgross@suse.com>, <john.hubbard@gmail.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+CC:     <devel@driverdev.osuosl.org>, Dave Chinner <david@fromorbit.com>,
+        Christoph Hellwig <hch@infradead.org>,
         Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        <amd-gfx@lists.freedesktop.org>, <ceph-devel@vger.kernel.org>,
-        <devel@driverdev.osuosl.org>, <devel@lists.orangefs.org>,
-        <dri-devel@lists.freedesktop.org>,
-        <intel-gfx@lists.freedesktop.org>, <kvm@vger.kernel.org>,
+        Ira Weiny <ira.weiny@intel.com>, <x86@kernel.org>,
+        <linux-mm@kvack.org>, Dave Hansen <dave.hansen@linux.intel.com>,
+        <amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+        <intel-gfx@lists.freedesktop.org>,
         <linux-arm-kernel@lists.infradead.org>,
-        <linux-block@vger.kernel.org>, <linux-crypto@vger.kernel.org>,
-        <linux-fbdev@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-media@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-nfs@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-rpi-kernel@lists.infradead.org>,
-        <linux-xfs@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <rds-devel@oss.oracle.com>, <sparclinux@vger.kernel.org>,
-        <x86@kernel.org>, <xen-devel@lists.xenproject.org>
-References: <20190802021653.4882-1-jhubbard@nvidia.com>
-From:   John Hubbard <jhubbard@nvidia.com>
+        <linux-rpi-kernel@lists.infradead.org>, <devel@lists.orangefs.org>,
+        <xen-devel@lists.xenproject.org>,
+        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
+        <rds-devel@oss.oracle.com>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        Jan Kara <jack@suse.cz>, <ceph-devel@vger.kernel.org>,
+        <kvm@vger.kernel.org>, <linux-block@vger.kernel.org>,
+        <linux-crypto@vger.kernel.org>, <linux-fbdev@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>,
+        LKML <linux-kernel@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <linux-nfs@vger.kernel.org>,
+        <linux-rdma@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        <netdev@vger.kernel.org>, <sparclinux@vger.kernel.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+ <20190802022005.5117-21-jhubbard@nvidia.com>
+ <4471e9dc-a315-42c1-0c3c-55ba4eeeb106@suse.com>
 X-Nvconfidentiality: public
-Message-ID: <ec87b662-0fc2-0951-1337-a91b4888201b@nvidia.com>
-Date:   Thu, 1 Aug 2019 19:39:00 -0700
+From:   John Hubbard <jhubbard@nvidia.com>
+Message-ID: <d5140833-e9ee-beb5-ff0a-2d13a4fe819f@nvidia.com>
+Date:   Thu, 1 Aug 2019 22:48:15 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190802021653.4882-1-jhubbard@nvidia.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+In-Reply-To: <4471e9dc-a315-42c1-0c3c-55ba4eeeb106@suse.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
  HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="UTF-8"; format="flowed"
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1564713550; bh=uB7qKWJf2vIk7MCI51NrKGKnU0tjP3n9YQM4FSsQ99A=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
+        t=1564724995; bh=OWvjPY2RJnSXiNaT1G8Eyahp8MUAsm98cTkExQmaDUY=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
          Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
          X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
          Content-Transfer-Encoding;
-        b=aftmkmmNomCdfG4/nsU7QFjmse0kzSiVn7k6qdyITGQKtpIb7fXB3ira93x2ikjhP
-         hh9fWh6OxSH7I4ITUxx9rk4nMXoUcCl6xE7j7d8OaKs0QzK3tWjGXYe1PPsA5+CMkF
-         sKiN+5/hdBTh4TsmJWAPetkvcksKG1W7KX4K24lGpfHw6t/QQ4fbKf5zlriq/zHiCI
-         WN7lLvY4tFrWOLTfdOFRIa/sFBuq00RVcHrLnsHi/Dnbw2dVeWXrugMTAYnP04jnRA
-         tXP1GLNpYcsDC/T0sb/csl6pvYXC87xnKjlVca8dQdSp/cuFTGUobSHcHyKfqM9q/X
-         eCw5n+JFkzHyg==
+        b=g4+wbBM5eRNl11+v4FSAl8PrvEnWACjbjTJMUv4Ewv3g+h7PgD8hueH5dPeoF8sW5
+         c20eFrVi38BUjWugKSUxA2GH7CM3A3OrXQMppFfNCHg/NTgln/g1EuAeIEfsheR70J
+         47ajhTYRdBziMz0qVCHRjvKDjLN869T+rpjyKMqZQbhfLl80UOF5a6wxQMkyYeuu5C
+         +SnQBQbOJUSigTfdZ2ZjmuC0GsGJhOMqTD72slI2rg2m1d7LKmLad2tBrS2UUN+9aI
+         ixGXEdOyIH0YMQhEWsNGgp8xCyCNq0cOZ0EzzfGMekaZZJReXbXnLe2japHjsnQzSN
+         gxuwPmkfTC8TQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190802023900.-q2oMWVyJELrclIvHAwpXKVAXQVyuCxFq5ojmm3NX04@z>
+Message-ID: <20190802054815.dZPvAyVLTDNDDS5pKuNU0lye0Qqor090LHTP93-JpPc@z>
 
-On 8/1/19 7:16 PM, john.hubbard@gmail.com wrote:
-> From: John Hubbard <jhubbard@nvidia.com>
-> 
-> Hi,
-> 
-> These are best characterized as miscellaneous conversions: many (not all)
-> call sites that don't involve biovec or iov_iter, nor mm/. It also leaves
-> out a few call sites that require some more work. These are mostly pretty
-> simple ones.
-> 
-> It's probably best to send all of these via Andrew's -mm tree, assuming
-> that there are no significant merge conflicts with ongoing work in other
-> trees (which I doubt, given that these are small changes).
-> 
+On 8/1/19 9:36 PM, Juergen Gross wrote:
+> On 02.08.19 04:19, john.hubbard@gmail.com wrote:
+>> From: John Hubbard <jhubbard@nvidia.com>
+...
+>> diff --git a/drivers/xen/privcmd.c b/drivers/xen/privcmd.c
+>> index 2f5ce7230a43..29e461dbee2d 100644
+>> --- a/drivers/xen/privcmd.c
+>> +++ b/drivers/xen/privcmd.c
+>> @@ -611,15 +611,10 @@ static int lock_pages(
+>> =C2=A0 static void unlock_pages(struct page *pages[], unsigned int nr_pa=
+ges)
+>> =C2=A0 {
+>> -=C2=A0=C2=A0=C2=A0 unsigned int i;
+>> -
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!pages)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
+>> -=C2=A0=C2=A0=C2=A0 for (i =3D 0; i < nr_pages; i++) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (pages[i])
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 put_=
+page(pages[i]);
+>> -=C2=A0=C2=A0=C2=A0 }
+>> +=C2=A0=C2=A0=C2=A0 put_user_pages(pages, nr_pages);
+>=20
+> You are not handling the case where pages[i] is NULL here. Or am I
+> missing a pending patch to put_user_pages() here?
+>=20
 
-In case anyone is wondering, this truncated series is due to a script failure:
-git-send-email chokes when it hits email addresses whose names have a
-comma in them, as happened here with patch 0003.  
+Hi Juergen,
 
-Please disregard this set and reply to the other thread.
+You are correct--this no longer handles the cases where pages[i]
+is NULL. It's intentional, though possibly wrong. :)
+
+I see that I should have added my standard blurb to this
+commit description. I missed this one, but some of the other patches
+have it. It makes the following, possibly incorrect claim:
+
+"This changes the release code slightly, because each page slot in the
+page_list[] array is no longer checked for NULL. However, that check
+was wrong anyway, because the get_user_pages() pattern of usage here
+never allowed for NULL entries within a range of pinned pages."
+
+The way I've seen these page arrays used with get_user_pages(),
+things are either done single page, or with a contiguous range. So
+unless I'm missing a case where someone is either
+
+a) releasing individual pages within a range (and thus likely messing
+up their count of pages they have), or
+
+b) allocating two gup ranges within the same pages[] array, with a
+gap between the allocations,
+
+...then it should be correct. If so, then I'll add the above blurb
+to this patch's commit description.
+
+If that's not the case (both here, and in 3 or 4 other patches in this
+series, then as you said, I should add NULL checks to put_user_pages()
+and put_user_pages_dirty_lock().
+
 
 thanks,
--- 
+--=20
 John Hubbard
 NVIDIA
