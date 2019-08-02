@@ -1,61 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:40977 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727686AbfHDWt7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 18:49:59 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH v2 25/34] mm/frame_vector.c: convert put_page() to put_user_page*()
-Date: Sun,  4 Aug 2019 15:49:06 -0700
-Message-Id: <20190804224915.28669-26-jhubbard@nvidia.com>
-In-Reply-To: <20190804224915.28669-1-jhubbard@nvidia.com>
-References: <20190804224915.28669-1-jhubbard@nvidia.com>
+Received: from mx2.suse.de ([195.135.220.15]:45098 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728157AbfHBEg4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Aug 2019 00:36:56 -0400
+Subject: Re: [PATCH 20/34] xen: convert put_page() to put_user_page*()
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+ <20190802022005.5117-21-jhubbard@nvidia.com>
+From: Juergen Gross <jgross@suse.com>
+Message-ID: <4471e9dc-a315-42c1-0c3c-55ba4eeeb106@suse.com>
+Date: Fri, 2 Aug 2019 06:36:51 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190802022005.5117-21-jhubbard@nvidia.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: de-DE
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
+To: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
+Cc: devel@driverdev.osuosl.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ira Weiny <ira.weiny@intel.com>, x86@kernel.org, linux-mm@kvack.org, Dave Hansen <dave.hansen@linux.intel.com>, amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, linux-rpi-kernel@lists.infradead.org, devel@lists.orangefs.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, rds-devel@oss.oracle.com, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, kvm@vger.kernel.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>
 
-From: John Hubbard <jhubbard@nvidia.com>
+On 02.08.19 04:19, john.hubbard@gmail.com wrote:
+> From: John Hubbard <jhubbard@nvidia.com>
+> 
+> For pages that were retained via get_user_pages*(), release those pages
+> via the new put_user_page*() routines, instead of via put_page() or
+> release_pages().
+> 
+> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+> ("mm: introduce put_user_page*(), placeholder versions").
+> 
+> Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+> Cc: Juergen Gross <jgross@suse.com>
+> Cc: xen-devel@lists.xenproject.org
+> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+> ---
+>   drivers/xen/gntdev.c  | 5 +----
+>   drivers/xen/privcmd.c | 7 +------
+>   2 files changed, 2 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/xen/gntdev.c b/drivers/xen/gntdev.c
+> index 4c339c7e66e5..2586b3df2bb6 100644
+> --- a/drivers/xen/gntdev.c
+> +++ b/drivers/xen/gntdev.c
+> @@ -864,10 +864,7 @@ static int gntdev_get_page(struct gntdev_copy_batch *batch, void __user *virt,
+>   
+>   static void gntdev_put_pages(struct gntdev_copy_batch *batch)
+>   {
+> -	unsigned int i;
+> -
+> -	for (i = 0; i < batch->nr_pages; i++)
+> -		put_page(batch->pages[i]);
+> +	put_user_pages(batch->pages, batch->nr_pages);
+>   	batch->nr_pages = 0;
+>   }
+>   
+> diff --git a/drivers/xen/privcmd.c b/drivers/xen/privcmd.c
+> index 2f5ce7230a43..29e461dbee2d 100644
+> --- a/drivers/xen/privcmd.c
+> +++ b/drivers/xen/privcmd.c
+> @@ -611,15 +611,10 @@ static int lock_pages(
+>   
+>   static void unlock_pages(struct page *pages[], unsigned int nr_pages)
+>   {
+> -	unsigned int i;
+> -
+>   	if (!pages)
+>   		return;
+>   
+> -	for (i = 0; i < nr_pages; i++) {
+> -		if (pages[i])
+> -			put_page(pages[i]);
+> -	}
+> +	put_user_pages(pages, nr_pages);
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+You are not handling the case where pages[i] is NULL here. Or am I
+missing a pending patch to put_user_pages() here?
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
 
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Mel Gorman <mgorman@suse.de>
-Cc: Vlastimil Babka <vbabka@suse.cz>
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- mm/frame_vector.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
-
-diff --git a/mm/frame_vector.c b/mm/frame_vector.c
-index c64dca6e27c2..f590badac776 100644
---- a/mm/frame_vector.c
-+++ b/mm/frame_vector.c
-@@ -120,7 +120,6 @@ EXPORT_SYMBOL(get_vaddr_frames);
-  */
- void put_vaddr_frames(struct frame_vector *vec)
- {
--	int i;
- 	struct page **pages;
- 
- 	if (!vec->got_ref)
-@@ -133,8 +132,7 @@ void put_vaddr_frames(struct frame_vector *vec)
- 	 */
- 	if (WARN_ON(IS_ERR(pages)))
- 		goto out;
--	for (i = 0; i < vec->nr_frames; i++)
--		put_page(pages[i]);
-+	put_user_pages(pages, vec->nr_frames);
- 	vec->got_ref = false;
- out:
- 	vec->nr_frames = 0;
--- 
-2.22.0
+Juergen
