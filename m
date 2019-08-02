@@ -1,53 +1,64 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:17795 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391971AbfHBTew (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 15:34:52 -0400
-Subject: Re: [PATCH 00/34] put_user_pages(): miscellaneous call sites
-References: <20190802021653.4882-1-jhubbard@nvidia.com>
- <20190802080554.GD2332@hirez.programming.kicks-ass.net>
-From: John Hubbard <jhubbard@nvidia.com>
-Message-ID: <8968c928-5712-03a9-68df-051f5b58fdbc@nvidia.com>
-Date: Fri, 2 Aug 2019 12:33:13 -0700
+Received: from mail.kernel.org ([198.145.29.99]:44032 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729919AbfHBWci (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Aug 2019 18:32:38 -0400
+Message-ID: <2f0d5993e9731808b73b0018f5fc4b3335fc6373.camel@kernel.org>
+Subject: Re: [PATCH 03/34] net/ceph: convert put_page() to put_user_page*()
+From: Jeff Layton <jlayton@kernel.org>
+Date: Fri, 02 Aug 2019 18:32:33 -0400
+In-Reply-To: <20190802022005.5117-4-jhubbard@nvidia.com>
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+         <20190802022005.5117-4-jhubbard@nvidia.com>
+Content-Type: text/plain; charset="UTF-8"
 MIME-Version: 1.0
-In-Reply-To: <20190802080554.GD2332@hirez.programming.kicks-ass.net>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Peter Zijlstra <peterz@infradead.org>, john.hubbard@gmail.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org
+To: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?ISO-8859-1?Q?J=E9r=F4me?= Glisse <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Ilya Dryomov <idryomov@gmail.com>, Sage Weil <sage@redhat.com>, "David S . Miller" <davem@davemloft.net>
 
-On 8/2/19 1:05 AM, Peter Zijlstra wrote:
-> On Thu, Aug 01, 2019 at 07:16:19PM -0700, john.hubbard@gmail.com wrote:
+On Thu, 2019-08-01 at 19:19 -0700, john.hubbard@gmail.com wrote:
+> From: John Hubbard <jhubbard@nvidia.com>
 > 
->> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
->> ("mm: introduce put_user_page*(), placeholder versions"). That commit
->> has an extensive description of the problem and the planned steps to
->> solve it, but the highlites are:
+> For pages that were retained via get_user_pages*(), release those pages
+> via the new put_user_page*() routines, instead of via put_page() or
+> release_pages().
 > 
-> That is one horridly mangled Changelog there :-/ It looks like it's
-> partially duplicated.
-
-Yeah. It took so long to merge that I think I was no longer able to
-actually see the commit description, after N readings. sigh
-
+> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+> ("mm: introduce put_user_page*(), placeholder versions").
 > 
-> Anyway; no objections to any of that, but I just wanted to mention that
-> there are other problems with long term pinning that haven't been
-> mentioned, notably they inhibit compaction.
+> Cc: Ilya Dryomov <idryomov@gmail.com>
+> Cc: Sage Weil <sage@redhat.com>
+> Cc: David S. Miller <davem@davemloft.net>
+> Cc: ceph-devel@vger.kernel.org
+> Cc: netdev@vger.kernel.org
+> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+> ---
+>  net/ceph/pagevec.c | 8 +-------
+>  1 file changed, 1 insertion(+), 7 deletions(-)
 > 
-> A long time ago I proposed an interface to mark pages as pinned, such
-> that we could run compaction before we actually did the pinning.
-> 
+> diff --git a/net/ceph/pagevec.c b/net/ceph/pagevec.c
+> index 64305e7056a1..c88fff2ab9bd 100644
+> --- a/net/ceph/pagevec.c
+> +++ b/net/ceph/pagevec.c
+> @@ -12,13 +12,7 @@
+>  
+>  void ceph_put_page_vector(struct page **pages, int num_pages, bool dirty)
+>  {
+> -	int i;
+> -
+> -	for (i = 0; i < num_pages; i++) {
+> -		if (dirty)
+> -			set_page_dirty_lock(pages[i]);
+> -		put_page(pages[i]);
+> -	}
+> +	put_user_pages_dirty_lock(pages, num_pages, dirty);
+>  	kvfree(pages);
+>  }
+>  EXPORT_SYMBOL(ceph_put_page_vector);
 
-This is all heading toward marking pages as pinned, so we should finally
-get there.  I'll post the RFC for tracking pinned pages shortly.
+This patch looks sane enough. Assuming that the earlier patches are OK:
 
-
-thanks,
--- 
-John Hubbard
-NVIDIA
+Acked-by: Jeff Layton <jlayton@kernel.org>
