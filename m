@@ -1,58 +1,80 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:40229 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389247AbfHBCU0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:26 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH 09/34] media/v4l2-core/mm: convert put_page() to put_user_page*()
-Date: Thu,  1 Aug 2019 19:19:40 -0700
-Message-Id: <20190802022005.5117-10-jhubbard@nvidia.com>
-In-Reply-To: <20190802022005.5117-1-jhubbard@nvidia.com>
-References: <20190802022005.5117-1-jhubbard@nvidia.com>
+Received: from out4436.biz.mail.alibaba.com ([47.88.44.36]:53734 "EHLO
+        out4436.biz.mail.alibaba.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726796AbfHBCF2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:05:28 -0400
+Date: Fri, 2 Aug 2019 09:55:22 +0800
+From: Eryu Guan <eguan@linux.alibaba.com>
+Subject: Re: [PATCH 5/5] xfs: test new v5 bulkstat commands
+Message-ID: <20190802015454.GF52397@e18g06458.et15sqa>
+References: <156462375516.2945299.16564635037236083118.stgit@magnolia>
+ <156462379043.2945299.17354996626313190310.stgit@magnolia>
+ <20190801104814.GC59093@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190801104814.GC59093@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Mauro Carvalho Chehab <mchehab@kernel.org>, Kees Cook <keescook@chromium.org>, Hans Verkuil <hans.verkuil@cisco.com>, Sakari Ailus <sakari.ailus@linux.intel.com>, Robin Murphy <robin.murphy@arm.com>, Souptick Joarder <jrdr.linux@gmail.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, guaneryu@gmail.com, linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: John Hubbard <jhubbard@nvidia.com>
+On Thu, Aug 01, 2019 at 06:48:15AM -0400, Brian Foster wrote:
+> On Wed, Jul 31, 2019 at 06:43:10PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Check that the new v5 bulkstat commands do everything the old one do,
+> > and then make sure the new functionality actually works.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  .gitignore                 |    1 
+> >  src/Makefile               |    2 
+> >  src/bulkstat_null_ocount.c |   61 +++++++++
+> >  tests/xfs/744              |  215 ++++++++++++++++++++++++++++++++
+> >  tests/xfs/744.out          |  297 ++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/xfs/745              |   47 +++++++
+> >  tests/xfs/745.out          |    2 
+> >  tests/xfs/group            |    2 
+> >  8 files changed, 626 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/bulkstat_null_ocount.c
+> >  create mode 100755 tests/xfs/744
+> >  create mode 100644 tests/xfs/744.out
+> >  create mode 100755 tests/xfs/745
+> >  create mode 100644 tests/xfs/745.out
+> > 
+> > 
+> ...
+> > diff --git a/tests/xfs/group b/tests/xfs/group
+> > index 270d82ff..ef0cf92c 100644
+> > --- a/tests/xfs/group
+> > +++ b/tests/xfs/group
+> > @@ -506,3 +506,5 @@
+> >  506 auto quick health
+> >  507 clone
+> >  508 auto quick quota
+> > +744 auto ioctl quick
+> > +745 auto ioctl quick
+> > 
+> 
+> One quick note that xfs/744 runs in ~68 seconds in my (low resource)
+> test VM. Not a problem in and of itself, but it seems slightly long for
+> the quick group. Can somebody remind me of the quick group criteria?
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+A quick test is usually under 30s run-time.
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
+> 
+> FWIW if I kick off a quick group run, the first 10-15 tests complete in
+> 10s or so or less with the exception of generic/013, which takes over a
+> minute. So perhaps anything under a minute or so is fine..? Either way,
+> that can be easily changed on merge if appropriate:
 
-Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
-Cc: Kees Cook <keescook@chromium.org>
-Cc: Hans Verkuil <hans.verkuil@cisco.com>
-Cc: Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc: Jan Kara <jack@suse.cz>
-Cc: Robin Murphy <robin.murphy@arm.com>
-Cc: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-media@vger.kernel.org
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- drivers/media/v4l2-core/videobuf-dma-sg.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+Yeah, I'll drop quick group if it's not really quick :)
 
-diff --git a/drivers/media/v4l2-core/videobuf-dma-sg.c b/drivers/media/v4l2-core/videobuf-dma-sg.c
-index 66a6c6c236a7..d6eeb437ec19 100644
---- a/drivers/media/v4l2-core/videobuf-dma-sg.c
-+++ b/drivers/media/v4l2-core/videobuf-dma-sg.c
-@@ -349,8 +349,7 @@ int videobuf_dma_free(struct videobuf_dmabuf *dma)
- 	BUG_ON(dma->sglen);
- 
- 	if (dma->pages) {
--		for (i = 0; i < dma->nr_pages; i++)
--			put_page(dma->pages[i]);
-+		put_user_pages(dma->pages, dma->nr_pages);
- 		kfree(dma->pages);
- 		dma->pages = NULL;
- 	}
--- 
-2.22.0
+> 
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+Thanks for the review!
+
+Eryu
