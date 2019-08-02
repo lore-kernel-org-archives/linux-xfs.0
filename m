@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:39900 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390865AbfHBCUk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:40 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:37949 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390951AbfHBCUx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:53 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH 17/34] vfio: convert put_page() to put_user_page*()
-Date: Thu,  1 Aug 2019 19:19:48 -0700
-Message-Id: <20190802022005.5117-18-jhubbard@nvidia.com>
+Subject: [PATCH 26/34] mm/gup_benchmark.c: convert put_page() to put_user_page*()
+Date: Thu,  1 Aug 2019 19:19:57 -0700
+Message-Id: <20190802022005.5117-27-jhubbard@nvidia.com>
 In-Reply-To: <20190802022005.5117-1-jhubbard@nvidia.com>
 References: <20190802022005.5117-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
@@ -15,7 +15,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Alex Williamson <alex.williamson@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Dan Carpenter <dan.carpenter@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Keith Busch <keith.busch@intel.com>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, "Michael S . Tsirkin" <mst@redhat.com>, YueHaibing <yuehaibing@huawei.com>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -26,48 +26,29 @@ release_pages().
 This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
-Note that this effectively changes the code's behavior in
-qp_release_pages(): it now ultimately calls set_page_dirty_lock(),
-instead of set_page_dirty(). This is probably more accurate.
-
-As Christophe Hellwig put it, "set_page_dirty() is only safe if we are
-dealing with a file backed page where we have reference on the inode it
-hangs off." [1]
-
-[1] https://lore.kernel.org/r/20190723153640.GB720@lst.de
-
-Cc: Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Kirill A. Shutemov <kirill.shutemov@linux.intel.com>
+Cc: Michael S. Tsirkin <mst@redhat.com>
+Cc: YueHaibing <yuehaibing@huawei.com>
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/vfio/vfio_iommu_type1.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ mm/gup_benchmark.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/vfio/vfio_iommu_type1.c b/drivers/vfio/vfio_iommu_type1.c
-index 054391f30fa8..5a5461a14299 100644
---- a/drivers/vfio/vfio_iommu_type1.c
-+++ b/drivers/vfio/vfio_iommu_type1.c
-@@ -320,9 +320,9 @@ static int put_pfn(unsigned long pfn, int prot)
- {
- 	if (!is_invalid_reserved_pfn(pfn)) {
- 		struct page *page = pfn_to_page(pfn);
--		if (prot & IOMMU_WRITE)
--			SetPageDirty(page);
--		put_page(page);
-+		bool dirty = prot & IOMMU_WRITE;
-+
-+		put_user_pages_dirty_lock(&page, 1, dirty);
- 		return 1;
+diff --git a/mm/gup_benchmark.c b/mm/gup_benchmark.c
+index 7dd602d7f8db..515ac8eeb6ee 100644
+--- a/mm/gup_benchmark.c
++++ b/mm/gup_benchmark.c
+@@ -79,7 +79,7 @@ static int __gup_benchmark_ioctl(unsigned int cmd,
+ 	for (i = 0; i < nr_pages; i++) {
+ 		if (!pages[i])
+ 			break;
+-		put_page(pages[i]);
++		put_user_page(pages[i]);
  	}
- 	return 0;
-@@ -356,7 +356,7 @@ static int vaddr_get_pfn(struct mm_struct *mm, unsigned long vaddr,
- 		 */
- 		if (ret > 0 && vma_is_fsdax(vmas[0])) {
- 			ret = -EOPNOTSUPP;
--			put_page(page[0]);
-+			put_user_page(page[0]);
- 		}
- 	}
- 	up_read(&mm->mmap_sem);
+ 	end_time = ktime_get();
+ 	gup->put_delta_usec = ktime_us_delta(end_time, start_time);
 -- 
 2.22.0
