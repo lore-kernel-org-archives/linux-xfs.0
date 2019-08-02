@@ -1,53 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:5322 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726044AbfHBSwz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 14:52:55 -0400
-Subject: Re: [PATCH 16/34] drivers/tee: convert put_page() to put_user_page*()
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:17220 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2404439AbfHBT0l (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 15:26:41 -0400
+Subject: Re: [PATCH 20/34] xen: convert put_page() to put_user_page*()
 References: <20190802022005.5117-1-jhubbard@nvidia.com>
- <20190802022005.5117-17-jhubbard@nvidia.com>
- <CAHUa44G++iiwU62jj7QH=V3sr4z26sf007xrwWLPw6AAeMLAEw@mail.gmail.com>
+ <20190802022005.5117-21-jhubbard@nvidia.com>
+ <4471e9dc-a315-42c1-0c3c-55ba4eeeb106@suse.com>
+ <d5140833-e9ee-beb5-ff0a-2d13a4fe819f@nvidia.com>
+ <d4931311-db01-e8c3-0f8c-d64685dc2143@suse.com>
+ <2807E5FD2F6FDA4886F6618EAC48510E79E66216@CRSMSX101.amr.corp.intel.com>
 From: John Hubbard <jhubbard@nvidia.com>
-Message-ID: <23cc9ac3-4b03-9187-aae6-d64ba8cfca00@nvidia.com>
-Date: Fri, 2 Aug 2019 11:51:14 -0700
+Message-ID: <746b2412-f48a-9722-2763-253a1b9c899d@nvidia.com>
+Date: Fri, 2 Aug 2019 12:25:01 -0700
 MIME-Version: 1.0
-In-Reply-To: <CAHUa44G++iiwU62jj7QH=V3sr4z26sf007xrwWLPw6AAeMLAEw@mail.gmail.com>
+In-Reply-To: <2807E5FD2F6FDA4886F6618EAC48510E79E66216@CRSMSX101.amr.corp.intel.com>
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jens Wiklander <jens.wiklander@linaro.org>, john.hubbard@gmail.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, Linux ARM <linux-arm-kernel@lists.infradead.org>, linux-block@vger.kernel.org, "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" <linux-crypto@vger.kernel.org>, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org
+To: "Weiny, Ira" <ira.weiny@intel.com>, Juergen Gross <jgross@suse.com>, "john.hubbard@gmail.com" <john.hubbard@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: "devel@driverdev.osuosl.org" <devel@driverdev.osuosl.org>, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, "Williams, Dan J" <dan.j.williams@intel.com>, "x86@kernel.org" <x86@kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, Dave Hansen <dave.hansen@linux.intel.com>, "amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "intel-gfx@lists.freedesktop.org" <intel-gfx@lists.freedesktop.org>, "linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>, "linux-rpi-kernel@lists.infradead.org" <linux-rpi-kernel@lists.infradead.org>, "devel@lists.orangefs.org" <devel@lists.orangefs.org>, "xen-devel@lists.xenproject.org" <xen-devel@lists.xenproject.org>, Boris Ostrovsky <boris.ostrovsky@oracle.com>, "rds-devel@oss.oracle.com" <rds-devel@oss.oracle.com>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Jan Kara <jack@suse.cz>, "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>, "kvm@vger.kernel.org" <kvm@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-crypto@vger.kernel.org" <linux-crypto@vger.kernel.org>, "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "linux-media@vger.kernel.org" <linux-media@vger.kernel.org>, "linux-nfs@vger.kernel.org" <linux-nfs@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "sparclinux@vger.kernel.org" <sparclinux@vger.kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>
 
-On 8/1/19 11:29 PM, Jens Wiklander wrote:
-> On Fri, Aug 2, 2019 at 4:20 AM <john.hubbard@gmail.com> wrote:
+On 8/2/19 9:09 AM, Weiny, Ira wrote:
 >>
->> From: John Hubbard <jhubbard@nvidia.com>
+>> On 02.08.19 07:48, John Hubbard wrote:
+>>> On 8/1/19 9:36 PM, Juergen Gross wrote:
+>>>> On 02.08.19 04:19, john.hubbard@gmail.com wrote:
+>>>>> From: John Hubbard <jhubbard@nvidia.com>
+>>> ...
+>>> If that's not the case (both here, and in 3 or 4 other patches in this
+>>> series, then as you said, I should add NULL checks to put_user_pages()
+>>> and put_user_pages_dirty_lock().
 >>
->> For pages that were retained via get_user_pages*(), release those pages
->> via the new put_user_page*() routines, instead of via put_page() or
->> release_pages().
+>> In this case it is not correct, but can easily be handled. The NULL case can
+>> occur only in an error case with the pages array filled partially or not at all.
 >>
->> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
->> ("mm: introduce put_user_page*(), placeholder versions").
->>
->> Cc: Jens Wiklander <jens.wiklander@linaro.org>
->> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
->> ---
->>   drivers/tee/tee_shm.c | 10 ++--------
->>   1 file changed, 2 insertions(+), 8 deletions(-)
+>> I'd prefer something like the attached patch here.
 > 
-> Acked-by: Jens Wiklander <jens.wiklander@linaro.org>
-> 
-> I suppose you're taking this via your own tree or such.
+> I'm not an expert in this code and have not looked at it carefully but that patch does seem to be the better fix than forcing NULL checks on everyone.
 > 
 
-Hi Jens,
+OK, I'll use Juergen's approach, and also check for that pattern in the
+other patches.
 
-Thanks for the ACK! I'm expecting that Andrew will take this through his
--mm tree, unless he pops up and says otherwise.
 
 thanks,
 -- 
