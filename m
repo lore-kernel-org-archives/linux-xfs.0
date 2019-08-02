@@ -1,101 +1,59 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56173 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731376AbfHBAAC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 20:00:02 -0400
-Date: Fri, 2 Aug 2019 09:58:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
-Message-ID: <20190801235849.GO7777@dread.disaster.area>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-10-david@fromorbit.com>
- <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:40730 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389155AbfHBCUR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:17 -0400
+From: john.hubbard@gmail.com
+Subject: [PATCH 03/34] net/ceph: convert put_page() to put_user_page*()
+Date: Thu,  1 Aug 2019 19:19:34 -0700
+Message-Id: <20190802022005.5117-4-jhubbard@nvidia.com>
+In-Reply-To: <20190802022005.5117-1-jhubbard@nvidia.com>
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Mason <clm@fb.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Ilya Dryomov <idryomov@gmail.com>, Sage Weil <sage@redhat.com>, "David S . Miller" <davem@davemloft.net>
 
-On Thu, Aug 01, 2019 at 01:39:34PM +0000, Chris Mason wrote:
-> On 31 Jul 2019, at 22:17, Dave Chinner wrote:
-> 
-> > From: Dave Chinner <dchinner@redhat.com>
-> >
-> > Running metadata intensive workloads, I've been seeing the AIL
-> > pushing getting stuck on pinned buffers and triggering log forces.
-> > The log force is taking a long time to run because the log IO is
-> > getting throttled by wbt_wait() - the block layer writeback
-> > throttle. It's being throttled because there is a huge amount of
-> > metadata writeback going on which is filling the request queue.
-> >
-> > IOWs, we have a priority inversion problem here.
-> >
-> > Mark the log IO bios with REQ_IDLE so they don't get throttled
-> > by the block layer writeback throttle. When we are forcing the CIL,
-> > we are likely to need to to tens of log IOs, and they are issued as
-> > fast as they can be build and IO completed. Hence REQ_IDLE is
-> > appropriate - it's an indication that more IO will follow shortly.
-> >
-> > And because we also set REQ_SYNC, the writeback throttle will no
-> > treat log IO the same way it treats direct IO writes - it will not
-> > throttle them at all. Hence we solve the priority inversion problem
-> > caused by the writeback throttle being unable to distinguish between
-> > high priority log IO and background metadata writeback.
-> >
->   [ cc Jens ]
-> 
-> We spent a lot of time getting rid of these inversions in io.latency 
-> (and the new io.cost), where REQ_META just blows through the throttling 
-> and goes into back charging instead.
+From: John Hubbard <jhubbard@nvidia.com>
 
-Which simply reinforces the fact that that request type based
-throttling is a fundamentally broken architecture.
+For pages that were retained via get_user_pages*(), release those pages
+via the new put_user_page*() routines, instead of via put_page() or
+release_pages().
 
-> It feels awkward to have one set of prio inversion workarounds for io.* 
-> and another for wbt.  Jens, should we make an explicit one that doesn't 
-> rely on magic side effects, or just decide that metadata is meta enough 
-> to break all the rules?
+This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+("mm: introduce put_user_page*(), placeholder versions").
 
-The problem isn't REQ_META blows throw the throttling, the problem
-is that different REQ_META IOs have different priority.
+Cc: Ilya Dryomov <idryomov@gmail.com>
+Cc: Sage Weil <sage@redhat.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: ceph-devel@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ net/ceph/pagevec.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-IOWs, the problem here is that we are trying to infer priority from
-the request type rather than an actual priority assigned by the
-submitter. There is no way direct IO has higher priority in a
-filesystem than log IO tagged with REQ_META as direct IO can require
-log IO to make progress. Priority is a policy determined by the
-submitter, not the mechanism doing the throttling.
-
-Can we please move this all over to priorites based on
-bio->b_ioprio? And then document how the range of priorities are
-managed, such as:
-
-(99 = highest prio to 0 = lowest)
-
-swap out
-swap in				>90
-User hard RT max		89
-User hard RT min		80
-filesystem max			79
-ionice max			60
-background data writeback	40
-ionice min			20
-filesystem min			10
-idle				0
-
-So that we can appropriately prioritise different types of kernel
-internal IO w.r.t user controlled IO priorities? This way we can
-still tag the bios with the type of data they contain, but we
-no longer use that to determine whether to throttle that IO or not -
-throttling/scheduling should be done entirely on a priority basis.
-
-Cheers,
-
-Dave.
+diff --git a/net/ceph/pagevec.c b/net/ceph/pagevec.c
+index 64305e7056a1..c88fff2ab9bd 100644
+--- a/net/ceph/pagevec.c
++++ b/net/ceph/pagevec.c
+@@ -12,13 +12,7 @@
+ 
+ void ceph_put_page_vector(struct page **pages, int num_pages, bool dirty)
+ {
+-	int i;
+-
+-	for (i = 0; i < num_pages; i++) {
+-		if (dirty)
+-			set_page_dirty_lock(pages[i]);
+-		put_page(pages[i]);
+-	}
++	put_user_pages_dirty_lock(pages, num_pages, dirty);
+ 	kvfree(pages);
+ }
+ EXPORT_SYMBOL(ceph_put_page_vector);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.22.0
