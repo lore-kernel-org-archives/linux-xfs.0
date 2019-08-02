@@ -1,43 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:58270 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2405370AbfHBSeW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 14:34:22 -0400
-Date: Fri, 2 Aug 2019 11:34:19 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
-Message-ID: <20190802183419.GC5597@bombadil.infradead.org>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-10-david@fromorbit.com>
- <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
- <20190801235849.GO7777@dread.disaster.area>
- <7093F5C3-53D2-4C49-9C0D-64B20C565D18@fb.com>
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:5322 "EHLO
+        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726044AbfHBSwz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 14:52:55 -0400
+Subject: Re: [PATCH 16/34] drivers/tee: convert put_page() to put_user_page*()
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+ <20190802022005.5117-17-jhubbard@nvidia.com>
+ <CAHUa44G++iiwU62jj7QH=V3sr4z26sf007xrwWLPw6AAeMLAEw@mail.gmail.com>
+From: John Hubbard <jhubbard@nvidia.com>
+Message-ID: <23cc9ac3-4b03-9187-aae6-d64ba8cfca00@nvidia.com>
+Date: Fri, 2 Aug 2019 11:51:14 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7093F5C3-53D2-4C49-9C0D-64B20C565D18@fb.com>
+In-Reply-To: <CAHUa44G++iiwU62jj7QH=V3sr4z26sf007xrwWLPw6AAeMLAEw@mail.gmail.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Chris Mason <clm@fb.com>
-Cc: Dave Chinner <david@fromorbit.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Jens Wiklander <jens.wiklander@linaro.org>, john.hubbard@gmail.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, Linux ARM <linux-arm-kernel@lists.infradead.org>, linux-block@vger.kernel.org, "open list:HARDWARE RANDOM NUMBER GENERATOR CORE" <linux-crypto@vger.kernel.org>, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org
 
-On Fri, Aug 02, 2019 at 02:11:53PM +0000, Chris Mason wrote:
-> Yes and no.  At some point important FS threads have the potential to 
-> wait on every single REQ_META IO on the box, so every single REQ_META IO 
-> has the potential to create priority inversions.
+On 8/1/19 11:29 PM, Jens Wiklander wrote:
+> On Fri, Aug 2, 2019 at 4:20 AM <john.hubbard@gmail.com> wrote:
+>>
+>> From: John Hubbard <jhubbard@nvidia.com>
+>>
+>> For pages that were retained via get_user_pages*(), release those pages
+>> via the new put_user_page*() routines, instead of via put_page() or
+>> release_pages().
+>>
+>> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+>> ("mm: introduce put_user_page*(), placeholder versions").
+>>
+>> Cc: Jens Wiklander <jens.wiklander@linaro.org>
+>> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+>> ---
+>>   drivers/tee/tee_shm.c | 10 ++--------
+>>   1 file changed, 2 insertions(+), 8 deletions(-)
+> 
+> Acked-by: Jens Wiklander <jens.wiklander@linaro.org>
+> 
+> I suppose you're taking this via your own tree or such.
+> 
 
-[...]
+Hi Jens,
 
-> Tejun reminded me that in a lot of ways, swap is user IO and it's 
-> actually fine to have it prioritized at the same level as user IO.  We 
-> don't want to let a low prio app thrash the drive swapping things in and 
-> out all the time, and it's actually fine to make them wait as long as 
-> other higher priority processes aren't waiting for the memory.  This 
-> depends on the cgroup config, so wrt your current patches it probably 
-> sounds crazy, but we have a lot of data around this from the fleet.
+Thanks for the ACK! I'm expecting that Andrew will take this through his
+-mm tree, unless he pops up and says otherwise.
 
-swap is only user IO if we're doing the swapping in response to an
-allocation done on behalf of a user thread.  If one of the above-mentioned
-important FS threads does a memory allocation which causes swapping,
-that priority needs to be inherited by the IO.
+thanks,
+-- 
+John Hubbard
+NVIDIA
