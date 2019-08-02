@@ -1,36 +1,51 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:59956 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731650AbfHBIHV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 04:07:21 -0400
-Date: Fri, 2 Aug 2019 10:05:54 +0200
-From: Peter Zijlstra <peterz@infradead.org>
-Subject: Re: [PATCH 00/34] put_user_pages(): miscellaneous call sites
-Message-ID: <20190802080554.GD2332@hirez.programming.kicks-ass.net>
-References: <20190802021653.4882-1-jhubbard@nvidia.com>
+Received: from bombadil.infradead.org ([198.137.202.133]:39132 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2403902AbfHBIMX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 04:12:23 -0400
+Date: Fri, 2 Aug 2019 01:12:21 -0700
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
+Message-ID: <20190802081221.GA15849@infradead.org>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-10-david@fromorbit.com>
+ <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
+ <20190801235849.GO7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190802021653.4882-1-jhubbard@nvidia.com>
+In-Reply-To: <20190801235849.GO7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: john.hubbard@gmail.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: Chris Mason <clm@fb.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
 
-On Thu, Aug 01, 2019 at 07:16:19PM -0700, john.hubbard@gmail.com wrote:
+On Fri, Aug 02, 2019 at 09:58:49AM +1000, Dave Chinner wrote:
+> Which simply reinforces the fact that that request type based
+> throttling is a fundamentally broken architecture.
+> 
+> > It feels awkward to have one set of prio inversion workarounds for io.* 
+> > and another for wbt.  Jens, should we make an explicit one that doesn't 
+> > rely on magic side effects, or just decide that metadata is meta enough 
+> > to break all the rules?
+> 
+> The problem isn't REQ_META blows throw the throttling, the problem
+> is that different REQ_META IOs have different priority.
+> 
+> IOWs, the problem here is that we are trying to infer priority from
+> the request type rather than an actual priority assigned by the
+> submitter. There is no way direct IO has higher priority in a
+> filesystem than log IO tagged with REQ_META as direct IO can require
+> log IO to make progress. Priority is a policy determined by the
+> submitter, not the mechanism doing the throttling.
+> 
+> Can we please move this all over to priorites based on
+> bio->b_ioprio? And then document how the range of priorities are
+> managed, such as:
 
-> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-> ("mm: introduce put_user_page*(), placeholder versions"). That commit
-> has an extensive description of the problem and the planned steps to
-> solve it, but the highlites are:
-
-That is one horridly mangled Changelog there :-/ It looks like it's
-partially duplicated.
-
-Anyway; no objections to any of that, but I just wanted to mention that
-there are other problems with long term pinning that haven't been
-mentioned, notably they inhibit compaction.
-
-A long time ago I proposed an interface to mark pages as pinned, such
-that we could run compaction before we actually did the pinning.
+Yes, we need to fix the magic deducted throttling behavior, especiall
+the odd REQ_IDLE that in its various incarnations has been a massive
+source of toruble and confusion.  Not sure tons of priorities are
+really helping, given that even hardware with priority level support
+usually just supports about two priorit levels.
