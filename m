@@ -1,72 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:37348 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727614AbfHDWt4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 18:49:56 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH v2 23/34] uprobes: convert put_page() to put_user_page*()
-Date: Sun,  4 Aug 2019 15:49:04 -0700
-Message-Id: <20190804224915.28669-24-jhubbard@nvidia.com>
-In-Reply-To: <20190804224915.28669-1-jhubbard@nvidia.com>
-References: <20190804224915.28669-1-jhubbard@nvidia.com>
+Received: from mx1.redhat.com ([209.132.183.28]:50332 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732033AbfHBP1M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Aug 2019 11:27:12 -0400
+Date: Fri, 2 Aug 2019 11:27:09 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 01/24] mm: directed shrinker work deferral
+Message-ID: <20190802152709.GA60893@bfoster>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-2-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190801021752.4986-2-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, Arnaldo Carvalho de Melo <acme@kernel.org>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, Jiri Olsa <jolsa@redhat.com>, Namhyung Kim <namhyung@kernel.org>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-From: John Hubbard <jhubbard@nvidia.com>
+On Thu, Aug 01, 2019 at 12:17:29PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Introduce a mechanism for ->count_objects() to indicate to the
+> shrinker infrastructure that the reclaim context will not allow
+> scanning work to be done and so the work it decides is necessary
+> needs to be deferred.
+> 
+> This simplifies the code by separating out the accounting of
+> deferred work from the actual doing of the work, and allows better
+> decisions to be made by the shrinekr control logic on what action it
+> can take.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  include/linux/shrinker.h | 7 +++++++
+>  mm/vmscan.c              | 8 ++++++++
+>  2 files changed, 15 insertions(+)
+> 
+> diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> index 9443cafd1969..af78c475fc32 100644
+> --- a/include/linux/shrinker.h
+> +++ b/include/linux/shrinker.h
+> @@ -31,6 +31,13 @@ struct shrink_control {
+>  
+>  	/* current memcg being shrunk (for memcg aware shrinkers) */
+>  	struct mem_cgroup *memcg;
+> +
+> +	/*
+> +	 * set by ->count_objects if reclaim context prevents reclaim from
+> +	 * occurring. This allows the shrinker to immediately defer all the
+> +	 * work and not even attempt to scan the cache.
+> +	 */
+> +	bool will_defer;
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+Functionality wise this seems fairly straightforward. FWIW, I find the
+'will_defer' name a little confusing because it implies to me that the
+shrinker is telling the caller about something it would do if called as
+opposed to explicitly telling the caller to defer. I'd just call it
+'defer' I guess, but that's just my .02. ;P
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
+>  };
+>  
+>  #define SHRINK_STOP (~0UL)
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 44df66a98f2a..ae3035fe94bc 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -541,6 +541,13 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+>  				   freeable, delta, total_scan, priority);
+>  
+> +	/*
+> +	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+> +	 * defer the work to a context that can scan the cache.
+> +	 */
+> +	if (shrinkctl->will_defer)
+> +		goto done;
+> +
 
-Cc: Peter Zijlstra <peterz@infradead.org>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Arnaldo Carvalho de Melo <acme@kernel.org>
-Cc: Alexander Shishkin <alexander.shishkin@linux.intel.com>
-Cc: Jiri Olsa <jolsa@redhat.com>
-Cc: Namhyung Kim <namhyung@kernel.org>
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- kernel/events/uprobes.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Who's responsible for clearing the flag? Perhaps we should do so here
+once it's acted upon since we don't call into the shrinker again?
 
-diff --git a/kernel/events/uprobes.c b/kernel/events/uprobes.c
-index 84fa00497c49..4a575de8cec8 100644
---- a/kernel/events/uprobes.c
-+++ b/kernel/events/uprobes.c
-@@ -397,7 +397,7 @@ __update_ref_ctr(struct mm_struct *mm, unsigned long vaddr, short d)
- 	ret = 0;
- out:
- 	kunmap_atomic(kaddr);
--	put_page(page);
-+	put_user_page(page);
- 	return ret;
- }
- 
-@@ -504,7 +504,7 @@ int uprobe_write_opcode(struct arch_uprobe *auprobe, struct mm_struct *mm,
- 	ret = __replace_page(vma, vaddr, old_page, new_page);
- 	put_page(new_page);
- put_old:
--	put_page(old_page);
-+	put_user_page(old_page);
- 
- 	if (unlikely(ret == -EAGAIN))
- 		goto retry;
-@@ -1981,7 +1981,7 @@ static int is_trap_at_addr(struct mm_struct *mm, unsigned long vaddr)
- 		return result;
- 
- 	copy_from_page(page, vaddr, &opcode, UPROBE_SWBP_INSN_SIZE);
--	put_page(page);
-+	put_user_page(page);
-  out:
- 	/* This needs to return true for any variant of the trap insn */
- 	return is_trap_insn(&opcode);
--- 
-2.22.0
+Note that I see this structure is reinitialized on every iteration in
+the caller, but there already is the SHRINK_EMPTY case where we call
+back into do_shrink_slab(). Granted the deferred state likely hasn't
+changed, but the fact that we'd call back into the count callback to set
+it again implies the logic could be a bit more explicit, particularly if
+this will eventually be used for more dynamic shrinker state that might
+change call to call (i.e., object dirty state, etc.).
+
+BTW, do we need to care about the ->nr_cached_objects() call from the
+generic superblock shrinker (super_cache_scan())?
+
+Brian
+
+>  	/*
+>  	 * Normally, we should not scan less than batch_size objects in one
+>  	 * pass to avoid too frequent shrinker calls, but if the slab has less
+> @@ -575,6 +582,7 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  		cond_resched();
+>  	}
+>  
+> +done:
+>  	if (next_deferred >= scanned)
+>  		next_deferred -= scanned;
+>  	else
+> -- 
+> 2.22.0
+> 
