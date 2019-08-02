@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:44608 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403914AbfHBCU6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:58 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:44583 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389189AbfHBCUi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 1 Aug 2019 22:20:38 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH 29/34] mm/process_vm_access.c: convert put_page() to put_user_page*()
-Date: Thu,  1 Aug 2019 19:20:00 -0700
-Message-Id: <20190802022005.5117-30-jhubbard@nvidia.com>
+Subject: [PATCH 16/34] drivers/tee: convert put_page() to put_user_page*()
+Date: Thu,  1 Aug 2019 19:19:47 -0700
+Message-Id: <20190802022005.5117-17-jhubbard@nvidia.com>
 In-Reply-To: <20190802022005.5117-1-jhubbard@nvidia.com>
 References: <20190802022005.5117-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
@@ -15,7 +15,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Al Viro <viro@zeniv.linux.org.uk>, Andrea Arcangeli <aarcange@redhat.com>, Christopher Yeoh <cyeoh@au1.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Ingo Molnar <mingo@kernel.org>, Jann Horn <jann@thejh.net>, Lorenzo Stoakes <lstoakes@gmail.com>, Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, Mike Rapoport <rppt@linux.vnet.ibm.com>, Rashika Kheria <rashika.kheria@gmail.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Jens Wiklander <jens.wiklander@linaro.org>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -26,68 +26,51 @@ release_pages().
 This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Andrea Arcangeli <aarcange@redhat.com>
-Cc: Christopher Yeoh <cyeoh@au1.ibm.com>
-Cc: Dave Hansen <dave.hansen@linux.intel.com>
-Cc: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Ingo Molnar <mingo@kernel.org>
-Cc: Jann Horn <jann@thejh.net>
-Cc: Lorenzo Stoakes <lstoakes@gmail.com>
-Cc: Mathieu Desnoyers <mathieu.desnoyers@efficios.com>
-Cc: Mike Rapoport <rppt@linux.vnet.ibm.com>
-Cc: Rashika Kheria <rashika.kheria@gmail.com>
+Cc: Jens Wiklander <jens.wiklander@linaro.org>
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- mm/process_vm_access.c | 18 +++++++++---------
- 1 file changed, 9 insertions(+), 9 deletions(-)
+ drivers/tee/tee_shm.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/mm/process_vm_access.c b/mm/process_vm_access.c
-index 357aa7bef6c0..4d29d54ec93f 100644
---- a/mm/process_vm_access.c
-+++ b/mm/process_vm_access.c
-@@ -96,7 +96,7 @@ static int process_vm_rw_single_vec(unsigned long addr,
- 		flags |= FOLL_WRITE;
+diff --git a/drivers/tee/tee_shm.c b/drivers/tee/tee_shm.c
+index 2da026fd12c9..c967d0420b67 100644
+--- a/drivers/tee/tee_shm.c
++++ b/drivers/tee/tee_shm.c
+@@ -31,16 +31,13 @@ static void tee_shm_release(struct tee_shm *shm)
  
- 	while (!rc && nr_pages && iov_iter_count(iter)) {
--		int pages = min(nr_pages, max_pages_per_loop);
-+		int pinned_pages = min(nr_pages, max_pages_per_loop);
- 		int locked = 1;
- 		size_t bytes;
+ 		poolm->ops->free(poolm, shm);
+ 	} else if (shm->flags & TEE_SHM_REGISTER) {
+-		size_t n;
+ 		int rc = teedev->desc->ops->shm_unregister(shm->ctx, shm);
  
-@@ -106,14 +106,15 @@ static int process_vm_rw_single_vec(unsigned long addr,
- 		 * current/current->mm
- 		 */
- 		down_read(&mm->mmap_sem);
--		pages = get_user_pages_remote(task, mm, pa, pages, flags,
--					      process_pages, NULL, &locked);
-+		pinned_pages = get_user_pages_remote(task, mm, pa, pinned_pages,
-+						     flags, process_pages, NULL,
-+						     &locked);
- 		if (locked)
- 			up_read(&mm->mmap_sem);
--		if (pages <= 0)
-+		if (pinned_pages <= 0)
- 			return -EFAULT;
+ 		if (rc)
+ 			dev_err(teedev->dev.parent,
+ 				"unregister shm %p failed: %d", shm, rc);
  
--		bytes = pages * PAGE_SIZE - start_offset;
-+		bytes = pinned_pages * PAGE_SIZE - start_offset;
- 		if (bytes > len)
- 			bytes = len;
- 
-@@ -122,10 +123,9 @@ static int process_vm_rw_single_vec(unsigned long addr,
- 					 vm_write);
- 		len -= bytes;
- 		start_offset = 0;
--		nr_pages -= pages;
--		pa += pages * PAGE_SIZE;
--		while (pages)
--			put_page(process_pages[--pages]);
-+		nr_pages -= pinned_pages;
-+		pa += pinned_pages * PAGE_SIZE;
-+		put_user_pages(process_pages, pinned_pages);
+-		for (n = 0; n < shm->num_pages; n++)
+-			put_page(shm->pages[n]);
+-
++		put_user_pages(shm->pages, shm->num_pages);
+ 		kfree(shm->pages);
  	}
  
- 	return rc;
+@@ -313,16 +310,13 @@ struct tee_shm *tee_shm_register(struct tee_context *ctx, unsigned long addr,
+ 	return shm;
+ err:
+ 	if (shm) {
+-		size_t n;
+-
+ 		if (shm->id >= 0) {
+ 			mutex_lock(&teedev->mutex);
+ 			idr_remove(&teedev->idr, shm->id);
+ 			mutex_unlock(&teedev->mutex);
+ 		}
+ 		if (shm->pages) {
+-			for (n = 0; n < shm->num_pages; n++)
+-				put_page(shm->pages[n]);
++			put_user_pages(shm->pages, shm->num_pages);
+ 			kfree(shm->pages);
+ 		}
+ 	}
 -- 
 2.22.0
