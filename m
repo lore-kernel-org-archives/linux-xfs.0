@@ -1,43 +1,62 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:11805 "EHLO mga09.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387890AbfHBJTf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 2 Aug 2019 05:19:35 -0400
-Content-Type: text/plain; charset="utf-8"
+Received: from mail-wr1-f68.google.com ([209.85.221.68]:38249 "EHLO
+        mail-wr1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387876AbfHBJTn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 05:19:43 -0400
+Received: by mail-wr1-f68.google.com with SMTP id g17so76409297wrr.5
+        for <linux-xfs@vger.kernel.org>; Fri, 02 Aug 2019 02:19:42 -0700 (PDT)
+Date: Fri, 2 Aug 2019 11:19:39 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
+ ioctl_fibmap
+Message-ID: <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
+References: <20190731141245.7230-1-cmaiolino@redhat.com>
+ <20190731141245.7230-5-cmaiolino@redhat.com>
+ <20190731231217.GV1561054@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8BIT
-From: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
-In-Reply-To: <20190802022005.5117-7-jhubbard@nvidia.com>
-References: <20190802022005.5117-1-jhubbard@nvidia.com>
- <20190802022005.5117-7-jhubbard@nvidia.com>
-Message-ID: <156473756254.19842.12384378926183716632@jlahtine-desk.ger.corp.intel.com>
-Subject: Re: [PATCH 06/34] drm/i915: convert put_page() to put_user_page*()
-Date: Fri, 02 Aug 2019 12:19:22 +0300
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190731231217.GV1561054@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>, john.hubbard@gmail.com
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?utf-8?b?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Jani Nikula <jani.nikula@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-Quoting john.hubbard@gmail.com (2019-08-02 05:19:37)
-> From: John Hubbard <jhubbard@nvidia.com>
+Hi Darrick.
+
+> > +		return error;
+> > +
+> > +	block = ur_block;
+> > +	error = bmap(inode, &block);
+> > +
+> > +	if (error)
+> > +		ur_block = 0;
+> > +	else
+> > +		ur_block = block;
 > 
-> For pages that were retained via get_user_pages*(), release those pages
-> via the new put_user_page*() routines, instead of via put_page() or
-> release_pages().
+> What happens if ur_block > INT_MAX?  Shouldn't we return zero (i.e.
+> error) instead of truncating the value?  Maybe the code does this
+> somewhere else?  Here seemed like the obvious place for an overflow
+> check as we go from sector_t to int.
 > 
-> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-> ("mm: introduce put_user_page*(), placeholder versions").
+
+The behavior should still be the same. It will get truncated, unfortunately. I
+don't think we can actually change this behavior and return zero instead of
+truncating it.
+
+> --D
 > 
-> Note that this effectively changes the code's behavior in
-> i915_gem_userptr_put_pages(): it now calls set_page_dirty_lock(),
-> instead of set_page_dirty(). This is probably more accurate.
+> > +
+> > +	error = put_user(ur_block, p);
+> > +
+> > +	return error;
+> >  }
+> >  
+> >  /**
+> > -- 
+> > 2.20.1
+> > 
 
-We've already fixed this in drm-tip where the current code uses
-set_page_dirty_lock().
-
-This would conflict with our tree. Rodrigo is handling
-drm-intel-next for 5.4, so you guys want to coordinate how
-to merge.
-
-Regards, Joonas
+-- 
+Carlos
