@@ -1,51 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:39132 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403902AbfHBIMX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 04:12:23 -0400
-Date: Fri, 2 Aug 2019 01:12:21 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
-Message-ID: <20190802081221.GA15849@infradead.org>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-10-david@fromorbit.com>
- <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
- <20190801235849.GO7777@dread.disaster.area>
+Received: from verein.lst.de ([213.95.11.211]:50830 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726164AbfHBI14 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Aug 2019 04:27:56 -0400
+Date: Fri, 2 Aug 2019 10:27:53 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 1/2] iomap: Support large pages
+Message-ID: <20190802082753.GA10664@lst.de>
+References: <20190731171734.21601-1-willy@infradead.org> <20190731171734.21601-2-willy@infradead.org> <20190731230315.GJ7777@dread.disaster.area> <20190801035955.GI4700@bombadil.infradead.org> <20190801162147.GB25871@lst.de> <20190801174500.GL4700@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190801235849.GO7777@dread.disaster.area>
+In-Reply-To: <20190801174500.GL4700@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Chris Mason <clm@fb.com>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: Christoph Hellwig <hch@lst.de>, Dave Chinner <david@fromorbit.com>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org
 
-On Fri, Aug 02, 2019 at 09:58:49AM +1000, Dave Chinner wrote:
-> Which simply reinforces the fact that that request type based
-> throttling is a fundamentally broken architecture.
+On Thu, Aug 01, 2019 at 10:45:00AM -0700, Matthew Wilcox wrote:
+> On Thu, Aug 01, 2019 at 06:21:47PM +0200, Christoph Hellwig wrote:
+> > On Wed, Jul 31, 2019 at 08:59:55PM -0700, Matthew Wilcox wrote:
+> > > -       nbits = BITS_TO_LONGS(page_size(page) / SECTOR_SIZE);
+> > > -       iop = kmalloc(struct_size(iop, uptodate, nbits),
+> > > -                       GFP_NOFS | __GFP_NOFAIL);
+> > > -       atomic_set(&iop->read_count, 0);
+> > > -       atomic_set(&iop->write_count, 0);
+> > > -       bitmap_zero(iop->uptodate, nbits);
+> > > +       n = BITS_TO_LONGS(page_size(page) >> inode->i_blkbits);
+> > > +       iop = kmalloc(struct_size(iop, uptodate, n),
+> > > +                       GFP_NOFS | __GFP_NOFAIL | __GFP_ZERO);
+> > 
+> > I am really worried about potential very large GFP_NOFS | __GFP_NOFAIL
+> > allocations here.
 > 
-> > It feels awkward to have one set of prio inversion workarounds for io.* 
-> > and another for wbt.  Jens, should we make an explicit one that doesn't 
-> > rely on magic side effects, or just decide that metadata is meta enough 
-> > to break all the rules?
-> 
-> The problem isn't REQ_META blows throw the throttling, the problem
-> is that different REQ_META IOs have different priority.
-> 
-> IOWs, the problem here is that we are trying to infer priority from
-> the request type rather than an actual priority assigned by the
-> submitter. There is no way direct IO has higher priority in a
-> filesystem than log IO tagged with REQ_META as direct IO can require
-> log IO to make progress. Priority is a policy determined by the
-> submitter, not the mechanism doing the throttling.
-> 
-> Can we please move this all over to priorites based on
-> bio->b_ioprio? And then document how the range of priorities are
-> managed, such as:
+> I don't think it gets _very_ large here.  Assuming a 4kB block size
+> filesystem, that's 512 bits (64 bytes, plus 16 bytes for the two counters)
+> for a 2MB page.  For machines with an 8MB PMD page, it's 272 bytes.
+> Not a very nice fraction of a page size, so probably rounded up to a 512
+> byte allocation, but well under the one page that the MM is supposed to
+> guarantee being able to allocate.
 
-Yes, we need to fix the magic deducted throttling behavior, especiall
-the odd REQ_IDLE that in its various incarnations has been a massive
-source of toruble and confusion.  Not sure tons of priorities are
-really helping, given that even hardware with priority level support
-usually just supports about two priorit levels.
+And if we use GB pages?
+
+Or 512-byte blocks or at least 1k blocks, which we need to handle even
+if they are not preferred by any means.  The real issue here is not just
+the VMs capability to allocate these by some means, but that we do
+__GFP_NOFAIL allocations in nofs context.
+
+> > And thinking about this a bit more while walking
+> > at the beach I wonder if a better option is to just allocate one
+> > iomap per tail page if needed rather than blowing the head page one
+> > up.  We'd still always use the read_count and write_count in the
+> > head page, but the bitmaps in the tail pages, which should be pretty
+> > easily doable.
+> 
+> We wouldn't need to allocate an iomap per tail page, even.  We could
+> just use one bit of tail-page->private per block.  That'd work except
+> for 512-byte block size on machines with a 64kB page.  I doubt many
+> people expect that combination to work well.
+
+We'd still need to deal with the T10 PI tuples for a case like that,
+though.
+
+> 
+> One of my longer-term ambitions is to do away with tail pages under
+> certain situations; eg partition the memory between allocatable-as-4kB
+> pages and allocatable-as-2MB pages.  We'd need a different solution for
+> that, but it's a bit of a pipe dream right now anyway.
+
+Yes, lets focus on that.  Maybe at some point we'll also get extent
+based VM instead of pages ;-)
