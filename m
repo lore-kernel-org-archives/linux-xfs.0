@@ -1,50 +1,86 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:45950 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727591AbfHDWtx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 18:49:53 -0400
-From: john.hubbard@gmail.com
-Subject: [PATCH v2 21/34] fs/exec.c: convert put_page() to put_user_page*()
-Date: Sun,  4 Aug 2019 15:49:02 -0700
-Message-Id: <20190804224915.28669-22-jhubbard@nvidia.com>
-In-Reply-To: <20190804224915.28669-1-jhubbard@nvidia.com>
-References: <20190804224915.28669-1-jhubbard@nvidia.com>
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:2974 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728714AbfHBFt4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 01:49:56 -0400
+Subject: Re: [PATCH 20/34] xen: convert put_page() to put_user_page*()
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+ <20190802022005.5117-21-jhubbard@nvidia.com>
+ <4471e9dc-a315-42c1-0c3c-55ba4eeeb106@suse.com>
+From: John Hubbard <jhubbard@nvidia.com>
+Message-ID: <d5140833-e9ee-beb5-ff0a-2d13a4fe819f@nvidia.com>
+Date: Thu, 1 Aug 2019 22:48:15 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <4471e9dc-a315-42c1-0c3c-55ba4eeeb106@suse.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Alexander Viro <viro@zeniv.linux.org.uk>
+To: Juergen Gross <jgross@suse.com>, john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
+Cc: devel@driverdev.osuosl.org, Dave Chinner <david@fromorbit.com>, Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Ira Weiny <ira.weiny@intel.com>, x86@kernel.org, linux-mm@kvack.org, Dave Hansen <dave.hansen@linux.intel.com>, amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, linux-arm-kernel@lists.infradead.org, linux-rpi-kernel@lists.infradead.org, devel@lists.orangefs.org, xen-devel@lists.xenproject.org, Boris Ostrovsky <boris.ostrovsky@oracle.com>, rds-devel@oss.oracle.com, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, Jan Kara <jack@suse.cz>, ceph-devel@vger.kernel.org, kvm@vger.kernel.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-media@vger.kernel.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>
 
-From: John Hubbard <jhubbard@nvidia.com>
+On 8/1/19 9:36 PM, Juergen Gross wrote:
+> On 02.08.19 04:19, john.hubbard@gmail.com wrote:
+>> From: John Hubbard <jhubbard@nvidia.com>
+...
+>> diff --git a/drivers/xen/privcmd.c b/drivers/xen/privcmd.c
+>> index 2f5ce7230a43..29e461dbee2d 100644
+>> --- a/drivers/xen/privcmd.c
+>> +++ b/drivers/xen/privcmd.c
+>> @@ -611,15 +611,10 @@ static int lock_pages(
+>> =C2=A0 static void unlock_pages(struct page *pages[], unsigned int nr_pa=
+ges)
+>> =C2=A0 {
+>> -=C2=A0=C2=A0=C2=A0 unsigned int i;
+>> -
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (!pages)
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return;
+>> -=C2=A0=C2=A0=C2=A0 for (i =3D 0; i < nr_pages; i++) {
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (pages[i])
+>> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 put_=
+page(pages[i]);
+>> -=C2=A0=C2=A0=C2=A0 }
+>> +=C2=A0=C2=A0=C2=A0 put_user_pages(pages, nr_pages);
+>=20
+> You are not handling the case where pages[i] is NULL here. Or am I
+> missing a pending patch to put_user_pages() here?
+>=20
 
-For pages that were retained via get_user_pages*(), release those pages
-via the new put_user_page*() routines, instead of via put_page() or
-release_pages().
+Hi Juergen,
 
-This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
-("mm: introduce put_user_page*(), placeholder versions").
+You are correct--this no longer handles the cases where pages[i]
+is NULL. It's intentional, though possibly wrong. :)
 
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-Cc: linux-fsdevel@vger.kernel.org
-Signed-off-by: John Hubbard <jhubbard@nvidia.com>
----
- fs/exec.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+I see that I should have added my standard blurb to this
+commit description. I missed this one, but some of the other patches
+have it. It makes the following, possibly incorrect claim:
 
-diff --git a/fs/exec.c b/fs/exec.c
-index f7f6a140856a..ee442151582f 100644
---- a/fs/exec.c
-+++ b/fs/exec.c
-@@ -227,7 +227,7 @@ static struct page *get_arg_page(struct linux_binprm *bprm, unsigned long pos,
- 
- static void put_arg_page(struct page *page)
- {
--	put_page(page);
-+	put_user_page(page);
- }
- 
- static void free_arg_pages(struct linux_binprm *bprm)
--- 
-2.22.0
+"This changes the release code slightly, because each page slot in the
+page_list[] array is no longer checked for NULL. However, that check
+was wrong anyway, because the get_user_pages() pattern of usage here
+never allowed for NULL entries within a range of pinned pages."
+
+The way I've seen these page arrays used with get_user_pages(),
+things are either done single page, or with a contiguous range. So
+unless I'm missing a case where someone is either
+
+a) releasing individual pages within a range (and thus likely messing
+up their count of pages they have), or
+
+b) allocating two gup ranges within the same pages[] array, with a
+gap between the allocations,
+
+...then it should be correct. If so, then I'll add the above blurb
+to this patch's commit description.
+
+If that's not the case (both here, and in 3 or 4 other patches in this
+series, then as you said, I should add NULL checks to put_user_pages()
+and put_user_pages_dirty_lock().
+
+
+thanks,
+--=20
+John Hubbard
+NVIDIA
