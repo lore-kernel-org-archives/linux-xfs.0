@@ -1,209 +1,181 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:46512 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732701AbfHBP3W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 2 Aug 2019 11:29:22 -0400
-Date: Fri, 2 Aug 2019 08:29:02 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 8/9] Use FIEMAP for FIBMAP calls
-Message-ID: <20190802152902.GI7138@magnolia>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
- <20190731141245.7230-9-cmaiolino@redhat.com>
- <20190731232254.GW1561054@magnolia>
- <20190802134816.usmauocewduggrjt@pegasus.maiolino.io>
+Received: from mx1.redhat.com ([209.132.183.28]:58542 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1732277AbfHBPb2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 2 Aug 2019 11:31:28 -0400
+Date: Fri, 2 Aug 2019 11:31:24 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 03/24] mm: factor shrinker work calculations
+Message-ID: <20190802153124.GC60893@bfoster>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190802134816.usmauocewduggrjt@pegasus.maiolino.io>
+In-Reply-To: <20190801021752.4986-4-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-On Fri, Aug 02, 2019 at 03:48:17PM +0200, Carlos Maiolino wrote:
-> > > -#define EXT4_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC|FIEMAP_FLAG_XATTR)
-> > > +#define EXT4_FIEMAP_FLAGS	(FIEMAP_FLAG_SYNC | \
-> > > +				 FIEMAP_FLAG_XATTR| \
-> > > +				 FIEMAP_KERNEL_FIBMAP)
-> > >  
-> > >  static int ext4_xattr_fiemap(struct inode *inode,
-> > >  				struct fiemap_extent_info *fieinfo)
-> > > @@ -5048,6 +5050,9 @@ int ext4_fiemap(struct inode *inode, struct fiemap_extent_info *fieinfo)
-> > >  	if (ext4_has_inline_data(inode)) {
-> > >  		int has_inline = 1;
-> > >  
-> > > +		if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP)
-> > > +			return -EINVAL;
-> > 
-> > Wouldn't the inline data case be caught by fiemap_bmap and turned into
-> > -EINVAL?
+On Thu, Aug 01, 2019 at 12:17:31PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Yes, it does, but until ext4_fiemap() returns the extent with the INLINE flag,
-> it does need to go through the whole fiemap mapping mechanism when we already
-> know the result... So, instead of letting the ext4_fiemap() map the extent, just
-> take the shortcut and return -EINVAL directly.
+> Start to clean up the shrinker code by factoring out the calculation
+> that determines how much work to do. This separates the calculation
+> from clamping and other adjustments that are done before the
+> shrinker work is run.
 > 
-> The check in fiemap_bmap() is a 'safe measure' (if it does have other name I
-> don't know :), but if the filesystem already knows it's gonna fall into an
-> inline inode, taking the shortcut is better, isn't it?
+> Also convert the calculation for the amount of work to be done to
+> use 64 bit logic so we don't have to keep jumping through hoops to
+> keep calculations within 32 bits on 32 bit systems.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  mm/vmscan.c | 74 ++++++++++++++++++++++++++++++++++-------------------
+>  1 file changed, 47 insertions(+), 27 deletions(-)
+> 
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index ae3035fe94bc..b7472953b0e6 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -464,13 +464,45 @@ EXPORT_SYMBOL(unregister_shrinker);
+>  
+>  #define SHRINK_BATCH 128
+>  
+> +/*
+> + * Calculate the number of new objects to scan this time around. Return
+> + * the work to be done. If there are freeable objects, return that number in
+> + * @freeable_objects.
+> + */
+> +static int64_t shrink_scan_count(struct shrink_control *shrinkctl,
+> +			    struct shrinker *shrinker, int priority,
+> +			    int64_t *freeable_objects)
+> +{
+> +	uint64_t delta;
+> +	uint64_t freeable;
+> +
+> +	freeable = shrinker->count_objects(shrinker, shrinkctl);
+> +	if (freeable == 0 || freeable == SHRINK_EMPTY)
+> +		return freeable;
+> +
+> +	if (shrinker->seeks) {
+> +		delta = freeable >> (priority - 2);
+> +		do_div(delta, shrinker->seeks);
+> +	} else {
+> +		/*
+> +		 * These objects don't require any IO to create. Trim
+> +		 * them aggressively under memory pressure to keep
+> +		 * them from causing refetches in the IO caches.
+> +		 */
+> +		delta = freeable / 2;
+> +	}
+> +
+> +	*freeable_objects = freeable;
+> +	return delta > 0 ? delta : 0;
 
-I suppose so.  Just wondering, that was all... :)
+I see Nikolay had some similar comments but FWIW delta is unsigned so
+I'm not sure the point of the > 0 check.
 
-> 
-> > > +		return 1;
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +static int bmap_fiemap(struct inode *inode, sector_t *block)
-> > > +{
-> > > +	struct fiemap_extent_info fieinfo = { 0, };
-> > > +	struct fiemap_extent fextent;
-> > > +	u64 start = *block << inode->i_blkbits;
-> > > +	int error = -EINVAL;
-> > > +
-> > > +	fextent.fe_logical = 0;
-> > > +	fextent.fe_physical = 0;
-> > > +	fieinfo.fi_extents_max = 1;
-> > > +	fieinfo.fi_extents_mapped = 0;
-> > > +	fieinfo.fi_cb_data = &fextent;
-> > > +	fieinfo.fi_start = start;
-> > > +	fieinfo.fi_len = 1 << inode->i_blkbits;
-> > > +	fieinfo.fi_cb = fiemap_fill_kernel_extent;
-> > > +	fieinfo.fi_flags = (FIEMAP_KERNEL_FIBMAP | FIEMAP_FLAG_SYNC);
-> > > +
-> > > +	error = inode->i_op->fiemap(inode, &fieinfo);
-> > > +
-> > > +	if (error)
-> > > +		return error;
-> > > +
-> > > +	if (fieinfo.fi_flags & (FIEMAP_EXTENT_UNKNOWN |
-> > > +				FIEMAP_EXTENT_ENCODED |
-> > > +				FIEMAP_EXTENT_DATA_INLINE |
-> > > +				FIEMAP_EXTENT_UNWRITTEN |
-> > > +				FIEMAP_EXTENT_SHARED))
-> > > +		return -EINVAL;
-> > > +
-> > > +	*block = (fextent.fe_physical +
-> > > +		  (start - fextent.fe_logical)) >> inode->i_blkbits;
-> > > +
-> > > +	return error;
-> > > +}
-> > > +
-> > >  /**
-> > >   *	bmap	- find a block number in a file
-> > >   *	@inode:  inode owning the block number being requested
-> > > @@ -1591,10 +1663,15 @@ EXPORT_SYMBOL(iput);
-> > >   */
-> > >  int bmap(struct inode *inode, sector_t *block)
-> > >  {
-> > > -	if (!inode->i_mapping->a_ops->bmap)
-> > > +	if (inode->i_op->fiemap)
-> > > +		return bmap_fiemap(inode, block);
-> > > +
-> > > +	if (inode->i_mapping->a_ops->bmap)
-> > > +		*block = inode->i_mapping->a_ops->bmap(inode->i_mapping,
-> > > +						       *block);
-> > > +	else
-> > >  		return -EINVAL;
-> > >  
-> > > -	*block = inode->i_mapping->a_ops->bmap(inode->i_mapping, *block);
-> > >  	return 0;
-> > >  }
-> > >  EXPORT_SYMBOL(bmap);
-> > > diff --git a/fs/ioctl.c b/fs/ioctl.c
-> > > index d72696c222de..0759ac6e4c7e 100644
-> > > --- a/fs/ioctl.c
-> > > +++ b/fs/ioctl.c
-> > > @@ -77,11 +77,8 @@ static int ioctl_fibmap(struct file *filp, int __user *p)
-> > >  	return error;
-> > >  }
-> > >  
-> > > -#define SET_UNKNOWN_FLAGS	(FIEMAP_EXTENT_DELALLOC)
-> > > -#define SET_NO_UNMOUNTED_IO_FLAGS	(FIEMAP_EXTENT_DATA_ENCRYPTED)
-> > > -#define SET_NOT_ALIGNED_FLAGS	(FIEMAP_EXTENT_DATA_TAIL|FIEMAP_EXTENT_DATA_INLINE)
-> > > -int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo, u64 logical,
-> > > -			    u64 phys, u64 len, u32 flags)
-> > > +static int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo,
-> > > +			u64 logical, u64 phys, u64 len, u32 flags)
-> > >  {
-> > >  	struct fiemap_extent extent;
-> > >  	struct fiemap_extent __user *dest = fieinfo->fi_cb_data;
-> > > @@ -89,17 +86,17 @@ int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo, u64 logical,
-> > >  	/* only count the extents */
-> > >  	if (fieinfo->fi_extents_max == 0) {
-> > >  		fieinfo->fi_extents_mapped++;
-> > > -		return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
-> > > +		goto out;
-> > >  	}
-> > >  
-> > >  	if (fieinfo->fi_extents_mapped >= fieinfo->fi_extents_max)
-> > >  		return 1;
-> > >  
-> > > -	if (flags & SET_UNKNOWN_FLAGS)
-> > > +	if (flags & FIEMAP_EXTENT_DELALLOC)
-> > >  		flags |= FIEMAP_EXTENT_UNKNOWN;
-> > > -	if (flags & SET_NO_UNMOUNTED_IO_FLAGS)
-> > > +	if (flags & FIEMAP_EXTENT_DATA_ENCRYPTED)
-> > >  		flags |= FIEMAP_EXTENT_ENCODED;
-> > > -	if (flags & SET_NOT_ALIGNED_FLAGS)
-> > 
-> > It's too bad that we lose the "not aligned" semantic meaning here.
-> 
-> May you explain a bit better what you mean? We don't lose it, just the define
-> goes away, the reason I dropped these defines is because the same flags are used
-> in both functions, fiemap_fill_{user,kernel}_extent(), and I didn't think
-> defining them on both places (or in fs.h) has any benefit here, so I opted to
-> remove them.
+Brian
 
-Eh, I changed my mind.  It's easy enough to tell which flags map to "No
-umounted IO" from the code even if the #defines go away.
+> +}
+> +
+>  static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  				    struct shrinker *shrinker, int priority)
+>  {
+>  	unsigned long freed = 0;
+> -	unsigned long long delta;
+>  	long total_scan;
+> -	long freeable;
+> +	int64_t freeable_objects = 0;
+> +	int64_t scan_count;
+>  	long nr;
+>  	long new_nr;
+>  	int nid = shrinkctl->nid;
+> @@ -481,9 +513,10 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  	if (!(shrinker->flags & SHRINKER_NUMA_AWARE))
+>  		nid = 0;
+>  
+> -	freeable = shrinker->count_objects(shrinker, shrinkctl);
+> -	if (freeable == 0 || freeable == SHRINK_EMPTY)
+> -		return freeable;
+> +	scan_count = shrink_scan_count(shrinkctl, shrinker, priority,
+> +					&freeable_objects);
+> +	if (scan_count == 0 || scan_count == SHRINK_EMPTY)
+> +		return scan_count;
+>  
+>  	/*
+>  	 * copy the current shrinker scan count into a local variable
+> @@ -492,25 +525,11 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  	 */
+>  	nr = atomic_long_xchg(&shrinker->nr_deferred[nid], 0);
+>  
+> -	total_scan = nr;
+> -	if (shrinker->seeks) {
+> -		delta = freeable >> priority;
+> -		delta *= 4;
+> -		do_div(delta, shrinker->seeks);
+> -	} else {
+> -		/*
+> -		 * These objects don't require any IO to create. Trim
+> -		 * them aggressively under memory pressure to keep
+> -		 * them from causing refetches in the IO caches.
+> -		 */
+> -		delta = freeable / 2;
+> -	}
+> -
+> -	total_scan += delta;
+> +	total_scan = nr + scan_count;
+>  	if (total_scan < 0) {
+>  		pr_err("shrink_slab: %pS negative objects to delete nr=%ld\n",
+>  		       shrinker->scan_objects, total_scan);
+> -		total_scan = freeable;
+> +		total_scan = scan_count;
 
-> > 
-> > > +	if (flags & (FIEMAP_EXTENT_DATA_TAIL | FIEMAP_EXTENT_DATA_INLINE))
-> > >  		flags |= FIEMAP_EXTENT_NOT_ALIGNED;
-> > 
-> > Why doesn't this function just call fiemap_fill_kernel_extent to fill
-> > out the onstack @extent structure?  We've now implemented "fill out out
-> > a struct fiemap_extent" twice.
-> 
-> fiemap_fill_{user, kernel}_extent() have different purposes, and the big
-> difference is one handles a userspace pointer memory and the other don't. IIRC
-> the original proposal was some sort of sharing a single function, but then
-> Christoph suggested a new design, using different functions as callbacks.
+Why the change from the (now) freeable_objects value to scan_count?
 
-It's harder for me to tell when I don't have a branch containing the
-final product to look at, but I'd have thought that _fill_kernel fills
-out an in-kernel fiemap extent; and then _fill_user would declare one on
-the stack, call _fill_kernel to set the fields, and then copy_to_user?
+Brian
 
-(But maybe the code already does this and I can't tell...)
-
-> 
-> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > index b485190b7ecd..18a798e9076b 100644
-> > > --- a/fs/xfs/xfs_iops.c
-> > > +++ b/fs/xfs/xfs_iops.c
-> > > @@ -1113,6 +1113,11 @@ xfs_vn_fiemap(
-> > >  	struct fiemap_extent_info *fieinfo)
-> > >  {
-> > >  	int	error;
-> > > +	struct	xfs_inode	*ip = XFS_I(inode);
-> > 
-> > Would you mind fixing the indentation to match usual xfs style?
-> 
-> Sure, will fix it
-> 
-> 
-> > 
-> > > +
-> > > +	if (fieinfo->fi_flags & FIEMAP_KERNEL_FIBMAP)
-> > > +		if (xfs_is_reflink_inode(ip) || XFS_IS_REALTIME_INODE(ip))
-> > > +			return -EINVAL;
-> > 
-> > The xfs part looks ok to me.
-> > 
-> > --D
-> > 
-> 
+>  		next_deferred = nr;
+>  	} else
+>  		next_deferred = total_scan;
+> @@ -527,19 +546,20 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  	 * Hence only allow the shrinker to scan the entire cache when
+>  	 * a large delta change is calculated directly.
+>  	 */
+> -	if (delta < freeable / 4)
+> -		total_scan = min(total_scan, freeable / 2);
+> +	if (scan_count < freeable_objects / 4)
+> +		total_scan = min_t(long, total_scan, freeable_objects / 2);
+>  
+>  	/*
+>  	 * Avoid risking looping forever due to too large nr value:
+>  	 * never try to free more than twice the estimate number of
+>  	 * freeable entries.
+>  	 */
+> -	if (total_scan > freeable * 2)
+> -		total_scan = freeable * 2;
+> +	if (total_scan > freeable_objects * 2)
+> +		total_scan = freeable_objects * 2;
+>  
+>  	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+> -				   freeable, delta, total_scan, priority);
+> +				   freeable_objects, scan_count,
+> +				   total_scan, priority);
+>  
+>  	/*
+>  	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+> @@ -564,7 +584,7 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  	 * possible.
+>  	 */
+>  	while (total_scan >= batch_size ||
+> -	       total_scan >= freeable) {
+> +	       total_scan >= freeable_objects) {
+>  		unsigned long ret;
+>  		unsigned long nr_to_scan = min(batch_size, total_scan);
+>  
 > -- 
-> Carlos
+> 2.22.0
+> 
