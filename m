@@ -2,73 +2,154 @@ Return-Path: <SRS0=V8GW=V7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
-	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FE0BC433FF
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Aug 2019 18:25:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42DC4C32750
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Aug 2019 20:03:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A15A214AE
-	for <linux-xfs@archiver.kernel.org>; Sat,  3 Aug 2019 18:25:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1564856703;
-	bh=W63KeKcvsCsWsH7W36Bbackx+e/UA+/F2PmXbbz2fFk=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=Aj9jh1x5MZA2BqQ5XnKm2hxKMcfMErTtHVgYrVi8Y/zEEDE3VfZobjCKvov/pluiC
-	 E1npg46we4Rj5gb7ScHxPe4d95JRdWGVadAghe3dDzHY4eG1fXhWuV7L6UsjVusSxD
-	 QlCbYSV8Op8G/NF/EFHFJlYwXOZJBTsh0honWOS4=
+	by mail.kernel.org (Postfix) with ESMTP id 105AD2075C
+	for <linux-xfs@archiver.kernel.org>; Sat,  3 Aug 2019 20:03:14 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="I2YSIJHt"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728664AbfHCSZC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 3 Aug 2019 14:25:02 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35370 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728600AbfHCSZC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 3 Aug 2019 14:25:02 -0400
-Subject: Re: [GIT PULL] xfs: cleanups for 5.3-rc3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1564856701;
-        bh=W63KeKcvsCsWsH7W36Bbackx+e/UA+/F2PmXbbz2fFk=;
-        h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=kzNYq10+nsi+u09gfzu/p7IEL4CQvhn2q5FJGK+0Zbtro/NR2txaVO23Dd8nV4yd+
-         pVR77UoZpSbEImYf91L4MS3n7HA/TU4Pb+bC5hUMr7xEAET9NkxtLR1W8wmNIjRst7
-         TveUa21dl6d7nDeRZ3mKb4kdWQPkQ7uO8AXtPX2g=
-From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20190803163312.GK7138@magnolia>
-References: <20190803163312.GK7138@magnolia>
-X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20190803163312.GK7138@magnolia>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
- tags/xfs-5.3-fixes-1
-X-PR-Tracked-Commit-Id: afa1d96d1430c2138c545fb76e6dcb21222098d4
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: e12b243de76dcc24a904a48a2efda94fdc4cdf07
-Message-Id:
- <156485670157.25774.15292161755260080253.pr-tracker-bot@kernel.org>
-Date:   Sat, 03 Aug 2019 18:25:01 +0000
-To:     "Darrick J. Wong" <djwong@kernel.org>
-Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
-        "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        id S1729005AbfHCUDI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 3 Aug 2019 16:03:08 -0400
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:10527 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727585AbfHCUDI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 16:03:08 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate16.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d45e87a0000>; Sat, 03 Aug 2019 13:03:06 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Sat, 03 Aug 2019 13:03:06 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Sat, 03 Aug 2019 13:03:06 -0700
+Received: from [10.110.48.28] (172.20.13.39) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Sat, 3 Aug
+ 2019 20:03:05 +0000
+Subject: Re: [PATCH 06/34] drm/i915: convert put_page() to put_user_page*()
+From:   John Hubbard <jhubbard@nvidia.com>
+To:     Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        <john.hubbard@gmail.com>
+CC:     Christoph Hellwig <hch@infradead.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+        LKML <linux-kernel@vger.kernel.org>,
+        <amd-gfx@lists.freedesktop.org>, <ceph-devel@vger.kernel.org>,
+        <devel@driverdev.osuosl.org>, <devel@lists.orangefs.org>,
+        <dri-devel@lists.freedesktop.org>,
+        <intel-gfx@lists.freedesktop.org>, <kvm@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>,
+        <linux-block@vger.kernel.org>, <linux-crypto@vger.kernel.org>,
+        <linux-fbdev@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-media@vger.kernel.org>, <linux-mm@kvack.org>,
+        <linux-nfs@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+        <linux-rpi-kernel@lists.infradead.org>,
+        <linux-xfs@vger.kernel.org>, <netdev@vger.kernel.org>,
+        <rds-devel@oss.oracle.com>, <sparclinux@vger.kernel.org>,
+        <x86@kernel.org>, <xen-devel@lists.xenproject.org>,
+        Jani Nikula <jani.nikula@linux.intel.com>,
+        Rodrigo Vivi <rodrigo.vivi@intel.com>,
+        David Airlie <airlied@linux.ie>
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+ <20190802022005.5117-7-jhubbard@nvidia.com>
+ <156473756254.19842.12384378926183716632@jlahtine-desk.ger.corp.intel.com>
+ <7d9a9c57-4322-270b-b636-7214019f87e9@nvidia.com>
+X-Nvconfidentiality: public
+Message-ID: <22c309f6-a7ca-2624-79c3-b16a1487f488@nvidia.com>
+Date:   Sat, 3 Aug 2019 13:03:05 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
+MIME-Version: 1.0
+In-Reply-To: <7d9a9c57-4322-270b-b636-7214019f87e9@nvidia.com>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="UTF-8"
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1564862587; bh=ilU/8cKxAxLoWjJW9QtQ++HPyf9Kp7C47ReaMR8aBDk=;
+        h=X-PGP-Universal:Subject:From:To:CC:References:X-Nvconfidentiality:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=I2YSIJHtEvh6s6ys5+qZOy9oK09e18lfnMQt77fXZCyrgzqntxCUGfZ7oWikmHJt5
+         4V1+y4MySAejsYy1JLbf4x7KQ0hiidb6jg5xsakkPPG/MxjywoS180jIN6uhV11y/O
+         011sP6dgxSCe7CPHZfVmc5h9v3h4EFz6CzWGnO3zjeLQA+xNf7n8Aq4VIo5dqejc1s
+         ogxZqWO3QmjUKVwNVzjjVrVg9ptoPI8+f8bAuuTtyZ6ixyHn7fxeF7f3r5zkr6u4id
+         LKe10E8R/74E4Fa+DG9GwiVmNsBu++raNIZCy4+8RyCJBTlO14Pl8lc8yCIpDgUHCO
+         oxDfeJ3aA6pnw==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Message-ID: <20190803182501.Writ7g6dEuIG_9H68MnKYIE40Ae4925aL7MjM9X_WCA@z>
+Message-ID: <20190803200305.QR8k3rkJL5sYvw1AmEcafSL5LPidSW8EX2qra3CBojA@z>
 
-The pull request you sent on Sat, 3 Aug 2019 09:33:12 -0700:
+On 8/2/19 11:48 AM, John Hubbard wrote:
+> On 8/2/19 2:19 AM, Joonas Lahtinen wrote:
+>> Quoting john.hubbard@gmail.com (2019-08-02 05:19:37)
+>>> From: John Hubbard <jhubbard@nvidia.com>
+...
+> In order to deal with the merge problem, I'll drop this patch from my ser=
+ies,
+> and I'd recommend that the drm-intel-next take the following approach:
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.3-fixes-1
+Actually, I just pulled the latest linux.git, and there are a few changes:
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/e12b243de76dcc24a904a48a2efda94fdc4cdf07
+>=20
+> 1) For now, s/put_page/put_user_page/ in i915_gem_userptr_put_pages(),
+> and fix up the set_page_dirty() --> set_page_dirty_lock() issue, like thi=
+s
+> (based against linux.git):
+>=20
+> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c b/drivers/gpu/dr=
+m/i915/gem/i915_gem_userptr.c
+> index 528b61678334..94721cc0093b 100644
+> --- a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> +++ b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> @@ -664,10 +664,10 @@ i915_gem_userptr_put_pages(struct drm_i915_gem_obje=
+ct *obj,
+>=20
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 for_each_sgt_page(page, sgt_it=
+er, pages) {
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 if (obj->mm.dirty)
+> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_page_dirty=
+(page);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_page_dirty=
+_lock(page);
 
-Thank you!
+I see you've already applied this fix to your tree, in linux.git already.
 
--- 
-Deet-doot-dot, I am a bot.
-https://korg.wiki.kernel.org/userdoc/prtracker
+>=20
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 mark_page_accessed(page);
+> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 put_page(page);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 put_user_page(page);
+
+But this conversion still needs doing. So I'll repost a patch that only doe=
+s=20
+this (plus the other call sites).=20
+
+That can go in via either your tree, or Andrew's -mm tree, without generati=
+ng
+any conflicts.
+
+thanks,
+--=20
+John Hubbard
+NVIDIA
