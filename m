@@ -1,53 +1,42 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:50736 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387950AbfHCQdO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sat, 3 Aug 2019 12:33:14 -0400
-Date: Sat, 3 Aug 2019 09:33:12 -0700
-From: "Darrick J. Wong" <djwong@kernel.org>
-Subject: [GIT PULL] xfs: cleanups for 5.3-rc3
-Message-ID: <20190803163312.GK7138@magnolia>
+Received: from mail-lj1-f195.google.com ([209.85.208.195]:35444 "EHLO
+        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728368AbfHCRq6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 13:46:58 -0400
+Received: by mail-lj1-f195.google.com with SMTP id x25so75817901ljh.2
+        for <linux-xfs@vger.kernel.org>; Sat, 03 Aug 2019 10:46:57 -0700 (PDT)
+Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com. [209.85.167.48])
+        by smtp.gmail.com with ESMTPSA id j23sm13495473lfb.93.2019.08.03.10.46.54
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
+        Sat, 03 Aug 2019 10:46:55 -0700 (PDT)
+Received: by mail-lf1-f48.google.com with SMTP id s19so55119414lfb.9
+        for <linux-xfs@vger.kernel.org>; Sat, 03 Aug 2019 10:46:54 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+References: <20190803163312.GK7138@magnolia>
+In-Reply-To: <20190803163312.GK7138@magnolia>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Sat, 3 Aug 2019 10:46:38 -0700
+Message-ID: <CAHk-=wgg8Y=KxZaHy66BdOKKtDzQ_XN4sR6YWa00+v+06azt4A@mail.gmail.com>
+Subject: Re: [GIT PULL] xfs: cleanups for 5.3-rc3
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org, david@fromorbit.com, linux-kernel@vger.kernel.org, sandeen@sandeen.net, hch@lst.de
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>
 
-Hi Linus,
+On Sat, Aug 3, 2019 at 9:33 AM Darrick J. Wong <djwong@kernel.org> wrote:
+>
+> Here are a couple more bug fixes that trickled in since -rc1.  It's
+> survived the usual xfstests runs and merges cleanly with this morning's
+> master.  Please let me know if anything strange happens.
 
-Here are a couple more bug fixes that trickled in since -rc1.  It's
-survived the usual xfstests runs and merges cleanly with this morning's
-master.  Please let me know if anything strange happens.
+Hmm. This was tagged, but not signed like your usual tags are.
 
---D
+I've pulled it (I don't _require_ signed tags from kernel.org), but
+would generally be much happier if I saw the signing too...
 
-The following changes since commit 609488bc979f99f805f34e9a32c1e3b71179d10b:
+Thanks,
 
-  Linux 5.3-rc2 (2019-07-28 12:47:02 -0700)
-
-are available in the Git repository at:
-
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.3-fixes-1
-
-for you to fetch changes up to afa1d96d1430c2138c545fb76e6dcb21222098d4:
-
-  xfs: Fix possible null-pointer dereferences in xchk_da_btree_block_check_sibling() (2019-07-30 11:28:20 -0700)
-
-----------------------------------------------------------------
-Changes since last update:
-- Avoid leaking kernel stack contents to userspace.
-- Fix a potential null pointer dereference in the dabtree scrub code.
-
-----------------------------------------------------------------
-Darrick J. Wong (1):
-      xfs: fix stack contents leakage in the v1 inumber ioctls
-
-Jia-Ju Bai (1):
-      xfs: Fix possible null-pointer dereferences in xchk_da_btree_block_check_sibling()
-
- fs/xfs/scrub/dabtree.c | 6 +++++-
- fs/xfs/xfs_itable.c    | 3 +++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+                 Linus
