@@ -1,42 +1,82 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-lj1-f195.google.com ([209.85.208.195]:35444 "EHLO
-        mail-lj1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728368AbfHCRq6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 13:46:58 -0400
-Received: by mail-lj1-f195.google.com with SMTP id x25so75817901ljh.2
-        for <linux-xfs@vger.kernel.org>; Sat, 03 Aug 2019 10:46:57 -0700 (PDT)
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com. [209.85.167.48])
-        by smtp.gmail.com with ESMTPSA id j23sm13495473lfb.93.2019.08.03.10.46.54
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_3 cipher=AEAD-AES128-GCM-SHA256 bits=128/128);
-        Sat, 03 Aug 2019 10:46:55 -0700 (PDT)
-Received: by mail-lf1-f48.google.com with SMTP id s19so55119414lfb.9
-        for <linux-xfs@vger.kernel.org>; Sat, 03 Aug 2019 10:46:54 -0700 (PDT)
+Received: from hqemgate16.nvidia.com ([216.228.121.65]:10527 "EHLO
+        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727585AbfHCUDI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 16:03:08 -0400
+Subject: Re: [PATCH 06/34] drm/i915: convert put_page() to put_user_page*()
+From: John Hubbard <jhubbard@nvidia.com>
+References: <20190802022005.5117-1-jhubbard@nvidia.com>
+ <20190802022005.5117-7-jhubbard@nvidia.com>
+ <156473756254.19842.12384378926183716632@jlahtine-desk.ger.corp.intel.com>
+ <7d9a9c57-4322-270b-b636-7214019f87e9@nvidia.com>
+Message-ID: <22c309f6-a7ca-2624-79c3-b16a1487f488@nvidia.com>
+Date: Sat, 3 Aug 2019 13:03:05 -0700
 MIME-Version: 1.0
-References: <20190803163312.GK7138@magnolia>
-In-Reply-To: <20190803163312.GK7138@magnolia>
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Date: Sat, 3 Aug 2019 10:46:38 -0700
-Message-ID: <CAHk-=wgg8Y=KxZaHy66BdOKKtDzQ_XN4sR6YWa00+v+06azt4A@mail.gmail.com>
-Subject: Re: [GIT PULL] xfs: cleanups for 5.3-rc3
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <7d9a9c57-4322-270b-b636-7214019f87e9@nvidia.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>, Linux List Kernel Mailing <linux-kernel@vger.kernel.org>, Eric Sandeen <sandeen@sandeen.net>, Christoph Hellwig <hch@lst.de>
+To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, john.hubbard@gmail.com
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, Jani Nikula <jani.nikula@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>
 
-On Sat, Aug 3, 2019 at 9:33 AM Darrick J. Wong <djwong@kernel.org> wrote:
->
-> Here are a couple more bug fixes that trickled in since -rc1.  It's
-> survived the usual xfstests runs and merges cleanly with this morning's
-> master.  Please let me know if anything strange happens.
+On 8/2/19 11:48 AM, John Hubbard wrote:
+> On 8/2/19 2:19 AM, Joonas Lahtinen wrote:
+>> Quoting john.hubbard@gmail.com (2019-08-02 05:19:37)
+>>> From: John Hubbard <jhubbard@nvidia.com>
+...
+> In order to deal with the merge problem, I'll drop this patch from my ser=
+ies,
+> and I'd recommend that the drm-intel-next take the following approach:
 
-Hmm. This was tagged, but not signed like your usual tags are.
+Actually, I just pulled the latest linux.git, and there are a few changes:
 
-I've pulled it (I don't _require_ signed tags from kernel.org), but
-would generally be much happier if I saw the signing too...
+>=20
+> 1) For now, s/put_page/put_user_page/ in i915_gem_userptr_put_pages(),
+> and fix up the set_page_dirty() --> set_page_dirty_lock() issue, like thi=
+s
+> (based against linux.git):
+>=20
+> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c b/drivers/gpu/dr=
+m/i915/gem/i915_gem_userptr.c
+> index 528b61678334..94721cc0093b 100644
+> --- a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> +++ b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> @@ -664,10 +664,10 @@ i915_gem_userptr_put_pages(struct drm_i915_gem_obje=
+ct *obj,
+>=20
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 for_each_sgt_page(page, sgt_it=
+er, pages) {
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 if (obj->mm.dirty)
+> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_page_dirty=
+(page);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_page_dirty=
+_lock(page);
 
-Thanks,
+I see you've already applied this fix to your tree, in linux.git already.
 
-                 Linus
+>=20
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 mark_page_accessed(page);
+> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 put_page(page);
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0 put_user_page(page);
+
+But this conversion still needs doing. So I'll repost a patch that only doe=
+s=20
+this (plus the other call sites).=20
+
+That can go in via either your tree, or Andrew's -mm tree, without generati=
+ng
+any conflicts.
+
+thanks,
+--=20
+John Hubbard
+NVIDIA
