@@ -1,79 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:41811 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726181AbfHDP0z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 11:26:55 -0400
-Date: Sun, 4 Aug 2019 23:26:46 +0800
-From: Eryu Guan <guaneryu@gmail.com>
-Subject: Re: [PATCH v2] common/rc: check 'chattr +/-x' on dax device.
-Message-ID: <20190804152646.GA2665@desktop>
-References: <20190731022949.2463-1-ruansy.fnst@cn.fujitsu.com>
+Received: from mx2.suse.de ([195.135.220.15]:33790 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726332AbfHDRMs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 4 Aug 2019 13:12:48 -0400
+Subject: Re: [PATCH 16/24] xfs: Lower CIL flush limit for large logs
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-17-david@fromorbit.com>
+From: Nikolay Borisov <nborisov@suse.com>
+Message-ID: <b8b711fc-ba44-b510-91e8-8b6c247c30f3@suse.com>
+Date: Sun, 4 Aug 2019 20:12:45 +0300
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190731022949.2463-1-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <20190801021752.4986-17-david@fromorbit.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc: darrick.wong@oracle.com, fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Jul 31, 2019 at 10:29:49AM +0800, Shiyang Ruan wrote:
-> 'chattr +/-x' only works on a dax device.  When checking if the 'x'
-> attribute is supported by XFS_IO_PROG:
->     _require_xfs_io_command "chattr" "x"    (called by xfs/260)
-> it's better to do the check on a dax device.
 
-Hmm, I don't think it's necessary, test should _require_scratch_dax,
-which should _notrun the test already, before checking chattr +/-x
-support. Do you see any specific problem caused by this issue when
-running xfs/260?
 
+On 1.08.19 г. 5:17 ч., Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Signed-off-by: Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-> ---
->  common/rc | 12 ++++++++++++
->  1 file changed, 12 insertions(+)
+> The current CIL size aggregation limit is 1/8th the log size. This
+> means for large logs we might be aggregating at least 250MB of dirty objects
+> in memory before the CIL is flushed to the journal. With CIL shadow
+> buffers sitting around, this means the CIL is often consuming >500MB
+> of temporary memory that is all allocated under GFP_NOFS conditions.
 > 
-> diff --git a/common/rc b/common/rc
-> index e0b087c1..91ab2900 100644
-> --- a/common/rc
-> +++ b/common/rc
-> @@ -2094,11 +2094,23 @@ _require_xfs_io_command()
->  		if [ -z "$param" ]; then
->  			param=s
->  		fi
-> +
-> +		# Attribute "x" should be tested on a dax device
-> +		if [ "$param" = "x" ]; then
-> +			_require_scratch_dax
-> +			_scratch_mount
+> FLushing the CIL can take some time to do if there is other IO
+> ongoing, and can introduce substantial log force latency by itself.
+> It also pins the memory until the objects are in the AIL and can be
+> written back and reclaimed by shrinkers. Hence this threshold also
+> tends to determine the minimum amount of memory XFS can operate in
+> under heavy modification without triggering the OOM killer.
+> 
+> Modify the CIL space limit to prevent such huge amounts of pinned
+> metadata from aggregating. We can 2MB of log IO in flight at once,
+There is a word missing between 'can' and '2MB'
+> so limit aggregation to 8x this size (arbitrary). This has some
+> impact on performance (5-10% decrease on 16-way fsmark) and
+> increases the amount of log traffic (~50% on same workload) but it
+> is necessary to prevent rampant OOM killing under iworkloads that
+> modify large amounts of metadata under heavy memory pressure.
+> 
+> This was found via trace analysis or AIL behaviour. e.g. insertion
+s/or/of/
 
-$SCRATCH_DEV is wiped before every test, it's wrong to assume the device
-is directly mountable. And checking chattr +/-x support doesn't require
-scratch device, so it's better not to introduce this dependency
-implicitly.
+> from a single CIL flush:
 
-Thanks,
-Eryu
-
-> +			testfile=$SCRATCH_MNT/$$.xfs_io
-> +		fi
-> +
->  		# Test xfs_io chattr support AND
->  		# filesystem FS_IOC_FSSETXATTR support
->  		testio=`$XFS_IO_PROG -F -f -c "chattr +$param" $testfile 2>&1`
->  		$XFS_IO_PROG -F -f -r -c "chattr -$param" $testfile 2>&1
->  		param_checked="+$param"
-> +
-> +		if [ "$param" = "x" ]; then
-> +			_scratch_unmount
-> +		fi
->  		;;
->  	"chproj")
->  		testio=`$XFS_IO_PROG -F -f -c "chproj 0" $testfile 2>&1`
-> -- 
-> 2.17.0
-> 
-> 
-> 
+<snip>
