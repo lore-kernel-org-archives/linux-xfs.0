@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:39834 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727263AbfHDWtj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 18:49:39 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:40436 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727067AbfHDWtc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 18:49:32 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH v2 12/34] vmci: convert put_page() to put_user_page*()
-Date: Sun,  4 Aug 2019 15:48:53 -0700
-Message-Id: <20190804224915.28669-13-jhubbard@nvidia.com>
+Subject: [PATCH v2 08/34] media/ivtv: convert put_page() to put_user_page*()
+Date: Sun,  4 Aug 2019 15:48:49 -0700
+Message-Id: <20190804224915.28669-9-jhubbard@nvidia.com>
 In-Reply-To: <20190804224915.28669-1-jhubbard@nvidia.com>
 References: <20190804224915.28669-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
@@ -15,7 +15,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Arnd Bergmann <arnd@arndb.de>, Al Viro <viro@zeniv.linux.org.uk>, "Gustavo A . R . Silva" <gustavo@embeddedor.com>, Kees Cook <keescook@chromium.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Andy Walls <awalls@md.metrocast.net>, Mauro Carvalho Chehab <mchehab@kernel.org>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -26,60 +26,110 @@ release_pages().
 This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
-Note that this effectively changes the code's behavior in
-qp_release_pages(): it now ultimately calls set_page_dirty_lock(),
-instead of set_page_dirty(). This is probably more accurate.
-
-As Christoph Hellwig put it, "set_page_dirty() is only safe if we are
-dealing with a file backed page where we have reference on the inode it
-hangs off." [1]
-
-[1] https://lore.kernel.org/r/20190723153640.GB720@lst.de
-
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Gustavo A. R. Silva <gustavo@embeddedor.com>
-Cc: Kees Cook <keescook@chromium.org>
+Cc: Andy Walls <awalls@md.metrocast.net>
+Cc: Mauro Carvalho Chehab <mchehab@kernel.org>
+Cc: linux-media@vger.kernel.org
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/misc/vmw_vmci/vmci_context.c    |  2 +-
- drivers/misc/vmw_vmci/vmci_queue_pair.c | 11 ++---------
- 2 files changed, 3 insertions(+), 10 deletions(-)
+ drivers/media/pci/ivtv/ivtv-udma.c | 14 ++++----------
+ drivers/media/pci/ivtv/ivtv-yuv.c  | 11 +++--------
+ 2 files changed, 7 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/misc/vmw_vmci/vmci_context.c b/drivers/misc/vmw_vmci/vmci_context.c
-index 16695366ec92..9daa52ee63b7 100644
---- a/drivers/misc/vmw_vmci/vmci_context.c
-+++ b/drivers/misc/vmw_vmci/vmci_context.c
-@@ -587,7 +587,7 @@ void vmci_ctx_unset_notify(struct vmci_ctx *context)
- 
- 	if (notify_page) {
- 		kunmap(notify_page);
--		put_page(notify_page);
-+		put_user_page(notify_page);
- 	}
- }
- 
-diff --git a/drivers/misc/vmw_vmci/vmci_queue_pair.c b/drivers/misc/vmw_vmci/vmci_queue_pair.c
-index 8531ae781195..e5434551d0ef 100644
---- a/drivers/misc/vmw_vmci/vmci_queue_pair.c
-+++ b/drivers/misc/vmw_vmci/vmci_queue_pair.c
-@@ -626,15 +626,8 @@ static void qp_release_queue_mutex(struct vmci_queue *queue)
- static void qp_release_pages(struct page **pages,
- 			     u64 num_pages, bool dirty)
+diff --git a/drivers/media/pci/ivtv/ivtv-udma.c b/drivers/media/pci/ivtv/ivtv-udma.c
+index 5f8883031c9c..7c7f33c2412b 100644
+--- a/drivers/media/pci/ivtv/ivtv-udma.c
++++ b/drivers/media/pci/ivtv/ivtv-udma.c
+@@ -92,7 +92,7 @@ int ivtv_udma_setup(struct ivtv *itv, unsigned long ivtv_dest_addr,
  {
+ 	struct ivtv_dma_page_info user_dma;
+ 	struct ivtv_user_dma *dma = &itv->udma;
+-	int i, err;
++	int err;
+ 
+ 	IVTV_DEBUG_DMA("ivtv_udma_setup, dst: 0x%08x\n", (unsigned int)ivtv_dest_addr);
+ 
+@@ -119,8 +119,7 @@ int ivtv_udma_setup(struct ivtv *itv, unsigned long ivtv_dest_addr,
+ 		IVTV_DEBUG_WARN("failed to map user pages, returned %d instead of %d\n",
+ 			   err, user_dma.page_count);
+ 		if (err >= 0) {
+-			for (i = 0; i < err; i++)
+-				put_page(dma->map[i]);
++			put_user_pages(dma->map, err);
+ 			return -EINVAL;
+ 		}
+ 		return err;
+@@ -130,9 +129,7 @@ int ivtv_udma_setup(struct ivtv *itv, unsigned long ivtv_dest_addr,
+ 
+ 	/* Fill SG List with new values */
+ 	if (ivtv_udma_fill_sg_list(dma, &user_dma, 0) < 0) {
+-		for (i = 0; i < dma->page_count; i++) {
+-			put_page(dma->map[i]);
+-		}
++		put_user_pages(dma->map, dma->page_count);
+ 		dma->page_count = 0;
+ 		return -ENOMEM;
+ 	}
+@@ -153,7 +150,6 @@ int ivtv_udma_setup(struct ivtv *itv, unsigned long ivtv_dest_addr,
+ void ivtv_udma_unmap(struct ivtv *itv)
+ {
+ 	struct ivtv_user_dma *dma = &itv->udma;
 -	int i;
--
--	for (i = 0; i < num_pages; i++) {
--		if (dirty)
--			set_page_dirty(pages[i]);
--
--		put_page(pages[i]);
--		pages[i] = NULL;
+ 
+ 	IVTV_DEBUG_INFO("ivtv_unmap_user_dma\n");
+ 
+@@ -170,9 +166,7 @@ void ivtv_udma_unmap(struct ivtv *itv)
+ 	ivtv_udma_sync_for_cpu(itv);
+ 
+ 	/* Release User Pages */
+-	for (i = 0; i < dma->page_count; i++) {
+-		put_page(dma->map[i]);
 -	}
-+	put_user_pages_dirty_lock(pages, num_pages, dirty);
-+	memset(pages, 0, num_pages * sizeof(struct page *));
++	put_user_pages(dma->map, dma->page_count);
+ 	dma->page_count = 0;
  }
  
- /*
+diff --git a/drivers/media/pci/ivtv/ivtv-yuv.c b/drivers/media/pci/ivtv/ivtv-yuv.c
+index cd2fe2d444c0..2c61a11d391d 100644
+--- a/drivers/media/pci/ivtv/ivtv-yuv.c
++++ b/drivers/media/pci/ivtv/ivtv-yuv.c
+@@ -30,7 +30,6 @@ static int ivtv_yuv_prep_user_dma(struct ivtv *itv, struct ivtv_user_dma *dma,
+ 	struct yuv_playback_info *yi = &itv->yuv_info;
+ 	u8 frame = yi->draw_frame;
+ 	struct yuv_frame_info *f = &yi->new_frame_info[frame];
+-	int i;
+ 	int y_pages, uv_pages;
+ 	unsigned long y_buffer_offset, uv_buffer_offset;
+ 	int y_decode_height, uv_decode_height, y_size;
+@@ -81,8 +80,7 @@ static int ivtv_yuv_prep_user_dma(struct ivtv *itv, struct ivtv_user_dma *dma,
+ 				 uv_pages, uv_dma.page_count);
+ 
+ 			if (uv_pages >= 0) {
+-				for (i = 0; i < uv_pages; i++)
+-					put_page(dma->map[y_pages + i]);
++				put_user_pages(&dma->map[y_pages], uv_pages);
+ 				rc = -EFAULT;
+ 			} else {
+ 				rc = uv_pages;
+@@ -93,8 +91,7 @@ static int ivtv_yuv_prep_user_dma(struct ivtv *itv, struct ivtv_user_dma *dma,
+ 				 y_pages, y_dma.page_count);
+ 		}
+ 		if (y_pages >= 0) {
+-			for (i = 0; i < y_pages; i++)
+-				put_page(dma->map[i]);
++			put_user_pages(dma->map, y_pages);
+ 			/*
+ 			 * Inherit the -EFAULT from rc's
+ 			 * initialization, but allow it to be
+@@ -112,9 +109,7 @@ static int ivtv_yuv_prep_user_dma(struct ivtv *itv, struct ivtv_user_dma *dma,
+ 	/* Fill & map SG List */
+ 	if (ivtv_udma_fill_sg_list (dma, &uv_dma, ivtv_udma_fill_sg_list (dma, &y_dma, 0)) < 0) {
+ 		IVTV_DEBUG_WARN("could not allocate bounce buffers for highmem userspace buffers\n");
+-		for (i = 0; i < dma->page_count; i++) {
+-			put_page(dma->map[i]);
+-		}
++		put_user_pages(dma->map, dma->page_count);
+ 		dma->page_count = 0;
+ 		return -ENOMEM;
+ 	}
 -- 
 2.22.0
