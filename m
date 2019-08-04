@@ -1,55 +1,55 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33790 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1726332AbfHDRMs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 4 Aug 2019 13:12:48 -0400
-Subject: Re: [PATCH 16/24] xfs: Lower CIL flush limit for large logs
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-17-david@fromorbit.com>
-From: Nikolay Borisov <nborisov@suse.com>
-Message-ID: <b8b711fc-ba44-b510-91e8-8b6c247c30f3@suse.com>
-Date: Sun, 4 Aug 2019 20:12:45 +0300
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:38477 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727169AbfHDWtb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 18:49:31 -0400
+From: john.hubbard@gmail.com
+Subject: [PATCH v2 07/34] drm/radeon: convert put_page() to put_user_page*()
+Date: Sun,  4 Aug 2019 15:48:48 -0700
+Message-Id: <20190804224915.28669-8-jhubbard@nvidia.com>
+In-Reply-To: <20190804224915.28669-1-jhubbard@nvidia.com>
+References: <20190804224915.28669-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20190801021752.4986-17-david@fromorbit.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
-Cc: linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Alex Deucher <alexander.deucher@amd.com>, =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>, David Zhou <David1.Zhou@amd.com>, David Airlie <airlied@linux.ie>
 
+From: John Hubbard <jhubbard@nvidia.com>
 
+For pages that were retained via get_user_pages*(), release those pages
+via the new put_user_page*() routines, instead of via put_page() or
+release_pages().
 
-On 1.08.19 г. 5:17 ч., Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> The current CIL size aggregation limit is 1/8th the log size. This
-> means for large logs we might be aggregating at least 250MB of dirty objects
-> in memory before the CIL is flushed to the journal. With CIL shadow
-> buffers sitting around, this means the CIL is often consuming >500MB
-> of temporary memory that is all allocated under GFP_NOFS conditions.
-> 
-> FLushing the CIL can take some time to do if there is other IO
-> ongoing, and can introduce substantial log force latency by itself.
-> It also pins the memory until the objects are in the AIL and can be
-> written back and reclaimed by shrinkers. Hence this threshold also
-> tends to determine the minimum amount of memory XFS can operate in
-> under heavy modification without triggering the OOM killer.
-> 
-> Modify the CIL space limit to prevent such huge amounts of pinned
-> metadata from aggregating. We can 2MB of log IO in flight at once,
-There is a word missing between 'can' and '2MB'
-> so limit aggregation to 8x this size (arbitrary). This has some
-> impact on performance (5-10% decrease on 16-way fsmark) and
-> increases the amount of log traffic (~50% on same workload) but it
-> is necessary to prevent rampant OOM killing under iworkloads that
-> modify large amounts of metadata under heavy memory pressure.
-> 
-> This was found via trace analysis or AIL behaviour. e.g. insertion
-s/or/of/
+This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+("mm: introduce put_user_page*(), placeholder versions").
 
-> from a single CIL flush:
+Cc: Alex Deucher <alexander.deucher@amd.com>
+Cc: Christian König <christian.koenig@amd.com>
+Cc: David (ChunMing) Zhou <David1.Zhou@amd.com>
+Cc: David Airlie <airlied@linux.ie>
+Cc: amd-gfx@lists.freedesktop.org
+Cc: dri-devel@lists.freedesktop.org
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ drivers/gpu/drm/radeon/radeon_ttm.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-<snip>
+diff --git a/drivers/gpu/drm/radeon/radeon_ttm.c b/drivers/gpu/drm/radeon/radeon_ttm.c
+index fb3696bc616d..4c9943fa10df 100644
+--- a/drivers/gpu/drm/radeon/radeon_ttm.c
++++ b/drivers/gpu/drm/radeon/radeon_ttm.c
+@@ -540,7 +540,7 @@ static int radeon_ttm_tt_pin_userptr(struct ttm_tt *ttm)
+ 	kfree(ttm->sg);
+ 
+ release_pages:
+-	release_pages(ttm->pages, pinned);
++	put_user_pages(ttm->pages, pinned);
+ 	return r;
+ }
+ 
+-- 
+2.22.0
