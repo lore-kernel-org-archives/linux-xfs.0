@@ -1,82 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate16.nvidia.com ([216.228.121.65]:10527 "EHLO
-        hqemgate16.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727585AbfHCUDI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 16:03:08 -0400
-Subject: Re: [PATCH 06/34] drm/i915: convert put_page() to put_user_page*()
-From: John Hubbard <jhubbard@nvidia.com>
-References: <20190802022005.5117-1-jhubbard@nvidia.com>
- <20190802022005.5117-7-jhubbard@nvidia.com>
- <156473756254.19842.12384378926183716632@jlahtine-desk.ger.corp.intel.com>
- <7d9a9c57-4322-270b-b636-7214019f87e9@nvidia.com>
-Message-ID: <22c309f6-a7ca-2624-79c3-b16a1487f488@nvidia.com>
-Date: Sat, 3 Aug 2019 13:03:05 -0700
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:51456 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728274AbfHDBum (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 21:50:42 -0400
+Date: Sun, 4 Aug 2019 11:49:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 01/24] mm: directed shrinker work deferral
+Message-ID: <20190804014930.GR7777@dread.disaster.area>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-2-david@fromorbit.com>
+ <20190802152709.GA60893@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <7d9a9c57-4322-270b-b636-7214019f87e9@nvidia.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190802152709.GA60893@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>, Andrew Morton <akpm@linux-foundation.org>, john.hubbard@gmail.com
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, Jani Nikula <jani.nikula@linux.intel.com>, Rodrigo Vivi <rodrigo.vivi@intel.com>, David Airlie <airlied@linux.ie>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-On 8/2/19 11:48 AM, John Hubbard wrote:
-> On 8/2/19 2:19 AM, Joonas Lahtinen wrote:
->> Quoting john.hubbard@gmail.com (2019-08-02 05:19:37)
->>> From: John Hubbard <jhubbard@nvidia.com>
-...
-> In order to deal with the merge problem, I'll drop this patch from my ser=
-ies,
-> and I'd recommend that the drm-intel-next take the following approach:
+On Fri, Aug 02, 2019 at 11:27:09AM -0400, Brian Foster wrote:
+> On Thu, Aug 01, 2019 at 12:17:29PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > Introduce a mechanism for ->count_objects() to indicate to the
+> > shrinker infrastructure that the reclaim context will not allow
+> > scanning work to be done and so the work it decides is necessary
+> > needs to be deferred.
+> > 
+> > This simplifies the code by separating out the accounting of
+> > deferred work from the actual doing of the work, and allows better
+> > decisions to be made by the shrinekr control logic on what action it
+> > can take.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  include/linux/shrinker.h | 7 +++++++
+> >  mm/vmscan.c              | 8 ++++++++
+> >  2 files changed, 15 insertions(+)
+> > 
+> > diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
+> > index 9443cafd1969..af78c475fc32 100644
+> > --- a/include/linux/shrinker.h
+> > +++ b/include/linux/shrinker.h
+> > @@ -31,6 +31,13 @@ struct shrink_control {
+> >  
+> >  	/* current memcg being shrunk (for memcg aware shrinkers) */
+> >  	struct mem_cgroup *memcg;
+> > +
+> > +	/*
+> > +	 * set by ->count_objects if reclaim context prevents reclaim from
+> > +	 * occurring. This allows the shrinker to immediately defer all the
+> > +	 * work and not even attempt to scan the cache.
+> > +	 */
+> > +	bool will_defer;
+> 
+> Functionality wise this seems fairly straightforward. FWIW, I find the
+> 'will_defer' name a little confusing because it implies to me that the
+> shrinker is telling the caller about something it would do if called as
+> opposed to explicitly telling the caller to defer. I'd just call it
+> 'defer' I guess, but that's just my .02. ;P
 
-Actually, I just pulled the latest linux.git, and there are a few changes:
+Ok, I'll change it to something like "defer_work" or "defer_scan"
+here.
 
->=20
-> 1) For now, s/put_page/put_user_page/ in i915_gem_userptr_put_pages(),
-> and fix up the set_page_dirty() --> set_page_dirty_lock() issue, like thi=
-s
-> (based against linux.git):
->=20
-> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c b/drivers/gpu/dr=
-m/i915/gem/i915_gem_userptr.c
-> index 528b61678334..94721cc0093b 100644
-> --- a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
-> +++ b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
-> @@ -664,10 +664,10 @@ i915_gem_userptr_put_pages(struct drm_i915_gem_obje=
-ct *obj,
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 for_each_sgt_page(page, sgt_it=
-er, pages) {
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 if (obj->mm.dirty)
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_page_dirty=
-(page);
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 set_page_dirty=
-_lock(page);
+> >  };
+> >  
+> >  #define SHRINK_STOP (~0UL)
+> > diff --git a/mm/vmscan.c b/mm/vmscan.c
+> > index 44df66a98f2a..ae3035fe94bc 100644
+> > --- a/mm/vmscan.c
+> > +++ b/mm/vmscan.c
+> > @@ -541,6 +541,13 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+> >  	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+> >  				   freeable, delta, total_scan, priority);
+> >  
+> > +	/*
+> > +	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+> > +	 * defer the work to a context that can scan the cache.
+> > +	 */
+> > +	if (shrinkctl->will_defer)
+> > +		goto done;
+> > +
+> 
+> Who's responsible for clearing the flag? Perhaps we should do so here
+> once it's acted upon since we don't call into the shrinker again?
 
-I see you've already applied this fix to your tree, in linux.git already.
+Each shrinker invocation has it's own shrink_control context - they
+are not shared between shrinkers - the higher level is responsible
+for setting up the control state of each individual shrinker
+invocation...
 
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0 mark_page_accessed(page);
-> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 put_page(page);
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 put_user_page(page);
+> Note that I see this structure is reinitialized on every iteration in
+> the caller, but there already is the SHRINK_EMPTY case where we call
+> back into do_shrink_slab().
 
-But this conversion still needs doing. So I'll repost a patch that only doe=
-s=20
-this (plus the other call sites).=20
+.... because there is external state tracking in memcgs that
+determine what shrinkers get run. See shrink_slab_memcg().
 
-That can go in via either your tree, or Andrew's -mm tree, without generati=
-ng
-any conflicts.
+i.e. The SHRINK_EMPTY return value is a special hack for memcg
+shrinkers so it can track whether there are freeable objects in the
+cache externally to try to avoid calling into shrinkers where no
+work can be done.  Think about having hundreds of shrinkers and
+hundreds of memcgs...
 
-thanks,
---=20
-John Hubbard
-NVIDIA
+Anyway, the tracking of the freeable bit is racy, so the
+SHRINK_EMPTY hack where it clears the bit and calls back into the
+shrinker is handling the case where objects were freed between the
+shrinker running and shrink_slab_memcg() clearing the freeable bit
+from the slab. Hence it has to call back into the shrinker again -
+if it gets anything other than SHRINK_EMPTY returned, then it will
+set the bit again.
+
+In reality, SHRINK_EMPTY and deferring work are mutually exclusive.
+Work only gets deferred when there's work that can be done and in
+that case SHRINK_EMPTY will not be returned - a value of "0 freed
+objects" will be returned when we defer work. So if the first call
+returns SHRINK_EMPTY, the "defer" state has not been touched and
+so doesn't require resetting to zero here.
+
+> Granted the deferred state likely hasn't
+> changed, but the fact that we'd call back into the count callback to set
+> it again implies the logic could be a bit more explicit, particularly if
+> this will eventually be used for more dynamic shrinker state that might
+> change call to call (i.e., object dirty state, etc.).
+> 
+> BTW, do we need to care about the ->nr_cached_objects() call from the
+> generic superblock shrinker (super_cache_scan())?
+
+No, and we never had to because it is inside the superblock shrinker
+and the superblock shrinker does the GFP_NOFS context checks.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
