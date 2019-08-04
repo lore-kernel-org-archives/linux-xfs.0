@@ -1,136 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:51456 "EHLO
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33297 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728274AbfHDBum (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 21:50:42 -0400
-Date: Sun, 4 Aug 2019 11:49:30 +1000
+        by vger.kernel.org with ESMTP id S1728274AbfHDCGn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 3 Aug 2019 22:06:43 -0400
+Date: Sun, 4 Aug 2019 12:05:32 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 01/24] mm: directed shrinker work deferral
-Message-ID: <20190804014930.GR7777@dread.disaster.area>
+Subject: Re: [PATCH 03/24] mm: factor shrinker work calculations
+Message-ID: <20190804020532.GT7777@dread.disaster.area>
 References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-2-david@fromorbit.com>
- <20190802152709.GA60893@bfoster>
+ <20190801021752.4986-4-david@fromorbit.com>
+ <e07bf57b-a9cb-cb7b-b2be-3ec1b355a184@suse.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20190802152709.GA60893@bfoster>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e07bf57b-a9cb-cb7b-b2be-3ec1b355a184@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Nikolay Borisov <nborisov@suse.com>
 Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-On Fri, Aug 02, 2019 at 11:27:09AM -0400, Brian Foster wrote:
-> On Thu, Aug 01, 2019 at 12:17:29PM +1000, Dave Chinner wrote:
+On Fri, Aug 02, 2019 at 06:08:37PM +0300, Nikolay Borisov wrote:
+> 
+> 
+> On 1.08.19 г. 5:17 ч., Dave Chinner wrote:
 > > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > Introduce a mechanism for ->count_objects() to indicate to the
-> > shrinker infrastructure that the reclaim context will not allow
-> > scanning work to be done and so the work it decides is necessary
-> > needs to be deferred.
+> > Start to clean up the shrinker code by factoring out the calculation
+> > that determines how much work to do. This separates the calculation
+> > from clamping and other adjustments that are done before the
+> > shrinker work is run.
 > > 
-> > This simplifies the code by separating out the accounting of
-> > deferred work from the actual doing of the work, and allows better
-> > decisions to be made by the shrinekr control logic on what action it
-> > can take.
+> > Also convert the calculation for the amount of work to be done to
+> > use 64 bit logic so we don't have to keep jumping through hoops to
+> > keep calculations within 32 bits on 32 bit systems.
 > > 
 > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > ---
-> >  include/linux/shrinker.h | 7 +++++++
-> >  mm/vmscan.c              | 8 ++++++++
-> >  2 files changed, 15 insertions(+)
+> >  mm/vmscan.c | 74 ++++++++++++++++++++++++++++++++++-------------------
+> >  1 file changed, 47 insertions(+), 27 deletions(-)
 > > 
-> > diff --git a/include/linux/shrinker.h b/include/linux/shrinker.h
-> > index 9443cafd1969..af78c475fc32 100644
-> > --- a/include/linux/shrinker.h
-> > +++ b/include/linux/shrinker.h
-> > @@ -31,6 +31,13 @@ struct shrink_control {
-> >  
-> >  	/* current memcg being shrunk (for memcg aware shrinkers) */
-> >  	struct mem_cgroup *memcg;
-> > +
-> > +	/*
-> > +	 * set by ->count_objects if reclaim context prevents reclaim from
-> > +	 * occurring. This allows the shrinker to immediately defer all the
-> > +	 * work and not even attempt to scan the cache.
-> > +	 */
-> > +	bool will_defer;
-> 
-> Functionality wise this seems fairly straightforward. FWIW, I find the
-> 'will_defer' name a little confusing because it implies to me that the
-> shrinker is telling the caller about something it would do if called as
-> opposed to explicitly telling the caller to defer. I'd just call it
-> 'defer' I guess, but that's just my .02. ;P
-
-Ok, I'll change it to something like "defer_work" or "defer_scan"
-here.
-
-> >  };
-> >  
-> >  #define SHRINK_STOP (~0UL)
 > > diff --git a/mm/vmscan.c b/mm/vmscan.c
-> > index 44df66a98f2a..ae3035fe94bc 100644
+> > index ae3035fe94bc..b7472953b0e6 100644
 > > --- a/mm/vmscan.c
 > > +++ b/mm/vmscan.c
-> > @@ -541,6 +541,13 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
-> >  	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
-> >  				   freeable, delta, total_scan, priority);
+> > @@ -464,13 +464,45 @@ EXPORT_SYMBOL(unregister_shrinker);
 > >  
-> > +	/*
-> > +	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
-> > +	 * defer the work to a context that can scan the cache.
-> > +	 */
-> > +	if (shrinkctl->will_defer)
-> > +		goto done;
+> >  #define SHRINK_BATCH 128
+> >  
+> > +/*
+> > + * Calculate the number of new objects to scan this time around. Return
+> > + * the work to be done. If there are freeable objects, return that number in
+> > + * @freeable_objects.
+> > + */
+> > +static int64_t shrink_scan_count(struct shrink_control *shrinkctl,
+> > +			    struct shrinker *shrinker, int priority,
+> > +			    int64_t *freeable_objects)
+> 
+> nit: make the return parm definition also uin64_t, also we have u64 types.
+
+SHRINK_EMPTY is actually a negative number (-2), and it gets whacked
+back into a signed long value in the caller. So returning a signed
+integer is actually correct.
+
+> > +{
+> > +	uint64_t delta;
+> > +	uint64_t freeable;
 > > +
+> > +	freeable = shrinker->count_objects(shrinker, shrinkctl);
+> > +	if (freeable == 0 || freeable == SHRINK_EMPTY)
+> > +		return freeable;
+> > +
+> > +	if (shrinker->seeks) {
+> > +		delta = freeable >> (priority - 2);
+> > +		do_div(delta, shrinker->seeks);
 > 
-> Who's responsible for clearing the flag? Perhaps we should do so here
-> once it's acted upon since we don't call into the shrinker again?
+> a comment about the reasoning behind this calculation would be nice.
 
-Each shrinker invocation has it's own shrink_control context - they
-are not shared between shrinkers - the higher level is responsible
-for setting up the control state of each individual shrinker
-invocation...
+I'm just moving code here.
 
-> Note that I see this structure is reinitialized on every iteration in
-> the caller, but there already is the SHRINK_EMPTY case where we call
-> back into do_shrink_slab().
+The reason for this calculation requires an awfully long description
+that isn't actually appropriate here or in this patch set.
 
-.... because there is external state tracking in memcgs that
-determine what shrinkers get run. See shrink_slab_memcg().
+If there should be any comment describing how shrinker work biasing
+should be configured, it needs to be in include/linux/shrinker.h
+around the definition of DEFAULT_SEEKS and shrinker->seeks as this
+code requires shrinker->seeks to be configured appropriately by the
+code that registers the shrinker.
 
-i.e. The SHRINK_EMPTY return value is a special hack for memcg
-shrinkers so it can track whether there are freeable objects in the
-cache externally to try to avoid calling into shrinkers where no
-work can be done.  Think about having hundreds of shrinkers and
-hundreds of memcgs...
-
-Anyway, the tracking of the freeable bit is racy, so the
-SHRINK_EMPTY hack where it clears the bit and calls back into the
-shrinker is handling the case where objects were freed between the
-shrinker running and shrink_slab_memcg() clearing the freeable bit
-from the slab. Hence it has to call back into the shrinker again -
-if it gets anything other than SHRINK_EMPTY returned, then it will
-set the bit again.
-
-In reality, SHRINK_EMPTY and deferring work are mutually exclusive.
-Work only gets deferred when there's work that can be done and in
-that case SHRINK_EMPTY will not be returned - a value of "0 freed
-objects" will be returned when we defer work. So if the first call
-returns SHRINK_EMPTY, the "defer" state has not been touched and
-so doesn't require resetting to zero here.
-
-> Granted the deferred state likely hasn't
-> changed, but the fact that we'd call back into the count callback to set
-> it again implies the logic could be a bit more explicit, particularly if
-> this will eventually be used for more dynamic shrinker state that might
-> change call to call (i.e., object dirty state, etc.).
+> >  static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+> >  				    struct shrinker *shrinker, int priority)
+> >  {
+> >  	unsigned long freed = 0;
+> > -	unsigned long long delta;
+> >  	long total_scan;
+> > -	long freeable;
+> > +	int64_t freeable_objects = 0;
+> > +	int64_t scan_count;
 > 
-> BTW, do we need to care about the ->nr_cached_objects() call from the
-> generic superblock shrinker (super_cache_scan())?
+> why int and not uint64 ? We can never have negative object count, right?
 
-No, and we never had to because it is inside the superblock shrinker
-and the superblock shrinker does the GFP_NOFS context checks.
+SHRINK_STOP, SHRINK_EMPTY are negative numbers, and the higher level
+interface uses longs, not unsigned longs. So we have to treat
+numbers greater than LONG_MAX as invalid for object/scan counts.
 
 Cheers,
 
