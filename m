@@ -1,102 +1,154 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:8612 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1728885AbfHESc6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Aug 2019 14:32:58 -0400
-From: Chris Mason <clm@fb.com>
-Subject: Re: [PATCH 09/24] xfs: don't allow log IO to be throttled
-Date: Mon, 5 Aug 2019 18:32:51 +0000
-Message-ID: <C823BAA1-18D5-4C25-9506-59A740817E8C@fb.com>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-10-david@fromorbit.com>
- <F1E7CC65-D2CB-4078-9AA3-9D172ECDE17B@fb.com>
- <20190801235849.GO7777@dread.disaster.area>
- <7093F5C3-53D2-4C49-9C0D-64B20C565D18@fb.com>
- <20190802232814.GP7777@dread.disaster.area>
-In-Reply-To: <20190802232814.GP7777@dread.disaster.area>
-Content-Language: en-US
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:42766 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730457AbfHEUbu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Aug 2019 16:31:50 -0400
+Received: by mail-pf1-f194.google.com with SMTP id q10so40194979pff.9
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 13:31:49 -0700 (PDT)
+Subject: Re: Block device direct read EIO handling broken?
+From: Jens Axboe <axboe@kernel.dk>
+References: <20190805181524.GE7129@magnolia>
+ <66bd785d-7598-5cc2-5e98-447fd128c153@kernel.dk>
+Message-ID: <36973a52-e876-fc09-7a63-2fc16b855f8d@kernel.dk>
+Date: Mon, 5 Aug 2019 13:31:45 -0700
 MIME-Version: 1.0
+In-Reply-To: <66bd785d-7598-5cc2-5e98-447fd128c153@kernel.dk>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, Damien Le Moal <Damien.LeMoal@wdc.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, linux-block@vger.kernel.org, xfs <linux-xfs@vger.kernel.org>
 
-On 2 Aug 2019, at 19:28, Dave Chinner wrote:
+On 8/5/19 11:31 AM, Jens Axboe wrote:
+> On 8/5/19 11:15 AM, Darrick J. Wong wrote:
+>> Hi Damien,
+>>
+>> I noticed a regression in xfs/747 (an unreleased xfstest for the
+>> xfs_scrub media scanning feature) on 5.3-rc3.  I'll condense that down
+>> to a simpler reproducer:
+>>
+>> # dmsetup table
+>> error-test: 0 209 linear 8:48 0
+>> error-test: 209 1 error
+>> error-test: 210 6446894 linear 8:48 210
+>>
+>> Basically we have a ~3G /dev/sdd and we set up device mapper to fail IO
+>> for sector 209 and to pass the io to the scsi device everywhere else.
+>>
+>> On 5.3-rc3, performing a directio pread of this range with a < 1M buffer
+>> (in other words, a request for fewer than MAX_BIO_PAGES bytes) yields
+>> EIO like you'd expect:
+>>
+>> # strace -e pread64 xfs_io -d -c 'pread -b 1024k 0k 1120k' /dev/mapper/error-test
+>> pread64(3, 0x7f880e1c7000, 1048576, 0)  = -1 EIO (Input/output error)
+>> pread: Input/output error
+>> +++ exited with 0 +++
+>>
+>> But doing it with a larger buffer succeeds(!):
+>>
+>> # strace -e pread64 xfs_io -d -c 'pread -b 2048k 0k 1120k' /dev/mapper/error-test
+>> pread64(3, "XFSB\0\0\20\0\0\0\0\0\0\fL\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"..., 1146880, 0) = 1146880
+>> read 1146880/1146880 bytes at offset 0
+>> 1 MiB, 1 ops; 0.0009 sec (1.124 GiB/sec and 1052.6316 ops/sec)
+>> +++ exited with 0 +++
+>>
+>> (Note that the part of the buffer corresponding to the dm-error area is
+>> uninitialized)
+>>
+>> On 5.3-rc2, both commands would fail with EIO like you'd expect.  The
+>> only change between rc2 and rc3 is commit 0eb6ddfb865c ("block: Fix
+>> __blkdev_direct_IO() for bio fragments").
+>>
+>> AFAICT we end up in __blkdev_direct_IO with a 1120K buffer, which gets
+>> split into two bios: one for the first BIO_MAX_PAGES worth of data (1MB)
+>> and a second one for the 96k after that.
+>>
+>> I think the problem is that every time we submit a bio, we increase ret
+>> by the size of that bio, but at the time we do that we have no idea if
+>> the bio is going to succeed or not.  At the end of the function we do:
+>>
+>> 	if (!ret)
+>> 		ret = blk_status_to_errno(dio->bio.bi_status);
+>>
+>> Which means that we only pick up the IO error if we haven't already set
+>> ret.  I suppose that was useful for being able to return a short read,
+>> but now that we always increment ret by the size of the bio, we act like
+>> the whole buffer was read.  I tried a -rc2 kernel and found that 40% of
+>> the time I'd get an EIO and the rest of the time I got a short read.
+>>
+>> Not sure where to go from here, but something's not right...
+> 
+> I'll take a look.
 
-> On Fri, Aug 02, 2019 at 02:11:53PM +0000, Chris Mason wrote:
->> On 1 Aug 2019, at 19:58, Dave Chinner wrote:
->> I can't really see bio->b_ioprio working without the rest of the IO
->> controller logic creating a sensible system,
->
-> That's exactly the problem we need to solve. The current situation
-> is ... untenable. Regardless of whether the io.latency controller
-> works well, the fact is that the wbt subsystem is active on -all-
-> configurations and the way it "prioritises" is completely broken.
+How about this? The old code did:
 
-Completely broken is probably a little strong.   Before wbt, it was=20
-impossible to do buffered IO without periodically saturating the drive=20
-in unexpected ways.  We've got a lot of data showing it helping, and=20
-it's pretty easy to setup a new A/B experiment to demonstrate it's=20
-usefulness in current kernels.  But that doesn't mean it's perfect.
+	if (!ret)
+		ret = blk_status_to_errno(dio->bio.bi_status);
+	if (likely(!ret))
+		ret = dio->size;
 
->
->> framework to define weights etc.  My question is if it's worth trying
->> inside of the wbt code, or if we should just let the metadata go
->> through.
->
-> As I said, that doesn't  solve the problem. We /want/ critical
-> journal IO to have higher priority that background metadata
-> writeback. Just ignoring REQ_META doesn't help us there - it just
-> moves the priority inversion to blocking on request queue tags.
+where 'ret' was just tracking the error. With 'ret' now being the
+positive IO size, we should overwrite it if ret is >= 0, not just if
+it's zero.
 
-Does XFS background metadata IO ever get waited on by critical journal=20
-threads?  My understanding is that all of the filesystems do this from=20
-time to time.  Without a way to bump the priority of throttled=20
-background metadata IO, I can't see how to avoid prio inversions without=20
-running background metadata at the same prio as all of the critical=20
-journal IO.
+Also kill a use-after-free.
 
->
->> Tejun reminded me that in a lot of ways, swap is user IO and it's
->> actually fine to have it prioritized at the same level as user IO. =20
->> We
->
-> I think that's wrong. Swap *in* could have user priority but swap
-> *out* is global as there is no guarantee that the page being swapped
-> belongs to the user context that is reclaiming memory.
->
-> Lots of other user and kernel reclaim contexts may be waiting on
-> that swap to complete, so it's important that swap out is not
-> arbitrarily delayed or susceptible to priority inversions. i.e. swap
-> out must take priority over swap-in and other user IO because that
-> IO may require allocation to make progress via swapping to free
-> "user" file data cached in memory....
->
->> don't want to let a low prio app thrash the drive swapping things in=20
->> and
->> out all the time,
->
-> Low priority apps will be throttled on *swap in* IO - i.e. by their
-> incoming memory demand. High priority apps should be swapping out
-> low priority app memory if there are shortages - that's what priority
-> defines....
->
->> other higher priority processes aren't waiting for the memory.  This
->> depends on the cgroup config, so wrt your current patches it probably
->> sounds crazy, but we have a lot of data around this from the fleet.
->
-> I'm not using cgroups.
->
-> Core infrastructure needs to work without cgroups being configured
-> to confine everything in userspace to "safe" bounds, and right now
-> just running things in the root cgroup doesn't appear to work very
-> well at all.
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index a6f7c892cb4a..67c8e87c9481 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -386,6 +386,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 
+ 	ret = 0;
+ 	for (;;) {
++		ssize_t this_size;
+ 		int err;
+ 
+ 		bio_set_dev(bio, bdev);
+@@ -433,13 +434,14 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 				polled = true;
+ 			}
+ 
++			this_size = bio->bi_iter.bi_size;
+ 			qc = submit_bio(bio);
+ 			if (qc == BLK_QC_T_EAGAIN) {
+ 				if (!ret)
+ 					ret = -EAGAIN;
+ 				goto error;
+ 			}
+-			ret = dio->size;
++			ret += this_size;
+ 
+ 			if (polled)
+ 				WRITE_ONCE(iocb->ki_cookie, qc);
+@@ -460,13 +462,14 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 			atomic_inc(&dio->ref);
+ 		}
+ 
++		this_size = bio->bi_iter.bi_size;
+ 		qc = submit_bio(bio);
+ 		if (qc == BLK_QC_T_EAGAIN) {
+ 			if (!ret)
+ 				ret = -EAGAIN;
+ 			goto error;
+ 		}
+-		ret = dio->size;
++		ret += this_size;
+ 
+ 		bio = bio_alloc(gfp, nr_pages);
+ 		if (!bio) {
+@@ -494,7 +497,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 	__set_current_state(TASK_RUNNING);
+ 
+ out:
+-	if (!ret)
++	if (ret >= 0)
+ 		ret = blk_status_to_errno(dio->bio.bi_status);
+ 
+ 	bio_put(&dio->bio);
 
-I'm not disagreeing with this part, my real point is there isn't a=20
-single answer.  It's possible for swap to be critical to the running of=20
-the box in some workloads, and totally unimportant in others.
-
--chris
+-- 
+Jens Axboe
