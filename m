@@ -1,107 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53549 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726394AbfHEHVm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Aug 2019 03:21:42 -0400
-Date: Mon, 5 Aug 2019 17:20:31 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v19 00/18] xfs: online repair support
-Message-ID: <20190805072031.GW7777@dread.disaster.area>
-References: <156496528310.804304.8105015456378794397.stgit@magnolia>
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:42179 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726880AbfHEJkX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Aug 2019 05:40:23 -0400
+Received: by mail-wr1-f65.google.com with SMTP id x1so33793104wrr.9
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 02:40:21 -0700 (PDT)
+Date: Mon, 5 Aug 2019 11:40:18 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 5/9] fs: Move start and length fiemap fields into
+ fiemap_extent_info
+Message-ID: <20190805094017.3tcskxxpssjolfmg@pegasus.maiolino.io>
+References: <20190731141245.7230-1-cmaiolino@redhat.com>
+ <20190731141245.7230-6-cmaiolino@redhat.com>
+ <20190731232837.GZ1561054@magnolia>
+ <20190802095115.bjz6ejbouif3wkbt@pegasus.maiolino.io>
+ <20190802151519.GH7138@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156496528310.804304.8105015456378794397.stgit@magnolia>
+In-Reply-To: <20190802151519.GH7138@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On Sun, Aug 04, 2019 at 05:34:43PM -0700, Darrick J. Wong wrote:
-> Hi all,
+On Fri, Aug 02, 2019 at 08:15:19AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 02, 2019 at 11:51:16AM +0200, Carlos Maiolino wrote:
+> > > >  
+> > > >  STATIC int
+> > > >  xfs_vn_fiemap(
+> > > > -	struct inode		*inode,
+> > > > -	struct fiemap_extent_info *fieinfo,
+> > > > -	u64			start,
+> > > > -	u64			length)
+> > > > +	struct inode		  *inode,
+> > > > +	struct fiemap_extent_info *fieinfo)
+> > > >  {
+> > > > -	int			error;
+> > > > +	u64	start = fieinfo->fi_start;
+> > > > +	u64	length = fieinfo->fi_len;
+> > > > +	int	error;
+> > > 
+> > > Would be nice if the variable name indentation was consistent here, but
+> > > otherwise the xfs part looks ok.
+> > 
+> > These fields are removed on the next patch, updating it is really required?
 > 
-> This is the first part of the nineteenth revision of a patchset that
-> adds to XFS kernel support for online metadata scrubbing and repair.
-> There aren't any on-disk format changes.
+> Yes, please.
+
+NP then
+
+> > > > +	u64		fi_start;
+> > > > +	u64		fi_len;
+> > > 
+> > > Comments for these two new fields?
+> > 
+> > Sure, how about this:
+> > 
+> >        u64           fi_start;            /* Logical offset at which
+> >                                              start mapping */
+> >        u64           fi_len;              /* Logical length of mapping
+> >                                              the caller cares about */
+> > 
+> > 
+> > btw, Above indentation won't match final result
 > 
-> New for this version is a rebase against 5.3-rc2, integration with the
-> health reporting subsystem, and the explicit revalidation of all
-> metadata structures that were rebuilt.
+> Looks good to me.
+
+Will update the fields, thanks for the review
+
 > 
-> Patch 1 lays the groundwork for scrub types specifying a revalidation
-> function that will check everything that the repair function might have
-> rebuilt.  This will be necessary for the free space and inode btree
-> repair functions, which rebuild both btrees at once.
-> 
-> Patch 2 ensures that the health reporting query code doesn't get in the
-> way of post-repair revalidation of all rebuilt metadata structures.
-> 
-> Patch 3 creates a new data structure that provides an abstraction of a
-> big memory array by using linked lists.  This is where we store records
-> for btree reconstruction.  This first implementation is memory
-> inefficient and consumes a /lot/ of kernel memory, but lays the
-> groundwork for the last patch in the set to convert the implementation
-> to use a (memfd) swap file, which enables us to use pageable memory
-> without pounding the slab cache.
-> 
-> Patches 4-10 implement reconstruction of the free space btrees, inode
-> btrees, reference count btrees, inode records, inode forks, inode block
-> maps, and symbolic links.
+> > 
+> > Christoph, may I keep your reviewed tag by updating the comments as above?
+> > Otherwise I'll just remove your tag
+> > 
+> > > 
+> > > --D
+> > > 
+> > > > +	unsigned int	fi_extents_mapped;	/* Number of mapped extents */
+> > > > +	unsigned int	fi_extents_max;		/* Size of fiemap_extent array */
+> > > > +	struct		fiemap_extent __user *fi_extents_start;	/* Start of
+> > > > +								   fiemap_extent
+> > > > +								   array */
+> > > >  };
+> > > >  int fiemap_fill_next_extent(struct fiemap_extent_info *info, u64 logical,
+> > > >  			    u64 phys, u64 len, u32 flags);
+> > > > @@ -1841,8 +1844,7 @@ struct inode_operations {
+> > > >  	int (*setattr) (struct dentry *, struct iattr *);
+> > > >  	int (*getattr) (const struct path *, struct kstat *, u32, unsigned int);
+> > > >  	ssize_t (*listxattr) (struct dentry *, char *, size_t);
+> > > > -	int (*fiemap)(struct inode *, struct fiemap_extent_info *, u64 start,
+> > > > -		      u64 len);
+> > > > +	int (*fiemap)(struct inode *, struct fiemap_extent_info *);
+> > > >  	int (*update_time)(struct inode *, struct timespec64 *, int);
+> > > >  	int (*atomic_open)(struct inode *, struct dentry *,
+> > > >  			   struct file *, unsigned open_flag,
+> > > > @@ -3199,11 +3201,10 @@ extern int vfs_readlink(struct dentry *, char __user *, int);
+> > > >  
+> > > >  extern int __generic_block_fiemap(struct inode *inode,
+> > > >  				  struct fiemap_extent_info *fieinfo,
+> > > > -				  loff_t start, loff_t len,
+> > > >  				  get_block_t *get_block);
+> > > >  extern int generic_block_fiemap(struct inode *inode,
+> > > > -				struct fiemap_extent_info *fieinfo, u64 start,
+> > > > -				u64 len, get_block_t *get_block);
+> > > > +				struct fiemap_extent_info *fieinfo,
+> > > > +				get_block_t *get_block);
+> > > >  
+> > > >  extern struct file_system_type *get_filesystem(struct file_system_type *fs);
+> > > >  extern void put_filesystem(struct file_system_type *fs);
+> > > > -- 
+> > > > 2.20.1
+> > > > 
+> > 
+> > -- 
+> > Carlos
 
-Darrick and I had a discussion on #xfs about the btree rebuilds
-mainly centered around robustness. The biggest issue I saw with the
-code as it stands is that we replace the existing btree as we build
-it. As a result, we go from a complete tree with a single corruption
-to an empty tree with lots of external dangling references (i.e.
-massive corruption!) until the rebuild finishes. Hence if we crash
-while the rebuild is in progress, we risk being in a state where:
-
-	- log recovery will abort because it trips over partial tree
-	  state
-	- mounting won't run because scanning the btree at mount
-	  time falls of the end of the btree unexpectedly, doesn't
-	  find enough free space for reservations, etc
-	- mounting succeeds but then the first operations fail
-	  because the tree is incomplete and the filesystem
-	  immediately shuts down.
-
-So if we crash while there is a background repair taking place on
-the root filesystem, then it is very likely the system will not boot
-up after the crash. :(
-
-We came to the conclusion - independently, at the same time :) -
-that we should rebuild btrees in known free space with a dangling
-root node and then, once the whole new tree has been built, we
-atomically swap the btree root nodes. Hence if we crash during
-rebuild, we just have some dangling, unreferenced used space that a
-subsequent scrub/repair/rebuild cycle will release back to the free
-space pool.
-
-That leaves the original corrupt tree in place, and hence we don't
-make things any worse than they already are by trying to repair the
-tree. The atomic swap of the root nodes allows failsafe transition
-between the old and new trees, and the rebuild can then free the
-space the old tree used. If we crash at this point, then it's just
-dangling free space and a subsequent scrub/repair/rebuild cycle will
-release it back to the free space pool.
-
-This mechanism also works with xfs_repair - if we run xfs_repair
-after a crash during online rebuild, it will still see the original
-corrupt trees, find the dangling free space as well, and clean
-everything up with a new tree rebuild. Which means, again, an online
-rebuild failure does not make anything worse than before the rebuild
-started....
-
-Darrick thinks that this can quite easily be done simply by skipping
-the root node pointer update (->set_root, IIRC) until the new tree
-has been fully rebuilt. Hopefully that is the case, because an
-atomic swap mechanism like this will make the repair algorithms a
-lot more robust. :)
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
