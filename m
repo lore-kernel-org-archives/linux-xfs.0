@@ -1,29 +1,30 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:44876 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726709AbfHEAgp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 20:36:45 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x750NvHZ098415
-        for <linux-xfs@vger.kernel.org>; Mon, 5 Aug 2019 00:36:42 GMT
+Received: from userp2130.oracle.com ([156.151.31.86]:49628 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726709AbfHEAgx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 4 Aug 2019 20:36:53 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x750Obvu023953
+        for <linux-xfs@vger.kernel.org>; Mon, 5 Aug 2019 00:36:48 GMT
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2u527pc7a0-1
+        by userp2130.oracle.com with ESMTP id 2u51ptmbdf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 00:36:42 +0000
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 00:36:48 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x750N0L8195579
-        for <linux-xfs@vger.kernel.org>; Mon, 5 Aug 2019 00:36:41 GMT
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x750N0fs195597
+        for <linux-xfs@vger.kernel.org>; Mon, 5 Aug 2019 00:36:48 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2u51kktu2t-1
+        by userp3020.oracle.com with ESMTP id 2u51kktu5r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 00:36:41 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x750afBe013129
-        for <linux-xfs@vger.kernel.org>; Mon, 5 Aug 2019 00:36:41 GMT
-Subject: [PATCH 17/18] xfs: repair quotas
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 00:36:47 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x750al27013208
+        for <linux-xfs@vger.kernel.org>; Mon, 5 Aug 2019 00:36:47 GMT
+Subject: [PATCH 18/18] xfs: convert big array and blob array to use memfd
+ backend
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Sun, 04 Aug 2019 17:36:39 -0700
-Message-ID: <156496539989.804304.17839339304435444855.stgit@magnolia>
+Date: Sun, 04 Aug 2019 17:36:46 -0700
+Message-ID: <156496540609.804304.199956930600327951.stgit@magnolia>
 In-Reply-To: <156496528310.804304.8105015456378794397.stgit@magnolia>
 References: <156496528310.804304.8105015456378794397.stgit@magnolia>
 MIME-Version: 1.0
@@ -37,83 +38,1038 @@ Cc: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fix anything that causes the quota verifiers to fail.
+There are several problems with the initial implementations of the big
+array and the blob array data structures.  First, using linked lists
+imposes a two-pointer overhead on every record stored.  For blobs this
+isn't serious, but for fixed-size records this increases memory
+requirements by 40-60%.  Second, we're using kernel memory to store the
+intermediate records.  Kernel memory cannot be paged out, which means we
+run the risk of OOMing the machine when we run out of physical memory.
+
+Therefore, replace the linked lists in both structures with memfd files.
+Random access becomes much easier, memory overhead drops to a negligible
+amount, and because memfd pages can be swapped, we have considerably
+more flexibility for memory use.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/Makefile             |    1 
- fs/xfs/scrub/attr_repair.c  |    2 
- fs/xfs/scrub/common.h       |    9 +
- fs/xfs/scrub/quota.c        |    2 
- fs/xfs/scrub/quota_repair.c |  363 +++++++++++++++++++++++++++++++++++++++++++
- fs/xfs/scrub/repair.c       |   58 +++++++
- fs/xfs/scrub/repair.h       |    8 +
- fs/xfs/scrub/scrub.c        |   11 +
- 8 files changed, 446 insertions(+), 8 deletions(-)
- create mode 100644 fs/xfs/scrub/quota_repair.c
+ fs/xfs/Makefile      |    1 
+ fs/xfs/scrub/array.c |  607 +++++++++++++++++++++++++++++++++++++++-----------
+ fs/xfs/scrub/array.h |   16 -
+ fs/xfs/scrub/blob.c  |   94 +++++---
+ fs/xfs/scrub/blob.h  |    5 
+ fs/xfs/scrub/trace.h |   23 ++
+ fs/xfs/scrub/xfile.c |  121 ++++++++++
+ fs/xfs/scrub/xfile.h |   21 ++
+ 8 files changed, 708 insertions(+), 180 deletions(-)
+ create mode 100644 fs/xfs/scrub/xfile.c
+ create mode 100644 fs/xfs/scrub/xfile.h
 
 
 diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
-index 270a3f41fb30..a2461621ac26 100644
+index a2461621ac26..4a4f8121499b 100644
 --- a/fs/xfs/Makefile
 +++ b/fs/xfs/Makefile
-@@ -172,5 +172,6 @@ xfs-y				+= $(addprefix scrub/, \
+@@ -171,6 +171,7 @@ xfs-y				+= $(addprefix scrub/, \
+ 				   refcount_repair.o \
  				   repair.o \
  				   symlink_repair.o \
++				   xfile.o \
  				   )
-+xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota_repair.o
+ xfs-$(CONFIG_XFS_QUOTA)		+= scrub/quota_repair.o
  endif
- endif
-diff --git a/fs/xfs/scrub/attr_repair.c b/fs/xfs/scrub/attr_repair.c
-index b05547efc7b4..1dd2064052a0 100644
---- a/fs/xfs/scrub/attr_repair.c
-+++ b/fs/xfs/scrub/attr_repair.c
-@@ -457,7 +457,7 @@ xrep_xattr_reset_attr_local(
+diff --git a/fs/xfs/scrub/array.c b/fs/xfs/scrub/array.c
+index 4089e595df8b..1b3635a115b2 100644
+--- a/fs/xfs/scrub/array.c
++++ b/fs/xfs/scrub/array.c
+@@ -6,24 +6,41 @@
+ #include "xfs.h"
+ #include "xfs_fs.h"
+ #include "xfs_shared.h"
++#include "xfs_format.h"
+ #include "scrub/array.h"
++#include "scrub/scrub.h"
++#include "scrub/trace.h"
++#include "scrub/xfile.h"
+ 
+ /*
+  * XFS Fixed-Size Big Memory Array
+  * ===============================
+- * The big memory array uses a list to store large numbers of fixed-size
+- * records in memory.  Access to the array is performed via indexed get and put
+- * methods, and an append method is provided for convenience.  Array elements
+- * can be set to all zeroes, which means that the entry is NULL and will be
+- * skipped during iteration.
++ * The file-backed memory array uses a memfd "file" to store large numbers of
++ * fixed-size records in memory that can be paged out.  This puts less stress
++ * on the memory reclaim algorithms because memfd file pages are not pinned and
++ * can be paged out; however, array access is less direct than would be in a
++ * regular memory array.  Access to the array is performed via indexed get and
++ * put methods, and an append method is provided for convenience.  Array
++ * elements can be set to all zeroes, which means that the entry is NULL and
++ * will be skipped during iteration.
+  */
+ 
+-struct xa_item {
+-	struct list_head	list;
+-	/* array item comes after here */
+-};
++#define XFBMA_MAX_TEMP	(2)
+ 
+-#define XA_ITEM_SIZE(sz)	(sizeof(struct xa_item) + (sz))
++/*
++ * Pointer to temp space.  Because we can't access the memfd data directly, we
++ * allocate a small amount of memory on the end of the xfbma to buffer array
++ * items when we need space to store values temporarily.
++ */
++static inline void *
++xfbma_temp(
++	struct xfbma	*array,
++	unsigned int	nr)
++{
++	ASSERT(nr < XFBMA_MAX_TEMP);
++
++	return ((char *)(array + 1)) + (nr * array->obj_size);
++}
+ 
+ /* Initialize a big memory array. */
+ struct xfbma *
+@@ -31,97 +48,47 @@ xfbma_init(
+ 	size_t		obj_size)
+ {
+ 	struct xfbma	*array;
++	struct file	*filp;
+ 	int		error;
+ 
++	filp = xfile_create("big array");
++	if (!filp)
++		return ERR_PTR(-ENOMEM);
++	if (IS_ERR(filp))
++		return ERR_CAST(filp);
++
+ 	error = -ENOMEM;
+-	array = kmem_alloc(sizeof(struct xfbma) + obj_size,
++	array = kmem_alloc(sizeof(struct xfbma) + (XFBMA_MAX_TEMP * obj_size),
+ 			KM_NOFS | KM_MAYFAIL);
+ 	if (!array)
+-		return ERR_PTR(error);
++		goto out_filp;
+ 
++	array->filp = filp;
+ 	array->obj_size = obj_size;
+ 	array->nr = 0;
+-	INIT_LIST_HEAD(&array->list);
+-	memset(&array->cache, 0, sizeof(array->cache));
+-
+ 	return array;
++out_filp:
++	fput(filp);
++	return ERR_PTR(error);
  }
  
- /* Free all the attribute fork blocks and delete the fork. */
--STATIC int
-+int
- xrep_xattr_reset_fork(
- 	struct xfs_scrub	*sc,
- 	uint64_t		nr_attrs)
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 003a772cd26c..475680576c1b 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -142,4 +142,13 @@ int xchk_ilock_inverted(struct xfs_inode *ip, uint lock_mode);
- void xchk_stop_reaping(struct xfs_scrub *sc);
- void xchk_start_reaping(struct xfs_scrub *sc);
- 
-+/* Do we need to invoke the repair tool? */
-+static inline bool xfs_scrub_needs_repair(struct xfs_scrub_metadata *sm)
-+{
-+	return sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
-+			       XFS_SCRUB_OFLAG_XCORRUPT |
-+			       XFS_SCRUB_OFLAG_PREEN);
-+}
-+uint xchk_quota_to_dqtype(struct xfs_scrub *sc);
-+
- #endif	/* __XFS_SCRUB_COMMON_H__ */
-diff --git a/fs/xfs/scrub/quota.c b/fs/xfs/scrub/quota.c
-index 0a33b4421c32..9dd737aff144 100644
---- a/fs/xfs/scrub/quota.c
-+++ b/fs/xfs/scrub/quota.c
-@@ -18,7 +18,7 @@
- #include "scrub/common.h"
- 
- /* Convert a scrub type code to a DQ flag, or return 0 if error. */
--static inline uint
-+uint
- xchk_quota_to_dqtype(
- 	struct xfs_scrub	*sc)
+ void
+ xfbma_destroy(
+ 	struct xfbma	*array)
  {
-diff --git a/fs/xfs/scrub/quota_repair.c b/fs/xfs/scrub/quota_repair.c
+-	struct xa_item	*item, *n;
+-
+-	list_for_each_entry_safe(item, n, &array->list, list) {
+-		list_del(&item->list);
+-		kmem_free(item);
+-	}
++	xfile_destroy(array->filp);
+ 	kmem_free(array);
+ }
+ 
+-/* Find something in the cache. */
+-static struct xa_item *
+-xfbma_cache_lookup(
+-	struct xfbma	*array,
+-	uint64_t	nr)
+-{
+-	uint64_t	i;
+-
+-	for (i = 0; i < XMA_CACHE_SIZE; i++)
+-		if (array->cache[i].nr == nr && array->cache[i].item)
+-			return array->cache[i].item;
+-	return NULL;
+-}
+-
+-/* Invalidate the lookup cache. */
+-static void
+-xfbma_cache_invalidate(
+-	struct xfbma	*array)
+-{
+-	memset(array->cache, 0, sizeof(array->cache));
+-}
+-
+-/* Put something in the cache. */
+-static void
+-xfbma_cache_store(
+-	struct xfbma	*array,
+-	uint64_t	nr,
+-	struct xa_item	*item)
+-{
+-	memmove(array->cache + 1, array->cache,
+-			sizeof(struct xma_cache) * (XMA_CACHE_SIZE - 1));
+-	array->cache[0].item = item;
+-	array->cache[0].nr = nr;
+-}
+-
+-/* Find a particular array item. */
+-static struct xa_item *
+-xfbma_lookup(
++/* Compute offset of array element. */
++static inline loff_t
++xfbma_offset(
+ 	struct xfbma	*array,
+ 	uint64_t	nr)
+ {
+-	struct xa_item	*item;
+-	uint64_t	i;
+-
+-	if (nr >= array->nr) {
+-		ASSERT(0);
+-		return NULL;
+-	}
+-
+-	item = xfbma_cache_lookup(array, nr);
+-	if (item)
+-		return item;
+-
+-	i = 0;
+-	list_for_each_entry(item, &array->list, list) {
+-		if (i == nr) {
+-			xfbma_cache_store(array, nr, item);
+-			return item;
+-		}
+-		i++;
+-	}
+-	return NULL;
++	if (nr >= array->nr)
++		return -1;
++	return nr * array->obj_size;
+ }
+ 
+ /* Get an element from the array. */
+@@ -131,13 +98,14 @@ xfbma_get(
+ 	uint64_t	nr,
+ 	void		*ptr)
+ {
+-	struct xa_item	*item;
++	loff_t		pos = xfbma_offset(array, nr);
+ 
+-	item = xfbma_lookup(array, nr);
+-	if (!item)
++	if (pos < 0) {
++		ASSERT(0);
+ 		return -ENODATA;
+-	memcpy(ptr, item + 1, array->obj_size);
+-	return 0;
++	}
++
++	return xfile_io(array->filp, XFILE_IO_READ, &pos, ptr, array->obj_size);
+ }
+ 
+ /* Put an element in the array. */
+@@ -147,13 +115,15 @@ xfbma_set(
+ 	uint64_t	nr,
+ 	void		*ptr)
+ {
+-	struct xa_item	*item;
++	loff_t		pos = xfbma_offset(array, nr);
+ 
+-	item = xfbma_lookup(array, nr);
+-	if (!item)
++	if (pos < 0) {
++		ASSERT(0);
+ 		return -ENODATA;
+-	memcpy(item + 1, ptr, array->obj_size);
+-	return 0;
++	}
++
++	return xfile_io(array->filp, XFILE_IO_WRITE, &pos, ptr,
++			array->obj_size);
+ }
+ 
+ /* Is this array element NULL? */
+@@ -171,14 +141,16 @@ xfbma_insert_anywhere(
+ 	struct xfbma	*array,
+ 	void		*ptr)
+ {
+-	struct xa_item	*item;
++	void		*temp = xfbma_temp(array, 0);
++	uint64_t	i;
++	int		error;
+ 
+ 	/* Find a null slot to put it in. */
+-	list_for_each_entry(item, &array->list, list) {
+-		if (!xfbma_is_null(array, item + 1))
++	for (i = 0; i < array->nr; i++) {
++		error = xfbma_get(array, i, temp);
++		if (error || !xfbma_is_null(array, temp))
+ 			continue;
+-		memcpy(item + 1, ptr, array->obj_size);
+-		return 0;
++		return xfbma_set(array, i, ptr);
+ 	}
+ 
+ 	/* No null slots, just dump it on the end. */
+@@ -191,13 +163,17 @@ xfbma_nullify(
+ 	struct xfbma	*array,
+ 	uint64_t	nr)
+ {
+-	struct xa_item	*item;
++	void		*temp = xfbma_temp(array, 0);
++	loff_t		pos = xfbma_offset(array, nr);
+ 
+-	item = xfbma_lookup(array, nr);
+-	if (!item)
++	if (pos < 0) {
++		ASSERT(0);
+ 		return -ENODATA;
+-	memset(item + 1, 0, array->obj_size);
+-	return 0;
++	}
++
++	memset(temp, 0, array->obj_size);
++	return xfile_io(array->filp, XFILE_IO_WRITE, &pos, temp,
++			array->obj_size);
+ }
+ 
+ /* Append an element to the array. */
+@@ -206,22 +182,25 @@ xfbma_append(
+ 	struct xfbma	*array,
+ 	void		*ptr)
+ {
+-	struct xa_item	*item;
++	loff_t		pos = array->obj_size * array->nr;
++	int		error;
+ 
+-	item = kmem_alloc(XA_ITEM_SIZE(array->obj_size), KM_NOFS | KM_MAYFAIL);
+-	if (!item)
+-		return -ENOMEM;
++	if (pos < 0) {
++		ASSERT(0);
++		return -ENODATA;
++	}
+ 
+-	INIT_LIST_HEAD(&item->list);
+-	memcpy(item + 1, ptr, array->obj_size);
+-	list_add_tail(&item->list, &array->list);
++	error = xfile_io(array->filp, XFILE_IO_WRITE, &pos, ptr,
++			array->obj_size);
++	if (error)
++		return error;
+ 	array->nr++;
+ 	return 0;
+ }
+ 
+ /*
+  * Iterate every element in this array, freeing each element as we go.
+- * Array elements will be shifted down.
++ * Array elements will be nulled out.
+  */
+ int
+ xfbma_iter_del(
+@@ -229,23 +208,35 @@ xfbma_iter_del(
+ 	xfbma_iter_fn	iter_fn,
+ 	void		*priv)
+ {
+-	struct xa_item	*item, *n;
++	void		*temp = xfbma_temp(array, 0);
++	pgoff_t		oldpagenr = 0;
++	uint64_t	max_bytes;
++	uint64_t	i;
++	loff_t		pos;
+ 	int		error = 0;
+ 
+-	list_for_each_entry_safe(item, n, &array->list, list) {
+-		if (xfbma_is_null(array, item + 1))
++	max_bytes = array->nr * array->obj_size;
++	for (pos = 0, i = 0; pos < max_bytes; i++) {
++		pgoff_t	pagenr;
++
++		error = xfile_io(array->filp, XFILE_IO_READ, &pos, temp,
++				array->obj_size);
++		if (error)
++			break;
++		if (xfbma_is_null(array, temp))
+ 			goto next;
+-		memcpy(array + 1, item + 1, array->obj_size);
+-		error = iter_fn(array + 1, priv);
++		error = iter_fn(temp, priv);
+ 		if (error)
+ 			break;
+ next:
+-		list_del(&item->list);
+-		kmem_free(item);
+-		array->nr--;
++		/* Release the previous page if possible. */
++		pagenr = pos >> PAGE_SHIFT;
++		if (pagenr != oldpagenr)
++			xfile_discard(array->filp, oldpagenr << PAGE_SHIFT,
++					pos - 1);
++		oldpagenr = pagenr;
+ 	}
+ 
+-	xfbma_cache_invalidate(array);
+ 	return error;
+ }
+ 
+@@ -257,27 +248,383 @@ xfbma_length(
+ 	return array->nr;
+ }
+ 
+-static int
+-xfbma_item_cmp(
+-	void			*priv,
+-	struct list_head	*a,
+-	struct list_head	*b)
++/*
++ * Select the median value from a[lo], a[mid], and a[hi].  Put the median in
++ * a[lo], the lowest in a[lo], and the highest in a[hi].  Using the median of
++ * the three reduces the chances that we pick the worst case pivot value, since
++ * it's likely that our array values are nearly sorted.
++ */
++STATIC int
++xfbma_qsort_pivot(
++	struct xfbma	*array,
++	xfbma_cmp_fn	cmp_fn,
++	uint64_t	lo,
++	uint64_t	mid,
++	uint64_t	hi)
+ {
+-	int			(*cmp_fn)(void *a, void *b) = priv;
+-	struct xa_item		*ai, *bi;
++	void		*a = xfbma_temp(array, 0);
++	void		*b = xfbma_temp(array, 1);
++	int		error;
+ 
+-	ai = container_of(a, struct xa_item, list);
+-	bi = container_of(b, struct xa_item, list);
++	/* if a[mid] < a[lo], swap a[mid] and a[lo]. */
++	error = xfbma_get(array, mid, a);
++	if (error)
++		return error;
++	error = xfbma_get(array, lo, b);
++	if (error)
++		return error;
++	if (cmp_fn(a, b) < 0) {
++		error = xfbma_set(array, lo, a);
++		if (error)
++			return error;
++		error = xfbma_set(array, mid, b);
++		if (error)
++			return error;
++	}
+ 
+-	return cmp_fn(ai + 1, bi + 1);
++	/* if a[hi] < a[mid], swap a[mid] and a[hi]. */
++	error = xfbma_get(array, hi, a);
++	if (error)
++		return error;
++	error = xfbma_get(array, mid, b);
++	if (error)
++		return error;
++	if (cmp_fn(a, b) < 0) {
++		error = xfbma_set(array, mid, a);
++		if (error)
++			return error;
++		error = xfbma_set(array, hi, b);
++		if (error)
++			return error;
++	} else {
++		goto move_front;
++	}
++
++	/* if a[mid] < a[lo], swap a[mid] and a[lo]. */
++	error = xfbma_get(array, mid, a);
++	if (error)
++		return error;
++	error = xfbma_get(array, lo, b);
++	if (error)
++		return error;
++	if (cmp_fn(a, b) < 0) {
++		error = xfbma_set(array, lo, a);
++		if (error)
++			return error;
++		error = xfbma_set(array, mid, b);
++		if (error)
++			return error;
++	}
++move_front:
++	/* move our selected pivot to a[lo] */
++	error = xfbma_get(array, lo, b);
++	if (error)
++		return error;
++	error = xfbma_get(array, mid, a);
++	if (error)
++		return error;
++	error = xfbma_set(array, mid, b);
++	if (error)
++		return error;
++	return xfbma_set(array, lo, a);
++}
++
++/*
++ * Perform an insertion sort on a subset of the array.
++ * Though insertion sort is an O(n^2) algorithm, for small set sizes it's
++ * faster than quicksort's stack machine, so we let it take over for that.
++ */
++STATIC int
++xfbma_isort(
++	struct xfbma	*array,
++	xfbma_cmp_fn	cmp_fn,
++	uint64_t	start,
++	uint64_t	end)
++{
++	void		*a = xfbma_temp(array, 0);
++	void		*b = xfbma_temp(array, 1);
++	uint64_t	tmp;
++	uint64_t	i;
++	uint64_t	run;
++	int		error;
++
++	/*
++	 * Move the smallest element in a[start..end] to a[start].  This
++	 * simplifies the loop control logic below.
++	 */
++	tmp = start;
++	error = xfbma_get(array, tmp, b);
++	if (error)
++		return error;
++	for (run = start + 1; run <= end; run++) {
++		/* if a[run] < a[tmp], tmp = run */
++		error = xfbma_get(array, run, a);
++		if (error)
++			return error;
++		if (cmp_fn(a, b) < 0) {
++			tmp = run;
++			memcpy(b, a, array->obj_size);
++		}
++	}
++
++	/*
++	 * The smallest element is a[tmp]; swap with a[start] if tmp != start.
++	 * Recall that a[tmp] is already in *b.
++	 */
++	if (tmp != start) {
++		error = xfbma_get(array, start, a);
++		if (error)
++			return error;
++		error = xfbma_set(array, tmp, a);
++		if (error)
++			return error;
++		error = xfbma_set(array, start, b);
++		if (error)
++			return error;
++	}
++
++	/*
++	 * Perform an insertion sort on a[start+1..end].  We already made sure
++	 * that the smallest value in the original range is now in a[start],
++	 * so the inner loop should never underflow.
++	 *
++	 * For each a[start+2..end], make sure it's in the correct position
++	 * with respect to the elements that came before it.
++	 */
++	for (run = start + 2; run <= end; run++) {
++		error = xfbma_get(array, run, a);
++		if (error)
++			return error;
++
++		/*
++		 * Find the correct place for a[run] by walking leftwards
++		 * towards the start of the range until a[tmp] is no longer
++		 * greater than a[run].
++		 */
++		tmp = run - 1;
++		error = xfbma_get(array, tmp, b);
++		if (error)
++			return error;
++		while (cmp_fn(a, b) < 0) {
++			tmp--;
++			error = xfbma_get(array, tmp, b);
++			if (error)
++				return error;
++		}
++		tmp++;
++
++		/*
++		 * If tmp != run, then a[tmp..run-1] are all less than a[run],
++		 * so right barrel roll a[tmp..run] to get this range in
++		 * sorted order.
++		 */
++		if (tmp == run)
++			continue;
++
++		for (i = run; i >= tmp; i--) {
++			error = xfbma_get(array, i - 1, b);
++			if (error)
++				return error;
++			error = xfbma_set(array, i, b);
++			if (error)
++				return error;
++		}
++		error = xfbma_set(array, tmp, a);
++		if (error)
++			return error;
++	}
++
++	return 0;
+ }
+ 
+-/* Sort everything in this array. */
++/*
++ * Sort the array elements via quicksort.  This implementation incorporates
++ * four optimizations discussed in Sedgewick:
++ *
++ * 1. Use an explicit stack of array indicies to store the next array
++ *    partition to sort.  This helps us to avoid recursion in the call stack,
++ *    which is particularly expensive in the kernel.
++ *
++ * 2. Choose the pivot element using a median-of-three decision tree.  This
++ *    reduces the probability of selecting a bad pivot value which causes
++ *    worst case behavior (i.e. partition sizes of 1).  Chance are fairly good
++ *    that the list is nearly sorted, so this is important.
++ *
++ * 3. The smaller of the two sub-partitions is pushed onto the stack to start
++ *    the next level of recursion, and the larger sub-partition replaces the
++ *    current stack frame.  This guarantees that we won't need more than
++ *    log2(nr) stack space.
++ *
++ * 4. Use insertion sort for small sets since since insertion sort is faster
++ *    for small, mostly sorted array segments.  In the author's experience,
++ *    substituting insertion sort for arrays smaller than 4 elements yields
++ *    a ~10% reduction in runtime.
++ */
++
++/*
++ * Due to the use of signed indices, we can only support up to 2^63 records.
++ * Files can only grow to 2^63 bytes, so this is not much of a limitation.
++ */
++#define QSORT_MAX_RECS		(1ULL << 63)
++
++/*
++ * For array subsets smaller than 4 elements, it's slightly faster to use
++ * insertion sort than quicksort's stack machine.
++ */
++#define ISORT_THRESHOLD		(4)
+ int
+ xfbma_sort(
+ 	struct xfbma	*array,
+ 	xfbma_cmp_fn	cmp_fn)
+ {
+-	list_sort(cmp_fn, &array->list, xfbma_item_cmp);
+-	return 0;
++	int64_t		*stack;
++	int64_t		*beg;
++	int64_t		*end;
++	void		*pivot = xfbma_temp(array, 0);
++	void		*temp = xfbma_temp(array, 1);
++	int64_t		lo, mid, hi;
++	const int	max_stack_depth = ilog2(array->nr) + 1;
++	int		stack_depth = 0;
++	int		max_stack_used = 0;
++	int		error = 0;
++
++	if (array->nr == 0)
++		return 0;
++	if (array->nr >= QSORT_MAX_RECS)
++		return -E2BIG;
++	if (array->nr <= ISORT_THRESHOLD)
++		return xfbma_isort(array, cmp_fn, 0, array->nr - 1);
++
++	/* Allocate our pointer stacks for sorting. */
++	stack = kmem_alloc(sizeof(int64_t) * 2 * max_stack_depth,
++			KM_NOFS | KM_MAYFAIL);
++	if (!stack)
++		return -ENOMEM;
++	beg = stack;
++	end = &stack[max_stack_depth];
++
++	beg[0] = 0;
++	end[0] = array->nr;
++	while (stack_depth >= 0) {
++		lo = beg[stack_depth];
++		hi = end[stack_depth] - 1;
++
++		/* Nothing left in this partition to sort; pop stack. */
++		if (lo >= hi) {
++			stack_depth--;
++			continue;
++		}
++
++		/* Small enough for insertion sort? */
++		if (hi - lo <= ISORT_THRESHOLD) {
++			error = xfbma_isort(array, cmp_fn, lo, hi);
++			if (error)
++				goto out_free;
++			stack_depth--;
++			continue;
++		}
++
++		/* Pick a pivot, move it to a[lo] and stash it. */
++		mid = lo + ((hi - lo) / 2);
++		error = xfbma_qsort_pivot(array, cmp_fn, lo, mid, hi);
++		if (error)
++			goto out_free;
++
++		error = xfbma_get(array, lo, pivot);
++		if (error)
++			goto out_free;
++
++		/*
++		 * Rearrange a[lo..hi] such that everything smaller than the
++		 * pivot is on the left side of the range and everything larger
++		 * than the pivot is on the right side of the range.
++		 */
++		while (lo < hi) {
++			/*
++			 * Decrement hi until it finds an a[hi] less than the
++			 * pivot value.
++			 */
++			error = xfbma_get(array, hi, temp);
++			if (error)
++				goto out_free;
++			while (cmp_fn(temp, pivot) >= 0 && lo < hi) {
++				hi--;
++				error = xfbma_get(array, hi, temp);
++				if (error)
++					goto out_free;
++			}
++
++			/* Copy that item (a[hi]) to a[lo]. */
++			if (lo < hi) {
++				error = xfbma_set(array, lo++, temp);
++				if (error)
++					goto out_free;
++			}
++
++			/*
++			 * Increment lo until it finds an a[lo] greater than
++			 * the pivot value.
++			 */
++			error = xfbma_get(array, lo, temp);
++			if (error)
++				goto out_free;
++			while (cmp_fn(temp, pivot) <= 0 && lo < hi) {
++				lo++;
++				error = xfbma_get(array, lo, temp);
++				if (error)
++					goto out_free;
++			}
++
++			/* Copy that item (a[lo]) to a[hi]. */
++			if (lo < hi) {
++				error = xfbma_set(array, hi--, temp);
++				if (error)
++					goto out_free;
++			}
++		}
++
++		/*
++		 * Put our pivot value in the correct place at a[lo].  All
++		 * values between a[beg[i]] and a[lo - 1] should be less than
++		 * the pivot; and all values between a[lo + 1] and a[end[i]-1]
++		 * should be greater than the pivot.
++		 */
++		error = xfbma_set(array, lo, pivot);
++		if (error)
++			goto out_free;
++
++		/*
++		 * Set up the pointers for the next iteration.  We push onto
++		 * the stack all of the unsorted values between a[lo + 1] and
++		 * a[end[i]], and we tweak the current stack frame to point to
++		 * the unsorted values between a[beg[i]] and a[lo] so that
++		 * those values will be sorted when we pop the stack.
++		 */
++		beg[stack_depth + 1] = lo + 1;
++		end[stack_depth + 1] = end[stack_depth];
++		end[stack_depth++] = lo;
++
++		/* Check our stack usage. */
++		max_stack_used = max(max_stack_used, stack_depth);
++		if (stack_depth >= max_stack_depth) {
++			ASSERT(0);
++			return -EFSCORRUPTED;
++		}
++
++		/*
++		 * Always start with the smaller of the two partitions to keep
++		 * the amount of recursion in check.
++		 */
++		if (end[stack_depth] - beg[stack_depth] >
++		    end[stack_depth - 1] - beg[stack_depth - 1]) {
++			swap(beg[stack_depth], beg[stack_depth - 1]);
++			swap(end[stack_depth], end[stack_depth - 1]);
++		}
++	}
++
++out_free:
++	kfree(stack);
++	trace_xfbma_sort_stats(array->nr, max_stack_depth, max_stack_used,
++			error);
++	return error;
+ }
+diff --git a/fs/xfs/scrub/array.h b/fs/xfs/scrub/array.h
+index 607e664147b3..e002edb657f4 100644
+--- a/fs/xfs/scrub/array.h
++++ b/fs/xfs/scrub/array.h
+@@ -6,20 +6,10 @@
+ #ifndef __XFS_SCRUB_ARRAY_H__
+ #define __XFS_SCRUB_ARRAY_H__
+ 
+-struct xma_item;
+-
+-struct xma_cache {
+-	uint64_t	nr;
+-	struct xa_item	*item;
+-};
+-
+-#define XMA_CACHE_SIZE	(8)
+-
+ struct xfbma {
+-	struct list_head	list;
+-	size_t			obj_size;
+-	uint64_t		nr;
+-	struct xma_cache	cache[XMA_CACHE_SIZE];
++	struct file	*filp;
++	size_t		obj_size;
++	uint64_t	nr;
+ };
+ 
+ struct xfbma *xfbma_init(size_t obj_size);
+diff --git a/fs/xfs/scrub/blob.c b/fs/xfs/scrub/blob.c
+index 4928f0985d49..94912fcb1fd1 100644
+--- a/fs/xfs/scrub/blob.c
++++ b/fs/xfs/scrub/blob.c
+@@ -8,38 +8,48 @@
+ #include "xfs_shared.h"
+ #include "scrub/array.h"
+ #include "scrub/blob.h"
++#include "scrub/xfile.h"
+ 
+ /*
+  * XFS Blob Storage
+  * ================
+- * Stores and retrieves blobs using a list.  Objects are appended to
+- * the list and the pointer is returned as a magic cookie for retrieval.
++ * Stores and retrieves blobs using a memfd object.  Objects are appended to
++ * the file and the offset is returned as a magic cookie for retrieval.
+  */
+ 
+ #define XB_KEY_MAGIC	0xABAADDAD
+ struct xb_key {
+-	struct list_head	list;
+ 	uint32_t		magic;
+ 	uint32_t		size;
++	loff_t			offset;
+ 	/* blob comes after here */
+ } __packed;
+ 
+-#define XB_KEY_SIZE(sz)	(sizeof(struct xb_key) + (sz))
+-
+ /* Initialize a blob storage object. */
+ struct xblob *
+ xblob_init(void)
+ {
+ 	struct xblob	*blob;
++	struct file	*filp;
+ 	int		error;
+ 
++	filp = xfile_create("blob storage");
++	if (!filp)
++		return ERR_PTR(-ENOMEM);
++	if (IS_ERR(filp))
++		return ERR_CAST(filp);
++
+ 	error = -ENOMEM;
+ 	blob = kmem_alloc(sizeof(struct xblob), KM_NOFS | KM_MAYFAIL);
+ 	if (!blob)
+-		return ERR_PTR(error);
++		goto out_filp;
+ 
+-	INIT_LIST_HEAD(&blob->list);
++	blob->filp = filp;
++	blob->last_offset = PAGE_SIZE;
+ 	return blob;
++out_filp:
++	fput(filp);
++	return ERR_PTR(error);
+ }
+ 
+ /* Destroy a blob storage object. */
+@@ -47,12 +57,7 @@ void
+ xblob_destroy(
+ 	struct xblob	*blob)
+ {
+-	struct xb_key	*key, *n;
+-
+-	list_for_each_entry_safe(key, n, &blob->list, list) {
+-		list_del(&key->list);
+-		kmem_free(key);
+-	}
++	xfile_destroy(blob->filp);
+ 	kmem_free(blob);
+ }
+ 
+@@ -64,19 +69,24 @@ xblob_get(
+ 	void		*ptr,
+ 	uint32_t	size)
+ {
+-	struct xb_key	*key = (struct xb_key *)cookie;
++	struct xb_key	key;
++	loff_t		pos = cookie;
++	int		error;
++
++	error = xfile_io(blob->filp, XFILE_IO_READ, &pos, &key, sizeof(key));
++	if (error)
++		return error;
+ 
+-	if (key->magic != XB_KEY_MAGIC) {
++	if (key.magic != XB_KEY_MAGIC || key.offset != cookie) {
+ 		ASSERT(0);
+ 		return -ENODATA;
+ 	}
+-	if (size < key->size) {
++	if (size < key.size) {
+ 		ASSERT(0);
+ 		return -EFBIG;
+ 	}
+ 
+-	memcpy(ptr, key + 1, key->size);
+-	return 0;
++	return xfile_io(blob->filp, XFILE_IO_READ, &pos, ptr, key.size);
+ }
+ 
+ /* Store a blob. */
+@@ -87,19 +97,28 @@ xblob_put(
+ 	void		*ptr,
+ 	uint32_t	size)
+ {
+-	struct xb_key	*key;
+-
+-	key = kmem_alloc(XB_KEY_SIZE(size), KM_NOFS | KM_MAYFAIL);
+-	if (!key)
+-		return -ENOMEM;
+-
+-	INIT_LIST_HEAD(&key->list);
+-	list_add_tail(&key->list, &blob->list);
+-	key->magic = XB_KEY_MAGIC;
+-	key->size = size;
+-	memcpy(key + 1, ptr, size);
+-	*cookie = (xblob_cookie)key;
++	struct xb_key	key = {
++		.offset = blob->last_offset,
++		.magic = XB_KEY_MAGIC,
++		.size = size,
++	};
++	loff_t		pos = blob->last_offset;
++	int		error;
++
++	error = xfile_io(blob->filp, XFILE_IO_WRITE, &pos, &key, sizeof(key));
++	if (error)
++		goto out_err;
++
++	error = xfile_io(blob->filp, XFILE_IO_WRITE, &pos, ptr, size);
++	if (error)
++		goto out_err;
++
++	*cookie = blob->last_offset;
++	blob->last_offset = pos;
+ 	return 0;
++out_err:
++	xfile_discard(blob->filp, blob->last_offset, pos - 1);
++	return -ENOMEM;
+ }
+ 
+ /* Free a blob. */
+@@ -108,14 +127,19 @@ xblob_free(
+ 	struct xblob	*blob,
+ 	xblob_cookie	cookie)
+ {
+-	struct xb_key	*key = (struct xb_key *)cookie;
++	struct xb_key	key;
++	loff_t		pos = cookie;
++	int		error;
++
++	error = xfile_io(blob->filp, XFILE_IO_READ, &pos, &key, sizeof(key));
++	if (error)
++		return error;
+ 
+-	if (key->magic != XB_KEY_MAGIC) {
++	if (key.magic != XB_KEY_MAGIC || key.offset != cookie) {
+ 		ASSERT(0);
+ 		return -ENODATA;
+ 	}
+-	key->magic = 0;
+-	list_del(&key->list);
+-	kmem_free(key);
++
++	xfile_discard(blob->filp, cookie, cookie + sizeof(key) + key.size - 1);
+ 	return 0;
+ }
+diff --git a/fs/xfs/scrub/blob.h b/fs/xfs/scrub/blob.h
+index 2595a15f78ac..c6f6c6a2e084 100644
+--- a/fs/xfs/scrub/blob.h
++++ b/fs/xfs/scrub/blob.h
+@@ -7,10 +7,11 @@
+ #define __XFS_SCRUB_BLOB_H__
+ 
+ struct xblob {
+-	struct list_head	list;
++	struct file	*filp;
++	loff_t		last_offset;
+ };
+ 
+-typedef void			*xblob_cookie;
++typedef loff_t		xblob_cookie;
+ 
+ struct xblob *xblob_init(void);
+ void xblob_destroy(struct xblob *blob);
+diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+index 7eb166599a61..8788030d13f6 100644
+--- a/fs/xfs/scrub/trace.h
++++ b/fs/xfs/scrub/trace.h
+@@ -906,6 +906,29 @@ TRACE_EVENT(xrep_ibt_insert,
+ 		  __entry->freemask)
+ )
+ 
++TRACE_EVENT(xfbma_sort_stats,
++	TP_PROTO(uint64_t nr, unsigned int max_stack_depth,
++		 unsigned int max_stack_used, int error),
++	TP_ARGS(nr, max_stack_depth, max_stack_used, error),
++	TP_STRUCT__entry(
++		__field(uint64_t, nr)
++		__field(unsigned int, max_stack_depth)
++		__field(unsigned int, max_stack_used)
++		__field(int, error)
++	),
++	TP_fast_assign(
++		__entry->nr = nr;
++		__entry->max_stack_depth = max_stack_depth;
++		__entry->max_stack_used = max_stack_used;
++		__entry->error = error;
++	),
++	TP_printk("nr %llu max_depth %u max_used %u error %d",
++		  __entry->nr,
++		  __entry->max_stack_depth,
++		  __entry->max_stack_used,
++		  __entry->error)
++);
++
+ #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
+ 
+ #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+diff --git a/fs/xfs/scrub/xfile.c b/fs/xfs/scrub/xfile.c
 new file mode 100644
-index 000000000000..5f76c4f4db1a
+index 000000000000..e0058e61202f
 --- /dev/null
-+++ b/fs/xfs/scrub/quota_repair.c
-@@ -0,0 +1,363 @@
++++ b/fs/xfs/scrub/xfile.c
+@@ -0,0 +1,121 @@
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +/*
 + * Copyright (C) 2019 Oracle.  All Rights Reserved.
@@ -123,502 +1079,142 @@ index 000000000000..5f76c4f4db1a
 +#include "xfs_fs.h"
 +#include "xfs_shared.h"
 +#include "xfs_format.h"
-+#include "xfs_trans_resv.h"
-+#include "xfs_mount.h"
-+#include "xfs_defer.h"
-+#include "xfs_btree.h"
-+#include "xfs_bit.h"
-+#include "xfs_log_format.h"
-+#include "xfs_trans.h"
-+#include "xfs_sb.h"
-+#include "xfs_inode.h"
-+#include "xfs_inode_fork.h"
-+#include "xfs_alloc.h"
-+#include "xfs_bmap.h"
-+#include "xfs_quota.h"
-+#include "xfs_qm.h"
-+#include "xfs_dquot.h"
-+#include "xfs_dquot_item.h"
-+#include "scrub/xfs_scrub.h"
++#include "scrub/array.h"
 +#include "scrub/scrub.h"
-+#include "scrub/common.h"
 +#include "scrub/trace.h"
-+#include "scrub/repair.h"
++#include "scrub/xfile.h"
++#include <linux/shmem_fs.h>
 +
 +/*
-+ * Quota Repair
-+ * ============
-+ *
-+ * Quota repairs are fairly simplistic; we fix everything that the dquot
-+ * verifiers complain about, cap any counters or limits that make no sense,
-+ * and schedule a quotacheck if we had to fix anything.  We also repair any
-+ * data fork extent records that don't apply to metadata files.
++ * Create a memfd to our specifications and return a file pointer.  The file
++ * is not installed in the file description table (because userspace has no
++ * business accessing our internal data), which means that the caller /must/
++ * fput the file when finished.
 + */
++struct file *
++xfile_create(
++	const char	*description)
++{
++	struct file	*filp;
 +
-+struct xrep_quota_info {
-+	struct xfs_scrub	*sc;
-+	bool			need_quotacheck;
++	filp = shmem_file_setup(description, 0, 0);
++	if (IS_ERR_OR_NULL(filp))
++		return filp;
++
++	filp->f_mode |= FMODE_PREAD | FMODE_PWRITE;
++	filp->f_flags |= O_RDWR | O_LARGEFILE;
++	return filp;
++}
++
++void
++xfile_destroy(
++	struct file	*filp)
++{
++	fput(filp);
++}
++
++struct xfile_io_args {
++	struct work_struct	work;
++	struct completion	*done;
++
++	struct file		*filp;
++	void			*ptr;
++	loff_t			*pos;
++	size_t			count;
++	ssize_t			ret;
++	bool			is_read;
 +};
 +
-+/* Scrub the fields in an individual quota item. */
-+STATIC int
-+xrep_quota_item(
-+	struct xfs_dquot	*dq,
-+	uint			dqtype,
-+	void			*priv)
++static void
++xfile_io_worker(
++	struct work_struct	*work)
 +{
-+	struct xrep_quota_info	*rqi = priv;
-+	struct xfs_scrub	*sc = rqi->sc;
-+	struct xfs_mount	*mp = sc->mp;
-+	struct xfs_disk_dquot	*d = &dq->q_core;
-+	unsigned long long	bsoft;
-+	unsigned long long	isoft;
-+	unsigned long long	rsoft;
-+	unsigned long long	bhard;
-+	unsigned long long	ihard;
-+	unsigned long long	rhard;
-+	unsigned long long	bcount;
-+	unsigned long long	icount;
-+	unsigned long long	rcount;
-+	xfs_ino_t		fs_icount;
-+	bool			dirty = false;
-+	int			error;
++	struct xfile_io_args	*args;
++	unsigned int		pflags;
 +
-+	/* Did we get the dquot type we wanted? */
-+	if (dqtype != (d->d_flags & XFS_DQ_ALLTYPES)) {
-+		d->d_flags = dqtype;
-+		dirty = true;
-+	}
++	args = container_of(work, struct xfile_io_args, work);
++	pflags = memalloc_nofs_save();
 +
-+	if (d->d_pad0 || d->d_pad) {
-+		d->d_pad0 = 0;
-+		d->d_pad = 0;
-+		dirty = true;
-+	}
++	if (args->is_read)
++		args->ret = kernel_read(args->filp, args->ptr, args->count,
++				args->pos);
++	else
++		args->ret = kernel_write(args->filp, args->ptr, args->count,
++				args->pos);
++	complete(args->done);
 +
-+	/* Check the limits. */
-+	bhard = be64_to_cpu(d->d_blk_hardlimit);
-+	ihard = be64_to_cpu(d->d_ino_hardlimit);
-+	rhard = be64_to_cpu(d->d_rtb_hardlimit);
++	memalloc_nofs_restore(pflags);
++}
 +
-+	bsoft = be64_to_cpu(d->d_blk_softlimit);
-+	isoft = be64_to_cpu(d->d_ino_softlimit);
-+	rsoft = be64_to_cpu(d->d_rtb_softlimit);
++/*
++ * Perform a read or write IO to the file backing the array.  We can defer
++ * the work to a workqueue if the caller so desires, either to reduce stack
++ * usage or because the xfs is frozen and we want to avoid deadlocking on the
++ * page fault that might be about to happen.
++ */
++int
++xfile_io(
++	struct file	*filp,
++	unsigned int	cmd_flags,
++	loff_t		*pos,
++	void		*ptr,
++	size_t		count)
++{
++	DECLARE_COMPLETION_ONSTACK(done);
++	struct xfile_io_args	args = {
++		.filp = filp,
++		.ptr = ptr,
++		.pos = pos,
++		.count = count,
++		.done = &done,
++		.is_read = (cmd_flags & XFILE_IO_MASK) == XFILE_IO_READ,
++	};
 +
-+	if (bsoft > bhard) {
-+		d->d_blk_softlimit = d->d_blk_hardlimit;
-+		dirty = true;
-+	}
-+
-+	if (isoft > ihard) {
-+		d->d_ino_softlimit = d->d_ino_hardlimit;
-+		dirty = true;
-+	}
-+
-+	if (rsoft > rhard) {
-+		d->d_rtb_softlimit = d->d_rtb_hardlimit;
-+		dirty = true;
-+	}
-+
-+	/* Check the resource counts. */
-+	bcount = be64_to_cpu(d->d_bcount);
-+	icount = be64_to_cpu(d->d_icount);
-+	rcount = be64_to_cpu(d->d_rtbcount);
-+	fs_icount = percpu_counter_sum(&mp->m_icount);
++	INIT_WORK_ONSTACK(&args.work, xfile_io_worker);
++	schedule_work(&args.work);
++	wait_for_completion(&done);
++	destroy_work_on_stack(&args.work);
 +
 +	/*
-+	 * Check that usage doesn't exceed physical limits.  However, on
-+	 * a reflink filesystem we're allowed to exceed physical space
-+	 * if there are no quota limits.  We don't know what the real number
-+	 * is, but we can make quotacheck find out for us.
++	 * Since we're treating this file as "memory", any IO error should be
++	 * treated as a failure to find any memory.
 +	 */
-+	if (!xfs_sb_version_hasreflink(&mp->m_sb) &&
-+	    mp->m_sb.sb_dblocks < bcount) {
-+		dq->q_res_bcount -= be64_to_cpu(dq->q_core.d_bcount);
-+		dq->q_res_bcount += mp->m_sb.sb_dblocks;
-+		d->d_bcount = cpu_to_be64(mp->m_sb.sb_dblocks);
-+		rqi->need_quotacheck = true;
-+		dirty = true;
-+	}
-+	if (icount > fs_icount) {
-+		dq->q_res_icount -= be64_to_cpu(dq->q_core.d_icount);
-+		dq->q_res_icount += fs_icount;
-+		d->d_icount = cpu_to_be64(fs_icount);
-+		rqi->need_quotacheck = true;
-+		dirty = true;
-+	}
-+	if (rcount > mp->m_sb.sb_rblocks) {
-+		dq->q_res_rtbcount -= be64_to_cpu(dq->q_core.d_rtbcount);
-+		dq->q_res_rtbcount += mp->m_sb.sb_rblocks;
-+		d->d_rtbcount = cpu_to_be64(mp->m_sb.sb_rblocks);
-+		rqi->need_quotacheck = true;
-+		dirty = true;
-+	}
-+
-+	if (!dirty)
-+		return 0;
-+
-+	dq->dq_flags |= XFS_DQ_DIRTY;
-+	xfs_trans_dqjoin(sc->tp, dq);
-+	xfs_trans_log_dquot(sc->tp, dq);
-+	error = xfs_trans_roll(&sc->tp);
-+	xfs_dqlock(dq);
-+	return error;
++	return args.ret == count ? 0 : -ENOMEM;
 +}
 +
-+/* Fix a quota timer so that we can pass the verifier. */
-+STATIC void
-+xrep_quota_fix_timer(
-+	__be64			softlimit,
-+	__be64			countnow,
-+	__be32			*timer,
-+	time_t			timelimit)
++/* Discard pages backing a range of the file. */
++void
++xfile_discard(
++	struct file	*filp,
++	loff_t		start,
++	loff_t		end)
 +{
-+	uint64_t		soft = be64_to_cpu(softlimit);
-+	uint64_t		count = be64_to_cpu(countnow);
-+
-+	if (soft && count > soft && *timer == 0)
-+		*timer = cpu_to_be32(get_seconds() + timelimit);
++	shmem_truncate_range(file_inode(filp), start, end);
 +}
-+
-+/* Fix anything the verifiers complain about. */
-+STATIC int
-+xrep_quota_block(
-+	struct xfs_scrub	*sc,
-+	struct xfs_buf		*bp,
-+	uint			dqtype,
-+	xfs_dqid_t		id)
-+{
-+	struct xfs_dqblk	*d = (struct xfs_dqblk *)bp->b_addr;
-+	struct xfs_disk_dquot	*ddq;
-+	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
-+	enum xfs_blft		buftype = 0;
-+	int			i;
-+
-+	bp->b_ops = &xfs_dquot_buf_ops;
-+	for (i = 0; i < qi->qi_dqperchunk; i++) {
-+		ddq = &d[i].dd_diskdq;
-+
-+		ddq->d_magic = cpu_to_be16(XFS_DQUOT_MAGIC);
-+		ddq->d_version = XFS_DQUOT_VERSION;
-+		ddq->d_flags = dqtype;
-+		ddq->d_id = cpu_to_be32(id + i);
-+
-+		xrep_quota_fix_timer(ddq->d_blk_softlimit,
-+				ddq->d_bcount, &ddq->d_btimer,
-+				qi->qi_btimelimit);
-+		xrep_quota_fix_timer(ddq->d_ino_softlimit,
-+				ddq->d_icount, &ddq->d_itimer,
-+				qi->qi_itimelimit);
-+		xrep_quota_fix_timer(ddq->d_rtb_softlimit,
-+				ddq->d_rtbcount, &ddq->d_rtbtimer,
-+				qi->qi_rtbtimelimit);
-+
-+		/* We only support v5 filesystems so always set these. */
-+		uuid_copy(&d->dd_uuid, &sc->mp->m_sb.sb_meta_uuid);
-+		xfs_update_cksum((char *)d, sizeof(struct xfs_dqblk),
-+				 XFS_DQUOT_CRC_OFF);
-+		d->dd_lsn = 0;
-+	}
-+	switch (dqtype) {
-+	case XFS_DQ_USER:
-+		buftype = XFS_BLFT_UDQUOT_BUF;
-+		break;
-+	case XFS_DQ_GROUP:
-+		buftype = XFS_BLFT_GDQUOT_BUF;
-+		break;
-+	case XFS_DQ_PROJ:
-+		buftype = XFS_BLFT_PDQUOT_BUF;
-+		break;
-+	}
-+	xfs_trans_buf_set_type(sc->tp, bp, buftype);
-+	xfs_trans_log_buf(sc->tp, bp, 0, BBTOB(bp->b_length) - 1);
-+	return xfs_trans_roll(&sc->tp);
-+}
-+
-+/* Repair quota's data fork. */
-+STATIC int
-+xrep_quota_data_fork(
-+	struct xfs_scrub	*sc,
-+	uint			dqtype)
-+{
-+	struct xfs_bmbt_irec	irec = { 0 };
-+	struct xfs_iext_cursor	icur;
-+	struct xfs_quotainfo	*qi = sc->mp->m_quotainfo;
-+	struct xfs_ifork	*ifp;
-+	struct xfs_buf		*bp;
-+	struct xfs_dqblk	*d;
-+	xfs_dqid_t		id;
-+	xfs_fileoff_t		max_dqid_off;
-+	xfs_fileoff_t		off;
-+	xfs_fsblock_t		fsbno;
-+	bool			truncate = false;
-+	int			error = 0;
-+
-+	error = xrep_metadata_inode_forks(sc);
-+	if (error)
-+		goto out;
-+
-+	/* Check for data fork problems that apply only to quota files. */
-+	max_dqid_off = ((xfs_dqid_t)-1) / qi->qi_dqperchunk;
-+	ifp = XFS_IFORK_PTR(sc->ip, XFS_DATA_FORK);
-+	for_each_xfs_iext(ifp, &icur, &irec) {
-+		if (isnullstartblock(irec.br_startblock)) {
-+			error = -EFSCORRUPTED;
-+			goto out;
-+		}
-+
-+		if (irec.br_startoff > max_dqid_off ||
-+		    irec.br_startoff + irec.br_blockcount - 1 > max_dqid_off) {
-+			truncate = true;
-+			break;
-+		}
-+	}
-+	if (truncate) {
-+		error = xfs_itruncate_extents(&sc->tp, sc->ip, XFS_DATA_FORK,
-+				max_dqid_off * sc->mp->m_sb.sb_blocksize);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Now go fix anything that fails the verifiers. */
-+	for_each_xfs_iext(ifp, &icur, &irec) {
-+		for (fsbno = irec.br_startblock, off = irec.br_startoff;
-+		     fsbno < irec.br_startblock + irec.br_blockcount;
-+		     fsbno += XFS_DQUOT_CLUSTER_SIZE_FSB,
-+				off += XFS_DQUOT_CLUSTER_SIZE_FSB) {
-+			id = off * qi->qi_dqperchunk;
-+			error = xfs_trans_read_buf(sc->mp, sc->tp,
-+					sc->mp->m_ddev_targp,
-+					XFS_FSB_TO_DADDR(sc->mp, fsbno),
-+					qi->qi_dqchunklen,
-+					0, &bp, &xfs_dquot_buf_ops);
-+			if (error == 0) {
-+				d = (struct xfs_dqblk *)bp->b_addr;
-+				if (id == be32_to_cpu(d->dd_diskdq.d_id)) {
-+					xfs_trans_brelse(sc->tp, bp);
-+					continue;
-+				}
-+				error = -EFSCORRUPTED;
-+				xfs_trans_brelse(sc->tp, bp);
-+			}
-+			if (error != -EFSBADCRC && error != -EFSCORRUPTED)
-+				goto out;
-+
-+			/* Failed verifier, try again. */
-+			error = xfs_trans_read_buf(sc->mp, sc->tp,
-+					sc->mp->m_ddev_targp,
-+					XFS_FSB_TO_DADDR(sc->mp, fsbno),
-+					qi->qi_dqchunklen,
-+					0, &bp, NULL);
-+			if (error)
-+				goto out;
-+
-+			/*
-+			 * Fix the quota block, which will roll our transaction
-+			 * and release bp.
-+			 */
-+			error = xrep_quota_block(sc, bp, dqtype, id);
-+			if (error)
-+				goto out;
-+		}
-+	}
-+
-+out:
-+	return error;
-+}
-+
+diff --git a/fs/xfs/scrub/xfile.h b/fs/xfs/scrub/xfile.h
+new file mode 100644
+index 000000000000..41817bcadc43
+--- /dev/null
++++ b/fs/xfs/scrub/xfile.h
+@@ -0,0 +1,21 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
 +/*
-+ * Go fix anything in the quota items that we could have been mad about.  Now
-+ * that we've checked the quota inode data fork we have to drop ILOCK_EXCL to
-+ * use the regular dquot functions.
++ * Copyright (C) 2019 Oracle.  All Rights Reserved.
++ * Author: Darrick J. Wong <darrick.wong@oracle.com>
 + */
-+STATIC int
-+xrep_quota_problems(
-+	struct xfs_scrub	*sc,
-+	uint			dqtype)
-+{
-+	struct xrep_quota_info	rqi;
-+	int			error;
++#ifndef __XFS_SCRUB_XFILE_H__
++#define __XFS_SCRUB_XFILE_H__
 +
-+	rqi.sc = sc;
-+	rqi.need_quotacheck = false;
-+	error = xfs_qm_dqiterate(sc->mp, dqtype, xrep_quota_item, &rqi);
-+	if (error)
-+		return error;
++struct file *xfile_create(const char *description);
++void xfile_destroy(struct file *filp);
 +
-+	/* Make a quotacheck happen. */
-+	if (rqi.need_quotacheck)
-+		xrep_force_quotacheck(sc, dqtype);
-+	return 0;
-+}
++/* read or write? */
++#define XFILE_IO_READ		(0)
++#define XFILE_IO_WRITE		(1)
++#define XFILE_IO_MASK		(1 << 0)
++int xfile_io(struct file *filp, unsigned int cmd_flags, loff_t *pos,
++		void *ptr, size_t count);
 +
-+/* Repair all of a quota type's items. */
-+int
-+xrep_quota(
-+	struct xfs_scrub	*sc)
-+{
-+	uint			dqtype;
-+	int			error;
++void xfile_discard(struct file *filp, loff_t start, loff_t end);
 +
-+	dqtype = xchk_quota_to_dqtype(sc);
-+
-+	/* Fix problematic data fork mappings. */
-+	error = xrep_quota_data_fork(sc, dqtype);
-+	if (error)
-+		goto out;
-+
-+	/* Unlock quota inode; we play only with dquots from now on. */
-+	xfs_iunlock(sc->ip, sc->ilock_flags);
-+	sc->ilock_flags = 0;
-+
-+	/* Fix anything the dquot verifiers complain about. */
-+	error = xrep_quota_problems(sc, dqtype);
-+out:
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-index ad93d25602ae..63b0e2440acf 100644
---- a/fs/xfs/scrub/repair.c
-+++ b/fs/xfs/scrub/repair.c
-@@ -24,6 +24,8 @@
- #include "xfs_extent_busy.h"
- #include "xfs_ag_resv.h"
- #include "xfs_quota.h"
-+#include "xfs_attr.h"
-+#include "xfs_reflink.h"
- #include "scrub/scrub.h"
- #include "scrub/common.h"
- #include "scrub/trace.h"
-@@ -975,3 +977,59 @@ xrep_reset_perag_resv(
- out:
- 	return error;
- }
-+
-+/*
-+ * Repair the attr/data forks of a metadata inode.  The metadata inode must be
-+ * pointed to by sc->ip and the ILOCK must be held.
-+ */
-+int
-+xrep_metadata_inode_forks(
-+	struct xfs_scrub	*sc)
-+{
-+	__u32			smtype;
-+	__u32			smflags;
-+	int			error;
-+
-+	smtype = sc->sm->sm_type;
-+	smflags = sc->sm->sm_flags;
-+
-+	/* Let's see if the forks need repair. */
-+	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	error = xchk_metadata_inode_forks(sc);
-+	if (error || !xfs_scrub_needs_repair(sc->sm))
-+		goto out;
-+
-+	xfs_trans_ijoin(sc->tp, sc->ip, 0);
-+
-+	/* Clear the reflink flag & attr forks that we shouldn't have. */
-+	if (xfs_is_reflink_inode(sc->ip)) {
-+		error = xfs_reflink_clear_inode_flag(sc->ip, &sc->tp);
-+		if (error)
-+			goto out;
-+	}
-+
-+	if (xfs_inode_hasattr(sc->ip)) {
-+		error = xrep_xattr_reset_fork(sc, 0);
-+		if (error)
-+			goto out;
-+	}
-+
-+	/* Repair the data fork. */
-+	sc->sm->sm_type = XFS_SCRUB_TYPE_BMBTD;
-+	error = xrep_bmap_data(sc);
-+	sc->sm->sm_type = smtype;
-+	if (error)
-+		goto out;
-+
-+	/* Bail out if we still need repairs. */
-+	sc->sm->sm_flags &= ~XFS_SCRUB_FLAGS_OUT;
-+	error = xchk_metadata_inode_forks(sc);
-+	if (error)
-+		goto out;
-+	if (xfs_scrub_needs_repair(sc->sm))
-+		error = -EFSCORRUPTED;
-+out:
-+	sc->sm->sm_type = smtype;
-+	sc->sm->sm_flags = smflags;
-+	return error;
-+}
-diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
-index ea77ce90401d..334ff33031e6 100644
---- a/fs/xfs/scrub/repair.h
-+++ b/fs/xfs/scrub/repair.h
-@@ -52,6 +52,8 @@ int xrep_find_ag_btree_roots(struct xfs_scrub *sc, struct xfs_buf *agf_bp,
- void xrep_force_quotacheck(struct xfs_scrub *sc, uint dqtype);
- int xrep_ino_dqattach(struct xfs_scrub *sc);
- int xrep_reset_perag_resv(struct xfs_scrub *sc);
-+int xrep_xattr_reset_fork(struct xfs_scrub *sc, uint64_t nr_attrs);
-+int xrep_metadata_inode_forks(struct xfs_scrub *sc);
- 
- /* Metadata revalidators */
- 
-@@ -73,6 +75,11 @@ int xrep_bmap_data(struct xfs_scrub *sc);
- int xrep_bmap_attr(struct xfs_scrub *sc);
- int xrep_symlink(struct xfs_scrub *sc);
- int xrep_xattr(struct xfs_scrub *sc);
-+#ifdef CONFIG_XFS_QUOTA
-+int xrep_quota(struct xfs_scrub *sc);
-+#else
-+# define xrep_quota			xrep_notsupported
-+#endif /* CONFIG_XFS_QUOTA */
- 
- #else
- 
-@@ -120,6 +127,7 @@ xrep_reset_perag_resv(
- #define xrep_bmap_attr			xrep_notsupported
- #define xrep_symlink			xrep_notsupported
- #define xrep_xattr			xrep_notsupported
-+#define xrep_quota			xrep_notsupported
- 
- #endif /* CONFIG_XFS_ONLINE_REPAIR */
- 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 0561cce37a31..3ecf1f24a20e 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -322,19 +322,19 @@ static const struct xchk_meta_ops meta_scrub_ops[] = {
- 		.type	= ST_FS,
- 		.setup	= xchk_setup_quota,
- 		.scrub	= xchk_quota,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_quota,
- 	},
- 	[XFS_SCRUB_TYPE_GQUOTA] = {	/* group quota */
- 		.type	= ST_FS,
- 		.setup	= xchk_setup_quota,
- 		.scrub	= xchk_quota,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_quota,
- 	},
- 	[XFS_SCRUB_TYPE_PQUOTA] = {	/* project quota */
- 		.type	= ST_FS,
- 		.setup	= xchk_setup_quota,
- 		.scrub	= xchk_quota,
--		.repair	= xrep_notsupported,
-+		.repair	= xrep_quota,
- 	},
- 	[XFS_SCRUB_TYPE_FSCOUNTERS] = {	/* fs summary counters */
- 		.type	= ST_FS,
-@@ -527,9 +527,8 @@ xfs_scrub_metadata(
- 		if (XFS_TEST_ERROR(false, mp, XFS_ERRTAG_FORCE_SCRUB_REPAIR))
- 			sc.sm->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
- 
--		needs_fix = (sc.sm->sm_flags & (XFS_SCRUB_OFLAG_CORRUPT |
--						XFS_SCRUB_OFLAG_XCORRUPT |
--						XFS_SCRUB_OFLAG_PREEN));
-+		needs_fix = xfs_scrub_needs_repair(sc.sm);
-+
- 		/*
- 		 * If userspace asked for a repair but it wasn't necessary,
- 		 * report that back to userspace.
++#endif /* __XFS_SCRUB_XFILE_H__ */
