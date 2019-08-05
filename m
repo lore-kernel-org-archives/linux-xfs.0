@@ -1,180 +1,91 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:36364 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729231AbfHEPNY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Aug 2019 11:13:24 -0400
-Date: Mon, 5 Aug 2019 08:12:58 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
- ioctl_fibmap
-Message-ID: <20190805151258.GD7129@magnolia>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
- <20190731141245.7230-5-cmaiolino@redhat.com>
- <20190731231217.GV1561054@magnolia>
- <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
- <20190802151400.GG7138@magnolia>
- <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
+Received: from mga12.intel.com ([192.55.52.136]:43074 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728760AbfHEQxN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 5 Aug 2019 12:53:13 -0400
+Date: Mon, 5 Aug 2019 09:53:46 -0700
+From: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Subject: Re: [PATCH v2 06/34] drm/i915: convert put_page() to put_user_page*()
+Message-ID: <20190805165346.GB25953@intel.com>
+References: <20190804224915.28669-1-jhubbard@nvidia.com>
+ <20190804224915.28669-7-jhubbard@nvidia.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
+In-Reply-To: <20190804224915.28669-7-jhubbard@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: john.hubbard@gmail.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, David Airlie <airlied@linux.ie>, Dave Hansen <dave.hansen@linux.intel.com>, Dave Chinner <david@fromorbit.com>, dri-devel@lists.freedesktop.org, linux-mm@kvack.org, sparclinux@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, rds-devel@oss.oracle.com, linux-rdma@vger.kernel.org, x86@kernel.org, amd-gfx@lists.freedesktop.org, Christoph Hellwig <hch@infradead.org>, Jason Gunthorpe <jgg@ziepe.ca>, xen-devel@lists.xenproject.org, devel@lists.orangefs.org, linux-media@vger.kernel.org, John Hubbard <jhubbard@nvidia.com>, intel-gfx@lists.freedesktop.org, linux-block@vger.kernel.org, =?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>, linux-rpi-kernel@lists.infradead.org, Dan Williams <dan.j.williams@intel.com>, linux-arm-kernel@lists.infradead.org, linux-nfs@vger.kernel.org, netdev@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fsdevel@vger.kernel.org
 
-On Mon, Aug 05, 2019 at 12:27:30PM +0200, Carlos Maiolino wrote:
-> On Fri, Aug 02, 2019 at 08:14:00AM -0700, Darrick J. Wong wrote:
-> > On Fri, Aug 02, 2019 at 11:19:39AM +0200, Carlos Maiolino wrote:
-> > > Hi Darrick.
-> > > 
-> > > > > +		return error;
-> > > > > +
-> > > > > +	block = ur_block;
-> > > > > +	error = bmap(inode, &block);
-> > > > > +
-> > > > > +	if (error)
-> > > > > +		ur_block = 0;
-> > > > > +	else
-> > > > > +		ur_block = block;
-> > > > 
-> > > > What happens if ur_block > INT_MAX?  Shouldn't we return zero (i.e.
-> > > > error) instead of truncating the value?  Maybe the code does this
-> > > > somewhere else?  Here seemed like the obvious place for an overflow
-> > > > check as we go from sector_t to int.
-> > > > 
-> > > 
-> > > The behavior should still be the same. It will get truncated, unfortunately. I
-> > > don't think we can actually change this behavior and return zero instead of
-> > > truncating it.
-> > 
-> > But that's even worse, because the programs that rely on FIBMAP will now
-> > receive *incorrect* results that may point at a different file and
-> > definitely do not point at the correct file block.
+On Sun, Aug 04, 2019 at 03:48:47PM -0700, john.hubbard@gmail.com wrote:
+> From: John Hubbard <jhubbard@nvidia.com>
 > 
-> How is this worse? This is exactly what happens today, on the original FIBMAP
-> implementation.
-
-Ok, I wasn't being 110% careful with my words.  Delete "will now" from
-the sentence above.
-
-> Maybe I am not seeing something or having a different thinking you have, but
-> this is the behavior we have now, without my patches. And we can't really change
-> it; the user view of this implementation.
-> That's why I didn't try to change the result, so the truncation still happens.
-
-I understand that we're not generally supposed to change existing
-userspace interfaces, but the fact remains that allowing truncated
-responses causes *filesystem corruption*.
-
-We know that the most well known FIBMAP callers are bootloaders, and we
-know what they do with the information they get -- they use it to record
-the block map of boot files.  So if the IPL/grub/whatever installer
-queries the boot file and the boot file is at block 12345678901 (a
-34-bit number), this interface truncates that to 3755744309 (a 32-bit
-number) and that's where the bootloader will think its boot files are.
-The installation succeeds, the user reboots and *kaboom* the system no
-longer boots because the contents of block 3755744309 is not a bootloader.
-
-Worse yet, grub1 used FIBMAP data to record the location of the grub
-environment file and installed itself between the MBR and the start of
-partition 1.  If the environment file is at offset 1234578901, grub will
-write status data to its environment file (which it thinks is at
-3755744309) and *KABOOM* we've just destroyed whatever was in that
-block.
-
-Far better for the bootloader installation script to hit an error and
-force the admin to deal with the situation than for the system to become
-unbootable.  That's *why* the (newer) iomap bmap implementation does not
-return truncated mappings, even though the classic implementation does.
-
-The classic code returning truncated results is a broken behavior.
-
-> > Note also that the iomap (and therefore xfs) implementation WARNs on
-> > integer overflow and returns 0 (error) to prevent an incorrect access.
+> For pages that were retained via get_user_pages*(), release those pages
+> via the new put_user_page*() routines, instead of via put_page() or
+> release_pages().
 > 
-> It does not really prevent anything. It just issue a warning saying the result
-> will be truncated, in an attempt to notify the FIBMAP interface user that he/she
-> can't trust the result, but it does not prevent a truncated result to be
+> This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+> ("mm: introduce put_user_page*(), placeholder versions").
+> 
+> This is a merge-able version of the fix, because it restricts
+> itself to put_user_page() and put_user_pages(), both of which
+> have not changed their APIs. Later, i915_gem_userptr_put_pages()
+> can be simplified to use put_user_pages_dirty_lock().
 
-I disagree; the iomap bmap implementation /does/ prevent truncated responses:
+Thanks for that.
+with this version we won't have any conflict.
 
-: static loff_t
-: iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
-: void *data, struct iomap *iomap)
-: {
-: 	sector_t *bno = data, addr;
-: 
-: 	if (iomap->type == IOMAP_MAPPED) {
-: 		addr = (pos - iomap->offset + iomap->addr) >> inode->i_blkbits;
-: 		if (addr > INT_MAX)
-: 			WARN(1, "would truncate bmap result\n");
-
-Notice how we don't set *bno here?
-
-: 		else
-: 			*bno = addr;
-
-And only set it in the case that there isn't an integer overflow?
-
-: 	}
-: 	return 0;
-: }
-:
-: /* legacy ->bmap interface.  0 is the error return (!) */
-: sector_t
-: iomap_bmap(struct address_space *mapping, sector_t bno,
-: 		const struct iomap_ops *ops)
-: {
-: 	struct inode *inode = mapping->host;
-: 	loff_t pos = bno << inode->i_blkbits;
-: 	unsigned blocksize = i_blocksize(inode);
-: 
-: 	if (filemap_write_and_wait(mapping))
-: 		return 0;
-: 
-: 	bno = 0;
-
-We initialize bno to zero here...
-
-: 	iomap_apply(inode, pos, blocksize, 0, ops, &bno, iomap_bmap_actor);
-
-...then pass bno's address to the apply function to pass to
-iomap_bmap_actor, so either the _actor function set bno or in the case
-of overflow it left it set to zero.
-
-: 	return bno;
-: }
-
-> returned. And IIRC, iomap is the only interface now that cares about issuing a
-> warning.
->
-> I think the *best* we could do here, is to make the new bmap() to issue the same
-> kind of WARN() iomap does, but we can't really change the end result.
-
-I'd rather we break legacy code than corrupt filesystems.
-
---D
+Ack for going through mm tree.
 
 > 
-> > 
-> > --D
-> > 
-> > > > --D
-> > > > 
-> > > > > +
-> > > > > +	error = put_user(ur_block, p);
-> > > > > +
-> > > > > +	return error;
-> > > > >  }
-> > > > >  
-> > > > >  /**
-> > > > > -- 
-> > > > > 2.20.1
-> > > > > 
-> > > 
-> > > -- 
-> > > Carlos
+> Cc: Jani Nikula <jani.nikula@linux.intel.com>
+> Cc: Joonas Lahtinen <joonas.lahtinen@linux.intel.com>
+> Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+> Cc: David Airlie <airlied@linux.ie>
+> Cc: intel-gfx@lists.freedesktop.org
+> Cc: dri-devel@lists.freedesktop.org
+> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+> ---
+>  drivers/gpu/drm/i915/gem/i915_gem_userptr.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
+> diff --git a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> index 2caa594322bc..76dda2923cf1 100644
+> --- a/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> +++ b/drivers/gpu/drm/i915/gem/i915_gem_userptr.c
+> @@ -527,7 +527,7 @@ __i915_gem_userptr_get_pages_worker(struct work_struct *_work)
+>  	}
+>  	mutex_unlock(&obj->mm.lock);
+>  
+> -	release_pages(pvec, pinned);
+> +	put_user_pages(pvec, pinned);
+>  	kvfree(pvec);
+>  
+>  	i915_gem_object_put(obj);
+> @@ -640,7 +640,7 @@ static int i915_gem_userptr_get_pages(struct drm_i915_gem_object *obj)
+>  		__i915_gem_userptr_set_active(obj, true);
+>  
+>  	if (IS_ERR(pages))
+> -		release_pages(pvec, pinned);
+> +		put_user_pages(pvec, pinned);
+>  	kvfree(pvec);
+>  
+>  	return PTR_ERR_OR_ZERO(pages);
+> @@ -675,7 +675,7 @@ i915_gem_userptr_put_pages(struct drm_i915_gem_object *obj,
+>  			set_page_dirty_lock(page);
+>  
+>  		mark_page_accessed(page);
+> -		put_page(page);
+> +		put_user_page(page);
+>  	}
+>  	obj->mm.dirty = false;
+>  
 > -- 
-> Carlos
+> 2.22.0
+> 
+> _______________________________________________
+> dri-devel mailing list
+> dri-devel@lists.freedesktop.org
+> https://lists.freedesktop.org/mailman/listinfo/dri-devel
