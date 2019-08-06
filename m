@@ -1,178 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:38829 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726783AbfHFNek (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 09:34:40 -0400
-Received: by mail-pf1-f196.google.com with SMTP id y15so41540850pfn.5
-        for <linux-xfs@vger.kernel.org>; Tue, 06 Aug 2019 06:34:40 -0700 (PDT)
-Subject: Re: Block device direct read EIO handling broken?
-References: <20190805181524.GE7129@magnolia>
- <66bd785d-7598-5cc2-5e98-447fd128c153@kernel.dk>
- <36973a52-e876-fc09-7a63-2fc16b855f8d@kernel.dk>
- <BYAPR04MB5816246256B1333C048EB0A1E7DA0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <474c560f-5de0-6082-67ac-f7c640d9b346@kernel.dk>
- <BYAPR04MB5816C3B24310C1E18F9E024CE7DA0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <f3f98663-8f92-c933-c7c0-8db6635e6112@kernel.dk>
- <BYAPR04MB581644536C6EAEA36E3B4912E7DA0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <BYAPR04MB5816C7D04915AF7B656F900BE7DA0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <BYAPR04MB5816D1AB6B586FAD664F8D79E7D50@BYAPR04MB5816.namprd04.prod.outlook.com>
- <43435418-9d70-ec33-1f2d-c95fb986979c@kernel.dk>
- <BYAPR04MB5816811245DDC55429D6D146E7D50@BYAPR04MB5816.namprd04.prod.outlook.com>
-From: Jens Axboe <axboe@kernel.dk>
-Message-ID: <e8d0653b-fdc5-e04c-641e-24b5cf859f3f@kernel.dk>
-Date: Tue, 6 Aug 2019 06:34:36 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:53330 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730289AbfHFOsX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 10:48:23 -0400
+Date: Tue, 6 Aug 2019 07:48:00 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
+ ioctl_fibmap
+Message-ID: <20190806144800.GN7138@magnolia>
+References: <20190731141245.7230-1-cmaiolino@redhat.com>
+ <20190731141245.7230-5-cmaiolino@redhat.com>
+ <20190731231217.GV1561054@magnolia>
+ <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
+ <20190802151400.GG7138@magnolia>
+ <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
+ <20190805151258.GD7129@magnolia>
+ <20190806053840.GH13409@lst.de>
+ <20190806120723.eb72ykmukgjejiku@pegasus.maiolino.io>
 MIME-Version: 1.0
-In-Reply-To: <BYAPR04MB5816811245DDC55429D6D146E7D50@BYAPR04MB5816.namprd04.prod.outlook.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190806120723.eb72ykmukgjejiku@pegasus.maiolino.io>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Damien Le Moal <Damien.LeMoal@wdc.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On 8/6/19 12:05 AM, Damien Le Moal wrote:
-> On 2019/08/06 13:09, Jens Axboe wrote:
->> On 8/5/19 5:05 PM, Damien Le Moal wrote:
->>> On 2019/08/06 7:05, Damien Le Moal wrote:
->>>> On 2019/08/06 6:59, Damien Le Moal wrote:
->>>>> On 2019/08/06 6:28, Jens Axboe wrote:
->>>>>> On 8/5/19 2:27 PM, Damien Le Moal wrote:
->>>>>>> On 2019/08/06 6:26, Jens Axboe wrote:
->>>>>>>>> In any case, looking again at this code, it looks like there is a
->>>>>>>>> problem with dio->size being incremented early, even for fragments
->>>>>>>>> that get BLK_QC_T_EAGAIN, because dio->size is being used in
->>>>>>>>> blkdev_bio_end_io(). So an incorrect size can be reported to user
->>>>>>>>> space in that case on completion (e.g. large asynchronous no-wait dio
->>>>>>>>> that cannot be issued in one go).
->>>>>>>>>
->>>>>>>>> So maybe something like this ? (completely untested)
->>>>>>>>
->>>>>>>> I think that looks pretty good, I like not double accounting with
->>>>>>>> this_size and dio->size, and we retain the old style ordering for the
->>>>>>>> ret value.
->>>>>>>
->>>>>>> Do you want a proper patch with real testing backup ? I can send that
->>>>>>> later today.
->>>>>>
->>>>>> Yeah that'd be great, I like your approach better.
->>>>>>
->>>>>
->>>>> Looking again, I think this is not it yet: dio->size is being referenced after
->>>>> submit_bio(), so blkdev_bio_end_io() may see the old value if the bio completes
->>>>> before dio->size increment. So the use-after-free is still there. And since
->>>>> blkdev_bio_end_io() processes completion to user space only when dio->ref
->>>>> becomes 0, adding an atomic_inc/dec(&dio->ref) over the loop would not help and
->>>>> does not cover the single BIO case. Any idea how to address this one ?
->>>>>
->>>>
->>>> May be add a bio_get/put() over the 2 places that do submit_bio() would work,
->>>> for all cases (single/multi BIO, sync & async). E.g.:
->>>>
->>>> +                       bio_get(bio);
->>>>                           qc = submit_bio(bio);
->>>>                           if (qc == BLK_QC_T_EAGAIN) {
->>>>                                   if (!dio->size)
->>>>                                           ret = -EAGAIN;
->>>> +                               bio_put(bio);
->>>>                                   goto error;
->>>>                           }
->>>>                           dio->size += bio_size;
->>>> +                       bio_put(bio);
->>>>
->>>> Thoughts ?
->>>>
->>>
->>> That does not work since the reference to dio->size in
->>> blkdev_bio_end_io() depends on atomic_dec_and_test(&dio->ref) which
->>> counts the BIO fragments for the dio (+1 for async multi-bio case). So
->>> completion of the last bio can still reference the old value of
->>> dio->size.
->>>
->>> Adding a bio_get/put() on dio->bio ensures that dio stays around, but
->>> does not prevent the use of the wrong dio->size. Adding an additional
->>> atomic_inc/dec(&dio->ref) would prevent that, but we would need to
->>> handle dio completion at the end of __blkdev_direct_IO() if all BIO
->>> fragments already completed at that point. That is a lot more plumbing
->>> needed, relying completely on dio->ref for all cases, thus removing
->>> the dio->multi_bio management.
->>>
->>> Something like this:
->>
->> Don't like this, as it adds unnecessary atomics for the sync case.
->> What's wrong with just adjusting dio->size if we get BLK_QC_T_EAGAIN?
->> It's safe to do so, since we're doing the final put later. We just can't
->> do it for the normal case of submit_bio() succeeding. Kill the new 'ret'
->> usage and return to what we had as well, it's more readable too imho.
->>
->> Totally untested...
->>
->> diff --git a/fs/block_dev.c b/fs/block_dev.c
->> index a6f7c892cb4a..131e2e0582a6 100644
->> --- a/fs/block_dev.c
->> +++ b/fs/block_dev.c
->> @@ -349,7 +349,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
->>   	loff_t pos = iocb->ki_pos;
->>   	blk_qc_t qc = BLK_QC_T_NONE;
->>   	gfp_t gfp;
->> -	ssize_t ret;
->> +	int ret;
->>   
->>   	if ((pos | iov_iter_alignment(iter)) &
->>   	    (bdev_logical_block_size(bdev) - 1))
->> @@ -386,8 +386,6 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
->>   
->>   	ret = 0;
->>   	for (;;) {
->> -		int err;
->> -
->>   		bio_set_dev(bio, bdev);
->>   		bio->bi_iter.bi_sector = pos >> 9;
->>   		bio->bi_write_hint = iocb->ki_hint;
->> @@ -395,10 +393,8 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
->>   		bio->bi_end_io = blkdev_bio_end_io;
->>   		bio->bi_ioprio = iocb->ki_ioprio;
->>   
->> -		err = bio_iov_iter_get_pages(bio, iter);
->> -		if (unlikely(err)) {
->> -			if (!ret)
->> -				ret = err;
->> +		ret = bio_iov_iter_get_pages(bio, iter);
->> +		if (unlikely(ret)) {
->>   			bio->bi_status = BLK_STS_IOERR;
->>   			bio_endio(bio);
->>   			break;
->> @@ -421,7 +417,6 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
->>   		if (nowait)
->>   			bio->bi_opf |= (REQ_NOWAIT | REQ_NOWAIT_INLINE);
->>   
->> -		dio->size += bio->bi_iter.bi_size;
->>   		pos += bio->bi_iter.bi_size;
->>   
->>   		nr_pages = iov_iter_npages(iter, BIO_MAX_PAGES);
->> @@ -433,13 +428,13 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
->>   				polled = true;
->>   			}
->>   
->> +			dio->size += bio->bi_iter.bi_size;
->>   			qc = submit_bio(bio);
->>   			if (qc == BLK_QC_T_EAGAIN) {
->> -				if (!ret)
->> -					ret = -EAGAIN;
->> +				dio->size -= bio->bi_iter.bi_size;
+On Tue, Aug 06, 2019 at 02:07:24PM +0200, Carlos Maiolino wrote:
+> On Tue, Aug 06, 2019 at 07:38:40AM +0200, Christoph Hellwig wrote:
+> > On Mon, Aug 05, 2019 at 08:12:58AM -0700, Darrick J. Wong wrote:
+> > > > returned. And IIRC, iomap is the only interface now that cares about issuing a
+> > > > warning.
+> > > >
+> > > > I think the *best* we could do here, is to make the new bmap() to issue the same
+> > > > kind of WARN() iomap does, but we can't really change the end result.
+> > > 
+> > > I'd rather we break legacy code than corrupt filesystems.
+> > 
 > 
-> ref after free of bio here. Easy to fix though. Also, with this, the
-> bio_endio() call within submit_bio() for the EAGAIN failure will see a
-> dio->size too large, including this failed bio. So this does not work.
+> Yes, I have the same feeling, but this patchset does not have the goal to fix
+> the broken api.
+> 
+> > This particular patch should keep existing behavior as is, as the intent
+> > is to not change functionality.  Throwing in another patch to have saner
+> > error behavior now that we have a saner in-kernel interface that cleary
+> > documents what it is breaking and why on the other hand sounds like a
+> > very good idea.
+> 
+> I totally agree here, and to be honest, I think such change should be in a
+> different patchset rather than a new patch in this series. I can do it for sure,
+> but this discussion IMHO should be done not only here in linux-fsdevel, but also
+> in linux-api, which well, I don't think cc'ing this whole patchset there will do
+> any good other than keep the change discussion more complicated than it should
+> be. I'd rather finish the design and implementation of this patchset, and I'll
+> follow-up it, once it's all set, with a new patch to change the truncation
+> behavior, it will make the discussion way easier than mixing up subjects. What
+> you guys think?
 
-There's no ref after free here - if BLK_QC_T_EAGAIN is being returned,
-the bio has not been freed. There's no calling bio_endio() for that
-case.
+I probably would've fixed the truncation behavior in the old code and
+based the fiemap-fibmap conversion on that so that anyone who wants to
+backport the behavior change to an old kernel has an easier time of it.
 
-For dio->size, it doesn't matter. If we get the error here, bio_endio()
-was never called. And if the submission is successful, we use dio->size
-for the success case.
+But afterwards probably works just as well since I don't feel like tying
+ourselves in more knots over an old interface. ;)
 
--- 
-Jens Axboe
+--D
+
+> Cheers
+> 
+> 
+> -- 
+> Carlos
