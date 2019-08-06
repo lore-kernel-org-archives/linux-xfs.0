@@ -1,69 +1,36 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:47114 "EHLO
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33465 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728089AbfHFVfD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 17:35:03 -0400
-Date: Wed, 7 Aug 2019 07:33:53 +1000
+        by vger.kernel.org with ESMTP id S1728872AbfHFViQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 17:38:16 -0400
+Date: Wed, 7 Aug 2019 07:37:08 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 18/24] xfs: reduce kswapd blocking on inode locking.
-Message-ID: <20190806213353.GJ7777@dread.disaster.area>
+Subject: Re: [RFC] [PATCH 00/24] mm, xfs: non-blocking inode reclaim
+Message-ID: <20190806213708.GK7777@dread.disaster.area>
 References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-19-david@fromorbit.com>
- <20190806182213.GF2979@bfoster>
+ <20190806055744.GC25736@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190806182213.GF2979@bfoster>
+In-Reply-To: <20190806055744.GC25736@infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
+To: Christoph Hellwig <hch@infradead.org>
 Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-On Tue, Aug 06, 2019 at 02:22:13PM -0400, Brian Foster wrote:
-> On Thu, Aug 01, 2019 at 12:17:46PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When doing async node reclaiming, we grab a batch of inodes that we
-> > are likely able to reclaim and ignore those that are already
-> > flushing. However, when we actually go to reclaim them, the first
-> > thing we do is lock the inode. If we are racing with something
-> > else reclaiming the inode or flushing it because it is dirty,
-> > we block on the inode lock. Hence we can still block kswapd here.
-> > 
-> > Further, if we flush an inode, we also cluster all the other dirty
-> > inodes in that cluster into the same IO, flush locking them all.
-> > However, if the workload is operating on sequential inodes (e.g.
-> > created by a tarball extraction) most of these inodes will be
-> > sequntial in the cache and so in the same batch
-> > we've already grabbed for reclaim scanning.
-> > 
-> > As a result, it is common for all the inodes in the batch to be
-> > dirty and it is common for the first inode flushed to also flush all
-> > the inodes in the reclaim batch. In which case, they are now all
-> > going to be flush locked and we do not want to block on them.
-> > 
+On Mon, Aug 05, 2019 at 10:57:44PM -0700, Christoph Hellwig wrote:
+> Hi Dave,
 > 
-> Hmm... I think I'm missing something with this description. For dirty
-> inodes that are flushed in a cluster via reclaim as described, aren't we
-> already blocking on all of the flush locks by virtue of the synchronous
-> I/O associated with the flush of the first dirty inode in that
-> particular cluster?
+> do you have a git tree available to look over the whole series?
 
-Currently we end up issuing IO and waiting for it, so by the time we
-get to the next inode in the cluster, it's already been cleaned and
-unlocked.
-
-However, as we go to non-blocking scanning, if we hit one
-flush-locked inode in a batch, it's entirely likely that the rest of
-the inodes in the batch are also flush locked, and so we should
-always try to skip over them in non-blocking reclaim.
-
-This is really just a stepping stone in the logic to the way the
-LRU isolation function works - it's entirely non-blocking and full
-of lock order inversions, so everything has to run under try-lock
-semantics. This is essentially starting that restructuring, based on
-the observation that sequential inodes are flushed in batches...
+Not yet, I'll get one up for the next version of the patchset and I
+have done some page cache vs inode cache balance testing. That,
+FWIW, is not looking good - the vanilla 5.3-rc3 kernel is unable to
+maintain a balanced page cache/inode cache working set under steady
+state tarball-extraction workloads. Memory reclaim looks to be have
+been completely borked from a system balance perspective since I
+last looked at it maybe a year ago....
 
 Cheers,
 
