@@ -1,12 +1,11 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39628 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731081AbfHFAZE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 5 Aug 2019 20:25:04 -0400
-Date: Tue, 6 Aug 2019 10:23:53 +1000
-From: Dave Chinner <david@fromorbit.com>
+Received: from mail-pl1-f196.google.com ([209.85.214.196]:32862 "EHLO
+        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725997AbfHFEJo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 00:09:44 -0400
+Received: by mail-pl1-f196.google.com with SMTP id c14so37208068plo.0
+        for <linux-xfs@vger.kernel.org>; Mon, 05 Aug 2019 21:09:44 -0700 (PDT)
 Subject: Re: Block device direct read EIO handling broken?
-Message-ID: <20190806002353.GC7777@dread.disaster.area>
 References: <20190805181524.GE7129@magnolia>
  <66bd785d-7598-5cc2-5e98-447fd128c153@kernel.dk>
  <36973a52-e876-fc09-7a63-2fc16b855f8d@kernel.dk>
@@ -17,77 +16,186 @@ References: <20190805181524.GE7129@magnolia>
  <BYAPR04MB581644536C6EAEA36E3B4912E7DA0@BYAPR04MB5816.namprd04.prod.outlook.com>
  <BYAPR04MB5816C7D04915AF7B656F900BE7DA0@BYAPR04MB5816.namprd04.prod.outlook.com>
  <BYAPR04MB5816D1AB6B586FAD664F8D79E7D50@BYAPR04MB5816.namprd04.prod.outlook.com>
+From: Jens Axboe <axboe@kernel.dk>
+Message-ID: <43435418-9d70-ec33-1f2d-c95fb986979c@kernel.dk>
+Date: Mon, 5 Aug 2019 21:09:39 -0700
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
 In-Reply-To: <BYAPR04MB5816D1AB6B586FAD664F8D79E7D50@BYAPR04MB5816.namprd04.prod.outlook.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, "Darrick J. Wong" <darrick.wong@oracle.com>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
+To: Damien Le Moal <Damien.LeMoal@wdc.com>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, xfs <linux-xfs@vger.kernel.org>
 
-On Tue, Aug 06, 2019 at 12:05:51AM +0000, Damien Le Moal wrote:
+On 8/5/19 5:05 PM, Damien Le Moal wrote:
 > On 2019/08/06 7:05, Damien Le Moal wrote:
-> > On 2019/08/06 6:59, Damien Le Moal wrote:
-> >> On 2019/08/06 6:28, Jens Axboe wrote:
-> >>> On 8/5/19 2:27 PM, Damien Le Moal wrote:
-> >>>> On 2019/08/06 6:26, Jens Axboe wrote:
-> >>>>>> In any case, looking again at this code, it looks like there is a
-> >>>>>> problem with dio->size being incremented early, even for fragments
-> >>>>>> that get BLK_QC_T_EAGAIN, because dio->size is being used in
-> >>>>>> blkdev_bio_end_io(). So an incorrect size can be reported to user
-> >>>>>> space in that case on completion (e.g. large asynchronous no-wait dio
-> >>>>>> that cannot be issued in one go).
-> >>>>>>
-> >>>>>> So maybe something like this ? (completely untested)
-> >>>>>
-> >>>>> I think that looks pretty good, I like not double accounting with
-> >>>>> this_size and dio->size, and we retain the old style ordering for the
-> >>>>> ret value.
-> >>>>
-> >>>> Do you want a proper patch with real testing backup ? I can send that
-> >>>> later today.
-> >>>
-> >>> Yeah that'd be great, I like your approach better.
-> >>>
-> >>
-> >> Looking again, I think this is not it yet: dio->size is being referenced after
-> >> submit_bio(), so blkdev_bio_end_io() may see the old value if the bio completes
-> >> before dio->size increment. So the use-after-free is still there. And since
-> >> blkdev_bio_end_io() processes completion to user space only when dio->ref
-> >> becomes 0, adding an atomic_inc/dec(&dio->ref) over the loop would not help and
-> >> does not cover the single BIO case. Any idea how to address this one ?
-> >>
-> > 
-> > May be add a bio_get/put() over the 2 places that do submit_bio() would work,
-> > for all cases (single/multi BIO, sync & async). E.g.:
-> > 
-> > +                       bio_get(bio);
-> >                         qc = submit_bio(bio);
-> >                         if (qc == BLK_QC_T_EAGAIN) {
-> >                                 if (!dio->size)
-> >                                         ret = -EAGAIN;
-> > +                               bio_put(bio);
-> >                                 goto error;
-> >                         }
-> >                         dio->size += bio_size;
-> > +                       bio_put(bio);
-> > 
-> > Thoughts ?
-> > 
+>> On 2019/08/06 6:59, Damien Le Moal wrote:
+>>> On 2019/08/06 6:28, Jens Axboe wrote:
+>>>> On 8/5/19 2:27 PM, Damien Le Moal wrote:
+>>>>> On 2019/08/06 6:26, Jens Axboe wrote:
+>>>>>>> In any case, looking again at this code, it looks like there is a
+>>>>>>> problem with dio->size being incremented early, even for fragments
+>>>>>>> that get BLK_QC_T_EAGAIN, because dio->size is being used in
+>>>>>>> blkdev_bio_end_io(). So an incorrect size can be reported to user
+>>>>>>> space in that case on completion (e.g. large asynchronous no-wait dio
+>>>>>>> that cannot be issued in one go).
+>>>>>>>
+>>>>>>> So maybe something like this ? (completely untested)
+>>>>>>
+>>>>>> I think that looks pretty good, I like not double accounting with
+>>>>>> this_size and dio->size, and we retain the old style ordering for the
+>>>>>> ret value.
+>>>>>
+>>>>> Do you want a proper patch with real testing backup ? I can send that
+>>>>> later today.
+>>>>
+>>>> Yeah that'd be great, I like your approach better.
+>>>>
+>>>
+>>> Looking again, I think this is not it yet: dio->size is being referenced after
+>>> submit_bio(), so blkdev_bio_end_io() may see the old value if the bio completes
+>>> before dio->size increment. So the use-after-free is still there. And since
+>>> blkdev_bio_end_io() processes completion to user space only when dio->ref
+>>> becomes 0, adding an atomic_inc/dec(&dio->ref) over the loop would not help and
+>>> does not cover the single BIO case. Any idea how to address this one ?
+>>>
+>>
+>> May be add a bio_get/put() over the 2 places that do submit_bio() would work,
+>> for all cases (single/multi BIO, sync & async). E.g.:
+>>
+>> +                       bio_get(bio);
+>>                          qc = submit_bio(bio);
+>>                          if (qc == BLK_QC_T_EAGAIN) {
+>>                                  if (!dio->size)
+>>                                          ret = -EAGAIN;
+>> +                               bio_put(bio);
+>>                                  goto error;
+>>                          }
+>>                          dio->size += bio_size;
+>> +                       bio_put(bio);
+>>
+>> Thoughts ?
+>>
 > 
-> That does not work since the reference to dio->size in blkdev_bio_end_io()
-> depends on atomic_dec_and_test(&dio->ref) which counts the BIO fragments for the
-> dio (+1 for async multi-bio case). So completion of the last bio can still
-> reference the old value of dio->size.
+> That does not work since the reference to dio->size in
+> blkdev_bio_end_io() depends on atomic_dec_and_test(&dio->ref) which
+> counts the BIO fragments for the dio (+1 for async multi-bio case). So
+> completion of the last bio can still reference the old value of
+> dio->size.
+> 
+> Adding a bio_get/put() on dio->bio ensures that dio stays around, but
+> does not prevent the use of the wrong dio->size. Adding an additional
+> atomic_inc/dec(&dio->ref) would prevent that, but we would need to
+> handle dio completion at the end of __blkdev_direct_IO() if all BIO
+> fragments already completed at that point. That is a lot more plumbing
+> needed, relying completely on dio->ref for all cases, thus removing
+> the dio->multi_bio management.
+> 
+> Something like this:
 
-Didn't we fix this same use-after-free in iomap_dio_rw() in commit
-4ea899ead278 ("iomap: fix a use after free in iomap_dio_rw")?
+Don't like this, as it adds unnecessary atomics for the sync case.
+What's wrong with just adjusting dio->size if we get BLK_QC_T_EAGAIN?
+It's safe to do so, since we're doing the final put later. We just can't
+do it for the normal case of submit_bio() succeeding. Kill the new 'ret'
+usage and return to what we had as well, it's more readable too imho.
 
-Cheers,
+Totally untested...
 
-Dave.
+diff --git a/fs/block_dev.c b/fs/block_dev.c
+index a6f7c892cb4a..131e2e0582a6 100644
+--- a/fs/block_dev.c
++++ b/fs/block_dev.c
+@@ -349,7 +349,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 	loff_t pos = iocb->ki_pos;
+ 	blk_qc_t qc = BLK_QC_T_NONE;
+ 	gfp_t gfp;
+-	ssize_t ret;
++	int ret;
+ 
+ 	if ((pos | iov_iter_alignment(iter)) &
+ 	    (bdev_logical_block_size(bdev) - 1))
+@@ -386,8 +386,6 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 
+ 	ret = 0;
+ 	for (;;) {
+-		int err;
+-
+ 		bio_set_dev(bio, bdev);
+ 		bio->bi_iter.bi_sector = pos >> 9;
+ 		bio->bi_write_hint = iocb->ki_hint;
+@@ -395,10 +393,8 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 		bio->bi_end_io = blkdev_bio_end_io;
+ 		bio->bi_ioprio = iocb->ki_ioprio;
+ 
+-		err = bio_iov_iter_get_pages(bio, iter);
+-		if (unlikely(err)) {
+-			if (!ret)
+-				ret = err;
++		ret = bio_iov_iter_get_pages(bio, iter);
++		if (unlikely(ret)) {
+ 			bio->bi_status = BLK_STS_IOERR;
+ 			bio_endio(bio);
+ 			break;
+@@ -421,7 +417,6 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 		if (nowait)
+ 			bio->bi_opf |= (REQ_NOWAIT | REQ_NOWAIT_INLINE);
+ 
+-		dio->size += bio->bi_iter.bi_size;
+ 		pos += bio->bi_iter.bi_size;
+ 
+ 		nr_pages = iov_iter_npages(iter, BIO_MAX_PAGES);
+@@ -433,13 +428,13 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 				polled = true;
+ 			}
+ 
++			dio->size += bio->bi_iter.bi_size;
+ 			qc = submit_bio(bio);
+ 			if (qc == BLK_QC_T_EAGAIN) {
+-				if (!ret)
+-					ret = -EAGAIN;
++				dio->size -= bio->bi_iter.bi_size;
++				ret = -EAGAIN;
+ 				goto error;
+ 			}
+-			ret = dio->size;
+ 
+ 			if (polled)
+ 				WRITE_ONCE(iocb->ki_cookie, qc);
+@@ -460,18 +455,17 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ 			atomic_inc(&dio->ref);
+ 		}
+ 
++		dio->size += bio->bi_iter.bi_size;
+ 		qc = submit_bio(bio);
+ 		if (qc == BLK_QC_T_EAGAIN) {
+-			if (!ret)
+-				ret = -EAGAIN;
++			dio->size -= bio->bi_iter.bi_size;
++			ret = -EAGAIN;
+ 			goto error;
+ 		}
+-		ret = dio->size;
+ 
+ 		bio = bio_alloc(gfp, nr_pages);
+ 		if (!bio) {
+-			if (!ret)
+-				ret = -EAGAIN;
++			ret = -EAGAIN;
+ 			goto error;
+ 		}
+ 	}
+@@ -496,6 +490,8 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter *iter, int nr_pages)
+ out:
+ 	if (!ret)
+ 		ret = blk_status_to_errno(dio->bio.bi_status);
++	if (likely(!ret))
++		ret = dio->size;
+ 
+ 	bio_put(&dio->bio);
+ 	return ret;
+
 -- 
-Dave Chinner
-david@fromorbit.com
+Jens Axboe
