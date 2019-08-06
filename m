@@ -1,112 +1,40 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44534 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728582AbfHFSWP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 6 Aug 2019 14:22:15 -0400
-Date: Tue, 6 Aug 2019 14:22:13 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 18/24] xfs: reduce kswapd blocking on inode locking.
-Message-ID: <20190806182213.GF2979@bfoster>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-19-david@fromorbit.com>
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:34499 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725948AbfHFUHL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 16:07:11 -0400
+Date: Tue, 6 Aug 2019 20:07:07 +0000
+From: Luis Chamberlain <mcgrof@kernel.org>
+Subject: Re: XFS segementation fault with new linux 4.19.63
+Message-ID: <20190806200707.GV30113@42.do-not-panic.com>
+References: <e0ca189e-2f96-6599-40ce-a4fc8866d8d1@nekoboi.moe>
+ <20190806070806.GA13112@infradead.org>
+ <cbe57554-ed5f-6163-d48c-9069aa2dcc7b@nekoboi.moe>
+ <20190806092318.GE7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190801021752.4986-19-david@fromorbit.com>
+In-Reply-To: <20190806092318.GE7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Kinky Nekoboi <kinky_nekoboi@nekoboi.moe>, Christoph Hellwig <hch@infradead.org>, linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Thu, Aug 01, 2019 at 12:17:46PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Tue, Aug 06, 2019 at 07:23:18PM +1000, Dave Chinner wrote:
+> On Tue, Aug 06, 2019 at 09:10:57AM +0200, Kinky Nekoboi wrote:
+> > Addional info:
+> > 
+> > this only occurs if kernel is compiled with:
+> > 
+> > CONFIG_XFS_DEBUG=y
+> > 
+> > running 4.19.64 without xfs debugging works fine
 > 
-> When doing async node reclaiming, we grab a batch of inodes that we
-> are likely able to reclaim and ignore those that are already
-> flushing. However, when we actually go to reclaim them, the first
-> thing we do is lock the inode. If we are racing with something
-> else reclaiming the inode or flushing it because it is dirty,
-> we block on the inode lock. Hence we can still block kswapd here.
-> 
-> Further, if we flush an inode, we also cluster all the other dirty
-> inodes in that cluster into the same IO, flush locking them all.
-> However, if the workload is operating on sequential inodes (e.g.
-> created by a tarball extraction) most of these inodes will be
-> sequntial in the cache and so in the same batch
-> we've already grabbed for reclaim scanning.
-> 
-> As a result, it is common for all the inodes in the batch to be
-> dirty and it is common for the first inode flushed to also flush all
-> the inodes in the reclaim batch. In which case, they are now all
-> going to be flush locked and we do not want to block on them.
-> 
+> I'm guessing 4.19 doesn't have commit c08768977b9a ("xfs: finobt AG
+> reserves don't consider last AG can be a runt")....
 
-Hmm... I think I'm missing something with this description. For dirty
-inodes that are flushed in a cluster via reclaim as described, aren't we
-already blocking on all of the flush locks by virtue of the synchronous
-I/O associated with the flush of the first dirty inode in that
-particular cluster?
+It does not. Kinky, can you confirm if cherry picking it fixes your
+crash? If so I can queue it up for the next batch of fixes for v4.19.
 
-Brian
-
-> Hence, for async reclaim (SYNC_TRYLOCK) make sure we always use
-> trylock semantics and abort reclaim of an inode as quickly as we can
-> without blocking kswapd.
-> 
-> Found via tracing and finding big batches of repeated lock/unlock
-> runs on inodes that we just flushed by write clustering during
-> reclaim.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_icache.c | 23 ++++++++++++++++++-----
->  1 file changed, 18 insertions(+), 5 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 2fa2f8dcf86b..e6b9030875b9 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1104,11 +1104,23 @@ xfs_reclaim_inode(
->  
->  restart:
->  	error = 0;
-> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -	if (!xfs_iflock_nowait(ip)) {
-> -		if (!(sync_mode & SYNC_WAIT))
-> +	/*
-> +	 * Don't try to flush the inode if another inode in this cluster has
-> +	 * already flushed it after we did the initial checks in
-> +	 * xfs_reclaim_inode_grab().
-> +	 */
-> +	if (sync_mode & SYNC_TRYLOCK) {
-> +		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
->  			goto out;
-> -		xfs_iflock(ip);
-> +		if (!xfs_iflock_nowait(ip))
-> +			goto out_unlock;
-> +	} else {
-> +		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> +		if (!xfs_iflock_nowait(ip)) {
-> +			if (!(sync_mode & SYNC_WAIT))
-> +				goto out_unlock;
-> +			xfs_iflock(ip);
-> +		}
->  	}
->  
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-> @@ -1215,9 +1227,10 @@ xfs_reclaim_inode(
->  
->  out_ifunlock:
->  	xfs_ifunlock(ip);
-> +out_unlock:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  out:
->  	xfs_iflags_clear(ip, XFS_IRECLAIM);
-> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
->  	/*
->  	 * We could return -EAGAIN here to make reclaim rescan the inode tree in
->  	 * a short while. However, this just burns CPU time scanning the tree
-> -- 
-> 2.22.0
-> 
+  Luis
