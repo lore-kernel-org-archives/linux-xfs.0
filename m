@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:36697 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729305AbfHGBeQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:34:16 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:46568 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729254AbfHGBeP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:34:15 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH v3 19/41] vfio: convert put_page() to put_user_page*()
-Date: Tue,  6 Aug 2019 18:33:18 -0700
-Message-Id: <20190807013340.9706-20-jhubbard@nvidia.com>
+Subject: [PATCH v3 18/41] drivers/tee: convert put_page() to put_user_page*()
+Date: Tue,  6 Aug 2019 18:33:17 -0700
+Message-Id: <20190807013340.9706-19-jhubbard@nvidia.com>
 In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
 References: <20190807013340.9706-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
@@ -15,7 +15,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Alex Williamson <alex.williamson@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Jens Wiklander <jens.wiklander@linaro.org>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -26,48 +26,51 @@ release_pages().
 This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
-Note that this effectively changes the code's behavior in
-qp_release_pages(): it now ultimately calls set_page_dirty_lock(),
-instead of set_page_dirty(). This is probably more accurate.
-
-As Christoph Hellwig put it, "set_page_dirty() is only safe if we are
-dealing with a file backed page where we have reference on the inode it
-hangs off." [1]
-
-[1] https://lore.kernel.org/r/20190723153640.GB720@lst.de
-
-Cc: Alex Williamson <alex.williamson@redhat.com>
-Cc: kvm@vger.kernel.org
+Acked-by: Jens Wiklander <jens.wiklander@linaro.org>
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/vfio/vfio_iommu_type1.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/tee/tee_shm.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/vfio/vfio_iommu_type1.c b/drivers/vfio/vfio_iommu_type1.c
-index 054391f30fa8..5a5461a14299 100644
---- a/drivers/vfio/vfio_iommu_type1.c
-+++ b/drivers/vfio/vfio_iommu_type1.c
-@@ -320,9 +320,9 @@ static int put_pfn(unsigned long pfn, int prot)
- {
- 	if (!is_invalid_reserved_pfn(pfn)) {
- 		struct page *page = pfn_to_page(pfn);
--		if (prot & IOMMU_WRITE)
--			SetPageDirty(page);
--		put_page(page);
-+		bool dirty = prot & IOMMU_WRITE;
-+
-+		put_user_pages_dirty_lock(&page, 1, dirty);
- 		return 1;
+diff --git a/drivers/tee/tee_shm.c b/drivers/tee/tee_shm.c
+index 2da026fd12c9..c967d0420b67 100644
+--- a/drivers/tee/tee_shm.c
++++ b/drivers/tee/tee_shm.c
+@@ -31,16 +31,13 @@ static void tee_shm_release(struct tee_shm *shm)
+ 
+ 		poolm->ops->free(poolm, shm);
+ 	} else if (shm->flags & TEE_SHM_REGISTER) {
+-		size_t n;
+ 		int rc = teedev->desc->ops->shm_unregister(shm->ctx, shm);
+ 
+ 		if (rc)
+ 			dev_err(teedev->dev.parent,
+ 				"unregister shm %p failed: %d", shm, rc);
+ 
+-		for (n = 0; n < shm->num_pages; n++)
+-			put_page(shm->pages[n]);
+-
++		put_user_pages(shm->pages, shm->num_pages);
+ 		kfree(shm->pages);
  	}
- 	return 0;
-@@ -356,7 +356,7 @@ static int vaddr_get_pfn(struct mm_struct *mm, unsigned long vaddr,
- 		 */
- 		if (ret > 0 && vma_is_fsdax(vmas[0])) {
- 			ret = -EOPNOTSUPP;
--			put_page(page[0]);
-+			put_user_page(page[0]);
+ 
+@@ -313,16 +310,13 @@ struct tee_shm *tee_shm_register(struct tee_context *ctx, unsigned long addr,
+ 	return shm;
+ err:
+ 	if (shm) {
+-		size_t n;
+-
+ 		if (shm->id >= 0) {
+ 			mutex_lock(&teedev->mutex);
+ 			idr_remove(&teedev->idr, shm->id);
+ 			mutex_unlock(&teedev->mutex);
+ 		}
+ 		if (shm->pages) {
+-			for (n = 0; n < shm->num_pages; n++)
+-				put_page(shm->pages[n]);
++			put_user_pages(shm->pages, shm->num_pages);
+ 			kfree(shm->pages);
  		}
  	}
- 	up_read(&mm->mmap_sem);
 -- 
 2.22.0
