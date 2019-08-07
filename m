@@ -1,96 +1,163 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41438 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725785AbfHIALS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 20:11:18 -0400
-Date: Fri, 9 Aug 2019 10:10:05 +1000
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44741 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727213AbfHGWdw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Aug 2019 18:33:52 -0400
+Date: Thu, 8 Aug 2019 08:32:41 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 22/24] xfs: track reclaimable inodes using a LRU list
-Message-ID: <20190809001005.GW7777@dread.disaster.area>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-23-david@fromorbit.com>
- <20190808163653.GB24551@bfoster>
+Subject: Re: [PATCH] [Regression, v5.0] mm: boosted kswapd reclaim b0rks
+ system cache balance
+Message-ID: <20190807223241.GO7777@dread.disaster.area>
+References: <20190807091858.2857-1-david@fromorbit.com>
+ <20190807093056.GS11812@dhcp22.suse.cz>
+ <20190807150316.GL2708@suse.de>
+ <20190807205615.GI2739@techsingularity.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190808163653.GB24551@bfoster>
+In-Reply-To: <20190807205615.GI2739@techsingularity.net>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Mel Gorman <mgorman@techsingularity.net>
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
 
-On Thu, Aug 08, 2019 at 12:36:53PM -0400, Brian Foster wrote:
-> On Thu, Aug 01, 2019 at 12:17:50PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 07, 2019 at 09:56:15PM +0100, Mel Gorman wrote:
+> On Wed, Aug 07, 2019 at 04:03:16PM +0100, Mel Gorman wrote:
+> > <SNIP>
+> >
+> > On that basis, it may justify ripping out the may_shrinkslab logic
+> > everywhere. The downside is that some microbenchmarks will notice.
+> > Specifically IO benchmarks that fill memory and reread (particularly
+> > rereading the metadata via any inode operation) may show reduced
+> > results. Such benchmarks can be strongly affected by whether the inode
+> > information is still memory resident and watermark boosting reduces
+> > the changes the data is still resident in memory. Technically still a
+> > regression but a tunable one.
 > > 
-> > Now that we don't do IO from the inode reclaim code, there is no
-> > need to optimise inode scanning order for optimal IO
-> > characteristics. The AIL takes care of that for us, so now reclaim
-> > can focus on selecting the best inodes to reclaim.
+> > Hence the following "it builds" patch that has zero supporting data on
+> > whether it's a good idea or not.
 > > 
-> > Hence we can change the inode reclaim algorithm to a real LRU and
-> > remove the need to use the radix tree to track and walk inodes under
-> > reclaim. This frees up a radix tree bit and simplifies the code that
-> > marks inodes are reclaim candidates. It also simplifies the reclaim
-> > code - we don't need batching anymore and all the reclaim logic
-> > can be added to the LRU isolation callback.
-> > 
-> > Further, we get node aware reclaim at the xfs_inode level, which
-> > should help the per-node reclaim code free relevant inodes faster.
-> > 
-> > We can re-use the VFS inode lru pointers - once the inode has been
-> > reclaimed from the VFS, we can use these pointers ourselves. Hence
-> > we don't need to grow the inode to change the way we index
-> > reclaimable inodes.
-> > 
-> > Start by adding the list_lru tracking in parallel with the existing
-> > reclaim code. This makes it easier to see the LRU infrastructure
-> > separate to the reclaim algorithm changes. Especially the locking
-> > order, which is ip->i_flags_lock -> list_lru lock.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_icache.c | 31 +++++++------------------------
-> >  fs/xfs/xfs_icache.h |  1 -
-> >  fs/xfs/xfs_mount.h  |  1 +
-> >  fs/xfs/xfs_super.c  | 31 ++++++++++++++++++++++++-------
-> >  4 files changed, 32 insertions(+), 32 deletions(-)
-> > 
-> ...
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index a59d3a21be5c..b5c4c1b6fd19 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> ...
-> > @@ -1801,7 +1817,8 @@ xfs_fs_nr_cached_objects(
-> >  	/* Paranoia: catch incorrect calls during mount setup or teardown */
-> >  	if (WARN_ON_ONCE(!sb->s_fs_info))
-> >  		return 0;
-> > -	return xfs_reclaim_inodes_count(XFS_M(sb));
-> > +
-> > +	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
 > 
-> Do we not need locking here,
+> This is a more complete version of the same patch that summaries the
+> problem and includes data from my own testing
+....
+> A fsmark benchmark configuration was constructed similar to
+> what Dave reported and is codified by the mmtest configuration
+> config-io-fsmark-small-file-stream.  It was evaluated on a 1-socket machine
+> to avoid dealing with NUMA-related issues and the timing of reclaim. The
+> storage was an SSD Samsung Evo and a fresh XFS filesystem was used for
+> the test data.
 
-No locking is needed - we have no global lock that protects the
-list_lru that we could use to serialise the count - that would
-completely destroy the scalability advantages the list_lru provide.
-As it is, shrinker counts have always been inherently racy and so we
-don't really care for accuracy anywhere in the shrinker code. Hence
-there is no need to attempt to be accurate here, just like didn't
-attempt to be accurate for the per AG reclaimable inode count
-aggregation that this replaces.
+Have you run fstrim on that drive recently? I'm running these tests
+on a 960 EVO ssd, and when I started looking at shrinkers 3 weeks
+ago I had all sorts of whacky performance problems and inconsistent
+results. Turned out there were all sorts of random long IO latencies
+occurring (in the hundreds of milliseconds) because the drive was
+constantly running garbage collection to free up space. As a result
+it was both blocking on GC and thermal throttling under these fsmark
+workloads.
 
-> or are we just skipping it because this
-> apparently maintains a count field and accuracy isn't critical? If the
-> latter, a one liner comment would be useful.
+I made a new XFS filesystem on it (lazy man's rm -rf *), then ran
+fstrim on it to tell the drive all the space is free. Drive temps
+dropped 30C immediately, and all of the whacky performance anomolies
+went away. I now fstrim the drive in my vm startup scripts before
+each test run, and it's giving consistent results again.
 
-I don't think it needs comments as they would be stating the
-obvious.  We don't have comments explaining this in any other
-shrinker - it's jsut assumed that anyone working with shrinkers
-already knows that the counts are not required to be exactly
-accurate...
+> It is likely that the test configuration is not a proper match for Dave's
+> test as the results are different in terms of performance. However, my
+> configuration reports fsmark performance every 10% of memory worth of
+> files and I suspect Dave's configuration reported Files/sec when memory
+> was already full. THP was enabled for mine, disabled for Dave's and
+> probably a whole load of other methodology differences that rarely
+> get recorded properly.
+
+Yup, like I forgot to mention that my test system is using a 4-node
+fakenuma setup (i.e. 4 nodes, 4GB RAM and 4 CPUs per node, so
+there are 4 separate kswapd's doing concurrent reclaim). That
+changes reclaim patterns as well.
+
+
+> fsmark
+>                                    5.3.0-rc3              5.3.0-rc3
+>                                      vanilla          shrinker-v1r1
+> Min       1-files/sec     5181.70 (   0.00%)     3204.20 ( -38.16%)
+> 1st-qrtle 1-files/sec    14877.10 (   0.00%)     6596.90 ( -55.66%)
+> 2nd-qrtle 1-files/sec     6521.30 (   0.00%)     5707.80 ( -12.47%)
+> 3rd-qrtle 1-files/sec     5614.30 (   0.00%)     5363.80 (  -4.46%)
+> Max-1     1-files/sec    18463.00 (   0.00%)    18479.90 (   0.09%)
+> Max-5     1-files/sec    18028.40 (   0.00%)    17829.00 (  -1.11%)
+> Max-10    1-files/sec    17502.70 (   0.00%)    17080.90 (  -2.41%)
+> Max-90    1-files/sec     5438.80 (   0.00%)     5106.60 (  -6.11%)
+> Max-95    1-files/sec     5390.30 (   0.00%)     5020.40 (  -6.86%)
+> Max-99    1-files/sec     5271.20 (   0.00%)     3376.20 ( -35.95%)
+> Max       1-files/sec    18463.00 (   0.00%)    18479.90 (   0.09%)
+> Hmean     1-files/sec     7459.11 (   0.00%)     6249.49 ( -16.22%)
+> Stddev    1-files/sec     4733.16 (   0.00%)     4362.10 (   7.84%)
+> CoeffVar  1-files/sec       51.66 (   0.00%)       57.49 ( -11.29%)
+> BHmean-99 1-files/sec     7515.09 (   0.00%)     6351.81 ( -15.48%)
+> BHmean-95 1-files/sec     7625.39 (   0.00%)     6486.09 ( -14.94%)
+> BHmean-90 1-files/sec     7803.19 (   0.00%)     6588.61 ( -15.57%)
+> BHmean-75 1-files/sec     8518.74 (   0.00%)     6954.25 ( -18.37%)
+> BHmean-50 1-files/sec    10953.31 (   0.00%)     8017.89 ( -26.80%)
+> BHmean-25 1-files/sec    16732.38 (   0.00%)    11739.65 ( -29.84%)
+> 
+>                    5.3.0-rc3   5.3.0-rc3
+>                      vanillashrinker-v1r1
+> Duration User          77.29       89.09
+> Duration System      1097.13     1332.86
+> Duration Elapsed     2014.14     2596.39
+
+I'm not sure we are testing or measuring exactly the same things :)
+
+> This is showing that fsmark runs slower as a result of this patch but
+> there are other important observations that justify the patch.
+> 
+> 1. With the vanilla kernel, the number of dirty pages in the system
+>    is very low for much of the test. With this patch, dirty pages
+>    is generally kept at 10% which matches vm.dirty_background_ratio
+>    which is normal expected historical behaviour.
+> 
+> 2. With the vanilla kernel, the ratio of Slab/Pagecache is close to
+>    0.95 for much of the test i.e. Slab is being left alone and dominating
+>    memory consumption. With the patch applied, the ratio varies between
+>    0.35 and 0.45 with the bulk of the measured ratios roughly half way
+>    between those values. This is a different balance to what Dave reported
+>    but it was at least consistent.
+
+Yeah, the balance is typically a bit different for different configs
+and storage. The trick is getting the balance to be roughly
+consistent across a range of different configs. The fakenuma setup
+also has a significant impact on where the balance is found. And I
+can't remember if the "fixed" memory usage numbers I quoted came
+from a run with my "make XFS inode reclaim nonblocking" patchset or
+not.
+
+> 3. Slabs are scanned throughout the entire test with the patch applied.
+>    The vanille kernel has long periods with no scan activity and then
+>    relatively massive spikes.
+> 
+> 4. Overall vmstats are closer to normal expectations
+> 
+> 	                                5.3.0-rc3      5.3.0-rc3
+> 	                                  vanilla  shrinker-v1r1
+> 	Direct pages scanned             60308.00        5226.00
+> 	Kswapd pages scanned          18316110.00    12295574.00
+> 	Kswapd pages reclaimed        13121037.00     7280152.00
+> 	Direct pages reclaimed           11817.00        5226.00
+> 	Kswapd efficiency %                 71.64          59.21
+> 	Kswapd velocity                   9093.76        4735.64
+> 	Direct efficiency %                 19.59         100.00
+> 	Direct velocity                     29.94           2.01
+> 	Page reclaim immediate          247921.00           0.00
+> 	Slabs scanned                 16602344.00    29369536.00
+> 	Direct inode steals               1574.00         800.00
+> 	Kswapd inode steals             130033.00     3968788.00
+> 	Kswapd skipped wait                  0.00           0.00
+
+That looks a lot better. Patch looks reasonable, though I'm
+interested to know what impact it has on tests you ran in the
+original commit for the boosting.
 
 Cheers,
 
