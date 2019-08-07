@@ -1,22 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:38114 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729781AbfHGBee (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:34:34 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:36714 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729712AbfHGBe3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:34:29 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH v3 30/41] mm/madvise.c: convert put_page() to put_user_page*()
-Date: Tue,  6 Aug 2019 18:33:29 -0700
-Message-Id: <20190807013340.9706-31-jhubbard@nvidia.com>
+Subject: [PATCH v3 27/41] mm/frame_vector.c: convert put_page() to put_user_page*()
+Date: Tue,  6 Aug 2019 18:33:26 -0700
+Message-Id: <20190807013340.9706-28-jhubbard@nvidia.com>
 In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
 References: <20190807013340.9706-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Daniel Black <daniel@linux.ibm.com>, Matthew Wilcox <willy@infradead.org>, Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Mel Gorman <mgorman@suse.de>, Vlastimil Babka <vbabka@suse.cz>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -28,28 +27,35 @@ This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
 Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Daniel Black <daniel@linux.ibm.com>
 Cc: Jan Kara <jack@suse.cz>
-Cc: Jérôme Glisse <jglisse@redhat.com>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Mike Kravetz <mike.kravetz@oracle.com>
+Cc: Mel Gorman <mgorman@suse.de>
+Cc: Vlastimil Babka <vbabka@suse.cz>
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- mm/madvise.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ mm/frame_vector.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/mm/madvise.c b/mm/madvise.c
-index 968df3aa069f..1c6881a761a5 100644
---- a/mm/madvise.c
-+++ b/mm/madvise.c
-@@ -672,7 +672,7 @@ static int madvise_inject_error(int behavior,
- 		 * routine is responsible for pinning the page to prevent it
- 		 * from being released back to the page allocator.
- 		 */
--		put_page(page);
-+		put_user_page(page);
- 		ret = memory_failure(pfn, 0);
- 		if (ret)
- 			return ret;
+diff --git a/mm/frame_vector.c b/mm/frame_vector.c
+index c64dca6e27c2..f590badac776 100644
+--- a/mm/frame_vector.c
++++ b/mm/frame_vector.c
+@@ -120,7 +120,6 @@ EXPORT_SYMBOL(get_vaddr_frames);
+  */
+ void put_vaddr_frames(struct frame_vector *vec)
+ {
+-	int i;
+ 	struct page **pages;
+ 
+ 	if (!vec->got_ref)
+@@ -133,8 +132,7 @@ void put_vaddr_frames(struct frame_vector *vec)
+ 	 */
+ 	if (WARN_ON(IS_ERR(pages)))
+ 		goto out;
+-	for (i = 0; i < vec->nr_frames; i++)
+-		put_page(pages[i]);
++	put_user_pages(pages, vec->nr_frames);
+ 	vec->got_ref = false;
+ out:
+ 	vec->nr_frames = 0;
 -- 
 2.22.0
