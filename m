@@ -1,41 +1,107 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:13872 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727788AbfHGBt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:49:58 -0400
-Subject: Re: [PATCH v3 00/39] put_user_pages(): miscellaneous call sites
-References: <20190807013340.9706-1-jhubbard@nvidia.com>
-From: John Hubbard <jhubbard@nvidia.com>
-Message-ID: <912eb2bd-4102-05c1-5571-c261617ad30b@nvidia.com>
-Date: Tue, 6 Aug 2019 18:49:55 -0700
+Received: from userp2130.oracle.com ([156.151.31.86]:48316 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727710AbfHGBo7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:44:59 -0400
+Date: Tue, 6 Aug 2019 18:44:54 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+Message-ID: <20190807014454.GA7135@magnolia>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <156394157450.1850719.464315342783936237.stgit@magnolia>
+ <20190725180330.GH1561054@magnolia>
+ <20190728113036.GO7943@desktop>
+ <20190730005506.GC2345316@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190730005506.GC2345316@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org
+To: Eryu Guan <guaneryu@gmail.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On 8/6/19 6:32 PM, john.hubbard@gmail.com wrote:
-> From: John Hubbard <jhubbard@nvidia.com>
-> ...
+On Mon, Jul 29, 2019 at 05:55:06PM -0700, Darrick J. Wong wrote:
+> On Sun, Jul 28, 2019 at 07:30:36PM +0800, Eryu Guan wrote:
+> > On Thu, Jul 25, 2019 at 11:03:30AM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > Since the iomap code are moving to fs/iomap/ we have to add new entries
+> > > to the aiodio dmesg filter to reflect this.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > > v2: fix all the iomap regexes
+> > > ---
+> > >  common/filter |    9 +++++----
+> > >  1 file changed, 5 insertions(+), 4 deletions(-)
+> > > 
+> > > diff --git a/common/filter b/common/filter
+> > > index ed082d24..2e32ab10 100644
+> > > --- a/common/filter
+> > > +++ b/common/filter
+> > > @@ -550,10 +550,10 @@ _filter_aiodio_dmesg()
+> > >  	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
+> > >  	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
+> > >  	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+> > > -	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+> > > +	local warn5="WARNING:.*fs/iomap.*:.*iomap_dio_rw.*"
+> > >  	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+> > > -	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+> > > -	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+> > > +	local warn7="WARNING:.*fs/iomap.*:.*iomap_dio_actor.*"
+> > > +	local warn8="WARNING:.*fs/iomap.*:.*iomap_dio_complete.*"
+> > 
+> > I don't think we need new filters anymore, as commit 5a9d929d6e13
+> > ("iomap: report collisions between directio and buffered writes to
+> > userspace") replaced the WARN_ON with a pr_crit(). These filters are
+> > there only for old kernels.
 > 
-> John Hubbard (38):
->   mm/gup: add make_dirty arg to put_user_pages_dirty_lock()
-...
->  54 files changed, 191 insertions(+), 323 deletions(-)
+> Aaaaahh... but I /did/ write this patch because I kept hitting a WARNING
+> somewhere in the iomap directio code, and you know what?  It's one of the
+> warnings about a bogus iomap type in iomap_dio_actor.
 > 
-ahem, yes, apparently this is what happens if I add a few patches while editing
-the cover letter... :) 
+> I /think/ this is what happens when a buffered write sneaks in and
+> creates a delalloc reservation after the directio write has zapped the
+> page cache but before it actually starts iterating extents.
+> Consequently iomap_dio_actor sees the delalloc extent and WARNs.
+> 
+> Will have to recheck this, but maybe the kernel needs to deploy that
+> helper that 5a9d929d6e13 for that case.
 
-The subject line should read "00/41", and the list of files affected here is
-therefore under-reported in this cover letter. However, the patch series itself is 
-intact and ready for submission.
+Aha, I found it again.  The patch fixes failures in generic/446 when a
+directio write through iomap encounters a delalloc extent and triggers
+the WARN_ON_ONCE at the bottom of iomap_dio_actor:
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+WARNING: CPU: 2 PID: 1710922 at fs/iomap/direct-io.c:383 iomap_dio_actor+0x144/0x1a0
+
+This can happen if a buffered write and a directio write race to fill a
+hole and the buffered write manages to stuff a delalloc reservation into
+the data mapping after the dio write has cleared the page cache.
+
+We don't need the dio_warn_stale_pagecache() warning here because we
+fail the direct write and therefore do not write anything to disk.
+
+--D
+
+> 
+> --D
+> 
+> > Thanks,
+> > Eryu
+> > 
+> > >  	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
+> > >  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+> > >  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+> > > @@ -563,7 +563,8 @@ _filter_aiodio_dmesg()
+> > >  	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+> > >  	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+> > >  	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+> > > -	    -e "s#$warn9#Intentional warnings in dio_complete#"
+> > > +	    -e "s#$warn9#Intentional warnings in dio_complete#" \
+> > > +	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+> > >  }
+> > >  
+> > >  # We generate assert related WARNINGs on purpose and make sure test doesn't fail
