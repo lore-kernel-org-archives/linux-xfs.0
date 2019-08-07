@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:44534 "EHLO
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:39655 "EHLO
         mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729017AbfHGBeN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:34:13 -0400
+        with ESMTP id S1729486AbfHGBeV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:34:21 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH v3 17/41] staging/vc04_services: convert put_page() to put_user_page*()
-Date: Tue,  6 Aug 2019 18:33:16 -0700
-Message-Id: <20190807013340.9706-18-jhubbard@nvidia.com>
+Subject: [PATCH v3 22/41] xen: convert put_page() to put_user_page*()
+Date: Tue,  6 Aug 2019 18:33:21 -0700
+Message-Id: <20190807013340.9706-23-jhubbard@nvidia.com>
 In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
 References: <20190807013340.9706-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
@@ -15,7 +15,7 @@ Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Eric Anholt <eric@anholt.net>, Stefan Wahren <stefan.wahren@i2se.com>, Mihaela Muraru <mihaela.muraru21@gmail.com>, Suniel Mahesh <sunil.m@techveda.org>, Al Viro <viro@zeniv.linux.org.uk>, Sidong Yang <realwakka@gmail.com>, Kishore KP <kishore.p@techveda.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Juergen Gross <jgross@suse.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -26,51 +26,99 @@ release_pages().
 This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
-Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+This also handles pages[i] == NULL cases, thanks to an approach
+that is actually written by Juergen Gross.
 
-Cc: Eric Anholt <eric@anholt.net>
-Cc: Stefan Wahren <stefan.wahren@i2se.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Mihaela Muraru <mihaela.muraru21@gmail.com>
-Cc: Suniel Mahesh <sunil.m@techveda.org>
-Cc: Al Viro <viro@zeniv.linux.org.uk>
-Cc: Sidong Yang <realwakka@gmail.com>
-Cc: Kishore KP <kishore.p@techveda.org>
-Cc: linux-rpi-kernel@lists.infradead.org
-Cc: linux-arm-kernel@lists.infradead.org
-Cc: devel@driverdev.osuosl.org
+Signed-off-by: Juergen Gross <jgross@suse.com>
+
+Cc: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: xen-devel@lists.xenproject.org
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- .../vc04_services/interface/vchiq_arm/vchiq_2835_arm.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/xen/privcmd.c | 32 +++++++++++---------------------
+ 1 file changed, 11 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_2835_arm.c b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_2835_arm.c
-index 61c69f353cdb..ec92b4c50e95 100644
---- a/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_2835_arm.c
-+++ b/drivers/staging/vc04_services/interface/vchiq_arm/vchiq_2835_arm.c
-@@ -336,10 +336,7 @@ cleanup_pagelistinfo(struct vchiq_pagelist_info *pagelistinfo)
+diff --git a/drivers/xen/privcmd.c b/drivers/xen/privcmd.c
+index c6070e70dd73..c7d0763ca8c2 100644
+--- a/drivers/xen/privcmd.c
++++ b/drivers/xen/privcmd.c
+@@ -582,10 +582,11 @@ static long privcmd_ioctl_mmap_batch(
+ 
+ static int lock_pages(
+ 	struct privcmd_dm_op_buf kbufs[], unsigned int num,
+-	struct page *pages[], unsigned int nr_pages)
++	struct page *pages[], unsigned int *nr_pages)
+ {
+-	unsigned int i;
++	unsigned int i, free = *nr_pages;
+ 
++	*nr_pages = 0;
+ 	for (i = 0; i < num; i++) {
+ 		unsigned int requested;
+ 		int pinned;
+@@ -593,35 +594,22 @@ static int lock_pages(
+ 		requested = DIV_ROUND_UP(
+ 			offset_in_page(kbufs[i].uptr) + kbufs[i].size,
+ 			PAGE_SIZE);
+-		if (requested > nr_pages)
++		if (requested > free)
+ 			return -ENOSPC;
+ 
+ 		pinned = get_user_pages_fast(
+ 			(unsigned long) kbufs[i].uptr,
+-			requested, FOLL_WRITE, pages);
++			requested, FOLL_WRITE, pages + *nr_pages);
+ 		if (pinned < 0)
+ 			return pinned;
+ 
+-		nr_pages -= pinned;
+-		pages += pinned;
++		free -= pinned;
++		*nr_pages += pinned;
  	}
  
- 	if (pagelistinfo->pages_need_release) {
--		unsigned int i;
+ 	return 0;
+ }
+ 
+-static void unlock_pages(struct page *pages[], unsigned int nr_pages)
+-{
+-	unsigned int i;
 -
--		for (i = 0; i < pagelistinfo->num_pages; i++)
--			put_page(pagelistinfo->pages[i]);
-+		put_user_pages(pagelistinfo->pages, pagelistinfo->num_pages);
+-	if (!pages)
+-		return;
+-
+-	for (i = 0; i < nr_pages; i++) {
+-		if (pages[i])
+-			put_page(pages[i]);
+-	}
+-}
+-
+ static long privcmd_ioctl_dm_op(struct file *file, void __user *udata)
+ {
+ 	struct privcmd_data *data = file->private_data;
+@@ -681,11 +669,12 @@ static long privcmd_ioctl_dm_op(struct file *file, void __user *udata)
+ 
+ 	xbufs = kcalloc(kdata.num, sizeof(*xbufs), GFP_KERNEL);
+ 	if (!xbufs) {
++		nr_pages = 0;
+ 		rc = -ENOMEM;
+ 		goto out;
  	}
  
- 	dma_free_coherent(g_dev, pagelistinfo->pagelist_buffer_size,
-@@ -454,10 +451,7 @@ create_pagelist(char __user *buf, size_t count, unsigned short type)
- 				       __func__, actual_pages, num_pages);
+-	rc = lock_pages(kbufs, kdata.num, pages, nr_pages);
++	rc = lock_pages(kbufs, kdata.num, pages, &nr_pages);
+ 	if (rc)
+ 		goto out;
  
- 			/* This is probably due to the process being killed */
--			while (actual_pages > 0) {
--				actual_pages--;
--				put_page(pages[actual_pages]);
--			}
-+			put_user_pages(pages, actual_pages);
- 			cleanup_pagelistinfo(pagelistinfo);
- 			return NULL;
- 		}
+@@ -699,7 +688,8 @@ static long privcmd_ioctl_dm_op(struct file *file, void __user *udata)
+ 	xen_preemptible_hcall_end();
+ 
+ out:
+-	unlock_pages(pages, nr_pages);
++	if (pages)
++		put_user_pages(pages, nr_pages);
+ 	kfree(xbufs);
+ 	kfree(pages);
+ 	kfree(kbufs);
 -- 
 2.22.0
