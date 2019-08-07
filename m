@@ -1,341 +1,291 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46020 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388029AbfHGSJT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Aug 2019 14:09:19 -0400
-Date: Wed, 7 Aug 2019 14:09:15 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 20/24] xfs: use AIL pushing for inode reclaim IO
-Message-ID: <20190807180915.GA20425@bfoster>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-21-david@fromorbit.com>
+Received: from outbound-smtp15.blacknight.com ([46.22.139.232]:33252 "EHLO
+        outbound-smtp15.blacknight.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727213AbfHGVDq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Aug 2019 17:03:46 -0400
+Received: from mail.blacknight.com (unknown [81.17.254.17])
+        by outbound-smtp15.blacknight.com (Postfix) with ESMTPS id C78C01C20BB
+        for <linux-xfs@vger.kernel.org>; Wed,  7 Aug 2019 21:56:17 +0100 (IST)
+Date: Wed, 7 Aug 2019 21:56:15 +0100
+From: Mel Gorman <mgorman@techsingularity.net>
+Subject: Re: [PATCH] [Regression, v5.0] mm: boosted kswapd reclaim b0rks
+ system cache balance
+Message-ID: <20190807205615.GI2739@techsingularity.net>
+References: <20190807091858.2857-1-david@fromorbit.com>
+ <20190807093056.GS11812@dhcp22.suse.cz>
+ <20190807150316.GL2708@suse.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
 Content-Disposition: inline
-In-Reply-To: <20190801021752.4986-21-david@fromorbit.com>
+In-Reply-To: <20190807150316.GL2708@suse.de>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Cc: Michal Hocko <mhocko@kernel.org>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
 
-On Thu, Aug 01, 2019 at 12:17:48PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 07, 2019 at 04:03:16PM +0100, Mel Gorman wrote:
+> <SNIP>
+>
+> On that basis, it may justify ripping out the may_shrinkslab logic
+> everywhere. The downside is that some microbenchmarks will notice.
+> Specifically IO benchmarks that fill memory and reread (particularly
+> rereading the metadata via any inode operation) may show reduced
+> results. Such benchmarks can be strongly affected by whether the inode
+> information is still memory resident and watermark boosting reduces
+> the changes the data is still resident in memory. Technically still a
+> regression but a tunable one.
 > 
-> Inode reclaim currently issues it's own inode IO when it comes
-> across dirty inodes. This is used to throttle direct reclaim down to
-> the rate at which we can reclaim dirty inodes. Failure to throttle
-> in this manner results in the OOM killer being trivial to trigger
-> even when there is lots of free memory available.
-> 
-> However, having direct reclaimers issue IO causes an amount of
-> IO thrashing to occur. We can have up to the number of AGs in the
-> filesystem concurrently issuing IO, plus the AIL pushing thread as
-> well. This means we can many competing sources of IO and they all
-> end up thrashing and competing for the request slots in the block
-> device.
-> 
-> Similar to dirty page throttling and the BDI flusher thread, we can
-> use the AIL pushing thread the sole place we issue inode writeback
-> from and everything else waits for it to make progress. To do this,
-> reclaim will skip over dirty inodes, but in doing so will record the
-> lowest LSN of all the dirty inodes it skips. It will then push the
-> AIL to this LSN and wait for it to complete that work.
-> 
-> In doing so, we block direct reclaim on the IO of at least one IO,
-> thereby providing some level of throttling for when we encounter
-> dirty inodes. However we gain the ability to scan and reclaim
-> clean inodes in a non-blocking fashion. This allows us to
-> remove all the per-ag reclaim locking that avoids excessive direct
-> reclaim, as repeated concurrent direct reclaim will hit the same
-> dirty inodes on block waiting on the same IO to complete.
+> Hence the following "it builds" patch that has zero supporting data on
+> whether it's a good idea or not.
 > 
 
-The last part of the above sentence sounds borked..
+This is a more complete version of the same patch that summaries the
+problem and includes data from my own testing
 
-> Hence direct reclaim will be throttled directly by the rate at which
-> dirty inodes are cleaned by AIL pushing, rather than by delays
-> caused by competing IO submissions. This allows us to remove all the
-> locking that limits direct reclaim concurrency and greatly
-> simplifies the inode reclaim code now that it just skips dirty
-> inodes.
-> 
-> Note: this patch by itself isn't completely able to throttle direct
-> reclaim sufficiently to prevent OOM killer madness. We can't do that
-> until we change the way we index reclaimable inodes in the next
-> patch and can feed back state to the mm core sanely.  However, we
-> can't change the way we index reclaimable inodes until we have
-> IO-less non-blocking reclaim for both direct reclaim and kswapd
-> reclaim.  Catch-22...
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  fs/xfs/xfs_icache.c    | 208 +++++++++++++++++------------------------
->  fs/xfs/xfs_mount.c     |   4 -
->  fs/xfs/xfs_mount.h     |   1 -
->  fs/xfs/xfs_trans_ail.c |   4 +-
->  4 files changed, 90 insertions(+), 127 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-> index 0bd4420a7e16..4c4c5bc12147 100644
-> --- a/fs/xfs/xfs_icache.c
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -22,6 +22,7 @@
->  #include "xfs_dquot_item.h"
->  #include "xfs_dquot.h"
->  #include "xfs_reflink.h"
-> +#include "xfs_log.h"
->  
->  #include <linux/iversion.h>
->  
-> @@ -967,28 +968,42 @@ xfs_inode_ag_iterator_tag(
->  }
->  
->  /*
-> - * Grab the inode for reclaim exclusively.
-> - * Return 0 if we grabbed it, non-zero otherwise.
-> + * Grab the inode for reclaim.
-> + *
-> + * Return false if we aren't going to reclaim it, true if it is a reclaim
-> + * candidate.
-> + *
-> + * If the inode is clean or unreclaimable, return NULLCOMMITLSN to tell the
-> + * caller it does not require flushing. Otherwise return the log item lsn of the
-> + * inode so the caller can determine it's inode flush target.  If we get the
-> + * clean/dirty state wrong then it will be sorted in xfs_reclaim_inode() once we
-> + * have locks held.
->   */
-> -STATIC int
-> +STATIC bool
->  xfs_reclaim_inode_grab(
->  	struct xfs_inode	*ip,
-> -	int			flags)
-> +	int			flags,
-> +	xfs_lsn_t		*lsn)
->  {
->  	ASSERT(rcu_read_lock_held());
-> +	*lsn = 0;
+---8<---
+mm, vmscan: Do not special-case slab reclaim when watermarks are boosted
 
-The comment above says we return NULLCOMMITLSN. Given the rest of the
-code, I'm assuming we should just fix up the comment.
+Dave Chinner reported a problem pointing a finger at commit
+1c30844d2dfe ("mm: reclaim small amounts of memory when an
+external fragmentation event occurs"). The report is extensive (see
+https://lore.kernel.org/linux-mm/20190807091858.2857-1-david@fromorbit.com/)
+and it's worth recording the most relevant parts (colorful language and
+typos included).
 
->  
->  	/* quick check for stale RCU freed inode */
->  	if (!ip->i_ino)
-> -		return 1;
-> +		return false;
->  
->  	/*
-> -	 * If we are asked for non-blocking operation, do unlocked checks to
-> -	 * see if the inode already is being flushed or in reclaim to avoid
-> -	 * lock traffic.
-> +	 * Do unlocked checks to see if the inode already is being flushed or in
-> +	 * reclaim to avoid lock traffic. If the inode is not clean, return the
-> +	 * it's position in the AIL for the caller to push to.
->  	 */
-> -	if ((flags & SYNC_TRYLOCK) &&
-> -	    __xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
-> -		return 1;
-> +	if (!xfs_inode_clean(ip)) {
-> +		*lsn = ip->i_itemp->ili_item.li_lsn;
-> +		return false;
-> +	}
-> +
-> +	if (__xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
-> +		return false;
->  
->  	/*
->  	 * The radix tree lock here protects a thread in xfs_iget from racing
-...
-> @@ -1050,92 +1065,67 @@ xfs_reclaim_inode_grab(
->   *	clean		=> reclaim
->   *	dirty, async	=> requeue
->   *	dirty, sync	=> flush, wait and reclaim
-> + *
-> + * Returns true if the inode was reclaimed, false otherwise.
->   */
-> -STATIC int
-> +STATIC bool
->  xfs_reclaim_inode(
->  	struct xfs_inode	*ip,
->  	struct xfs_perag	*pag,
-> -	int			sync_mode)
-> +	xfs_lsn_t		*lsn)
->  {
-> -	struct xfs_buf		*bp = NULL;
-> -	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
-> -	int			error;
-> +	xfs_ino_t		ino;
-> +
-> +	*lsn = 0;
->  
-> -restart:
-> -	error = 0;
->  	/*
->  	 * Don't try to flush the inode if another inode in this cluster has
->  	 * already flushed it after we did the initial checks in
->  	 * xfs_reclaim_inode_grab().
->  	 */
-> -	if (sync_mode & SYNC_TRYLOCK) {
-> -		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-> -			goto out;
-> -		if (!xfs_iflock_nowait(ip))
-> -			goto out_unlock;
-> -	} else {
-> -		xfs_ilock(ip, XFS_ILOCK_EXCL);
-> -		if (!xfs_iflock_nowait(ip)) {
-> -			if (!(sync_mode & SYNC_WAIT))
-> -				goto out_unlock;
-> -			xfs_iflock(ip);
-> -		}
-> -	}
-> +	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
-> +		goto out;
-> +	if (!xfs_iflock_nowait(ip))
-> +		goto out_unlock;
->  
+	When running a simple, steady state 4kB file creation test to
+	simulate extracting tarballs larger than memory full of small
+	files into the filesystem, I noticed that once memory fills up
+	the cache balance goes to hell.
 
-Do we even need the flush lock here any more if we're never going to
-flush from this context? The shutdown case just below notwithstanding
-(which I'm also wondering if we should just drop given we abort from
-xfs_iflush() on shutdown), the pin count is an atomic and the dirty
-state changes under ilock.
+	The workload is creating one dirty cached inode for every dirty
+	page, both of which should require a single IO each to clean and
+	reclaim, and creation of inodes is throttled by the rate at which
+	dirty writeback runs at (via balance dirty pages). Hence the ingest
+	rate of new cached inodes and page cache pages is identical and
+	steady. As a result, memory reclaim should quickly find a steady
+	balance between page cache and inode caches.
 
-Maybe I'm missing something else, but the reason I ask is that the
-increased flush lock contention in codepaths that don't actually flush
-once it's acquired gives me a bit of concern that we could reduce
-effectiveness of the one task that actually does (xfsaild).
+	The moment memory fills, the page cache is reclaimed at a much
+	faster rate than the inode cache, and evidence suggests taht
+	the inode cache shrinker is not being called when large batches
+	of pages are being reclaimed. In roughly the same time period
+	that it takes to fill memory with 50% pages and 50% slab caches,
+	memory reclaim reduces the page cache down to just dirty pages
+	and slab caches fill the entirity of memory.
 
-> +	/* If we are in shutdown, we don't care about blocking. */
->  	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
->  		xfs_iunpin_wait(ip);
->  		/* xfs_iflush_abort() drops the flush lock */
->  		xfs_iflush_abort(ip, false);
->  		goto reclaim;
->  	}
-> -	if (xfs_ipincount(ip)) {
-> -		if (!(sync_mode & SYNC_WAIT))
-> -			goto out_ifunlock;
-> -		xfs_iunpin_wait(ip);
-> -	}
-> -	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
-> -		xfs_ifunlock(ip);
-> -		goto reclaim;
-> -	}
->  
->  	/*
-> -	 * Never flush out dirty data during non-blocking reclaim, as it would
-> -	 * just contend with AIL pushing trying to do the same job.
-> +	 * If it is pinned, we only want to flush this if there's nothing else
-> +	 * to be flushed as it requires a log force. Hence we essentially set
-> +	 * the LSN to flush the entire AIL which will end up triggering a log
-> +	 * force to unpin this inode, but that will only happen if there are not
-> +	 * other inodes in the scan that only need writeback.
->  	 */
-> -	if (!(sync_mode & SYNC_WAIT))
-> +	if (xfs_ipincount(ip)) {
-> +		*lsn = ip->i_itemp->ili_last_lsn;
+	The LRU is largely full of dirty pages, and we're getting spikes
+	of random writeback from memory reclaim so it's all going to shit.
+	Behaviour never recovers, the page cache remains pinned at just
+	dirty pages, and nothing I could tune would make any difference.
+	vfs_cache_pressure makes no difference - I would it up so high
+	it should trim the entire inode caches in a singel pass, yet it
+	didn't do anything. It was clear from tracing and live telemetry
+	that the shrinkers were pretty much not running except when
+	there was absolutely no memory free at all, and then they did
+	the minimum necessary to free memory to make progress.
 
-->ili_last_lsn comes from xfs_cil_ctx->sequence, which I don't think is
-actually a physical LSN suitable for AIL pushing. The lsn assigned to
-the item once it's physically logged and AIL inserted comes from
-ctx->start_lsn, which comes from the iclog header and so is a physical
-LSN.
+	So I went looking at the code, trying to find places where pages
+	got reclaimed and the shrinkers weren't called. There's only one
+	- kswapd doing boosted reclaim as per commit 1c30844d2dfe ("mm:
+	reclaim small amounts of memory when an external fragmentation
+	event occurs").
 
-That said, this usage of ili_last_lsn seems to disappear by the end of
-the series...
+The watermark boosting introduced by the commit is triggered in response
+to an allocation "fragmentation event". The boosting was not intended
+to target THP specifically.  However, with Dave's perfectly reasonable
+workload, fragmentation events can be very common given the ratio of slab
+to page cache allocations so boosting remains active for long periods
+of time.
 
->  		goto out_ifunlock;
-> +	}
->  
-...
-> @@ -1205,39 +1189,28 @@ xfs_reclaim_inode(
->   * corrupted, we still want to try to reclaim all the inodes. If we don't,
->   * then a shut down during filesystem unmount reclaim walk leak all the
->   * unreclaimed inodes.
-> + *
-> + * Return the number of inodes freed.
->   */
->  STATIC int
->  xfs_reclaim_inodes_ag(
->  	struct xfs_mount	*mp,
->  	int			flags,
-> -	int			*nr_to_scan)
-> +	int			nr_to_scan)
->  {
->  	struct xfs_perag	*pag;
-> -	int			error = 0;
-> -	int			last_error = 0;
->  	xfs_agnumber_t		ag;
-> -	int			trylock = flags & SYNC_TRYLOCK;
-> -	int			skipped;
-> +	xfs_lsn_t		lsn, lowest_lsn = NULLCOMMITLSN;
-> +	long			freed = 0;
->  
-> -restart:
->  	ag = 0;
-> -	skipped = 0;
->  	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
->  		unsigned long	first_index = 0;
->  		int		done = 0;
->  		int		nr_found = 0;
->  
->  		ag = pag->pag_agno + 1;
-> -
-> -		if (trylock) {
-> -			if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
-> -				skipped++;
-> -				xfs_perag_put(pag);
-> -				continue;
-> -			}
-> -			first_index = pag->pag_ici_reclaim_cursor;
-> -		} else
-> -			mutex_lock(&pag->pag_ici_reclaim_lock);
+As high-order allocations typically use compaction and compaction cannot
+move slab pages the decision was made in the commit to special-case kswapd
+when watermarks are boosted -- kswapd avoids reclaiming slab as reclaiming
+slab does not directly help compaction.
 
-I understand that the eliminated blocking drops a dependency on the
-perag reclaim exclusion as described by the commit log, but I'm not sure
-it's enough to justify removing it entirely. For one, the reclaim cursor
-management looks potentially racy. Also, doesn't this exclusion provide
-some balance for reclaim across AGs? E.g., if a bunch of reclaim threads
-come in at the same time, this allows them to walk across AGs instead of
-potentially stumbling over eachother in the batching/grabbing code.
+As Dave notes, this decision means that slab can be artificially protected
+for long periods of time and messes up the balance with slab and page
+caches.
 
-I see again that most of this code seems to ultimately go away, replaced
-by an LRU mechanism so we no longer operate on a per-ag basis. I can see
-how this becomes irrelevant with that mechanism, but I think it might
-make more sense to drop this locking along with the broader mechanism in
-the last patch or two of the series rather than doing it here. If
-nothing else, that eliminates the need for the reviewer to consider this
-transient "old mechanism + new locking" state as opposed to reasoning
-about the old mechanism vs. new mechanism and why the old locking simply
-no longer applies.
+Removing the special casing can still indirectly help fragmentation by
+avoiding fragmentation-causing events due to slab allocation as pages
+from a slab pageblock will have some slab objects freed.  Furthermore,
+with the special casing, reclaim behaviour is unpredictable as kswapd
+sometimes examines slab and sometimes does not in a manner that is tricky
+to tune against and tricky to analyse.
 
-> +		first_index = pag->pag_ici_reclaim_cursor;
->  
->  		do {
->  			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
-...
-> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-> index 00d66175f41a..5802139f786b 100644
-> --- a/fs/xfs/xfs_trans_ail.c
-> +++ b/fs/xfs/xfs_trans_ail.c
-> @@ -676,8 +676,10 @@ xfs_ail_push_sync(
->  	spin_lock(&ailp->ail_lock);
->  	while ((lip = xfs_ail_min(ailp)) != NULL) {
->  		prepare_to_wait(&ailp->ail_push, &wait, TASK_UNINTERRUPTIBLE);
-> +	trace_printk("lip lsn 0x%llx thres 0x%llx targ 0x%llx",
-> +			lip->li_lsn, threshold_lsn, ailp->ail_target);
->  		if (XFS_FORCED_SHUTDOWN(ailp->ail_mount) ||
-> -		    XFS_LSN_CMP(threshold_lsn, lip->li_lsn) <= 0)
-> +		    XFS_LSN_CMP(threshold_lsn, lip->li_lsn) < 0)
->  			break;
+This patch removes the special casing. The downside is that this is
+not a universal performance win. Some benchmarks that depend on the
+residency of data when rereading metadata may see a regression when
+slab reclaim is restored to its original behaviour. Similarly, some
+benchmarks that only read-once or write-once may perform better when page
+reclaim is too aggressive. The primary upside is that slab shrinker is
+less surprising (arguably more sane but that's a matter of opinion) and
+behaves consistently regardless of the fragmentation state of the system.
 
-Stale/mislocated changes?
+A fsmark benchmark configuration was constructed similar to
+what Dave reported and is codified by the mmtest configuration
+config-io-fsmark-small-file-stream.  It was evaluated on a 1-socket machine
+to avoid dealing with NUMA-related issues and the timing of reclaim. The
+storage was an SSD Samsung Evo and a fresh XFS filesystem was used for
+the test data.
 
-Brian
+It is likely that the test configuration is not a proper match for Dave's
+test as the results are different in terms of performance. However, my
+configuration reports fsmark performance every 10% of memory worth of
+files and I suspect Dave's configuration reported Files/sec when memory
+was already full. THP was enabled for mine, disabled for Dave's and
+probably a whole load of other methodology differences that rarely
+get recorded properly.
 
->  		/* XXX: cmpxchg? */
->  		while (XFS_LSN_CMP(threshold_lsn, ailp->ail_target) > 0)
-> -- 
-> 2.22.0
-> 
+fsmark
+                                   5.3.0-rc3              5.3.0-rc3
+                                     vanilla          shrinker-v1r1
+Min       1-files/sec     5181.70 (   0.00%)     3204.20 ( -38.16%)
+1st-qrtle 1-files/sec    14877.10 (   0.00%)     6596.90 ( -55.66%)
+2nd-qrtle 1-files/sec     6521.30 (   0.00%)     5707.80 ( -12.47%)
+3rd-qrtle 1-files/sec     5614.30 (   0.00%)     5363.80 (  -4.46%)
+Max-1     1-files/sec    18463.00 (   0.00%)    18479.90 (   0.09%)
+Max-5     1-files/sec    18028.40 (   0.00%)    17829.00 (  -1.11%)
+Max-10    1-files/sec    17502.70 (   0.00%)    17080.90 (  -2.41%)
+Max-90    1-files/sec     5438.80 (   0.00%)     5106.60 (  -6.11%)
+Max-95    1-files/sec     5390.30 (   0.00%)     5020.40 (  -6.86%)
+Max-99    1-files/sec     5271.20 (   0.00%)     3376.20 ( -35.95%)
+Max       1-files/sec    18463.00 (   0.00%)    18479.90 (   0.09%)
+Hmean     1-files/sec     7459.11 (   0.00%)     6249.49 ( -16.22%)
+Stddev    1-files/sec     4733.16 (   0.00%)     4362.10 (   7.84%)
+CoeffVar  1-files/sec       51.66 (   0.00%)       57.49 ( -11.29%)
+BHmean-99 1-files/sec     7515.09 (   0.00%)     6351.81 ( -15.48%)
+BHmean-95 1-files/sec     7625.39 (   0.00%)     6486.09 ( -14.94%)
+BHmean-90 1-files/sec     7803.19 (   0.00%)     6588.61 ( -15.57%)
+BHmean-75 1-files/sec     8518.74 (   0.00%)     6954.25 ( -18.37%)
+BHmean-50 1-files/sec    10953.31 (   0.00%)     8017.89 ( -26.80%)
+BHmean-25 1-files/sec    16732.38 (   0.00%)    11739.65 ( -29.84%)
+
+                   5.3.0-rc3   5.3.0-rc3
+                     vanillashrinker-v1r1
+Duration User          77.29       89.09
+Duration System      1097.13     1332.86
+Duration Elapsed     2014.14     2596.39
+
+This is showing that fsmark runs slower as a result of this patch but
+there are other important observations that justify the patch.
+
+1. With the vanilla kernel, the number of dirty pages in the system
+   is very low for much of the test. With this patch, dirty pages
+   is generally kept at 10% which matches vm.dirty_background_ratio
+   which is normal expected historical behaviour.
+
+2. With the vanilla kernel, the ratio of Slab/Pagecache is close to
+   0.95 for much of the test i.e. Slab is being left alone and dominating
+   memory consumption. With the patch applied, the ratio varies between
+   0.35 and 0.45 with the bulk of the measured ratios roughly half way
+   between those values. This is a different balance to what Dave reported
+   but it was at least consistent.
+
+3. Slabs are scanned throughout the entire test with the patch applied.
+   The vanille kernel has long periods with no scan activity and then
+   relatively massive spikes.
+
+4. Overall vmstats are closer to normal expectations
+
+	                                5.3.0-rc3      5.3.0-rc3
+	                                  vanilla  shrinker-v1r1
+	Direct pages scanned             60308.00        5226.00
+	Kswapd pages scanned          18316110.00    12295574.00
+	Kswapd pages reclaimed        13121037.00     7280152.00
+	Direct pages reclaimed           11817.00        5226.00
+	Kswapd efficiency %                 71.64          59.21
+	Kswapd velocity                   9093.76        4735.64
+	Direct efficiency %                 19.59         100.00
+	Direct velocity                     29.94           2.01
+	Page reclaim immediate          247921.00           0.00
+	Slabs scanned                 16602344.00    29369536.00
+	Direct inode steals               1574.00         800.00
+	Kswapd inode steals             130033.00     3968788.00
+	Kswapd skipped wait                  0.00           0.00
+
+	o Vanilla kernel is hitting direct reclaim more frequently,
+	  not very much in absolute terms but the fact the patch
+	  reduces it is interesting
+	o "Page reclaim immediate" in the vanilla kernel indicates
+	  dirty pages are being encountered at the tail of the LRU.
+	  This is generally bad and means in this case that the LRU
+	  is not long enough for dirty pages to be cleaned by the
+	  background flush in time. This is eliminated by the
+	  patch
+	o With the patch, kswapd is reclaiming 30 times more slab
+	  pages than with the vanilla kernel. This is indicative
+	  of the watermark boosting over-protecting slab
+
+A more complete set of tests is being run but the bottom line is that
+special casing kswapd to avoid slab behaviour is unpredictable and can
+lead to abnormal results for normal workloads. This patch restores the
+expected behaviour that slab and page cache is balanced consistently for
+a workload with a steady allocation ratio of slab/pagecache pages.
+
+Fixes: 1c30844d2dfe ("mm: reclaim small amounts of memory when an external fragmentation event occurs")
+Signed-off-by: Mel Gorman <mgorman@techsingularity.net>
+---
+ mm/vmscan.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
+
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index dbdc46a84f63..6051a9007150 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -88,9 +88,6 @@ struct scan_control {
+ 	/* Can pages be swapped as part of reclaim? */
+ 	unsigned int may_swap:1;
+ 
+-	/* e.g. boosted watermark reclaim leaves slabs alone */
+-	unsigned int may_shrinkslab:1;
+-
+ 	/*
+ 	 * Cgroups are not reclaimed below their configured memory.low,
+ 	 * unless we threaten to OOM. If any cgroups are skipped due to
+@@ -2714,10 +2711,8 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
+ 			shrink_node_memcg(pgdat, memcg, sc, &lru_pages);
+ 			node_lru_pages += lru_pages;
+ 
+-			if (sc->may_shrinkslab) {
+-				shrink_slab(sc->gfp_mask, pgdat->node_id,
+-				    memcg, sc->priority);
+-			}
++			shrink_slab(sc->gfp_mask, pgdat->node_id,
++			    memcg, sc->priority);
+ 
+ 			/* Record the group's reclaim efficiency */
+ 			vmpressure(sc->gfp_mask, memcg, false,
+@@ -3194,7 +3189,6 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
+ 		.may_writepage = !laptop_mode,
+ 		.may_unmap = 1,
+ 		.may_swap = 1,
+-		.may_shrinkslab = 1,
+ 	};
+ 
+ 	/*
+@@ -3238,7 +3232,6 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
+ 		.may_unmap = 1,
+ 		.reclaim_idx = MAX_NR_ZONES - 1,
+ 		.may_swap = !noswap,
+-		.may_shrinkslab = 1,
+ 	};
+ 	unsigned long lru_pages;
+ 
+@@ -3286,7 +3279,6 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
+ 		.may_writepage = !laptop_mode,
+ 		.may_unmap = 1,
+ 		.may_swap = may_swap,
+-		.may_shrinkslab = 1,
+ 	};
+ 
+ 	set_task_reclaim_state(current, &sc.reclaim_state);
+@@ -3598,7 +3590,6 @@ static int balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
+ 		 */
+ 		sc.may_writepage = !laptop_mode && !nr_boost_reclaim;
+ 		sc.may_swap = !nr_boost_reclaim;
+-		sc.may_shrinkslab = !nr_boost_reclaim;
+ 
+ 		/*
+ 		 * Do some background aging of the anon list, to give
