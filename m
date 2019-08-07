@@ -1,101 +1,60 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:37769 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726044AbfHFWlm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 18:41:42 -0400
-Date: Tue, 6 Aug 2019 22:41:38 +0000
-From: Luis Chamberlain <mcgrof@kernel.org>
-Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
- ioctl_fibmap
-Message-ID: <20190806224138.GW30113@42.do-not-panic.com>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
- <20190731141245.7230-5-cmaiolino@redhat.com>
- <20190731231217.GV1561054@magnolia>
- <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
- <20190802151400.GG7138@magnolia>
- <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
- <20190805151258.GD7129@magnolia>
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:41939 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728654AbfHGBdu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:33:50 -0400
+From: john.hubbard@gmail.com
+Subject: [PATCH v3 03/41] net/xdp: convert put_page() to put_user_page*()
+Date: Tue,  6 Aug 2019 18:33:02 -0700
+Message-Id: <20190807013340.9706-4-jhubbard@nvidia.com>
+In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
+References: <20190807013340.9706-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190805151258.GD7129@magnolia>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, =?UTF-8?q?Bj=C3=B6rn=20T=C3=B6pel?= <bjorn.topel@intel.com>, Magnus Karlsson <magnus.karlsson@intel.com>, "David S . Miller" <davem@davemloft.net>
 
-On Mon, Aug 05, 2019 at 08:12:58AM -0700, Darrick J. Wong wrote:
-> On Mon, Aug 05, 2019 at 12:27:30PM +0200, Carlos Maiolino wrote:
-> > On Fri, Aug 02, 2019 at 08:14:00AM -0700, Darrick J. Wong wrote:
-> > > On Fri, Aug 02, 2019 at 11:19:39AM +0200, Carlos Maiolino wrote:
-> > > > Hi Darrick.
-> > > > 
-> > > > > > +		return error;
-> > > > > > +
-> > > > > > +	block = ur_block;
-> > > > > > +	error = bmap(inode, &block);
-> > > > > > +
-> > > > > > +	if (error)
-> > > > > > +		ur_block = 0;
-> > > > > > +	else
-> > > > > > +		ur_block = block;
-> > > > > 
-> > > > > What happens if ur_block > INT_MAX?  Shouldn't we return zero (i.e.
-> > > > > error) instead of truncating the value?  Maybe the code does this
-> > > > > somewhere else?  Here seemed like the obvious place for an overflow
-> > > > > check as we go from sector_t to int.
-> > > > > 
-> > > > 
-> > > > The behavior should still be the same. It will get truncated, unfortunately. I
-> > > > don't think we can actually change this behavior and return zero instead of
-> > > > truncating it.
-> > > 
-> > > But that's even worse, because the programs that rely on FIBMAP will now
-> > > receive *incorrect* results that may point at a different file and
-> > > definitely do not point at the correct file block.
-> > 
-> > How is this worse? This is exactly what happens today, on the original FIBMAP
-> > implementation.
-> 
-> Ok, I wasn't being 110% careful with my words.  Delete "will now" from
-> the sentence above.
-> 
-> > Maybe I am not seeing something or having a different thinking you have, but
-> > this is the behavior we have now, without my patches. And we can't really change
-> > it; the user view of this implementation.
-> > That's why I didn't try to change the result, so the truncation still happens.
-> 
-> I understand that we're not generally supposed to change existing
-> userspace interfaces, but the fact remains that allowing truncated
-> responses causes *filesystem corruption*.
-> 
-> We know that the most well known FIBMAP callers are bootloaders, and we
-> know what they do with the information they get -- they use it to record
-> the block map of boot files.  So if the IPL/grub/whatever installer
-> queries the boot file and the boot file is at block 12345678901 (a
-> 34-bit number), this interface truncates that to 3755744309 (a 32-bit
-> number) and that's where the bootloader will think its boot files are.
-> The installation succeeds, the user reboots and *kaboom* the system no
-> longer boots because the contents of block 3755744309 is not a bootloader.
-> 
-> Worse yet, grub1 used FIBMAP data to record the location of the grub
-> environment file and installed itself between the MBR and the start of
-> partition 1.  If the environment file is at offset 1234578901, grub will
-> write status data to its environment file (which it thinks is at
-> 3755744309) and *KABOOM* we've just destroyed whatever was in that
-> block.
-> 
-> Far better for the bootloader installation script to hit an error and
-> force the admin to deal with the situation than for the system to become
-> unbootable.  That's *why* the (newer) iomap bmap implementation does not
-> return truncated mappings, even though the classic implementation does.
-> 
-> The classic code returning truncated results is a broken behavior.
+From: John Hubbard <jhubbard@nvidia.com>
 
-How long as it been broken for? And if we do fix it, I'd just like for
-a nice commit lot describing potential risks of not applying it. *If*
-the issue exists as-is today, the above contains a lot of information
-for addressing potential issues, even if theoretical.
+For pages that were retained via get_user_pages*(), release those pages
+via the new put_user_page*() routines, instead of via put_page() or
+release_pages().
 
-  Luis
+This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
+("mm: introduce put_user_page*(), placeholder versions").
+
+Acked-by: Björn Töpel <bjorn.topel@intel.com>
+Cc: Magnus Karlsson <magnus.karlsson@intel.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: netdev@vger.kernel.org
+Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+---
+ net/xdp/xdp_umem.c | 9 +--------
+ 1 file changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/net/xdp/xdp_umem.c b/net/xdp/xdp_umem.c
+index 83de74ca729a..17c4b3d3dc34 100644
+--- a/net/xdp/xdp_umem.c
++++ b/net/xdp/xdp_umem.c
+@@ -166,14 +166,7 @@ void xdp_umem_clear_dev(struct xdp_umem *umem)
+ 
+ static void xdp_umem_unpin_pages(struct xdp_umem *umem)
+ {
+-	unsigned int i;
+-
+-	for (i = 0; i < umem->npgs; i++) {
+-		struct page *page = umem->pgs[i];
+-
+-		set_page_dirty_lock(page);
+-		put_page(page);
+-	}
++	put_user_pages_dirty_lock(umem->pgs, umem->npgs, true);
+ 
+ 	kfree(umem->pgs);
+ 	umem->pgs = NULL;
+-- 
+2.22.0
