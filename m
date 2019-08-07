@@ -1,201 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43514 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727213AbfHGPDW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 7 Aug 2019 11:03:22 -0400
-Date: Wed, 7 Aug 2019 16:03:16 +0100
-From: Mel Gorman <mgorman@suse.de>
-Subject: Re: [PATCH] [Regression, v5.0] mm: boosted kswapd reclaim b0rks
- system cache balance
-Message-ID: <20190807150316.GL2708@suse.de>
-References: <20190807091858.2857-1-david@fromorbit.com>
- <20190807093056.GS11812@dhcp22.suse.cz>
+Received: from mga12.intel.com ([192.55.52.136]:62225 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388257AbfHGQNz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 7 Aug 2019 12:13:55 -0400
+Date: Thu, 8 Aug 2019 00:12:59 +0800
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 04/24] shrinker: defer work only to kswapd
+Message-ID: <201908080021.L0zJBvz1%lkp@intel.com>
+References: <20190801021752.4986-5-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190807093056.GS11812@dhcp22.suse.cz>
+In-Reply-To: <20190801021752.4986-5-david@fromorbit.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Michal Hocko <mhocko@kernel.org>
-Cc: Dave Chinner <david@fromorbit.com>, linux-mm@kvack.org, linux-xfs@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
+To: Dave Chinner <david@fromorbit.com>
+Cc: kbuild-all@01.org, linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-On Wed, Aug 07, 2019 at 11:30:56AM +0200, Michal Hocko wrote:
-> [Cc Mel and Vlastimil as it seems like fallout from 1c30844d2dfe2]
-> 
+Hi Dave,
 
-More than likely.
+Thank you for the patch! Perhaps something to improve:
 
-> On Wed 07-08-19 19:18:58, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > When running a simple, steady state 4kB file creation test to
-> > simulate extracting tarballs larger than memory full of small files
-> > into the filesystem, I noticed that once memory fills up the cache
-> > balance goes to hell.
-> > 
+[auto build test WARNING on linus/master]
+[cannot apply to v5.3-rc3 next-20190807]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Ok, I'm assuming you are using fsmark with -k to keep files around,
-and -S0 to leave cleaning to the background flush, a number of files per
-iteration to get regular reporting and a total number of iterations to
-fill memory to hit what you're seeing. I've created a configuration that
-should do this but it'll take a long time to run on a local test machine.
+url:    https://github.com/0day-ci/linux/commits/Dave-Chinner/mm-xfs-non-blocking-inode-reclaim/20190804-042311
+reproduce:
+        # apt-get install sparse
+        # sparse version: v0.6.1-rc1-7-g2b96cd8-dirty
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
 
-I'm not 100% certain I guessed right as to get fsmark reports while memory
-fills, it would have to be fewer files so each iteration would have to
-preserve files. If the number of files per iteration is large enough to
-fill memory then the drop in files/sec is not visible from the fs_mark
-output (or we are using different versions). I guess you could just be
-calculating average files/sec over the entire run based on elapsed time.
+If you fix the issue, kindly add following tag
+Reported-by: kbuild test robot <lkp@intel.com>
 
-> > The workload is creating one dirty cached inode for every dirty
-> > page, both of which should require a single IO each to clean and
-> > reclaim, and creation of inodes is throttled by the rate at which
-> > dirty writeback runs at (via balance dirty pages). Hence the ingest
-> > rate of new cached inodes and page cache pages is identical and
-> > steady. As a result, memory reclaim should quickly find a steady
-> > balance between page cache and inode caches.
-> > 
-> > It doesn't.
-> > 
-> > The moment memory fills, the page cache is reclaimed at a much
-> > faster rate than the inode cache, and evidence suggests taht the
-> > inode cache shrinker is not being called when large batches of pages
-> > are being reclaimed. In roughly the same time period that it takes
-> > to fill memory with 50% pages and 50% slab caches, memory reclaim
-> > reduces the page cache down to just dirty pages and slab caches fill
-> > the entirity of memory.
-> > 
-> > At the point where the page cache is reduced to just the dirty
-> > pages, there is a clear change in write IO patterns. Up to this
-> > point it has been running at a steady 1500 write IOPS for ~200MB/s
-> > of write throughtput (data, journal and metadata).
 
-As observed by iostat -x or something else? Sum of r/s and w/s would
-approximate iops but not the breakdown of whether it is data, journal
-or metadata writes. The rest can be inferred from a blktrace but I would
-prefer to replicate your setup as close as possible. If you're not using
-fs_mark to report Files/sec, are you simply monitoring df -i over time?
+sparse warnings: (new ones prefixed by >>)
 
-> > <SNIP additional detail on fs_mark output>
-> > <SNIP additional detail on monitoring meminfo over time>
-> > <SNIP observations on dirty handling>
+>> mm/vmscan.c:539:70: sparse: sparse: incorrect type in argument 1 (different base types) @@    expected struct atomic64_t [usertype] *v @@    got ruct atomic64_t [usertype] *v @@
+>> mm/vmscan.c:539:70: sparse:    expected struct atomic64_t [usertype] *v
+>> mm/vmscan.c:539:70: sparse:    got struct atomic_t [usertype] *
+   arch/x86/include/asm/irqflags.h:54:9: sparse: sparse: context imbalance in 'check_move_unevictable_pages' - unexpected unlock
 
-All understood.
+vim +539 mm/vmscan.c
 
-> > So I went looking at the code, trying to find places where pages got
-> > reclaimed and the shrinkers weren't called. There's only one -
-> > kswapd doing boosted reclaim as per commit 1c30844d2dfe ("mm: reclaim
-> > small amounts of memory when an external fragmentation event
-> > occurs"). I'm not even using THP or allocating huge pages, so this
-> > code should not be active or having any effect onmemory reclaim at
-> > all, yet the majority of reclaim is being done with "boost" and so
-> > it's not reclaiming slab caches at all. It will only free clean
-> > pages from the LRU.
-> > 
-> > And so when we do run out memory, it switches to normal reclaim,
-> > which hits dirty pages on the LRU and does some shrinker work, too,
-> > but then appears to switch back to boosted reclaim one watermarks
-> > are reached.
-> > 
-> > The patch below restores page cache vs inode cache balance for this
-> > steady state workload. It balances out at about 40% page cache, 60%
-> > slab cache, and sustained performance is 10-15% higher than without
-> > this patch because the IO patterns remain in control of dirty
-> > writeback and the filesystem, not kswapd.
-> > 
-> > Performance with boosted reclaim also running shrinkers over the
-> > same steady state portion of the test as above.
-> > 
+   498	
+   499	static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+   500					    struct shrinker *shrinker, int priority)
+   501	{
+   502		unsigned long freed = 0;
+   503		int64_t freeable_objects = 0;
+   504		int64_t scan_count;
+   505		int64_t scanned_objects = 0;
+   506		int64_t next_deferred = 0;
+   507		int64_t deferred_count = 0;
+   508		long new_nr;
+   509		int nid = shrinkctl->nid;
+   510		long batch_size = shrinker->batch ? shrinker->batch
+   511						  : SHRINK_BATCH;
+   512	
+   513		if (!(shrinker->flags & SHRINKER_NUMA_AWARE))
+   514			nid = 0;
+   515	
+   516		scan_count = shrink_scan_count(shrinkctl, shrinker, priority,
+   517						&freeable_objects);
+   518		if (scan_count == 0 || scan_count == SHRINK_EMPTY)
+   519			return scan_count;
+   520	
+   521		/*
+   522		 * If kswapd, we take all the deferred work and do it here. We don't let
+   523		 * direct reclaim do this, because then it means some poor sod is going
+   524		 * to have to do somebody else's GFP_NOFS reclaim, and it hides the real
+   525		 * amount of reclaim work from concurrent kswapd operations. Hence we do
+   526		 * the work in the wrong place, at the wrong time, and it's largely
+   527		 * unpredictable.
+   528		 *
+   529		 * By doing the deferred work only in kswapd, we can schedule the work
+   530		 * according the the reclaim priority - low priority reclaim will do
+   531		 * less deferred work, hence we'll do more of the deferred work the more
+   532		 * desperate we become for free memory. This avoids the need for needing
+   533		 * to specifically avoid deferred work windup as low amount os memory
+   534		 * pressure won't excessive trim caches anymore.
+   535		 */
+   536		if (current_is_kswapd()) {
+   537			int64_t	deferred_scan;
+   538	
+ > 539			deferred_count = atomic64_xchg(&shrinker->nr_deferred[nid], 0);
+   540	
+   541			/* we want to scan 5-10% of the deferred work here at minimum */
+   542			deferred_scan = deferred_count;
+   543			if (priority)
+   544				do_div(deferred_scan, priority);
+   545			scan_count += deferred_scan;
+   546	
+   547			/*
+   548			 * If there is more deferred work than the number of freeable
+   549			 * items in the cache, limit the amount of work we will carry
+   550			 * over to the next kswapd run on this cache. This prevents
+   551			 * deferred work windup.
+   552			 */
+   553			if (deferred_count > freeable_objects * 2)
+   554				deferred_count = freeable_objects * 2;
+   555	
+   556		}
+   557	
+   558		/*
+   559		 * Avoid risking looping forever due to too large nr value:
+   560		 * never try to free more than twice the estimate number of
+   561		 * freeable entries.
+   562		 */
+   563		if (scan_count > freeable_objects * 2)
+   564			scan_count = freeable_objects * 2;
+   565	
+   566		trace_mm_shrink_slab_start(shrinker, shrinkctl, deferred_count,
+   567					   freeable_objects, scan_count,
+   568					   scan_count, priority);
+   569	
+   570		/*
+   571		 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+   572		 * defer the work to a context that can scan the cache.
+   573		 */
+   574		if (shrinkctl->will_defer)
+   575			goto done;
+   576	
+   577		/*
+   578		 * Normally, we should not scan less than batch_size objects in one
+   579		 * pass to avoid too frequent shrinker calls, but if the slab has less
+   580		 * than batch_size objects in total and we are really tight on memory,
+   581		 * we will try to reclaim all available objects, otherwise we can end
+   582		 * up failing allocations although there are plenty of reclaimable
+   583		 * objects spread over several slabs with usage less than the
+   584		 * batch_size.
+   585		 *
+   586		 * We detect the "tight on memory" situations by looking at the total
+   587		 * number of objects we want to scan (total_scan). If it is greater
+   588		 * than the total number of objects on slab (freeable), we must be
+   589		 * scanning at high prio and therefore should try to reclaim as much as
+   590		 * possible.
+   591		 */
+   592		while (scan_count >= batch_size ||
+   593		       scan_count >= freeable_objects) {
+   594			unsigned long ret;
+   595			unsigned long nr_to_scan = min_t(long, batch_size, scan_count);
+   596	
+   597			shrinkctl->nr_to_scan = nr_to_scan;
+   598			shrinkctl->nr_scanned = nr_to_scan;
+   599			ret = shrinker->scan_objects(shrinker, shrinkctl);
+   600			if (ret == SHRINK_STOP)
+   601				break;
+   602			freed += ret;
+   603	
+   604			count_vm_events(SLABS_SCANNED, shrinkctl->nr_scanned);
+   605			scan_count -= shrinkctl->nr_scanned;
+   606			scanned_objects += shrinkctl->nr_scanned;
+   607	
+   608			cond_resched();
+   609		}
+   610	
+   611	done:
+   612		if (deferred_count)
+   613			next_deferred = deferred_count - scanned_objects;
+   614		else if (scan_count > 0)
+   615			next_deferred = scan_count;
+   616		/*
+   617		 * move the unused scan count back into the shrinker in a
+   618		 * manner that handles concurrent updates. If we exhausted the
+   619		 * scan, there is no need to do an update.
+   620		 */
+   621		if (next_deferred > 0)
+   622			new_nr = atomic_long_add_return(next_deferred,
+   623							&shrinker->nr_deferred[nid]);
+   624		else
+   625			new_nr = atomic_long_read(&shrinker->nr_deferred[nid]);
+   626	
+   627		trace_mm_shrink_slab_end(shrinker, nid, freed, deferred_count, new_nr,
+   628						scan_count);
+   629		return freed;
+   630	}
+   631	
 
-The boosting was not intended to target THP specifically -- it was meant
-to help recover early from any fragmentation-related event for any user
-that might need it. Hence, it's not tied to THP but even with THP
-disabled, the boosting will still take effect.
-
-One band-aid would be to disable watermark boosting entirely when THP is
-disabled but that feels wrong. However, I would be interested in hearing
-if sysctl vm.watermark_boost_factor=0 has the same effect as your patch.
-
-The intention behind avoiding slab reclaim from kswapd context is that the
-boost is due to a fragmentation-causing event. Compaction cannot move slab
-pages so reclaiming them in response to fragmentation does not directly
-help. However, it can indirectly help by avoiding fragmentation-causing
-events due to slab allocation like inodes and also mean that reclaim
-behaviour is not special cased.
-
-On that basis, it may justify ripping out the may_shrinkslab logic
-everywhere. The downside is that some microbenchmarks will notice.
-Specifically IO benchmarks that fill memory and reread (particularly
-rereading the metadata via any inode operation) may show reduced
-results. Such benchmarks can be strongly affected by whether the inode
-information is still memory resident and watermark boosting reduces
-the changes the data is still resident in memory. Technically still a
-regression but a tunable one.
-
-Hence the following "it builds" patch that has zero supporting data on
-whether it's a good idea or not.
-
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index dbdc46a84f63..6051a9007150 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -88,9 +88,6 @@ struct scan_control {
- 	/* Can pages be swapped as part of reclaim? */
- 	unsigned int may_swap:1;
- 
--	/* e.g. boosted watermark reclaim leaves slabs alone */
--	unsigned int may_shrinkslab:1;
--
- 	/*
- 	 * Cgroups are not reclaimed below their configured memory.low,
- 	 * unless we threaten to OOM. If any cgroups are skipped due to
-@@ -2714,10 +2711,8 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 			shrink_node_memcg(pgdat, memcg, sc, &lru_pages);
- 			node_lru_pages += lru_pages;
- 
--			if (sc->may_shrinkslab) {
--				shrink_slab(sc->gfp_mask, pgdat->node_id,
--				    memcg, sc->priority);
--			}
-+			shrink_slab(sc->gfp_mask, pgdat->node_id,
-+			    memcg, sc->priority);
- 
- 			/* Record the group's reclaim efficiency */
- 			vmpressure(sc->gfp_mask, memcg, false,
-@@ -3194,7 +3189,6 @@ unsigned long try_to_free_pages(struct zonelist *zonelist, int order,
- 		.may_writepage = !laptop_mode,
- 		.may_unmap = 1,
- 		.may_swap = 1,
--		.may_shrinkslab = 1,
- 	};
- 
- 	/*
-@@ -3238,7 +3232,6 @@ unsigned long mem_cgroup_shrink_node(struct mem_cgroup *memcg,
- 		.may_unmap = 1,
- 		.reclaim_idx = MAX_NR_ZONES - 1,
- 		.may_swap = !noswap,
--		.may_shrinkslab = 1,
- 	};
- 	unsigned long lru_pages;
- 
-@@ -3286,7 +3279,6 @@ unsigned long try_to_free_mem_cgroup_pages(struct mem_cgroup *memcg,
- 		.may_writepage = !laptop_mode,
- 		.may_unmap = 1,
- 		.may_swap = may_swap,
--		.may_shrinkslab = 1,
- 	};
- 
- 	set_task_reclaim_state(current, &sc.reclaim_state);
-@@ -3598,7 +3590,6 @@ static int balance_pgdat(pg_data_t *pgdat, int order, int classzone_idx)
- 		 */
- 		sc.may_writepage = !laptop_mode && !nr_boost_reclaim;
- 		sc.may_swap = !nr_boost_reclaim;
--		sc.may_shrinkslab = !nr_boost_reclaim;
- 
- 		/*
- 		 * Do some background aging of the anon list, to give
-
--- 
-Mel Gorman
-SUSE Labs
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
