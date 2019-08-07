@@ -1,22 +1,21 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:42301 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728747AbfHGBd4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:33:56 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:45729 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728704AbfHGBdx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:33:53 -0400
 From: john.hubbard@gmail.com
-Subject: [PATCH v3 07/41] drm/etnaviv: convert release_pages() to put_user_pages()
-Date: Tue,  6 Aug 2019 18:33:06 -0700
-Message-Id: <20190807013340.9706-8-jhubbard@nvidia.com>
+Subject: [PATCH v3 05/41] net/ceph: convert put_page() to put_user_page*()
+Date: Tue,  6 Aug 2019 18:33:04 -0700
+Message-Id: <20190807013340.9706-6-jhubbard@nvidia.com>
 In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
 References: <20190807013340.9706-1-jhubbard@nvidia.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Joerg Roedel <joro@8bytes.org>, Paolo Bonzini <pbonzini@redhat.com>, =?UTF-8?q?Radim=20Kr=C4=8Dm=C3=A1=C5=99?= <rkrcmar@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>, "H . Peter Anvin" <hpa@zytor.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Jeff Layton <jlayton@kernel.org>, Ilya Dryomov <idryomov@gmail.com>, Sage Weil <sage@redhat.com>, "David S . Miller" <davem@davemloft.net>
 
 From: John Hubbard <jhubbard@nvidia.com>
 
@@ -27,41 +26,36 @@ release_pages().
 This is part a tree-wide conversion, as described in commit fc1d8e7cca2d
 ("mm: introduce put_user_page*(), placeholder versions").
 
-Cc: Joerg Roedel <joro@8bytes.org>
-Cc: Paolo Bonzini <pbonzini@redhat.com>
-Cc: Radim Krčmář <rkrcmar@redhat.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>
-Cc: Ingo Molnar <mingo@redhat.com>
-Cc: Borislav Petkov <bp@alien8.de>
-Cc: H. Peter Anvin <hpa@zytor.com>
-Cc: x86@kernel.org
-Cc: kvm@vger.kernel.org
+Acked-by: Jeff Layton <jlayton@kernel.org>
+
+Cc: Ilya Dryomov <idryomov@gmail.com>
+Cc: Sage Weil <sage@redhat.com>
+Cc: David S. Miller <davem@davemloft.net>
+Cc: ceph-devel@vger.kernel.org
+Cc: netdev@vger.kernel.org
 Signed-off-by: John Hubbard <jhubbard@nvidia.com>
 ---
- drivers/gpu/drm/etnaviv/etnaviv_gem.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ net/ceph/pagevec.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-diff --git a/drivers/gpu/drm/etnaviv/etnaviv_gem.c b/drivers/gpu/drm/etnaviv/etnaviv_gem.c
-index e8778ebb72e6..a0144a5ee325 100644
---- a/drivers/gpu/drm/etnaviv/etnaviv_gem.c
-+++ b/drivers/gpu/drm/etnaviv/etnaviv_gem.c
-@@ -686,7 +686,7 @@ static int etnaviv_gem_userptr_get_pages(struct etnaviv_gem_object *etnaviv_obj)
- 		ret = get_user_pages_fast(ptr, num_pages,
- 					  !userptr->ro ? FOLL_WRITE : 0, pages);
- 		if (ret < 0) {
--			release_pages(pvec, pinned);
-+			put_user_pages(pvec, pinned);
- 			kvfree(pvec);
- 			return ret;
- 		}
-@@ -710,7 +710,7 @@ static void etnaviv_gem_userptr_release(struct etnaviv_gem_object *etnaviv_obj)
- 	if (etnaviv_obj->pages) {
- 		int npages = etnaviv_obj->base.size >> PAGE_SHIFT;
+diff --git a/net/ceph/pagevec.c b/net/ceph/pagevec.c
+index 64305e7056a1..c88fff2ab9bd 100644
+--- a/net/ceph/pagevec.c
++++ b/net/ceph/pagevec.c
+@@ -12,13 +12,7 @@
  
--		release_pages(etnaviv_obj->pages, npages);
-+		put_user_pages(etnaviv_obj->pages, npages);
- 		kvfree(etnaviv_obj->pages);
- 	}
+ void ceph_put_page_vector(struct page **pages, int num_pages, bool dirty)
+ {
+-	int i;
+-
+-	for (i = 0; i < num_pages; i++) {
+-		if (dirty)
+-			set_page_dirty_lock(pages[i]);
+-		put_page(pages[i]);
+-	}
++	put_user_pages_dirty_lock(pages, num_pages, dirty);
+ 	kvfree(pages);
  }
+ EXPORT_SYMBOL(ceph_put_page_vector);
 -- 
 2.22.0
