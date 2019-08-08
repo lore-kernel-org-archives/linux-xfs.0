@@ -1,15 +1,15 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f67.google.com ([209.85.221.67]:37088 "EHLO
-        mail-wr1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731226AbfHHHND (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 03:13:03 -0400
-Received: by mail-wr1-f67.google.com with SMTP id b3so1400053wro.4
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2019 00:13:01 -0700 (PDT)
-Date: Thu, 8 Aug 2019 09:12:58 +0200
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:37554 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731038AbfHHHR2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 03:17:28 -0400
+Received: by mail-wr1-f66.google.com with SMTP id b3so1411538wro.4
+        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2019 00:17:27 -0700 (PDT)
+Date: Thu, 8 Aug 2019 09:17:24 +0200
 From: Carlos Maiolino <cmaiolino@redhat.com>
 Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
  ioctl_fibmap
-Message-ID: <20190808071257.ufbk5i35xpkf4byh@pegasus.maiolino.io>
+Message-ID: <20190808071723.532hytasnglsuukf@pegasus.maiolino.io>
 References: <20190731141245.7230-1-cmaiolino@redhat.com>
  <20190731141245.7230-5-cmaiolino@redhat.com>
  <20190731231217.GV1561054@magnolia>
@@ -17,60 +17,72 @@ References: <20190731141245.7230-1-cmaiolino@redhat.com>
  <20190802151400.GG7138@magnolia>
  <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
  <20190805151258.GD7129@magnolia>
- <20190806224138.GW30113@42.do-not-panic.com>
+ <20190806053840.GH13409@lst.de>
+ <20190806120723.eb72ykmukgjejiku@pegasus.maiolino.io>
+ <20190806144800.GN7138@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190806224138.GW30113@42.do-not-panic.com>
+In-Reply-To: <20190806144800.GN7138@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Luis Chamberlain <mcgrof@kernel.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
+On Tue, Aug 06, 2019 at 07:48:00AM -0700, Darrick J. Wong wrote:
+> On Tue, Aug 06, 2019 at 02:07:24PM +0200, Carlos Maiolino wrote:
+> > On Tue, Aug 06, 2019 at 07:38:40AM +0200, Christoph Hellwig wrote:
+> > > On Mon, Aug 05, 2019 at 08:12:58AM -0700, Darrick J. Wong wrote:
+> > > > > returned. And IIRC, iomap is the only interface now that cares about issuing a
+> > > > > warning.
+> > > > >
+> > > > > I think the *best* we could do here, is to make the new bmap() to issue the same
+> > > > > kind of WARN() iomap does, but we can't really change the end result.
+> > > > 
+> > > > I'd rather we break legacy code than corrupt filesystems.
+> > > 
 > > 
-> > > Maybe I am not seeing something or having a different thinking you have, but
-> > > this is the behavior we have now, without my patches. And we can't really change
-> > > it; the user view of this implementation.
-> > > That's why I didn't try to change the result, so the truncation still happens.
+> > Yes, I have the same feeling, but this patchset does not have the goal to fix
+> > the broken api.
 > > 
-> > I understand that we're not generally supposed to change existing
-> > userspace interfaces, but the fact remains that allowing truncated
-> > responses causes *filesystem corruption*.
+> > > This particular patch should keep existing behavior as is, as the intent
+> > > is to not change functionality.  Throwing in another patch to have saner
+> > > error behavior now that we have a saner in-kernel interface that cleary
+> > > documents what it is breaking and why on the other hand sounds like a
+> > > very good idea.
 > > 
-> > We know that the most well known FIBMAP callers are bootloaders, and we
-> > know what they do with the information they get -- they use it to record
-> > the block map of boot files.  So if the IPL/grub/whatever installer
-> > queries the boot file and the boot file is at block 12345678901 (a
-> > 34-bit number), this interface truncates that to 3755744309 (a 32-bit
-> > number) and that's where the bootloader will think its boot files are.
-> > The installation succeeds, the user reboots and *kaboom* the system no
-> > longer boots because the contents of block 3755744309 is not a bootloader.
-> > 
-> > Worse yet, grub1 used FIBMAP data to record the location of the grub
-> > environment file and installed itself between the MBR and the start of
-> > partition 1.  If the environment file is at offset 1234578901, grub will
-> > write status data to its environment file (which it thinks is at
-> > 3755744309) and *KABOOM* we've just destroyed whatever was in that
-> > block.
-> > 
-> > Far better for the bootloader installation script to hit an error and
-> > force the admin to deal with the situation than for the system to become
-> > unbootable.  That's *why* the (newer) iomap bmap implementation does not
-> > return truncated mappings, even though the classic implementation does.
-> > 
-> > The classic code returning truncated results is a broken behavior.
+> > I totally agree here, and to be honest, I think such change should be in a
+> > different patchset rather than a new patch in this series. I can do it for sure,
+> > but this discussion IMHO should be done not only here in linux-fsdevel, but also
+> > in linux-api, which well, I don't think cc'ing this whole patchset there will do
+> > any good other than keep the change discussion more complicated than it should
+> > be. I'd rather finish the design and implementation of this patchset, and I'll
+> > follow-up it, once it's all set, with a new patch to change the truncation
+> > behavior, it will make the discussion way easier than mixing up subjects. What
+> > you guys think?
 > 
-> How long as it been broken for? And if we do fix it, I'd just like for
-> a nice commit lot describing potential risks of not applying it. *If*
-> the issue exists as-is today, the above contains a lot of information
-> for addressing potential issues, even if theoretical.
+> I probably would've fixed the truncation behavior in the old code and
+> based the fiemap-fibmap conversion on that so that anyone who wants to
+> backport the behavior change to an old kernel has an easier time of it.
 > 
 
-It's broken since forever. This has always been the FIBMAP behavior.
+Well, another problem in fixing it in the old code, is that bmap() can't
+properly return errors :P
+After this patchset, bmap() will be able to return errors, so we can easily fix
+it, once we won't need to 'guess' what a zero return mean from bmap()
 
 
->   Luis
+> But afterwards probably works just as well since I don't feel like tying
+> ourselves in more knots over an old interface. ;)
+> 
+> --D
+> 
+> > Cheers
+> > 
+> > 
+> > -- 
+> > Carlos
 
 -- 
 Carlos
