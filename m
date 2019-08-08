@@ -1,135 +1,50 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35840 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727950AbfHHD5i (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Aug 2019 23:57:38 -0400
-Received: by mail-pl1-f196.google.com with SMTP id k8so42944569plt.3
-        for <linux-xfs@vger.kernel.org>; Wed, 07 Aug 2019 20:57:38 -0700 (PDT)
-Date: Thu, 8 Aug 2019 11:57:30 +0800
-From: Murphy Zhou <jencce.kernel@gmail.com>
-Subject: Re: [LTP] [PATCH v7 3/3] syscalls/copy_file_range02: increase
- coverage and remove EXDEV test
-Message-ID: <20190808035730.3kzors4trok6amtr@XZHOUW.usersys.redhat.com>
-References: <20190730110555.GB7528@rei.lan>
- <1564569629-2358-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
- <1564569629-2358-3-git-send-email-xuyang2018.jy@cn.fujitsu.com>
- <20190805065832.ti6vpoviykfaxcj7@XZHOUW.usersys.redhat.com>
- <5D47D6B9.9090306@cn.fujitsu.com>
- <20190805102211.pvyufepn6xywi7vm@XZHOUW.usersys.redhat.com>
- <20190806162703.GA1333@dell5510>
- <20190807101742.mt6tgowsh4xw5hyt@XZHOUW.usersys.redhat.com>
- <5D4B92EF.4090800@cn.fujitsu.com>
+Received: from ozlabs.org ([203.11.71.1]:56463 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725868AbfHHFmp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Aug 2019 01:42:45 -0400
+From: Michael Ellerman <mpe@ellerman.id.au>
+Subject: Re: [PATCH v3 38/41] powerpc: convert put_page() to put_user_page*()
+In-Reply-To: <20190807013340.9706-39-jhubbard@nvidia.com>
+References: <20190807013340.9706-1-jhubbard@nvidia.com> <20190807013340.9706-39-jhubbard@nvidia.com>
+Date: Thu, 08 Aug 2019 15:42:34 +1000
+Message-ID: <87k1botdpx.fsf@concordia.ellerman.id.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <5D4B92EF.4090800@cn.fujitsu.com>
+Content-Type: text/plain
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-Cc: Murphy Zhou <jencce.kernel@gmail.com>, Petr Vorel <pvorel@suse.cz>, chrubis@suse.cz, ltp@lists.linux.it, linux-xfs@vger.kernel.org
+To: john.hubbard@gmail.com, Andrew Morton <akpm@linux-foundation.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Dan Williams <dan.j.williams@intel.com>, Dave Chinner <david@fromorbit.com>, Dave Hansen <dave.hansen@linux.intel.com>, Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>, Jason Gunthorpe <jgg@ziepe.ca>, =?utf-8?B?SsOpcsO0?= =?utf-8?B?bWU=?= Glisse <jglisse@redhat.com>, LKML <linux-kernel@vger.kernel.org>, amd-gfx@lists.freedesktop.org, ceph-devel@vger.kernel.org, devel@driverdev.osuosl.org, devel@lists.orangefs.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-block@vger.kernel.org, linux-crypto@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-media@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, rds-devel@oss.oracle.com, sparclinux@vger.kernel.org, x86@kernel.org, xen-devel@lists.xenproject.org, John Hubbard <jhubbard@nvidia.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Christoph Hellwig <hch@lst.de>, linuxppc-dev@lists.ozlabs.org
 
-On Thu, Aug 08, 2019 at 11:11:43AM +0800, Yang Xu wrote:
-> on 2019/08/07 18:17, Murphy Zhou wrote:
-> 
-> > And I have a question about LTP itself.
-> >
-> > If we run the testcase directly like:
-> > 	 ./testcases/kernel/syscalls/copy_file_range/copy_file_range02
-> >
-> > to test all_filesystems, for every filesystem, we mkfs and mount it in
-> > .mntpoint, but we do not chdir to .mntpoint. So we are running tests in 
-> > the same tmpdir, fs type of which does not change while looping
-> > all_filesystems.  Only the .mntpoint in tmpdir has different fs type in
-> > each loop.
-> >
-> > Now we are using this to test cross-device copy in copy_file_range01.c,
-> > but in copy_file_range02.c, we are not using .mntpint at all, all the
-> > tests in the all_filesystems loop are running in the same tmpdir. In other
-> > words, we are NOT testing all filesystems.
-> >
-> > Is this expected?
->  I removed the mnted test for cross-device copy_file_range in copy_file_range02.c.
-> And I ignore the non-used mntpoint. IMO, we can directly use the FILE_MNTED to test EFBIG on all filesystems, 
+Hi John,
 
-If mntpoint is not used, it makes absolutely NO sense to test all_filesystems.
+john.hubbard@gmail.com writes:
+> diff --git a/arch/powerpc/mm/book3s64/iommu_api.c b/arch/powerpc/mm/book3s64/iommu_api.c
+> index b056cae3388b..e126193ba295 100644
+> --- a/arch/powerpc/mm/book3s64/iommu_api.c
+> +++ b/arch/powerpc/mm/book3s64/iommu_api.c
+> @@ -203,6 +202,7 @@ static void mm_iommu_unpin(struct mm_iommu_table_group_mem_t *mem)
+>  {
+>  	long i;
+>  	struct page *page = NULL;
+> +	bool dirty = false;
 
-Because in the all_filesystems loop, various supported filesystems are
-created and mounted in mntpoint.
+I don't think you need that initialisation do you?
 
-And the copy_file_range tests happens outside of mntpoint. It just repeats
-the same test several times in the same tmpdir, fs type of which depends
-on /tmp configuration.
-
-When the log prints "testing ext2", it's not the truth.
-
-EFBIG is another issue.
-
-Thanks,
-Murphy
-> 
-> as below:
-> diff --git a/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c b/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c
-> index 26bfa008a..67974ffa2 100644
-> --- a/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c
-> +++ b/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c
-> @@ -49,6 +49,7 @@ static int fd_blkdev;
->  static int fd_chrdev;
->  static int fd_fifo;
->  static int fd_copy;
-> +static int fd_mnted;
-> 
->  static int chattr_i_nsup;
->  static int swap_nsup;
-> 
-> @@ -73,7 +74,7 @@ static struct tcase {
->         {&fd_chrdev,    0,   EINVAL,     0,     CONTSIZE},
->         {&fd_fifo,      0,   EINVAL,     0,     CONTSIZE},
->         {&fd_copy,      0,   EOVERFLOW,  MAX_OFF, ULLONG_MAX},
-> -       {&fd_copy,      0,   EFBIG,      MAX_OFF, MIN_OFF},
-> +       {&fd_mnted,      0,   EFBIG,      MAX_OFF, MIN_OFF},
->  };
-> 
->  static int run_command(char *command, char *option, char *file)
-> @@ -117,7 +118,10 @@ static void verify_copy_file_range(unsigned int n)
->                         tst_res(TPASS | TTERRNO,
->                                         "copy_file_range failed as expected");
->                 } else {
-> -                       tst_res(TFAIL | TTERRNO,
-> +                       if (tc->exp_err == EFBIG && TST_ERR == EXDEV)
-> +                               tst_res(TCONF, "copy_file_range doesn't support cross-device,skip it");
-> +                       else
-> +                               tst_res(TFAIL | TTERRNO,
->                                 "copy_file_range failed unexpectedly; expected %s, but got",
->                                 tst_strerrno(tc->exp_err));
->                         return;
-> 
-> @@ -152,6 +156,8 @@ static void cleanup(void)
->                 SAFE_CLOSE(fd_dup);
->         if (fd_copy > 0)
->                 SAFE_CLOSE(fd_copy);
-> +       if (fd_mnted > 0)
-> +               SAFE_CLOSE(fd_mnted);
->         SAFE_UNLINK(FILE_FIFO);
+>  	if (!mem->hpas)
+>  		return;
+> @@ -215,10 +215,9 @@ static void mm_iommu_unpin(struct mm_iommu_table_group_mem_t *mem)
+>  		if (!page)
+>  			continue;
+>  
+> -		if (mem->hpas[i] & MM_IOMMU_TABLE_GROUP_PAGE_DIRTY)
+> -			SetPageDirty(page);
+> +		dirty = mem->hpas[i] & MM_IOMMU_TABLE_GROUP_PAGE_DIRTY;
+> -		put_page(page);
+> +		put_user_pages_dirty_lock(&page, 1, dirty);
+>  		mem->hpas[i] = 0;
+>  	}
 >  }
-> 
-> @@ -194,6 +200,7 @@ static void setup(void)
-> 
->         fd_copy = SAFE_OPEN(FILE_COPY_PATH, O_RDWR | O_CREAT | O_TRUNC, 0664);
->         chattr_i_nsup = run_command("chattr", "+i", FILE_IMMUTABLE_PATH);
-> +       fd_mnted  = SAFE_OPEN(FILE_MNTED_PATH, O_RDWR | O_CREAT, 0664);
-> 
->         if (!tst_fs_has_free(".", sysconf(_SC_PAGESIZE) * 10, TST_BYTES)) {
->                 tst_res(TCONF, "Insufficient disk space to create swap file");
->                 swap_nsup = 3;
-> 
-> test12) succeed on extN, failed on both btrfs and xfs, we need to detect filesystem type to handle. Or, I think we 
-> can set a limit on filesize because this kind of user scene is a bit more than the first one , the EFBIG error can be 
-> received easily (Also, we don't need  mnt_device mntpoint all_filesystem if so).
-> What do you think about it?
-> 
-> > I commented out testcases in copy_file_range02.c other then #12, and add
-> > some nasty debug info:
-> 
-> 
-> 
+
+cheers
