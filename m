@@ -1,88 +1,72 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-wr1-f66.google.com ([209.85.221.66]:37554 "EHLO
-        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731038AbfHHHR2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 03:17:28 -0400
-Received: by mail-wr1-f66.google.com with SMTP id b3so1411538wro.4
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2019 00:17:27 -0700 (PDT)
-Date: Thu, 8 Aug 2019 09:17:24 +0200
+Received: from mx1.redhat.com ([209.132.183.28]:35390 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731844AbfHHI1u (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Aug 2019 04:27:50 -0400
 From: Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
- ioctl_fibmap
-Message-ID: <20190808071723.532hytasnglsuukf@pegasus.maiolino.io>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
- <20190731141245.7230-5-cmaiolino@redhat.com>
- <20190731231217.GV1561054@magnolia>
- <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
- <20190802151400.GG7138@magnolia>
- <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
- <20190805151258.GD7129@magnolia>
- <20190806053840.GH13409@lst.de>
- <20190806120723.eb72ykmukgjejiku@pegasus.maiolino.io>
- <20190806144800.GN7138@magnolia>
+Subject: [PATCH 0/9 V5] New ->fiemap infrastructure and ->bmap removal
+Date: Thu,  8 Aug 2019 10:27:35 +0200
+Message-Id: <20190808082744.31405-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190806144800.GN7138@magnolia>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org, adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Aug 06, 2019 at 07:48:00AM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 06, 2019 at 02:07:24PM +0200, Carlos Maiolino wrote:
-> > On Tue, Aug 06, 2019 at 07:38:40AM +0200, Christoph Hellwig wrote:
-> > > On Mon, Aug 05, 2019 at 08:12:58AM -0700, Darrick J. Wong wrote:
-> > > > > returned. And IIRC, iomap is the only interface now that cares about issuing a
-> > > > > warning.
-> > > > >
-> > > > > I think the *best* we could do here, is to make the new bmap() to issue the same
-> > > > > kind of WARN() iomap does, but we can't really change the end result.
-> > > > 
-> > > > I'd rather we break legacy code than corrupt filesystems.
-> > > 
-> > 
-> > Yes, I have the same feeling, but this patchset does not have the goal to fix
-> > the broken api.
-> > 
-> > > This particular patch should keep existing behavior as is, as the intent
-> > > is to not change functionality.  Throwing in another patch to have saner
-> > > error behavior now that we have a saner in-kernel interface that cleary
-> > > documents what it is breaking and why on the other hand sounds like a
-> > > very good idea.
-> > 
-> > I totally agree here, and to be honest, I think such change should be in a
-> > different patchset rather than a new patch in this series. I can do it for sure,
-> > but this discussion IMHO should be done not only here in linux-fsdevel, but also
-> > in linux-api, which well, I don't think cc'ing this whole patchset there will do
-> > any good other than keep the change discussion more complicated than it should
-> > be. I'd rather finish the design and implementation of this patchset, and I'll
-> > follow-up it, once it's all set, with a new patch to change the truncation
-> > behavior, it will make the discussion way easier than mixing up subjects. What
-> > you guys think?
-> 
-> I probably would've fixed the truncation behavior in the old code and
-> based the fiemap-fibmap conversion on that so that anyone who wants to
-> backport the behavior change to an old kernel has an easier time of it.
-> 
+Hi.
 
-Well, another problem in fixing it in the old code, is that bmap() can't
-properly return errors :P
-After this patchset, bmap() will be able to return errors, so we can easily fix
-it, once we won't need to 'guess' what a zero return mean from bmap()
+This is the 5th version of the complete series with the goal to deprecate and
+eventually remove ->bmap() interface, in lieu of FIEMAP.
+
+This V5, compared with V4 is properly rebased against 5.3, and addresses the
+issues raised in V4 discussion.
+
+Details of what changed on each patch are in their specific changelogs.
 
 
-> But afterwards probably works just as well since I don't feel like tying
-> ourselves in more knots over an old interface. ;)
-> 
-> --D
-> 
-> > Cheers
-> > 
-> > 
-> > -- 
-> > Carlos
+
+Carlos Maiolino (9):
+  fs: Enable bmap() function to properly return errors
+  cachefiles: drop direct usage of ->bmap method.
+  ecryptfs: drop direct calls to ->bmap
+  fibmap: Use bmap instead of ->bmap method in ioctl_fibmap
+  fs: Move start and length fiemap fields into fiemap_extent_info
+  iomap: Remove length and start fields from iomap_fiemap
+  fiemap: Use a callback to fill fiemap extents
+  Use FIEMAP for FIBMAP calls
+  xfs: Get rid of ->bmap
+
+ drivers/md/md-bitmap.c |  16 ++++--
+ fs/bad_inode.c         |   3 +-
+ fs/btrfs/inode.c       |   5 +-
+ fs/cachefiles/rdwr.c   |  27 ++++-----
+ fs/ecryptfs/mmap.c     |  16 ++----
+ fs/ext2/ext2.h         |   3 +-
+ fs/ext2/inode.c        |   6 +-
+ fs/ext4/ext4.h         |   3 +-
+ fs/ext4/extents.c      |  15 +++--
+ fs/f2fs/data.c         |  31 +++++++---
+ fs/f2fs/f2fs.h         |   3 +-
+ fs/gfs2/inode.c        |   9 ++-
+ fs/hpfs/file.c         |   4 +-
+ fs/inode.c             | 105 +++++++++++++++++++++++++++++----
+ fs/ioctl.c             | 128 ++++++++++++++++++++++++++---------------
+ fs/iomap/fiemap.c      |   6 +-
+ fs/jbd2/journal.c      |  22 ++++---
+ fs/nilfs2/inode.c      |   5 +-
+ fs/nilfs2/nilfs.h      |   3 +-
+ fs/ocfs2/extent_map.c  |  13 ++++-
+ fs/ocfs2/extent_map.h  |   3 +-
+ fs/overlayfs/inode.c   |   5 +-
+ fs/xfs/xfs_aops.c      |  24 --------
+ fs/xfs/xfs_iops.c      |  20 ++++---
+ fs/xfs/xfs_trace.h     |   1 -
+ include/linux/fs.h     |  35 +++++++----
+ include/linux/iomap.h  |   2 +-
+ mm/page_io.c           |  11 ++--
+ 28 files changed, 334 insertions(+), 190 deletions(-)
 
 -- 
-Carlos
+2.20.1
