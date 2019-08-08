@@ -1,83 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53426 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:47836 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732698AbfHHQgz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 8 Aug 2019 12:36:55 -0400
-Date: Thu, 8 Aug 2019 12:36:53 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 22/24] xfs: track reclaimable inodes using a LRU list
-Message-ID: <20190808163653.GB24551@bfoster>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-23-david@fromorbit.com>
+        id S1732698AbfHHQF5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Aug 2019 12:05:57 -0400
+Date: Thu, 8 Aug 2019 11:05:55 -0500
+From: Bill O'Donnell <billodo@redhat.com>
+Subject: Re: [PATCH 2/3] xfs: remove more ondisk directory corruption asserts
+Message-ID: <20190808160555.GA19733@redhat.com>
+References: <156527561023.1960675.17007470833732765300.stgit@magnolia>
+ <156527562244.1960675.10725983010213633067.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190801021752.4986-23-david@fromorbit.com>
+In-Reply-To: <156527562244.1960675.10725983010213633067.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Thu, Aug 01, 2019 at 12:17:50PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Aug 08, 2019 at 07:47:02AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Now that we don't do IO from the inode reclaim code, there is no
-> need to optimise inode scanning order for optimal IO
-> characteristics. The AIL takes care of that for us, so now reclaim
-> can focus on selecting the best inodes to reclaim.
+> Continue our game of replacing ASSERTs for corrupt ondisk metadata with
+> EFSCORRUPTED returns.
 > 
-> Hence we can change the inode reclaim algorithm to a real LRU and
-> remove the need to use the radix tree to track and walk inodes under
-> reclaim. This frees up a radix tree bit and simplifies the code that
-> marks inodes are reclaim candidates. It also simplifies the reclaim
-> code - we don't need batching anymore and all the reclaim logic
-> can be added to the LRU isolation callback.
-> 
-> Further, we get node aware reclaim at the xfs_inode level, which
-> should help the per-node reclaim code free relevant inodes faster.
-> 
-> We can re-use the VFS inode lru pointers - once the inode has been
-> reclaimed from the VFS, we can use these pointers ourselves. Hence
-> we don't need to grow the inode to change the way we index
-> reclaimable inodes.
-> 
-> Start by adding the list_lru tracking in parallel with the existing
-> reclaim code. This makes it easier to see the LRU infrastructure
-> separate to the reclaim algorithm changes. Especially the locking
-> order, which is ip->i_flags_lock -> list_lru lock.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Looks good to me.
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+
 > ---
->  fs/xfs/xfs_icache.c | 31 +++++++------------------------
->  fs/xfs/xfs_icache.h |  1 -
->  fs/xfs/xfs_mount.h  |  1 +
->  fs/xfs/xfs_super.c  | 31 ++++++++++++++++++++++++-------
->  4 files changed, 32 insertions(+), 32 deletions(-)
+>  fs/xfs/libxfs/xfs_da_btree.c  |   19 ++++++++++++-------
+>  fs/xfs/libxfs/xfs_dir2_node.c |    3 ++-
+>  2 files changed, 14 insertions(+), 8 deletions(-)
 > 
-...
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index a59d3a21be5c..b5c4c1b6fd19 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-...
-> @@ -1801,7 +1817,8 @@ xfs_fs_nr_cached_objects(
->  	/* Paranoia: catch incorrect calls during mount setup or teardown */
->  	if (WARN_ON_ONCE(!sb->s_fs_info))
->  		return 0;
-> -	return xfs_reclaim_inodes_count(XFS_M(sb));
-> +
-> +	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
-
-Do we not need locking here, or are we just skipping it because this
-apparently maintains a count field and accuracy isn't critical? If the
-latter, a one liner comment would be useful.
-
-Brian
-
+> 
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.c b/fs/xfs/libxfs/xfs_da_btree.c
+> index d1c77fd0815d..0bf56e94bfe9 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.c
+> +++ b/fs/xfs/libxfs/xfs_da_btree.c
+> @@ -487,10 +487,8 @@ xfs_da3_split(
+>  	ASSERT(state->path.active == 0);
+>  	oldblk = &state->path.blk[0];
+>  	error = xfs_da3_root_split(state, oldblk, addblk);
+> -	if (error) {
+> -		addblk->bp = NULL;
+> -		return error;	/* GROT: dir is inconsistent */
+> -	}
+> +	if (error)
+> +		goto out;
+>  
+>  	/*
+>  	 * Update pointers to the node which used to be block 0 and just got
+> @@ -505,7 +503,10 @@ xfs_da3_split(
+>  	 */
+>  	node = oldblk->bp->b_addr;
+>  	if (node->hdr.info.forw) {
+> -		ASSERT(be32_to_cpu(node->hdr.info.forw) == addblk->blkno);
+> +		if (be32_to_cpu(node->hdr.info.forw) != addblk->blkno) {
+> +			error = -EFSCORRUPTED;
+> +			goto out;
+> +		}
+>  		node = addblk->bp->b_addr;
+>  		node->hdr.info.back = cpu_to_be32(oldblk->blkno);
+>  		xfs_trans_log_buf(state->args->trans, addblk->bp,
+> @@ -514,15 +515,19 @@ xfs_da3_split(
+>  	}
+>  	node = oldblk->bp->b_addr;
+>  	if (node->hdr.info.back) {
+> -		ASSERT(be32_to_cpu(node->hdr.info.back) == addblk->blkno);
+> +		if (be32_to_cpu(node->hdr.info.back) != addblk->blkno) {
+> +			error = -EFSCORRUPTED;
+> +			goto out;
+> +		}
+>  		node = addblk->bp->b_addr;
+>  		node->hdr.info.forw = cpu_to_be32(oldblk->blkno);
+>  		xfs_trans_log_buf(state->args->trans, addblk->bp,
+>  				  XFS_DA_LOGRANGE(node, &node->hdr.info,
+>  				  sizeof(node->hdr.info)));
+>  	}
+> +out:
+>  	addblk->bp = NULL;
+> -	return 0;
+> +	return error;
 >  }
 >  
->  static long
-> -- 
-> 2.22.0
+>  /*
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index afcc6642690a..1fc44efc344d 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -741,7 +741,8 @@ xfs_dir2_leafn_lookup_for_entry(
+>  	ents = dp->d_ops->leaf_ents_p(leaf);
+>  
+>  	xfs_dir3_leaf_check(dp, bp);
+> -	ASSERT(leafhdr.count > 0);
+> +	if (leafhdr.count <= 0)
+> +		return -EFSCORRUPTED;
+>  
+>  	/*
+>  	 * Look up the hash value in the leaf entries.
 > 
