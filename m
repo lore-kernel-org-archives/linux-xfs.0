@@ -1,109 +1,141 @@
-Return-Path: <SRS0=pwWQ=WD=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=Dzjb=WE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76C9BC433FF
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Aug 2019 01:50:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB40C433FF
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Aug 2019 03:12:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4721B21871
-	for <linux-xfs@archiver.kernel.org>; Wed,  7 Aug 2019 01:50:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="Ikr1Z0Qm"
+	by mail.kernel.org (Postfix) with ESMTP id 031BD216C8
+	for <linux-xfs@archiver.kernel.org>; Thu,  8 Aug 2019 03:12:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729327AbfHGBt7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 6 Aug 2019 21:49:59 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:13872 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727788AbfHGBt6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 6 Aug 2019 21:49:58 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d4a2e4e0000>; Tue, 06 Aug 2019 18:50:06 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Tue, 06 Aug 2019 18:49:56 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Tue, 06 Aug 2019 18:49:56 -0700
-Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 7 Aug
- 2019 01:49:55 +0000
-Subject: Re: [PATCH v3 00/39] put_user_pages(): miscellaneous call sites
-To:     <john.hubbard@gmail.com>, Andrew Morton <akpm@linux-foundation.org>
-CC:     Christoph Hellwig <hch@infradead.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Dave Hansen <dave.hansen@linux.intel.com>,
-        Ira Weiny <ira.weiny@intel.com>, Jan Kara <jack@suse.cz>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        <amd-gfx@lists.freedesktop.org>, <ceph-devel@vger.kernel.org>,
-        <devel@driverdev.osuosl.org>, <devel@lists.orangefs.org>,
-        <dri-devel@lists.freedesktop.org>,
-        <intel-gfx@lists.freedesktop.org>, <kvm@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>,
-        <linux-block@vger.kernel.org>, <linux-crypto@vger.kernel.org>,
-        <linux-fbdev@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-media@vger.kernel.org>, <linux-mm@kvack.org>,
-        <linux-nfs@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-rpi-kernel@lists.infradead.org>,
-        <linux-xfs@vger.kernel.org>, <netdev@vger.kernel.org>,
-        <rds-devel@oss.oracle.com>, <sparclinux@vger.kernel.org>,
-        <x86@kernel.org>, <xen-devel@lists.xenproject.org>
-References: <20190807013340.9706-1-jhubbard@nvidia.com>
-From:   John Hubbard <jhubbard@nvidia.com>
-X-Nvconfidentiality: public
-Message-ID: <912eb2bd-4102-05c1-5571-c261617ad30b@nvidia.com>
-Date:   Tue, 6 Aug 2019 18:49:55 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1728060AbfHHDMK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 7 Aug 2019 23:12:10 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:59024 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727978AbfHHDMK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 7 Aug 2019 23:12:10 -0400
+X-IronPort-AV: E=Sophos;i="5.64,358,1559491200"; 
+   d="scan'208";a="73187039"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 08 Aug 2019 11:12:01 +0800
+Received: from G08CNEXCHPEKD02.g08.fujitsu.local (unknown [10.167.33.83])
+        by cn.fujitsu.com (Postfix) with ESMTP id C4D614CDFCE8;
+        Thu,  8 Aug 2019 11:12:01 +0800 (CST)
+Received: from [10.167.215.46] (10.167.215.46) by
+ G08CNEXCHPEKD02.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
+ id 14.3.439.0; Thu, 8 Aug 2019 11:12:00 +0800
+Message-ID: <5D4B92EF.4090800@cn.fujitsu.com>
+Date:   Thu, 8 Aug 2019 11:11:43 +0800
+From:   Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+User-Agent: Mozilla/5.0 (Windows; U; Windows NT 6.1; zh-CN; rv:1.9.2.18) Gecko/20110616 Thunderbird/3.1.11
 MIME-Version: 1.0
-In-Reply-To: <20190807013340.9706-1-jhubbard@nvidia.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
- HQMAIL107.nvidia.com (172.20.187.13)
+To:     Murphy Zhou <jencce.kernel@gmail.com>
+CC:     Petr Vorel <pvorel@suse.cz>, <chrubis@suse.cz>,
+        <ltp@lists.linux.it>, <linux-xfs@vger.kernel.org>
+Subject: Re: [LTP] [PATCH v7 3/3] syscalls/copy_file_range02: increase coverage
+ and remove EXDEV test
+References: <20190730110555.GB7528@rei.lan> <1564569629-2358-1-git-send-email-xuyang2018.jy@cn.fujitsu.com> <1564569629-2358-3-git-send-email-xuyang2018.jy@cn.fujitsu.com> <20190805065832.ti6vpoviykfaxcj7@XZHOUW.usersys.redhat.com> <5D47D6B9.9090306@cn.fujitsu.com> <20190805102211.pvyufepn6xywi7vm@XZHOUW.usersys.redhat.com> <20190806162703.GA1333@dell5510> <20190807101742.mt6tgowsh4xw5hyt@XZHOUW.usersys.redhat.com>
+In-Reply-To: <20190807101742.mt6tgowsh4xw5hyt@XZHOUW.usersys.redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1565142606; bh=Dn5BKjZ7JEBRqWgfa18GnM7OhUXy8yDZwMN3JIIxlGw=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=Ikr1Z0QmiSe2izYZJH1uqOSC6icnToC0RNMEpxuB23chpfLBCzP3w/AieqLXvDTl5
-         WiAJO8Q4P7LqaICg9w9tXQj3/iPr6N76Dc9IbqJMajQoyinrqFfwgCWwW9UnKbczaL
-         GaLoALYFsFwWv8Sy+VSzQYK1xKYCINe6tMld2WSk4jzjh2UDaUm/4PS/zoETIOvAHY
-         Cv7DiogcZErrjHQstqfLwjbbIS2N4ESoffKtD4ugOTExuz4uGt5TgMT8y01S0TheeO
-         6qVWyeW6YYVimOARtYB9SW21zJJlrmRpt7UH+8pXV98uEPUBYTW77sxtUkB504xqpb
-         D9OLrQ7tTourQ==
+X-Originating-IP: [10.167.215.46]
+X-yoursite-MailScanner-ID: C4D614CDFCE8.AF30B
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: xuyang2018.jy@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190807014955.zcE6FKeoGhTG7WO-X8XceC2rnK7xGkwUPmyN1iM_S-c@z>
+Message-ID: <20190808031143.DEf57xRD9F3zcjN-8GM_Mz8jEemidOer4L_LFgM56oE@z>
 
-On 8/6/19 6:32 PM, john.hubbard@gmail.com wrote:
-> From: John Hubbard <jhubbard@nvidia.com>
-> ...
-> 
-> John Hubbard (38):
->   mm/gup: add make_dirty arg to put_user_pages_dirty_lock()
-...
->  54 files changed, 191 insertions(+), 323 deletions(-)
-> 
-ahem, yes, apparently this is what happens if I add a few patches while editing
-the cover letter... :) 
+on 2019/08/07 18:17, Murphy Zhou wrote:
 
-The subject line should read "00/41", and the list of files affected here is
-therefore under-reported in this cover letter. However, the patch series itself is 
-intact and ready for submission.
+> And I have a question about LTP itself.
+>
+> If we run the testcase directly like:
+> 	 ./testcases/kernel/syscalls/copy_file_range/copy_file_range02
+>
+> to test all_filesystems, for every filesystem, we mkfs and mount it in
+> .mntpoint, but we do not chdir to .mntpoint. So we are running tests in 
+> the same tmpdir, fs type of which does not change while looping
+> all_filesystems.  Only the .mntpoint in tmpdir has different fs type in
+> each loop.
+>
+> Now we are using this to test cross-device copy in copy_file_range01.c,
+> but in copy_file_range02.c, we are not using .mntpint at all, all the
+> tests in the all_filesystems loop are running in the same tmpdir. In other
+> words, we are NOT testing all filesystems.
+>
+> Is this expected?
+ I removed the mnted test for cross-device copy_file_range in copy_file_range02.c.
+And I ignore the non-used mntpoint. IMO, we can directly use the FILE_MNTED to test EFBIG on all filesystems, 
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+as below:
+diff --git a/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c b/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c
+index 26bfa008a..67974ffa2 100644
+--- a/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c
++++ b/testcases/kernel/syscalls/copy_file_range/copy_file_range02.c
+@@ -49,6 +49,7 @@ static int fd_blkdev;
+ static int fd_chrdev;
+ static int fd_fifo;
+ static int fd_copy;
++static int fd_mnted;
+
+ static int chattr_i_nsup;
+ static int swap_nsup;
+
+@@ -73,7 +74,7 @@ static struct tcase {
+        {&fd_chrdev,    0,   EINVAL,     0,     CONTSIZE},
+        {&fd_fifo,      0,   EINVAL,     0,     CONTSIZE},
+        {&fd_copy,      0,   EOVERFLOW,  MAX_OFF, ULLONG_MAX},
+-       {&fd_copy,      0,   EFBIG,      MAX_OFF, MIN_OFF},
++       {&fd_mnted,      0,   EFBIG,      MAX_OFF, MIN_OFF},
+ };
+
+ static int run_command(char *command, char *option, char *file)
+@@ -117,7 +118,10 @@ static void verify_copy_file_range(unsigned int n)
+                        tst_res(TPASS | TTERRNO,
+                                        "copy_file_range failed as expected");
+                } else {
+-                       tst_res(TFAIL | TTERRNO,
++                       if (tc->exp_err == EFBIG && TST_ERR == EXDEV)
++                               tst_res(TCONF, "copy_file_range doesn't support cross-device,skip it");
++                       else
++                               tst_res(TFAIL | TTERRNO,
+                                "copy_file_range failed unexpectedly; expected %s, but got",
+                                tst_strerrno(tc->exp_err));
+                        return;
+
+@@ -152,6 +156,8 @@ static void cleanup(void)
+                SAFE_CLOSE(fd_dup);
+        if (fd_copy > 0)
+                SAFE_CLOSE(fd_copy);
++       if (fd_mnted > 0)
++               SAFE_CLOSE(fd_mnted);
+        SAFE_UNLINK(FILE_FIFO);
+ }
+
+@@ -194,6 +200,7 @@ static void setup(void)
+
+        fd_copy = SAFE_OPEN(FILE_COPY_PATH, O_RDWR | O_CREAT | O_TRUNC, 0664);
+        chattr_i_nsup = run_command("chattr", "+i", FILE_IMMUTABLE_PATH);
++       fd_mnted  = SAFE_OPEN(FILE_MNTED_PATH, O_RDWR | O_CREAT, 0664);
+
+        if (!tst_fs_has_free(".", sysconf(_SC_PAGESIZE) * 10, TST_BYTES)) {
+                tst_res(TCONF, "Insufficient disk space to create swap file");
+                swap_nsup = 3;
+
+test12) succeed on extN, failed on both btrfs and xfs, we need to detect filesystem type to handle. Or, I think we 
+can set a limit on filesize because this kind of user scene is a bit more than the first one , the EFBIG error can be 
+received easily (Also, we don't need  mnt_device mntpoint all_filesystem if so).
+What do you think about it?
+
+> I commented out testcases in copy_file_range02.c other then #12, and add
+> some nasty debug info:
+
+
+
