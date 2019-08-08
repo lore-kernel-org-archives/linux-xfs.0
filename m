@@ -1,44 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:56358 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389823AbfHHNxc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 09:53:32 -0400
-Date: Thu, 8 Aug 2019 06:53:29 -0700
-From: Matthew Wilcox <willy@infradead.org>
-Subject: Re: [PATCH] direct-io: use GFP_NOIO to avoid deadlock
-Message-ID: <20190808135329.GG5482@bombadil.infradead.org>
-References: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:34194 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731844AbfHHI2P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Aug 2019 04:28:15 -0400
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 9/9] xfs: Get rid of ->bmap
+Date: Thu,  8 Aug 2019 10:27:44 +0200
+Message-Id: <20190808082744.31405-10-cmaiolino@redhat.com>
+In-Reply-To: <20190808082744.31405-1-cmaiolino@redhat.com>
+References: <20190808082744.31405-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <msnitzer@redhat.com>, junxiao.bi@oracle.com, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, honglei.wang@oracle.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: linux-fsdevel@vger.kernel.org
+Cc: hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On Thu, Aug 08, 2019 at 05:50:10AM -0400, Mikulas Patocka wrote:
-> A deadlock with this stacktrace was observed.
-> 
-> The obvious problem here is that in the call chain 
-> xfs_vm_direct_IO->__blockdev_direct_IO->do_blockdev_direct_IO->kmem_cache_alloc 
-> we do a GFP_KERNEL allocation while we are in a filesystem driver and in a 
-> block device driver.
+We don't need ->bmap anymore, only usage for it was FIBMAP, which is now
+gone.
 
-But that's not the problem.  The problem is the loop driver calls into the
-filesystem without calling memalloc_noio_save() / memalloc_noio_restore().
-There are dozens of places in XFS which use GFP_KERNEL allocations and
-all can trigger this same problem if called from the loop driver.
+Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+---
 
->   #14 [ffff88272f5af880] kmem_cache_alloc at ffffffff811f484b
->   #15 [ffff88272f5af8d0] do_blockdev_direct_IO at ffffffff812535b3
->   #16 [ffff88272f5afb00] __blockdev_direct_IO at ffffffff81255dc3
->   #17 [ffff88272f5afb30] xfs_vm_direct_IO at ffffffffa01fe3fc [xfs]
->   #18 [ffff88272f5afb90] generic_file_read_iter at ffffffff81198994
->   #19 [ffff88272f5afc50] __dta_xfs_file_read_iter_2398 at ffffffffa020c970 [xfs]
->   #20 [ffff88272f5afcc0] lo_rw_aio at ffffffffa0377042 [loop]
->   #21 [ffff88272f5afd70] loop_queue_work at ffffffffa0377c3b [loop]
->   #22 [ffff88272f5afe60] kthread_worker_fn at ffffffff810a8a0c
->   #23 [ffff88272f5afec0] kthread at ffffffff810a8428
->   #24 [ffff88272f5aff50] ret_from_fork at ffffffff81745242
+Changelog:
+
+	V5:
+		- Properly rebase against 5.3
+		- iomap_{bmap(),bmap_actor()} are now used also by GFS2, so
+		  don't remove them anymore
+	V2:
+		- Kill iomap_bmap() and iomap_bmap_actor()
+
+ fs/xfs/xfs_aops.c  | 24 ------------------------
+ fs/xfs/xfs_trace.h |  1 -
+ 2 files changed, 25 deletions(-)
+
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f16d5f196c6b..097cf52ad09e 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -1132,29 +1132,6 @@ xfs_vm_releasepage(
+ 	return iomap_releasepage(page, gfp_mask);
+ }
+ 
+-STATIC sector_t
+-xfs_vm_bmap(
+-	struct address_space	*mapping,
+-	sector_t		block)
+-{
+-	struct xfs_inode	*ip = XFS_I(mapping->host);
+-
+-	trace_xfs_vm_bmap(ip);
+-
+-	/*
+-	 * The swap code (ab-)uses ->bmap to get a block mapping and then
+-	 * bypasses the file system for actual I/O.  We really can't allow
+-	 * that on reflinks inodes, so we have to skip out here.  And yes,
+-	 * 0 is the magic code for a bmap error.
+-	 *
+-	 * Since we don't pass back blockdev info, we can't return bmap
+-	 * information for rt files either.
+-	 */
+-	if (xfs_is_cow_inode(ip) || XFS_IS_REALTIME_INODE(ip))
+-		return 0;
+-	return iomap_bmap(mapping, block, &xfs_iomap_ops);
+-}
+-
+ STATIC int
+ xfs_vm_readpage(
+ 	struct file		*unused,
+@@ -1193,7 +1170,6 @@ const struct address_space_operations xfs_address_space_operations = {
+ 	.set_page_dirty		= iomap_set_page_dirty,
+ 	.releasepage		= xfs_vm_releasepage,
+ 	.invalidatepage		= xfs_vm_invalidatepage,
+-	.bmap			= xfs_vm_bmap,
+ 	.direct_IO		= noop_direct_IO,
+ 	.migratepage		= iomap_migrate_page,
+ 	.is_partially_uptodate  = iomap_is_partially_uptodate,
+diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+index 8094b1920eef..fab17ea7d1eb 100644
+--- a/fs/xfs/xfs_trace.h
++++ b/fs/xfs/xfs_trace.h
+@@ -621,7 +621,6 @@ DEFINE_INODE_EVENT(xfs_readdir);
+ #ifdef CONFIG_XFS_POSIX_ACL
+ DEFINE_INODE_EVENT(xfs_get_acl);
+ #endif
+-DEFINE_INODE_EVENT(xfs_vm_bmap);
+ DEFINE_INODE_EVENT(xfs_file_ioctl);
+ DEFINE_INODE_EVENT(xfs_file_compat_ioctl);
+ DEFINE_INODE_EVENT(xfs_ioctl_setattr);
+-- 
+2.20.1
