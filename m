@@ -1,276 +1,188 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate14.nvidia.com ([216.228.121.143]:10947 "EHLO
-        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726125AbfHJASf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 20:18:35 -0400
-Subject: Re: [RFC PATCH v2 11/19] mm/gup: Pass follow_page_context further
- down the call stack
+Received: from mga02.intel.com ([134.134.136.20]:7086 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726022AbfHIW6n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 18:58:43 -0400
+From: ira.weiny@intel.com
+Subject: [RFC PATCH v2 01/19] fs/locks: Export F_LAYOUT lease to user space
+Date: Fri,  9 Aug 2019 15:58:15 -0700
+Message-Id: <20190809225833.6657-2-ira.weiny@intel.com>
+In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
 References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-12-ira.weiny@intel.com>
-From: John Hubbard <jhubbard@nvidia.com>
-Message-ID: <57000521-cc09-9c33-9fa4-1fae5a3972c2@nvidia.com>
-Date: Fri, 9 Aug 2019 17:18:31 -0700
 MIME-Version: 1.0
-In-Reply-To: <20190809225833.6657-12-ira.weiny@intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: ira.weiny@intel.com, Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
 
-On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
-> 
-> In preparation for passing more information (vaddr_pin) into
-> follow_page_pte(), follow_devmap_pud(), and follow_devmap_pmd().
-> 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> ---
->  include/linux/huge_mm.h | 17 -----------------
->  mm/gup.c                | 31 +++++++++++++++----------------
->  mm/huge_memory.c        |  6 ++++--
->  mm/internal.h           | 28 ++++++++++++++++++++++++++++
->  4 files changed, 47 insertions(+), 35 deletions(-)
-> 
-> diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-> index 45ede62aa85b..b01a20ce0bb9 100644
-> --- a/include/linux/huge_mm.h
-> +++ b/include/linux/huge_mm.h
-> @@ -233,11 +233,6 @@ static inline int hpage_nr_pages(struct page *page)
->  	return 1;
->  }
->  
-> -struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
-> -		pmd_t *pmd, int flags, struct dev_pagemap **pgmap);
-> -struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
-> -		pud_t *pud, int flags, struct dev_pagemap **pgmap);
-> -
->  extern vm_fault_t do_huge_pmd_numa_page(struct vm_fault *vmf, pmd_t orig_pmd);
->  
->  extern struct page *huge_zero_page;
-> @@ -375,18 +370,6 @@ static inline void mm_put_huge_zero_page(struct mm_struct *mm)
->  	return;
->  }
->  
-> -static inline struct page *follow_devmap_pmd(struct vm_area_struct *vma,
-> -	unsigned long addr, pmd_t *pmd, int flags, struct dev_pagemap **pgmap)
-> -{
-> -	return NULL;
-> -}
-> -
-> -static inline struct page *follow_devmap_pud(struct vm_area_struct *vma,
-> -	unsigned long addr, pud_t *pud, int flags, struct dev_pagemap **pgmap)
-> -{
-> -	return NULL;
-> -}
-> -
->  static inline bool thp_migration_supported(void)
->  {
->  	return false;
-> diff --git a/mm/gup.c b/mm/gup.c
-> index 504af3e9a942..a7a9d2f5278c 100644
-> --- a/mm/gup.c
-> +++ b/mm/gup.c
-> @@ -24,11 +24,6 @@
->  
->  #include "internal.h"
->  
-> -struct follow_page_context {
-> -	struct dev_pagemap *pgmap;
-> -	unsigned int page_mask;
-> -};
-> -
->  /**
->   * put_user_pages_dirty_lock() - release and optionally dirty gup-pinned pages
->   * @pages:  array of pages to be maybe marked dirty, and definitely released.
-> @@ -172,8 +167,9 @@ static inline bool can_follow_write_pte(pte_t pte, unsigned int flags)
->  
->  static struct page *follow_page_pte(struct vm_area_struct *vma,
->  		unsigned long address, pmd_t *pmd, unsigned int flags,
-> -		struct dev_pagemap **pgmap)
-> +		struct follow_page_context *ctx)
->  {
-> +	struct dev_pagemap **pgmap = &ctx->pgmap;
->  	struct mm_struct *mm = vma->vm_mm;
->  	struct page *page;
->  	spinlock_t *ptl;
-> @@ -363,13 +359,13 @@ static struct page *follow_pmd_mask(struct vm_area_struct *vma,
->  	}
->  	if (pmd_devmap(pmdval)) {
->  		ptl = pmd_lock(mm, pmd);
-> -		page = follow_devmap_pmd(vma, address, pmd, flags, &ctx->pgmap);
-> +		page = follow_devmap_pmd(vma, address, pmd, flags, ctx);
->  		spin_unlock(ptl);
->  		if (page)
->  			return page;
->  	}
->  	if (likely(!pmd_trans_huge(pmdval)))
-> -		return follow_page_pte(vma, address, pmd, flags, &ctx->pgmap);
-> +		return follow_page_pte(vma, address, pmd, flags, ctx);
->  
->  	if ((flags & FOLL_NUMA) && pmd_protnone(pmdval))
->  		return no_page_table(vma, flags);
-> @@ -389,7 +385,7 @@ static struct page *follow_pmd_mask(struct vm_area_struct *vma,
->  	}
->  	if (unlikely(!pmd_trans_huge(*pmd))) {
->  		spin_unlock(ptl);
-> -		return follow_page_pte(vma, address, pmd, flags, &ctx->pgmap);
-> +		return follow_page_pte(vma, address, pmd, flags, ctx);
->  	}
->  	if (flags & (FOLL_SPLIT | FOLL_SPLIT_PMD)) {
->  		int ret;
-> @@ -419,7 +415,7 @@ static struct page *follow_pmd_mask(struct vm_area_struct *vma,
->  		}
->  
->  		return ret ? ERR_PTR(ret) :
-> -			follow_page_pte(vma, address, pmd, flags, &ctx->pgmap);
-> +			follow_page_pte(vma, address, pmd, flags, ctx);
->  	}
->  	page = follow_trans_huge_pmd(vma, address, pmd, flags);
->  	spin_unlock(ptl);
-> @@ -456,7 +452,7 @@ static struct page *follow_pud_mask(struct vm_area_struct *vma,
->  	}
->  	if (pud_devmap(*pud)) {
->  		ptl = pud_lock(mm, pud);
-> -		page = follow_devmap_pud(vma, address, pud, flags, &ctx->pgmap);
-> +		page = follow_devmap_pud(vma, address, pud, flags, ctx);
->  		spin_unlock(ptl);
->  		if (page)
->  			return page;
-> @@ -786,7 +782,8 @@ static int check_vma_flags(struct vm_area_struct *vma, unsigned long gup_flags)
->  static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
->  		unsigned long start, unsigned long nr_pages,
->  		unsigned int gup_flags, struct page **pages,
-> -		struct vm_area_struct **vmas, int *nonblocking)
-> +		struct vm_area_struct **vmas, int *nonblocking,
-> +		struct vaddr_pin *vaddr_pin)
+From: Ira Weiny <ira.weiny@intel.com>
 
-I didn't expect to see more vaddr_pin arg passing, based on the commit
-description. Did you want this as part of patch 9 or 10 instead? If not,
-then let's mention it in the commit description.
+In order to support an opt-in policy for users to allow long term pins
+of FS DAX pages we need to export the LAYOUT lease to user space.
 
->  {
->  	long ret = 0, i = 0;
->  	struct vm_area_struct *vma = NULL;
-> @@ -797,6 +794,8 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
->  
->  	VM_BUG_ON(!!pages != !!(gup_flags & FOLL_GET));
->  
-> +	ctx.vaddr_pin = vaddr_pin;
-> +
->  	/*
->  	 * If FOLL_FORCE is set then do not force a full fault as the hinting
->  	 * fault information is unrelated to the reference behaviour of a task
-> @@ -1025,7 +1024,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
->  	lock_dropped = false;
->  	for (;;) {
->  		ret = __get_user_pages(tsk, mm, start, nr_pages, flags, pages,
-> -				       vmas, locked);
-> +				       vmas, locked, vaddr_pin);
->  		if (!locked)
->  			/* VM_FAULT_RETRY couldn't trigger, bypass */
->  			return ret;
-> @@ -1068,7 +1067,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
->  		lock_dropped = true;
->  		down_read(&mm->mmap_sem);
->  		ret = __get_user_pages(tsk, mm, start, 1, flags | FOLL_TRIED,
-> -				       pages, NULL, NULL);
-> +				       pages, NULL, NULL, vaddr_pin);
->  		if (ret != 1) {
->  			BUG_ON(ret > 1);
->  			if (!pages_done)
-> @@ -1226,7 +1225,7 @@ long populate_vma_page_range(struct vm_area_struct *vma,
->  	 * not result in a stack expansion that recurses back here.
->  	 */
->  	return __get_user_pages(current, mm, start, nr_pages, gup_flags,
-> -				NULL, NULL, nonblocking);
-> +				NULL, NULL, nonblocking, NULL);
->  }
->  
->  /*
-> @@ -1311,7 +1310,7 @@ struct page *get_dump_page(unsigned long addr)
->  
->  	if (__get_user_pages(current, current->mm, addr, 1,
->  			     FOLL_FORCE | FOLL_DUMP | FOLL_GET, &page, &vma,
-> -			     NULL) < 1)
-> +			     NULL, NULL) < 1)
->  		return NULL;
->  	flush_cache_page(vma, addr, page_to_pfn(page));
->  	return page;
-> diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-> index bc1a07a55be1..7e09f2f17ed8 100644
-> --- a/mm/huge_memory.c
-> +++ b/mm/huge_memory.c
-> @@ -916,8 +916,9 @@ static void touch_pmd(struct vm_area_struct *vma, unsigned long addr,
->  }
->  
->  struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
-> -		pmd_t *pmd, int flags, struct dev_pagemap **pgmap)
-> +		pmd_t *pmd, int flags, struct follow_page_context *ctx)
->  {
-> +	struct dev_pagemap **pgmap = &ctx->pgmap;
->  	unsigned long pfn = pmd_pfn(*pmd);
->  	struct mm_struct *mm = vma->vm_mm;
->  	struct page *page;
-> @@ -1068,8 +1069,9 @@ static void touch_pud(struct vm_area_struct *vma, unsigned long addr,
->  }
->  
->  struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
-> -		pud_t *pud, int flags, struct dev_pagemap **pgmap)
-> +		pud_t *pud, int flags, struct follow_page_context *ctx)
->  {
-> +	struct dev_pagemap **pgmap = &ctx->pgmap;
->  	unsigned long pfn = pud_pfn(*pud);
->  	struct mm_struct *mm = vma->vm_mm;
->  	struct page *page;
-> diff --git a/mm/internal.h b/mm/internal.h
-> index 0d5f720c75ab..46ada5279856 100644
-> --- a/mm/internal.h
-> +++ b/mm/internal.h
-> @@ -12,6 +12,34 @@
->  #include <linux/pagemap.h>
->  #include <linux/tracepoint-defs.h>
->  
-> +struct follow_page_context {
-> +	struct dev_pagemap *pgmap;
-> +	unsigned int page_mask;
-> +	struct vaddr_pin *vaddr_pin;
-> +};
-> +
-> +#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-> +struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
-> +		pmd_t *pmd, int flags, struct follow_page_context *ctx);
-> +struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
-> +		pud_t *pud, int flags, struct follow_page_context *ctx);
-> +#else
-> +static inline struct page *follow_devmap_pmd(struct vm_area_struct *vma,
-> +	unsigned long addr, pmd_t *pmd, int flags,
-> +	struct follow_page_context *ctx)
-> +{
-> +	return NULL;
-> +}
-> +
-> +static inline struct page *follow_devmap_pud(struct vm_area_struct *vma,
-> +	unsigned long addr, pud_t *pud, int flags,
-> +	struct follow_page_context *ctx)
-> +{
-> +	return NULL;
-> +}
-> +#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-> +
-> +
->  /*
->   * The set of flags that only affect watermark checking and reclaim
->   * behaviour. This is used by the MM to obey the caller constraints
-> 
+This is the first of 2 new lease flags which must be used to allow a
+long term pin to be made on a file.
 
+After the complete series:
 
+0) Registrations to Device DAX char devs are not affected
 
+1) The user has to opt in to allowing page pins on a file with an exclusive
+   layout lease.  Both exclusive and layout lease flags are user visible now.
 
-thanks,
+2) page pins will fail if the lease is not active when the file back page is
+   encountered.
+
+3) Any truncate or hole punch operation on a pinned DAX page will fail.
+
+4) The user has the option of holding the lease or releasing it.  If they
+   release it no other pin calls will work on the file.
+
+5) Closing the file is ok.
+
+6) Unmapping the file is ok
+
+7) Pins against the files are tracked back to an owning file or an owning mm
+   depending on the internal subsystem needs.  With RDMA there is an owning
+   file which is related to the pined file.
+
+8) Only RDMA is currently supported
+
+9) Truncation of pages which are not actively pinned nor covered by a lease
+   will succeed.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/locks.c                       | 36 +++++++++++++++++++++++++++-----
+ include/linux/fs.h               |  2 +-
+ include/uapi/asm-generic/fcntl.h |  3 +++
+ 3 files changed, 35 insertions(+), 6 deletions(-)
+
+diff --git a/fs/locks.c b/fs/locks.c
+index 24d1db632f6c..ad17c6ffca06 100644
+--- a/fs/locks.c
++++ b/fs/locks.c
+@@ -191,6 +191,8 @@ static int target_leasetype(struct file_lock *fl)
+ 		return F_UNLCK;
+ 	if (fl->fl_flags & FL_DOWNGRADE_PENDING)
+ 		return F_RDLCK;
++	if (fl->fl_flags & FL_LAYOUT)
++		return F_LAYOUT;
+ 	return fl->fl_type;
+ }
+ 
+@@ -611,7 +613,8 @@ static const struct lock_manager_operations lease_manager_ops = {
+ /*
+  * Initialize a lease, use the default lock manager operations
+  */
+-static int lease_init(struct file *filp, long type, struct file_lock *fl)
++static int lease_init(struct file *filp, long type, unsigned int flags,
++		      struct file_lock *fl)
+ {
+ 	if (assign_type(fl, type) != 0)
+ 		return -EINVAL;
+@@ -621,6 +624,8 @@ static int lease_init(struct file *filp, long type, struct file_lock *fl)
+ 
+ 	fl->fl_file = filp;
+ 	fl->fl_flags = FL_LEASE;
++	if (flags & FL_LAYOUT)
++		fl->fl_flags |= FL_LAYOUT;
+ 	fl->fl_start = 0;
+ 	fl->fl_end = OFFSET_MAX;
+ 	fl->fl_ops = NULL;
+@@ -629,7 +634,8 @@ static int lease_init(struct file *filp, long type, struct file_lock *fl)
+ }
+ 
+ /* Allocate a file_lock initialised to this type of lease */
+-static struct file_lock *lease_alloc(struct file *filp, long type)
++static struct file_lock *lease_alloc(struct file *filp, long type,
++				     unsigned int flags)
+ {
+ 	struct file_lock *fl = locks_alloc_lock();
+ 	int error = -ENOMEM;
+@@ -637,7 +643,7 @@ static struct file_lock *lease_alloc(struct file *filp, long type)
+ 	if (fl == NULL)
+ 		return ERR_PTR(error);
+ 
+-	error = lease_init(filp, type, fl);
++	error = lease_init(filp, type, flags, fl);
+ 	if (error) {
+ 		locks_free_lock(fl);
+ 		return ERR_PTR(error);
+@@ -1583,7 +1589,7 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
+ 	int want_write = (mode & O_ACCMODE) != O_RDONLY;
+ 	LIST_HEAD(dispose);
+ 
+-	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK);
++	new_fl = lease_alloc(NULL, want_write ? F_WRLCK : F_RDLCK, 0);
+ 	if (IS_ERR(new_fl))
+ 		return PTR_ERR(new_fl);
+ 	new_fl->fl_flags = type;
+@@ -1720,6 +1726,8 @@ EXPORT_SYMBOL(lease_get_mtime);
+  *
+  *	%F_UNLCK to indicate no lease is held.
+  *
++ *	%F_LAYOUT to indicate a layout lease is held.
++ *
+  *	(if a lease break is pending):
+  *
+  *	%F_RDLCK to indicate an exclusive lease needs to be
+@@ -2022,8 +2030,26 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
+ 	struct file_lock *fl;
+ 	struct fasync_struct *new;
+ 	int error;
++	unsigned int flags = 0;
++
++	/*
++	 * NOTE on F_LAYOUT lease
++	 *
++	 * LAYOUT lease types are taken on files which the user knows that
++	 * they will be pinning in memory for some indeterminate amount of
++	 * time.  Such as for use with RDMA.  While we don't know what user
++	 * space is going to do with the file we still use a F_RDLOCK level of
++	 * lease.  This ensures that there are no conflicts between
++	 * 2 users.  The conflict should only come from the File system wanting
++	 * to revoke the lease in break_layout()  And this is done by using
++	 * F_WRLCK in the break code.
++	 */
++	if (arg == F_LAYOUT) {
++		arg = F_RDLCK;
++		flags = FL_LAYOUT;
++	}
+ 
+-	fl = lease_alloc(filp, arg);
++	fl = lease_alloc(filp, arg, flags);
+ 	if (IS_ERR(fl))
+ 		return PTR_ERR(fl);
+ 
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 046108cd4ed9..dd60d5be9886 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1004,7 +1004,7 @@ static inline struct file *get_file(struct file *f)
+ #define FL_DOWNGRADE_PENDING	256 /* Lease is being downgraded */
+ #define FL_UNLOCK_PENDING	512 /* Lease is being broken */
+ #define FL_OFDLCK	1024	/* lock is "owned" by struct file */
+-#define FL_LAYOUT	2048	/* outstanding pNFS layout */
++#define FL_LAYOUT	2048	/* outstanding pNFS layout or user held pin */
+ 
+ #define FL_CLOSE_POSIX (FL_POSIX | FL_CLOSE)
+ 
+diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+index 9dc0bf0c5a6e..baddd54f3031 100644
+--- a/include/uapi/asm-generic/fcntl.h
++++ b/include/uapi/asm-generic/fcntl.h
+@@ -174,6 +174,9 @@ struct f_owner_ex {
+ #define F_SHLCK		8	/* or 4 */
+ #endif
+ 
++#define F_LAYOUT	16      /* layout lease to allow longterm pins such as
++				   RDMA */
++
+ /* operations for bsd flock(), also used by the kernel implementation */
+ #define LOCK_SH		1	/* shared lock */
+ #define LOCK_EX		2	/* exclusive lock */
 -- 
-John Hubbard
-NVIDIA
+2.20.1
