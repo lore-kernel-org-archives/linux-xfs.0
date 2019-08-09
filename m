@@ -1,146 +1,219 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:44005 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390228AbfHHSxc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 14:53:32 -0400
-Received: by mail-pg1-f194.google.com with SMTP id r26so8568222pgl.10
-        for <linux-xfs@vger.kernel.org>; Thu, 08 Aug 2019 11:53:31 -0700 (PDT)
-From: Andreas Dilger <adilger@dilger.ca>
-Message-Id: <69E22C32-5EDC-4507-9407-A1622BC31560@dilger.ca>
-Content-Type: multipart/signed;
- boundary="Apple-Mail=_39697C0F-3B43-4F6C-B46F-487A1EAB1FEB";
- protocol="application/pgp-signature"; micalg=pgp-sha256
-Mime-Version: 1.0 (Mac OS X Mail 10.3 \(3273\))
-Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
- ioctl_fibmap
-Date: Thu, 8 Aug 2019 12:53:25 -0600
-In-Reply-To: <20190808071257.ufbk5i35xpkf4byh@pegasus.maiolino.io>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
- <20190731141245.7230-5-cmaiolino@redhat.com>
- <20190731231217.GV1561054@magnolia>
- <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
- <20190802151400.GG7138@magnolia>
- <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
- <20190805151258.GD7129@magnolia> <20190806224138.GW30113@42.do-not-panic.com>
- <20190808071257.ufbk5i35xpkf4byh@pegasus.maiolino.io>
+Received: from mga03.intel.com ([134.134.136.65]:26737 "EHLO mga03.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1733258AbfHIAFh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Aug 2019 20:05:37 -0400
+Date: Fri, 9 Aug 2019 08:04:56 +0800
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 7/9] fiemap: Use a callback to fill fiemap extents
+Message-ID: <201908090808.UlvbBeuF%lkp@intel.com>
+References: <20190808082744.31405-8-cmaiolino@redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190808082744.31405-8-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: Luis Chamberlain <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, rpeterso@redhat.com, linux-xfs <linux-xfs@vger.kernel.org>
+Cc: kbuild-all@01.org, linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+
+Hi Carlos,
+
+Thank you for the patch! Perhaps something to improve:
+
+[auto build test WARNING on linus/master]
+[cannot apply to v5.3-rc3 next-20190808]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Carlos-Maiolino/New-fiemap-infrastructure-and-bmap-removal/20190808-221354
+reproduce:
+        # apt-get install sparse
+        # sparse version: v0.6.1-rc1-7-g2b96cd8-dirty
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
+
+If you fix the issue, kindly add following tag
+Reported-by: kbuild test robot <lkp@intel.com>
 
 
---Apple-Mail=_39697C0F-3B43-4F6C-B46F-487A1EAB1FEB
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+sparse warnings: (new ones prefixed by >>)
 
-On Aug 8, 2019, at 1:12 AM, Carlos Maiolino <cmaiolino@redhat.com> =
-wrote:
->=20
->>>=20
->>>> Maybe I am not seeing something or having a different thinking you =
-have, but
->>>> this is the behavior we have now, without my patches. And we can't =
-really change
->>>> it; the user view of this implementation.
->>>> That's why I didn't try to change the result, so the truncation =
-still happens.
->>>=20
->>> I understand that we're not generally supposed to change existing
->>> userspace interfaces, but the fact remains that allowing truncated
->>> responses causes *filesystem corruption*.
->>>=20
->>> We know that the most well known FIBMAP callers are bootloaders, and =
-we
->>> know what they do with the information they get -- they use it to =
-record
->>> the block map of boot files.  So if the IPL/grub/whatever installer
->>> queries the boot file and the boot file is at block 12345678901 (a
->>> 34-bit number), this interface truncates that to 3755744309 (a =
-32-bit
->>> number) and that's where the bootloader will think its boot files =
-are.
->>> The installation succeeds, the user reboots and *kaboom* the system =
-no
->>> longer boots because the contents of block 3755744309 is not a =
-bootloader.
->>>=20
->>> Worse yet, grub1 used FIBMAP data to record the location of the grub
->>> environment file and installed itself between the MBR and the start =
-of
->>> partition 1.  If the environment file is at offset 1234578901, grub =
-will
->>> write status data to its environment file (which it thinks is at
->>> 3755744309) and *KABOOM* we've just destroyed whatever was in that
->>> block.
->>>=20
->>> Far better for the bootloader installation script to hit an error =
-and
->>> force the admin to deal with the situation than for the system to =
-become
->>> unbootable.  That's *why* the (newer) iomap bmap implementation does =
-not
->>> return truncated mappings, even though the classic implementation =
-does.
->>>=20
->>> The classic code returning truncated results is a broken behavior.
->>=20
->> How long as it been broken for? And if we do fix it, I'd just like =
-for
->> a nice commit lot describing potential risks of not applying it. *If*
->> the issue exists as-is today, the above contains a lot of information
->> for addressing potential issues, even if theoretical.
->>=20
->=20
-> It's broken since forever. This has always been the FIBMAP behavior.
+>> fs/ioctl.c:87:52: sparse: sparse: incorrect type in initializer (different address spaces) @@    expected struct fiemap_extent [noderef] <asn:1> *dest @@    got n:1> *dest @@
+>> fs/ioctl.c:87:52: sparse:    expected struct fiemap_extent [noderef] <asn:1> *dest
+>> fs/ioctl.c:87:52: sparse:    got void *fi_cb_data
+   fs/ioctl.c:83:5: sparse: sparse: symbol 'fiemap_fill_user_extent' was not declared. Should it be static?
+>> fs/ioctl.c:218:28: sparse: sparse: incorrect type in assignment (different address spaces) @@    expected void *[assigned] fi_cb_data @@    got struct fiemap_extent [nvoid *[assigned] fi_cb_data @@
+>> fs/ioctl.c:218:28: sparse:    expected void *[assigned] fi_cb_data
+>> fs/ioctl.c:218:28: sparse:    got struct fiemap_extent [noderef] <asn:1> *
+>> fs/ioctl.c:224:14: sparse: sparse: incorrect type in argument 1 (different address spaces) @@    expected void const volatile [noderef] <asn:1> * @@    got oderef] <asn:1> * @@
+>> fs/ioctl.c:224:14: sparse:    expected void const volatile [noderef] <asn:1> *
+>> fs/ioctl.c:224:14: sparse:    got void *[assigned] fi_cb_data
 
-It's been broken since forever, but only for filesystems larger than 4TB =
-or
-16TB (2^32 blocks), which are only becoming commonplace for root disks =
-recently.
-Also, doesn't LILO have a limit on the location of the kernel image, in =
-the
-first 1GB or similar?
+vim +87 fs/ioctl.c
 
-So maybe this is not an issue that FIBMAP users ever hit in practise =
-anyway,
-but I agree that it doesn't make sense to return bad data (32-bit =
-wrapped block
-numbers) and 0 should be returned in such cases.
+    79	
+    80	#define SET_UNKNOWN_FLAGS	(FIEMAP_EXTENT_DELALLOC)
+    81	#define SET_NO_UNMOUNTED_IO_FLAGS	(FIEMAP_EXTENT_DATA_ENCRYPTED)
+    82	#define SET_NOT_ALIGNED_FLAGS	(FIEMAP_EXTENT_DATA_TAIL|FIEMAP_EXTENT_DATA_INLINE)
+    83	int fiemap_fill_user_extent(struct fiemap_extent_info *fieinfo, u64 logical,
+    84				    u64 phys, u64 len, u32 flags)
+    85	{
+    86		struct fiemap_extent extent;
+  > 87		struct fiemap_extent __user *dest = fieinfo->fi_cb_data;
+    88	
+    89		/* only count the extents */
+    90		if (fieinfo->fi_extents_max == 0) {
+    91			fieinfo->fi_extents_mapped++;
+    92			return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
+    93		}
+    94	
+    95		if (fieinfo->fi_extents_mapped >= fieinfo->fi_extents_max)
+    96			return 1;
+    97	
+    98		if (flags & SET_UNKNOWN_FLAGS)
+    99			flags |= FIEMAP_EXTENT_UNKNOWN;
+   100		if (flags & SET_NO_UNMOUNTED_IO_FLAGS)
+   101			flags |= FIEMAP_EXTENT_ENCODED;
+   102		if (flags & SET_NOT_ALIGNED_FLAGS)
+   103			flags |= FIEMAP_EXTENT_NOT_ALIGNED;
+   104	
+   105		memset(&extent, 0, sizeof(extent));
+   106		extent.fe_logical = logical;
+   107		extent.fe_physical = phys;
+   108		extent.fe_length = len;
+   109		extent.fe_flags = flags;
+   110	
+   111		dest += fieinfo->fi_extents_mapped;
+   112		if (copy_to_user(dest, &extent, sizeof(extent)))
+   113			return -EFAULT;
+   114	
+   115		fieinfo->fi_extents_mapped++;
+   116		if (fieinfo->fi_extents_mapped == fieinfo->fi_extents_max)
+   117			return 1;
+   118		return (flags & FIEMAP_EXTENT_LAST) ? 1 : 0;
+   119	}
+   120	
+   121	/**
+   122	 * fiemap_fill_next_extent - Fiemap helper function
+   123	 * @fieinfo:	Fiemap context passed into ->fiemap
+   124	 * @logical:	Extent logical start offset, in bytes
+   125	 * @phys:	Extent physical start offset, in bytes
+   126	 * @len:	Extent length, in bytes
+   127	 * @flags:	FIEMAP_EXTENT flags that describe this extent
+   128	 *
+   129	 * Called from file system ->fiemap callback. Will populate extent
+   130	 * info as passed in via arguments and copy to user memory. On
+   131	 * success, extent count on fieinfo is incremented.
+   132	 *
+   133	 * Returns 0 on success, -errno on error, 1 if this was the last
+   134	 * extent that will fit in user array.
+   135	 */
+   136	int fiemap_fill_next_extent(struct fiemap_extent_info *fieinfo, u64 logical,
+   137				    u64 phys, u64 len, u32 flags)
+   138	{
+   139		return fieinfo->fi_cb(fieinfo, logical, phys, len, flags);
+   140	}
+   141	EXPORT_SYMBOL(fiemap_fill_next_extent);
+   142	
+   143	/**
+   144	 * fiemap_check_flags - check validity of requested flags for fiemap
+   145	 * @fieinfo:	Fiemap context passed into ->fiemap
+   146	 * @fs_flags:	Set of fiemap flags that the file system understands
+   147	 *
+   148	 * Called from file system ->fiemap callback. This will compute the
+   149	 * intersection of valid fiemap flags and those that the fs supports. That
+   150	 * value is then compared against the user supplied flags. In case of bad user
+   151	 * flags, the invalid values will be written into the fieinfo structure, and
+   152	 * -EBADR is returned, which tells ioctl_fiemap() to return those values to
+   153	 * userspace. For this reason, a return code of -EBADR should be preserved.
+   154	 *
+   155	 * Returns 0 on success, -EBADR on bad flags.
+   156	 */
+   157	int fiemap_check_flags(struct fiemap_extent_info *fieinfo, u32 fs_flags)
+   158	{
+   159		u32 incompat_flags;
+   160	
+   161		incompat_flags = fieinfo->fi_flags & ~(FIEMAP_FLAGS_COMPAT & fs_flags);
+   162		if (incompat_flags) {
+   163			fieinfo->fi_flags = incompat_flags;
+   164			return -EBADR;
+   165		}
+   166		return 0;
+   167	}
+   168	EXPORT_SYMBOL(fiemap_check_flags);
+   169	
+   170	static int fiemap_check_ranges(struct super_block *sb,
+   171				       u64 start, u64 len, u64 *new_len)
+   172	{
+   173		u64 maxbytes = (u64) sb->s_maxbytes;
+   174	
+   175		*new_len = len;
+   176	
+   177		if (len == 0)
+   178			return -EINVAL;
+   179	
+   180		if (start > maxbytes)
+   181			return -EFBIG;
+   182	
+   183		/*
+   184		 * Shrink request scope to what the fs can actually handle.
+   185		 */
+   186		if (len > maxbytes || (maxbytes - len) < start)
+   187			*new_len = maxbytes - start;
+   188	
+   189		return 0;
+   190	}
+   191	
+   192	static int ioctl_fiemap(struct file *filp, unsigned long arg)
+   193	{
+   194		struct fiemap fiemap;
+   195		struct fiemap __user *ufiemap = (struct fiemap __user *) arg;
+   196		struct fiemap_extent_info fieinfo = { 0, };
+   197		struct inode *inode = file_inode(filp);
+   198		struct super_block *sb = inode->i_sb;
+   199		u64 len;
+   200		int error;
+   201	
+   202		if (!inode->i_op->fiemap)
+   203			return -EOPNOTSUPP;
+   204	
+   205		if (copy_from_user(&fiemap, ufiemap, sizeof(fiemap)))
+   206			return -EFAULT;
+   207	
+   208		if (fiemap.fm_extent_count > FIEMAP_MAX_EXTENTS)
+   209			return -EINVAL;
+   210	
+   211		error = fiemap_check_ranges(sb, fiemap.fm_start, fiemap.fm_length,
+   212					    &len);
+   213		if (error)
+   214			return error;
+   215	
+   216		fieinfo.fi_flags = fiemap.fm_flags;
+   217		fieinfo.fi_extents_max = fiemap.fm_extent_count;
+ > 218		fieinfo.fi_cb_data = ufiemap->fm_extents;
+   219		fieinfo.fi_start = fiemap.fm_start;
+   220		fieinfo.fi_len = len;
+   221		fieinfo.fi_cb = fiemap_fill_user_extent;
+   222	
+   223		if (fiemap.fm_extent_count != 0 &&
+ > 224		    !access_ok(fieinfo.fi_cb_data,
+   225			       fieinfo.fi_extents_max * sizeof(struct fiemap_extent)))
+   226			return -EFAULT;
+   227	
+   228		if (fieinfo.fi_flags & FIEMAP_FLAG_SYNC)
+   229			filemap_write_and_wait(inode->i_mapping);
+   230	
+   231		error = inode->i_op->fiemap(inode, &fieinfo);
+   232		fiemap.fm_flags = fieinfo.fi_flags;
+   233		fiemap.fm_mapped_extents = fieinfo.fi_extents_mapped;
+   234		if (copy_to_user(ufiemap, &fiemap, sizeof(fiemap)))
+   235			error = -EFAULT;
+   236	
+   237		return error;
+   238	}
+   239	
 
-
-Cheers, Andreas
-
-
-
-
-
-
---Apple-Mail=_39697C0F-3B43-4F6C-B46F-487A1EAB1FEB
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename=signature.asc
-Content-Type: application/pgp-signature;
-	name=signature.asc
-Content-Description: Message signed with OpenPGP
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEDb73u6ZejP5ZMprvcqXauRfMH+AFAl1Mb6YACgkQcqXauRfM
-H+DXIw/9E7jMcw2a2hvhRw3vkhG3/68LSALNdU8k0FLKxlB9tv+PyYEBi0ykBQhd
-kq6f5QB0onO6RXk5OG8ylftrIASFPl40JFXoOAgheHnVuH6TUlpmG0/S+Lr2AAxF
-jkg7jeGFurNF3NVTd0MiwFYbQbx5VzeKgDVB8Q1RWP4z5pcc1mT522LiYx4OXhhn
-EPZxa76LNvOi5mfZLRu8tvonFjoBUy5Ui0YulEJcY85E/v+euu2vdOCzmfbTujq+
-AG8XCAdwegg9OltIWzzBHNMvPT1mKdxeGT/5KomOy/R0I9Q5QBrYJe6rw32FS72L
-9PytFAk3l71c1sehdVqkCqpaJdwWR/8Fylk0kTz85LKMyaQ2SCav9zPaBrqCG8Xh
-p/XVxfFkolk6OLGmsH4ICGdBi3l2z1ZOWt8U+QTvUu50I3RLIUPdyD53YAkomEr5
-daHE7zx5yCNqx8zEz/V3Vp6CoPzaTMNbzCI8rKy3PwUG/qiPIcAJBa9HNqv8nVxY
-sXHdbawi+wCJz+MCibiXOQTXgCvZiuVhDeylr6ic6d64LP6dMUCrOhdAM0Qr1ylm
-O0kQVEp4IifaM7VaheZxukwHERl0a+jRqMuFstuHRTJp/PLw6s6mzQVgdDykCPZV
-fVGJ5xE55qwrQDJvUH8tnSLHx8MmgbeIhZV5qUjux3Uc5xT4FP0=
-=vAPg
------END PGP SIGNATURE-----
-
---Apple-Mail=_39697C0F-3B43-4F6C-B46F-487A1EAB1FEB--
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
