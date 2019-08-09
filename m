@@ -1,12 +1,12 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:25557 "EHLO mga06.intel.com"
+Received: from mga11.intel.com ([192.55.52.93]:23362 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730376AbfHIW7C (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:59:02 -0400
+        id S1729891AbfHIW6w (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 18:58:52 -0400
 From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 12/19] mm/gup: Prep put_user_pages() to take an vaddr_pin struct
-Date: Fri,  9 Aug 2019 15:58:26 -0700
-Message-Id: <20190809225833.6657-13-ira.weiny@intel.com>
+Subject: [RFC PATCH v2 07/19] fs/xfs: Teach xfs to use new dax_layout_busy_page()
+Date: Fri,  9 Aug 2019 15:58:21 -0700
+Message-Id: <20190809225833.6657-8-ira.weiny@intel.com>
 In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
 References: <20190809225833.6657-1-ira.weiny@intel.com>
 MIME-Version: 1.0
@@ -19,202 +19,162 @@ Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Mat
 
 From: Ira Weiny <ira.weiny@intel.com>
 
-Once callers start to use vaddr_pin the put_user_pages calls will need
-to have access to this data coming in.  Prep put_user_pages() for this
-data.
+dax_layout_busy_page() can now operate on a sub-range of the
+address_space provided.
+
+Have xfs specify the sub range to dax_layout_busy_page()
 
 Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 ---
- include/linux/mm.h |  20 +-------
- mm/gup.c           | 122 ++++++++++++++++++++++++++++++++-------------
- 2 files changed, 88 insertions(+), 54 deletions(-)
+ fs/xfs/xfs_file.c  | 19 +++++++++++++------
+ fs/xfs/xfs_inode.h |  5 +++--
+ fs/xfs/xfs_ioctl.c | 15 ++++++++++++---
+ fs/xfs/xfs_iops.c  | 14 ++++++++++----
+ 4 files changed, 38 insertions(+), 15 deletions(-)
 
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index befe150d17be..9d37cafbef9a 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1064,25 +1064,7 @@ static inline void put_page(struct page *page)
- 		__put_page(page);
- }
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 8f8d478f9ec6..447571e3cb02 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -295,7 +295,11 @@ xfs_file_aio_write_checks(
+ 	if (error <= 0)
+ 		return error;
  
--/**
-- * put_user_page() - release a gup-pinned page
-- * @page:            pointer to page to be released
-- *
-- * Pages that were pinned via get_user_pages*() must be released via
-- * either put_user_page(), or one of the put_user_pages*() routines
-- * below. This is so that eventually, pages that are pinned via
-- * get_user_pages*() can be separately tracked and uniquely handled. In
-- * particular, interactions with RDMA and filesystems need special
-- * handling.
-- *
-- * put_user_page() and put_page() are not interchangeable, despite this early
-- * implementation that makes them look the same. put_user_page() calls must
-- * be perfectly matched up with get_user_page() calls.
-- */
--static inline void put_user_page(struct page *page)
--{
--	put_page(page);
--}
-+void put_user_page(struct page *page);
- 
- void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
- 			       bool make_dirty);
-diff --git a/mm/gup.c b/mm/gup.c
-index a7a9d2f5278c..10cfd30ff668 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -24,30 +24,41 @@
- 
- #include "internal.h"
- 
--/**
-- * put_user_pages_dirty_lock() - release and optionally dirty gup-pinned pages
-- * @pages:  array of pages to be maybe marked dirty, and definitely released.
-- * @npages: number of pages in the @pages array.
-- * @make_dirty: whether to mark the pages dirty
-- *
-- * "gup-pinned page" refers to a page that has had one of the get_user_pages()
-- * variants called on that page.
-- *
-- * For each page in the @pages array, make that page (or its head page, if a
-- * compound page) dirty, if @make_dirty is true, and if the page was previously
-- * listed as clean. In any case, releases all pages using put_user_page(),
-- * possibly via put_user_pages(), for the non-dirty case.
-- *
-- * Please see the put_user_page() documentation for details.
-- *
-- * set_page_dirty_lock() is used internally. If instead, set_page_dirty() is
-- * required, then the caller should a) verify that this is really correct,
-- * because _lock() is usually required, and b) hand code it:
-- * set_page_dirty_lock(), put_user_page().
-- *
-- */
--void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
--			       bool make_dirty)
-+static void __put_user_page(struct vaddr_pin *vaddr_pin, struct page *page)
-+{
-+	page = compound_head(page);
-+
+-	error = xfs_break_layouts(inode, iolock, BREAK_WRITE);
 +	/*
-+	 * For devmap managed pages we need to catch refcount transition from
-+	 * GUP_PIN_COUNTING_BIAS to 1, when refcount reach one it means the
-+	 * page is free and we need to inform the device driver through
-+	 * callback. See include/linux/memremap.h and HMM for details.
++	 * BREAK_WRITE ignores offset/len tuple just specify the whole file
++	 * (0 - ULONG_MAX to be safe.
 +	 */
-+	if (put_devmap_managed_page(page))
-+		return;
-+
-+	if (put_page_testzero(page))
-+		__put_page(page);
-+}
-+
-+static void __put_user_pages(struct vaddr_pin *vaddr_pin, struct page **pages,
-+			     unsigned long npages)
-+{
-+	unsigned long index;
-+
-+	/*
-+	 * TODO: this can be optimized for huge pages: if a series of pages is
-+	 * physically contiguous and part of the same compound page, then a
-+	 * single operation to the head page should suffice.
-+	 */
-+	for (index = 0; index < npages; index++)
-+		__put_user_page(vaddr_pin, pages[index]);
-+}
-+
-+static void __put_user_pages_dirty_lock(struct vaddr_pin *vaddr_pin,
-+					struct page **pages,
-+					unsigned long npages,
-+					bool make_dirty)
++	error = xfs_break_layouts(inode, iolock, 0, ULONG_MAX, BREAK_WRITE);
+ 	if (error)
+ 		return error;
+ 
+@@ -734,14 +738,15 @@ xfs_wait_dax_page(
+ static int
+ xfs_break_dax_layouts(
+ 	struct inode		*inode,
+-	bool			*retry)
++	bool			*retry,
++	loff_t                   off,
++	loff_t                   len)
  {
- 	unsigned long index;
+ 	struct page		*page;
  
-@@ -58,7 +69,7 @@ void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
- 	 */
+ 	ASSERT(xfs_isilocked(XFS_I(inode), XFS_MMAPLOCK_EXCL));
  
- 	if (!make_dirty) {
--		put_user_pages(pages, npages);
-+		__put_user_pages(vaddr_pin, pages, npages);
- 		return;
+-	/* We default to the "whole file" */
+-	page = dax_layout_busy_page(inode->i_mapping, 0, ULONG_MAX);
++	page = dax_layout_busy_page(inode->i_mapping, off, len);
+ 	if (!page)
+ 		return 0;
+ 
+@@ -755,6 +760,8 @@ int
+ xfs_break_layouts(
+ 	struct inode		*inode,
+ 	uint			*iolock,
++	loff_t                   off,
++	loff_t                   len,
+ 	enum layout_break_reason reason)
+ {
+ 	bool			retry;
+@@ -766,7 +773,7 @@ xfs_break_layouts(
+ 		retry = false;
+ 		switch (reason) {
+ 		case BREAK_UNMAP:
+-			error = xfs_break_dax_layouts(inode, &retry);
++			error = xfs_break_dax_layouts(inode, &retry, off, len);
+ 			if (error || retry)
+ 				break;
+ 			/* fall through */
+@@ -808,7 +815,7 @@ xfs_file_fallocate(
+ 		return -EOPNOTSUPP;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
++	error = xfs_break_layouts(inode, &iolock, offset, len, BREAK_UNMAP);
+ 	if (error)
+ 		goto out_unlock;
+ 
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 558173f95a03..1b0948f5267c 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -475,8 +475,9 @@ enum xfs_prealloc_flags {
+ 
+ int	xfs_update_prealloc_flags(struct xfs_inode *ip,
+ 				  enum xfs_prealloc_flags flags);
+-int	xfs_break_layouts(struct inode *inode, uint *iolock,
+-		enum layout_break_reason reason);
++int xfs_break_layouts(struct inode *inode, uint *iolock,
++		      loff_t off, loff_t len,
++		      enum layout_break_reason reason);
+ 
+ /* from xfs_iops.c */
+ extern void xfs_setup_inode(struct xfs_inode *ip);
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 6f7848cd5527..3897b88080bd 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -597,6 +597,7 @@ xfs_ioc_space(
+ 	enum xfs_prealloc_flags	flags = 0;
+ 	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+ 	int			error;
++	loff_t                  break_length;
+ 
+ 	if (inode->i_flags & (S_IMMUTABLE|S_APPEND))
+ 		return -EPERM;
+@@ -617,9 +618,6 @@ xfs_ioc_space(
+ 		return error;
+ 
+ 	xfs_ilock(ip, iolock);
+-	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+-	if (error)
+-		goto out_unlock;
+ 
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+@@ -665,6 +663,17 @@ xfs_ioc_space(
+ 		goto out_unlock;
  	}
  
-@@ -86,9 +97,58 @@ void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
- 		 */
- 		if (!PageDirty(page))
- 			set_page_dirty_lock(page);
--		put_user_page(page);
-+		__put_user_page(vaddr_pin, page);
- 	}
- }
++	/* break layout for the whole file if len ends up 0 */
++	if (bf->l_len == 0)
++		break_length = ULONG_MAX;
++	else
++		break_length = bf->l_len;
 +
-+/**
-+ * put_user_page() - release a gup-pinned page
-+ * @page:            pointer to page to be released
-+ *
-+ * Pages that were pinned via get_user_pages*() must be released via
-+ * either put_user_page(), or one of the put_user_pages*() routines
-+ * below. This is so that eventually, pages that are pinned via
-+ * get_user_pages*() can be separately tracked and uniquely handled. In
-+ * particular, interactions with RDMA and filesystems need special
-+ * handling.
-+ *
-+ * put_user_page() and put_page() are not interchangeable, despite this early
-+ * implementation that makes them look the same. put_user_page() calls must
-+ * be perfectly matched up with get_user_page() calls.
-+ */
-+void put_user_page(struct page *page)
-+{
-+	__put_user_page(NULL, page);
-+}
-+EXPORT_SYMBOL(put_user_page);
++	error = xfs_break_layouts(inode, &iolock, bf->l_start, break_length,
++				  BREAK_UNMAP);
++	if (error)
++		goto out_unlock;
 +
-+/**
-+ * put_user_pages_dirty_lock() - release and optionally dirty gup-pinned pages
-+ * @pages:  array of pages to be maybe marked dirty, and definitely released.
-+ * @npages: number of pages in the @pages array.
-+ * @make_dirty: whether to mark the pages dirty
-+ *
-+ * "gup-pinned page" refers to a page that has had one of the get_user_pages()
-+ * variants called on that page.
-+ *
-+ * For each page in the @pages array, make that page (or its head page, if a
-+ * compound page) dirty, if @make_dirty is true, and if the page was previously
-+ * listed as clean. In any case, releases all pages using put_user_page(),
-+ * possibly via put_user_pages(), for the non-dirty case.
-+ *
-+ * Please see the put_user_page() documentation for details.
-+ *
-+ * set_page_dirty_lock() is used internally. If instead, set_page_dirty() is
-+ * required, then the caller should a) verify that this is really correct,
-+ * because _lock() is usually required, and b) hand code it:
-+ * set_page_dirty_lock(), put_user_page().
-+ *
-+ */
-+void put_user_pages_dirty_lock(struct page **pages, unsigned long npages,
-+			       bool make_dirty)
-+{
-+	__put_user_pages_dirty_lock(NULL, pages, npages, make_dirty);
-+}
- EXPORT_SYMBOL(put_user_pages_dirty_lock);
+ 	switch (cmd) {
+ 	case XFS_IOC_ZERO_RANGE:
+ 		flags |= XFS_PREALLOC_SET;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index ff3c1fae5357..f0de5486f6c1 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -1042,10 +1042,16 @@ xfs_vn_setattr(
+ 		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+ 		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
  
- /**
-@@ -102,15 +162,7 @@ EXPORT_SYMBOL(put_user_pages_dirty_lock);
-  */
- void put_user_pages(struct page **pages, unsigned long npages)
- {
--	unsigned long index;
--
--	/*
--	 * TODO: this can be optimized for huge pages: if a series of pages is
--	 * physically contiguous and part of the same compound page, then a
--	 * single operation to the head page should suffice.
--	 */
--	for (index = 0; index < npages; index++)
--		put_user_page(pages[index]);
-+	__put_user_pages(NULL, pages, npages);
- }
- EXPORT_SYMBOL(put_user_pages);
+-		error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+-		if (error) {
+-			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+-			return error;
++		if (iattr->ia_size < inode->i_size) {
++			loff_t                  off = iattr->ia_size;
++			loff_t                  len = inode->i_size - iattr->ia_size;
++
++			error = xfs_break_layouts(inode, &iolock, off, len,
++						  BREAK_UNMAP);
++			if (error) {
++				xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
++				return error;
++			}
+ 		}
  
+ 		error = xfs_vn_setattr_size(dentry, iattr);
 -- 
 2.20.1
