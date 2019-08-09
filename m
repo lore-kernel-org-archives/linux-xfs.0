@@ -1,104 +1,288 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45982 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726212AbfHKBCr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Aug 2019 21:02:47 -0400
-Date: Sun, 11 Aug 2019 11:01:36 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH V2] xfs: allocate xattr buffer on demand
-Message-ID: <20190811010136.GD7777@dread.disaster.area>
-References: <20190724045911.GU7689@dread.disaster.area>
- <403e606b-1b7b-5983-d8e5-a7fecee84702@applied-asynchrony.com>
+Received: from mga11.intel.com ([192.55.52.93]:23377 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730744AbfHIW7J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 18:59:09 -0400
+From: ira.weiny@intel.com
+Subject: [RFC PATCH v2 18/19] {mm,procfs}: Add display file_pins proc
+Date: Fri,  9 Aug 2019 15:58:32 -0700
+Message-Id: <20190809225833.6657-19-ira.weiny@intel.com>
+In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <403e606b-1b7b-5983-d8e5-a7fecee84702@applied-asynchrony.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
-Cc: linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
 
-On Sat, Aug 10, 2019 at 11:45:35PM +0200, Holger Hoffstätte wrote:
-> 
-> Hi Dave -
-> 
-> great patch but I found something that seems off in xfs_attr3_leaf_getvalue:
+From: Ira Weiny <ira.weiny@intel.com>
 
-It's not a "great patch" if there's something wrong with it. :/
+Now that we have the file pins information stored add a new procfs entry
+to display them to the user.
 
-> > @@ -2378,31 +2403,23 @@ xfs_attr3_leaf_getvalue((..snip..)
-> > +	if (args->flags & ATTR_KERNOVAL) {
-> >   		args->valuelen = args->rmtvaluelen;
-> > +		return 0;
-> >   	}
-> > -	return 0;
-> > +	return xfs_attr_copy_value(args, NULL, args->rmtvaluelen);
-> 
-> With gcc9 I get:
-> 
->   CC      fs/xfs/libxfs/xfs_attr_leaf.o
-> In function 'xfs_attr_copy_value',
->     inlined from 'xfs_attr3_leaf_getvalue' at fs/xfs/libxfs/xfs_attr_leaf.c:2425:9:
-> fs/xfs/libxfs/xfs_attr_leaf.c:421:2: warning: argument 2 null where non-null expected [-Wnonnull]
->   421 |  memcpy(args->value, value, valuelen);
->       |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> In file included from ./arch/x86/include/asm/string.h:5,
->                  from ./include/linux/string.h:20,
->                  from ./include/linux/uuid.h:12,
->                  from ./fs/xfs/xfs_linux.h:10,
->                  from ./fs/xfs/xfs.h:22,
->                  from fs/xfs/libxfs/xfs_attr_leaf.c:7:
-> fs/xfs/libxfs/xfs_attr_leaf.c: In function 'xfs_attr3_leaf_getvalue':
-> ./arch/x86/include/asm/string_64.h:14:14: note: in a call to function 'memcpy' declared here
->    14 | extern void *memcpy(void *to, const void *from, size_t len);
->       |              ^~~~~~
-> 
-> and sure enough, the NULL "value" arg is and passed as-is to memcpy in
-> xfs_attr_copy_value.
+NOTE output will be dependant on where the file pin is tied to.  Some
+processes may have the pin associated with a file descriptor in which
+case that file is reported as well.
 
-"sure enough", eh?
+Others are associated directly with the process mm and are reported as
+such.
 
-> Maybe you meant to sanitize the value when it's NULL?
+For example of a file pinned to an RDMA open context (fd 4) and a file
+pinned to the mm of that process:
 
-Nope - look at the code:
+4: /dev/infiniband/uverbs0
+   /mnt/pmem/foo
+/mnt/pmem/bar
 
-        args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
->>>>    args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
-        args->rmtblkcnt = xfs_attr3_rmt_blocks(args->dp->i_mount,
-                                               args->rmtvaluelen);
-        if (args->flags & ATTR_KERNOVAL) {
-                args->valuelen = args->rmtvaluelen;
-                return 0;
-        }
-        return xfs_attr_copy_value(args, NULL, args->rmtvaluelen);
-}
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/proc/base.c | 214 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 214 insertions(+)
 
-And the relevant code in xfs_attr_copy_value() does:
-
-        /* remote block xattr requires IO for copy-in */
->>>>    if (args->rmtblkno)
->>>>            return xfs_attr_rmtval_get(args);
-
-        memcpy(args->value, value, valuelen);
-        return 0;
-}
-
-The memcpy() is never reached in this case. Hence the compiler
-warning is a false positive and the code is not going to crash here.
-
-Regardless, I'm going to have to change the code because I doubt gcc
-will ever be smart enough to understand the code flow as it stands.
-We have to do this every so often to avoid false positive
-uninitialised variable warnings, so it's not like working around
-compiler issues is something new.
-
-I'll post an updated version tomorrow....
-
-Cheers,
-
-Dave.
+diff --git a/fs/proc/base.c b/fs/proc/base.c
+index ebea9501afb8..f4d219172235 100644
+--- a/fs/proc/base.c
++++ b/fs/proc/base.c
+@@ -2995,6 +2995,7 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
+  */
+ static const struct file_operations proc_task_operations;
+ static const struct inode_operations proc_task_inode_operations;
++static const struct file_operations proc_pid_file_pins_operations;
+ 
+ static const struct pid_entry tgid_base_stuff[] = {
+ 	DIR("task",       S_IRUGO|S_IXUGO, proc_task_inode_operations, proc_task_operations),
+@@ -3024,6 +3025,7 @@ static const struct pid_entry tgid_base_stuff[] = {
+ 	ONE("stat",       S_IRUGO, proc_tgid_stat),
+ 	ONE("statm",      S_IRUGO, proc_pid_statm),
+ 	REG("maps",       S_IRUGO, proc_pid_maps_operations),
++	REG("file_pins",  S_IRUGO, proc_pid_file_pins_operations),
+ #ifdef CONFIG_NUMA
+ 	REG("numa_maps",  S_IRUGO, proc_pid_numa_maps_operations),
+ #endif
+@@ -3422,6 +3424,7 @@ static const struct pid_entry tid_base_stuff[] = {
+ 	ONE("stat",      S_IRUGO, proc_tid_stat),
+ 	ONE("statm",     S_IRUGO, proc_pid_statm),
+ 	REG("maps",      S_IRUGO, proc_pid_maps_operations),
++	REG("file_pins", S_IRUGO, proc_pid_file_pins_operations),
+ #ifdef CONFIG_PROC_CHILDREN
+ 	REG("children",  S_IRUGO, proc_tid_children_operations),
+ #endif
+@@ -3718,3 +3721,214 @@ void __init set_proc_pid_nlink(void)
+ 	nlink_tid = pid_entry_nlink(tid_base_stuff, ARRAY_SIZE(tid_base_stuff));
+ 	nlink_tgid = pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
+ }
++
++/**
++ * file_pin information below.
++ */
++
++struct proc_file_pins_private {
++	struct inode *inode;
++	struct task_struct *task;
++	struct mm_struct *mm;
++	struct files_struct *files;
++	unsigned int nr_pins;
++	struct xarray fps;
++} __randomize_layout;
++
++static void release_fp(struct proc_file_pins_private *priv)
++{
++	up_read(&priv->mm->mmap_sem);
++	mmput(priv->mm);
++}
++
++static void print_fd_file_pin(struct seq_file *m, struct file *file,
++			    unsigned long i)
++{
++	struct file_file_pin *fp;
++	struct file_file_pin *tmp;
++
++	if (list_empty_careful(&file->file_pins))
++		return;
++
++	seq_printf(m, "%lu: ", i);
++	seq_file_path(m, file, "\n");
++	seq_putc(m, '\n');
++
++	list_for_each_entry_safe(fp, tmp, &file->file_pins, list) {
++		seq_puts(m, "   ");
++		seq_file_path(m, fp->file, "\n");
++		seq_putc(m, '\n');
++	}
++}
++
++/* We are storing the index's within the FD table for later retrieval */
++static int store_fd(const void *priv , struct file *file, unsigned i)
++{
++	struct proc_file_pins_private *fp_priv;
++
++	/* cast away const... */
++	fp_priv = (struct proc_file_pins_private *)priv;
++
++	if (list_empty_careful(&file->file_pins))
++		return 0;
++
++	/* can't sleep in the iterate of the fd table */
++	xa_store(&fp_priv->fps, fp_priv->nr_pins, xa_mk_value(i), GFP_ATOMIC);
++	fp_priv->nr_pins++;
++
++	return 0;
++}
++
++static void store_mm_pins(struct proc_file_pins_private *priv)
++{
++	struct mm_file_pin *fp;
++	struct mm_file_pin *tmp;
++
++	list_for_each_entry_safe(fp, tmp, &priv->mm->file_pins, list) {
++		xa_store(&priv->fps, priv->nr_pins, fp, GFP_KERNEL);
++		priv->nr_pins++;
++	}
++}
++
++
++static void *fp_start(struct seq_file *m, loff_t *ppos)
++{
++	struct proc_file_pins_private *priv = m->private;
++	unsigned int pos = *ppos;
++
++	priv->task = get_proc_task(priv->inode);
++	if (!priv->task)
++		return ERR_PTR(-ESRCH);
++
++	if (!priv->mm || !mmget_not_zero(priv->mm))
++		return NULL;
++
++	priv->files = get_files_struct(priv->task);
++	down_read(&priv->mm->mmap_sem);
++
++	xa_destroy(&priv->fps);
++	priv->nr_pins = 0;
++
++	/* grab fds of "files" which have pins and store as xa values */
++	if (priv->files)
++		iterate_fd(priv->files, 0, store_fd, priv);
++
++	/* store mm_file_pins as xa entries */
++	store_mm_pins(priv);
++
++	if (pos >= priv->nr_pins) {
++		release_fp(priv);
++		return NULL;
++	}
++
++	return xa_load(&priv->fps, pos);
++}
++
++static void *fp_next(struct seq_file *m, void *v, loff_t *pos)
++{
++	struct proc_file_pins_private *priv = m->private;
++
++	(*pos)++;
++	if ((*pos) >= priv->nr_pins) {
++		release_fp(priv);
++		return NULL;
++	}
++
++	return xa_load(&priv->fps, *pos);
++}
++
++static void fp_stop(struct seq_file *m, void *v)
++{
++	struct proc_file_pins_private *priv = m->private;
++
++	if (v)
++		release_fp(priv);
++
++	if (priv->task) {
++		put_task_struct(priv->task);
++		priv->task = NULL;
++	}
++
++	if (priv->files) {
++		put_files_struct(priv->files);
++		priv->files = NULL;
++	}
++}
++
++static int show_fp(struct seq_file *m, void *v)
++{
++	struct proc_file_pins_private *priv = m->private;
++
++	if (xa_is_value(v)) {
++		struct file *file;
++		unsigned long fd = xa_to_value(v);
++
++		rcu_read_lock();
++		file = fcheck_files(priv->files, fd);
++		if (file)
++			print_fd_file_pin(m, file, fd);
++		rcu_read_unlock();
++	} else {
++		struct mm_file_pin *fp = v;
++
++		seq_puts(m, "mm: ");
++		seq_file_path(m, fp->file, "\n");
++	}
++
++	return 0;
++}
++
++static const struct seq_operations proc_pid_file_pins_op = {
++	.start	= fp_start,
++	.next	= fp_next,
++	.stop	= fp_stop,
++	.show	= show_fp
++};
++
++static int proc_file_pins_open(struct inode *inode, struct file *file)
++{
++	struct proc_file_pins_private *priv = __seq_open_private(file,
++						&proc_pid_file_pins_op,
++						sizeof(*priv));
++
++	if (!priv)
++		return -ENOMEM;
++
++	xa_init(&priv->fps);
++	priv->inode = inode;
++	priv->mm = proc_mem_open(inode, PTRACE_MODE_READ);
++	priv->task = NULL;
++	if (IS_ERR(priv->mm)) {
++		int err = PTR_ERR(priv->mm);
++
++		seq_release_private(inode, file);
++		return err;
++	}
++
++	return 0;
++}
++
++static int proc_file_pins_release(struct inode *inode, struct file *file)
++{
++	struct seq_file *seq = file->private_data;
++	struct proc_file_pins_private *priv = seq->private;
++
++	/* This is for "protection" not sure when these may end up not being
++	 * NULL here... */
++	WARN_ON(priv->files);
++	WARN_ON(priv->task);
++
++	if (priv->mm)
++		mmdrop(priv->mm);
++
++	xa_destroy(&priv->fps);
++
++	return seq_release_private(inode, file);
++}
++
++static const struct file_operations proc_pid_file_pins_operations = {
++	.open		= proc_file_pins_open,
++	.read		= seq_read,
++	.llseek		= seq_lseek,
++	.release	= proc_file_pins_release,
++};
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
