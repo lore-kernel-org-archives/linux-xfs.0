@@ -1,122 +1,122 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:7086 "EHLO mga02.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729534AbfHIW6p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:58:45 -0400
-From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 03/19] mm/gup: Pass flags down to __gup_device_huge* calls
-Date: Fri,  9 Aug 2019 15:58:17 -0700
-Message-Id: <20190809225833.6657-4-ira.weiny@intel.com>
-In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55799 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726053AbfHIXxo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 19:53:44 -0400
+Date: Sat, 10 Aug 2019 09:52:31 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH v2 01/19] fs/locks: Export F_LAYOUT lease to user
+ space
+Message-ID: <20190809235231.GC7777@dread.disaster.area>
 References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-2-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809225833.6657-2-ira.weiny@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
+To: ira.weiny@intel.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Fri, Aug 09, 2019 at 03:58:15PM -0700, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> In order to support an opt-in policy for users to allow long term pins
+> of FS DAX pages we need to export the LAYOUT lease to user space.
+> 
+> This is the first of 2 new lease flags which must be used to allow a
+> long term pin to be made on a file.
+> 
+> After the complete series:
+> 
+> 0) Registrations to Device DAX char devs are not affected
+> 
+> 1) The user has to opt in to allowing page pins on a file with an exclusive
+>    layout lease.  Both exclusive and layout lease flags are user visible now.
+> 
+> 2) page pins will fail if the lease is not active when the file back page is
+>    encountered.
+> 
+> 3) Any truncate or hole punch operation on a pinned DAX page will fail.
+> 
+> 4) The user has the option of holding the lease or releasing it.  If they
+>    release it no other pin calls will work on the file.
+> 
+> 5) Closing the file is ok.
+> 
+> 6) Unmapping the file is ok
+> 
+> 7) Pins against the files are tracked back to an owning file or an owning mm
+>    depending on the internal subsystem needs.  With RDMA there is an owning
+>    file which is related to the pined file.
+> 
+> 8) Only RDMA is currently supported
+> 
+> 9) Truncation of pages which are not actively pinned nor covered by a lease
+>    will succeed.
 
-In order to support checking for a layout lease on a FS DAX inode these
-calls need to know if FOLL_LONGTERM was specified.
+This has nothing to do with layout leases or what they provide
+access arbitration over. Layout leases have _nothing_ to do with
+page pinning or RDMA - they arbitrate behaviour the file offset ->
+physical block device mapping within the filesystem and the
+behaviour that will occur when a specific lease is held.
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- mm/gup.c | 26 +++++++++++++++++---------
- 1 file changed, 17 insertions(+), 9 deletions(-)
+The commit descripting needs to describe what F_LAYOUT actually
+protects, when they'll get broken, etc, not how RDMA is going to use
+it.
 
-diff --git a/mm/gup.c b/mm/gup.c
-index b6a293bf1267..80423779a50a 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -1881,7 +1881,8 @@ static int gup_pte_range(pmd_t pmd, unsigned long addr, unsigned long end,
- 
- #if defined(CONFIG_ARCH_HAS_PTE_DEVMAP) && defined(CONFIG_TRANSPARENT_HUGEPAGE)
- static int __gup_device_huge(unsigned long pfn, unsigned long addr,
--		unsigned long end, struct page **pages, int *nr)
-+		unsigned long end, struct page **pages, int *nr,
-+		unsigned int flags)
- {
- 	int nr_start = *nr;
- 	struct dev_pagemap *pgmap = NULL;
-@@ -1907,30 +1908,33 @@ static int __gup_device_huge(unsigned long pfn, unsigned long addr,
- }
- 
- static int __gup_device_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
--		unsigned long end, struct page **pages, int *nr)
-+		unsigned long end, struct page **pages, int *nr,
-+		unsigned int flags)
- {
- 	unsigned long fault_pfn;
- 	int nr_start = *nr;
- 
- 	fault_pfn = pmd_pfn(orig) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
--	if (!__gup_device_huge(fault_pfn, addr, end, pages, nr))
-+	if (!__gup_device_huge(fault_pfn, addr, end, pages, nr, flags))
- 		return 0;
- 
- 	if (unlikely(pmd_val(orig) != pmd_val(*pmdp))) {
- 		undo_dev_pagemap(nr, nr_start, pages);
- 		return 0;
- 	}
-+
- 	return 1;
- }
- 
- static int __gup_device_huge_pud(pud_t orig, pud_t *pudp, unsigned long addr,
--		unsigned long end, struct page **pages, int *nr)
-+		unsigned long end, struct page **pages, int *nr,
-+		unsigned int flags)
- {
- 	unsigned long fault_pfn;
- 	int nr_start = *nr;
- 
- 	fault_pfn = pud_pfn(orig) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
--	if (!__gup_device_huge(fault_pfn, addr, end, pages, nr))
-+	if (!__gup_device_huge(fault_pfn, addr, end, pages, nr, flags))
- 		return 0;
- 
- 	if (unlikely(pud_val(orig) != pud_val(*pudp))) {
-@@ -1941,14 +1945,16 @@ static int __gup_device_huge_pud(pud_t orig, pud_t *pudp, unsigned long addr,
- }
- #else
- static int __gup_device_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
--		unsigned long end, struct page **pages, int *nr)
-+		unsigned long end, struct page **pages, int *nr,
-+		unsigned int flags)
- {
- 	BUILD_BUG();
- 	return 0;
- }
- 
- static int __gup_device_huge_pud(pud_t pud, pud_t *pudp, unsigned long addr,
--		unsigned long end, struct page **pages, int *nr)
-+		unsigned long end, struct page **pages, int *nr,
-+		unsigned int flags)
- {
- 	BUILD_BUG();
- 	return 0;
-@@ -2051,7 +2057,8 @@ static int gup_huge_pmd(pmd_t orig, pmd_t *pmdp, unsigned long addr,
- 	if (pmd_devmap(orig)) {
- 		if (unlikely(flags & FOLL_LONGTERM))
- 			return 0;
--		return __gup_device_huge_pmd(orig, pmdp, addr, end, pages, nr);
-+		return __gup_device_huge_pmd(orig, pmdp, addr, end, pages, nr,
-+					     flags);
- 	}
- 
- 	refs = 0;
-@@ -2092,7 +2099,8 @@ static int gup_huge_pud(pud_t orig, pud_t *pudp, unsigned long addr,
- 	if (pud_devmap(orig)) {
- 		if (unlikely(flags & FOLL_LONGTERM))
- 			return 0;
--		return __gup_device_huge_pud(orig, pudp, addr, end, pages, nr);
-+		return __gup_device_huge_pud(orig, pudp, addr, end, pages, nr,
-+					     flags);
- 	}
- 
- 	refs = 0;
+> @@ -2022,8 +2030,26 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
+>  	struct file_lock *fl;
+>  	struct fasync_struct *new;
+>  	int error;
+> +	unsigned int flags = 0;
+> +
+> +	/*
+> +	 * NOTE on F_LAYOUT lease
+> +	 *
+> +	 * LAYOUT lease types are taken on files which the user knows that
+> +	 * they will be pinning in memory for some indeterminate amount of
+> +	 * time.
+
+Indeed, layout leases have nothing to do with pinning of memory.
+That's something an application taht uses layout leases might do,
+but it largely irrelevant to the functionality layout leases
+provide. What needs to be done here is explain what the layout lease
+API actually guarantees w.r.t. the physical file layout, not what
+some application is going to do with a lease. e.g.
+
+	The layout lease F_RDLCK guarantees that the holder will be
+	notified that the physical file layout is about to be
+	changed, and that it needs to release any resources it has
+	over the range of this lease, drop the lease and then
+	request it again to wait for the kernel to finish whatever
+	it is doing on that range.
+
+	The layout lease F_RDLCK also allows the holder to modify
+	the physical layout of the file. If an operation from the
+	lease holder occurs that would modify the layout, that lease
+	holder does not get notification that a change will occur,
+	but it will block until all other F_RDLCK leases have been
+	released by their holders before going ahead.
+
+	If there is a F_WRLCK lease held on the file, then a F_RDLCK
+	holder will fail any operation that may modify the physical
+	layout of the file. F_WRLCK provides exclusive physical
+	modification access to the holder, guaranteeing nothing else
+	will change the layout of the file while it holds the lease.
+
+	The F_WRLCK holder can change the physical layout of the
+	file if it so desires, this will block while F_RDLCK holders
+	are notified and release their leases before the
+	modification will take place.
+
+We need to define the semantics we expose to userspace first.....
+
+Cheers,
+
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
