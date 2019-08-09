@@ -1,113 +1,94 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:51546 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732375AbfHHOkQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 8 Aug 2019 10:40:16 -0400
-Subject: Re: [PATCH] direct-io: use GFP_NOIO to avoid deadlock
-References: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com>
-From: Junxiao Bi <junxiao.bi@oracle.com>
-Message-ID: <e2ddc05c-a2f8-7f62-c56f-6170adea41dc@oracle.com>
-Date: Thu, 8 Aug 2019 07:39:45 -0700
+Received: from mga06.intel.com ([134.134.136.31]:48197 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729418AbfHIB5s (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 8 Aug 2019 21:57:48 -0400
+Date: Fri, 9 Aug 2019 09:56:49 +0800
+From: kbuild test robot <lkp@intel.com>
+Subject: Re: [PATCH 8/9] Use FIEMAP for FIBMAP calls
+Message-ID: <201908090949.xqu7PPMV%lkp@intel.com>
+References: <20190808082744.31405-9-cmaiolino@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190808082744.31405-9-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>, Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <msnitzer@redhat.com>
-Cc: dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, honglei.wang@oracle.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: kbuild-all@01.org, linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-Hi Mikulas,
+Hi Carlos,
 
-This seemed not issue on mainline, mutex in dm_bufio_shrink_count() had 
-been removed from mainline.
+Thank you for the patch! Perhaps something to improve:
 
-Thanks,
+[auto build test WARNING on linus/master]
+[cannot apply to v5.3-rc3 next-20190808]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
 
-Junxiao.
+url:    https://github.com/0day-ci/linux/commits/Carlos-Maiolino/New-fiemap-infrastructure-and-bmap-removal/20190808-221354
+reproduce:
+        # apt-get install sparse
+        # sparse version: v0.6.1-rc1-7-g2b96cd8-dirty
+        make ARCH=x86_64 allmodconfig
+        make C=1 CF='-fdiagnostic-prefix -D__CHECK_ENDIAN__'
 
-On 8/8/19 2:50 AM, Mikulas Patocka wrote:
-> A deadlock with this stacktrace was observed.
->
-> The obvious problem here is that in the call chain
-> xfs_vm_direct_IO->__blockdev_direct_IO->do_blockdev_direct_IO->kmem_cache_alloc
-> we do a GFP_KERNEL allocation while we are in a filesystem driver and in a
-> block device driver.
->
-> This patch changes the direct-io code to use GFP_NOIO.
->
-> PID: 474    TASK: ffff8813e11f4600  CPU: 10  COMMAND: "kswapd0"
->     #0 [ffff8813dedfb938] __schedule at ffffffff8173f405
->     #1 [ffff8813dedfb990] schedule at ffffffff8173fa27
->     #2 [ffff8813dedfb9b0] schedule_timeout at ffffffff81742fec
->     #3 [ffff8813dedfba60] io_schedule_timeout at ffffffff8173f186
->     #4 [ffff8813dedfbaa0] bit_wait_io at ffffffff8174034f
->     #5 [ffff8813dedfbac0] __wait_on_bit at ffffffff8173fec8
->     #6 [ffff8813dedfbb10] out_of_line_wait_on_bit at ffffffff8173ff81
->     #7 [ffff8813dedfbb90] __make_buffer_clean at ffffffffa038736f [dm_bufio]
->     #8 [ffff8813dedfbbb0] __try_evict_buffer at ffffffffa0387bb8 [dm_bufio]
->     #9 [ffff8813dedfbbd0] dm_bufio_shrink_scan at ffffffffa0387cc3 [dm_bufio]
->    #10 [ffff8813dedfbc40] shrink_slab at ffffffff811a87ce
->    #11 [ffff8813dedfbd30] shrink_zone at ffffffff811ad778
->    #12 [ffff8813dedfbdc0] kswapd at ffffffff811ae92f
->    #13 [ffff8813dedfbec0] kthread at ffffffff810a8428
->    #14 [ffff8813dedfbf50] ret_from_fork at ffffffff81745242
->
->    PID: 14127  TASK: ffff881455749c00  CPU: 11  COMMAND: "loop1"
->     #0 [ffff88272f5af228] __schedule at ffffffff8173f405
->     #1 [ffff88272f5af280] schedule at ffffffff8173fa27
->     #2 [ffff88272f5af2a0] schedule_preempt_disabled at ffffffff8173fd5e
->     #3 [ffff88272f5af2b0] __mutex_lock_slowpath at ffffffff81741fb5
->     #4 [ffff88272f5af330] mutex_lock at ffffffff81742133
->     #5 [ffff88272f5af350] dm_bufio_shrink_count at ffffffffa03865f9 [dm_bufio]
->     #6 [ffff88272f5af380] shrink_slab at ffffffff811a86bd
->     #7 [ffff88272f5af470] shrink_zone at ffffffff811ad778
->     #8 [ffff88272f5af500] do_try_to_free_pages at ffffffff811adb34
->     #9 [ffff88272f5af590] try_to_free_pages at ffffffff811adef8
->    #10 [ffff88272f5af610] __alloc_pages_nodemask at ffffffff811a09c3
->    #11 [ffff88272f5af710] alloc_pages_current at ffffffff811e8b71
->    #12 [ffff88272f5af760] new_slab at ffffffff811f4523
->    #13 [ffff88272f5af7b0] __slab_alloc at ffffffff8173a1b5
->    #14 [ffff88272f5af880] kmem_cache_alloc at ffffffff811f484b
->    #15 [ffff88272f5af8d0] do_blockdev_direct_IO at ffffffff812535b3
->    #16 [ffff88272f5afb00] __blockdev_direct_IO at ffffffff81255dc3
->    #17 [ffff88272f5afb30] xfs_vm_direct_IO at ffffffffa01fe3fc [xfs]
->    #18 [ffff88272f5afb90] generic_file_read_iter at ffffffff81198994
->    #19 [ffff88272f5afc50] __dta_xfs_file_read_iter_2398 at ffffffffa020c970 [xfs]
->    #20 [ffff88272f5afcc0] lo_rw_aio at ffffffffa0377042 [loop]
->    #21 [ffff88272f5afd70] loop_queue_work at ffffffffa0377c3b [loop]
->    #22 [ffff88272f5afe60] kthread_worker_fn at ffffffff810a8a0c
->    #23 [ffff88272f5afec0] kthread at ffffffff810a8428
->    #24 [ffff88272f5aff50] ret_from_fork at ffffffff81745242
->
-> Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-> Cc: stable@vger.kernel.org
->
-> ---
->   fs/direct-io.c |    4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
->
-> Index: linux-2.6/fs/direct-io.c
-> ===================================================================
-> --- linux-2.6.orig/fs/direct-io.c	2019-08-02 08:51:56.000000000 +0200
-> +++ linux-2.6/fs/direct-io.c	2019-08-08 11:22:18.000000000 +0200
-> @@ -436,7 +436,7 @@ dio_bio_alloc(struct dio *dio, struct di
->   	 * bio_alloc() is guaranteed to return a bio when allowed to sleep and
->   	 * we request a valid number of vectors.
->   	 */
-> -	bio = bio_alloc(GFP_KERNEL, nr_vecs);
-> +	bio = bio_alloc(GFP_NOIO, nr_vecs);
->   
->   	bio_set_dev(bio, bdev);
->   	bio->bi_iter.bi_sector = first_sector;
-> @@ -1197,7 +1197,7 @@ do_blockdev_direct_IO(struct kiocb *iocb
->   	if (iov_iter_rw(iter) == READ && !count)
->   		return 0;
->   
-> -	dio = kmem_cache_alloc(dio_cache, GFP_KERNEL);
-> +	dio = kmem_cache_alloc(dio_cache, GFP_NOIO);
->   	retval = -ENOMEM;
->   	if (!dio)
->   		goto out;
+If you fix the issue, kindly add following tag
+Reported-by: kbuild test robot <lkp@intel.com>
+
+
+sparse warnings: (new ones prefixed by >>)
+
+>> fs/inode.c:1597:36: sparse: sparse: Using plain integer as NULL pointer
+   fs/inode.c:721:24: sparse: sparse: context imbalance in 'inode_lru_isolate' - wrong count at exit
+   fs/inode.c:810:9: sparse: sparse: context imbalance in 'find_inode' - different lock contexts for basic block
+   fs/inode.c:841:9: sparse: sparse: context imbalance in 'find_inode_fast' - different lock contexts for basic block
+   fs/inode.c:1447:5: sparse: sparse: context imbalance in 'insert_inode_locked' - wrong count at exit
+   include/linux/spinlock.h:378:9: sparse: sparse: context imbalance in 'iput_final' - unexpected unlock
+   fs/inode.c:1572:6: sparse: sparse: context imbalance in 'iput' - wrong count at exit
+   fs/inode.c:2024:13: sparse: sparse: context imbalance in '__wait_on_freeing_inode' - unexpected unlock
+
+vim +1597 fs/inode.c
+
+  1590	
+  1591	static int fiemap_fill_kernel_extent(struct fiemap_extent_info *fieinfo,
+  1592				u64 logical, u64 phys, u64 len, u32 flags)
+  1593	{
+  1594		struct fiemap_extent *extent = fieinfo->fi_cb_data;
+  1595	
+  1596		/* only count the extents */
+> 1597		if (fieinfo->fi_cb_data == 0) {
+  1598			fieinfo->fi_extents_mapped++;
+  1599			goto out;
+  1600		}
+  1601	
+  1602		if (fieinfo->fi_extents_mapped >= fieinfo->fi_extents_max)
+  1603			return 1;
+  1604	
+  1605		if (flags & FIEMAP_EXTENT_DELALLOC)
+  1606			flags |= FIEMAP_EXTENT_UNKNOWN;
+  1607		if (flags & FIEMAP_EXTENT_DATA_ENCRYPTED)
+  1608			flags |= FIEMAP_EXTENT_ENCODED;
+  1609		if (flags & (FIEMAP_EXTENT_DATA_TAIL | FIEMAP_EXTENT_DATA_INLINE))
+  1610			flags |= FIEMAP_EXTENT_NOT_ALIGNED;
+  1611	
+  1612		extent->fe_logical = logical;
+  1613		extent->fe_physical = phys;
+  1614		extent->fe_length = len;
+  1615		extent->fe_flags = flags;
+  1616	
+  1617		fieinfo->fi_extents_mapped++;
+  1618	
+  1619		if (fieinfo->fi_extents_mapped == fieinfo->fi_extents_max)
+  1620			return 1;
+  1621	
+  1622	out:
+  1623		if (flags & FIEMAP_EXTENT_LAST)
+  1624			return 1;
+  1625		return 0;
+  1626	}
+  1627	
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
