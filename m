@@ -1,87 +1,173 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44968 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725730AbfHKWyS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Aug 2019 18:54:18 -0400
-Date: Mon, 12 Aug 2019 08:53:07 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
- reference to `xfs_ag_geom_health'
-Message-ID: <20190811225307.GF7777@dread.disaster.area>
-References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+Received: from sandeen.net ([63.231.237.45]:60604 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725985AbfHITkH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 15:40:07 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 8B9FD328A16
+        for <linux-xfs@vger.kernel.org>; Fri,  9 Aug 2019 14:40:06 -0500 (CDT)
+From: Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.2.0 released
+Message-ID: <e172f478-0923-b9cd-2032-70ffae337d15@sandeen.net>
+Date: Fri, 9 Aug 2019 14:40:04 -0500
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Deutschmann <whissi@gentoo.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: linux-xfs <linux-xfs@vger.kernel.org>
 
-On Sun, Aug 11, 2019 at 03:06:13PM +0200, Thomas Deutschmann wrote:
-> Hi,
-> 
-> building xfsprogs-5.2.0 is failing with the following error:
-> 
-> >     [CC]     xfs_copy.o
-> > x86_64-pc-linux-gnu-gcc -O2 -pipe -march=ivybridge -mtune=ivybridge -mno-xsaveopt -frecord-gcc-switches -D_FILE_OFFSET_BITS=64 -O2 -pipe -march=ivybridge -mtune=ivybridge -mno-xsaveopt -frecord-gcc-switches  -O2 -pipe -march=ivybridge -mtune=ivybridge -mno-xsaveopt -frecord-gcc-switches -DNDEBUG -DVERSION=\"5.2.0\" -DLOCALEDIR=\"/usr/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -I../libxfs -DENABLE_GETTEXT -D_GNU_SOURCE -funsigned-char -fno-strict-aliasing -Wall -DHAVE_MNTENT -DHAVE_FSETXATTR -DENABLE_BLKID -DHAVE_GETFSMAP  -c xfs_copy.c
-> >     [LD]     xfs_copy
-> > /bin/bash ../libtool --quiet --tag=CC --mode=link x86_64-pc-linux-gnu-gcc -o xfs_copy -Wl,-O1 -Wl,--as-needed  -Wl,-O1 -Wl,--as-needed   -Wl,-O1 -Wl,--as-needed   -Wl,-O1 -Wl,--as-needed   xfs_copy.o   ../libxfs/libxfs.la ../libxlog/libxlog.la ../libfrog/libfrog.la -luuid -lpthread -lrt  
-> > /usr/lib/gcc/x86_64-pc-linux-gnu/9.1.0/../../../../x86_64-pc-linux-gnu/bin/ld: ../libxfs/.libs/libxfs.so: undefined reference to `xfs_ag_geom_health'
-> > collect2: error: ld returned 1 exit status
-> > gmake[2]: *** [../include/buildrules:65: xfs_copy] Error 1
-> > gmake[1]: *** [include/buildrules:36: copy] Error 2
-> > make: *** [Makefile:92: default] Error 2
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj
+Content-Type: multipart/mixed; boundary="zwQSGMd8rxxqtShwbeXRTFViFTLnK9jtA";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <e172f478-0923-b9cd-2032-70ffae337d15@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs v5.2.0 released
 
-That's quite a set of custom compiler options you have there. It's
-complaining about a reference to a function that is dead code in
-the build that is called from other dead code in the build. i.e the
-linker or compiler has elided one part of the dead code, but not all
-of it. The build works if nothing is elided or all the dead code is
-elided, so that seems like a toolchain problem more that anything.
+--zwQSGMd8rxxqtShwbeXRTFViFTLnK9jtA
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-FWIW, the default build w. gcc-8.3.0 on debian unstable is fine:
+Hi folks,
 
-gcc -MM -g -O2 -D_FILE_OFFSET_BITS=64   -g -O2 -DDEBUG -DVERSION=\"5.2.0\" -DLOCALEDIR=\"/usr/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -I../libxfs -DENABLE_GETTEXT -D_GNU_SOURCE -funsigned-char -fno-strict-aliasing -Wall -DHAVE_MNTENT -DHAVE_FSETXATTR -DENABLE_BLKID -DHAVE_GETFSMAP  xfs_copy.c > .dep
-rm -f .dep
-    [CC]     xfs_copy.o
-gcc -g -O2 -D_FILE_OFFSET_BITS=64   -g -O2 -DDEBUG -DVERSION=\"5.2.0\" -DLOCALEDIR=\"/usr/share/locale\" -DPACKAGE=\"xfsprogs\" -I../include -I../libxfs -DENABLE_GETTEXT -D_GNU_SOURCE -funsigned-char -fno-strict-aliasing -Wall -DHAVE_MNTENT -DHAVE_FSETXATTR -DENABLE_BLKID -DHAVE_GETFSMAP  -c xfs_copy.c
-    [LD]     xfs_copy
-/bin/bash ../libtool --quiet --tag=CC --mode=link gcc -o xfs_copy   -static-libtool-libs  xfs_copy.o   ../libxfs/libxfs.la ../libxlog/libxlog.la ../libfrog/libfrog.la -luuid -lpthread -lrt
+xfsprogs v5.2.0 has been released, and the xfsprogs repository at:
 
-And it tells me that your whacky set of options to the
-linker pass (which repeats 3x "-Wl,-O1 -Wl,--as-needed  " instead of
-"-static-libtool-libs") is likely the problem.
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-Yup, that's the problem. If I run your linker command on my
-successful build to relink the xfs-copy binary:
+has just been updated.
 
-/bin/bash ../libtool --quiet --tag=CC --mode=link gcc -o xfs_copy -Wl,-O1 -Wl,--as-needed  -Wl,-O1 -Wl,--as-needed   -Wl,-O1 -Wl,--as-needed   -Wl,-O1 -Wl,--as-needed   xfs_copy.o   ../libxfs/libxfs.la ../libxlog/libxlog.la ../libfrog/libfrog.la -luuid -lpthread -lrt
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_new_probe_from_filename'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_alignment_offset'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_get_topology'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_do_fullprobe'
-/usr/bin/ld: ../libxfs/.libs/libxfs.so: undefined reference to `xfs_ag_geom_health'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_logical_sector_size'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_optimal_io_size'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_lookup_value'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_free_probe'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_physical_sector_size'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_enable_partitions'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_minimum_io_size'
+Tarballs are available at:
 
-There's all sorts of problems with undefined references to code not
-used by xfs_copy. Ok, so the problem is at your end with custom
-build options, not a problem with the code or the default build.
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.2.0.tar=
+=2Egz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.2.0.tar=
+=2Exz
+https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.2.0.tar=
+=2Esign
 
-How did you configure this build? Can you run a clean build without
-configuring in any of the whacky compiler super-optimisations that
-you have and see if that builds cleanly?
 
-Cheers,
+This is the most boring release ever(tm).  It contains only libxfs syncup=
+s,
+and some cosmetic changes unique to xfsprogs-specific libxfs/ files.
+Onward to 5.3!
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Thanks,
+-Eric
+
+The new head of the master branch is commit:
+
+2976bfe xfsprogs: Release v5.2.0
+
+New Commits since v5.1.0:
+
+Brian Foster (3):
+      [580a438] xfs: don't account extra agfl blocks as available
+      [b8b9c3c] xfs: make tr_growdata a permanent transaction
+      [d85d342] xfs: assert that we don't enter agfl freeing with a non-p=
+ermanent transaction
+
+Darrick J. Wong (11):
+      [f866934] xfs: track metadata health status
+      [7b55f0f] xfs: replace the BAD_SUMMARY mount flag with the equivale=
+nt health code
+      [25b8487] xfs: clear BAD_SUMMARY if unmounting an unhealthy filesys=
+tem
+      [debdc16] xfs: add a new ioctl to describe allocation group geometr=
+y
+      [69423ea] xfs: report fs and rt health via geometry structure
+      [378d9e6] xfs: report AG health via AG geometry ioctl
+      [f394edc] xfs: report inode health via bulkstat
+      [f73690f] xfs: track delayed allocation reservations across the fil=
+esystem
+      [9833c1a] xfs: always rejoin held resources during defer roll
+      [e9caede] xfs: add online scrub for superblock counters
+      [247c499] xfs: don't reserve per-AG space for an internal log
+
+Dave Chinner (1):
+      [4ddaada] xfs: bump XFS_IOC_FSGEOMETRY to v5 structures
+
+Eric Sandeen (7):
+      [a37cde5] xfs: change some error-less functions to void types
+      [e20cbd1] xfsprogs: Release v5.2.0-rc0
+      [e6afdab] libxfs: reorder functions in libxfs/trans.c
+      [9c64b9b] libxfs: cosmetic changes to libxfs/trans.c
+      [42b85f5] libxfs: trivial changes to libxfs/trans.c
+      [3a3f5b1] libxfs: don't use enum for buffer flags
+      [2976bfe] xfsprogs: Release v5.2.0
+
+
+Code Diffstat:
+
+ VERSION                     |   2 +-
+ configure.ac                |   2 +-
+ db/info.c                   |  10 +-
+ debian/changelog            |   6 +
+ doc/CHANGES                 |   6 +
+ fsr/xfs_fsr.c               |   8 +-
+ include/xfs_mount.h         |   8 +
+ include/xfs_trace.h         |   5 +
+ include/xfs_trans.h         |   7 +-
+ libxfs/libxfs_api_defs.h    |   1 +
+ libxfs/libxfs_io.h          |  17 +-
+ libxfs/libxfs_priv.h        |   1 +
+ libxfs/trans.c              | 406 +++++++++++++++++++++++++++-----------=
+------
+ libxfs/util.c               |  21 ++-
+ libxfs/xfs_ag.c             |  54 ++++++
+ libxfs/xfs_ag.h             |   2 +
+ libxfs/xfs_alloc.c          |  13 +-
+ libxfs/xfs_attr.c           |  35 ++--
+ libxfs/xfs_attr.h           |   2 +-
+ libxfs/xfs_bmap.c           |  17 +-
+ libxfs/xfs_defer.c          |  14 +-
+ libxfs/xfs_dquot_buf.c      |   4 +-
+ libxfs/xfs_fs.h             | 139 +++++++++++----
+ libxfs/xfs_health.h         | 190 +++++++++++++++++++++
+ libxfs/xfs_ialloc_btree.c   |   9 +
+ libxfs/xfs_quota_defs.h     |   2 +-
+ libxfs/xfs_refcount_btree.c |   9 +
+ libxfs/xfs_rmap_btree.c     |   9 +
+ libxfs/xfs_sb.c             |  18 +-
+ libxfs/xfs_sb.h             |   2 +-
+ libxfs/xfs_trans_resv.c     |   6 +-
+ libxfs/xfs_types.c          |   2 +-
+ libxfs/xfs_types.h          |   2 +
+ mkfs/xfs_mkfs.c             |  11 +-
+ rtcp/xfs_rtcp.c             |   2 +-
+ 35 files changed, 766 insertions(+), 276 deletions(-)
+ create mode 100644 libxfs/xfs_health.h
+
+
+--zwQSGMd8rxxqtShwbeXRTFViFTLnK9jtA--
+
+--a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl1NzBUACgkQIK4WkuE9
+3uB2Dg/+JPQYh31RMx927fpPAkcMEZFGQN8b2nMMVhvraiNvAlfeaRiQEmtmysdy
+KQDRDuejV6NXi1jbMpD1VuxShCmi/2gr0ZGVtAn8NqToCOx8fcjGNXEEMJcuBqjb
+nFOYfzdYs9DqE1TL9quny4eWlvtW+dOyRFtSYrUMlEqG5D/2ZJ6ZNdArk9JEQt5O
+2QMavBzysgKlwQK9mJRfaAOGzfH1/R6tZscZpNEBCj2MeLxvemgoxnWugku0s/58
++7Qo2noOFRABwBQQPTiLRnXu6Hrs4sSs92aBR2/J0uer4nEDrBxx1+iOy0p+174/
+K6ZcjXVfYNaXIQFulRxOpwl5KN3QJjzGD3ufKNAz3STDc+2N8H2UVfz1nbqTKwFV
+B5R5pbeOS0Xlpk9UDQCG3CnAdh6UodheEOozPCr8w/VWO6/txO4ZnauEACZ3SRws
+jSvyUiEk24bV+zGNpqcriSQgdZg6jKci4zP7qFNQ9gesXxEU1kluyAalgRkeSm6a
+WHCxUpIic1ZPR7wHm7WCw6UL9dAd5QQnYNMQaLH9pCiKPh+b9+myu/Qpvb+0Fm9Z
+17l+kNXd48BybugEBHjTlDqVw1qeybTQ4AlHNOtALQi/p3d9ti5QrgGRf4ad5kIZ
+D1lImq7Ovi2aaOR+bn38YS7S8dn1lQCnk7PC4WyPFpxj8zPVtv8=
+=/+NG
+-----END PGP SIGNATURE-----
+
+--a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj--
