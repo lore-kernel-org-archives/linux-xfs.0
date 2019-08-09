@@ -1,220 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41628 "EHLO mx1.redhat.com"
+Received: from mga03.intel.com ([134.134.136.65]:58582 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726179AbfHKMqH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 11 Aug 2019 08:46:07 -0400
-Date: Sun, 11 Aug 2019 08:46:04 -0400
-From: Brian Foster <bfoster@redhat.com>
-Subject: Re: [PATCH 23/24] xfs: reclaim inodes from the LRU
-Message-ID: <20190811124604.GA27188@bfoster>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-24-david@fromorbit.com>
- <20190808163905.GC24551@bfoster>
- <20190809012022.GX7777@dread.disaster.area>
- <20190809123632.GA29669@bfoster>
- <20190811021747.GE7777@dread.disaster.area>
+        id S1730531AbfHIW7D (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 18:59:03 -0400
+From: ira.weiny@intel.com
+Subject: [RFC PATCH v2 13/19] {mm,file}: Add file_pins objects
+Date: Fri,  9 Aug 2019 15:58:27 -0700
+Message-Id: <20190809225833.6657-14-ira.weiny@intel.com>
+In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190811021747.GE7777@dread.disaster.area>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
 
-On Sun, Aug 11, 2019 at 12:17:47PM +1000, Dave Chinner wrote:
-> On Fri, Aug 09, 2019 at 08:36:32AM -0400, Brian Foster wrote:
-> > On Fri, Aug 09, 2019 at 11:20:22AM +1000, Dave Chinner wrote:
-> > > On Thu, Aug 08, 2019 at 12:39:05PM -0400, Brian Foster wrote:
-> > > > On Thu, Aug 01, 2019 at 12:17:51PM +1000, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-...
-> > > > > +	long freed;
-> > > > >  
-> > > > > -	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
-> > > > > +	INIT_LIST_HEAD(&ra.freeable);
-> > > > > +	ra.lowest_lsn = NULLCOMMITLSN;
-> > > > > +	ra.dirty_skipped = 0;
-> > > > > +
-> > > > > +	freed = list_lru_shrink_walk(&mp->m_inode_lru, sc,
-> > > > > +					xfs_inode_reclaim_isolate, &ra);
-> > > > 
-> > > > This is more related to the locking discussion on the earlier patch, but
-> > > > this looks like it has more similar serialization to the example patch I
-> > > > posted than the one without locking at all. IIUC, this walk has an
-> > > > internal lock per node lru that is held across the walk and passed into
-> > > > the callback. We never cycle it, so for any given node we only allow one
-> > > > reclaimer through here at a time.
-> > > 
-> > > That's not a guarantee that list_lru gives us. It could drop it's
-> > > internal lock at any time during that walk and we would be
-> > > blissfully unaware that it has done this. And at that point, the
-> > > reclaim context is completely unaware that other reclaim contexts
-> > > may be scanning the same LRU at the same time and are interleaving
-> > > with it.
-> > > 
-> > 
-> > What is not a guarantee? I'm not following your point here. I suppose it
-> > technically could drop the lock, but then it would have to restart the
-> > iteration and wouldn't exactly provide predictable batching capability
-> > to users.
-> 
-> There is no guarantee that the list_lru_shrink_walk() provides a
-> single list walker at a time or that it provides predictable
-> batching capability to users.
-> 
+From: Ira Weiny <ira.weiny@intel.com>
 
-Hm, Ok. I suppose the code could change if that's your point. But how is
-that relevant to how XFS reclaim behavior as of this patch compares to
-the intermediate patch 20? Note again that this the only reason I bring
-it up in this patch (which seems mostly sane to me). Perhaps I should
-have just replied again to patch 20 to avoid confusion. Apologies for
-that, but that ship has sailed...
+User page pins (aka GUP) needs to track file information of files being
+pinned by those calls.  Depending on the needs of the caller this
+information is stored in 1 of 2 ways.
 
-To reiterate, I suggested not dropping the lock in patch 20 for
-$reasons. You replied generally that doing so might cause more problems
-than it solves. I replied with a compromise patch that leaves the lock,
-but only acquires it across inode grabbing instead of the entire reclaim
-operation. This essentially implements "serialized isolation batching"
-as we've termed it here (assuming the patch is correct).
+1) Some subsystems like RDMA associate GUP pins with file descriptors
+   which can be passed around to other process'.  In this case a file
+   being pined must be associated with an owning file object (which can
+   then be resolved back to any of the processes which have a file
+   descriptor 'pointing' to that file object).
 
-I eventually made it to this patch and observe that you end up with an
-implementation that does serialized isolation batching. Of course the
-locking and implementation is quite different with this being a whole
-new mechanism, so performance and things could be quite different too.
-But my point is that if serialized isolation batching is acceptable
-behavior for XFS inode reclaim right now, then it seems reasonable to me
-that it be acceptable in patch 20 for what is ultimately just an
-intermediate state.
+2) Other subsystems do not have an owning file and can therefore
+   associate the file pin directly to the mm of the process which
+   created them.
 
-I appreciate all of the discussion and background information that
-follows, but it gets way far off from the original feedback. I've still
-seen no direct response to the thoughts above either here or in patch
-20. Are you planning to incorporate that example patch or something
-similar? If so, then I think we're on the same page.
+This patch introduces the new file pin structures and ensures struct
+file and struct mm_struct are prepared to store them.
 
-> > This internal lock protects the integrity of the list from external
-> > adds/removes, etc., but it's also passed into the callback so of course
-> > it can be cycled at any point. The callback just has to notify the
-> > caller to restart the walk. E.g., from __list_lru_walk_one():
-> > 
-> >         /*
-> >          * The lru lock has been dropped, our list traversal is
-> >          * now invalid and so we have to restart from scratch.
-> >          */
-> 
-> As the designer and author of the list_lru code, I do know how it
-> works. I also know exactly what this problem this behaviour was
-> intended to solve, because I had to solve it to meet the
-> requirements I had for the infrastructure.
-> 
-> The isolation walk lock batching currently done is an optimisation
-> to minimise lru lock contention - it amortise the cost of getting
-> the lock over a substantial batch of work. If we drop the lock on
-> every item we try to isolate - my initial implementations did this -
-> then the lru lock thrashes badly against concurrent inserts and
-> deletes and scalability is not much better than the global lock it
-> was replacing.
-> 
+In subsequent patches the required information will be passed into new
+pin page calls and procfs is enhanced to show this information to the user.
 
-Ok.
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ fs/file_table.c          |  4 ++++
+ include/linux/file.h     | 49 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/fs.h       |  2 ++
+ include/linux/mm_types.h |  2 ++
+ kernel/fork.c            |  3 +++
+ 5 files changed, 60 insertions(+)
 
-> IOWs, the behaviour we have now is a result of lock contention
-> optimisation to meet scalability requirements, not because of some
-> "predictable batching" requirement. If we were to rework the
-> traversal mechanism such that the lru lock was not necessary to
-> protect the state of the LRU list across the batch of isolate
-> callbacks, then we'd get the scalability we need but we'd completely
-> change the concurrency behaviour. The list would still do LRU
-> reclaim, and the isolate functions still work exactly as tehy
-> currently do (i.e. they work on just the item passed to them) but
-> we'd have concurrent reclaim contexts isolating items on the same
-> LRU concurrently rather than being serialised. And that's perfectly
-> fine, because the isolate/dispose architecture just doesn't care
-> how the items on the LRU are isolated for disposal.....
-> 
-
-Sure, that mostly makes sense. We're free to similarly rework the old
-mechanism to not require locking just as well. My point is that the
-patch to move I/O submission to the AIL doesn't do that sufficiently,
-despite that being the initial purpose of the lock.
-
-BTW, the commit[1] that introduces the pag reclaim lock back in 2010
-introduces the cursor at the same time and actually does mention some of
-the things I'm pointing out as potential problems with patch 20. It
-refers to potential for "massive contention" and prevention of
-reclaimers "continually scanning the same inodes in each AG." Again, I'm
-not worried about that for this series because we ultimately rework the
-shrinker past those issues, but it appears that it wasn't purely a
-matter of I/O submission ordering that motivated the lock (though I'm
-sure that was part of it).
-
-Given that, I think another reasonable option for patch 20 is to remove
-the cursor and locking together. That at least matches some form of
-historical reclaim behavior in XFS. If we took that approach, it might
-make sense to split patch 20 into one patch that shifts I/O to xfsaild
-(new behavior) and a subsequent that undoes [1].
-
-[1] 69b491c214d7 ("xfs: serialise inode reclaim within an AG")
-
-> What I'm trying to say is that the "isolation batching" we have is
-> not desirable but it is necessary, and we because that's internal to
-> the list_lru implementation, we can change that behaviour however
-> we want and it won't affect the subsystems that own the objects
-> being reclaimed. They still just get handed a list of items to
-> dispose, and they all come from the reclaim end of the LRU list...
-> 
-> Indeed, the new XFS inode shrinker is not dependent on any specific
-> batching order, it's not dependent on isolation being serialised,
-> and it's not dependent on the lru_lock being held across the
-> isolation function. IOWs, it's set up just right to take advantage
-> of any increases in isolation concurrency that the list_lru
-> infrastructure could provide...
->
-
-Yep, it's a nice abstraction. This has no bearing on the old
-implementation which does have XFS specific locking, however.
+diff --git a/fs/file_table.c b/fs/file_table.c
+index b07b53f24ff5..38947b9a4769 100644
+--- a/fs/file_table.c
++++ b/fs/file_table.c
+@@ -46,6 +46,7 @@ static void file_free_rcu(struct rcu_head *head)
+ {
+ 	struct file *f = container_of(head, struct file, f_u.fu_rcuhead);
  
-> > > > That seems to be Ok given we don't do much in the isolation handler, the
-> > > > lock isn't held across the dispose sequence and we're still batching in
-> > > > the shrinker core on top of that. We're still serialized over the lru
-> > > > fixups such that concurrent reclaimers aren't processing the same
-> > > > inodes, however.
-> > > 
-> > > The only thing that we may need here is need_resched() checks if it
-> > > turns out that holding a lock for 1024 items to be scanned proved to
-> > > be too long to hold on to a single CPU. If we do that we'd cycle the
-> > > LRU lock and return RETRY or RETRY_REMOVE, hence enabling reclaimers
-> > > more finer-grained interleaving....
-> > > 
-> > 
-> > Sure, with the caveat that we restart the traversal..
-> 
-> Which only re-traverses the inodes we skipped because they were
-> locked at the time. IOWs, Skipping inodes is rare because if it is
-> in reclaim then the only things that can be contending is a radix
-> tree lookup in progress or an inode clustering operation
-> (write/free) in progress. Either way, they will be relatively rare
-> and very short term lock holds, so if we have to restart the scan
-> after dropping the lru lock then it's likely we'll restart at next
-> inode in line for reclaim, anyway....
-> 
-> Hence I don't think having to restart a traversal would really
-> matter all that much....
-> 
-
-Perhaps, that seems fairly reasonable given that we rotate dirty inodes.
-I'm not totally convinced we might not thrash on an LRU with a high
-population of dirty inodes or that a restart is even the simplest
-approach to dealing with large batch sizes, but I'd reserve judgement on
-that until there's code to review.
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
++	WARN_ON(!list_empty(&f->file_pins));
+ 	put_cred(f->f_cred);
+ 	kmem_cache_free(filp_cachep, f);
+ }
+@@ -118,6 +119,9 @@ static struct file *__alloc_file(int flags, const struct cred *cred)
+ 	f->f_mode = OPEN_FMODE(flags);
+ 	/* f->f_version: 0 */
+ 
++	INIT_LIST_HEAD(&f->file_pins);
++	spin_lock_init(&f->fp_lock);
++
+ 	return f;
+ }
+ 
+diff --git a/include/linux/file.h b/include/linux/file.h
+index 3fcddff56bc4..cd79adad5b23 100644
+--- a/include/linux/file.h
++++ b/include/linux/file.h
+@@ -9,6 +9,7 @@
+ #include <linux/compiler.h>
+ #include <linux/types.h>
+ #include <linux/posix_types.h>
++#include <linux/kref.h>
+ 
+ struct file;
+ 
+@@ -91,4 +92,52 @@ extern void fd_install(unsigned int fd, struct file *file);
+ extern void flush_delayed_fput(void);
+ extern void __fput_sync(struct file *);
+ 
++/**
++ * struct file_file_pin
++ *
++ * Associate a pin'ed file with another file owner.
++ *
++ * Subsystems such as RDMA have the ability to pin memory which is associated
++ * with a file descriptor which can be passed to other processes without
++ * necessarily having that memory accessed in the remote processes address
++ * space.
++ *
++ * @file file backing memory which was pined by a GUP caller
++ * @f_owner the file representing the GUP owner
++ * @list of all file pins this owner has
++ *       (struct file *)->file_pins
++ * @ref number of times this pin was taken (roughly the number of pages pinned
++ *      in the file)
++ */
++struct file_file_pin {
++	struct file *file;
++	struct file *f_owner;
++	struct list_head list;
++	struct kref ref;
++};
++
++/*
++ * struct mm_file_pin
++ *
++ * Some GUP callers do not have an "owning" file.  Those pins are accounted for
++ * in the mm of the process that called GUP.
++ *
++ * The tuple {file, inode} is used to track this as a unique file pin and to
++ * track when this pin has been removed.
++ *
++ * @file file backing memory which was pined by a GUP caller
++ * @mm back point to owning mm
++ * @inode backing the file
++ * @list of all file pins this owner has
++ *       (struct mm_struct *)->file_pins
++ * @ref number of times this pin was taken
++ */
++struct mm_file_pin {
++	struct file *file;
++	struct mm_struct *mm;
++	struct inode *inode;
++	struct list_head list;
++	struct kref ref;
++};
++
+ #endif /* __LINUX_FILE_H */
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 2e41ce547913..d2e08feb9737 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -963,6 +963,8 @@ struct file {
+ #endif /* #ifdef CONFIG_EPOLL */
+ 	struct address_space	*f_mapping;
+ 	errseq_t		f_wb_err;
++	struct list_head        file_pins;
++	spinlock_t              fp_lock;
+ } __randomize_layout
+   __attribute__((aligned(4)));	/* lest something weird decides that 2 is OK */
+ 
+diff --git a/include/linux/mm_types.h b/include/linux/mm_types.h
+index 6a7a1083b6fb..4f6ea4acddbd 100644
+--- a/include/linux/mm_types.h
++++ b/include/linux/mm_types.h
+@@ -516,6 +516,8 @@ struct mm_struct {
+ 		/* HMM needs to track a few things per mm */
+ 		struct hmm *hmm;
+ #endif
++		struct list_head file_pins;
++		spinlock_t fp_lock; /* lock file_pins */
+ 	} __randomize_layout;
+ 
+ 	/*
+diff --git a/kernel/fork.c b/kernel/fork.c
+index 0e2f9a2c132c..093f2f2fce1a 100644
+--- a/kernel/fork.c
++++ b/kernel/fork.c
+@@ -675,6 +675,7 @@ void __mmdrop(struct mm_struct *mm)
+ 	BUG_ON(mm == &init_mm);
+ 	WARN_ON_ONCE(mm == current->mm);
+ 	WARN_ON_ONCE(mm == current->active_mm);
++	WARN_ON(!list_empty(&mm->file_pins));
+ 	mm_free_pgd(mm);
+ 	destroy_context(mm);
+ 	mmu_notifier_mm_destroy(mm);
+@@ -1013,6 +1014,8 @@ static struct mm_struct *mm_init(struct mm_struct *mm, struct task_struct *p,
+ 	mm->pmd_huge_pte = NULL;
+ #endif
+ 	mm_init_uprobes_state(mm);
++	INIT_LIST_HEAD(&mm->file_pins);
++	spin_lock_init(&mm->fp_lock);
+ 
+ 	if (current->mm) {
+ 		mm->flags = current->mm->flags & MMF_INIT_MASK;
+-- 
+2.20.1
