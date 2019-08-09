@@ -1,173 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from sandeen.net ([63.231.237.45]:60604 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725985AbfHITkH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 15:40:07 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8B9FD328A16
-        for <linux-xfs@vger.kernel.org>; Fri,  9 Aug 2019 14:40:06 -0500 (CDT)
-From: Eric Sandeen <sandeen@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v5.2.0 released
-Message-ID: <e172f478-0923-b9cd-2032-70ffae337d15@sandeen.net>
-Date: Fri, 9 Aug 2019 14:40:04 -0500
-MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj"
+Received: from userp2130.oracle.com ([156.151.31.86]:49420 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726157AbfHIVhg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 17:37:36 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LYXTh071914
+        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:35 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2u8hpsa4vr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:37:34 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LO3Ne007968
+        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:34 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2u8x1h6vfr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:37:33 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x79LbWNl018939
+        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:33 GMT
+From: Allison Collins <allison.henderson@oracle.com>
+Subject: [PATCH v2 00/18] Delayed Attributes
+Date: Fri,  9 Aug 2019 14:37:08 -0700
+Message-Id: <20190809213726.32336-1-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs <linux-xfs@vger.kernel.org>
+To: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj
-Content-Type: multipart/mixed; boundary="zwQSGMd8rxxqtShwbeXRTFViFTLnK9jtA";
- protected-headers="v1"
-From: Eric Sandeen <sandeen@sandeen.net>
-To: linux-xfs <linux-xfs@vger.kernel.org>
-Message-ID: <e172f478-0923-b9cd-2032-70ffae337d15@sandeen.net>
-Subject: [ANNOUNCE] xfsprogs v5.2.0 released
+Hi all,
 
---zwQSGMd8rxxqtShwbeXRTFViFTLnK9jtA
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+This set is a subset of a larger series for parent pointers. 
+Delayed attributes allow attribute operations (set and remove) to be 
+logged and committed in the same way that other delayed operations do.
+This will help break up more complex operations when we later introduce
+parent pointers which can be used in a number of optimizations.  Since
+delayed attributes can be implemented as a stand alone feature, I've
+decided to subdivide the set to help make it more manageable.
 
-Hi folks,
+Changes since v2:
+Patches 6 through 17 are new and focus mostly on refactoring the
+attribute set and remove operations.  Since delayed operations can
+not be handling transactions, to goal of the refactoring is to
+factor up the transaction specific code as much as possible while
+modularizing the remaining code into helper functions that we can
+reuse for our new delayed attr routines.
 
-xfsprogs v5.2.0 has been released, and the xfsprogs repository at:
+Patch 15 then adds a new set of xfs_attr_da* routines that
+return EAGAIN when a new transaction is needed.  Patch 14 adds
+a new struct xfs_delay_context which these new routine will use
+to stash local variables or other information they need to more
+or less pickup where they left off. 
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+I've also made the corresponding updates to the user space side, and
+added a new test case to xfstests as well.  I'm still getting an
+error about busy inodes after the journal replay, but I figure
+theres plenty here to people to review while I work on that.
 
-has just been updated.
+Question, comment and feedback appreciated! 
 
-Tarballs are available at:
+Thanks all!
+Allison
 
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.2.0.tar=
-=2Egz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.2.0.tar=
-=2Exz
-https://www.kernel.org/pub/linux/utils/fs/xfs/xfsprogs/xfsprogs-5.2.0.tar=
-=2Esign
+Allison Collins (13):
+  xfs: Replace attribute parameters with struct xfs_name
+  xfs: Factor out new helper functions xfs_attr_rmtval_set
+  xfs: Factor up trans handling in xfs_attr3_leaf_flipflags
+  xfs: Factor out xfs_attr_leaf_addname helper
+  xfs: Factor up commit from xfs_attr_try_sf_addname
+  xfs: Factor up trans roll from xfs_attr3_leaf_setflag
+  xfs: Add xfs_attr3_leaf helper functions
+  xfs: Factor out xfs_attr_rmtval_remove_value
+  xfs: Factor up trans roll in xfs_attr3_leaf_clearflag
+  xfs: Add delay context to xfs_da_args
+  xfs: Add delayed attribute routines
+  xfs: Roll delayed attr operations by returning EAGAIN
+  xfs: Enable delayed attributes
 
+Allison Henderson (5):
+  xfs: Remove all strlen in all xfs_attr_* functions for attr names.
+  xfs: Set up infastructure for deferred attribute operations
+  xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+  xfs: Add xfs_has_attr and subroutines
+  xfs: Add delayed attributes error tag
 
-This is the most boring release ever(tm).  It contains only libxfs syncup=
-s,
-and some cosmetic changes unique to xfsprogs-specific libxfs/ files.
-Onward to 5.3!
+ fs/xfs/Makefile                 |    2 +-
+ fs/xfs/libxfs/xfs_attr.c        | 1145 ++++++++++++++++++++++++++++++++++-----
+ fs/xfs/libxfs/xfs_attr.h        |   49 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  167 ++++--
+ fs/xfs/libxfs/xfs_attr_leaf.h   |    4 +
+ fs/xfs/libxfs/xfs_attr_remote.c |   98 +++-
+ fs/xfs/libxfs/xfs_attr_remote.h |    5 +-
+ fs/xfs/libxfs/xfs_da_btree.h    |   23 +
+ fs/xfs/libxfs/xfs_defer.c       |    1 +
+ fs/xfs/libxfs/xfs_defer.h       |    3 +
+ fs/xfs/libxfs/xfs_errortag.h    |    4 +-
+ fs/xfs/libxfs/xfs_log_format.h  |   44 +-
+ fs/xfs/libxfs/xfs_types.h       |    1 +
+ fs/xfs/scrub/common.c           |    2 +
+ fs/xfs/xfs_acl.c                |   26 +-
+ fs/xfs/xfs_attr_item.c          |  804 +++++++++++++++++++++++++++
+ fs/xfs/xfs_attr_item.h          |  102 ++++
+ fs/xfs/xfs_attr_list.c          |    1 +
+ fs/xfs/xfs_error.c              |    3 +
+ fs/xfs/xfs_ioctl.c              |   21 +-
+ fs/xfs/xfs_ioctl32.c            |    2 +
+ fs/xfs/xfs_iops.c               |   10 +-
+ fs/xfs/xfs_log.c                |    4 +
+ fs/xfs/xfs_log_recover.c        |  174 ++++++
+ fs/xfs/xfs_ondisk.h             |    2 +
+ fs/xfs/xfs_trans.h              |    4 +-
+ fs/xfs/xfs_xattr.c              |   20 +-
+ 27 files changed, 2504 insertions(+), 217 deletions(-)
+ create mode 100644 fs/xfs/xfs_attr_item.c
+ create mode 100644 fs/xfs/xfs_attr_item.h
 
-Thanks,
--Eric
-
-The new head of the master branch is commit:
-
-2976bfe xfsprogs: Release v5.2.0
-
-New Commits since v5.1.0:
-
-Brian Foster (3):
-      [580a438] xfs: don't account extra agfl blocks as available
-      [b8b9c3c] xfs: make tr_growdata a permanent transaction
-      [d85d342] xfs: assert that we don't enter agfl freeing with a non-p=
-ermanent transaction
-
-Darrick J. Wong (11):
-      [f866934] xfs: track metadata health status
-      [7b55f0f] xfs: replace the BAD_SUMMARY mount flag with the equivale=
-nt health code
-      [25b8487] xfs: clear BAD_SUMMARY if unmounting an unhealthy filesys=
-tem
-      [debdc16] xfs: add a new ioctl to describe allocation group geometr=
-y
-      [69423ea] xfs: report fs and rt health via geometry structure
-      [378d9e6] xfs: report AG health via AG geometry ioctl
-      [f394edc] xfs: report inode health via bulkstat
-      [f73690f] xfs: track delayed allocation reservations across the fil=
-esystem
-      [9833c1a] xfs: always rejoin held resources during defer roll
-      [e9caede] xfs: add online scrub for superblock counters
-      [247c499] xfs: don't reserve per-AG space for an internal log
-
-Dave Chinner (1):
-      [4ddaada] xfs: bump XFS_IOC_FSGEOMETRY to v5 structures
-
-Eric Sandeen (7):
-      [a37cde5] xfs: change some error-less functions to void types
-      [e20cbd1] xfsprogs: Release v5.2.0-rc0
-      [e6afdab] libxfs: reorder functions in libxfs/trans.c
-      [9c64b9b] libxfs: cosmetic changes to libxfs/trans.c
-      [42b85f5] libxfs: trivial changes to libxfs/trans.c
-      [3a3f5b1] libxfs: don't use enum for buffer flags
-      [2976bfe] xfsprogs: Release v5.2.0
-
-
-Code Diffstat:
-
- VERSION                     |   2 +-
- configure.ac                |   2 +-
- db/info.c                   |  10 +-
- debian/changelog            |   6 +
- doc/CHANGES                 |   6 +
- fsr/xfs_fsr.c               |   8 +-
- include/xfs_mount.h         |   8 +
- include/xfs_trace.h         |   5 +
- include/xfs_trans.h         |   7 +-
- libxfs/libxfs_api_defs.h    |   1 +
- libxfs/libxfs_io.h          |  17 +-
- libxfs/libxfs_priv.h        |   1 +
- libxfs/trans.c              | 406 +++++++++++++++++++++++++++-----------=
-------
- libxfs/util.c               |  21 ++-
- libxfs/xfs_ag.c             |  54 ++++++
- libxfs/xfs_ag.h             |   2 +
- libxfs/xfs_alloc.c          |  13 +-
- libxfs/xfs_attr.c           |  35 ++--
- libxfs/xfs_attr.h           |   2 +-
- libxfs/xfs_bmap.c           |  17 +-
- libxfs/xfs_defer.c          |  14 +-
- libxfs/xfs_dquot_buf.c      |   4 +-
- libxfs/xfs_fs.h             | 139 +++++++++++----
- libxfs/xfs_health.h         | 190 +++++++++++++++++++++
- libxfs/xfs_ialloc_btree.c   |   9 +
- libxfs/xfs_quota_defs.h     |   2 +-
- libxfs/xfs_refcount_btree.c |   9 +
- libxfs/xfs_rmap_btree.c     |   9 +
- libxfs/xfs_sb.c             |  18 +-
- libxfs/xfs_sb.h             |   2 +-
- libxfs/xfs_trans_resv.c     |   6 +-
- libxfs/xfs_types.c          |   2 +-
- libxfs/xfs_types.h          |   2 +
- mkfs/xfs_mkfs.c             |  11 +-
- rtcp/xfs_rtcp.c             |   2 +-
- 35 files changed, 766 insertions(+), 276 deletions(-)
- create mode 100644 libxfs/xfs_health.h
-
-
---zwQSGMd8rxxqtShwbeXRTFViFTLnK9jtA--
-
---a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl1NzBUACgkQIK4WkuE9
-3uB2Dg/+JPQYh31RMx927fpPAkcMEZFGQN8b2nMMVhvraiNvAlfeaRiQEmtmysdy
-KQDRDuejV6NXi1jbMpD1VuxShCmi/2gr0ZGVtAn8NqToCOx8fcjGNXEEMJcuBqjb
-nFOYfzdYs9DqE1TL9quny4eWlvtW+dOyRFtSYrUMlEqG5D/2ZJ6ZNdArk9JEQt5O
-2QMavBzysgKlwQK9mJRfaAOGzfH1/R6tZscZpNEBCj2MeLxvemgoxnWugku0s/58
-+7Qo2noOFRABwBQQPTiLRnXu6Hrs4sSs92aBR2/J0uer4nEDrBxx1+iOy0p+174/
-K6ZcjXVfYNaXIQFulRxOpwl5KN3QJjzGD3ufKNAz3STDc+2N8H2UVfz1nbqTKwFV
-B5R5pbeOS0Xlpk9UDQCG3CnAdh6UodheEOozPCr8w/VWO6/txO4ZnauEACZ3SRws
-jSvyUiEk24bV+zGNpqcriSQgdZg6jKci4zP7qFNQ9gesXxEU1kluyAalgRkeSm6a
-WHCxUpIic1ZPR7wHm7WCw6UL9dAd5QQnYNMQaLH9pCiKPh+b9+myu/Qpvb+0Fm9Z
-17l+kNXd48BybugEBHjTlDqVw1qeybTQ4AlHNOtALQi/p3d9ti5QrgGRf4ad5kIZ
-D1lImq7Ovi2aaOR+bn38YS7S8dn1lQCnk7PC4WyPFpxj8zPVtv8=
-=/+NG
------END PGP SIGNATURE-----
-
---a4jNrQfPmXxLdvGXuoPbj6kMFY9CjRENj--
+-- 
+2.7.4
