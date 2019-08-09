@@ -1,29 +1,29 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:58650 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728160AbfHIVhq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 17:37:46 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LYbFI084554
-        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:44 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2u8hgpa7wh-1
+Received: from aserp2120.oracle.com ([141.146.126.78]:55612 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728202AbfHIVhr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 17:37:47 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LYWf3092777
+        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:45 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2u8hasj985-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:37:44 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LO4Kc008114
-        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:43 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2u8x1h6vkp-1
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:37:45 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LNLFU071981
+        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2u8x9fxjwm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:37:43 +0000
+        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:37:45 +0000
 Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x79LbhHE001874
-        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:43 GMT
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x79Lbh64019000
+        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:37:44 GMT
 From: Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH v2 06/18] xfs: Factor out new helper functions xfs_attr_rmtval_set
-Date: Fri,  9 Aug 2019 14:37:14 -0700
-Message-Id: <20190809213726.32336-7-allison.henderson@oracle.com>
+Subject: [PATCH v2 18/18] xfs: Add delayed attributes error tag
+Date: Fri,  9 Aug 2019 14:37:26 -0700
+Message-Id: <20190809213726.32336-19-allison.henderson@oracle.com>
 In-Reply-To: <20190809213726.32336-1-allison.henderson@oracle.com>
 References: <20190809213726.32336-1-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
@@ -31,139 +31,99 @@ List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: linux-xfs@vger.kernel.org
 
-Break xfs_attr_rmtval_set into two helper functions
-xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
-xfs_attr_rmtval_set rolls the transaction between the
-helpers, but delayed operations cannot.  We will use
-the helpers later when constructing new delayed
-attribute routines.
+From: Allison Henderson <allison.henderson@oracle.com>
+
+This patch adds an error tag that we can use to test
+delayed attribute recovery and replay
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_remote.c | 73 +++++++++++++++++++++++++++++++----------
- fs/xfs/libxfs/xfs_attr_remote.h |  4 ++-
- 2 files changed, 58 insertions(+), 19 deletions(-)
+ fs/xfs/libxfs/xfs_errortag.h | 4 +++-
+ fs/xfs/xfs_attr_item.c       | 8 ++++++++
+ fs/xfs/xfs_error.c           | 3 +++
+ 3 files changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index 4eb30d3..c421412 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -21,6 +21,7 @@
- #include "xfs_attr.h"
- #include "xfs_trace.h"
- #include "xfs_error.h"
-+#include "xfs_attr_remote.h"
+diff --git a/fs/xfs/libxfs/xfs_errortag.h b/fs/xfs/libxfs/xfs_errortag.h
+index 79e6c4f..85d5850 100644
+--- a/fs/xfs/libxfs/xfs_errortag.h
++++ b/fs/xfs/libxfs/xfs_errortag.h
+@@ -55,7 +55,8 @@
+ #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
+ #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
+ #define XFS_ERRTAG_IUNLINK_FALLBACK			34
+-#define XFS_ERRTAG_MAX					35
++#define XFS_ERRTAG_DELAYED_ATTR				35
++#define XFS_ERRTAG_MAX					36
  
- #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+ /*
+  * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
+@@ -95,5 +96,6 @@
+ #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
+ #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
+ #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
++#define XFS_RANDOM_DELAYED_ATTR				1
  
-@@ -430,34 +431,18 @@ xfs_attr_rmtval_set(
- 	struct xfs_da_args	*args)
- {
- 	struct xfs_inode	*dp = args->dp;
--	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
- 	xfs_fileoff_t		lfileoff = 0;
--	uint8_t			*src = args->value;
- 	int			blkcnt;
--	int			valuelen;
- 	int			nmap;
- 	int			error;
--	int			offset = 0;
+ #endif /* __XFS_ERRORTAG_H_ */
+diff --git a/fs/xfs/xfs_attr_item.c b/fs/xfs/xfs_attr_item.c
+index 6693880..045d23a 100644
+--- a/fs/xfs/xfs_attr_item.c
++++ b/fs/xfs/xfs_attr_item.c
+@@ -33,6 +33,8 @@
+ #include "libxfs/xfs_da_format.h"
+ #include "xfs_inode.h"
+ #include "xfs_quota.h"
++#include "xfs_error.h"
++#include "xfs_errortag.h"
  
--	trace_xfs_attr_rmtval_set(args);
--
--	/*
--	 * Find a "hole" in the attribute address space large enough for
--	 * us to drop the new attribute's value into. Because CRC enable
--	 * attributes have headers, we can't just do a straight byte to FSB
--	 * conversion and have to take the header space into account.
--	 */
--	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
--	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
--						   XFS_ATTR_FORK);
-+	error = xfs_attr_rmt_find_hole(args, &blkcnt, &lfileoff);
+ 
+ /*
+@@ -74,6 +76,11 @@ xfs_trans_attr(
  	if (error)
  		return error;
  
--	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
--	args->rmtblkcnt = blkcnt;
--
-+	lblkno = (xfs_dablk_t)lfileoff;
- 	/*
- 	 * Roll through the "value", allocating blocks on disk as required.
- 	 */
-@@ -498,6 +483,58 @@ xfs_attr_rmtval_set(
- 			return error;
++	if (XFS_TEST_ERROR(false, args->dp->i_mount, XFS_ERRTAG_DELAYED_ATTR)) {
++		error = -EIO;
++		goto out;
++	}
++
+ 	switch (op_flags) {
+ 	case XFS_ATTR_OP_FLAGS_SET:
+ 		args->op_flags |= XFS_DA_OP_ADDNAME;
+@@ -87,6 +94,7 @@ xfs_trans_attr(
+ 		error = -EFSCORRUPTED;
  	}
  
-+	error = xfs_attr_rmtval_set_value(args);
-+	return error;
-+}
-+
-+
-+
-+int
-+xfs_attr_rmt_find_hole(
-+	struct xfs_da_args	*args,
-+	int			*blkcnt,
-+	xfs_fileoff_t		*lfileoff)
-+{
-+	struct xfs_inode        *dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error;
-+
-+	trace_xfs_attr_rmtval_set(args);
-+
-+	/*
-+	 * Find a "hole" in the attribute address space large enough for
-+	 * us to drop the new attribute's value into. Because CRC enable
-+	 * attributes have headers, we can't just do a straight byte to FSB
-+	 * conversion and have to take the header space into account.
-+	 */
-+	*blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
-+	error = xfs_bmap_first_unused(args->trans, args->dp, *blkcnt, lfileoff,
-+						   XFS_ATTR_FORK);
-+	if (error)
-+		return error;
-+
-+	args->rmtblkno = (xfs_dablk_t)*lfileoff;
-+	args->rmtblkcnt = *blkcnt;
-+
-+	return 0;
-+}
-+
-+int
-+xfs_attr_rmtval_set_value(
-+	struct xfs_da_args	*args)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_bmbt_irec	map;
-+	xfs_dablk_t		lblkno;
-+	uint8_t			*src = args->value;
-+	int			blkcnt;
-+	int			valuelen;
-+	int			nmap;
-+	int			error;
-+	int			offset = 0;
-+
-+
++out:
  	/*
- 	 * Roll through the "value", copying the attribute value to the
- 	 * already-allocated blocks.  Blocks are written synchronously
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
-index 9d20b66..2a73cd9 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.h
-+++ b/fs/xfs/libxfs/xfs_attr_remote.h
-@@ -11,5 +11,7 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
- int xfs_attr_rmtval_get(struct xfs_da_args *args);
- int xfs_attr_rmtval_set(struct xfs_da_args *args);
- int xfs_attr_rmtval_remove(struct xfs_da_args *args);
--
-+int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
-+int xfs_attr_rmt_find_hole(struct xfs_da_args *args, int *blkcnt,
-+			   xfs_fileoff_t *lfileoff);
- #endif /* __XFS_ATTR_REMOTE_H__ */
+ 	 * Mark the transaction dirty, even on error. This ensures the
+ 	 * transaction is aborted, which:
+diff --git a/fs/xfs/xfs_error.c b/fs/xfs/xfs_error.c
+index 544c948..9b2de63 100644
+--- a/fs/xfs/xfs_error.c
++++ b/fs/xfs/xfs_error.c
+@@ -53,6 +53,7 @@ static unsigned int xfs_errortag_random_default[] = {
+ 	XFS_RANDOM_FORCE_SCRUB_REPAIR,
+ 	XFS_RANDOM_FORCE_SUMMARY_RECALC,
+ 	XFS_RANDOM_IUNLINK_FALLBACK,
++	XFS_RANDOM_DELAYED_ATTR,
+ };
+ 
+ struct xfs_errortag_attr {
+@@ -162,6 +163,7 @@ XFS_ERRORTAG_ATTR_RW(buf_lru_ref,	XFS_ERRTAG_BUF_LRU_REF);
+ XFS_ERRORTAG_ATTR_RW(force_repair,	XFS_ERRTAG_FORCE_SCRUB_REPAIR);
+ XFS_ERRORTAG_ATTR_RW(bad_summary,	XFS_ERRTAG_FORCE_SUMMARY_RECALC);
+ XFS_ERRORTAG_ATTR_RW(iunlink_fallback,	XFS_ERRTAG_IUNLINK_FALLBACK);
++XFS_ERRORTAG_ATTR_RW(delayed_attr,	XFS_ERRTAG_DELAYED_ATTR);
+ 
+ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(noerror),
+@@ -199,6 +201,7 @@ static struct attribute *xfs_errortag_attrs[] = {
+ 	XFS_ERRORTAG_ATTR_LIST(force_repair),
+ 	XFS_ERRORTAG_ATTR_LIST(bad_summary),
+ 	XFS_ERRORTAG_ATTR_LIST(iunlink_fallback),
++	XFS_ERRORTAG_ATTR_LIST(delayed_attr),
+ 	NULL,
+ };
+ 
 -- 
 2.7.4
