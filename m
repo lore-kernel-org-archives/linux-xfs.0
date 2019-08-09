@@ -1,159 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:50272 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726189AbfHIViS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 17:38:18 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LYjOg072235
-        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:38:17 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2u8hpsa4ya-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:38:17 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x79LNUOs056397
-        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:38:17 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2u8pj9m4gu-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 09 Aug 2019 21:38:17 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x79LcGlB002183
-        for <linux-xfs@vger.kernel.org>; Fri, 9 Aug 2019 21:38:16 GMT
-From: Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH v1 04/19] xfsprogs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-Date: Fri,  9 Aug 2019 14:37:49 -0700
-Message-Id: <20190809213804.32628-5-allison.henderson@oracle.com>
-In-Reply-To: <20190809213804.32628-1-allison.henderson@oracle.com>
-References: <20190809213804.32628-1-allison.henderson@oracle.com>
+Received: from mga04.intel.com ([192.55.52.120]:25396 "EHLO mga04.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729588AbfHIW6r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 18:58:47 -0400
+From: ira.weiny@intel.com
+Subject: [RFC PATCH v2 04/19] mm/gup: Ensure F_LAYOUT lease is held prior to GUP'ing pages
+Date: Fri,  9 Aug 2019 15:58:18 -0700
+Message-Id: <20190809225833.6657-5-ira.weiny@intel.com>
+In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
 
-These routines set up set and start a new deferred attribute
-operation.  These functions are meant to be called by other
-code needing to initiate a deferred attribute operation.
+From: Ira Weiny <ira.weiny@intel.com>
 
-Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+On FS DAX files users must inform the file system they intend to take
+long term GUP pins on the file pages.  Failure to do so should result in
+an error.
+
+Ensure that a F_LAYOUT lease exists at the time the GUP call is made.
+If not return EPERM.
+
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+
 ---
- libxfs/xfs_attr.c | 74 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_attr.h |  5 ++++
- 2 files changed, 79 insertions(+)
+Changes from RFC v1:
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 99a3a31..4690538 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -26,6 +26,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_attr_item.h"
-+#include "xfs_attr.h"
- 
- /*
-  * xfs_attr.c
-@@ -400,6 +401,48 @@ out_trans_cancel:
- 	goto out_unlock;
+    The old version had remnants of when GUP was going to take the lease
+    for the user.  Remove this prototype code.
+    Fix issue in gup_device_huge which was setting page reference prior
+    to checking for Layout Lease
+    Re-base to 5.3+
+    Clean up htmldoc comments
+
+ fs/locks.c         | 47 ++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/mm.h |  2 ++
+ mm/gup.c           | 23 +++++++++++++++++++++++
+ mm/huge_memory.c   | 12 ++++++++++++
+ 4 files changed, 84 insertions(+)
+
+diff --git a/fs/locks.c b/fs/locks.c
+index 0c7359cdab92..14892c84844b 100644
+--- a/fs/locks.c
++++ b/fs/locks.c
+@@ -2971,3 +2971,50 @@ static int __init filelock_init(void)
+ 	return 0;
  }
- 
-+/* Sets an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_set_deferred(
-+	struct xfs_inode	*dp,
-+	struct xfs_trans	*tp,
-+	struct xfs_name		*name,
-+	const unsigned char	*value,
-+	unsigned int		valuelen)
+ core_initcall(filelock_init);
++
++/**
++ * mapping_inode_has_layout - ensure a file mapped page has a layout lease
++ * taken
++ * @page: page we are trying to GUP
++ *
++ * This should only be called on DAX pages.  DAX pages which are mapped through
++ * FS DAX do not use the page cache.  As a result they require the user to take
++ * a LAYOUT lease on them prior to be able to pin them for longterm use.
++ * This allows the user to opt-into the fact that truncation operations will
++ * fail for the duration of the pin.
++ *
++ * Return true if the page has a LAYOUT lease associated with it's file.
++ */
++bool mapping_inode_has_layout(struct page *page)
 +{
++	bool ret = false;
++	struct inode *inode;
++	struct file_lock *fl;
 +
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
++	if (WARN_ON(PageAnon(page)) ||
++	    WARN_ON(!page) ||
++	    WARN_ON(!page->mapping) ||
++	    WARN_ON(!page->mapping->host))
++		return false;
 +
-+	/*
-+	 * All set operations must have a name but not necessarily a value.
-+	 */
-+	if (!name->len) {
-+		ASSERT(0);
-+		return -EINVAL;
++	inode = page->mapping->host;
++
++	smp_mb();
++	if (inode->i_flctx &&
++	    !list_empty_careful(&inode->i_flctx->flc_lease)) {
++		spin_lock(&inode->i_flctx->flc_lock);
++		ret = false;
++		list_for_each_entry(fl, &inode->i_flctx->flc_lease, fl_list) {
++			if (fl->fl_pid == current->tgid &&
++			    (fl->fl_flags & FL_LAYOUT) &&
++			    (fl->fl_flags & FL_EXCLUSIVE)) {
++				ret = true;
++				break;
++			}
++		}
++		spin_unlock(&inode->i_flctx->flc_lock);
 +	}
 +
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(name->len, valuelen),
-+			 KM_SLEEP|KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(name->len, valuelen));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
-+	new->xattri_name_len = name->len;
-+	new->xattri_value_len = valuelen;
-+	new->xattri_flags = name->type;
-+	memcpy(&name_value[0], name->name, name->len);
-+	new->xattri_name = name_value;
-+	new->xattri_value = name_value + name->len;
-+
-+	if (valuelen > 0)
-+		memcpy(&name_value[name->len], value, valuelen);
-+
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
++	return ret;
 +}
-+
- /*
-  * Generic handler routine to remove a name from an attribute list.
-  * Transitions attribute list from Btree to shortform as necessary.
-@@ -481,6 +524,37 @@ out:
- 	return error;
- }
++EXPORT_SYMBOL_GPL(mapping_inode_has_layout);
+diff --git a/include/linux/mm.h b/include/linux/mm.h
+index ad6766a08f9b..04f22722b374 100644
+--- a/include/linux/mm.h
++++ b/include/linux/mm.h
+@@ -1583,6 +1583,8 @@ int account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc);
+ int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc,
+ 			struct task_struct *task, bool bypass_rlim);
  
-+/* Removes an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_remove_deferred(
-+	struct xfs_inode        *dp,
-+	struct xfs_trans	*tp,
-+	struct xfs_name		*name)
-+{
++bool mapping_inode_has_layout(struct page *page);
 +
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
+ /* Container for pinned pfns / pages */
+ struct frame_vector {
+ 	unsigned int nr_allocated;	/* Number of frames we have space for */
+diff --git a/mm/gup.c b/mm/gup.c
+index 80423779a50a..0b05e22ac05f 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -221,6 +221,13 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
+ 			page = pte_page(pte);
+ 		else
+ 			goto no_page;
 +
-+	if (!name->len) {
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(name->len, 0), KM_SLEEP|KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(name->len, 0));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
-+	new->xattri_name_len = name->len;
-+	new->xattri_value_len = 0;
-+	new->xattri_flags = name->type;
-+	memcpy(name_value, name->name, name->len);
-+
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index 7089a80..f4efa7c 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -171,5 +171,10 @@ bool xfs_attr_namecheck(const void *name, size_t length);
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       struct xfs_name *name);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-+int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-+			  struct xfs_name *name, const unsigned char *value,
-+			  unsigned int valuelen);
-+int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-+			    struct xfs_name *name);
++		if (unlikely(flags & FOLL_LONGTERM) &&
++		    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
++		    !mapping_inode_has_layout(page)) {
++			page = ERR_PTR(-EPERM);
++			goto out;
++		}
+ 	} else if (unlikely(!page)) {
+ 		if (flags & FOLL_DUMP) {
+ 			/* Avoid special (like zero) pages in core dumps */
+@@ -1847,6 +1854,14 @@ static int gup_pte_range(pmd_t pmd, unsigned long addr, unsigned long end,
  
- #endif	/* __XFS_ATTR_H__ */
+ 		VM_BUG_ON_PAGE(compound_head(page) != head, page);
+ 
++		if (pte_devmap(pte) &&
++		    unlikely(flags & FOLL_LONGTERM) &&
++		    pgmap->type == MEMORY_DEVICE_FS_DAX &&
++		    !mapping_inode_has_layout(head)) {
++			put_user_page(head);
++			goto pte_unmap;
++		}
++
+ 		SetPageReferenced(page);
+ 		pages[*nr] = page;
+ 		(*nr)++;
+@@ -1895,6 +1910,14 @@ static int __gup_device_huge(unsigned long pfn, unsigned long addr,
+ 			undo_dev_pagemap(nr, nr_start, pages);
+ 			return 0;
+ 		}
++
++		if (unlikely(flags & FOLL_LONGTERM) &&
++		    pgmap->type == MEMORY_DEVICE_FS_DAX &&
++		    !mapping_inode_has_layout(page)) {
++			undo_dev_pagemap(nr, nr_start, pages);
++			return 0;
++		}
++
+ 		SetPageReferenced(page);
+ 		pages[*nr] = page;
+ 		get_page(page);
+diff --git a/mm/huge_memory.c b/mm/huge_memory.c
+index 1334ede667a8..bc1a07a55be1 100644
+--- a/mm/huge_memory.c
++++ b/mm/huge_memory.c
+@@ -953,6 +953,12 @@ struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
+ 	if (!*pgmap)
+ 		return ERR_PTR(-EFAULT);
+ 	page = pfn_to_page(pfn);
++
++	if (unlikely(flags & FOLL_LONGTERM) &&
++	    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
++	    !mapping_inode_has_layout(page))
++		return ERR_PTR(-EPERM);
++
+ 	get_page(page);
+ 
+ 	return page;
+@@ -1093,6 +1099,12 @@ struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
+ 	if (!*pgmap)
+ 		return ERR_PTR(-EFAULT);
+ 	page = pfn_to_page(pfn);
++
++	if (unlikely(flags & FOLL_LONGTERM) &&
++	    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
++	    !mapping_inode_has_layout(page))
++		return ERR_PTR(-EPERM);
++
+ 	get_page(page);
+ 
+ 	return page;
 -- 
-2.7.4
+2.20.1
