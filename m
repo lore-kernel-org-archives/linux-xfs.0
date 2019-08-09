@@ -1,179 +1,196 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48313 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726484AbfHKCTB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Aug 2019 22:19:01 -0400
-Date: Sun, 11 Aug 2019 12:17:47 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 23/24] xfs: reclaim inodes from the LRU
-Message-ID: <20190811021747.GE7777@dread.disaster.area>
-References: <20190801021752.4986-1-david@fromorbit.com>
- <20190801021752.4986-24-david@fromorbit.com>
- <20190808163905.GC24551@bfoster>
- <20190809012022.GX7777@dread.disaster.area>
- <20190809123632.GA29669@bfoster>
+Received: from mga12.intel.com ([192.55.52.136]:47931 "EHLO mga12.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730724AbfHIW7I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 9 Aug 2019 18:59:08 -0400
+From: ira.weiny@intel.com
+Subject: [RFC PATCH v2 17/19] RDMA/umem: Convert to vaddr_[pin|unpin]* operations.
+Date: Fri,  9 Aug 2019 15:58:31 -0700
+Message-Id: <20190809225833.6657-18-ira.weiny@intel.com>
+In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190809123632.GA29669@bfoster>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
 
-On Fri, Aug 09, 2019 at 08:36:32AM -0400, Brian Foster wrote:
-> On Fri, Aug 09, 2019 at 11:20:22AM +1000, Dave Chinner wrote:
-> > On Thu, Aug 08, 2019 at 12:39:05PM -0400, Brian Foster wrote:
-> > > On Thu, Aug 01, 2019 at 12:17:51PM +1000, Dave Chinner wrote:
-> > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > 
-> > > > Replace the AG radix tree walking reclaim code with a list_lru
-> > > > walker, giving us both node-aware and memcg-aware inode reclaim
-> > > > at the XFS level. This requires adding an inode isolation function to
-> > > > determine if the inode can be reclaim, and a list walker to
-> > > > dispose of the inodes that were isolated.
-> > > > 
-> > > > We want the isolation function to be non-blocking. If we can't
-> > > > grab an inode then we either skip it or rotate it. If it's clean
-> > > > then we skip it, if it's dirty then we rotate to give it time to be
-> > > 
-> > > Do you mean we remove it if it's clean?
-> > 
-> > No, I mean if we can't grab it and it's clean, then we just skip it,
-> > leaving it at the head of the LRU for the next scanner to
-> > immediately try to reclaim it. If it's dirty, we rotate it so that
-> > time passes before we try to reclaim it again in the hope that it is
-> > already clean by the time we've scanned through the entire LRU...
-> > 
-> 
-> Ah, Ok. That could probably be worded more explicitly. E.g.:
-> 
-> "If we can't grab an inode, we skip it if it is clean or rotate it if
-> dirty. Dirty inode rotation gives the inode time to be cleaned before
-> it's scanned again. ..."
+From: Ira Weiny <ira.weiny@intel.com>
 
-*nod*
+In order to properly track the pinning information we need to keep a
+vaddr_pin object around.  Store that within the umem object directly.
 
-> > > > +++ b/fs/xfs/xfs_super.c
-> > > ...
-> > > > @@ -1810,23 +1811,58 @@ xfs_fs_mount(
-> ...
-> > > > +	long freed;
-> > > >  
-> > > > -	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
-> > > > +	INIT_LIST_HEAD(&ra.freeable);
-> > > > +	ra.lowest_lsn = NULLCOMMITLSN;
-> > > > +	ra.dirty_skipped = 0;
-> > > > +
-> > > > +	freed = list_lru_shrink_walk(&mp->m_inode_lru, sc,
-> > > > +					xfs_inode_reclaim_isolate, &ra);
-> > > 
-> > > This is more related to the locking discussion on the earlier patch, but
-> > > this looks like it has more similar serialization to the example patch I
-> > > posted than the one without locking at all. IIUC, this walk has an
-> > > internal lock per node lru that is held across the walk and passed into
-> > > the callback. We never cycle it, so for any given node we only allow one
-> > > reclaimer through here at a time.
-> > 
-> > That's not a guarantee that list_lru gives us. It could drop it's
-> > internal lock at any time during that walk and we would be
-> > blissfully unaware that it has done this. And at that point, the
-> > reclaim context is completely unaware that other reclaim contexts
-> > may be scanning the same LRU at the same time and are interleaving
-> > with it.
-> > 
-> 
-> What is not a guarantee? I'm not following your point here. I suppose it
-> technically could drop the lock, but then it would have to restart the
-> iteration and wouldn't exactly provide predictable batching capability
-> to users.
+The vaddr_pin object allows the GUP code to associate any files it pins
+with the RDMA file descriptor associated with this GUP.
 
-There is no guarantee that the list_lru_shrink_walk() provides a
-single list walker at a time or that it provides predictable
-batching capability to users.
+Furthermore, use the vaddr_pin object to store the owning mm while we
+are at it.
 
-> This internal lock protects the integrity of the list from external
-> adds/removes, etc., but it's also passed into the callback so of course
-> it can be cycled at any point. The callback just has to notify the
-> caller to restart the walk. E.g., from __list_lru_walk_one():
-> 
->         /*
->          * The lru lock has been dropped, our list traversal is
->          * now invalid and so we have to restart from scratch.
->          */
+No references need to be taken on the owing file as the lifetime of that
+object is tied to all the umems being destroyed first.
 
-As the designer and author of the list_lru code, I do know how it
-works. I also know exactly what this problem this behaviour was
-intended to solve, because I had to solve it to meet the
-requirements I had for the infrastructure.
+Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+---
+ drivers/infiniband/core/umem.c     | 26 +++++++++++++++++---------
+ drivers/infiniband/core/umem_odp.c | 16 ++++++++--------
+ include/rdma/ib_umem.h             |  2 +-
+ 3 files changed, 26 insertions(+), 18 deletions(-)
 
-The isolation walk lock batching currently done is an optimisation
-to minimise lru lock contention - it amortise the cost of getting
-the lock over a substantial batch of work. If we drop the lock on
-every item we try to isolate - my initial implementations did this -
-then the lru lock thrashes badly against concurrent inserts and
-deletes and scalability is not much better than the global lock it
-was replacing.
-
-IOWs, the behaviour we have now is a result of lock contention
-optimisation to meet scalability requirements, not because of some
-"predictable batching" requirement. If we were to rework the
-traversal mechanism such that the lru lock was not necessary to
-protect the state of the LRU list across the batch of isolate
-callbacks, then we'd get the scalability we need but we'd completely
-change the concurrency behaviour. The list would still do LRU
-reclaim, and the isolate functions still work exactly as tehy
-currently do (i.e. they work on just the item passed to them) but
-we'd have concurrent reclaim contexts isolating items on the same
-LRU concurrently rather than being serialised. And that's perfectly
-fine, because the isolate/dispose architecture just doesn't care
-how the items on the LRU are isolated for disposal.....
-
-What I'm trying to say is that the "isolation batching" we have is
-not desirable but it is necessary, and we because that's internal to
-the list_lru implementation, we can change that behaviour however
-we want and it won't affect the subsystems that own the objects
-being reclaimed. They still just get handed a list of items to
-dispose, and they all come from the reclaim end of the LRU list...
-
-Indeed, the new XFS inode shrinker is not dependent on any specific
-batching order, it's not dependent on isolation being serialised,
-and it's not dependent on the lru_lock being held across the
-isolation function. IOWs, it's set up just right to take advantage
-of any increases in isolation concurrency that the list_lru
-infrastructure could provide...
-
-> > > That seems to be Ok given we don't do much in the isolation handler, the
-> > > lock isn't held across the dispose sequence and we're still batching in
-> > > the shrinker core on top of that. We're still serialized over the lru
-> > > fixups such that concurrent reclaimers aren't processing the same
-> > > inodes, however.
-> > 
-> > The only thing that we may need here is need_resched() checks if it
-> > turns out that holding a lock for 1024 items to be scanned proved to
-> > be too long to hold on to a single CPU. If we do that we'd cycle the
-> > LRU lock and return RETRY or RETRY_REMOVE, hence enabling reclaimers
-> > more finer-grained interleaving....
-> > 
-> 
-> Sure, with the caveat that we restart the traversal..
-
-Which only re-traverses the inodes we skipped because they were
-locked at the time. IOWs, Skipping inodes is rare because if it is
-in reclaim then the only things that can be contending is a radix
-tree lookup in progress or an inode clustering operation
-(write/free) in progress. Either way, they will be relatively rare
-and very short term lock holds, so if we have to restart the scan
-after dropping the lru lock then it's likely we'll restart at next
-inode in line for reclaim, anyway....
-
-Hence I don't think having to restart a traversal would really
-matter all that much....
-
-Cheers,
-
-Dave.
+diff --git a/drivers/infiniband/core/umem.c b/drivers/infiniband/core/umem.c
+index 965cf9dea71a..a9ce3e3816ef 100644
+--- a/drivers/infiniband/core/umem.c
++++ b/drivers/infiniband/core/umem.c
+@@ -54,7 +54,8 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
+ 
+ 	for_each_sg_page(umem->sg_head.sgl, &sg_iter, umem->sg_nents, 0) {
+ 		page = sg_page_iter_page(&sg_iter);
+-		put_user_pages_dirty_lock(&page, 1, umem->writable && dirty);
++		vaddr_unpin_pages_dirty_lock(&page, 1, &umem->vaddr_pin,
++					     umem->writable && dirty);
+ 	}
+ 
+ 	sg_free_table(&umem->sg_head);
+@@ -243,8 +244,15 @@ struct ib_umem *ib_umem_get(struct ib_udata *udata, unsigned long addr,
+ 	umem->length     = size;
+ 	umem->address    = addr;
+ 	umem->writable   = ib_access_writable(access);
+-	umem->owning_mm = mm = current->mm;
+-	mmgrab(mm);
++	umem->vaddr_pin.mm = mm = current->mm;
++	mmgrab(umem->vaddr_pin.mm);
++
++	/* No need to get a reference to the core file object here.  The key is
++	 * that sys_file reference is held by the ufile.  Any duplication of
++	 * sys_file by the core will keep references active until all those
++	 * contexts are closed out.  No matter which process hold them open.
++	 */
++	umem->vaddr_pin.f_owner = context->ufile->sys_file;
+ 
+ 	if (access & IB_ACCESS_ON_DEMAND) {
+ 		if (WARN_ON_ONCE(!context->invalidate_range)) {
+@@ -292,11 +300,11 @@ struct ib_umem *ib_umem_get(struct ib_udata *udata, unsigned long addr,
+ 
+ 	while (npages) {
+ 		down_read(&mm->mmap_sem);
+-		ret = get_user_pages(cur_base,
++		ret = vaddr_pin_pages(cur_base,
+ 				     min_t(unsigned long, npages,
+ 					   PAGE_SIZE / sizeof (struct page *)),
+-				     gup_flags | FOLL_LONGTERM,
+-				     page_list, NULL);
++				     gup_flags,
++				     page_list, &umem->vaddr_pin);
+ 		if (ret < 0) {
+ 			up_read(&mm->mmap_sem);
+ 			goto umem_release;
+@@ -336,7 +344,7 @@ struct ib_umem *ib_umem_get(struct ib_udata *udata, unsigned long addr,
+ 	free_page((unsigned long) page_list);
+ umem_kfree:
+ 	if (ret) {
+-		mmdrop(umem->owning_mm);
++		mmdrop(umem->vaddr_pin.mm);
+ 		kfree(umem);
+ 	}
+ 	return ret ? ERR_PTR(ret) : umem;
+@@ -345,7 +353,7 @@ EXPORT_SYMBOL(ib_umem_get);
+ 
+ static void __ib_umem_release_tail(struct ib_umem *umem)
+ {
+-	mmdrop(umem->owning_mm);
++	mmdrop(umem->vaddr_pin.mm);
+ 	if (umem->is_odp)
+ 		kfree(to_ib_umem_odp(umem));
+ 	else
+@@ -369,7 +377,7 @@ void ib_umem_release(struct ib_umem *umem)
+ 
+ 	__ib_umem_release(umem->context->device, umem, 1);
+ 
+-	atomic64_sub(ib_umem_num_pages(umem), &umem->owning_mm->pinned_vm);
++	atomic64_sub(ib_umem_num_pages(umem), &umem->vaddr_pin.mm->pinned_vm);
+ 	__ib_umem_release_tail(umem);
+ }
+ EXPORT_SYMBOL(ib_umem_release);
+diff --git a/drivers/infiniband/core/umem_odp.c b/drivers/infiniband/core/umem_odp.c
+index 2a75c6f8d827..53085896d718 100644
+--- a/drivers/infiniband/core/umem_odp.c
++++ b/drivers/infiniband/core/umem_odp.c
+@@ -278,11 +278,11 @@ static int get_per_mm(struct ib_umem_odp *umem_odp)
+ 	 */
+ 	mutex_lock(&ctx->per_mm_list_lock);
+ 	list_for_each_entry(per_mm, &ctx->per_mm_list, ucontext_list) {
+-		if (per_mm->mm == umem_odp->umem.owning_mm)
++		if (per_mm->mm == umem_odp->umem.vaddr_pin.mm)
+ 			goto found;
+ 	}
+ 
+-	per_mm = alloc_per_mm(ctx, umem_odp->umem.owning_mm);
++	per_mm = alloc_per_mm(ctx, umem_odp->umem.vaddr_pin.mm);
+ 	if (IS_ERR(per_mm)) {
+ 		mutex_unlock(&ctx->per_mm_list_lock);
+ 		return PTR_ERR(per_mm);
+@@ -355,8 +355,8 @@ struct ib_umem_odp *ib_alloc_odp_umem(struct ib_umem_odp *root,
+ 	umem->writable   = root->umem.writable;
+ 	umem->is_odp = 1;
+ 	odp_data->per_mm = per_mm;
+-	umem->owning_mm  = per_mm->mm;
+-	mmgrab(umem->owning_mm);
++	umem->vaddr_pin.mm  = per_mm->mm;
++	mmgrab(umem->vaddr_pin.mm);
+ 
+ 	mutex_init(&odp_data->umem_mutex);
+ 	init_completion(&odp_data->notifier_completion);
+@@ -389,7 +389,7 @@ struct ib_umem_odp *ib_alloc_odp_umem(struct ib_umem_odp *root,
+ out_page_list:
+ 	vfree(odp_data->page_list);
+ out_odp_data:
+-	mmdrop(umem->owning_mm);
++	mmdrop(umem->vaddr_pin.mm);
+ 	kfree(odp_data);
+ 	return ERR_PTR(ret);
+ }
+@@ -399,10 +399,10 @@ int ib_umem_odp_get(struct ib_umem_odp *umem_odp, int access)
+ {
+ 	struct ib_umem *umem = &umem_odp->umem;
+ 	/*
+-	 * NOTE: This must called in a process context where umem->owning_mm
++	 * NOTE: This must called in a process context where umem->vaddr_pin.mm
+ 	 * == current->mm
+ 	 */
+-	struct mm_struct *mm = umem->owning_mm;
++	struct mm_struct *mm = umem->vaddr_pin.mm;
+ 	int ret_val;
+ 
+ 	umem_odp->page_shift = PAGE_SHIFT;
+@@ -581,7 +581,7 @@ int ib_umem_odp_map_dma_pages(struct ib_umem_odp *umem_odp, u64 user_virt,
+ 			      unsigned long current_seq)
+ {
+ 	struct task_struct *owning_process  = NULL;
+-	struct mm_struct *owning_mm = umem_odp->umem.owning_mm;
++	struct mm_struct *owning_mm = umem_odp->umem.vaddr_pin.mm;
+ 	struct page       **local_page_list = NULL;
+ 	u64 page_mask, off;
+ 	int j, k, ret = 0, start_idx, npages = 0;
+diff --git a/include/rdma/ib_umem.h b/include/rdma/ib_umem.h
+index 1052d0d62be7..ab677c799e29 100644
+--- a/include/rdma/ib_umem.h
++++ b/include/rdma/ib_umem.h
+@@ -43,7 +43,6 @@ struct ib_umem_odp;
+ 
+ struct ib_umem {
+ 	struct ib_ucontext     *context;
+-	struct mm_struct       *owning_mm;
+ 	size_t			length;
+ 	unsigned long		address;
+ 	u32 writable : 1;
+@@ -52,6 +51,7 @@ struct ib_umem {
+ 	struct sg_table sg_head;
+ 	int             nmap;
+ 	unsigned int    sg_nents;
++	struct vaddr_pin vaddr_pin;
+ };
+ 
+ /* Returns the offset of the umem start relative to the first page. */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
