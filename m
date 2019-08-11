@@ -1,122 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga17.intel.com ([192.55.52.151]:9691 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729112AbfHIW6o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:58:44 -0400
-From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user Layout lease
-Date: Fri,  9 Aug 2019 15:58:16 -0700
-Message-Id: <20190809225833.6657-3-ira.weiny@intel.com>
-In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:37758 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725870AbfHKXLI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Aug 2019 19:11:08 -0400
+Date: Mon, 12 Aug 2019 09:09:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 1/3] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190811230955.GG7777@dread.disaster.area>
+References: <156527561023.1960675.17007470833732765300.stgit@magnolia>
+ <156527561641.1960675.7113883901730327475.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156527561641.1960675.7113883901730327475.stgit@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Thu, Aug 08, 2019 at 07:46:56AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> When dedupe wants to use the page cache to compare parts of two files
+> for dedupe, we must be very careful to handle locking correctly.  The
+> current code doesn't do this.  It must lock and unlock the page only
+> once if the two pages are the same, since the overlapping range check
+> doesn't catch this when blocksize < pagesize.  If the pages are distinct
+> but from the same file, we must observe page locking order and lock them
+> in order of increasing offset to avoid clashing with writeback locking.
+> 
+> Fixes: 876bec6f9bbfcb3 ("vfs: refactor clone/dedupe_file_range common functions")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/read_write.c |   36 ++++++++++++++++++++++++++++--------
+>  1 file changed, 28 insertions(+), 8 deletions(-)
+> 
+> 
+> diff --git a/fs/read_write.c b/fs/read_write.c
+> index 1f5088dec566..4dbdccffa59e 100644
+> --- a/fs/read_write.c
+> +++ b/fs/read_write.c
+> @@ -1811,10 +1811,7 @@ static int generic_remap_check_len(struct inode *inode_in,
+>  	return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
+>  }
+>  
+> -/*
+> - * Read a page's worth of file data into the page cache.  Return the page
+> - * locked.
+> - */
+> +/* Read a page's worth of file data into the page cache. */
+>  static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+>  {
+>  	struct page *page;
+> @@ -1826,10 +1823,32 @@ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+>  		put_page(page);
+>  		return ERR_PTR(-EIO);
+>  	}
+> -	lock_page(page);
+>  	return page;
+>  }
+>  
+> +/*
+> + * Lock two pages, ensuring that we lock in offset order if the pages are from
+> + * the same file.
+> + */
+> +static void vfs_lock_two_pages(struct page *page1, struct page *page2)
+> +{
+> +	/* Always lock in order of increasing index. */
+> +	if (page1->index > page2->index)
+> +		swap(page1, page2);
+> +
+> +	lock_page(page1);
+> +	if (page1 != page2)
+> +		lock_page(page2);
+> +}
+> +
+> +/* Unlock two pages, being careful not to unlock the same page twice. */
+> +static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
+> +{
+> +	unlock_page(page1);
+> +	if (page1 != page2)
+> +		unlock_page(page2);
+> +}
+> +
+>  /*
+>   * Compare extents of two files to see if they are the same.
+>   * Caller must have locked both inodes to prevent write races.
+> @@ -1867,10 +1886,12 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+>  		dest_page = vfs_dedupe_get_page(dest, destoff);
+>  		if (IS_ERR(dest_page)) {
+>  			error = PTR_ERR(dest_page);
+> -			unlock_page(src_page);
+>  			put_page(src_page);
+>  			goto out_error;
+>  		}
+> +
+> +		vfs_lock_two_pages(src_page, dest_page);
+> +
 
-Add an exclusive lease flag which indicates that the layout mechanism
-can not be broken.
+Locking looks fine now, but....
 
-Exclusive layout leases allow the file system to know that pages may be
-GUP pined and that attempts to change the layout, ie truncate, should be
-failed.
+... don't we need to check for invalidation races on the source page
+here because the src inode is only locked shared and so can race with
+things like direct IO under shared inode locking doing invalidation?
 
-A process which attempts to break it's own exclusive lease gets an
-EDEADLOCK return to help determine that this is likely a programming bug
-vs someone else holding a resource.
+Cheers,
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- fs/locks.c                       | 23 +++++++++++++++++++++--
- include/linux/fs.h               |  1 +
- include/uapi/asm-generic/fcntl.h |  2 ++
- 3 files changed, 24 insertions(+), 2 deletions(-)
-
-diff --git a/fs/locks.c b/fs/locks.c
-index ad17c6ffca06..0c7359cdab92 100644
---- a/fs/locks.c
-+++ b/fs/locks.c
-@@ -626,6 +626,8 @@ static int lease_init(struct file *filp, long type, unsigned int flags,
- 	fl->fl_flags = FL_LEASE;
- 	if (flags & FL_LAYOUT)
- 		fl->fl_flags |= FL_LAYOUT;
-+	if (flags & FL_EXCLUSIVE)
-+		fl->fl_flags |= FL_EXCLUSIVE;
- 	fl->fl_start = 0;
- 	fl->fl_end = OFFSET_MAX;
- 	fl->fl_ops = NULL;
-@@ -1619,6 +1621,14 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
- 	list_for_each_entry_safe(fl, tmp, &ctx->flc_lease, fl_list) {
- 		if (!leases_conflict(fl, new_fl))
- 			continue;
-+		if (fl->fl_flags & FL_EXCLUSIVE) {
-+			error = -ETXTBSY;
-+			if (new_fl->fl_pid == fl->fl_pid) {
-+				error = -EDEADLOCK;
-+				goto out;
-+			}
-+			continue;
-+		}
- 		if (want_write) {
- 			if (fl->fl_flags & FL_UNLOCK_PENDING)
- 				continue;
-@@ -1634,6 +1644,13 @@ int __break_lease(struct inode *inode, unsigned int mode, unsigned int type)
- 			locks_delete_lock_ctx(fl, &dispose);
- 	}
- 
-+	/* We differentiate between -EDEADLOCK and -ETXTBSY so the above loop
-+	 * continues with -ETXTBSY looking for a potential deadlock instead.
-+	 * If deadlock is not found go ahead and return -ETXTBSY.
-+	 */
-+	if (error == -ETXTBSY)
-+		goto out;
-+
- 	if (list_empty(&ctx->flc_lease))
- 		goto out;
- 
-@@ -2044,9 +2061,11 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
- 	 * to revoke the lease in break_layout()  And this is done by using
- 	 * F_WRLCK in the break code.
- 	 */
--	if (arg == F_LAYOUT) {
-+	if ((arg & F_LAYOUT) == F_LAYOUT) {
-+		if ((arg & F_EXCLUSIVE) == F_EXCLUSIVE)
-+			flags |= FL_EXCLUSIVE;
- 		arg = F_RDLCK;
--		flags = FL_LAYOUT;
-+		flags |= FL_LAYOUT;
- 	}
- 
- 	fl = lease_alloc(filp, arg, flags);
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index dd60d5be9886..2e41ce547913 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1005,6 +1005,7 @@ static inline struct file *get_file(struct file *f)
- #define FL_UNLOCK_PENDING	512 /* Lease is being broken */
- #define FL_OFDLCK	1024	/* lock is "owned" by struct file */
- #define FL_LAYOUT	2048	/* outstanding pNFS layout or user held pin */
-+#define FL_EXCLUSIVE	4096	/* Layout lease is exclusive */
- 
- #define FL_CLOSE_POSIX (FL_POSIX | FL_CLOSE)
- 
-diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
-index baddd54f3031..88b175ceccbc 100644
---- a/include/uapi/asm-generic/fcntl.h
-+++ b/include/uapi/asm-generic/fcntl.h
-@@ -176,6 +176,8 @@ struct f_owner_ex {
- 
- #define F_LAYOUT	16      /* layout lease to allow longterm pins such as
- 				   RDMA */
-+#define F_EXCLUSIVE	32      /* layout lease is exclusive */
-+				/* FIXME or shoudl this be F_EXLCK??? */
- 
- /* operations for bsd flock(), also used by the kernel implementation */
- #define LOCK_SH		1	/* shared lock */
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
