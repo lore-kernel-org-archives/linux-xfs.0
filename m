@@ -1,259 +1,179 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:23645 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730266AbfHIW7A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:59:00 -0400
-From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 11/19] mm/gup: Pass follow_page_context further down the call stack
-Date: Fri,  9 Aug 2019 15:58:25 -0700
-Message-Id: <20190809225833.6657-12-ira.weiny@intel.com>
-In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48313 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726484AbfHKCTB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Aug 2019 22:19:01 -0400
+Date: Sun, 11 Aug 2019 12:17:47 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 23/24] xfs: reclaim inodes from the LRU
+Message-ID: <20190811021747.GE7777@dread.disaster.area>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-24-david@fromorbit.com>
+ <20190808163905.GC24551@bfoster>
+ <20190809012022.GX7777@dread.disaster.area>
+ <20190809123632.GA29669@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809123632.GA29669@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
+To: Brian Foster <bfoster@redhat.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Fri, Aug 09, 2019 at 08:36:32AM -0400, Brian Foster wrote:
+> On Fri, Aug 09, 2019 at 11:20:22AM +1000, Dave Chinner wrote:
+> > On Thu, Aug 08, 2019 at 12:39:05PM -0400, Brian Foster wrote:
+> > > On Thu, Aug 01, 2019 at 12:17:51PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > Replace the AG radix tree walking reclaim code with a list_lru
+> > > > walker, giving us both node-aware and memcg-aware inode reclaim
+> > > > at the XFS level. This requires adding an inode isolation function to
+> > > > determine if the inode can be reclaim, and a list walker to
+> > > > dispose of the inodes that were isolated.
+> > > > 
+> > > > We want the isolation function to be non-blocking. If we can't
+> > > > grab an inode then we either skip it or rotate it. If it's clean
+> > > > then we skip it, if it's dirty then we rotate to give it time to be
+> > > 
+> > > Do you mean we remove it if it's clean?
+> > 
+> > No, I mean if we can't grab it and it's clean, then we just skip it,
+> > leaving it at the head of the LRU for the next scanner to
+> > immediately try to reclaim it. If it's dirty, we rotate it so that
+> > time passes before we try to reclaim it again in the hope that it is
+> > already clean by the time we've scanned through the entire LRU...
+> > 
+> 
+> Ah, Ok. That could probably be worded more explicitly. E.g.:
+> 
+> "If we can't grab an inode, we skip it if it is clean or rotate it if
+> dirty. Dirty inode rotation gives the inode time to be cleaned before
+> it's scanned again. ..."
 
-In preparation for passing more information (vaddr_pin) into
-follow_page_pte(), follow_devmap_pud(), and follow_devmap_pmd().
+*nod*
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- include/linux/huge_mm.h | 17 -----------------
- mm/gup.c                | 31 +++++++++++++++----------------
- mm/huge_memory.c        |  6 ++++--
- mm/internal.h           | 28 ++++++++++++++++++++++++++++
- 4 files changed, 47 insertions(+), 35 deletions(-)
+> > > > +++ b/fs/xfs/xfs_super.c
+> > > ...
+> > > > @@ -1810,23 +1811,58 @@ xfs_fs_mount(
+> ...
+> > > > +	long freed;
+> > > >  
+> > > > -	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
+> > > > +	INIT_LIST_HEAD(&ra.freeable);
+> > > > +	ra.lowest_lsn = NULLCOMMITLSN;
+> > > > +	ra.dirty_skipped = 0;
+> > > > +
+> > > > +	freed = list_lru_shrink_walk(&mp->m_inode_lru, sc,
+> > > > +					xfs_inode_reclaim_isolate, &ra);
+> > > 
+> > > This is more related to the locking discussion on the earlier patch, but
+> > > this looks like it has more similar serialization to the example patch I
+> > > posted than the one without locking at all. IIUC, this walk has an
+> > > internal lock per node lru that is held across the walk and passed into
+> > > the callback. We never cycle it, so for any given node we only allow one
+> > > reclaimer through here at a time.
+> > 
+> > That's not a guarantee that list_lru gives us. It could drop it's
+> > internal lock at any time during that walk and we would be
+> > blissfully unaware that it has done this. And at that point, the
+> > reclaim context is completely unaware that other reclaim contexts
+> > may be scanning the same LRU at the same time and are interleaving
+> > with it.
+> > 
+> 
+> What is not a guarantee? I'm not following your point here. I suppose it
+> technically could drop the lock, but then it would have to restart the
+> iteration and wouldn't exactly provide predictable batching capability
+> to users.
 
-diff --git a/include/linux/huge_mm.h b/include/linux/huge_mm.h
-index 45ede62aa85b..b01a20ce0bb9 100644
---- a/include/linux/huge_mm.h
-+++ b/include/linux/huge_mm.h
-@@ -233,11 +233,6 @@ static inline int hpage_nr_pages(struct page *page)
- 	return 1;
- }
- 
--struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
--		pmd_t *pmd, int flags, struct dev_pagemap **pgmap);
--struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
--		pud_t *pud, int flags, struct dev_pagemap **pgmap);
--
- extern vm_fault_t do_huge_pmd_numa_page(struct vm_fault *vmf, pmd_t orig_pmd);
- 
- extern struct page *huge_zero_page;
-@@ -375,18 +370,6 @@ static inline void mm_put_huge_zero_page(struct mm_struct *mm)
- 	return;
- }
- 
--static inline struct page *follow_devmap_pmd(struct vm_area_struct *vma,
--	unsigned long addr, pmd_t *pmd, int flags, struct dev_pagemap **pgmap)
--{
--	return NULL;
--}
--
--static inline struct page *follow_devmap_pud(struct vm_area_struct *vma,
--	unsigned long addr, pud_t *pud, int flags, struct dev_pagemap **pgmap)
--{
--	return NULL;
--}
--
- static inline bool thp_migration_supported(void)
- {
- 	return false;
-diff --git a/mm/gup.c b/mm/gup.c
-index 504af3e9a942..a7a9d2f5278c 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -24,11 +24,6 @@
- 
- #include "internal.h"
- 
--struct follow_page_context {
--	struct dev_pagemap *pgmap;
--	unsigned int page_mask;
--};
--
- /**
-  * put_user_pages_dirty_lock() - release and optionally dirty gup-pinned pages
-  * @pages:  array of pages to be maybe marked dirty, and definitely released.
-@@ -172,8 +167,9 @@ static inline bool can_follow_write_pte(pte_t pte, unsigned int flags)
- 
- static struct page *follow_page_pte(struct vm_area_struct *vma,
- 		unsigned long address, pmd_t *pmd, unsigned int flags,
--		struct dev_pagemap **pgmap)
-+		struct follow_page_context *ctx)
- {
-+	struct dev_pagemap **pgmap = &ctx->pgmap;
- 	struct mm_struct *mm = vma->vm_mm;
- 	struct page *page;
- 	spinlock_t *ptl;
-@@ -363,13 +359,13 @@ static struct page *follow_pmd_mask(struct vm_area_struct *vma,
- 	}
- 	if (pmd_devmap(pmdval)) {
- 		ptl = pmd_lock(mm, pmd);
--		page = follow_devmap_pmd(vma, address, pmd, flags, &ctx->pgmap);
-+		page = follow_devmap_pmd(vma, address, pmd, flags, ctx);
- 		spin_unlock(ptl);
- 		if (page)
- 			return page;
- 	}
- 	if (likely(!pmd_trans_huge(pmdval)))
--		return follow_page_pte(vma, address, pmd, flags, &ctx->pgmap);
-+		return follow_page_pte(vma, address, pmd, flags, ctx);
- 
- 	if ((flags & FOLL_NUMA) && pmd_protnone(pmdval))
- 		return no_page_table(vma, flags);
-@@ -389,7 +385,7 @@ static struct page *follow_pmd_mask(struct vm_area_struct *vma,
- 	}
- 	if (unlikely(!pmd_trans_huge(*pmd))) {
- 		spin_unlock(ptl);
--		return follow_page_pte(vma, address, pmd, flags, &ctx->pgmap);
-+		return follow_page_pte(vma, address, pmd, flags, ctx);
- 	}
- 	if (flags & (FOLL_SPLIT | FOLL_SPLIT_PMD)) {
- 		int ret;
-@@ -419,7 +415,7 @@ static struct page *follow_pmd_mask(struct vm_area_struct *vma,
- 		}
- 
- 		return ret ? ERR_PTR(ret) :
--			follow_page_pte(vma, address, pmd, flags, &ctx->pgmap);
-+			follow_page_pte(vma, address, pmd, flags, ctx);
- 	}
- 	page = follow_trans_huge_pmd(vma, address, pmd, flags);
- 	spin_unlock(ptl);
-@@ -456,7 +452,7 @@ static struct page *follow_pud_mask(struct vm_area_struct *vma,
- 	}
- 	if (pud_devmap(*pud)) {
- 		ptl = pud_lock(mm, pud);
--		page = follow_devmap_pud(vma, address, pud, flags, &ctx->pgmap);
-+		page = follow_devmap_pud(vma, address, pud, flags, ctx);
- 		spin_unlock(ptl);
- 		if (page)
- 			return page;
-@@ -786,7 +782,8 @@ static int check_vma_flags(struct vm_area_struct *vma, unsigned long gup_flags)
- static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
- 		unsigned long start, unsigned long nr_pages,
- 		unsigned int gup_flags, struct page **pages,
--		struct vm_area_struct **vmas, int *nonblocking)
-+		struct vm_area_struct **vmas, int *nonblocking,
-+		struct vaddr_pin *vaddr_pin)
- {
- 	long ret = 0, i = 0;
- 	struct vm_area_struct *vma = NULL;
-@@ -797,6 +794,8 @@ static long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
- 
- 	VM_BUG_ON(!!pages != !!(gup_flags & FOLL_GET));
- 
-+	ctx.vaddr_pin = vaddr_pin;
-+
- 	/*
- 	 * If FOLL_FORCE is set then do not force a full fault as the hinting
- 	 * fault information is unrelated to the reference behaviour of a task
-@@ -1025,7 +1024,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
- 	lock_dropped = false;
- 	for (;;) {
- 		ret = __get_user_pages(tsk, mm, start, nr_pages, flags, pages,
--				       vmas, locked);
-+				       vmas, locked, vaddr_pin);
- 		if (!locked)
- 			/* VM_FAULT_RETRY couldn't trigger, bypass */
- 			return ret;
-@@ -1068,7 +1067,7 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
- 		lock_dropped = true;
- 		down_read(&mm->mmap_sem);
- 		ret = __get_user_pages(tsk, mm, start, 1, flags | FOLL_TRIED,
--				       pages, NULL, NULL);
-+				       pages, NULL, NULL, vaddr_pin);
- 		if (ret != 1) {
- 			BUG_ON(ret > 1);
- 			if (!pages_done)
-@@ -1226,7 +1225,7 @@ long populate_vma_page_range(struct vm_area_struct *vma,
- 	 * not result in a stack expansion that recurses back here.
- 	 */
- 	return __get_user_pages(current, mm, start, nr_pages, gup_flags,
--				NULL, NULL, nonblocking);
-+				NULL, NULL, nonblocking, NULL);
- }
- 
- /*
-@@ -1311,7 +1310,7 @@ struct page *get_dump_page(unsigned long addr)
- 
- 	if (__get_user_pages(current, current->mm, addr, 1,
- 			     FOLL_FORCE | FOLL_DUMP | FOLL_GET, &page, &vma,
--			     NULL) < 1)
-+			     NULL, NULL) < 1)
- 		return NULL;
- 	flush_cache_page(vma, addr, page_to_pfn(page));
- 	return page;
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index bc1a07a55be1..7e09f2f17ed8 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -916,8 +916,9 @@ static void touch_pmd(struct vm_area_struct *vma, unsigned long addr,
- }
- 
- struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
--		pmd_t *pmd, int flags, struct dev_pagemap **pgmap)
-+		pmd_t *pmd, int flags, struct follow_page_context *ctx)
- {
-+	struct dev_pagemap **pgmap = &ctx->pgmap;
- 	unsigned long pfn = pmd_pfn(*pmd);
- 	struct mm_struct *mm = vma->vm_mm;
- 	struct page *page;
-@@ -1068,8 +1069,9 @@ static void touch_pud(struct vm_area_struct *vma, unsigned long addr,
- }
- 
- struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
--		pud_t *pud, int flags, struct dev_pagemap **pgmap)
-+		pud_t *pud, int flags, struct follow_page_context *ctx)
- {
-+	struct dev_pagemap **pgmap = &ctx->pgmap;
- 	unsigned long pfn = pud_pfn(*pud);
- 	struct mm_struct *mm = vma->vm_mm;
- 	struct page *page;
-diff --git a/mm/internal.h b/mm/internal.h
-index 0d5f720c75ab..46ada5279856 100644
---- a/mm/internal.h
-+++ b/mm/internal.h
-@@ -12,6 +12,34 @@
- #include <linux/pagemap.h>
- #include <linux/tracepoint-defs.h>
- 
-+struct follow_page_context {
-+	struct dev_pagemap *pgmap;
-+	unsigned int page_mask;
-+	struct vaddr_pin *vaddr_pin;
-+};
-+
-+#ifdef CONFIG_TRANSPARENT_HUGEPAGE
-+struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
-+		pmd_t *pmd, int flags, struct follow_page_context *ctx);
-+struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
-+		pud_t *pud, int flags, struct follow_page_context *ctx);
-+#else
-+static inline struct page *follow_devmap_pmd(struct vm_area_struct *vma,
-+	unsigned long addr, pmd_t *pmd, int flags,
-+	struct follow_page_context *ctx)
-+{
-+	return NULL;
-+}
-+
-+static inline struct page *follow_devmap_pud(struct vm_area_struct *vma,
-+	unsigned long addr, pud_t *pud, int flags,
-+	struct follow_page_context *ctx)
-+{
-+	return NULL;
-+}
-+#endif /* CONFIG_TRANSPARENT_HUGEPAGE */
-+
-+
- /*
-  * The set of flags that only affect watermark checking and reclaim
-  * behaviour. This is used by the MM to obey the caller constraints
+There is no guarantee that the list_lru_shrink_walk() provides a
+single list walker at a time or that it provides predictable
+batching capability to users.
+
+> This internal lock protects the integrity of the list from external
+> adds/removes, etc., but it's also passed into the callback so of course
+> it can be cycled at any point. The callback just has to notify the
+> caller to restart the walk. E.g., from __list_lru_walk_one():
+> 
+>         /*
+>          * The lru lock has been dropped, our list traversal is
+>          * now invalid and so we have to restart from scratch.
+>          */
+
+As the designer and author of the list_lru code, I do know how it
+works. I also know exactly what this problem this behaviour was
+intended to solve, because I had to solve it to meet the
+requirements I had for the infrastructure.
+
+The isolation walk lock batching currently done is an optimisation
+to minimise lru lock contention - it amortise the cost of getting
+the lock over a substantial batch of work. If we drop the lock on
+every item we try to isolate - my initial implementations did this -
+then the lru lock thrashes badly against concurrent inserts and
+deletes and scalability is not much better than the global lock it
+was replacing.
+
+IOWs, the behaviour we have now is a result of lock contention
+optimisation to meet scalability requirements, not because of some
+"predictable batching" requirement. If we were to rework the
+traversal mechanism such that the lru lock was not necessary to
+protect the state of the LRU list across the batch of isolate
+callbacks, then we'd get the scalability we need but we'd completely
+change the concurrency behaviour. The list would still do LRU
+reclaim, and the isolate functions still work exactly as tehy
+currently do (i.e. they work on just the item passed to them) but
+we'd have concurrent reclaim contexts isolating items on the same
+LRU concurrently rather than being serialised. And that's perfectly
+fine, because the isolate/dispose architecture just doesn't care
+how the items on the LRU are isolated for disposal.....
+
+What I'm trying to say is that the "isolation batching" we have is
+not desirable but it is necessary, and we because that's internal to
+the list_lru implementation, we can change that behaviour however
+we want and it won't affect the subsystems that own the objects
+being reclaimed. They still just get handed a list of items to
+dispose, and they all come from the reclaim end of the LRU list...
+
+Indeed, the new XFS inode shrinker is not dependent on any specific
+batching order, it's not dependent on isolation being serialised,
+and it's not dependent on the lru_lock being held across the
+isolation function. IOWs, it's set up just right to take advantage
+of any increases in isolation concurrency that the list_lru
+infrastructure could provide...
+
+> > > That seems to be Ok given we don't do much in the isolation handler, the
+> > > lock isn't held across the dispose sequence and we're still batching in
+> > > the shrinker core on top of that. We're still serialized over the lru
+> > > fixups such that concurrent reclaimers aren't processing the same
+> > > inodes, however.
+> > 
+> > The only thing that we may need here is need_resched() checks if it
+> > turns out that holding a lock for 1024 items to be scanned proved to
+> > be too long to hold on to a single CPU. If we do that we'd cycle the
+> > LRU lock and return RETRY or RETRY_REMOVE, hence enabling reclaimers
+> > more finer-grained interleaving....
+> > 
+> 
+> Sure, with the caveat that we restart the traversal..
+
+Which only re-traverses the inodes we skipped because they were
+locked at the time. IOWs, Skipping inodes is rare because if it is
+in reclaim then the only things that can be contending is a radix
+tree lookup in progress or an inode clustering operation
+(write/free) in progress. Either way, they will be relatively rare
+and very short term lock holds, so if we have to restart the scan
+after dropping the lru lock then it's likely we'll restart at next
+inode in line for reclaim, anyway....
+
+Hence I don't think having to restart a traversal would really
+matter all that much....
+
+Cheers,
+
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
