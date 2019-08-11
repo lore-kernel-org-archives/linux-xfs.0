@@ -1,194 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:25396 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729588AbfHIW6r (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:58:47 -0400
-From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 04/19] mm/gup: Ensure F_LAYOUT lease is held prior to GUP'ing pages
-Date: Fri,  9 Aug 2019 15:58:18 -0700
-Message-Id: <20190809225833.6657-5-ira.weiny@intel.com>
-In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:37516 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726014AbfHKPZt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Aug 2019 11:25:49 -0400
+Date: Sun, 11 Aug 2019 23:25:39 +0800
+From: Eryu Guan <guaneryu@gmail.com>
+Subject: Re: [PATCH v2 1/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+Message-ID: <20190811152539.GE2665@desktop>
+References: <156394156831.1850719.2997473679130010771.stgit@magnolia>
+ <156394157450.1850719.464315342783936237.stgit@magnolia>
+ <20190725180330.GH1561054@magnolia>
+ <20190728113036.GO7943@desktop>
+ <20190730005506.GC2345316@magnolia>
+ <20190807014454.GA7135@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190807014454.GA7135@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Tue, Aug 06, 2019 at 06:44:54PM -0700, Darrick J. Wong wrote:
+> On Mon, Jul 29, 2019 at 05:55:06PM -0700, Darrick J. Wong wrote:
+> > On Sun, Jul 28, 2019 at 07:30:36PM +0800, Eryu Guan wrote:
+> > > On Thu, Jul 25, 2019 at 11:03:30AM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Since the iomap code are moving to fs/iomap/ we have to add new entries
+> > > > to the aiodio dmesg filter to reflect this.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > > v2: fix all the iomap regexes
+> > > > ---
+> > > >  common/filter |    9 +++++----
+> > > >  1 file changed, 5 insertions(+), 4 deletions(-)
+> > > > 
+> > > > diff --git a/common/filter b/common/filter
+> > > > index ed082d24..2e32ab10 100644
+> > > > --- a/common/filter
+> > > > +++ b/common/filter
+> > > > @@ -550,10 +550,10 @@ _filter_aiodio_dmesg()
+> > > >  	local warn2="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_dio_aio_read.*"
+> > > >  	local warn3="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_read_iter.*"
+> > > >  	local warn4="WARNING:.*fs/xfs/xfs_file\.c:.*xfs_file_aio_read.*"
+> > > > -	local warn5="WARNING:.*fs/iomap\.c:.*iomap_dio_rw.*"
+> > > > +	local warn5="WARNING:.*fs/iomap.*:.*iomap_dio_rw.*"
+> > > >  	local warn6="WARNING:.*fs/xfs/xfs_aops\.c:.*__xfs_get_blocks.*"
+> > > > -	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+> > > > -	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+> > > > +	local warn7="WARNING:.*fs/iomap.*:.*iomap_dio_actor.*"
+> > > > +	local warn8="WARNING:.*fs/iomap.*:.*iomap_dio_complete.*"
+> > > 
+> > > I don't think we need new filters anymore, as commit 5a9d929d6e13
+> > > ("iomap: report collisions between directio and buffered writes to
+> > > userspace") replaced the WARN_ON with a pr_crit(). These filters are
+> > > there only for old kernels.
+> > 
+> > Aaaaahh... but I /did/ write this patch because I kept hitting a WARNING
+> > somewhere in the iomap directio code, and you know what?  It's one of the
+> > warnings about a bogus iomap type in iomap_dio_actor.
+> > 
+> > I /think/ this is what happens when a buffered write sneaks in and
+> > creates a delalloc reservation after the directio write has zapped the
+> > page cache but before it actually starts iterating extents.
+> > Consequently iomap_dio_actor sees the delalloc extent and WARNs.
+> > 
+> > Will have to recheck this, but maybe the kernel needs to deploy that
+> > helper that 5a9d929d6e13 for that case.
+> 
+> Aha, I found it again.  The patch fixes failures in generic/446 when a
+> directio write through iomap encounters a delalloc extent and triggers
+> the WARN_ON_ONCE at the bottom of iomap_dio_actor:
+> 
+> WARNING: CPU: 2 PID: 1710922 at fs/iomap/direct-io.c:383 iomap_dio_actor+0x144/0x1a0
 
-On FS DAX files users must inform the file system they intend to take
-long term GUP pins on the file pages.  Failure to do so should result in
-an error.
+Yeah, I can hit it too when run generic/446 on XFS as well.
 
-Ensure that a F_LAYOUT lease exists at the time the GUP call is made.
-If not return EPERM.
+> 
+> This can happen if a buffered write and a directio write race to fill a
+> hole and the buffered write manages to stuff a delalloc reservation into
+> the data mapping after the dio write has cleared the page cache.
+> 
+> We don't need the dio_warn_stale_pagecache() warning here because we
+> fail the direct write and therefore do not write anything to disk.
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+IMHO, the v1 patch makes more sense in this case, as iomap_dio_actor is
+the only place that could generate to-be-filtered warning now, warnings
+in iomap_dio_rw and iomap_dio_complete are suppressed by commit
+5a9d929d6e13.
 
----
-Changes from RFC v1:
+Thanks,
+Eryu
 
-    The old version had remnants of when GUP was going to take the lease
-    for the user.  Remove this prototype code.
-    Fix issue in gup_device_huge which was setting page reference prior
-    to checking for Layout Lease
-    Re-base to 5.3+
-    Clean up htmldoc comments
-
- fs/locks.c         | 47 ++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/mm.h |  2 ++
- mm/gup.c           | 23 +++++++++++++++++++++++
- mm/huge_memory.c   | 12 ++++++++++++
- 4 files changed, 84 insertions(+)
-
-diff --git a/fs/locks.c b/fs/locks.c
-index 0c7359cdab92..14892c84844b 100644
---- a/fs/locks.c
-+++ b/fs/locks.c
-@@ -2971,3 +2971,50 @@ static int __init filelock_init(void)
- 	return 0;
- }
- core_initcall(filelock_init);
-+
-+/**
-+ * mapping_inode_has_layout - ensure a file mapped page has a layout lease
-+ * taken
-+ * @page: page we are trying to GUP
-+ *
-+ * This should only be called on DAX pages.  DAX pages which are mapped through
-+ * FS DAX do not use the page cache.  As a result they require the user to take
-+ * a LAYOUT lease on them prior to be able to pin them for longterm use.
-+ * This allows the user to opt-into the fact that truncation operations will
-+ * fail for the duration of the pin.
-+ *
-+ * Return true if the page has a LAYOUT lease associated with it's file.
-+ */
-+bool mapping_inode_has_layout(struct page *page)
-+{
-+	bool ret = false;
-+	struct inode *inode;
-+	struct file_lock *fl;
-+
-+	if (WARN_ON(PageAnon(page)) ||
-+	    WARN_ON(!page) ||
-+	    WARN_ON(!page->mapping) ||
-+	    WARN_ON(!page->mapping->host))
-+		return false;
-+
-+	inode = page->mapping->host;
-+
-+	smp_mb();
-+	if (inode->i_flctx &&
-+	    !list_empty_careful(&inode->i_flctx->flc_lease)) {
-+		spin_lock(&inode->i_flctx->flc_lock);
-+		ret = false;
-+		list_for_each_entry(fl, &inode->i_flctx->flc_lease, fl_list) {
-+			if (fl->fl_pid == current->tgid &&
-+			    (fl->fl_flags & FL_LAYOUT) &&
-+			    (fl->fl_flags & FL_EXCLUSIVE)) {
-+				ret = true;
-+				break;
-+			}
-+		}
-+		spin_unlock(&inode->i_flctx->flc_lock);
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(mapping_inode_has_layout);
-diff --git a/include/linux/mm.h b/include/linux/mm.h
-index ad6766a08f9b..04f22722b374 100644
---- a/include/linux/mm.h
-+++ b/include/linux/mm.h
-@@ -1583,6 +1583,8 @@ int account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc);
- int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc,
- 			struct task_struct *task, bool bypass_rlim);
- 
-+bool mapping_inode_has_layout(struct page *page);
-+
- /* Container for pinned pfns / pages */
- struct frame_vector {
- 	unsigned int nr_allocated;	/* Number of frames we have space for */
-diff --git a/mm/gup.c b/mm/gup.c
-index 80423779a50a..0b05e22ac05f 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -221,6 +221,13 @@ static struct page *follow_page_pte(struct vm_area_struct *vma,
- 			page = pte_page(pte);
- 		else
- 			goto no_page;
-+
-+		if (unlikely(flags & FOLL_LONGTERM) &&
-+		    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
-+		    !mapping_inode_has_layout(page)) {
-+			page = ERR_PTR(-EPERM);
-+			goto out;
-+		}
- 	} else if (unlikely(!page)) {
- 		if (flags & FOLL_DUMP) {
- 			/* Avoid special (like zero) pages in core dumps */
-@@ -1847,6 +1854,14 @@ static int gup_pte_range(pmd_t pmd, unsigned long addr, unsigned long end,
- 
- 		VM_BUG_ON_PAGE(compound_head(page) != head, page);
- 
-+		if (pte_devmap(pte) &&
-+		    unlikely(flags & FOLL_LONGTERM) &&
-+		    pgmap->type == MEMORY_DEVICE_FS_DAX &&
-+		    !mapping_inode_has_layout(head)) {
-+			put_user_page(head);
-+			goto pte_unmap;
-+		}
-+
- 		SetPageReferenced(page);
- 		pages[*nr] = page;
- 		(*nr)++;
-@@ -1895,6 +1910,14 @@ static int __gup_device_huge(unsigned long pfn, unsigned long addr,
- 			undo_dev_pagemap(nr, nr_start, pages);
- 			return 0;
- 		}
-+
-+		if (unlikely(flags & FOLL_LONGTERM) &&
-+		    pgmap->type == MEMORY_DEVICE_FS_DAX &&
-+		    !mapping_inode_has_layout(page)) {
-+			undo_dev_pagemap(nr, nr_start, pages);
-+			return 0;
-+		}
-+
- 		SetPageReferenced(page);
- 		pages[*nr] = page;
- 		get_page(page);
-diff --git a/mm/huge_memory.c b/mm/huge_memory.c
-index 1334ede667a8..bc1a07a55be1 100644
---- a/mm/huge_memory.c
-+++ b/mm/huge_memory.c
-@@ -953,6 +953,12 @@ struct page *follow_devmap_pmd(struct vm_area_struct *vma, unsigned long addr,
- 	if (!*pgmap)
- 		return ERR_PTR(-EFAULT);
- 	page = pfn_to_page(pfn);
-+
-+	if (unlikely(flags & FOLL_LONGTERM) &&
-+	    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
-+	    !mapping_inode_has_layout(page))
-+		return ERR_PTR(-EPERM);
-+
- 	get_page(page);
- 
- 	return page;
-@@ -1093,6 +1099,12 @@ struct page *follow_devmap_pud(struct vm_area_struct *vma, unsigned long addr,
- 	if (!*pgmap)
- 		return ERR_PTR(-EFAULT);
- 	page = pfn_to_page(pfn);
-+
-+	if (unlikely(flags & FOLL_LONGTERM) &&
-+	    (*pgmap)->type == MEMORY_DEVICE_FS_DAX &&
-+	    !mapping_inode_has_layout(page))
-+		return ERR_PTR(-EPERM);
-+
- 	get_page(page);
- 
- 	return page;
--- 
-2.20.1
+> 
+> --D
+> 
+> > 
+> > --D
+> > 
+> > > Thanks,
+> > > Eryu
+> > > 
+> > > >  	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
+> > > >  	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+> > > >  	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+> > > > @@ -563,7 +563,8 @@ _filter_aiodio_dmesg()
+> > > >  	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+> > > >  	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+> > > >  	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+> > > > -	    -e "s#$warn9#Intentional warnings in dio_complete#"
+> > > > +	    -e "s#$warn9#Intentional warnings in dio_complete#" \
+> > > > +	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+> > > >  }
+> > > >  
+> > > >  # We generate assert related WARNINGs on purpose and make sure test doesn't fail
