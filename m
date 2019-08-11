@@ -1,288 +1,220 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:23377 "EHLO mga11.intel.com"
+Received: from mx1.redhat.com ([209.132.183.28]:41628 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730744AbfHIW7J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:59:09 -0400
-From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 18/19] {mm,procfs}: Add display file_pins proc
-Date: Fri,  9 Aug 2019 15:58:32 -0700
-Message-Id: <20190809225833.6657-19-ira.weiny@intel.com>
-In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
+        id S1726179AbfHKMqH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 11 Aug 2019 08:46:07 -0400
+Date: Sun, 11 Aug 2019 08:46:04 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 23/24] xfs: reclaim inodes from the LRU
+Message-ID: <20190811124604.GA27188@bfoster>
+References: <20190801021752.4986-1-david@fromorbit.com>
+ <20190801021752.4986-24-david@fromorbit.com>
+ <20190808163905.GC24551@bfoster>
+ <20190809012022.GX7777@dread.disaster.area>
+ <20190809123632.GA29669@bfoster>
+ <20190811021747.GE7777@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190811021747.GE7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-xfs@vger.kernel.org, linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Sun, Aug 11, 2019 at 12:17:47PM +1000, Dave Chinner wrote:
+> On Fri, Aug 09, 2019 at 08:36:32AM -0400, Brian Foster wrote:
+> > On Fri, Aug 09, 2019 at 11:20:22AM +1000, Dave Chinner wrote:
+> > > On Thu, Aug 08, 2019 at 12:39:05PM -0400, Brian Foster wrote:
+> > > > On Thu, Aug 01, 2019 at 12:17:51PM +1000, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+...
+> > > > > +	long freed;
+> > > > >  
+> > > > > -	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
+> > > > > +	INIT_LIST_HEAD(&ra.freeable);
+> > > > > +	ra.lowest_lsn = NULLCOMMITLSN;
+> > > > > +	ra.dirty_skipped = 0;
+> > > > > +
+> > > > > +	freed = list_lru_shrink_walk(&mp->m_inode_lru, sc,
+> > > > > +					xfs_inode_reclaim_isolate, &ra);
+> > > > 
+> > > > This is more related to the locking discussion on the earlier patch, but
+> > > > this looks like it has more similar serialization to the example patch I
+> > > > posted than the one without locking at all. IIUC, this walk has an
+> > > > internal lock per node lru that is held across the walk and passed into
+> > > > the callback. We never cycle it, so for any given node we only allow one
+> > > > reclaimer through here at a time.
+> > > 
+> > > That's not a guarantee that list_lru gives us. It could drop it's
+> > > internal lock at any time during that walk and we would be
+> > > blissfully unaware that it has done this. And at that point, the
+> > > reclaim context is completely unaware that other reclaim contexts
+> > > may be scanning the same LRU at the same time and are interleaving
+> > > with it.
+> > > 
+> > 
+> > What is not a guarantee? I'm not following your point here. I suppose it
+> > technically could drop the lock, but then it would have to restart the
+> > iteration and wouldn't exactly provide predictable batching capability
+> > to users.
+> 
+> There is no guarantee that the list_lru_shrink_walk() provides a
+> single list walker at a time or that it provides predictable
+> batching capability to users.
+> 
 
-Now that we have the file pins information stored add a new procfs entry
-to display them to the user.
+Hm, Ok. I suppose the code could change if that's your point. But how is
+that relevant to how XFS reclaim behavior as of this patch compares to
+the intermediate patch 20? Note again that this the only reason I bring
+it up in this patch (which seems mostly sane to me). Perhaps I should
+have just replied again to patch 20 to avoid confusion. Apologies for
+that, but that ship has sailed...
 
-NOTE output will be dependant on where the file pin is tied to.  Some
-processes may have the pin associated with a file descriptor in which
-case that file is reported as well.
+To reiterate, I suggested not dropping the lock in patch 20 for
+$reasons. You replied generally that doing so might cause more problems
+than it solves. I replied with a compromise patch that leaves the lock,
+but only acquires it across inode grabbing instead of the entire reclaim
+operation. This essentially implements "serialized isolation batching"
+as we've termed it here (assuming the patch is correct).
 
-Others are associated directly with the process mm and are reported as
-such.
+I eventually made it to this patch and observe that you end up with an
+implementation that does serialized isolation batching. Of course the
+locking and implementation is quite different with this being a whole
+new mechanism, so performance and things could be quite different too.
+But my point is that if serialized isolation batching is acceptable
+behavior for XFS inode reclaim right now, then it seems reasonable to me
+that it be acceptable in patch 20 for what is ultimately just an
+intermediate state.
 
-For example of a file pinned to an RDMA open context (fd 4) and a file
-pinned to the mm of that process:
+I appreciate all of the discussion and background information that
+follows, but it gets way far off from the original feedback. I've still
+seen no direct response to the thoughts above either here or in patch
+20. Are you planning to incorporate that example patch or something
+similar? If so, then I think we're on the same page.
 
-4: /dev/infiniband/uverbs0
-   /mnt/pmem/foo
-/mnt/pmem/bar
+> > This internal lock protects the integrity of the list from external
+> > adds/removes, etc., but it's also passed into the callback so of course
+> > it can be cycled at any point. The callback just has to notify the
+> > caller to restart the walk. E.g., from __list_lru_walk_one():
+> > 
+> >         /*
+> >          * The lru lock has been dropped, our list traversal is
+> >          * now invalid and so we have to restart from scratch.
+> >          */
+> 
+> As the designer and author of the list_lru code, I do know how it
+> works. I also know exactly what this problem this behaviour was
+> intended to solve, because I had to solve it to meet the
+> requirements I had for the infrastructure.
+> 
+> The isolation walk lock batching currently done is an optimisation
+> to minimise lru lock contention - it amortise the cost of getting
+> the lock over a substantial batch of work. If we drop the lock on
+> every item we try to isolate - my initial implementations did this -
+> then the lru lock thrashes badly against concurrent inserts and
+> deletes and scalability is not much better than the global lock it
+> was replacing.
+> 
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- fs/proc/base.c | 214 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 214 insertions(+)
+Ok.
 
-diff --git a/fs/proc/base.c b/fs/proc/base.c
-index ebea9501afb8..f4d219172235 100644
---- a/fs/proc/base.c
-+++ b/fs/proc/base.c
-@@ -2995,6 +2995,7 @@ static int proc_stack_depth(struct seq_file *m, struct pid_namespace *ns,
-  */
- static const struct file_operations proc_task_operations;
- static const struct inode_operations proc_task_inode_operations;
-+static const struct file_operations proc_pid_file_pins_operations;
+> IOWs, the behaviour we have now is a result of lock contention
+> optimisation to meet scalability requirements, not because of some
+> "predictable batching" requirement. If we were to rework the
+> traversal mechanism such that the lru lock was not necessary to
+> protect the state of the LRU list across the batch of isolate
+> callbacks, then we'd get the scalability we need but we'd completely
+> change the concurrency behaviour. The list would still do LRU
+> reclaim, and the isolate functions still work exactly as tehy
+> currently do (i.e. they work on just the item passed to them) but
+> we'd have concurrent reclaim contexts isolating items on the same
+> LRU concurrently rather than being serialised. And that's perfectly
+> fine, because the isolate/dispose architecture just doesn't care
+> how the items on the LRU are isolated for disposal.....
+> 
+
+Sure, that mostly makes sense. We're free to similarly rework the old
+mechanism to not require locking just as well. My point is that the
+patch to move I/O submission to the AIL doesn't do that sufficiently,
+despite that being the initial purpose of the lock.
+
+BTW, the commit[1] that introduces the pag reclaim lock back in 2010
+introduces the cursor at the same time and actually does mention some of
+the things I'm pointing out as potential problems with patch 20. It
+refers to potential for "massive contention" and prevention of
+reclaimers "continually scanning the same inodes in each AG." Again, I'm
+not worried about that for this series because we ultimately rework the
+shrinker past those issues, but it appears that it wasn't purely a
+matter of I/O submission ordering that motivated the lock (though I'm
+sure that was part of it).
+
+Given that, I think another reasonable option for patch 20 is to remove
+the cursor and locking together. That at least matches some form of
+historical reclaim behavior in XFS. If we took that approach, it might
+make sense to split patch 20 into one patch that shifts I/O to xfsaild
+(new behavior) and a subsequent that undoes [1].
+
+[1] 69b491c214d7 ("xfs: serialise inode reclaim within an AG")
+
+> What I'm trying to say is that the "isolation batching" we have is
+> not desirable but it is necessary, and we because that's internal to
+> the list_lru implementation, we can change that behaviour however
+> we want and it won't affect the subsystems that own the objects
+> being reclaimed. They still just get handed a list of items to
+> dispose, and they all come from the reclaim end of the LRU list...
+> 
+> Indeed, the new XFS inode shrinker is not dependent on any specific
+> batching order, it's not dependent on isolation being serialised,
+> and it's not dependent on the lru_lock being held across the
+> isolation function. IOWs, it's set up just right to take advantage
+> of any increases in isolation concurrency that the list_lru
+> infrastructure could provide...
+>
+
+Yep, it's a nice abstraction. This has no bearing on the old
+implementation which does have XFS specific locking, however.
  
- static const struct pid_entry tgid_base_stuff[] = {
- 	DIR("task",       S_IRUGO|S_IXUGO, proc_task_inode_operations, proc_task_operations),
-@@ -3024,6 +3025,7 @@ static const struct pid_entry tgid_base_stuff[] = {
- 	ONE("stat",       S_IRUGO, proc_tgid_stat),
- 	ONE("statm",      S_IRUGO, proc_pid_statm),
- 	REG("maps",       S_IRUGO, proc_pid_maps_operations),
-+	REG("file_pins",  S_IRUGO, proc_pid_file_pins_operations),
- #ifdef CONFIG_NUMA
- 	REG("numa_maps",  S_IRUGO, proc_pid_numa_maps_operations),
- #endif
-@@ -3422,6 +3424,7 @@ static const struct pid_entry tid_base_stuff[] = {
- 	ONE("stat",      S_IRUGO, proc_tid_stat),
- 	ONE("statm",     S_IRUGO, proc_pid_statm),
- 	REG("maps",      S_IRUGO, proc_pid_maps_operations),
-+	REG("file_pins", S_IRUGO, proc_pid_file_pins_operations),
- #ifdef CONFIG_PROC_CHILDREN
- 	REG("children",  S_IRUGO, proc_tid_children_operations),
- #endif
-@@ -3718,3 +3721,214 @@ void __init set_proc_pid_nlink(void)
- 	nlink_tid = pid_entry_nlink(tid_base_stuff, ARRAY_SIZE(tid_base_stuff));
- 	nlink_tgid = pid_entry_nlink(tgid_base_stuff, ARRAY_SIZE(tgid_base_stuff));
- }
-+
-+/**
-+ * file_pin information below.
-+ */
-+
-+struct proc_file_pins_private {
-+	struct inode *inode;
-+	struct task_struct *task;
-+	struct mm_struct *mm;
-+	struct files_struct *files;
-+	unsigned int nr_pins;
-+	struct xarray fps;
-+} __randomize_layout;
-+
-+static void release_fp(struct proc_file_pins_private *priv)
-+{
-+	up_read(&priv->mm->mmap_sem);
-+	mmput(priv->mm);
-+}
-+
-+static void print_fd_file_pin(struct seq_file *m, struct file *file,
-+			    unsigned long i)
-+{
-+	struct file_file_pin *fp;
-+	struct file_file_pin *tmp;
-+
-+	if (list_empty_careful(&file->file_pins))
-+		return;
-+
-+	seq_printf(m, "%lu: ", i);
-+	seq_file_path(m, file, "\n");
-+	seq_putc(m, '\n');
-+
-+	list_for_each_entry_safe(fp, tmp, &file->file_pins, list) {
-+		seq_puts(m, "   ");
-+		seq_file_path(m, fp->file, "\n");
-+		seq_putc(m, '\n');
-+	}
-+}
-+
-+/* We are storing the index's within the FD table for later retrieval */
-+static int store_fd(const void *priv , struct file *file, unsigned i)
-+{
-+	struct proc_file_pins_private *fp_priv;
-+
-+	/* cast away const... */
-+	fp_priv = (struct proc_file_pins_private *)priv;
-+
-+	if (list_empty_careful(&file->file_pins))
-+		return 0;
-+
-+	/* can't sleep in the iterate of the fd table */
-+	xa_store(&fp_priv->fps, fp_priv->nr_pins, xa_mk_value(i), GFP_ATOMIC);
-+	fp_priv->nr_pins++;
-+
-+	return 0;
-+}
-+
-+static void store_mm_pins(struct proc_file_pins_private *priv)
-+{
-+	struct mm_file_pin *fp;
-+	struct mm_file_pin *tmp;
-+
-+	list_for_each_entry_safe(fp, tmp, &priv->mm->file_pins, list) {
-+		xa_store(&priv->fps, priv->nr_pins, fp, GFP_KERNEL);
-+		priv->nr_pins++;
-+	}
-+}
-+
-+
-+static void *fp_start(struct seq_file *m, loff_t *ppos)
-+{
-+	struct proc_file_pins_private *priv = m->private;
-+	unsigned int pos = *ppos;
-+
-+	priv->task = get_proc_task(priv->inode);
-+	if (!priv->task)
-+		return ERR_PTR(-ESRCH);
-+
-+	if (!priv->mm || !mmget_not_zero(priv->mm))
-+		return NULL;
-+
-+	priv->files = get_files_struct(priv->task);
-+	down_read(&priv->mm->mmap_sem);
-+
-+	xa_destroy(&priv->fps);
-+	priv->nr_pins = 0;
-+
-+	/* grab fds of "files" which have pins and store as xa values */
-+	if (priv->files)
-+		iterate_fd(priv->files, 0, store_fd, priv);
-+
-+	/* store mm_file_pins as xa entries */
-+	store_mm_pins(priv);
-+
-+	if (pos >= priv->nr_pins) {
-+		release_fp(priv);
-+		return NULL;
-+	}
-+
-+	return xa_load(&priv->fps, pos);
-+}
-+
-+static void *fp_next(struct seq_file *m, void *v, loff_t *pos)
-+{
-+	struct proc_file_pins_private *priv = m->private;
-+
-+	(*pos)++;
-+	if ((*pos) >= priv->nr_pins) {
-+		release_fp(priv);
-+		return NULL;
-+	}
-+
-+	return xa_load(&priv->fps, *pos);
-+}
-+
-+static void fp_stop(struct seq_file *m, void *v)
-+{
-+	struct proc_file_pins_private *priv = m->private;
-+
-+	if (v)
-+		release_fp(priv);
-+
-+	if (priv->task) {
-+		put_task_struct(priv->task);
-+		priv->task = NULL;
-+	}
-+
-+	if (priv->files) {
-+		put_files_struct(priv->files);
-+		priv->files = NULL;
-+	}
-+}
-+
-+static int show_fp(struct seq_file *m, void *v)
-+{
-+	struct proc_file_pins_private *priv = m->private;
-+
-+	if (xa_is_value(v)) {
-+		struct file *file;
-+		unsigned long fd = xa_to_value(v);
-+
-+		rcu_read_lock();
-+		file = fcheck_files(priv->files, fd);
-+		if (file)
-+			print_fd_file_pin(m, file, fd);
-+		rcu_read_unlock();
-+	} else {
-+		struct mm_file_pin *fp = v;
-+
-+		seq_puts(m, "mm: ");
-+		seq_file_path(m, fp->file, "\n");
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct seq_operations proc_pid_file_pins_op = {
-+	.start	= fp_start,
-+	.next	= fp_next,
-+	.stop	= fp_stop,
-+	.show	= show_fp
-+};
-+
-+static int proc_file_pins_open(struct inode *inode, struct file *file)
-+{
-+	struct proc_file_pins_private *priv = __seq_open_private(file,
-+						&proc_pid_file_pins_op,
-+						sizeof(*priv));
-+
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	xa_init(&priv->fps);
-+	priv->inode = inode;
-+	priv->mm = proc_mem_open(inode, PTRACE_MODE_READ);
-+	priv->task = NULL;
-+	if (IS_ERR(priv->mm)) {
-+		int err = PTR_ERR(priv->mm);
-+
-+		seq_release_private(inode, file);
-+		return err;
-+	}
-+
-+	return 0;
-+}
-+
-+static int proc_file_pins_release(struct inode *inode, struct file *file)
-+{
-+	struct seq_file *seq = file->private_data;
-+	struct proc_file_pins_private *priv = seq->private;
-+
-+	/* This is for "protection" not sure when these may end up not being
-+	 * NULL here... */
-+	WARN_ON(priv->files);
-+	WARN_ON(priv->task);
-+
-+	if (priv->mm)
-+		mmdrop(priv->mm);
-+
-+	xa_destroy(&priv->fps);
-+
-+	return seq_release_private(inode, file);
-+}
-+
-+static const struct file_operations proc_pid_file_pins_operations = {
-+	.open		= proc_file_pins_open,
-+	.read		= seq_read,
-+	.llseek		= seq_lseek,
-+	.release	= proc_file_pins_release,
-+};
--- 
-2.20.1
+> > > > That seems to be Ok given we don't do much in the isolation handler, the
+> > > > lock isn't held across the dispose sequence and we're still batching in
+> > > > the shrinker core on top of that. We're still serialized over the lru
+> > > > fixups such that concurrent reclaimers aren't processing the same
+> > > > inodes, however.
+> > > 
+> > > The only thing that we may need here is need_resched() checks if it
+> > > turns out that holding a lock for 1024 items to be scanned proved to
+> > > be too long to hold on to a single CPU. If we do that we'd cycle the
+> > > LRU lock and return RETRY or RETRY_REMOVE, hence enabling reclaimers
+> > > more finer-grained interleaving....
+> > > 
+> > 
+> > Sure, with the caveat that we restart the traversal..
+> 
+> Which only re-traverses the inodes we skipped because they were
+> locked at the time. IOWs, Skipping inodes is rare because if it is
+> in reclaim then the only things that can be contending is a radix
+> tree lookup in progress or an inode clustering operation
+> (write/free) in progress. Either way, they will be relatively rare
+> and very short term lock holds, so if we have to restart the scan
+> after dropping the lru lock then it's likely we'll restart at next
+> inode in line for reclaim, anyway....
+> 
+> Hence I don't think having to restart a traversal would really
+> matter all that much....
+> 
+
+Perhaps, that seems fairly reasonable given that we rotate dirty inodes.
+I'm not totally convinced we might not thrash on an LRU with a high
+population of dirty inodes or that a restart is even the simplest
+approach to dealing with large batch sizes, but I'd reserve judgement on
+that until there's code to review.
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
