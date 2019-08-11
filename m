@@ -1,196 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga12.intel.com ([192.55.52.136]:47931 "EHLO mga12.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730724AbfHIW7I (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 9 Aug 2019 18:59:08 -0400
-From: ira.weiny@intel.com
-Subject: [RFC PATCH v2 17/19] RDMA/umem: Convert to vaddr_[pin|unpin]* operations.
-Date: Fri,  9 Aug 2019 15:58:31 -0700
-Message-Id: <20190809225833.6657-18-ira.weiny@intel.com>
-In-Reply-To: <20190809225833.6657-1-ira.weiny@intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45982 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726212AbfHKBCr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 10 Aug 2019 21:02:47 -0400
+Date: Sun, 11 Aug 2019 11:01:36 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH V2] xfs: allocate xattr buffer on demand
+Message-ID: <20190811010136.GD7777@dread.disaster.area>
+References: <20190724045911.GU7689@dread.disaster.area>
+ <403e606b-1b7b-5983-d8e5-a7fecee84702@applied-asynchrony.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <403e606b-1b7b-5983-d8e5-a7fecee84702@applied-asynchrony.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org, Ira Weiny <ira.weiny@intel.com>
+To: Holger =?iso-8859-1?Q?Hoffst=E4tte?= <holger@applied-asynchrony.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Sat, Aug 10, 2019 at 11:45:35PM +0200, Holger Hoffstätte wrote:
+> 
+> Hi Dave -
+> 
+> great patch but I found something that seems off in xfs_attr3_leaf_getvalue:
 
-In order to properly track the pinning information we need to keep a
-vaddr_pin object around.  Store that within the umem object directly.
+It's not a "great patch" if there's something wrong with it. :/
 
-The vaddr_pin object allows the GUP code to associate any files it pins
-with the RDMA file descriptor associated with this GUP.
+> > @@ -2378,31 +2403,23 @@ xfs_attr3_leaf_getvalue((..snip..)
+> > +	if (args->flags & ATTR_KERNOVAL) {
+> >   		args->valuelen = args->rmtvaluelen;
+> > +		return 0;
+> >   	}
+> > -	return 0;
+> > +	return xfs_attr_copy_value(args, NULL, args->rmtvaluelen);
+> 
+> With gcc9 I get:
+> 
+>   CC      fs/xfs/libxfs/xfs_attr_leaf.o
+> In function 'xfs_attr_copy_value',
+>     inlined from 'xfs_attr3_leaf_getvalue' at fs/xfs/libxfs/xfs_attr_leaf.c:2425:9:
+> fs/xfs/libxfs/xfs_attr_leaf.c:421:2: warning: argument 2 null where non-null expected [-Wnonnull]
+>   421 |  memcpy(args->value, value, valuelen);
+>       |  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> In file included from ./arch/x86/include/asm/string.h:5,
+>                  from ./include/linux/string.h:20,
+>                  from ./include/linux/uuid.h:12,
+>                  from ./fs/xfs/xfs_linux.h:10,
+>                  from ./fs/xfs/xfs.h:22,
+>                  from fs/xfs/libxfs/xfs_attr_leaf.c:7:
+> fs/xfs/libxfs/xfs_attr_leaf.c: In function 'xfs_attr3_leaf_getvalue':
+> ./arch/x86/include/asm/string_64.h:14:14: note: in a call to function 'memcpy' declared here
+>    14 | extern void *memcpy(void *to, const void *from, size_t len);
+>       |              ^~~~~~
+> 
+> and sure enough, the NULL "value" arg is and passed as-is to memcpy in
+> xfs_attr_copy_value.
 
-Furthermore, use the vaddr_pin object to store the owning mm while we
-are at it.
+"sure enough", eh?
 
-No references need to be taken on the owing file as the lifetime of that
-object is tied to all the umems being destroyed first.
+> Maybe you meant to sanitize the value when it's NULL?
 
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- drivers/infiniband/core/umem.c     | 26 +++++++++++++++++---------
- drivers/infiniband/core/umem_odp.c | 16 ++++++++--------
- include/rdma/ib_umem.h             |  2 +-
- 3 files changed, 26 insertions(+), 18 deletions(-)
+Nope - look at the code:
 
-diff --git a/drivers/infiniband/core/umem.c b/drivers/infiniband/core/umem.c
-index 965cf9dea71a..a9ce3e3816ef 100644
---- a/drivers/infiniband/core/umem.c
-+++ b/drivers/infiniband/core/umem.c
-@@ -54,7 +54,8 @@ static void __ib_umem_release(struct ib_device *dev, struct ib_umem *umem, int d
- 
- 	for_each_sg_page(umem->sg_head.sgl, &sg_iter, umem->sg_nents, 0) {
- 		page = sg_page_iter_page(&sg_iter);
--		put_user_pages_dirty_lock(&page, 1, umem->writable && dirty);
-+		vaddr_unpin_pages_dirty_lock(&page, 1, &umem->vaddr_pin,
-+					     umem->writable && dirty);
- 	}
- 
- 	sg_free_table(&umem->sg_head);
-@@ -243,8 +244,15 @@ struct ib_umem *ib_umem_get(struct ib_udata *udata, unsigned long addr,
- 	umem->length     = size;
- 	umem->address    = addr;
- 	umem->writable   = ib_access_writable(access);
--	umem->owning_mm = mm = current->mm;
--	mmgrab(mm);
-+	umem->vaddr_pin.mm = mm = current->mm;
-+	mmgrab(umem->vaddr_pin.mm);
-+
-+	/* No need to get a reference to the core file object here.  The key is
-+	 * that sys_file reference is held by the ufile.  Any duplication of
-+	 * sys_file by the core will keep references active until all those
-+	 * contexts are closed out.  No matter which process hold them open.
-+	 */
-+	umem->vaddr_pin.f_owner = context->ufile->sys_file;
- 
- 	if (access & IB_ACCESS_ON_DEMAND) {
- 		if (WARN_ON_ONCE(!context->invalidate_range)) {
-@@ -292,11 +300,11 @@ struct ib_umem *ib_umem_get(struct ib_udata *udata, unsigned long addr,
- 
- 	while (npages) {
- 		down_read(&mm->mmap_sem);
--		ret = get_user_pages(cur_base,
-+		ret = vaddr_pin_pages(cur_base,
- 				     min_t(unsigned long, npages,
- 					   PAGE_SIZE / sizeof (struct page *)),
--				     gup_flags | FOLL_LONGTERM,
--				     page_list, NULL);
-+				     gup_flags,
-+				     page_list, &umem->vaddr_pin);
- 		if (ret < 0) {
- 			up_read(&mm->mmap_sem);
- 			goto umem_release;
-@@ -336,7 +344,7 @@ struct ib_umem *ib_umem_get(struct ib_udata *udata, unsigned long addr,
- 	free_page((unsigned long) page_list);
- umem_kfree:
- 	if (ret) {
--		mmdrop(umem->owning_mm);
-+		mmdrop(umem->vaddr_pin.mm);
- 		kfree(umem);
- 	}
- 	return ret ? ERR_PTR(ret) : umem;
-@@ -345,7 +353,7 @@ EXPORT_SYMBOL(ib_umem_get);
- 
- static void __ib_umem_release_tail(struct ib_umem *umem)
- {
--	mmdrop(umem->owning_mm);
-+	mmdrop(umem->vaddr_pin.mm);
- 	if (umem->is_odp)
- 		kfree(to_ib_umem_odp(umem));
- 	else
-@@ -369,7 +377,7 @@ void ib_umem_release(struct ib_umem *umem)
- 
- 	__ib_umem_release(umem->context->device, umem, 1);
- 
--	atomic64_sub(ib_umem_num_pages(umem), &umem->owning_mm->pinned_vm);
-+	atomic64_sub(ib_umem_num_pages(umem), &umem->vaddr_pin.mm->pinned_vm);
- 	__ib_umem_release_tail(umem);
- }
- EXPORT_SYMBOL(ib_umem_release);
-diff --git a/drivers/infiniband/core/umem_odp.c b/drivers/infiniband/core/umem_odp.c
-index 2a75c6f8d827..53085896d718 100644
---- a/drivers/infiniband/core/umem_odp.c
-+++ b/drivers/infiniband/core/umem_odp.c
-@@ -278,11 +278,11 @@ static int get_per_mm(struct ib_umem_odp *umem_odp)
- 	 */
- 	mutex_lock(&ctx->per_mm_list_lock);
- 	list_for_each_entry(per_mm, &ctx->per_mm_list, ucontext_list) {
--		if (per_mm->mm == umem_odp->umem.owning_mm)
-+		if (per_mm->mm == umem_odp->umem.vaddr_pin.mm)
- 			goto found;
- 	}
- 
--	per_mm = alloc_per_mm(ctx, umem_odp->umem.owning_mm);
-+	per_mm = alloc_per_mm(ctx, umem_odp->umem.vaddr_pin.mm);
- 	if (IS_ERR(per_mm)) {
- 		mutex_unlock(&ctx->per_mm_list_lock);
- 		return PTR_ERR(per_mm);
-@@ -355,8 +355,8 @@ struct ib_umem_odp *ib_alloc_odp_umem(struct ib_umem_odp *root,
- 	umem->writable   = root->umem.writable;
- 	umem->is_odp = 1;
- 	odp_data->per_mm = per_mm;
--	umem->owning_mm  = per_mm->mm;
--	mmgrab(umem->owning_mm);
-+	umem->vaddr_pin.mm  = per_mm->mm;
-+	mmgrab(umem->vaddr_pin.mm);
- 
- 	mutex_init(&odp_data->umem_mutex);
- 	init_completion(&odp_data->notifier_completion);
-@@ -389,7 +389,7 @@ struct ib_umem_odp *ib_alloc_odp_umem(struct ib_umem_odp *root,
- out_page_list:
- 	vfree(odp_data->page_list);
- out_odp_data:
--	mmdrop(umem->owning_mm);
-+	mmdrop(umem->vaddr_pin.mm);
- 	kfree(odp_data);
- 	return ERR_PTR(ret);
- }
-@@ -399,10 +399,10 @@ int ib_umem_odp_get(struct ib_umem_odp *umem_odp, int access)
- {
- 	struct ib_umem *umem = &umem_odp->umem;
- 	/*
--	 * NOTE: This must called in a process context where umem->owning_mm
-+	 * NOTE: This must called in a process context where umem->vaddr_pin.mm
- 	 * == current->mm
- 	 */
--	struct mm_struct *mm = umem->owning_mm;
-+	struct mm_struct *mm = umem->vaddr_pin.mm;
- 	int ret_val;
- 
- 	umem_odp->page_shift = PAGE_SHIFT;
-@@ -581,7 +581,7 @@ int ib_umem_odp_map_dma_pages(struct ib_umem_odp *umem_odp, u64 user_virt,
- 			      unsigned long current_seq)
- {
- 	struct task_struct *owning_process  = NULL;
--	struct mm_struct *owning_mm = umem_odp->umem.owning_mm;
-+	struct mm_struct *owning_mm = umem_odp->umem.vaddr_pin.mm;
- 	struct page       **local_page_list = NULL;
- 	u64 page_mask, off;
- 	int j, k, ret = 0, start_idx, npages = 0;
-diff --git a/include/rdma/ib_umem.h b/include/rdma/ib_umem.h
-index 1052d0d62be7..ab677c799e29 100644
---- a/include/rdma/ib_umem.h
-+++ b/include/rdma/ib_umem.h
-@@ -43,7 +43,6 @@ struct ib_umem_odp;
- 
- struct ib_umem {
- 	struct ib_ucontext     *context;
--	struct mm_struct       *owning_mm;
- 	size_t			length;
- 	unsigned long		address;
- 	u32 writable : 1;
-@@ -52,6 +51,7 @@ struct ib_umem {
- 	struct sg_table sg_head;
- 	int             nmap;
- 	unsigned int    sg_nents;
-+	struct vaddr_pin vaddr_pin;
- };
- 
- /* Returns the offset of the umem start relative to the first page. */
+        args->rmtvaluelen = be32_to_cpu(name_rmt->valuelen);
+>>>>    args->rmtblkno = be32_to_cpu(name_rmt->valueblk);
+        args->rmtblkcnt = xfs_attr3_rmt_blocks(args->dp->i_mount,
+                                               args->rmtvaluelen);
+        if (args->flags & ATTR_KERNOVAL) {
+                args->valuelen = args->rmtvaluelen;
+                return 0;
+        }
+        return xfs_attr_copy_value(args, NULL, args->rmtvaluelen);
+}
+
+And the relevant code in xfs_attr_copy_value() does:
+
+        /* remote block xattr requires IO for copy-in */
+>>>>    if (args->rmtblkno)
+>>>>            return xfs_attr_rmtval_get(args);
+
+        memcpy(args->value, value, valuelen);
+        return 0;
+}
+
+The memcpy() is never reached in this case. Hence the compiler
+warning is a false positive and the code is not going to crash here.
+
+Regardless, I'm going to have to change the code because I doubt gcc
+will ever be smart enough to understand the code flow as it stands.
+We have to do this every so often to avoid false positive
+uninitialised variable warnings, so it's not like working around
+compiler issues is something new.
+
+I'll post an updated version tomorrow....
+
+Cheers,
+
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
