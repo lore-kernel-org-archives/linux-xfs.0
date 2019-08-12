@@ -1,199 +1,386 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53500 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726838AbfHLR5P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Aug 2019 13:57:15 -0400
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: [RFC PATCH 6/8] xfs_io/encrypt: add 'add_enckey' command
-Date: Mon, 12 Aug 2019 10:56:32 -0700
-Message-Id: <20190812175635.34186-7-ebiggers@kernel.org>
-In-Reply-To: <20190812175635.34186-1-ebiggers@kernel.org>
-References: <20190812175635.34186-1-ebiggers@kernel.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:50254 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726358AbfHLXey (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 19:34:54 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CNXdFC104295
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 23:34:53 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2u9nbtanjv-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 23:34:53 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CNXFFH189079
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 23:34:52 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2u9n9hf4ra-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 23:34:52 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7CNYpV6022366
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 23:34:51 GMT
+Subject: Re: [PATCH v1 19/19] xfsprogs: Add log item printing for ATTRI and
+ ATTRD
+References: <20190809213804.32628-1-allison.henderson@oracle.com>
+ <20190809213804.32628-20-allison.henderson@oracle.com>
+ <20190812164651.GF7138@magnolia>
+From: Allison Collins <allison.henderson@oracle.com>
+Message-ID: <94109bb3-f46b-fea2-4d8a-50792c11f958@oracle.com>
+Date: Mon, 12 Aug 2019 16:34:50 -0700
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190812164651.GF7138@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On 8/12/19 9:46 AM, Darrick J. Wong wrote:
+> On Fri, Aug 09, 2019 at 02:38:04PM -0700, Allison Collins wrote:
+>> From: Allison Henderson <allison.henderson@oracle.com>
+>>
+>> This patch implements a new set of log printing functions to
+>> print the ATTRI and ATTRD items and vectors in the log.  These
+>> will be used during log dump and log recover operations.
+>>
+>> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>> ---
+>>   logprint/log_misc.c      |  31 +++++++-
+>>   logprint/log_print_all.c |  12 +++
+>>   logprint/log_redo.c      | 189 +++++++++++++++++++++++++++++++++++++++++++++++
+>>   logprint/logprint.h      |   7 ++
+>>   4 files changed, 238 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/logprint/log_misc.c b/logprint/log_misc.c
+>> index c325f04..7b2055d 100644
+>> --- a/logprint/log_misc.c
+>> +++ b/logprint/log_misc.c
+>> @@ -54,11 +54,29 @@ print_stars(void)
+>>   	   "***********************************\n");
+>>   }	/* print_stars */
+>>   
+>> +void
+>> +print_hex_dump(char *ptr, int len) {
+>> +	int i = 0;
+>> +
+>> +	for (i = 0; i < len; i++) {
+>> +		if (i % 16 == 0)
+>> +			printf("%08x ", i);
+>> +
+>> +		printf("%02x", ptr[i]);
+>> +
+>> +		if ((i+1)%16 == 0)
+>> +			printf("\n");
+>> +		else if ((i+1)%2 == 0)
+>> +			printf(" ");
+>> +	}
+>> +	printf("\n");
+>> +}
+> 
+> Maybe it's time to implement xfs_hex_dump?
+I think we have that through libxfs, but it prints it as an alert, and 
+this just needs to be printed as part of the log dump.
 
-Add an 'add_enckey' command to xfs_io, to provide a command-line
-interface to the FS_IOC_ADD_ENCRYPTION_KEY ioctl.
+Once we get to pptrs, we can use the attribute flags to decide when to 
+print it as a pptr record instead of this hex dump.  It would be nice to 
+have something to indicate when it's a string too, but with out using a 
+flag or something similar, I thought it was best not to make assumptions.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- io/encrypt.c      | 109 ++++++++++++++++++++++++++++++++++++++++++++++
- man/man8/xfs_io.8 |  15 +++++++
- 2 files changed, 124 insertions(+)
+Allison
 
-diff --git a/io/encrypt.c b/io/encrypt.c
-index f982cd17..038c4cce 100644
---- a/io/encrypt.c
-+++ b/io/encrypt.c
-@@ -138,6 +138,7 @@ struct fscrypt_get_key_status_arg {
- 
- static cmdinfo_t get_encpolicy_cmd;
- static cmdinfo_t set_encpolicy_cmd;
-+static cmdinfo_t add_enckey_cmd;
- 
- static void
- get_encpolicy_help(void)
-@@ -183,6 +184,22 @@ set_encpolicy_help(void)
- "\n"));
- }
- 
-+static void
-+add_enckey_help(void)
-+{
-+	printf(_(
-+"\n"
-+" add an encryption key to the filesystem\n"
-+"\n"
-+" Examples:\n"
-+" 'add_enckey' - add key for v2 policies\n"
-+" 'add_enckey -d 0000111122223333' - add key for v1 policies w/ given descriptor\n"
-+"\n"
-+"The key in binary is read from standard input.\n"
-+" -d DESCRIPTOR -- master_key_descriptor\n"
-+"\n"));
-+}
-+
- static const struct {
- 	__u8 mode;
- 	const char *name;
-@@ -594,6 +611,88 @@ set_encpolicy_f(int argc, char **argv)
- 	return 0;
- }
- 
-+static ssize_t
-+read_until_limit_or_eof(int fd, void *buf, size_t limit)
-+{
-+	size_t bytes_read = 0;
-+	ssize_t res;
-+
-+	while (limit) {
-+		res = read(fd, buf, limit);
-+		if (res < 0)
-+			return res;
-+		if (res == 0)
-+			break;
-+		buf += res;
-+		bytes_read += res;
-+		limit -= res;
-+	}
-+	return bytes_read;
-+}
-+
-+static int
-+add_enckey_f(int argc, char **argv)
-+{
-+	int c;
-+	struct fscrypt_add_key_arg *arg;
-+	ssize_t raw_size;
-+
-+	arg = calloc(1, sizeof(*arg) + FSCRYPT_MAX_KEY_SIZE + 1);
-+	if (!arg) {
-+		fprintf(stderr, "calloc failed\n");
-+		exitcode = 1;
-+		return 0;
-+	}
-+
-+	arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
-+
-+	while ((c = getopt(argc, argv, "d:")) != EOF) {
-+		switch (c) {
-+		case 'd':
-+			arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR;
-+			if (!str2keydesc(optarg, arg->key_spec.u.descriptor))
-+				goto out;
-+			break;
-+		default:
-+			return command_usage(&add_enckey_cmd);
-+		}
-+	}
-+	argc -= optind;
-+	argv += optind;
-+
-+	if (argc != 0)
-+		return command_usage(&add_enckey_cmd);
-+
-+	raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
-+					   FSCRYPT_MAX_KEY_SIZE + 1);
-+	if (raw_size < 0) {
-+		fprintf(stderr, "Error reading key from stdin: %s\n",
-+			strerror(errno));
-+		exitcode = 1;
-+		goto out;
-+	}
-+	if (raw_size > FSCRYPT_MAX_KEY_SIZE) {
-+		fprintf(stderr,
-+			"Invalid key; got > FSCRYPT_MAX_KEY_SIZE (%d) bytes on stdin!\n",
-+			FSCRYPT_MAX_KEY_SIZE);
-+		goto out;
-+	}
-+	arg->raw_size = raw_size;
-+
-+	if (ioctl(file->fd, FS_IOC_ADD_ENCRYPTION_KEY, arg) != 0) {
-+		fprintf(stderr, "Error adding encryption key: %s\n",
-+			strerror(errno));
-+		exitcode = 1;
-+		goto out;
-+	}
-+	printf("Added encryption key with %s %s\n",
-+	       keyspectype(&arg->key_spec), keyspec2str(&arg->key_spec));
-+out:
-+	memset(arg->raw, 0, FSCRYPT_MAX_KEY_SIZE + 1);
-+	free(arg);
-+	return 0;
-+}
-+
- void
- encrypt_init(void)
- {
-@@ -618,6 +717,16 @@ encrypt_init(void)
- 		_("assign an encryption policy to the current file");
- 	set_encpolicy_cmd.help = set_encpolicy_help;
- 
-+	add_enckey_cmd.name = "add_enckey";
-+	add_enckey_cmd.cfunc = add_enckey_f;
-+	add_enckey_cmd.args = _("[-d descriptor]");
-+	add_enckey_cmd.argmin = 0;
-+	add_enckey_cmd.argmax = -1;
-+	add_enckey_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-+	add_enckey_cmd.oneline = _("add an encryption key to the filesystem");
-+	add_enckey_cmd.help = add_enckey_help;
-+
- 	add_command(&get_encpolicy_cmd);
- 	add_command(&set_encpolicy_cmd);
-+	add_command(&add_enckey_cmd);
- }
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 18fcde0f..7d6a23fe 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -749,6 +749,21 @@ Test whether v2 encryption policies are supported.  Prints "supported",
- .RE
- .PD
- .TP
-+.BI "add_enckey [ \-d " descriptor " ]"
-+On filesystems that support encryption, add an encryption key to the filesystem
-+containing the currently open file.  The key in binary (typically 64 bytes long)
-+is read from standard input.
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.BI \-d " descriptor"
-+key descriptor, as a 16-character hex string (8 bytes).  If given, the key will
-+be available for use by v1 encryption policies that use this descriptor.
-+Otherwise, the key is added as a v2 policy key, and on success the resulting
-+"key identifier" will be printed.
-+.RE
-+.PD
-+.TP
- .BR lsattr " [ " \-R " | " \-D " | " \-a " | " \-v " ]"
- List extended inode flags on the currently open file. If the
- .B \-R
--- 
-2.23.0.rc1.153.gdeed80330f-goog
+> 
+> --D
+> 
+>> +
+>>   /*
+>>    * Given a pointer to a data segment, print out the data as if it were
+>>    * a log operation header.
+>>    */
+>> -static void
+>> +void
+>>   xlog_print_op_header(xlog_op_header_t	*op_head,
+>>   		     int		i,
+>>   		     char		**ptr)
+>> @@ -949,6 +967,17 @@ xlog_print_record(
+>>   					be32_to_cpu(op_head->oh_len));
+>>   			break;
+>>   		    }
+>> +		    case XFS_LI_ATTRI: {
+>> +                        skip = xlog_print_trans_attri(&ptr,
+>> +                                        be32_to_cpu(op_head->oh_len),
+>> +                                        &i);
+>> +                        break;
+>> +                    }
+>> +                    case XFS_LI_ATTRD: {
+>> +                        skip = xlog_print_trans_attrd(&ptr,
+>> +                                        be32_to_cpu(op_head->oh_len));
+>> +                        break;
+>> +                    }
+>>   		    case XFS_LI_RUI: {
+>>   			skip = xlog_print_trans_rui(&ptr,
+>>   					be32_to_cpu(op_head->oh_len),
+>> diff --git a/logprint/log_print_all.c b/logprint/log_print_all.c
+>> index eafffe2..f794a68 100644
+>> --- a/logprint/log_print_all.c
+>> +++ b/logprint/log_print_all.c
+>> @@ -400,6 +400,12 @@ xlog_recover_print_logitem(
+>>   	case XFS_LI_EFI:
+>>   		xlog_recover_print_efi(item);
+>>   		break;
+>> +	case XFS_LI_ATTRD:
+>> +		xlog_recover_print_attrd(item);
+>> +		break;
+>> +	case XFS_LI_ATTRI:
+>> +		xlog_recover_print_attri(item);
+>> +		break;
+>>   	case XFS_LI_RUD:
+>>   		xlog_recover_print_rud(item);
+>>   		break;
+>> @@ -452,6 +458,12 @@ xlog_recover_print_item(
+>>   	case XFS_LI_EFI:
+>>   		printf("EFI");
+>>   		break;
+>> +	case XFS_LI_ATTRD:
+>> +		printf("ATTRD");
+>> +		break;
+>> +	case XFS_LI_ATTRI:
+>> +		printf("ATTRI");
+>> +		break;
+>>   	case XFS_LI_RUD:
+>>   		printf("RUD");
+>>   		break;
+>> diff --git a/logprint/log_redo.c b/logprint/log_redo.c
+>> index f1f690e..005fd84 100644
+>> --- a/logprint/log_redo.c
+>> +++ b/logprint/log_redo.c
+>> @@ -8,6 +8,7 @@
+>>   #include "libxlog.h"
+>>   
+>>   #include "logprint.h"
+>> +#include "xfs_attr_item.h"
+>>   
+>>   /* Extent Free Items */
+>>   
+>> @@ -653,3 +654,191 @@ xlog_recover_print_bud(
+>>   	f = item->ri_buf[0].i_addr;
+>>   	xlog_print_trans_bud(&f, sizeof(struct xfs_bud_log_format));
+>>   }
+>> +
+>> +/* Attr Items */
+>> +
+>> +static int
+>> +xfs_attri_copy_log_format(
+>> +	char				*buf,
+>> +	uint				len,
+>> +	struct xfs_attri_log_format	*dst_attri_fmt)
+>> +{
+>> +	uint dst_len = sizeof(struct xfs_attri_log_format);
+>> +
+>> +	if (len == dst_len) {
+>> +		memcpy((char *)dst_attri_fmt, buf, len);
+>> +		return 0;
+>> +	}
+>> +
+>> +	fprintf(stderr, _("%s: bad size of attri format: %u; expected %u\n"),
+>> +		progname, len, dst_len);
+>> +	return 1;
+>> +}
+>> +
+>> +int
+>> +xlog_print_trans_attri(
+>> +	char				**ptr,
+>> +	uint				src_len,
+>> +	int				*i)
+>> +{
+>> +	struct xfs_attri_log_format	*src_f = NULL;
+>> +	xlog_op_header_t		*head = NULL;
+>> +	uint				dst_len;
+>> +	int				error = 0;
+>> +
+>> +	dst_len = sizeof(struct xfs_attri_log_format);
+>> +	if (src_len != dst_len) {
+>> +		fprintf(stderr, _("%s: bad size of attri format: %u; expected %u\n"),
+>> +				progname, src_len, dst_len);
+>> +		return 1;
+>> +	}
+>> +
+>> +	/*
+>> +	 * memmove to ensure 8-byte alignment for the long longs in
+>> +	 * xfs_attri_log_format_t structure
+>> +	 */
+>> +	if ((src_f = (struct xfs_attri_log_format *)malloc(src_len)) == NULL) {
+>> +		fprintf(stderr, _("%s: xlog_print_trans_attri: malloc failed\n"),
+>> +				progname);
+>> +		exit(1);
+>> +	}
+>> +	memmove((char*)src_f, *ptr, src_len);
+>> +	*ptr += src_len;
+>> +
+>> +	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
+>> +		src_f->alfi_size, src_f->alfi_name_len, src_f->alfi_value_len,
+>> +				(unsigned long long)src_f->alfi_id);
+>> +
+>> +	if (src_f->alfi_name_len > 0) {
+>> +		printf(_("\n"));
+>> +		(*i)++;
+>> +		head = (xlog_op_header_t *)*ptr;
+>> +		xlog_print_op_header(head, *i, ptr);
+>> +		error = xlog_print_trans_attri_name(ptr, be32_to_cpu(head->oh_len));
+>> +		if (error)
+>> +			goto error;
+>> +	}
+>> +
+>> +	if (src_f->alfi_value_len > 0) {
+>> +		printf(_("\n"));
+>> +		(*i)++;
+>> +		head = (xlog_op_header_t *)*ptr;
+>> +		xlog_print_op_header(head, *i, ptr);
+>> +		error = xlog_print_trans_attri_value(ptr, be32_to_cpu(head->oh_len),
+>> +				src_f->alfi_value_len);
+>> +	}
+>> +error:
+>> +	free(src_f);
+>> +
+>> +	return error;
+>> +}	/* xlog_print_trans_attri */
+>> +
+>> +int
+>> +xlog_print_trans_attri_name(
+>> +	char				**ptr,
+>> +	uint				src_len)
+>> +{
+>> +
+>> +	printf(_("ATTRI:  name len:%u\n"), src_len);
+>> +	print_hex_dump(*ptr, src_len);
+>> +
+>> +	*ptr += src_len;
+>> +
+>> +	return 0;
+>> +}	/* xlog_print_trans_attri */
+>> +
+>> +int
+>> +xlog_print_trans_attri_value(
+>> +	char				**ptr,
+>> +	uint				src_len,
+>> +	int				value_len)
+>> +{
+>> +	printf(_("ATTRI:  value len:%u\n"), value_len);
+>> +	print_hex_dump(*ptr, value_len);
+>> +
+>> +	*ptr += src_len;
+>> +
+>> +	return 0;
+>> +}	/* xlog_print_trans_attri_value */
+>> +
+>> +void
+>> +xlog_recover_print_attri(
+>> +	xlog_recover_item_t	*item)
+>> +{
+>> +	struct xfs_attri_log_format	*f, *src_f = NULL;
+>> +	uint				src_len, dst_len;
+>> +
+>> +	int				region = 0;
+>> +
+>> +	src_f = (struct xfs_attri_log_format *)item->ri_buf[0].i_addr;
+>> +	src_len = item->ri_buf[region].i_len;
+>> +
+>> +	/*
+>> +	 * An xfs_attri_log_format structure contains a attribute name and
+>> +	 * variable length value  as the last field.
+>> +	 */
+>> +	dst_len = sizeof(struct xfs_attri_log_format);
+>> +
+>> +	if ((f = ((struct xfs_attri_log_format *)malloc(dst_len))) == NULL) {
+>> +		fprintf(stderr, _("%s: xlog_recover_print_attri: malloc failed\n"),
+>> +			progname);
+>> +		exit(1);
+>> +	}
+>> +	if (xfs_attri_copy_log_format((char*)src_f, src_len, f))
+>> +		goto out;
+>> +
+>> +	printf(_("ATTRI:  #regs: %d	name_len: %d, value_len: %d  id: 0x%llx\n"),
+>> +		f->alfi_size, f->alfi_name_len, f->alfi_value_len, (unsigned long long)f->alfi_id);
+>> +
+>> +	if (f->alfi_name_len > 0) {
+>> +		region++;
+>> +		printf(_("ATTRI:  name len:%u\n"), f->alfi_name_len);
+>> +		print_hex_dump((char *)item->ri_buf[region].i_addr,
+>> +			       f->alfi_name_len);
+>> +	}
+>> +
+>> +	if (f->alfi_value_len > 0) {
+>> +		region++;
+>> +		printf(_("ATTRI:  value len:%u\n"), f->alfi_value_len);
+>> +		print_hex_dump((char *)item->ri_buf[region].i_addr,
+>> +			       f->alfi_value_len);
+>> +	}
+>> +
+>> +out:
+>> +	free(f);
+>> +
+>> +}
+>> +
+>> +int
+>> +xlog_print_trans_attrd(char **ptr, uint len)
+>> +{
+>> +	struct xfs_attrd_log_format *f;
+>> +	struct xfs_attrd_log_format lbuf;
+>> +	uint core_size = sizeof(struct xfs_attrd_log_format);
+>> +
+>> +	memcpy(&lbuf, *ptr, MIN(core_size, len));
+>> +	f = &lbuf;
+>> +	*ptr += len;
+>> +	if (len >= core_size) {
+>> +		printf(_("ATTRD:  #regs: %d	id: 0x%llx\n"),
+>> +			f->alfd_size,
+>> +			(unsigned long long)f->alfd_alf_id);
+>> +		return 0;
+>> +	} else {
+>> +		printf(_("ATTRD: Not enough data to decode further\n"));
+>> +		return 1;
+>> +	}
+>> +}	/* xlog_print_trans_attrd */
+>> +
+>> +void
+>> +xlog_recover_print_attrd(
+>> +	xlog_recover_item_t		*item)
+>> +{
+>> +	struct xfs_attrd_log_format	*f;
+>> +
+>> +	f = (struct xfs_attrd_log_format *)item->ri_buf[0].i_addr;
+>> +
+>> +	printf(_("	ATTRD:  #regs: %d	id: 0x%llx\n"),
+>> +		f->alfd_size,
+>> +		(unsigned long long)f->alfd_alf_id);
+>> +}
+>> diff --git a/logprint/logprint.h b/logprint/logprint.h
+>> index 98ac0d4..b76c590 100644
+>> --- a/logprint/logprint.h
+>> +++ b/logprint/logprint.h
+>> @@ -28,6 +28,7 @@ extern void xfs_log_print_trans(struct xlog *, int);
+>>   extern void print_xlog_record_line(void);
+>>   extern void print_xlog_op_line(void);
+>>   extern void print_stars(void);
+>> +extern void print_hex_dump(char* ptr, int len);
+>>   
+>>   extern struct xfs_inode_log_format *
+>>   	xfs_inode_item_format_convert(char *, uint, struct xfs_inode_log_format *);
+>> @@ -52,4 +53,10 @@ extern void xlog_recover_print_bui(struct xlog_recover_item *item);
+>>   extern int xlog_print_trans_bud(char **ptr, uint len);
+>>   extern void xlog_recover_print_bud(struct xlog_recover_item *item);
+>>   
+>> +extern int xlog_print_trans_attri(char **ptr, uint src_len, int *i);
+>> +extern int xlog_print_trans_attri_name(char **ptr, uint src_len);
+>> +extern int xlog_print_trans_attri_value(char **ptr, uint src_len, int value_len);
+>> +extern void xlog_recover_print_attri(xlog_recover_item_t *item);
+>> +extern int xlog_print_trans_attrd(char **ptr, uint len);
+>> +extern void xlog_recover_print_attrd(xlog_recover_item_t *item);
+>>   #endif	/* LOGPRINT_H */
+>> -- 
+>> 2.7.4
+>>
