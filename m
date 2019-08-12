@@ -1,104 +1,43 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:63746 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727224AbfHLVBT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Aug 2019 17:01:19 -0400
-Date: Mon, 12 Aug 2019 14:01:17 -0700
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [RFC PATCH v2 15/19] mm/gup: Introduce vaddr_pin_pages()
-Message-ID: <20190812210116.GD20634@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-16-ira.weiny@intel.com>
- <88d82639-c0b2-0b35-1919-999a8438031c@nvidia.com>
+Received: from www262.sakura.ne.jp ([202.181.97.72]:62845 "EHLO
+        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727691AbfHLK5o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 06:57:44 -0400
+Subject: Re: [PATCH] fs: xfs: xfs_log: Don't use KM_MAYFAIL at
+ xfs_log_reserve().
+References: <20190729215657.GI7777@dread.disaster.area>
+ <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
+ <20190801185057.GT30113@42.do-not-panic.com> <20190801204614.GD7138@magnolia>
+ <20190802222158.GU30113@42.do-not-panic.com>
+From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
+Message-ID: <126f1f28-de58-815c-bd37-424a06216884@i-love.sakura.ne.jp>
+Date: Mon, 12 Aug 2019 19:57:27 +0900
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <88d82639-c0b2-0b35-1919-999a8438031c@nvidia.com>
+In-Reply-To: <20190802222158.GU30113@42.do-not-panic.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: John Hubbard <jhubbard@nvidia.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Luis Chamberlain <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
 
-On Sun, Aug 11, 2019 at 04:07:23PM -0700, John Hubbard wrote:
-> On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > The addition of FOLL_LONGTERM has taken on additional meaning for CMA
-> > pages.
-> > 
-> > In addition subsystems such as RDMA require new information to be passed
-> > to the GUP interface to track file owning information.  As such a simple
-> > FOLL_LONGTERM flag is no longer sufficient for these users to pin pages.
-> > 
-> > Introduce a new GUP like call which takes the newly introduced vaddr_pin
-> > information.  Failure to pass the vaddr_pin object back to a vaddr_put*
-> > call will result in a failure if pins were created on files during the
-> > pin operation.
-> > 
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > 
+On 2019/08/03 7:21, Luis Chamberlain wrote:
+>> I'm pretty sure this didn't solve the underlying stale data exposure
+>> problem, which might be why you think this is "opaque".  It fixes a bug
+>> that causes data writeback failure (which was the exposure vector this
+>> time) but I think the ultimate fix for the exposure problem are the two
+>> patches I linked to quite a ways back in this discussion....
+>>
+>> --D
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?id=bd012b434a56d9fac3cbc33062b8e2cd6e1ad0a0
+>> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?id=adcf7c0c87191fd3616813c8ce9790f89a9a8eba
 > 
-> I'm creating a new call site conversion series, to replace the 
-> "put_user_pages(): miscellaneous call sites" series. This uses
-> vaddr_pin_pages*() where appropriate. So it's based on your series here.
-> 
-> btw, while doing that, I noticed one more typo while re-reading some of the comments. 
-> Thought you probably want to collect them all for the next spin. Below...
-> 
-> > ---
-> > Changes from list:
-> > 	Change to vaddr_put_pages_dirty_lock
-> > 	Change to vaddr_unpin_pages_dirty_lock
-> > 
-> >  include/linux/mm.h |  5 ++++
-> >  mm/gup.c           | 59 ++++++++++++++++++++++++++++++++++++++++++++++
-> >  2 files changed, 64 insertions(+)
-> > 
-> > diff --git a/include/linux/mm.h b/include/linux/mm.h
-> > index 657c947bda49..90c5802866df 100644
-> > --- a/include/linux/mm.h
-> > +++ b/include/linux/mm.h
-> > @@ -1603,6 +1603,11 @@ int account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc);
-> >  int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc,
-> >  			struct task_struct *task, bool bypass_rlim);
-> >  
-> > +long vaddr_pin_pages(unsigned long addr, unsigned long nr_pages,
-> > +		     unsigned int gup_flags, struct page **pages,
-> > +		     struct vaddr_pin *vaddr_pin);
-> > +void vaddr_unpin_pages_dirty_lock(struct page **pages, unsigned long nr_pages,
-> > +				  struct vaddr_pin *vaddr_pin, bool make_dirty);
-> >  bool mapping_inode_has_layout(struct vaddr_pin *vaddr_pin, struct page *page);
-> >  
-> >  /* Container for pinned pfns / pages */
-> > diff --git a/mm/gup.c b/mm/gup.c
-> > index eeaa0ddd08a6..6d23f70d7847 100644
-> > --- a/mm/gup.c
-> > +++ b/mm/gup.c
-> > @@ -2536,3 +2536,62 @@ int get_user_pages_fast(unsigned long start, int nr_pages,
-> >  	return ret;
-> >  }
-> >  EXPORT_SYMBOL_GPL(get_user_pages_fast);
-> > +
-> > +/**
-> > + * vaddr_pin_pages pin pages by virtual address and return the pages to the
-> > + * user.
-> > + *
-> > + * @addr, start address
-> > + * @nr_pages, number of pages to pin
-> > + * @gup_flags, flags to use for the pin
-> > + * @pages, array of pages returned
-> > + * @vaddr_pin, initalized meta information this pin is to be associated
-> 
-> Typo:
->                   initialized
+> Got it, thanks! Even with this, I still think the current commit could
+> say a bit a more about the effects of not having this patch applied.
+> What are the effects of say having the above two patches applied but not
+> the one being submitted now?
 
-Thanks fixed.
-Ira
-
-> 
-> 
-> thanks,
-> -- 
-> John Hubbard
-> NVIDIA
+Is this patch going to be applied as-is? Or, someone have a plan to rewrite the changelog?
