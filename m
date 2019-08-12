@@ -1,116 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:55180 "EHLO smtp.gentoo.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726236AbfHLWSP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Aug 2019 18:18:15 -0400
-Received: from [IPv6:2001:4dd6:f35f:0:149a:6c9b:d6bb:ae22] (2001-4dd6-f35f-0-149a-6c9b-d6bb-ae22.ipv6dyn.netcologne.de [IPv6:2001:4dd6:f35f:0:149a:6c9b:d6bb:ae22])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        (Authenticated sender: whissi)
-        by smtp.gentoo.org (Postfix) with ESMTPSA id EBF693499D3
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:18:12 +0000 (UTC)
-Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
- reference to `xfs_ag_geom_health'
-References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
- <20190811225307.GF7777@dread.disaster.area>
- <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
- <20190812002306.GH7777@dread.disaster.area>
- <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
- <20190812031123.GA6129@dread.disaster.area>
- <20190812043046.GB6129@dread.disaster.area>
- <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
- <20190812214449.GC6129@dread.disaster.area>
-From: Thomas Deutschmann <whissi@gentoo.org>
-Message-ID: <ddabd271-2820-85f3-4393-99deb5a0eaef@gentoo.org>
-Date: Tue, 13 Aug 2019 00:18:04 +0200
+Received: from userp2130.oracle.com ([156.151.31.86]:38344 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725648AbfHLQOY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 12:14:24 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CGEHEi137502
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:14:23 GMT
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2u9nbt8qah-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:14:23 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CGCtf3015328
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:14:22 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2u9k1vce4j-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:14:22 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7CGEMG3030230
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:14:22 GMT
+Date: Mon, 12 Aug 2019 09:14:21 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 09/18] xfs: Factor up commit from
+ xfs_attr_try_sf_addname
+Message-ID: <20190812161420.GX7138@magnolia>
+References: <20190809213726.32336-1-allison.henderson@oracle.com>
+ <20190809213726.32336-10-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20190812214449.GC6129@dread.disaster.area>
-Content-Type: multipart/signed; micalg=pgp-sha512;
- protocol="application/pgp-signature";
- boundary="UTZSbqglDWAnfBPMK4K99WazVQh27ucyD"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809213726.32336-10-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Allison Collins <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---UTZSbqglDWAnfBPMK4K99WazVQh27ucyD
-Content-Type: multipart/mixed; boundary="PnNaWkmD9W2sV5kMZ4wMbuu8puE7b6vj9";
- protected-headers="v1"
-From: Thomas Deutschmann <whissi@gentoo.org>
-To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-Message-ID: <ddabd271-2820-85f3-4393-99deb5a0eaef@gentoo.org>
-Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
- reference to `xfs_ag_geom_health'
-References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
- <20190811225307.GF7777@dread.disaster.area>
- <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
- <20190812002306.GH7777@dread.disaster.area>
- <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
- <20190812031123.GA6129@dread.disaster.area>
- <20190812043046.GB6129@dread.disaster.area>
- <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
- <20190812214449.GC6129@dread.disaster.area>
-In-Reply-To: <20190812214449.GC6129@dread.disaster.area>
+On Fri, Aug 09, 2019 at 02:37:17PM -0700, Allison Collins wrote:
+> New delayed attribute routines cannot handle transactions,
+> so factor this up to the calling function.
+> 
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 15 ++++++++-------
+>  1 file changed, 8 insertions(+), 7 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index f9d5e28..6bd87e6 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -196,7 +196,7 @@ xfs_attr_try_sf_addname(
+>  {
+>  
+>  	struct xfs_mount	*mp = dp->i_mount;
+> -	int			error, error2;
+> +	int			error;
+>  
+>  	error = xfs_attr_shortform_addname(args);
+>  	if (error == -ENOSPC)
+> @@ -212,9 +212,7 @@ xfs_attr_try_sf_addname(
+>  	if (mp->m_flags & XFS_MOUNT_WSYNC)
+>  		xfs_trans_set_sync(args->trans);
+>  
+> -	error2 = xfs_trans_commit(args->trans);
+> -	args->trans = NULL;
+> -	return error ? error : error2;
+> +	return error;
+>  }
+>  
+>  /*
+> @@ -226,7 +224,7 @@ xfs_attr_set_args(
+>  {
+>  	struct xfs_inode	*dp = args->dp;
+>  	struct xfs_buf          *leaf_bp = NULL;
+> -	int			error;
+> +	int			error, error2 = 0;;
+>  
+>  	/*
+>  	 * If the attribute list is non-existent or a shortform list,
+> @@ -246,8 +244,11 @@ xfs_attr_set_args(
+>  		 * Try to add the attr to the attribute list in the inode.
+>  		 */
+>  		error = xfs_attr_try_sf_addname(dp, args);
+> -		if (error != -ENOSPC)
+> -			return error;
+> +		if (error != -ENOSPC) {
+> +			error2 = xfs_trans_commit(args->trans);
 
---PnNaWkmD9W2sV5kMZ4wMbuu8puE7b6vj9
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+I've wondered about this weird logic... if xfs_attr_shortform_addname
+returns an error code other than ENOSPC, why would we commit the
+transaction?  Usually we let the error code bounce up to whomever
+allocated the transaction and let them cancel it.
 
-On 2019-08-12 23:44, Dave Chinner wrote:
->> That's not the correct way to reproduce. It's really important to
->> _export_ the variable to trigger the problem and _this_ is a problem i=
-n
->> xfsprogs' build system.
-> Which means you are overriding the LDFLAGS set by configure when
-> you _run make_, not just telling configure to use those LDFLAGS.
->=20
-> That's why _make_ is getting screwed up - it is doing exactly what
-> you are telling it to do, and that is to overrides every occurrence
-> of LDFLAGS with your exported options rather than using the correct
-> set configure calculated and specified.
->=20
-> Exporting your CFLAGS and LDFLAGS is the wrong thing to doing
-> - they should only ever be passed to the configure invocation and
-> not remain to pollute the build environment after you've run
-> configure.
+Hmm, looking around some more, I guess xfs_attr_shortform_remove can
+return ENOATTR to _addname and _shortform_lookup can return EEXIST, but
+with either of those error codes, the transaction isn't dirty so it's
+not like we're committing garbage state into the filesystem...?
 
-I disagree with the conclusion. LDFLAGS in build environment shouldn't
-cause any problems, especially when you are using a build system:
+--D
 
-Normally, configure will get the value and the Makefiles will use the
-value _from_ configure... but using configure _and_ reading _and adding_
-values from environment _in addition_ seems to be wrong.
-
-So you either use a build system or you don't.
-
-
---=20
-Regards,
-Thomas Deutschmann / Gentoo Linux Developer
-C4DD 695F A713 8F24 2AA1 5638 5849 7EE5 1D5D 74A5
-
-
---PnNaWkmD9W2sV5kMZ4wMbuu8puE7b6vj9--
-
---UTZSbqglDWAnfBPMK4K99WazVQh27ucyD
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQGTBAEBCgB9FiEEExKRzo+LDXJgXHuURObr3Jv2BVkFAl1R5ZxfFIAAAAAALgAo
-aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDEz
-MTI5MUNFOEY4QjBENzI2MDVDN0I5NDQ0RTZFQkRDOUJGNjA1NTkACgkQRObr3Jv2
-BVkfMQf/ZEYEMA5LNrFWEKVgQZranFfpot3FnxkghViJ4pafxFxtdWK5a/tcnlQZ
-YCSeuDsmvMphqi2BCFFUoPOCwGCSeIK6m6o+cjVGi9uoaOXmgNsaN1nEW2EeCvdh
-Ys0F9TOdSvWLpurdkosphVty3qmaaqRTI8CUJr/t/pQbp8xiUytrLPYs9HEUNk38
-d4CmeyO0WTZbGewEJGmk9u1p8ZtH/BHV6tk96WFgjrPDHr5krd6ZlxUdV20rjH+e
-SHKBTm7NrZoBuaO6jTz9yf5CuNN96A0nVJ92O5KaGKeDIgGXKf37cyz/nf6L/N5+
-9+i+3Bu6vqWDHigB4FQ4kmbgSJp6mw==
-=UsY9
------END PGP SIGNATURE-----
-
---UTZSbqglDWAnfBPMK4K99WazVQh27ucyD--
+> +			args->trans = NULL;
+> +			return error ? error : error2;
+> +		}
+>  
+>  		/*
+>  		 * It won't fit in the shortform, transform to a leaf block.
+> -- 
+> 2.7.4
+> 
