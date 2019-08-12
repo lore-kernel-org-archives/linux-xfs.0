@@ -1,253 +1,102 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53488 "EHLO mail.kernel.org"
+Received: from mga01.intel.com ([192.55.52.88]:56621 "EHLO mga01.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726497AbfHLR5Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Aug 2019 13:57:16 -0400
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: [RFC PATCH 2/8] xfs_io/encrypt: update to UAPI definitions from Linux v5.4
-Date: Mon, 12 Aug 2019 10:56:28 -0700
-Message-Id: <20190812175635.34186-3-ebiggers@kernel.org>
-In-Reply-To: <20190812175635.34186-1-ebiggers@kernel.org>
-References: <20190812175635.34186-1-ebiggers@kernel.org>
+        id S1726236AbfHLSF4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 14:05:56 -0400
+Date: Mon, 12 Aug 2019 11:05:51 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [RFC PATCH v2 07/19] fs/xfs: Teach xfs to use new
+ dax_layout_busy_page()
+Message-ID: <20190812180551.GC19746@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-8-ira.weiny@intel.com>
+ <20190809233037.GB7777@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809233037.GB7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-From: Eric Biggers <ebiggers@google.com>
+On Sat, Aug 10, 2019 at 09:30:37AM +1000, Dave Chinner wrote:
+> On Fri, Aug 09, 2019 at 03:58:21PM -0700, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > dax_layout_busy_page() can now operate on a sub-range of the
+> > address_space provided.
+> > 
+> > Have xfs specify the sub range to dax_layout_busy_page()
+> 
+> Hmmm. I've got patches that change all these XFS interfaces to
+> support range locks. I'm not sure the way the ranges are passed here
+> is the best way to do it, and I suspect they aren't correct in some
+> cases, either....
+> 
+> > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> > index ff3c1fae5357..f0de5486f6c1 100644
+> > --- a/fs/xfs/xfs_iops.c
+> > +++ b/fs/xfs/xfs_iops.c
+> > @@ -1042,10 +1042,16 @@ xfs_vn_setattr(
+> >  		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
+> >  		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+> >  
+> > -		error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+> > -		if (error) {
+> > -			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> > -			return error;
+> > +		if (iattr->ia_size < inode->i_size) {
+> > +			loff_t                  off = iattr->ia_size;
+> > +			loff_t                  len = inode->i_size - iattr->ia_size;
+> > +
+> > +			error = xfs_break_layouts(inode, &iolock, off, len,
+> > +						  BREAK_UNMAP);
+> > +			if (error) {
+> > +				xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
+> > +				return error;
+> > +			}
+> 
+> This isn't right - truncate up still needs to break the layout on
+> the last filesystem block of the file,
 
-Update to the latest fscrypt UAPI definitions, including:
+I'm not following this?  From a user perspective they can't have done anything
+with the data beyond the EOF.  So isn't it safe to allow EOF to grow without
+changing the layout of that last block?
 
-- New names for some existing definitions (FSCRYPT_ instead of FS_).
-- New ioctls.
-- New encryption mode numbers and flags.
+> and truncate down needs to
+> extend to "maximum file offset" because we remove all extents beyond
+> EOF on a truncate down.
 
-This patch doesn't make any change to the program logic itself.
+Ok, I was trying to allow a user to extend the file without conflicts if they
+were to have a pin on the 'beginning' of the original file.  This sounds like
+you are saying that a layout lease must be dropped to do that?  In some ways I
+think I understand what you are driving at and I think I see how I may have
+been playing "fast and loose" with the strictness of the layout lease.  But
+from a user perspective if there is a part of the file which "does not exist"
+(beyond EOF) does it matter that the layout there may change?
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- io/encrypt.c | 160 +++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 122 insertions(+), 38 deletions(-)
+> 
+> i.e. when we use preallocation, the extent map extends beyond EOF,
+> and layout leases need to be able to extend beyond the current EOF
+> to allow the lease owner to do extending writes, extending truncate,
+> preallocation beyond EOF, etc safely without having to get a new
+> lease to cover the new region in the extended file...
 
-diff --git a/io/encrypt.c b/io/encrypt.c
-index e8766dc1..ac473ed7 100644
---- a/io/encrypt.c
-+++ b/io/encrypt.c
-@@ -15,42 +15,126 @@
- #endif
- 
- /*
-- * We may have to declare the fscrypt ioctls ourselves because someone may be
-- * compiling xfsprogs with old kernel headers.  And since some old versions of
-- * <linux/fs.h> declared the policy struct and ioctl numbers but not the flags
-- * and modes, our declarations must be split into two conditional blocks.
-+ * Declare the fscrypt ioctls if needed, since someone may be compiling xfsprogs
-+ * with old kernel headers.  But <linux/fs.h> has already been included, so be
-+ * careful not to declare things twice.
-  */
- 
--/* Policy struct and ioctl numbers */
-+/* first batch of ioctls (Linux headers v4.6+) */
- #ifndef FS_IOC_SET_ENCRYPTION_POLICY
--#define FS_KEY_DESCRIPTOR_SIZE  8
-+#define fscrypt_policy fscrypt_policy_v1
-+#define FS_IOC_SET_ENCRYPTION_POLICY		_IOR('f', 19, struct fscrypt_policy)
-+#define FS_IOC_GET_ENCRYPTION_PWSALT		_IOW('f', 20, __u8[16])
-+#define FS_IOC_GET_ENCRYPTION_POLICY		_IOW('f', 21, struct fscrypt_policy)
-+#endif
-+
-+/*
-+ * Second batch of ioctls (Linux headers v5.4+), plus some renamings from FS_ to
-+ * FSCRYPT_.  We don't bother defining the old names here.
-+ */
-+#ifndef FS_IOC_GET_ENCRYPTION_POLICY_EX
-+
-+#define FSCRYPT_POLICY_FLAGS_PAD_4		0x00
-+#define FSCRYPT_POLICY_FLAGS_PAD_8		0x01
-+#define FSCRYPT_POLICY_FLAGS_PAD_16		0x02
-+#define FSCRYPT_POLICY_FLAGS_PAD_32		0x03
-+#define FSCRYPT_POLICY_FLAGS_PAD_MASK		0x03
-+#define FSCRYPT_POLICY_FLAG_DIRECT_KEY		0x04
-+
-+#define FSCRYPT_MODE_AES_256_XTS		1
-+#define FSCRYPT_MODE_AES_256_CTS		4
-+#define FSCRYPT_MODE_AES_128_CBC		5
-+#define FSCRYPT_MODE_AES_128_CTS		6
-+#define FSCRYPT_MODE_ADIANTUM			9
-+
-+/*
-+ * In the headers for Linux v4.6 through v5.3, 'struct fscrypt_policy_v1' is
-+ * already defined under its old name, 'struct fscrypt_policy'.  But it's fine
-+ * to define it under its new name too.
-+ *
-+ * Note: "v1" policies really are version "0" in the API.
-+ */
-+#define FSCRYPT_POLICY_V1		0
-+#define FSCRYPT_KEY_DESCRIPTOR_SIZE	8
-+struct fscrypt_policy_v1 {
-+	__u8 version;
-+	__u8 contents_encryption_mode;
-+	__u8 filenames_encryption_mode;
-+	__u8 flags;
-+	__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-+};
- 
--struct fscrypt_policy {
-+#define FSCRYPT_POLICY_V2		2
-+#define FSCRYPT_KEY_IDENTIFIER_SIZE	16
-+struct fscrypt_policy_v2 {
- 	__u8 version;
- 	__u8 contents_encryption_mode;
- 	__u8 filenames_encryption_mode;
- 	__u8 flags;
--	__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE];
--} __attribute__((packed));
--
--#define FS_IOC_SET_ENCRYPTION_POLICY	_IOR('f', 19, struct fscrypt_policy)
--#define FS_IOC_GET_ENCRYPTION_PWSALT	_IOW('f', 20, __u8[16])
--#define FS_IOC_GET_ENCRYPTION_POLICY	_IOW('f', 21, struct fscrypt_policy)
--#endif /* FS_IOC_SET_ENCRYPTION_POLICY */
--
--/* Policy flags and encryption modes */
--#ifndef FS_ENCRYPTION_MODE_AES_256_XTS
--#define FS_POLICY_FLAGS_PAD_4		0x00
--#define FS_POLICY_FLAGS_PAD_8		0x01
--#define FS_POLICY_FLAGS_PAD_16		0x02
--#define FS_POLICY_FLAGS_PAD_32		0x03
--#define FS_POLICY_FLAGS_PAD_MASK	0x03
--#define FS_POLICY_FLAGS_VALID		0x03
--
--#define FS_ENCRYPTION_MODE_INVALID	0
--#define FS_ENCRYPTION_MODE_AES_256_XTS	1
--#define FS_ENCRYPTION_MODE_AES_256_CTS	4
--#endif /* FS_ENCRYPTION_MODE_AES_256_XTS */
-+	__u8 __reserved[4];
-+	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-+};
-+
-+#define FSCRYPT_MAX_KEY_SIZE		64
-+
-+#define FS_IOC_GET_ENCRYPTION_POLICY_EX		_IOWR('f', 22, __u8[9]) /* size + version */
-+struct fscrypt_get_policy_ex_arg {
-+	__u64 policy_size; /* input/output */
-+	union {
-+		__u8 version;
-+		struct fscrypt_policy_v1 v1;
-+		struct fscrypt_policy_v2 v2;
-+	} policy; /* output */
-+};
-+
-+#define FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR	1
-+#define FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER	2
-+struct fscrypt_key_specifier {
-+	__u32 type;	/* one of FSCRYPT_KEY_SPEC_TYPE_* */
-+	__u32 __reserved;
-+	union {
-+		__u8 __reserved[32]; /* reserve some extra space */
-+		__u8 descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-+		__u8 identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-+	} u;
-+};
-+
-+#define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
-+struct fscrypt_add_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 raw_size;
-+	__u32 __reserved[9];
-+	__u8 raw[];
-+};
-+
-+#define FS_IOC_REMOVE_ENCRYPTION_KEY		_IOWR('f', 24, struct fscrypt_remove_key_arg)
-+#define FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS	_IOWR('f', 25, struct fscrypt_remove_key_arg)
-+struct fscrypt_remove_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+#define FSCRYPT_KEY_REMOVAL_STATUS_FLAG_FILES_BUSY	0x00000001
-+#define FSCRYPT_KEY_REMOVAL_STATUS_FLAG_OTHER_USERS	0x00000002
-+	__u32 removal_status_flags;	/* output */
-+	__u32 __reserved[5];
-+};
-+
-+#define FS_IOC_GET_ENCRYPTION_KEY_STATUS	_IOWR('f', 26, struct fscrypt_get_key_status_arg)
-+struct fscrypt_get_key_status_arg {
-+	/* input */
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 __reserved[6];
-+
-+	/* output */
-+#define FSCRYPT_KEY_STATUS_ABSENT		1
-+#define FSCRYPT_KEY_STATUS_PRESENT		2
-+#define FSCRYPT_KEY_STATUS_INCOMPLETELY_REMOVED	3
-+	__u32 status;
-+#define FSCRYPT_KEY_STATUS_FLAG_ADDED_BY_SELF   0x00000001
-+	__u32 status_flags;
-+	__u32 user_count;
-+	__u32 __out_reserved[13];
-+};
-+
-+#endif /* !FS_IOC_GET_ENCRYPTION_POLICY_EX */
- 
- static cmdinfo_t get_encpolicy_cmd;
- static cmdinfo_t set_encpolicy_cmd;
-@@ -84,8 +168,8 @@ static const struct {
- 	__u8 mode;
- 	const char *name;
- } available_modes[] = {
--	{FS_ENCRYPTION_MODE_AES_256_XTS, "AES-256-XTS"},
--	{FS_ENCRYPTION_MODE_AES_256_CTS, "AES-256-CTS"},
-+	{FSCRYPT_MODE_AES_256_XTS, "AES-256-XTS"},
-+	{FSCRYPT_MODE_AES_256_CTS, "AES-256-CTS"},
- };
- 
- static bool
-@@ -131,12 +215,12 @@ mode2str(__u8 mode)
- }
- 
- static const char *
--keydesc2str(__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE])
-+keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
- {
--	static char buf[2 * FS_KEY_DESCRIPTOR_SIZE + 1];
-+	static char buf[2 * FSCRYPT_KEY_DESCRIPTOR_SIZE + 1];
- 	int i;
- 
--	for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++)
-+	for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++)
- 		sprintf(&buf[2 * i], "%02x", master_key_descriptor[i]);
- 
- 	return buf;
-@@ -176,9 +260,9 @@ set_encpolicy_f(int argc, char **argv)
- 
- 	/* Initialize the policy structure with default values */
- 	memset(&policy, 0, sizeof(policy));
--	policy.contents_encryption_mode = FS_ENCRYPTION_MODE_AES_256_XTS;
--	policy.filenames_encryption_mode = FS_ENCRYPTION_MODE_AES_256_CTS;
--	policy.flags = FS_POLICY_FLAGS_PAD_16;
-+	policy.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
-+	policy.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
-+	policy.flags = FSCRYPT_POLICY_FLAGS_PAD_16;
- 
- 	/* Parse options */
- 	while ((c = getopt(argc, argv, "c:n:f:v:")) != EOF) {
-@@ -229,7 +313,7 @@ set_encpolicy_f(int argc, char **argv)
- 		unsigned long long x;
- 		int i;
- 
--		if (strlen(keydesc) != FS_KEY_DESCRIPTOR_SIZE * 2) {
-+		if (strlen(keydesc) != FSCRYPT_KEY_DESCRIPTOR_SIZE * 2) {
- 			fprintf(stderr, "invalid key descriptor: %s\n",
- 				keydesc);
- 			return 0;
-@@ -242,7 +326,7 @@ set_encpolicy_f(int argc, char **argv)
- 			return 0;
- 		}
- 
--		for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++) {
-+		for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++) {
- 			policy.master_key_descriptor[i] = x >> 56;
- 			x <<= 8;
- 		}
--- 
-2.23.0.rc1.153.gdeed80330f-goog
+I'm not following this.  What determines when preallocation is done?
+
+Forgive my ignorance on file systems but how can we have a layout for every
+file which is "maximum file offset" for every file even if a file is only 1
+page long?
+
+Thanks,
+Ira
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
