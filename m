@@ -1,102 +1,121 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:51146 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:46630 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726568AbfHLWla (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 18:41:30 -0400
+        with ESMTP id S1725901AbfHLQmm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 12:42:42 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CMYtCT062466
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:41:28 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2u9nbtagxk-1
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CGcgo9158961
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:42:41 GMT
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2u9nbt8v67-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:41:28 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CMcdC0062168
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:39:28 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2u9k1vrg2b-1
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:42:41 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CGd7Ng080655
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:42:40 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2u9m0abxbg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:39:28 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7CMdRJm022274
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:39:28 GMT
-From: Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH v1 18/19] xfsprogs: Add delayed attributes error tag
-References: <20190809213804.32628-1-allison.henderson@oracle.com>
- <20190809213804.32628-19-allison.henderson@oracle.com>
- <20190812164407.GE7138@magnolia>
-Message-ID: <d56cc76a-cd1a-8e57-5f2c-553d33551502@oracle.com>
-Date: Mon, 12 Aug 2019 15:39:26 -0700
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:42:40 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7CGgdCV001932
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:42:39 GMT
+Date: Mon, 12 Aug 2019 09:42:38 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 17/18] xfs: Enable delayed attributes
+Message-ID: <20190812164238.GD7138@magnolia>
+References: <20190809213726.32336-1-allison.henderson@oracle.com>
+ <20190809213726.32336-18-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20190812164407.GE7138@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809213726.32336-18-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
+To: Allison Collins <allison.henderson@oracle.com>
 Cc: linux-xfs@vger.kernel.org
 
-On 8/12/19 9:44 AM, Darrick J. Wong wrote:
-> On Fri, Aug 09, 2019 at 02:38:03PM -0700, Allison Collins wrote:
->> Subject: [PATCH v1 18/19] xfsprogs: Add delayed attributes error tag
-> 
-> In the final version this ought to be "xfs_io:", not "xfsprogs:" since
-> the libxfs changes will invariably land through a separate
-> libxfs-apply'd patch.
-> 
-> Looks ok otherwise,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
+On Fri, Aug 09, 2019 at 02:37:25PM -0700, Allison Collins wrote:
+> Finally enable delayed attributes in xfs_attr_set and
+> xfs_attr_remove.  We only do this for v4 and up since we
+> cant add new log entries to old fs versions
 
-Ok, will do.  Thanks!
-Allison
+...you can't add new log item types to *existing* fs versions, which
+includes everything through present-day v5.
 
-> --D
+This needs a separate feature bit somewhere to prevent existing xfs
+drivers from crashing and burning on attri/attrd items.  Most of this
+deferred attr code could exist independently from the parent pointer
+feature, so I guess you could be the first person to use one of the log
+incompat feature bits?  That would be one way to get wider testing of
+deferred attrs while we work on parent pointers.
+
+--D
+
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 26 ++++++++++++++++++++++++--
+>  1 file changed, 24 insertions(+), 2 deletions(-)
 > 
->> This patch adds an error tag that we can use to test
->> delayed attribute recovery and replay
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> ---
->>   io/inject.c           | 1 +
->>   libxfs/xfs_errortag.h | 4 +++-
->>   2 files changed, 4 insertions(+), 1 deletion(-)
->>
->> diff --git a/io/inject.c b/io/inject.c
->> index cabfc3e..05bd4db 100644
->> --- a/io/inject.c
->> +++ b/io/inject.c
->> @@ -54,6 +54,7 @@ error_tag(char *name)
->>   		{ XFS_ERRTAG_FORCE_SCRUB_REPAIR,	"force_repair" },
->>   		{ XFS_ERRTAG_FORCE_SUMMARY_RECALC,	"bad_summary" },
->>   		{ XFS_ERRTAG_IUNLINK_FALLBACK,		"iunlink_fallback" },
->> +		{ XFS_ERRTAG_DELAYED_ATTR,		"delayed_attr" },
->>   		{ XFS_ERRTAG_MAX,			NULL }
->>   	};
->>   	int	count;
->> diff --git a/libxfs/xfs_errortag.h b/libxfs/xfs_errortag.h
->> index 79e6c4f..85d5850 100644
->> --- a/libxfs/xfs_errortag.h
->> +++ b/libxfs/xfs_errortag.h
->> @@ -55,7 +55,8 @@
->>   #define XFS_ERRTAG_FORCE_SCRUB_REPAIR			32
->>   #define XFS_ERRTAG_FORCE_SUMMARY_RECALC			33
->>   #define XFS_ERRTAG_IUNLINK_FALLBACK			34
->> -#define XFS_ERRTAG_MAX					35
->> +#define XFS_ERRTAG_DELAYED_ATTR				35
->> +#define XFS_ERRTAG_MAX					36
->>   
->>   /*
->>    * Random factors for above tags, 1 means always, 2 means 1/2 time, etc.
->> @@ -95,5 +96,6 @@
->>   #define XFS_RANDOM_FORCE_SCRUB_REPAIR			1
->>   #define XFS_RANDOM_FORCE_SUMMARY_RECALC			1
->>   #define XFS_RANDOM_IUNLINK_FALLBACK			(XFS_RANDOM_DEFAULT/10)
->> +#define XFS_RANDOM_DELAYED_ATTR				1
->>   
->>   #endif /* __XFS_ERRORTAG_H_ */
->> -- 
->> 2.7.4
->>
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 9931e50..7023734 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -506,6 +506,7 @@ xfs_attr_set(
+>  	int			valuelen)
+>  {
+>  	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+>  	struct xfs_da_args	args;
+>  	struct xfs_trans_res	tres;
+>  	int			rsvd = (name->type & ATTR_ROOT) != 0;
+> @@ -564,7 +565,20 @@ xfs_attr_set(
+>  		goto out_trans_cancel;
+>  
+>  	xfs_trans_ijoin(args.trans, dp, 0);
+> -	error = xfs_attr_set_args(&args);
+> +	if (XFS_SB_VERSION_NUM(sbp) < XFS_SB_VERSION_4)
+> +		error = xfs_attr_set_args(&args);
+> +	else {
+> +		error = xfs_has_attr(&args);
+> +
+> +		if (error == -EEXIST && (name->type & ATTR_CREATE))
+> +			goto out_trans_cancel;
+> +
+> +		if (error == -ENOATTR && (name->type & ATTR_REPLACE))
+> +			goto out_trans_cancel;
+> +
+> +		error = xfs_attr_set_deferred(dp, args.trans, name, value,
+> +					      valuelen);
+> +	}
+>  	if (error)
+>  		goto out_trans_cancel;
+>  	if (!args.trans) {
+> @@ -649,6 +663,7 @@ xfs_attr_remove(
+>  	struct xfs_name		*name)
+>  {
+>  	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_sb		*sbp = &mp->m_sb;
+>  	struct xfs_da_args	args;
+>  	int			error;
+>  
+> @@ -690,7 +705,14 @@ xfs_attr_remove(
+>  	 */
+>  	xfs_trans_ijoin(args.trans, dp, 0);
+>  
+> -	error = xfs_attr_remove_args(&args);
+> +	error = xfs_has_attr(&args);
+> +	if (error == -ENOATTR)
+> +		goto out;
+> +
+> +	if (XFS_SB_VERSION_NUM(sbp) < XFS_SB_VERSION_4)
+> +		error = xfs_attr_remove_args(&args);
+> +	else
+> +		error = xfs_attr_remove_deferred(dp, args.trans, name);
+>  	if (error)
+>  		goto out;
+>  
+> -- 
+> 2.7.4
+> 
