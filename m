@@ -1,492 +1,117 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:36298 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726219AbfHLP4m (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 11:56:42 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFs8ae144669
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:56:39 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2u9nvp0kg2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:56:38 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFqtbR152253
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:56:38 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2u9n9h0w5w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:56:37 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7CFubJP032075
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:56:37 GMT
-Date: Mon, 12 Aug 2019 08:56:35 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 05/18] xfs: Add xfs_has_attr and subroutines
-Message-ID: <20190812155635.GT7138@magnolia>
-References: <20190809213726.32336-1-allison.henderson@oracle.com>
- <20190809213726.32336-6-allison.henderson@oracle.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40436 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726565AbfHLVqB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 17:46:01 -0400
+Date: Tue, 13 Aug 2019 07:44:49 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+Message-ID: <20190812214449.GC6129@dread.disaster.area>
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+ <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190809213726.32336-6-allison.henderson@oracle.com>
+In-Reply-To: <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Collins <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: Thomas Deutschmann <whissi@gentoo.org>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Fri, Aug 09, 2019 at 02:37:13PM -0700, Allison Collins wrote:
-> From: Allison Henderson <allison.henderson@oracle.com>
+On Mon, Aug 12, 2019 at 12:57:32PM +0200, Thomas Deutschmann wrote:
+> Hi,
 > 
-> This patch adds a new functions to check for the existence of
-> an attribute.  Subroutines are also added to handle the cases
-> of leaf blocks, nodes or shortform.  Common code that appears
-> in existing attr add and remove functions have been factored
-> out to help reduce the appearence of duplicated code.  We will
-> need these routines later for delayed attributes since delayed
-> operations cannot return error codes.
+> On 2019-08-12 06:30, Dave Chinner wrote:
+> >>> In a clear environment, do:
+> >>>
+> >>>> tar -xaf xfsprogs-5.2.0.tar.xz
+> >>>> cd xfsprogs-5.2.0
+> >>>> export CFLAGS="-O2 -pipe -march=ivybridge -mtune=ivybridge -mno-xsaveopt"
+> >>>> export LDFLAGS="-Wl,-O1 -Wl,--as-needed"
+> >>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> >> Don't do this.
+> >>
+> >> "--as-needed" is the default linker behaviour since gcc 4.x. You do
+> >> not need this. As for passing "-O1" to the linker, that's not going
+> >> to do anything measurable for you. Use --enable-lto to turn on link
+> >> time optimisations if they are supported by the compiler.
+> > 
+> > Ok, I could reproduce your link time failure for a while with
+> > --enable-lto, but I ran 'make distclean' and the problem went away
+> > completely. And I can build with your options successfully, too:
+> > 
+> > $ make realclean
+> > $ make configure
+> > <builds new configure script>
+> > $ LDFLAGS="-Wl,-O1 -Wl,--as-needed" ./configure
 > 
-> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c      | 151 +++++++++++++++++++++++++++---------------
->  fs/xfs/libxfs/xfs_attr.h      |   1 +
->  fs/xfs/libxfs/xfs_attr_leaf.c |  82 +++++++++++++++--------
->  fs/xfs/libxfs/xfs_attr_leaf.h |   2 +
->  4 files changed, 158 insertions(+), 78 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index a2fba0c..72af8e2 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -48,6 +48,7 @@ STATIC int xfs_attr_shortform_addname(xfs_da_args_t *args);
->  STATIC int xfs_attr_leaf_get(xfs_da_args_t *args);
->  STATIC int xfs_attr_leaf_addname(xfs_da_args_t *args);
->  STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
-> +STATIC int xfs_leaf_has_attr(xfs_da_args_t *args, struct xfs_buf **bp);         
+> That's not the correct way to reproduce. It's really important to
+> _export_ the variable to trigger the problem and _this_ is a problem in
+> xfsprogs' build system.
 
-Trailing whitespace, and please use "struct xfs_da_args", not the
-typedef...
+Which means you are overriding the LDFLAGS set by configure when
+you _run make_, not just telling configure to use those LDFLAGS.
 
->  
->  /*
->   * Internal routines when attribute list is more than one block.
-> @@ -55,6 +56,8 @@ STATIC int xfs_attr_leaf_removename(xfs_da_args_t *args);
->  STATIC int xfs_attr_node_get(xfs_da_args_t *args);
->  STATIC int xfs_attr_node_addname(xfs_da_args_t *args);
->  STATIC int xfs_attr_node_removename(xfs_da_args_t *args);
-> +STATIC int xfs_attr_node_hasname(xfs_da_args_t *args,
-> +				 struct xfs_da_state **state);
->  STATIC int xfs_attr_fillstate(xfs_da_state_t *state);
->  STATIC int xfs_attr_refillstate(xfs_da_state_t *state);
->  
-> @@ -278,6 +281,32 @@ xfs_attr_set_args(
->  }
->  
->  /*
-> + * Return EEXIST if attr is found, or ENOATTR if not
-> + */
-> +int
-> +xfs_has_attr(
-> +	struct xfs_da_args      *args)
-> +{
-> +	struct xfs_inode        *dp = args->dp;
-> +	struct xfs_buf		*bp;
-> +	int                     error;
-> +
-> +	if (!xfs_inode_hasattr(dp)) {
-> +		error = -ENOATTR;
-> +	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
-> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
-> +		error = xfs_shortform_has_attr(args, NULL, NULL);
-> +	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
-> +		error = xfs_leaf_has_attr(args, &bp);
-> +		xfs_trans_brelse(args->trans, bp);
-> +	} else {
-> +		error = xfs_attr_node_hasname(args, NULL);
-> +	}
-> +
-> +	return error;
-> +}
-> +
-> +/*
->   * Remove the attribute specified in @args.
->   */
->  int
-> @@ -616,26 +645,17 @@ STATIC int
->  xfs_attr_leaf_addname(
->  	struct xfs_da_args	*args)
->  {
-> -	struct xfs_inode	*dp;
->  	struct xfs_buf		*bp;
->  	int			retval, error, forkoff;
-> +	struct xfs_inode	*dp = args->dp;
->  
->  	trace_xfs_attr_leaf_addname(args);
->  
->  	/*
-> -	 * Read the (only) block in the attribute list in.
-> -	 */
-> -	dp = args->dp;
-> -	args->blkno = 0;
-> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-> -	if (error)
-> -		return error;
-> -
-> -	/*
->  	 * Look up the given attribute in the leaf block.  Figure out if
->  	 * the given flags produce an error or call for an atomic rename.
->  	 */
-> -	retval = xfs_attr3_leaf_lookup_int(bp, args);
-> +	retval = xfs_leaf_has_attr(args, &bp);
->  	if ((args->flags & ATTR_REPLACE) && (retval == -ENOATTR)) {
->  		xfs_trans_brelse(args->trans, bp);
->  		return retval;
-> @@ -787,6 +807,26 @@ xfs_attr_leaf_addname(
->  }
->  
->  /*
-> + * Return EEXIST if attr is found, or ENOATTR if not
-> + */
-> +STATIC int
-> +xfs_leaf_has_attr(
-> +	struct xfs_da_args      *args,
-> +	struct xfs_buf		**bp)
-> +{
-> +	int                     error = 0;
-> +
-> +	args->blkno = 0;
-> +	error = xfs_attr3_leaf_read(args->trans, args->dp,
-> +			args->blkno, -1, bp);
+That's why _make_ is getting screwed up - it is doing exactly what
+you are telling it to do, and that is to overrides every occurrence
+of LDFLAGS with your exported options rather than using the correct
+set configure calculated and specified.
 
-Can we please get rid of these -1 and -2 magic values that eventually
-become the mappedbno argument to xfs_dabuf_map?
+Exporting your CFLAGS and LDFLAGS is the wrong thing to doing
+- they should only ever be passed to the configure invocation and
+not remain to pollute the build environment after you've run
+configure.
 
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfs_attr3_leaf_lookup_int(*bp, args);
-> +	return error;
+> But keep in mind that 3x "-Wl,-O1 -Wl,--as-needed" don't cause a failure
+> without "--disable-static" for me... that's just the answer for your
+> question where this is coming from.
 
-"return xfs_attr3_leaf_lookup_int..." ?
+As I've already explained, --disable-static should never have worked
+in the first place, because the internal XFS libraries are
+statically linked and need to be build statically, which
+--disable-static turns off. 
 
-> +}
-> +
-> +/*
->   * Remove a name from the leaf attribute list structure
->   *
->   * This leaf block cannot have a "remote" value, we only call this routine
-> @@ -806,12 +846,8 @@ xfs_attr_leaf_removename(
->  	 * Remove the attribute.
->  	 */
->  	dp = args->dp;
-> -	args->blkno = 0;
-> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-> -	if (error)
-> -		return error;
->  
-> -	error = xfs_attr3_leaf_lookup_int(bp, args);
-> +	error = xfs_leaf_has_attr(args, &bp);
->  	if (error == -ENOATTR) {
->  		xfs_trans_brelse(args->trans, bp);
->  		return error;
-> @@ -848,12 +884,7 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
->  
->  	trace_xfs_attr_leaf_get(args);
->  
-> -	args->blkno = 0;
-> -	error = xfs_attr3_leaf_read(args->trans, args->dp, args->blkno, -1, &bp);
-> -	if (error)
-> -		return error;
-> -
-> -	error = xfs_attr3_leaf_lookup_int(bp, args);
-> +	error = xfs_leaf_has_attr(args, &bp);
->  	if (error != -EEXIST)  {
->  		xfs_trans_brelse(args->trans, bp);
->  		return error;
-> @@ -866,6 +897,43 @@ xfs_attr_leaf_get(xfs_da_args_t *args)
->  	return error;
->  }
->  
-> +/*
-> + * Return EEXIST if attr is found, or ENOATTR if not
-> + * statep: If not null is set to point at the found state.  Caller will
-> + * 	   be responsible for freeing the state in this case.
-> + */
-> +STATIC int
-> +xfs_attr_node_hasname(
-> +	struct xfs_da_args	*args,
-> +	struct xfs_da_state	**statep)
-> +{
-> +	struct xfs_da_state	*state;
-> +	struct xfs_inode	*dp;
-> +	int			retval, error;
-> +
-> +	/*
-> +	 * Tie a string around our finger to remind us where we are.
-> +	 */
-> +	dp = args->dp;
-> +	state = xfs_da_state_alloc();
-> +	state->args = args;
-> +	state->mp = dp->i_mount;
-> +
-> +	/*
-> +	 * Search to see if name exists, and get back a pointer to it.
-> +	 */
-> +	error = xfs_da3_node_lookup_int(state, &retval);
-> +	if (error == 0)
-> +		error = retval;
-> +
-> +	if (statep != NULL)
-> +		*statep = state;
-> +	else
-> +		xfs_da_state_free(state);
-> +
-> +	return error;
-> +}
-> +
->  /*========================================================================
->   * External routines when attribute list size > geo->blksize
->   *========================================================================*/
-> @@ -898,17 +966,14 @@ xfs_attr_node_addname(
->  	dp = args->dp;
->  	mp = dp->i_mount;
->  restart:
-> -	state = xfs_da_state_alloc();
-> -	state->args = args;
-> -	state->mp = mp;
-> -
->  	/*
->  	 * Search to see if name already exists, and get back a pointer
->  	 * to where it should go.
->  	 */
-> -	error = xfs_da3_node_lookup_int(state, &retval);
-> -	if (error)
-> +	error = xfs_attr_node_hasname(args, &state);
-> +	if (error == -EEXIST)
->  		goto out;
-> +
->  	blk = &state->path.blk[ state->path.active-1 ];
->  	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
->  	if ((args->flags & ATTR_REPLACE) && (retval == -ENOATTR)) {
-> @@ -1113,29 +1178,15 @@ xfs_attr_node_removename(
->  {
->  	struct xfs_da_state	*state;
->  	struct xfs_da_state_blk	*blk;
-> -	struct xfs_inode	*dp;
->  	struct xfs_buf		*bp;
->  	int			retval, error, forkoff;
-> +	struct xfs_inode	*dp = args->dp;
->  
->  	trace_xfs_attr_node_removename(args);
->  
-> -	/*
-> -	 * Tie a string around our finger to remind us where we are.
-> -	 */
-> -	dp = args->dp;
-> -	state = xfs_da_state_alloc();
-> -	state->args = args;
-> -	state->mp = dp->i_mount;
-> -
-> -	/*
-> -	 * Search to see if name exists, and get back a pointer to it.
-> -	 */
-> -	error = xfs_da3_node_lookup_int(state, &retval);
-> -	if (error || (retval != -EEXIST)) {
-> -		if (error == 0)
-> -			error = retval;
-> +	error = xfs_attr_node_hasname(args, &state);
-> +	if (error != -EEXIST)
->  		goto out;
-> -	}
->  
->  	/*
->  	 * If there is an out-of-line value, de-allocate the blocks.
-> @@ -1355,17 +1406,13 @@ xfs_attr_node_get(xfs_da_args_t *args)
->  
->  	trace_xfs_attr_node_get(args);
->  
-> -	state = xfs_da_state_alloc();
-> -	state->args = args;
-> -	state->mp = args->dp->i_mount;
-> -
->  	/*
->  	 * Search to see if name exists, and get back a pointer to it.
->  	 */
-> -	error = xfs_da3_node_lookup_int(state, &retval);
-> -	if (error) {
-> +	error = xfs_attr_node_hasname(args, &state);
-> +	if (error != -EEXIST) {
->  		retval = error;
-> -	} else if (retval == -EEXIST) {
-> +	} else {
->  		blk = &state->path.blk[ state->path.active-1 ];
->  		ASSERT(blk->bp != NULL);
->  		ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
-> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
-> index 0bade83..c082d34 100644
-> --- a/fs/xfs/libxfs/xfs_attr.h
-> +++ b/fs/xfs/libxfs/xfs_attr.h
-> @@ -170,6 +170,7 @@ int xfs_attr_set(struct xfs_inode *dp, struct xfs_name *name,
->  		 unsigned char *value, int valuelen);
->  int xfs_attr_set_args(struct xfs_da_args *args);
->  int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name);
-> +int xfs_has_attr(struct xfs_da_args *args);
->  int xfs_attr_remove_args(struct xfs_da_args *args);
->  int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
->  		  int flags, struct attrlist_cursor_kern *cursor);
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> index 70eb941..8d2e11f 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> @@ -546,6 +546,53 @@ xfs_attr_shortform_create(xfs_da_args_t *args)
->  }
->  
->  /*
-> + * Return EEXIST if attr is found, or ENOATTR if not
-> + * args:  args containing attribute name and namelen
-> + * sfep:  If not null, pointer will be set to the last attr entry found
-> + * basep: If not null, pointer is set to the byte offset of the entry in the
-> + *	  list
-> + */
-> +int
-> +xfs_shortform_has_attr(
-> +	struct xfs_da_args	 *args,
-> +	struct xfs_attr_sf_entry **sfep,
-> +	int			 *basep)
-> +{
-> +	struct xfs_attr_shortform *sf;
-> +	struct xfs_attr_sf_entry *sfe;
-> +	int			base = sizeof(struct xfs_attr_sf_hdr);
-> +	int			size = 0;
-> +	int			end;
-> +	int			i;
-> +
-> +	base = sizeof(struct xfs_attr_sf_hdr);
-> +	sf = (struct xfs_attr_shortform *)args->dp->i_afp->if_u1.if_data;
-> +	sfe = &sf->list[0];
-> +	end = sf->hdr.count;
-> +	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
-> +			base += size, i++) {
-> +		size = XFS_ATTR_SF_ENTSIZE(sfe);
-> +		if (sfe->namelen != args->namelen)
-> +			continue;
-> +		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
-> +			continue;
-> +		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
-> +			continue;
-> +		break;
-> +	}
-> +
-> +	if (sfep != NULL)
-> +		*sfep = sfe;
-> +
-> +	if (basep != NULL)
-> +		*basep = base;
-> +
-> +	if (i == end)
-> +		return -ENOATTR;
-> +	return -EEXIST;
-> +}
-> +
-> +/*
->   * Add a name/value pair to the shortform attribute list.
->   * Overflow from the inode has already been checked for.
->   */
-> @@ -554,7 +601,7 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
->  {
->  	xfs_attr_shortform_t *sf;
->  	xfs_attr_sf_entry_t *sfe;
-> -	int i, offset, size;
-> +	int offset, size, error;
->  	xfs_mount_t *mp;
->  	xfs_inode_t *dp;
->  	struct xfs_ifork *ifp;
-> @@ -568,18 +615,11 @@ xfs_attr_shortform_add(xfs_da_args_t *args, int forkoff)
->  	ifp = dp->i_afp;
->  	ASSERT(ifp->if_flags & XFS_IFINLINE);
->  	sf = (xfs_attr_shortform_t *)ifp->if_u1.if_data;
-> -	sfe = &sf->list[0];
-> -	for (i = 0; i < sf->hdr.count; sfe = XFS_ATTR_SF_NEXTENTRY(sfe), i++) {
-> +	error = xfs_shortform_has_attr(args, &sfe, NULL);
->  #ifdef DEBUG
-> -		if (sfe->namelen != args->namelen)
-> -			continue;
-> -		if (memcmp(args->name, sfe->nameval, args->namelen) != 0)
-> -			continue;
-> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
-> -			continue;
-> +	if (error == -EEXIST)
->  		ASSERT(0);
+Indeed:
 
-ASSERT(error != -EEXIST); ?  Without the #ifdef DEBUG since ASSERT does
-nothing if DEBUG isn't defined...
+$ git reset --hard v5.1.0; make realclean; make configure ; ./configure --disable-static ; make -j 32
+......
+    [LD]     xfs_estimate
+    [LD]     xfs_mdrestore
+    [LD]     xfs_rtcp
+    [LD]     libhandle.la
+    [LD]     libxcmd.la
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_new_probe_from_filename'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_alignment_offset'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_get_topology'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_do_fullprobe'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_logical_sector_size'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_optimal_io_size'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_lookup_value'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_free_probe'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_physical_sector_size'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_enable_partitions'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_minimum_io_size'
+$
 
->  #endif
-> -	}
->  
->  	offset = (char *)sfe - (char *)sf;
->  	size = XFS_ATTR_SF_ENTSIZE_BYNAME(args->namelen, args->valuelen);
-> @@ -626,7 +666,7 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
->  {
->  	xfs_attr_shortform_t *sf;
->  	xfs_attr_sf_entry_t *sfe;
-> -	int base, size=0, end, totsize, i;
-> +	int base, size = 0, end, totsize, error;
->  	xfs_mount_t *mp;
->  	xfs_inode_t *dp;
+Yup, --disable-static is broken in v5.1.0, too. I'm guessing it
+hasn't worked for a long time....
 
-Please fix the typedef and indentation here while you're changing this
-(and all the other attr) functions.
+So, please remove --disable-static from your build, and everything
+will be fine. I'll write up a patch to remove --disable-static from
+the configure script so this broken option can't be specified any
+more.
 
-Otherwise, I very much like this cleanup. :)
+Cheers,
 
---D
-
->  
-> @@ -634,23 +674,13 @@ xfs_attr_shortform_remove(xfs_da_args_t *args)
->  
->  	dp = args->dp;
->  	mp = dp->i_mount;
-> -	base = sizeof(xfs_attr_sf_hdr_t);
->  	sf = (xfs_attr_shortform_t *)dp->i_afp->if_u1.if_data;
-> -	sfe = &sf->list[0];
->  	end = sf->hdr.count;
-> -	for (i = 0; i < end; sfe = XFS_ATTR_SF_NEXTENTRY(sfe),
-> -					base += size, i++) {
-> -		size = XFS_ATTR_SF_ENTSIZE(sfe);
-> -		if (sfe->namelen != args->namelen)
-> -			continue;
-> -		if (memcmp(sfe->nameval, args->name, args->namelen) != 0)
-> -			continue;
-> -		if (!xfs_attr_namesp_match(args->flags, sfe->flags))
-> -			continue;
-> -		break;
-> -	}
-> -	if (i == end)
-> -		return -ENOATTR;
-> +
-> +	error = xfs_shortform_has_attr(args, &sfe, &base);
-> +	if (error == -ENOATTR)
-> +		return error;
-> +	size = XFS_ATTR_SF_ENTSIZE(sfe);
->  
->  	/*
->  	 * Fix up the attribute fork data, covering the hole
-> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-> index 7b74e18..be1f636 100644
-> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
-> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-> @@ -39,6 +39,8 @@ int	xfs_attr_shortform_getvalue(struct xfs_da_args *args);
->  int	xfs_attr_shortform_to_leaf(struct xfs_da_args *args,
->  			struct xfs_buf **leaf_bp);
->  int	xfs_attr_shortform_remove(struct xfs_da_args *args);
-> +int	xfs_shortform_has_attr(struct xfs_da_args *args,
-> +			       struct xfs_attr_sf_entry **sfep, int *basep);
->  int	xfs_attr_shortform_allfit(struct xfs_buf *bp, struct xfs_inode *dp);
->  int	xfs_attr_shortform_bytesfit(struct xfs_inode *dp, int bytes);
->  xfs_failaddr_t xfs_attr_shortform_verify(struct xfs_inode *ip);
-> -- 
-> 2.7.4
-> 
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
