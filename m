@@ -1,194 +1,61 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:49376 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726457AbfHLQCA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 12:02:00 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFxOrs122738
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:58 GMT
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2u9nbt8mnj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFx2MK046345
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:58 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2u9nre184y-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:57 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7CG1vmh006731
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:57 GMT
-Date: Mon, 12 Aug 2019 09:01:56 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 06/18] xfs: Factor out new helper functions
- xfs_attr_rmtval_set
-Message-ID: <20190812160156.GU7138@magnolia>
-References: <20190809213726.32336-1-allison.henderson@oracle.com>
- <20190809213726.32336-7-allison.henderson@oracle.com>
+Received: from ozlabs.org ([203.11.71.1]:32927 "EHLO ozlabs.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726200AbfHLVpL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 17:45:11 -0400
+Date: Tue, 13 Aug 2019 07:45:06 +1000
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: linux-next: Fixes tag needs some work in the xfs tree
+Message-ID: <20190813074506.3e2ee2c8@canb.auug.org.au>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190809213726.32336-7-allison.henderson@oracle.com>
+Content-Type: multipart/signed; boundary="Sig_/qZu7HnNcDMRIIYz=EyaSqZg";
+ protocol="application/pgp-signature"; micalg=pgp-sha256
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Collins <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>, David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org
+Cc: Linux Next Mailing List <linux-next@vger.kernel.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Tetsuo Handa <penguin-kernel@I-love.SAKURA.ne.jp>
 
-On Fri, Aug 09, 2019 at 02:37:14PM -0700, Allison Collins wrote:
-> Break xfs_attr_rmtval_set into two helper functions
-> xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
-> xfs_attr_rmtval_set rolls the transaction between the
-> helpers, but delayed operations cannot.  We will use
-> the helpers later when constructing new delayed
-> attribute routines.
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr_remote.c | 73 +++++++++++++++++++++++++++++++----------
->  fs/xfs/libxfs/xfs_attr_remote.h |  4 ++-
->  2 files changed, 58 insertions(+), 19 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-> index 4eb30d3..c421412 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.c
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
-> @@ -21,6 +21,7 @@
->  #include "xfs_attr.h"
->  #include "xfs_trace.h"
->  #include "xfs_error.h"
-> +#include "xfs_attr_remote.h"
->  
->  #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
->  
-> @@ -430,34 +431,18 @@ xfs_attr_rmtval_set(
->  	struct xfs_da_args	*args)
->  {
->  	struct xfs_inode	*dp = args->dp;
-> -	struct xfs_mount	*mp = dp->i_mount;
->  	struct xfs_bmbt_irec	map;
->  	xfs_dablk_t		lblkno;
->  	xfs_fileoff_t		lfileoff = 0;
-> -	uint8_t			*src = args->value;
->  	int			blkcnt;
-> -	int			valuelen;
->  	int			nmap;
->  	int			error;
-> -	int			offset = 0;
->  
-> -	trace_xfs_attr_rmtval_set(args);
-> -
-> -	/*
-> -	 * Find a "hole" in the attribute address space large enough for
-> -	 * us to drop the new attribute's value into. Because CRC enable
-> -	 * attributes have headers, we can't just do a straight byte to FSB
-> -	 * conversion and have to take the header space into account.
-> -	 */
-> -	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
-> -	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
-> -						   XFS_ATTR_FORK);
-> +	error = xfs_attr_rmt_find_hole(args, &blkcnt, &lfileoff);
->  	if (error)
->  		return error;
->  
-> -	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
-> -	args->rmtblkcnt = blkcnt;
-> -
-> +	lblkno = (xfs_dablk_t)lfileoff;
->  	/*
->  	 * Roll through the "value", allocating blocks on disk as required.
->  	 */
-> @@ -498,6 +483,58 @@ xfs_attr_rmtval_set(
->  			return error;
->  	}
->  
-> +	error = xfs_attr_rmtval_set_value(args);
-> +	return error;
-> +}
-> +
-> +
-> +
+--Sig_/qZu7HnNcDMRIIYz=EyaSqZg
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: quoted-printable
 
-Only need one blank line between functions.
+Hi all,
 
-> +int
-> +xfs_attr_rmt_find_hole(
-> +	struct xfs_da_args	*args,
-> +	int			*blkcnt,
-> +	xfs_fileoff_t		*lfileoff)
-> +{
-> +	struct xfs_inode        *dp = args->dp;
-> +	struct xfs_mount	*mp = dp->i_mount;
-> +	int			error;
-> +
-> +	trace_xfs_attr_rmtval_set(args);
+In commit
 
-Shouldn't this be in the xfs_attr_rmtval_set_value function?
-We're not actually setting anything here, we're just looking for holes.
+  294fc7a4c8ec ("fs: xfs: xfs_log: Don't use KM_MAYFAIL at xfs_log_reserve(=
+).")
 
-> +
-> +	/*
-> +	 * Find a "hole" in the attribute address space large enough for
-> +	 * us to drop the new attribute's value into. Because CRC enable
+Fixes tag
 
-This first sentence would make a lovely comment above this function
-telling us what it does.
+  Fixes: eb01c9cd87 ("[XFS] Remove the xlog_ticket allocator")
 
-> +	 * attributes have headers, we can't just do a straight byte to FSB
-> +	 * conversion and have to take the header space into account.
-> +	 */
-> +	*blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
+has these problem(s):
 
-Can the callers be refactored to use args->rmtblkcnt to eliminate the
-@blkcnt parameter?
+  - SHA1 should be at least 12 digits long
+    This can be fixed for the future by setting core.abbrev to 12 (or
+    more) or (for git v2.11 or later) just making sure it is not set
+    (or set to "auto").
 
---D
+--=20
+Cheers,
+Stephen Rothwell
 
-> +	error = xfs_bmap_first_unused(args->trans, args->dp, *blkcnt, lfileoff,
-> +						   XFS_ATTR_FORK);
-> +	if (error)
-> +		return error;
-> +
-> +	args->rmtblkno = (xfs_dablk_t)*lfileoff;
-> +	args->rmtblkcnt = *blkcnt;
-> +
-> +	return 0;
-> +}
-> +
-> +int
-> +xfs_attr_rmtval_set_value(
-> +	struct xfs_da_args	*args)
-> +{
-> +	struct xfs_inode	*dp = args->dp;
-> +	struct xfs_mount	*mp = dp->i_mount;
-> +	struct xfs_bmbt_irec	map;
-> +	xfs_dablk_t		lblkno;
-> +	uint8_t			*src = args->value;
-> +	int			blkcnt;
-> +	int			valuelen;
-> +	int			nmap;
-> +	int			error;
-> +	int			offset = 0;
-> +
-> +
->  	/*
->  	 * Roll through the "value", copying the attribute value to the
->  	 * already-allocated blocks.  Blocks are written synchronously
-> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
-> index 9d20b66..2a73cd9 100644
-> --- a/fs/xfs/libxfs/xfs_attr_remote.h
-> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
-> @@ -11,5 +11,7 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
->  int xfs_attr_rmtval_get(struct xfs_da_args *args);
->  int xfs_attr_rmtval_set(struct xfs_da_args *args);
->  int xfs_attr_rmtval_remove(struct xfs_da_args *args);
-> -
-> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
-> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args, int *blkcnt,
-> +			   xfs_fileoff_t *lfileoff);
->  #endif /* __XFS_ATTR_REMOTE_H__ */
-> -- 
-> 2.7.4
-> 
+--Sig_/qZu7HnNcDMRIIYz=EyaSqZg
+Content-Type: application/pgp-signature
+Content-Description: OpenPGP digital signature
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCAAdFiEENIC96giZ81tWdLgKAVBC80lX0GwFAl1R3eIACgkQAVBC80lX
+0GyQdggAiIZNkT1bXZlEiouHqcI/6K+Q5IiKQfem6//MqILuFjBaM62fwggQEtJ8
+fblLTbCyJUYMO1TBrSir0FDBUU5Gs+xGpMS+Xt+wnCZzBBru80135pr+gIL/izxt
+CtYYFR0fdUeG4soHg7gb0ZBSaYoSuMP12CD0IQjsQwQDaYL5aoWsFBBk1btUo89y
+aUuWAFyIWiYOdUow9vZ8jVrtW+K4YDE2ejP2QkGyE//nxES00E08AScWtWIgFwCA
+ZMWXRdgw9bd87XklAGOfyas86xVgVG6MJVrYiAdub+Xr0CJA7jUh8/vMH8TEWgrL
+xPmns2M3UtU5y4FeH14QOYVjNEs1cg==
+=VlG8
+-----END PGP SIGNATURE-----
+
+--Sig_/qZu7HnNcDMRIIYz=EyaSqZg--
