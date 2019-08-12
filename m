@@ -1,117 +1,194 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40436 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726565AbfHLVqB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 17:46:01 -0400
-Date: Tue, 13 Aug 2019 07:44:49 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
- reference to `xfs_ag_geom_health'
-Message-ID: <20190812214449.GC6129@dread.disaster.area>
-References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
- <20190811225307.GF7777@dread.disaster.area>
- <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
- <20190812002306.GH7777@dread.disaster.area>
- <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
- <20190812031123.GA6129@dread.disaster.area>
- <20190812043046.GB6129@dread.disaster.area>
- <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+Received: from userp2130.oracle.com ([156.151.31.86]:49376 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726457AbfHLQCA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 12:02:00 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFxOrs122738
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:58 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2u9nbt8mnj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFx2MK046345
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:58 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2u9nre184y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:57 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7CG1vmh006731
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:01:57 GMT
+Date: Mon, 12 Aug 2019 09:01:56 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 06/18] xfs: Factor out new helper functions
+ xfs_attr_rmtval_set
+Message-ID: <20190812160156.GU7138@magnolia>
+References: <20190809213726.32336-1-allison.henderson@oracle.com>
+ <20190809213726.32336-7-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+In-Reply-To: <20190809213726.32336-7-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Thomas Deutschmann <whissi@gentoo.org>
-Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Allison Collins <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Aug 12, 2019 at 12:57:32PM +0200, Thomas Deutschmann wrote:
-> Hi,
+On Fri, Aug 09, 2019 at 02:37:14PM -0700, Allison Collins wrote:
+> Break xfs_attr_rmtval_set into two helper functions
+> xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
+> xfs_attr_rmtval_set rolls the transaction between the
+> helpers, but delayed operations cannot.  We will use
+> the helpers later when constructing new delayed
+> attribute routines.
 > 
-> On 2019-08-12 06:30, Dave Chinner wrote:
-> >>> In a clear environment, do:
-> >>>
-> >>>> tar -xaf xfsprogs-5.2.0.tar.xz
-> >>>> cd xfsprogs-5.2.0
-> >>>> export CFLAGS="-O2 -pipe -march=ivybridge -mtune=ivybridge -mno-xsaveopt"
-> >>>> export LDFLAGS="-Wl,-O1 -Wl,--as-needed"
-> >>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >> Don't do this.
-> >>
-> >> "--as-needed" is the default linker behaviour since gcc 4.x. You do
-> >> not need this. As for passing "-O1" to the linker, that's not going
-> >> to do anything measurable for you. Use --enable-lto to turn on link
-> >> time optimisations if they are supported by the compiler.
-> > 
-> > Ok, I could reproduce your link time failure for a while with
-> > --enable-lto, but I ran 'make distclean' and the problem went away
-> > completely. And I can build with your options successfully, too:
-> > 
-> > $ make realclean
-> > $ make configure
-> > <builds new configure script>
-> > $ LDFLAGS="-Wl,-O1 -Wl,--as-needed" ./configure
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_remote.c | 73 +++++++++++++++++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_attr_remote.h |  4 ++-
+>  2 files changed, 58 insertions(+), 19 deletions(-)
 > 
-> That's not the correct way to reproduce. It's really important to
-> _export_ the variable to trigger the problem and _this_ is a problem in
-> xfsprogs' build system.
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index 4eb30d3..c421412 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+> @@ -21,6 +21,7 @@
+>  #include "xfs_attr.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_error.h"
+> +#include "xfs_attr_remote.h"
+>  
+>  #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
+>  
+> @@ -430,34 +431,18 @@ xfs_attr_rmtval_set(
+>  	struct xfs_da_args	*args)
+>  {
+>  	struct xfs_inode	*dp = args->dp;
+> -	struct xfs_mount	*mp = dp->i_mount;
+>  	struct xfs_bmbt_irec	map;
+>  	xfs_dablk_t		lblkno;
+>  	xfs_fileoff_t		lfileoff = 0;
+> -	uint8_t			*src = args->value;
+>  	int			blkcnt;
+> -	int			valuelen;
+>  	int			nmap;
+>  	int			error;
+> -	int			offset = 0;
+>  
+> -	trace_xfs_attr_rmtval_set(args);
+> -
+> -	/*
+> -	 * Find a "hole" in the attribute address space large enough for
+> -	 * us to drop the new attribute's value into. Because CRC enable
+> -	 * attributes have headers, we can't just do a straight byte to FSB
+> -	 * conversion and have to take the header space into account.
+> -	 */
+> -	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
+> -	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
+> -						   XFS_ATTR_FORK);
+> +	error = xfs_attr_rmt_find_hole(args, &blkcnt, &lfileoff);
+>  	if (error)
+>  		return error;
+>  
+> -	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
+> -	args->rmtblkcnt = blkcnt;
+> -
+> +	lblkno = (xfs_dablk_t)lfileoff;
+>  	/*
+>  	 * Roll through the "value", allocating blocks on disk as required.
+>  	 */
+> @@ -498,6 +483,58 @@ xfs_attr_rmtval_set(
+>  			return error;
+>  	}
+>  
+> +	error = xfs_attr_rmtval_set_value(args);
+> +	return error;
+> +}
+> +
+> +
+> +
 
-Which means you are overriding the LDFLAGS set by configure when
-you _run make_, not just telling configure to use those LDFLAGS.
+Only need one blank line between functions.
 
-That's why _make_ is getting screwed up - it is doing exactly what
-you are telling it to do, and that is to overrides every occurrence
-of LDFLAGS with your exported options rather than using the correct
-set configure calculated and specified.
+> +int
+> +xfs_attr_rmt_find_hole(
+> +	struct xfs_da_args	*args,
+> +	int			*blkcnt,
+> +	xfs_fileoff_t		*lfileoff)
+> +{
+> +	struct xfs_inode        *dp = args->dp;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	int			error;
+> +
+> +	trace_xfs_attr_rmtval_set(args);
 
-Exporting your CFLAGS and LDFLAGS is the wrong thing to doing
-- they should only ever be passed to the configure invocation and
-not remain to pollute the build environment after you've run
-configure.
+Shouldn't this be in the xfs_attr_rmtval_set_value function?
+We're not actually setting anything here, we're just looking for holes.
 
-> But keep in mind that 3x "-Wl,-O1 -Wl,--as-needed" don't cause a failure
-> without "--disable-static" for me... that's just the answer for your
-> question where this is coming from.
+> +
+> +	/*
+> +	 * Find a "hole" in the attribute address space large enough for
+> +	 * us to drop the new attribute's value into. Because CRC enable
 
-As I've already explained, --disable-static should never have worked
-in the first place, because the internal XFS libraries are
-statically linked and need to be build statically, which
---disable-static turns off. 
+This first sentence would make a lovely comment above this function
+telling us what it does.
 
-Indeed:
+> +	 * attributes have headers, we can't just do a straight byte to FSB
+> +	 * conversion and have to take the header space into account.
+> +	 */
+> +	*blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
 
-$ git reset --hard v5.1.0; make realclean; make configure ; ./configure --disable-static ; make -j 32
-......
-    [LD]     xfs_estimate
-    [LD]     xfs_mdrestore
-    [LD]     xfs_rtcp
-    [LD]     libhandle.la
-    [LD]     libxcmd.la
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_new_probe_from_filename'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_alignment_offset'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_get_topology'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_do_fullprobe'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_logical_sector_size'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_optimal_io_size'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_lookup_value'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_free_probe'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_physical_sector_size'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_enable_partitions'
-/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_minimum_io_size'
-$
+Can the callers be refactored to use args->rmtblkcnt to eliminate the
+@blkcnt parameter?
 
-Yup, --disable-static is broken in v5.1.0, too. I'm guessing it
-hasn't worked for a long time....
+--D
 
-So, please remove --disable-static from your build, and everything
-will be fine. I'll write up a patch to remove --disable-static from
-the configure script so this broken option can't be specified any
-more.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +	error = xfs_bmap_first_unused(args->trans, args->dp, *blkcnt, lfileoff,
+> +						   XFS_ATTR_FORK);
+> +	if (error)
+> +		return error;
+> +
+> +	args->rmtblkno = (xfs_dablk_t)*lfileoff;
+> +	args->rmtblkcnt = *blkcnt;
+> +
+> +	return 0;
+> +}
+> +
+> +int
+> +xfs_attr_rmtval_set_value(
+> +	struct xfs_da_args	*args)
+> +{
+> +	struct xfs_inode	*dp = args->dp;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_bmbt_irec	map;
+> +	xfs_dablk_t		lblkno;
+> +	uint8_t			*src = args->value;
+> +	int			blkcnt;
+> +	int			valuelen;
+> +	int			nmap;
+> +	int			error;
+> +	int			offset = 0;
+> +
+> +
+>  	/*
+>  	 * Roll through the "value", copying the attribute value to the
+>  	 * already-allocated blocks.  Blocks are written synchronously
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> index 9d20b66..2a73cd9 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> @@ -11,5 +11,7 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
+>  int xfs_attr_rmtval_get(struct xfs_da_args *args);
+>  int xfs_attr_rmtval_set(struct xfs_da_args *args);
+>  int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> -
+> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
+> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args, int *blkcnt,
+> +			   xfs_fileoff_t *lfileoff);
+>  #endif /* __XFS_ATTR_REMOTE_H__ */
+> -- 
+> 2.7.4
+> 
