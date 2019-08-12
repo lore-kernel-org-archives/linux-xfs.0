@@ -1,129 +1,116 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:56340 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726610AbfHLQG7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 12:06:59 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CG42uH127740
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:06:58 GMT
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2u9nbt8nqf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:06:57 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CG2fss189060
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:06:57 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2u9n9h1epb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:06:57 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7CG6uW7010182
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:06:56 GMT
-Date: Mon, 12 Aug 2019 09:06:55 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 08/18] xfs: Factor out xfs_attr_leaf_addname helper
-Message-ID: <20190812160655.GW7138@magnolia>
-References: <20190809213726.32336-1-allison.henderson@oracle.com>
- <20190809213726.32336-9-allison.henderson@oracle.com>
+Received: from smtp.gentoo.org ([140.211.166.183]:55180 "EHLO smtp.gentoo.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726236AbfHLWSP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 18:18:15 -0400
+Received: from [IPv6:2001:4dd6:f35f:0:149a:6c9b:d6bb:ae22] (2001-4dd6-f35f-0-149a-6c9b-d6bb-ae22.ipv6dyn.netcologne.de [IPv6:2001:4dd6:f35f:0:149a:6c9b:d6bb:ae22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: whissi)
+        by smtp.gentoo.org (Postfix) with ESMTPSA id EBF693499D3
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 22:18:12 +0000 (UTC)
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+ <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+ <20190812214449.GC6129@dread.disaster.area>
+From: Thomas Deutschmann <whissi@gentoo.org>
+Message-ID: <ddabd271-2820-85f3-4393-99deb5a0eaef@gentoo.org>
+Date: Tue, 13 Aug 2019 00:18:04 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190809213726.32336-9-allison.henderson@oracle.com>
+In-Reply-To: <20190812214449.GC6129@dread.disaster.area>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="UTZSbqglDWAnfBPMK4K99WazVQh27ucyD"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Collins <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Fri, Aug 09, 2019 at 02:37:16PM -0700, Allison Collins wrote:
-> Factor out new helper function xfs_attr_leaf_try_add.
-> Because new delayed attribute routines cannot roll
-> transactions, we carve off the parts of
-> xfs_attr_leaf_addname that we can use.  This will help
-> to reduce repetitive code later when we introduce
-> delayed attributes.
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
->  fs/xfs/libxfs/xfs_attr.c | 43 +++++++++++++++++++++++++++++--------------
->  1 file changed, 29 insertions(+), 14 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> index f36c792..f9d5e28 100644
-> --- a/fs/xfs/libxfs/xfs_attr.c
-> +++ b/fs/xfs/libxfs/xfs_attr.c
-> @@ -635,19 +635,12 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
->   * External routines when attribute list is one block
->   *========================================================================*/
->  
-> -/*
-> - * Add a name to the leaf attribute list structure
-> - *
-> - * This leaf block cannot have a "remote" value, we only call this routine
-> - * if bmap_one_block() says there is only one block (ie: no remote blks).
-> - */
->  STATIC int
-> -xfs_attr_leaf_addname(
-> -	struct xfs_da_args	*args)
-> +xfs_attr_leaf_try_add(
-> +	struct xfs_da_args	*args,
-> +	struct xfs_buf		*bp)
->  {
-> -	struct xfs_buf		*bp;
-> -	int			retval, error, forkoff;
-> -	struct xfs_inode	*dp = args->dp;
-> +	int			retval, error;
->  
->  	trace_xfs_attr_leaf_addname(args);
->  
-> @@ -692,13 +685,35 @@ xfs_attr_leaf_addname(
->  	retval = xfs_attr3_leaf_add(bp, args);
->  	if (retval == -ENOSPC) {
->  		/*
-> -		 * Promote the attribute list to the Btree format, then
-> -		 * Commit that transaction so that the node_addname() call
-> -		 * can manage its own transactions.
-> +		 * Promote the attribute list to the Btree format,
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--UTZSbqglDWAnfBPMK4K99WazVQh27ucyD
+Content-Type: multipart/mixed; boundary="PnNaWkmD9W2sV5kMZ4wMbuu8puE7b6vj9";
+ protected-headers="v1"
+From: Thomas Deutschmann <whissi@gentoo.org>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Message-ID: <ddabd271-2820-85f3-4393-99deb5a0eaef@gentoo.org>
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+ <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+ <20190812214449.GC6129@dread.disaster.area>
+In-Reply-To: <20190812214449.GC6129@dread.disaster.area>
 
-Why does the sentence end with a comma?
+--PnNaWkmD9W2sV5kMZ4wMbuu8puE7b6vj9
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
->  		 */
->  		error = xfs_attr3_leaf_to_node(args);
->  		if (error)
->  			return error;
-> +	}
-> +	return retval;
-> +}
-> +
-> +
-> +/*
-> + * Add a name to the leaf attribute list structure
-> + *
-> + * This leaf block cannot have a "remote" value, we only call this routine
-> + * if bmap_one_block() says there is only one block (ie: no remote blks).
-> + */
-> +STATIC int
-> +xfs_attr_leaf_addname(struct xfs_da_args	*args)
-> +{
-> +	int retval, error, forkoff;
+On 2019-08-12 23:44, Dave Chinner wrote:
+>> That's not the correct way to reproduce. It's really important to
+>> _export_ the variable to trigger the problem and _this_ is a problem i=
+n
+>> xfsprogs' build system.
+> Which means you are overriding the LDFLAGS set by configure when
+> you _run make_, not just telling configure to use those LDFLAGS.
+>=20
+> That's why _make_ is getting screwed up - it is doing exactly what
+> you are telling it to do, and that is to overrides every occurrence
+> of LDFLAGS with your exported options rather than using the correct
+> set configure calculated and specified.
+>=20
+> Exporting your CFLAGS and LDFLAGS is the wrong thing to doing
+> - they should only ever be passed to the configure invocation and
+> not remain to pollute the build environment after you've run
+> configure.
 
-Indentation problem here.
+I disagree with the conclusion. LDFLAGS in build environment shouldn't
+cause any problems, especially when you are using a build system:
 
---D
+Normally, configure will get the value and the Makefiles will use the
+value _from_ configure... but using configure _and_ reading _and adding_
+values from environment _in addition_ seems to be wrong.
 
-> +	struct xfs_buf		*bp = NULL;
-> +	struct xfs_inode	*dp = args->dp;
-> +
-> +	retval = xfs_attr_leaf_try_add(args, bp);
-> +	if (retval == -ENOSPC) {
-> +		/*
-> +		 * Commit that transaction so that the node_addname() call
-> +		 * can manage its own transactions.
-> +		 */
->  		error = xfs_defer_finish(&args->trans);
->  		if (error)
->  			return error;
-> -- 
-> 2.7.4
-> 
+So you either use a build system or you don't.
+
+
+--=20
+Regards,
+Thomas Deutschmann / Gentoo Linux Developer
+C4DD 695F A713 8F24 2AA1 5638 5849 7EE5 1D5D 74A5
+
+
+--PnNaWkmD9W2sV5kMZ4wMbuu8puE7b6vj9--
+
+--UTZSbqglDWAnfBPMK4K99WazVQh27ucyD
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQGTBAEBCgB9FiEEExKRzo+LDXJgXHuURObr3Jv2BVkFAl1R5ZxfFIAAAAAALgAo
+aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDEz
+MTI5MUNFOEY4QjBENzI2MDVDN0I5NDQ0RTZFQkRDOUJGNjA1NTkACgkQRObr3Jv2
+BVkfMQf/ZEYEMA5LNrFWEKVgQZranFfpot3FnxkghViJ4pafxFxtdWK5a/tcnlQZ
+YCSeuDsmvMphqi2BCFFUoPOCwGCSeIK6m6o+cjVGi9uoaOXmgNsaN1nEW2EeCvdh
+Ys0F9TOdSvWLpurdkosphVty3qmaaqRTI8CUJr/t/pQbp8xiUytrLPYs9HEUNk38
+d4CmeyO0WTZbGewEJGmk9u1p8ZtH/BHV6tk96WFgjrPDHr5krd6ZlxUdV20rjH+e
+SHKBTm7NrZoBuaO6jTz9yf5CuNN96A0nVJ92O5KaGKeDIgGXKf37cyz/nf6L/N5+
+9+i+3Bu6vqWDHigB4FQ4kmbgSJp6mw==
+=UsY9
+-----END PGP SIGNATURE-----
+
+--UTZSbqglDWAnfBPMK4K99WazVQh27ucyD--
