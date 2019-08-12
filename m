@@ -1,112 +1,167 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:54270 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728681AbfHMO2g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Aug 2019 10:28:36 -0400
-Date: Tue, 13 Aug 2019 07:28:01 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH 2/2] xfsprogs: Fix --disable-static option build
-Message-ID: <20190813142801.GP7138@magnolia>
-References: <20190813051421.21137-1-david@fromorbit.com>
- <20190813051421.21137-3-david@fromorbit.com>
+Received: from mail.kernel.org ([198.145.29.99]:53510 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726839AbfHLR5Q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 13:57:16 -0400
+From: Eric Biggers <ebiggers@kernel.org>
+Subject: [RFC PATCH 7/8] xfs_io/encrypt: add 'rm_enckey' command
+Date: Mon, 12 Aug 2019 10:56:33 -0700
+Message-Id: <20190812175635.34186-8-ebiggers@kernel.org>
+In-Reply-To: <20190812175635.34186-1-ebiggers@kernel.org>
+References: <20190812175635.34186-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190813051421.21137-3-david@fromorbit.com>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: linux-xfs@vger.kernel.org
+To: linux-xfs@vger.kernel.org
+Cc: fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 03:14:20PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> Internal xfsprogs libraries are linked statically to binaries as
-> they are not shipped libraries. Using --disable-static prevents the
-> internal static libraries from being built and this breaks dead code
-> elimination and results in linker failures from link dependencies
-> introduced by dead code.
-> 
-> We can't remove the --disable-static option that causes this as it
-> is part of the libtool/autoconf generated infrastructure. We can,
-> however, reliably detect whether static library building has been
-> disabled after the libtool infrastructure has been configured.
-> Therefore, add a check to determine the static build status and
-> abort the configure script with an error if we have been configured
-> not to build static libraries.
+From: Eric Biggers <ebiggers@google.com>
 
-Uh... is this missing from the patch?  I don't see anything that aborts
-configure.  Though I sense this might be your v2 solution that works
-around --disable-static via the ld command line and leaves configure
-alone...? :)
+Add a 'rm_enckey' command to xfs_io, to provide a command-line interface
+to the FS_IOC_REMOVE_ENCRYPTION_KEY and
+FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS ioctls.
 
---D
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ io/encrypt.c      | 75 +++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 | 15 ++++++++++
+ 2 files changed, 90 insertions(+)
 
-> This build command now succeeds:
-> 
-> $ make realclean; make configure; ./configure --disable-static ; make
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  libfrog/Makefile | 2 ++
->  libxcmd/Makefile | 2 ++
->  libxfs/Makefile  | 2 ++
->  libxlog/Makefile | 2 ++
->  4 files changed, 8 insertions(+)
-> 
-> diff --git a/libfrog/Makefile b/libfrog/Makefile
-> index f5a0539b3f03..4d79983eb910 100644
-> --- a/libfrog/Makefile
-> +++ b/libfrog/Makefile
-> @@ -9,6 +9,8 @@ LTLIBRARY = libfrog.la
->  LT_CURRENT = 0
->  LT_REVISION = 0
->  LT_AGE = 0
-> +# we need a static build even if --disable-static is specified
-> +LTLDFLAGS += -static
->  
->  CFILES = \
->  avl64.c \
-> diff --git a/libxcmd/Makefile b/libxcmd/Makefile
-> index 914bec024c46..f9bc1c5c483a 100644
-> --- a/libxcmd/Makefile
-> +++ b/libxcmd/Makefile
-> @@ -9,6 +9,8 @@ LTLIBRARY = libxcmd.la
->  LT_CURRENT = 0
->  LT_REVISION = 0
->  LT_AGE = 0
-> +# we need a static build even if --disable-static is specified
-> +LTLDFLAGS += -static
->  
->  CFILES = command.c input.c help.c quit.c
->  
-> diff --git a/libxfs/Makefile b/libxfs/Makefile
-> index 8c681e0b9083..d1688dc3853a 100644
-> --- a/libxfs/Makefile
-> +++ b/libxfs/Makefile
-> @@ -9,6 +9,8 @@ LTLIBRARY = libxfs.la
->  LT_CURRENT = 0
->  LT_REVISION = 0
->  LT_AGE = 0
-> +# we need a static build even if --disable-static is specified
-> +LTLDFLAGS += -static
->  
->  # headers to install in include/xfs
->  PKGHFILES = xfs_fs.h \
-> diff --git a/libxlog/Makefile b/libxlog/Makefile
-> index bdea6abacea4..b0f5ef154133 100644
-> --- a/libxlog/Makefile
-> +++ b/libxlog/Makefile
-> @@ -9,6 +9,8 @@ LTLIBRARY = libxlog.la
->  LT_CURRENT = 0
->  LT_REVISION = 0
->  LT_AGE = 0
-> +# we need a static build even if --disable-static is specified
-> +LTLDFLAGS += -static
->  
->  CFILES = xfs_log_recover.c util.c
->  
-> -- 
-> 2.23.0.rc1
-> 
+diff --git a/io/encrypt.c b/io/encrypt.c
+index 038c4cce..213c9c53 100644
+--- a/io/encrypt.c
++++ b/io/encrypt.c
+@@ -139,6 +139,7 @@ struct fscrypt_get_key_status_arg {
+ static cmdinfo_t get_encpolicy_cmd;
+ static cmdinfo_t set_encpolicy_cmd;
+ static cmdinfo_t add_enckey_cmd;
++static cmdinfo_t rm_enckey_cmd;
+ 
+ static void
+ get_encpolicy_help(void)
+@@ -200,6 +201,21 @@ add_enckey_help(void)
+ "\n"));
+ }
+ 
++static void
++rm_enckey_help(void)
++{
++	printf(_(
++"\n"
++" remove an encryption key from the filesystem\n"
++"\n"
++" Examples:\n"
++" 'rm_enckey 0000111122223333' - remove key for v1 policies w/ given descriptor\n"
++" 'rm_enckey 00001111222233334444555566667777' - remove key for v2 policies w/ given identifier\n"
++"\n"
++" -a -- remove key for all users who have added it (privileged operation)\n"
++"\n"));
++}
++
+ static const struct {
+ 	__u8 mode;
+ 	const char *name;
+@@ -693,6 +709,54 @@ out:
+ 	return 0;
+ }
+ 
++static int
++rm_enckey_f(int argc, char **argv)
++{
++	int c;
++	struct fscrypt_remove_key_arg arg;
++	int ioc = FS_IOC_REMOVE_ENCRYPTION_KEY;
++
++	memset(&arg, 0, sizeof(arg));
++
++	while ((c = getopt(argc, argv, "a")) != EOF) {
++		switch (c) {
++		case 'a':
++			ioc = FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS;
++			break;
++		default:
++			return command_usage(&rm_enckey_cmd);
++		}
++	}
++	argc -= optind;
++	argv += optind;
++
++	if (argc != 1)
++		return command_usage(&rm_enckey_cmd);
++
++	if (str2keyspec(argv[0], -1, &arg.key_spec) < 0)
++		return 0;
++
++	if (ioctl(file->fd, ioc, &arg) != 0) {
++		fprintf(stderr, "Error removing encryption key: %s\n",
++			strerror(errno));
++		exitcode = 1;
++		return 0;
++	}
++	if (arg.removal_status_flags &
++	    FSCRYPT_KEY_REMOVAL_STATUS_FLAG_OTHER_USERS) {
++		printf("Removed user's claim to encryption key with %s %s\n",
++		       keyspectype(&arg.key_spec), keyspec2str(&arg.key_spec));
++	} else if (arg.removal_status_flags &
++		   FSCRYPT_KEY_REMOVAL_STATUS_FLAG_FILES_BUSY) {
++		printf("Removed encryption key with %s %s, but files still busy\n",
++		       keyspectype(&arg.key_spec), keyspec2str(&arg.key_spec));
++	} else {
++		printf("Removed encryption key with %s %s\n",
++		       keyspectype(&arg.key_spec), keyspec2str(&arg.key_spec));
++	}
++	return 0;
++}
++
+ void
+ encrypt_init(void)
+ {
+@@ -726,7 +790,18 @@ encrypt_init(void)
+ 	add_enckey_cmd.oneline = _("add an encryption key to the filesystem");
+ 	add_enckey_cmd.help = add_enckey_help;
+ 
++	rm_enckey_cmd.name = "rm_enckey";
++	rm_enckey_cmd.cfunc = rm_enckey_f;
++	rm_enckey_cmd.args = _("keyspec");
++	rm_enckey_cmd.argmin = 0;
++	rm_enckey_cmd.argmax = -1;
++	rm_enckey_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	rm_enckey_cmd.oneline =
++		_("remove an encryption key from the filesystem");
++	rm_enckey_cmd.help = rm_enckey_help;
++
+ 	add_command(&get_encpolicy_cmd);
+ 	add_command(&set_encpolicy_cmd);
+ 	add_command(&add_enckey_cmd);
++	add_command(&rm_enckey_cmd);
+ }
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 7d6a23fe..a6894778 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -764,6 +764,21 @@ Otherwise, the key is added as a v2 policy key, and on success the resulting
+ .RE
+ .PD
+ .TP
++.BI "rm_enckey " keyspec
++On filesystems that support encryption, remove an encryption key from the
++filesystem containing the currently open file.
++.I keyspec
++is a hex string specifying the key to remove, as a 16-character "key descriptor"
++or a 32-character "key identifier".
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.BI \-a
++Remove the key for all users who have added it, not just the current user.  This
++is a privileged operation.
++.RE
++.PD
++.TP
+ .BR lsattr " [ " \-R " | " \-D " | " \-a " | " \-v " ]"
+ List extended inode flags on the currently open file. If the
+ .B \-R
+-- 
+2.23.0.rc1.153.gdeed80330f-goog
