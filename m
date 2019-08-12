@@ -1,53 +1,193 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:4930 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726809AbfHLVUU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 17:20:20 -0400
-Subject: Re: [RFC PATCH v2 15/19] mm/gup: Introduce vaddr_pin_pages()
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-16-ira.weiny@intel.com>
- <6ed26a08-4371-9dc1-09eb-7b8a4689d93b@nvidia.com>
- <20190812210013.GC20634@iweiny-DESK2.sc.intel.com>
-From: John Hubbard <jhubbard@nvidia.com>
-Message-ID: <b4e15390-701d-c6e9-564c-04e6a3effd50@nvidia.com>
-Date: Mon, 12 Aug 2019 14:20:14 -0700
+Received: from aserp2120.oracle.com ([141.146.126.78]:36508 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726818AbfHLPNV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 11:13:21 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CF8e1M101470
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:13:19 GMT
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2u9nvp0asj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:13:19 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CF8Txf017495
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:13:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2u9n9gyc9u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:13:18 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7CFDH0k026303
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:13:17 GMT
+Date: Mon, 12 Aug 2019 08:13:16 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 02/18] xfs: Replace attribute parameters with struct
+ xfs_name
+Message-ID: <20190812151316.GR7138@magnolia>
+References: <20190809213726.32336-1-allison.henderson@oracle.com>
+ <20190809213726.32336-3-allison.henderson@oracle.com>
 MIME-Version: 1.0
-In-Reply-To: <20190812210013.GC20634@iweiny-DESK2.sc.intel.com>
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809213726.32336-3-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ira Weiny <ira.weiny@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Allison Collins <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On 8/12/19 2:00 PM, Ira Weiny wrote:
-> On Fri, Aug 09, 2019 at 05:09:54PM -0700, John Hubbard wrote:
->> On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
->>> From: Ira Weiny <ira.weiny@intel.com>
-...
+On Fri, Aug 09, 2019 at 02:37:10PM -0700, Allison Collins wrote:
+> This patch replaces the attribute name, length and flags parameters with a
+> single struct xfs_name parameter.  This helps to clean up the numbers of
+> parameters being passed around and pre-simplifies the code some.
 > 
-> At one point I wanted to (and had in my tree) a new flag but I went away from
-> it.  Prior to the discussion on mlock last week I did not think we needed it.
-> But I'm ok to add it back in.
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 40 ++++++++++++++++------------------------
+>  fs/xfs/libxfs/xfs_attr.h | 12 +++++-------
+>  fs/xfs/xfs_acl.c         | 26 +++++++++++++-------------
+>  fs/xfs/xfs_ioctl.c       | 26 ++++++++++++++++----------
+>  fs/xfs/xfs_iops.c        | 10 ++++++----
+>  fs/xfs/xfs_xattr.c       | 21 +++++++++------------
+>  6 files changed, 65 insertions(+), 70 deletions(-)
 > 
-> I was not ignoring the idea for this RFC I just wanted to get this out there
-> for people to see.  I see that you threw out a couple of patches which add this
-> flag in.
-> 
-> FWIW, I think it would be good to differentiate between an indefinite pinned
-> page vs a referenced "gotten" page.
-> 
-> What you and I have been working on is the former.  So it would be easy to
-> change your refcounting patches to simply key off of FOLL_PIN.
-> 
-> Would you like me to add in your FOLL_PIN patches to this series?
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 7761925..0c91116 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -61,9 +61,7 @@ STATIC int
+>  xfs_attr_args_init(
+>  	struct xfs_da_args	*args,
+>  	struct xfs_inode	*dp,
+> -	const unsigned char	*name,
+> -	size_t			namelen,
+> -	int			flags)
+> +	struct xfs_name		*name)
+>  {
+>  
+>  	if (!name)
+> @@ -73,9 +71,9 @@ xfs_attr_args_init(
+>  	args->geo = dp->i_mount->m_attr_geo;
+>  	args->whichfork = XFS_ATTR_FORK;
+>  	args->dp = dp;
+> -	args->flags = flags;
+> -	args->name = name;
+> -	args->namelen = namelen;
+> +	args->flags = name->type;
+> +	args->name = name->name;
+> +	args->namelen = name->len;
 
-Sure, that would be perfect. They don't make any sense on their own, and
-it's all part of the same design idea.
+/me wonders if you ought to just have an xfs_name embedded in the
+xfs_da_args struct, seeing as the directory code uses it too.
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+>  	if (args->namelen >= MAXNAMELEN)
+>  		return -EFAULT;		/* match IRIX behaviour */
+>  
+
+<skipping a bunch of changes that look fine to me>
+
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index b1b7b1b..bdf925c 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -46,13 +46,15 @@ xfs_initxattrs(
+>  {
+>  	const struct xattr	*xattr;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+> +	struct xfs_name		name;
+>  	int			error = 0;
+>  
+>  	for (xattr = xattr_array; xattr->name != NULL; xattr++) {
+> -		error = xfs_attr_set(ip, xattr->name,
+> -				     strlen(xattr->name),
+> -				     xattr->value, xattr->value_len,
+> -				     ATTR_SECURE);
+> +		name.name = xattr->name;
+> +		name.len = strlen(xattr->name);
+> +		name.type = ATTR_SECURE;
+
+You might as well declare and initialize name in the loop body.
+
+> +		error = xfs_attr_set(ip, &name,
+> +				     xattr->value, xattr->value_len);
+
+Does the attr value need a similar structure encapsulation too?
+
+>  		if (error < 0)
+>  			break;
+>  	}
+> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
+> index fe12d11..3c63930 100644
+> --- a/fs/xfs/xfs_xattr.c
+> +++ b/fs/xfs/xfs_xattr.c
+> @@ -20,18 +20,17 @@ static int
+>  xfs_xattr_get(const struct xattr_handler *handler, struct dentry *unused,
+>  		struct inode *inode, const char *name, void *value, size_t size)
+>  {
+> -	int xflags = handler->flags;
+>  	struct xfs_inode *ip = XFS_I(inode);
+>  	int error, asize = size;
+> -	size_t namelen = strlen(name);
+> +	struct xfs_name xname = {name, strlen(name), handler->flags};
+
+I think the preferred format for this is to use the structure field
+names explicity during assignment...
+
+	struct xfs_name		xname = {
+		.name		= name,
+		.namelen	= strlen(name),
+		.type		= handler->flags,
+	};
+
+Also, please fix the variable/argument declaration indentation style of
+this function to match the rest of xfs. :)
+
+--D
+
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (!size) {
+> -		xflags |= ATTR_KERNOVAL;
+> +		xname.type |= ATTR_KERNOVAL;
+>  		value = NULL;
+>  	}
+>  
+> -	error = xfs_attr_get(ip, name, namelen, value, &asize, xflags);
+> +	error = xfs_attr_get(ip, &xname, value, &asize);
+>  	if (error)
+>  		return error;
+>  	return asize;
+> @@ -64,23 +63,21 @@ xfs_xattr_set(const struct xattr_handler *handler, struct dentry *unused,
+>  		struct inode *inode, const char *name, const void *value,
+>  		size_t size, int flags)
+>  {
+> -	int			xflags = handler->flags;
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			error;
+> -	size_t			namelen = strlen(name);
+> +	struct xfs_name		xname = {name, strlen(name), handler->flags};
+>  
+>  	/* Convert Linux syscall to XFS internal ATTR flags */
+>  	if (flags & XATTR_CREATE)
+> -		xflags |= ATTR_CREATE;
+> +		xname.type |= ATTR_CREATE;
+>  	if (flags & XATTR_REPLACE)
+> -		xflags |= ATTR_REPLACE;
+> +		xname.type |= ATTR_REPLACE;
+>  
+>  	if (!value)
+> -		return xfs_attr_remove(ip, name,
+> -				       namelen, xflags);
+> -	error = xfs_attr_set(ip, name, namelen, (void *)value, size, xflags);
+> +		return xfs_attr_remove(ip, &xname);
+> +	error = xfs_attr_set(ip, &xname, (void *)value, size);
+>  	if (!error)
+> -		xfs_forget_acl(inode, name, xflags);
+> +		xfs_forget_acl(inode, name, xname.type);
+>  
+>  	return error;
+>  }
+> -- 
+> 2.7.4
+> 
