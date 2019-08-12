@@ -1,111 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from aserp2120.oracle.com ([141.146.126.78]:52116 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbfHLQaL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 12:30:11 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CGSvWp177174
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:30:10 GMT
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2u9nvp0syh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:30:10 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CGT1Yu062296
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:30:09 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2u9k1vd1cn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:30:09 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7CGU85C023293
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 16:30:08 GMT
-Date: Mon, 12 Aug 2019 09:30:07 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v2 07/18] xfs: Factor up trans handling in
- xfs_attr3_leaf_flipflags
-Message-ID: <20190812163007.GC7138@magnolia>
-References: <20190809213726.32336-1-allison.henderson@oracle.com>
- <20190809213726.32336-8-allison.henderson@oracle.com>
- <20190812160252.GV7138@magnolia>
+Received: from smtp.gentoo.org ([140.211.166.183]:34112 "EHLO smtp.gentoo.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728140AbfHLK5p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 06:57:45 -0400
+Received: from [IPv6:2001:4dd6:f35f:0:149a:6c9b:d6bb:ae22] (2001-4dd6-f35f-0-149a-6c9b-d6bb-ae22.ipv6dyn.netcologne.de [IPv6:2001:4dd6:f35f:0:149a:6c9b:d6bb:ae22])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        (Authenticated sender: whissi)
+        by smtp.gentoo.org (Postfix) with ESMTPSA id 1658B349972
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 10:57:41 +0000 (UTC)
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+From: Thomas Deutschmann <whissi@gentoo.org>
+Message-ID: <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+Date: Mon, 12 Aug 2019 12:57:32 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190812160252.GV7138@magnolia>
+In-Reply-To: <20190812043046.GB6129@dread.disaster.area>
+Content-Type: multipart/signed; micalg=pgp-sha512;
+ protocol="application/pgp-signature";
+ boundary="Ev48FaiHfMOM8Ci7y760sesN7JvyGwroA"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Allison Collins <allison.henderson@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On Mon, Aug 12, 2019 at 09:02:52AM -0700, Darrick J. Wong wrote:
-> On Fri, Aug 09, 2019 at 02:37:15PM -0700, Allison Collins wrote:
-> > Since delayed operations cannot roll transactions, factor
-> > up the transaction handling into the calling function
-> > 
-> > Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> 
-> Looks ok,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--Ev48FaiHfMOM8Ci7y760sesN7JvyGwroA
+Content-Type: multipart/mixed; boundary="nFfiI8eyexJ6WE9akVGZkTVKWsDYNEzRl";
+ protected-headers="v1"
+From: Thomas Deutschmann <whissi@gentoo.org>
+To: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Message-ID: <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+In-Reply-To: <20190812043046.GB6129@dread.disaster.area>
 
-No, not ok!
+--nFfiI8eyexJ6WE9akVGZkTVKWsDYNEzRl
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> > ---
-> >  fs/xfs/libxfs/xfs_attr.c      | 10 ++++++++++
-> >  fs/xfs/libxfs/xfs_attr_leaf.c |  5 -----
-> >  2 files changed, 10 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-> > index 72af8e2..f36c792 100644
-> > --- a/fs/xfs/libxfs/xfs_attr.c
-> > +++ b/fs/xfs/libxfs/xfs_attr.c
-> > @@ -752,6 +752,11 @@ xfs_attr_leaf_addname(
-> >  		error = xfs_attr3_leaf_flipflags(args);
-> >  		if (error)
-> >  			return error;
-> > +		/*
-> > +		 * Commit the flag value change and start the next trans in
-> > +		 * series.
-> > +		 */
-> > +		error = xfs_trans_roll_inode(&args->trans, args->dp);
+Hi,
 
-Lost error value here!
+On 2019-08-12 06:30, Dave Chinner wrote:
+>>> In a clear environment, do:
+>>>
+>>>> tar -xaf xfsprogs-5.2.0.tar.xz
+>>>> cd xfsprogs-5.2.0
+>>>> export CFLAGS=3D"-O2 -pipe -march=3Divybridge -mtune=3Divybridge -mn=
+o-xsaveopt"
+>>>> export LDFLAGS=3D"-Wl,-O1 -Wl,--as-needed"
+>>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>> Don't do this.
+>>
+>> "--as-needed" is the default linker behaviour since gcc 4.x. You do
+>> not need this. As for passing "-O1" to the linker, that's not going
+>> to do anything measurable for you. Use --enable-lto to turn on link
+>> time optimisations if they are supported by the compiler.
+>=20
+> Ok, I could reproduce your link time failure for a while with
+> --enable-lto, but I ran 'make distclean' and the problem went away
+> completely. And I can build with your options successfully, too:
+>=20
+> $ make realclean
+> $ make configure
+> <builds new configure script>
+> $ LDFLAGS=3D"-Wl,-O1 -Wl,--as-needed" ./configure
 
-> >  
-> >  		/*
-> >  		 * Dismantle the "old" attribute/value pair by removing
-> > @@ -1090,6 +1095,11 @@ xfs_attr_node_addname(
-> >  		error = xfs_attr3_leaf_flipflags(args);
-> >  		if (error)
-> >  			goto out;
-> > +		/*
-> > +		 * Commit the flag value change and start the next trans in
-> > +		 * series
-> > +		 */
-> > +		error = xfs_trans_roll_inode(&args->trans, args->dp);
+That's not the correct way to reproduce. It's really important to
+_export_ the variable to trigger the problem and _this_ is a problem in
+xfsprogs' build system.
 
-And here!
+But keep in mind that 3x "-Wl,-O1 -Wl,--as-needed" don't cause a failure
+without "--disable-static" for me... that's just the answer for your
+question where this is coming from.
 
---D
 
-> >  
-> >  		/*
-> >  		 * Dismantle the "old" attribute/value pair by removing
-> > diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > index 8d2e11f..8a6f5df 100644
-> > --- a/fs/xfs/libxfs/xfs_attr_leaf.c
-> > +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
-> > @@ -2891,10 +2891,5 @@ xfs_attr3_leaf_flipflags(
-> >  			 XFS_DA_LOGRANGE(leaf2, name_rmt, sizeof(*name_rmt)));
-> >  	}
-> >  
-> > -	/*
-> > -	 * Commit the flag value change and start the next trans in series.
-> > -	 */
-> > -	error = xfs_trans_roll_inode(&args->trans, args->dp);
-> > -
-> >  	return error;
-> >  }
-> > -- 
-> > 2.7.4
-> > 
+--=20
+Regards,
+Thomas Deutschmann / Gentoo Linux Developer
+C4DD 695F A713 8F24 2AA1 5638 5849 7EE5 1D5D 74A5
+
+
+--nFfiI8eyexJ6WE9akVGZkTVKWsDYNEzRl--
+
+--Ev48FaiHfMOM8Ci7y760sesN7JvyGwroA
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQGTBAEBCgB9FiEEExKRzo+LDXJgXHuURObr3Jv2BVkFAl1RRhxfFIAAAAAALgAo
+aXNzdWVyLWZwckBub3RhdGlvbnMub3BlbnBncC5maWZ0aGhvcnNlbWFuLm5ldDEz
+MTI5MUNFOEY4QjBENzI2MDVDN0I5NDQ0RTZFQkRDOUJGNjA1NTkACgkQRObr3Jv2
+BVn3xgf+OevUJPOZ8/iEb4QyzdDr2dx/bwL/M7hP7oWadGGWj7QuPeYYL7XnszRc
+pphOURc8XoJ6gbzIaN6r9Z12j3XUgGXWM1xZssPBA77uAkXAp4HTlATxcnmSfCdt
+8a/2HgyKWduuGF6CAQ/PnLq/i4RR0U3zEUfiNhVVHZTthq1v+r2iR9ReDRYJ8s2T
+Tf84XjguS7M5qPgQPoviDLIh4tjEGD4SERefL/shls591cll+Vgmxkhr6bpsoRNv
++elcCccyISw9ivaqApiRv+4hKbPCpx6apuMjAo7gYTJNW+THv9GD4qZzjWmaGY2a
+Ga1QFPOC3oo7g2H4Zu9dUOHYjC9p3w==
+=CVkQ
+-----END PGP SIGNATURE-----
+
+--Ev48FaiHfMOM8Ci7y760sesN7JvyGwroA--
