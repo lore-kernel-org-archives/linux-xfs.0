@@ -1,206 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:17727 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725985AbfHJAGr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 9 Aug 2019 20:06:47 -0400
-Subject: Re: [RFC PATCH v2 09/19] mm/gup: Introduce vaddr_pin structure
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-10-ira.weiny@intel.com>
-From: John Hubbard <jhubbard@nvidia.com>
-Message-ID: <e92723cf-97a1-9860-9482-8466ff2feaa8@nvidia.com>
-Date: Fri, 9 Aug 2019 17:06:44 -0700
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:53364 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725730AbfHLAYR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 11 Aug 2019 20:24:17 -0400
+Date: Mon, 12 Aug 2019 10:23:06 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+Message-ID: <20190812002306.GH7777@dread.disaster.area>
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
 MIME-Version: 1.0
-In-Reply-To: <20190809225833.6657-10-ira.weiny@intel.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: ira.weiny@intel.com, Andrew Morton <akpm@linux-foundation.org>
-Cc: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Thomas Deutschmann <whissi@gentoo.org>
+Cc: "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
-> From: Ira Weiny <ira.weiny@intel.com>
+On Mon, Aug 12, 2019 at 01:30:46AM +0200, Thomas Deutschmann wrote:
+> On 2019-08-12 00:53, Dave Chinner wrote:
+> > How did you configure this build? Can you run a clean build without
+> > configuring in any of the whacky compiler super-optimisations that
+> > you have and see if that builds cleanly?
 > 
-> Some subsystems need to pass owning file information to GUP calls to
-> allow for GUP to associate the "owning file" to any files being pinned
-> within the GUP call.
+> Just add
 > 
-> Introduce an object to specify this information and pass it down through
-> some of the GUP call stack.
+>   --disable-static
+
+yes, ok, that produces a link time error, but...
 > 
-> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> ---
->  include/linux/mm.h |  9 +++++++++
->  mm/gup.c           | 36 ++++++++++++++++++++++--------------
->  2 files changed, 31 insertions(+), 14 deletions(-)
-> 
+> and you should be able to reproduce. This option will cause that 3x
+> "-Wl,-O1 -Wl,--as-needed  " will be passed to the linker.
 
-Looks good, although you may want to combine it with the next patch. 
-Otherwise it feels like a "to be continued" when you're reading them.
+it does not produce that whacky linker command line you are getting:
 
-Either way, though:
+    [LD]     xfs_copy
+/bin/bash ../libtool --quiet --tag=CC --mode=link gcc -o xfs_copy   -static-libtool-libs  xfs_copy.o   ../libxfs/libxfs.la ../libxlog/libxlog.la ../libfrog/libfrog.la -luuid -lpthread -lrt  
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_new_probe_from_filename'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_topology_get_alignment_offset'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_probe_get_topology'
+/usr/bin/ld: ../libfrog/.libs/libfrog.so: undefined reference to `blkid_do_fullprobe'
+/usr/bin/ld: ../libxfs/.libs/libxfs.so: undefined reference to `xfs_ag_geom_health'
+.....
 
-    Reviewed-by: John Hubbard <jhubbard@nvidia.com>
+In fact, the linker command is identical to the non-static build,
+which implies the ../libxfs/libxfs.la library definition points
+to something different:
+
+# The name that we can dlopen(3).
+dlname='libxfs.so.0'
+
+# Names of this library.
+library_names='libxfs.so.0.0.0 libxfs.so.0 libxfs.so'
+
+# The name of the static archive.
+old_library=
+
+.....
+
+And when static libraries are built:
+
+# The name that we can dlopen(3).
+dlname='libxfs.so.0'
+
+# Names of this library.
+library_names='libxfs.so.0.0.0 libxfs.so.0 libxfs.so'
+
+# The name of the static archive.
+old_library='libxfs.a'
+
+....
 
 
-thanks,
+Yeah, so there's teh difference - there should be no change to
+the linker command line from --disable-static.
+
+Really, I don't know why we support --disable-static at all.
+Internal XFS libraries have to be statically linked because they are
+not shipped as installed shared libraries. Hence not building the
+static version of the library is wrong, and the shared version is
+not used by anything. The default build dynamically links external
+libraries, so there is nothing to be gained from disabling internal
+static libraries.
+
+Indeed, that's why we have the -static-libtool-libs option on the
+linker command link, as commit ece49daeff1a ("xfsprogs: do not do
+any dynamic linking of libtool libraries") explains:
+
+    if --disable-static and --enable-shared are given on the command
+    line, the link with xfsprogs's internal libraries fail because
+    they have been dynamically compiled.
+    
+    Hence the following error:
+    ld: attempted static link of dynamic object `../libxcmd/.libs/libxcmd.so'
+    
+    xfsprogs rely on the original behaviour of -static which was modified in
+    Buildroot by [1].  But since commit [2] the build of xfsprogs tools is broken
+    because they try to link statically with the static libuuid library
+    (util-linux), which is not build for shared only build.
+    
+    The use of -static-libtool-libs allows to fallback to the dynamic linking for
+    libuuid only:
+    
+    LD_TRACE_LOADED_OBJECTS=1 xfs_copy
+            linux-gate.so.1 =>  (0xf7793000)
+            libuuid.so.1 => /lib/libuuid.so.1 (0x465e1000)
+            libpthread.so.0 => /lib/libpthread.so.0 (0x46db1000)
+            librt.so.1 => /lib/librt.so.1 (0x46f21000)
+            libc.so.6 => /lib/libc.so.6 (0x46bf1000)
+            /lib/ld-linux.so.2 (0x46bce000)
+
+So I'd be removing --disable-static from your build because it
+really isn't doing anything useful...
+
+That still doesn't explain where all the whacky gcc options are
+coming from - that's got to be something specific to your build or
+distro environment.
+
+Cheers,
+
+Dave.
 -- 
-John Hubbard
-NVIDIA
-
-> diff --git a/include/linux/mm.h b/include/linux/mm.h
-> index 04f22722b374..befe150d17be 100644
-> --- a/include/linux/mm.h
-> +++ b/include/linux/mm.h
-> @@ -971,6 +971,15 @@ static inline bool is_zone_device_page(const struct page *page)
->  }
->  #endif
->  
-> +/**
-> + * @f_owner The file who "owns this GUP"
-> + * @mm The mm who "owns this GUP"
-> + */
-> +struct vaddr_pin {
-> +	struct file *f_owner;
-> +	struct mm_struct *mm;
-> +};
-> +
->  #ifdef CONFIG_DEV_PAGEMAP_OPS
->  void __put_devmap_managed_page(struct page *page);
->  DECLARE_STATIC_KEY_FALSE(devmap_managed_key);
-> diff --git a/mm/gup.c b/mm/gup.c
-> index 0b05e22ac05f..7a449500f0a6 100644
-> --- a/mm/gup.c
-> +++ b/mm/gup.c
-> @@ -1005,7 +1005,8 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
->  						struct page **pages,
->  						struct vm_area_struct **vmas,
->  						int *locked,
-> -						unsigned int flags)
-> +						unsigned int flags,
-> +						struct vaddr_pin *vaddr_pin)
->  {
->  	long ret, pages_done;
->  	bool lock_dropped;
-> @@ -1165,7 +1166,8 @@ long get_user_pages_remote(struct task_struct *tsk, struct mm_struct *mm,
->  
->  	return __get_user_pages_locked(tsk, mm, start, nr_pages, pages, vmas,
->  				       locked,
-> -				       gup_flags | FOLL_TOUCH | FOLL_REMOTE);
-> +				       gup_flags | FOLL_TOUCH | FOLL_REMOTE,
-> +				       NULL);
->  }
->  EXPORT_SYMBOL(get_user_pages_remote);
->  
-> @@ -1320,7 +1322,8 @@ static long __get_user_pages_locked(struct task_struct *tsk,
->  		struct mm_struct *mm, unsigned long start,
->  		unsigned long nr_pages, struct page **pages,
->  		struct vm_area_struct **vmas, int *locked,
-> -		unsigned int foll_flags)
-> +		unsigned int foll_flags,
-> +		struct vaddr_pin *vaddr_pin)
->  {
->  	struct vm_area_struct *vma;
->  	unsigned long vm_flags;
-> @@ -1504,7 +1507,7 @@ static long check_and_migrate_cma_pages(struct task_struct *tsk,
->  		 */
->  		nr_pages = __get_user_pages_locked(tsk, mm, start, nr_pages,
->  						   pages, vmas, NULL,
-> -						   gup_flags);
-> +						   gup_flags, NULL);
->  
->  		if ((nr_pages > 0) && migrate_allow) {
->  			drain_allow = true;
-> @@ -1537,7 +1540,8 @@ static long __gup_longterm_locked(struct task_struct *tsk,
->  				  unsigned long nr_pages,
->  				  struct page **pages,
->  				  struct vm_area_struct **vmas,
-> -				  unsigned int gup_flags)
-> +				  unsigned int gup_flags,
-> +				  struct vaddr_pin *vaddr_pin)
->  {
->  	struct vm_area_struct **vmas_tmp = vmas;
->  	unsigned long flags = 0;
-> @@ -1558,7 +1562,7 @@ static long __gup_longterm_locked(struct task_struct *tsk,
->  	}
->  
->  	rc = __get_user_pages_locked(tsk, mm, start, nr_pages, pages,
-> -				     vmas_tmp, NULL, gup_flags);
-> +				     vmas_tmp, NULL, gup_flags, vaddr_pin);
->  
->  	if (gup_flags & FOLL_LONGTERM) {
->  		memalloc_nocma_restore(flags);
-> @@ -1588,10 +1592,11 @@ static __always_inline long __gup_longterm_locked(struct task_struct *tsk,
->  						  unsigned long nr_pages,
->  						  struct page **pages,
->  						  struct vm_area_struct **vmas,
-> -						  unsigned int flags)
-> +						  unsigned int flags,
-> +						  struct vaddr_pin *vaddr_pin)
->  {
->  	return __get_user_pages_locked(tsk, mm, start, nr_pages, pages, vmas,
-> -				       NULL, flags);
-> +				       NULL, flags, vaddr_pin);
->  }
->  #endif /* CONFIG_FS_DAX || CONFIG_CMA */
->  
-> @@ -1607,7 +1612,8 @@ long get_user_pages(unsigned long start, unsigned long nr_pages,
->  		struct vm_area_struct **vmas)
->  {
->  	return __gup_longterm_locked(current, current->mm, start, nr_pages,
-> -				     pages, vmas, gup_flags | FOLL_TOUCH);
-> +				     pages, vmas, gup_flags | FOLL_TOUCH,
-> +				     NULL);
->  }
->  EXPORT_SYMBOL(get_user_pages);
->  
-> @@ -1647,7 +1653,7 @@ long get_user_pages_locked(unsigned long start, unsigned long nr_pages,
->  
->  	return __get_user_pages_locked(current, current->mm, start, nr_pages,
->  				       pages, NULL, locked,
-> -				       gup_flags | FOLL_TOUCH);
-> +				       gup_flags | FOLL_TOUCH, NULL);
->  }
->  EXPORT_SYMBOL(get_user_pages_locked);
->  
-> @@ -1684,7 +1690,7 @@ long get_user_pages_unlocked(unsigned long start, unsigned long nr_pages,
->  
->  	down_read(&mm->mmap_sem);
->  	ret = __get_user_pages_locked(current, mm, start, nr_pages, pages, NULL,
-> -				      &locked, gup_flags | FOLL_TOUCH);
-> +				      &locked, gup_flags | FOLL_TOUCH, NULL);
->  	if (locked)
->  		up_read(&mm->mmap_sem);
->  	return ret;
-> @@ -2377,7 +2383,8 @@ int __get_user_pages_fast(unsigned long start, int nr_pages, int write,
->  EXPORT_SYMBOL_GPL(__get_user_pages_fast);
->  
->  static int __gup_longterm_unlocked(unsigned long start, int nr_pages,
-> -				   unsigned int gup_flags, struct page **pages)
-> +				   unsigned int gup_flags, struct page **pages,
-> +				   struct vaddr_pin *vaddr_pin)
->  {
->  	int ret;
->  
-> @@ -2389,7 +2396,8 @@ static int __gup_longterm_unlocked(unsigned long start, int nr_pages,
->  		down_read(&current->mm->mmap_sem);
->  		ret = __gup_longterm_locked(current, current->mm,
->  					    start, nr_pages,
-> -					    pages, NULL, gup_flags);
-> +					    pages, NULL, gup_flags,
-> +					    vaddr_pin);
->  		up_read(&current->mm->mmap_sem);
->  	} else {
->  		ret = get_user_pages_unlocked(start, nr_pages,
-> @@ -2448,7 +2456,7 @@ int get_user_pages_fast(unsigned long start, int nr_pages,
->  		pages += nr;
->  
->  		ret = __gup_longterm_unlocked(start, nr_pages - nr,
-> -					      gup_flags, pages);
-> +					      gup_flags, pages, NULL);
->  
->  		/* Have to be a bit careful with return values */
->  		if (nr > 0) {
-> 
+Dave Chinner
+david@fromorbit.com
