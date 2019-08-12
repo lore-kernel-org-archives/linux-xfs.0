@@ -1,277 +1,129 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53492 "EHLO mail.kernel.org"
+Received: from sandeen.net ([63.231.237.45]:42770 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726811AbfHLR5P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Aug 2019 13:57:15 -0400
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: [RFC PATCH 4/8] xfs_io/encrypt: extend 'get_encpolicy' to support v2 policies
-Date: Mon, 12 Aug 2019 10:56:30 -0700
-Message-Id: <20190812175635.34186-5-ebiggers@kernel.org>
-In-Reply-To: <20190812175635.34186-1-ebiggers@kernel.org>
-References: <20190812175635.34186-1-ebiggers@kernel.org>
+        id S1725822AbfHLQfA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 12:35:00 -0400
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+ <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+From: Eric Sandeen <sandeen@sandeen.net>
+Message-ID: <5aff83b5-2ff3-4c2c-e0ef-c04bc506fe4f@sandeen.net>
+Date: Mon, 12 Aug 2019 11:34:56 -0500
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="pisG2onWkJFSznO9hIZiEMsNQHioRVFCH"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
+To: Thomas Deutschmann <whissi@gentoo.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
 
-From: Eric Biggers <ebiggers@google.com>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--pisG2onWkJFSznO9hIZiEMsNQHioRVFCH
+Content-Type: multipart/mixed; boundary="pvSy01QCrO70y4in7HudnJ6LFvlFw2ebk";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: Thomas Deutschmann <whissi@gentoo.org>,
+ "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+Message-ID: <5aff83b5-2ff3-4c2c-e0ef-c04bc506fe4f@sandeen.net>
+Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
+ reference to `xfs_ag_geom_health'
+References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
+ <20190811225307.GF7777@dread.disaster.area>
+ <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
+ <20190812002306.GH7777@dread.disaster.area>
+ <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
+ <20190812031123.GA6129@dread.disaster.area>
+ <20190812043046.GB6129@dread.disaster.area>
+ <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
+In-Reply-To: <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
 
-get_encpolicy uses the FS_IOC_GET_ENCRYPTION_POLICY ioctl to retrieve
-the file's encryption policy, then displays it.  But that only works for
-v1 encryption policies.  A new ioctl, FS_IOC_GET_ENCRYPTION_POLICY_EX,
-has been introduced which is more flexible and can retrieve both v1 and
-v2 encryption policies.
+--pvSy01QCrO70y4in7HudnJ6LFvlFw2ebk
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-Make get_encpolicy use the new ioctl if the kernel supports it and
-display the resulting the v1 or v2 encryption policy.  Otherwise, fall
-back to the old ioctl and display the v1 policy.
 
-Also add new options:
 
-  -1: Use the old ioctl only.  This will be used to test the old ioctl
-      even when the kernel supports the new one.
+On 8/12/19 5:57 AM, Thomas Deutschmann wrote:
+> Hi,
+>=20
+> On 2019-08-12 06:30, Dave Chinner wrote:
+>>>> In a clear environment, do:
+>>>>
+>>>>> tar -xaf xfsprogs-5.2.0.tar.xz
+>>>>> cd xfsprogs-5.2.0
+>>>>> export CFLAGS=3D"-O2 -pipe -march=3Divybridge -mtune=3Divybridge -m=
+no-xsaveopt"
+>>>>> export LDFLAGS=3D"-Wl,-O1 -Wl,--as-needed"
+>>>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>>> Don't do this.
+>>>
+>>> "--as-needed" is the default linker behaviour since gcc 4.x. You do
+>>> not need this. As for passing "-O1" to the linker, that's not going
+>>> to do anything measurable for you. Use --enable-lto to turn on link
+>>> time optimisations if they are supported by the compiler.
+>>
+>> Ok, I could reproduce your link time failure for a while with
+>> --enable-lto, but I ran 'make distclean' and the problem went away
+>> completely. And I can build with your options successfully, too:
+>>
+>> $ make realclean
+>> $ make configure
+>> <builds new configure script>
+>> $ LDFLAGS=3D"-Wl,-O1 -Wl,--as-needed" ./configure
+>=20
+> That's not the correct way to reproduce. It's really important to
+> _export_ the variable to trigger the problem and _this_ is a problem in=
 
-  -t: Test whether the new ioctl is supported.  This will be useful to
-      determine whether v2 policies should be tested or not.
+> xfsprogs' build system.
+>=20
+> But keep in mind that 3x "-Wl,-O1 -Wl,--as-needed" don't cause a failur=
+e
+> without "--disable-static" for me... that's just the answer for your
+> question where this is coming from.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- io/encrypt.c      | 150 +++++++++++++++++++++++++++++++++++++++++-----
- man/man8/xfs_io.8 |  15 ++++-
- 2 files changed, 147 insertions(+), 18 deletions(-)
+My takeaway here is that I should probably stub out some things to make
+this issue go away altogether, but that it can also be remedied by adjust=
+ing
+compiler/linker flags.  Correct?  I'm not sure if this warrants a 5.2.1 r=
+elease.
 
-diff --git a/io/encrypt.c b/io/encrypt.c
-index 11eb4a3e..5b92cfae 100644
---- a/io/encrypt.c
-+++ b/io/encrypt.c
-@@ -1,6 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0
- /*
-- * Copyright (c) 2016 Google, Inc.  All Rights Reserved.
-+ * Copyright 2016, 2019 Google LLC
-  * Author: Eric Biggers <ebiggers@google.com>
-  */
- 
-@@ -139,6 +139,20 @@ struct fscrypt_get_key_status_arg {
- static cmdinfo_t get_encpolicy_cmd;
- static cmdinfo_t set_encpolicy_cmd;
- 
-+static void
-+get_encpolicy_help(void)
-+{
-+	printf(_(
-+"\n"
-+" display the encryption policy of the current file\n"
-+"\n"
-+" -1 -- Use only the old ioctl to get the encryption policy.\n"
-+"       This only works if the file has a v1 encryption policy.\n"
-+" -t -- Test whether v2 encryption policies are supported.\n"
-+"       Prints \"supported\", \"unsupported\", or an error message.\n"
-+"\n"));
-+}
-+
- static void
- set_encpolicy_help(void)
- {
-@@ -218,7 +232,7 @@ mode2str(__u8 mode)
- }
- 
- static const char *
--keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
-+keydesc2str(const __u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
- {
- 	static char buf[2 * FSCRYPT_KEY_DESCRIPTOR_SIZE + 1];
- 	int i;
-@@ -229,29 +243,131 @@ keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
- 	return buf;
- }
- 
-+static const char *
-+keyid2str(const __u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE])
-+{
-+	static char buf[2 * FSCRYPT_KEY_IDENTIFIER_SIZE + 1];
-+	int i;
-+
-+	for (i = 0; i < FSCRYPT_KEY_IDENTIFIER_SIZE; i++)
-+		sprintf(&buf[2 * i], "%02x", master_key_identifier[i]);
-+
-+	return buf;
-+}
-+
-+static void
-+test_for_v2_policy_support(void)
-+{
-+	struct fscrypt_get_policy_ex_arg arg;
-+
-+	arg.policy_size = sizeof(arg.policy);
-+
-+	if (ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY_EX, &arg) == 0 ||
-+	    errno == ENODATA /* file unencrypted */) {
-+		printf("supported\n");
-+		return;
-+	}
-+	if (errno == ENOTTY) {
-+		printf("unsupported\n");
-+		return;
-+	}
-+	fprintf(stderr,
-+		"%s: unexpected error checking for FS_IOC_GET_ENCRYPTION_POLICY_EX support: %s\n",
-+		file->name, strerror(errno));
-+	exitcode = 1;
-+}
-+
-+static void
-+show_v1_encryption_policy(const struct fscrypt_policy_v1 *policy)
-+{
-+	printf("Encryption policy for %s:\n", file->name);
-+	printf("\tPolicy version: %u\n", policy->version);
-+	printf("\tMaster key descriptor: %s\n",
-+	       keydesc2str(policy->master_key_descriptor));
-+	printf("\tContents encryption mode: %u (%s)\n",
-+	       policy->contents_encryption_mode,
-+	       mode2str(policy->contents_encryption_mode));
-+	printf("\tFilenames encryption mode: %u (%s)\n",
-+	       policy->filenames_encryption_mode,
-+	       mode2str(policy->filenames_encryption_mode));
-+	printf("\tFlags: 0x%02x\n", policy->flags);
-+}
-+
-+static void
-+show_v2_encryption_policy(const struct fscrypt_policy_v2 *policy)
-+{
-+	printf("Encryption policy for %s:\n", file->name);
-+	printf("\tPolicy version: %u\n", policy->version);
-+	printf("\tMaster key identifier: %s\n",
-+	       keyid2str(policy->master_key_identifier));
-+	printf("\tContents encryption mode: %u (%s)\n",
-+	       policy->contents_encryption_mode,
-+	       mode2str(policy->contents_encryption_mode));
-+	printf("\tFilenames encryption mode: %u (%s)\n",
-+	       policy->filenames_encryption_mode,
-+	       mode2str(policy->filenames_encryption_mode));
-+	printf("\tFlags: 0x%02x\n", policy->flags);
-+}
-+
- static int
- get_encpolicy_f(int argc, char **argv)
- {
--	struct fscrypt_policy policy;
-+	int c;
-+	struct fscrypt_get_policy_ex_arg arg;
-+	bool only_use_v1_ioctl = false;
-+	int res;
- 
--	if (ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY, &policy) < 0) {
-+	while ((c = getopt(argc, argv, "1t")) != EOF) {
-+		switch (c) {
-+		case '1':
-+			only_use_v1_ioctl = true;
-+			break;
-+		case 't':
-+			test_for_v2_policy_support();
-+			return 0;
-+		default:
-+			return command_usage(&get_encpolicy_cmd);
-+		}
-+	}
-+	argc -= optind;
-+	argv += optind;
-+
-+	if (argc != 0)
-+		return command_usage(&get_encpolicy_cmd);
-+
-+	/* first try the new ioctl */
-+	if (only_use_v1_ioctl) {
-+		res = -1;
-+		errno = ENOTTY;
-+	} else {
-+		arg.policy_size = sizeof(arg.policy);
-+		res = ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY_EX, &arg);
-+	}
-+
-+	/* fall back to the old ioctl */
-+	if (res != 0 && errno == ENOTTY)
-+		res = ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY,
-+			    &arg.policy.v1);
-+
-+	if (res != 0) {
- 		fprintf(stderr, "%s: failed to get encryption policy: %s\n",
- 			file->name, strerror(errno));
- 		exitcode = 1;
- 		return 0;
- 	}
- 
--	printf("Encryption policy for %s:\n", file->name);
--	printf("\tPolicy version: %u\n", policy.version);
--	printf("\tMaster key descriptor: %s\n",
--	       keydesc2str(policy.master_key_descriptor));
--	printf("\tContents encryption mode: %u (%s)\n",
--	       policy.contents_encryption_mode,
--	       mode2str(policy.contents_encryption_mode));
--	printf("\tFilenames encryption mode: %u (%s)\n",
--	       policy.filenames_encryption_mode,
--	       mode2str(policy.filenames_encryption_mode));
--	printf("\tFlags: 0x%02x\n", policy.flags);
-+	switch (arg.policy.version) {
-+	case FSCRYPT_POLICY_V1:
-+		show_v1_encryption_policy(&arg.policy.v1);
-+		break;
-+	case FSCRYPT_POLICY_V2:
-+		show_v2_encryption_policy(&arg.policy.v2);
-+		break;
-+	default:
-+		printf("Encryption policy for %s:\n", file->name);
-+		printf("\tPolicy version: %u (unknown)\n", arg.policy.version);
-+		break;
-+	}
- 	return 0;
- }
- 
-@@ -351,11 +467,13 @@ encrypt_init(void)
- {
- 	get_encpolicy_cmd.name = "get_encpolicy";
- 	get_encpolicy_cmd.cfunc = get_encpolicy_f;
-+	get_encpolicy_cmd.args = _("[-1] [-t]");
- 	get_encpolicy_cmd.argmin = 0;
--	get_encpolicy_cmd.argmax = 0;
-+	get_encpolicy_cmd.argmax = -1;
- 	get_encpolicy_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
- 	get_encpolicy_cmd.oneline =
- 		_("display the encryption policy of the current file");
-+	get_encpolicy_cmd.help = get_encpolicy_help;
- 
- 	set_encpolicy_cmd.name = "set_encpolicy";
- 	set_encpolicy_cmd.cfunc = set_encpolicy_f;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 6e064bdd..3dd34a0c 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -724,10 +724,21 @@ version of policy structure (numeric)
- .RE
- .PD
- .TP
--.BR get_encpolicy
-+.BI "get_encpolicy [ \-1 ] [ \-t ]"
- On filesystems that support encryption, display the encryption policy of the
- current file.
--
-+.RS 1.0i
-+.PD 0
-+.TP 0.4i
-+.BI \-1
-+Use only the old ioctl to get the encryption policy.  This only works if the
-+file has a v1 encryption policy.
-+.TP
-+.BI \-t
-+Test whether v2 encryption policies are supported.  Prints "supported",
-+"unsupported", or an error message.
-+.RE
-+.PD
- .TP
- .BR lsattr " [ " \-R " | " \-D " | " \-a " | " \-v " ]"
- List extended inode flags on the currently open file. If the
--- 
-2.23.0.rc1.153.gdeed80330f-goog
+Thanks,
+-Eric
+
+
+--pvSy01QCrO70y4in7HudnJ6LFvlFw2ebk--
+
+--pisG2onWkJFSznO9hIZiEMsNQHioRVFCH
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIyBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl1RlTAACgkQIK4WkuE9
+3uDRqw/2JkVJuPr3AymxYLg3I/Jqkni/HQpxiaCwdSkRZIkws28EmADzyAn1Gf5B
+/Bo+OHIXnHKKfc/C2PvL7wd7jzy7mSOWRmsftnVWx/4DIVsX2eICpqo3DJdhjBa/
+Tf7/bzvhF+CJ0uuqWzm0FPmFoSOFNhohWWO+hqPCjHRGIRwJFGqOFMeg8Nt/8zTh
+MF8kFLymMQEnTJreWgZ31Id2pZr+PzMPl53Djj9faDKn6g3fCdIGgERBJSIgdjwf
+OaQ5X4gmusuv3U6IpkOgAz/tm+KwXmdA3OSCp8LwUVb/06xa/pQKKlgRczCkSTuy
+yUFMS2uswsgPkkr4qqUz3NTgqghY8R4Yc16v/A7TLaJ0BfLY8Ti5/X6J8+Vdt60J
+GTlLa42i3z350kriNX0/BSMVbsZS2xF4UlMxWZSVCfIJWWM4nfLvF603UJWqjGbx
+ljVDNhGYoWAj1LRKwpZXcPh8SRy/jS5A08/HsAnnDUiEfSGhBNkgMwcXIzxmZU65
+yLCMiS3Vr096L+z8T0oFE4+ZWyaGCpluh6R2kLAD1axTiMI6BR7dxk/tF5lt82NJ
+gUy3M3pYb6wUUILH9qbHNbKCmELVdJULb5mFhb3/3G7KwamJ4JyflE65dA6/kua1
+75glPdIrpWh43Xk6UaBvh2JInYIGmEyO4yY9MzG7stEN4wFUXw==
+=RUc+
+-----END PGP SIGNATURE-----
+
+--pisG2onWkJFSznO9hIZiEMsNQHioRVFCH--
