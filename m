@@ -1,43 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from www262.sakura.ne.jp ([202.181.97.72]:62845 "EHLO
-        www262.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727691AbfHLK5o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 06:57:44 -0400
-Subject: Re: [PATCH] fs: xfs: xfs_log: Don't use KM_MAYFAIL at
- xfs_log_reserve().
-References: <20190729215657.GI7777@dread.disaster.area>
- <1564653995-9004-1-git-send-email-penguin-kernel@I-love.SAKURA.ne.jp>
- <20190801185057.GT30113@42.do-not-panic.com> <20190801204614.GD7138@magnolia>
- <20190802222158.GU30113@42.do-not-panic.com>
-From: Tetsuo Handa <penguin-kernel@i-love.sakura.ne.jp>
-Message-ID: <126f1f28-de58-815c-bd37-424a06216884@i-love.sakura.ne.jp>
-Date: Mon, 12 Aug 2019 19:57:27 +0900
+Received: from mga06.intel.com ([134.134.136.31]:44879 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726663AbfHLVQE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 17:16:04 -0400
+Date: Mon, 12 Aug 2019 14:15:37 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [RFC PATCH v2 16/19] RDMA/uverbs: Add back pointer to system
+ file object
+Message-ID: <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-17-ira.weiny@intel.com>
+ <20190812130039.GD24457@ziepe.ca>
+ <20190812172826.GA19746@iweiny-DESK2.sc.intel.com>
+ <20190812175615.GI24457@ziepe.ca>
 MIME-Version: 1.0
-In-Reply-To: <20190802222158.GU30113@42.do-not-panic.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190812175615.GI24457@ziepe.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Luis Chamberlain <mcgrof@kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>, Brian Foster <bfoster@redhat.com>
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On 2019/08/03 7:21, Luis Chamberlain wrote:
->> I'm pretty sure this didn't solve the underlying stale data exposure
->> problem, which might be why you think this is "opaque".  It fixes a bug
->> that causes data writeback failure (which was the exposure vector this
->> time) but I think the ultimate fix for the exposure problem are the two
->> patches I linked to quite a ways back in this discussion....
->>
->> --D
->>
->> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?id=bd012b434a56d9fac3cbc33062b8e2cd6e1ad0a0
->> https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/commit/?id=adcf7c0c87191fd3616813c8ce9790f89a9a8eba
+On Mon, Aug 12, 2019 at 02:56:15PM -0300, Jason Gunthorpe wrote:
+> On Mon, Aug 12, 2019 at 10:28:27AM -0700, Ira Weiny wrote:
+> > On Mon, Aug 12, 2019 at 10:00:40AM -0300, Jason Gunthorpe wrote:
+> > > On Fri, Aug 09, 2019 at 03:58:30PM -0700, ira.weiny@intel.com wrote:
+> > > > From: Ira Weiny <ira.weiny@intel.com>
+> > > > 
+> > > > In order for MRs to be tracked against the open verbs context the ufile
+> > > > needs to have a pointer to hand to the GUP code.
+> > > > 
+> > > > No references need to be taken as this should be valid for the lifetime
+> > > > of the context.
+> > > > 
+> > > > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > > >  drivers/infiniband/core/uverbs.h      | 1 +
+> > > >  drivers/infiniband/core/uverbs_main.c | 1 +
+> > > >  2 files changed, 2 insertions(+)
+> > > > 
+> > > > diff --git a/drivers/infiniband/core/uverbs.h b/drivers/infiniband/core/uverbs.h
+> > > > index 1e5aeb39f774..e802ba8c67d6 100644
+> > > > +++ b/drivers/infiniband/core/uverbs.h
+> > > > @@ -163,6 +163,7 @@ struct ib_uverbs_file {
+> > > >  	struct page *disassociate_page;
+> > > >  
+> > > >  	struct xarray		idr;
+> > > > +	struct file             *sys_file; /* backpointer to system file object */
+> > > >  };
+> > > 
+> > > The 'struct file' has a lifetime strictly shorter than the
+> > > ib_uverbs_file, which is kref'd on its own lifetime. Having a back
+> > > pointer like this is confouding as it will be invalid for some of the
+> > > lifetime of the struct.
+> > 
+> > Ah...  ok.  I really thought it was the other way around.
+> > 
+> > __fput() should not call ib_uverbs_close() until the last reference on struct
+> > file is released...  What holds references to struct ib_uverbs_file past that?
 > 
-> Got it, thanks! Even with this, I still think the current commit could
-> say a bit a more about the effects of not having this patch applied.
-> What are the effects of say having the above two patches applied but not
-> the one being submitted now?
+> Child fds hold onto the internal ib_uverbs_file until they are closed
 
-Is this patch going to be applied as-is? Or, someone have a plan to rewrite the changelog?
+The FDs hold the struct file, don't they?
+
+> 
+> > Perhaps I need to add this (untested)?
+> > 
+> > diff --git a/drivers/infiniband/core/uverbs_main.c
+> > b/drivers/infiniband/core/uverbs_main.c
+> > index f628f9e4c09f..654e774d9cf2 100644
+> > +++ b/drivers/infiniband/core/uverbs_main.c
+> > @@ -1125,6 +1125,8 @@ static int ib_uverbs_close(struct inode *inode, struct file *filp)
+> >         list_del_init(&file->list);
+> >         mutex_unlock(&file->device->lists_mutex);
+> >  
+> > +       file->sys_file = NULL;
+> 
+> Now this has unlocked updates to that data.. you'd need some lock and
+> get not zero pattern
+
+You can't call "get" here because I'm 99% sure we only get here when struct
+file has no references left...  I could be wrong.  It took me a while to work
+through the reference counting so I could have missed something.
+
+Ira
