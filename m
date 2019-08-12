@@ -1,209 +1,104 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2120.oracle.com ([156.151.31.85]:43530 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726681AbfHLT3V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 15:29:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CJE8lk113015
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 19:29:20 GMT
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2u9pjq9n5b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 19:29:19 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CJDEJS092612
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 19:29:19 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2u9m0agktq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 19:29:18 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7CJTHuS030111
-        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 19:29:18 GMT
-From: Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH v2 06/18] xfs: Factor out new helper functions
- xfs_attr_rmtval_set
-References: <20190809213726.32336-1-allison.henderson@oracle.com>
- <20190809213726.32336-7-allison.henderson@oracle.com>
- <20190812160156.GU7138@magnolia>
-Message-ID: <7959fdf2-f927-bb19-533f-fe9e98926959@oracle.com>
-Date: Mon, 12 Aug 2019 12:29:16 -0700
+Received: from mga11.intel.com ([192.55.52.93]:63746 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727224AbfHLVBT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 17:01:19 -0400
+Date: Mon, 12 Aug 2019 14:01:17 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [RFC PATCH v2 15/19] mm/gup: Introduce vaddr_pin_pages()
+Message-ID: <20190812210116.GD20634@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-16-ira.weiny@intel.com>
+ <88d82639-c0b2-0b35-1919-999a8438031c@nvidia.com>
 MIME-Version: 1.0
-In-Reply-To: <20190812160156.GU7138@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <88d82639-c0b2-0b35-1919-999a8438031c@nvidia.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: linux-xfs@vger.kernel.org
+To: John Hubbard <jhubbard@nvidia.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On 8/12/19 9:01 AM, Darrick J. Wong wrote:
-> On Fri, Aug 09, 2019 at 02:37:14PM -0700, Allison Collins wrote:
->> Break xfs_attr_rmtval_set into two helper functions
->> xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
->> xfs_attr_rmtval_set rolls the transaction between the
->> helpers, but delayed operations cannot.  We will use
->> the helpers later when constructing new delayed
->> attribute routines.
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr_remote.c | 73 +++++++++++++++++++++++++++++++----------
->>   fs/xfs/libxfs/xfs_attr_remote.h |  4 ++-
->>   2 files changed, 58 insertions(+), 19 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
->> index 4eb30d3..c421412 100644
->> --- a/fs/xfs/libxfs/xfs_attr_remote.c
->> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
->> @@ -21,6 +21,7 @@
->>   #include "xfs_attr.h"
->>   #include "xfs_trace.h"
->>   #include "xfs_error.h"
->> +#include "xfs_attr_remote.h"
->>   
->>   #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
->>   
->> @@ -430,34 +431,18 @@ xfs_attr_rmtval_set(
->>   	struct xfs_da_args	*args)
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->> -	struct xfs_mount	*mp = dp->i_mount;
->>   	struct xfs_bmbt_irec	map;
->>   	xfs_dablk_t		lblkno;
->>   	xfs_fileoff_t		lfileoff = 0;
->> -	uint8_t			*src = args->value;
->>   	int			blkcnt;
->> -	int			valuelen;
->>   	int			nmap;
->>   	int			error;
->> -	int			offset = 0;
->>   
->> -	trace_xfs_attr_rmtval_set(args);
->> -
->> -	/*
->> -	 * Find a "hole" in the attribute address space large enough for
->> -	 * us to drop the new attribute's value into. Because CRC enable
->> -	 * attributes have headers, we can't just do a straight byte to FSB
->> -	 * conversion and have to take the header space into account.
->> -	 */
->> -	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
->> -	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
->> -						   XFS_ATTR_FORK);
->> +	error = xfs_attr_rmt_find_hole(args, &blkcnt, &lfileoff);
->>   	if (error)
->>   		return error;
->>   
->> -	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
->> -	args->rmtblkcnt = blkcnt;
->> -
->> +	lblkno = (xfs_dablk_t)lfileoff;
->>   	/*
->>   	 * Roll through the "value", allocating blocks on disk as required.
->>   	 */
->> @@ -498,6 +483,58 @@ xfs_attr_rmtval_set(
->>   			return error;
->>   	}
->>   
->> +	error = xfs_attr_rmtval_set_value(args);
->> +	return error;
->> +}
->> +
->> +
->> +
+On Sun, Aug 11, 2019 at 04:07:23PM -0700, John Hubbard wrote:
+> On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > The addition of FOLL_LONGTERM has taken on additional meaning for CMA
+> > pages.
+> > 
+> > In addition subsystems such as RDMA require new information to be passed
+> > to the GUP interface to track file owning information.  As such a simple
+> > FOLL_LONGTERM flag is no longer sufficient for these users to pin pages.
+> > 
+> > Introduce a new GUP like call which takes the newly introduced vaddr_pin
+> > information.  Failure to pass the vaddr_pin object back to a vaddr_put*
+> > call will result in a failure if pins were created on files during the
+> > pin operation.
+> > 
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > 
 > 
-> Only need one blank line between functions.
-Ok, will trim out
+> I'm creating a new call site conversion series, to replace the 
+> "put_user_pages(): miscellaneous call sites" series. This uses
+> vaddr_pin_pages*() where appropriate. So it's based on your series here.
+> 
+> btw, while doing that, I noticed one more typo while re-reading some of the comments. 
+> Thought you probably want to collect them all for the next spin. Below...
+> 
+> > ---
+> > Changes from list:
+> > 	Change to vaddr_put_pages_dirty_lock
+> > 	Change to vaddr_unpin_pages_dirty_lock
+> > 
+> >  include/linux/mm.h |  5 ++++
+> >  mm/gup.c           | 59 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  2 files changed, 64 insertions(+)
+> > 
+> > diff --git a/include/linux/mm.h b/include/linux/mm.h
+> > index 657c947bda49..90c5802866df 100644
+> > --- a/include/linux/mm.h
+> > +++ b/include/linux/mm.h
+> > @@ -1603,6 +1603,11 @@ int account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc);
+> >  int __account_locked_vm(struct mm_struct *mm, unsigned long pages, bool inc,
+> >  			struct task_struct *task, bool bypass_rlim);
+> >  
+> > +long vaddr_pin_pages(unsigned long addr, unsigned long nr_pages,
+> > +		     unsigned int gup_flags, struct page **pages,
+> > +		     struct vaddr_pin *vaddr_pin);
+> > +void vaddr_unpin_pages_dirty_lock(struct page **pages, unsigned long nr_pages,
+> > +				  struct vaddr_pin *vaddr_pin, bool make_dirty);
+> >  bool mapping_inode_has_layout(struct vaddr_pin *vaddr_pin, struct page *page);
+> >  
+> >  /* Container for pinned pfns / pages */
+> > diff --git a/mm/gup.c b/mm/gup.c
+> > index eeaa0ddd08a6..6d23f70d7847 100644
+> > --- a/mm/gup.c
+> > +++ b/mm/gup.c
+> > @@ -2536,3 +2536,62 @@ int get_user_pages_fast(unsigned long start, int nr_pages,
+> >  	return ret;
+> >  }
+> >  EXPORT_SYMBOL_GPL(get_user_pages_fast);
+> > +
+> > +/**
+> > + * vaddr_pin_pages pin pages by virtual address and return the pages to the
+> > + * user.
+> > + *
+> > + * @addr, start address
+> > + * @nr_pages, number of pages to pin
+> > + * @gup_flags, flags to use for the pin
+> > + * @pages, array of pages returned
+> > + * @vaddr_pin, initalized meta information this pin is to be associated
+> 
+> Typo:
+>                   initialized
+
+Thanks fixed.
+Ira
 
 > 
->> +int
->> +xfs_attr_rmt_find_hole(
->> +	struct xfs_da_args	*args,
->> +	int			*blkcnt,
->> +	xfs_fileoff_t		*lfileoff)
->> +{
->> +	struct xfs_inode        *dp = args->dp;
->> +	struct xfs_mount	*mp = dp->i_mount;
->> +	int			error;
->> +
->> +	trace_xfs_attr_rmtval_set(args);
 > 
-> Shouldn't this be in the xfs_attr_rmtval_set_value function?
-> We're not actually setting anything here, we're just looking for holes.
-Yes, that would probably make more sense there.  :-)
-
-> 
->> +
->> +	/*
->> +	 * Find a "hole" in the attribute address space large enough for
->> +	 * us to drop the new attribute's value into. Because CRC enable
-> 
-> This first sentence would make a lovely comment above this function
-> telling us what it does.
-Ok, that sounds good, I will move that up
-
-> 
->> +	 * attributes have headers, we can't just do a straight byte to FSB
->> +	 * conversion and have to take the header space into account.
->> +	 */
->> +	*blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
-> 
-> Can the callers be refactored to use args->rmtblkcnt to eliminate the
-> @blkcnt parameter?
-
-Sure, I think that would be ok.  I'll see if I can clean that out.
-Thanks!
-
-Allison
-
-> 
-> --D
-> 
->> +	error = xfs_bmap_first_unused(args->trans, args->dp, *blkcnt, lfileoff,
->> +						   XFS_ATTR_FORK);
->> +	if (error)
->> +		return error;
->> +
->> +	args->rmtblkno = (xfs_dablk_t)*lfileoff;
->> +	args->rmtblkcnt = *blkcnt;
->> +
->> +	return 0;
->> +}
->> +
->> +int
->> +xfs_attr_rmtval_set_value(
->> +	struct xfs_da_args	*args)
->> +{
->> +	struct xfs_inode	*dp = args->dp;
->> +	struct xfs_mount	*mp = dp->i_mount;
->> +	struct xfs_bmbt_irec	map;
->> +	xfs_dablk_t		lblkno;
->> +	uint8_t			*src = args->value;
->> +	int			blkcnt;
->> +	int			valuelen;
->> +	int			nmap;
->> +	int			error;
->> +	int			offset = 0;
->> +
->> +
->>   	/*
->>   	 * Roll through the "value", copying the attribute value to the
->>   	 * already-allocated blocks.  Blocks are written synchronously
->> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
->> index 9d20b66..2a73cd9 100644
->> --- a/fs/xfs/libxfs/xfs_attr_remote.h
->> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
->> @@ -11,5 +11,7 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
->>   int xfs_attr_rmtval_get(struct xfs_da_args *args);
->>   int xfs_attr_rmtval_set(struct xfs_da_args *args);
->>   int xfs_attr_rmtval_remove(struct xfs_da_args *args);
->> -
->> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
->> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args, int *blkcnt,
->> +			   xfs_fileoff_t *lfileoff);
->>   #endif /* __XFS_ATTR_REMOTE_H__ */
->> -- 
->> 2.7.4
->>
+> thanks,
+> -- 
+> John Hubbard
+> NVIDIA
