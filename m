@@ -1,54 +1,140 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:53490 "EHLO mail.kernel.org"
+Received: from mga11.intel.com ([192.55.52.93]:50215 "EHLO mga11.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726551AbfHLR5P (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 12 Aug 2019 13:57:15 -0400
-From: Eric Biggers <ebiggers@kernel.org>
-Subject: [RFC PATCH 3/8] xfs_io/encrypt: add new encryption modes
-Date: Mon, 12 Aug 2019 10:56:29 -0700
-Message-Id: <20190812175635.34186-4-ebiggers@kernel.org>
-In-Reply-To: <20190812175635.34186-1-ebiggers@kernel.org>
-References: <20190812175635.34186-1-ebiggers@kernel.org>
+        id S1726090AbfHLSDk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 12 Aug 2019 14:03:40 -0400
+Date: Mon, 12 Aug 2019 10:36:26 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [RFC PATCH v2 01/19] fs/locks: Export F_LAYOUT lease to user
+ space
+Message-ID: <20190812173626.GB19746@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-2-ira.weiny@intel.com>
+ <20190809235231.GC7777@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190809235231.GC7777@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
-Cc: fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-From: Eric Biggers <ebiggers@google.com>
+On Sat, Aug 10, 2019 at 09:52:31AM +1000, Dave Chinner wrote:
+> On Fri, Aug 09, 2019 at 03:58:15PM -0700, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > In order to support an opt-in policy for users to allow long term pins
+> > of FS DAX pages we need to export the LAYOUT lease to user space.
+> > 
+> > This is the first of 2 new lease flags which must be used to allow a
+> > long term pin to be made on a file.
+> > 
+> > After the complete series:
+> > 
+> > 0) Registrations to Device DAX char devs are not affected
+> > 
+> > 1) The user has to opt in to allowing page pins on a file with an exclusive
+> >    layout lease.  Both exclusive and layout lease flags are user visible now.
+> > 
+> > 2) page pins will fail if the lease is not active when the file back page is
+> >    encountered.
+> > 
+> > 3) Any truncate or hole punch operation on a pinned DAX page will fail.
+> > 
+> > 4) The user has the option of holding the lease or releasing it.  If they
+> >    release it no other pin calls will work on the file.
+> > 
+> > 5) Closing the file is ok.
+> > 
+> > 6) Unmapping the file is ok
+> > 
+> > 7) Pins against the files are tracked back to an owning file or an owning mm
+> >    depending on the internal subsystem needs.  With RDMA there is an owning
+> >    file which is related to the pined file.
+> > 
+> > 8) Only RDMA is currently supported
+> > 
+> > 9) Truncation of pages which are not actively pinned nor covered by a lease
+> >    will succeed.
+> 
+> This has nothing to do with layout leases or what they provide
+> access arbitration over. Layout leases have _nothing_ to do with
+> page pinning or RDMA - they arbitrate behaviour the file offset ->
+> physical block device mapping within the filesystem and the
+> behaviour that will occur when a specific lease is held.
+> 
+> The commit descripting needs to describe what F_LAYOUT actually
+> protects, when they'll get broken, etc, not how RDMA is going to use
+> it.
 
-Add new encryption modes: AES-128-CBC and AES-128-CTS (supported since
-Linux v4.11), and Adiantum (supported since Linux v5.0).
+Ok yes I've been lax in mixing the cover letter for the series and this first
+commit message.  My apologies.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- io/encrypt.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+> 
+> > @@ -2022,8 +2030,26 @@ static int do_fcntl_add_lease(unsigned int fd, struct file *filp, long arg)
+> >  	struct file_lock *fl;
+> >  	struct fasync_struct *new;
+> >  	int error;
+> > +	unsigned int flags = 0;
+> > +
+> > +	/*
+> > +	 * NOTE on F_LAYOUT lease
+> > +	 *
+> > +	 * LAYOUT lease types are taken on files which the user knows that
+> > +	 * they will be pinning in memory for some indeterminate amount of
+> > +	 * time.
+> 
+> Indeed, layout leases have nothing to do with pinning of memory.
 
-diff --git a/io/encrypt.c b/io/encrypt.c
-index ac473ed7..11eb4a3e 100644
---- a/io/encrypt.c
-+++ b/io/encrypt.c
-@@ -156,7 +156,7 @@ set_encpolicy_help(void)
- " -v VERSION -- version of policy structure\n"
- "\n"
- " MODE can be numeric or one of the following predefined values:\n"
--"    AES-256-XTS, AES-256-CTS\n"
-+"    AES-256-XTS, AES-256-CTS, AES-128-CBC, AES-128-CTS, Adiantum\n"
- " FLAGS and VERSION must be numeric.\n"
- "\n"
- " Note that it's only possible to set an encryption policy on an empty\n"
-@@ -170,6 +170,9 @@ static const struct {
- } available_modes[] = {
- 	{FSCRYPT_MODE_AES_256_XTS, "AES-256-XTS"},
- 	{FSCRYPT_MODE_AES_256_CTS, "AES-256-CTS"},
-+	{FSCRYPT_MODE_AES_128_CBC, "AES-128-CBC"},
-+	{FSCRYPT_MODE_AES_128_CTS, "AES-128-CTS"},
-+	{FSCRYPT_MODE_ADIANTUM, "Adiantum"},
- };
- 
- static bool
--- 
-2.23.0.rc1.153.gdeed80330f-goog
+Yep, Fair enough.  I'll rework the comment.
+
+> That's something an application taht uses layout leases might do,
+> but it largely irrelevant to the functionality layout leases
+> provide. What needs to be done here is explain what the layout lease
+> API actually guarantees w.r.t. the physical file layout, not what
+> some application is going to do with a lease. e.g.
+> 
+> 	The layout lease F_RDLCK guarantees that the holder will be
+> 	notified that the physical file layout is about to be
+> 	changed, and that it needs to release any resources it has
+> 	over the range of this lease, drop the lease and then
+> 	request it again to wait for the kernel to finish whatever
+> 	it is doing on that range.
+> 
+> 	The layout lease F_RDLCK also allows the holder to modify
+> 	the physical layout of the file. If an operation from the
+> 	lease holder occurs that would modify the layout, that lease
+> 	holder does not get notification that a change will occur,
+> 	but it will block until all other F_RDLCK leases have been
+> 	released by their holders before going ahead.
+> 
+> 	If there is a F_WRLCK lease held on the file, then a F_RDLCK
+> 	holder will fail any operation that may modify the physical
+> 	layout of the file. F_WRLCK provides exclusive physical
+> 	modification access to the holder, guaranteeing nothing else
+> 	will change the layout of the file while it holds the lease.
+> 
+> 	The F_WRLCK holder can change the physical layout of the
+> 	file if it so desires, this will block while F_RDLCK holders
+> 	are notified and release their leases before the
+> 	modification will take place.
+> 
+> We need to define the semantics we expose to userspace first.....
+
+Agreed.  I believe I have implemented the semantics you describe above.  Do I
+have your permission to use your verbiage as part of reworking the comment and
+commit message?
+
+Thanks,
+Ira
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
