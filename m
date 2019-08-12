@@ -1,92 +1,177 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:51858 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726144AbfHLWEw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 18:04:52 -0400
-Date: Tue, 13 Aug 2019 08:03:42 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: xfsprogs-5.2.0 FTBFS: ../libxfs/.libs/libxfs.so: undefined
- reference to `xfs_ag_geom_health'
-Message-ID: <20190812220342.GD6129@dread.disaster.area>
-References: <c4b1b7db-bf73-9b96-b418-5a639e7decdc@gentoo.org>
- <20190811225307.GF7777@dread.disaster.area>
- <ebcf887f-81fc-9080-67c9-63946316f3e0@gentoo.org>
- <20190812002306.GH7777@dread.disaster.area>
- <df65ea4f-18af-4fab-e59d-29fa8440489c@gentoo.org>
- <20190812031123.GA6129@dread.disaster.area>
- <20190812043046.GB6129@dread.disaster.area>
- <09ad7dd5-c2cd-aaaa-82d5-0f3a18eb4062@gentoo.org>
- <5aff83b5-2ff3-4c2c-e0ef-c04bc506fe4f@sandeen.net>
+Received: from aserp2120.oracle.com ([141.146.126.78]:48946 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726334AbfHLPod (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 11:44:33 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFhRqJ135107
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:44:31 GMT
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2u9nvp0h4u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:44:31 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7CFgZ5k008902
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:44:31 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2u9nre0pxr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:44:31 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7CFiUNY016574
+        for <linux-xfs@vger.kernel.org>; Mon, 12 Aug 2019 15:44:31 GMT
+Date: Mon, 12 Aug 2019 08:44:29 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v2 04/18] xfs: Add xfs_attr_set_deferred and
+ xfs_attr_remove_deferred
+Message-ID: <20190812154429.GS7138@magnolia>
+References: <20190809213726.32336-1-allison.henderson@oracle.com>
+ <20190809213726.32336-5-allison.henderson@oracle.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <5aff83b5-2ff3-4c2c-e0ef-c04bc506fe4f@sandeen.net>
+In-Reply-To: <20190809213726.32336-5-allison.henderson@oracle.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Eric Sandeen <sandeen@sandeen.net>
-Cc: Thomas Deutschmann <whissi@gentoo.org>, "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
+To: Allison Collins <allison.henderson@oracle.com>
+Cc: linux-xfs@vger.kernel.org
 
-On Mon, Aug 12, 2019 at 11:34:56AM -0500, Eric Sandeen wrote:
+On Fri, Aug 09, 2019 at 02:37:12PM -0700, Allison Collins wrote:
+> From: Allison Henderson <allison.henderson@oracle.com>
 > 
+> These routines set up set and start a new deferred attribute
+> operation.  These functions are meant to be called by other
+> code needing to initiate a deferred attribute operation.
 > 
-> On 8/12/19 5:57 AM, Thomas Deutschmann wrote:
-> > Hi,
-> > 
-> > On 2019-08-12 06:30, Dave Chinner wrote:
-> >>>> In a clear environment, do:
-> >>>>
-> >>>>> tar -xaf xfsprogs-5.2.0.tar.xz
-> >>>>> cd xfsprogs-5.2.0
-> >>>>> export CFLAGS="-O2 -pipe -march=ivybridge -mtune=ivybridge -mno-xsaveopt"
-> >>>>> export LDFLAGS="-Wl,-O1 -Wl,--as-needed"
-> >>>            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-> >>> Don't do this.
-> >>>
-> >>> "--as-needed" is the default linker behaviour since gcc 4.x. You do
-> >>> not need this. As for passing "-O1" to the linker, that's not going
-> >>> to do anything measurable for you. Use --enable-lto to turn on link
-> >>> time optimisations if they are supported by the compiler.
-> >>
-> >> Ok, I could reproduce your link time failure for a while with
-> >> --enable-lto, but I ran 'make distclean' and the problem went away
-> >> completely. And I can build with your options successfully, too:
-> >>
-> >> $ make realclean
-> >> $ make configure
-> >> <builds new configure script>
-> >> $ LDFLAGS="-Wl,-O1 -Wl,--as-needed" ./configure
-> > 
-> > That's not the correct way to reproduce. It's really important to
-> > _export_ the variable to trigger the problem and _this_ is a problem in
-> > xfsprogs' build system.
-> > 
-> > But keep in mind that 3x "-Wl,-O1 -Wl,--as-needed" don't cause a failure
-> > without "--disable-static" for me... that's just the answer for your
-> > question where this is coming from.
+> Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr.c | 74 ++++++++++++++++++++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_attr.h |  5 ++++
+>  2 files changed, 79 insertions(+)
 > 
-> My takeaway here is that I should probably stub out some things to make
-> this issue go away altogether,
+> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+> index 1f76618..a2fba0c 100644
+> --- a/fs/xfs/libxfs/xfs_attr.c
+> +++ b/fs/xfs/libxfs/xfs_attr.c
+> @@ -25,6 +25,7 @@
+>  #include "xfs_trans_space.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_attr_item.h"
+> +#include "xfs_attr.h"
+>  
+>  /*
+>   * xfs_attr.c
+> @@ -399,6 +400,48 @@ xfs_attr_set(
+>  	goto out_unlock;
+>  }
+>  
+> +/* Sets an attribute for an inode as a deferred operation */
+> +int
+> +xfs_attr_set_deferred(
+> +	struct xfs_inode	*dp,
+> +	struct xfs_trans	*tp,
+> +	struct xfs_name		*name,
+> +	const unsigned char	*value,
+> +	unsigned int		valuelen)
+> +{
+> +
+> +	struct xfs_attr_item	*new;
+> +	char			*name_value;
+> +
+> +	/*
+> +	 * All set operations must have a name but not necessarily a value.
+> +	 */
+> +	if (!name->len) {
+> +		ASSERT(0);
+> +		return -EINVAL;
+> +	}
+> +
+> +	new = kmem_alloc_large(XFS_ATTR_ITEM_SIZEOF(name->len, valuelen),
+> +			 KM_SLEEP|KM_NOFS);
+> +	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
+> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(name->len, valuelen));
+> +	new->xattri_ip = dp;
+> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_SET;
+> +	new->xattri_name_len = name->len;
+> +	new->xattri_value_len = valuelen;
+> +	new->xattri_flags = name->type;
+> +	memcpy(&name_value[0], name->name, name->len);
+> +	new->xattri_name = name_value;
+> +	new->xattri_value = name_value + name->len;
+> +
+> +	if (valuelen > 0)
+> +		memcpy(&name_value[name->len], value, valuelen);
+> +
+> +	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
+> +
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Generic handler routine to remove a name from an attribute list.
+>   * Transitions attribute list from Btree to shortform as necessary.
+> @@ -480,6 +523,37 @@ xfs_attr_remove(
+>  	return error;
+>  }
+>  
+> +/* Removes an attribute for an inode as a deferred operation */
+> +int
+> +xfs_attr_remove_deferred(
+> +	struct xfs_inode        *dp,
+> +	struct xfs_trans	*tp,
+> +	struct xfs_name		*name)
+> +{
+> +
+> +	struct xfs_attr_item	*new;
+> +	char			*name_value;
+> +
+> +	if (!name->len) {
+> +		ASSERT(0);
+> +		return -EINVAL;
+> +	}
+> +
+> +	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(name->len, 0), KM_SLEEP|KM_NOFS);
+> +	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
+> +	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(name->len, 0));
+> +	new->xattri_ip = dp;
+> +	new->xattri_op_flags = XFS_ATTR_OP_FLAGS_REMOVE;
+> +	new->xattri_name_len = name->len;
+> +	new->xattri_value_len = 0;
+> +	new->xattri_flags = name->type;
+> +	memcpy(name_value, name->name, name->len);
+> +
+> +	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
 
-The linker should be taking care of eliding dead code from
-statically linked libraries.
+Can the common parts of these two functions be refactored into a single
+initialization function called from xfs_attr_{set,remove}_deferred,
+similar to what xfs_rmap.c does for all the various deferred rmap calls?
 
-The issue here is that a shared library can't have undefined symbols
-elided at link time because the linker has no idea if they will be
-used or not.  Hence it fails to link against binaries that don't
-specify all possible external library dependencies, even when the
-library dependency is brought in by another library.
+--D
 
-> but that it can also be remedied by adjusting
-> compiler/linker flags.  Correct?  I'm not sure if this warrants a 5.2.1 release.
-
-If you don't use the non-default --disable-static configure option
-then there is no problem. That option appears to have been broken
-for a while now, so lets just get rid of it.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> +
+> +	return 0;
+> +}
+> +
+>  /*========================================================================
+>   * External routines when attribute list is inside the inode
+>   *========================================================================*/
+> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+> index 9132d4f..0bade83 100644
+> --- a/fs/xfs/libxfs/xfs_attr.h
+> +++ b/fs/xfs/libxfs/xfs_attr.h
+> @@ -177,5 +177,10 @@ bool xfs_attr_namecheck(const void *name, size_t length);
+>  int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+>  		       struct xfs_name *name);
+>  int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
+> +int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+> +			  struct xfs_name *name, const unsigned char *value,
+> +			  unsigned int valuelen);
+> +int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
+> +			    struct xfs_name *name);
+>  
+>  #endif	/* __XFS_ATTR_H__ */
+> -- 
+> 2.7.4
+> 
