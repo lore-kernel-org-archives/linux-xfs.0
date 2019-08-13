@@ -1,85 +1,120 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f194.google.com ([209.85.160.194]:46724 "EHLO
-        mail-qt1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725981AbfHMLso (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Aug 2019 07:48:44 -0400
-Received: by mail-qt1-f194.google.com with SMTP id j15so12384324qtl.13
-        for <linux-xfs@vger.kernel.org>; Tue, 13 Aug 2019 04:48:43 -0700 (PDT)
-Date: Tue, 13 Aug 2019 08:48:42 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [RFC PATCH v2 16/19] RDMA/uverbs: Add back pointer to system
- file object
-Message-ID: <20190813114842.GB29508@ziepe.ca>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-17-ira.weiny@intel.com>
- <20190812130039.GD24457@ziepe.ca>
- <20190812172826.GA19746@iweiny-DESK2.sc.intel.com>
- <20190812175615.GI24457@ziepe.ca>
- <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58196 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726600AbfHMLzq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Aug 2019 07:55:46 -0400
+Date: Tue, 13 Aug 2019 07:55:44 -0400
+From: Brian Foster <bfoster@redhat.com>
+Subject: Re: [PATCH 1/3] xfs: Use __xfs_buf_submit everywhere
+Message-ID: <20190813115544.GA37069@bfoster>
+References: <20190813090306.31278-1-nborisov@suse.com>
+ <20190813090306.31278-2-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
+In-Reply-To: <20190813090306.31278-2-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ira Weiny <ira.weiny@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Mon, Aug 12, 2019 at 02:15:37PM -0700, Ira Weiny wrote:
-> On Mon, Aug 12, 2019 at 02:56:15PM -0300, Jason Gunthorpe wrote:
-> > On Mon, Aug 12, 2019 at 10:28:27AM -0700, Ira Weiny wrote:
-> > > On Mon, Aug 12, 2019 at 10:00:40AM -0300, Jason Gunthorpe wrote:
-> > > > On Fri, Aug 09, 2019 at 03:58:30PM -0700, ira.weiny@intel.com wrote:
-> > > > > From: Ira Weiny <ira.weiny@intel.com>
-> > > > > 
-> > > > > In order for MRs to be tracked against the open verbs context the ufile
-> > > > > needs to have a pointer to hand to the GUP code.
-> > > > > 
-> > > > > No references need to be taken as this should be valid for the lifetime
-> > > > > of the context.
-> > > > > 
-> > > > > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > > > >  drivers/infiniband/core/uverbs.h      | 1 +
-> > > > >  drivers/infiniband/core/uverbs_main.c | 1 +
-> > > > >  2 files changed, 2 insertions(+)
-> > > > > 
-> > > > > diff --git a/drivers/infiniband/core/uverbs.h b/drivers/infiniband/core/uverbs.h
-> > > > > index 1e5aeb39f774..e802ba8c67d6 100644
-> > > > > +++ b/drivers/infiniband/core/uverbs.h
-> > > > > @@ -163,6 +163,7 @@ struct ib_uverbs_file {
-> > > > >  	struct page *disassociate_page;
-> > > > >  
-> > > > >  	struct xarray		idr;
-> > > > > +	struct file             *sys_file; /* backpointer to system file object */
-> > > > >  };
-> > > > 
-> > > > The 'struct file' has a lifetime strictly shorter than the
-> > > > ib_uverbs_file, which is kref'd on its own lifetime. Having a back
-> > > > pointer like this is confouding as it will be invalid for some of the
-> > > > lifetime of the struct.
-> > > 
-> > > Ah...  ok.  I really thought it was the other way around.
-> > > 
-> > > __fput() should not call ib_uverbs_close() until the last reference on struct
-> > > file is released...  What holds references to struct ib_uverbs_file past that?
-> > 
-> > Child fds hold onto the internal ib_uverbs_file until they are closed
+On Tue, Aug 13, 2019 at 12:03:04PM +0300, Nikolay Borisov wrote:
+> Currently xfs_buf_submit is used as a tiny wrapper to __xfs_buf_submit.
+> It only checks whether XFB_ASYNC flag is set and sets the second
+> parameter to __xfs_buf_submit accordingly. It's possible to remove the
+> level of indirection since in all contexts where xfs_buf_submit is
+> called we already know if XBF_ASYNC is set or not.
 > 
-> The FDs hold the struct file, don't they?
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> ---
 
-Only dups, there are other 'child' FDs we can create
+Random nit: the use of upper case in the first word of the commit log
+subject line kind of stands out to me. I know there are other instances
+of this (I think I noticed one the other day), but my presumption was
+that it was random/accidental where your patches seem to do it
+intentionally. Do we have a common practice here? Do we care? I prefer
+consistency of using lower case for normal text, but it's really just a
+nit.
 
-> > Now this has unlocked updates to that data.. you'd need some lock and
-> > get not zero pattern
+>  fs/xfs/xfs_buf.c         | 8 +++++---
+>  fs/xfs/xfs_buf_item.c    | 2 +-
+>  fs/xfs/xfs_log_recover.c | 2 +-
+>  3 files changed, 7 insertions(+), 5 deletions(-)
 > 
-> You can't call "get" here because I'm 99% sure we only get here when struct
-> file has no references left...
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index ca0849043f54..a75d05e49a98 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -751,13 +751,15 @@ _xfs_buf_read(
+>  	xfs_buf_t		*bp,
+>  	xfs_buf_flags_t		flags)
+>  {
+> +	bool wait = bp->b_flags & XBF_ASYNC ? false : true;
+> +
 
-Nope, like I said the other FDs hold the uverbs_file independent of
-the struct file it is related too. 
+This doesn't look quite right. Just below we clear several flags from
+->b_flags then potentially reapply based on the flags parameter. Hence,
+I think ->b_flags above may not reflect ->b_flags by the time we call
+__xfs_buf_submit().
 
-This is why having a back pointer like this is so ugly, it creates a
-reference counting cycle
+Brian
 
-Jason
+>  	ASSERT(!(flags & XBF_WRITE));
+>  	ASSERT(bp->b_maps[0].bm_bn != XFS_BUF_DADDR_NULL);
+>  
+>  	bp->b_flags &= ~(XBF_WRITE | XBF_ASYNC | XBF_READ_AHEAD);
+>  	bp->b_flags |= flags & (XBF_READ | XBF_ASYNC | XBF_READ_AHEAD);
+>  
+> -	return xfs_buf_submit(bp);
+> +	return __xfs_buf_submit(bp, wait);
+>  }
+>  
+>  /*
+> @@ -883,7 +885,7 @@ xfs_buf_read_uncached(
+>  	bp->b_flags |= XBF_READ;
+>  	bp->b_ops = ops;
+>  
+> -	xfs_buf_submit(bp);
+> +	__xfs_buf_submit(bp, true);
+>  	if (bp->b_error) {
+>  		int	error = bp->b_error;
+>  		xfs_buf_relse(bp);
+> @@ -1214,7 +1216,7 @@ xfs_bwrite(
+>  	bp->b_flags &= ~(XBF_ASYNC | XBF_READ | _XBF_DELWRI_Q |
+>  			 XBF_WRITE_FAIL | XBF_DONE);
+>  
+> -	error = xfs_buf_submit(bp);
+> +	error = __xfs_buf_submit(bp, true);
+>  	if (error)
+>  		xfs_force_shutdown(bp->b_mount, SHUTDOWN_META_IO_ERROR);
+>  	return error;
+> diff --git a/fs/xfs/xfs_buf_item.c b/fs/xfs/xfs_buf_item.c
+> index 7dcaec54a20b..fef08980dd21 100644
+> --- a/fs/xfs/xfs_buf_item.c
+> +++ b/fs/xfs/xfs_buf_item.c
+> @@ -1123,7 +1123,7 @@ xfs_buf_iodone_callback_error(
+>  			bp->b_first_retry_time = jiffies;
+>  
+>  		xfs_buf_ioerror(bp, 0);
+> -		xfs_buf_submit(bp);
+> +		__xfs_buf_submit(bp, false);
+>  		return true;
+>  	}
+>  
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 13d1d3e95b88..64e315f80147 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -5610,7 +5610,7 @@ xlog_do_recover(
+>  	bp->b_flags |= XBF_READ;
+>  	bp->b_ops = &xfs_sb_buf_ops;
+>  
+> -	error = xfs_buf_submit(bp);
+> +	error = __xfs_buf_submit(bp, true);
+>  	if (error) {
+>  		if (!XFS_FORCED_SHUTDOWN(mp)) {
+>  			xfs_buf_ioerror_alert(bp, __func__);
+> -- 
+> 2.17.1
+> 
