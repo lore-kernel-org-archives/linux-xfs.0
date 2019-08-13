@@ -1,4 +1,4 @@
-Return-Path: <SRS0=X2ej=WI=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=4IxZ=WJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
@@ -7,34 +7,33 @@ X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 166DBC31E40
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Aug 2019 21:20:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BEE8C32750
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Aug 2019 17:56:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC76D206C2
-	for <linux-xfs@archiver.kernel.org>; Mon, 12 Aug 2019 21:20:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 10B362064A
+	for <linux-xfs@archiver.kernel.org>; Tue, 13 Aug 2019 17:56:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="i3VfG8jw"
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="r1myjWjQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727303AbfHLVUU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 12 Aug 2019 17:20:20 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:4930 "EHLO
+        id S1727642AbfHMR4x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 13 Aug 2019 13:56:53 -0400
+Received: from hqemgate15.nvidia.com ([216.228.121.64]:16788 "EHLO
         hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726809AbfHLVUU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 12 Aug 2019 17:20:20 -0400
+        with ESMTP id S1725923AbfHMR4x (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Aug 2019 13:56:53 -0400
 Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d51d81e0001>; Mon, 12 Aug 2019 14:20:30 -0700
+        id <B5d52f9ef0000>; Tue, 13 Aug 2019 10:57:03 -0700
 Received: from hqmail.nvidia.com ([172.20.161.6])
   by hqpgpgate102.nvidia.com (PGP Universal service);
-  Mon, 12 Aug 2019 14:20:19 -0700
+  Tue, 13 Aug 2019 10:56:52 -0700
 X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Mon, 12 Aug 2019 14:20:19 -0700
-Received: from MacBook-Pro-10.local (10.124.1.5) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Mon, 12 Aug
- 2019 21:20:16 +0000
+        by hqpgpgate102.nvidia.com on Tue, 13 Aug 2019 10:56:52 -0700
+Received: from [10.110.48.28] (172.20.13.39) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 13 Aug
+ 2019 17:56:51 +0000
 Subject: Re: [RFC PATCH v2 15/19] mm/gup: Introduce vaddr_pin_pages()
-To:     Ira Weiny <ira.weiny@intel.com>
+To:     Ira Weiny <ira.weiny@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>
 CC:     Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
         Dan Williams <dan.j.williams@intel.com>,
         Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
         Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>,
@@ -45,64 +44,72 @@ CC:     Andrew Morton <akpm@linux-foundation.org>,
         <linux-mm@kvack.org>
 References: <20190809225833.6657-1-ira.weiny@intel.com>
  <20190809225833.6657-16-ira.weiny@intel.com>
- <6ed26a08-4371-9dc1-09eb-7b8a4689d93b@nvidia.com>
- <20190812210013.GC20634@iweiny-DESK2.sc.intel.com>
+ <20190812122814.GC24457@ziepe.ca>
+ <20190812214854.GF20634@iweiny-DESK2.sc.intel.com>
+ <20190813114706.GA29508@ziepe.ca>
+ <20190813174635.GC11882@iweiny-DESK2.sc.intel.com>
 From:   John Hubbard <jhubbard@nvidia.com>
 X-Nvconfidentiality: public
-Message-ID: <b4e15390-701d-c6e9-564c-04e6a3effd50@nvidia.com>
-Date:   Mon, 12 Aug 2019 14:20:14 -0700
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.8.0
+Message-ID: <95b05c4f-0bd6-ac31-20a2-28ee761c6238@nvidia.com>
+Date:   Tue, 13 Aug 2019 10:56:51 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190812210013.GC20634@iweiny-DESK2.sc.intel.com>
-X-Originating-IP: [10.124.1.5]
-X-ClientProxiedBy: HQMAIL104.nvidia.com (172.18.146.11) To
+In-Reply-To: <20190813174635.GC11882@iweiny-DESK2.sc.intel.com>
+X-Originating-IP: [172.20.13.39]
+X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
  HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="UTF-8"; format="flowed"
+Content-Type: text/plain; charset="UTF-8"
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1565644830; bh=JroT/x6S1SiN0zFyCuj22OCuZxP8/vKF5Bd4ngANWFg=;
+        t=1565719023; bh=KDoBH7FMcOFVaHbTNky7KSvvCBIevQY0atcdz7yZpyo=;
         h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
          Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
          X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
          Content-Transfer-Encoding;
-        b=i3VfG8jwOmXxQPogIwZ3sMCwfa3CGn1sVpvN5L89ZpC8daRGO/R9vtPcQ47P9mJKh
-         RafMQn1lyj28wP20RL4bwfklVqGKlcfPAph9NXoIwgiQdHwPgcKbnROYw10gmdDVRB
-         1aS4zaWboi6HStNT7Yrmu295QTNK0j6K5HIrCLRwR8jCgH/8n6x020QR0zeCSySUVY
-         VAXLG041hhDzAzbF3ygoB+7XO9fFnjFaejfE1ChOqzhEU5/hswkEAbHCgQ7dScaDdG
-         w+6XfT+PtAoSQVM3gP/Vv3ydQrcAmDn+XK4KuZZlDuKzgjlPJSCpn8JEDKzDbcX5Uy
-         UcyfVCRj6Jjvg==
+        b=r1myjWjQb9mZf2jmH/nl8EOm2qt2HUka2TVsF2Jum+qndnndTVwaD2327vhXLSeCi
+         XIpGwaKAZwWCMLAlTX/kfRa98I9xBwpMhAZ6eTqZRPz4zmMPa7tC2viy+Eub4ulUG/
+         fSd52XCv1zuDNwzHlnr6RMY/WlH/M4OFEPUek/8HPyi9Vdb1JGuOUy8IiDorNa+3Ua
+         2c/160jTWmEuUnof8/fNzqwgbNxD4seyIajR2G3YwfSZ/dqoIJN7D6+C64cqw5CxFF
+         Q03mIRJipiEmdnJCLEzKxeQsVQgOdkVfG2OprbuepROCdrgWbL6zWz92e+Qp+ecaJ4
+         wPrDn3x7NUcew==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190812212014.qx2vRpfoJFov6n54smPnvmQ60vyh7wFLDVWVNxV_tOM@z>
+Message-ID: <20190813175651.GVph81v7H50UTjiGs8cDEGDgtYYleO297N1yGfXGU0s@z>
 
-On 8/12/19 2:00 PM, Ira Weiny wrote:
-> On Fri, Aug 09, 2019 at 05:09:54PM -0700, John Hubbard wrote:
->> On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
->>> From: Ira Weiny <ira.weiny@intel.com>
+On 8/13/19 10:46 AM, Ira Weiny wrote:
+> On Tue, Aug 13, 2019 at 08:47:06AM -0300, Jason Gunthorpe wrote:
+>> On Mon, Aug 12, 2019 at 02:48:55PM -0700, Ira Weiny wrote:
+>>> On Mon, Aug 12, 2019 at 09:28:14AM -0300, Jason Gunthorpe wrote:
+>>>> On Fri, Aug 09, 2019 at 03:58:29PM -0700, ira.weiny@intel.com wrote:
+>>>>> From: Ira Weiny <ira.weiny@intel.com>
 ...
+>>> So I'm open to suggestions.  Jan gave me this one, so I figured it was safer to
+>>> suggest it...
+>>
+>> Should have the word user in it, imho
 > 
-> At one point I wanted to (and had in my tree) a new flag but I went away from
-> it.  Prior to the discussion on mlock last week I did not think we needed it.
-> But I'm ok to add it back in.
+> Fair enough...
 > 
-> I was not ignoring the idea for this RFC I just wanted to get this out there
-> for people to see.  I see that you threw out a couple of patches which add this
-> flag in.
+> user_addr_pin_pages(void __user * addr, ...) ?
 > 
-> FWIW, I think it would be good to differentiate between an indefinite pinned
-> page vs a referenced "gotten" page.
+> uaddr_pin_pages(void __user * addr, ...) ?
 > 
-> What you and I have been working on is the former.  So it would be easy to
-> change your refcounting patches to simply key off of FOLL_PIN.
+> I think I like uaddr...
 > 
-> Would you like me to add in your FOLL_PIN patches to this series?
 
-Sure, that would be perfect. They don't make any sense on their own, and
-it's all part of the same design idea.
+Better to spell out "user". "u" prefixes are used for "unsigned" and it
+is just too ambiguous here. Maybe:
+
+    vaddr_pin_user_pages()
+
+...which also sounds close enough to get_user_pages() that a bit of
+history and continuity is preserved, too.
+
+
 
 thanks,
 -- 
