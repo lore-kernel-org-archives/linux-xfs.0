@@ -1,69 +1,65 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:33776 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725911AbfHOGnl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 02:43:41 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:37057 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727150AbfHMQfx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Aug 2019 12:35:53 -0400
+Date: Tue, 13 Aug 2019 12:35:49 -0400 (EDT)
+From: Mikulas Patocka <mpatocka@redhat.com>
+Subject: Re: [PATCH] direct-io: use GFP_NOIO to avoid deadlock
+In-Reply-To: <20190809215733.GZ7777@dread.disaster.area>
+Message-ID: <alpine.LRH.2.02.1908131231010.6852@file01.intranet.prod.int.rdu2.redhat.com>
+References: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com> <20190809013403.GY7777@dread.disaster.area> <alpine.LRH.2.02.1908090725290.31061@file01.intranet.prod.int.rdu2.redhat.com>
+ <20190809215733.GZ7777@dread.disaster.area>
 MIME-Version: 1.0
-References: <20190814204259.120942-1-arnd@arndb.de> <20190814204259.120942-2-arnd@arndb.de>
- <20190814213753.GP6129@dread.disaster.area>
-In-Reply-To: <20190814213753.GP6129@dread.disaster.area>
-From: Arnd Bergmann <arnd@arndb.de>
-Date: Thu, 15 Aug 2019 08:43:24 +0200
-Message-ID: <CAK8P3a0CAAtxXcfYt8NwmNSmF5tWhSSihLBkOtuQ62onjst4sA@mail.gmail.com>
-Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
 To: Dave Chinner <david@fromorbit.com>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Allison Collins <allison.henderson@oracle.com>, Nick Bowler <nbowler@draconx.ca>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <msnitzer@redhat.com>, junxiao.bi@oracle.com, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, honglei.wang@oracle.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Wed, Aug 14, 2019 at 11:39 PM Dave Chinner <david@fromorbit.com> wrote:
-> >       case XFS_IOC_BULKSTAT:
-> >       case XFS_IOC_INUMBERS:
-> > -             return xfs_file_ioctl(filp, cmd, p);
-> > +             return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
->
-> I don't really like having to sprinkle special casts through the
-> code because of this.
->
-> Perhaps do something like:
->
-> static inline unsigned long compat_ptr_mask(unsigned long p)
-> {
->         return (unsigned long)compat_ptr(p);
-> }
->
-> and then up front you can do:
->
->         void    __user *arg;
->
->         p = compat_ptr_mask(p);
->         arg = (void __user *)p;
->
->
-> and then the rest of the code remains unchanged by now uses p
-> correctly instead of having to change all the code to cast arg back
-> to an unsigned long...
->
 
-In part 1 of the series, I define this function as a global:
 
-long compat_ptr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
-{
-        if (!file->f_op->unlocked_ioctl)
-                return -ENOIOCTLCMD;
+On Sat, 10 Aug 2019, Dave Chinner wrote:
 
-        return file->f_op->unlocked_ioctl(file, cmd, (unsigned
-long)compat_ptr(arg));
-}
+> No, you misunderstand. I'm talking about blocking kswapd being
+> wrong.  i.e. Blocking kswapd in shrinkers causes problems
+> because th ememory reclaim code does not expect kswapd to be
+> arbitrarily delayed by waiting on IO. We've had this problem with
+> the XFS inode cache shrinker for years, and there are many reports
+> of extremely long reclaim latencies for both direct and kswapd
+> reclaim that result from kswapd not making progress while waiting
+> in shrinkers for IO to complete.
+> 
+> The work I'm currently doing to fix this XFS problem can be found
+> here:
+> 
+> https://lore.kernel.org/linux-fsdevel/20190801021752.4986-1-david@fromorbit.com/
+> 
+> 
+> i.e. the point I'm making is that waiting for IO in kswapd reclaim
+> context is considered harmful - kswapd context shrinker reclaim
+> should be as non-blocking as possible, and any back-off to wait for
+> IO to complete should be done by the high level reclaim core once
+> it's completed an entire reclaim scan cycle of everything....
+> 
+> What follows from that, and is pertinent for in this situation, is
+> that if you don't block kswapd, then other reclaim contexts are not
+> going to get stuck waiting for it regardless of the reclaim context
+> they use.
+> 
+> Cheers,
+> 
+> Dave.
 
-How about using that to replace the individual casts:
+So, what do you think the dm-bufio shrinker should do?
 
--       return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
-+      return compat_ptr_ioctl(filp, cmd, arg);
+Currently it tries to free buffers on the clean list and if there are not 
+enough buffers on the clean list, it goes into the dirty list - it writes 
+the buffers back and then frees them.
 
-It adds another indirection, but it avoids all the casts and
-uses existing mechanism.
+What should it do? Should it just start writeback of the dirty list 
+without waiting for it? What should it do if all the buffers are under 
+writeback?
 
-     Arnd
+Mikulas
