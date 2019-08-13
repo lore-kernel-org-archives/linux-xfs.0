@@ -1,65 +1,113 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37057 "EHLO mx1.redhat.com"
+Received: from mga09.intel.com ([134.134.136.24]:57181 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727150AbfHMQfx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 13 Aug 2019 12:35:53 -0400
-Date: Tue, 13 Aug 2019 12:35:49 -0400 (EDT)
-From: Mikulas Patocka <mpatocka@redhat.com>
-Subject: Re: [PATCH] direct-io: use GFP_NOIO to avoid deadlock
-In-Reply-To: <20190809215733.GZ7777@dread.disaster.area>
-Message-ID: <alpine.LRH.2.02.1908131231010.6852@file01.intranet.prod.int.rdu2.redhat.com>
-References: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com> <20190809013403.GY7777@dread.disaster.area> <alpine.LRH.2.02.1908090725290.31061@file01.intranet.prod.int.rdu2.redhat.com>
- <20190809215733.GZ7777@dread.disaster.area>
+        id S1726137AbfHMRln (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 13 Aug 2019 13:41:43 -0400
+Date: Tue, 13 Aug 2019 10:41:42 -0700
+From: Ira Weiny <ira.weiny@intel.com>
+Subject: Re: [RFC PATCH v2 16/19] RDMA/uverbs: Add back pointer to system
+ file object
+Message-ID: <20190813174142.GB11882@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-17-ira.weiny@intel.com>
+ <20190812130039.GD24457@ziepe.ca>
+ <20190812172826.GA19746@iweiny-DESK2.sc.intel.com>
+ <20190812175615.GI24457@ziepe.ca>
+ <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
+ <20190813114842.GB29508@ziepe.ca>
 MIME-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190813114842.GB29508@ziepe.ca>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <msnitzer@redhat.com>, junxiao.bi@oracle.com, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, honglei.wang@oracle.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Jason Gunthorpe <jgg@ziepe.ca>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-
-
-On Sat, 10 Aug 2019, Dave Chinner wrote:
-
-> No, you misunderstand. I'm talking about blocking kswapd being
-> wrong.  i.e. Blocking kswapd in shrinkers causes problems
-> because th ememory reclaim code does not expect kswapd to be
-> arbitrarily delayed by waiting on IO. We've had this problem with
-> the XFS inode cache shrinker for years, and there are many reports
-> of extremely long reclaim latencies for both direct and kswapd
-> reclaim that result from kswapd not making progress while waiting
-> in shrinkers for IO to complete.
+On Tue, Aug 13, 2019 at 08:48:42AM -0300, Jason Gunthorpe wrote:
+> On Mon, Aug 12, 2019 at 02:15:37PM -0700, Ira Weiny wrote:
+> > On Mon, Aug 12, 2019 at 02:56:15PM -0300, Jason Gunthorpe wrote:
+> > > On Mon, Aug 12, 2019 at 10:28:27AM -0700, Ira Weiny wrote:
+> > > > On Mon, Aug 12, 2019 at 10:00:40AM -0300, Jason Gunthorpe wrote:
+> > > > > On Fri, Aug 09, 2019 at 03:58:30PM -0700, ira.weiny@intel.com wrote:
+> > > > > > From: Ira Weiny <ira.weiny@intel.com>
+> > > > > > 
+> > > > > > In order for MRs to be tracked against the open verbs context the ufile
+> > > > > > needs to have a pointer to hand to the GUP code.
+> > > > > > 
+> > > > > > No references need to be taken as this should be valid for the lifetime
+> > > > > > of the context.
+> > > > > > 
+> > > > > > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > > > > >  drivers/infiniband/core/uverbs.h      | 1 +
+> > > > > >  drivers/infiniband/core/uverbs_main.c | 1 +
+> > > > > >  2 files changed, 2 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/drivers/infiniband/core/uverbs.h b/drivers/infiniband/core/uverbs.h
+> > > > > > index 1e5aeb39f774..e802ba8c67d6 100644
+> > > > > > +++ b/drivers/infiniband/core/uverbs.h
+> > > > > > @@ -163,6 +163,7 @@ struct ib_uverbs_file {
+> > > > > >  	struct page *disassociate_page;
+> > > > > >  
+> > > > > >  	struct xarray		idr;
+> > > > > > +	struct file             *sys_file; /* backpointer to system file object */
+> > > > > >  };
+> > > > > 
+> > > > > The 'struct file' has a lifetime strictly shorter than the
+> > > > > ib_uverbs_file, which is kref'd on its own lifetime. Having a back
+> > > > > pointer like this is confouding as it will be invalid for some of the
+> > > > > lifetime of the struct.
+> > > > 
+> > > > Ah...  ok.  I really thought it was the other way around.
+> > > > 
+> > > > __fput() should not call ib_uverbs_close() until the last reference on struct
+> > > > file is released...  What holds references to struct ib_uverbs_file past that?
+> > > 
+> > > Child fds hold onto the internal ib_uverbs_file until they are closed
+> > 
+> > The FDs hold the struct file, don't they?
 > 
-> The work I'm currently doing to fix this XFS problem can be found
-> here:
+> Only dups, there are other 'child' FDs we can create
 > 
-> https://lore.kernel.org/linux-fsdevel/20190801021752.4986-1-david@fromorbit.com/
+> > > Now this has unlocked updates to that data.. you'd need some lock and
+> > > get not zero pattern
+> > 
+> > You can't call "get" here because I'm 99% sure we only get here when struct
+> > file has no references left...
 > 
-> 
-> i.e. the point I'm making is that waiting for IO in kswapd reclaim
-> context is considered harmful - kswapd context shrinker reclaim
-> should be as non-blocking as possible, and any back-off to wait for
-> IO to complete should be done by the high level reclaim core once
-> it's completed an entire reclaim scan cycle of everything....
-> 
-> What follows from that, and is pertinent for in this situation, is
-> that if you don't block kswapd, then other reclaim contexts are not
-> going to get stuck waiting for it regardless of the reclaim context
-> they use.
-> 
-> Cheers,
-> 
-> Dave.
+> Nope, like I said the other FDs hold the uverbs_file independent of
+> the struct file it is related too. 
 
-So, what do you think the dm-bufio shrinker should do?
+<sigh>
 
-Currently it tries to free buffers on the clean list and if there are not 
-enough buffers on the clean list, it goes into the dirty list - it writes 
-the buffers back and then frees them.
+We don't allow memory registrations to be created with those other FDs...
 
-What should it do? Should it just start writeback of the dirty list 
-without waiting for it? What should it do if all the buffers are under 
-writeback?
+And I was pretty sure uverbs_destroy_ufile_hw() would take care of (or ensure
+that some other thread is) destroying all the MR's we have associated with this
+FD.
 
-Mikulas
+I'll have to think on this more since uverbs_destroy_ufile_hw() does not
+block...  Which means there is a window here within the GUP code...  :-/
+
+> 
+> This is why having a back pointer like this is so ugly, it creates a
+> reference counting cycle
+
+Yep...  I worked through this...  and it was giving me fits...
+
+Anyway, the struct file is the only object in the core which was reasonable to
+store this information in since that is what is passed around to other
+processes...
+
+Another idea I explored was to create a callback into the driver from the core
+which put the responsibility of printing the pin information on the driver.
+
+But that started to be (and is likely going to be) a pretty complicated "dance"
+between the core and the drivers so I went this way...
+
+I also thought about holding some other reference on struct file which would
+allow release to be called while keeping struct file around.  But that seemed
+crazy...
+
+Ira
