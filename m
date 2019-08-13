@@ -1,64 +1,67 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48024 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731243AbfHOMzk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Aug 2019 08:55:40 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id DEFE4308A958
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:40 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 9D7065DA8B
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:40 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 3/4] xfs: randomly fall back to near mode lookup algorithm in debug mode
-Date: Thu, 15 Aug 2019 08:55:37 -0400
-Message-Id: <20190815125538.49570-4-bfoster@redhat.com>
-In-Reply-To: <20190815125538.49570-1-bfoster@redhat.com>
-References: <20190815125538.49570-1-bfoster@redhat.com>
+Received: from mail-qt1-f195.google.com ([209.85.160.195]:46533 "EHLO
+        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726814AbfHMLrI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Aug 2019 07:47:08 -0400
+Received: by mail-qt1-f195.google.com with SMTP id j15so12380355qtl.13
+        for <linux-xfs@vger.kernel.org>; Tue, 13 Aug 2019 04:47:08 -0700 (PDT)
+Date: Tue, 13 Aug 2019 08:47:06 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [RFC PATCH v2 15/19] mm/gup: Introduce vaddr_pin_pages()
+Message-ID: <20190813114706.GA29508@ziepe.ca>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-16-ira.weiny@intel.com>
+ <20190812122814.GC24457@ziepe.ca>
+ <20190812214854.GF20634@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190812214854.GF20634@iweiny-DESK2.sc.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Ira Weiny <ira.weiny@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-The last block scan is the dominant near mode allocation algorithm
-for a newer filesystem with fewer, large free extents. Add debug
-mode logic to randomly fall back to lookup mode to improve
-regression test coverage.
+On Mon, Aug 12, 2019 at 02:48:55PM -0700, Ira Weiny wrote:
+> On Mon, Aug 12, 2019 at 09:28:14AM -0300, Jason Gunthorpe wrote:
+> > On Fri, Aug 09, 2019 at 03:58:29PM -0700, ira.weiny@intel.com wrote:
+> > > From: Ira Weiny <ira.weiny@intel.com>
+> > > 
+> > > The addition of FOLL_LONGTERM has taken on additional meaning for CMA
+> > > pages.
+> > > 
+> > > In addition subsystems such as RDMA require new information to be passed
+> > > to the GUP interface to track file owning information.  As such a simple
+> > > FOLL_LONGTERM flag is no longer sufficient for these users to pin pages.
+> > > 
+> > > Introduce a new GUP like call which takes the newly introduced vaddr_pin
+> > > information.  Failure to pass the vaddr_pin object back to a vaddr_put*
+> > > call will result in a failure if pins were created on files during the
+> > > pin operation.
+> > 
+> > Is this a 'vaddr' in the traditional sense, ie does it work with
+> > something returned by valloc?
+> 
+> ...or malloc in user space, yes.  I think the idea is that it is a user virtual
+> address.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+valloc is a kernel call
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 7753b61ba532..d550aa5597bf 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1266,6 +1266,7 @@ xfs_alloc_ag_vextent_near(
- 	int			i;
- 	xfs_agblock_t		bno;
- 	xfs_extlen_t		len;
-+	bool			lastblock;
- 
- 	/* handle unitialized agbno range so caller doesn't have to */
- 	if (!args->min_agbno && !args->max_agbno)
-@@ -1291,7 +1292,12 @@ xfs_alloc_ag_vextent_near(
- 	 * Otherwise run the optimized lookup search algorithm from the current
- 	 * location to the end of the tree.
- 	 */
--	if (xfs_btree_islastblock(acur.cnt, 0)) {
-+	lastblock = xfs_btree_islastblock(acur.cnt, 0);
-+#ifdef DEBUG
-+	if (lastblock)
-+		lastblock = prandom_u32() & 1;
-+#endif
-+	if (lastblock) {
- 		int	j;
- 
- 		trace_xfs_alloc_cur_lastblock(args);
--- 
-2.20.1
+> So I'm open to suggestions.  Jan gave me this one, so I figured it was safer to
+> suggest it...
+
+Should have the word user in it, imho
+
+> > I also wish GUP like functions took in a 'void __user *' instead of
+> > the unsigned long to make this clear :\
+> 
+> Not a bad idea.  But I only see a couple of call sites who actually use a 'void
+> __user *' to pass into GUP...  :-/
+> 
+> For RDMA the address is _never_ a 'void __user *' AFAICS.
+
+That is actually a bug, converting from u64 to a 'user VA' needs to go
+through u64_to_user_ptr().
+
+Jason
