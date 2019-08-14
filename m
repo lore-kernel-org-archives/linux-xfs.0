@@ -1,125 +1,186 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:46116 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728684AbfHNRur (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Aug 2019 13:50:47 -0400
-Date: Wed, 14 Aug 2019 10:50:45 -0700
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [RFC PATCH v2 16/19] RDMA/uverbs: Add back pointer to system
- file object
-Message-ID: <20190814175045.GA31490@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-17-ira.weiny@intel.com>
- <20190812130039.GD24457@ziepe.ca>
- <20190812172826.GA19746@iweiny-DESK2.sc.intel.com>
- <20190812175615.GI24457@ziepe.ca>
- <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
- <20190813114842.GB29508@ziepe.ca>
- <20190813174142.GB11882@iweiny-DESK2.sc.intel.com>
- <20190813180022.GF29508@ziepe.ca>
- <20190813203858.GA12695@iweiny-DESK2.sc.intel.com>
- <20190814122308.GB13770@ziepe.ca>
+Received: from mout.kundenserver.de ([212.227.126.134]:55885 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725895AbfHNUpn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 16:45:43 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 00/18] compat_ioctl.c removal, part 2/3 
+Date: Wed, 14 Aug 2019 22:42:27 +0200
+Message-Id: <20190814204259.120942-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190814122308.GB13770@ziepe.ca>
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, davem@davemloft.net, axboe@kernel.dk, linux-block@vger.kernel.org, minyard@acm.org, gregkh@linuxfoundation.org, linux@roeck-us.net, alexandre.belloni@bootlin.com, jejb@linux.ibm.com, martin.petersen@oracle.com, dgilbert@interlog.com, jslaby@suse.com, wim@linux-watchdog.org, tytso@mit.edu, adilger.kernel@dilger.ca, jaegeuk@kernel.org, rpeterso@redhat.com, agruenba@redhat.com, mikulas@artax.karlin.mff.cuni.cz, konishi.ryusuke@gmail.com, jlbec@evilplan.org, joseph.qi@linux.alibaba.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, openipmi-developer@lists.sourceforge.net, linux-hwmon@vger.kernel.org, linux-ppp@vger.kernel.org, linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-watchdog@vger.kernel.org, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com
 
-On Wed, Aug 14, 2019 at 09:23:08AM -0300, Jason Gunthorpe wrote:
-> On Tue, Aug 13, 2019 at 01:38:59PM -0700, Ira Weiny wrote:
-> > On Tue, Aug 13, 2019 at 03:00:22PM -0300, Jason Gunthorpe wrote:
-> > > On Tue, Aug 13, 2019 at 10:41:42AM -0700, Ira Weiny wrote:
-> > > 
-> > > > And I was pretty sure uverbs_destroy_ufile_hw() would take care of (or ensure
-> > > > that some other thread is) destroying all the MR's we have associated with this
-> > > > FD.
-> > > 
-> > > fd's can't be revoked, so destroy_ufile_hw() can't touch them. It
-> > > deletes any underlying HW resources, but the FD persists.
-> > 
-> > I misspoke.  I should have said associated with this "context".  And of course
-> > uverbs_destroy_ufile_hw() does not touch the FD.  What I mean is that the
-> > struct file which had file_pins hanging off of it would be getting its file
-> > pins destroyed by uverbs_destroy_ufile_hw().  Therefore we don't need the FD
-> > after uverbs_destroy_ufile_hw() is done.
-> > 
-> > But since it does not block it may be that the struct file is gone before the
-> > MR is actually destroyed.  Which means I think the GUP code would blow up in
-> > that case...  :-(
-> 
-> Oh, yes, that is true, you also can't rely on the struct file living
-> longer than the HW objects either, that isn't how the lifetime model
-> works.
-> 
-> If GUP consumes the struct file it must allow the struct file to be
-> deleted before the GUP pin is released.
+This is a follow-up to part 1/3 that I posted after -rc2.
+I hope these are still largely uncontroversial changes, and
+I would like to get them into linux-5.4.
 
-I may have to think about this a bit.  But I'm starting to lean toward my
-callback method as a solution...
+Part 1 was in
 
-> 
-> > The drivers could provide some generic object (in RDMA this could be the
-> > uverbs_attr_bundle) which represents their "context".
-> 
-> For RDMA the obvious context is the struct ib_mr *
+https://lore.kernel.org/lkml/CAPcyv4i_nHzV155RcgnAQ189aq2Lfd2g8pA1D5NbZqo9E_u+Dw@mail.gmail.com/
 
-Not really, but maybe.  See below regarding tracking this across processes.
+Part 3 will be one kernel release after part 2 is merged,
+as that still needs a little extra work.
 
-> 
-> > But for the procfs interface, that context then needs to be associated with any
-> > file which points to it...  For RDMA, or any other "FD based pin mechanism", it
-> > would be up to the driver to "install" a procfs handler into any struct file
-> > which _may_ point to this context.  (before _or_ after memory pins).
-> 
-> Is this all just for debugging? Seems like a lot of complication just
-> to print a string
+The entire series is available at
 
-No, this is a requirement to allow an admin to determine why their truncates
-may be failing.  As per our discussion here:
+git://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git compat_ioctl
 
-https://lkml.org/lkml/2019/6/7/982
+      Arnd
 
-Looking back at the thread apparently no one confirmed my question (assertion).
-But no one objected to it either!  :-D  From that post:
+Al Viro (2):
+  compat_ioctl: unify copy-in of ppp filters
+  compat_ioctl: move PPPIOCSCOMPRESS to ppp_generic
 
-	"... if we can keep track of who has the pins in lsof can we agree no
-	process needs to be SIGKILL'ed?  Admins can do this on their own
-	"killing" if they really need to stop the use of these files, right?"
+Arnd Bergmann (16):
+  xfs: compat_ioctl: use compat_ptr()
+  xfs: compat_ioctl: add missing conversions
+  gfs2: add compat_ioctl support
+  fs: compat_ioctl: move FITRIM emulation into file systems
+  watchdog: cpwd: use generic compat_ptr_ioctl
+  compat_ioctl: move WDIOC handling into wdt drivers
+  compat_ioctl: reimplement SG_IO handling
+  af_unix: add compat_ioctl support
+  compat_ioctl: handle SIOCOUTQNSD
+  compat_ioctl: move SIOCOUTQ out of compat_ioctl.c
+  tty: handle compat PPP ioctls
+  compat_ioctl: handle PPPIOCGIDLE for 64-bit time_t
+  compat_ioctl: ppp: move simple commands into ppp_generic.c
+  compat_ioctl: move SG_GET_REQUEST_TABLE handling
+  pktcdvd: add compat_ioctl handler
+  scsi: sd: enable compat ioctls for sed-opal
 
-This is what I am trying to do here is ensure that no matter what the user
-does.  Fork, munmap, SCM_RIGHTS, close (on any FD), the underlying pin is
-associated to any process which has access to those pins and is holding
-references to those pages.  Then any user of the system who gets a failing
-truncate can figure out which processes are holding this up.
+ Documentation/networking/ppp_generic.txt  |   2 +
+ arch/powerpc/platforms/52xx/mpc52xx_gpt.c |   1 +
+ arch/um/drivers/harddog_kern.c            |   1 +
+ block/scsi_ioctl.c                        | 132 ++++++++-
+ drivers/block/pktcdvd.c                   |  25 ++
+ drivers/char/ipmi/ipmi_watchdog.c         |   1 +
+ drivers/hwmon/fschmd.c                    |   1 +
+ drivers/net/ppp/ppp_generic.c             | 245 ++++++++++-----
+ drivers/rtc/rtc-ds1374.c                  |   1 +
+ drivers/scsi/sd.c                         |  14 +-
+ drivers/scsi/sg.c                         |  59 +++-
+ drivers/tty/tty_io.c                      |   5 +
+ drivers/watchdog/acquirewdt.c             |   1 +
+ drivers/watchdog/advantechwdt.c           |   1 +
+ drivers/watchdog/alim1535_wdt.c           |   1 +
+ drivers/watchdog/alim7101_wdt.c           |   1 +
+ drivers/watchdog/ar7_wdt.c                |   1 +
+ drivers/watchdog/at91rm9200_wdt.c         |   1 +
+ drivers/watchdog/ath79_wdt.c              |   1 +
+ drivers/watchdog/bcm63xx_wdt.c            |   1 +
+ drivers/watchdog/cpu5wdt.c                |   1 +
+ drivers/watchdog/cpwd.c                   |  25 +-
+ drivers/watchdog/eurotechwdt.c            |   1 +
+ drivers/watchdog/f71808e_wdt.c            |   1 +
+ drivers/watchdog/gef_wdt.c                |   1 +
+ drivers/watchdog/geodewdt.c               |   1 +
+ drivers/watchdog/ib700wdt.c               |   1 +
+ drivers/watchdog/ibmasr.c                 |   1 +
+ drivers/watchdog/indydog.c                |   1 +
+ drivers/watchdog/intel_scu_watchdog.c     |   1 +
+ drivers/watchdog/iop_wdt.c                |   1 +
+ drivers/watchdog/it8712f_wdt.c            |   1 +
+ drivers/watchdog/ixp4xx_wdt.c             |   1 +
+ drivers/watchdog/ks8695_wdt.c             |   1 +
+ drivers/watchdog/m54xx_wdt.c              |   1 +
+ drivers/watchdog/machzwd.c                |   1 +
+ drivers/watchdog/mixcomwd.c               |   1 +
+ drivers/watchdog/mtx-1_wdt.c              |   1 +
+ drivers/watchdog/mv64x60_wdt.c            |   1 +
+ drivers/watchdog/nuc900_wdt.c             |   1 +
+ drivers/watchdog/nv_tco.c                 |   1 +
+ drivers/watchdog/pc87413_wdt.c            |   1 +
+ drivers/watchdog/pcwd.c                   |   1 +
+ drivers/watchdog/pcwd_pci.c               |   1 +
+ drivers/watchdog/pcwd_usb.c               |   1 +
+ drivers/watchdog/pika_wdt.c               |   1 +
+ drivers/watchdog/pnx833x_wdt.c            |   1 +
+ drivers/watchdog/rc32434_wdt.c            |   1 +
+ drivers/watchdog/rdc321x_wdt.c            |   1 +
+ drivers/watchdog/riowd.c                  |   1 +
+ drivers/watchdog/sa1100_wdt.c             |   1 +
+ drivers/watchdog/sb_wdog.c                |   1 +
+ drivers/watchdog/sbc60xxwdt.c             |   1 +
+ drivers/watchdog/sbc7240_wdt.c            |   1 +
+ drivers/watchdog/sbc_epx_c3.c             |   1 +
+ drivers/watchdog/sbc_fitpc2_wdt.c         |   1 +
+ drivers/watchdog/sc1200wdt.c              |   1 +
+ drivers/watchdog/sc520_wdt.c              |   1 +
+ drivers/watchdog/sch311x_wdt.c            |   1 +
+ drivers/watchdog/scx200_wdt.c             |   1 +
+ drivers/watchdog/smsc37b787_wdt.c         |   1 +
+ drivers/watchdog/w83877f_wdt.c            |   1 +
+ drivers/watchdog/w83977f_wdt.c            |   1 +
+ drivers/watchdog/wafer5823wdt.c           |   1 +
+ drivers/watchdog/watchdog_dev.c           |   1 +
+ drivers/watchdog/wdrtas.c                 |   1 +
+ drivers/watchdog/wdt.c                    |   1 +
+ drivers/watchdog/wdt285.c                 |   1 +
+ drivers/watchdog/wdt977.c                 |   1 +
+ drivers/watchdog/wdt_pci.c                |   1 +
+ fs/compat_ioctl.c                         | 346 +---------------------
+ fs/ecryptfs/file.c                        |   1 +
+ fs/ext4/ioctl.c                           |   1 +
+ fs/f2fs/file.c                            |   1 +
+ fs/gfs2/file.c                            |  24 ++
+ fs/hpfs/dir.c                             |   1 +
+ fs/hpfs/file.c                            |   1 +
+ fs/nilfs2/ioctl.c                         |   1 +
+ fs/ocfs2/ioctl.c                          |   1 +
+ fs/xfs/xfs_ioctl32.c                      |  11 +-
+ include/linux/blkdev.h                    |   2 +
+ include/uapi/linux/ppp-ioctl.h            |   2 +
+ include/uapi/linux/ppp_defs.h             |  14 +
+ lib/iov_iter.c                            |   1 +
+ net/socket.c                              |   3 +
+ net/unix/af_unix.c                        |  19 ++
+ 86 files changed, 526 insertions(+), 472 deletions(-)
 
-> 
-> Generally, I think you'd be better to associate things with the
-> mm_struct not some struct file... The whole design is simpler as GUP
-> already has the mm_struct.
+-- 
+2.20.0
 
-I wish I _could_ do that...  And for some simple users I do that.  This is why
-rdma_pin has the option to track against mm_struct _OR_ struct file.
-
-At first it seemed like carrying over the mm_struct info during fork would
-work...  but then there is SCM_RIGHTS where one can share the RDMA context with
-any "random" process...  AFAICS struct file has no concept of mm_struct (nor
-should it) so the dup for SCM_RIGHTS processing would not be able to do this.
-A further complication was that when the RDMA FD is dup'ed the RDMA subsystem
-does not know about it...  So it was not straight forward to have the RDMA
-subsystem do this either.  Not to mention that would be yet another
-complication the drivers would have to deal with...  I think you had similar
-issues which lead to the use of an "owning_mm" in the umem object.  So while
-_some_ mm_struct is held it may not be visible to the user since that mm_struct
-may belong to a process which is gone... Or even if not gone, killing it would not
-fully remove the pin...
-
-So keeping this tracked against struct file works (and seemed straight forward)
-no matter where/how the RDMA FD is shared...  Even with the complication above
-I still think it is easier to do this way.
-
-If I am missing something WRT the mm_struct "I'm all ears".
-
-Ira
+Cc: davem@davemloft.net
+Cc: axboe@kernel.dk
+Cc: linux-block@vger.kernel.org
+Cc: minyard@acm.org
+Cc: gregkh@linuxfoundation.org
+Cc: linux@roeck-us.net
+Cc: alexandre.belloni@bootlin.com
+Cc: jejb@linux.ibm.com
+Cc: martin.petersen@oracle.com
+Cc: dgilbert@interlog.com
+Cc: jslaby@suse.com
+Cc: wim@linux-watchdog.org
+Cc: viro@zeniv.linux.org.uk
+Cc: tytso@mit.edu
+Cc: adilger.kernel@dilger.ca
+Cc: jaegeuk@kernel.org
+Cc: rpeterso@redhat.com
+Cc: agruenba@redhat.com
+Cc: mikulas@artax.karlin.mff.cuni.cz
+Cc: konishi.ryusuke@gmail.com
+Cc: jlbec@evilplan.org
+Cc: joseph.qi@linux.alibaba.com
+Cc: darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org
+Cc: netdev@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: openipmi-developer@lists.sourceforge.net
+Cc: linux-hwmon@vger.kernel.org
+Cc: linux-ppp@vger.kernel.org
+Cc: linux-rtc@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
+Cc: linux-watchdog@vger.kernel.org
+Cc: linux-fsdevel@vger.kernel.org
+Cc: ecryptfs@vger.kernel.org
+Cc: linux-ext4@vger.kernel.org
+Cc: linux-f2fs-devel@lists.sourceforge.net
+Cc: cluster-devel@redhat.com
+Cc: linux-nilfs@vger.kernel.org
+Cc: ocfs2-devel@oss.oracle.com
