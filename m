@@ -1,135 +1,81 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48026 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729649AbfHOMzl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Aug 2019 08:55:41 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4FA34308A9E0
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:41 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 0C54D5DA8B
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:40 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 4/4] xfs: refactor successful AG allocation accounting code
-Date: Thu, 15 Aug 2019 08:55:38 -0400
-Message-Id: <20190815125538.49570-5-bfoster@redhat.com>
-In-Reply-To: <20190815125538.49570-1-bfoster@redhat.com>
-References: <20190815125538.49570-1-bfoster@redhat.com>
+Received: from szxga01-in.huawei.com ([45.249.212.187]:3939 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726373AbfHNHAy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Aug 2019 03:00:54 -0400
+Date: Wed, 14 Aug 2019 15:17:54 +0800
+From: Gao Xiang <gaoxiang25@huawei.com>
+Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190814071754.GC28602@138>
+References: <20190813151434.GQ7138@magnolia>
+ <20190813154010.GD5307@bombadil.infradead.org>
+ <20190814070321.GB28602@138>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20190814070321.GB28602@138>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-The higher level allocation code is unnecessarily split across
-xfs_alloc_ag_vextent() and xfs_alloc_ag_vextent_type(). In
-preparation for condensing this code, factor out the AG accounting
-bits and move the caller down after the generic allocation structure
-and function definitions to pick them up without the need for
-declarations. No functional changes.
+On Wed, Aug 14, 2019 at 03:03:21PM +0800, Gao Xiang wrote:
+> On Tue, Aug 13, 2019 at 08:40:10AM -0700, Matthew Wilcox wrote:
+> > On Tue, Aug 13, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
+> > > +		/*
+> > > +		 * Now that we've locked both pages, make sure they still
+> > > +		 * represent the data we're interested in.  If not, someone
+> > > +		 * is invalidating pages on us and we lose.
+> > > +		 */
+> > > +		if (src_page->mapping != src->i_mapping ||
+> > > +		    src_page->index != srcoff >> PAGE_SHIFT ||
+> > > +		    dest_page->mapping != dest->i_mapping ||
+> > > +		    dest_page->index != destoff >> PAGE_SHIFT) {
+> > > +			same = false;
+> > > +			goto unlock;
+> > > +		}
+> > 
+> > It is my understanding that you don't need to check the ->index here.
+> > If I'm wrong about that, I'd really appreciate being corrected, because
+> > the page cache locking is subtle.
+> > 
+> > You call read_mapping_page() which returns the page with an elevated
+> > refcount.  That means the page can't go back to the page allocator and
+> > be allocated again.  It can, because it's unlocked, still be truncated,
+> > so the check for ->mapping after locking it is needed.  But the check
+> > for ->index being correct was done by find_get_entry().
+> > 
+> > See pagecache_get_page() -- if we specify FGP_LOCK, then it will lock
+> > the page, check the ->mapping but not check ->index.  OK, it does check
+> > ->index, but in a VM_BUG_ON(), so it's not something that ought to be
+> > able to be wrong.
+> 
+> That is my understanding as well. In details...
+> 
+> The page data get ready after read_mapping_page() is successfully
+> returned. However, if someone needs to get a stable untruncated page,
+> lock_page() and recheck page->mapping are needed as well.
+> 
+> I have no idea how page->index can be changed safely without reallocating
+> the page, even some paths could keep using some truncated page temporarily
+> with some refcounts held but I think those paths cannot add these pages
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c | 75 +++++++++++++++++++++++----------------
- 1 file changed, 45 insertions(+), 30 deletions(-)
+Such a case is like that even if the page can be truncated
+at the same time without locking, some paths only needs to
+get its page data unstrictly (and note that these pages
+should be Uptodated before). Therefore those paths can
+only take a refcount without PG_lock... But such refcounts
+should be used temporarily, those pages cannot be added to
+page cache again without reallocating...
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index d550aa5597bf..4ae4cfa0ed7f 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -1364,6 +1364,48 @@ xfs_alloc_ag_vextent_near(
- 	return error;
- }
- 
-+/*
-+ * Various AG accounting updates for a successful allocation. This includes
-+ * updating the rmapbt, AG free block accounting and AG reservation accounting.
-+ */
-+STATIC int
-+xfs_alloc_ag_vextent_accounting(
-+	struct xfs_alloc_arg	*args)
-+{
-+	int			error = 0;
-+
-+	ASSERT(args->agbno != NULLAGBLOCK);
-+	ASSERT(args->len >= args->minlen);
-+	ASSERT(args->len <= args->maxlen);
-+	ASSERT(!args->wasfromfl || args->resv != XFS_AG_RESV_AGFL);
-+	ASSERT(args->agbno % args->alignment == 0);
-+
-+	/* if not file data, insert new block into the reverse map btree */
-+	if (!xfs_rmap_should_skip_owner_update(&args->oinfo)) {
-+		error = xfs_rmap_alloc(args->tp, args->agbp, args->agno,
-+				       args->agbno, args->len, &args->oinfo);
-+		if (error)
-+			return error;
-+	}
-+
-+	if (!args->wasfromfl) {
-+		error = xfs_alloc_update_counters(args->tp, args->pag,
-+						  args->agbp,
-+						  -((long)(args->len)));
-+		if (error)
-+			return error;
-+
-+		ASSERT(!xfs_extent_busy_search(args->mp, args->agno,
-+					      args->agbno, args->len));
-+	}
-+
-+	xfs_ag_resv_alloc_extent(args->pag, args->resv, args);
-+
-+	XFS_STATS_INC(args->mp, xs_allocx);
-+	XFS_STATS_ADD(args->mp, xs_allocb, args->len);
-+	return error;
-+}
-+
- /*
-  * Allocate a variable extent in the allocation group agno.
-  * Type and bno are used to determine where in the allocation group the
-@@ -1402,38 +1444,11 @@ xfs_alloc_ag_vextent(
- 		ASSERT(0);
- 		/* NOTREACHED */
- 	}
--
--	if (error || args->agbno == NULLAGBLOCK)
-+	if (error)
- 		return error;
- 
--	ASSERT(args->len >= args->minlen);
--	ASSERT(args->len <= args->maxlen);
--	ASSERT(!args->wasfromfl || args->resv != XFS_AG_RESV_AGFL);
--	ASSERT(args->agbno % args->alignment == 0);
--
--	/* if not file data, insert new block into the reverse map btree */
--	if (!xfs_rmap_should_skip_owner_update(&args->oinfo)) {
--		error = xfs_rmap_alloc(args->tp, args->agbp, args->agno,
--				       args->agbno, args->len, &args->oinfo);
--		if (error)
--			return error;
--	}
--
--	if (!args->wasfromfl) {
--		error = xfs_alloc_update_counters(args->tp, args->pag,
--						  args->agbp,
--						  -((long)(args->len)));
--		if (error)
--			return error;
--
--		ASSERT(!xfs_extent_busy_search(args->mp, args->agno,
--					      args->agbno, args->len));
--	}
--
--	xfs_ag_resv_alloc_extent(args->pag, args->resv, args);
--
--	XFS_STATS_INC(args->mp, xs_allocx);
--	XFS_STATS_ADD(args->mp, xs_allocb, args->len);
-+	if (args->agbno != NULLAGBLOCK)
-+		error = xfs_alloc_ag_vextent_accounting(args);
- 	return error;
- }
- 
--- 
-2.20.1
+Thanks,
+Gao Xiang
+
+> directly to some page cache again without freeing since it seems really
+> unsafe.....
+> 
+> Thanks,
+> Gao Xiang
+> 
+> > 
