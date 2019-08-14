@@ -1,100 +1,52 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.99]:59084 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725800AbfHNLVi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Aug 2019 07:21:38 -0400
-Message-ID: <1ba29bfa22f82e6d880ab31c3835047f3353f05a.camel@kernel.org>
-Subject: Re: [RFC PATCH v2 01/19] fs/locks: Export F_LAYOUT lease to user
- space
-From: Jeff Layton <jlayton@kernel.org>
-Date: Wed, 14 Aug 2019 07:21:34 -0400
-In-Reply-To: <20190814080547.GJ6129@dread.disaster.area>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
-         <20190809225833.6657-2-ira.weiny@intel.com>
-         <20190809235231.GC7777@dread.disaster.area>
-         <20190812173626.GB19746@iweiny-DESK2.sc.intel.com>
-         <20190814080547.GJ6129@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"
+Received: from mout.kundenserver.de ([212.227.126.135]:48999 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727414AbfHNUoL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 16:44:11 -0400
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH v5 02/18] xfs: compat_ioctl: add missing conversions
+Date: Wed, 14 Aug 2019 22:42:29 +0200
+Message-Id: <20190814204259.120942-3-arnd@arndb.de>
+In-Reply-To: <20190814204259.120942-1-arnd@arndb.de>
+References: <20190814204259.120942-1-arnd@arndb.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
+Cc: Arnd Bergmann <arnd@arndb.de>, stable@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>, Brian Foster <bfoster@redhat.com>, Nick Bowler <nbowler@draconx.ca>, Allison Collins <allison.henderson@oracle.com>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>
 
-On Wed, 2019-08-14 at 18:05 +1000, Dave Chinner wrote:
-> On Mon, Aug 12, 2019 at 10:36:26AM -0700, Ira Weiny wrote:
-> > On Sat, Aug 10, 2019 at 09:52:31AM +1000, Dave Chinner wrote:
-> > > On Fri, Aug 09, 2019 at 03:58:15PM -0700, ira.weiny@intel.com wrote:
-> > > > +	/*
-> > > > +	 * NOTE on F_LAYOUT lease
-> > > > +	 *
-> > > > +	 * LAYOUT lease types are taken on files which the user knows that
-> > > > +	 * they will be pinning in memory for some indeterminate amount of
-> > > > +	 * time.
-> > > 
-> > > Indeed, layout leases have nothing to do with pinning of memory.
-> > 
-> > Yep, Fair enough.  I'll rework the comment.
-> > 
-> > > That's something an application taht uses layout leases might do,
-> > > but it largely irrelevant to the functionality layout leases
-> > > provide. What needs to be done here is explain what the layout lease
-> > > API actually guarantees w.r.t. the physical file layout, not what
-> > > some application is going to do with a lease. e.g.
-> > > 
-> > > 	The layout lease F_RDLCK guarantees that the holder will be
-> > > 	notified that the physical file layout is about to be
-> > > 	changed, and that it needs to release any resources it has
-> > > 	over the range of this lease, drop the lease and then
-> > > 	request it again to wait for the kernel to finish whatever
-> > > 	it is doing on that range.
-> > > 
-> > > 	The layout lease F_RDLCK also allows the holder to modify
-> > > 	the physical layout of the file. If an operation from the
-> > > 	lease holder occurs that would modify the layout, that lease
-> > > 	holder does not get notification that a change will occur,
-> > > 	but it will block until all other F_RDLCK leases have been
-> > > 	released by their holders before going ahead.
-> > > 
-> > > 	If there is a F_WRLCK lease held on the file, then a F_RDLCK
-> > > 	holder will fail any operation that may modify the physical
-> > > 	layout of the file. F_WRLCK provides exclusive physical
-> > > 	modification access to the holder, guaranteeing nothing else
-> > > 	will change the layout of the file while it holds the lease.
-> > > 
-> > > 	The F_WRLCK holder can change the physical layout of the
-> > > 	file if it so desires, this will block while F_RDLCK holders
-> > > 	are notified and release their leases before the
-> > > 	modification will take place.
-> > > 
-> > > We need to define the semantics we expose to userspace first.....
+FS_IOC_GETFSLABEL/FS_IOC_SETFSLABEL were added in linux-4.18
+in xfs, but not in the compat_ioctl case, so add them here.
 
-Absolutely.
+FITRIM was added earlier and also lacks a line the same function,
+but this is ok because there is an entry in fs/compat_ioctl.c for
+it.
 
-> > 
-> > Agreed.  I believe I have implemented the semantics you describe above.  Do I
-> > have your permission to use your verbiage as part of reworking the comment and
-> > commit message?
-> 
-> Of course. :)
-> 
-> Cheers,
-> 
+Adding all three here to keep the native and compat ioctl handlers
+in sync.
 
-I'll review this in more detail soon, but subsequent postings of the set
-should probably also go to linux-api mailing list. This is a significant
-API change. It might not also hurt to get the glibc folks involved here
-too since you'll probably want to add the constants to the headers there
-as well.
+Cc: stable@vger.kernel.org
+Fixes: f7664b31975b ("xfs: implement online get/set fs label")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ fs/xfs/xfs_ioctl32.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Finally, consider going ahead and drafting a patch to the fcntl(2)
-manpage if you think you have the API mostly nailed down. This API is a
-little counterintuitive (i.e. you can change the layout with an F_RDLCK
-lease), so it will need to be very clearly documented. I've also found
-that when creating a new API, documenting it tends to help highlight its
-warts and areas where the behavior is not clearly defined.
-
+diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+index ad91e81a2fcf..63bdc4c1535b 100644
+--- a/fs/xfs/xfs_ioctl32.c
++++ b/fs/xfs/xfs_ioctl32.c
+@@ -576,6 +576,9 @@ xfs_file_compat_ioctl(
+ 	case XFS_IOC_SCRUB_METADATA:
+ 	case XFS_IOC_BULKSTAT:
+ 	case XFS_IOC_INUMBERS:
++	case FITRIM:
++	case FS_IOC_GETFSLABEL:
++	case FS_IOC_SETFSLABEL:
+ 		return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
+ #if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
+ 	/*
 -- 
-Jeff Layton <jlayton@kernel.org>
+2.20.0
