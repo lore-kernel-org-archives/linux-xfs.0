@@ -1,101 +1,32 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47358 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726383AbfHNKoX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 06:44:23 -0400
-Date: Wed, 14 Aug 2019 20:43:10 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH] direct-io: use GFP_NOIO to avoid deadlock
-Message-ID: <20190814104310.GN6129@dread.disaster.area>
-References: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com>
- <20190809013403.GY7777@dread.disaster.area>
- <alpine.LRH.2.02.1908090725290.31061@file01.intranet.prod.int.rdu2.redhat.com>
- <20190809215733.GZ7777@dread.disaster.area>
- <alpine.LRH.2.02.1908131231010.6852@file01.intranet.prod.int.rdu2.redhat.com>
+Received: from verein.lst.de ([213.95.11.211]:37184 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726121AbfHNLPj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Aug 2019 07:15:39 -0400
+Date: Wed, 14 Aug 2019 13:15:35 +0200
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/9] cachefiles: drop direct usage of ->bmap method.
+Message-ID: <20190814111535.GC1885@lst.de>
+References: <20190808082744.31405-1-cmaiolino@redhat.com> <20190808082744.31405-3-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <alpine.LRH.2.02.1908131231010.6852@file01.intranet.prod.int.rdu2.redhat.com>
+In-Reply-To: <20190808082744.31405-3-cmaiolino@redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Mikulas Patocka <mpatocka@redhat.com>
-Cc: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <msnitzer@redhat.com>, junxiao.bi@oracle.com, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, honglei.wang@oracle.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+To: Carlos Maiolino <cmaiolino@redhat.com>
+Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 12:35:49PM -0400, Mikulas Patocka wrote:
-> 
-> 
-> On Sat, 10 Aug 2019, Dave Chinner wrote:
-> 
-> > No, you misunderstand. I'm talking about blocking kswapd being
-> > wrong.  i.e. Blocking kswapd in shrinkers causes problems
-> > because th ememory reclaim code does not expect kswapd to be
-> > arbitrarily delayed by waiting on IO. We've had this problem with
-> > the XFS inode cache shrinker for years, and there are many reports
-> > of extremely long reclaim latencies for both direct and kswapd
-> > reclaim that result from kswapd not making progress while waiting
-> > in shrinkers for IO to complete.
-> > 
-> > The work I'm currently doing to fix this XFS problem can be found
-> > here:
-> > 
-> > https://lore.kernel.org/linux-fsdevel/20190801021752.4986-1-david@fromorbit.com/
-> > 
-> > 
-> > i.e. the point I'm making is that waiting for IO in kswapd reclaim
-> > context is considered harmful - kswapd context shrinker reclaim
-> > should be as non-blocking as possible, and any back-off to wait for
-> > IO to complete should be done by the high level reclaim core once
-> > it's completed an entire reclaim scan cycle of everything....
-> > 
-> > What follows from that, and is pertinent for in this situation, is
-> > that if you don't block kswapd, then other reclaim contexts are not
-> > going to get stuck waiting for it regardless of the reclaim context
-> > they use.
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> 
-> So, what do you think the dm-bufio shrinker should do?
+On Thu, Aug 08, 2019 at 10:27:37AM +0200, Carlos Maiolino wrote:
+> +	block = page->index;
+> +	block <<= shift;
 
-I'm not familiar with the constraints the code operates under, so
-I can't guarantee that I have an answer for you... :/
+Can't this cause overflows?
 
-> Currently it tries to free buffers on the clean list and if there are not 
-> enough buffers on the clean list, it goes into the dirty list - it writes 
-> the buffers back and then frees them.
-> 
-> What should it do? Should it just start writeback of the dirty list 
-> without waiting for it? What should it do if all the buffers are under 
-> writeback?
+> +
+> +	ret = bmap(inode, &block);
+> +	ASSERT(!ret);
 
-For kswapd, it should do what it can without blocking. e.g. kicking
-an async writer thread rather than submitting the IO itself. That's
-what I changes XFS to do.
-
-And if you look at the patchset in the above link, it also
-introduced a mechanism for shrinkers to communicate back to the high
-level reclaim code that kswapd needs to back off
-(reclaim_state->need_backoff).
-
-With these mechanism, the shrinker can start IO without blocking
-kswapd on congested request queues and tell memory reclaim to wait
-before calling this shrinker again. This allows kswapd to aggregate
-all the waits that shrinkers and page reclaim require to all
-progress to be made into a single backoff event. That means kswapd
-does other scanning work while background writeback goes on, and
-once everythign is scanned it does a single wait for everything that
-needs time to make progress...
-
-I think that should also work for the dm-bufio shrinker, and the the
-direct reclaim backoff parts of the patchset should work for
-non-blocking direct reclaim scanning as well, like it now does for
-XFS.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+I think we want some real error handling here instead of just an
+assert..
