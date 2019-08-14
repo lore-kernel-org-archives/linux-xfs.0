@@ -1,39 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.133]:42776 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728500AbfHOK0y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 06:26:54 -0400
-Date: Thu, 15 Aug 2019 03:26:49 -0700
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
-Message-ID: <20190815102649.GA10821@infradead.org>
-References: <20190814204259.120942-1-arnd@arndb.de>
- <20190814204259.120942-2-arnd@arndb.de>
- <20190814213753.GP6129@dread.disaster.area>
- <20190815071314.GA6960@infradead.org>
- <CAK8P3a2Hjfd49XY18cDr04ZpvC5ZBGudzxqpCesbSsDf1ydmSA@mail.gmail.com>
- <20190815080211.GA17055@infradead.org>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49931 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725280AbfHNJ4A (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 05:56:00 -0400
+Date: Wed, 14 Aug 2019 19:54:48 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190814095448.GK6129@dread.disaster.area>
+References: <20190813151434.GQ7138@magnolia>
+ <20190813154010.GD5307@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190815080211.GA17055@infradead.org>
+In-Reply-To: <20190813154010.GD5307@bombadil.infradead.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Christoph Hellwig <hch@infradead.org>, Dave Chinner <david@fromorbit.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Allison Collins <allison.henderson@oracle.com>, Nick Bowler <nbowler@draconx.ca>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>
+To: Matthew Wilcox <willy@infradead.org>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Thu, Aug 15, 2019 at 01:02:11AM -0700, Christoph Hellwig wrote:
-> In many ways I'd actually much rather have a table driven approach.
-> Let me try something..
+On Tue, Aug 13, 2019 at 08:40:10AM -0700, Matthew Wilcox wrote:
+> On Tue, Aug 13, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
+> > +		/*
+> > +		 * Now that we've locked both pages, make sure they still
+> > +		 * represent the data we're interested in.  If not, someone
+> > +		 * is invalidating pages on us and we lose.
+> > +		 */
+> > +		if (src_page->mapping != src->i_mapping ||
+> > +		    src_page->index != srcoff >> PAGE_SHIFT ||
+> > +		    dest_page->mapping != dest->i_mapping ||
+> > +		    dest_page->index != destoff >> PAGE_SHIFT) {
+> > +			same = false;
+> > +			goto unlock;
+> > +		}
+> 
+> It is my understanding that you don't need to check the ->index here.
+> If I'm wrong about that, I'd really appreciate being corrected, because
+> the page cache locking is subtle.
 
-Ok, it seems like we don't even need a table containing native and
-compat as we can just fall back.  The tables still seem nicer to read,
-though.
+Ah, when talking to Darrick about this, I didn't notice the code
+took references on the page, so it probably doesn't need the index
+check - the page can't be recycled out from under us here an
+inserted into a new mapping until we drop the reference.
 
-Let me know what you think of this:
+What I was mainly concerned about here is that we only have a shared
+inode lock on the src inode, so this code can be running
+concurrently with both invalidation and insertion into the mapping.
+e.g. direct write io does invalidation, buffered read does
+insertion. Hence we have to be really careful about the data in the
+source page being valid and stable while we run the comparison.
 
-http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table
+And on further thought, I don't think shared locking is actually
+safe here. A shared lock doesn't stop new direct IO from being
+submitted, so inode_dio_wait() just drains IO at that point in time
+and but doesn't provide any guarantee that there isn't concurrent
+DIO running.
 
-I also wonder if we should life the ioctl handler tables to the
-VFS..
+Hence we could do the comparison here, see the data is the same,
+drop the page lock, a DIO write then invalidates the page and writes
+new data while we are comparing the rest of page(s) in the range. By
+the time we've checked the whole range, the data at the start is no
+longer the same, and the comparison is stale.
+
+And then we do the dedupe operation oblivious to the fact the data
+on disk doesn't actually match anymore, and we corrupt the data in
+the destination file as it gets linked to mismatched data in the
+source file....
+
+Darrick?
+
+> You call read_mapping_page() which returns the page with an elevated
+> refcount.  That means the page can't go back to the page allocator and
+> be allocated again.  It can, because it's unlocked, still be truncated,
+> so the check for ->mapping after locking it is needed.  But the check
+> for ->index being correct was done by find_get_entry().
+> 
+> See pagecache_get_page() -- if we specify FGP_LOCK, then it will lock
+> the page, check the ->mapping but not check ->index.  OK, it does check
+> ->index, but in a VM_BUG_ON(), so it's not something that ought to be
+> able to be wrong.
+
+Yeah, we used to have to play tricks in the old XFS writeback
+clustering code to do our own non-blocking page cache lookups adn
+this was one of the things we needed to be careful about until
+the pagevec_lookup* interfaces came along and solved all the
+problems for us. Funny how the brain remembers old gotchas with
+also reminding you that the problems went away almost as long
+ago.....
+
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
