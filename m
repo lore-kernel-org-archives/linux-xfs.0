@@ -1,121 +1,74 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from userp2130.oracle.com ([156.151.31.86]:34546 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727273AbfHOAlw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 20:41:52 -0400
-Date: Wed, 14 Aug 2019 17:41:40 -0700
-From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
-Message-ID: <20190815004140.GE3440173@magnolia>
-References: <20190813151434.GQ7138@magnolia>
- <20190813154010.GD5307@bombadil.infradead.org>
- <20190814095448.GK6129@dread.disaster.area>
- <20190814153349.GS7138@magnolia>
- <20190814212833.GO6129@dread.disaster.area>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35938 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725800AbfHNKZE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 06:25:04 -0400
+Date: Wed, 14 Aug 2019 20:23:55 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 3/3] xfs: Opencode and remove DEFINE_SINGLE_BUF_MAP
+Message-ID: <20190814102355.GM6129@dread.disaster.area>
+References: <20190813090306.31278-1-nborisov@suse.com>
+ <20190813090306.31278-4-nborisov@suse.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190814212833.GO6129@dread.disaster.area>
+In-Reply-To: <20190813090306.31278-4-nborisov@suse.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Dave Chinner <david@fromorbit.com>
-Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Nikolay Borisov <nborisov@suse.com>
+Cc: linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-On Thu, Aug 15, 2019 at 07:28:33AM +1000, Dave Chinner wrote:
-> On Wed, Aug 14, 2019 at 08:33:49AM -0700, Darrick J. Wong wrote:
-> > On Wed, Aug 14, 2019 at 07:54:48PM +1000, Dave Chinner wrote:
-> > > On Tue, Aug 13, 2019 at 08:40:10AM -0700, Matthew Wilcox wrote:
-> > > > On Tue, Aug 13, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
-> > > > > +		/*
-> > > > > +		 * Now that we've locked both pages, make sure they still
-> > > > > +		 * represent the data we're interested in.  If not, someone
-> > > > > +		 * is invalidating pages on us and we lose.
-> > > > > +		 */
-> > > > > +		if (src_page->mapping != src->i_mapping ||
-> > > > > +		    src_page->index != srcoff >> PAGE_SHIFT ||
-> > > > > +		    dest_page->mapping != dest->i_mapping ||
-> > > > > +		    dest_page->index != destoff >> PAGE_SHIFT) {
-> > > > > +			same = false;
-> > > > > +			goto unlock;
-> > > > > +		}
-> > > > 
-> > > > It is my understanding that you don't need to check the ->index here.
-> > > > If I'm wrong about that, I'd really appreciate being corrected, because
-> > > > the page cache locking is subtle.
-> > > 
-> > > Ah, when talking to Darrick about this, I didn't notice the code
-> > > took references on the page, so it probably doesn't need the index
-> > > check - the page can't be recycled out from under us here an
-> > > inserted into a new mapping until we drop the reference.
-> > > 
-> > > What I was mainly concerned about here is that we only have a shared
-> > > inode lock on the src inode, so this code can be running
-> > > concurrently with both invalidation and insertion into the mapping.
-> > > e.g. direct write io does invalidation, buffered read does
-> > > insertion. Hence we have to be really careful about the data in the
-> > > source page being valid and stable while we run the comparison.
-> > > 
-> > > And on further thought, I don't think shared locking is actually
-> > > safe here. A shared lock doesn't stop new direct IO from being
-> > > submitted, so inode_dio_wait() just drains IO at that point in time
-> > > and but doesn't provide any guarantee that there isn't concurrent
-> > > DIO running.
-> > > 
-> > > Hence we could do the comparison here, see the data is the same,
-> > > drop the page lock, a DIO write then invalidates the page and writes
-> > > new data while we are comparing the rest of page(s) in the range. By
-> > > the time we've checked the whole range, the data at the start is no
-> > > longer the same, and the comparison is stale.
-> > > 
-> > > And then we do the dedupe operation oblivious to the fact the data
-> > > on disk doesn't actually match anymore, and we corrupt the data in
-> > > the destination file as it gets linked to mismatched data in the
-> > > source file....
-> > 
-> > <urrrrrrk> Yeah, that looks like a bug to me.  I didn't realize that
-> > directio writes were IOLOCK_SHARED and therefore reflink has to take
-> > IOLOCK_EXCL to block them.
-> > 
-> > Related question: do we need to do the same for MMAPLOCK?  I think the
-> > answer is yes because xfs_filemap_fault can call page_mkwrite with
-> > MMAPLOCK_SHARED.
+On Tue, Aug 13, 2019 at 12:03:06PM +0300, Nikolay Borisov wrote:
+> This macro encodes a trivial struct initializations, just open code it.
 > 
-> Hmmmm. Yes, you are right, but I don't just holding MMAPLOCK_EXCL is
-> enough. Holding the MMAPLOCK will hold off page faults while we have
-> the lock, but it won't prevent pages that already have writeable
-> ptes from being modified as they don't require another page fault
-> until they've been cleaned.
-> 
-> So it seems to me that if we need to ensure that the file range is
-> not being concurrently modified, we have to:
-> 
-> 	a) inode lock exclusive
-> 	b) mmap lock exclusive
-> 	c) break layouts(*)
-> 	d) wait for dio
-> 	e) clean all the dirty pages
-> 
-> On both the source and destination files. And then, because the
-> locks we hold form a barrier against newly dirtied pages, will all
-> attempts to modify the data be blocked. And so now the data
-> comparison can be done safely.
+> Signed-off-by: Nikolay Borisov <nborisov@suse.com>
 
-I think xfs already proceeds in this order (a-e), it's just that we
-aren't correctly taking IOLOCK_EXCL/MMAPLOCK_EXCL on the source file to
-prevent some other thread from starting a directio write or dirtying an
-mmap'd page.  But let's try my crappy little patch that fixes the shared
-locks and see what other smoke comes out of the machine...
+Hmmmm.
 
---D
+We have defines for this sort of structure definition and
+initialisation all over the kernel. e.g. LIST_HEAD(),
+DEFINE_PER_CPU(), DEFINE_HASHTABLE(), DEFINE_SPINLOCK(), etc...
 
-> (*) The break layouts bit is necessary to handle co-ordination with
-> RDMA, NVMEoF, P2P DMA, pNFS, etc that manipulate data directly via
-> the block device rather than through file pages or DIO...
+And really, the intent of the define was to make it easy to get
+rid of all the callers of the non-map buffer interfaces by moving
+the map definition into the callers of xfs_buf_get, _read, etc
+and then enabling use to remove the non-map interfaces
+altogether.
+
+Hence I'd much prefer to see the xfs_buf_{get,read,readahead} and
+xfs_trans_buf_{get,read} wrapper functions go away than removing the
+define.
+
+> ---
+>  fs/xfs/xfs_buf.c   | 4 ++--
+>  fs/xfs/xfs_buf.h   | 9 +++------
+>  fs/xfs/xfs_trans.h | 6 ++++--
+>  3 files changed, 9 insertions(+), 10 deletions(-)
 > 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 99c66f80d7cc..389c5b590f11 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -658,7 +658,7 @@ xfs_buf_incore(
+>  {
+>  	struct xfs_buf		*bp;
+>  	int			error;
+> -	DEFINE_SINGLE_BUF_MAP(map, blkno, numblks);
+> +	struct xfs_buf_map map = { .bm_bn = blkno, .bm_len = numblks };
+
+FWIW, I'm not a fan of single line definitions like this because
+they are really hard to read. If you are converting to this form, it
+should be like this:
+
+	struct xfs_buf_map map = {
+		.bm_bn = blkno,
+		.bm_len = numblks,
+	};
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
