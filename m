@@ -1,133 +1,111 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mga18.intel.com ([134.134.136.126]:51018 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726166AbfHNSIv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Aug 2019 14:08:51 -0400
-Date: Wed, 14 Aug 2019 11:08:49 -0700
-From: Ira Weiny <ira.weiny@intel.com>
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190814101714.GA26273@quack2.suse.cz>
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:51688 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726585AbfHNV3o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 17:29:44 -0400
+Date: Thu, 15 Aug 2019 07:28:33 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190814212833.GO6129@dread.disaster.area>
+References: <20190813151434.GQ7138@magnolia>
+ <20190813154010.GD5307@bombadil.infradead.org>
+ <20190814095448.GK6129@dread.disaster.area>
+ <20190814153349.GS7138@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190814101714.GA26273@quack2.suse.cz>
+In-Reply-To: <20190814153349.GS7138@magnolia>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Jan Kara <jack@suse.cz>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Wed, Aug 14, 2019 at 12:17:14PM +0200, Jan Kara wrote:
-> Hello!
+On Wed, Aug 14, 2019 at 08:33:49AM -0700, Darrick J. Wong wrote:
+> On Wed, Aug 14, 2019 at 07:54:48PM +1000, Dave Chinner wrote:
+> > On Tue, Aug 13, 2019 at 08:40:10AM -0700, Matthew Wilcox wrote:
+> > > On Tue, Aug 13, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
+> > > > +		/*
+> > > > +		 * Now that we've locked both pages, make sure they still
+> > > > +		 * represent the data we're interested in.  If not, someone
+> > > > +		 * is invalidating pages on us and we lose.
+> > > > +		 */
+> > > > +		if (src_page->mapping != src->i_mapping ||
+> > > > +		    src_page->index != srcoff >> PAGE_SHIFT ||
+> > > > +		    dest_page->mapping != dest->i_mapping ||
+> > > > +		    dest_page->index != destoff >> PAGE_SHIFT) {
+> > > > +			same = false;
+> > > > +			goto unlock;
+> > > > +		}
+> > > 
+> > > It is my understanding that you don't need to check the ->index here.
+> > > If I'm wrong about that, I'd really appreciate being corrected, because
+> > > the page cache locking is subtle.
+> > 
+> > Ah, when talking to Darrick about this, I didn't notice the code
+> > took references on the page, so it probably doesn't need the index
+> > check - the page can't be recycled out from under us here an
+> > inserted into a new mapping until we drop the reference.
+> > 
+> > What I was mainly concerned about here is that we only have a shared
+> > inode lock on the src inode, so this code can be running
+> > concurrently with both invalidation and insertion into the mapping.
+> > e.g. direct write io does invalidation, buffered read does
+> > insertion. Hence we have to be really careful about the data in the
+> > source page being valid and stable while we run the comparison.
+> > 
+> > And on further thought, I don't think shared locking is actually
+> > safe here. A shared lock doesn't stop new direct IO from being
+> > submitted, so inode_dio_wait() just drains IO at that point in time
+> > and but doesn't provide any guarantee that there isn't concurrent
+> > DIO running.
+> > 
+> > Hence we could do the comparison here, see the data is the same,
+> > drop the page lock, a DIO write then invalidates the page and writes
+> > new data while we are comparing the rest of page(s) in the range. By
+> > the time we've checked the whole range, the data at the start is no
+> > longer the same, and the comparison is stale.
+> > 
+> > And then we do the dedupe operation oblivious to the fact the data
+> > on disk doesn't actually match anymore, and we corrupt the data in
+> > the destination file as it gets linked to mismatched data in the
+> > source file....
 > 
-> On Fri 09-08-19 15:58:14, ira.weiny@intel.com wrote:
-> > Pre-requisites
-> > ==============
-> > 	Based on mmotm tree.
-> > 
-> > Based on the feedback from LSFmm, the LWN article, the RFC series since
-> > then, and a ton of scenarios I've worked in my mind and/or tested...[1]
-> > 
-> > Solution summary
-> > ================
-> > 
-> > The real issue is that there is no use case for a user to have RDMA pinn'ed
-> > memory which is then truncated.  So really any solution we present which:
-> > 
-> > A) Prevents file system corruption or data leaks
-> > ...and...
-> > B) Informs the user that they did something wrong
-> > 
-> > Should be an acceptable solution.
-> > 
-> > Because this is slightly new behavior.  And because this is going to be
-> > specific to DAX (because of the lack of a page cache) we have made the user
-> > "opt in" to this behavior.
-> > 
-> > The following patches implement the following solution.
-> > 
-> > 0) Registrations to Device DAX char devs are not affected
-> > 
-> > 1) The user has to opt in to allowing page pins on a file with an exclusive
-> >    layout lease.  Both exclusive and layout lease flags are user visible now.
-> > 
-> > 2) page pins will fail if the lease is not active when the file back page is
-> >    encountered.
-> > 
-> > 3) Any truncate or hole punch operation on a pinned DAX page will fail.
+> <urrrrrrk> Yeah, that looks like a bug to me.  I didn't realize that
+> directio writes were IOLOCK_SHARED and therefore reflink has to take
+> IOLOCK_EXCL to block them.
 > 
-> So I didn't fully grok the patch set yet but by "pinned DAX page" do you
-> mean a page which has corresponding file_pin covering it? Or do you mean a
-> page which has pincount increased? If the first then I'd rephrase this to
-> be less ambiguous, if the second then I think it is wrong. 
+> Related question: do we need to do the same for MMAPLOCK?  I think the
+> answer is yes because xfs_filemap_fault can call page_mkwrite with
+> MMAPLOCK_SHARED.
 
-I mean the second.  but by "fail" I mean hang.  Right now the "normal" page
-pincount processing will hang the truncate.  Given the discussion with John H
-we can make this a bit better if we use something like FOLL_PIN and the page
-count bias to indicate this type of pin.  Then I could fail the truncate
-outright.  but that is not done yet.
+Hmmmm. Yes, you are right, but I don't just holding MMAPLOCK_EXCL is
+enough. Holding the MMAPLOCK will hold off page faults while we have
+the lock, but it won't prevent pages that already have writeable
+ptes from being modified as they don't require another page fault
+until they've been cleaned.
 
-so... I used the word "fail" to be a bit more vague as the final implementation
-may return ETXTBUSY or hang as noted.
+So it seems to me that if we need to ensure that the file range is
+not being concurrently modified, we have to:
 
-> 
-> > 4) The user has the option of holding the lease or releasing it.  If they
-> >    release it no other pin calls will work on the file.
-> 
-> Last time we spoke the plan was that the lease is kept while the pages are
-> pinned (and an attempt to release the lease would block until the pages are
-> unpinned). That also makes it clear that the *lease* is what is making
-> truncate and hole punch fail with ETXTBUSY and the file_pin structure is
-> just an implementation detail how the existence is efficiently tracked (and
-> what keeps the backing file for the pages open so that the lease does not
-> get auto-destroyed). Why did you change this?
+	a) inode lock exclusive
+	b) mmap lock exclusive
+	c) break layouts(*)
+	d) wait for dio
+	e) clean all the dirty pages
 
-closing the file _and_ unmaping it will cause the lease to be released
-regardless of if we allow this or not.
+On both the source and destination files. And then, because the
+locks we hold form a barrier against newly dirtied pages, will all
+attempts to modify the data be blocked. And so now the data
+comparison can be done safely.
 
-As we discussed preventing the close seemed intractable.
+(*) The break layouts bit is necessary to handle co-ordination with
+RDMA, NVMEoF, P2P DMA, pNFS, etc that manipulate data directly via
+the block device rather than through file pages or DIO...
 
-I thought about failing the munmap but that seemed wrong as well.  But more
-importantly AFAIK RDMA can pass its memory pins to other processes via FD
-passing...  This means that one could pin this memory, pass it to another
-process and exit.  The file lease on the pin'ed file is lost.
+Cheers,
 
-The file lease is just a key to get the memory pin.  Once unlocked the procfs
-tracking keeps track of where that pin goes and which processes need to be
-killed to get rid of it.
-
-> 
-> > 5) Closing the file is ok.
-> > 
-> > 6) Unmapping the file is ok
-> > 
-> > 7) Pins against the files are tracked back to an owning file or an owning mm
-> >    depending on the internal subsystem needs.  With RDMA there is an owning
-> >    file which is related to the pined file.
-> > 
-> > 8) Only RDMA is currently supported
-> 
-> If you currently only need "owning file" variant in your patch set, then
-> I'd just implement that and leave "owning mm" variant for later if it
-> proves to be necessary. The things are complex enough as is...
-
-I can do that...  I was trying to get io_uring working as well with the
-owning_mm but I should save that for later.
-
-> 
-> > 9) Truncation of pages which are not actively pinned nor covered by a lease
-> >    will succeed.
-> 
-> Otherwise I like the design.
-
-Thanks,
-Ira
-
-> 
-> 								Honza
-> 
-> -- 
-> Jan Kara <jack@suse.com>
-> SUSE Labs, CR
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
