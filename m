@@ -1,209 +1,109 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:45123 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725265AbfHNIFY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 04:05:24 -0400
-Date: Wed, 14 Aug 2019 18:04:08 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [RFC PATCH v2 07/19] fs/xfs: Teach xfs to use new
- dax_layout_busy_page()
-Message-ID: <20190814080408.GI6129@dread.disaster.area>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-8-ira.weiny@intel.com>
- <20190809233037.GB7777@dread.disaster.area>
- <20190812180551.GC19746@iweiny-DESK2.sc.intel.com>
+Received: from aserp2120.oracle.com ([141.146.126.78]:40722 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726166AbfHNPej (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 11:34:39 -0400
+Date: Wed, 14 Aug 2019 08:33:49 -0700
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190814153349.GS7138@magnolia>
+References: <20190813151434.GQ7138@magnolia>
+ <20190813154010.GD5307@bombadil.infradead.org>
+ <20190814095448.GK6129@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190812180551.GC19746@iweiny-DESK2.sc.intel.com>
+In-Reply-To: <20190814095448.GK6129@dread.disaster.area>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ira Weiny <ira.weiny@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Matthew Wilcox <willy@infradead.org>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
 
-On Mon, Aug 12, 2019 at 11:05:51AM -0700, Ira Weiny wrote:
-> On Sat, Aug 10, 2019 at 09:30:37AM +1000, Dave Chinner wrote:
-> > On Fri, Aug 09, 2019 at 03:58:21PM -0700, ira.weiny@intel.com wrote:
-> > > From: Ira Weiny <ira.weiny@intel.com>
-> > > 
-> > > dax_layout_busy_page() can now operate on a sub-range of the
-> > > address_space provided.
-> > > 
-> > > Have xfs specify the sub range to dax_layout_busy_page()
+On Wed, Aug 14, 2019 at 07:54:48PM +1000, Dave Chinner wrote:
+> On Tue, Aug 13, 2019 at 08:40:10AM -0700, Matthew Wilcox wrote:
+> > On Tue, Aug 13, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
+> > > +		/*
+> > > +		 * Now that we've locked both pages, make sure they still
+> > > +		 * represent the data we're interested in.  If not, someone
+> > > +		 * is invalidating pages on us and we lose.
+> > > +		 */
+> > > +		if (src_page->mapping != src->i_mapping ||
+> > > +		    src_page->index != srcoff >> PAGE_SHIFT ||
+> > > +		    dest_page->mapping != dest->i_mapping ||
+> > > +		    dest_page->index != destoff >> PAGE_SHIFT) {
+> > > +			same = false;
+> > > +			goto unlock;
+> > > +		}
 > > 
-> > Hmmm. I've got patches that change all these XFS interfaces to
-> > support range locks. I'm not sure the way the ranges are passed here
-> > is the best way to do it, and I suspect they aren't correct in some
-> > cases, either....
+> > It is my understanding that you don't need to check the ->index here.
+> > If I'm wrong about that, I'd really appreciate being corrected, because
+> > the page cache locking is subtle.
+> 
+> Ah, when talking to Darrick about this, I didn't notice the code
+> took references on the page, so it probably doesn't need the index
+> check - the page can't be recycled out from under us here an
+> inserted into a new mapping until we drop the reference.
+> 
+> What I was mainly concerned about here is that we only have a shared
+> inode lock on the src inode, so this code can be running
+> concurrently with both invalidation and insertion into the mapping.
+> e.g. direct write io does invalidation, buffered read does
+> insertion. Hence we have to be really careful about the data in the
+> source page being valid and stable while we run the comparison.
+> 
+> And on further thought, I don't think shared locking is actually
+> safe here. A shared lock doesn't stop new direct IO from being
+> submitted, so inode_dio_wait() just drains IO at that point in time
+> and but doesn't provide any guarantee that there isn't concurrent
+> DIO running.
+> 
+> Hence we could do the comparison here, see the data is the same,
+> drop the page lock, a DIO write then invalidates the page and writes
+> new data while we are comparing the rest of page(s) in the range. By
+> the time we've checked the whole range, the data at the start is no
+> longer the same, and the comparison is stale.
+> 
+> And then we do the dedupe operation oblivious to the fact the data
+> on disk doesn't actually match anymore, and we corrupt the data in
+> the destination file as it gets linked to mismatched data in the
+> source file....
+
+<urrrrrrk> Yeah, that looks like a bug to me.  I didn't realize that
+directio writes were IOLOCK_SHARED and therefore reflink has to take
+IOLOCK_EXCL to block them.
+
+Related question: do we need to do the same for MMAPLOCK?  I think the
+answer is yes because xfs_filemap_fault can call page_mkwrite with
+MMAPLOCK_SHARED.
+
+--D
+
+> Darrick?
+> 
+> > You call read_mapping_page() which returns the page with an elevated
+> > refcount.  That means the page can't go back to the page allocator and
+> > be allocated again.  It can, because it's unlocked, still be truncated,
+> > so the check for ->mapping after locking it is needed.  But the check
+> > for ->index being correct was done by find_get_entry().
 > > 
-> > > diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> > > index ff3c1fae5357..f0de5486f6c1 100644
-> > > --- a/fs/xfs/xfs_iops.c
-> > > +++ b/fs/xfs/xfs_iops.c
-> > > @@ -1042,10 +1042,16 @@ xfs_vn_setattr(
-> > >  		xfs_ilock(ip, XFS_MMAPLOCK_EXCL);
-> > >  		iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
-> > >  
-> > > -		error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
-> > > -		if (error) {
-> > > -			xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> > > -			return error;
-> > > +		if (iattr->ia_size < inode->i_size) {
-> > > +			loff_t                  off = iattr->ia_size;
-> > > +			loff_t                  len = inode->i_size - iattr->ia_size;
-> > > +
-> > > +			error = xfs_break_layouts(inode, &iolock, off, len,
-> > > +						  BREAK_UNMAP);
-> > > +			if (error) {
-> > > +				xfs_iunlock(ip, XFS_MMAPLOCK_EXCL);
-> > > +				return error;
-> > > +			}
-> > 
-> > This isn't right - truncate up still needs to break the layout on
-> > the last filesystem block of the file,
+> > See pagecache_get_page() -- if we specify FGP_LOCK, then it will lock
+> > the page, check the ->mapping but not check ->index.  OK, it does check
+> > ->index, but in a VM_BUG_ON(), so it's not something that ought to be
+> > able to be wrong.
 > 
-> I'm not following this?  From a user perspective they can't have done anything
-> with the data beyond the EOF.  So isn't it safe to allow EOF to grow without
-> changing the layout of that last block?
-
-
-You're looking at this from the perspective of what RDMA page
-pinning, not what the guarantees a filesystem has to provide layout
-holders.
-
-For example, truncate up has to zero the portion of the block beyond
-EOF and that requires a data write. What happens if that block is a
-shared extent and hence we have do a copy on write and alter the
-file layout?
-
-Or perhaps that tail block still has dirty data over it that is
-marked for delayed allocation? Truncate up will have to write that
-data to zero the delayed allocation extent that spans EOF, and hence
-the truncate modifies the layout because it triggers allocation.
-
-i.e. just because an operation does not change user data, it does
-not mean that it will not change the file layout. There is a chance
-that truncate up will modify the layout and so we need to break the
-layout leases that span the range from the old size to the new
-size...
-
-> > and truncate down needs to
-> > extend to "maximum file offset" because we remove all extents beyond
-> > EOF on a truncate down.
+> Yeah, we used to have to play tricks in the old XFS writeback
+> clustering code to do our own non-blocking page cache lookups adn
+> this was one of the things we needed to be careful about until
+> the pagevec_lookup* interfaces came along and solved all the
+> problems for us. Funny how the brain remembers old gotchas with
+> also reminding you that the problems went away almost as long
+> ago.....
 > 
-> Ok, I was trying to allow a user to extend the file without conflicts if they
-> were to have a pin on the 'beginning' of the original file.
-
-If we want to allow file extension under a layout lease, the lease
-has to extend beyond EOF, otherwise the new section of the file is
-not covered by a lease. If leases only extend to the existing
-EOF, then once the new data is written and the file is extended,
-then the lease owner needs to take a new lease on the range they
-just wrote. SO the application ends up having to do write - lease
--write -lease - .... so that it has leases covering the range of the
-file it is extending into.
-
-Much better it to define a lease that extends to max file offset,
-such that it always covers they range past the existing EOF and
-extending writes will automatically be covered. What this then does
-is to trigger layout break notifications on file size change, either
-by write, truncate, fallocate, without having to actually know or
-track the exactly file size in the lease....
-
-> This sounds like
-> you are saying that a layout lease must be dropped to do that?  In some ways I
-> think I understand what you are driving at and I think I see how I may have
-> been playing "fast and loose" with the strictness of the layout lease.  But
-> from a user perspective if there is a part of the file which "does not exist"
-> (beyond EOF) does it matter that the layout there may change?
-
-Yes, it does, because userspace can directly manipulate the layout
-beyond EOF via fallocate(). e.g. we can preallocation beyond EOF
-without changing the file size, such that when we then do an
-extending write no layout change actually takes place. The only
-thing that happens from a layout point of view is that the file size
-changes.
-
-This becomes /interesting/ when you start doing things like
-
-	lseek(fd, offset, SEEK_END);
-	write(fd, buf, len);
-
-which will trigger a write way beyond EOF into allocated space.
-That will also trigger block zeroing at the old tail, and there may
-be block zeroing around the write() as well. We've effectively
-change the layout of the file at EOF,  We've effectively change the
-layout of the file at EOF, and potentially beyond EOF.
-
-Indeed, the app might be expecting the preallocation beyond EOF to
-remain, so it might register a layout over that range to be notified
-if the preallocation is removed or the EOF extends beyond it. It
-needs to be notified on truncate down (which removes that
-preallocated range the lease sits over) and EOF is moved beyond it
-(layout range state has changed from inaccessable to valid file
-data)....
-
-
-> > i.e. when we use preallocation, the extent map extends beyond EOF,
-> > and layout leases need to be able to extend beyond the current EOF
-> > to allow the lease owner to do extending writes, extending truncate,
-> > preallocation beyond EOF, etc safely without having to get a new
-> > lease to cover the new region in the extended file...
 > 
-> I'm not following this.  What determines when preallocation is done?
-
-The application can direct it via fallocate(FALLOC_FL_KEEPSIZE).
-It's typically used for workloads that do appending O_DSYNC or
-direct IO writes to minimise file fragmentation.
-
-The filesystem can ialso choose to do allocation beyond EOFi
-speculatively during writes. XFS does this extensively with delayed
-allocation. And the filesystem can also remove this speculative
-allocation beyond EOF, which it may do if there are no active pages
-dirties on the inode for a period, it is reclaimed, the filesystem
-is running low on space, the user/group is running low on quota
-space, etc.
-
-Again, just because user data does not change, it does not mean that
-the file layout will not change....
-
-> Forgive my ignorance on file systems but how can we have a layout for every
-> file which is "maximum file offset" for every file even if a file is only 1
-> page long?
-
-The layout lease doesn't care what the file size it. It doesn't even
-know what the file size is. The layout lease covers a range the
-logical file offset with the intend that any change to the file
-layout within that range will result in a notification. The layout
-lease is not bound to the range of valid data in the file at all -
-it doesn't matter if it points beyond EOF - if the file grows to
-the size the it overlaps the layout lease, then that layout lease
-needs to be notified by break_layouts....
-
-I've had a stinking headache all day, so I'm struggling to make
-sense right now. The best I can describe is that layout lease ranges
-do not imply or require valid file data to exist within the range
-they are taken over - they just cover a file offset range.
-
-FWIW, the fcntl() locking interface uses a length of 0 to
-indicate "to max file offset" rather than a specific length. e.g.
-SETLK and friends:
-
-	Specifying 0 for l_len has the special meaning: lock all
-	bytes starting at the location specified by l_whence and
-	l_start through to the end of file, no  matter
-	how large the file grows.
-
-That's exactly the semantics I'm talking about here - layout leases
-need to be able to specify an extent anywhere within the valid file
-offset range, and also to specify a nebulous "through to the end of
-the layout range" so taht file growth can be done without needing
-new leases to be taken as the file grows....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
