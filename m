@@ -1,69 +1,73 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:50389 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727414AbfHNUn7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 16:43:59 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
-Date: Wed, 14 Aug 2019 22:42:28 +0200
-Message-Id: <20190814204259.120942-2-arnd@arndb.de>
-In-Reply-To: <20190814204259.120942-1-arnd@arndb.de>
-References: <20190814204259.120942-1-arnd@arndb.de>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:57130 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728745AbfHNV5m (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 17:57:42 -0400
+Date: Thu, 15 Aug 2019 07:56:30 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user Layout
+ lease
+Message-ID: <20190814215630.GQ6129@dread.disaster.area>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-3-ira.weiny@intel.com>
+ <fde2959db776616008fc5d31df700f5d7d899433.camel@kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <fde2959db776616008fc5d31df700f5d7d899433.camel@kernel.org>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, Brian Foster <bfoster@redhat.com>, Allison Collins <allison.henderson@oracle.com>, Nick Bowler <nbowler@draconx.ca>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>
+To: Jeff Layton <jlayton@kernel.org>
+Cc: ira.weiny@intel.com, Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-For 31-bit s390 user space, we have to pass pointer arguments through
-compat_ptr() in the compat_ioctl handler.
+On Wed, Aug 14, 2019 at 10:15:06AM -0400, Jeff Layton wrote:
+> On Fri, 2019-08-09 at 15:58 -0700, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > Add an exclusive lease flag which indicates that the layout mechanism
+> > can not be broken.
+> > 
+> > Exclusive layout leases allow the file system to know that pages may be
+> > GUP pined and that attempts to change the layout, ie truncate, should be
+> > failed.
+> > 
+> > A process which attempts to break it's own exclusive lease gets an
+> > EDEADLOCK return to help determine that this is likely a programming bug
+> > vs someone else holding a resource.
+.....
+> > diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+> > index baddd54f3031..88b175ceccbc 100644
+> > --- a/include/uapi/asm-generic/fcntl.h
+> > +++ b/include/uapi/asm-generic/fcntl.h
+> > @@ -176,6 +176,8 @@ struct f_owner_ex {
+> >  
+> >  #define F_LAYOUT	16      /* layout lease to allow longterm pins such as
+> >  				   RDMA */
+> > +#define F_EXCLUSIVE	32      /* layout lease is exclusive */
+> > +				/* FIXME or shoudl this be F_EXLCK??? */
+> >  
+> >  /* operations for bsd flock(), also used by the kernel implementation */
+> >  #define LOCK_SH		1	/* shared lock */
+> 
+> This interface just seems weird to me. The existing F_*LCK values aren't
+> really set up to be flags, but are enumerated values (even if there are
+> some gaps on some arches). For instance, on parisc and sparc:
 
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- fs/xfs/xfs_ioctl32.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+I don't think we need to worry about this - the F_WRLCK version of
+the layout lease should have these exclusive access semantics (i.e
+other ops fail rather than block waiting for lease recall) and hence
+the API shouldn't need a new flag to specify them.
 
-diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-index 7fcf7569743f..ad91e81a2fcf 100644
---- a/fs/xfs/xfs_ioctl32.c
-+++ b/fs/xfs/xfs_ioctl32.c
-@@ -547,7 +547,7 @@ xfs_file_compat_ioctl(
- 	struct inode		*inode = file_inode(filp);
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
--	void			__user *arg = (void __user *)p;
-+	void			__user *arg = compat_ptr(p);
- 	int			error;
- 
- 	trace_xfs_file_compat_ioctl(ip);
-@@ -576,7 +576,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_SCRUB_METADATA:
- 	case XFS_IOC_BULKSTAT:
- 	case XFS_IOC_INUMBERS:
--		return xfs_file_ioctl(filp, cmd, p);
-+		return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
- #if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
- 	/*
- 	 * These are handled fine if no alignment issues.  To support x32
-@@ -602,7 +602,7 @@ xfs_file_compat_ioctl(
- 	 */
- 	case XFS_IOC_SWAPEXT:
- #endif
--		return xfs_file_ioctl(filp, cmd, p);
-+		return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
- #endif
- #if defined(BROKEN_X86_ALIGNMENT)
- 	case XFS_IOC_ALLOCSP_32:
-@@ -653,7 +653,7 @@ xfs_file_compat_ioctl(
- 	case XFS_IOC_SETXFLAGS_32:
- 	case XFS_IOC_GETVERSION_32:
- 		cmd = _NATIVE_IOC(cmd, long);
--		return xfs_file_ioctl(filp, cmd, p);
-+		return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
- 	case XFS_IOC_SWAPEXT_32: {
- 		struct xfs_swapext	  sxp;
- 		struct compat_xfs_swapext __user *sxu = arg;
+i.e. the primary difference between F_RDLCK and F_WRLCK layout
+leases is that the F_RDLCK is a shared, co-operative lease model
+where only delays in operations will be seen, while F_WRLCK is a
+"guarantee exclusive access and I don't care what it breaks"
+model... :)
+
+Cheers,
+
+Dave.
 -- 
-2.20.0
+Dave Chinner
+david@fromorbit.com
