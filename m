@@ -1,93 +1,97 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49931 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725280AbfHNJ4A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 05:56:00 -0400
-Date: Wed, 14 Aug 2019 19:54:48 +1000
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47358 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726383AbfHNKoX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 06:44:23 -0400
+Date: Wed, 14 Aug 2019 20:43:10 +1000
 From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
-Message-ID: <20190814095448.GK6129@dread.disaster.area>
-References: <20190813151434.GQ7138@magnolia>
- <20190813154010.GD5307@bombadil.infradead.org>
+Subject: Re: [PATCH] direct-io: use GFP_NOIO to avoid deadlock
+Message-ID: <20190814104310.GN6129@dread.disaster.area>
+References: <alpine.LRH.2.02.1908080540240.15519@file01.intranet.prod.int.rdu2.redhat.com>
+ <20190809013403.GY7777@dread.disaster.area>
+ <alpine.LRH.2.02.1908090725290.31061@file01.intranet.prod.int.rdu2.redhat.com>
+ <20190809215733.GZ7777@dread.disaster.area>
+ <alpine.LRH.2.02.1908131231010.6852@file01.intranet.prod.int.rdu2.redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190813154010.GD5307@bombadil.infradead.org>
+In-Reply-To: <alpine.LRH.2.02.1908131231010.6852@file01.intranet.prod.int.rdu2.redhat.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Matthew Wilcox <willy@infradead.org>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Mikulas Patocka <mpatocka@redhat.com>
+Cc: Alexander Viro <viro@zeniv.linux.org.uk>, "Darrick J. Wong" <darrick.wong@oracle.com>, Mike Snitzer <msnitzer@redhat.com>, junxiao.bi@oracle.com, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, honglei.wang@oracle.com, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 08:40:10AM -0700, Matthew Wilcox wrote:
-> On Tue, Aug 13, 2019 at 08:14:34AM -0700, Darrick J. Wong wrote:
-> > +		/*
-> > +		 * Now that we've locked both pages, make sure they still
-> > +		 * represent the data we're interested in.  If not, someone
-> > +		 * is invalidating pages on us and we lose.
-> > +		 */
-> > +		if (src_page->mapping != src->i_mapping ||
-> > +		    src_page->index != srcoff >> PAGE_SHIFT ||
-> > +		    dest_page->mapping != dest->i_mapping ||
-> > +		    dest_page->index != destoff >> PAGE_SHIFT) {
-> > +			same = false;
-> > +			goto unlock;
-> > +		}
+On Tue, Aug 13, 2019 at 12:35:49PM -0400, Mikulas Patocka wrote:
 > 
-> It is my understanding that you don't need to check the ->index here.
-> If I'm wrong about that, I'd really appreciate being corrected, because
-> the page cache locking is subtle.
-
-Ah, when talking to Darrick about this, I didn't notice the code
-took references on the page, so it probably doesn't need the index
-check - the page can't be recycled out from under us here an
-inserted into a new mapping until we drop the reference.
-
-What I was mainly concerned about here is that we only have a shared
-inode lock on the src inode, so this code can be running
-concurrently with both invalidation and insertion into the mapping.
-e.g. direct write io does invalidation, buffered read does
-insertion. Hence we have to be really careful about the data in the
-source page being valid and stable while we run the comparison.
-
-And on further thought, I don't think shared locking is actually
-safe here. A shared lock doesn't stop new direct IO from being
-submitted, so inode_dio_wait() just drains IO at that point in time
-and but doesn't provide any guarantee that there isn't concurrent
-DIO running.
-
-Hence we could do the comparison here, see the data is the same,
-drop the page lock, a DIO write then invalidates the page and writes
-new data while we are comparing the rest of page(s) in the range. By
-the time we've checked the whole range, the data at the start is no
-longer the same, and the comparison is stale.
-
-And then we do the dedupe operation oblivious to the fact the data
-on disk doesn't actually match anymore, and we corrupt the data in
-the destination file as it gets linked to mismatched data in the
-source file....
-
-Darrick?
-
-> You call read_mapping_page() which returns the page with an elevated
-> refcount.  That means the page can't go back to the page allocator and
-> be allocated again.  It can, because it's unlocked, still be truncated,
-> so the check for ->mapping after locking it is needed.  But the check
-> for ->index being correct was done by find_get_entry().
 > 
-> See pagecache_get_page() -- if we specify FGP_LOCK, then it will lock
-> the page, check the ->mapping but not check ->index.  OK, it does check
-> ->index, but in a VM_BUG_ON(), so it's not something that ought to be
-> able to be wrong.
+> On Sat, 10 Aug 2019, Dave Chinner wrote:
+> 
+> > No, you misunderstand. I'm talking about blocking kswapd being
+> > wrong.  i.e. Blocking kswapd in shrinkers causes problems
+> > because th ememory reclaim code does not expect kswapd to be
+> > arbitrarily delayed by waiting on IO. We've had this problem with
+> > the XFS inode cache shrinker for years, and there are many reports
+> > of extremely long reclaim latencies for both direct and kswapd
+> > reclaim that result from kswapd not making progress while waiting
+> > in shrinkers for IO to complete.
+> > 
+> > The work I'm currently doing to fix this XFS problem can be found
+> > here:
+> > 
+> > https://lore.kernel.org/linux-fsdevel/20190801021752.4986-1-david@fromorbit.com/
+> > 
+> > 
+> > i.e. the point I'm making is that waiting for IO in kswapd reclaim
+> > context is considered harmful - kswapd context shrinker reclaim
+> > should be as non-blocking as possible, and any back-off to wait for
+> > IO to complete should be done by the high level reclaim core once
+> > it's completed an entire reclaim scan cycle of everything....
+> > 
+> > What follows from that, and is pertinent for in this situation, is
+> > that if you don't block kswapd, then other reclaim contexts are not
+> > going to get stuck waiting for it regardless of the reclaim context
+> > they use.
+> > 
+> > Cheers,
+> > 
+> > Dave.
+> 
+> So, what do you think the dm-bufio shrinker should do?
 
-Yeah, we used to have to play tricks in the old XFS writeback
-clustering code to do our own non-blocking page cache lookups adn
-this was one of the things we needed to be careful about until
-the pagevec_lookup* interfaces came along and solved all the
-problems for us. Funny how the brain remembers old gotchas with
-also reminding you that the problems went away almost as long
-ago.....
+I'm not familiar with the constraints the code operates under, so
+I can't guarantee that I have an answer for you... :/
 
+> Currently it tries to free buffers on the clean list and if there are not 
+> enough buffers on the clean list, it goes into the dirty list - it writes 
+> the buffers back and then frees them.
+> 
+> What should it do? Should it just start writeback of the dirty list 
+> without waiting for it? What should it do if all the buffers are under 
+> writeback?
+
+For kswapd, it should do what it can without blocking. e.g. kicking
+an async writer thread rather than submitting the IO itself. That's
+what I changes XFS to do.
+
+And if you look at the patchset in the above link, it also
+introduced a mechanism for shrinkers to communicate back to the high
+level reclaim code that kswapd needs to back off
+(reclaim_state->need_backoff).
+
+With these mechanism, the shrinker can start IO without blocking
+kswapd on congested request queues and tell memory reclaim to wait
+before calling this shrinker again. This allows kswapd to aggregate
+all the waits that shrinkers and page reclaim require to all
+progress to be made into a single backoff event. That means kswapd
+does other scanning work while background writeback goes on, and
+once everythign is scanned it does a single wait for everything that
+needs time to make progress...
+
+I think that should also work for the dm-bufio shrinker, and the the
+direct reclaim backoff parts of the patchset should work for
+non-blocking direct reclaim scanning as well, like it now does for
+XFS.
 
 Cheers,
 
