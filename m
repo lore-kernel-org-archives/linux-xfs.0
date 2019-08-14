@@ -1,32 +1,78 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37184 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726121AbfHNLPj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 14 Aug 2019 07:15:39 -0400
-Date: Wed, 14 Aug 2019 13:15:35 +0200
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/9] cachefiles: drop direct usage of ->bmap method.
-Message-ID: <20190814111535.GC1885@lst.de>
-References: <20190808082744.31405-1-cmaiolino@redhat.com> <20190808082744.31405-3-cmaiolino@redhat.com>
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:35240 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726230AbfHNMXL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 08:23:11 -0400
+Received: by mail-qt1-f196.google.com with SMTP id u34so10552668qte.2
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2019 05:23:10 -0700 (PDT)
+Date: Wed, 14 Aug 2019 09:23:08 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: [RFC PATCH v2 16/19] RDMA/uverbs: Add back pointer to system
+ file object
+Message-ID: <20190814122308.GB13770@ziepe.ca>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-17-ira.weiny@intel.com>
+ <20190812130039.GD24457@ziepe.ca>
+ <20190812172826.GA19746@iweiny-DESK2.sc.intel.com>
+ <20190812175615.GI24457@ziepe.ca>
+ <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
+ <20190813114842.GB29508@ziepe.ca>
+ <20190813174142.GB11882@iweiny-DESK2.sc.intel.com>
+ <20190813180022.GF29508@ziepe.ca>
+ <20190813203858.GA12695@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190808082744.31405-3-cmaiolino@redhat.com>
+In-Reply-To: <20190813203858.GA12695@iweiny-DESK2.sc.intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Carlos Maiolino <cmaiolino@redhat.com>
-Cc: linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
+To: Ira Weiny <ira.weiny@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Thu, Aug 08, 2019 at 10:27:37AM +0200, Carlos Maiolino wrote:
-> +	block = page->index;
-> +	block <<= shift;
+On Tue, Aug 13, 2019 at 01:38:59PM -0700, Ira Weiny wrote:
+> On Tue, Aug 13, 2019 at 03:00:22PM -0300, Jason Gunthorpe wrote:
+> > On Tue, Aug 13, 2019 at 10:41:42AM -0700, Ira Weiny wrote:
+> > 
+> > > And I was pretty sure uverbs_destroy_ufile_hw() would take care of (or ensure
+> > > that some other thread is) destroying all the MR's we have associated with this
+> > > FD.
+> > 
+> > fd's can't be revoked, so destroy_ufile_hw() can't touch them. It
+> > deletes any underlying HW resources, but the FD persists.
+> 
+> I misspoke.  I should have said associated with this "context".  And of course
+> uverbs_destroy_ufile_hw() does not touch the FD.  What I mean is that the
+> struct file which had file_pins hanging off of it would be getting its file
+> pins destroyed by uverbs_destroy_ufile_hw().  Therefore we don't need the FD
+> after uverbs_destroy_ufile_hw() is done.
+> 
+> But since it does not block it may be that the struct file is gone before the
+> MR is actually destroyed.  Which means I think the GUP code would blow up in
+> that case...  :-(
 
-Can't this cause overflows?
+Oh, yes, that is true, you also can't rely on the struct file living
+longer than the HW objects either, that isn't how the lifetime model
+works.
 
-> +
-> +	ret = bmap(inode, &block);
-> +	ASSERT(!ret);
+If GUP consumes the struct file it must allow the struct file to be
+deleted before the GUP pin is released.
 
-I think we want some real error handling here instead of just an
-assert..
+> The drivers could provide some generic object (in RDMA this could be the
+> uverbs_attr_bundle) which represents their "context".
+
+For RDMA the obvious context is the struct ib_mr *
+
+> But for the procfs interface, that context then needs to be associated with any
+> file which points to it...  For RDMA, or any other "FD based pin mechanism", it
+> would be up to the driver to "install" a procfs handler into any struct file
+> which _may_ point to this context.  (before _or_ after memory pins).
+
+Is this all just for debugging? Seems like a lot of complication just
+to print a string
+
+Generally, I think you'd be better to associate things with the
+mm_struct not some struct file... The whole design is simpler as GUP
+already has the mm_struct.
+
+Jason
