@@ -1,63 +1,87 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60197 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725828AbfHNKP3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 06:15:29 -0400
-Date: Wed, 14 Aug 2019 20:14:17 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH 2/3] xfs: Rename __xfs_buf_submit to xfs_buf_submit
-Message-ID: <20190814101417.GL6129@dread.disaster.area>
-References: <20190813090306.31278-1-nborisov@suse.com>
- <20190813090306.31278-3-nborisov@suse.com>
- <20190813115658.GB37069@bfoster>
+Received: from mail-wr1-f66.google.com ([209.85.221.66]:43694 "EHLO
+        mail-wr1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726263AbfHNLBz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 07:01:55 -0400
+Received: by mail-wr1-f66.google.com with SMTP id y8so4723455wrn.10
+        for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2019 04:01:54 -0700 (PDT)
+Date: Wed, 14 Aug 2019 13:01:50 +0200
+From: Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
+ ioctl_fibmap
+Message-ID: <20190814110148.kbp6tplxibrnfpej@pegasus.maiolino.io>
+References: <20190808082744.31405-5-cmaiolino@redhat.com>
+ <201908090430.yoyXYjeY%lkp@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190813115658.GB37069@bfoster>
+In-Reply-To: <201908090430.yoyXYjeY%lkp@intel.com>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Brian Foster <bfoster@redhat.com>
-Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
+To: linux-fsdevel@vger.kernel.org
+Cc: hch@lst.de, adilger@dilger.ca, jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu, rpeterso@redhat.com, linux-xfs@vger.kernel.org
 
-On Tue, Aug 13, 2019 at 07:56:58AM -0400, Brian Foster wrote:
-> On Tue, Aug 13, 2019 at 12:03:05PM +0300, Nikolay Borisov wrote:
-> > Since xfs_buf_submit no longer has any callers just rename its __
-> > prefixed counterpart.
-> > 
-> > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
-> > ---
+Hey folks,
+
+> All errors (new ones prefixed by >>):
 > 
-> Now we have a primary submission interface that allows combinations of
-> XBF_ASYNC and waiting or not while the underlying mechanisms are not so
-> flexible. It looks like the current factoring exists to support delwri
-> queues where we never wait in buffer submission regardless of async
-> state because we are batching the submission/wait across multiple
-> buffers. But what happens if a caller passes an async buffer with wait
-> == true? I/O completion only completes ->b_iowait if XBF_ASYNC is clear.
+>    fs/ioctl.c: In function 'ioctl_fibmap':
+> >> fs/ioctl.c:68:10: error: implicit declaration of function 'bmap'; did you mean 'kmap'? [-Werror=implicit-function-declaration]
+
+Any of you guys may have a better idea on how to fix this?
+
+Essentially, this happens when CONFIG_BLOCK is not set, and although I don't
+really see a hard requirement to have bmap() exported only when CONFIG_BLOCK is
+set, at the same time, I don't see use for bmap() if CONFIG_BLOCK is not set.
+
+So, I'm in a kind of a chicken-egg problem.
+
+I am considering to just remove the #ifdef CONFIG_BLOCK / #endif from the bmap()
+declaration. This will fix the warning, and I don't see any side effects. What
+you guys think?
+
+
+>      error = bmap(inode, &block);
+>              ^~~~
+>              kmap
+>    cc1: some warnings being treated as errors
 > 
-> I find this rather confusing because now a caller needs to know about
-> implementation details to use the function properly. That's already true
-> of __xfs_buf_submit(), but that's partly why it's named as an "internal"
-> function. I think we ultimately need the interface flexibility so the
-> delwri case can continue to work. One option could be to update
-> xfs_buf_submit() such that we never wait on an XBF_ASYNC buffer and add
-> an assert to flag wait == true as invalid, but TBH I'm not convinced
-> this is any simpler than the current interface where most callers simply
-> only need to care about the flag. Maybe others have thoughts...
+> vim +68 fs/ioctl.c
+> 
+>     53	
+>     54	static int ioctl_fibmap(struct file *filp, int __user *p)
+>     55	{
+>     56		struct inode *inode = file_inode(filp);
+>     57		int error, ur_block;
+>     58		sector_t block;
+>     59	
+>     60		if (!capable(CAP_SYS_RAWIO))
+>     61			return -EPERM;
+>     62	
+>     63		error = get_user(ur_block, p);
+>     64		if (error)
+>     65			return error;
+>     66	
+>     67		block = ur_block;
+>   > 68		error = bmap(inode, &block);
+>     69	
+>     70		if (error)
+>     71			ur_block = 0;
+>     72		else
+>     73			ur_block = block;
+>     74	
+>     75		error = put_user(ur_block, p);
+>     76	
+>     77		return error;
+>     78	}
+>     79	
+> 
+> ---
+> 0-DAY kernel test infrastructure                Open Source Technology Center
+> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-Yeah, we slpit the code u plike this intentionally to separate out
-the different ways of submitting IO so that we didn't end up using
-invalid methods, like ASYNC + wait, which would lead to hangs
-waiting for IO that has already completed.
 
-I much prefer the code as it stands now - it may be slightly more
-verbose, but it's simple to understand and hard to use
-incorrectly....
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
