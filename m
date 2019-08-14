@@ -1,128 +1,63 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38540 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731243AbfHOMzk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Aug 2019 08:55:40 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 15E543001472
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:40 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C52C85DA8B
-        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:39 +0000 (UTC)
-From: Brian Foster <bfoster@redhat.com>
-Subject: [PATCH v3 1/4] xfs: track active state of allocation btree cursors
-Date: Thu, 15 Aug 2019 08:55:35 -0400
-Message-Id: <20190815125538.49570-2-bfoster@redhat.com>
-In-Reply-To: <20190815125538.49570-1-bfoster@redhat.com>
-References: <20190815125538.49570-1-bfoster@redhat.com>
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60197 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725828AbfHNKP3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 06:15:29 -0400
+Date: Wed, 14 Aug 2019 20:14:17 +1000
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 2/3] xfs: Rename __xfs_buf_submit to xfs_buf_submit
+Message-ID: <20190814101417.GL6129@dread.disaster.area>
+References: <20190813090306.31278-1-nborisov@suse.com>
+ <20190813090306.31278-3-nborisov@suse.com>
+ <20190813115658.GB37069@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190813115658.GB37069@bfoster>
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-xfs@vger.kernel.org
+To: Brian Foster <bfoster@redhat.com>
+Cc: Nikolay Borisov <nborisov@suse.com>, linux-xfs@vger.kernel.org, darrick.wong@oracle.com
 
-The upcoming allocation algorithm update searches multiple
-allocation btree cursors concurrently. As such, it requires an
-active state to track when a particular cursor should continue
-searching. While active state will be modified based on higher level
-logic, we can define base functionality based on the result of
-allocation btree lookups.
+On Tue, Aug 13, 2019 at 07:56:58AM -0400, Brian Foster wrote:
+> On Tue, Aug 13, 2019 at 12:03:05PM +0300, Nikolay Borisov wrote:
+> > Since xfs_buf_submit no longer has any callers just rename its __
+> > prefixed counterpart.
+> > 
+> > Signed-off-by: Nikolay Borisov <nborisov@suse.com>
+> > ---
+> 
+> Now we have a primary submission interface that allows combinations of
+> XBF_ASYNC and waiting or not while the underlying mechanisms are not so
+> flexible. It looks like the current factoring exists to support delwri
+> queues where we never wait in buffer submission regardless of async
+> state because we are batching the submission/wait across multiple
+> buffers. But what happens if a caller passes an async buffer with wait
+> == true? I/O completion only completes ->b_iowait if XBF_ASYNC is clear.
+> 
+> I find this rather confusing because now a caller needs to know about
+> implementation details to use the function properly. That's already true
+> of __xfs_buf_submit(), but that's partly why it's named as an "internal"
+> function. I think we ultimately need the interface flexibility so the
+> delwri case can continue to work. One option could be to update
+> xfs_buf_submit() such that we never wait on an XBF_ASYNC buffer and add
+> an assert to flag wait == true as invalid, but TBH I'm not convinced
+> this is any simpler than the current interface where most callers simply
+> only need to care about the flag. Maybe others have thoughts...
 
-Define an active flag in the private area of the btree cursor.
-Update it based on the result of lookups in the existing allocation
-btree helpers. Finally, provide a new helper to query the current
-state.
+Yeah, we slpit the code u plike this intentionally to separate out
+the different ways of submitting IO so that we didn't end up using
+invalid methods, like ASYNC + wait, which would lead to hangs
+waiting for IO that has already completed.
 
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_alloc.c       | 24 +++++++++++++++++++++---
- fs/xfs/libxfs/xfs_alloc_btree.c |  1 +
- fs/xfs/libxfs/xfs_btree.h       |  3 +++
- 3 files changed, 25 insertions(+), 3 deletions(-)
+I much prefer the code as it stands now - it may be slightly more
+verbose, but it's simple to understand and hard to use
+incorrectly....
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-index 372ad55631fc..6340f59ac3f4 100644
---- a/fs/xfs/libxfs/xfs_alloc.c
-+++ b/fs/xfs/libxfs/xfs_alloc.c
-@@ -146,9 +146,13 @@ xfs_alloc_lookup_eq(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat)	/* success/failure */
- {
-+	int			error;
-+
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
--	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
-+	error = xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
-+	cur->bc_private.a.priv.abt.active = *stat;
-+	return error;
- }
- 
- /*
-@@ -162,9 +166,13 @@ xfs_alloc_lookup_ge(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat)	/* success/failure */
- {
-+	int			error;
-+
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
--	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
-+	error = xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
-+	cur->bc_private.a.priv.abt.active = *stat;
-+	return error;
- }
- 
- /*
-@@ -178,9 +186,19 @@ xfs_alloc_lookup_le(
- 	xfs_extlen_t		len,	/* length of extent */
- 	int			*stat)	/* success/failure */
- {
-+	int			error;
- 	cur->bc_rec.a.ar_startblock = bno;
- 	cur->bc_rec.a.ar_blockcount = len;
--	return xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
-+	error = xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
-+	cur->bc_private.a.priv.abt.active = *stat;
-+	return error;
-+}
-+
-+static inline bool
-+xfs_alloc_cur_active(
-+	struct xfs_btree_cur	*cur)
-+{
-+	return cur && cur->bc_private.a.priv.abt.active;
- }
- 
- /*
-diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
-index 2a94543857a1..279694d73e4e 100644
---- a/fs/xfs/libxfs/xfs_alloc_btree.c
-+++ b/fs/xfs/libxfs/xfs_alloc_btree.c
-@@ -507,6 +507,7 @@ xfs_allocbt_init_cursor(
- 
- 	cur->bc_private.a.agbp = agbp;
- 	cur->bc_private.a.agno = agno;
-+	cur->bc_private.a.priv.abt.active = false;
- 
- 	if (xfs_sb_version_hascrc(&mp->m_sb))
- 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
-diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
-index fa3cd8ab9aba..a66063c356cc 100644
---- a/fs/xfs/libxfs/xfs_btree.h
-+++ b/fs/xfs/libxfs/xfs_btree.h
-@@ -183,6 +183,9 @@ union xfs_btree_cur_private {
- 		unsigned long	nr_ops;		/* # record updates */
- 		int		shape_changes;	/* # of extent splits */
- 	} refc;
-+	struct {
-+		bool		active;		/* allocation cursor state */
-+	} abt;
- };
- 
- /*
+Cheers,
+
+Dave.
 -- 
-2.20.1
+Dave Chinner
+david@fromorbit.com
