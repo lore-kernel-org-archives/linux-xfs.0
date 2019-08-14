@@ -1,162 +1,100 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-ua1-f67.google.com ([209.85.222.67]:46775 "EHLO
-        mail-ua1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726086AbfHMPxW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Aug 2019 11:53:22 -0400
-MIME-Version: 1.0
-References: <20190813151434.GQ7138@magnolia>
-In-Reply-To: <20190813151434.GQ7138@magnolia>
-Reply-To: fdmanana@gmail.com
-From: Filipe Manana <fdmanana@gmail.com>
-Date: Tue, 13 Aug 2019 16:53:09 +0100
-Message-ID: <CAL3q7H6bL1DO-3mAk5yPncVF62=ehStz7kZMTYK_4nXQ1H3k-A@mail.gmail.com>
-Subject: Re: [PATCH v3] vfs: fix page locking deadlocks when deduping files
+Received: from mail.kernel.org ([198.145.29.99]:59084 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725800AbfHNLVi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 14 Aug 2019 07:21:38 -0400
+Message-ID: <1ba29bfa22f82e6d880ab31c3835047f3353f05a.camel@kernel.org>
+Subject: Re: [RFC PATCH v2 01/19] fs/locks: Export F_LAYOUT lease to user
+ space
+From: Jeff Layton <jlayton@kernel.org>
+Date: Wed, 14 Aug 2019 07:21:34 -0400
+In-Reply-To: <20190814080547.GJ6129@dread.disaster.area>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+         <20190809225833.6657-2-ira.weiny@intel.com>
+         <20190809235231.GC7777@dread.disaster.area>
+         <20190812173626.GB19746@iweiny-DESK2.sc.intel.com>
+         <20190814080547.GJ6129@dread.disaster.area>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Dave Chinner <david@fromorbit.com>, xfs <linux-xfs@vger.kernel.org>, linux-fsdevel <linux-fsdevel@vger.kernel.org>
+To: Dave Chinner <david@fromorbit.com>, Ira Weiny <ira.weiny@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
 
-On Tue, Aug 13, 2019 at 4:15 PM Darrick J. Wong <darrick.wong@oracle.com> w=
-rote:
->
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->
-> When dedupe wants to use the page cache to compare parts of two files
-> for dedupe, we must be very careful to handle locking correctly.  The
-> current code doesn't do this.  It must lock and unlock the page only
-> once if the two pages are the same, since the overlapping range check
-> doesn't catch this when blocksize < pagesize.  If the pages are distinct
-> but from the same file, we must observe page locking order and lock them
-> in order of increasing offset to avoid clashing with writeback locking.
->
-> Fixes: 876bec6f9bbfcb3 ("vfs: refactor clone/dedupe_file_range common fun=
-ctions")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+On Wed, 2019-08-14 at 18:05 +1000, Dave Chinner wrote:
+> On Mon, Aug 12, 2019 at 10:36:26AM -0700, Ira Weiny wrote:
+> > On Sat, Aug 10, 2019 at 09:52:31AM +1000, Dave Chinner wrote:
+> > > On Fri, Aug 09, 2019 at 03:58:15PM -0700, ira.weiny@intel.com wrote:
+> > > > +	/*
+> > > > +	 * NOTE on F_LAYOUT lease
+> > > > +	 *
+> > > > +	 * LAYOUT lease types are taken on files which the user knows that
+> > > > +	 * they will be pinning in memory for some indeterminate amount of
+> > > > +	 * time.
+> > > 
+> > > Indeed, layout leases have nothing to do with pinning of memory.
+> > 
+> > Yep, Fair enough.  I'll rework the comment.
+> > 
+> > > That's something an application taht uses layout leases might do,
+> > > but it largely irrelevant to the functionality layout leases
+> > > provide. What needs to be done here is explain what the layout lease
+> > > API actually guarantees w.r.t. the physical file layout, not what
+> > > some application is going to do with a lease. e.g.
+> > > 
+> > > 	The layout lease F_RDLCK guarantees that the holder will be
+> > > 	notified that the physical file layout is about to be
+> > > 	changed, and that it needs to release any resources it has
+> > > 	over the range of this lease, drop the lease and then
+> > > 	request it again to wait for the kernel to finish whatever
+> > > 	it is doing on that range.
+> > > 
+> > > 	The layout lease F_RDLCK also allows the holder to modify
+> > > 	the physical layout of the file. If an operation from the
+> > > 	lease holder occurs that would modify the layout, that lease
+> > > 	holder does not get notification that a change will occur,
+> > > 	but it will block until all other F_RDLCK leases have been
+> > > 	released by their holders before going ahead.
+> > > 
+> > > 	If there is a F_WRLCK lease held on the file, then a F_RDLCK
+> > > 	holder will fail any operation that may modify the physical
+> > > 	layout of the file. F_WRLCK provides exclusive physical
+> > > 	modification access to the holder, guaranteeing nothing else
+> > > 	will change the layout of the file while it holds the lease.
+> > > 
+> > > 	The F_WRLCK holder can change the physical layout of the
+> > > 	file if it so desires, this will block while F_RDLCK holders
+> > > 	are notified and release their leases before the
+> > > 	modification will take place.
+> > > 
+> > > We need to define the semantics we expose to userspace first.....
 
-Reviewed-by: Filipe Manana <fdmanana@suse.com>
+Absolutely.
 
-We actually had the same bug in btrfs, before we had cloning/dedupe in
-vfs/xfs/etc, and fixed it back in 2017 [1].
-I totally missed this behaviour in the vfs helpers when I updated
-btrfs to use them some months ago.
-Thanks.
+> > 
+> > Agreed.  I believe I have implemented the semantics you describe above.  Do I
+> > have your permission to use your verbiage as part of reworking the comment and
+> > commit message?
+> 
+> Of course. :)
+> 
+> Cheers,
+> 
 
-[1] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/comm=
-it/?id=3Db1517622f2524f531113b12c27b9a0ea69c38983
+I'll review this in more detail soon, but subsequent postings of the set
+should probably also go to linux-api mailing list. This is a significant
+API change. It might not also hurt to get the glibc folks involved here
+too since you'll probably want to add the constants to the headers there
+as well.
 
+Finally, consider going ahead and drafting a patch to the fcntl(2)
+manpage if you think you have the API mostly nailed down. This API is a
+little counterintuitive (i.e. you can change the layout with an F_RDLCK
+lease), so it will need to be very clearly documented. I've also found
+that when creating a new API, documenting it tends to help highlight its
+warts and areas where the behavior is not clearly defined.
 
-> ---
-> v3: revalidate page after locking it
-> v2: provide an unlock helper
-> ---
->  fs/read_write.c |   50 ++++++++++++++++++++++++++++++++++++++++++-------=
--
->  1 file changed, 42 insertions(+), 8 deletions(-)
->
-> diff --git a/fs/read_write.c b/fs/read_write.c
-> index 1f5088dec566..da341eb3033c 100644
-> --- a/fs/read_write.c
-> +++ b/fs/read_write.c
-> @@ -1811,10 +1811,7 @@ static int generic_remap_check_len(struct inode *i=
-node_in,
->         return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
->  }
->
-> -/*
-> - * Read a page's worth of file data into the page cache.  Return the pag=
-e
-> - * locked.
-> - */
-> +/* Read a page's worth of file data into the page cache. */
->  static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offs=
-et)
->  {
->         struct page *page;
-> @@ -1826,10 +1823,32 @@ static struct page *vfs_dedupe_get_page(struct in=
-ode *inode, loff_t offset)
->                 put_page(page);
->                 return ERR_PTR(-EIO);
->         }
-> -       lock_page(page);
->         return page;
->  }
->
-> +/*
-> + * Lock two pages, ensuring that we lock in offset order if the pages ar=
-e from
-> + * the same file.
-> + */
-> +static void vfs_lock_two_pages(struct page *page1, struct page *page2)
-> +{
-> +       /* Always lock in order of increasing index. */
-> +       if (page1->index > page2->index)
-> +               swap(page1, page2);
-> +
-> +       lock_page(page1);
-> +       if (page1 !=3D page2)
-> +               lock_page(page2);
-> +}
-> +
-> +/* Unlock two pages, being careful not to unlock the same page twice. */
-> +static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
-> +{
-> +       unlock_page(page1);
-> +       if (page1 !=3D page2)
-> +               unlock_page(page2);
-> +}
-> +
->  /*
->   * Compare extents of two files to see if they are the same.
->   * Caller must have locked both inodes to prevent write races.
-> @@ -1867,10 +1886,25 @@ static int vfs_dedupe_file_range_compare(struct i=
-node *src, loff_t srcoff,
->                 dest_page =3D vfs_dedupe_get_page(dest, destoff);
->                 if (IS_ERR(dest_page)) {
->                         error =3D PTR_ERR(dest_page);
-> -                       unlock_page(src_page);
->                         put_page(src_page);
->                         goto out_error;
->                 }
-> +
-> +               vfs_lock_two_pages(src_page, dest_page);
-> +
-> +               /*
-> +                * Now that we've locked both pages, make sure they still
-> +                * represent the data we're interested in.  If not, someo=
-ne
-> +                * is invalidating pages on us and we lose.
-> +                */
-> +               if (src_page->mapping !=3D src->i_mapping ||
-> +                   src_page->index !=3D srcoff >> PAGE_SHIFT ||
-> +                   dest_page->mapping !=3D dest->i_mapping ||
-> +                   dest_page->index !=3D destoff >> PAGE_SHIFT) {
-> +                       same =3D false;
-> +                       goto unlock;
-> +               }
-> +
->                 src_addr =3D kmap_atomic(src_page);
->                 dest_addr =3D kmap_atomic(dest_page);
->
-> @@ -1882,8 +1916,8 @@ static int vfs_dedupe_file_range_compare(struct ino=
-de *src, loff_t srcoff,
->
->                 kunmap_atomic(dest_addr);
->                 kunmap_atomic(src_addr);
-> -               unlock_page(dest_page);
-> -               unlock_page(src_page);
-> +unlock:
-> +               vfs_unlock_two_pages(src_page, dest_page);
->                 put_page(dest_page);
->                 put_page(src_page);
->
-
-
---=20
-Filipe David Manana,
-
-=E2=80=9CWhether you think you can, or you think you can't =E2=80=94 you're=
- right.=E2=80=9D
+-- 
+Jeff Layton <jlayton@kernel.org>
