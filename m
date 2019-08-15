@@ -2,99 +2,120 @@ Return-Path: <SRS0=AwRW=WL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6083C3A589
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 17:13:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4E87C3A59B
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 18:18:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76AE0205F4
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 17:13:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1565889230;
-	bh=OKnNdaFflk01RelsesjLPMicKWo1UdpFSgHbeCLxf00=;
-	h=Date:From:To:Cc:Subject:List-ID:From;
-	b=Ao3r8bnn0gI59EA882wwa/TCAIXbSfbhOsUKkipo01QL8nY/DaLfcjBes9QL+bjni
-	 j4W3y2nddLDNyTeoqT1JWwkDR/XMbgajKK1TJfIBsFHJIrpSpWg+GY020v7/70Jjtd
-	 G7BG95YBUpDSOFacE1EB+kP44T9ghAhiGALIUBy4=
+	by mail.kernel.org (Postfix) with ESMTP id BC7352089E
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 18:18:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FD17lM8u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731446AbfHORNt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Aug 2019 13:13:49 -0400
-Received: from mail.kernel.org ([198.145.29.99]:53704 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730932AbfHORNs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 15 Aug 2019 13:13:48 -0400
-Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id C7249205F4;
-        Thu, 15 Aug 2019 17:13:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1565889227;
-        bh=OKnNdaFflk01RelsesjLPMicKWo1UdpFSgHbeCLxf00=;
-        h=Date:From:To:Cc:Subject:From;
-        b=s1NtQV4QDwfCIanOxEY6gJfURskShQ6M/q1if21UG/eHis2DblrJwMwSd6PzILckR
-         Fi7SD5Fswtg62p6PaWtXYs3bN54YA6idXgjrw4EKXof2HwPcZl/ESqJHyF3ZOhDJxs
-         Flkp1XUVtJ+edDIni5EjmwJ8bdac7XHT6Q3x9cOM=
-Date:   Thu, 15 Aug 2019 10:13:47 -0700
-From:   "Darrick J. Wong" <djwong@kernel.org>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     "Darrick J. Wong" <djwong@kernel.org>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
-Subject: [GIT PULL] xfs: fixes for 5.3-rc5
-Message-ID: <20190815171347.GD15186@magnolia>
+        id S1732729AbfHOSSG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Aug 2019 14:18:06 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:52518 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728283AbfHOSSG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 14:18:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=juAhuh8ocNm+VLit5UQVJy7awwSz34vKy9CkzRbIwc4=; b=FD17lM8uIRJr1AZE/aoLJqIZx
+        h90MHL/pF6QIZK2zqCFYxFYstB6Z4nmBc4xPd8DLr/nRgBuuGODBKAQJvWFh1HjsN0FVbPk1VPkj7
+        0B0HkT22vo/HlvCKRaGIcSBdJ5ATcT5mwzgAZWFg8FkBUggJ2kL1u/yuFrbjkAkpMeHgOnGGe+Zb+
+        fulYAX/V9Mvfmge/UTIuPdiGDF27SxJr6VqkAHW9vvfjW8a24Kv3bZSv6EnF+ZnTOUXbzVcEm+OkM
+        gNa8cZFeXzmbQr1mUXd/jTrzmM6UT09TiTHpbRfO+s5pBaI4YeFlZEW0lbCU7TNdG77W3kIv/Qpjq
+        r7Z9QdtNg==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1hyKK4-0004PO-Of; Thu, 15 Aug 2019 18:18:04 +0000
+Date:   Thu, 15 Aug 2019 11:18:04 -0700
+From:   Matthew Wilcox <willy@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        fdmanana@gmail.com, gaoxiang25@huawei.com
+Subject: Re: [PATCH v4] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190815181804.GB18474@bombadil.infradead.org>
+References: <20190815164940.GA15198@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190815164940.GA15198@magnolia>
+User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Linus,
+On Thu, Aug 15, 2019 at 09:49:40AM -0700, Darrick J. Wong wrote:
+> Fixes: 876bec6f9bbfcb3 ("vfs: refactor clone/dedupe_file_range common functions")
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Here are a few more bug fixes that trickled in since -rc3.  It's
-survived the usual xfstests runs and merges cleanly with this morning's
-master.  Please let me know if anything strange happens.
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 
---D
+(I approve of this patch going upstream)
 
-The following changes since commit afa1d96d1430c2138c545fb76e6dcb21222098d4:
+However, I think there are further simplifications to be made here.
+With this patch applied, vfs_dedupe_get_page() now looks like this:
 
-  xfs: Fix possible null-pointer dereferences in xchk_da_btree_block_check_sibling() (2019-07-30 11:28:20 -0700)
+static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+{
+        struct page *page;
 
-are available in the Git repository at:
+        page = read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
+        if (IS_ERR(page))
+                return page;
+        if (!PageUptodate(page)) {
+                put_page(page);
+                return ERR_PTR(-EIO);
+        }
+        return page;
+}
 
-  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.3-fixes-2
+But I don't think read_mapping_page() can return a page which doesn't have
+PageUptodate set.  Follow the path down through read_cache_page() into
+do_read_cache_page().
 
-for you to fetch changes up to 8612de3f7ba6e900465e340516b8313806d27b2d:
+Other than the locations which return an ERR_PTR, the only return point
+is at the out: label.  Three of the gotos to 'out' are guarded by 'if
+(PageUptodate)'.  The fourth is after calling wait_on_page_read().  Which
+will return ERR_PTR(-EIO) if the page isn't Uptodate after being unlocked.
 
-  xfs: don't crash on null attr fork xfs_bmapi_read (2019-08-12 09:32:44 -0700)
+Subtracting that never-exercised check from the routine leaves us with:
 
-----------------------------------------------------------------
-Changes since last update:
-- Fix crashes when the attr fork isn't present due to errors but inode
-  inactivation tries to zap the attr data anyway.
-- Convert more directory corruption debugging asserts to actual
-  EFSCORRUPTED returns instead of blowing up later on.
-- Don't fail writeback just because we ran out of memory allocating
-  metadata log data.
+static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+{
+        struct page *page;
 
-----------------------------------------------------------------
-Darrick J. Wong (2):
-      xfs: remove more ondisk directory corruption asserts
-      xfs: don't crash on null attr fork xfs_bmapi_read
+        page = read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
+        if (IS_ERR(page))
+                return page;
+        return page;
+}
 
-Tetsuo Handa (1):
-      fs: xfs: xfs_log: Don't use KM_MAYFAIL at xfs_log_reserve().
+which is fundamentally just:
 
- fs/xfs/libxfs/xfs_bmap.c      | 29 +++++++++++++++++++++--------
- fs/xfs/libxfs/xfs_da_btree.c  | 19 ++++++++++++-------
- fs/xfs/libxfs/xfs_dir2_node.c |  3 ++-
- fs/xfs/xfs_log.c              |  5 +----
- 4 files changed, 36 insertions(+), 20 deletions(-)
+static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+{
+        return read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
+}
+
+which seems like it might have a better name and be located in pagemap.h?
+
+I might also like to see
+
+ out:
++	VM_BUG_ON(!PageUptodate(page));
+ 	mark_page_accessed(page);
+
+at the end of do_read_cache_page(), just to be sure nobody ever screws
+that up.
+
