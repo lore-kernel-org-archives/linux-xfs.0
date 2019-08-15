@@ -1,13 +1,12 @@
 Return-Path: linux-xfs-owner@vger.kernel.org
-Received: from userp2130.oracle.com ([156.151.31.86]:53108 "EHLO
+Received: from userp2130.oracle.com ([156.151.31.86]:55858 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725977AbfHOPTR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 11:19:17 -0400
-Subject: [PATCH 3/3] common: filter aiodio dmesg after fs/iomap.c to
- fs/iomap/ move
+        with ESMTP id S1728728AbfHOPVL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 11:21:11 -0400
+Subject: [PATCH 2/3] generic/561: kill duperemove directly
 From: "Darrick J. Wong" <darrick.wong@oracle.com>
-Date: Thu, 15 Aug 2019 08:19:12 -0700
-Message-ID: <156588235283.24775.17750563527287824640.stgit@magnolia>
+Date: Thu, 15 Aug 2019 08:19:06 -0700
+Message-ID: <156588234658.24775.14952503026602339377.stgit@magnolia>
 In-Reply-To: <156588233330.24775.15183725500886844319.stgit@magnolia>
 References: <156588233330.24775.15183725500886844319.stgit@magnolia>
 MIME-Version: 1.0
@@ -20,37 +19,37 @@ Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since the iomap code are moving to fs/iomap/ we have to add new entries
-to the aiodio dmesg filter to reflect this.  It's still possible for
-filesystems using iomap for directio to cough up WARNings when a direct
-write collides with a buffered write, since in some cases we catch that
-early enough to have the direct write return EIO.
+While the kill statement added in the previous patch usually suffices to
+shut down the bash loop that runs the duperemove processes, for whatever
+reason this sometimes fails to kill duperemove.  Kill the duperemove
+processes directly after removing the run file, which should cause the
+bash loop to exit immediately.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- common/filter |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ tests/generic/561 |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/common/filter b/common/filter
-index ed082d24..26fc2132 100644
---- a/common/filter
-+++ b/common/filter
-@@ -555,6 +555,7 @@ _filter_aiodio_dmesg()
- 	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
- 	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
- 	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
-+	local warn10="WARNING:.*fs/iomap/direct-io\.c:.*iomap_dio_actor.*"
- 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
- 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
- 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
-@@ -563,7 +564,8 @@ _filter_aiodio_dmesg()
- 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
- 	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
- 	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
--	    -e "s#$warn9#Intentional warnings in dio_complete#"
-+	    -e "s#$warn9#Intentional warnings in dio_complete#" \
-+	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
- }
+diff --git a/tests/generic/561 b/tests/generic/561
+index 2f3eff3c..26ecff5d 100755
+--- a/tests/generic/561
++++ b/tests/generic/561
+@@ -47,7 +47,7 @@ function end_test()
+ 	# stop duperemove running
+ 	if [ -e $dupe_run ]; then
+ 		rm -f $dupe_run
+-		kill -INT $dedup_pids
++		$KILLALL_PROG -q $DUPEREMOVE_PROG > /dev/null 2>&1
+ 		wait $dedup_pids
+ 	fi
  
- # We generate assert related WARNINGs on purpose and make sure test doesn't fail
+@@ -74,7 +74,7 @@ for ((i = 0; i < $((2 * LOAD_FACTOR)); i++)); do
+ 	while [ -e $dupe_run ]; do
+ 		$DUPEREMOVE_PROG -dr --dedupe-options=same $testdir \
+ 			>>$seqres.full 2>&1
+-	done &
++	done 2>&1 | sed -e '/Terminated/d' &
+ 	dedup_pids="$! $dedup_pids"
+ done
+ 
