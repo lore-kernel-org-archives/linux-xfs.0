@@ -1,186 +1,128 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:55885 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725895AbfHNUpn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 16:45:43 -0400
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH v5 00/18] compat_ioctl.c removal, part 2/3 
-Date: Wed, 14 Aug 2019 22:42:27 +0200
-Message-Id: <20190814204259.120942-1-arnd@arndb.de>
+Received: from mx1.redhat.com ([209.132.183.28]:38540 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731243AbfHOMzk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 15 Aug 2019 08:55:40 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 15E543001472
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:40 +0000 (UTC)
+Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id C52C85DA8B
+        for <linux-xfs@vger.kernel.org>; Thu, 15 Aug 2019 12:55:39 +0000 (UTC)
+From: Brian Foster <bfoster@redhat.com>
+Subject: [PATCH v3 1/4] xfs: track active state of allocation btree cursors
+Date: Thu, 15 Aug 2019 08:55:35 -0400
+Message-Id: <20190815125538.49570-2-bfoster@redhat.com>
+In-Reply-To: <20190815125538.49570-1-bfoster@redhat.com>
+References: <20190815125538.49570-1-bfoster@redhat.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk, linux-fsdevel@vger.kernel.org
-Cc: Arnd Bergmann <arnd@arndb.de>, davem@davemloft.net, axboe@kernel.dk, linux-block@vger.kernel.org, minyard@acm.org, gregkh@linuxfoundation.org, linux@roeck-us.net, alexandre.belloni@bootlin.com, jejb@linux.ibm.com, martin.petersen@oracle.com, dgilbert@interlog.com, jslaby@suse.com, wim@linux-watchdog.org, tytso@mit.edu, adilger.kernel@dilger.ca, jaegeuk@kernel.org, rpeterso@redhat.com, agruenba@redhat.com, mikulas@artax.karlin.mff.cuni.cz, konishi.ryusuke@gmail.com, jlbec@evilplan.org, joseph.qi@linux.alibaba.com, darrick.wong@oracle.com, linux-xfs@vger.kernel.org, netdev@vger.kernel.org, openipmi-developer@lists.sourceforge.net, linux-hwmon@vger.kernel.org, linux-ppp@vger.kernel.org, linux-rtc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-watchdog@vger.kernel.org, ecryptfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, cluster-devel@redhat.com, linux-nilfs@vger.kernel.org, ocfs2-devel@oss.oracle.com
+To: linux-xfs@vger.kernel.org
 
-This is a follow-up to part 1/3 that I posted after -rc2.
-I hope these are still largely uncontroversial changes, and
-I would like to get them into linux-5.4.
+The upcoming allocation algorithm update searches multiple
+allocation btree cursors concurrently. As such, it requires an
+active state to track when a particular cursor should continue
+searching. While active state will be modified based on higher level
+logic, we can define base functionality based on the result of
+allocation btree lookups.
 
-Part 1 was in
+Define an active flag in the private area of the btree cursor.
+Update it based on the result of lookups in the existing allocation
+btree helpers. Finally, provide a new helper to query the current
+state.
 
-https://lore.kernel.org/lkml/CAPcyv4i_nHzV155RcgnAQ189aq2Lfd2g8pA1D5NbZqo9E_u+Dw@mail.gmail.com/
+Signed-off-by: Brian Foster <bfoster@redhat.com>
+---
+ fs/xfs/libxfs/xfs_alloc.c       | 24 +++++++++++++++++++++---
+ fs/xfs/libxfs/xfs_alloc_btree.c |  1 +
+ fs/xfs/libxfs/xfs_btree.h       |  3 +++
+ 3 files changed, 25 insertions(+), 3 deletions(-)
 
-Part 3 will be one kernel release after part 2 is merged,
-as that still needs a little extra work.
-
-The entire series is available at
-
-git://git.kernel.org/pub/scm/linux/kernel/git/arnd/playground.git compat_ioctl
-
-      Arnd
-
-Al Viro (2):
-  compat_ioctl: unify copy-in of ppp filters
-  compat_ioctl: move PPPIOCSCOMPRESS to ppp_generic
-
-Arnd Bergmann (16):
-  xfs: compat_ioctl: use compat_ptr()
-  xfs: compat_ioctl: add missing conversions
-  gfs2: add compat_ioctl support
-  fs: compat_ioctl: move FITRIM emulation into file systems
-  watchdog: cpwd: use generic compat_ptr_ioctl
-  compat_ioctl: move WDIOC handling into wdt drivers
-  compat_ioctl: reimplement SG_IO handling
-  af_unix: add compat_ioctl support
-  compat_ioctl: handle SIOCOUTQNSD
-  compat_ioctl: move SIOCOUTQ out of compat_ioctl.c
-  tty: handle compat PPP ioctls
-  compat_ioctl: handle PPPIOCGIDLE for 64-bit time_t
-  compat_ioctl: ppp: move simple commands into ppp_generic.c
-  compat_ioctl: move SG_GET_REQUEST_TABLE handling
-  pktcdvd: add compat_ioctl handler
-  scsi: sd: enable compat ioctls for sed-opal
-
- Documentation/networking/ppp_generic.txt  |   2 +
- arch/powerpc/platforms/52xx/mpc52xx_gpt.c |   1 +
- arch/um/drivers/harddog_kern.c            |   1 +
- block/scsi_ioctl.c                        | 132 ++++++++-
- drivers/block/pktcdvd.c                   |  25 ++
- drivers/char/ipmi/ipmi_watchdog.c         |   1 +
- drivers/hwmon/fschmd.c                    |   1 +
- drivers/net/ppp/ppp_generic.c             | 245 ++++++++++-----
- drivers/rtc/rtc-ds1374.c                  |   1 +
- drivers/scsi/sd.c                         |  14 +-
- drivers/scsi/sg.c                         |  59 +++-
- drivers/tty/tty_io.c                      |   5 +
- drivers/watchdog/acquirewdt.c             |   1 +
- drivers/watchdog/advantechwdt.c           |   1 +
- drivers/watchdog/alim1535_wdt.c           |   1 +
- drivers/watchdog/alim7101_wdt.c           |   1 +
- drivers/watchdog/ar7_wdt.c                |   1 +
- drivers/watchdog/at91rm9200_wdt.c         |   1 +
- drivers/watchdog/ath79_wdt.c              |   1 +
- drivers/watchdog/bcm63xx_wdt.c            |   1 +
- drivers/watchdog/cpu5wdt.c                |   1 +
- drivers/watchdog/cpwd.c                   |  25 +-
- drivers/watchdog/eurotechwdt.c            |   1 +
- drivers/watchdog/f71808e_wdt.c            |   1 +
- drivers/watchdog/gef_wdt.c                |   1 +
- drivers/watchdog/geodewdt.c               |   1 +
- drivers/watchdog/ib700wdt.c               |   1 +
- drivers/watchdog/ibmasr.c                 |   1 +
- drivers/watchdog/indydog.c                |   1 +
- drivers/watchdog/intel_scu_watchdog.c     |   1 +
- drivers/watchdog/iop_wdt.c                |   1 +
- drivers/watchdog/it8712f_wdt.c            |   1 +
- drivers/watchdog/ixp4xx_wdt.c             |   1 +
- drivers/watchdog/ks8695_wdt.c             |   1 +
- drivers/watchdog/m54xx_wdt.c              |   1 +
- drivers/watchdog/machzwd.c                |   1 +
- drivers/watchdog/mixcomwd.c               |   1 +
- drivers/watchdog/mtx-1_wdt.c              |   1 +
- drivers/watchdog/mv64x60_wdt.c            |   1 +
- drivers/watchdog/nuc900_wdt.c             |   1 +
- drivers/watchdog/nv_tco.c                 |   1 +
- drivers/watchdog/pc87413_wdt.c            |   1 +
- drivers/watchdog/pcwd.c                   |   1 +
- drivers/watchdog/pcwd_pci.c               |   1 +
- drivers/watchdog/pcwd_usb.c               |   1 +
- drivers/watchdog/pika_wdt.c               |   1 +
- drivers/watchdog/pnx833x_wdt.c            |   1 +
- drivers/watchdog/rc32434_wdt.c            |   1 +
- drivers/watchdog/rdc321x_wdt.c            |   1 +
- drivers/watchdog/riowd.c                  |   1 +
- drivers/watchdog/sa1100_wdt.c             |   1 +
- drivers/watchdog/sb_wdog.c                |   1 +
- drivers/watchdog/sbc60xxwdt.c             |   1 +
- drivers/watchdog/sbc7240_wdt.c            |   1 +
- drivers/watchdog/sbc_epx_c3.c             |   1 +
- drivers/watchdog/sbc_fitpc2_wdt.c         |   1 +
- drivers/watchdog/sc1200wdt.c              |   1 +
- drivers/watchdog/sc520_wdt.c              |   1 +
- drivers/watchdog/sch311x_wdt.c            |   1 +
- drivers/watchdog/scx200_wdt.c             |   1 +
- drivers/watchdog/smsc37b787_wdt.c         |   1 +
- drivers/watchdog/w83877f_wdt.c            |   1 +
- drivers/watchdog/w83977f_wdt.c            |   1 +
- drivers/watchdog/wafer5823wdt.c           |   1 +
- drivers/watchdog/watchdog_dev.c           |   1 +
- drivers/watchdog/wdrtas.c                 |   1 +
- drivers/watchdog/wdt.c                    |   1 +
- drivers/watchdog/wdt285.c                 |   1 +
- drivers/watchdog/wdt977.c                 |   1 +
- drivers/watchdog/wdt_pci.c                |   1 +
- fs/compat_ioctl.c                         | 346 +---------------------
- fs/ecryptfs/file.c                        |   1 +
- fs/ext4/ioctl.c                           |   1 +
- fs/f2fs/file.c                            |   1 +
- fs/gfs2/file.c                            |  24 ++
- fs/hpfs/dir.c                             |   1 +
- fs/hpfs/file.c                            |   1 +
- fs/nilfs2/ioctl.c                         |   1 +
- fs/ocfs2/ioctl.c                          |   1 +
- fs/xfs/xfs_ioctl32.c                      |  11 +-
- include/linux/blkdev.h                    |   2 +
- include/uapi/linux/ppp-ioctl.h            |   2 +
- include/uapi/linux/ppp_defs.h             |  14 +
- lib/iov_iter.c                            |   1 +
- net/socket.c                              |   3 +
- net/unix/af_unix.c                        |  19 ++
- 86 files changed, 526 insertions(+), 472 deletions(-)
-
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index 372ad55631fc..6340f59ac3f4 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -146,9 +146,13 @@ xfs_alloc_lookup_eq(
+ 	xfs_extlen_t		len,	/* length of extent */
+ 	int			*stat)	/* success/failure */
+ {
++	int			error;
++
+ 	cur->bc_rec.a.ar_startblock = bno;
+ 	cur->bc_rec.a.ar_blockcount = len;
+-	return xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
++	error = xfs_btree_lookup(cur, XFS_LOOKUP_EQ, stat);
++	cur->bc_private.a.priv.abt.active = *stat;
++	return error;
+ }
+ 
+ /*
+@@ -162,9 +166,13 @@ xfs_alloc_lookup_ge(
+ 	xfs_extlen_t		len,	/* length of extent */
+ 	int			*stat)	/* success/failure */
+ {
++	int			error;
++
+ 	cur->bc_rec.a.ar_startblock = bno;
+ 	cur->bc_rec.a.ar_blockcount = len;
+-	return xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
++	error = xfs_btree_lookup(cur, XFS_LOOKUP_GE, stat);
++	cur->bc_private.a.priv.abt.active = *stat;
++	return error;
+ }
+ 
+ /*
+@@ -178,9 +186,19 @@ xfs_alloc_lookup_le(
+ 	xfs_extlen_t		len,	/* length of extent */
+ 	int			*stat)	/* success/failure */
+ {
++	int			error;
+ 	cur->bc_rec.a.ar_startblock = bno;
+ 	cur->bc_rec.a.ar_blockcount = len;
+-	return xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
++	error = xfs_btree_lookup(cur, XFS_LOOKUP_LE, stat);
++	cur->bc_private.a.priv.abt.active = *stat;
++	return error;
++}
++
++static inline bool
++xfs_alloc_cur_active(
++	struct xfs_btree_cur	*cur)
++{
++	return cur && cur->bc_private.a.priv.abt.active;
+ }
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_alloc_btree.c b/fs/xfs/libxfs/xfs_alloc_btree.c
+index 2a94543857a1..279694d73e4e 100644
+--- a/fs/xfs/libxfs/xfs_alloc_btree.c
++++ b/fs/xfs/libxfs/xfs_alloc_btree.c
+@@ -507,6 +507,7 @@ xfs_allocbt_init_cursor(
+ 
+ 	cur->bc_private.a.agbp = agbp;
+ 	cur->bc_private.a.agno = agno;
++	cur->bc_private.a.priv.abt.active = false;
+ 
+ 	if (xfs_sb_version_hascrc(&mp->m_sb))
+ 		cur->bc_flags |= XFS_BTREE_CRC_BLOCKS;
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index fa3cd8ab9aba..a66063c356cc 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -183,6 +183,9 @@ union xfs_btree_cur_private {
+ 		unsigned long	nr_ops;		/* # record updates */
+ 		int		shape_changes;	/* # of extent splits */
+ 	} refc;
++	struct {
++		bool		active;		/* allocation cursor state */
++	} abt;
+ };
+ 
+ /*
 -- 
-2.20.0
-
-Cc: davem@davemloft.net
-Cc: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org
-Cc: minyard@acm.org
-Cc: gregkh@linuxfoundation.org
-Cc: linux@roeck-us.net
-Cc: alexandre.belloni@bootlin.com
-Cc: jejb@linux.ibm.com
-Cc: martin.petersen@oracle.com
-Cc: dgilbert@interlog.com
-Cc: jslaby@suse.com
-Cc: wim@linux-watchdog.org
-Cc: viro@zeniv.linux.org.uk
-Cc: tytso@mit.edu
-Cc: adilger.kernel@dilger.ca
-Cc: jaegeuk@kernel.org
-Cc: rpeterso@redhat.com
-Cc: agruenba@redhat.com
-Cc: mikulas@artax.karlin.mff.cuni.cz
-Cc: konishi.ryusuke@gmail.com
-Cc: jlbec@evilplan.org
-Cc: joseph.qi@linux.alibaba.com
-Cc: darrick.wong@oracle.com
-Cc: linux-xfs@vger.kernel.org
-Cc: netdev@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
-Cc: openipmi-developer@lists.sourceforge.net
-Cc: linux-hwmon@vger.kernel.org
-Cc: linux-ppp@vger.kernel.org
-Cc: linux-rtc@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Cc: linux-watchdog@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
-Cc: ecryptfs@vger.kernel.org
-Cc: linux-ext4@vger.kernel.org
-Cc: linux-f2fs-devel@lists.sourceforge.net
-Cc: cluster-devel@redhat.com
-Cc: linux-nilfs@vger.kernel.org
-Cc: ocfs2-devel@oss.oracle.com
+2.20.1
