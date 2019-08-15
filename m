@@ -1,51 +1,56 @@
-Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42810 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726352AbfHOMQZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 08:16:25 -0400
-Date: Thu, 15 Aug 2019 22:15:12 +1000
-From: Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
-Message-ID: <20190815121511.GR6129@dread.disaster.area>
-References: <20190814204259.120942-1-arnd@arndb.de>
- <20190814204259.120942-2-arnd@arndb.de>
- <20190814213753.GP6129@dread.disaster.area>
- <20190815071314.GA6960@infradead.org>
- <CAK8P3a2Hjfd49XY18cDr04ZpvC5ZBGudzxqpCesbSsDf1ydmSA@mail.gmail.com>
- <20190815080211.GA17055@infradead.org>
- <20190815102649.GA10821@infradead.org>
+Return-Path: linux-xfs-owner@vger.kernel.org
+Received: from userp2130.oracle.com ([156.151.31.86]:53108 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725977AbfHOPTR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 11:19:17 -0400
+Subject: [PATCH 3/3] common: filter aiodio dmesg after fs/iomap.c to
+ fs/iomap/ move
+From: "Darrick J. Wong" <darrick.wong@oracle.com>
+Date: Thu, 15 Aug 2019 08:19:12 -0700
+Message-ID: <156588235283.24775.17750563527287824640.stgit@magnolia>
+In-Reply-To: <156588233330.24775.15183725500886844319.stgit@magnolia>
+References: <156588233330.24775.15183725500886844319.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190815102649.GA10821@infradead.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
-List-Id: xfs
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Allison Collins <allison.henderson@oracle.com>, Nick Bowler <nbowler@draconx.ca>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>
+To: guaneryu@gmail.com, darrick.wong@oracle.com
+Cc: linux-xfs@vger.kernel.org, fstests@vger.kernel.org
 
-On Thu, Aug 15, 2019 at 03:26:49AM -0700, Christoph Hellwig wrote:
-> On Thu, Aug 15, 2019 at 01:02:11AM -0700, Christoph Hellwig wrote:
-> > In many ways I'd actually much rather have a table driven approach.
-> > Let me try something..
-> 
-> Ok, it seems like we don't even need a table containing native and
-> compat as we can just fall back.  The tables still seem nicer to read,
-> though.
-> 
-> Let me know what you think of this:
-> 
-> http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Lots to like in that handful of patches. :)
+Since the iomap code are moving to fs/iomap/ we have to add new entries
+to the aiodio dmesg filter to reflect this.  It's still possible for
+filesystems using iomap for directio to cough up WARNings when a direct
+write collides with a buffered write, since in some cases we catch that
+early enough to have the direct write return EIO.
 
-It can easily go before or after Arnd's patch, and the merge
-conflict either way would be minor, so I'm not really fussed either
-way this gets sorted out...
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ common/filter |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-Cheers,
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/common/filter b/common/filter
+index ed082d24..26fc2132 100644
+--- a/common/filter
++++ b/common/filter
+@@ -555,6 +555,7 @@ _filter_aiodio_dmesg()
+ 	local warn7="WARNING:.*fs/iomap\.c:.*iomap_dio_actor.*"
+ 	local warn8="WARNING:.*fs/iomap\.c:.*iomap_dio_complete.*"
+ 	local warn9="WARNING:.*fs/direct-io\.c:.*dio_complete.*"
++	local warn10="WARNING:.*fs/iomap/direct-io\.c:.*iomap_dio_actor.*"
+ 	sed -e "s#$warn1#Intentional warnings in xfs_file_dio_aio_write#" \
+ 	    -e "s#$warn2#Intentional warnings in xfs_file_dio_aio_read#" \
+ 	    -e "s#$warn3#Intentional warnings in xfs_file_read_iter#" \
+@@ -563,7 +564,8 @@ _filter_aiodio_dmesg()
+ 	    -e "s#$warn6#Intentional warnings in __xfs_get_blocks#" \
+ 	    -e "s#$warn7#Intentional warnings in iomap_dio_actor#" \
+ 	    -e "s#$warn8#Intentional warnings in iomap_dio_complete#" \
+-	    -e "s#$warn9#Intentional warnings in dio_complete#"
++	    -e "s#$warn9#Intentional warnings in dio_complete#" \
++	    -e "s#$warn10#Intentional warnings in iomap_dio_actor#"
+ }
+ 
+ # We generate assert related WARNINGs on purpose and make sure test doesn't fail
