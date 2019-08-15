@@ -1,117 +1,133 @@
-Return-Path: <SRS0=4IxZ=WJ=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=AwRW=WL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3BEE8C32750
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Aug 2019 17:56:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7A9EC433FF
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 07:57:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 10B362064A
-	for <linux-xfs@archiver.kernel.org>; Tue, 13 Aug 2019 17:56:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="r1myjWjQ"
+	by mail.kernel.org (Postfix) with ESMTP id C247F206C2
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 07:57:12 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727642AbfHMR4x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 13 Aug 2019 13:56:53 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:16788 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725923AbfHMR4x (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 13 Aug 2019 13:56:53 -0400
-Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d52f9ef0000>; Tue, 13 Aug 2019 10:57:03 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate102.nvidia.com (PGP Universal service);
-  Tue, 13 Aug 2019 10:56:52 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate102.nvidia.com on Tue, 13 Aug 2019 10:56:52 -0700
-Received: from [10.110.48.28] (172.20.13.39) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Tue, 13 Aug
- 2019 17:56:51 +0000
-Subject: Re: [RFC PATCH v2 15/19] mm/gup: Introduce vaddr_pin_pages()
-To:     Ira Weiny <ira.weiny@intel.com>, Jason Gunthorpe <jgg@ziepe.ca>
-CC:     Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>,
-        Dave Chinner <david@fromorbit.com>,
-        <linux-xfs@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-ext4@vger.kernel.org>,
-        <linux-mm@kvack.org>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-16-ira.weiny@intel.com>
- <20190812122814.GC24457@ziepe.ca>
- <20190812214854.GF20634@iweiny-DESK2.sc.intel.com>
- <20190813114706.GA29508@ziepe.ca>
- <20190813174635.GC11882@iweiny-DESK2.sc.intel.com>
-From:   John Hubbard <jhubbard@nvidia.com>
-X-Nvconfidentiality: public
-Message-ID: <95b05c4f-0bd6-ac31-20a2-28ee761c6238@nvidia.com>
-Date:   Tue, 13 Aug 2019 10:56:51 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1728660AbfHOH5M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Aug 2019 03:57:12 -0400
+Received: from mail-qt1-f196.google.com ([209.85.160.196]:39870 "EHLO
+        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726865AbfHOH5M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 03:57:12 -0400
+Received: by mail-qt1-f196.google.com with SMTP id l9so1507220qtu.6;
+        Thu, 15 Aug 2019 00:57:11 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=og1blWTjQbHD8z+Aa6GJsSM0EvDf+W5fF8nT8B5d5bg=;
+        b=CGvye5CU7blgQva+6GTdYRDGWKAygsJVKVOPKGyXYhjPvsEkJncwtCzCAGHgFZNZqI
+         seZpwaZT/GmvP75b+V9BUuz7suFpvoozamD4Focu6os8ICZKfsodyP4KIDor+piykMAY
+         W4VzDkADsoWtvwprZ15853+SEpzfNKS6zhURj3Wzt6X+nx/OvKAJFdeQ8Od3ammWxiaV
+         cURkXC4STeXXv5Jhs54MwUBwrivm2X8waGYN2x/lIk9095kFa96+jffYEfkUQkgBozC5
+         4a9555TowHsSgma5kHtQgEAQBCKrzfSHLFQzi6qxzrqek42Rn5aiq4bVDVxpULKKGMjP
+         ANBA==
+X-Gm-Message-State: APjAAAVW4YasHezuoaI8DdgjSDAGKc+1C5IFdpI/OzKQWMJJmo/Q7DPk
+        f/mDpkZutWY9gLVWYp+ruP8dLu52mS2y6LF6z2s=
+X-Google-Smtp-Source: APXvYqwd8Z0CEHj5l9dzXypLlvuaYz5uk3nK3xCoedz6ioYtSMQQriLYP3kyev1HsvcasLudoxA0iEzxmBatKCCLNxk=
+X-Received: by 2002:ac8:239d:: with SMTP id q29mr2844105qtq.304.1565855830956;
+ Thu, 15 Aug 2019 00:57:10 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20190813174635.GC11882@iweiny-DESK2.sc.intel.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- HQMAIL107.nvidia.com (172.20.187.13)
+References: <20190814204259.120942-1-arnd@arndb.de> <20190814204259.120942-2-arnd@arndb.de>
+ <20190814213753.GP6129@dread.disaster.area> <20190815071314.GA6960@infradead.org>
+In-Reply-To: <20190815071314.GA6960@infradead.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 15 Aug 2019 09:56:54 +0200
+Message-ID:
+ <CAK8P3a2Hjfd49XY18cDr04ZpvC5ZBGudzxqpCesbSsDf1ydmSA@mail.gmail.com>
+Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Nick Bowler <nbowler@draconx.ca>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <dchinner@redhat.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1565719023; bh=KDoBH7FMcOFVaHbTNky7KSvvCBIevQY0atcdz7yZpyo=;
-        h=X-PGP-Universal:Subject:To:CC:References:From:X-Nvconfidentiality:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=r1myjWjQb9mZf2jmH/nl8EOm2qt2HUka2TVsF2Jum+qndnndTVwaD2327vhXLSeCi
-         XIpGwaKAZwWCMLAlTX/kfRa98I9xBwpMhAZ6eTqZRPz4zmMPa7tC2viy+Eub4ulUG/
-         fSd52XCv1zuDNwzHlnr6RMY/WlH/M4OFEPUek/8HPyi9Vdb1JGuOUy8IiDorNa+3Ua
-         2c/160jTWmEuUnof8/fNzqwgbNxD4seyIajR2G3YwfSZ/dqoIJN7D6+C64cqw5CxFF
-         Q03mIRJipiEmdnJCLEzKxeQsVQgOdkVfG2OprbuepROCdrgWbL6zWz92e+Qp+ecaJ4
-         wPrDn3x7NUcew==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
-Message-ID: <20190813175651.GVph81v7H50UTjiGs8cDEGDgtYYleO297N1yGfXGU0s@z>
+Message-ID: <20190815075654.aJAPvj8eku_yxpp4sE-NEyg3dfoY6ND6S_fuczv6Ngs@z>
 
-On 8/13/19 10:46 AM, Ira Weiny wrote:
-> On Tue, Aug 13, 2019 at 08:47:06AM -0300, Jason Gunthorpe wrote:
->> On Mon, Aug 12, 2019 at 02:48:55PM -0700, Ira Weiny wrote:
->>> On Mon, Aug 12, 2019 at 09:28:14AM -0300, Jason Gunthorpe wrote:
->>>> On Fri, Aug 09, 2019 at 03:58:29PM -0700, ira.weiny@intel.com wrote:
->>>>> From: Ira Weiny <ira.weiny@intel.com>
-...
->>> So I'm open to suggestions.  Jan gave me this one, so I figured it was safer to
->>> suggest it...
->>
->> Should have the word user in it, imho
-> 
-> Fair enough...
-> 
-> user_addr_pin_pages(void __user * addr, ...) ?
-> 
-> uaddr_pin_pages(void __user * addr, ...) ?
-> 
-> I think I like uaddr...
-> 
+On Thu, Aug 15, 2019 at 9:13 AM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Thu, Aug 15, 2019 at 07:37:53AM +1000, Dave Chinner wrote:
+> > > @@ -576,7 +576,7 @@ xfs_file_compat_ioctl(
+> > >     case XFS_IOC_SCRUB_METADATA:
+> > >     case XFS_IOC_BULKSTAT:
+> > >     case XFS_IOC_INUMBERS:
+> > > -           return xfs_file_ioctl(filp, cmd, p);
+> > > +           return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
+> >
+> > I don't really like having to sprinkle special casts through the
+> > code because of this.
+>
+> True.  But the proper fix is to not do the indirection through
+> xfs_file_ioctl but instead to call xfs_ioc_scrub_metadata,
+> xfs_ioc_bulkstat, etc directly which all take a void __user
+> arguments already.
 
-Better to spell out "user". "u" prefixes are used for "unsigned" and it
-is just too ambiguous here. Maybe:
+I'm not sure that's better: This would end up duplicating all
+of xfs_file_ioctl(), which is already a fairly long function, compared
+to the current way of having a large set of commands all handled
+with a single line.
 
-    vaddr_pin_user_pages()
+From looking at other subsystems, what I find to work best is to
+move the compat handler into the same file as the native code
+and then structure the files so that shared handlers get
+put into one place, something like
 
-...which also sounds close enough to get_user_pages() that a bit of
-history and continuity is preserved, too.
+/* these are the ones that have the same ABI for 32-bit and 64-bit tasks */
+static int xfs_compatible_file_ioctl(struct file *filp, unsigned cmd,
+void __user *p)
+{
+      int ret = -ENOIOCTLCMD;
 
+       switch (cmd) {
+       case XFS_IOC_DIOINFO:
+            ...
+        case ...
+     }
 
+     return ret;
+}
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+long
+xfs_file_compat_ioctl(
+        struct file             *filp,
+        unsigned                cmd,
+        unsigned long           p)
+{
+       ret = xfs_compatible_file_ioctl(filp, cmd, compat_ptr(p));
+       if (ret != -ENOIOCTLCMD)
+              return ret;
+
+      /* all incompatible ones below */
+      switch (cmd) {
+         ...
+      }
+}
+Having them in one place makes it more obvious to readers how the
+native and compat handlers fit together, and makes it easier to keep
+the two in sync.
+
+That would of course be a much larger change to how it's done today,
+and it's way out of scope of what I want to achieve in my (already
+too long) series.
+
+     Arnd
