@@ -1,78 +1,76 @@
 Return-Path: <linux-xfs-owner@vger.kernel.org>
-Received: from mail-qt1-f196.google.com ([209.85.160.196]:35240 "EHLO
-        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726230AbfHNMXL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 14 Aug 2019 08:23:11 -0400
-Received: by mail-qt1-f196.google.com with SMTP id u34so10552668qte.2
-        for <linux-xfs@vger.kernel.org>; Wed, 14 Aug 2019 05:23:10 -0700 (PDT)
-Date: Wed, 14 Aug 2019 09:23:08 -0300
-From: Jason Gunthorpe <jgg@ziepe.ca>
-Subject: Re: [RFC PATCH v2 16/19] RDMA/uverbs: Add back pointer to system
- file object
-Message-ID: <20190814122308.GB13770@ziepe.ca>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-17-ira.weiny@intel.com>
- <20190812130039.GD24457@ziepe.ca>
- <20190812172826.GA19746@iweiny-DESK2.sc.intel.com>
- <20190812175615.GI24457@ziepe.ca>
- <20190812211537.GE20634@iweiny-DESK2.sc.intel.com>
- <20190813114842.GB29508@ziepe.ca>
- <20190813174142.GB11882@iweiny-DESK2.sc.intel.com>
- <20190813180022.GF29508@ziepe.ca>
- <20190813203858.GA12695@iweiny-DESK2.sc.intel.com>
+Received: from mail-qk1-f194.google.com ([209.85.222.194]:45849 "EHLO
+        mail-qk1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731238AbfHOLCh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 07:02:37 -0400
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190813203858.GA12695@iweiny-DESK2.sc.intel.com>
+References: <20190814204259.120942-1-arnd@arndb.de> <20190814204259.120942-2-arnd@arndb.de>
+ <20190814213753.GP6129@dread.disaster.area> <20190815071314.GA6960@infradead.org>
+ <CAK8P3a2Hjfd49XY18cDr04ZpvC5ZBGudzxqpCesbSsDf1ydmSA@mail.gmail.com>
+ <20190815080211.GA17055@infradead.org> <20190815102649.GA10821@infradead.org>
+In-Reply-To: <20190815102649.GA10821@infradead.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Date: Thu, 15 Aug 2019 13:02:19 +0200
+Message-ID: <CAK8P3a0jEsJbpkgKrjWNOsDSvQv5AXq_P7A92zr4my+uMnZijw@mail.gmail.com>
+Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 List-ID: <linux-xfs.vger.kernel.org>
 List-Id: xfs
-To: Ira Weiny <ira.weiny@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Dan Williams <dan.j.williams@intel.com>, Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>, John Hubbard <jhubbard@nvidia.com>, Michal Hocko <mhocko@suse.com>, Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org, linux-mm@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Dave Chinner <david@fromorbit.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>, "Darrick J. Wong" <darrick.wong@oracle.com>, linux-xfs <linux-xfs@vger.kernel.org>, Brian Foster <bfoster@redhat.com>, Allison Collins <allison.henderson@oracle.com>, Nick Bowler <nbowler@draconx.ca>, Eric Sandeen <sandeen@sandeen.net>, Dave Chinner <dchinner@redhat.com>
 
-On Tue, Aug 13, 2019 at 01:38:59PM -0700, Ira Weiny wrote:
-> On Tue, Aug 13, 2019 at 03:00:22PM -0300, Jason Gunthorpe wrote:
-> > On Tue, Aug 13, 2019 at 10:41:42AM -0700, Ira Weiny wrote:
-> > 
-> > > And I was pretty sure uverbs_destroy_ufile_hw() would take care of (or ensure
-> > > that some other thread is) destroying all the MR's we have associated with this
-> > > FD.
-> > 
-> > fd's can't be revoked, so destroy_ufile_hw() can't touch them. It
-> > deletes any underlying HW resources, but the FD persists.
-> 
-> I misspoke.  I should have said associated with this "context".  And of course
-> uverbs_destroy_ufile_hw() does not touch the FD.  What I mean is that the
-> struct file which had file_pins hanging off of it would be getting its file
-> pins destroyed by uverbs_destroy_ufile_hw().  Therefore we don't need the FD
-> after uverbs_destroy_ufile_hw() is done.
-> 
-> But since it does not block it may be that the struct file is gone before the
-> MR is actually destroyed.  Which means I think the GUP code would blow up in
-> that case...  :-(
+On Thu, Aug 15, 2019 at 12:26 PM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Thu, Aug 15, 2019 at 01:02:11AM -0700, Christoph Hellwig wrote:
+> > In many ways I'd actually much rather have a table driven approach.
+> > Let me try something..
+>
+> Ok, it seems like we don't even need a table containing native and
+> compat as we can just fall back.  The tables still seem nicer to read,
+> though.
+>
+> Let me know what you think of this:
+>
+> http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table
 
-Oh, yes, that is true, you also can't rely on the struct file living
-longer than the HW objects either, that isn't how the lifetime model
-works.
+These all look like useful cleanups, but I'm a little worried about introducing
+merge conflicts with my own patches. I would want to have my series get
+merged as a complete branch since each patch that removes a bit of
+fs/compat_ioctl.c would clash with a patch removing the adjacent bits
+otherwise.
 
-If GUP consumes the struct file it must allow the struct file to be
-deleted before the GUP pin is released.
+I still haven't heard from Al regarding what he thinks of my v5 series.
+If he wants me to send a pull request for it, I can of course add in
+your patches  after they are fully reviewed.
 
-> The drivers could provide some generic object (in RDMA this could be the
-> uverbs_attr_bundle) which represents their "context".
+> I also wonder if we should life the ioctl handler tables to the VFS.
 
-For RDMA the obvious context is the struct ib_mr *
+The idea of these tables has come up a few times in the past,
+and there are a couple of subsystems that have something like it,
+e.g. drivers/media.
 
-> But for the procfs interface, that context then needs to be associated with any
-> file which points to it...  For RDMA, or any other "FD based pin mechanism", it
-> would be up to the driver to "install" a procfs handler into any struct file
-> which _may_ point to this context.  (before _or_ after memory pins).
+Usually you'd want to combine the table with a more generic way to
+do the copy_from_user()/copy_to_user() on the argument, but that
+in turn requires all commands to be defined correctly (a lot of drivers
+have some commands that specify the wrong direction or the wrong
+size, or one that predates the _IO() macro).
 
-Is this all just for debugging? Seems like a lot of complication just
-to print a string
+What I could imaging having in the long run is to have the ioctl table
+attached to the file_operations structure, and then define it in a way
+that handles at least the more common variations:
 
-Generally, I think you'd be better to associate things with the
-mm_struct not some struct file... The whole design is simpler as GUP
-already has the mm_struct.
+- copy_from_user to stack, pass a kernel pointer to handler
+- a single entry for commands that are 32/64-bit compatible
+- entries that are only used for native vs compat mode if they
+  have incompatible arguments (this could also be handled
+  by calling in_compat_syscall() in the handler itself).
+- a flag to specify handlers that require the __user pointer instead
+  of the implied copy.
 
-Jason
+Doing this right will certainly require several revisions of patch
+series and lots of discussions, and is unrelated to the removal
+of fs/compat_ioctl.c, so I'd much prefer to get this series merged
+before we start working on that.
+
+       Arnd
