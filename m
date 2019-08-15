@@ -2,120 +2,93 @@ Return-Path: <SRS0=AwRW=WL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4E87C3A59B
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 18:18:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6755BC3A589
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 19:20:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC7352089E
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 18:18:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FD17lM8u"
+	by mail.kernel.org (Postfix) with ESMTP id 3DE1320656
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 19:20:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732729AbfHOSSG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Aug 2019 14:18:06 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:52518 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728283AbfHOSSG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 14:18:06 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=juAhuh8ocNm+VLit5UQVJy7awwSz34vKy9CkzRbIwc4=; b=FD17lM8uIRJr1AZE/aoLJqIZx
-        h90MHL/pF6QIZK2zqCFYxFYstB6Z4nmBc4xPd8DLr/nRgBuuGODBKAQJvWFh1HjsN0FVbPk1VPkj7
-        0B0HkT22vo/HlvCKRaGIcSBdJ5ATcT5mwzgAZWFg8FkBUggJ2kL1u/yuFrbjkAkpMeHgOnGGe+Zb+
-        fulYAX/V9Mvfmge/UTIuPdiGDF27SxJr6VqkAHW9vvfjW8a24Kv3bZSv6EnF+ZnTOUXbzVcEm+OkM
-        gNa8cZFeXzmbQr1mUXd/jTrzmM6UT09TiTHpbRfO+s5pBaI4YeFlZEW0lbCU7TNdG77W3kIv/Qpjq
-        r7Z9QdtNg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hyKK4-0004PO-Of; Thu, 15 Aug 2019 18:18:04 +0000
-Date:   Thu, 15 Aug 2019 11:18:04 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        fdmanana@gmail.com, gaoxiang25@huawei.com
-Subject: Re: [PATCH v4] vfs: fix page locking deadlocks when deduping files
-Message-ID: <20190815181804.GB18474@bombadil.infradead.org>
-References: <20190815164940.GA15198@magnolia>
+        id S1731328AbfHOTUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Aug 2019 15:20:50 -0400
+Received: from mail-qk1-f196.google.com ([209.85.222.196]:33800 "EHLO
+        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728762AbfHOTUu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 15:20:50 -0400
+Received: by mail-qk1-f196.google.com with SMTP id m10so2811586qkk.1;
+        Thu, 15 Aug 2019 12:20:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=j0lUY9T5fW9DD8Z/WYckZ7IOSLlu2YMChdXw9ONqN60=;
+        b=uYlU9pMmwmXULnKEMB51Cdc9LsMwfZDVEFxhjYL5MToOBup0WetBpBmUY3mAGi5W0g
+         7JCKYWefKVUJYwBER0d5w08jh/9vDyTHrYF0noASjA1RIV/CIebgiQgxhM59ZypRj9aP
+         4XjmheUqEJNKa49vsASgoRE1zQg1kpZtRnIg8XwQxV37gTxy0hEEcAtEKuLhdf9NBH6e
+         2jqJ39VX9w8eIgp1w9Z5+mkH9cXr9i75ymq1gpjmJtZjlvmI1bGMBE6RY/tuC43WP4jq
+         SYw3c8hRi/K81G8r2Tvm/y6RzRYeaLpXvXUwpVNt2NL6XG5AdVK646flEWzvIktPL5Ch
+         dnUA==
+X-Gm-Message-State: APjAAAXfRPFI5s4ZtaSa5Phvz8+VgWRMDvSI1L+jpL0Gq2m4PQL/S06c
+        uB6Ef5lHNK1mLswmXuZ45FX5VkyTgW5aeXVQ0SM=
+X-Google-Smtp-Source: APXvYqxX/tHpG9h/OJBhMq363Q18QRmF3x01hoRWTAAzITEuCxNGnYVfEJbyDSvcOIWBAaVl9ipsiC+7TX8uI+zxqbI=
+X-Received: by 2002:a37:4fcf:: with SMTP id d198mr5521517qkb.394.1565896849491;
+ Thu, 15 Aug 2019 12:20:49 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190815164940.GA15198@magnolia>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+References: <20190814204259.120942-1-arnd@arndb.de> <20190814204259.120942-2-arnd@arndb.de>
+ <20190814213753.GP6129@dread.disaster.area> <20190815071314.GA6960@infradead.org>
+ <CAK8P3a2Hjfd49XY18cDr04ZpvC5ZBGudzxqpCesbSsDf1ydmSA@mail.gmail.com>
+ <20190815080211.GA17055@infradead.org> <20190815102649.GA10821@infradead.org>
+ <20190815121511.GR6129@dread.disaster.area> <20190815140355.GA11012@infradead.org>
+In-Reply-To: <20190815140355.GA11012@infradead.org>
+From:   Arnd Bergmann <arnd@arndb.de>
+Date:   Thu, 15 Aug 2019 21:20:32 +0200
+Message-ID: <CAK8P3a1iNu7m=gy-NauXVBky+cBk8TPWwfWXO4gSw1mRPJefJA@mail.gmail.com>
+Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Allison Collins <allison.henderson@oracle.com>,
+        Nick Bowler <nbowler@draconx.ca>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        Dave Chinner <dchinner@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 15, 2019 at 09:49:40AM -0700, Darrick J. Wong wrote:
-> Fixes: 876bec6f9bbfcb3 ("vfs: refactor clone/dedupe_file_range common functions")
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Aug 15, 2019 at 4:04 PM Christoph Hellwig <hch@infradead.org> wrote:
+>
+> On Thu, Aug 15, 2019 at 10:15:12PM +1000, Dave Chinner wrote:
+> > > http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table
+> >
+> > Lots to like in that handful of patches. :)
+> >
+> > It can easily go before or after Arnd's patch, and the merge
+> > conflict either way would be minor, so I'm not really fussed either
+> > way this gets sorted out...
+>
+> The other thing we could do is to just pick the two important ones:
+>
+> http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table-5.3
+>
+> and throw that into Arnds series, or even 5.3, and then defer the
+> table thing until later.
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+If we can have your "xfs: fall back to native ioctls for unhandled compat
+ones" in 5.3, that would be ideal from my side, then I can just drop the
+corresponding patch from my series and have the rest merged for 5.4.
 
-(I approve of this patch going upstream)
+The compat_ptr addition is independent of my series, I just added it
+because I noticed it was missing, so we can merged that through
+the xfs tree along with your other changes, either for 5.3 or 5.4.
 
-However, I think there are further simplifications to be made here.
-With this patch applied, vfs_dedupe_get_page() now looks like this:
-
-static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
-{
-        struct page *page;
-
-        page = read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
-        if (IS_ERR(page))
-                return page;
-        if (!PageUptodate(page)) {
-                put_page(page);
-                return ERR_PTR(-EIO);
-        }
-        return page;
-}
-
-But I don't think read_mapping_page() can return a page which doesn't have
-PageUptodate set.  Follow the path down through read_cache_page() into
-do_read_cache_page().
-
-Other than the locations which return an ERR_PTR, the only return point
-is at the out: label.  Three of the gotos to 'out' are guarded by 'if
-(PageUptodate)'.  The fourth is after calling wait_on_page_read().  Which
-will return ERR_PTR(-EIO) if the page isn't Uptodate after being unlocked.
-
-Subtracting that never-exercised check from the routine leaves us with:
-
-static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
-{
-        struct page *page;
-
-        page = read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
-        if (IS_ERR(page))
-                return page;
-        return page;
-}
-
-which is fundamentally just:
-
-static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
-{
-        return read_mapping_page(inode->i_mapping, offset >> PAGE_SHIFT, NULL);
-}
-
-which seems like it might have a better name and be located in pagemap.h?
-
-I might also like to see
-
- out:
-+	VM_BUG_ON(!PageUptodate(page));
- 	mark_page_accessed(page);
-
-at the end of do_read_cache_page(), just to be sure nobody ever screws
-that up.
-
+     Arnd
