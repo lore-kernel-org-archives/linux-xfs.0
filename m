@@ -2,107 +2,119 @@ Return-Path: <SRS0=AwRW=WL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0533C3A589
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 19:46:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF09EC3A589
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 20:05:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6EBA2083B
-	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 19:46:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CD132084D
+	for <linux-xfs@archiver.kernel.org>; Thu, 15 Aug 2019 20:05:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Kza/hdXh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733173AbfHOTqi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 15 Aug 2019 15:46:38 -0400
-Received: from mail-qk1-f196.google.com ([209.85.222.196]:39855 "EHLO
-        mail-qk1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733171AbfHOTqh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 15:46:37 -0400
-Received: by mail-qk1-f196.google.com with SMTP id 125so2798256qkl.6;
-        Thu, 15 Aug 2019 12:46:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=KdkqCNrsYGZD/efIVrpgf4pItvwMxmRiBzolCMfFZmI=;
-        b=QCa/Cdo4uDI2awDb2aD6tAFyu11TJDCYhTcqQbD8Xo6Symdikzf7+T+rvJtn31iMfg
-         FU1TEjcJum2g9L01GfgAFpeDSjj363lsonsh/bMa1pqmEt2eefHR2V/OVF0JBvBtWYJR
-         1K3OlC5F2z9JKHOHkMoc+6iJLoeM3tyCMt3ABZTHv6uEn2lKDvyxNTp22ZGLbpvnpR+f
-         7VK2/tkDQMNkQ3DTUEeGaocILjz2PqB9Nd+LH73ITfyV5/ESNQ0mhXppbK/xpRv2duIX
-         X4Ua5OqSCikh38vaYWVVOTkaoCDewiou1r2MKg/KKlKltUSWjFhYURD3Os4hApAfy9jt
-         EjZw==
-X-Gm-Message-State: APjAAAW8h6hAksu+q45zOEHNOm9byTP9rNF5LYjLBUFh8riv0v8ItSbF
-        SeQGSFvMJHK5ZI5+c1WpQn7zsZkAah6F/h5q+aE=
-X-Google-Smtp-Source: APXvYqy13T7uVMDYpTqi18IlN7TrofLdgzVCO7AjQuCbroE3LCMOg++BJL4RQskx1N+5yUUInsGdvvlV44WsYbx1mWQ=
-X-Received: by 2002:a05:620a:b:: with SMTP id j11mr5687756qki.352.1565898396389;
- Thu, 15 Aug 2019 12:46:36 -0700 (PDT)
-MIME-Version: 1.0
-References: <20190814204259.120942-1-arnd@arndb.de> <20190814204259.120942-2-arnd@arndb.de>
- <20190814213753.GP6129@dread.disaster.area> <20190815071314.GA6960@infradead.org>
- <CAK8P3a2Hjfd49XY18cDr04ZpvC5ZBGudzxqpCesbSsDf1ydmSA@mail.gmail.com>
- <20190815080211.GA17055@infradead.org> <20190815102649.GA10821@infradead.org>
- <20190815121511.GR6129@dread.disaster.area> <20190815140355.GA11012@infradead.org>
- <CAK8P3a1iNu7m=gy-NauXVBky+cBk8TPWwfWXO4gSw1mRPJefJA@mail.gmail.com> <20190815192827.GE15186@magnolia>
-In-Reply-To: <20190815192827.GE15186@magnolia>
-From:   Arnd Bergmann <arnd@arndb.de>
-Date:   Thu, 15 Aug 2019 21:46:20 +0200
-Message-ID: <CAK8P3a2XCKF2W3ktF+DBeatarA_ALoVuGh=qGaNA+PqX1OSBog@mail.gmail.com>
-Subject: Re: [PATCH v5 01/18] xfs: compat_ioctl: use compat_ptr()
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        id S1733247AbfHOUFu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 15 Aug 2019 16:05:50 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38182 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731108AbfHOUFu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 15 Aug 2019 16:05:50 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7FK4QMk002775;
+        Thu, 15 Aug 2019 20:05:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=zbLSa6W0EuiTMTGJ10AKmzZODTdbzm2Hj3NPVCPtPyY=;
+ b=Kza/hdXhucTULvENXgBL7h+svfGm7Ib/OMek9SxSFitnZYfi6p4fCdY4y1dN8Wv4rYSH
+ ij3j14O4NU5LZhjtYFaKHrlWV+wEHdfpBMDENsjcfFeQu/FYZKNPtaHwau5wuap6Qtwf
+ immzaTZLmgZi++Hba4eYFkMmOoIq6+EqvigEEa/zrVCUfWz8eCXtj063t2+FO1rYLqfi
+ OIJfS5Hc2sgYh30TBIG5spcSQm7Clg/Ya6IOOKdjTSIj7Omqsr3GTn31XN81lVkei40F
+ 07zbjvvCaQw96DbI1ZRqj1wzEx7p5NxpJQTfK77cWD+Zjy02fjbHZSAwIc8VFjnZVonv Ag== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2u9pjqvtes-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 15 Aug 2019 20:05:41 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7FK3QIj097997;
+        Thu, 15 Aug 2019 20:05:40 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2ucpyspsys-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 15 Aug 2019 20:05:40 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7FK5aB7016146;
+        Thu, 15 Aug 2019 20:05:36 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 15 Aug 2019 13:05:35 -0700
+Date:   Thu, 15 Aug 2019 13:05:34 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
         linux-xfs <linux-xfs@vger.kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Allison Collins <allison.henderson@oracle.com>,
-        Nick Bowler <nbowler@draconx.ca>,
+        Dave Chinner <david@fromorbit.com>,
+        Linux List Kernel Mailing <linux-kernel@vger.kernel.org>,
         Eric Sandeen <sandeen@sandeen.net>,
-        Dave Chinner <dchinner@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+        Christoph Hellwig <hch@lst.de>
+Subject: Re: [GIT PULL] xfs: fixes for 5.3-rc5
+Message-ID: <20190815200534.GF15186@magnolia>
+References: <20190815171347.GD15186@magnolia>
+ <CAHk-=wiHuHLK49LKQhtERXaq0OYUnug4DJZFLPq9RHEG2Cm+bQ@mail.gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHk-=wiHuHLK49LKQhtERXaq0OYUnug4DJZFLPq9RHEG2Cm+bQ@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9350 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908150189
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9350 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908150189
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 15, 2019 at 9:28 PM Darrick J. Wong <darrick.wong@oracle.com> wrote:
->
-> On Thu, Aug 15, 2019 at 09:20:32PM +0200, Arnd Bergmann wrote:
-> > On Thu, Aug 15, 2019 at 4:04 PM Christoph Hellwig <hch@infradead.org> wrote:
-> > >
-> > > On Thu, Aug 15, 2019 at 10:15:12PM +1000, Dave Chinner wrote:
-> > > > > http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table
-> > > >
-> > > > Lots to like in that handful of patches. :)
-> > > >
-> > > > It can easily go before or after Arnd's patch, and the merge
-> > > > conflict either way would be minor, so I'm not really fussed either
-> > > > way this gets sorted out...
-> > >
-> > > The other thing we could do is to just pick the two important ones:
-> > >
-> > > http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-ioctl-table-5.3
-> > >
-> > > and throw that into Arnds series, or even 5.3, and then defer the
-> > > table thing until later.
+On Thu, Aug 15, 2019 at 12:38:33PM -0700, Linus Torvalds wrote:
+> Pulled. Just a quick note:
+> 
+> On Thu, Aug 15, 2019 at 10:13 AM Darrick J. Wong <djwong@kernel.org> wrote:
 > >
-> > If we can have your "xfs: fall back to native ioctls for unhandled compat
-> > ones" in 5.3, that would be ideal from my side, then I can just drop the
-> > corresponding patch from my series and have the rest merged for 5.4.
-> >
-> > The compat_ptr addition is independent of my series, I just added it
-> > because I noticed it was missing, so we can merged that through
-> > the xfs tree along with your other changes, either for 5.3 or 5.4.
->
-> Er... do the two patches in the -5.3 branch actually fix something
-> that's broken?  I sense s390 is missing a pointer sanitization check or
-> something...?
+> > - Convert more directory corruption debugging asserts to actual
+> >   EFSCORRUPTED returns instead of blowing up later on.
+> 
+> The proper error code looks like an obvious improvement, but I do
+> wonder if there should be some (ratelimited) system logging too?
+> 
+> I've seen a lot of programs that don't report errors very clearly and
+> might just silently stop running and as a sysadmin I'd think I'd
+> rather have something in the system logs than users saying "my app
+> crashes at startup"/
+> 
+> Maybe the logging ends up being there already - just done later. It
+> wasn't obvious from the patch, and I didn't check the whole callchain
+> (only direct callers).
 
-s390 is indeed missing the pointer conversion, the other patch
-adds compat ioctl support for FS_IOC_GETFSLABEL and
-FS_IOC_SETFSLABEL, which were missing, and it ensures that
-FITRIM keeps working after I remove it from the list in
-fs/compat_ioctl.c
+Metadata update failures hitting EFSCORRUPTED will leave a fair amount
+of spew in dmesg both when we find the corrupt metadata and the update
+transaction is aborted (which takes the filesystem down).  Read errors
+get logged if we spot an error within a block but aren't consistently
+logged when we discover problems between separate metadata objects.
 
-       Arnd
+FWIW I've wondered off and on if the VFS syscalls should be generating
+some kind of audit trail when something returns an error message to
+userspace?
+
+--D
+
+>                   Linus
