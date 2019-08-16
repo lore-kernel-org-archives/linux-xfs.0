@@ -2,134 +2,239 @@ Return-Path: <SRS0=CZ9Z=WM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DBE7C3A59D
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 20:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 337CBC3A59D
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 23:20:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 04CA32133F
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 20:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EEBA421721
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 23:20:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727693AbfHPU7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 16:59:46 -0400
-Received: from mga18.intel.com ([134.134.136.126]:20240 "EHLO mga18.intel.com"
+        id S1727765AbfHPXUI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 19:20:08 -0400
+Received: from mga14.intel.com ([192.55.52.115]:4094 "EHLO mga14.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727548AbfHPU7q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Aug 2019 16:59:46 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
+        id S1727757AbfHPXUI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Aug 2019 19:20:08 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
 X-Amp-File-Uploaded: False
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Aug 2019 13:59:45 -0700
+Received: from fmsmga004.fm.intel.com ([10.253.24.48])
+  by fmsmga103.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 16 Aug 2019 16:20:07 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,394,1559545200"; 
-   d="scan'208";a="171524858"
-Received: from fmsmsx105.amr.corp.intel.com ([10.18.124.203])
-  by orsmga008.jf.intel.com with ESMTP; 16 Aug 2019 13:59:45 -0700
-Received: from fmsmsx156.amr.corp.intel.com (10.18.116.74) by
- FMSMSX105.amr.corp.intel.com (10.18.124.203) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Fri, 16 Aug 2019 13:59:45 -0700
-Received: from fmsmsx113.amr.corp.intel.com ([169.254.13.127]) by
- fmsmsx156.amr.corp.intel.com ([169.254.13.183]) with mapi id 14.03.0439.000;
- Fri, 16 Aug 2019 13:59:44 -0700
-From:   "Verma, Vishal L" <vishal.l.verma@intel.com>
-To:     "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>
-CC:     "Williams, Dan J" <dan.j.williams@intel.com>,
-        "hch@lst.de" <hch@lst.de>,
-        "david@fromorbit.com" <david@fromorbit.com>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>
-Subject: 5.3-rc1 regression with XFS log recovery
-Thread-Topic: 5.3-rc1 regression with XFS log recovery
-Thread-Index: AQHVVHWHW9jyoVVDjkW5IFS3q2GBzg==
-Date:   Fri, 16 Aug 2019 20:59:44 +0000
-Message-ID: <e49a6a3a244db055995769eb844c281f93e50ab9.camel@intel.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.30.5 (3.30.5-1.fc29) 
-x-originating-ip: [10.251.152.70]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <DACA2FF55A9B4146AFD44FB57EF33DA5@intel.com>
-Content-Transfer-Encoding: base64
+X-IronPort-AV: E=Sophos;i="5.64,395,1559545200"; 
+   d="scan'208";a="201680827"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by fmsmga004.fm.intel.com with ESMTP; 16 Aug 2019 16:20:07 -0700
+Date:   Fri, 16 Aug 2019 16:20:07 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jan Kara <jack@suse.cz>
+Cc:     Michal Hocko <mhocko@suse.com>, Theodore Ts'o <tytso@mit.edu>,
+        linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-kernel@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>,
+        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-ext4@vger.kernel.org
+Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;
+ -)
+Message-ID: <20190816232006.GA11384@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190814101714.GA26273@quack2.suse.cz>
+ <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
+ <20190815130558.GF14313@quack2.suse.cz>
+ <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-SGkgYWxsLA0KDQpXaGVuIHJ1bm5pbmcgdGhlICduZGN0bCcgdW5pdCB0ZXN0cyBhZ2FpbnN0IDUu
-My1yYyBrZXJuZWxzLCBJIG5vdGljZWQgYQ0KZnJlcXVlbnQgZmFpbHVyZSBvZiB0aGUgJ21tYXAu
-c2gnIHRlc3QgWzFdWzJdLg0KDQpbMV06IGh0dHBzOi8vZ2l0aHViLmNvbS9wbWVtL25kY3RsL2Js
-b2IvbWFzdGVyL3Rlc3QvbW1hcC5zaA0KWzJdOiBodHRwczovL2dpdGh1Yi5jb20vcG1lbS9uZGN0
-bC9ibG9iL21hc3Rlci90ZXN0L21tYXAuYw0KDQpCdXQgaW4gdHJ5aW5nIHRvIHBhcmUgZG93biB0
-aGUgdGVzdCBmdXJ0aGVyLCBJIGZvdW5kIHRoYXQgSSBjYW4gc2ltcGx5DQpyZXByb2R1Y2UgdGhl
-IHByb2JsZW0gYnk6DQoNCiAgbWtmcy54ZnMgLWYgL2Rldi9wbWVtMA0KICBtb3VudCAvZGV2L3Bt
-ZW0wIC9tbnQvbWVtDQoNCldoZXJlICdwbWVtMCcgaXMgYSBsZWdhY3kgcG1lbSBuYW1lc3BhY2Ug
-ZnJvbSByZXNlcnZlZCBtZW1vcnkgdXNpbmcgdGhlDQptZW1tYXA9IGNvbW1hbmQgbGluZSBvcHRp
-b24uIChTcGVjaWZpY2FsbHksIEkgaGF2ZSB0aGlzOg0KbWVtbWFwPTNHITZHLDNHITlHICkNCg0K
-VGhlIGFib3ZlIG1rZnMvbW91bnQgc3RlcHMgZG9uJ3QgcmVwcm9kdWNlIHRoZSBwcm9ibGVtIGEg
-MTAwJSBvZiB0aGUNCnRpbWUsIGJ1dCBpdCBkb2VzIGhhcHBlbiBvbiBteSBxZW11IGJhc2VkIHNl
-dHVwIG92ZXIgNzUlIG9mIHRoZSB0aW1lcy4NCg0KVGhlIGtlcm5lbCBsb2cgc2hvd3MgdGhlIGZv
-bGxvd2luZyB3aGVuIHRoZSBtb3VudCBmYWlsczoNCg0KICAgW0F1ZzE2IDE0OjQxXSBYRlMgKHBt
-ZW0wKTogTW91bnRpbmcgVjUgRmlsZXN5c3RlbQ0KICAgWyAgKzAuMDAxODU2XSBYRlMgKHBtZW0w
-KTogdG90YWxseSB6ZXJvZWQgbG9nDQogICBbICArMC40MDI2MTZdIFhGUyAocG1lbTApOiBJbnRl
-cm5hbCBlcnJvciB4bG9nX2NsZWFyX3N0YWxlX2Jsb2NrcygyKSBhdCBsaW5lIDE3MTUgb2YgZmls
-ZSBmcy94ZnMveGZzX2xvZ19yZWNvdmVyLmMuICBDYWxsZXIgeGxvZ19maW5kX3RhaWwrMHgyMzAv
-MHgzNDAgW3hmc10NCiAgIFsgICswLjAwMTc0MV0gQ1BVOiA3IFBJRDogMTc3MSBDb21tOiBtb3Vu
-dCBUYWludGVkOiBHICAgICAgICAgICBPICAgICAgNS4yLjAtcmM0KyAjMTEyDQogICBbICArMC4w
-MDA5NzZdIEhhcmR3YXJlIG5hbWU6IFFFTVUgU3RhbmRhcmQgUEMgKGk0NDBGWCArIFBJSVgsIDE5
-OTYpLCBCSU9TIHJlbC0xLjExLjEtMC1nMDU1MWE0YmUyYy1wcmVidWlsdC5xZW11LXByb2plY3Qu
-b3JnIDA0LzAxLzIwMTQNCiAgIFsgICswLjAwMTUxNl0gQ2FsbCBUcmFjZToNCiAgIFsgICswLjAw
-MDM1MV0gIGR1bXBfc3RhY2srMHg4NS8weGMwDQogICBbICArMC4wMDA0NTJdICB4bG9nX2NsZWFy
-X3N0YWxlX2Jsb2NrcysweDE2ZC8weDE4MCBbeGZzXQ0KICAgWyAgKzAuMDAwNjY1XSAgeGxvZ19m
-aW5kX3RhaWwrMHgyMzAvMHgzNDAgW3hmc10NCiAgIFsgICswLjAwMDU4MV0gIHhsb2dfcmVjb3Zl
-cisweDJiLzB4MTYwIFt4ZnNdDQogICBbICArMC4wMDA1NTRdICB4ZnNfbG9nX21vdW50KzB4Mjgw
-LzB4MmEwIFt4ZnNdDQogICBbICArMC4wMDA1NjFdICB4ZnNfbW91bnRmcysweDQxNS8weDg2MCBb
-eGZzXQ0KICAgWyAgKzAuMDAwNTMzXSAgPyB4ZnNfbXJ1X2NhY2hlX2NyZWF0ZSsweDE4Yi8weDFm
-MCBbeGZzXQ0KICAgWyAgKzAuMDAwNjY1XSAgeGZzX2ZzX2ZpbGxfc3VwZXIrMHg0YjAvMHg3MDAg
-W3hmc10NCiAgIFsgICswLjAwMDYzOF0gID8geGZzX3Rlc3RfcmVtb3VudF9vcHRpb25zKzB4NjAv
-MHg2MCBbeGZzXQ0KICAgWyAgKzAuMDAwNzEwXSAgbW91bnRfYmRldisweDE3Zi8weDFiMA0KICAg
-WyAgKzAuMDAwNDQyXSAgbGVnYWN5X2dldF90cmVlKzB4MzAvMHg1MA0KICAgWyAgKzAuMDAwNDY3
-XSAgdmZzX2dldF90cmVlKzB4MjgvMHhmMA0KICAgWyAgKzAuMDAwNDM2XSAgZG9fbW91bnQrMHgy
-ZDQvMHhhMDANCiAgIFsgICswLjAwMDQxMV0gID8gbWVtZHVwX3VzZXIrMHgzZS8weDcwDQogICBb
-ICArMC4wMDA0NTVdICBrc3lzX21vdW50KzB4YmEvMHhkMA0KICAgWyAgKzAuMDAwNDIwXSAgX194
-NjRfc3lzX21vdW50KzB4MjEvMHgzMA0KICAgWyAgKzAuMDAwNDczXSAgZG9fc3lzY2FsbF82NCsw
-eDYwLzB4MjQwDQogICBbICArMC4wMDA0NjBdICBlbnRyeV9TWVNDQUxMXzY0X2FmdGVyX2h3ZnJh
-bWUrMHg0OS8weGJlDQogICBbICArMC4wMDA2NTVdIFJJUDogMDAzMzoweDdmNzMwZmVjOTFiZQ0K
-ICAgWyAgKzAuMDAwNTA2XSBDb2RlOiA0OCA4YiAwZCBjZCAxYyAwYyAwMCBmNyBkOCA2NCA4OSAw
-MSA0OCA4MyBjOCBmZiBjMyA2NiAyZSAwZiAxZiA4NCAwMCAwMCAwMCAwMCAwMCA5MCBmMyAwZiAx
-ZSBmYSA0OSA4OSBjYSBiOCBhNSAwMCAwMCAwMCAwZiAwNSA8NDg+IDNkIDAxIGYwIGZmIGZmIDcz
-IDAxIGMzIDQ4IDhiIDBkIDlhIDFjIDBjIDAwIGY3IGQ4IDY0IDg5IDAxIDQ4DQogICBbICArMC4w
-MDIzMDVdIFJTUDogMDAyYjowMDAwN2ZmZGFkYmRiMTc4IEVGTEFHUzogMDAwMDAyNDYgT1JJR19S
-QVg6IDAwMDAwMDAwMDAwMDAwYTUNCiAgIFsgICswLjAwMDkyMl0gUkFYOiBmZmZmZmZmZmZmZmZm
-ZmRhIFJCWDogMDAwMDU1YjhmOWRiOGE0MCBSQ1g6IDAwMDA3ZjczMGZlYzkxYmUNCiAgIFsgICsw
-LjAwMDg3NV0gUkRYOiAwMDAwNTViOGY5ZGJmZGIwIFJTSTogMDAwMDU1YjhmOWRiYjkzMCBSREk6
-IDAwMDA1NWI4ZjlkYjhjMjANCiAgIFsgICswLjAwMDkxN10gUkJQOiAwMDAwN2Y3MzEwMDdmMWE0
-IFIwODogMDAwMDAwMDAwMDAwMDAwMCBSMDk6IDAwMDA1NWI4ZjlkYzAxZjANCiAgIFsgICswLjAw
-MDk0Ml0gUjEwOiAwMDAwMDAwMGMwZWQwMDAwIFIxMTogMDAwMDAwMDAwMDAwMDI0NiBSMTI6IDAw
-MDAwMDAwMDAwMDAwMDANCiAgIFsgICswLjAwMDg3OF0gUjEzOiAwMDAwMDAwMGMwZWQwMDAwIFIx
-NDogMDAwMDU1YjhmOWRiOGMyMCBSMTU6IDAwMDA1NWI4ZjlkYmZkYjANCiAgIFsgICswLjAwMDkx
-NV0gWEZTIChwbWVtMCk6IGZhaWxlZCB0byBsb2NhdGUgbG9nIHRhaWwNCiAgIFsgICswLjAwMDYy
-Ml0gWEZTIChwbWVtMCk6IGxvZyBtb3VudC9yZWNvdmVyeSBmYWlsZWQ6IGVycm9yIC0xMTcNCiAg
-IFsgICswLjAxMjU2MF0gWEZTIChwbWVtMCk6IGxvZyBtb3VudCBmYWlsZWQNCg0KDQpBIGJpc2Vj
-dCBwb2ludGVkIHRvIHRoaXMgY29tbWl0Og0KDQpjb21taXQgNmFkNWIzMjU1YjllM2Q2ZDk0MTU0
-NzM4YWFjZDUxMTliZjljOGY2ZSAoSEVBRCAtPiBiaXNlY3QtYmFkLCByZWZzL2Jpc2VjdC9iYWQp
-DQpBdXRob3I6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KRGF0ZTogICBGcmkgSnVu
-IDI4IDE5OjI3OjI2IDIwMTkgLTA3MDANCg0KICAgIHhmczogdXNlIGJpb3MgZGlyZWN0bHkgdG8g
-cmVhZCBhbmQgd3JpdGUgdGhlIGxvZyByZWNvdmVyeSBidWZmZXJzDQogICAgDQogICAgVGhlIHhm
-c19idWYgc3RydWN0dXJlIGlzIGJhc2ljYWxseSB1c2VkIGFzIGEgZ2xvcmlmaWVkIGNvbnRhaW5l
-ciBmb3INCiAgICBhIG1lbW9yeSBhbGxvY2F0aW9uIGluIHRoZSBsb2cgcmVjb3ZlcnkgY29kZS4g
-IFJlcGxhY2UgaXQgd2l0aCBhDQogICAgY2FsbCB0byBrbWVtX2FsbG9jX2xhcmdlIGFuZCBhIHNp
-bXBsZSBhYnN0cmFjdGlvbiB0byByZWFkIGludG8gb3INCiAgICB3cml0ZSBmcm9tIGl0IHN5bmNo
-cm9ub3VzbHkgdXNpbmcgY2hhaW5lZCBiaW9zLg0KICAgIA0KICAgIFNpZ25lZC1vZmYtYnk6IENo
-cmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KICAgIFJldmlld2VkLWJ5OiBEYXJyaWNrIEou
-IFdvbmcgPGRhcnJpY2sud29uZ0BvcmFjbGUuY29tPg0KICAgIFNpZ25lZC1vZmYtYnk6IERhcnJp
-Y2sgSi4gV29uZyA8ZGFycmljay53b25nQG9yYWNsZS5jb20+DQoNCkZ1bGwgYmlzZWN0IGxvZyBm
-b2xsb3dzIGF0IHRoZSBlbmQuDQoNCkkgc2F3IFszXSwgYnV0IEkgY2FuIHN0aWxsIGVhc2lseSBo
-aXQgdGhlIGZhaWx1cmUgYWZ0ZXIgbWFudWFsbHkNCmFwcGx5aW5nIHRoYXQgcGF0Y2ggb24gdGhl
-IGFib3ZlIGNvbW1pdC4NCg0KWzNdOiBodHRwczovL2xvcmUua2VybmVsLm9yZy9saW51eC14ZnMv
-MjAxOTA3MDkxNTIzNTIuMjc0NjUtMS1oY2hAbHN0LmRlLw0KDQpBbnkgdGhvdWdodHMgb24gd2hh
-dCBtaWdodCBiZSBoYXBwZW5pbmc/IEknZCBiZSBoYXBweSB0byB0ZXN0IG91dA0KdGhlb3JpZXMv
-cGF0Y2hlcy4NCg0KVGhhbmtzLA0KCS1WaXNoYWwNCg0K
+On Fri, Aug 16, 2019 at 12:05:28PM -0700, 'Ira Weiny' wrote:
+> On Thu, Aug 15, 2019 at 03:05:58PM +0200, Jan Kara wrote:
+> > On Wed 14-08-19 11:08:49, Ira Weiny wrote:
+> > > On Wed, Aug 14, 2019 at 12:17:14PM +0200, Jan Kara wrote:
+> > > > Hello!
+> > > > 
+> > > > On Fri 09-08-19 15:58:14, ira.weiny@intel.com wrote:
+> > > > > Pre-requisites
+> > > > > ==============
+> > > > > 	Based on mmotm tree.
+> > > > > 
+> > > > > Based on the feedback from LSFmm, the LWN article, the RFC series since
+> > > > > then, and a ton of scenarios I've worked in my mind and/or tested...[1]
+> > > > > 
+> > > > > Solution summary
+> > > > > ================
+> > > > > 
+> > > > > The real issue is that there is no use case for a user to have RDMA pinn'ed
+> > > > > memory which is then truncated.  So really any solution we present which:
+> > > > > 
+> > > > > A) Prevents file system corruption or data leaks
+> > > > > ...and...
+> > > > > B) Informs the user that they did something wrong
+> > > > > 
+> > > > > Should be an acceptable solution.
+> > > > > 
+> > > > > Because this is slightly new behavior.  And because this is going to be
+> > > > > specific to DAX (because of the lack of a page cache) we have made the user
+> > > > > "opt in" to this behavior.
+> > > > > 
+> > > > > The following patches implement the following solution.
+> > > > > 
+> > > > > 0) Registrations to Device DAX char devs are not affected
+> > > > > 
+> > > > > 1) The user has to opt in to allowing page pins on a file with an exclusive
+> > > > >    layout lease.  Both exclusive and layout lease flags are user visible now.
+> > > > > 
+> > > > > 2) page pins will fail if the lease is not active when the file back page is
+> > > > >    encountered.
+> > > > > 
+> > > > > 3) Any truncate or hole punch operation on a pinned DAX page will fail.
+> > > > 
+> > > > So I didn't fully grok the patch set yet but by "pinned DAX page" do you
+> > > > mean a page which has corresponding file_pin covering it? Or do you mean a
+> > > > page which has pincount increased? If the first then I'd rephrase this to
+> > > > be less ambiguous, if the second then I think it is wrong. 
+> > > 
+> > > I mean the second.  but by "fail" I mean hang.  Right now the "normal" page
+> > > pincount processing will hang the truncate.  Given the discussion with John H
+> > > we can make this a bit better if we use something like FOLL_PIN and the page
+> > > count bias to indicate this type of pin.  Then I could fail the truncate
+> > > outright.  but that is not done yet.
+> > > 
+> > > so... I used the word "fail" to be a bit more vague as the final implementation
+> > > may return ETXTBUSY or hang as noted.
+> > 
+> > Ah, OK. Hanging is fine in principle but with longterm pins, your work
+> > makes sure they actually fail with ETXTBUSY, doesn't it? The thing is that
+> > e.g. DIO will use page pins as well for its buffers and we must wait there
+> > until the pin is released. So please just clarify your 'fail' here a bit
+> > :).
+> 
+> It will fail with ETXTBSY.  I've fixed a bug...  See below.
+> 
+> > 
+> > > > > 4) The user has the option of holding the lease or releasing it.  If they
+> > > > >    release it no other pin calls will work on the file.
+> > > > 
+> > > > Last time we spoke the plan was that the lease is kept while the pages are
+> > > > pinned (and an attempt to release the lease would block until the pages are
+> > > > unpinned). That also makes it clear that the *lease* is what is making
+> > > > truncate and hole punch fail with ETXTBUSY and the file_pin structure is
+> > > > just an implementation detail how the existence is efficiently tracked (and
+> > > > what keeps the backing file for the pages open so that the lease does not
+> > > > get auto-destroyed). Why did you change this?
+> > > 
+> > > closing the file _and_ unmaping it will cause the lease to be released
+> > > regardless of if we allow this or not.
+> > > 
+> > > As we discussed preventing the close seemed intractable.
+> > 
+> > Yes, preventing the application from closing the file is difficult. But
+> > from a quick look at your patches it seemed to me that you actually hold a
+> > backing file reference from the file_pin structure thus even though the
+> > application closes its file descriptor, the struct file (and thus the
+> > lease) lives further until the file_pin gets released. And that should last
+> > as long as the pages are pinned. Am I missing something?
+> > 
+> > > I thought about failing the munmap but that seemed wrong as well.  But more
+> > > importantly AFAIK RDMA can pass its memory pins to other processes via FD
+> > > passing...  This means that one could pin this memory, pass it to another
+> > > process and exit.  The file lease on the pin'ed file is lost.
+> > 
+> > Not if file_pin grabs struct file reference as I mentioned above...
+> >  
+> > > The file lease is just a key to get the memory pin.  Once unlocked the procfs
+> > > tracking keeps track of where that pin goes and which processes need to be
+> > > killed to get rid of it.
+> > 
+> > I think having file lease being just a key to get the pin is conceptually
+> > wrong. The lease is what expresses: "I'm accessing these blocks directly,
+> > don't touch them without coordinating with me." So it would be only natural
+> > if we maintained the lease while we are accessing blocks instead of
+> > transferring this protection responsibility to another structure - namely
+> > file_pin - and letting the lease go.
+> 
+> We do transfer that protection to the file_pin but we don't have to "let the
+> lease" go.  We just keep the lease with the file_pin as you said.  See below...
+> 
+> > But maybe I miss some technical reason
+> > why maintaining file lease is difficult. If that's the case, I'd like to hear
+> > what...
+> 
+> Ok, I've thought a bit about what you said and indeed it should work that way.
+> The reason I had to think a bit is that I was not sure why I thought we needed
+> to hang...  Turns out there were a couple of reasons...  1 not so good and 1 ok
+> but still not good enough to allow this...
+> 
+> 1) I had a bug in the XFS code which should have failed rather than hanging...
+>    So this was not a good reason...  And I was able to find/fix it...  Thanks!
+> 
+> 2) Second reason is that I thought I did not have a good way to tell if the
+>    lease was actually in use.  What I mean is that letting the lease go should
+>    be ok IFF we don't have any pins...  I was thinking that without John's code
+>    we don't have a way to know if there are any pins...  But that is wrong...
+>    All we have to do is check
+> 
+> 	!list_empty(file->file_pins)
+
+Oops...  I got my "struct files" mixed up...  The RDMA struct file has the
+file_pins hanging off it...  This will not work.
+
+I'll have to try something else to prevent this.  However, I don't want to walk
+all the pages of the inode.
+
+Also I'm concerned about just failing if they happen to be pinned.  They need
+to be LONGTERM pinned...  Otherwise we might have a transient failure of an
+unlock based on some internal kernel transient pin...  :-/
+
+Ira
+
+> 
+> So now with this detail I think you are right, we should be able to hold the
+> lease through the struct file even if the process no longer has any
+> "references" to it (ie closes and munmaps the file).
+> 
+> I'm going to add a patch to fail releasing the lease and remove this (item 4)
+> as part of the overall solution.
+> 
+> >  
+> > > > > 5) Closing the file is ok.
+> > > > > 
+> > > > > 6) Unmapping the file is ok
+> > > > > 
+> > > > > 7) Pins against the files are tracked back to an owning file or an owning mm
+> > > > >    depending on the internal subsystem needs.  With RDMA there is an owning
+> > > > >    file which is related to the pined file.
+> > > > > 
+> > > > > 8) Only RDMA is currently supported
+> > > > 
+> > > > If you currently only need "owning file" variant in your patch set, then
+> > > > I'd just implement that and leave "owning mm" variant for later if it
+> > > > proves to be necessary. The things are complex enough as is...
+> > > 
+> > > I can do that...  I was trying to get io_uring working as well with the
+> > > owning_mm but I should save that for later.
+> > 
+> > Ah, OK. Yes, I guess io_uring can be next step.
+> 
+> FWIW I have split the mm_struct stuff out.  I can keep it as a follow on series
+> for other users later.  At this point I have to solve the issue Jason brought
+> up WRT the RDMA file reference counting.
+> 
+> Thanks!
+> Ira
+> 
+> _______________________________________________
+> Linux-nvdimm mailing list
+> Linux-nvdimm@lists.01.org
+> https://lists.01.org/mailman/listinfo/linux-nvdimm
