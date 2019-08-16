@@ -2,282 +2,205 @@ Return-Path: <SRS0=CZ9Z=WM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AB35C3A59C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:53:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C502C3A59C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:11:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D8A1D2086C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:53:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F2B092064A
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:11:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nWk6FIht"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727359AbfHPOxO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 10:53:14 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52618 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726032AbfHPOxO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Aug 2019 10:53:14 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4FBB830860C2;
-        Fri, 16 Aug 2019 14:53:13 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 88D9244F8C;
-        Fri, 16 Aug 2019 14:53:12 +0000 (UTC)
-Date:   Fri, 16 Aug 2019 10:53:10 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     kaixuxia <xiakaixu1987@gmail.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        darrick.wong@oracle.com, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH] xfs: Fix agi&agf ABBA deadlock when performing rename
- with RENAME_WHITEOUT flag
-Message-ID: <20190816145310.GB54929@bfoster>
-References: <5f2ab55c-c1ef-a8f2-5662-b35e0838b979@gmail.com>
- <20190815233630.GU6129@dread.disaster.area>
- <65790fd5-5915-9318-8737-d81899d73e9e@gmail.com>
+        id S1727421AbfHPQLu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 12:11:50 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:50034 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727217AbfHPQLu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 12:11:50 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7GFxLak139918;
+        Fri, 16 Aug 2019 16:11:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=/XfcHtmvknRfAGCFyoREtSX/yPAfQMruwvDm1ATWtDE=;
+ b=nWk6FIhtC6xe5nQGwTRsPSw+Gh4Uf0NYE3caRf13eC7UosRfXnHHJ7l6o7nWy9sd8I7D
+ BxLcc2DMjDGQNSL9z4KeoM39LUgPVIQnhR1+Mjea7mZO44Iaff+da9ddjUwxy+hZUR3U
+ byrTnVSo3UpIVilJhKgmMUN3e2z9ymzTUb2EM+r+VqtG0xdnL1+k7WUBEq+Qv3Skby/K
+ X59vJ0n0o3BZ6j9R9Zibyrc8oaddcGDHl+sVxR8x3IIybKcSNNDu9ylrqdIqTCbKUbby
+ AWA0gfY3qDmxPqRyRhFWUuyxwZWlDnQNxhH79PvkAKiFKU7ZqkF404FM+TVfMD+4l5Xt Yw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2u9nbu1dpk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 16 Aug 2019 16:11:37 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7GFw4pQ087449;
+        Fri, 16 Aug 2019 16:11:37 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2udgqg9sa3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 16 Aug 2019 16:11:37 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7GGBa5F032097;
+        Fri, 16 Aug 2019 16:11:36 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 16 Aug 2019 09:11:35 -0700
+Date:   Fri, 16 Aug 2019 09:11:34 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH v2] xfs: fix reflink source file racing with directio writes
+Message-ID: <20190816161134.GH15186@magnolia>
+References: <20190815165043.GB15186@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <65790fd5-5915-9318-8737-d81899d73e9e@gmail.com>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Fri, 16 Aug 2019 14:53:13 +0000 (UTC)
+In-Reply-To: <20190815165043.GB15186@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9351 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908160170
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9351 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908160170
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 16, 2019 at 04:09:39PM +0800, kaixuxia wrote:
-> 
-> 
-> On 2019/8/16 7:36, Dave Chinner wrote:
-> > On Tue, Aug 13, 2019 at 07:17:33PM +0800, kaixuxia wrote:
-> > > In this patch we make the unlinked list removal a deferred operation,
-> > > i.e. log an iunlink remove intent and then do it after the RENAME_WHITEOUT
-> > > transaction has committed, and the iunlink remove intention and done
-> > > log items are provided.
-> > 
-> > I really like the idea of doing this, not just for the inode unlink
-> > list removal, but for all the high level complex metadata
-> > modifications such as create, unlink, etc.
-> > 
-> > The reason I like this is that it moves use closer to being able to
-> > do operations almost completely asynchronously once the first intent
-> > has been logged.
-> > 
-> 
-> Thanks a lot for your comments.
-> Yeah, sometimes the complex metadata modifications correspond to the
-> long and complex transactions that hold more locks or other common
-> resources, so the deferred options may be better choices than just
-> changing the order in one transaction.
-> 
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-I can't speak for Dave (who can of course chime in again..) or others,
-but I don't think he's saying that this approach is preferred to the
-various alternative approaches discussed in the other subthread. Note
-that he also replied there with another potential solution that doesn't
-involve deferred operations.
+While trawling through the dedupe file comparison code trying to fix
+page deadlocking problems, Dave Chinner noticed that the reflink code
+only takes shared IOLOCK/MMAPLOCKs on the source file.  Because
+page_mkwrite and directio writes do not take the EXCL versions of those
+locks, this means that reflink can race with writer processes.
 
-Rather, I think he's viewing this in a much longer term context around
-changing more of the filesystem to be async in architecture. Personally,
-I'd have a ton more questions around the context of what something like
-that looks like before I'd support starting to switch over less complex
-operations to be deferred operations based on the current dfops
-mechanism. The mechanism works and solves real problems, but it also has
-tradeoffs that IMO warrant the current model of selective use. Further,
-it's nearly impossible to determine what other fundamental
-incompatibilities might exist without context on bigger picture design.
-IOW, this topic really needs a separate thread that that starts with a
-high level architectural description for others to reason about, because
-I think it's already caused confusion.
+For pure remapping this can lead to undefined behavior and file
+corruption; for dedupe this means that we cannot be sure that the
+contents are identical when we decide to go ahead with the remapping.
 
-In short, while it might be worth keeping this patch around for future
-use, I still think this is overkill (and insufficient as Darrick already
-noted) for fixing the originally reported problem... 
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+v2: break both layouts
+---
+ fs/xfs/xfs_reflink.c |   63 +++++++++++++++++++++++++++++---------------------
+ 1 file changed, 37 insertions(+), 26 deletions(-)
 
-Brian
-
-> > Once we have committed the intent, we can treat the rest of the
-> > operation like recovery - all the information needed to perform the
-> > operation is in the intenti and all the objects that need to be
-> > locked across the entire operation are locked and joined to the
-> > defer structure. If the intent hits the log the we guarantee that it
-> > will be completed atomically and in the correct sequence order.
-> > Hence it doesn't matter once the intent is built and committed what
-> > context actually completes the rest of the transaction.
-> > 
-> > If we have to do a sync transaction, because XFS_MOUNT_SYNC,
-> > XFS_MOUNT_DIRSYNC, or there's a sync flag on the inode(s), we can
-> > add a waitqueue_head to the struct xfs_defer and have the context
-> > issuing the transaction attach itself and wait for the defer ops to
-> > complete and wake it....
-> > 
-> > 
-> > .....
-> > 
-> > > @@ -3752,6 +3755,96 @@ struct xfs_buf_cancel {
-> > >   }
-> > > 
-> > >   /*
-> > > + * This routine is called to create an in-core iunlink remove intent
-> > > + * item from the iri format structure which was logged on disk.
-> > > + * It allocates an in-core iri, copies the inode from the format
-> > > + * structure into it, and adds the iri to the AIL with the given
-> > > + * LSN.
-> > > + */
-> > > +STATIC int
-> > > +xlog_recover_iri_pass2(
-> > > +	struct xlog			*log,
-> > > +	struct xlog_recover_item	*item,
-> > > +	xfs_lsn_t			lsn)
-> > > +{
-> > > +	xfs_mount_t		*mp = log->l_mp;
-> > > +	xfs_iri_log_item_t	*irip;
-> > > +	xfs_iri_log_format_t	*iri_formatp;
-> > > +
-> > > +	iri_formatp = item->ri_buf[0].i_addr;
-> > > +
-> > > +	irip = xfs_iri_init(mp, 1);
-> > > +	irip->iri_format = *iri_formatp;
-> > > +	if (item->ri_buf[0].i_len != sizeof(xfs_iri_log_format_t)) {
-> > > +		xfs_iri_item_free(irip);
-> > > +		return EFSCORRUPTED;
-> > > +	}
-> > > +
-> > > +	spin_lock(&log->l_ailp->ail_lock);
-> > > +	/*
-> > > +	 * The IRI has two references. One for the IRD and one for IRI to ensure
-> > > +	 * it makes it into the AIL. Insert the IRI into the AIL directly and
-> > > +	 * drop the IRI reference. Note that xfs_trans_ail_update() drops the
-> > > +	 * AIL lock.
-> > > +	 */
-> > > +	xfs_trans_ail_update(log->l_ailp, &irip->iri_item, lsn);
-> > > +	xfs_iri_release(irip);
-> > > +	return 0;
-> > > +}
-> > 
-> > These intent recovery functions all do very, very similar things.
-> > We already have 4 copies of this almost identical code - I think
-> > there needs to be some factoring/abstrcting done here rather than
-> > continuing to copy/paste this code...
-> 
-> Factoring/abstrcting is better than just copy/paste...
-> The log incompat feature bit is also needed because adding new
-> log item types(IRI&IRD)...
-> Any way, I will send the V2 patch for all the review comments.
-> 
-> > 
-> > > @@ -3981,6 +4074,8 @@ struct xfs_buf_cancel {
-> > >   	case XFS_LI_CUD:
-> > >   	case XFS_LI_BUI:
-> > >   	case XFS_LI_BUD:
-> > > +	case XFS_LI_IRI:
-> > > +	case XFS_LI_IRD:
-> > >   	default:
-> > >   		break;
-> > >   	}
-> > > @@ -4010,6 +4105,8 @@ struct xfs_buf_cancel {
-> > >   	case XFS_LI_CUD:
-> > >   	case XFS_LI_BUI:
-> > >   	case XFS_LI_BUD:
-> > > +	case XFS_LI_IRI:
-> > > +	case XFS_LI_IRD:
-> > >   		/* nothing to do in pass 1 */
-> > >   		return 0;
-> > >   	default:
-> > > @@ -4052,6 +4149,10 @@ struct xfs_buf_cancel {
-> > >   		return xlog_recover_bui_pass2(log, item, trans->r_lsn);
-> > >   	case XFS_LI_BUD:
-> > >   		return xlog_recover_bud_pass2(log, item);
-> > > +	case XFS_LI_IRI:
-> > > +		return xlog_recover_iri_pass2(log, item, trans->r_lsn);
-> > > +	case XFS_LI_IRD:
-> > > +		return xlog_recover_ird_pass2(log, item);
-> > >   	case XFS_LI_DQUOT:
-> > >   		return xlog_recover_dquot_pass2(log, buffer_list, item,
-> > >   						trans->r_lsn);
-> > 
-> > As can be seen by the increasing size of this table....
-> > 
-> > > @@ -4721,6 +4822,46 @@ struct xfs_buf_cancel {
-> > >   	spin_lock(&ailp->ail_lock);
-> > >   }
-> > > 
-> > > +/* Recover the IRI if necessary. */
-> > > +STATIC int
-> > > +xlog_recover_process_iri(
-> > > +	struct xfs_trans		*parent_tp,
-> > > +	struct xfs_ail			*ailp,
-> > > +	struct xfs_log_item		*lip)
-> > > +{
-> > > +	struct xfs_iri_log_item		*irip;
-> > > +	int				error;
-> > > +
-> > > +	/*
-> > > +	 * Skip IRIs that we've already processed.
-> > > +	 */
-> > > +	irip = container_of(lip, struct xfs_iri_log_item, iri_item);
-> > > +	if (test_bit(XFS_IRI_RECOVERED, &irip->iri_flags))
-> > > +		return 0;
-> > > +
-> > > +	spin_unlock(&ailp->ail_lock);
-> > > +	error = xfs_iri_recover(parent_tp, irip);
-> > > +	spin_lock(&ailp->ail_lock);
-> > > +
-> > > +	return error;
-> > > +}
-> > > +
-> > > +/* Release the IRI since we're cancelling everything. */
-> > > +STATIC void
-> > > +xlog_recover_cancel_iri(
-> > > +	struct xfs_mount		*mp,
-> > > +	struct xfs_ail			*ailp,
-> > > +	struct xfs_log_item		*lip)
-> > > +{
-> > > +	struct xfs_iri_log_item         *irip;
-> > > +
-> > > +	irip = container_of(lip, struct xfs_iri_log_item, iri_item);
-> > > +
-> > > +	spin_unlock(&ailp->ail_lock);
-> > > +	xfs_iri_release(irip);
-> > > +	spin_lock(&ailp->ail_lock);
-> > > +}
-> > 
-> > More cookie cutter code.
-> > 
-> > > @@ -4856,6 +4998,9 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
-> > >   		case XFS_LI_BUI:
-> > >   			error = xlog_recover_process_bui(parent_tp, ailp, lip);
-> > >   			break;
-> > > +		case XFS_LI_IRI:
-> > > +			error = xlog_recover_process_iri(parent_tp, ailp, lip);
-> > > +			break;
-> > >   		}
-> > >   		if (error)
-> > >   			goto out;
-> > > @@ -4912,6 +5057,9 @@ static inline bool xlog_item_is_intent(struct xfs_log_item *lip)
-> > >   		case XFS_LI_BUI:
-> > >   			xlog_recover_cancel_bui(log->l_mp, ailp, lip);
-> > >   			break;
-> > > +		case XFS_LI_IRI:
-> > > +			xlog_recover_cancel_iri(log->l_mp, ailp, lip);
-> > > +			break;
-> > >   		}
-> > 
-> > And the table that drives it....
-> > 
-> > I guess what I'm saying is that I'd really like to see an abstract
-> > type specifically for intent log items and generic infrastructure to
-> > manipulate them before we go adding more of them...
-> > 
-> > Cheers,
-> > 
-> > Dave.
-> > 
-> 
-> -- 
-> kaixuxia
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c4ec7afd1170..edbe37b7f636 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1190,11 +1190,11 @@ xfs_reflink_remap_blocks(
+ }
+ 
+ /*
+- * Grab the exclusive iolock for a data copy from src to dest, making
+- * sure to abide vfs locking order (lowest pointer value goes first) and
+- * breaking the pnfs layout leases on dest before proceeding.  The loop
+- * is needed because we cannot call the blocking break_layout() with the
+- * src iolock held, and therefore have to back out both locks.
++ * Grab the exclusive iolock for a data copy from src to dest, making sure to
++ * abide vfs locking order (lowest pointer value goes first) and breaking the
++ * layout leases before proceeding.  The loop is needed because we cannot call
++ * the blocking break_layout() with the iolocks held, and therefore have to
++ * back out both locks.
+  */
+ static int
+ xfs_iolock_two_inodes_and_break_layout(
+@@ -1203,33 +1203,44 @@ xfs_iolock_two_inodes_and_break_layout(
+ {
+ 	int			error;
+ 
+-retry:
+-	if (src < dest) {
+-		inode_lock_shared(src);
+-		inode_lock_nested(dest, I_MUTEX_NONDIR2);
+-	} else {
+-		/* src >= dest */
+-		inode_lock(dest);
+-	}
++	if (src > dest)
++		swap(src, dest);
+ 
+-	error = break_layout(dest, false);
+-	if (error == -EWOULDBLOCK) {
+-		inode_unlock(dest);
+-		if (src < dest)
+-			inode_unlock_shared(src);
++retry:
++	/* Wait to break both inodes' layouts before we start locking. */
++	error = break_layout(src, true);
++	if (error)
++		return error;
++	if (src != dest) {
+ 		error = break_layout(dest, true);
+ 		if (error)
+ 			return error;
+-		goto retry;
+ 	}
++
++	/* Lock one inode and make sure nobody got in and leased it. */
++	inode_lock(src);
++	error = break_layout(src, false);
+ 	if (error) {
++		inode_unlock(src);
++		if (error == -EWOULDBLOCK)
++			goto retry;
++		return error;
++	}
++
++	if (src == dest)
++		return 0;
++
++	/* Lock the other inode and make sure nobody got in and leased it. */
++	inode_lock_nested(dest, I_MUTEX_NONDIR2);
++	error = break_layout(dest, false);
++	if (error) {
++		inode_unlock(src);
+ 		inode_unlock(dest);
+-		if (src < dest)
+-			inode_unlock_shared(src);
++		if (error == -EWOULDBLOCK)
++			goto retry;
+ 		return error;
+ 	}
+-	if (src > dest)
+-		inode_lock_shared_nested(src, I_MUTEX_NONDIR2);
++
+ 	return 0;
+ }
+ 
+@@ -1247,10 +1258,10 @@ xfs_reflink_remap_unlock(
+ 
+ 	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
+ 	if (!same_inode)
+-		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
++		xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
+ 	inode_unlock(inode_out);
+ 	if (!same_inode)
+-		inode_unlock_shared(inode_in);
++		inode_unlock(inode_in);
+ }
+ 
+ /*
+@@ -1325,7 +1336,7 @@ xfs_reflink_remap_prep(
+ 	if (same_inode)
+ 		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
+ 	else
+-		xfs_lock_two_inodes(src, XFS_MMAPLOCK_SHARED, dest,
++		xfs_lock_two_inodes(src, XFS_MMAPLOCK_EXCL, dest,
+ 				XFS_MMAPLOCK_EXCL);
+ 
+ 	/* Check file eligibility and prepare for block sharing. */
