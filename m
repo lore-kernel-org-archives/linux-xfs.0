@@ -5,69 +5,72 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C502C3A59C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:11:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6D42C3A59C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:13:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F2B092064A
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:11:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 78F202086C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:13:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nWk6FIht"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZXNgLmnk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727421AbfHPQLu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:11:50 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:50034 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727217AbfHPQLu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 12:11:50 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7GFxLak139918;
-        Fri, 16 Aug 2019 16:11:37 GMT
+        id S1727377AbfHPQNg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 12:13:36 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:45014 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726545AbfHPQNf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 12:13:35 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7GFxM80152563;
+        Fri, 16 Aug 2019 16:13:21 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=/XfcHtmvknRfAGCFyoREtSX/yPAfQMruwvDm1ATWtDE=;
- b=nWk6FIhtC6xe5nQGwTRsPSw+Gh4Uf0NYE3caRf13eC7UosRfXnHHJ7l6o7nWy9sd8I7D
- BxLcc2DMjDGQNSL9z4KeoM39LUgPVIQnhR1+Mjea7mZO44Iaff+da9ddjUwxy+hZUR3U
- byrTnVSo3UpIVilJhKgmMUN3e2z9ymzTUb2EM+r+VqtG0xdnL1+k7WUBEq+Qv3Skby/K
- X59vJ0n0o3BZ6j9R9Zibyrc8oaddcGDHl+sVxR8x3IIybKcSNNDu9ylrqdIqTCbKUbby
- AWA0gfY3qDmxPqRyRhFWUuyxwZWlDnQNxhH79PvkAKiFKU7ZqkF404FM+TVfMD+4l5Xt Yw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2u9nbu1dpk-1
+ bh=beMIpGusKdkJfAWG9ytguIHQbgtdJeDpnbjjZLRQ2hQ=;
+ b=ZXNgLmnko6aPgjOlotlDQRgtZPb7Yb/rlGXC5nmIHUBpAKpxNG9YF8qmV9ChzAT6VHrO
+ MC0LGh7JkHHbVy2y2QytIZnXRboXWbpDZh3ETq31yQZY6LZCGklehv4b1TdC2zbU1wGs
+ L6wW25NVWAkfD4RpISuDYP5EqqcExoHkqSrCAYqd0sQtt33sxG19Uio7+v7b58udbyE7
+ lP2Rw2WTZv74UGJsypvGRDihflXatftLdsIA/UmvNT5UTbfwPhG3wes8S9g5lqiCN0kl
+ RW+gCB2hg9o+77RxDxQNSvIacRlRqeDQfksNuK3oUlQsjJlhczRUF55DjnUEATmm/7aa wQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2u9pjr19wd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Aug 2019 16:11:37 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7GFw4pQ087449;
-        Fri, 16 Aug 2019 16:11:37 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2udgqg9sa3-1
+        Fri, 16 Aug 2019 16:13:21 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7GGDKUl058625;
+        Fri, 16 Aug 2019 16:13:20 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2udscpjfaa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 16 Aug 2019 16:11:37 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7GGBa5F032097;
-        Fri, 16 Aug 2019 16:11:36 GMT
+        Fri, 16 Aug 2019 16:13:20 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7GGDIuM024090;
+        Fri, 16 Aug 2019 16:13:18 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 16 Aug 2019 09:11:35 -0700
-Date:   Fri, 16 Aug 2019 09:11:34 -0700
+        with ESMTP ; Fri, 16 Aug 2019 09:13:18 -0700
+Date:   Fri, 16 Aug 2019 09:13:16 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        fdmanana@gmail.com, gaoxiang25@huawei.com, willy@infradead.org,
         Christoph Hellwig <hch@infradead.org>
-Subject: [PATCH v2] xfs: fix reflink source file racing with directio writes
-Message-ID: <20190816161134.GH15186@magnolia>
-References: <20190815165043.GB15186@magnolia>
+Subject: [PATCH v5] vfs: fix page locking deadlocks when deduping files
+Message-ID: <20190816161316.GI15186@magnolia>
+References: <20190815164940.GA15198@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190815165043.GB15186@magnolia>
+In-Reply-To: <20190815164940.GA15198@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9351 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=970
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908160170
+ engine=8.0.1-1906280000 definitions=main-1908160171
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9351 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
@@ -81,126 +84,111 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-While trawling through the dedupe file comparison code trying to fix
-page deadlocking problems, Dave Chinner noticed that the reflink code
-only takes shared IOLOCK/MMAPLOCKs on the source file.  Because
-page_mkwrite and directio writes do not take the EXCL versions of those
-locks, this means that reflink can race with writer processes.
+When dedupe wants to use the page cache to compare parts of two files
+for dedupe, we must be very careful to handle locking correctly.  The
+current code doesn't do this.  It must lock and unlock the page only
+once if the two pages are the same, since the overlapping range check
+doesn't catch this when blocksize < pagesize.  If the pages are distinct
+but from the same file, we must observe page locking order and lock them
+in order of increasing offset to avoid clashing with writeback locking.
 
-For pure remapping this can lead to undefined behavior and file
-corruption; for dedupe this means that we cannot be sure that the
-contents are identical when we decide to go ahead with the remapping.
-
+Fixes: 876bec6f9bbfcb3 ("vfs: refactor clone/dedupe_file_range common functions")
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Bill O'Donnell <billodo@redhat.com>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
-v2: break both layouts
+v5: recheck pageuptodate
+v4: drop the unnecessary page offset checks
+v3: revalidate page after locking it
+v2: provide an unlock helper
 ---
- fs/xfs/xfs_reflink.c |   63 +++++++++++++++++++++++++++++---------------------
- 1 file changed, 37 insertions(+), 26 deletions(-)
+ fs/read_write.c |   49 +++++++++++++++++++++++++++++++++++++++++--------
+ 1 file changed, 41 insertions(+), 8 deletions(-)
 
-diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
-index c4ec7afd1170..edbe37b7f636 100644
---- a/fs/xfs/xfs_reflink.c
-+++ b/fs/xfs/xfs_reflink.c
-@@ -1190,11 +1190,11 @@ xfs_reflink_remap_blocks(
+diff --git a/fs/read_write.c b/fs/read_write.c
+index 1f5088dec566..5bbf587f5bc1 100644
+--- a/fs/read_write.c
++++ b/fs/read_write.c
+@@ -1811,10 +1811,7 @@ static int generic_remap_check_len(struct inode *inode_in,
+ 	return (remap_flags & REMAP_FILE_DEDUP) ? -EBADE : -EINVAL;
  }
  
- /*
-- * Grab the exclusive iolock for a data copy from src to dest, making
-- * sure to abide vfs locking order (lowest pointer value goes first) and
-- * breaking the pnfs layout leases on dest before proceeding.  The loop
-- * is needed because we cannot call the blocking break_layout() with the
-- * src iolock held, and therefore have to back out both locks.
-+ * Grab the exclusive iolock for a data copy from src to dest, making sure to
-+ * abide vfs locking order (lowest pointer value goes first) and breaking the
-+ * layout leases before proceeding.  The loop is needed because we cannot call
-+ * the blocking break_layout() with the iolocks held, and therefore have to
-+ * back out both locks.
-  */
- static int
- xfs_iolock_two_inodes_and_break_layout(
-@@ -1203,33 +1203,44 @@ xfs_iolock_two_inodes_and_break_layout(
+-/*
+- * Read a page's worth of file data into the page cache.  Return the page
+- * locked.
+- */
++/* Read a page's worth of file data into the page cache. */
+ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
  {
- 	int			error;
- 
--retry:
--	if (src < dest) {
--		inode_lock_shared(src);
--		inode_lock_nested(dest, I_MUTEX_NONDIR2);
--	} else {
--		/* src >= dest */
--		inode_lock(dest);
--	}
-+	if (src > dest)
-+		swap(src, dest);
- 
--	error = break_layout(dest, false);
--	if (error == -EWOULDBLOCK) {
--		inode_unlock(dest);
--		if (src < dest)
--			inode_unlock_shared(src);
-+retry:
-+	/* Wait to break both inodes' layouts before we start locking. */
-+	error = break_layout(src, true);
-+	if (error)
-+		return error;
-+	if (src != dest) {
- 		error = break_layout(dest, true);
- 		if (error)
- 			return error;
--		goto retry;
+ 	struct page *page;
+@@ -1826,10 +1823,32 @@ static struct page *vfs_dedupe_get_page(struct inode *inode, loff_t offset)
+ 		put_page(page);
+ 		return ERR_PTR(-EIO);
  	}
-+
-+	/* Lock one inode and make sure nobody got in and leased it. */
-+	inode_lock(src);
-+	error = break_layout(src, false);
- 	if (error) {
-+		inode_unlock(src);
-+		if (error == -EWOULDBLOCK)
-+			goto retry;
-+		return error;
-+	}
-+
-+	if (src == dest)
-+		return 0;
-+
-+	/* Lock the other inode and make sure nobody got in and leased it. */
-+	inode_lock_nested(dest, I_MUTEX_NONDIR2);
-+	error = break_layout(dest, false);
-+	if (error) {
-+		inode_unlock(src);
- 		inode_unlock(dest);
--		if (src < dest)
--			inode_unlock_shared(src);
-+		if (error == -EWOULDBLOCK)
-+			goto retry;
- 		return error;
- 	}
--	if (src > dest)
--		inode_lock_shared_nested(src, I_MUTEX_NONDIR2);
-+
- 	return 0;
+-	lock_page(page);
+ 	return page;
  }
  
-@@ -1247,10 +1258,10 @@ xfs_reflink_remap_unlock(
- 
- 	xfs_iunlock(dest, XFS_MMAPLOCK_EXCL);
- 	if (!same_inode)
--		xfs_iunlock(src, XFS_MMAPLOCK_SHARED);
-+		xfs_iunlock(src, XFS_MMAPLOCK_EXCL);
- 	inode_unlock(inode_out);
- 	if (!same_inode)
--		inode_unlock_shared(inode_in);
-+		inode_unlock(inode_in);
- }
- 
++/*
++ * Lock two pages, ensuring that we lock in offset order if the pages are from
++ * the same file.
++ */
++static void vfs_lock_two_pages(struct page *page1, struct page *page2)
++{
++	/* Always lock in order of increasing index. */
++	if (page1->index > page2->index)
++		swap(page1, page2);
++
++	lock_page(page1);
++	if (page1 != page2)
++		lock_page(page2);
++}
++
++/* Unlock two pages, being careful not to unlock the same page twice. */
++static void vfs_unlock_two_pages(struct page *page1, struct page *page2)
++{
++	unlock_page(page1);
++	if (page1 != page2)
++		unlock_page(page2);
++}
++
  /*
-@@ -1325,7 +1336,7 @@ xfs_reflink_remap_prep(
- 	if (same_inode)
- 		xfs_ilock(src, XFS_MMAPLOCK_EXCL);
- 	else
--		xfs_lock_two_inodes(src, XFS_MMAPLOCK_SHARED, dest,
-+		xfs_lock_two_inodes(src, XFS_MMAPLOCK_EXCL, dest,
- 				XFS_MMAPLOCK_EXCL);
+  * Compare extents of two files to see if they are the same.
+  * Caller must have locked both inodes to prevent write races.
+@@ -1867,10 +1886,24 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 		dest_page = vfs_dedupe_get_page(dest, destoff);
+ 		if (IS_ERR(dest_page)) {
+ 			error = PTR_ERR(dest_page);
+-			unlock_page(src_page);
+ 			put_page(src_page);
+ 			goto out_error;
+ 		}
++
++		vfs_lock_two_pages(src_page, dest_page);
++
++		/*
++		 * Now that we've locked both pages, make sure they're still
++		 * mapped to the file data we're interested in.  If not,
++		 * someone is invalidating pages on us and we lose.
++		 */
++		if (!PageUptodate(src_page) || !PageUptodate(dest_page) ||
++		    src_page->mapping != src->i_mapping ||
++		    dest_page->mapping != dest->i_mapping) {
++			same = false;
++			goto unlock;
++		}
++
+ 		src_addr = kmap_atomic(src_page);
+ 		dest_addr = kmap_atomic(dest_page);
  
- 	/* Check file eligibility and prepare for block sharing. */
+@@ -1882,8 +1915,8 @@ static int vfs_dedupe_file_range_compare(struct inode *src, loff_t srcoff,
+ 
+ 		kunmap_atomic(dest_addr);
+ 		kunmap_atomic(src_addr);
+-		unlock_page(dest_page);
+-		unlock_page(src_page);
++unlock:
++		vfs_unlock_two_pages(src_page, dest_page);
+ 		put_page(dest_page);
+ 		put_page(src_page);
+ 
