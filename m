@@ -2,84 +2,125 @@ Return-Path: <SRS0=CZ9Z=WM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B37BC3A59C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:57:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35799C3A59C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 17:34:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 21D0B2077C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 16:57:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="nh4nbtZQ"
+	by mail.kernel.org (Postfix) with ESMTP id 0AA9C2173B
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 17:34:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1565976898;
+	bh=M2GrnZ2wAkoHSB726IZmRPqs7JvocNf1YKRNbgnmsLg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=1liCaTPt3S9BP46pt+aFSscEFOzpykav9c/yFjEdu93F0nMNgZjlX5FKyPT0eXCnT
+	 FFyQa9cFh0n710aIKGZSSxASMQNdSXk8Fj8MggAl/+fxEPHCtNs9SKuOZqepc3P5Hl
+	 frxYNI1l3CEpTWDaoEWlCUI6nSOqFEjW9oxFRPTo=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726469AbfHPQ5N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 12:57:13 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:49450 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725956AbfHPQ5N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 12:57:13 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=Byk+Z7fbnw+hJ1A3SXtpTv1x5R988Tvo9jglZrJEceo=; b=nh4nbtZQHdQyyXyIZ8CCXW9B/
-        Q6+zu6EJF1Xcn2mr2x72Atv+5kyKcdBI/cQxIlXqO08bN0XW2egrk7fH6vSHBn3lhwVqWZD1lX5gZ
-        kAuVdmlTDHvWxAhYd49msq4tZtygFrf1K33cYSMo5o+UxWyufnldWB4yGSe9jgRpoUaE0XY3lJAOV
-        lDl9hEMplWHuTax+CfUKDZqJ+uv/mJmL6JDSorK2vF/U7Q5ySksfd9GeyxtwzBFkmwdEL5256bNHH
-        nDTraS8sQ+MkuD3csxYuOFrErbyxU15Tg3ZDjYNqMk6Cc4inid54cX9uvP9/ucJETGxCMPMmjkCK8
-        OPN4XfqZA==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hyfXL-0005vL-Vi; Fri, 16 Aug 2019 16:57:11 +0000
-Date:   Fri, 16 Aug 2019 09:57:11 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        fdmanana@gmail.com, gaoxiang25@huawei.com
-Subject: Re: [PATCH v4] vfs: fix page locking deadlocks when deduping files
-Message-ID: <20190816165711.GC18474@bombadil.infradead.org>
-References: <20190815164940.GA15198@magnolia>
- <20190815181804.GB18474@bombadil.infradead.org>
- <20190816064753.GD2024@infradead.org>
+        id S1727597AbfHPRe5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 13:34:57 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:35455 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727067AbfHPRe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 13:34:56 -0400
+Received: by mail-pg1-f193.google.com with SMTP id n4so3287307pgv.2;
+        Fri, 16 Aug 2019 10:34:56 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=3Xy9YcG04MIYCahd4cU2uQmTISnqMkZBSAqzvxVs66w=;
+        b=rN0oUiXrFng512e6g3ezQL6fiGhv0TxqmSjI4KHY6Ez7A7tjEarRb9PLIhFWCcmBvF
+         ENJ8R23G1moGWPzGokDkPkflbbKaIldr6wWIo22TOfCIjqp2nVSfCp94bNUHVOLSa3ot
+         Ep2XaGgGsnfdBaDwaqyiaxQ8oKPDe1kktpkzsJOYc9vBVFH04Ex4vlHQQ6FSuXMRpPEo
+         DUtf7h3dL+cYDsnh0M+TNiGkNyw+HZpnJ1OLX9LuD5dm0mkDUu1hPceFZTduL+ILupco
+         cr4LueRkkrgmdtTJlWFIkX5c3sVmBEgxwiBUx9FEF6Bd77G+ohfczqxyVGq7wLB7Kozk
+         gfqA==
+X-Gm-Message-State: APjAAAWxCiqqOWHsRZv9t0tkt2tlMYOF7nM+zPBgt43p4HDAeE7xXfxB
+        hMTWeV0IjnZZaDxSRCF1dNI=
+X-Google-Smtp-Source: APXvYqxbyOqhPRPZESWOfYzipDa4UMvpwJhisE0n7mQeRUvSAD4C/o0spTVjdA/59LWOOMcUb8HtcQ==
+X-Received: by 2002:a65:4044:: with SMTP id h4mr8820268pgp.164.1565976895783;
+        Fri, 16 Aug 2019 10:34:55 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id ck8sm4601529pjb.25.2019.08.16.10.34.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 16 Aug 2019 10:34:54 -0700 (PDT)
+Received: by 42.do-not-panic.com (Postfix, from userid 1000)
+        id 93993403B8; Fri, 16 Aug 2019 17:34:53 +0000 (UTC)
+Date:   Fri, 16 Aug 2019 17:34:53 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>, fstests@vger.kernel.org,
+        Amir Goldstein <amir73il@gmail.com>,
+        Sasha Levin <Alexander.Levin@microsoft.com>,
+        Sasha Levin <levinsasha928@gmail.com>,
+        Valentin Rothberg <valentinrothberg@gmail.com>,
+        Ross Zwisler <ross.zwisler@linux.intel.com>,
+        Kent Overstreet <kent.overstreet@gmail.com>
+Subject: Re: [ANN] oscheck: wrapper for fstests check.sh - tracking and
+ working with baselines
+Message-ID: <20190816173453.GM16384@42.do-not-panic.com>
+References: <CAB=NE6UjcBgQhoQvZoWKXnPWoHVNMbeYdyGfYsHdgeA=L1M4wQ@mail.gmail.com>
+ <20180713205154.GA8782@bombadil.infradead.org>
+ <20180713205931.GC3620@garbanzo.do-not-panic.com>
+ <20180714222115.GA13230@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190816064753.GD2024@infradead.org>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+In-Reply-To: <20180714222115.GA13230@bombadil.infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 15, 2019 at 11:47:53PM -0700, Christoph Hellwig wrote:
-> On Thu, Aug 15, 2019 at 11:18:04AM -0700, Matthew Wilcox wrote:
-> > But I don't think read_mapping_page() can return a page which doesn't have
-> > PageUptodate set.  Follow the path down through read_cache_page() into
-> > do_read_cache_page().
+On Sat, Jul 14, 2018 at 03:21:15PM -0700, Matthew Wilcox wrote:
+> On Fri, Jul 13, 2018 at 01:59:31PM -0700, Luis R. Chamberlain wrote:
+> > > It's still ridiculously hard
+> > > to set up a DAX test environment though. 
 > 
-> read_mapping_page() can't, but I think we need the check after the 
-> lock_page still.
+> > > The best I've been able to
+> > > do is now merged into Kent's ktest -- but you're not based on that,
+> > > so I'll try and get your ostest set up to work with DAX.  Or maybe Ross
+> > > can do it since he's actually been able to get 2MB pages working and I
+> > > still haven't :-(
+> > 
+> > Patches and new sections to cover more ground indeed are appreciated!
+> 
+> I feel like we need to merge ktest and oscheck.
 
-The current code checks before locking the page:
+In the end I disagreed.
 
-        if (!PageUptodate(page)) {
-                put_page(page);
-                return ERR_PTR(-EIO);
-        }
-        lock_page(page);
+> oscheck assumes that you
+> know how to set up qemu, and ktest takes care of setting up qemu for you.
 
-so the race with clearing Uptodate already existed.
+I really disliked all the stupid hacks we had both mine and Kent's
+solution. So I wrote a proper modern devops environment for Linux kernel
+development which is agnostic to from an architectural pespective to
+your OS, and virtualization environment, whether that be local or cloud.
 
-XFS can ClearPageUptodate if it gets an error while doing writeback of
-a dirty page.  But we shouldn't be able to get a dirty page.  Before we
-get to this point, we call filemap_write_and_wait_range() while holding
-the inode's modification lock.
+Addressing cloud and local virtual environment proved more diffcult and
+took a bit of time. But with a bit of patience, I found something
+suitable, and better than just hacks put together.
 
-So I think we can't see a !Uptodate page, but of course I'd be happy to
-see a sequence of events that breaks this reasoning.
+It relies on ansible, vagrant and terraform. The later two unfortunately
+rely on Ruby...  Let me be clear though, I have my own reservations
+about relying on solutions which rely on Ruby... but I find that
+startups *should* do a better job than a few kernel developers writing
+shell hacks for their own prefferred virtual environment. With a bit of
+proper ... nudging...  I think we can steer things in the right
+direction. vagrant / terraform are at least perhaps more usable and
+popular then a few shell hacks.
+
+oscheck now embraces this solution, and you don't need to know much
+about setting up qemu, and even supports running on OS X. I've announced
+the effort through lkml as it turns out the nuts and bolts about the
+generic setup is actually a more common goal than for filesystems. The
+results:
+
+https://people.kernel.org/mcgrof/kdevops-a-devops-framework-for-linux-kernel-development
+
+  Luis
