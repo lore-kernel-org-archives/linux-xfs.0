@@ -6,49 +6,47 @@ X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 437EBC3A59C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 06:41:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CAC2EC3A59C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 06:42:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 166E12133F
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 06:41:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8907F21655
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 06:42:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y1tPwsGX"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="BG/fm2VM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726878AbfHPGlX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 02:41:23 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:49566 "EHLO
+        id S1726761AbfHPGmH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 02:42:07 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:49602 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725897AbfHPGlX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 02:41:23 -0400
+        with ESMTP id S1725945AbfHPGmG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 02:42:06 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=/3AMdneQMHbJ6jzTXFd3V+Aivs0XGBJ9bktDdp3GzLQ=; b=Y1tPwsGXD3zLqx6AOMMUC3Ugj
-        xvuB4D2C6bk0bsDZUc2vCFCGWjhFXIVzYgysQXCcQRB+uikJ0X/l2H1E1y5QD8FXqA88WZOUhmp8R
-        U6kV5i27Z4lDw2/Sm9wfTyEATaiZTF3TiyVuQZ3IxRvey7pa7QuyHbhRCJsjIMC02NAylFSATtg/P
-        Liz4EatPY+I/G/jvRno3m2IaEvVXSFDadd4wOM63qLJOvYGraOJEbkkulmEVq6vQ2YLLFGss0Rjnp
-        8oi7Fbs95eCMQPUOgvBZ4KT9i8SXNpRGURLuo5Csu6hmKkNjXlqBU0/I8zcD2FkEjXhudVjYt8BSL
-        oAd7Pn+9A==;
+         bh=75yAvQMeHUOOfStvGDr7kFZIB3XPI0gGlgceRdem48U=; b=BG/fm2VMHeTtEvFuupffxqpeR
+        1Hg6CGEY2ePgy0ZGDs+Xg4+JtInvgrk3Gr2Ty4t0nL1xKWFxAnvls6/PLATItpO2lUkX/G7kmY3Vl
+        8YIrkkJOke84sIHaxa8sjPVMg2ecoCcS510Aw0B47jPZrZqy6Pb3YBruFdkJ0LUkK5UDb8An2zsN4
+        7CvGNj0LQ962y6lVTYwWDoCWHjbmT6gBx/1dtlxvlWqv2TXydE/IMXKmLdfXTCEQABh1gT6TspSUw
+        q9/ggNdiEBCmqFRiUGCZdui3HiGwkmbkSGSdMxQdvnLEJweF7Fcvy+4VRvxhNRTa5HtQhbE+Avh+n
+        bFkGCn/4A==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1hyVvN-0003KH-5j; Fri, 16 Aug 2019 06:41:21 +0000
-Date:   Thu, 15 Aug 2019 23:41:21 -0700
+        id 1hyVw6-0003Mk-6e; Fri, 16 Aug 2019 06:42:06 +0000
+Date:   Thu, 15 Aug 2019 23:42:06 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     hch@infradead.org, akpm@linux-foundation.org, tytso@mit.edu,
-        viro@zeniv.linux.org.uk, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [PATCH 2/2] vfs: don't allow writes to swap files
-Message-ID: <20190816064121.GB2024@infradead.org>
-References: <156588514105.111054.13645634739408399209.stgit@magnolia>
- <156588515613.111054.13578448017133006248.stgit@magnolia>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix reflink source file racing with directio writes
+Message-ID: <20190816064206.GC2024@infradead.org>
+References: <20190815165043.GB15186@magnolia>
+ <20190815213716.GS6129@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156588515613.111054.13578448017133006248.stgit@magnolia>
+In-Reply-To: <20190815213716.GS6129@dread.disaster.area>
 User-Agent: Mutt/1.11.4 (2019-03-13)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -56,8 +54,21 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The new checks look fine to me, but where does the inode_drain_writes()
-function come from, I can't find that in my tree anywhere.
+On Fri, Aug 16, 2019 at 07:37:17AM +1000, Dave Chinner wrote:
+> I don't think this is quite right yet. The source inode locking
+> change is good, but it doesn't break the layout on the source inode
+> and so there is still they possibility that something has physical
+> access and is directly modifying the source file.
+> 
+> And with that, I suspect the locking algorithm changes
+> substantially:
+> 
+> 	order inodes
+> restart:
+> 	lock first inode
+> 	break layout on first inode
+> 	lock second inode
+> 	break layout on second inode
+> 	fail then unlock both inodes, goto restart
 
-Also what does inode_drain_writes do about existing shared writable
-mapping?  Do we even care about that corner case?
+Agreed, that is the locking scheme I'd expect.
