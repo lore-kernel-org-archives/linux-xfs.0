@@ -6,29 +6,28 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C8B8C3A59C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 13:51:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2179CC3A59C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:05:42 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 499F22064A
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 13:51:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F354521721
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:05:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727205AbfHPNvG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 09:51:06 -0400
-Received: from sandeen.net ([63.231.237.45]:55306 "EHLO sandeen.net"
+        id S1727337AbfHPOFl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 10:05:41 -0400
+Received: from sandeen.net ([63.231.237.45]:56134 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727199AbfHPNvG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Aug 2019 09:51:06 -0400
+        id S1727252AbfHPOFl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Aug 2019 10:05:41 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 7CAD4328A1E;
-        Fri, 16 Aug 2019 08:51:05 -0500 (CDT)
-Subject: Re: [PATCH 1/2] xfs: fall back to native ioctls for unhandled compat
- ones
+        by sandeen.net (Postfix) with ESMTPSA id 4391C328A18;
+        Fri, 16 Aug 2019 09:05:40 -0500 (CDT)
+Subject: Re: [PATCH 2/2] xfs: compat_ioctl: use compat_ptr()
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Cc:     Arnd Bergmann <arnd@arndb.de>
 References: <20190816063547.1592-1-hch@lst.de>
- <20190816063547.1592-2-hch@lst.de>
+ <20190816063547.1592-3-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <2a1854b9-26a4-402c-4932-7fde02e14ecb@sandeen.net>
-Date:   Fri, 16 Aug 2019 08:51:04 -0500
+Message-ID: <a8e1d5ff-678b-326b-1cfa-6fed93c6399d@sandeen.net>
+Date:   Fri, 16 Aug 2019 09:05:39 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190816063547.1592-2-hch@lst.de>
+In-Reply-To: <20190816063547.1592-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -88,92 +87,39 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 8/16/19 1:35 AM, Christoph Hellwig wrote:
-> Always try the native ioctl if we don't have a compat handler.  This
-> removes a lot of boilerplate code as 'modern' ioctls should generally
-> be compat clean, and fixes the missing entries for the recently added
-> FS_IOC_GETFSLABEL/FS_IOC_SETFSLABEL ioctls.
+> For 31-bit s390 user space, we have to pass pointer arguments through
+> compat_ptr() in the compat_ioctl handler.
 > 
-> Fixes: f7664b31975b ("xfs: implement online get/set fs label")
-
-whoops
-
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Seems fine
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  fs/xfs/xfs_ioctl32.c | 54 ++------------------------------------------
->  1 file changed, 2 insertions(+), 52 deletions(-)
+>  fs/xfs/xfs_ioctl32.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 7fcf7569743f..bae08ef92ac3 100644
+> index bae08ef92ac3..7bd7534f5051 100644
 > --- a/fs/xfs/xfs_ioctl32.c
 > +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -553,57 +553,6 @@ xfs_file_compat_ioctl(
->  	trace_xfs_file_compat_ioctl(ip);
+> @@ -547,7 +547,7 @@ xfs_file_compat_ioctl(
+>  	struct inode		*inode = file_inode(filp);
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	void			__user *arg = (void __user *)p;
+> +	void			__user *arg = compat_ptr(p);
+>  	int			error;
 >  
->  	switch (cmd) {
-> -	/* No size or alignment issues on any arch */
-> -	case XFS_IOC_DIOINFO:
-> -	case XFS_IOC_FSGEOMETRY_V4:
-> -	case XFS_IOC_FSGEOMETRY:
-> -	case XFS_IOC_AG_GEOMETRY:
-> -	case XFS_IOC_FSGETXATTR:
-> -	case XFS_IOC_FSSETXATTR:
-> -	case XFS_IOC_FSGETXATTRA:
-> -	case XFS_IOC_FSSETDM:
-> -	case XFS_IOC_GETBMAP:
-> -	case XFS_IOC_GETBMAPA:
-> -	case XFS_IOC_GETBMAPX:
-> -	case XFS_IOC_FSCOUNTS:
-> -	case XFS_IOC_SET_RESBLKS:
-> -	case XFS_IOC_GET_RESBLKS:
-> -	case XFS_IOC_FSGROWFSLOG:
-> -	case XFS_IOC_GOINGDOWN:
-> -	case XFS_IOC_ERROR_INJECTION:
-> -	case XFS_IOC_ERROR_CLEARALL:
-> -	case FS_IOC_GETFSMAP:
-> -	case XFS_IOC_SCRUB_METADATA:
-> -	case XFS_IOC_BULKSTAT:
-> -	case XFS_IOC_INUMBERS:
-> -		return xfs_file_ioctl(filp, cmd, p);
-> -#if !defined(BROKEN_X86_ALIGNMENT) || defined(CONFIG_X86_X32)
-> -	/*
-> -	 * These are handled fine if no alignment issues.  To support x32
-> -	 * which uses native 64-bit alignment we must emit these cases in
-> -	 * addition to the ia-32 compat set below.
-> -	 */
-> -	case XFS_IOC_ALLOCSP:
-> -	case XFS_IOC_FREESP:
-> -	case XFS_IOC_RESVSP:
-> -	case XFS_IOC_UNRESVSP:
-> -	case XFS_IOC_ALLOCSP64:
-> -	case XFS_IOC_FREESP64:
-> -	case XFS_IOC_RESVSP64:
-> -	case XFS_IOC_UNRESVSP64:
-> -	case XFS_IOC_FSGEOMETRY_V1:
-> -	case XFS_IOC_FSGROWFSDATA:
-> -	case XFS_IOC_FSGROWFSRT:
-> -	case XFS_IOC_ZERO_RANGE:
-> -#ifdef CONFIG_X86_X32
-> -	/*
-> -	 * x32 special: this gets a different cmd number from the ia-32 compat
-> -	 * case below; the associated data will match native 64-bit alignment.
-> -	 */
-> -	case XFS_IOC_SWAPEXT:
-> -#endif
-> -		return xfs_file_ioctl(filp, cmd, p);
-> -#endif
->  #if defined(BROKEN_X86_ALIGNMENT)
->  	case XFS_IOC_ALLOCSP_32:
->  	case XFS_IOC_FREESP_32:
-> @@ -705,6 +654,7 @@ xfs_file_compat_ioctl(
->  	case XFS_IOC_FSSETDM_BY_HANDLE_32:
+>  	trace_xfs_file_compat_ioctl(ip);
+> @@ -655,6 +655,6 @@ xfs_file_compat_ioctl(
 >  		return xfs_compat_fssetdm_by_handle(filp, arg);
 >  	default:
-> -		return -ENOIOCTLCMD;
-> +		/* try the native version */
-> +		return xfs_file_ioctl(filp, cmd, p);
+>  		/* try the native version */
+> -		return xfs_file_ioctl(filp, cmd, p);
+> +		return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
 >  	}
 >  }
 > 
