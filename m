@@ -2,124 +2,187 @@ Return-Path: <SRS0=CZ9Z=WM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2179CC3A59C
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:05:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9140CC3A59C
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:30:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F354521721
-	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:05:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6079E2133F
+	for <linux-xfs@archiver.kernel.org>; Fri, 16 Aug 2019 14:30:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727337AbfHPOFl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 10:05:41 -0400
-Received: from sandeen.net ([63.231.237.45]:56134 "EHLO sandeen.net"
+        id S1727217AbfHPOaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 10:30:52 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:46988 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727252AbfHPOFl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 16 Aug 2019 10:05:41 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1727245AbfHPOaw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 16 Aug 2019 10:30:52 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4391C328A18;
-        Fri, 16 Aug 2019 09:05:40 -0500 (CDT)
-Subject: Re: [PATCH 2/2] xfs: compat_ioctl: use compat_ptr()
-To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Cc:     Arnd Bergmann <arnd@arndb.de>
-References: <20190816063547.1592-1-hch@lst.de>
- <20190816063547.1592-3-hch@lst.de>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Openpgp: preference=signencrypt
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
- nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
- WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
- vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
- ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
- sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
- BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
- gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
- LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
- bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
- aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
- UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
- EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
- sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
- 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
- gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
- 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
- 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
- WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
- Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
- X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
- SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
- 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
- GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
- 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
- Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
- ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
- TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
- gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
- AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
- YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
- mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
- LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
- LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
- MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
- JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
- Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
- m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
- fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <a8e1d5ff-678b-326b-1cfa-6fed93c6399d@sandeen.net>
-Date:   Fri, 16 Aug 2019 09:05:39 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.8.0
+        by mx1.redhat.com (Postfix) with ESMTPS id BA8D3C009DCC;
+        Fri, 16 Aug 2019 14:30:51 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id C685C44F88;
+        Fri, 16 Aug 2019 14:30:50 +0000 (UTC)
+Date:   Fri, 16 Aug 2019 10:30:48 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     kaixuxia <xiakaixu1987@gmail.com>, linux-xfs@vger.kernel.org,
+        darrick.wong@oracle.com, newtongao@tencent.com,
+        jasperwang@tencent.com
+Subject: Re: [PATCH] xfs: Fix agi&agf ABBA deadlock when performing rename
+ with RENAME_WHITEOUT flag
+Message-ID: <20190816143048.GA54929@bfoster>
+References: <5f2ab55c-c1ef-a8f2-5662-b35e0838b979@gmail.com>
+ <20190813133614.GD37069@bfoster>
+ <20190815231001.GT6129@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20190816063547.1592-3-hch@lst.de>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190815231001.GT6129@dread.disaster.area>
+User-Agent: Mutt/1.12.0 (2019-05-25)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Fri, 16 Aug 2019 14:30:51 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/16/19 1:35 AM, Christoph Hellwig wrote:
-> For 31-bit s390 user space, we have to pass pointer arguments through
-> compat_ptr() in the compat_ioctl handler.
+On Fri, Aug 16, 2019 at 09:10:01AM +1000, Dave Chinner wrote:
+> On Tue, Aug 13, 2019 at 09:36:14AM -0400, Brian Foster wrote:
+> > On Tue, Aug 13, 2019 at 07:17:33PM +0800, kaixuxia wrote:
+> > > When performing rename operation with RENAME_WHITEOUT flag, we will
+> > > hold AGF lock to allocate or free extents in manipulating the dirents
+> > > firstly, and then doing the xfs_iunlink_remove() call last to hold
+> > > AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+> > > 
+> > 
+> > IIUC, the whiteout use case is that we're renaming a file, but the
+> > source dentry must be replaced with a magic whiteout inode rather than
+> > be removed. Therefore, xfs_rename() allocates the whiteout inode as a
+> > tmpfile first in a separate transaction, updates the target dentry with
+> > the source inode, replaces the source dentry to point to the whiteout
+> > inode and finally removes the whiteout inode from the unlinked list
+> > (since it is a tmpfile). This leads to the problem described below
+> > because the rename transaction ends up doing directory block allocs
+> > (locking the AGF) followed by the unlinked list remove (locking the
+> > AGI).
+> > 
+> > My understanding from reading the code is that this is primarly to
+> > cleanly handle error scenarios. If anything fails after we've allocated
+> > the whiteout tmpfile, it's simply left on the unlinked list and so the
+> > filesystem remains in a consistent/recoverable state. Given that, the
+> > solution here seems like overkill to me. For one, I thought background
+> > unlinked list removal was already on our roadmap (Darrick might have
+> > been looking at that and may already have a prototype as well). Also,
+> > unlinked list removal occurs at log recovery time already. That's
+> > somewhat of an existing purpose of the list, which makes a deferred
+> > unlinked list removal operation superfluous in more traditional cases
+> > where unlinked list removal doesn't require consistency with a directory
+> > operation.
+> > 
+> > Functional discussion aside.. from a complexity standpoint I'm wondering
+> > if we could do something much more simple like acquire the AGI lock for
+> > a whiteout inode earlier in xfs_rename(). For example, suppose we did
+> > something like:
+> > 
+> > 	/*
+> > 	 * Acquire the whiteout agi to preserve locking order in anticipation of
+> > 	 * unlinked list removal.
+> > 	 */
+> > 	if (wip)
+> > 		xfs_read_agi(mp, tp, XFS_INO_TO_AGNO(mp, wip->i_ino), &agibp);
+> > 
+> > ... after we allocate the transaction but before we do any directory ops
+> > that can result in block allocations. Would that prevent the problem
+> > you've observed?
 > 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Seems fine
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  fs/xfs/xfs_ioctl32.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+> I'd prefer that we just do things in an order that doesn't invert
+> the locking. For a whiteout, we only allocate blocks when modifying
+> the target directory, and we do a check to see if that will succeed
+> before actually doing the directory modification. That means the
+> directory modification will only fail due to an IO error or
+> corruption, both of which have a high probability of causing the
+> filesystem to be shut down. Any error after the directory mod will
+> cause a shutdown because the transaction is dirty.
 > 
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index bae08ef92ac3..7bd7534f5051 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -547,7 +547,7 @@ xfs_file_compat_ioctl(
->  	struct inode		*inode = file_inode(filp);
->  	struct xfs_inode	*ip = XFS_I(inode);
->  	struct xfs_mount	*mp = ip->i_mount;
-> -	void			__user *arg = (void __user *)p;
-> +	void			__user *arg = compat_ptr(p);
->  	int			error;
->  
->  	trace_xfs_file_compat_ioctl(ip);
-> @@ -655,6 +655,6 @@ xfs_file_compat_ioctl(
->  		return xfs_compat_fssetdm_by_handle(filp, arg);
->  	default:
->  		/* try the native version */
-> -		return xfs_file_ioctl(filp, cmd, p);
-> +		return xfs_file_ioctl(filp, cmd, (unsigned long)arg);
->  	}
->  }
+> Further, the operation that will lock the AGF is the target
+> directory modification if blocks need to be allocated, and the whole
+> point of the "check before execution" is to abort if ENOSPC would
+> occur as a result of trying to allocate blocks and we don't have a
+> space reservation for for those blocks because we are very, very
+> close to ENOSPC already.
 > 
+> If we fail the xfs_iunlink_remove() operation, we're shutting down
+> the filesystem. If we fail the xfs_dir_createname(target) call, we
+> are most likely going to be shutting down the filesystem. So the
+> premise that locating xfs_iunlink_remove() at the end to make error
+> handling easy is not really true - transaction cancel will clean
+> both of them up and shut the filesystem down.
+> 
+
+Yeah, though I guess it depends on whether it's considered correct to
+leave out the error handling. In this case, it sounds like you'd prefer
+to do that since we can infer the transaction is dirty and so the
+filesystem is shutting down anyways. That sounds reasonable to me given
+the quirky circumstances of this particular operation, provided we don't
+leave anything around in too bogus of a state to cause problems even
+with a shut down fs (which I don't think would be the case, but it
+should be tested).
+
+> Hence I think the right thing to do is to move the
+> xfs_iunlink_remove() call to between xfs_dir_canenter() and
+> xfs_dir_createname(). This means ENOSPC will abort with a clean
+> transaction and all is good, otherwise a failure is most likely
+> going to shut down the filesystem and it doesn't matter if we do
+> xfs_iunlink_remove() or xfs_dir_createname() first.
+> 
+
+Note that the canenter() call is currently only used in the target_ip ==
+NULL case (and only if we couldn't get a block res). Perhaps we don't
+care about the AGF lock in the other case, but we still need to fix up
+the whiteout tmpfile for both. For the target_ip != NULL case, we'd want
+to make sure we handle things like the -EEXIST error check in there
+right now before we dirty the transaction with a whiteout inode tweak so
+an invalid request from userspace doesn't shutdown the fs.
+
+Those nits aside, I think the iunlink_remove()/bumplink() combination is
+going to always dirty the transaction and so guarantee a cancel after
+that point shuts down the fs.
+
+> And by doing xfs_iunlink_remove() first, we remove the AGI/AGF
+> lock inversion problem....
+> 
+> I think this holds together, but I might have missed something in
+> the tangle of different rename operation cases. So it's worth
+> checking, but it looks to me like a better solution than having
+> a bare AGI lock in the middle of the function to work around error
+> handling logic we didn't clearly enough about at the time (hindsight
+> and all that jazz)....
+> 
+> Thoughts?
+> 
+
+If we explicitly ignore error handling as such because shutdown cleans
+up the mess, then I'd just like to make sure we have some combination of
+asserts and/or comments to verify that remains the case for future
+changes. Otherwise somebody could insert a transaction roll or something
+a couple years down the line and introduce a corruption vector that none
+of us remember. With that angle covered, the approach sounds reasonable
+to me.
+
+I have no terribly strong preference between the three alternative
+options discussed so far. Refactoring the dir code would be a bit more
+work in the way of fixing a bug, which is fine, but if we want/need a
+backportable fix it might be better to consider that a follow up fix up
+after taking one of the other two approaches to address the lock order
+issue.
+
+Brian
+
+> -Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
