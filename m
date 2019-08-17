@@ -2,169 +2,121 @@ Return-Path: <SRS0=Mbmt=WN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B67FBC3A59D
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Aug 2019 02:06:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58572C3A59E
+	for <linux-xfs@archiver.kernel.org>; Sat, 17 Aug 2019 02:27:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D79E21019
-	for <linux-xfs@archiver.kernel.org>; Sat, 17 Aug 2019 02:06:55 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hgLkPVOA"
+	by mail.kernel.org (Postfix) with ESMTP id 397452133F
+	for <linux-xfs@archiver.kernel.org>; Sat, 17 Aug 2019 02:27:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725938AbfHQCGy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 16 Aug 2019 22:06:54 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52342 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725911AbfHQCGy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 22:06:54 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7H243su022922
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Aug 2019 02:06:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=iPoE6kDLq8B/Al/oQssxWALhE4tnDZ82NzXl6629WzA=;
- b=hgLkPVOA/GBerjqlqbRklxzTfWxTIgxpGF5GZPjZ3TEhPqKfIU1mINay2o19sC57vkTR
- lZvUsqpUI0Th5mkRa/4hP/Fx45p/ZBsrntKJ2tkHzqBwvC5/TCLiZahVc9kKdOjtEUPN
- Z9Zqhx43C2HZsOpnwNQSiSVjSRx+TTTZsF3lo8TCoo8D0TTg7+6J9+FqoxH7XWgUyf3e
- WVlRVtsDPlufhQqCyuXEZbTEy9yZ9+jcyuysznZJ3cfu8h4l1D/4EzFIM3crFrghHjbR
- 0wgXS6EiPJp4SPn8tY3AINtEs1RSpNnNo9N4jAmQe4YiriMLI1RyJmRFQdq5pqrsxIjU Uw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2u9pjr385r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Aug 2019 02:06:53 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7H22xJ6147222
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Aug 2019 02:06:53 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2udgqgs54n-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Aug 2019 02:06:52 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7H26q08002561
-        for <linux-xfs@vger.kernel.org>; Sat, 17 Aug 2019 02:06:52 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 16 Aug 2019 19:06:51 -0700
-Date:   Fri, 16 Aug 2019 19:06:51 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: bmap scrub should only scrub records once
-Message-ID: <20190817020651.GH752159@magnolia>
+        id S1726088AbfHQC1U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 16 Aug 2019 22:27:20 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48957 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726032AbfHQC1U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 16 Aug 2019 22:27:20 -0400
+Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D0D423617AF;
+        Sat, 17 Aug 2019 12:27:10 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1hyoPr-0000Wh-58; Sat, 17 Aug 2019 12:26:03 +1000
+Date:   Sat, 17 Aug 2019 12:26:03 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Jan Kara <jack@suse.cz>, Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-ext4@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
+Message-ID: <20190817022603.GW6129@dread.disaster.area>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190814101714.GA26273@quack2.suse.cz>
+ <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
+ <20190815130558.GF14313@quack2.suse.cz>
+ <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9351 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908170020
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9351 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908170020
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=FmdZ9Uzk2mMA:10
+        a=7-415B0cAAAA:8 a=r7a9GJFEl8VWeONERSwA:9 a=QEXdDO2ut3YA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Aug 16, 2019 at 12:05:28PM -0700, Ira Weiny wrote:
+> On Thu, Aug 15, 2019 at 03:05:58PM +0200, Jan Kara wrote:
+> > On Wed 14-08-19 11:08:49, Ira Weiny wrote:
+> > > On Wed, Aug 14, 2019 at 12:17:14PM +0200, Jan Kara wrote:
+> 2) Second reason is that I thought I did not have a good way to tell if the
+>    lease was actually in use.  What I mean is that letting the lease go should
+>    be ok IFF we don't have any pins...  I was thinking that without John's code
+>    we don't have a way to know if there are any pins...  But that is wrong...
+>    All we have to do is check
+> 
+> 	!list_empty(file->file_pins)
+> 
+> So now with this detail I think you are right, we should be able to hold the
+> lease through the struct file even if the process no longer has any
+> "references" to it (ie closes and munmaps the file).
 
-The inode block mapping scrub function does more work for btree format
-extent maps than is absolutely necessary -- first it will walk the bmbt
-and check all the entries, and then it will load the incore tree and
-check every entry in that tree.
+I really, really dislike the idea of zombie layout leases. It's a
+nasty hack for poor application behaviour. This is a "we allow use
+after layout lease release" API, and I think encoding largely
+untraceable zombie objects into an API is very poor design.
 
-Reduce the run time of the ondisk bmbt walk if the incore tree is loaded
-by checking that the incore tree has an exact match for the bmbt extent.
-Similarly, skip the incore tree walk if we have to load it from the
-bmbt, since we just checked that.
+From the fcntl man page:
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/bmap.c |   40 +++++++++++++++++++++++++++++++++++++---
- 1 file changed, 37 insertions(+), 3 deletions(-)
+LEASES
+	Leases are associated with an open file description (see
+	open(2)).  This means that duplicate file descriptors
+	(created by, for example, fork(2) or dup(2))  re‐ fer  to
+	the  same  lease,  and this lease may be modified or
+	released using any of these descriptors.  Furthermore, the
+	lease is released by either an explicit F_UNLCK operation on
+	any of these duplicate file descriptors, or when all such
+	file descriptors have been closed.
 
-diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
-index 1bd29fdc2ab5..6170736fa94f 100644
---- a/fs/xfs/scrub/bmap.c
-+++ b/fs/xfs/scrub/bmap.c
-@@ -384,6 +384,7 @@ xchk_bmapbt_rec(
- 	struct xfs_inode	*ip = bs->cur->bc_private.b.ip;
- 	struct xfs_buf		*bp = NULL;
- 	struct xfs_btree_block	*block;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, info->whichfork);
- 	uint64_t		owner;
- 	int			i;
- 
-@@ -402,8 +403,30 @@ xchk_bmapbt_rec(
- 		}
- 	}
- 
--	/* Set up the in-core record and scrub it. */
-+	/*
-+	 * If the incore bmap cache is already loaded, check that it contains
-+	 * an extent that matches this one exactly.  We validate those cached
-+	 * bmaps later, so we don't need to check here.
-+	 *
-+	 * If the cache is /not/ loaded, we need to validate the bmbt records
-+	 * now.
-+	 */
- 	xfs_bmbt_disk_get_all(&rec->bmbt, &irec);
-+        if (ifp->if_flags & XFS_IFEXTENTS) {
-+		struct xfs_bmbt_irec	iext_irec;
-+		struct xfs_iext_cursor	icur;
-+
-+		if (!xfs_iext_lookup_extent(ip, ifp, irec.br_startoff, &icur,
-+					&iext_irec) ||
-+		    irec.br_startoff != iext_irec.br_startoff ||
-+		    irec.br_startblock != iext_irec.br_startblock ||
-+		    irec.br_blockcount != iext_irec.br_blockcount ||
-+		    irec.br_state != iext_irec.br_state)
-+			xchk_fblock_set_corrupt(bs->sc, info->whichfork,
-+					irec.br_startoff);
-+		return 0;
-+	}
-+
- 	return xchk_bmap_extent(ip, bs->cur, info, &irec);
- }
- 
-@@ -671,11 +694,22 @@ xchk_bmap(
- 	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
- 		goto out;
- 
--	/* Now try to scrub the in-memory extent list. */
-+	/*
-+	 * If the incore bmap cache isn't loaded, then this inode has a bmap
-+	 * btree and we already walked it to check all of the mappings.  Load
-+	 * the cache now and skip ahead to rmap checking (which requires the
-+	 * bmap cache to be loaded).  We don't need to check twice.
-+	 *
-+	 * If the cache /is/ loaded, then we haven't checked any mappings, so
-+	 * iterate the incore cache and check the mappings now, because the
-+	 * bmbt iteration code skipped the checks, assuming that we'd do them
-+	 * here.
-+	 */
-         if (!(ifp->if_flags & XFS_IFEXTENTS)) {
- 		error = xfs_iread_extents(sc->tp, ip, whichfork);
- 		if (!xchk_fblock_process_error(sc, whichfork, 0, &error))
- 			goto out;
-+		goto out_check_rmap;
- 	}
- 
- 	/* Find the offset of the last extent in the mapping. */
-@@ -689,7 +723,7 @@ xchk_bmap(
- 	for_each_xfs_iext(ifp, &icur, &irec) {
- 		if (xchk_should_terminate(sc, &error) ||
- 		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
--			break;
-+			goto out;
- 		if (isnullstartblock(irec.br_startblock))
- 			continue;
- 		if (irec.br_startoff >= endoff) {
+Leases are associated with *open* file descriptors, not the
+lifetime of the struct file in the kernel. If the application closes
+the open fds that refer to the lease, then the kernel does not
+guarantee, and the application has no right to expect, that the
+lease remains active in any way once the application closes all
+direct references to the lease.
+
+IOWs, applications using layout leases need to hold the lease fd
+open for as long as the want access to the physical file layout. It
+is a also a requirement of the layout lease that the holder releases
+the resources it holds on the layout before it releases the layout
+lease, exclusive lease or not. Closing the fd indicates they do not
+need access to the file any more, and so the lease should be
+reclaimed at that point.
+
+I'm of a mind to make the last close() on a file block if there's an
+active layout lease to prevent processes from zombie-ing layout
+leases like this. i.e. you can't close the fd until resources that
+pin the lease have been released.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
