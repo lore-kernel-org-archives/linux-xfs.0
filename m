@@ -3,216 +3,169 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1105EC3A5A0
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 09:25:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F69C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 10:10:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E4F762087E
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 09:25:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3D2E2087B
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 10:10:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727218AbfHSJZ0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Aug 2019 05:25:26 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:38302 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726594AbfHSJZ0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Aug 2019 05:25:26 -0400
-Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C3A4743DB5F;
-        Mon, 19 Aug 2019 19:25:16 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1hzdtZ-0003uw-KP; Mon, 19 Aug 2019 19:24:09 +1000
-Date:   Mon, 19 Aug 2019 19:24:09 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     Ira Weiny <ira.weiny@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190819092409.GM7777@dread.disaster.area>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190814101714.GA26273@quack2.suse.cz>
- <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
- <20190815130558.GF14313@quack2.suse.cz>
- <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
+        id S1726805AbfHSKKQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Aug 2019 06:10:16 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:55070 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726703AbfHSKKP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Aug 2019 06:10:15 -0400
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 85CD720ABB
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2019 10:10:14 +0000 (UTC)
+Received: by mail-wr1-f72.google.com with SMTP id h3so5007906wrw.7
+        for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2019 03:10:14 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=VRKFfBref80hOnkkTdfeT0QDM8EowtXF0wFUUWsyeww=;
+        b=P3kr2GwNK9T1MZuSjKma3g76LR6aHveDIkKbqdJNe3s6bC+LEuzcfwdf6YAPAxcI4f
+         O3G/yKt9ulZYrvt79w1LeZOY9QjkwUd/olAF1jCUdApdZibfoSZKzjbPVsVHtIQ4GcoK
+         AtPpa3sI5AiJWIZOBuWazUdgNTq1VwIOrGYpCDEJmyeDfXxZc4+1O3luu/bzFOJR2VlB
+         ln0SeeeAXRCJIzKKIEge/adsSsq2+/DC666yRYpRFz1nhpUqzvqJMFAF7ZwOPTYsjPaJ
+         OuSTht0/BbWKjMn8MLFc4CKOhYKNrNZNz3F/E4X1NvgHmecJEGxk/nAFmH8G0Ipsb5IG
+         hFfg==
+X-Gm-Message-State: APjAAAXBU92vJ0/xFr6vgbrTP46bRt0CMsNI2NsjP461tGYrjcSFr22j
+        HH7aySKSQSe18c2dWHlrojsDeB012rP2kRvHE5XbZxuqxJXFXxF1a85xWBK6TIi+3ylRbnssetd
+        Wy1d+EYZT32UZdeHVlmsi
+X-Received: by 2002:adf:db49:: with SMTP id f9mr26483891wrj.112.1566209412374;
+        Mon, 19 Aug 2019 03:10:12 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqybRYq3mT8yCsurUsJitMkgUf3MuqwUb4K0TwZpp4tQrjtqbcH6q3Nn9AU5+z43ML1zF1BMKw==
+X-Received: by 2002:adf:db49:: with SMTP id f9mr26483857wrj.112.1566209412143;
+        Mon, 19 Aug 2019 03:10:12 -0700 (PDT)
+Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id i18sm15619200wrp.91.2019.08.19.03.10.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 19 Aug 2019 03:10:11 -0700 (PDT)
+Date:   Mon, 19 Aug 2019 12:10:09 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Andreas Dilger <adilger@dilger.ca>
+Cc:     Luis Chamberlain <mcgrof@kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        Miklos Szeredi <miklos@szeredi.hu>, rpeterso@redhat.com,
+        linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
+ ioctl_fibmap
+Message-ID: <20190819101007.ou5jthy6zlqpmw2w@pegasus.maiolino.io>
+Mail-Followup-To: Andreas Dilger <adilger@dilger.ca>,
+        Luis Chamberlain <mcgrof@kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>,
+        Miklos Szeredi <miklos@szeredi.hu>, rpeterso@redhat.com,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <20190731141245.7230-1-cmaiolino@redhat.com>
+ <20190731141245.7230-5-cmaiolino@redhat.com>
+ <20190731231217.GV1561054@magnolia>
+ <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
+ <20190802151400.GG7138@magnolia>
+ <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
+ <20190805151258.GD7129@magnolia>
+ <20190806224138.GW30113@42.do-not-panic.com>
+ <20190808071257.ufbk5i35xpkf4byh@pegasus.maiolino.io>
+ <69E22C32-5EDC-4507-9407-A1622BC31560@dilger.ca>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190819063412.GA20455@quack2.suse.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=uRkhnK3tQF7xzalHlfoA:9 a=qxnrrwIs3tiBhskk:21
-        a=zvn5vesPaJoFCDyj:21 a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <69E22C32-5EDC-4507-9407-A1622BC31560@dilger.ca>
+User-Agent: NeoMutt/20180716
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 19, 2019 at 08:34:12AM +0200, Jan Kara wrote:
-> On Sat 17-08-19 12:26:03, Dave Chinner wrote:
-> > On Fri, Aug 16, 2019 at 12:05:28PM -0700, Ira Weiny wrote:
-> > > On Thu, Aug 15, 2019 at 03:05:58PM +0200, Jan Kara wrote:
-> > > > On Wed 14-08-19 11:08:49, Ira Weiny wrote:
-> > > > > On Wed, Aug 14, 2019 at 12:17:14PM +0200, Jan Kara wrote:
-> > > 2) Second reason is that I thought I did not have a good way to tell if the
-> > >    lease was actually in use.  What I mean is that letting the lease go should
-> > >    be ok IFF we don't have any pins...  I was thinking that without John's code
-> > >    we don't have a way to know if there are any pins...  But that is wrong...
-> > >    All we have to do is check
-> > > 
-> > > 	!list_empty(file->file_pins)
-> > > 
-> > > So now with this detail I think you are right, we should be able to hold the
-> > > lease through the struct file even if the process no longer has any
-> > > "references" to it (ie closes and munmaps the file).
+Meh... Sorry andreas, your reply became disconnected from the thread, and I
+think I didn't reply.
+
+On Thu, Aug 08, 2019 at 12:53:25PM -0600, Andreas Dilger wrote:
+> On Aug 8, 2019, at 1:12 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
 > > 
-> > I really, really dislike the idea of zombie layout leases. It's a
-> > nasty hack for poor application behaviour. This is a "we allow use
-> > after layout lease release" API, and I think encoding largely
-> > untraceable zombie objects into an API is very poor design.
+> >>> 
+> >>>> Maybe I am not seeing something or having a different thinking you have, but
+> >>>> this is the behavior we have now, without my patches. And we can't really change
+> >>>> it; the user view of this implementation.
+> >>>> That's why I didn't try to change the result, so the truncation still happens.
+> >>> 
+> >>> I understand that we're not generally supposed to change existing
+> >>> userspace interfaces, but the fact remains that allowing truncated
+> >>> responses causes *filesystem corruption*.
+> >>> 
+> >>> We know that the most well known FIBMAP callers are bootloaders, and we
+> >>> know what they do with the information they get -- they use it to record
+> >>> the block map of boot files.  So if the IPL/grub/whatever installer
+> >>> queries the boot file and the boot file is at block 12345678901 (a
+> >>> 34-bit number), this interface truncates that to 3755744309 (a 32-bit
+> >>> number) and that's where the bootloader will think its boot files are.
+> >>> The installation succeeds, the user reboots and *kaboom* the system no
+> >>> longer boots because the contents of block 3755744309 is not a bootloader.
+> >>> 
+> >>> Worse yet, grub1 used FIBMAP data to record the location of the grub
+> >>> environment file and installed itself between the MBR and the start of
+> >>> partition 1.  If the environment file is at offset 1234578901, grub will
+> >>> write status data to its environment file (which it thinks is at
+> >>> 3755744309) and *KABOOM* we've just destroyed whatever was in that
+> >>> block.
+> >>> 
+> >>> Far better for the bootloader installation script to hit an error and
+> >>> force the admin to deal with the situation than for the system to become
+> >>> unbootable.  That's *why* the (newer) iomap bmap implementation does not
+> >>> return truncated mappings, even though the classic implementation does.
+> >>> 
+> >>> The classic code returning truncated results is a broken behavior.
+> >> 
+> >> How long as it been broken for? And if we do fix it, I'd just like for
+> >> a nice commit lot describing potential risks of not applying it. *If*
+> >> the issue exists as-is today, the above contains a lot of information
+> >> for addressing potential issues, even if theoretical.
+> >> 
 > > 
-> > From the fcntl man page:
-> > 
-> > LEASES
-> > 	Leases are associated with an open file description (see
-> > 	open(2)).  This means that duplicate file descriptors
-> > 	(created by, for example, fork(2) or dup(2))  re‐ fer  to
-> > 	the  same  lease,  and this lease may be modified or
-> > 	released using any of these descriptors.  Furthermore, the
-> > 	lease is released by either an explicit F_UNLCK operation on
-> > 	any of these duplicate file descriptors, or when all such
-> > 	file descriptors have been closed.
-> > 
-> > Leases are associated with *open* file descriptors, not the
-> > lifetime of the struct file in the kernel. If the application closes
-> > the open fds that refer to the lease, then the kernel does not
-> > guarantee, and the application has no right to expect, that the
-> > lease remains active in any way once the application closes all
-> > direct references to the lease.
-> > 
-> > IOWs, applications using layout leases need to hold the lease fd
-> > open for as long as the want access to the physical file layout. It
-> > is a also a requirement of the layout lease that the holder releases
-> > the resources it holds on the layout before it releases the layout
-> > lease, exclusive lease or not. Closing the fd indicates they do not
-> > need access to the file any more, and so the lease should be
-> > reclaimed at that point.
-> > 
-> > I'm of a mind to make the last close() on a file block if there's an
-> > active layout lease to prevent processes from zombie-ing layout
-> > leases like this. i.e. you can't close the fd until resources that
-> > pin the lease have been released.
+> > It's broken since forever. This has always been the FIBMAP behavior.
 > 
-> Yeah, so this was my initial though as well [1]. But as the discussion in
-> that thread revealed, the problem with blocking last close is that kernel
-> does not really expect close to block. You could easily deadlock e.g. if
-> the process gets SIGKILL, file with lease has fd 10, and the RDMA context
-> holding pages pinned has fd 15.
+> It's been broken since forever, but only for filesystems larger than 4TB or
+> 16TB (2^32 blocks), which are only becoming commonplace for root disks recently.
+> Also, doesn't LILO have a limit on the location of the kernel image, in the
+> first 1GB or similar?
+> 
+> So maybe this is not an issue that FIBMAP users ever hit in practise anyway,
+> but I agree that it doesn't make sense to return bad data (32-bit wrapped block
+> numbers) and 0 should be returned in such cases.
+> 
 
-Sure, I did think about this a bit about it before suggesting it :)
+Thanks for the input, but TBH I don't use LILO for a long time, and I don't
+remember exactly how it works.
 
-The last close is an interesting case because the __fput() call
-actually runs from task_work() context, not where the last reference
-is actually dropped. So it already has certain specific interactions
-with signals and task exit processing via task_add_work() and
-task_work_run().
+Anyway, I have 2 bugs to fix in this code, after I can get this series in, one
+is the overflow we'll probably need kernel-api approval, and another one is the
+acceptance of negative values into FIBMAP, which we have no protection at all.
+I'll fix both once I can get the main series in.
 
-task_add_work() calls set_notify_resume(task), so if nothing else
-triggers when returning to userspace we run this path:
+Cheers
 
-exit_to_usermode_loop()
-  tracehook_notify_resume()
-    task_work_run()
-      __fput()
-	locks_remove_file()
-	  locks_remove_lease()
-	    ....
 
-It's worth noting that locks_remove_lease() does a
-percpu_down_read() which means we can already block in this context
-removing leases....
+> 
+> Cheers, Andreas
+> 
+> 
+> 
+> 
+> 
 
-If there is a signal pending, the task work is run this way (before
-the above notify path):
 
-exit_to_usermode_loop()
-  do_signal()
-    get_signal()
-      task_work_run()
-        __fput()
 
-We can detect this case via signal_pending() and even SIGKILL via
-fatal_signal_pending(), and so we can decide not to block based on
-the fact the process is about to be reaped and so the lease largely
-doesn't matter anymore. I'd argue that it is close and we can't
-easily back out, so we'd only break the block on a fatal signal....
-
-And then, of course, is the call path through do_exit(), which has
-the PF_EXITING task flag set:
-
-do_exit()
-  exit_task_work()
-    task_work_run()
-      __fput()
-
-and so it's easy to avoid blocking in this case, too.
-
-So that leaves just the normal close() syscall exit case, where the
-application has full control of the order in which resources are
-released. We've already established that we can block in this
-context.  Blocking in an interruptible state will allow fatal signal
-delivery to wake us, and then we fall into the
-fatal_signal_pending() case if we get a SIGKILL while blocking.
-
-Hence I think blocking in this case would be OK - it indicates an
-application bug (releasing a lease before releasing the resources)
-but leaves SIGKILL available to administrators to resolve situations
-involving buggy applications.
-
-This requires applications to follow the rules: any process
-that pins physical resources must have an active reference to a
-layout lease, either via a duplicated fd or it's own private lease.
-If the app doesn't play by the rules, it hangs in close() until it
-is killed.
-
-> Or you could wait for another process to
-> release page pins and blocking SIGKILL on that is also bad.
-
-Again, each individual process that pins pages from the layout must
-have it's own active layout lease reference.
-
-> So in the end
-> the least bad solution we've come up with were these "zombie" leases as you
-> call them and tracking them in /proc so that userspace at least has a way
-> of seeing them. But if you can come up with a different solution, I'm
-> certainly not attached to the current one...
-
-It might be the "least bad" solution, but it's still a pretty bad
-one. And one that I don't think is necessary if we simply enforce
-the "process must have active references for the entire time the
-process uses the resource" rule. That's the way file access has
-always worked, I don't see why we should be doing anything different
-for access to the physical layout of files...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
