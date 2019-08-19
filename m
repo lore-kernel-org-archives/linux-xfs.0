@@ -2,185 +2,115 @@ Return-Path: <SRS0=Z/aa=WP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F22C3A5A0
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 22:13:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95F78C3A5A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 23:10:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC6F3214DA
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 22:13:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6619E22CF7
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 23:10:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H02CKvvP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728352AbfHSWNS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Aug 2019 18:13:18 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60899 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728136AbfHSWNS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Aug 2019 18:13:18 -0400
-Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4754F362403;
-        Tue, 20 Aug 2019 08:13:08 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1hzpse-0000TD-Pg; Tue, 20 Aug 2019 08:12:00 +1000
-Date:   Tue, 20 Aug 2019 08:12:00 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     kaixuxia <xiakaixu1987@gmail.com>, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH V2] xfs: Fix agi&agf ABBA deadlock when performing rename
- with RENAME_WHITEOUT flag
-Message-ID: <20190819221200.GN7777@dread.disaster.area>
-References: <8eda2397-b7fb-6dd4-a448-a81628b48edc@gmail.com>
- <20190819151335.GB2875@bfoster>
+        id S1728287AbfHSXKi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Aug 2019 19:10:38 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:42284 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728204AbfHSXKi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Aug 2019 19:10:38 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7JNA2Hl004022;
+        Mon, 19 Aug 2019 23:10:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=VwXXPTi3PJu3WoEKqDUGPJTQ2J6rMB91D0vpSCDwdFM=;
+ b=H02CKvvPw74ff4AzAmw4G8u8Lvj+tTzA++uIZsjhwJncfU0MjdDLpXWdpTC9a7ZVmlAa
+ lsRTwvx4pRkA/IRPpQ33R9PMxe795MPlz4aB0KD3vmRKgyGjJePqcEJlxke/PfbVuHhB
+ Ws6GO8j/dV7Nitni2hZV1S9KZlXUFyhviwgmPF/gniE6TD3T9iU41olCmfyQuhPwyDEs
+ Iu43khsZeL96yxp7ML/+jLASRLG1yy+9c+fXoUT5sn8QFmwCzaE1ntRa7utbD8mYm4P1
+ fxUPWoKFwqDOsy1gzylMcnZjWVNdR0OQ+UGlkHNnNrnW2Ot4mi2sEnbamVixNJd6F8aF pw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2ue90tahkr-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 19 Aug 2019 23:10:36 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7JN8LBJ190722;
+        Mon, 19 Aug 2019 23:10:36 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2ug267wtmb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 19 Aug 2019 23:10:35 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7JNAZ7j018438;
+        Mon, 19 Aug 2019 23:10:35 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 19 Aug 2019 16:10:34 -0700
+Date:   Mon, 19 Aug 2019 16:10:31 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     ira.weiny@intel.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] fs/xfs: Fix return code of xfs_break_leased_layouts()
+Message-ID: <20190819231031.GB1037350@magnolia>
+References: <20190819213918.29371-1-ira.weiny@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190819151335.GB2875@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=GvQkQWPkAAAA:8 a=7-415B0cAAAA:8 a=-T8trkfYl0IoraWLOdQA:9
-        a=cnWfvRXVZBWv-LEO:21 a=pYvbPafPTobBl9iG:21 a=CjuIK1q_8ugA:10
-        a=IZKFYfNWVLfQsFoIDbx0:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190819213918.29371-1-ira.weiny@intel.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9354 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908190228
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9354 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908190228
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 19, 2019 at 11:13:35AM -0400, Brian Foster wrote:
-> On Mon, Aug 19, 2019 at 09:06:39PM +0800, kaixuxia wrote:
-> > When performing rename operation with RENAME_WHITEOUT flag, we will
-> > hold AGF lock to allocate or free extents in manipulating the dirents
-> > firstly, and then doing the xfs_iunlink_remove() call last to hold
-> > AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
-> > 
-> > The big problem here is that we have an ordering constraint on AGF
-> > and AGI locking - inode allocation locks the AGI, then can allocate
-> > a new extent for new inodes, locking the AGF after the AGI. Hence
-> > the ordering that is imposed by other parts of the code is AGI before
-> > AGF. So we get the ABBA agi&agf deadlock here.
-> > 
-> ...
-> > 
-> > In this patch we move the xfs_iunlink_remove() call to between
-> > xfs_dir_canenter() and xfs_dir_createname(). By doing xfs_iunlink
-> > _remove() firstly, we remove the AGI/AGF lock inversion problem.
-> > 
-> > Signed-off-by: kaixuxia <kaixuxia@tencent.com>
-> > ---
-> >  fs/xfs/xfs_inode.c | 20 +++++++++++++++++---
-> >  1 file changed, 17 insertions(+), 3 deletions(-)
-> > 
-> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> > index 6467d5e..48691f2 100644
-> > --- a/fs/xfs/xfs_inode.c
-> > +++ b/fs/xfs/xfs_inode.c
-> > @@ -3294,6 +3294,18 @@ struct xfs_iunlink {
-> >  			if (error)
-> >  				goto out_trans_cancel;
-> >  		}
-> > +
-> > +		/*
-> > +		 * Handle the whiteout inode and acquire the AGI lock, so
-> > +		 * fix the AGI/AGF lock inversion problem.
-> > +		 */
+On Mon, Aug 19, 2019 at 02:39:18PM -0700, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
 > 
-> The comment could be a little more specific. For example:
+> The parens used in the while loop would result in error being assigned
+> the value 1 rather than the intended errno value.
 > 
-> "Directory entry creation may acquire the AGF. Remove the whiteout from
-> the unlinked list first to preserve correct AGI/AGF locking order."
+> This is required to return -ETXTBSY from follow on break_layout()
+> changes.
 > 
-> > +		if (wip) {
-> > +			ASSERT(VFS_I(wip)->i_nlink == 0);
-> > +			error = xfs_iunlink_remove(tp, wip);
-> > +			if (error)
-> > +				goto out_trans_cancel;
-> > +		}
-> > +
-> >  		/*
-> >  		 * If target does not exist and the rename crosses
-> >  		 * directories, adjust the target directory link count
-> > @@ -3428,9 +3440,11 @@ struct xfs_iunlink {
-> >  	if (wip) {
-> >  		ASSERT(VFS_I(wip)->i_nlink == 0);
-> >  		xfs_bumplink(tp, wip);
-> > -		error = xfs_iunlink_remove(tp, wip);
-> > -		if (error)
-> > -			goto out_trans_cancel;
-> > +		if (target_ip != NULL) {
-> > +			error = xfs_iunlink_remove(tp, wip);
-> > +			if (error)
-> > +				goto out_trans_cancel;
-> > +		}
-> 
-> The comment above this hunk needs to be updated. I'm also not a big fan
-> of this factoring of doing the removal in the if branch above and then
-> encoding the else logic down here. It might be cleaner and more
-> consistent to have a call in each branch of the if/else above.
-> 
-> FWIW, I'm also curious if this could be cleaned up further by pulling
-> the -ENOSPC/-EEXIST checks out of the earlier branch, following that
-> with the whiteout removal, and then doing the dir_create/replace. For
-> example, something like:
-> 
-> 	/* error checks before we dirty the transaction */
-> 	if (!target_ip && !spaceres) {
-> 		error = xfs_dir_canenter();
-> 		...
-> 	} else if (S_ISDIR() && !(empty || nlink > 2))
-> 		error = -EEXIST;
-> 		...
-> 	}
-> 
-> 	if (wip) {
-> 		...
-> 		xfs_iunlink_remove();
-> 	}
-> 
-> 	if (!target_ip) {
-> 		xfs_dir_create();
-> 		...
-> 	} else {
-> 		xfs_dir_replace();
-> 		...
-> 	}
-> 
-> ... but that may not be any cleaner..? It could also be done as a
-> followup cleanup patch as well.
+> Signed-off-by: Ira Weiny <ira.weiny@intel.com>
 
-Makes sense, but the more I look at this, the more I think we should
-get rid of on-disk whiteout inodes altogether and finally make use
-of XFS_DIR3_FT_WHT in the dirent file type.
+Doh.
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-The whiteout inode is a nasty VFS level hack to support whiteouts on
-filesystems that have no way of storing whiteouts natively. i.e. a
-whiteout inode is a chardev with a mode of 0 and a device number of
-0. We only need to present that magic indoe to userspace, we don't
-need to actually store it on disk.  IOWs, we could get rid of this
-whole problem with XFS_DIR3_FT_WHT.
+--D
 
-XFS_DIR3_FT_WHT means we no longer need to allocate a tmpfile for
-the whiteout, we don't have xfs_iunlink_remove calls in rename, and
-all we have to do is a xfs_dir_replace() call to zero out the inode
-number and change the ftype in the dirent.
-
-It will need changes to the xfs_lookup code to instantiate the
-special chardev inode in memory when a whiteout is found, and
-probably checks to ensure we never dirty such an inode. Giving it an
-invalid inode number will be sufficient to prevent it from being
-written to disk.
-
-It's a bit more work, but I think killing on-disk whiteout inode is
-the eventual solution we want here...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>  fs/xfs/xfs_pnfs.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
+> index 0c954cad7449..a339bd5fa260 100644
+> --- a/fs/xfs/xfs_pnfs.c
+> +++ b/fs/xfs/xfs_pnfs.c
+> @@ -32,7 +32,7 @@ xfs_break_leased_layouts(
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	int			error;
+>  
+> -	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
+> +	while ((error = break_layout(inode, false)) == -EWOULDBLOCK) {
+>  		xfs_iunlock(ip, *iolock);
+>  		*did_unlock = true;
+>  		error = break_layout(inode, true);
+> -- 
+> 2.20.1
+> 
