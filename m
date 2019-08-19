@@ -2,98 +2,185 @@ Return-Path: <SRS0=Z/aa=WP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B7000C3A5A0
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 21:53:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0F22C3A5A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 22:13:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8952C22CEC
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 21:53:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CC6F3214DA
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 22:13:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728366AbfHSVx1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Aug 2019 17:53:27 -0400
-Received: from mga18.intel.com ([134.134.136.126]:6061 "EHLO mga18.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728352AbfHSVx0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Aug 2019 17:53:26 -0400
-X-Amp-Result: UNSCANNABLE
-X-Amp-File-Uploaded: False
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Aug 2019 14:53:24 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,406,1559545200"; 
-   d="scan'208";a="189658795"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by orsmga002.jf.intel.com with ESMTP; 19 Aug 2019 14:53:23 -0700
-Date:   Mon, 19 Aug 2019 14:53:23 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Jason Gunthorpe <jgg@ziepe.ca>
-Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190819215322.GA2839@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190814101714.GA26273@quack2.suse.cz>
- <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
- <20190815130558.GF14313@quack2.suse.cz>
- <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
+        id S1728352AbfHSWNS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Aug 2019 18:13:18 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60899 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728136AbfHSWNS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Aug 2019 18:13:18 -0400
+Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4754F362403;
+        Tue, 20 Aug 2019 08:13:08 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1hzpse-0000TD-Pg; Tue, 20 Aug 2019 08:12:00 +1000
+Date:   Tue, 20 Aug 2019 08:12:00 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     kaixuxia <xiakaixu1987@gmail.com>, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+Subject: Re: [PATCH V2] xfs: Fix agi&agf ABBA deadlock when performing rename
+ with RENAME_WHITEOUT flag
+Message-ID: <20190819221200.GN7777@dread.disaster.area>
+References: <8eda2397-b7fb-6dd4-a448-a81628b48edc@gmail.com>
+ <20190819151335.GB2875@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190819123841.GC5058@ziepe.ca>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20190819151335.GB2875@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=GvQkQWPkAAAA:8 a=7-415B0cAAAA:8 a=-T8trkfYl0IoraWLOdQA:9
+        a=cnWfvRXVZBWv-LEO:21 a=pYvbPafPTobBl9iG:21 a=CjuIK1q_8ugA:10
+        a=IZKFYfNWVLfQsFoIDbx0:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
-> On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
+On Mon, Aug 19, 2019 at 11:13:35AM -0400, Brian Foster wrote:
+> On Mon, Aug 19, 2019 at 09:06:39PM +0800, kaixuxia wrote:
+> > When performing rename operation with RENAME_WHITEOUT flag, we will
+> > hold AGF lock to allocate or free extents in manipulating the dirents
+> > firstly, and then doing the xfs_iunlink_remove() call last to hold
+> > AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+> > 
+> > The big problem here is that we have an ordering constraint on AGF
+> > and AGI locking - inode allocation locks the AGI, then can allocate
+> > a new extent for new inodes, locking the AGF after the AGI. Hence
+> > the ordering that is imposed by other parts of the code is AGI before
+> > AGF. So we get the ABBA agi&agf deadlock here.
+> > 
+> ...
+> > 
+> > In this patch we move the xfs_iunlink_remove() call to between
+> > xfs_dir_canenter() and xfs_dir_createname(). By doing xfs_iunlink
+> > _remove() firstly, we remove the AGI/AGF lock inversion problem.
+> > 
+> > Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+> > ---
+> >  fs/xfs/xfs_inode.c | 20 +++++++++++++++++---
+> >  1 file changed, 17 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> > index 6467d5e..48691f2 100644
+> > --- a/fs/xfs/xfs_inode.c
+> > +++ b/fs/xfs/xfs_inode.c
+> > @@ -3294,6 +3294,18 @@ struct xfs_iunlink {
+> >  			if (error)
+> >  				goto out_trans_cancel;
+> >  		}
+> > +
+> > +		/*
+> > +		 * Handle the whiteout inode and acquire the AGI lock, so
+> > +		 * fix the AGI/AGF lock inversion problem.
+> > +		 */
 > 
-> > So that leaves just the normal close() syscall exit case, where the
-> > application has full control of the order in which resources are
-> > released. We've already established that we can block in this
-> > context.  Blocking in an interruptible state will allow fatal signal
-> > delivery to wake us, and then we fall into the
-> > fatal_signal_pending() case if we get a SIGKILL while blocking.
+> The comment could be a little more specific. For example:
 > 
-> The major problem with RDMA is that it doesn't always wait on close() for the
-> MR holding the page pins to be destoyed. This is done to avoid a
-> deadlock of the form:
+> "Directory entry creation may acquire the AGF. Remove the whiteout from
+> the unlinked list first to preserve correct AGI/AGF locking order."
 > 
->    uverbs_destroy_ufile_hw()
->       mutex_lock()
->        [..]
->         mmput()
->          exit_mmap()
->           remove_vma()
->            fput();
->             file_operations->release()
->              ib_uverbs_close()
->               uverbs_destroy_ufile_hw()
->                mutex_lock()   <-- Deadlock
+> > +		if (wip) {
+> > +			ASSERT(VFS_I(wip)->i_nlink == 0);
+> > +			error = xfs_iunlink_remove(tp, wip);
+> > +			if (error)
+> > +				goto out_trans_cancel;
+> > +		}
+> > +
+> >  		/*
+> >  		 * If target does not exist and the rename crosses
+> >  		 * directories, adjust the target directory link count
+> > @@ -3428,9 +3440,11 @@ struct xfs_iunlink {
+> >  	if (wip) {
+> >  		ASSERT(VFS_I(wip)->i_nlink == 0);
+> >  		xfs_bumplink(tp, wip);
+> > -		error = xfs_iunlink_remove(tp, wip);
+> > -		if (error)
+> > -			goto out_trans_cancel;
+> > +		if (target_ip != NULL) {
+> > +			error = xfs_iunlink_remove(tp, wip);
+> > +			if (error)
+> > +				goto out_trans_cancel;
+> > +		}
 > 
-> But, as I said to Ira earlier, I wonder if this is now impossible on
-> modern kernels and we can switch to making the whole thing
-> synchronous. That would resolve RDMA's main problem with this.
+> The comment above this hunk needs to be updated. I'm also not a big fan
+> of this factoring of doing the removal in the if branch above and then
+> encoding the else logic down here. It might be cleaner and more
+> consistent to have a call in each branch of the if/else above.
+> 
+> FWIW, I'm also curious if this could be cleaned up further by pulling
+> the -ENOSPC/-EEXIST checks out of the earlier branch, following that
+> with the whiteout removal, and then doing the dir_create/replace. For
+> example, something like:
+> 
+> 	/* error checks before we dirty the transaction */
+> 	if (!target_ip && !spaceres) {
+> 		error = xfs_dir_canenter();
+> 		...
+> 	} else if (S_ISDIR() && !(empty || nlink > 2))
+> 		error = -EEXIST;
+> 		...
+> 	}
+> 
+> 	if (wip) {
+> 		...
+> 		xfs_iunlink_remove();
+> 	}
+> 
+> 	if (!target_ip) {
+> 		xfs_dir_create();
+> 		...
+> 	} else {
+> 		xfs_dir_replace();
+> 		...
+> 	}
+> 
+> ... but that may not be any cleaner..? It could also be done as a
+> followup cleanup patch as well.
 
-I'm still looking into this...  but my bigger concern is that the RDMA FD can
-be passed to other processes via SCM_RIGHTS.  Which means the process holding
-the pin may _not_ be the one with the open file and layout lease...
+Makes sense, but the more I look at this, the more I think we should
+get rid of on-disk whiteout inodes altogether and finally make use
+of XFS_DIR3_FT_WHT in the dirent file type.
 
-Ira
+The whiteout inode is a nasty VFS level hack to support whiteouts on
+filesystems that have no way of storing whiteouts natively. i.e. a
+whiteout inode is a chardev with a mode of 0 and a device number of
+0. We only need to present that magic indoe to userspace, we don't
+need to actually store it on disk.  IOWs, we could get rid of this
+whole problem with XFS_DIR3_FT_WHT.
 
+XFS_DIR3_FT_WHT means we no longer need to allocate a tmpfile for
+the whiteout, we don't have xfs_iunlink_remove calls in rename, and
+all we have to do is a xfs_dir_replace() call to zero out the inode
+number and change the ftype in the dirent.
+
+It will need changes to the xfs_lookup code to instantiate the
+special chardev inode in memory when a whiteout is found, and
+probably checks to ensure we never dirty such an inode. Giving it an
+invalid inode number will be sufficient to prevent it from being
+written to disk.
+
+It's a bit more work, but I think killing on-disk whiteout inode is
+the eventual solution we want here...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
