@@ -2,71 +2,98 @@ Return-Path: <SRS0=Z/aa=WP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B329C3A5A0
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 21:39:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B7000C3A5A0
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 21:53:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1ECD42087E
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 21:39:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8952C22CEC
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 21:53:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728229AbfHSVjV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Aug 2019 17:39:21 -0400
-Received: from mga04.intel.com ([192.55.52.120]:35701 "EHLO mga04.intel.com"
+        id S1728366AbfHSVx1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Aug 2019 17:53:27 -0400
+Received: from mga18.intel.com ([134.134.136.126]:6061 "EHLO mga18.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728014AbfHSVjV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Aug 2019 17:39:21 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
+        id S1728352AbfHSVx0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 19 Aug 2019 17:53:26 -0400
+X-Amp-Result: UNSCANNABLE
 X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Aug 2019 14:39:21 -0700
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Aug 2019 14:53:24 -0700
+X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="5.64,406,1559545200"; 
-   d="scan'208";a="168879691"
-Received: from iweiny-desk2.sc.intel.com (HELO localhost) ([10.3.52.157])
-  by orsmga007-auth.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 19 Aug 2019 14:39:20 -0700
-From:   ira.weiny@intel.com
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Cc:     linux-kernel@vger.kernel.org, Ira Weiny <ira.weiny@intel.com>
-Subject: [PATCH] fs/xfs: Fix return code of xfs_break_leased_layouts()
-Date:   Mon, 19 Aug 2019 14:39:18 -0700
-Message-Id: <20190819213918.29371-1-ira.weiny@intel.com>
-X-Mailer: git-send-email 2.20.1
+   d="scan'208";a="189658795"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga002.jf.intel.com with ESMTP; 19 Aug 2019 14:53:23 -0700
+Date:   Mon, 19 Aug 2019 14:53:23 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Jason Gunthorpe <jgg@ziepe.ca>
+Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-ext4@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
+Message-ID: <20190819215322.GA2839@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190814101714.GA26273@quack2.suse.cz>
+ <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
+ <20190815130558.GF14313@quack2.suse.cz>
+ <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
+ <20190817022603.GW6129@dread.disaster.area>
+ <20190819063412.GA20455@quack2.suse.cz>
+ <20190819092409.GM7777@dread.disaster.area>
+ <20190819123841.GC5058@ziepe.ca>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190819123841.GC5058@ziepe.ca>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Ira Weiny <ira.weiny@intel.com>
+On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
+> On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
+> 
+> > So that leaves just the normal close() syscall exit case, where the
+> > application has full control of the order in which resources are
+> > released. We've already established that we can block in this
+> > context.  Blocking in an interruptible state will allow fatal signal
+> > delivery to wake us, and then we fall into the
+> > fatal_signal_pending() case if we get a SIGKILL while blocking.
+> 
+> The major problem with RDMA is that it doesn't always wait on close() for the
+> MR holding the page pins to be destoyed. This is done to avoid a
+> deadlock of the form:
+> 
+>    uverbs_destroy_ufile_hw()
+>       mutex_lock()
+>        [..]
+>         mmput()
+>          exit_mmap()
+>           remove_vma()
+>            fput();
+>             file_operations->release()
+>              ib_uverbs_close()
+>               uverbs_destroy_ufile_hw()
+>                mutex_lock()   <-- Deadlock
+> 
+> But, as I said to Ira earlier, I wonder if this is now impossible on
+> modern kernels and we can switch to making the whole thing
+> synchronous. That would resolve RDMA's main problem with this.
 
-The parens used in the while loop would result in error being assigned
-the value 1 rather than the intended errno value.
+I'm still looking into this...  but my bigger concern is that the RDMA FD can
+be passed to other processes via SCM_RIGHTS.  Which means the process holding
+the pin may _not_ be the one with the open file and layout lease...
 
-This is required to return -ETXTBSY from follow on break_layout()
-changes.
-
-Signed-off-by: Ira Weiny <ira.weiny@intel.com>
----
- fs/xfs/xfs_pnfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-index 0c954cad7449..a339bd5fa260 100644
---- a/fs/xfs/xfs_pnfs.c
-+++ b/fs/xfs/xfs_pnfs.c
-@@ -32,7 +32,7 @@ xfs_break_leased_layouts(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	int			error;
- 
--	while ((error = break_layout(inode, false) == -EWOULDBLOCK)) {
-+	while ((error = break_layout(inode, false)) == -EWOULDBLOCK) {
- 		xfs_iunlock(ip, *iolock);
- 		*did_unlock = true;
- 		error = break_layout(inode, true);
--- 
-2.20.1
+Ira
 
