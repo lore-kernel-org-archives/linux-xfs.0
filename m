@@ -6,166 +6,212 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F69C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 10:10:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91AADC3A5A1
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 10:21:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B3D2E2087B
-	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 10:10:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 68277204EC
+	for <linux-xfs@archiver.kernel.org>; Mon, 19 Aug 2019 10:21:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726805AbfHSKKQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 19 Aug 2019 06:10:16 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:55070 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726703AbfHSKKP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 19 Aug 2019 06:10:15 -0400
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 85CD720ABB
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2019 10:10:14 +0000 (UTC)
-Received: by mail-wr1-f72.google.com with SMTP id h3so5007906wrw.7
-        for <linux-xfs@vger.kernel.org>; Mon, 19 Aug 2019 03:10:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=VRKFfBref80hOnkkTdfeT0QDM8EowtXF0wFUUWsyeww=;
-        b=P3kr2GwNK9T1MZuSjKma3g76LR6aHveDIkKbqdJNe3s6bC+LEuzcfwdf6YAPAxcI4f
-         O3G/yKt9ulZYrvt79w1LeZOY9QjkwUd/olAF1jCUdApdZibfoSZKzjbPVsVHtIQ4GcoK
-         AtPpa3sI5AiJWIZOBuWazUdgNTq1VwIOrGYpCDEJmyeDfXxZc4+1O3luu/bzFOJR2VlB
-         ln0SeeeAXRCJIzKKIEge/adsSsq2+/DC666yRYpRFz1nhpUqzvqJMFAF7ZwOPTYsjPaJ
-         OuSTht0/BbWKjMn8MLFc4CKOhYKNrNZNz3F/E4X1NvgHmecJEGxk/nAFmH8G0Ipsb5IG
-         hFfg==
-X-Gm-Message-State: APjAAAXBU92vJ0/xFr6vgbrTP46bRt0CMsNI2NsjP461tGYrjcSFr22j
-        HH7aySKSQSe18c2dWHlrojsDeB012rP2kRvHE5XbZxuqxJXFXxF1a85xWBK6TIi+3ylRbnssetd
-        Wy1d+EYZT32UZdeHVlmsi
-X-Received: by 2002:adf:db49:: with SMTP id f9mr26483891wrj.112.1566209412374;
-        Mon, 19 Aug 2019 03:10:12 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqybRYq3mT8yCsurUsJitMkgUf3MuqwUb4K0TwZpp4tQrjtqbcH6q3Nn9AU5+z43ML1zF1BMKw==
-X-Received: by 2002:adf:db49:: with SMTP id f9mr26483857wrj.112.1566209412143;
-        Mon, 19 Aug 2019 03:10:12 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id i18sm15619200wrp.91.2019.08.19.03.10.10
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 19 Aug 2019 03:10:11 -0700 (PDT)
-Date:   Mon, 19 Aug 2019 12:10:09 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Andreas Dilger <adilger@dilger.ca>
-Cc:     Luis Chamberlain <mcgrof@kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>, rpeterso@redhat.com,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH 4/9] fibmap: Use bmap instead of ->bmap method in
- ioctl_fibmap
-Message-ID: <20190819101007.ou5jthy6zlqpmw2w@pegasus.maiolino.io>
-Mail-Followup-To: Andreas Dilger <adilger@dilger.ca>,
-        Luis Chamberlain <mcgrof@kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Linux FS-devel Mailing List <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>, Jaegeuk Kim <jaegeuk@kernel.org>,
-        Miklos Szeredi <miklos@szeredi.hu>, rpeterso@redhat.com,
-        linux-xfs <linux-xfs@vger.kernel.org>
-References: <20190731141245.7230-1-cmaiolino@redhat.com>
- <20190731141245.7230-5-cmaiolino@redhat.com>
- <20190731231217.GV1561054@magnolia>
- <20190802091937.kwutqtwt64q5hzkz@pegasus.maiolino.io>
- <20190802151400.GG7138@magnolia>
- <20190805102729.ooda6sg65j65ojd4@pegasus.maiolino.io>
- <20190805151258.GD7129@magnolia>
- <20190806224138.GW30113@42.do-not-panic.com>
- <20190808071257.ufbk5i35xpkf4byh@pegasus.maiolino.io>
- <69E22C32-5EDC-4507-9407-A1622BC31560@dilger.ca>
+        id S1726755AbfHSKV3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 19 Aug 2019 06:21:29 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52391 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726703AbfHSKV2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 19 Aug 2019 06:21:28 -0400
+Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F26E243D040;
+        Mon, 19 Aug 2019 20:21:24 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1hzelt-0004Gw-Bk; Mon, 19 Aug 2019 20:20:17 +1000
+Date:   Mon, 19 Aug 2019 20:20:17 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     kaixuxia <xiakaixu1987@gmail.com>, linux-xfs@vger.kernel.org,
+        darrick.wong@oracle.com, newtongao@tencent.com,
+        jasperwang@tencent.com
+Subject: Re: [PATCH] xfs: Fix agi&agf ABBA deadlock when performing rename
+ with RENAME_WHITEOUT flag
+Message-ID: <20190819102017.GA6129@dread.disaster.area>
+References: <5f2ab55c-c1ef-a8f2-5662-b35e0838b979@gmail.com>
+ <20190815233630.GU6129@dread.disaster.area>
+ <65790fd5-5915-9318-8737-d81899d73e9e@gmail.com>
+ <20190816145310.GB54929@bfoster>
+ <20190817014023.GV6129@dread.disaster.area>
+ <20190817132006.GA60618@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <69E22C32-5EDC-4507-9407-A1622BC31560@dilger.ca>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20190817132006.GA60618@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=6QYmVgRpAAAA:8 a=7-415B0cAAAA:8 a=R8h7EXXdWe5AwtPebWIA:9
+        a=CjuIK1q_8ugA:10 a=hBeyHLqrtYWpXn6Xfe_q:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Meh... Sorry andreas, your reply became disconnected from the thread, and I
-think I didn't reply.
-
-On Thu, Aug 08, 2019 at 12:53:25PM -0600, Andreas Dilger wrote:
-> On Aug 8, 2019, at 1:12 AM, Carlos Maiolino <cmaiolino@redhat.com> wrote:
+On Sat, Aug 17, 2019 at 09:20:06AM -0400, Brian Foster wrote:
+> On Sat, Aug 17, 2019 at 11:40:23AM +1000, Dave Chinner wrote:
+> > I like this patch because it means we are starting to reach the
+> > end-game of this architectural change.  This patch indicates that
+> > people are starting to understand the end goal of this work: to
+> > break up big transactions into atomic chains of smaller, simpler
+> > linked transactions.  And they are doing so without needing to be
+> > explicitly told "this is how we want complex modifications to be
+> > done". This is _really good_. :)
 > > 
-> >>> 
-> >>>> Maybe I am not seeing something or having a different thinking you have, but
-> >>>> this is the behavior we have now, without my patches. And we can't really change
-> >>>> it; the user view of this implementation.
-> >>>> That's why I didn't try to change the result, so the truncation still happens.
-> >>> 
-> >>> I understand that we're not generally supposed to change existing
-> >>> userspace interfaces, but the fact remains that allowing truncated
-> >>> responses causes *filesystem corruption*.
-> >>> 
-> >>> We know that the most well known FIBMAP callers are bootloaders, and we
-> >>> know what they do with the information they get -- they use it to record
-> >>> the block map of boot files.  So if the IPL/grub/whatever installer
-> >>> queries the boot file and the boot file is at block 12345678901 (a
-> >>> 34-bit number), this interface truncates that to 3755744309 (a 32-bit
-> >>> number) and that's where the bootloader will think its boot files are.
-> >>> The installation succeeds, the user reboots and *kaboom* the system no
-> >>> longer boots because the contents of block 3755744309 is not a bootloader.
-> >>> 
-> >>> Worse yet, grub1 used FIBMAP data to record the location of the grub
-> >>> environment file and installed itself between the MBR and the start of
-> >>> partition 1.  If the environment file is at offset 1234578901, grub will
-> >>> write status data to its environment file (which it thinks is at
-> >>> 3755744309) and *KABOOM* we've just destroyed whatever was in that
-> >>> block.
-> >>> 
-> >>> Far better for the bootloader installation script to hit an error and
-> >>> force the admin to deal with the situation than for the system to become
-> >>> unbootable.  That's *why* the (newer) iomap bmap implementation does not
-> >>> return truncated mappings, even though the classic implementation does.
-> >>> 
-> >>> The classic code returning truncated results is a broken behavior.
-> >> 
-> >> How long as it been broken for? And if we do fix it, I'd just like for
-> >> a nice commit lot describing potential risks of not applying it. *If*
-> >> the issue exists as-is today, the above contains a lot of information
-> >> for addressing potential issues, even if theoretical.
-> >> 
+> > And that leads me to start thinking about the next step after that,
+> > which I'd always planned it to be, and that is async processing of
+> > the "atomic multi-transaction operations". That, at the time, was
+> > based on the observation that we had supercomputers with thousands
+> > of CPUs banging on the one filesystem and we always had CPUs to
+> > spare. That's even more true these days: lots of filesytem
+> > operations still single threaded so we have huge amounts of idle CPU
+> > to spare. We could be using that to speed up things like rsync,
+> > tarball extraction, rm -rf, etc.
 > > 
-> > It's broken since forever. This has always been the FIBMAP behavior.
 > 
-> It's been broken since forever, but only for filesystems larger than 4TB or
-> 16TB (2^32 blocks), which are only becoming commonplace for root disks recently.
-> Also, doesn't LILO have a limit on the location of the kernel image, in the
-> first 1GB or similar?
+> I haven't read back through the links yet, but on a skim the "async"
+> part of this sounds like a gap in what is described in the sections
+> referenced above (which sounds more like changing log formats to
+> something more logical than physical). I'm pretty familiar with all of
+> the dfops bits to this point, the async bit is what I'm asking about...
 > 
-> So maybe this is not an issue that FIBMAP users ever hit in practise anyway,
-> but I agree that it doesn't make sense to return bad data (32-bit wrapped block
-> numbers) and 0 should be returned in such cases.
-> 
+> What exactly are you thinking about making async that isn't already? Are
+> you talking about separating in-core changes from backend
+> ordering/logging in general and across the board?
 
-Thanks for the input, but TBH I don't use LILO for a long time, and I don't
-remember exactly how it works.
+Yup, separating the work we have to do from the process context that
+needs it to be done.
 
-Anyway, I have 2 bugs to fix in this code, after I can get this series in, one
-is the overflow we'll probably need kernel-api approval, and another one is the
-acceptance of negative values into FIBMAP, which we have no protection at all.
-I'll fix both once I can get the main series in.
+Think about a buffered write. All we need to do in process context
+is reserve space and copy the data into the kernel. The rest of it
+is done asynchornously in the background, and can be expedited by
+fsync().
 
-Cheers
+Basically applying that to create, rename, etc. It's more complex
+because we have to guarantee ordering of operations, but
+fundamentally there is nothing stopping us from doing something liek
+this on create:
 
+here's a synchronous create, but with async transaction processing:
 
-> 
-> Cheers, Andreas
-> 
-> 
-> 
-> 
-> 
+	DEFINE_WAIT(wait);
 
+	trans alloc
+	lock dir inode
+	log intent {
+		dir = dp
+		op = file create
+		name = <xfs_name>
+		mode = mode
+		wait = wait
+	}
+	xfs_defer_finish(intent, wait)
+		-> commits intent
+		-> punts rest of work to worker thread
+			-> when all is done, will wakeup(wait)
+		-> sleeps on wait
+	unlock dir
 
+This could eventually become an async create by restructuring it
+kinda like this:
 
+	ip = xfs_inode_alloc();
+
+	<initialise and set up inode, leave XFS_INEW/I_NEW set>
+
+	grab dir sequence number
+	trans alloc
+	log intent {
+		dir = dp
+		seq = dir_seq
+		op = file create
+		name = <xfs_name>
+		mode = mode
+		ip = ip
+	}
+	xfs_defer_finish(intent)
+		-> commits intent
+		-> punts rest of creation work to worker thread
+			when complete, will clear XFS_INEW/I_NEW
+
+	return instantiated inode to caller
+
+Anyone one who looks this inode up after creation will block
+on XFS_INEW/I_NEW flag bits. The caller that created the inode
+will be able to operate on it straight away....
+
+SO converting to async processing is really requires several steps.
+
+	1. convert everything to intent logging and defer
+	   operations
+	2. start every modification with an intent and commit
+	3. add wait events to each dfops chain
+	4. run dfops in worker threads, calling wakeups when done
+	5. convert high level code to do in-core modifications,
+	   dfops runs on-disk transactions only
+	6. get rid of high level waits for ops that don't need
+	   to wait for transactional changes.
+
+> Or opportunistically
+> making certain deferred operations async if the result of such
+> operations is not required to be complete by the time the issuing
+> operation returns to userspace?
+
+Well, that's obvious for things like unlink. But what such async
+processing allows is things like bulk directory modifications
+(e.g. rm -rf detection because the dir inode gets unlinked before
+we've started processing any of the dirent removal ops) which can
+greatly speed up operations.
+
+e.g. rm -rf becomes "load all the inodes into memory as we log
+dirent removal, when the dir unlink is logged, truncate the dir
+inode they are all gone. Sort all the inodes into same cluster/chunk
+groups, free all the inodes in a single inobt/finobt record
+update...."
+
+IOWs, moving to intent based logging allows us to dynamically change
+the way we do operations - the intent defines what needs to be done,
+but it doesn't define how it gets done. As such, bulk processing
+optimisations become possible and those optimisations can be done
+completely independently of the front end that logs the initial
+intent.
+
+> For example, a hole punch needs to
+> modify the associated file before it returns, but we might not care if
+> the associated block freeing operation has completed or not before the
+> punch returns (as long as the intent is logged) because that's not a
+> hard requirement of the higher level operation. Whereas the current
+> behavior is that the extent free operation is deferred, but it is not
+> necessarily async at the operational level (i.e. the async logging
+> nature of the CIL notwithstanding). Hm?
+
+Yup, exactly. Nothing says the extent has to be free by the time the
+hole punch returns. The only rules we need to play by is that it
+looks to userspace like there's hole, and if they run fsync then
+there really is a hole.  Otherwise the scheduling of the work is
+largely up to us.
+
+Split front/back async processing like this isn't new - it's
+something Daniel Phillips was trying to do with tux3. It deferred as
+much as it could to the back end processing threads and did as
+little as possible in the syscall contexts. See slide 14:
+
+https://events.static.linuxfound.org/sites/events/files/slides/tux3.linuxcon.pdf
+
+So the concept has largely been proven in other filesystems, it's
+just that if you don't design something from scratch to be
+asynchronous it can be difficult to retrofit...
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
