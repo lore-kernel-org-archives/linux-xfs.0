@@ -2,127 +2,121 @@ Return-Path: <SRS0=kQBn=WQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5830C3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7DC3C3A59E
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:57:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B408722CF7
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:55:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="F8bCgYAm"
+	by mail.kernel.org (Postfix) with ESMTP id 8613E22DA7
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:57:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729155AbfHTLzS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 07:55:18 -0400
-Received: from mail-qt1-f193.google.com ([209.85.160.193]:33818 "EHLO
-        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728983AbfHTLzS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 07:55:18 -0400
-Received: by mail-qt1-f193.google.com with SMTP id q4so5632445qtp.1
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 04:55:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=cjWne9JJX/bamk/BsyOJB8Qocb+2jJnD/6EfxMqzNUc=;
-        b=F8bCgYAmAkUxSVlSTscXxlQRELIsOQnZmrvm1sUjW95CUd0khTshKRxwCuLjyokKev
-         BO8QDllptp/4vv0c5+22/EhhQN7BANX7GXbwhmoL4l4ncCnzuvcFIBhtQofbuqTX6nsg
-         zwql74Buzj9teOKUbKfj5TE3uHNM/5fbApiO0JHQMUUYJ/unQvJimJ2vf/e7eXWfu4Qr
-         e3qKOUbeDxtQCKEEnBFIKa+Y83F0ozkYPvP+sRDb4zW7tz+74GJgY/PNJGOy+FAsmX1f
-         luk7Y3QQ++vwxmyoZVrHTbe9U0I/Qk1BqrxGPfTC0MFEGoh/lly24xPvz/0fT0h+OEJy
-         qwWg==
+        id S1727006AbfHTL5i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 07:57:38 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:59826 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728283AbfHTL5h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Aug 2019 07:57:37 -0400
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com [209.85.221.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id CF54764041
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 11:57:36 +0000 (UTC)
+Received: by mail-wr1-f71.google.com with SMTP id k8so5806244wrx.19
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 04:57:36 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=cjWne9JJX/bamk/BsyOJB8Qocb+2jJnD/6EfxMqzNUc=;
-        b=MrYd8tZPogqzfHueX3B3r99sg1qRo2dwP5tkNI33Vzl9hklEsoDSEaKGn/S79LpxrW
-         fmwUsEAWNZw8vXUODIcvBTi2hzIoeSBMmkU9GI27GC8yxxsyAzxBayW6Ejq5dYWbk1PT
-         GKS6UXOpF6IvyPuTuMxWAS1ZPmQ2Zrp7I9jDdEkYTEcImu81w6o2vv9VKmAsBSUYcnrB
-         xAkO2JPddLKwnDKnIOcGwDYwINoBLJSIqZse7TX2PAhtftzlesGR50KI9p7uLcqUqa21
-         ga/2DFsIt9pDTit09ccjEsj2c8I8Mh/0OqsP2cDgTWnOMjzoQM4hRESjopXE9ZQ9QyrE
-         VqAw==
-X-Gm-Message-State: APjAAAXLii4XKh2uVEbQ599mYLXQ14cFyQO0y06VtrrHeHMGRUfxWMvL
-        tbpWtUnfv20ENXJGJHjYSvVZlw==
-X-Google-Smtp-Source: APXvYqz2loiM8+YcMWhCUXDCstClokgbXoeINv82DptJXTepeIjclfvYpo9S265xpxsrLBOY09rJbg==
-X-Received: by 2002:a0c:d251:: with SMTP id o17mr14202195qvh.109.1566302116866;
-        Tue, 20 Aug 2019 04:55:16 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-55-100.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.55.100])
-        by smtp.gmail.com with ESMTPSA id f23sm8218362qkk.80.2019.08.20.04.55.16
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Tue, 20 Aug 2019 04:55:16 -0700 (PDT)
-Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1i02jL-0007t8-HZ; Tue, 20 Aug 2019 08:55:15 -0300
-Date:   Tue, 20 Aug 2019 08:55:15 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jan Kara <jack@suse.cz>, Ira Weiny <ira.weiny@intel.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190820115515.GA29246@ziepe.ca>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190814101714.GA26273@quack2.suse.cz>
- <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
- <20190815130558.GF14313@quack2.suse.cz>
- <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=XDKEoOdHwq1lbeRx7Aw+gnzvXTG37O7vnLdKpNshzwg=;
+        b=F8H5KpL9StYHt73RRblruViXpyJvQ/kYf5mkxi6kKf0mYvXW8VjUnAqaqCG7klcmFE
+         uztAj5o4R6Q65DALCo5Th4CtoOZ6s2J2k+gFOOpKm7LOx3ZPPPHhlLtwRqvaeDDCtjAU
+         LiG0T3/K8ucODQlc89DN7nq9crMsNE4+BLXdm06ctWfEN3PDTWTiU53Z31x7W1CqaW6J
+         glJsegZyP8x8lTOk1ydgJevwdMJG9mcU6ICzSAhYeZYah9I5RvGkYEkIHlOENso1ab7T
+         QcNFKSSXOTyNty4NYCjycnelpomuIhbOEKr31XScEhCBRwPTT2U8zYnZQhTCUbTMyRQH
+         jv4A==
+X-Gm-Message-State: APjAAAVlxum2Y7Vj1FrhcE86WU5MV8YYPOgi0V5AWUrRR7E5qR9FtXQU
+        hNEXAxOQJs2wIcCC4UEfwfhL9N7C1kCUc/MfPxY2qo9neJGWCv6SyWayg/1jDQWMU/WV5/xgRUO
+        Y2QMOC7U7s48OJLR2Dcem
+X-Received: by 2002:a5d:5302:: with SMTP id e2mr34260715wrv.345.1566302255528;
+        Tue, 20 Aug 2019 04:57:35 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqxacsi4LfxSfRp+8+CxkC8yY0Yg8as35IT8Y5TfMDGMA3q7N5ldlBJvJxDKANyD5thffwKLXQ==
+X-Received: by 2002:a5d:5302:: with SMTP id e2mr34260687wrv.345.1566302255317;
+        Tue, 20 Aug 2019 04:57:35 -0700 (PDT)
+Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id v124sm14321570wmf.23.2019.08.20.04.57.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 20 Aug 2019 04:57:34 -0700 (PDT)
+Date:   Tue, 20 Aug 2019 13:57:32 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-fsdevel@vger.kernel.org, adilger@dilger.ca,
+        jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu,
+        rpeterso@redhat.com, linux-xfs@vger.kernel.org, dhowells@redhat.com
+Subject: Re: [PATCH 2/9] cachefiles: drop direct usage of ->bmap method.
+Message-ID: <20190820115731.bed7gwfygk66nj43@pegasus.maiolino.io>
+Mail-Followup-To: Christoph Hellwig <hch@lst.de>,
+        linux-fsdevel@vger.kernel.org, adilger@dilger.ca,
+        jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu,
+        rpeterso@redhat.com, linux-xfs@vger.kernel.org, dhowells@redhat.com
+References: <20190808082744.31405-1-cmaiolino@redhat.com>
+ <20190808082744.31405-3-cmaiolino@redhat.com>
+ <20190814111535.GC1885@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190820011210.GP7777@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190814111535.GC1885@lst.de>
+User-Agent: NeoMutt/20180716
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 20, 2019 at 11:12:10AM +1000, Dave Chinner wrote:
-> On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
-> > On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
-> > 
-> > > So that leaves just the normal close() syscall exit case, where the
-> > > application has full control of the order in which resources are
-> > > released. We've already established that we can block in this
-> > > context.  Blocking in an interruptible state will allow fatal signal
-> > > delivery to wake us, and then we fall into the
-> > > fatal_signal_pending() case if we get a SIGKILL while blocking.
-> > 
-> > The major problem with RDMA is that it doesn't always wait on close() for the
-> > MR holding the page pins to be destoyed. This is done to avoid a
-> > deadlock of the form:
-> > 
-> >    uverbs_destroy_ufile_hw()
-> >       mutex_lock()
-> >        [..]
-> >         mmput()
-> >          exit_mmap()
-> >           remove_vma()
-> >            fput();
-> >             file_operations->release()
+On Wed, Aug 14, 2019 at 01:15:35PM +0200, Christoph Hellwig wrote:
+> On Thu, Aug 08, 2019 at 10:27:37AM +0200, Carlos Maiolino wrote:
+> > +	block = page->index;
+> > +	block <<= shift;
 > 
-> I think this is wrong, and I'm pretty sure it's an example of why
-> the final __fput() call is moved out of line.
+> Can't this cause overflows?
 
-Yes, I think so too, all I can say is this *used* to happen, as we
-have special code avoiding it, which is the code that is messing up
-Ira's lifetime model.
+Hmm, I honestly don't know. I did look at the code, and I couldn't really spot
+anything concrete.
 
-Ira, you could try unraveling the special locking, that solves your
-lifetime issues?
+Maybe if the block size is much smaller than PAGE_SIZE, but I am really not
+sure.
 
-Jason
+Bear in mind though, I didn't change the logic here at all. I just reused one
+variable instead of juggling both (block0 and block) old variables. So, if this
+really can overflow, the code is already buggy even without my patch, I'm CC'ing
+dhowells just in case.
+
+
+> 
+> > +
+> > +	ret = bmap(inode, &block);
+> > +	ASSERT(!ret);
+> 
+> I think we want some real error handling here instead of just an
+> assert..
+
+I left this ASSERT() here, to match the current logic. By now, the only error we
+can get is -EINVAL, which basically says ->bmap() method does not exist, which
+is basically what does happen today with:
+
+ASSERT(inode->i_mapping->a_ops->bmap);
+
+
+But I do agree, it will be better to provide some sort of error handling here,
+maybe I should do something like:
+
+ASSERT(ret == -EINVAL)
+
+to keep the logic exactly the same and do not blow up in the future if/when we
+expand possible error values from bmap()
+
+What you think?
+
+-- 
+Carlos
