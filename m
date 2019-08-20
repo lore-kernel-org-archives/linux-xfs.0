@@ -2,95 +2,72 @@ Return-Path: <SRS0=kQBn=WQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27D1AC3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 12:23:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40861C3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 12:28:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F3B3322DBF
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 12:23:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0C95122DA7
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 12:28:51 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Sb8IcfXu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729712AbfHTMXE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 08:23:04 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51010 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729155AbfHTMXE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Aug 2019 08:23:04 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EB46AA35FE0;
-        Tue, 20 Aug 2019 12:23:03 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 482AB1001B11;
-        Tue, 20 Aug 2019 12:23:02 +0000 (UTC)
-Date:   Tue, 20 Aug 2019 08:23:00 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     kaixuxia <xiakaixu1987@gmail.com>, linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH V2] xfs: Fix agi&agf ABBA deadlock when performing rename
- with RENAME_WHITEOUT flag
-Message-ID: <20190820122300.GB14307@bfoster>
-References: <8eda2397-b7fb-6dd4-a448-a81628b48edc@gmail.com>
- <20190819151335.GB2875@bfoster>
- <718fa074-2c33-280e-c664-6afcc3bfe777@gmail.com>
- <20190820080741.GE1119@dread.disaster.area>
- <62649c5f-5390-8887-fe95-4f873af62804@gmail.com>
- <20190820105101.GA14307@bfoster>
- <20190820112304.GF1119@dread.disaster.area>
+        id S1729923AbfHTM2q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 08:28:46 -0400
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:36712 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728771AbfHTM2q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 08:28:46 -0400
+Received: by mail-wm1-f66.google.com with SMTP id g67so2496136wme.1;
+        Tue, 20 Aug 2019 05:28:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=tSR8sb1uotjnjfdOyV2jp4tciGn/c2mOxbn+GtlfYOs=;
+        b=Sb8IcfXuDfRdmyL0CRWnFamS5vXoAjqTViv3zIBCL7F76sefcdcrviBEAfc8hUN6mY
+         3T2bTygs2djOmtPhghEO8PRH2iKMYaNCw9HCKu3MztXx0199Y3m3lZm7qg1ygnF5ZipV
+         9zTNPxjLh3mxv/gSW7AFCAFg96NijzXXkpMMfyZz9iK9Gu8BRzkt5jsP6rSh45v6mZaD
+         1Mp00pCMqRSNjKv24+RZJwwcK2onM8os9c3AzSupDq/Y6Tuboo7p5U9mMSviFfCMGbyH
+         4/mgJa/JCVh7gCKrE/mr+4oGqLmlc/13oohkYaUKNtCUmwcT0ufYIDDwRe4pOWb9o4KN
+         lcbg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=tSR8sb1uotjnjfdOyV2jp4tciGn/c2mOxbn+GtlfYOs=;
+        b=FaMCm9tr2jksjCKWASEHmgRjWJ6XAE1RI0zxJp/GHsPdP4OhGFrGg38qam+hnNiuFZ
+         Kkx/LAWajyEL/QACoibwbQbhPZKF9PsR0yTzx3s9evK1c9wSz/s07TNHoNPVHON3dIrO
+         XQaet/EcnUPlVdCoktN8EjUAy+OGuYSKblikpQYRWIh5rjeJMMLcGjes6qWTUAPZTdx+
+         +02wCCingD+LaUTrzTbQ6XGvk1qwdlKveefr2noa8fu9YLn5/I1mEp7OyitaDKRR2y3i
+         JvTbq8zf/ZIX/1SH6wEs1MJKa/ZkwsJ49NCIafYVMQU2poQ4jv4ek+T9xZgEh+O466c7
+         DSEw==
+X-Gm-Message-State: APjAAAUX53w8VbFdei8PAuQEJ/6cAnPB9JHbAIcSXg6NN/SL09kmh5g4
+        /eJbzBw9qXfboHUzHuS2ItmeQUMP6KCQHLe0RFrBmMcc
+X-Google-Smtp-Source: APXvYqyRVbaXH5E+zsLwPDG0vuC0U7wlFSG7bKGWfN7PgLa4N/DQBhMBCHvfrfvM80hn+6Il6g7uH/noqPunFBw5Yzk=
+X-Received: by 2002:a1c:dd8a:: with SMTP id u132mr498571wmg.1.1566304123445;
+ Tue, 20 Aug 2019 05:28:43 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190820112304.GF1119@dread.disaster.area>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Tue, 20 Aug 2019 12:23:04 +0000 (UTC)
+References: <20190818165817.32634-1-deepa.kernel@gmail.com>
+ <20190818165817.32634-7-deepa.kernel@gmail.com> <CAK+_RLmK0Vy79giAZnUCmmivvRT+GLZXyiMqBoFB0_Ed1W8BkA@mail.gmail.com>
+In-Reply-To: <CAK+_RLmK0Vy79giAZnUCmmivvRT+GLZXyiMqBoFB0_Ed1W8BkA@mail.gmail.com>
+From:   Tigran Aivazian <aivazian.tigran@gmail.com>
+Date:   Tue, 20 Aug 2019 13:28:32 +0100
+Message-ID: <CAK+_RL=ZK40XWY_c8wskAwNw8-Q3DY-+B0GoYo0JEVmqxYD7ig@mail.gmail.com>
+Subject: Re: [PATCH v8 06/20] fs: Fill in max and min timestamps in superblock
+To:     Deepa Dinamani <deepa.kernel@gmail.com>
+Cc:     LKML <linux-kernel@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs@vger.kernel.org, linux-mtd@lists.infradead.org,
+        reiserfs-devel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 20, 2019 at 09:23:04PM +1000, Dave Chinner wrote:
-> On Tue, Aug 20, 2019 at 06:51:01AM -0400, Brian Foster wrote:
-> > On Tue, Aug 20, 2019 at 04:53:22PM +0800, kaixuxia wrote:
-> > FWIW if we do take that approach, then IMO it's worth reconsidering the
-> > 1-2 liner I originally proposed to fix the locking. It's slightly hacky,
-> > but really all three options are hacky in slightly different ways. The
-> > flipside is it's trivial to implement, review and backport and now would
-> > be removed shortly thereafter when we replace the on-disk whiteout with
-> > the in-core fake whiteout thing. Just my .02 though..
-> 
-> We've got to keep the existing whiteout method around for,
-> essentially, forever, because we have to support kernels that don't
-> do in-memory translations of DT_WHT to a magic chardev inode and
-> vice versa (i.e. via mknod). IOWs, we'll need a feature bit to
-> indicate that we actually have DT_WHT based whiteouts on disk.
-> 
-
-I'm not quite following (probably just because I'm not terribly familiar
-with the use case). If current kernels know how to fake up whiteout
-inodes in memory based on a dentry, why do we need to continue to create
-new on-disk whiteout inodes just because a filesystem might already have
-such inodes on disk? Wouldn't the old format whiteouts just continue to
-work as expected without any extra handling?
-
-I can see needing a feature bit to restrict a filesystem from being used
-on an unsupported, older kernel, but is there a reason we wouldn't just
-enable that by default anyways?
-
-Brian
-
-> So we may as well fix this properly now by restructuring the code as
-> we will still have to maintain this functionality for a long time to
-> come.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+I see no problems for BFS.
+Acked-By: Tigran Aivazian <aivazian.tigran@gmail.com>
