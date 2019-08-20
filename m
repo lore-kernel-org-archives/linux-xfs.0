@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90027C3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 208B5C3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:32:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6118622DD3
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA2D82332A
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LodEkLO5"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jHuY6sEQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730619AbfHTUbx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 16:31:53 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:43378 "EHLO
+        id S1730681AbfHTUb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 16:31:59 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:43506 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730501AbfHTUbw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 16:31:52 -0400
+        with ESMTP id S1730501AbfHTUb7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 16:31:59 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKSvwi165915;
-        Tue, 20 Aug 2019 20:31:50 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKT1Ib165933;
+        Tue, 20 Aug 2019 20:31:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=oFSuHYvWrbt90dE0qxE+iaFJdENw72o334nkDq6mwSw=;
- b=LodEkLO5eNnsz9L8mTcAvIXuQe45K5QPjn8T2kkkKVlOVJ6rcboC2Qm65wpAZuoWSThV
- 80PD9QrcbewTrvrG674YMwnD5hhYeHN2PInfrNuHRqj1s7JxlEmQC0HJkQRUV1GlTMuq
- xLB2D91uHzg8+LQFOKPiSYHNX8eI8e3TGcqwdZsbRgfabUrljro5j9Mwop5eR0Ehq6Cx
- 8S3xwt8q+b/G9Ixcmb15dfZVm8600RP0H2bodwGIBpsutSs8qvE0jSS/CfrQoOyx19z/
- sVC4XZPw4Sf+ZukCkURwwYMoMhxcDDm5SZV7z/QGevtyvYYcfeb6j2c4L4waOee4SOyq DA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2uea7qs0j8-1
+ bh=4uKhtbd+qizFfa6vZxLzkxuZlnU1dqqYB5ij1qL4O3Y=;
+ b=jHuY6sEQK8Zn7QaXr9l81lsxpr9RS2/A9l2HSRn4sIeNBbc5CodcSMjQsfAdgFQ5sGWZ
+ e4py3VzAiLbO6k9XhdUsqzf58xTUadhBTDCT3DtRX7wfPhSuNSGOeAC8Ha1NFav1Ckp1
+ iY0Em47ScW6jcq0OQMavHm+RsxdvyWPkA0AoWX5xlo8GadlEnnXihKnoaTSsPX/4K30z
+ hxiHYVwOwk6dEiZuvVDolqlxAltBrqnGx4/y2JUkr/b+KGCVPzYi2+cCtP+23o2ofdsl
+ CboOzPReJzuo3161yabZwdMn7GmyOfQ3Am8YNophDi+O8p3S7qdQdl4Mg2PACfkrE2t/ dw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2uea7qs0jw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 20:31:50 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKTLWA191139;
-        Tue, 20 Aug 2019 20:31:49 GMT
+        Tue, 20 Aug 2019 20:31:56 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKTSYt104732;
+        Tue, 20 Aug 2019 20:31:56 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2ugj7p4sqt-1
+        by userp3020.oracle.com with ESMTP id 2ug269648r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 20:31:49 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7KKVn9M019982;
-        Tue, 20 Aug 2019 20:31:49 GMT
+        Tue, 20 Aug 2019 20:31:56 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7KKVtRx020009;
+        Tue, 20 Aug 2019 20:31:55 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 20 Aug 2019 13:31:49 -0700
-Subject: [PATCH 06/12] man: document the new allocation group geometry ioctl
+        with ESMTP ; Tue, 20 Aug 2019 13:31:55 -0700
+Subject: [PATCH 07/12] man: document the new health reporting fields in
+ various ioctls
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 20 Aug 2019 13:31:48 -0700
-Message-ID: <156633310832.1215978.10494838202211430225.stgit@magnolia>
+Date:   Tue, 20 Aug 2019 13:31:54 -0700
+Message-ID: <156633311435.1215978.5608220966246380465.stgit@magnolia>
 In-Reply-To: <156633307176.1215978.17394956977918540525.stgit@magnolia>
 References: <156633307176.1215978.17394956977918540525.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,111 +81,225 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Document the new ioctl to describe an allocation group's geometry.
+Update the manpages to conver the new health reporting fields in the
+fs geometry, ag geometry, and bulkstat ioctls.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- man/man2/ioctl_xfs_ag_geometry.2 |   74 ++++++++++++++++++++++++++++++++++++++
- man/man3/xfsctl.3                |    6 +++
- 2 files changed, 80 insertions(+)
- create mode 100644 man/man2/ioctl_xfs_ag_geometry.2
+ man/man2/ioctl_xfs_ag_geometry.2   |   48 +++++++++++++++++++++++++++++++
+ man/man2/ioctl_xfs_fsbulkstat.2    |   52 +++++++++++++++++++++++++++++++++
+ man/man2/ioctl_xfs_fsop_geometry.2 |   56 +++++++++++++++++++++++++++++++++++-
+ 3 files changed, 154 insertions(+), 2 deletions(-)
 
 
 diff --git a/man/man2/ioctl_xfs_ag_geometry.2 b/man/man2/ioctl_xfs_ag_geometry.2
-new file mode 100644
-index 00000000..5dfe0d08
---- /dev/null
+index 5dfe0d08..cf6aec1d 100644
+--- a/man/man2/ioctl_xfs_ag_geometry.2
 +++ b/man/man2/ioctl_xfs_ag_geometry.2
-@@ -0,0 +1,74 @@
-+.\" Copyright (c) 2019, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" SPDX-License-Identifier: GPL-2.0+
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-AG-GEOMETRY 2 2019-04-11 "XFS"
-+.SH NAME
-+ioctl_xfs_ag_geometry \- query XFS allocation group geometry information
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.PP
-+.BI "int ioctl(int " fd ", XFS_IOC_AG_GEOMETRY, struct xfs_ag_geometry *" arg );
-+.SH DESCRIPTION
-+This XFS ioctl retrieves the geometry information for a given allocation group.
-+The geometry information is conveyed in a structure of the following form:
-+.PP
-+.in +4n
-+.nf
-+struct xfs_ag_geometry {
-+	uint32_t  ag_number;
-+	uint32_t  ag_length;
-+	uint32_t  ag_freeblks;
-+	uint32_t  ag_icount;
-+	uint32_t  ag_ifree;
-+	uint32_t  ag_sick;
-+	uint32_t  ag_checked;
-+	uint32_t  ag_reserved32;
-+	uint64_t  ag_reserved[12];
-+};
-+.fi
-+.in
-+.TP
-+.I ag_number
-+The number of allocation group that the caller wishes to learn about.
-+.TP
-+.I ag_length
-+Length of the allocation group, in units of filesystem blocks.
-+.TP
-+.I ag_freeblks
-+Number of free blocks in the allocation group, in units of filesystem blocks.
-+.TP
-+.I ag_icount
-+Number of inode records allocated in this allocation group.
-+.TP
-+.I ag_ifree
-+Number of unused inode records (of the space allocated) in this allocation
-+group.
-+.TP
-+.IR ag_reserved " and " ag_reserved32
-+Will be set to zero.
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EFSBADCRC
-+Metadata checksum validation failed while performing the query.
-+.TP
-+.B EFSCORRUPTED
-+Metadata corruption was encountered while performing the query.
-+.TP
-+.B EINVAL
-+The specified allocation group number is not valid for this filesystem.
-+.TP
-+.B EIO
-+An I/O error was encountered while performing the query.
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH SEE ALSO
-+.BR ioctl (2)
-diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-index 7e6588b8..dfebd12d 100644
---- a/man/man3/xfsctl.3
-+++ b/man/man3/xfsctl.3
-@@ -336,6 +336,12 @@ See
- .BR ioctl_xfs_fsop_geometry (2)
- for more information.
- 
-+.TP
-+.B XFS_IOC_AG_GEOMETRY
-+See
-+.BR ioctl_xfs_ag_geometry (2)
-+for more information.
-+
+@@ -49,6 +49,54 @@ group.
  .TP
- .BR XFS_IOC_FSBULKSTAT " or " XFS_IOC_FSBULKSTAT_SINGLE
- See
+ .IR ag_reserved " and " ag_reserved32
+ Will be set to zero.
++.PP
++The fields
++.IR ag_sick " and " ag_checked
++indicate the relative health of various allocation group metadata:
++.IP \[bu] 2
++If a given sick flag is set in
++.IR ag_sick ,
++then that piece of metadata has been observed to be damaged.
++The same bit will be set in
++.IR ag_checked .
++.IP \[bu]
++If a given sick flag is set in
++.I ag_checked
++and is not set in
++.IR ag_sick ,
++then that piece of metadata has been checked and is not faulty.
++.IP \[bu]
++If a given sick flag is not set in
++.IR ag_checked ,
++then no conclusion can be made.
++.PP
++The following flags apply to these fields:
++.RS 0.4i
++.TP
++.B XFS_AG_GEOM_SICK_SB
++Allocation group superblock.
++.TP
++.B XFS_AG_GEOM_SICK_AGF
++Free space header.
++.TP
++.B XFS_AG_GEOM_SICK_AGFL
++Free space reserve list.
++.TP
++.B XFS_AG_GEOM_SICK_AGI
++Inode header.
++.TP
++.BR XFS_AG_GEOM_SICK_BNOBT " or " XFS_AG_GEOM_SICK_CNTBT
++Free space btrees.
++.TP
++.BR XFS_AG_GEOM_SICK_INOBT " or " XFS_AG_GEOM_SICK_FINOBT
++Inode btrees.
++.TP
++.B XFS_AG_GEOM_SICK_RMAPBT
++Reverse mapping btree.
++.TP
++.B XFS_AG_GEOM_SICK_REFCNTBT
++Reference count btree.
++.RE
+ .SH RETURN VALUE
+ On error, \-1 is returned, and
+ .I errno
+diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
+index a8b22dc4..3e13cfa8 100644
+--- a/man/man2/ioctl_xfs_fsbulkstat.2
++++ b/man/man2/ioctl_xfs_fsbulkstat.2
+@@ -94,7 +94,9 @@ struct xfs_bstat {
+ 	__u16             bs_projid_lo;
+ 	__u16             bs_forkoff;
+ 	__u16             bs_projid_hi;
+-	unsigned char     bs_pad[6];
++	uint16_t          bs_sick;
++	uint16_t          bs_checked;
++	unsigned char     bs_pad[2];
+ 	__u32             bs_cowextsize;
+ 	__u32             bs_dmevmask;
+ 	__u16             bs_dmstate;
+@@ -184,6 +186,54 @@ is unused on Linux.
+ .I bs_aextents
+ is the number of storage mappings associated with this file's extended
+ attributes.
++.PP
++The fields
++.IR bs_sick " and " bs_checked
++indicate the relative health of various allocation group metadata:
++.IP \[bu] 2
++If a given sick flag is set in
++.IR bs_sick ,
++then that piece of metadata has been observed to be damaged.
++The same bit should be set in
++.IR bs_checked .
++.IP \[bu]
++If a given sick flag is set in
++.I bs_checked
++but is not set in
++.IR bs_sick ,
++then that piece of metadata has been checked and is not faulty.
++.IP \[bu]
++If a given sick flag is not set in
++.IR bs_checked ,
++then no conclusion can be made.
++.PP
++The following flags apply to these fields:
++.RS 0.4i
++.TP
++.B XFS_BS_SICK_INODE
++The inode's record itself.
++.TP
++.B XFS_BS_SICK_BMBTD
++File data extent mappings.
++.TP
++.B XFS_BS_SICK_BMBTA
++Extended attribute extent mappings.
++.TP
++.B XFS_BS_SICK_BMBTC
++Copy on Write staging extent mappings.
++.TP
++.B XFS_BS_SICK_DIR
++Directory information.
++.TP
++.B XFS_BS_SICK_XATTR
++Extended attribute data.
++.TP
++.B XFS_BS_SICK_SYMLINK
++Symbolic link target.
++.TP
++.B XFS_BS_SICK_PARENT
++Parent pointers.
++.RE
+ .SH RETURN VALUE
+ On error, \-1 is returned, and
+ .I errno
+diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsop_geometry.2
+index 365bda8b..a35bbaeb 100644
+--- a/man/man2/ioctl_xfs_fsop_geometry.2
++++ b/man/man2/ioctl_xfs_fsop_geometry.2
+@@ -47,7 +47,9 @@ struct xfs_fsop_geom {
+ 	__u32         logsunit;
+ 	/* struct xfs_fsop_geom_v4 stops here. */
+ 
+-	__u64         reserved[18];
++	__u32         sick;
++	__u32         checked;
++	__u64         reserved[17];
+ };
+ .fi
+ .in
+@@ -130,6 +132,13 @@ This field is meaningful only if the flag
+ .B  XFS_FSOP_GEOM_FLAGS_LOGV2
+ is set.
+ .PP
++The fields
++.IR sick " and " checked
++indicate the relative health of various whole-filesystem metadata.
++Please see the section
++.B XFS METADATA HEALTH REPORTING
++for more details.
++.PP
+ .I reserved
+ is set to zero.
+ .SH FILESYSTEM FEATURE FLAGS
+@@ -203,6 +212,51 @@ Filesystem stores reverse mappings of blocks to owners.
+ .B XFS_FSOP_GEOM_FLAGS_REFLINK
+ Filesystem supports sharing blocks between files.
+ .RE
++.SH XFS METADATA HEALTH REPORTING
++.PP
++The online filesystem checking utility scans metadata and records what it
++finds in the kernel incore state.
++The following scheme is used for userspace to read the incore health status
++of the filesystem:
++
++.IP \[bu] 2
++If a given sick flag is set in
++.IR sick ,
++then that piece of metadata has been observed to be damaged.
++The same bit should be set in
++.IR checked .
++.IP \[bu]
++If a given sick flag is set in
++.I checked
++but is not set in
++.IR sick ,
++then that piece of metadata has been checked and is not faulty.
++.IP \[bu]
++If a given sick flag is not set in
++.IR checked ,
++then no conclusion can be made.
++.PP
++The following flags apply to these fields:
++.RS 0.4i
++.TP
++.B XFS_FSOP_GEOM_SICK_COUNTERS
++Inode and space summary counters.
++.TP
++.B XFS_FSOP_GEOM_SICK_UQUOTA
++User quota information.
++.TP
++.B XFS_FSOP_GEOM_SICK_GQUOTA
++Group quota information.
++.TP
++.B XFS_FSOP_GEOM_SICK_PQUOTA
++Project quota information.
++.TP
++.B XFS_FSOP_GEOM_SICK_RT_BITMAP
++Free space bitmap for the realtime device.
++.TP
++.B XFS_FSOP_GEOM_SICK_RT_SUMMARY
++Free space summary for the realtime device.
++.RE
+ 
+ .SH RETURN VALUE
+ On error, \-1 is returned, and
 
