@@ -2,101 +2,135 @@ Return-Path: <SRS0=kQBn=WQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F05CFC3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 22:08:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9577AC3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 22:14:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C9B0C206DD
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 22:08:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E0CB206DD
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 22:14:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730931AbfHTWIl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 18:08:41 -0400
-Received: from mga17.intel.com ([192.55.52.151]:23905 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730092AbfHTWIl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Aug 2019 18:08:41 -0400
-X-Amp-Result: SKIPPED(no attachment in message)
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 15:08:40 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,410,1559545200"; 
-   d="scan'208";a="180837181"
-Received: from fmsmsx108.amr.corp.intel.com ([10.18.124.206])
-  by orsmga003.jf.intel.com with ESMTP; 20 Aug 2019 15:08:40 -0700
-Received: from fmsmsx116.amr.corp.intel.com (10.18.116.20) by
- FMSMSX108.amr.corp.intel.com (10.18.124.206) with Microsoft SMTP Server (TLS)
- id 14.3.439.0; Tue, 20 Aug 2019 15:08:39 -0700
-Received: from fmsmsx113.amr.corp.intel.com ([169.254.13.127]) by
- fmsmsx116.amr.corp.intel.com ([169.254.2.181]) with mapi id 14.03.0439.000;
- Tue, 20 Aug 2019 15:08:39 -0700
-From:   "Verma, Vishal L" <vishal.l.verma@intel.com>
-To:     "david@fromorbit.com" <david@fromorbit.com>,
-        "ming.lei@redhat.com" <ming.lei@redhat.com>
-CC:     "hch@lst.de" <hch@lst.de>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "Williams, Dan J" <dan.j.williams@intel.com>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>
-Subject: Re: 5.3-rc1 regression with XFS log recovery
-Thread-Topic: 5.3-rc1 regression with XFS log recovery
-Thread-Index: AQHVVHWHW9jyoVVDjkW5IFS3q2GBzqcA9LwAgAAIcACAAKWeAIAAbhuAgAA90wCAAAYTAIAAAzOAgAABtICAAAMbAIABkriAgAAUDACAACclAIAAE9WAgADOroCAAAbXAA==
-Date:   Tue, 20 Aug 2019 22:08:38 +0000
-Message-ID: <85bde038615a6a82d79708fd04944671ca8580c5.camel@intel.com>
-References: <20190819000831.GX6129@dread.disaster.area>
-         <20190819034948.GA14261@lst.de> <20190819041132.GA14492@lst.de>
-         <20190819042259.GZ6129@dread.disaster.area> <20190819042905.GA15613@lst.de>
-         <20190819044012.GA15800@lst.de> <20190820044135.GC1119@dread.disaster.area>
-         <20190820055320.GB27501@lst.de> <20190820081325.GA21032@ming.t460p>
-         <20190820092424.GB21032@ming.t460p>
-         <20190820214408.GG1119@dread.disaster.area>
-In-Reply-To: <20190820214408.GG1119@dread.disaster.area>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-user-agent: Evolution 3.30.5 (3.30.5-1.fc29) 
-x-originating-ip: [10.232.112.185]
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <C3DC649C046C4A47BED7A667C3C8711A@intel.com>
-Content-Transfer-Encoding: base64
+        id S1729887AbfHTWOt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 18:14:49 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59336 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728283AbfHTWOs (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 18:14:48 -0400
+Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 2466C43D7C3;
+        Wed, 21 Aug 2019 08:14:45 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i0CNl-00014Y-Jd; Wed, 21 Aug 2019 08:13:37 +1000
+Date:   Wed, 21 Aug 2019 08:13:37 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     kaixuxia <xiakaixu1987@gmail.com>, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+Subject: Re: [PATCH V2] xfs: Fix agi&agf ABBA deadlock when performing rename
+ with RENAME_WHITEOUT flag
+Message-ID: <20190820221337.GH1119@dread.disaster.area>
+References: <8eda2397-b7fb-6dd4-a448-a81628b48edc@gmail.com>
+ <20190819151335.GB2875@bfoster>
+ <718fa074-2c33-280e-c664-6afcc3bfe777@gmail.com>
+ <20190820080741.GE1119@dread.disaster.area>
+ <62649c5f-5390-8887-fe95-4f873af62804@gmail.com>
+ <20190820105101.GA14307@bfoster>
+ <20190820112304.GF1119@dread.disaster.area>
+ <20190820122300.GB14307@bfoster>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190820122300.GB14307@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=7-415B0cAAAA:8 a=fj9TDP3gWvWqASHTkgkA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-T24gV2VkLCAyMDE5LTA4LTIxIGF0IDA3OjQ0ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
-IA0KPiBIb3dldmVyLCB0aGUgY2FzZSBoZXJlIGlzIHRoYXQ6DQo+IA0KPiA+ID4gPiA+IGkuZS4g
-cGFnZQkJb2Zmc2V0CWxlbglzZWN0b3INCj4gPiA+ID4gPiAwMDAwMDAwMGE3N2YwMTQ2CTc2OAkz
-MzI4CTB4N2QwMDQ4DQo+ID4gPiA+ID4gMDAwMDAwMDA2Y2VjYTkxZQkwCTc2OAkweDdkMDA0ZQ0K
-PiANCj4gVGhlIHNlY29uZCBwYWdlIGFkZGVkIHRvIHRoZSBidmVjIGlzIGFjdHVhbGx5IG9mZnNl
-dCBhbGlnbmVkci4gSGVuY2UNCj4gdGhlIGNoZWNrIHdvdWxkIGRvIG5vdGhpbmcgb24gdGhlIGZp
-cnN0IHBhZ2UgYmVjYXVzZSB0aGUgYnZlYyBhcnJheQ0KPiBpcyBlbXB0eSAoc28gZ29lcyBpbnRv
-IGEgbmV3IGJ2ZWMgYW55d2F5KSwgYW5kIHRoZSBjaGVjayBvbiB0aGUNCj4gc2Vjb25kIHBhZ2Ug
-d291bGQgZG8gbm90aGluZyBhbiBpdCB3b3VsZCBtZXJnZSB3aXRoIGZpcnN0IGJlY2F1c2UNCj4g
-dGhlIG9mZnNldCBpcyBhbGlnbmVkIGNvcnJlY3RseS4gSW4gYm90aCBjYXNlcywgdGhlIGxlbmd0
-aCBvZiB0aGUNCj4gc2VnbWVudCBpcyBub3QgYWxpZ25lZCwgc28gdGhhdCBuZWVkcyB0byBiZSBj
-aGVja2VkLCB0b28uDQo+IA0KPiBJT1dzLCBJIHRoaW5rIHRoZSBjaGVjayBuZWVkcyB0byBiZSBp
-biBiaW9fYWRkX3BhZ2UsIGl0IG5lZWRzIHRvDQo+IGNoZWNrIGJvdGggdGhlIG9mZnNldCBhbmQg
-bGVuZ3RoIGZvciBhbGlnbm1lbnQsIGFuZCBpdCBuZWVkcyB0byBncmFiDQo+IHRoZSBhbGlnbm1l
-bnQgZnJvbSBxdWV1ZV9kbWFfYWxpZ25tZW50KCksIG5vdCB1c2UgYSBoYXJkIGNvZGVkIHZhbHVl
-DQo+IG9mIDUxMS4NCj4gDQpTbyBzb21ldGhpbmcgbGlrZSB0aGlzPw0KDQpkaWZmIC0tZ2l0IGEv
-YmxvY2svYmlvLmMgYi9ibG9jay9iaW8uYw0KaW5kZXggMjk5YTBlNzY1MWVjLi44MGY0NDlkMjNl
-NWEgMTAwNjQ0DQotLS0gYS9ibG9jay9iaW8uYw0KKysrIGIvYmxvY2svYmlvLmMNCkBAIC04MjIs
-OCArODIyLDEyIEBAIEVYUE9SVF9TWU1CT0xfR1BMKF9fYmlvX2FkZF9wYWdlKTsNCiBpbnQgYmlv
-X2FkZF9wYWdlKHN0cnVjdCBiaW8gKmJpbywgc3RydWN0IHBhZ2UgKnBhZ2UsDQogICAgICAgICAg
-ICAgICAgIHVuc2lnbmVkIGludCBsZW4sIHVuc2lnbmVkIGludCBvZmZzZXQpDQogew0KKyAgICAg
-ICBzdHJ1Y3QgcmVxdWVzdF9xdWV1ZSAqcSA9IGJpby0+YmlfZGlzay0+cXVldWU7DQogICAgICAg
-IGJvb2wgc2FtZV9wYWdlID0gZmFsc2U7DQogDQorICAgICAgIGlmIChvZmZzZXQgJiBxdWV1ZV9k
-bWFfYWxpZ25tZW50KHEpIHx8IGxlbiAmIHF1ZXVlX2RtYV9hbGlnbm1lbnQocSkpDQorICAgICAg
-ICAgICAgICAgcmV0dXJuIDA7DQorDQogICAgICAgIGlmICghX19iaW9fdHJ5X21lcmdlX3BhZ2Uo
-YmlvLCBwYWdlLCBsZW4sIG9mZnNldCwgJnNhbWVfcGFnZSkpIHsNCiAgICAgICAgICAgICAgICBp
-ZiAoYmlvX2Z1bGwoYmlvLCBsZW4pKQ0KICAgICAgICAgICAgICAgICAgICAgICAgcmV0dXJuIDA7
-DQoNCkkgdHJpZWQgdGhpcywgYnV0IHRoZSAnbW91bnQnIGp1c3QgaGFuZ3MgLSB3aGljaCBsb29r
-cyBsaWtlIGl0IG1pZ2h0IGJlDQpkdWUgdG8geGZzX3J3X2JkZXYoKSBkb2luZzoNCg0KICB3aGls
-ZSAoYmlvX2FkZF9wYWdlKGJpbywgcGFnZSwgbGVuLCBvZmYpICE9IGxlbikgew0KICAJLi4uDQoN
-Cg==
+On Tue, Aug 20, 2019 at 08:23:00AM -0400, Brian Foster wrote:
+> On Tue, Aug 20, 2019 at 09:23:04PM +1000, Dave Chinner wrote:
+> > On Tue, Aug 20, 2019 at 06:51:01AM -0400, Brian Foster wrote:
+> > > On Tue, Aug 20, 2019 at 04:53:22PM +0800, kaixuxia wrote:
+> > > FWIW if we do take that approach, then IMO it's worth reconsidering the
+> > > 1-2 liner I originally proposed to fix the locking. It's slightly hacky,
+> > > but really all three options are hacky in slightly different ways. The
+> > > flipside is it's trivial to implement, review and backport and now would
+> > > be removed shortly thereafter when we replace the on-disk whiteout with
+> > > the in-core fake whiteout thing. Just my .02 though..
+> > 
+> > We've got to keep the existing whiteout method around for,
+> > essentially, forever, because we have to support kernels that don't
+> > do in-memory translations of DT_WHT to a magic chardev inode and
+> > vice versa (i.e. via mknod). IOWs, we'll need a feature bit to
+> > indicate that we actually have DT_WHT based whiteouts on disk.
+> > 
+> 
+> I'm not quite following (probably just because I'm not terribly familiar
+> with the use case). If current kernels know how to fake up whiteout
+> inodes in memory based on a dentry, why do we need to continue to create
+> new on-disk whiteout inodes just because a filesystem might already have
+> such inodes on disk?
+
+We don't, unless there's a chance the filesystem will be booted
+again on an older kernel. So it's a one-way conversion: once we
+start using DT_WHT based whiteouts, there is no going back.
+
+> Wouldn't the old format whiteouts just continue to
+> work as expected without any extra handling?
+
+Yes, but that's not the problem. It's forwards compatibility that
+matters here.  i.e. upgrade a kernel, something doesn't work, roll
+back to older kernel. Everything should work if the feature set on
+the filesystem is unchanged, even though the filesystem was used
+with a newer kernel.
+
+If the newer kernel has done something on disk that the older kernel
+does not understand (e.g. using DT_WHT based whiteouts), then the
+newer kernel must mark the filesystem with a feature bit to prevent
+the older kernel from doing the wrong thing with the format it
+doesn't exect to see. Mis-parsing a whiteout and not applying it
+correctly is a stale data exposure security bug, so we have to be
+careful here.
+
+Existing kernels don't know how to take a DT_WHT whiteout and fake
+up a magical chardev inode. Hence DT_WHT whiteouts will not work
+correctly on current kernels, even though we have DT_WHT in the dir
+ftype feature (and hence available on both v4 and v5 filesystems).
+i.e. the issue here is the VFS has defined the on-disk whiteout
+format, and we want the on-disk storage from chardev inodes to
+DT_WHT. Hence we need a feature bit because we are changing the
+method of storing whiteouts on disk, even though we
+-technically- aren't changing the _XFS_ on-disk format.
+
+Think of it as though DT_WHT support doesn't exist in XFS, and now
+we are going to add it...
+
+> I can see needing a feature bit to restrict a filesystem from being used
+> on an unsupported, older kernel, but is there a reason we wouldn't just
+> enable that by default anyways?
+
+Rule #1: Never enable new on-disk feature bits by default
+
+:)
+
+Yes, in future we can decide to automatically enable the feature bit
+in the kernel code, but that's not something we can do until kernel
+support for the DT_WHT based whiteouts is already widespread as it's
+not a backwards compatible change.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
