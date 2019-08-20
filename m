@@ -2,287 +2,117 @@ Return-Path: <SRS0=kQBn=WQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C4BEC3A59E
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:32:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD7AEC3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:47:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 193232332B
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:32:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CbO6kr5j"
+	by mail.kernel.org (Postfix) with ESMTP id A8B6222DD3
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:47:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730501AbfHTUcz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 16:32:55 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:44698 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730819AbfHTUcz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 16:32:55 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKSs27165894;
-        Tue, 20 Aug 2019 20:32:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=gVvXR8f+OwcZozwmQk7It6Hvpz2uL7eV48XVncxlpEI=;
- b=CbO6kr5jflHnFwhDrlkeCnVWh2tG3kteToEVtnJs9fU2dDnbu9d8rQxYvOJGu73sHkgz
- 5YkldWAfgfE1taQQUPbzRFVTvHffIlzZzsBi/8n/eDIwCoagDwhsiMenxCPwnJ9LuiGi
- o20pJv0GwObrUatYaR1azP1UTPk/3C8kybF4Dof0co25pQ9OyTz1nqOa4kHXtah9+ySh
- RmkMgzhltIpdBMn3GM/v46ajVeOeF5nbw41QiTolHhQZ5MbPF01nnAElWAkDcDL0J0Gp
- 5eroDdfGW/WqzAtvztiQrCUGt92zNWNpba5kM4DwjfZL6/obg8w6nFWHHk30rxPI92E1 Zg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2uea7qs0ty-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 20:32:53 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKSqNt160357;
-        Tue, 20 Aug 2019 20:30:53 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2ug1g9rjmm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 20:30:52 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7KKUqpB028035;
-        Tue, 20 Aug 2019 20:30:52 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 20 Aug 2019 13:30:51 -0700
-Subject: [PATCH 3/6] libfrog: store more inode and block geometry in struct
- xfs_fd
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 20 Aug 2019 13:30:51 -0700
-Message-ID: <156633305101.1215733.5608933964901928679.stgit@magnolia>
-In-Reply-To: <156633303230.1215733.4447734852671168748.stgit@magnolia>
-References: <156633303230.1215733.4447734852671168748.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        id S1730704AbfHTUrb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 16:47:31 -0400
+Received: from sandeen.net ([63.231.237.45]:57038 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729833AbfHTUrb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Aug 2019 16:47:31 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 0E4C2182EC
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 15:47:29 -0500 (CDT)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [PATCH] xfsprogs: fix geometry calls on older kernels for 5.2.1
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <7d83cd0d-8a15-201e-9ebf-e1f859270b92@sandeen.net>
+Date:   Tue, 20 Aug 2019 15:47:29 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9355 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908200183
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9355 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908200183
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+I didn't think 5.2.0 through; the udpate of the geometry ioctl means
+that the tools won't work on older kernels that don't support the
+v5 ioctls, since I failed to merge Darrick's wrappers.
 
-Move the extra AG geometry fields out of scrub and into the libfrog code
-so that we can consolidate the geoemtry code in one place.
+As a very quick one-off I'd like to merge this to just revert every
+geometry call back to the original ioctl, so it keeps working on
+older kernels and I'll release 5.2.1.  This hack can go away when
+Darrick's wrappers get merged.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 ---
- include/xfrog.h    |   12 ++++++++++++
- libfrog/fsgeom.c   |   13 ++++++++++++-
- scrub/fscounters.c |    4 ++--
- scrub/inodes.c     |    4 ++--
- scrub/phase1.c     |    5 -----
- scrub/phase3.c     |    6 +++---
- scrub/phase5.c     |    4 ++--
- scrub/phase6.c     |    2 +-
- scrub/phase7.c     |    6 +++---
- scrub/xfs_scrub.h  |    4 ----
- 10 files changed, 37 insertions(+), 23 deletions(-)
 
+I'm a little concerned that 3rd party existing code which worked fine
+before will now get the new XFS_IOC_FSGEOMETRY definition if they get
+rebuilt, and suddenly stop working on older kernels. Am I overreacting
+or misunderstanding our compatibility goals?
 
-diff --git a/include/xfrog.h b/include/xfrog.h
-index f3808911..d11317f7 100644
---- a/include/xfrog.h
-+++ b/include/xfrog.h
-@@ -30,6 +30,18 @@ struct xfs_fd {
- 
- 	/* filesystem geometry */
- 	struct xfs_fsop_geom	fsgeom;
+diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+index f1158a79..253b706c 100644
+--- a/libxfs/xfs_fs.h
++++ b/libxfs/xfs_fs.h
+@@ -720,7 +720,10 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+ #define XFS_IOC_FSGEOMETRY_V4	     _IOR ('X', 124, struct xfs_fsop_geom_v4)
+ #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
+-#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
++/* For backwards compatibility in 5.2.1, just for now */
++/* #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom_v5) */
++#define XFS_IOC_FSGEOMETRY XFS_IOC_FSGEOMETRY_V4
 +
-+	/* log2 of sb_agblocks (rounded up) */
-+	unsigned int		agblklog;
-+
-+	/* log2 of sb_blocksize */
-+	unsigned int		blocklog;
-+
-+	/* log2 of sb_inodesize */
-+	unsigned int		inodelog;
-+
-+	/* log2 of sb_inopblock */
-+	unsigned int		inopblog;
- };
+ /*	XFS_IOC_GETFSUUID ---------- deprecated 140	 */
  
- /* Static initializers */
-diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-index debdece8..bc6158fb 100644
---- a/libfrog/fsgeom.c
-+++ b/libfrog/fsgeom.c
-@@ -5,6 +5,7 @@
- #include "libxfs.h"
- #include "fsgeom.h"
- #include "xfrog.h"
-+#include "libfrog.h"
- 
- void
- xfs_report_geom(
-@@ -94,7 +95,17 @@ int
- xfrog_prepare_geometry(
- 	struct xfs_fd		*xfd)
- {
--	return xfrog_geometry(xfd->fd, &xfd->fsgeom);
-+	int			ret;
-+
-+	ret = xfrog_geometry(xfd->fd, &xfd->fsgeom);
-+	if (ret)
-+		return ret;
-+
-+	xfd->agblklog = log2_roundup(xfd->fsgeom.agblocks);
-+	xfd->blocklog = highbit32(xfd->fsgeom.blocksize);
-+	xfd->inodelog = highbit32(xfd->fsgeom.inodesize);
-+	xfd->inopblog = xfd->blocklog - xfd->inodelog;
-+	return 0;
- }
- 
- /* Release any resources associated with this xfrog structure. */
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index f18d0e19..ac898764 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -91,8 +91,8 @@ xfs_count_ag_inodes(
- 				minor(ctx->fsinfo.fs_datadev),
- 				agno);
- 
--	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
--	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
-+	ag_ino = (__u64)agno << (ctx->mnt.inopblog + ctx->mnt.agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->mnt.inopblog + ctx->mnt.agblklog);
- 
- 	moveon = xfs_count_inodes_range(ctx, descr, ag_ino, next_ag_ino - 1,
- 			&ci->counters[agno]);
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 08f3d847..873ad425 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -228,8 +228,8 @@ xfs_scan_ag_inodes(
- 				minor(ctx->fsinfo.fs_datadev),
- 				agno);
- 
--	ag_ino = (__u64)agno << (ctx->inopblog + ctx->agblklog);
--	next_ag_ino = (__u64)(agno + 1) << (ctx->inopblog + ctx->agblklog);
-+	ag_ino = (__u64)agno << (ctx->mnt.inopblog + ctx->mnt.agblklog);
-+	next_ag_ino = (__u64)(agno + 1) << (ctx->mnt.inopblog + ctx->mnt.agblklog);
- 
- 	moveon = xfs_iterate_inodes_range(ctx, descr, ctx->fshandle, ag_ino,
- 			next_ag_ino - 1, si->fn, si->arg);
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 2b8e69d2..d052a21c 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -140,11 +140,6 @@ _("Does not appear to be an XFS filesystem!"));
- 		return false;
- 	}
- 
--	ctx->agblklog = log2_roundup(ctx->mnt.fsgeom.agblocks);
--	ctx->blocklog = highbit32(ctx->mnt.fsgeom.blocksize);
--	ctx->inodelog = highbit32(ctx->mnt.fsgeom.inodesize);
--	ctx->inopblog = ctx->blocklog - ctx->inodelog;
--
- 	error = path_to_fshandle(ctx->mntpoint, &ctx->fshandle,
- 			&ctx->fshandle_len);
- 	if (error) {
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index a42d8213..579e08c3 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -52,8 +52,8 @@ xfs_scrub_inode_vfs_error(
- 	xfs_agino_t		agino;
- 	int			old_errno = errno;
- 
--	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
--	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-+	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-+	agino = bstat->bs_ino % (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
- 	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
- 			(uint64_t)bstat->bs_ino, agno, agino);
- 	errno = old_errno;
-@@ -77,7 +77,7 @@ xfs_scrub_inode(
- 	int			error;
- 
- 	xfs_action_list_init(&alist);
--	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
-+	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
- 	background_sleep();
- 
- 	/* Try to open the inode to pin it. */
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 748885d4..36ec27b3 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -239,8 +239,8 @@ xfs_scrub_connections(
- 	int			fd = -1;
- 	int			error;
- 
--	agno = bstat->bs_ino / (1ULL << (ctx->inopblog + ctx->agblklog));
--	agino = bstat->bs_ino % (1ULL << (ctx->inopblog + ctx->agblklog));
-+	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-+	agino = bstat->bs_ino % (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
- 	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
- 			(uint64_t)bstat->bs_ino, agno, agino);
- 	background_sleep();
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index e5a0b3c1..48971270 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -547,7 +547,7 @@ xfs_estimate_verify_work(
- 	if (!moveon)
- 		return moveon;
- 
--	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->blocklog;
-+	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->mnt.blocklog;
- 	*nr_threads = disk_heads(ctx->datadev);
- 	*rshift = 20;
- 	return moveon;
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index 13959ca8..41a77356 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -148,11 +148,11 @@ xfs_scan_summary(
- 	 * filesystem treats them as "free", but since we scanned
- 	 * them, we'll consider them used.
- 	 */
--	d_bfree -= totalcount.agbytes >> ctx->blocklog;
-+	d_bfree -= totalcount.agbytes >> ctx->mnt.blocklog;
- 
- 	/* Report on what we found. */
--	used_data = (d_blocks - d_bfree) << ctx->blocklog;
--	used_rt = (r_blocks - r_bfree) << ctx->blocklog;
-+	used_data = (d_blocks - d_bfree) << ctx->mnt.blocklog;
-+	used_rt = (r_blocks - r_bfree) << ctx->mnt.blocklog;
- 	used_files = f_files - f_free;
- 	stat_data = totalcount.dbytes;
- 	stat_rt = totalcount.rbytes;
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 28eae6fe..fb34c587 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -63,10 +63,6 @@ struct scrub_ctx {
- 
- 	/* XFS specific geometry */
- 	struct fs_path		fsinfo;
--	unsigned int		agblklog;
--	unsigned int		blocklog;
--	unsigned int		inodelog;
--	unsigned int		inopblog;
- 	void			*fshandle;
- 	size_t			fshandle_len;
- 
+ /* reflink ioctls; these MUST match the btrfs ioctl definitions */
 
