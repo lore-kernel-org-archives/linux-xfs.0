@@ -3,122 +3,144 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71F3CC3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 22:47:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CA67C3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 23:54:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4398D216F4
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 22:47:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FC22206B6
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 23:54:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730918AbfHTWrM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 18:47:12 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44811 "EHLO
+        id S1726202AbfHTXye (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 19:54:34 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55849 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730638AbfHTWrL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 18:47:11 -0400
+        by vger.kernel.org with ESMTP id S1726151AbfHTXye (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 19:54:34 -0400
 Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6466743C621;
-        Wed, 21 Aug 2019 08:47:07 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 1F28A43E4DC;
+        Wed, 21 Aug 2019 09:54:30 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i0Ct6-0001Gb-2M; Wed, 21 Aug 2019 08:46:00 +1000
-Date:   Wed, 21 Aug 2019 08:46:00 +1000
+        id 1i0DwI-0001eZ-LB; Wed, 21 Aug 2019 09:53:22 +1000
+Date:   Wed, 21 Aug 2019 09:53:22 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Eric Sandeen <sandeen@sandeen.net>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfsprogs: fix geometry calls on older kernels for 5.2.1
-Message-ID: <20190820224600.GI1119@dread.disaster.area>
-References: <7d83cd0d-8a15-201e-9ebf-e1f859270b92@sandeen.net>
- <20190820211828.GC1037350@magnolia>
+To:     "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc:     "ming.lei@redhat.com" <ming.lei@redhat.com>,
+        "hch@lst.de" <hch@lst.de>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "Williams, Dan J" <dan.j.williams@intel.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+Subject: Re: 5.3-rc1 regression with XFS log recovery
+Message-ID: <20190820235322.GJ1119@dread.disaster.area>
+References: <20190819041132.GA14492@lst.de>
+ <20190819042259.GZ6129@dread.disaster.area>
+ <20190819042905.GA15613@lst.de>
+ <20190819044012.GA15800@lst.de>
+ <20190820044135.GC1119@dread.disaster.area>
+ <20190820055320.GB27501@lst.de>
+ <20190820081325.GA21032@ming.t460p>
+ <20190820092424.GB21032@ming.t460p>
+ <20190820214408.GG1119@dread.disaster.area>
+ <85bde038615a6a82d79708fd04944671ca8580c5.camel@intel.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190820211828.GC1037350@magnolia>
+In-Reply-To: <85bde038615a6a82d79708fd04944671ca8580c5.camel@intel.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=06siI641TgNblo_UBYoA:9
-        a=ORV8YEe1-9RMHKGV:21 a=9D-fd6phwaKbtu2H:21 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=Xv0y9uns91YydaQQMxwA:9 a=-ec80IMEu3Jzm-bp:21
+        a=6fXaY66gyORZkQyz:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 20, 2019 at 02:18:28PM -0700, Darrick J. Wong wrote:
-> On Tue, Aug 20, 2019 at 03:47:29PM -0500, Eric Sandeen wrote:
-> > I didn't think 5.2.0 through; the udpate of the geometry ioctl means
-> > that the tools won't work on older kernels that don't support the
-> > v5 ioctls, since I failed to merge Darrick's wrappers.
+On Tue, Aug 20, 2019 at 10:08:38PM +0000, Verma, Vishal L wrote:
+> On Wed, 2019-08-21 at 07:44 +1000, Dave Chinner wrote:
 > > 
-> > As a very quick one-off I'd like to merge this to just revert every
-> > geometry call back to the original ioctl, so it keeps working on
-> > older kernels and I'll release 5.2.1.  This hack can go away when
-> > Darrick's wrappers get merged.
+> > However, the case here is that:
 > > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> 
-> For the four line code fix,
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> > ---
+> > > > > > i.e. page		offset	len	sector
+> > > > > > 00000000a77f0146	768	3328	0x7d0048
+> > > > > > 000000006ceca91e	0	768	0x7d004e
 > > 
-> > I'm a little concerned that 3rd party existing code which worked fine
-> > before will now get the new XFS_IOC_FSGEOMETRY definition if they get
-> > rebuilt, and suddenly stop working on older kernels. Am I overreacting
-> > or misunderstanding our compatibility goals?
+> > The second page added to the bvec is actually offset alignedr. Hence
+> > the check would do nothing on the first page because the bvec array
+> > is empty (so goes into a new bvec anyway), and the check on the
+> > second page would do nothing an it would merge with first because
+> > the offset is aligned correctly. In both cases, the length of the
+> > segment is not aligned, so that needs to be checked, too.
+> > 
+> > IOWs, I think the check needs to be in bio_add_page, it needs to
+> > check both the offset and length for alignment, and it needs to grab
+> > the alignment from queue_dma_alignment(), not use a hard coded value
+> > of 511.
+> > 
+> So something like this?
 > 
-> As for this question ^^^ ... <URRRK>.
+> diff --git a/block/bio.c b/block/bio.c
+> index 299a0e7651ec..80f449d23e5a 100644
+> --- a/block/bio.c
+> +++ b/block/bio.c
+> @@ -822,8 +822,12 @@ EXPORT_SYMBOL_GPL(__bio_add_page);
+>  int bio_add_page(struct bio *bio, struct page *page,
+>                  unsigned int len, unsigned int offset)
+>  {
+> +       struct request_queue *q = bio->bi_disk->queue;
+>         bool same_page = false;
+>  
+> +       if (offset & queue_dma_alignment(q) || len & queue_dma_alignment(q))
+> +               return 0;
+> +
+>         if (!__bio_try_merge_page(bio, page, len, offset, &same_page)) {
+>                 if (bio_full(bio, len))
+>                         return 0;
 > 
-> I thought the overall strategy was to get everything in xfsprogs using
-> libfrog wrappers that would degrade gracefully on old kernels.
+> I tried this, but the 'mount' just hangs - which looks like it might be
+> due to xfs_rw_bdev() doing:
+> 
+>   while (bio_add_page(bio, page, len, off) != len) {
 
-The wrappers were a necessary part of the conversion. They should
-have been merged with the rest of XFS_IOC_FSGEOMETRY changes. How
-did this get broken up?
+That's the return of zero that causes the loop to make no progress.
+i.e. a return of 0 means "won't fit in bio, allocate a new bio
+and try again". It's not an error return, so always returning zero
+will eventually chew up all your memory allocating bios it
+doesn't use, because submit_bio() doesn't return errors on chained
+bios until the final bio in the chain is completed.
 
-> For xfsdump/restore, I think we should just merge it into xfsprogs and
-> then it can use our wrappers.
+Add a bio_add_page_checked() function that does exactly the same
+this as bio_add_page(), but add the
 
-Don't need to care about dump/restore:
+	if (WARN_ON_ONCE((offset | len) & queue_dma_alignment(q)))
+		return -EIO;
 
-$ git grep FSGEOM
-common/fs.c:    if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geo)) {
-doc/CHANGES:      XFS_IOC_FSGEOMETRY instead of XFS_IOC_GETFSUUID ioctl, so
-$
+to it and change the xfs code to:
 
-It only uses teh V1 ioctl.
+	while ((len = bio_add_page_checked(bio, page, len, off)) != len) {
+		if (len < 0) {
+			/*
+			 * submit the bio to wait on the rest of the
+			 * chain to complete, then return an error.
+			 * This is a really shitty failure on write, as we
+			 * will have just done a partial write and
+			 * effectively corrupted something on disk.
+			 */
+			submit_bio_wait(bio);
+			return len;
+		}
+		....
+	}
 
-As it is, the correct thing to do here is to put the fallback into
-the xfsctl() function. This is actually an exported and documented
-interface to use xfs ioctls by external problems - it's part of
-libhandle(), and that should be obvious by the fact the man page
-that describes all this is xfsctl(3).
-
-i.e. any app using XFS ioctls should be using the xfsctl()
-interface, not calling ioctl directly. The whole reason for that it
-because it allows us to handle things like this in application
-independent code....
- 
-So I'd suggest that the fallback code should be in the xfsctl
-handler and then userspace will pick this up and won't care about
-which kernel it is running on...
-
-I suspect the bigger picture is to convert all the open ioctl()
-calls in xfsprogs for XFS specific ioctls to xfsctl(). We've kinda
-screwed this pooch since we stopped having to support multiple
-platforms.
-
-> For everything else... I thought the story was that you shouldn't really
-> be using xfs ioctls unless you're keeping up with upstream.
-
-Or you should be linked against libhandle and using xfsctl() to
-be isolated from these sorts of things.
+We probably should change all the XFS calls to bio_add_page to
+bio_add_page_checked() while we are at it, because we have the
+same alignment problem through xfs_buf.c and, potentially, on iclogs
+via xfs_log.c as iclogs are allocated with kmem_alloc_large(), too.
 
 Cheers,
 
