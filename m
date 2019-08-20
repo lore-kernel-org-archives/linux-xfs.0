@@ -2,96 +2,127 @@ Return-Path: <SRS0=kQBn=WQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50CE0C3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5830C3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:55:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2DBB7214DA
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:36:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B408722CF7
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 11:55:18 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="F8bCgYAm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729693AbfHTLgZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 07:36:25 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:1773 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729576AbfHTLgZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 20 Aug 2019 07:36:25 -0400
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com [209.85.221.72])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id EFC727BDD1
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 11:36:24 +0000 (UTC)
-Received: by mail-wr1-f72.google.com with SMTP id a2so6877259wrs.8
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 04:36:24 -0700 (PDT)
+        id S1729155AbfHTLzS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 07:55:18 -0400
+Received: from mail-qt1-f193.google.com ([209.85.160.193]:33818 "EHLO
+        mail-qt1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728983AbfHTLzS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 07:55:18 -0400
+Received: by mail-qt1-f193.google.com with SMTP id q4so5632445qtp.1
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 04:55:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=cjWne9JJX/bamk/BsyOJB8Qocb+2jJnD/6EfxMqzNUc=;
+        b=F8bCgYAmAkUxSVlSTscXxlQRELIsOQnZmrvm1sUjW95CUd0khTshKRxwCuLjyokKev
+         BO8QDllptp/4vv0c5+22/EhhQN7BANX7GXbwhmoL4l4ncCnzuvcFIBhtQofbuqTX6nsg
+         zwql74Buzj9teOKUbKfj5TE3uHNM/5fbApiO0JHQMUUYJ/unQvJimJ2vf/e7eXWfu4Qr
+         e3qKOUbeDxtQCKEEnBFIKa+Y83F0ozkYPvP+sRDb4zW7tz+74GJgY/PNJGOy+FAsmX1f
+         luk7Y3QQ++vwxmyoZVrHTbe9U0I/Qk1BqrxGPfTC0MFEGoh/lly24xPvz/0fT0h+OEJy
+         qwWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=+jTC31UoVxVyJbeKdpThaY7dIDTPTM58fPXXoh/n94I=;
-        b=SaLJddCAJaSYqDeZAjT7PcXywSYYTgr6vv+cMbiNDtqirMP+52+0qTi3M6t5E0P1e7
-         sbfluUKIQj7i/+gWbKg0HgKHVdvPtYuBqbbBwzw2Qhb3EC2U5nqWF8YtDh6OKWoPm0sw
-         fgtc7w6mhsc/xWL7Ql0sV244f/Fz9d2wgqZVWcBsceX0QlJZ3gJly9VmNovUptZmKZUU
-         RaI/OcA2wvLe8tNAj5BTBKV4BB/zRzDvyDW7Hl1fvOxxfThYwzhHQdpEGLnRMNILzBIb
-         7iKn0QS3/l9CVZK9AFj+77Y17ZpyZHwFg58RnnnWh/s0taOZZ8SjRAt4/MYOQkR+4Suy
-         vtFg==
-X-Gm-Message-State: APjAAAX7UKwiY5anz821PyxdM3KAKr2yNIKI9o4eD7HNa7vPJQjFEB3M
-        YQkTSMOiKMbayoWoOZyjmekFsVVL8rLdSNhfMf2sst1VQBRq+aK8pG4+iPHpva4ifE0ZffendZp
-        1QlLvjXfp09lI5h6CBjdc
-X-Received: by 2002:adf:ef07:: with SMTP id e7mr34882019wro.242.1566300983619;
-        Tue, 20 Aug 2019 04:36:23 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzAYdlEhSdDtLN+CYcxeGMt+rxtk0Xw8GXeAg6FWlBrxY3BzmFeRyzV70cLgQ+UXhJsdubCvw==
-X-Received: by 2002:adf:ef07:: with SMTP id e7mr34881989wro.242.1566300983378;
-        Tue, 20 Aug 2019 04:36:23 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id v7sm2356800wrn.41.2019.08.20.04.36.22
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 Aug 2019 04:36:22 -0700 (PDT)
-Date:   Tue, 20 Aug 2019 13:36:20 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-fsdevel@vger.kernel.org, adilger@dilger.ca,
-        jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu,
-        rpeterso@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/9] fs: Enable bmap() function to properly return errors
-Message-ID: <20190820113619.qhvf44wyc4b2emw3@pegasus.maiolino.io>
-Mail-Followup-To: Christoph Hellwig <hch@lst.de>,
-        linux-fsdevel@vger.kernel.org, adilger@dilger.ca,
-        jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu,
-        rpeterso@redhat.com, linux-xfs@vger.kernel.org
-References: <20190808082744.31405-1-cmaiolino@redhat.com>
- <20190808082744.31405-2-cmaiolino@redhat.com>
- <20190814111435.GB1885@lst.de>
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=cjWne9JJX/bamk/BsyOJB8Qocb+2jJnD/6EfxMqzNUc=;
+        b=MrYd8tZPogqzfHueX3B3r99sg1qRo2dwP5tkNI33Vzl9hklEsoDSEaKGn/S79LpxrW
+         fmwUsEAWNZw8vXUODIcvBTi2hzIoeSBMmkU9GI27GC8yxxsyAzxBayW6Ejq5dYWbk1PT
+         GKS6UXOpF6IvyPuTuMxWAS1ZPmQ2Zrp7I9jDdEkYTEcImu81w6o2vv9VKmAsBSUYcnrB
+         xAkO2JPddLKwnDKnIOcGwDYwINoBLJSIqZse7TX2PAhtftzlesGR50KI9p7uLcqUqa21
+         ga/2DFsIt9pDTit09ccjEsj2c8I8Mh/0OqsP2cDgTWnOMjzoQM4hRESjopXE9ZQ9QyrE
+         VqAw==
+X-Gm-Message-State: APjAAAXLii4XKh2uVEbQ599mYLXQ14cFyQO0y06VtrrHeHMGRUfxWMvL
+        tbpWtUnfv20ENXJGJHjYSvVZlw==
+X-Google-Smtp-Source: APXvYqz2loiM8+YcMWhCUXDCstClokgbXoeINv82DptJXTepeIjclfvYpo9S265xpxsrLBOY09rJbg==
+X-Received: by 2002:a0c:d251:: with SMTP id o17mr14202195qvh.109.1566302116866;
+        Tue, 20 Aug 2019 04:55:16 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-156-34-55-100.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.55.100])
+        by smtp.gmail.com with ESMTPSA id f23sm8218362qkk.80.2019.08.20.04.55.16
+        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
+        Tue, 20 Aug 2019 04:55:16 -0700 (PDT)
+Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
+        (envelope-from <jgg@ziepe.ca>)
+        id 1i02jL-0007t8-HZ; Tue, 20 Aug 2019 08:55:15 -0300
+Date:   Tue, 20 Aug 2019 08:55:15 -0300
+From:   Jason Gunthorpe <jgg@ziepe.ca>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Jan Kara <jack@suse.cz>, Ira Weiny <ira.weiny@intel.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-ext4@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
+Message-ID: <20190820115515.GA29246@ziepe.ca>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190814101714.GA26273@quack2.suse.cz>
+ <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
+ <20190815130558.GF14313@quack2.suse.cz>
+ <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
+ <20190817022603.GW6129@dread.disaster.area>
+ <20190819063412.GA20455@quack2.suse.cz>
+ <20190819092409.GM7777@dread.disaster.area>
+ <20190819123841.GC5058@ziepe.ca>
+ <20190820011210.GP7777@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190814111435.GB1885@lst.de>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20190820011210.GP7777@dread.disaster.area>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 14, 2019 at 01:14:35PM +0200, Christoph Hellwig wrote:
-> Just curious from looking this again - shoudn't the 0 block be turned
-> into an error by the bmap() function?  At least for the legacy ->bmap
-> case so that we don't have to carry this cruft around.
+On Tue, Aug 20, 2019 at 11:12:10AM +1000, Dave Chinner wrote:
+> On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
+> > On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
+> > 
+> > > So that leaves just the normal close() syscall exit case, where the
+> > > application has full control of the order in which resources are
+> > > released. We've already established that we can block in this
+> > > context.  Blocking in an interruptible state will allow fatal signal
+> > > delivery to wake us, and then we fall into the
+> > > fatal_signal_pending() case if we get a SIGKILL while blocking.
+> > 
+> > The major problem with RDMA is that it doesn't always wait on close() for the
+> > MR holding the page pins to be destoyed. This is done to avoid a
+> > deadlock of the form:
+> > 
+> >    uverbs_destroy_ufile_hw()
+> >       mutex_lock()
+> >        [..]
+> >         mmput()
+> >          exit_mmap()
+> >           remove_vma()
+> >            fput();
+> >             file_operations->release()
+> 
+> I think this is wrong, and I'm pretty sure it's an example of why
+> the final __fput() call is moved out of line.
 
-I don't think so, this patch does not change the bmap interface on the
-filesystems itself, and at this point, we don't have a way to distinguish
-between a hole and an error from the filesystem's bmap() interface. The main
-idea of enabling bmap() to return errors, was to take advantage of the fiemap
-errors (in another patch in this series).
+Yes, I think so too, all I can say is this *used* to happen, as we
+have special code avoiding it, which is the code that is messing up
+Ira's lifetime model.
 
-Although, I do agree that this also opens the possibility to change the
-interface itself, and make ->bmap calls to really return errors, but this will
-require a bigger change in all users of ->bmap(). I can work on that, but I'd
-prefer to change this interface in another patchset, after this one is merged.
-So, we can work only on those filesystems where ->bmap() will still be a thing.
+Ira, you could try unraveling the special locking, that solves your
+lifetime issues?
 
-Cheers.
-
--- 
-Carlos
+Jason
