@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41460C3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 23CCFC3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EE862082F
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EB5732332A
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 20:31:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z9JhSGFF"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TnJPCnJA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730638AbfHTUbW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 16:31:22 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:42768 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730704AbfHTUbW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 16:31:22 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKTJL1166356;
-        Tue, 20 Aug 2019 20:31:20 GMT
+        id S1730466AbfHTUb2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 16:31:28 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:45766 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730092AbfHTUb2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 16:31:28 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKSw0m151484;
+        Tue, 20 Aug 2019 20:31:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=a4Ae/ui4mUzj5LTuy5Kzv3nR5vwNUiZsRpdH/6w0om4=;
- b=Z9JhSGFFvqS8vbDCXIvwFlxRPYh5t6L4Hqc3Y9umLZXGwqQiwfXMsM05+wX+Rmm4JRSf
- TvHVlhrI/OwuQs3TfA9APwCCBn35WqU3TcD6QsDHoxIuEb4Cc57NIoS4hi9HO9kp/3mm
- PZYm3wtBUDs8SZyFA77f7IsyyhHJvSTuSQRwLUF7RDbbK/OKJ6e2nCwmsCdNWZex7Ruj
- Jv9bJxz4uJ3vpHXXy4+kmfhRNYWQjHNLUMjtGm3k5Clg48HKdkqzxX/Nnkx/3q4K1j5y
- Zp3yOBAJ8y7CK3mOVcCffGTJ2upY4hYyXBlQWhCvmdPJEesTMH0DYN7s6bkzDYt5Plqh qw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2uea7qs0d3-1
+ bh=u3BETOqj/MIWmZ7VhcfIEaAgXDWaQH0oW/CF101gXX8=;
+ b=TnJPCnJAlYT7yM/bJBmB3ltLjmydZZeAkdLV9BUO9KfMf4xvq6GcqQo9SdNkwhrnbMVU
+ yWGOg1YAYLVc7l+kWSaQPGdoMs4CRDECFg7nH2xKWAIO3UzQyit3aJoAUv9Tut5BpGqh
+ 8sNogac1jCS+BiagqbC1ORrbZKEoKzRLeVGZsgbTsOxJjpQoC/K0G51DtVrX+gBY0r8g
+ D2N4+Pcqijq5zRh25RM15XWCagW2w/y7klXQ6rkb3DtLedzXkcrvmKa2+QfgB4jLbCNd
+ p7aZRPXfSiApzaIDVyrhgWS6dsg6gNLF8z5LnwzMXh3tCu+k36TMgTwCTCN92eh0Sza7 5g== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2ue90th5tf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 20:31:20 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKTCW4071301;
-        Tue, 20 Aug 2019 20:31:19 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2ugj7pnekg-1
+        Tue, 20 Aug 2019 20:31:26 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KKSo07160309;
+        Tue, 20 Aug 2019 20:31:25 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2ug1g9rk6h-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 20:31:19 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7KKVJUl019752;
-        Tue, 20 Aug 2019 20:31:19 GMT
+        Tue, 20 Aug 2019 20:31:25 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7KKVPgk028281;
+        Tue, 20 Aug 2019 20:31:25 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 20 Aug 2019 13:31:18 -0700
-Subject: [PATCH 01/12] libxfs-diff: try harder to find the kernel equivalent
- libxfs files
+        with ESMTP ; Tue, 20 Aug 2019 13:31:24 -0700
+Subject: [PATCH 02/12] libxfs: move topology declarations into separate
+ header
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 20 Aug 2019 13:31:17 -0700
-Message-ID: <156633307795.1215978.8644291951311062567.stgit@magnolia>
+Date:   Tue, 20 Aug 2019 13:31:24 -0700
+Message-ID: <156633308405.1215978.11329921136072672886.stgit@magnolia>
 In-Reply-To: <156633307176.1215978.17394956977918540525.stgit@magnolia>
 References: <156633307176.1215978.17394956977918540525.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,25 +81,141 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Now that we're syncing userspace libxfs/ files with kernel fs/xfs/
-files, teach the diff tool to try fs/xfs/xfs_foo.c if
-fs/xfs/libxfs/xfs_foo.c doesn't exist.
+The topology functions live in libfrog now, which means their
+declarations don't belong in libxcmd.h.  Create new header file for
+them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tools/libxfs-diff |    1 +
- 1 file changed, 1 insertion(+)
+ include/libxcmd.h  |   31 -------------------------------
+ include/topology.h |   39 +++++++++++++++++++++++++++++++++++++++
+ libfrog/topology.c |    1 +
+ mkfs/xfs_mkfs.c    |    2 +-
+ repair/sb.c        |    1 +
+ 5 files changed, 42 insertions(+), 32 deletions(-)
+ create mode 100644 include/topology.h
 
 
-diff --git a/tools/libxfs-diff b/tools/libxfs-diff
-index fa57c004..c18ad487 100755
---- a/tools/libxfs-diff
-+++ b/tools/libxfs-diff
-@@ -22,5 +22,6 @@ dir="$(readlink -m "${dir}/..")"
+diff --git a/include/libxcmd.h b/include/libxcmd.h
+index 20e5d834..7b889b0a 100644
+--- a/include/libxcmd.h
++++ b/include/libxcmd.h
+@@ -10,35 +10,4 @@
+ #include "libxfs.h"
+ #include <sys/time.h>
  
- for i in libxfs/xfs*.[ch]; do
- 	kfile="${dir}/$i"
-+	test -f "${kfile}" || kfile="$(echo "${kfile}" | sed -e 's|libxfs/||g')"
- 	diff -Naurpw --label "$i" <(sed -e '/#include/d' "$i") --label "${kfile}" <(sed -e '/#include/d' "${kfile}")
- done
+-/*
+- * Device topology information.
+- */
+-typedef struct fs_topology {
+-	int	dsunit;		/* stripe unit - data subvolume */
+-	int	dswidth;	/* stripe width - data subvolume */
+-	int	rtswidth;	/* stripe width - rt subvolume */
+-	int	lsectorsize;	/* logical sector size &*/
+-	int	psectorsize;	/* physical sector size */
+-} fs_topology_t;
+-
+-extern void
+-get_topology(
+-	libxfs_init_t		*xi,
+-	struct fs_topology	*ft,
+-	int			force_overwrite);
+-
+-extern void
+-calc_default_ag_geometry(
+-	int		blocklog,
+-	uint64_t	dblocks,
+-	int		multidisk,
+-	uint64_t	*agsize,
+-	uint64_t	*agcount);
+-
+-extern int
+-check_overwrite(
+-	const char	*device);
+-
+-
+-
+ #endif	/* __LIBXCMD_H__ */
+diff --git a/include/topology.h b/include/topology.h
+new file mode 100644
+index 00000000..61ede23a
+--- /dev/null
++++ b/include/topology.h
+@@ -0,0 +1,39 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2000-2005 Silicon Graphics, Inc.
++ * All Rights Reserved.
++ */
++
++#ifndef __TOPOLOGY_H__
++#define __TOPOLOGY_H__
++
++/*
++ * Device topology information.
++ */
++typedef struct fs_topology {
++	int	dsunit;		/* stripe unit - data subvolume */
++	int	dswidth;	/* stripe width - data subvolume */
++	int	rtswidth;	/* stripe width - rt subvolume */
++	int	lsectorsize;	/* logical sector size &*/
++	int	psectorsize;	/* physical sector size */
++} fs_topology_t;
++
++extern void
++get_topology(
++	libxfs_init_t		*xi,
++	struct fs_topology	*ft,
++	int			force_overwrite);
++
++extern void
++calc_default_ag_geometry(
++	int		blocklog,
++	uint64_t	dblocks,
++	int		multidisk,
++	uint64_t	*agsize,
++	uint64_t	*agcount);
++
++extern int
++check_overwrite(
++	const char	*device);
++
++#endif	/* __TOPOLOGY_H__ */
+diff --git a/libfrog/topology.c b/libfrog/topology.c
+index cac164f3..e2f87415 100644
+--- a/libfrog/topology.c
++++ b/libfrog/topology.c
+@@ -10,6 +10,7 @@
+ #  include <blkid/blkid.h>
+ #endif /* ENABLE_BLKID */
+ #include "xfs_multidisk.h"
++#include "topology.h"
+ 
+ #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
+ #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
+diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
+index 0bdf6ec3..d05a6898 100644
+--- a/mkfs/xfs_mkfs.c
++++ b/mkfs/xfs_mkfs.c
+@@ -9,7 +9,7 @@
+ #include "xfs_multidisk.h"
+ #include "libxcmd.h"
+ #include "fsgeom.h"
+-
++#include "topology.h"
+ 
+ #define TERABYTES(count, blog)	((uint64_t)(count) << (40 - (blog)))
+ #define GIGABYTES(count, blog)	((uint64_t)(count) << (30 - (blog)))
+diff --git a/repair/sb.c b/repair/sb.c
+index 119bf219..547969f7 100644
+--- a/repair/sb.c
++++ b/repair/sb.c
+@@ -12,6 +12,7 @@
+ #include "protos.h"
+ #include "err_protos.h"
+ #include "xfs_multidisk.h"
++#include "topology.h"
+ 
+ #define BSIZE	(1024 * 1024)
+ 
 
