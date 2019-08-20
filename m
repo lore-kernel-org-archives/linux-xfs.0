@@ -2,287 +2,87 @@ Return-Path: <SRS0=kQBn=WQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DF6C3A589
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 15:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 434DCC3A589
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 16:31:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1E6C622DBF
-	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 15:26:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="C0OnXS35"
+	by mail.kernel.org (Postfix) with ESMTP id 2081422DD6
+	for <linux-xfs@archiver.kernel.org>; Tue, 20 Aug 2019 16:31:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730380AbfHTP0v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 11:26:51 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:38878 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730023AbfHTP0u (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 11:26:50 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KF8mmH032107;
-        Tue, 20 Aug 2019 15:26:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=CXn6S0crVvBpLh5v+hQmCUXGeFv4P8NNsmY00AqcMaY=;
- b=C0OnXS35U7hPduV4kOqrjkFIIkYg2ejKj3tZLglGD7bkIRt+S21LGCWoMpV91x+TYO9H
- RRxE3Aiv+Dce3nSZOBIv0Uv+B82EBnvpJv6vwIcoQo3B2VUc1EfBzbzGnsmewxB/9aCi
- OWfbnLlP6krJ3MSm+pZKzKE2X7Gsx0IvkMQNLZ2v2hXv7RD3y6CvjXpFRBpkNlYRe8Wk
- scvktIBJQxNZup7q5ZwL92p+OCMl850XnwsE7KhYGy8cVh9BMWtsLfZlIQ7iPZZgFJ6J
- ZXau4G19pFdUg697EcvAiSkyBc71B1wgCzExxHl/ERvGGyx3Bg1PRXjBXdWJEp3Tpd/U Bg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2ue90tf8mm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 15:26:42 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7KF9AZ8132420;
-        Tue, 20 Aug 2019 15:26:41 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2ug1g9dbc2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 20 Aug 2019 15:26:41 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7KFQeEv003749;
-        Tue, 20 Aug 2019 15:26:40 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 20 Aug 2019 08:26:39 -0700
-Date:   Tue, 20 Aug 2019 08:26:38 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Damien Le Moal <damien.lemoal@wdc.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Matias Bjorling <matias.bjorling@wdc.com>
-Subject: Re: [PATCH V2] fs: New zonefs file system
-Message-ID: <20190820152638.GA1037422@magnolia>
-References: <20190820081249.27353-1-damien.lemoal@wdc.com>
+        id S1728344AbfHTQa7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 12:30:59 -0400
+Received: from mga01.intel.com ([192.55.52.88]:7313 "EHLO mga01.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726981AbfHTQa7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Aug 2019 12:30:59 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 09:30:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,408,1559545200"; 
+   d="scan'208";a="185956463"
+Received: from fmsmsx108.amr.corp.intel.com ([10.18.124.206])
+  by FMSMGA003.fm.intel.com with ESMTP; 20 Aug 2019 09:30:57 -0700
+Received: from FMSMSX110.amr.corp.intel.com (10.18.116.10) by
+ FMSMSX108.amr.corp.intel.com (10.18.124.206) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Tue, 20 Aug 2019 09:30:57 -0700
+Received: from fmsmsx113.amr.corp.intel.com ([169.254.13.127]) by
+ FMSMSX110.amr.corp.intel.com ([169.254.14.63]) with mapi id 14.03.0439.000;
+ Tue, 20 Aug 2019 09:30:57 -0700
+From:   "Verma, Vishal L" <vishal.l.verma@intel.com>
+To:     "hch@lst.de" <hch@lst.de>,
+        "ming.lei@redhat.com" <ming.lei@redhat.com>
+CC:     "Williams, Dan J" <dan.j.williams@intel.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "david@fromorbit.com" <david@fromorbit.com>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Subject: Re: 5.3-rc1 regression with XFS log recovery
+Thread-Topic: 5.3-rc1 regression with XFS log recovery
+Thread-Index: AQHVVHWHW9jyoVVDjkW5IFS3q2GBzqcA9LwAgAAIcACAAKWeAIAAbhuAgAA90wCAAAYTAIAAAzOAgAABtICAAAMbAIABkriAgAAUDACAACclAIAAE9WAgAB3KwA=
+Date:   Tue, 20 Aug 2019 16:30:56 +0000
+Message-ID: <70d0f825df98351d586285e0629fff16ce345438.camel@intel.com>
+References: <20190818173426.GA32311@lst.de>
+         <20190819000831.GX6129@dread.disaster.area> <20190819034948.GA14261@lst.de>
+         <20190819041132.GA14492@lst.de> <20190819042259.GZ6129@dread.disaster.area>
+         <20190819042905.GA15613@lst.de> <20190819044012.GA15800@lst.de>
+         <20190820044135.GC1119@dread.disaster.area> <20190820055320.GB27501@lst.de>
+         <20190820081325.GA21032@ming.t460p> <20190820092424.GB21032@ming.t460p>
+In-Reply-To: <20190820092424.GB21032@ming.t460p>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+x-originating-ip: [10.232.112.185]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <96E25D766D03C448814B99ECAA06EBF4@intel.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190820081249.27353-1-damien.lemoal@wdc.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9355 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908200147
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9355 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908200147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 20, 2019 at 05:12:49PM +0900, Damien Le Moal wrote:
-> zonefs is a very simple file system exposing each zone of a zoned
-> block device as a file. zonefs is in fact closer to a raw block device
-> access interface than to a full feature POSIX file system.
-
-/me cuts out a lot of stuff...
-
-> +/*
-> + * When a write error occurs in a sequenial zone, the zone write pointer
-
-"sequential"
-
-> + * position must be refreshed to correct the file size and zonefs inode
-> + * write pointer offset.
-> + */
-> +static int zonefs_seq_file_write_failed(struct inode *inode, int error)
-> +{
-> +	struct super_block *sb = inode->i_sb;
-> +	struct zonefs_inode_info *zi = ZONEFS_I(inode);
-> +	sector_t sector = zi->i_zsector;
-> +	unsigned int nofs_flag;
-> +	struct blk_zone zone;
-> +	int n = 1, ret;
-> +	loff_t pos;
-
-<snip again>
-
-> +/*
-> + * Read super block information from the device.
-> + */
-> +static int zonefs_read_super(struct super_block *sb)
-> +{
-> +	struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
-> +	struct zonefs_super *super;
-> +	struct bio bio;
-> +	struct bio_vec bio_vec;
-> +	struct page *page;
-> +	int ret;
-> +
-> +	page = alloc_page(GFP_KERNEL);
-> +	if (!page)
-> +		return -ENOMEM;
-> +
-> +	bio_init(&bio, &bio_vec, 1);
-> +	bio.bi_iter.bi_sector = 0;
-> +	bio_set_dev(&bio, sb->s_bdev);
-> +	bio_set_op_attrs(&bio, REQ_OP_READ, 0);
-> +	bio_add_page(&bio, page, PAGE_SIZE, 0);
-> +
-> +	ret = submit_bio_wait(&bio);
-> +	if (ret)
-> +		goto out;
-> +
-> +	ret = -EINVAL;
-> +	super = page_address(page);
-> +	if (le32_to_cpu(super->s_magic) != ZONEFS_MAGIC)
-> +		goto out;
-> +	sbi->s_features = le64_to_cpu(super->s_features);
-> +	if (zonefs_has_feature(sbi, ZONEFS_F_UID)) {
-> +		sbi->s_uid = make_kuid(current_user_ns(),
-> +				       le32_to_cpu(super->s_uid));
-> +		if (!uid_valid(sbi->s_uid))
-> +			goto out;
-> +	}
-> +	if (zonefs_has_feature(sbi, ZONEFS_F_GID)) {
-> +		sbi->s_gid = make_kgid(current_user_ns(),
-> +				       le32_to_cpu(super->s_gid));
-> +		if (!gid_valid(sbi->s_gid))
-> +			goto out;
-> +	}
-> +	if (zonefs_has_feature(sbi, ZONEFS_F_PERM))
-> +		sbi->s_perm = le32_to_cpu(super->s_perm);
-
-Unknown feature bits are silently ignored.  Is that intentional?  Will
-all features be compat features?  I would find it a little annoying to
-format (for example) a F_UID filesystem only to have some old kernel
-driver ignore it.
-
-> +
-> +	uuid_copy(&sbi->s_uuid, &super->s_uuid);
-> +	ret = 0;
-> +
-> +out:
-> +	__free_page(page);
-> +
-> +	return ret;
-> +}
-
-<snip>
-
-> +/*
-> + * On-disk super block (block 0).
-> + */
-> +struct zonefs_super {
-> +
-> +	/* Magic number */
-> +	__le32		s_magic;
-> +
-> +	/* Features */
-> +	__le64		s_features;
-> +
-> +	/* 128-bit uuid */
-> +	uuid_t		s_uuid;
-> +
-> +	/* UID/GID to use for files */
-> +	__le32		s_uid;
-> +	__le32		s_gid;
-> +
-> +	/* File permissions */
-> +	__le32		s_perm;
-> +
-> +	/* Padding to 4K */
-> +	__u8		s_reserved[4056];
-
-Hmm, I noticed that fill_super doesn't check that s_reserved is actually
-zero (or any specific value).  You might consider enforcing that so that
-future you can add fields beyond s_perm without having to burn a
-s_features bit every time you do it.
-
-Also a little surprised there's no checksum field here to detect bit
-flips and such. ;)
-
---D
-
-> +
-> +} __packed;
-> +
-> +/*
-> + * Feature flags: used on disk in the s_features field of struct zonefs_super
-> + * and in-memory in the s_feartures field of struct zonefs_sb_info.
-> + */
-> +enum zonefs_features {
-> +	/*
-> +	 * Use a zone start sector value as file name.
-> +	 */
-> +	ZONEFS_F_STARTSECT_NAME,
-> +	/*
-> +	 * Aggregate contiguous conventional zones into a single file.
-> +	 */
-> +	ZONEFS_F_AGRCNV,
-> +	/*
-> +	 * Use super block specified UID for files instead of default.
-> +	 */
-> +	ZONEFS_F_UID,
-> +	/*
-> +	 * Use super block specified GID for files instead of default.
-> +	 */
-> +	ZONEFS_F_GID,
-> +	/*
-> +	 * Use super block specified file permissions instead of default 640.
-> +	 */
-> +	ZONEFS_F_PERM,
-> +};
-> +
-> +/*
-> + * In-memory Super block information.
-> + */
-> +struct zonefs_sb_info {
-> +
-> +	unsigned long long	s_features;
-> +	kuid_t			s_uid;		/* File owner UID */
-> +	kgid_t			s_gid;		/* File owner GID */
-> +	umode_t			s_perm;		/* File permissions */
-> +	uuid_t			s_uuid;
-> +
-> +	loff_t			s_blocksize_mask;
-> +	unsigned int		s_nr_zones[ZONEFS_ZTYPE_MAX];
-> +};
-> +
-> +static inline struct zonefs_sb_info *ZONEFS_SB(struct super_block *sb)
-> +{
-> +	return sb->s_fs_info;
-> +}
-> +
-> +static inline bool zonefs_has_feature(struct zonefs_sb_info *sbi,
-> +				      enum zonefs_features f)
-> +{
-> +	return sbi->s_features & (1ULL << f);
-> +}
-> +
-> +#define zonefs_info(sb, format, args...)	\
-> +	pr_info("zonefs (%s): " format, sb->s_id, ## args)
-> +#define zonefs_err(sb, format, args...)	\
-> +	pr_err("zonefs (%s) ERROR: " format, sb->s_id, ## args)
-> +#define zonefs_warn(sb, format, args...)	\
-> +	pr_warn("zonefs (%s) WARN: " format, sb->s_id, ## args)
-> +
-> +#endif
-> diff --git a/include/uapi/linux/magic.h b/include/uapi/linux/magic.h
-> index 1274c692e59c..3be20c774142 100644
-> --- a/include/uapi/linux/magic.h
-> +++ b/include/uapi/linux/magic.h
-> @@ -86,6 +86,7 @@
->  #define NSFS_MAGIC		0x6e736673
->  #define BPF_FS_MAGIC		0xcafe4a11
->  #define AAFS_MAGIC		0x5a3c69f0
-> +#define ZONEFS_MAGIC		0x5a4f4653
->  
->  /* Since UDF 2.01 is ISO 13346 based... */
->  #define UDF_SUPER_MAGIC		0x15013346
-> -- 
-> 2.21.0
-> 
+T24gVHVlLCAyMDE5LTA4LTIwIGF0IDE3OjI0ICswODAwLCBNaW5nIExlaSB3cm90ZToNCj4gDQo+
+IEl0IGNhbiBiZSBxdWl0ZSBoYXJkIHRvIGRlYWwgd2l0aCBub24tNTEyIGFsaWduZWQgc2VjdG9y
+IGJ1ZmZlciwgc2luY2UNCj4gb25lIHNlY3RvciBidWZmZXIgbWF5IGNyb3NzIHR3byBwYWdlcywg
+c28gZmFyIG9uZSB3b3JrYXJvdW5kIEkgdGhvdWdodA0KPiBvZiBpcyB0byBub3QgbWVyZ2Ugc3Vj
+aCBJTyBidWZmZXIgaW50byBvbmUgYnZlYy4NCj4gDQo+IFZlcm1hLCBjb3VsZCB5b3UgdHJ5IHRo
+ZSBmb2xsb3dpbmcgcGF0Y2g/DQoNCkhpIE1pbmcsDQoNCkkgY2FuIGhpdCB0aGUgc2FtZSBmYWls
+dXJlIHdpdGggdGhpcyBwYXRjaC4NCkZ1bGwgdGhyZWFkLCBpbiBjYXNlIHlvdSBoYXZlbid0IGFs
+cmVhZHkgc2VlbiBpdDoNCmh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL2xpbnV4LXhmcy9lNDlhNmEz
+YTI0NGRiMDU1OTk1NzY5ZWI4NDRjMjgxZjkzZTUwYWI5LmNhbWVsQGludGVsLmNvbS8NCg0KPiAN
+Cj4gZGlmZiAtLWdpdCBhL2Jsb2NrL2Jpby5jIGIvYmxvY2svYmlvLmMNCj4gaW5kZXggMjRhNDk2
+ZjVkMmUyLi40OWRlYWIyYWM4YzQgMTAwNjQ0DQo+IC0tLSBhL2Jsb2NrL2Jpby5jDQo+ICsrKyBi
+L2Jsb2NrL2Jpby5jDQo+IEBAIC03NjksNiArNzY5LDkgQEAgYm9vbCBfX2Jpb190cnlfbWVyZ2Vf
+cGFnZShzdHJ1Y3QgYmlvICpiaW8sIHN0cnVjdA0KPiBwYWdlICpwYWdlLA0KPiAgCWlmIChXQVJO
+X09OX09OQ0UoYmlvX2ZsYWdnZWQoYmlvLCBCSU9fQ0xPTkVEKSkpDQo+ICAJCXJldHVybiBmYWxz
+ZTsNCj4gIA0KPiArCWlmIChvZmYgJiA1MTEpDQo+ICsJCXJldHVybiBmYWxzZTsNCj4gKw0KPiAg
+CWlmIChiaW8tPmJpX3ZjbnQgPiAwKSB7DQo+ICAJCXN0cnVjdCBiaW9fdmVjICpidiA9ICZiaW8t
+PmJpX2lvX3ZlY1tiaW8tPmJpX3ZjbnQgLSAxXTsNCj4gIA0KPiANCj4gVGhhbmtzLA0KPiBNaW5n
+DQoNCg==
