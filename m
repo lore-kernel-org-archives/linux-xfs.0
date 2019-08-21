@@ -6,227 +6,189 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7BEB8C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 13:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 05A4FC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 13:39:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4CC1520679
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 13:35:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D03C222DD3
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 13:39:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727918AbfHUNfg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Aug 2019 09:35:36 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57444 "EHLO mx1.redhat.com"
+        id S1728502AbfHUNjH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 09:39:07 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49154 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726372AbfHUNfg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Aug 2019 09:35:36 -0400
+        id S1727918AbfHUNjH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Aug 2019 09:39:07 -0400
 Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E6AA23082B02;
-        Wed, 21 Aug 2019 13:35:35 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id CA6C310C0216;
+        Wed, 21 Aug 2019 13:39:06 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 901D81001925;
-        Wed, 21 Aug 2019 13:35:35 +0000 (UTC)
-Date:   Wed, 21 Aug 2019 09:35:33 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 71AAC1001925;
+        Wed, 21 Aug 2019 13:39:06 +0000 (UTC)
+Date:   Wed, 21 Aug 2019 09:39:04 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: add kmem_alloc_io()
-Message-ID: <20190821133533.GB19646@bfoster>
+Subject: Re: [PATCH 3/3] xfs: alignment check bio buffers
+Message-ID: <20190821133904.GC19646@bfoster>
 References: <20190821083820.11725-1-david@fromorbit.com>
- <20190821083820.11725-3-david@fromorbit.com>
+ <20190821083820.11725-4-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190821083820.11725-3-david@fromorbit.com>
+In-Reply-To: <20190821083820.11725-4-david@fromorbit.com>
 User-Agent: Mutt/1.12.0 (2019-05-25)
 X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Wed, 21 Aug 2019 13:35:35 +0000 (UTC)
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.65]); Wed, 21 Aug 2019 13:39:06 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 06:38:19PM +1000, Dave Chinner wrote:
+On Wed, Aug 21, 2019 at 06:38:20PM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> Memory we use to submit for IO needs strict alignment to the
-> underlying driver contraints. Worst case, this is 512 bytes. Given
-> that all allocations for IO are always a power of 2 multiple of 512
-> bytes, the kernel heap provides natural alignment for objects of
-> these sizes and that suffices.
+> Add memory buffer alignment validation checks to bios built in XFS
+> to catch bugs that will result in silent data corruption in block
+> drivers that cannot handle unaligned memory buffers but don't
+> validate the incoming buffer alignment is correct.
 > 
-> Until, of course, memory debugging of some kind is turned on (e.g.
-> red zones, poisoning, KASAN) and then the alignment of the heap
-> objects is thrown out the window. Then we get weird IO errors and
-> data corruption problems because drivers don't validate alignment
-> and do the wrong thing when passed unaligned memory buffers in bios.
+> Known drivers with these issues are xenblk, brd and pmem.
 > 
-> TO fix this, introduce kmem_alloc_io(), which will guaranteeat least
-
-s/TO/To/
-
-> 512 byte alignment of buffers for IO, even if memory debugging
-> options are turned on. It is assumed that the minimum allocation
-> size will be 512 bytes, and that sizes will be power of 2 mulitples
-> of 512 bytes.
-> 
-> Use this everywhere we allocate buffers for IO.
-> 
-> This no longer fails with log recovery errors when KASAN is enabled
-> due to the brd driver not handling unaligned memory buffers:
-> 
-> # mkfs.xfs -f /dev/ram0 ; mount /dev/ram0 /mnt/test
+> Despite there being nothing XFS specific to xfs_bio_add_page(), this
+> function was created to do the required validation because the block
+> layer developers that keep telling us that is not possible to
+> validate buffer alignment in bio_add_page(), and even if it was
+> possible it would be too much overhead to do at runtime.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/kmem.c            | 61 +++++++++++++++++++++++++++++-----------
->  fs/xfs/kmem.h            |  1 +
->  fs/xfs/xfs_buf.c         |  4 +--
->  fs/xfs/xfs_log.c         |  2 +-
->  fs/xfs/xfs_log_recover.c |  2 +-
->  fs/xfs/xfs_trace.h       |  1 +
->  6 files changed, 50 insertions(+), 21 deletions(-)
+>  fs/xfs/xfs_bio_io.c | 32 +++++++++++++++++++++++++++++---
+>  fs/xfs/xfs_buf.c    |  2 +-
+>  fs/xfs/xfs_linux.h  |  3 +++
+>  fs/xfs/xfs_log.c    |  6 +++++-
+>  4 files changed, 38 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
-> index edcf393c8fd9..ec693c0fdcff 100644
-> --- a/fs/xfs/kmem.c
-> +++ b/fs/xfs/kmem.c
-...
-> @@ -62,6 +56,39 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
->  	return ptr;
+> diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+> index e2148f2d5d6b..fbaea643c000 100644
+> --- a/fs/xfs/xfs_bio_io.c
+> +++ b/fs/xfs/xfs_bio_io.c
+> @@ -9,6 +9,27 @@ static inline unsigned int bio_max_vecs(unsigned int count)
+>  	return min_t(unsigned, howmany(count, PAGE_SIZE), BIO_MAX_PAGES);
 >  }
 >  
-> +/*
-> + * Same as kmem_alloc_large, except we guarantee a 512 byte aligned buffer is
-> + * returned. vmalloc always returns an aligned region.
-> + */
-> +void *
-> +kmem_alloc_io(size_t size, xfs_km_flags_t flags)
+> +int
+> +xfs_bio_add_page(
+> +	struct bio	*bio,
+> +	struct page	*page,
+> +	unsigned int	len,
+> +	unsigned int	offset)
 > +{
-> +	void	*ptr;
+> +	struct request_queue	*q = bio->bi_disk->queue;
+> +	bool		same_page = false;
 > +
-> +	trace_kmem_alloc_io(size, flags, _RET_IP_);
+> +	if (WARN_ON_ONCE(!blk_rq_aligned(q, len, offset)))
+> +		return -EIO;
 > +
-> +	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
-> +	if (ptr) {
-> +		if (!((long)ptr & 511))
-> +			return ptr;
-> +		kfree(ptr);
+> +	if (!__bio_try_merge_page(bio, page, len, offset, &same_page)) {
+> +		if (bio_full(bio, len))
+> +			return 0;
+> +		__bio_add_page(bio, page, len, offset);
 > +	}
-> +	return __kmem_vmalloc(size, flags);
+> +	return len;
 > +}
+> +
 
-Even though it is unfortunate, this seems like a quite reasonable and
-isolated temporary solution to the problem to me. The one concern I have
-is if/how much this could affect performance under certain
-circumstances. I realize that these callsites are isolated in the common
-scenario. Less common scenarios like sub-page block sizes (whether due
-to explicit mkfs time format or default configurations on larger page
-size systems) can fall into this path much more frequently, however.
+Seems reasonable to me. Looks like bio_add_page() with an error check.
+;) Given that, what's the need to open-code bio_add_page() here rather
+than just call it after the check?
 
-Since this implies some kind of vm debug option is enabled, performance
-itself isn't critical when this solution is active. But how bad is it in
-those cases where we might depend on this more heavily? Have you
-confirmed that the end configuration is still "usable," at least?
+>  int
+>  xfs_rw_bdev(
+>  	struct block_device	*bdev,
+...
+> @@ -36,9 +57,12 @@ xfs_rw_bdev(
+>  		unsigned int	off = offset_in_page(data);
+>  		unsigned int	len = min_t(unsigned, left, PAGE_SIZE - off);
+>  
+> -		while (bio_add_page(bio, page, len, off) != len) {
+> +		while ((ret = xfs_bio_add_page(bio, page, len, off)) != len) {
+>  			struct bio	*prev = bio;
+>  
+> +			if (ret < 0)
+> +				goto submit;
+> +
 
-I ask because the repeated alloc/free behavior can easily be avoided via
-something like an mp flag (which may require a tweak to the
-kmem_alloc_io() interface) to skip further kmem_alloc() calls from this
-path once we see one unaligned allocation. That assumes this behavior is
-tied to functionality that isn't dynamically configured at runtime, of
-course.
+Hmm.. is submitting the bio really the right thing to do if we get here
+and have failed to add any pages to the bio? If we're already seeing
+weird behavior for bios with unaligned data memory, this seems like a
+recipe for similar weirdness. We'd also end up doing a partial write in
+scenarios where we already know we're returning an error. Perhaps we
+should create an error path or use a check similar to what is already in
+xfs_buf_ioapply_map() (though I'm not a fan of submitting a partial I/O
+when we already know we're going to return an error) to call bio_endio()
+to undo any chaining.
+
+>  			bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+>  			bio_copy_dev(bio, prev);
+>  			bio->bi_iter.bi_sector = bio_end_sector(prev);
+...
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 7bd1f31febfc..a2d499baee9c 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -1294,7 +1294,7 @@ xfs_buf_ioapply_map(
+>  		if (nbytes > size)
+>  			nbytes = size;
+>  
+> -		rbytes = bio_add_page(bio, bp->b_pages[page_index], nbytes,
+> +		rbytes = xfs_bio_add_page(bio, bp->b_pages[page_index], nbytes,
+>  				      offset);
+
+Similar concern here. The higher level code seems written under the
+assumption that bio_add_page() returns success or zero. In this case the
+error is basically tossed so we can also attempt to split/chain an empty
+bio, or even better, submit a partial write and continue operating as if
+nothing happened (outside of the warning). The latter case should be
+handled as a log I/O error one way or another.
 
 Brian
 
-> +
-> +void *
-> +kmem_alloc_large(size_t size, xfs_km_flags_t flags)
-> +{
-> +	void	*ptr;
-> +
-> +	trace_kmem_alloc_large(size, flags, _RET_IP_);
-> +
-> +	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
-> +	if (ptr)
-> +		return ptr;
-> +	return __kmem_vmalloc(size, flags);
-> +}
-> +
->  void *
->  kmem_realloc(const void *old, size_t newsize, xfs_km_flags_t flags)
->  {
-> diff --git a/fs/xfs/kmem.h b/fs/xfs/kmem.h
-> index 267655acd426..423a1fa0fcd6 100644
-> --- a/fs/xfs/kmem.h
-> +++ b/fs/xfs/kmem.h
-> @@ -59,6 +59,7 @@ kmem_flags_convert(xfs_km_flags_t flags)
+>  		if (rbytes < nbytes)
+>  			break;
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index ca15105681ca..e71c7bf3e714 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -145,6 +145,9 @@ static inline void delay(long ticks)
+>  	schedule_timeout_uninterruptible(ticks);
 >  }
 >  
->  extern void *kmem_alloc(size_t, xfs_km_flags_t);
-> +extern void *kmem_alloc_io(size_t, xfs_km_flags_t);
->  extern void *kmem_alloc_large(size_t size, xfs_km_flags_t);
->  extern void *kmem_realloc(const void *, size_t, xfs_km_flags_t);
->  static inline void  kmem_free(const void *ptr)
-> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> index ca0849043f54..7bd1f31febfc 100644
-> --- a/fs/xfs/xfs_buf.c
-> +++ b/fs/xfs/xfs_buf.c
-> @@ -353,7 +353,7 @@ xfs_buf_allocate_memory(
->  	 */
->  	size = BBTOB(bp->b_length);
->  	if (size < PAGE_SIZE) {
-> -		bp->b_addr = kmem_alloc(size, KM_NOFS);
-> +		bp->b_addr = kmem_alloc_io(size, KM_NOFS);
->  		if (!bp->b_addr) {
->  			/* low memory - use alloc_page loop instead */
->  			goto use_alloc_page;
-> @@ -368,7 +368,7 @@ xfs_buf_allocate_memory(
->  		}
->  		bp->b_offset = offset_in_page(bp->b_addr);
->  		bp->b_pages = bp->b_page_array;
-> -		bp->b_pages[0] = virt_to_page(bp->b_addr);
-> +		bp->b_pages[0] = kmem_to_page(bp->b_addr);
->  		bp->b_page_count = 1;
->  		bp->b_flags |= _XBF_KMEM;
->  		return 0;
+> +int xfs_bio_add_page(struct bio *bio, struct page *page, unsigned int len,
+> +			unsigned int offset);
+> +
+>  /*
+>   * XFS wrapper structure for sysfs support. It depends on external data
+>   * structures and is embedded in various internal data structures to implement
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index 7fc3c1ad36bc..1830d185d7fc 100644
+> index 1830d185d7fc..52f7d840d09e 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -1415,7 +1415,7 @@ xlog_alloc_log(
->  		iclog->ic_prev = prev_iclog;
->  		prev_iclog = iclog;
+> @@ -1673,8 +1673,12 @@ xlog_map_iclog_data(
+>  		struct page	*page = kmem_to_page(data);
+>  		unsigned int	off = offset_in_page(data);
+>  		size_t		len = min_t(size_t, count, PAGE_SIZE - off);
+> +		int		ret;
 >  
-> -		iclog->ic_data = kmem_alloc_large(log->l_iclog_size,
-> +		iclog->ic_data = kmem_alloc_io(log->l_iclog_size,
->  				KM_MAYFAIL);
->  		if (!iclog->ic_data)
->  			goto out_free_iclog;
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 13d1d3e95b88..b4a6a008986b 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -125,7 +125,7 @@ xlog_alloc_buffer(
->  	if (nbblks > 1 && log->l_sectBBsize > 1)
->  		nbblks += log->l_sectBBsize;
->  	nbblks = round_up(nbblks, log->l_sectBBsize);
-> -	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL);
-> +	return kmem_alloc_io(BBTOB(nbblks), KM_MAYFAIL);
->  }
+> -		WARN_ON_ONCE(bio_add_page(bio, page, len, off) != len);
+> +		ret = xfs_bio_add_page(bio, page, len, off);
+> +		WARN_ON_ONCE(ret != len);
+> +		if (ret < 0)
+> +			break;
 >  
->  /*
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 8bb8b4704a00..eaae275ed430 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -3604,6 +3604,7 @@ DEFINE_EVENT(xfs_kmem_class, name, \
->  	TP_PROTO(ssize_t size, int flags, unsigned long caller_ip), \
->  	TP_ARGS(size, flags, caller_ip))
->  DEFINE_KMEM_EVENT(kmem_alloc);
-> +DEFINE_KMEM_EVENT(kmem_alloc_io);
->  DEFINE_KMEM_EVENT(kmem_alloc_large);
->  DEFINE_KMEM_EVENT(kmem_realloc);
->  DEFINE_KMEM_EVENT(kmem_zone_alloc);
+>  		data += len;
+>  		count -= len;
 > -- 
 > 2.23.0.rc1
 > 
