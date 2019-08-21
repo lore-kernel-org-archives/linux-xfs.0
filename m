@@ -2,134 +2,254 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B3E1AC3A589
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 02:24:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20D26C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 04:46:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 77E6D22DD3
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 02:24:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3B142339D
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 04:46:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="gmGHB3o2";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="naVxIL0z"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tLKvqx9Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726463AbfHUCYW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 22:24:22 -0400
-Received: from esa5.hgst.iphmx.com ([216.71.153.144]:31275 "EHLO
-        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726193AbfHUCYW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 22:24:22 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1566354263; x=1597890263;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=PWpfmpcO/F0DJeoiQRbmmuTDD7JIiuVS+QVS+Lb9p/I=;
-  b=gmGHB3o2NISkw3HpC2Kn8xb7D/C/vveUec5uQ1TUSVdQUyoLIUzwPfZB
-   HtiNXxwXGTVCuZPko1yUMk3Cd+Q1CMn6TYCpQzVNsDuyVbAXl1VEyZpu3
-   KtkgsVkp0S8UquidEXkz0JCqFTPZDBuuwLz9ruehQukGfLZ9th1HjS+cB
-   QQu27MSGLiNQRWY+a716tNSRvc/W2arlk/7KuNxv6diT2I0Co3dHoWN0a
-   c0d4C/y8Vutl4hUkBuUCX6UpXxMVmeGMKJJQ0dJgd+gQw4rZSEbd9KKC/
-   jhBHHUP5yL2OraMATQMiois1ubMXUxBFPE9+/IOak8qieTEEsm1u+AkKC
-   g==;
-IronPort-SDR: v+uoOayGunHZVnskt5iuWMWnircJvW5zoDCZfKz5jCxOXtZY6wRqPLWt92uYMMRYdxO5G7RcZv
- 8S/kBMoZCzPWcGl7L7rDuMdt8OSDvYeXcjGpCBRPSJnnAU1Q3oCEN4QhYaERmjnzFgPXS0LB4J
- qrMKO9ppn2IvGKN3EnBUbUrLe5Omle+X2TwxSTk4z7rqcxxfVOrzYcGjx7DzkpuIveqFO1sBUJ
- yh0iJ0E5H8rpUSt8d+FXZzNCjaKKiAVBoq7juhp5Hlub7aT+SmeJPqid4Ci47eOt2KPdcQWe87
- jZU=
-X-IronPort-AV: E=Sophos;i="5.64,410,1559491200"; 
-   d="scan'208";a="117228346"
-Received: from mail-bn3nam04lp2053.outbound.protection.outlook.com (HELO NAM04-BN3-obe.outbound.protection.outlook.com) ([104.47.46.53])
-  by ob1.hgst.iphmx.com with ESMTP; 21 Aug 2019 10:24:21 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=M0mL70LtSiG6K6CHov9KENPgiWMK5pUfVEYlIO553eeQNbeMokWeS5I3hurICt1FZ5D6hlzb8p2oKK6ePlx2rTGVpDY6ypeXZCRZfUK7+lmF7XMHb4ZQLVe6iK8O5vtGtPM+Yy8YmFU1xZGqWp/BcvyltfB08JLLH/SpHqGt7Kn6ox6UvGwyUVFY+N5WPU1ErirnSZscKPtQ0QLIEbVAYCrpbYHfvwqXQ69+2SVm6A4ACgpjJ02C02twZuJ6C6lW3+H15H9lyocWclT/HATUJMjoCIkYfNtJZdYQB0m48R+Nx8BgRlQA9hV+J0LiCcMwkIfeHltVu4lksZNNfMEXjw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PWpfmpcO/F0DJeoiQRbmmuTDD7JIiuVS+QVS+Lb9p/I=;
- b=Y0ffbPnksbJrGXgeOJmQKsi1OUuvrYRrL4OprS5boxq6G/n2k8cWD2+gMgod4UDUaeYllD65OUgEsZSjblHFzXaIGTkGojrIJ0gM5I2IUpc2uUwvxkMd1hBrSX7FdVfhoJ25ac4YR8O8XGGawv2yEYt729G9PyG0oj75GDNQ/8i3N0AH9JBP9BsWmf/wmRS5GDFXxAKXAQKwyKtAAPPEbbiEwtd71McWsOANThZ9XUUM9rqzOm1KM9+xpE4hNMmyzk0f/cBauH8CWgjgyVa0U7L06wqnRG3nzFs9RE6J+0s0NqkpijMpkTQo7I2EOWTvxhGrblZNpgzRDW+MeSy//Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1726673AbfHUEqY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 00:46:24 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:43064 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725866AbfHUEqY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 00:46:24 -0400
+Received: by mail-pl1-f193.google.com with SMTP id 4so619662pld.10
+        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 21:46:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PWpfmpcO/F0DJeoiQRbmmuTDD7JIiuVS+QVS+Lb9p/I=;
- b=naVxIL0ztLZcYJkyq1TrJRAxSIITa942zk0Tb3WVY04a4/PYqr98VHw3RwwUyw3nTy6ezXLdNnaMozE2a4hkXyBBVRvh6a77T29tUHkaQ4Ito3D5NoeF2tV9bAgN6vWiJe793D7T+7T2MBfkcoO+T7caxJSftX8hISCTCTGetcQ=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.58.207) by
- BYAPR04MB4054.namprd04.prod.outlook.com (52.135.215.149) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2178.18; Wed, 21 Aug 2019 02:24:19 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::a538:afd0:d62a:55bc]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::a538:afd0:d62a:55bc%7]) with mapi id 15.20.2178.020; Wed, 21 Aug 2019
- 02:24:19 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-CC:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>
-Subject: Re: [PATCH V2] fs: New zonefs file system
-Thread-Topic: [PATCH V2] fs: New zonefs file system
-Thread-Index: AQHVVy8UVAVGvwSe4Um+ID5oFBsG3w==
-Date:   Wed, 21 Aug 2019 02:24:19 +0000
-Message-ID: <BYAPR04MB5816BAB2EA50F571311AFB7AE7AA0@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190820081249.27353-1-damien.lemoal@wdc.com>
- <20190820152638.GA1037422@magnolia>
- <BYAPR04MB58160FB257F05BB93D3367BFE7AA0@BYAPR04MB5816.namprd04.prod.outlook.com>
- <20190821014333.GD1037350@magnolia>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.9]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: bfe941c7-f9f2-44cd-334b-08d725deabfb
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(5600148)(711020)(4605104)(1401327)(4618075)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(2017052603328)(7193020);SRVR:BYAPR04MB4054;
-x-ms-traffictypediagnostic: BYAPR04MB4054:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB405438BD3F87B78FFD020FE2E7AA0@BYAPR04MB4054.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:6108;
-x-forefront-prvs: 0136C1DDA4
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(39860400002)(366004)(136003)(346002)(396003)(376002)(189003)(199004)(55016002)(52536014)(76176011)(5660300002)(7696005)(99286004)(305945005)(33656002)(229853002)(2906002)(54906003)(6916009)(316002)(7736002)(6116002)(3846002)(74316002)(558084003)(478600001)(86362001)(8936002)(256004)(81156014)(8676002)(81166006)(71190400001)(71200400001)(66066001)(14454004)(4326008)(66946007)(6506007)(6436002)(446003)(53546011)(186003)(25786009)(91956017)(76116006)(53936002)(64756008)(102836004)(476003)(26005)(66446008)(66476007)(66556008)(486006)(9686003)(6246003);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB4054;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;MX:1;A:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: AzxQdq8DbOfTaCUvo44T6pAYRBbyiIqgelA3E7eyK+aurUKoira5+5Q1znLYiXmtgJx3XO4a4fW3LsI/8ySFlNR0nVObpQ6lTvSJ0TB0JIp9LAddRrWp+b6WgYhuppONX1mW2pJDTlVD6X5wl2JA7z6JkA5SuXuc05gfx3vnByrcqUMexg10XB6AjxIoiHAdE2KQcyMmWyM5FsMm0PpZmpyPDmkJVc/HiUY6x7TkupgWjVtYNXf7w3kfCE7e6U8X5mIWm1EFc9rnwyKwk4C1qeRX4cdUBl+obvMljH7Bb+bb2Ep1dU4Hjgga22DkouYBxcmT4fyH3Tdywf6Tlb8d6Oy/etqWfrHWoccAHWont5XamoO2Qvmm7/JP/s0t7a05nXZcE5UJglVHpS3PiuBjIkiZC3yOAUn9QWkMa1qf+hU=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=to:cc:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=yI8O5NeomA9vU5KiViEmux7z0ZL2Vy3sxm5JlszmgjA=;
+        b=tLKvqx9YgWznUY3tkBxPRinJMviqCDHjwAA/F4FCYs1cdH++Y8D9P3zRb2qz2Zjuht
+         If101LFzYbE1ynmv1ltiJHrKdZ818pl+TZOV12aabz+270fBYxHeBAGm9Dedkg/1kFDN
+         /k210bUBSD3RRryT0DOPFIDVZsbHP9vXwG6BtMoIMm61c0M9rqXBr6xjePkFO3hAj3BZ
+         SqyhCpPRm/XRGhaMckrcbKkcTCgqhbL9uJNdDaGeR9QjE7QEVwNsfeml6f02KM9DkOF0
+         gJT6QI2ErQEeYYUM6bIxbEKuELyDzUGYu47IIiBI1eUpZp4JWAJdbBWfDCxN/Tf9JWWx
+         oQow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=yI8O5NeomA9vU5KiViEmux7z0ZL2Vy3sxm5JlszmgjA=;
+        b=DjokWKAWK4N8ghbEXxF4C9WeS5Jk6pNwCaUY1WpNn6WbzgweZVynYgC914C4jIsP/H
+         eIyqZWY8G0Chf8d2Y+gx/DDyp3coTBAHCrOfahZRRMgLAgUeoxTLWTod1lEVc5E+hO2/
+         koFKcTKFsj6M7EpkfkblTDsLA3U0YSWkioVcyZO2UyKLSJt/ci0JuQgsKC+v3OiqKWk5
+         fygVT3O6qWvt58pj5UZOEF3mUPmNlAQn2korjW7QcaU47Rhz1EMFFlakfQrjn5hW8GE1
+         Gp62BfKoeHnjtCSkFCErc23oYkLGAcBa8NorXlwtre6uLYmEEH4Ecfp1Nas0DGCoBF9E
+         NnUw==
+X-Gm-Message-State: APjAAAUZrr7qi42tFjfFjo16XEFYD/qtEyLnEBdAukmyfkqQFi6U64sV
+        rRVPFQBqmKlxwN191xwHiurgOao=
+X-Google-Smtp-Source: APXvYqx59tIYgX17wW2t8c1NhJS8v8Ks0VGpS2CLRPBVpGGvlGdyR4/ZZePtRkNGOzMy8hZDTUiwmQ==
+X-Received: by 2002:a17:902:724a:: with SMTP id c10mr1898091pll.163.1566362783479;
+        Tue, 20 Aug 2019 21:46:23 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id j187sm27978126pfg.178.2019.08.20.21.46.20
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 20 Aug 2019 21:46:22 -0700 (PDT)
+To:     linux-xfs@vger.kernel.org
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Dave Chinner <david@fromorbit.com>, newtongao@tencent.com,
+        jasperwang@tencent.com, xiakaixu1987@gmail.com
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Subject: [PATCH v3] xfs: Fix agi&agf ABBA deadlock when performing rename with
+ RENAME_WHITEOUT flag
+Message-ID: <cc2a0c81-ee9e-d2bd-9cc0-025873f394c0@gmail.com>
+Date:   Wed, 21 Aug 2019 12:46:18 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bfe941c7-f9f2-44cd-334b-08d725deabfb
-X-MS-Exchange-CrossTenant-originalarrivaltime: 21 Aug 2019 02:24:19.3299
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: ugI4wT+fxPPF07aFuM1LL0gBU0KTC21v7FxNt9T36PdFeb3yUM/wZNVGMTrKMKIYJT4VoGRP+Uy/BUv5Z0Nhww==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB4054
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2019/08/21 10:43, Darrick J. Wong wrote:=0A=
-> Generally, *-for-next is the branch you want, particularly if you decide=
-=0A=
-> at some point to add your zonedfs tree to the for-next zoo.=0A=
-=0A=
-OK. Rebasing and sending a v3 with corrections.=0A=
-=0A=
-Thanks.=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+When performing rename operation with RENAME_WHITEOUT flag, we will
+hold AGF lock to allocate or free extents in manipulating the dirents
+firstly, and then doing the xfs_iunlink_remove() call last to hold
+AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+
+The big problem here is that we have an ordering constraint on AGF
+and AGI locking - inode allocation locks the AGI, then can allocate
+a new extent for new inodes, locking the AGF after the AGI. Hence
+the ordering that is imposed by other parts of the code is AGI before
+AGF. So we get the ABBA agi&agf deadlock here.
+
+Process A:
+Call trace:
+  ? __schedule+0x2bd/0x620
+  schedule+0x33/0x90
+  schedule_timeout+0x17d/0x290
+  __down_common+0xef/0x125
+  ? xfs_buf_find+0x215/0x6c0 [xfs]
+  down+0x3b/0x50
+  xfs_buf_lock+0x34/0xf0 [xfs]
+  xfs_buf_find+0x215/0x6c0 [xfs]
+  xfs_buf_get_map+0x37/0x230 [xfs]
+  xfs_buf_read_map+0x29/0x190 [xfs]
+  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+  xfs_read_agf+0xa6/0x180 [xfs]
+  ? schedule_timeout+0x17d/0x290
+  xfs_alloc_read_agf+0x52/0x1f0 [xfs]
+  xfs_alloc_fix_freelist+0x432/0x590 [xfs]
+  ? down+0x3b/0x50
+  ? xfs_buf_lock+0x34/0xf0 [xfs]
+  ? xfs_buf_find+0x215/0x6c0 [xfs]
+  xfs_alloc_vextent+0x301/0x6c0 [xfs]
+  xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
+  ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
+  xfs_dialloc+0x116/0x290 [xfs]
+  xfs_ialloc+0x6d/0x5e0 [xfs]
+  ? xfs_log_reserve+0x165/0x280 [xfs]
+  xfs_dir_ialloc+0x8c/0x240 [xfs]
+  xfs_create+0x35a/0x610 [xfs]
+  xfs_generic_create+0x1f1/0x2f0 [xfs]
+  ...
+
+Process B:
+Call trace:
+  ? __schedule+0x2bd/0x620
+  ? xfs_bmapi_allocate+0x245/0x380 [xfs]
+  schedule+0x33/0x90
+  schedule_timeout+0x17d/0x290
+  ? xfs_buf_find+0x1fd/0x6c0 [xfs]
+  __down_common+0xef/0x125
+  ? xfs_buf_get_map+0x37/0x230 [xfs]
+  ? xfs_buf_find+0x215/0x6c0 [xfs]
+  down+0x3b/0x50
+  xfs_buf_lock+0x34/0xf0 [xfs]
+  xfs_buf_find+0x215/0x6c0 [xfs]
+  xfs_buf_get_map+0x37/0x230 [xfs]
+  xfs_buf_read_map+0x29/0x190 [xfs]
+  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+  xfs_read_agi+0xa8/0x160 [xfs]
+  xfs_iunlink_remove+0x6f/0x2a0 [xfs]
+  ? current_time+0x46/0x80
+  ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
+  xfs_rename+0x57a/0xae0 [xfs]
+  xfs_vn_rename+0xe4/0x150 [xfs]
+  ...
+
+In this patch we move the xfs_iunlink_remove() call to
+before acquiring the AGF lock to preserve correct AGI/AGF locking
+order.
+
+Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+---
+  fs/xfs/xfs_inode.c | 61 ++++++++++++++++++++++++++++++++++--------------------
+  1 file changed, 38 insertions(+), 23 deletions(-)
+
+diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+index 6467d5e..cf06568 100644
+--- a/fs/xfs/xfs_inode.c
++++ b/fs/xfs/xfs_inode.c
+@@ -3282,7 +3282,8 @@ struct xfs_iunlink {
+  					spaceres);
+
+  	/*
+-	 * Set up the target.
++	 * Error checks before we dirty the transaction, return
++	 * the error code if check failed and the filesystem is clean.
+  	 */
+  	if (target_ip == NULL) {
+  		/*
+@@ -3294,6 +3295,40 @@ struct xfs_iunlink {
+  			if (error)
+  				goto out_trans_cancel;
+  		}
++	} else {
++		/*
++		 * If target exists and it's a directory, check that both
++		 * target and source are directories and that target can be
++		 * destroyed, or that neither is a directory.
++		 */
++		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
++			/*
++			 * Make sure target dir is empty.
++			 */
++			if (!(xfs_dir_isempty(target_ip)) ||
++			    (VFS_I(target_ip)->i_nlink > 2)) {
++				error = -EEXIST;
++				goto out_trans_cancel;
++			}
++		}
++	}
++
++	/*
++	 * Directory entry creation below may acquire the AGF. Remove
++	 * the whiteout from the unlinked list first to preserve correct
++	 * AGI/AGF locking order.
++	 */
++	if (wip) {
++		ASSERT(VFS_I(wip)->i_nlink == 0);
++		error = xfs_iunlink_remove(tp, wip);
++		if (error)
++			goto out_trans_cancel;
++	}
++
++	/*
++	 * Set up the target.
++	 */
++	if (target_ip == NULL) {
+  		/*
+  		 * If target does not exist and the rename crosses
+  		 * directories, adjust the target directory link count
+@@ -3312,22 +3347,6 @@ struct xfs_iunlink {
+  		}
+  	} else { /* target_ip != NULL */
+  		/*
+-		 * If target exists and it's a directory, check that both
+-		 * target and source are directories and that target can be
+-		 * destroyed, or that neither is a directory.
+-		 */
+-		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
+-			/*
+-			 * Make sure target dir is empty.
+-			 */
+-			if (!(xfs_dir_isempty(target_ip)) ||
+-			    (VFS_I(target_ip)->i_nlink > 2)) {
+-				error = -EEXIST;
+-				goto out_trans_cancel;
+-			}
+-		}
+-
+-		/*
+  		 * Link the source inode under the target name.
+  		 * If the source inode is a directory and we are moving
+  		 * it across directories, its ".." entry will be
+@@ -3421,16 +3440,12 @@ struct xfs_iunlink {
+  	 * For whiteouts, we need to bump the link count on the whiteout inode.
+  	 * This means that failures all the way up to this point leave the inode
+  	 * on the unlinked list and so cleanup is a simple matter of dropping
+-	 * the remaining reference to it. If we fail here after bumping the link
+-	 * count, we're shutting down the filesystem so we'll never see the
+-	 * intermediate state on disk.
++	 * the remaining reference to it. Move the xfs_iunlink_remove() call to
++	 * before acquiring the AGF lock to preserve correct AGI/AGF locking order.
+  	 */
+  	if (wip) {
+  		ASSERT(VFS_I(wip)->i_nlink == 0);
+  		xfs_bumplink(tp, wip);
+-		error = xfs_iunlink_remove(tp, wip);
+-		if (error)
+-			goto out_trans_cancel;
+  		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+
+  		/*
+-- 
+1.8.3.1
+
+-- 
+kaixuxia
