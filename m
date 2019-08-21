@@ -2,197 +2,98 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BBDBC3A589
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 01:43:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8209EC3A589
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 01:56:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CF34C22D6D
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 01:43:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kHnc+Vs/"
+	by mail.kernel.org (Postfix) with ESMTP id 5CDD722DD3
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 01:56:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726202AbfHUBnt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 21:43:49 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54988 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726193AbfHUBnt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 21:43:49 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7L1dBKU019489;
-        Wed, 21 Aug 2019 01:43:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=w6b8o4+pJHqTlJ40Y3niZtVtKkdml7k+mWU6xWb/k6c=;
- b=kHnc+Vs/JCCvvwXdC2NsmG/8wr9DWrJN585WmzJJZSMimRi4aSl9+zrt3/7pGht+7hW5
- VLC/3Ja0/EfrzBFDHejds6nQN7JFMCfonAiF4ayuo2URi/0pGHX2F6WrMLBTGO/gaFU0
- dh5yQMSLKcggugBeER5gQpCGxxIdHkqAwnQnxlrqpnHsRMEa374srWoeqEd7jU+zCnd1
- o8lzK+TJxd+e6gdB4P0NovTV8ZZWXXmHDryCONyELbqO9/syodQDOeJwlISkwAUVdVGP
- e8NV6S8A2vTY3r6qtc4joe6FLg+lRH/uNdkJxpbk1Ac1rhWKjwm9NgdY+YfCQjdNboM3 rA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2ue9hpj2qh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Aug 2019 01:43:42 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7L1hes1186949;
-        Wed, 21 Aug 2019 01:43:41 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2ug269dbb2-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 21 Aug 2019 01:43:40 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7L1hYGo025974;
-        Wed, 21 Aug 2019 01:43:35 GMT
-Received: from localhost (/10.159.156.31)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 20 Aug 2019 18:43:34 -0700
-Date:   Tue, 20 Aug 2019 18:43:33 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        id S1726586AbfHUB4g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 21:56:36 -0400
+Received: from mga18.intel.com ([134.134.136.126]:16848 "EHLO mga18.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726533AbfHUB4f (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 20 Aug 2019 21:56:35 -0400
+X-Amp-Result: SKIPPED(no attachment in message)
+X-Amp-File-Uploaded: False
+Received: from fmsmga006.fm.intel.com ([10.253.24.20])
+  by orsmga106.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 20 Aug 2019 18:56:34 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,410,1559545200"; 
+   d="scan'208";a="378788221"
+Received: from fmsmsx103.amr.corp.intel.com ([10.18.124.201])
+  by fmsmga006.fm.intel.com with ESMTP; 20 Aug 2019 18:56:34 -0700
+Received: from FMSMSX110.amr.corp.intel.com (10.18.116.10) by
+ FMSMSX103.amr.corp.intel.com (10.18.124.201) with Microsoft SMTP Server (TLS)
+ id 14.3.439.0; Tue, 20 Aug 2019 18:56:34 -0700
+Received: from fmsmsx113.amr.corp.intel.com ([169.254.13.127]) by
+ FMSMSX110.amr.corp.intel.com ([169.254.14.63]) with mapi id 14.03.0439.000;
+ Tue, 20 Aug 2019 18:56:34 -0700
+From:   "Verma, Vishal L" <vishal.l.verma@intel.com>
+To:     "hch@lst.de" <hch@lst.de>,
+        "david@fromorbit.com" <david@fromorbit.com>
+CC:     "Williams, Dan J" <dan.j.williams@intel.com>,
         "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>
-Subject: Re: [PATCH V2] fs: New zonefs file system
-Message-ID: <20190821014333.GD1037350@magnolia>
-References: <20190820081249.27353-1-damien.lemoal@wdc.com>
- <20190820152638.GA1037422@magnolia>
- <BYAPR04MB58160FB257F05BB93D3367BFE7AA0@BYAPR04MB5816.namprd04.prod.outlook.com>
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+Subject: Re: 5.3-rc1 regression with XFS log recovery
+Thread-Topic: 5.3-rc1 regression with XFS log recovery
+Thread-Index: AQHVVHWHW9jyoVVDjkW5IFS3q2GBzqcA9LwAgAAIcACAAKWeAIADl9qAgAAE5ICAAAa1gIAADYGA
+Date:   Wed, 21 Aug 2019 01:56:33 +0000
+Message-ID: <92a9a35a96235fba6537cfdc89cc42603db50fb9.camel@intel.com>
+References: <e49a6a3a244db055995769eb844c281f93e50ab9.camel@intel.com>
+         <20190818071128.GA17286@lst.de> <20190818074140.GA18648@lst.de>
+         <20190818173426.GA32311@lst.de> <20190821002643.GK1119@dread.disaster.area>
+         <20190821004413.GB20250@lst.de> <20190821010813.GL1119@dread.disaster.area>
+In-Reply-To: <20190821010813.GL1119@dread.disaster.area>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+user-agent: Evolution 3.30.5 (3.30.5-1.fc29) 
+x-originating-ip: [10.251.152.70]
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <0937B63DC8A49A4884A471DB7D389AB5@intel.com>
+Content-Transfer-Encoding: base64
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BYAPR04MB58160FB257F05BB93D3367BFE7AA0@BYAPR04MB5816.namprd04.prod.outlook.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9355 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908210014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9355 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908210013
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 01:05:56AM +0000, Damien Le Moal wrote:
-> Darrick,
-> 
-> On 2019/08/21 0:26, Darrick J. Wong wrote:
-> [...]
-> >> +/*
-> >> + * Read super block information from the device.
-> >> + */
-> >> +static int zonefs_read_super(struct super_block *sb)
-> >> +{
-> >> +     struct zonefs_sb_info *sbi = ZONEFS_SB(sb);
-> >> +     struct zonefs_super *super;
-> >> +     struct bio bio;
-> >> +     struct bio_vec bio_vec;
-> >> +     struct page *page;
-> >> +     int ret;
-> >> +
-> >> +     page = alloc_page(GFP_KERNEL);
-> >> +     if (!page)
-> >> +             return -ENOMEM;
-> >> +
-> >> +     bio_init(&bio, &bio_vec, 1);
-> >> +     bio.bi_iter.bi_sector = 0;
-> >> +     bio_set_dev(&bio, sb->s_bdev);
-> >> +     bio_set_op_attrs(&bio, REQ_OP_READ, 0);
-> >> +     bio_add_page(&bio, page, PAGE_SIZE, 0);
-> >> +
-> >> +     ret = submit_bio_wait(&bio);
-> >> +     if (ret)
-> >> +             goto out;
-> >> +
-> >> +     ret = -EINVAL;
-> >> +     super = page_address(page);
-> >> +     if (le32_to_cpu(super->s_magic) != ZONEFS_MAGIC)
-> >> +             goto out;
-> >> +     sbi->s_features = le64_to_cpu(super->s_features);
-> >> +     if (zonefs_has_feature(sbi, ZONEFS_F_UID)) {
-> >> +             sbi->s_uid = make_kuid(current_user_ns(),
-> >> +                                    le32_to_cpu(super->s_uid));
-> >> +             if (!uid_valid(sbi->s_uid))
-> >> +                     goto out;
-> >> +     }
-> >> +     if (zonefs_has_feature(sbi, ZONEFS_F_GID)) {
-> >> +             sbi->s_gid = make_kgid(current_user_ns(),
-> >> +                                    le32_to_cpu(super->s_gid));
-> >> +             if (!gid_valid(sbi->s_gid))
-> >> +                     goto out;
-> >> +     }
-> >> +     if (zonefs_has_feature(sbi, ZONEFS_F_PERM))
-> >> +             sbi->s_perm = le32_to_cpu(super->s_perm);
-> > 
-> > Unknown feature bits are silently ignored.  Is that intentional?  Will
-> > all features be compat features?  I would find it a little annoying to
-> > format (for example) a F_UID filesystem only to have some old kernel
-> > driver ignore it.
-> 
-> Good point. I will add checks for unknown feature bits.
-> 
-> >> +/*
-> >> + * On-disk super block (block 0).
-> >> + */
-> >> +struct zonefs_super {
-> >> +
-> >> +     /* Magic number */
-> >> +     __le32          s_magic;
-> >> +
-> >> +     /* Features */
-> >> +     __le64          s_features;
-> >> +
-> >> +     /* 128-bit uuid */
-> >> +     uuid_t          s_uuid;
-> >> +
-> >> +     /* UID/GID to use for files */
-> >> +     __le32          s_uid;
-> >> +     __le32          s_gid;
-> >> +
-> >> +     /* File permissions */
-> >> +     __le32          s_perm;
-> >> +
-> >> +     /* Padding to 4K */
-> >> +     __u8            s_reserved[4056];
-> > 
-> > Hmm, I noticed that fill_super doesn't check that s_reserved is actually
-> > zero (or any specific value).  You might consider enforcing that so that
-> > future you can add fields beyond s_perm without having to burn a
-> > s_features bit every time you do it.
-> 
-> Indeed. Will fix that.
-> 
-> > Also a little surprised there's no checksum field here to detect bit
-> > flips and such. ;)
-> 
-> Yep. I did have that on my to-do list but forgot to actually do it... Will fix
-> everything and send a v3.
-> 
-> Thank you for the comments. One more question: should I rebase on your
-> iomap-for-next branch or on iomap-5.4-merge branch ? Both branches look
-> identical right now.
-
-Generally, *-for-next is the branch you want, particularly if you decide
-at some point to add your zonedfs tree to the for-next zoo.
-
---D
-
-> Best regards.
-> 
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+T24gV2VkLCAyMDE5LTA4LTIxIGF0IDExOjA4ICsxMDAwLCBEYXZlIENoaW5uZXIgd3JvdGU6DQo+
+IE9uIFdlZCwgQXVnIDIxLCAyMDE5IGF0IDAyOjQ0OjEzQU0gKzAyMDAsIGhjaEBsc3QuZGUgd3Jv
+dGU6DQo+ID4gT24gV2VkLCBBdWcgMjEsIDIwMTkgYXQgMTA6MjY6NDNBTSArMTAwMCwgRGF2ZSBD
+aGlubmVyIHdyb3RlOg0KPiA+ID4gQWZ0ZXIgdGhpbmtpbmcgb24gdGhpcyBmb3IgYSBiaXQsIEkg
+c3VzcGVjdCB0aGUgYmV0dGVyIHRoaW5nIHRvIGRvDQo+ID4gPiBoZXJlIGlzIGFkZCBhIEtNX0FM
+SUdORUQgZmxhZyB0byB0aGUgYWxsb2NhdGlvbiwgc28gaWYgdGhlDQo+ID4gPiBpbnRlcm5hbA0K
+PiA+ID4ga21lbV9hbGxvYygpIHJldHVybnMgYW4gdW5hbGlnbmVkIHBvaW50ZXIgd2UgZnJlZSBp
+dCBhbmQgZmFsbA0KPiA+ID4gdGhyb3VnaCB0byB2bWFsbG9jKCkgdG8gZ2V0IGEgcHJvcGVybHkg
+YWxpZ25lZCBwb2ludGVyLi4uLg0KPiA+ID4gDQo+ID4gPiBUaGF0IHdheSBub25lIG9mIHRoZSBv
+dGhlciBpbnRlcmZhY2VzIGhhdmUgdG8gY2hhbmdlLCBhbmQgd2UgY2FuDQo+ID4gPiB0aGVuIHVz
+ZSBrbWVtX2FsbG9jX2xhcmdlKCkgZXZlcnl3aGVyZSB3ZSBhbGxvY2F0ZSBidWZmZXJzIGZvciBJ
+Ty4NCj4gPiA+IEFuZCB3ZSBkb24ndCBuZWVkIG5ldyBpbmZyYXN0cnVjdHVyZSBqdXN0IHRvIHN1
+cHBvcnQgdGhlc2UgZGVidWcNCj4gPiA+IGNvbmZpZ3VyYXRpb25zLCBlaXRoZXIuDQo+ID4gPiAN
+Cj4gPiA+IEFjdHVhbGx5LCBrbWVtX2FsbG9jX2lvKCkgbWlnaHQgYmUgYSBiZXR0ZXIgaWRlYSAt
+IGtlZXAgdGhlDQo+ID4gPiBhbGlnbmVkDQo+ID4gPiBmbGFnIGludGVybmFsIHRvIHRoZSBrbWVt
+IGNvZGUuIFNlZW1zIGxpa2UgYSBwcmV0dHkgc2ltcGxlDQo+ID4gPiBzb2x1dGlvbg0KPiA+ID4g
+dG8gdGhlIGVudGlyZSBwcm9ibGVtIHdlIGhhdmUgaGVyZS4uLg0KPiA+IA0KPiA+IFRoZSBpbnRl
+cmZhY2Ugc291bmRzIG9rLiAgVGhlIHNpbXBsZSB0cnkgYW5kIGZhbGxiYWNrIGltcGxlbWVudGF0
+aW9uDQo+ID4gT1RPSCBtZWFucyB3ZSBhbHdheXMgZG8gdHdvIGFsbG9jYXRpb25zINGWZiBzbHVi
+IGRlYnVnZ2luZyBpcw0KPiA+IGVuYWJsZWQsDQo+ID4gd2hpY2ggaXMgYSBsaXR0bGUgbGFzdHku
+DQo+IA0KPiBTb21lIGNyZWF0aXZlIGlmZGVmZXJ5IGNvdWxkIGF2b2lkIHRoYXQsIGJ1dCBxdWl0
+ZSBmcmFua2x5IGl0J3Mgb25seQ0KPiBuZWNlc3NhcnkgZm9yIGxpbWl0ZWQgYWxsb2NhdGlvbiBj
+b250ZXh0cyBhbmQgc28gdGhlDQo+IG92ZXJoZWFkL2ludGVyYWN0aW9ucyB3b3VsZCBsYXJnZWx5
+IGJlIHVubm90aWNhYmxlIGNvbXBhcmVkIHRvIHRoZQ0KPiB3aWRlciBpbXBhY3Qgb2YgbWVtb3J5
+IGRlYnVnZ2luZy4uLg0KPiANCj4gPiBJIGd1ZXNzIHRoZSBiZXN0IHdlIGNhbiBkbyBmb3IgNS4z
+IGFuZA0KPiA+IHRoZW4gZmlndXJlIG91dCBhIHdheSB0byBhdm9pZCBmb3IgbGF0ZXIuDQo+IA0K
+PiBZZWFoLCBpdCBhbHNvIGhhcyB0aGUgYWR2YW50YWdlIG9mIGRvY3VtZW50aW5nIGFsbCB0aGUg
+cGxhY2VzIHdlDQo+IG5lZWQgdG8gYmUgY2FyZWZ1bCBvZiBhbGxvY2F0aW9uIGFsaWdubWVudCwg
+YW5kIGl0IHdvdWxkIGFsbG93IHVzIHRvDQo+IHNpbXBseSBwbHVnIGluIHdoYXRldmVyIGZ1dHVy
+ZSBpbmZyYXN0cnVjdHVyZSBjb21lcyBhbG9uZyB0aGF0DQo+IGd1YXJhbnRlZXMgYWxsb2NhdGlv
+biBhbGlnbm1lbnQgd2l0aG91dCBjaGFuZ2luZyBhbnkgb3RoZXIgWEZTDQo+IGNvZGUuLi4NCg0K
+SnVzdCB0byBjbGFyaWZ5LCB0aGlzIHByZWNsdWRlcyB0aGUgY2hhbmdlcyB0byBiaW9fYWRkX3Bh
+Z2UoKSB5b3UNCnN1Z2dlc3RlZCBlYXJsaWVyLCByaWdodD8NCg0KDQo=
