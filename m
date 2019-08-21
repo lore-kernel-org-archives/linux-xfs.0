@@ -2,254 +2,317 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 20D26C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 04:46:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 664BBC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 06:16:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D3B142339D
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 04:46:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="tLKvqx9Y"
+	by mail.kernel.org (Postfix) with ESMTP id 336DB216F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 06:16:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726673AbfHUEqY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Aug 2019 00:46:24 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:43064 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725866AbfHUEqY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 00:46:24 -0400
-Received: by mail-pl1-f193.google.com with SMTP id 4so619662pld.10
-        for <linux-xfs@vger.kernel.org>; Tue, 20 Aug 2019 21:46:23 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=yI8O5NeomA9vU5KiViEmux7z0ZL2Vy3sxm5JlszmgjA=;
-        b=tLKvqx9YgWznUY3tkBxPRinJMviqCDHjwAA/F4FCYs1cdH++Y8D9P3zRb2qz2Zjuht
-         If101LFzYbE1ynmv1ltiJHrKdZ818pl+TZOV12aabz+270fBYxHeBAGm9Dedkg/1kFDN
-         /k210bUBSD3RRryT0DOPFIDVZsbHP9vXwG6BtMoIMm61c0M9rqXBr6xjePkFO3hAj3BZ
-         SqyhCpPRm/XRGhaMckrcbKkcTCgqhbL9uJNdDaGeR9QjE7QEVwNsfeml6f02KM9DkOF0
-         gJT6QI2ErQEeYYUM6bIxbEKuELyDzUGYu47IIiBI1eUpZp4JWAJdbBWfDCxN/Tf9JWWx
-         oQow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=yI8O5NeomA9vU5KiViEmux7z0ZL2Vy3sxm5JlszmgjA=;
-        b=DjokWKAWK4N8ghbEXxF4C9WeS5Jk6pNwCaUY1WpNn6WbzgweZVynYgC914C4jIsP/H
-         eIyqZWY8G0Chf8d2Y+gx/DDyp3coTBAHCrOfahZRRMgLAgUeoxTLWTod1lEVc5E+hO2/
-         koFKcTKFsj6M7EpkfkblTDsLA3U0YSWkioVcyZO2UyKLSJt/ci0JuQgsKC+v3OiqKWk5
-         fygVT3O6qWvt58pj5UZOEF3mUPmNlAQn2korjW7QcaU47Rhz1EMFFlakfQrjn5hW8GE1
-         Gp62BfKoeHnjtCSkFCErc23oYkLGAcBa8NorXlwtre6uLYmEEH4Ecfp1Nas0DGCoBF9E
-         NnUw==
-X-Gm-Message-State: APjAAAUZrr7qi42tFjfFjo16XEFYD/qtEyLnEBdAukmyfkqQFi6U64sV
-        rRVPFQBqmKlxwN191xwHiurgOao=
-X-Google-Smtp-Source: APXvYqx59tIYgX17wW2t8c1NhJS8v8Ks0VGpS2CLRPBVpGGvlGdyR4/ZZePtRkNGOzMy8hZDTUiwmQ==
-X-Received: by 2002:a17:902:724a:: with SMTP id c10mr1898091pll.163.1566362783479;
-        Tue, 20 Aug 2019 21:46:23 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id j187sm27978126pfg.178.2019.08.20.21.46.20
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 20 Aug 2019 21:46:22 -0700 (PDT)
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>, newtongao@tencent.com,
-        jasperwang@tencent.com, xiakaixu1987@gmail.com
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Subject: [PATCH v3] xfs: Fix agi&agf ABBA deadlock when performing rename with
- RENAME_WHITEOUT flag
-Message-ID: <cc2a0c81-ee9e-d2bd-9cc0-025873f394c0@gmail.com>
-Date:   Wed, 21 Aug 2019 12:46:18 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727818AbfHUGQR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 02:16:17 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41189 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726193AbfHUGQR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 02:16:17 -0400
+Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5EDEC43DEEB;
+        Wed, 21 Aug 2019 16:16:13 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i0Jth-00040t-5q; Wed, 21 Aug 2019 16:15:05 +1000
+Date:   Wed, 21 Aug 2019 16:15:05 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Verma, Vishal L" <vishal.l.verma@intel.com>
+Cc:     "hch@lst.de" <hch@lst.de>,
+        "Williams, Dan J" <dan.j.williams@intel.com>,
+        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+        "darrick.wong@oracle.com" <darrick.wong@oracle.com>
+Subject: Re: 5.3-rc1 regression with XFS log recovery
+Message-ID: <20190821061505.GM1119@dread.disaster.area>
+References: <e49a6a3a244db055995769eb844c281f93e50ab9.camel@intel.com>
+ <20190818071128.GA17286@lst.de>
+ <20190818074140.GA18648@lst.de>
+ <20190818173426.GA32311@lst.de>
+ <20190821002643.GK1119@dread.disaster.area>
+ <20190821004413.GB20250@lst.de>
+ <20190821010813.GL1119@dread.disaster.area>
+ <92a9a35a96235fba6537cfdc89cc42603db50fb9.camel@intel.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <92a9a35a96235fba6537cfdc89cc42603db50fb9.camel@intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=FmdZ9Uzk2mMA:10
+        a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8 a=viWo9_wYBWZxYAac8tEA:9
+        a=QEXdDO2ut3YA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When performing rename operation with RENAME_WHITEOUT flag, we will
-hold AGF lock to allocate or free extents in manipulating the dirents
-firstly, and then doing the xfs_iunlink_remove() call last to hold
-AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+On Wed, Aug 21, 2019 at 01:56:33AM +0000, Verma, Vishal L wrote:
+> On Wed, 2019-08-21 at 11:08 +1000, Dave Chinner wrote:
+> > On Wed, Aug 21, 2019 at 02:44:13AM +0200, hch@lst.de wrote:
+> > > On Wed, Aug 21, 2019 at 10:26:43AM +1000, Dave Chinner wrote:
+> > > > After thinking on this for a bit, I suspect the better thing to do
+> > > > here is add a KM_ALIGNED flag to the allocation, so if the
+> > > > internal
+> > > > kmem_alloc() returns an unaligned pointer we free it and fall
+> > > > through to vmalloc() to get a properly aligned pointer....
+> > > > 
+> > > > That way none of the other interfaces have to change, and we can
+> > > > then use kmem_alloc_large() everywhere we allocate buffers for IO.
+> > > > And we don't need new infrastructure just to support these debug
+> > > > configurations, either.
+> > > > 
+> > > > Actually, kmem_alloc_io() might be a better idea - keep the
+> > > > aligned
+> > > > flag internal to the kmem code. Seems like a pretty simple
+> > > > solution
+> > > > to the entire problem we have here...
+> > > 
+> > > The interface sounds ok.  The simple try and fallback implementation
+> > > OTOH means we always do two allocations іf slub debugging is
+> > > enabled,
+> > > which is a little lasty.
+> > 
+> > Some creative ifdefery could avoid that, but quite frankly it's only
+> > necessary for limited allocation contexts and so the
+> > overhead/interactions would largely be unnoticable compared to the
+> > wider impact of memory debugging...
+> > 
+> > > I guess the best we can do for 5.3 and
+> > > then figure out a way to avoid for later.
+> > 
+> > Yeah, it also has the advantage of documenting all the places we
+> > need to be careful of allocation alignment, and it would allow us to
+> > simply plug in whatever future infrastructure comes along that
+> > guarantees allocation alignment without changing any other XFS
+> > code...
+> 
+> Just to clarify, this precludes the changes to bio_add_page() you
+> suggested earlier, right?
 
-The big problem here is that we have an ordering constraint on AGF
-and AGI locking - inode allocation locks the AGI, then can allocate
-a new extent for new inodes, locking the AGF after the AGI. Hence
-the ordering that is imposed by other parts of the code is AGI before
-AGF. So we get the ABBA agi&agf deadlock here.
+Nope, I most certainly want the block layer to catch this, but
+given the total lack of understanding from Ming, I've given up
+on trying to convince them that validation is both possible and
+necessarily.
 
-Process A:
-Call trace:
-  ? __schedule+0x2bd/0x620
-  schedule+0x33/0x90
-  schedule_timeout+0x17d/0x290
-  __down_common+0xef/0x125
-  ? xfs_buf_find+0x215/0x6c0 [xfs]
-  down+0x3b/0x50
-  xfs_buf_lock+0x34/0xf0 [xfs]
-  xfs_buf_find+0x215/0x6c0 [xfs]
-  xfs_buf_get_map+0x37/0x230 [xfs]
-  xfs_buf_read_map+0x29/0x190 [xfs]
-  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
-  xfs_read_agf+0xa6/0x180 [xfs]
-  ? schedule_timeout+0x17d/0x290
-  xfs_alloc_read_agf+0x52/0x1f0 [xfs]
-  xfs_alloc_fix_freelist+0x432/0x590 [xfs]
-  ? down+0x3b/0x50
-  ? xfs_buf_lock+0x34/0xf0 [xfs]
-  ? xfs_buf_find+0x215/0x6c0 [xfs]
-  xfs_alloc_vextent+0x301/0x6c0 [xfs]
-  xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
-  ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
-  xfs_dialloc+0x116/0x290 [xfs]
-  xfs_ialloc+0x6d/0x5e0 [xfs]
-  ? xfs_log_reserve+0x165/0x280 [xfs]
-  xfs_dir_ialloc+0x8c/0x240 [xfs]
-  xfs_create+0x35a/0x610 [xfs]
-  xfs_generic_create+0x1f1/0x2f0 [xfs]
-  ...
+The patch below basically copies bio_add_page() into xfs as
+xfs_bio_add_page() and uses block layer helpers to check alignment.
+It's the same helper blk_rq_map_kern() uses to detect and bounce
+unaligned user buffers...
 
-Process B:
-Call trace:
-  ? __schedule+0x2bd/0x620
-  ? xfs_bmapi_allocate+0x245/0x380 [xfs]
-  schedule+0x33/0x90
-  schedule_timeout+0x17d/0x290
-  ? xfs_buf_find+0x1fd/0x6c0 [xfs]
-  __down_common+0xef/0x125
-  ? xfs_buf_get_map+0x37/0x230 [xfs]
-  ? xfs_buf_find+0x215/0x6c0 [xfs]
-  down+0x3b/0x50
-  xfs_buf_lock+0x34/0xf0 [xfs]
-  xfs_buf_find+0x215/0x6c0 [xfs]
-  xfs_buf_get_map+0x37/0x230 [xfs]
-  xfs_buf_read_map+0x29/0x190 [xfs]
-  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
-  xfs_read_agi+0xa8/0x160 [xfs]
-  xfs_iunlink_remove+0x6f/0x2a0 [xfs]
-  ? current_time+0x46/0x80
-  ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
-  xfs_rename+0x57a/0xae0 [xfs]
-  xfs_vn_rename+0xe4/0x150 [xfs]
-  ...
+WIth that, the simple KASAN enabled reproducer:
 
-In this patch we move the xfs_iunlink_remove() call to
-before acquiring the AGF lock to preserve correct AGI/AGF locking
-order.
+# mkfs.xfs /dev/ram0; mount /dev/ram0 /mnt/test
+[   88.260091] XFS (ram0): Mounting V5 Filesystem
+[   88.314453] WARNING: CPU: 0 PID: 4681 at fs/xfs/xfs_bio_io.c:24 xfs_bio_add_page+0x134/0x1d3
+[   88.316484] CPU: 0 PID: 4681 Comm: mount Not tainted 5.3.0-rc5-dgc+ #1516
+[   88.318115] Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.12.0-1 04/01/2014
+[   88.320110] RIP: 0010:xfs_bio_add_page+0x134/0x1d3
+....
+[   88.340471] Call Trace:
+[   88.343011]  xfs_rw_bdev.cold.5+0xf4/0x193
+[   88.345224]  xlog_do_io+0xd1/0x1c0
+[   88.346050]  xlog_bread+0x23/0x70
+[   88.346857]  xlog_find_verify_log_record+0xc8/0x330
+[   88.349171]  xlog_find_zeroed+0x224/0x330
+[   88.356712]  xlog_find_head+0xbe/0x640
+[   88.375967]  xlog_find_tail+0xc6/0x500
+[   88.388098]  xlog_recover+0x80/0x2a0
+[   88.392020]  xfs_log_mount+0x3a5/0x3d0
+[   88.392931]  xfs_mountfs+0x753/0xe40
+[   88.403201]  xfs_fs_fill_super+0x5c1/0x9d0
+[   88.405320]  mount_bdev+0x1be/0x200
+[   88.407178]  legacy_get_tree+0x6e/0xb0
+[   88.408089]  vfs_get_tree+0x41/0x160
+[   88.408955]  do_mount+0xa48/0xcf0
+[   88.416384]  ksys_mount+0xb6/0xd0
+[   88.417191]  __x64_sys_mount+0x62/0x70
+[   88.418101]  do_syscall_64+0x70/0x230
+[   88.418991]  entry_SYSCALL_64_after_hwframe+0x49/0xbe
+[   88.420208] RIP: 0033:0x7f1817194fea
+......
+[   88.436923] XFS (ram0): log recovery read I/O error at daddr 0x0 len 8 error -5
+[   88.438707] XFS (ram0): empty log check failed
+[   88.439794] XFS (ram0): log mount/recovery failed: error -5
+[   88.441435] XFS (ram0): log mount failed
+mount: /mnt/test: can't read superblock on /dev/ram0.
+umount: /mnt/test: not mounted.
+#
 
-Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+throws a warning and an IO error. No data corruption, no weird
+log recovery failures, etc. This is easy to detect, and so easy to
+debug now. Shame we can't do this in the block layer code.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
+
+xfs: alignment check bio buffers
+
+From: Dave Chinner <dchinner@redhat.com>
+
+Because apparently this is impossible to do in the block layer.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
-  fs/xfs/xfs_inode.c | 61 ++++++++++++++++++++++++++++++++++--------------------
-  1 file changed, 38 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_bio_io.c | 32 +++++++++++++++++++++++++++++---
+ fs/xfs/xfs_buf.c    |  7 ++++---
+ fs/xfs/xfs_linux.h  |  3 +++
+ fs/xfs/xfs_log.c    |  6 +++++-
+ 4 files changed, 41 insertions(+), 7 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 6467d5e..cf06568 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3282,7 +3282,8 @@ struct xfs_iunlink {
-  					spaceres);
-
-  	/*
--	 * Set up the target.
-+	 * Error checks before we dirty the transaction, return
-+	 * the error code if check failed and the filesystem is clean.
-  	 */
-  	if (target_ip == NULL) {
-  		/*
-@@ -3294,6 +3295,40 @@ struct xfs_iunlink {
-  			if (error)
-  				goto out_trans_cancel;
-  		}
-+	} else {
-+		/*
-+		 * If target exists and it's a directory, check that both
-+		 * target and source are directories and that target can be
-+		 * destroyed, or that neither is a directory.
-+		 */
-+		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
-+			/*
-+			 * Make sure target dir is empty.
-+			 */
-+			if (!(xfs_dir_isempty(target_ip)) ||
-+			    (VFS_I(target_ip)->i_nlink > 2)) {
-+				error = -EEXIST;
-+				goto out_trans_cancel;
-+			}
-+		}
-+	}
+diff --git a/fs/xfs/xfs_bio_io.c b/fs/xfs/xfs_bio_io.c
+index e2148f2d5d6b..fbaea643c000 100644
+--- a/fs/xfs/xfs_bio_io.c
++++ b/fs/xfs/xfs_bio_io.c
+@@ -9,6 +9,27 @@ static inline unsigned int bio_max_vecs(unsigned int count)
+ 	return min_t(unsigned, howmany(count, PAGE_SIZE), BIO_MAX_PAGES);
+ }
+ 
++int
++xfs_bio_add_page(
++	struct bio	*bio,
++	struct page	*page,
++	unsigned int	len,
++	unsigned int	offset)
++{
++	struct request_queue	*q = bio->bi_disk->queue;
++	bool		same_page = false;
 +
-+	/*
-+	 * Directory entry creation below may acquire the AGF. Remove
-+	 * the whiteout from the unlinked list first to preserve correct
-+	 * AGI/AGF locking order.
-+	 */
-+	if (wip) {
-+		ASSERT(VFS_I(wip)->i_nlink == 0);
-+		error = xfs_iunlink_remove(tp, wip);
-+		if (error)
-+			goto out_trans_cancel;
-+	}
++	if (WARN_ON_ONCE(!blk_rq_aligned(q, len, offset)))
++		return -EIO;
 +
-+	/*
-+	 * Set up the target.
-+	 */
-+	if (target_ip == NULL) {
-  		/*
-  		 * If target does not exist and the rename crosses
-  		 * directories, adjust the target directory link count
-@@ -3312,22 +3347,6 @@ struct xfs_iunlink {
-  		}
-  	} else { /* target_ip != NULL */
-  		/*
--		 * If target exists and it's a directory, check that both
--		 * target and source are directories and that target can be
--		 * destroyed, or that neither is a directory.
--		 */
--		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
--			/*
--			 * Make sure target dir is empty.
--			 */
--			if (!(xfs_dir_isempty(target_ip)) ||
--			    (VFS_I(target_ip)->i_nlink > 2)) {
--				error = -EEXIST;
--				goto out_trans_cancel;
--			}
--		}
--
--		/*
-  		 * Link the source inode under the target name.
-  		 * If the source inode is a directory and we are moving
-  		 * it across directories, its ".." entry will be
-@@ -3421,16 +3440,12 @@ struct xfs_iunlink {
-  	 * For whiteouts, we need to bump the link count on the whiteout inode.
-  	 * This means that failures all the way up to this point leave the inode
-  	 * on the unlinked list and so cleanup is a simple matter of dropping
--	 * the remaining reference to it. If we fail here after bumping the link
--	 * count, we're shutting down the filesystem so we'll never see the
--	 * intermediate state on disk.
-+	 * the remaining reference to it. Move the xfs_iunlink_remove() call to
-+	 * before acquiring the AGF lock to preserve correct AGI/AGF locking order.
-  	 */
-  	if (wip) {
-  		ASSERT(VFS_I(wip)->i_nlink == 0);
-  		xfs_bumplink(tp, wip);
--		error = xfs_iunlink_remove(tp, wip);
--		if (error)
--			goto out_trans_cancel;
-  		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
-
-  		/*
--- 
-1.8.3.1
-
--- 
-kaixuxia
++	if (!__bio_try_merge_page(bio, page, len, offset, &same_page)) {
++		if (bio_full(bio, len))
++			return 0;
++		__bio_add_page(bio, page, len, offset);
++	}
++	return len;
++}
++
+ int
+ xfs_rw_bdev(
+ 	struct block_device	*bdev,
+@@ -20,7 +41,7 @@ xfs_rw_bdev(
+ {
+ 	unsigned int		is_vmalloc = is_vmalloc_addr(data);
+ 	unsigned int		left = count;
+-	int			error;
++	int			error, ret = 0;
+ 	struct bio		*bio;
+ 
+ 	if (is_vmalloc && op == REQ_OP_WRITE)
+@@ -36,9 +57,12 @@ xfs_rw_bdev(
+ 		unsigned int	off = offset_in_page(data);
+ 		unsigned int	len = min_t(unsigned, left, PAGE_SIZE - off);
+ 
+-		while (bio_add_page(bio, page, len, off) != len) {
++		while ((ret = xfs_bio_add_page(bio, page, len, off)) != len) {
+ 			struct bio	*prev = bio;
+ 
++			if (ret < 0)
++				goto submit;
++
+ 			bio = bio_alloc(GFP_KERNEL, bio_max_vecs(left));
+ 			bio_copy_dev(bio, prev);
+ 			bio->bi_iter.bi_sector = bio_end_sector(prev);
+@@ -48,14 +72,16 @@ xfs_rw_bdev(
+ 			submit_bio(prev);
+ 		}
+ 
++		ret = 0;
+ 		data += len;
+ 		left -= len;
+ 	} while (left > 0);
+ 
++submit:
+ 	error = submit_bio_wait(bio);
+ 	bio_put(bio);
+ 
+ 	if (is_vmalloc && op == REQ_OP_READ)
+ 		invalidate_kernel_vmap_range(data, count);
+-	return error;
++	return ret ? ret : error;
+ }
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index dd3aa64098a8..f2e6669f60b0 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1261,6 +1261,7 @@ xfs_buf_ioapply_map(
+ 	sector_t	sector =  bp->b_maps[map].bm_bn;
+ 	int		size;
+ 	int		offset;
++	int		rbytes = 0;
+ 
+ 	/* skip the pages in the buffer before the start offset */
+ 	page_index = 0;
+@@ -1290,12 +1291,12 @@ xfs_buf_ioapply_map(
+ 	bio_set_op_attrs(bio, op, op_flags);
+ 
+ 	for (; size && nr_pages; nr_pages--, page_index++) {
+-		int	rbytes, nbytes = PAGE_SIZE - offset;
++		int	nbytes = PAGE_SIZE - offset;
+ 
+ 		if (nbytes > size)
+ 			nbytes = size;
+ 
+-		rbytes = bio_add_page(bio, bp->b_pages[page_index], nbytes,
++		rbytes = xfs_bio_add_page(bio, bp->b_pages[page_index], nbytes,
+ 				      offset);
+ 		if (rbytes < nbytes)
+ 			break;
+@@ -1306,7 +1307,7 @@ xfs_buf_ioapply_map(
+ 		total_nr_pages--;
+ 	}
+ 
+-	if (likely(bio->bi_iter.bi_size)) {
++	if (likely(bio->bi_iter.bi_size && rbytes >= 0)) {
+ 		if (xfs_buf_is_vmapped(bp)) {
+ 			flush_kernel_vmap_range(bp->b_addr,
+ 						xfs_buf_vmap_len(bp));
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index ca15105681ca..e71c7bf3e714 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -145,6 +145,9 @@ static inline void delay(long ticks)
+ 	schedule_timeout_uninterruptible(ticks);
+ }
+ 
++int xfs_bio_add_page(struct bio *bio, struct page *page, unsigned int len,
++			unsigned int offset);
++
+ /*
+  * XFS wrapper structure for sysfs support. It depends on external data
+  * structures and is embedded in various internal data structures to implement
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index acc5a824bb9e..c2f1ff57fb6d 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -1673,8 +1673,12 @@ xlog_map_iclog_data(
+ 		struct page	*page = kmem_to_page(data);
+ 		unsigned int	off = offset_in_page(data);
+ 		size_t		len = min_t(size_t, count, PAGE_SIZE - off);
++		int		ret;
+ 
+-		WARN_ON_ONCE(bio_add_page(bio, page, len, off) != len);
++		ret = xfs_bio_add_page(bio, page, len, off);
++		WARN_ON_ONCE(ret != len);
++		if (ret < 0)
++			break;
+ 
+ 		data += len;
+ 		count -= len;
