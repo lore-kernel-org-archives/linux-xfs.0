@@ -2,106 +2,167 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDB07C3A589
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:27:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9497BC3A589
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9702922CF7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:27:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5D11F22DA7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Qeclk0a+"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726257AbfHUA1w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 20:27:52 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40315 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726028AbfHUA1v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:27:51 -0400
-Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 58B4343E0D7;
-        Wed, 21 Aug 2019 10:27:50 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i0ESZ-0001vi-DY; Wed, 21 Aug 2019 10:26:43 +1000
-Date:   Wed, 21 Aug 2019 10:26:43 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "hch@lst.de" <hch@lst.de>
-Cc:     "Verma, Vishal L" <vishal.l.verma@intel.com>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        "Williams, Dan J" <dan.j.williams@intel.com>,
-        "darrick.wong@oracle.com" <darrick.wong@oracle.com>
-Subject: Re: 5.3-rc1 regression with XFS log recovery
-Message-ID: <20190821002643.GK1119@dread.disaster.area>
-References: <e49a6a3a244db055995769eb844c281f93e50ab9.camel@intel.com>
- <20190818071128.GA17286@lst.de>
- <20190818074140.GA18648@lst.de>
- <20190818173426.GA32311@lst.de>
+        id S1726435AbfHUAan (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 20:30:43 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56728 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726028AbfHUAam (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:42 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=TpSePgz02GkghZM1yEUYwUuZuyuUMUK08NAW5vfqrco=; b=Qeclk0a+RGaahcVQFrt2ipxglv
+        ZpcmRN/jKfYeHqp66tjTyxed9nEyeVUF18o17kfrbJCFGfvUNipRUvwahdEkYkA/3QFqFTeowN/1A
+        yAgQtuq9Dg/lJ9Qfh5Au7a8W01TjbdGw8c8JkxUFGviWm5RD8Hd9sPiD3sqGn5PSMMtG5a/rjih4a
+        /dHUzHlRO6XaoUWEAYkfFGevg1xrBh8T9M81gUexspMuAgv5jztT2ok1e35m08RS+UWZX5p1iT7LK
+        1j2XVL7ytbvfhdvEAF5OZu+NAzUuCFD/Hwl+IqBMm1QGMhLHYr/MD9yu2z7ulr5Iv2/MII320+c/p
+        4T9dNvng==;
+Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i0EWQ-0003HR-81; Wed, 21 Aug 2019 00:30:42 +0000
+From:   Matthew Wilcox <willy@infradead.org>
+To:     linux-fsdevel@vger.kernel.org
+Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, hch@lst.de,
+        linux-xfs@vger.kernel.org, linux-mm@kvack.org
+Subject: [PATCH v2 1/5] fs: Introduce i_blocks_per_page
+Date:   Tue, 20 Aug 2019 17:30:35 -0700
+Message-Id: <20190821003039.12555-2-willy@infradead.org>
+X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190821003039.12555-1-willy@infradead.org>
+References: <20190821003039.12555-1-willy@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190818173426.GA32311@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=rg55TvFzVAOYHM5hWT0A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Aug 18, 2019 at 07:34:26PM +0200, hch@lst.de wrote:
-> On Sun, Aug 18, 2019 at 09:41:40AM +0200, hch@lst.de wrote:
-> > On Sun, Aug 18, 2019 at 09:11:28AM +0200, hch@lst.de wrote:
-> > > > The kernel log shows the following when the mount fails:
-> > > 
-> > > Is it always that same message?  I'll see if I can reproduce it,
-> > > but I won't have that much memory to spare to create fake pmem,
-> > > hope this also works with a single device and/or less memory..
-> > 
-> > I've reproduced a similar ASSERT with a small pmem device, so I hope
-> > I can debug the issue locally now.
-> 
-> So I can also reproduce the same issue with the ramdisk driver, but not
-> with any other 4k sector size device (nvmet, scsi target, scsi_debug,
-> loop).  Which made me wonder if there is some issue about the memory
-> passed in, and indeed just switching to plain vmalloc vs the XFS
-> kmem_alloc_large wrapper that either uses kmalloc or vmalloc fixes
-> the issue for me.  I don't really understand why yet, maybe I need to
-> dig out alignment testing patches.
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index 13d1d3e95b88..918ad3b884a7 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -125,7 +125,7 @@ xlog_alloc_buffer(
->  	if (nbblks > 1 && log->l_sectBBsize > 1)
->  		nbblks += log->l_sectBBsize;
->  	nbblks = round_up(nbblks, log->l_sectBBsize);
-> -	return kmem_alloc_large(BBTOB(nbblks), KM_MAYFAIL);
-> +	return vmalloc(BBTOB(nbblks));
->  }
+From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-After thinking on this for a bit, I suspect the better thing to do
-here is add a KM_ALIGNED flag to the allocation, so if the internal
-kmem_alloc() returns an unaligned pointer we free it and fall
-through to vmalloc() to get a properly aligned pointer....
+This helper is useful for both large pages in the page cache and for
+supporting block size larger than page size.  Convert some example
+users (we have a few different ways of writing this idiom).
 
-That way none of the other interfaces have to change, and we can
-then use kmem_alloc_large() everywhere we allocate buffers for IO.
-And we don't need new infrastructure just to support these debug
-configurations, either.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
+ fs/iomap/buffered-io.c  |  4 ++--
+ fs/jfs/jfs_metapage.c   |  2 +-
+ fs/xfs/xfs_aops.c       |  8 ++++----
+ include/linux/pagemap.h | 13 +++++++++++++
+ 4 files changed, 20 insertions(+), 7 deletions(-)
 
-Actually, kmem_alloc_io() might be a better idea - keep the aligned
-flag internal to the kmem code. Seems like a pretty simple solution
-to the entire problem we have here...
-
-Cheers,
-
-Dave.
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index e25901ae3ff4..0e76a4b6d98a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -24,7 +24,7 @@ iomap_page_create(struct inode *inode, struct page *page)
+ {
+ 	struct iomap_page *iop = to_iomap_page(page);
+ 
+-	if (iop || i_blocksize(inode) == PAGE_SIZE)
++	if (iop || i_blocks_per_page(inode, page) <= 1)
+ 		return iop;
+ 
+ 	iop = kmalloc(sizeof(*iop), GFP_NOFS | __GFP_NOFAIL);
+@@ -128,7 +128,7 @@ iomap_set_range_uptodate(struct page *page, unsigned off, unsigned len)
+ 	bool uptodate = true;
+ 
+ 	if (iop) {
+-		for (i = 0; i < PAGE_SIZE / i_blocksize(inode); i++) {
++		for (i = 0; i < i_blocks_per_page(inode, page); i++) {
+ 			if (i >= first && i <= last)
+ 				set_bit(i, iop->uptodate);
+ 			else if (!test_bit(i, iop->uptodate))
+diff --git a/fs/jfs/jfs_metapage.c b/fs/jfs/jfs_metapage.c
+index a2f5338a5ea1..176580f54af9 100644
+--- a/fs/jfs/jfs_metapage.c
++++ b/fs/jfs/jfs_metapage.c
+@@ -473,7 +473,7 @@ static int metapage_readpage(struct file *fp, struct page *page)
+ 	struct inode *inode = page->mapping->host;
+ 	struct bio *bio = NULL;
+ 	int block_offset;
+-	int blocks_per_page = PAGE_SIZE >> inode->i_blkbits;
++	int blocks_per_page = i_blocks_per_page(inode, page);
+ 	sector_t page_start;	/* address of page in fs blocks */
+ 	sector_t pblock;
+ 	int xlen;
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index f16d5f196c6b..102cfd8a97d6 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -68,7 +68,7 @@ xfs_finish_page_writeback(
+ 		mapping_set_error(inode->i_mapping, -EIO);
+ 	}
+ 
+-	ASSERT(iop || i_blocksize(inode) == PAGE_SIZE);
++	ASSERT(iop || i_blocks_per_page(inode, bvec->bv_page) <= 1);
+ 	ASSERT(!iop || atomic_read(&iop->write_count) > 0);
+ 
+ 	if (!iop || atomic_dec_and_test(&iop->write_count))
+@@ -839,7 +839,7 @@ xfs_aops_discard_page(
+ 			page, ip->i_ino, offset);
+ 
+ 	error = xfs_bmap_punch_delalloc_range(ip, start_fsb,
+-			PAGE_SIZE / i_blocksize(inode));
++			i_blocks_per_page(inode, page));
+ 	if (error && !XFS_FORCED_SHUTDOWN(mp))
+ 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
+ out_invalidate:
+@@ -877,7 +877,7 @@ xfs_writepage_map(
+ 	uint64_t		file_offset;	/* file offset of page */
+ 	int			error = 0, count = 0, i;
+ 
+-	ASSERT(iop || i_blocksize(inode) == PAGE_SIZE);
++	ASSERT(iop || i_blocks_per_page(inode, page) <= 1);
+ 	ASSERT(!iop || atomic_read(&iop->write_count) == 0);
+ 
+ 	/*
+@@ -886,7 +886,7 @@ xfs_writepage_map(
+ 	 * one.
+ 	 */
+ 	for (i = 0, file_offset = page_offset(page);
+-	     i < (PAGE_SIZE >> inode->i_blkbits) && file_offset < end_offset;
++	     i < i_blocks_per_page(inode, page) && file_offset < end_offset;
+ 	     i++, file_offset += len) {
+ 		if (iop && !test_bit(i, iop->uptodate))
+ 			continue;
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index cf837d313b96..2728f20fbc49 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -644,4 +644,17 @@ static inline unsigned long dir_pages(struct inode *inode)
+ 			       PAGE_SHIFT;
+ }
+ 
++/**
++ * i_blocks_per_page - How many blocks fit in this page.
++ * @inode: The inode which contains the blocks.
++ * @page: The (potentially large) page.
++ *
++ * Context: Any context.
++ * Return: The number of filesystem blocks covered by this page.
++ */
++static inline
++unsigned int i_blocks_per_page(struct inode *inode, struct page *page)
++{
++	return page_size(page) >> inode->i_blkbits;
++}
+ #endif /* _LINUX_PAGEMAP_H */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.23.0.rc1
+
