@@ -2,127 +2,321 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 550E9C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 19:48:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 13589C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 20:24:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2799A22DD3
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 19:48:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CAD1022DD3
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 20:24:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="VF//ZkIg"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R7AmGmau"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730137AbfHUTsN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Aug 2019 15:48:13 -0400
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:44344 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730117AbfHUTsM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 15:48:12 -0400
-Received: by mail-qt1-f195.google.com with SMTP id 44so4519819qtg.11
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Aug 2019 12:48:12 -0700 (PDT)
+        id S1729086AbfHUUYD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 16:24:03 -0400
+Received: from mail-io1-f67.google.com ([209.85.166.67]:34686 "EHLO
+        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727998AbfHUUYC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 16:24:02 -0400
+Received: by mail-io1-f67.google.com with SMTP id s21so7359787ioa.1;
+        Wed, 21 Aug 2019 13:24:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=RKaQWnWiA/zCcExfi75lqB9ALEnDHuRristulqneTd4=;
-        b=VF//ZkIgb0ccMf/fYMR8ys1oZHmy5JRKO8S8IVnwY93iOCu/W7+tqrcWFw+5rldxNI
-         aOtLu3PsXm0Him3edXbZNXCIhRk5dw4XYfKu4e3yv8iN/mxXDcev7A64Goh60uRoeToj
-         KsbYARzI5dfW3WUW2nHR+o8WkktwHJGaehfIiJX8Npx8V5kKAL0zIUWne13iFi3yzfE0
-         Mr3GgB9fCwjOgBICH92Ndb17k2AjhI3vfLJVcZ59QAI/xkGuigPoWEVo0xwQOrmHgZvG
-         +llknKnaKUAXOzinx5ExtHyGDbPgE5bGB/pnb1FjLysYXUDhwnplOXXe90luAkrxNaEF
-         /MsQ==
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=Cb34hvSHfTOaxOpUGV4SIJr+N2dm/IYSUfB2jrXQVXg=;
+        b=R7AmGmauC3ectTYZH11YkKXxlEkDtgSRea7ivjqEU1sjriQpEoNC+8g6e3NCp5kGYO
+         QtBhN7MdDCQ+bhuJCDFOMMp4p7c0CQbv2qZLZtL2QqXuWTneCL7c+CWygf1rNz4EfJRD
+         9yb/CmoLpOfIkhTZSBvpRuA3CYTTwtQmlaK+Ha8C4DQYv7/+vrWOP+ftOvYNPQf3zJzC
+         QUMDEHdKDgwYzoH0mTWZLq11NVJeMJGPMOzsVsczBb/OA+goqcRT3EUXgC1qj2bJUcBZ
+         A/i6ZSVBuUTBrZFnTJaAyLgP1tKsNFitYSdPZRZ4wku4xkm3gviLH6xKknkMhq7L8BX1
+         9Q8w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=RKaQWnWiA/zCcExfi75lqB9ALEnDHuRristulqneTd4=;
-        b=C+Ate4sQuuxp3eSiH716AITpxmIaQVcnmI5167t+TAvymFyH//yRCIS5BVYU7rN7ey
-         iTJh1KVbloFM21JfrEDr7/5UavmW4JOau/4RPxKzj7NZDh8Qb4ohMz4p5LwJWuajabyw
-         1lsJr6mWisAbZhn4+uSiEhAYLBHWEYOrezvWQWnBkQnwY60+GxpJn4hzm38+0LiaQLfd
-         SHRq7k/w4SWK3wwWZbgbneLDTgi0BFsvuyM2Vm9+Cpr9e+jmJ8ZLOIuvkLja4T4cRt7j
-         RsJpdPhZKkKnD6DuixXAj5Mohy9GqNVnpoUJwIGccBvpw/9rLlTFuCIEa9DbHC02qWRt
-         FdBQ==
-X-Gm-Message-State: APjAAAVw2Jl5FbqbzmR7YVBz0SXYtRmhhY2c4T9QBD2YqIGKPD1Ly6eY
-        q/7vgrzOI9sNw9EYg/5VRnN3NTxeHU4=
-X-Google-Smtp-Source: APXvYqynnJZ0Zi7g4jGmr+xM0aj4NgAU3mYFQCm90qX+6uBLqZGFaKsA8ELnMbT3xzkDRjmj+/uCGg==
-X-Received: by 2002:ac8:468f:: with SMTP id g15mr33328922qto.353.1566416891773;
-        Wed, 21 Aug 2019 12:48:11 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-55-100.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.55.100])
-        by smtp.gmail.com with ESMTPSA id q62sm11253497qkb.69.2019.08.21.12.48.11
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 21 Aug 2019 12:48:11 -0700 (PDT)
-Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1i0WaY-0005kK-I1; Wed, 21 Aug 2019 16:48:10 -0300
-Date:   Wed, 21 Aug 2019 16:48:10 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190821194810.GI8653@ziepe.ca>
-References: <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
- <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190821181343.GH8653@ziepe.ca>
- <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=Cb34hvSHfTOaxOpUGV4SIJr+N2dm/IYSUfB2jrXQVXg=;
+        b=G/ibJnvGJNUQL3VCo+lM8ziLoz9TpEvi+twaWhwzGSKkH91HMFdO1YKH+E09P6dsmn
+         6G6YQnmALiQJpU4JGwFwxkbUqpyEiWbqnYI1tBa9m0uuVDfvDniudUT0PM2qJIW1pzt8
+         FLd7bLCiG70hPWB3marBo2MWcxGeKZdMgzoFkV3P1W15/3Y6t/oOGHSkTnbgiiy8oM8h
+         LvgQ3sEjQPR0UxVM4rN65naaz5vvPeaSsjvL+3FkTU4LqeeT93dzkonvy5Z3z7SQ9oCu
+         71gjulLXHSy44ee/2eoF0xbtIO5/DgOyLF17i97jBz1NuGqRDTi4lHqNjLJ9V7PbUMYB
+         3SNQ==
+X-Gm-Message-State: APjAAAX8kR4Sf3McHy3jQxCw62pgQnXlx6rjWkxcHe0N/tre/+X2RL1o
+        m23+wr1DWJzIW2WQEz+dcFP6GuMbjkKymtbgJQY=
+X-Google-Smtp-Source: APXvYqxjzLlkq8RSOF/WoVkQLcH9qjKB3Sv1jKzLLZo41JXIeqoFPwHHK8vqjy10Mq//9Hm5Tj7VW7o0Gu49YTTPPps=
+X-Received: by 2002:a5e:9e42:: with SMTP id j2mr25963973ioq.133.1566419040923;
+ Wed, 21 Aug 2019 13:24:00 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+References: <20181202180832.GR8125@magnolia> <20181202181045.GS8125@magnolia>
+In-Reply-To: <20181202181045.GS8125@magnolia>
+From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
+Date:   Wed, 21 Aug 2019 22:23:49 +0200
+Message-ID: <CAHpGcM+WQYFHOOC8SzKq+=DuHVZ4fw4RHLTMUDN-o6GX3YtGvQ@mail.gmail.com>
+Subject: Re: [PATCH v2 2/2] iomap: partially revert 4721a601099 (simulated
+ directio short read on EFAULT)
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, jencce.kernel@gmail.com,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        overlayfs <linux-unionfs@vger.kernel.org>,
+        Zorro Lang <zlang@redhat.com>,
+        fstests <fstests@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        cluster-devel <cluster-devel@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 11:57:03AM -0700, Ira Weiny wrote:
+Hi Darrick,
 
-> > Oh, I didn't think we were talking about that. Hanging the close of
-> > the datafile fd contingent on some other FD's closure is a recipe for
-> > deadlock..
-> 
-> The discussion between Jan and Dave was concerning what happens when a user
-> calls
-> 
-> fd = open()
-> fnctl(...getlease...)
-> addr = mmap(fd...)
-> ib_reg_mr() <pin>
-> munmap(addr...)
-> close(fd)
+Am So., 2. Dez. 2018 um 19:13 Uhr schrieb Darrick J. Wong
+<darrick.wong@oracle.com>:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>
+> In commit 4721a601099, we tried to fix a problem wherein directio reads
+> into a splice pipe will bounce EFAULT/EAGAIN all the way out to
+> userspace by simulating a zero-byte short read.  This happens because
+> some directio read implementations (xfs) will call
+> bio_iov_iter_get_pages to grab pipe buffer pages and issue asynchronous
+> reads, but as soon as we run out of pipe buffers that _get_pages call
+> returns EFAULT, which the splice code translates to EAGAIN and bounces
+> out to userspace.
+>
+> In that commit, the iomap code catches the EFAULT and simulates a
+> zero-byte read, but that causes assertion errors on regular splice reads
+> because xfs doesn't allow short directio reads.  This causes infinite
+> splice() loops and assertion failures on generic/095 on overlayfs
+> because xfs only permit total success or total failure of a directio
+> operation.  The underlying issue in the pipe splice code has now been
+> fixed by changing the pipe splice loop to avoid avoid reading more data
+> than there is space in the pipe.
+>
+> Therefore, it's no longer necessary to simulate the short directio, so
+> remove the hack from iomap.
+>
+> Fixes: 4721a601099 ("iomap: dio data corruption and spurious errors when pipes fill")
+> Reported-by: Amir Goldstein <amir73il@gmail.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: split into two patches per hch request
+> ---
+>  fs/iomap.c |    9 ---------
+>  1 file changed, 9 deletions(-)
+>
+> diff --git a/fs/iomap.c b/fs/iomap.c
+> index 3ffb776fbebe..d6bc98ae8d35 100644
+> --- a/fs/iomap.c
+> +++ b/fs/iomap.c
+> @@ -1877,15 +1877,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+>                                 dio->wait_for_completion = true;
+>                                 ret = 0;
+>                         }
+> -
+> -                       /*
+> -                        * Splicing to pipes can fail on a full pipe. We have to
+> -                        * swallow this to make it look like a short IO
+> -                        * otherwise the higher splice layers will completely
+> -                        * mishandle the error and stop moving data.
+> -                        */
+> -                       if (ret == -EFAULT)
+> -                               ret = 0;
+>                         break;
+>                 }
+>                 pos += ret;
 
-I don't see how blocking close(fd) could work. Write it like this:
+I'm afraid this breaks the following test case on xfs and gfs2, the
+two current users of iomap_dio_rw.
 
- fd = open()
- uverbs = open(/dev/uverbs)
- fnctl(...getlease...)
- addr = mmap(fd...)
- ib_reg_mr() <pin>
- munmap(addr...)
-  <sigkill>
+Here, the splice system call fails with errno = EAGAIN when trying to
+"move data" from a file opened with O_DIRECT into a pipe.
 
-The order FD's are closed during sigkill is not deterministic, so when
-all the fputs happen during a kill'd exit we could end up blocking in
-close(fd) as close(uverbs) will come after in the close
-list. close(uverbs) is the thing that does the dereg_mr and releases
-the pin.
+The test case can be run with option -d to not use O_DIRECT, which
+makes the test succeed.
 
-We don't need complexity with dup to create problems.
+The -r option switches from reading from the pipe sequentially to
+reading concurrently with the splice, which doesn't change the
+behavior.
 
-Jason
+Any thoughts?
+
+Thanks,
+Andreas
+
+=================================== 8< ===================================
+#define _GNU_SOURCE
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <err.h>
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+#include <errno.h>
+
+#define SECTOR_SIZE 512
+#define BUFFER_SIZE (150 * SECTOR_SIZE)
+
+void read_from_pipe(int fd, const char *filename, size_t size)
+{
+    char buffer[SECTOR_SIZE];
+    size_t sz;
+    ssize_t ret;
+
+    while (size) {
+        sz = size;
+        if (sz > sizeof buffer)
+            sz = sizeof buffer;
+        ret = read(fd, buffer, sz);
+        if (ret < 0)
+            err(1, "read: %s", filename);
+        if (ret == 0) {
+            fprintf(stderr, "read: %s: unexpected EOF\n", filename);
+            exit(1);
+        }
+        size -= sz;
+    }
+}
+
+void do_splice1(int fd, const char *filename, size_t size)
+{
+    bool retried = false;
+    int pipefd[2];
+
+    if (pipe(pipefd) == -1)
+        err(1, "pipe");
+    while (size) {
+        ssize_t spliced;
+
+        spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+        if (spliced == -1) {
+            if (errno == EAGAIN && !retried) {
+                retried = true;
+                fprintf(stderr, "retrying splice\n");
+                sleep(1);
+                continue;
+            }
+            err(1, "splice");
+        }
+        read_from_pipe(pipefd[0], filename, spliced);
+        size -= spliced;
+    }
+    close(pipefd[0]);
+    close(pipefd[1]);
+}
+
+void do_splice2(int fd, const char *filename, size_t size)
+{
+    bool retried = false;
+    int pipefd[2];
+    int pid;
+
+    if (pipe(pipefd) == -1)
+        err(1, "pipe");
+
+    pid = fork();
+    if (pid == 0) {
+        close(pipefd[1]);
+        read_from_pipe(pipefd[0], filename, size);
+        exit(0);
+    } else {
+        close(pipefd[0]);
+        while (size) {
+            ssize_t spliced;
+
+            spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+            if (spliced == -1) {
+                if (errno == EAGAIN && !retried) {
+                    retried = true;
+                    fprintf(stderr, "retrying splice\n");
+                    sleep(1);
+                    continue;
+                }
+                err(1, "splice");
+            }
+            size -= spliced;
+        }
+        close(pipefd[1]);
+        waitpid(pid, NULL, 0);
+    }
+}
+
+void usage(const char *argv0)
+{
+    fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
+    exit(2);
+}
+
+int main(int argc, char *argv[])
+{
+    void (*do_splice)(int fd, const char *filename, size_t size);
+    const char *filename;
+    char *buffer;
+    int opt, open_flags, fd;
+    ssize_t ret;
+
+    do_splice = do_splice1;
+    open_flags = O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
+
+    while ((opt = getopt(argc, argv, "rd")) != -1) {
+        switch(opt) {
+        case 'r':
+            do_splice = do_splice2;
+            break;
+        case 'd':
+            open_flags &= ~O_DIRECT;
+            break;
+        default:  /* '?' */
+            usage(argv[0]);
+        }
+    }
+
+    if (optind >= argc)
+        usage(argv[0]);
+    filename = argv[optind];
+
+    printf("%s reader %s O_DIRECT\n",
+           do_splice == do_splice1 ? "sequential" : "concurrent",
+           (open_flags & O_DIRECT) ? "with" : "without");
+
+    buffer = aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
+    if (buffer == NULL)
+        err(1, "aligned_alloc");
+
+    fd = open(filename, open_flags, 0666);
+    if (fd == -1)
+        err(1, "open: %s", filename);
+
+    memset(buffer, 'x', BUFFER_SIZE);
+    ret = write(fd, buffer, BUFFER_SIZE);
+    if (ret < 0)
+        err(1, "write: %s", filename);
+    if (ret != BUFFER_SIZE) {
+        fprintf(stderr, "%s: short write\n", filename);
+        exit(1);
+    }
+
+    ret = lseek(fd, 0, SEEK_SET);
+    if (ret != 0)
+        err(1, "lseek: %s", filename);
+
+    do_splice(fd, filename, BUFFER_SIZE);
+
+    if (unlink(filename) == -1)
+        err(1, "unlink: %s", filename);
+
+    return 0;
+}
+=================================== 8< ===================================
