@@ -2,46 +2,49 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A603C3A589
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A905C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60F6522DA7
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5033022DD6
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Huw1B8AM"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hfuFvEaE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726558AbfHUAat (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 20:30:49 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56756 "EHLO
+        id S1726583AbfHUAaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 20:30:52 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56772 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726028AbfHUAas (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:48 -0400
+        with ESMTP id S1726028AbfHUAav (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:51 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=oeVOANfId+UFajzaQ2gzW3c9xEV2b0FiX63evlEKZv0=; b=Huw1B8AMREhrx9XNmoNt4deM9
-        XSwL/uolvP12oF8bakTOb7gFvccAgSYatlSvv+RwOvuBI9BK82q1JqugmsueqUJgDGNHLUBBc4DCm
-        sD3r5M8F6HJoy0IXcPqibA1BqVjt4yjo1S6wUcbb/zFH87Nyk+JwaiDp52ecZDxywdLagHBjD2JaT
-        OC6kJF8BHpxkJJOgIInWAPbzOUoPkTHbJUFKR7UjSKlhvoGTygIQr+ld7CoqaF4P5y1JaxTw7sRcA
-        LVKoZsjeg24PM2/zpg7HAOCev4FNVrKKIlJo48lA2VKZV1aNJASlHIaQsoaHn2HP23USgRMtBCwmD
-        zOdQErHLg==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=8+LFRgysFm6l7b1EmI740QXkofLUbCuDM+A6qLMp9ww=; b=hfuFvEaEQut5AVQb1YlZ91uQkZ
+        cQCCd+XL0ZBjSfW+iVu6x/ii9yjABmkxM578Y1ifxD7MMwjomQLoKGn5k4MLo2FX/86BoXjOGYx+m
+        st3+ToZCILpSW/kqCpeT1dtRTADo/0xMsbEK3LKhk9WhVc8eDvpYi0Sg0B/CLMkYomJKnt44gkhFd
+        4QqRaGzT/xJhc6sVKdddPDG4H6ktFrxuEeyvAJ1O71FUL4NKpe0v0gJNYXfogtiSI3fi5iLUrGIRa
+        8WF1zrkQ0+YMlL9tT+cBEyyUoucubTbfdFEgqghr9OeVk1kAfYxAmOblCehYf/ZXd0//Z8EABbvof
+        y4pJ4swA==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i0EWQ-0003HO-6R; Wed, 21 Aug 2019 00:30:42 +0000
+        id 1i0EWQ-0003HW-A3; Wed, 21 Aug 2019 00:30:42 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, hch@lst.de,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH v2 0/5] iomap & xfs support for large pages
-Date:   Tue, 20 Aug 2019 17:30:34 -0700
-Message-Id: <20190821003039.12555-1-willy@infradead.org>
+Subject: [PATCH v2 2/5] mm: Add file_offset_of_ helpers
+Date:   Tue, 20 Aug 2019 17:30:36 -0700
+Message-Id: <20190821003039.12555-3-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190821003039.12555-1-willy@infradead.org>
+References: <20190821003039.12555-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -51,37 +54,60 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-In order to support large pages in the page cache, filesystems have
-to understand that they're being passed a large page and read or write
-the entire large page, rather than just the first page.  This pair of
-patches adds that support to XFS.
+The page_offset function is badly named for people reading the functions
+which call it.  The natural meaning of a function with this name would
+be 'offset within a page', not 'page offset in bytes within a file'.
+Dave Chinner suggests file_offset_of_page() as a replacement function
+name and I'm also adding file_offset_of_next_page() as a helper for the
+large page work.  Also add kernel-doc for these functions so they show
+up in the kernel API book.
 
-Still untested beyond compilation.
+page_offset() is retained as a compatibility define for now.
+---
+ include/linux/pagemap.h | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
 
-v2:
- - Added a few helpers per Dave Chinner's suggestions
- - Use GFP_ZERO instead of individually zeroing each field of iop
- - Rewrite iomap_set_range_uptodate() to use bitmap functions instead
-   of individual bit operations
- - Drop support for large pages being used for files with inline data
-   (it didn't work anyway, because kmap_atomic() is only going to map
-   the first page of a compound page)
- - Pass a struct page to xfs_finish_page_writeback instead of the bvec
-
-Matthew Wilcox (Oracle) (5):
-  fs: Introduce i_blocks_per_page
-  mm: Add file_offset_of_ helpers
-  iomap: Support large pages
-  xfs: Support large pages
-  xfs: Pass a page to xfs_finish_page_writeback
-
- fs/iomap/buffered-io.c  | 121 ++++++++++++++++++++++++++--------------
- fs/jfs/jfs_metapage.c   |   2 +-
- fs/xfs/xfs_aops.c       |  37 ++++++------
- include/linux/iomap.h   |   2 +-
- include/linux/mm.h      |   2 +
- include/linux/pagemap.h |  38 ++++++++++++-
- 6 files changed, 135 insertions(+), 67 deletions(-)
-
+diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
+index 2728f20fbc49..84f341109710 100644
+--- a/include/linux/pagemap.h
++++ b/include/linux/pagemap.h
+@@ -436,14 +436,33 @@ static inline pgoff_t page_to_pgoff(struct page *page)
+ 	return page_to_index(page);
+ }
+ 
+-/*
+- * Return byte-offset into filesystem object for page.
++/**
++ * file_offset_of_page - File offset of this page.
++ * @page: Page cache page.
++ *
++ * Context: Any context.
++ * Return: The offset of the first byte of this page.
+  */
+-static inline loff_t page_offset(struct page *page)
++static inline loff_t file_offset_of_page(struct page *page)
+ {
+ 	return ((loff_t)page->index) << PAGE_SHIFT;
+ }
+ 
++/* Legacy; please convert callers */
++#define page_offset(page)	file_offset_of_page(page)
++
++/**
++ * file_offset_of_next_page - File offset of the next page.
++ * @page: Page cache page.
++ *
++ * Context: Any context.
++ * Return: The offset of the first byte after this page.
++ */
++static inline loff_t file_offset_of_next_page(struct page *page)
++{
++	return ((loff_t)page->index + compound_nr(page)) << PAGE_SHIFT;
++}
++
+ static inline loff_t page_file_offset(struct page *page)
+ {
+ 	return ((loff_t)page_index(page)) << PAGE_SHIFT;
 -- 
 2.23.0.rc1
+
