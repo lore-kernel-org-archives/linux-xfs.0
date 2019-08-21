@@ -2,46 +2,46 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A905C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98F7AC3A589
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5033022DD6
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6387C2339D
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hfuFvEaE"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="EYq9cp4l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726583AbfHUAaw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 20:30:52 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56772 "EHLO
+        id S1726605AbfHUAaz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 20:30:55 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56786 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726028AbfHUAav (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:51 -0400
+        with ESMTP id S1726028AbfHUAay (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=8+LFRgysFm6l7b1EmI740QXkofLUbCuDM+A6qLMp9ww=; b=hfuFvEaEQut5AVQb1YlZ91uQkZ
-        cQCCd+XL0ZBjSfW+iVu6x/ii9yjABmkxM578Y1ifxD7MMwjomQLoKGn5k4MLo2FX/86BoXjOGYx+m
-        st3+ToZCILpSW/kqCpeT1dtRTADo/0xMsbEK3LKhk9WhVc8eDvpYi0Sg0B/CLMkYomJKnt44gkhFd
-        4QqRaGzT/xJhc6sVKdddPDG4H6ktFrxuEeyvAJ1O71FUL4NKpe0v0gJNYXfogtiSI3fi5iLUrGIRa
-        8WF1zrkQ0+YMlL9tT+cBEyyUoucubTbfdFEgqghr9OeVk1kAfYxAmOblCehYf/ZXd0//Z8EABbvof
-        y4pJ4swA==;
+        bh=2gejrSoB2FzOwPwvIl0YMQL5/0v4jqvQgFkwdGSMLdY=; b=EYq9cp4l8H1rBuegeGWSpo3tV/
+        b64BCrcV/5dPyOeSAJWKmjxUbIYGlM3/VUrUmNv2AcS7HW4NI30jeKHpIrvz2DbdH48AjTsO9Bch0
+        X96PDpCP9O2c97OGZF0tkz3vZsdb7+/vgXSgyCY32JWsOIPikpz9ysGDYhERuourwZJrswEzY4/4s
+        0znWy3av/2InYDoHUCu2BfvZR981QSw37FWWDVBJUAZxKPrq+llrq109lbA46BK21cobBmTh4YgeZ
+        zRTqHwTik5u0XVUI6hDwDdb65uILwGg2fu1SokY/tbStjIUQVYNZkAmhkJJuO53T5SU6sm0QRPpKw
+        kDN3fYlQ==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i0EWQ-0003HW-A3; Wed, 21 Aug 2019 00:30:42 +0000
+        id 1i0EWQ-0003Hi-EJ; Wed, 21 Aug 2019 00:30:42 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, hch@lst.de,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH v2 2/5] mm: Add file_offset_of_ helpers
-Date:   Tue, 20 Aug 2019 17:30:36 -0700
-Message-Id: <20190821003039.12555-3-willy@infradead.org>
+Subject: [PATCH v2 5/5] xfs: Pass a page to xfs_finish_page_writeback
+Date:   Tue, 20 Aug 2019 17:30:39 -0700
+Message-Id: <20190821003039.12555-6-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
 In-Reply-To: <20190821003039.12555-1-willy@infradead.org>
 References: <20190821003039.12555-1-willy@infradead.org>
@@ -54,60 +54,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-The page_offset function is badly named for people reading the functions
-which call it.  The natural meaning of a function with this name would
-be 'offset within a page', not 'page offset in bytes within a file'.
-Dave Chinner suggests file_offset_of_page() as a replacement function
-name and I'm also adding file_offset_of_next_page() as a helper for the
-large page work.  Also add kernel-doc for these functions so they show
-up in the kernel API book.
+The only part of the bvec we were accessing was the bv_page, so just
+pass that instead of the whole bvec.
 
-page_offset() is retained as a compatibility define for now.
+Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
 ---
- include/linux/pagemap.h | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
+ fs/xfs/xfs_aops.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/include/linux/pagemap.h b/include/linux/pagemap.h
-index 2728f20fbc49..84f341109710 100644
---- a/include/linux/pagemap.h
-+++ b/include/linux/pagemap.h
-@@ -436,14 +436,33 @@ static inline pgoff_t page_to_pgoff(struct page *page)
- 	return page_to_index(page);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 1a26e9ca626b..edcb4797fcc2 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -58,21 +58,21 @@ xfs_find_daxdev_for_inode(
+ static void
+ xfs_finish_page_writeback(
+ 	struct inode		*inode,
+-	struct bio_vec	*bvec,
++	struct page		*page,
+ 	int			error)
+ {
+-	struct iomap_page	*iop = to_iomap_page(bvec->bv_page);
++	struct iomap_page	*iop = to_iomap_page(page);
+ 
+ 	if (error) {
+-		SetPageError(bvec->bv_page);
++		SetPageError(page);
+ 		mapping_set_error(inode->i_mapping, -EIO);
+ 	}
+ 
+-	ASSERT(iop || i_blocks_per_page(inode, bvec->bv_page) <= 1);
++	ASSERT(iop || i_blocks_per_page(inode, page) <= 1);
+ 	ASSERT(!iop || atomic_read(&iop->write_count) > 0);
+ 
+ 	if (!iop || atomic_dec_and_test(&iop->write_count))
+-		end_page_writeback(bvec->bv_page);
++		end_page_writeback(page);
  }
  
--/*
-- * Return byte-offset into filesystem object for page.
-+/**
-+ * file_offset_of_page - File offset of this page.
-+ * @page: Page cache page.
-+ *
-+ * Context: Any context.
-+ * Return: The offset of the first byte of this page.
-  */
--static inline loff_t page_offset(struct page *page)
-+static inline loff_t file_offset_of_page(struct page *page)
- {
- 	return ((loff_t)page->index) << PAGE_SHIFT;
- }
+ /*
+@@ -106,7 +106,7 @@ xfs_destroy_ioend(
  
-+/* Legacy; please convert callers */
-+#define page_offset(page)	file_offset_of_page(page)
-+
-+/**
-+ * file_offset_of_next_page - File offset of the next page.
-+ * @page: Page cache page.
-+ *
-+ * Context: Any context.
-+ * Return: The offset of the first byte after this page.
-+ */
-+static inline loff_t file_offset_of_next_page(struct page *page)
-+{
-+	return ((loff_t)page->index + compound_nr(page)) << PAGE_SHIFT;
-+}
-+
- static inline loff_t page_file_offset(struct page *page)
- {
- 	return ((loff_t)page_index(page)) << PAGE_SHIFT;
+ 		/* walk each page on bio, ending page IO on them */
+ 		bio_for_each_segment_all(bvec, bio, iter_all)
+-			xfs_finish_page_writeback(inode, bvec, error);
++			xfs_finish_page_writeback(inode, bvec->bv_page, error);
+ 		bio_put(bio);
+ 	}
+ 
 -- 
 2.23.0.rc1
 
