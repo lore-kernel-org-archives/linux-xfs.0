@@ -2,49 +2,46 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F1BA8C3A59D
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A603C3A589
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C53F022DD3
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 60F6522DA7
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 00:30:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E8OZSh34"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Huw1B8AM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726512AbfHUAaq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 20 Aug 2019 20:30:46 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56744 "EHLO
+        id S1726558AbfHUAat (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 20 Aug 2019 20:30:49 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56756 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726028AbfHUAaq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:46 -0400
+        with ESMTP id S1726028AbfHUAas (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 20 Aug 2019 20:30:48 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=iwYJY7S8Qb3H1qd117LIhrHhXdjR6K0E8vfO12YRxHU=; b=E8OZSh34g8xMpPIQPPbI3RZ0Kk
-        hWiv0hKFRqYz71lulS4vK7X2SzdOejeqNSjZFjiwdzctHwxmYxjt2rbXqtSfGLXY/R8RMIb38nENR
-        SVDccHI0NjXZ52zIbgPv/PhQCqPyRhEfg1HN1AKyv9E2Yo8awIGe7MoLeE6HEkoc4U56uU4Q6W5NK
-        2ThzHhoP/rlPJo6FnTIQiuLSBncuS5r+p844p8Y5L4uIVvTNo2z3KKWRCTW1xPGqfQfm0sf6kSJD1
-        YXjBJBI4EZPMSD1H7X/10qWG308clwCMzszz8CcP/eG//fYHoALpRCXVg+F3qBCimu7scohi0Esh5
-        AvILxmEQ==;
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=oeVOANfId+UFajzaQ2gzW3c9xEV2b0FiX63evlEKZv0=; b=Huw1B8AMREhrx9XNmoNt4deM9
+        XSwL/uolvP12oF8bakTOb7gFvccAgSYatlSvv+RwOvuBI9BK82q1JqugmsueqUJgDGNHLUBBc4DCm
+        sD3r5M8F6HJoy0IXcPqibA1BqVjt4yjo1S6wUcbb/zFH87Nyk+JwaiDp52ecZDxywdLagHBjD2JaT
+        OC6kJF8BHpxkJJOgIInWAPbzOUoPkTHbJUFKR7UjSKlhvoGTygIQr+ld7CoqaF4P5y1JaxTw7sRcA
+        LVKoZsjeg24PM2/zpg7HAOCev4FNVrKKIlJo48lA2VKZV1aNJASlHIaQsoaHn2HP23USgRMtBCwmD
+        zOdQErHLg==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i0EWQ-0003He-Cw; Wed, 21 Aug 2019 00:30:42 +0000
+        id 1i0EWQ-0003HO-6R; Wed, 21 Aug 2019 00:30:42 +0000
 From:   Matthew Wilcox <willy@infradead.org>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     "Matthew Wilcox (Oracle)" <willy@infradead.org>, hch@lst.de,
         linux-xfs@vger.kernel.org, linux-mm@kvack.org
-Subject: [PATCH v2 4/5] xfs: Support large pages
-Date:   Tue, 20 Aug 2019 17:30:38 -0700
-Message-Id: <20190821003039.12555-5-willy@infradead.org>
+Subject: [PATCH v2 0/5] iomap & xfs support for large pages
+Date:   Tue, 20 Aug 2019 17:30:34 -0700
+Message-Id: <20190821003039.12555-1-willy@infradead.org>
 X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190821003039.12555-1-willy@infradead.org>
-References: <20190821003039.12555-1-willy@infradead.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -54,79 +51,37 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: "Matthew Wilcox (Oracle)" <willy@infradead.org>
 
-Mostly this is just checking the page size of each page instead of
-assuming PAGE_SIZE.  Clean up the logic in writepage a little.
+In order to support large pages in the page cache, filesystems have
+to understand that they're being passed a large page and read or write
+the entire large page, rather than just the first page.  This pair of
+patches adds that support to XFS.
 
-Signed-off-by: Matthew Wilcox (Oracle) <willy@infradead.org>
----
- fs/xfs/xfs_aops.c | 19 +++++++++----------
- 1 file changed, 9 insertions(+), 10 deletions(-)
+Still untested beyond compilation.
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index 102cfd8a97d6..1a26e9ca626b 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -765,7 +765,7 @@ xfs_add_to_ioend(
- 	struct xfs_mount	*mp = ip->i_mount;
- 	struct block_device	*bdev = xfs_find_bdev_for_inode(inode);
- 	unsigned		len = i_blocksize(inode);
--	unsigned		poff = offset & (PAGE_SIZE - 1);
-+	unsigned		poff = offset & (page_size(page) - 1);
- 	bool			merged, same_page = false;
- 	sector_t		sector;
- 
-@@ -843,7 +843,7 @@ xfs_aops_discard_page(
- 	if (error && !XFS_FORCED_SHUTDOWN(mp))
- 		xfs_alert(mp, "page discard unable to remove delalloc mapping.");
- out_invalidate:
--	xfs_vm_invalidatepage(page, 0, PAGE_SIZE);
-+	xfs_vm_invalidatepage(page, 0, page_size(page));
- }
- 
- /*
-@@ -984,8 +984,7 @@ xfs_do_writepage(
- 	struct xfs_writepage_ctx *wpc = data;
- 	struct inode		*inode = page->mapping->host;
- 	loff_t			offset;
--	uint64_t              end_offset;
--	pgoff_t                 end_index;
-+	uint64_t		end_offset;
- 
- 	trace_xfs_writepage(inode, page, 0, 0);
- 
-@@ -1024,10 +1023,9 @@ xfs_do_writepage(
- 	 * ---------------------------------^------------------|
- 	 */
- 	offset = i_size_read(inode);
--	end_index = offset >> PAGE_SHIFT;
--	if (page->index < end_index)
--		end_offset = (xfs_off_t)(page->index + 1) << PAGE_SHIFT;
--	else {
-+	end_offset = file_offset_of_next_page(page);
-+
-+	if (end_offset > offset) {
- 		/*
- 		 * Check whether the page to write out is beyond or straddles
- 		 * i_size or not.
-@@ -1039,7 +1037,8 @@ xfs_do_writepage(
- 		 * |				    |      Straddles     |
- 		 * ---------------------------------^-----------|--------|
- 		 */
--		unsigned offset_into_page = offset & (PAGE_SIZE - 1);
-+		unsigned offset_into_page = offset_in_this_page(page, offset);
-+		pgoff_t end_index = offset >> PAGE_SHIFT;
- 
- 		/*
- 		 * Skip the page if it is fully outside i_size, e.g. due to a
-@@ -1070,7 +1069,7 @@ xfs_do_writepage(
- 		 * memory is zeroed when mapped, and writes to that region are
- 		 * not written out to the file."
- 		 */
--		zero_user_segment(page, offset_into_page, PAGE_SIZE);
-+		zero_user_segment(page, offset_into_page, page_size(page));
- 
- 		/* Adjust the end_offset to the end of file */
- 		end_offset = offset;
+v2:
+ - Added a few helpers per Dave Chinner's suggestions
+ - Use GFP_ZERO instead of individually zeroing each field of iop
+ - Rewrite iomap_set_range_uptodate() to use bitmap functions instead
+   of individual bit operations
+ - Drop support for large pages being used for files with inline data
+   (it didn't work anyway, because kmap_atomic() is only going to map
+   the first page of a compound page)
+ - Pass a struct page to xfs_finish_page_writeback instead of the bvec
+
+Matthew Wilcox (Oracle) (5):
+  fs: Introduce i_blocks_per_page
+  mm: Add file_offset_of_ helpers
+  iomap: Support large pages
+  xfs: Support large pages
+  xfs: Pass a page to xfs_finish_page_writeback
+
+ fs/iomap/buffered-io.c  | 121 ++++++++++++++++++++++++++--------------
+ fs/jfs/jfs_metapage.c   |   2 +-
+ fs/xfs/xfs_aops.c       |  37 ++++++------
+ include/linux/iomap.h   |   2 +-
+ include/linux/mm.h      |   2 +
+ include/linux/pagemap.h |  38 ++++++++++++-
+ 6 files changed, 135 insertions(+), 67 deletions(-)
+
 -- 
 2.23.0.rc1
-
