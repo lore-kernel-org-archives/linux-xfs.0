@@ -2,33 +2,34 @@ Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D26C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 15:23:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44749C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 15:39:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54CDA206BA
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 15:23:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15AB022DD3
+	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 15:39:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728441AbfHUPXc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Aug 2019 11:23:32 -0400
-Received: from sandeen.net ([63.231.237.45]:57316 "EHLO sandeen.net"
+        id S1727227AbfHUPjK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 11:39:10 -0400
+Received: from sandeen.net ([63.231.237.45]:58088 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726885AbfHUPXb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 21 Aug 2019 11:23:31 -0400
+        id S1727205AbfHUPjK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 21 Aug 2019 11:39:10 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C248417DFF;
-        Wed, 21 Aug 2019 10:23:30 -0500 (CDT)
-Subject: Re: [PATCH 2/3] xfs: add kmem_alloc_io()
-To:     Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20190821083820.11725-1-david@fromorbit.com>
- <20190821083820.11725-3-david@fromorbit.com> <20190821133533.GB19646@bfoster>
+        by sandeen.net (Postfix) with ESMTPSA id 05D6817DFF;
+        Wed, 21 Aug 2019 10:39:08 -0500 (CDT)
+Subject: Re: [PATCH] xfsprogs: fix geometry calls on older kernels for 5.2.1
+To:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <7d83cd0d-8a15-201e-9ebf-e1f859270b92@sandeen.net>
+ <20190820211828.GC1037350@magnolia>
+ <20190820224600.GI1119@dread.disaster.area>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,111 +74,101 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <f559978b-4c82-87ed-a79c-5c63228f4955@sandeen.net>
-Date:   Wed, 21 Aug 2019 10:23:29 -0500
+Message-ID: <bde705a3-828a-13d7-e5d8-960cc48be9d0@sandeen.net>
+Date:   Wed, 21 Aug 2019 10:39:08 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <20190821133533.GB19646@bfoster>
+In-Reply-To: <20190820224600.GI1119@dread.disaster.area>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/21/19 8:35 AM, Brian Foster wrote:
-> On Wed, Aug 21, 2019 at 06:38:19PM +1000, Dave Chinner wrote:
->> From: Dave Chinner <dchinner@redhat.com>
+On 8/20/19 5:46 PM, Dave Chinner wrote:
+> On Tue, Aug 20, 2019 at 02:18:28PM -0700, Darrick J. Wong wrote:
+>> On Tue, Aug 20, 2019 at 03:47:29PM -0500, Eric Sandeen wrote:
+>>> I didn't think 5.2.0 through; the udpate of the geometry ioctl means
+>>> that the tools won't work on older kernels that don't support the
+>>> v5 ioctls, since I failed to merge Darrick's wrappers.
+>>>
+>>> As a very quick one-off I'd like to merge this to just revert every
+>>> geometry call back to the original ioctl, so it keeps working on
+>>> older kernels and I'll release 5.2.1.  This hack can go away when
+>>> Darrick's wrappers get merged.
+>>>
+>>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 >>
->> Memory we use to submit for IO needs strict alignment to the
->> underlying driver contraints. Worst case, this is 512 bytes. Given
->> that all allocations for IO are always a power of 2 multiple of 512
->> bytes, the kernel heap provides natural alignment for objects of
->> these sizes and that suffices.
+>> For the four line code fix,
+>> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 >>
->> Until, of course, memory debugging of some kind is turned on (e.g.
->> red zones, poisoning, KASAN) and then the alignment of the heap
->> objects is thrown out the window. Then we get weird IO errors and
->> data corruption problems because drivers don't validate alignment
->> and do the wrong thing when passed unaligned memory buffers in bios.
+>>> ---
+>>>
+>>> I'm a little concerned that 3rd party existing code which worked fine
+>>> before will now get the new XFS_IOC_FSGEOMETRY definition if they get
+>>> rebuilt, and suddenly stop working on older kernels. Am I overreacting
+>>> or misunderstanding our compatibility goals?
 >>
->> TO fix this, introduce kmem_alloc_io(), which will guaranteeat least
+>> As for this question ^^^ ... <URRRK>.
+>>
+>> I thought the overall strategy was to get everything in xfsprogs using
+>> libfrog wrappers that would degrade gracefully on old kernels.
 > 
-> s/TO/To/
-> 
->> 512 byte alignment of buffers for IO, even if memory debugging
->> options are turned on. It is assumed that the minimum allocation
->> size will be 512 bytes, and that sizes will be power of 2 mulitples
->> of 512 bytes.
->>
->> Use this everywhere we allocate buffers for IO.
->>
->> This no longer fails with log recovery errors when KASAN is enabled
->> due to the brd driver not handling unaligned memory buffers:
->>
->> # mkfs.xfs -f /dev/ram0 ; mount /dev/ram0 /mnt/test
->>
->> Signed-off-by: Dave Chinner <dchinner@redhat.com>
->> ---
->>  fs/xfs/kmem.c            | 61 +++++++++++++++++++++++++++++-----------
->>  fs/xfs/kmem.h            |  1 +
->>  fs/xfs/xfs_buf.c         |  4 +--
->>  fs/xfs/xfs_log.c         |  2 +-
->>  fs/xfs/xfs_log_recover.c |  2 +-
->>  fs/xfs/xfs_trace.h       |  1 +
->>  6 files changed, 50 insertions(+), 21 deletions(-)
->>
->> diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
->> index edcf393c8fd9..ec693c0fdcff 100644
->> --- a/fs/xfs/kmem.c
->> +++ b/fs/xfs/kmem.c
-> ...
->> @@ -62,6 +56,39 @@ kmem_alloc_large(size_t size, xfs_km_flags_t flags)
->>  	return ptr;
->>  }
->>  
->> +/*
->> + * Same as kmem_alloc_large, except we guarantee a 512 byte aligned buffer is
->> + * returned. vmalloc always returns an aligned region.
->> + */
->> +void *
->> +kmem_alloc_io(size_t size, xfs_km_flags_t flags)
->> +{
->> +	void	*ptr;
->> +
->> +	trace_kmem_alloc_io(size, flags, _RET_IP_);
->> +
->> +	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
->> +	if (ptr) {
->> +		if (!((long)ptr & 511))
->> +			return ptr;
->> +		kfree(ptr);
->> +	}
->> +	return __kmem_vmalloc(size, flags);
->> +}
-> 
-> Even though it is unfortunate, this seems like a quite reasonable and
-> isolated temporary solution to the problem to me. The one concern I have
-> is if/how much this could affect performance under certain
-> circumstances. I realize that these callsites are isolated in the common
-> scenario. Less common scenarios like sub-page block sizes (whether due
-> to explicit mkfs time format or default configurations on larger page
-> size systems) can fall into this path much more frequently, however.
-> 
-> Since this implies some kind of vm debug option is enabled, performance
-> itself isn't critical when this solution is active. But how bad is it in
-> those cases where we might depend on this more heavily? Have you
-> confirmed that the end configuration is still "usable," at least?
-> 
-> I ask because the repeated alloc/free behavior can easily be avoided via
-> something like an mp flag (which may require a tweak to the
-> kmem_alloc_io() interface) to skip further kmem_alloc() calls from this
-> path once we see one unaligned allocation. That assumes this behavior is
-> tied to functionality that isn't dynamically configured at runtime, of
-> course.
+> The wrappers were a necessary part of the conversion. They should
+> have been merged with the rest of XFS_IOC_FSGEOMETRY changes. How
+> did this get broken up?
 
-This seems like a good idea to me.
+because libxfs sync is automated, and wrappers are not.  Darrick tried, but
+despite his best efforts my suckiness prevailed spectacularly this time.
 
+Anyway my worry was about 3rd parties directly using the ioctl definition
+but I guess I've been convinced that I don't need to worry about that because
+it's not for 3rd party consumption in general.
+
+>> For xfsdump/restore, I think we should just merge it into xfsprogs and
+>> then it can use our wrappers.
+> 
+> Don't need to care about dump/restore:
+> 
+> $ git grep FSGEOM
+> common/fs.c:    if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geo)) {
+> doc/CHANGES:      XFS_IOC_FSGEOMETRY instead of XFS_IOC_GETFSUUID ioctl, so
+> $
+> 
+> It only uses teh V1 ioctl.
+
+Yup, thanks for checking that.
+
+> As it is, the correct thing to do here is to put the fallback into
+> the xfsctl() function. This is actually an exported and documented
+> interface to use xfs ioctls by external problems - it's part of
+> libhandle(), and that should be obvious by the fact the man page
+> that describes all this is xfsctl(3).
+> 
+> i.e. any app using XFS ioctls should be using the xfsctl()
+> interface, not calling ioctl directly. The whole reason for that it
+> because it allows us to handle things like this in application
+> independent code....
+>  
+> So I'd suggest that the fallback code should be in the xfsctl
+> handler and then userspace will pick this up and won't care about
+> which kernel it is running on...
+> 
+> I suspect the bigger picture is to convert all the open ioctl()
+> calls in xfsprogs for XFS specific ioctls to xfsctl(). We've kinda
+> screwed this pooch since we stopped having to support multiple
+> platforms.
+> 
+>> For everything else... I thought the story was that you shouldn't really
+>> be using xfs ioctls unless you're keeping up with upstream.
+> 
+> Or you should be linked against libhandle and using xfsctl() to
+> be isolated from these sorts of things.
+
+Yeah fair.
+
+Thanks,
 -Eric
