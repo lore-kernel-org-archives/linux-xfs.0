@@ -2,120 +2,108 @@ Return-Path: <SRS0=94LY=WS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE4F6C3A59E
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 00:38:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C1E7C3A59E
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 00:46:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 867E0216F4
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 00:38:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 743CD22CE3
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 00:46:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728487AbfHVAi6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Aug 2019 20:38:58 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58089 "EHLO
+        id S1727038AbfHVAqH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 20:46:07 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50543 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727291AbfHVAi6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 20:38:58 -0400
+        by vger.kernel.org with ESMTP id S1729081AbfHVAqH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 20:46:07 -0400
 Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5849143E43C;
-        Thu, 22 Aug 2019 10:38:52 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 01FEE43D738;
+        Thu, 22 Aug 2019 10:46:04 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i0b6n-0004U6-2z; Thu, 22 Aug 2019 10:37:45 +1000
-Date:   Thu, 22 Aug 2019 10:37:45 +1000
+        id 1i0bDl-0004Ug-TS; Thu, 22 Aug 2019 10:44:57 +1000
+Date:   Thu, 22 Aug 2019 10:44:57 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, Jens Axboe <axboe@kernel.dk>,
-        linux-block@vger.kernel.org
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 3/3] xfs: alignment check bio buffers
-Message-ID: <20190822003745.GS1119@dread.disaster.area>
+Message-ID: <20190822004457.GT1119@dread.disaster.area>
 References: <20190821083820.11725-1-david@fromorbit.com>
  <20190821083820.11725-4-david@fromorbit.com>
- <20190821232945.GC24904@infradead.org>
+ <20190821133904.GC19646@bfoster>
+ <20190821233041.GD24904@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190821232945.GC24904@infradead.org>
+In-Reply-To: <20190821233041.GD24904@infradead.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=rU67Zy6-Q7zb79vJh6YA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=7-415B0cAAAA:8 a=oHf9qcJ02pf2Py10R3AA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 04:29:45PM -0700, Christoph Hellwig wrote:
-> On Wed, Aug 21, 2019 at 06:38:20PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Aug 21, 2019 at 04:30:41PM -0700, Christoph Hellwig wrote:
+> On Wed, Aug 21, 2019 at 09:39:04AM -0400, Brian Foster wrote:
+> > > @@ -36,9 +57,12 @@ xfs_rw_bdev(
+> > >  		unsigned int	off = offset_in_page(data);
+> > >  		unsigned int	len = min_t(unsigned, left, PAGE_SIZE - off);
+> > >  
+> > > -		while (bio_add_page(bio, page, len, off) != len) {
+> > > +		while ((ret = xfs_bio_add_page(bio, page, len, off)) != len) {
+> > >  			struct bio	*prev = bio;
+> > >  
+> > > +			if (ret < 0)
+> > > +				goto submit;
+> > > +
 > > 
-> > Add memory buffer alignment validation checks to bios built in XFS
-> > to catch bugs that will result in silent data corruption in block
-> > drivers that cannot handle unaligned memory buffers but don't
-> > validate the incoming buffer alignment is correct.
-> > 
-> > Known drivers with these issues are xenblk, brd and pmem.
-> > 
-> > Despite there being nothing XFS specific to xfs_bio_add_page(), this
-> > function was created to do the required validation because the block
-> > layer developers that keep telling us that is not possible to
-> > validate buffer alignment in bio_add_page(), and even if it was
-> > possible it would be too much overhead to do at runtime.
+> > Hmm.. is submitting the bio really the right thing to do if we get here
+> > and have failed to add any pages to the bio? If we're already seeing
+> > weird behavior for bios with unaligned data memory, this seems like a
+> > recipe for similar weirdness. We'd also end up doing a partial write in
+> > scenarios where we already know we're returning an error. Perhaps we
+> > should create an error path or use a check similar to what is already in
+> > xfs_buf_ioapply_map() (though I'm not a fan of submitting a partial I/O
+> > when we already know we're going to return an error) to call bio_endio()
+> > to undo any chaining.
 > 
-> I really don't think we should life this to XFS, but instead fix it
-> in the block layer.  And that is not only because I have a pending
-> series lifting bits you are touching to the block layer..
+> It is not the right thing to do.  Calling bio_endio after setting
+> an error is the right thing to do (modulo any other cleanup needed).
 
-I agree, but....
+bio_endio() doesn't wait for completion or all the IO in progress.
 
-> 
-> > +int
-> > +xfs_bio_add_page(
-> > +	struct bio	*bio,
-> > +	struct page	*page,
-> > +	unsigned int	len,
-> > +	unsigned int	offset)
-> > +{
-> > +	struct request_queue	*q = bio->bi_disk->queue;
-> > +	bool		same_page = false;
-> > +
-> > +	if (WARN_ON_ONCE(!blk_rq_aligned(q, len, offset)))
-> > +		return -EIO;
-> > +
-> > +	if (!__bio_try_merge_page(bio, page, len, offset, &same_page)) {
-> > +		if (bio_full(bio, len))
-> > +			return 0;
-> > +		__bio_add_page(bio, page, len, offset);
-> > +	}
-> > +	return len;
-> 
-> I know Jens disagree, but with the amount of bugs we've been hitting
-> thangs to slub (and I'm pretty sure we have a more hiding outside of
-> XFS) I think we need to add the blk_rq_aligned check to bio_add_page.
+In fact, if we have chained bios still in progress, it does
+absolutely nothing:
 
-... I'm not prepared to fight this battle to get this initial fix
-into the code. Get the fix merged, then we can 
+void bio_endio(struct bio *bio)
+{
+again:
+>>>>>   if (!bio_remaining_done(bio))
+                return;
 
-> Note that all current callers of bio_add_page can only really check
-> for the return value != the added len anyway, so it is not going to
-> make anything worse.
+and so we return still with the memory we've put into the buffers in
+active use by the chained bios under IO. On error, we'll free the
+allocated buffer immediately, and that means we've got a
+use-after-free as the bios in progress still have references to it.
+If it's heap memory we are using here, then that's a memory
+corruption (read) or kernel memory leak (write) vector.
 
-It does make things worse - it turns multi-bio chaining loops like
-the one xfs_rw_bdev() into an endless loop as they don't make
-progress - they just keep allocating a new bio and retrying the same
-badly aligned buffer and failing. So if we want an alignment failure
-to error out, callers need to handle the failure, not treat it like
-a full bio.
+So we have to wait for IO completion before we return from this
+function, and AFAICT, the only way to do that is to call
+submit_bio_wait() on the parent of the bio chain to wait for all
+child bios to drop their references and call bio_endio() on the
+parent of the chain....
 
 Cheers,
 
 Dave.
-
 -- 
 Dave Chinner
 david@fromorbit.com
