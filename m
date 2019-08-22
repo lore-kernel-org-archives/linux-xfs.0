@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E309FC3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:39:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1416CC3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 20:54:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C314A23401
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:39:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC29F23401
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 20:54:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732840AbfHVTjH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 15:39:07 -0400
-Received: from sandeen.net ([63.231.237.45]:58804 "EHLO sandeen.net"
+        id S1732198AbfHVUyt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 16:54:49 -0400
+Received: from sandeen.net ([63.231.237.45]:34398 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726319AbfHVTjG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Aug 2019 15:39:06 -0400
+        id S1731775AbfHVUyt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Aug 2019 16:54:49 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9086F4A1375;
-        Thu, 22 Aug 2019 14:39:05 -0500 (CDT)
-Subject: [PATCH] xfsdump: reject bind mounted subdir targets
+        by sandeen.net (Postfix) with ESMTPSA id C69704CDD3A;
+        Thu, 22 Aug 2019 15:54:47 -0500 (CDT)
+Subject: Re: [PATCH] xfsdump: reject bind mounted subdir targets
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     Eric Sandeen <sandeen@redhat.com>,
         linux-xfs <linux-xfs@vger.kernel.org>
 References: <f66f26f7-5e29-80fc-206c-9a53cf4640fa@redhat.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <1a18d094-0fe0-0bee-ea1f-861ccb60a671@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,92 +72,97 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <1a18d094-0fe0-0bee-ea1f-861ccb60a671@sandeen.net>
-Date:   Thu, 22 Aug 2019 14:39:04 -0500
+Message-ID: <8edc0b26-fe64-2999-1600-fd683d9aa00d@sandeen.net>
+Date:   Thu, 22 Aug 2019 15:54:46 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <f66f26f7-5e29-80fc-206c-9a53cf4640fa@redhat.com>
+In-Reply-To: <1a18d094-0fe0-0bee-ea1f-861ccb60a671@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Once upon a time, xfsdump pointed at a bind-mounted subdirectory
-caused problems because we assumed the inode of the bind-mounted
-dir was the root inode of the filesystem.  That got written into the
-dump header, and a subsequent restore would fail on the mismatch.
+On 8/22/19 2:39 PM, Eric Sandeen wrote:
+> Once upon a time, xfsdump pointed at a bind-mounted subdirectory
+> caused problems because we assumed the inode of the bind-mounted
+> dir was the root inode of the filesystem.  That got written into the
+> dump header, and a subsequent restore would fail on the mismatch.
+> 
+> An effort was made to determine the true root inode using bulkstat,
+> to retrieve the first (lowest-numbered) inode in the filesystem.
+> 
+> That approach is now known to fail in the (rare) case where inodes
+> are allocated with a lower number than the root.  As a result, thewrong root inode number still goes into the dump header, and restore
+> will fail with:
+> 
+> xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
+> 
+> in this case as well.
+> 
+> Rather than trying to work out the true root inode for the filesystem
+> in question if it's bind mounted, just go the simple route and reject
+> bind mounts of subdirs altogether.  This probably leads to less surprise
+> in any case, as dumping a bind-mounted subdir actually will dump the
+> entire filesystem AFAICT.
+> 
+> Fixes: 25195ebf107 ("xfsdump: handle bind mount targets")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+> ---
+> 
+> diff --git a/dump/content.c b/dump/content.c
+> index 30232d4..b9f4929 100644
+> --- a/dump/content.c
+> +++ b/dump/content.c
+> @@ -1383,12 +1383,12 @@ baseuuidbypass:
+>  
+>  	/* figure out the ino for the root directory of the fs
+>  	 * and get its struct xfs_bstat for inomap_build().  This could
+> -	 * be a bind mount; don't ask for the mount point inode,
+> -	 * find the actual lowest inode number in the filesystem.
+> +	 * be a bind mount; disallow this case because we don't know the
+> +	 * root inode.
+>  	 */
+>  	{
+>  		stat64_t rootstat;
+> -		xfs_ino_t lastino = 0;
+> +		xfs_ino_t lastino;
+>  		int ocount = 0;
+>  		struct xfs_fsop_bulkreq bulkreq;
+>  
+> @@ -1404,7 +1404,8 @@ baseuuidbypass:
+>  			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
+>  		assert(sc_rootxfsstatp);
+>  
+> -		/* Get the first valid (i.e. root) inode in this fs */
+> +		/* Bulkstat this inode to get generation number */
+> +		lastino = rootstat.st_ino - 1;
+>  		bulkreq.lastip = (__u64 *)&lastino;
+>  		bulkreq.icount = 1;
+>  		bulkreq.ubuffer = sc_rootxfsstatp;
 
-An effort was made to determine the true root inode using bulkstat,
-to retrieve the first (lowest-numbered) inode in the filesystem.
+actually, I forgot we have bigstat_one() which wraps this up, I'll use that
+instead.
 
-That approach is now known to fail in the (rare) case where inodes
-are allocated with a lower number than the root.  As a result, thewrong root inode number still goes into the dump header, and restore
-will fail with:
-
-xfsrestore: tree.c:757: tree_begindir: Assertion `ino != persp->p_rootino || hardh == persp->p_rooth' failed.
-
-in this case as well.
-
-Rather than trying to work out the true root inode for the filesystem
-in question if it's bind mounted, just go the simple route and reject
-bind mounts of subdirs altogether.  This probably leads to less surprise
-in any case, as dumping a bind-mounted subdir actually will dump the
-entire filesystem AFAICT.
-
-Fixes: 25195ebf107 ("xfsdump: handle bind mount targets")
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
----
-
-diff --git a/dump/content.c b/dump/content.c
-index 30232d4..b9f4929 100644
---- a/dump/content.c
-+++ b/dump/content.c
-@@ -1383,12 +1383,12 @@ baseuuidbypass:
- 
- 	/* figure out the ino for the root directory of the fs
- 	 * and get its struct xfs_bstat for inomap_build().  This could
--	 * be a bind mount; don't ask for the mount point inode,
--	 * find the actual lowest inode number in the filesystem.
-+	 * be a bind mount; disallow this case because we don't know the
-+	 * root inode.
- 	 */
- 	{
- 		stat64_t rootstat;
--		xfs_ino_t lastino = 0;
-+		xfs_ino_t lastino;
- 		int ocount = 0;
- 		struct xfs_fsop_bulkreq bulkreq;
- 
-@@ -1404,7 +1404,8 @@ baseuuidbypass:
- 			(struct xfs_bstat *)calloc(1, sizeof(struct xfs_bstat));
- 		assert(sc_rootxfsstatp);
- 
--		/* Get the first valid (i.e. root) inode in this fs */
-+		/* Bulkstat this inode to get generation number */
-+		lastino = rootstat.st_ino - 1;
- 		bulkreq.lastip = (__u64 *)&lastino;
- 		bulkreq.icount = 1;
- 		bulkreq.ubuffer = sc_rootxfsstatp;
-@@ -1415,10 +1416,13 @@ baseuuidbypass:
- 			return BOOL_FALSE;
- 		}
- 
--		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
--			mlog (MLOG_NORMAL | MLOG_NOTE,
--			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
--			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
-+		/* The real root inode will have a generation of zero */
-+		if (sc_rootxfsstatp->bs_gen != 0) {
-+			mlog (MLOG_ERROR,
-+_("Dir inode %lld at %s has non-zero generation, not a root inode, bind mount?\n"),
-+				rootstat.st_ino, mntpnt);
-+			return BOOL_FALSE;
-+		}
- 	}
- 
- 	/* alloc a file system handle, to be used with the jdm_open()
-
+> @@ -1415,10 +1416,13 @@ baseuuidbypass:
+>  			return BOOL_FALSE;
+>  		}
+>  
+> -		if (sc_rootxfsstatp->bs_ino != rootstat.st_ino)
+> -			mlog (MLOG_NORMAL | MLOG_NOTE,
+> -			       _("root ino %lld differs from mount dir ino %lld, bind mount?\n"),
+> -			         sc_rootxfsstatp->bs_ino, rootstat.st_ino);
+> +		/* The real root inode will have a generation of zero */
+> +		if (sc_rootxfsstatp->bs_gen != 0) {
+> +			mlog (MLOG_ERROR,
+> +_("Dir inode %lld at %s has non-zero generation, not a root inode, bind mount?\n"),
+> +				rootstat.st_ino, mntpnt);
+> +			return BOOL_FALSE;
+> +		}
+>  	}
+>  
+>  	/* alloc a file system handle, to be used with the jdm_open()
+> 
