@@ -2,172 +2,174 @@ Return-Path: <SRS0=94LY=WS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B4C9C3A59D
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 06:36:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFDF6C3A59D
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 07:24:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 165FD20644
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 06:36:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IWFIdsIC"
+	by mail.kernel.org (Postfix) with ESMTP id 8B408214DA
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 07:24:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727476AbfHVGgj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 02:36:39 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:35430 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727401AbfHVGgj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 02:36:39 -0400
-Received: by mail-pl1-f194.google.com with SMTP id gn20so2848402plb.2
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Aug 2019 23:36:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=pSoXR2D2OnLHuNyUMSsWbUEVN/S2NcVhjAAS1QkJJUI=;
-        b=IWFIdsICc5kxcOtVOBfbTOXBLowRYnxDYtv+J2GfXglgaGIhQXFJDJIty7Rm+0S+t0
-         AEufwmslfh3MjgY8F5IkWQIUGPvH0oXlv3avTJSBOfzwVV9zLmSWgvWzSAhCD+/6spSn
-         2LeKVL01BfuPHjbtZPlr2G3HdYPmfivCNXgqNe3d49cXtq0JFKHEY8C6wB8j0gR23hhy
-         euSzSGQbgaIQoB//u7CTN8iFzad7brU2YntHQnM4/DG5xGOVKSFo8nOMq2WNAUG61w9Z
-         ZeBu/Yc7BpIUUhIpY2a87UfKyFeNtDqCJwfOQOuY9DmJx6fVHYqhzw+zLTJ5S7mFXJIS
-         zvEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=pSoXR2D2OnLHuNyUMSsWbUEVN/S2NcVhjAAS1QkJJUI=;
-        b=Fe0XLmff4Cbc2q63FWhtzOK+OglUWPAD0nRkKwUkZzX5Ua46czsuFTJ0boJ2a2c3k2
-         8wsBbZs5Em2UgHK9lPzpHCpBfsvfX9rpfZCePeY/WbElDnTAWWPqKH9UYBvjPjkSQioQ
-         iOHlqiAScKxaxyn7Dk6Ceoo8zCAE22TXsuiRRGJReynq7pwlhu5kS+RP4Yx+N3G5LiiS
-         e+fjcEHKJ2pgQjekuHD96Hab3iPh2Vq575n2tS4x4HYiHaWHbop1updSSvosxey3otaE
-         kAvU7E4lSzziJXUoVZQF9uQwoaI7PUpa0U3RvKuacGGs8xNOThKMEgnL3Pd8pVUozU3f
-         bLFw==
-X-Gm-Message-State: APjAAAWF1nZO+IvxKCqArifEg874pedruXdegDa/2b9kDngUwyazxo0k
-        8I0rL4FSETc3U05HrsGADQ==
-X-Google-Smtp-Source: APXvYqxa7Zb5lXQqntvA0o5d/6nscoHIC/yfx64GrvxIkn9J+tFBH2N27M7HKczLdZlYjpPT5r63zQ==
-X-Received: by 2002:a17:902:288b:: with SMTP id f11mr11069796plb.13.1566455798861;
-        Wed, 21 Aug 2019 23:36:38 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id s20sm25112769pfe.169.2019.08.21.23.36.36
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 21 Aug 2019 23:36:38 -0700 (PDT)
-Subject: Re: [PATCH v4] xfs: Fix agi&agf ABBA deadlock when performing rename
- with RENAME_WHITEOUT flag
+        id S1730108AbfHVHYP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 03:24:15 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:57698 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728104AbfHVHYP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Aug 2019 03:24:15 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 329B781F13;
+        Thu, 22 Aug 2019 07:24:14 +0000 (UTC)
+Received: from ming.t460p (ovpn-8-30.pek2.redhat.com [10.72.8.30])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 26A6560605;
+        Thu, 22 Aug 2019 07:24:03 +0000 (UTC)
+Date:   Thu, 22 Aug 2019 15:23:58 +0800
+From:   Ming Lei <ming.lei@redhat.com>
 To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-References: <72adde91-556c-8af3-e217-5a658697972e@gmail.com>
- <20190822050143.GV1119@dread.disaster.area>
- <3d6e190f-f88e-ef75-8dc1-9b0958706e38@gmail.com>
- <20190822060648.GX1119@dread.disaster.area>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <ba9a37ff-bdfd-d5b1-c882-27afe2bd5a88@gmail.com>
-Date:   Thu, 22 Aug 2019 14:36:35 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+Cc:     Ming Lei <tom.leiming@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>,
+        Jens Axboe <axboe@kernel.dk>,
+        linux-block <linux-block@vger.kernel.org>
+Subject: Re: [PATCH 3/3] xfs: alignment check bio buffers
+Message-ID: <20190822072351.GA5414@ming.t460p>
+References: <20190821083820.11725-1-david@fromorbit.com>
+ <20190821083820.11725-4-david@fromorbit.com>
+ <20190821232945.GC24904@infradead.org>
+ <CACVXFVN93h7QrFvZNVQQwYZg_n0wGXwn=XZztMJrNbdjzzSpKQ@mail.gmail.com>
+ <20190822044905.GU1119@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20190822060648.GX1119@dread.disaster.area>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190822044905.GU1119@dread.disaster.area>
+User-Agent: Mutt/1.11.3 (2019-02-01)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Thu, 22 Aug 2019 07:24:14 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2019/8/22 14:06, Dave Chinner wrote:
-> On Thu, Aug 22, 2019 at 01:45:48PM +0800, kaixuxia wrote:
->> On 2019/8/22 13:01, Dave Chinner wrote:
->>> On Thu, Aug 22, 2019 at 12:33:23PM +0800, kaixuxia wrote:
->>>
->>>> @@ -3419,25 +3431,15 @@ struct xfs_iunlink {
->>>>  
->>>>  	/*
->>>>  	 * For whiteouts, we need to bump the link count on the whiteout inode.
->>>
->>> Shouldn't this line be removed as well?
->>
->> Because the xfs_bumplink() call below will do this.
+On Thu, Aug 22, 2019 at 02:49:05PM +1000, Dave Chinner wrote:
+> On Thu, Aug 22, 2019 at 10:50:02AM +0800, Ming Lei wrote:
+> > On Thu, Aug 22, 2019 at 8:06 AM Christoph Hellwig <hch@infradead.org> wrote:
+> > >
+> > > On Wed, Aug 21, 2019 at 06:38:20PM +1000, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > >
+> > > > Add memory buffer alignment validation checks to bios built in XFS
+> > > > to catch bugs that will result in silent data corruption in block
+> > > > drivers that cannot handle unaligned memory buffers but don't
+> > > > validate the incoming buffer alignment is correct.
+> > > >
+> > > > Known drivers with these issues are xenblk, brd and pmem.
+> > > >
+> > > > Despite there being nothing XFS specific to xfs_bio_add_page(), this
+> > > > function was created to do the required validation because the block
+> > > > layer developers that keep telling us that is not possible to
+> > > > validate buffer alignment in bio_add_page(), and even if it was
+> > > > possible it would be too much overhead to do at runtime.
+> > >
+> > > I really don't think we should life this to XFS, but instead fix it
+> > > in the block layer.  And that is not only because I have a pending
+> > > series lifting bits you are touching to the block layer..
+> > >
+> > > > +int
+> > > > +xfs_bio_add_page(
+> > > > +     struct bio      *bio,
+> > > > +     struct page     *page,
+> > > > +     unsigned int    len,
+> > > > +     unsigned int    offset)
+> > > > +{
+> > > > +     struct request_queue    *q = bio->bi_disk->queue;
+> > > > +     bool            same_page = false;
+> > > > +
+> > > > +     if (WARN_ON_ONCE(!blk_rq_aligned(q, len, offset)))
+> > > > +             return -EIO;
+> > > > +
+> > > > +     if (!__bio_try_merge_page(bio, page, len, offset, &same_page)) {
+> > > > +             if (bio_full(bio, len))
+> > > > +                     return 0;
+> > > > +             __bio_add_page(bio, page, len, offset);
+> > > > +     }
+> > > > +     return len;
+> > >
+> > > I know Jens disagree, but with the amount of bugs we've been hitting
+> > > thangs to slub (and I'm pretty sure we have a more hiding outside of
+> > > XFS) I think we need to add the blk_rq_aligned check to bio_add_page.
+> > 
+> > It isn't correct to blk_rq_aligned() here because 'len' has to be logical block
+> > size aligned, instead of DMA aligned only.
 > 
-> Oh, yeah, I just assumed that from the "we have a real link" part of
-> the new comment :P
+> News to me.
 > 
->>>> -	 * This means that failures all the way up to this point leave the inode
->>>> -	 * on the unlinked list and so cleanup is a simple matter of dropping
->>>> -	 * the remaining reference to it. If we fail here after bumping the link
->>>> -	 * count, we're shutting down the filesystem so we'll never see the
->>>> -	 * intermediate state on disk.
->>>> +	 * The whiteout inode has been removed from the unlinked list and log
->>>> +	 * recovery will clean up the mess for the failures up to this point.
->>>> +	 * After this point we have a real link, clear the tmpfile state flag
->>>> +	 * from the inode so it doesn't accidentally get misused in future.
->>>>  	 */
->>>>  	if (wip) {
->>>>  		ASSERT(VFS_I(wip)->i_nlink == 0);
->>>>  		xfs_bumplink(tp, wip);
->>>> -		error = xfs_iunlink_remove(tp, wip);
->>>> -		if (error)
->>>> -			goto out_trans_cancel;
->>>>  		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
->>>> -
->>>> -		/*
->>>> -		 * Now we have a real link, clear the "I'm a tmpfile" state
->>>> -		 * flag from the inode so it doesn't accidentally get misused in
->>>> -		 * future.
->>>> -		 */
->>>>  		VFS_I(wip)->i_state &= ~I_LINKABLE;
->>>>  	}
->>>
->>> Why not move all this up into the same branch that removes the
->>> whiteout from the unlinked list? Why separate this logic as none of
->>> what is left here could cause a failure even if it is run earlier?
->>
->> Yep, it could not cause a failure if we move all this into the same
->> branch that xfs_iunlink_remove() call. We move the xfs_iunlink_remove()
->> first to preserve correct AGI/AGF locking order, and maybe it is better
->> we bump the link count after using the whiteout inode really, such as
->> xfs_dir_replace(...,wip,...) ...
-> 
-> It makes no difference where we bump the link count as long as we do
-> it after the xfs_iunlink_remove() call. At that point, any failure
-> will result in a shutdown and so it doesn't matter that we've
-> already bumped the link count because the shutdown with prevent
-> it from reaching the disk...
+> AFAIA, the overall _IO_ that is being built needs to be a multiple
+> of the logical block size in total size (i.e. bio->bi_iter.size)
 
-Yeah, so it can be like this:
+Right.
 
-	/*
-	 * For whiteouts, we need to bump the link count on the whiteout inode.
-	 * The whiteout inode is removed from the unlinked list and log recovery
-	 * will clean up the mess for the failures after this point. After this
- 	 * point we have a real link, clear the tmpfile state flag from the inode
-	 * so it doesn't accidentally get misused in future.
-	 */
-	if (wip) {
-		ASSERT(VFS_I(wip)->i_nlink == 0);
-		error = xfs_iunlink_remove(tp, wip);
-		if (error)
-			...
-		xfs_bumplink(tp, wip);
-		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
-		VFS_I(wip)->i_state &= ~I_LINKABLE;
-	}
+> because sub sector IO is not allowed. But queue DMA limits are not
+> defined in sectors - they define the scatter/gather DMA capability
+> of the hardware, and that's what individual segments (bvecs) need to
+> align to.  That's what blk_rq_aligned() checks here - that the bvec
 
-Right?
+Segment isn't same with bvec. We build segment via scatterlist interface
+from bvecs in case that driver needs segment for DMA between CPU and
+HBA. The built segment has to respect every kinds of queue limits.
+
+Now there are two kinds of bio, one is called fs bio, the other one is
+bio for doing IO from/to the device. Block layer splits fs bio into
+bios with proper size for doing IO.
+
+If one bvec is added with un-aligned length to fs bio, and if this bvec
+can't be merged with the following ones, how can block layer handle that?
+For example, this bvec is un-aligned with virt boundary, then one single
+bio is allocated for doing IO of this bvec, then sub-sector IO is
+generated.
+
+> segment aligns to what the underlying driver(s) requires, not that
+> the entire IO is sector sized and aligned.
+
+Not every drivers need to handle segment, some drivers simply handle
+single-page bvec(pmem, brd, zram, ...) or multi-page bvec(loop).
+
+Then un-aligned bvec may cause trouble for drivers which single-page bvec.
 
 > 
-> Cheers,
-> 
-> Dave.
-> 
+> Also, think about multipage bvecs - the pages we are spanning here
+> are contiguous pages, so this should end up merging them and turning
+> it into a single multipage bvec whose length is sector size
+> aligned...
 
--- 
-kaixuxia
+This way works for drivers which use segment, and most of drivers
+belong to this type.
+
+> 
+> > Also not sure all users may setup bio->bi_disk well before adding page to bio,
+> > since it is allowed to do that now.
+> 
+> XFS does, so I just don't care about random users of bio_add_page()
+> in this patch. Somebody else can run the block layer gauntlet to get
+> these checks moved into generic code and they've already been
+> rejected twice as unnecessary.
+
+If the check is to be added on bio_add_page(), every users have to be
+audited.
+
+> 
+> > If slub buffer crosses two pages, block layer may not handle it at all
+> > even though
+> > un-aligned 'offset' issue is solved.
+> 
+> A slub buffer crossing two _contiguous_ pages should end up merged
+> as a multipage bvec. But I'm curious, what does adding multiple
+> contiguous pages to a bio actually break?
+
+Some drivers don't or can't handle multi-page bvec, we have to split
+it into single-page bvec, then un-aligned bvec is seen by this drivers.
+
+thanks,
+Ming
