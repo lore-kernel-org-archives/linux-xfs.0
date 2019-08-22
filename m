@@ -1,112 +1,111 @@
-Return-Path: <SRS0=IGv+=WR=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=94LY=WS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7B3CC3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 23:49:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0265CC3A59E
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 00:32:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98D822339E
-	for <linux-xfs@archiver.kernel.org>; Wed, 21 Aug 2019 23:49:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="gPyjbbOl"
+	by mail.kernel.org (Postfix) with ESMTP id CD75C21848
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 00:32:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730822AbfHUXts (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 21 Aug 2019 19:49:48 -0400
-Received: from mail-qt1-f195.google.com ([209.85.160.195]:37419 "EHLO
-        mail-qt1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730818AbfHUXtr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 19:49:47 -0400
-Received: by mail-qt1-f195.google.com with SMTP id y26so5363286qto.4
-        for <linux-xfs@vger.kernel.org>; Wed, 21 Aug 2019 16:49:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=ziepe.ca; s=google;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=8Dz6lpgjK94wsk5MHL4jboQE1NnpsCOBFBvUAahO07A=;
-        b=gPyjbbOlWbFMNLNEHlm3dVB7Uzz3AKtizx4gilO4AsJS5UDSi7tKtuKLliMJh4+rPu
-         1Jf/sMigbAhn4QGVmiCQ6jvV0hXBmnUimeqP0xUMpcAFxLHy5mSvYZ2fitBb6fMv1QEd
-         cZ2rJhYAzO91SSmOVmphbBBxbh+HSxrYlvJ3tgnRnP1JDEhZkz5GiMo9UEiNo9GyVRUF
-         8WnH6kAl7p/wnpPhgEWF5q/2JAvm1wPyF94nsUIZ3Nn/qacJn/LeA6n513wpAcQCJroq
-         gRk02pguSic3ESpZjlGMGpJT0L4SvQqRx3eSvDn9QgwMdBegopEE9vJkJ6UvTjj8CtPC
-         e/+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=8Dz6lpgjK94wsk5MHL4jboQE1NnpsCOBFBvUAahO07A=;
-        b=Ehpjks6CZGC7FjdiwmuMNmjHQrVlwvaRjIdE9nOHbw+RdNZKcOtCh0Pp8N4xk7U1a9
-         mRKTiyU7b2EXipSunwalrdo4drrfpakusQz3UdlfG5VOEh7LcbI9qqP+93MDN47GHidw
-         /lOsHR4zKeXDHvplOZWVTcycnF85hqvBI05GKcIBpsCTHdf3XbSSt+bvvHADENODCUga
-         R4Mi6dalN6ThX8xr5iB6oCr24+kdPmWr29u5lQqPyVpfaNzGPO3G/68hqHkX8iUk1AlR
-         GvqL+oxWVr8UF0yjjbwoF2b8yBjxmfqLzWkn//WvmMLW81qdvjCW4FXPiRTLHN1v0Bhk
-         d6IQ==
-X-Gm-Message-State: APjAAAXpifYAErVjmaayAPscoptfnEeM//Es6iMBMJ6y47Lw78Qjs04F
-        tqRJsz0iUnmPFwRbOzKALq452Q==
-X-Google-Smtp-Source: APXvYqydXtesxNmJNprP51Mg7fYbplLAQObHr5i5Uy4KKN0cJaAIkir0EBD/uw5rTQeKc1g+BuOcEQ==
-X-Received: by 2002:ac8:22ac:: with SMTP id f41mr33955957qta.362.1566431386704;
-        Wed, 21 Aug 2019 16:49:46 -0700 (PDT)
-Received: from ziepe.ca (hlfxns017vw-156-34-55-100.dhcp-dynamic.fibreop.ns.bellaliant.net. [156.34.55.100])
-        by smtp.gmail.com with ESMTPSA id 125sm11156870qkl.36.2019.08.21.16.49.46
-        (version=TLS1_2 cipher=ECDHE-RSA-CHACHA20-POLY1305 bits=256/256);
-        Wed, 21 Aug 2019 16:49:46 -0700 (PDT)
-Received: from jgg by mlx.ziepe.ca with local (Exim 4.90_1)
-        (envelope-from <jgg@ziepe.ca>)
-        id 1i0aML-0008RC-Ks; Wed, 21 Aug 2019 20:49:45 -0300
-Date:   Wed, 21 Aug 2019 20:49:45 -0300
-From:   Jason Gunthorpe <jgg@ziepe.ca>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190821234945.GA31944@ziepe.ca>
-References: <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
- <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190821181343.GH8653@ziepe.ca>
- <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
- <20190821194810.GI8653@ziepe.ca>
- <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
+        id S1727807AbfHVAcm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 21 Aug 2019 20:32:42 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46810 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727038AbfHVAcm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 21 Aug 2019 20:32:42 -0400
+Received: from dread.disaster.area (pa49-195-190-67.pa.nsw.optusnet.com.au [49.195.190.67])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id F312143D96E;
+        Thu, 22 Aug 2019 10:32:39 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i0b0m-0004TW-1I; Thu, 22 Aug 2019 10:31:32 +1000
+Date:   Thu, 22 Aug 2019 10:31:32 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: add kmem_alloc_io()
+Message-ID: <20190822003131.GR1119@dread.disaster.area>
+References: <20190821083820.11725-1-david@fromorbit.com>
+ <20190821083820.11725-3-david@fromorbit.com>
+ <20190821232440.GB24904@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+In-Reply-To: <20190821232440.GB24904@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=TR82T6zjGmBjdfWdGgpkDw==:117 a=TR82T6zjGmBjdfWdGgpkDw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=7-415B0cAAAA:8 a=0GnI0VYItIVuTeV953gA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 01:44:21PM -0700, Ira Weiny wrote:
-
-> > The order FD's are closed during sigkill is not deterministic, so when
-> > all the fputs happen during a kill'd exit we could end up blocking in
-> > close(fd) as close(uverbs) will come after in the close
-> > list. close(uverbs) is the thing that does the dereg_mr and releases
-> > the pin.
+On Wed, Aug 21, 2019 at 04:24:40PM -0700, Christoph Hellwig wrote:
+> > +
+> > +/*
+> > + * __vmalloc() will allocate data pages and auxillary structures (e.g.
+> > + * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context here. Hence
+> > + * we need to tell memory reclaim that we are in such a context via
+> > + * PF_MEMALLOC_NOFS to prevent memory reclaim re-entering the filesystem here
+> > + * and potentially deadlocking.
+> > + */
 > 
-> Of course, that is a different scenario which needs to be fixed in my patch
-> set.  Now that my servers are back up I can hopefully make progress.  (Power
-> was down for them yesterday).
+> Btw, I think we should eventually kill off KM_NOFS and just use
+> PF_MEMALLOC_NOFS in XFS, as the interface makes so much more sense.
+> But that's something for the future.
 
-It isn't really a different scenario, the problem is that the
-filesystem fd must be closable independenly of fencing the MR to avoid
-deadlock cycles. Once you resolve that the issue of the uverbs FD out
-living it won't matter one bit if it is in the same process or
-another.
+Yeah, and it's not quite as simple as just using PF_MEMALLOC_NOFS
+at high levels - we'll still need to annotate callers that use KM_NOFS
+to avoid lockdep false positives. i.e. any code that can be called from
+GFP_KERNEL and reclaim context will throw false positives from
+lockdep if we don't annotate tehm correctly....
 
-Jason
+> > +/*
+> > + * Same as kmem_alloc_large, except we guarantee a 512 byte aligned buffer is
+> > + * returned. vmalloc always returns an aligned region.
+> > + */
+> > +void *
+> > +kmem_alloc_io(size_t size, xfs_km_flags_t flags)
+> > +{
+> > +	void	*ptr;
+> > +
+> > +	trace_kmem_alloc_io(size, flags, _RET_IP_);
+> > +
+> > +	ptr = kmem_alloc(size, flags | KM_MAYFAIL);
+> > +	if (ptr) {
+> > +		if (!((long)ptr & 511))
+> 
+> Please use unsigned long (or uintptr_t if you want to be fancy),
+> and (SECTOR_SIZE - 1).
+
+Already changed it to uintptr_t when I did...
+
+> 
+> As said elsewhere if we want to be fancy we should probably pass a
+> request queue or something pointing to it.
+
+.... this. Well, not exactly this - I pass in the alignment required
+as an int, and the callers get it from the request queue....
+
+> But then again I don't think
+> it really matters much, it would save us the reallocation with slub debug
+> for a bunch of scsi adapters that support dword aligned I/O.  But last
+> least the interface would be a little more obvious.
+
+Yup, just smoke testing it now before I resend.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
