@@ -6,74 +6,95 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A19F8C3A59D
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 10:20:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A9BAC3A59D
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 11:14:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79B65206BB
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 10:20:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66ED52339F
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 11:14:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387528AbfHVKUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 06:20:11 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:55472 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726142AbfHVKUL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Aug 2019 06:20:11 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4FAFA3082A6C;
-        Thu, 22 Aug 2019 10:20:11 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-30.pek2.redhat.com [10.72.8.30])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 46B1460BF3;
-        Thu, 22 Aug 2019 10:20:04 +0000 (UTC)
-Date:   Thu, 22 Aug 2019 18:20:00 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Ming Lei <tom.leiming@gmail.com>,
-        "open list:XFS FILESYSTEM" <linux-xfs@vger.kernel.org>,
-        Jens Axboe <axboe@kernel.dk>,
-        linux-block <linux-block@vger.kernel.org>
-Subject: Re: [PATCH 3/3] xfs: alignment check bio buffers
-Message-ID: <20190822101958.GA9632@ming.t460p>
+        id S1731485AbfHVLOd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 07:14:33 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42110 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726844AbfHVLOc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Aug 2019 07:14:32 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 7E2A6AF11;
+        Thu, 22 Aug 2019 11:14:31 +0000 (UTC)
+Subject: Re: [PATCH 2/3] xfs: add kmem_alloc_io()
+To:     Dave Chinner <david@fromorbit.com>,
+        Peter Zijlstra <peterz@infradead.org>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+        penguin-kernel@I-love.SAKURA.ne.jp
 References: <20190821083820.11725-1-david@fromorbit.com>
- <20190821083820.11725-4-david@fromorbit.com>
- <20190821232945.GC24904@infradead.org>
- <CACVXFVN93h7QrFvZNVQQwYZg_n0wGXwn=XZztMJrNbdjzzSpKQ@mail.gmail.com>
- <20190822044905.GU1119@dread.disaster.area>
- <20190822080852.GC31346@infradead.org>
+ <20190821083820.11725-3-david@fromorbit.com>
+ <20190821232440.GB24904@infradead.org>
+ <20190822003131.GR1119@dread.disaster.area>
+ <20190822075948.GA31346@infradead.org>
+ <20190822085130.GI2349@hirez.programming.kicks-ass.net>
+ <20190822091057.GK2386@hirez.programming.kicks-ass.net>
+ <20190822101441.GY1119@dread.disaster.area>
+From:   Vlastimil Babka <vbabka@suse.cz>
+Message-ID: <ddcdc274-be61-6e40-5a14-a4faa954f090@suse.cz>
+Date:   Thu, 22 Aug 2019 13:14:30 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190822080852.GC31346@infradead.org>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Thu, 22 Aug 2019 10:20:11 +0000 (UTC)
+In-Reply-To: <20190822101441.GY1119@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 22, 2019 at 01:08:52AM -0700, Christoph Hellwig wrote:
-> On Thu, Aug 22, 2019 at 02:49:05PM +1000, Dave Chinner wrote:
-> > On Thu, Aug 22, 2019 at 10:50:02AM +0800, Ming Lei wrote:
-> > > It isn't correct to blk_rq_aligned() here because 'len' has to be logical block
-> > > size aligned, instead of DMA aligned only.
+On 8/22/19 12:14 PM, Dave Chinner wrote:
+> On Thu, Aug 22, 2019 at 11:10:57AM +0200, Peter Zijlstra wrote:
+>> 
+>> Ah, current_gfp_context() already seems to transfer PF_MEMALLOC_NOFS
+>> into the GFP flags.
+>> 
+>> So are we sure it is broken and needs mending?
 > 
-> Even if len would have to be a multiple of the sector size, that doesn't
-> mean calling blk_rq_aligned would be incorrect, just possibly not
-> catching all issues.
+> Well, that's what we are trying to work out. The problem is that we
+> have code that takes locks and does allocations that is called both
+> above and below the reclaim "lock" context. Once it's been seen
+> below the reclaim lock context, calling it with GFP_KERNEL context
+> above the reclaim lock context throws a deadlock warning.
+> 
+> The only way around that was to mark these allocation sites as
+> GFP_NOFS so lockdep is never allowed to see that recursion through
+> reclaim occur. Even though it isn't a deadlock vector.
+> 
+> What we're looking at is whether PF_MEMALLOC_NOFS changes this - I
+> don't think it does solve this problem. i.e. if we define the
+> allocation as GFP_KERNEL and then use PF_MEMALLOC_NOFS where reclaim
+> is not allowed, we still have GFP_KERNEL allocations in code above
+> reclaim that has also been seen below relcaim. And so we'll get
+> false positive warnings again.
 
-In theory, fs bio shouldn't care any DMA limits, which should have been done
-on splitted bio for doing IO to device.
+If I understand both you and the code directly, the code sites won't call
+__fs_reclaim_acquire when called with current->flags including PF_MEMALLOC_NOFS.
+So that would mean they "won't be seen below the reclaim" and all would be fine,
+right?
 
-Also .dma_alignment isn't considered in blk_stack_limits(), so in case
-of DM, MD or other stacking drivers, fs code won't know the accurate
-.dma_alignment of underlying queues at all, and the stacking driver's
-queue dma alignment is still 512.
+> What I think we are going to have to do here is manually audit
+> each of the KM_NOFS call sites as we remove the NOFS from them and
+> determine if ___GFP_NOLOCKDEP is needed to stop lockdep from trying
+> to track these allocation sites. We've never used this tag because
+> we'd already fixed most of these false positives with explicit
+> GFP_NOFS tags long before ___GFP_NOLOCKDEP was created.
+> 
+> But until someone starts doing the work, I don't know if it will
+> work or even whether conversion PF_MEMALLOC_NOFS is going to
+> introduce a bunch of new ways to get false positives from lockdep...
+> 
+> Cheers,
+> 
+> Dave.
+> 
 
-Also suppose the check is added, I am a bit curious how fs code handles the
-failure, so could you explain a bit about the failure handling?
-
-Thanks, 
-Ming
