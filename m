@@ -6,23 +6,23 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BAB8EC3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:13:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 92E65C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:19:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E36021743
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:13:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 72E98233FD
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391684AbfHVTN3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 15:13:29 -0400
-Received: from sandeen.net ([63.231.237.45]:57400 "EHLO sandeen.net"
+        id S2387454AbfHVTTx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 15:19:53 -0400
+Received: from sandeen.net ([63.231.237.45]:57792 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730531AbfHVTN3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Aug 2019 15:13:29 -0400
+        id S1731916AbfHVTTw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Aug 2019 15:19:52 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A0A654A1354;
-        Thu, 22 Aug 2019 14:13:27 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 8085F4CDD38;
+        Thu, 22 Aug 2019 14:19:51 -0500 (CDT)
 Subject: Re: [PATCH] xfsdump: find root inode, not first inode
 From:   Eric Sandeen <sandeen@sandeen.net>
 To:     Dave Chinner <david@fromorbit.com>,
@@ -31,6 +31,7 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 References: <f66f26f7-5e29-80fc-206c-9a53cf4640fa@redhat.com>
  <20190822060117.GW1119@dread.disaster.area>
  <f33ee1bb-5b32-d14b-4e37-b8c114514e78@sandeen.net>
+ <ac2a8c72-426a-acb2-6e76-0940d5eabb6e@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -74,12 +75,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <ac2a8c72-426a-acb2-6e76-0940d5eabb6e@sandeen.net>
-Date:   Thu, 22 Aug 2019 14:13:26 -0500
+Message-ID: <40dc9a2d-3a1d-8d27-88df-9370067b76a7@sandeen.net>
+Date:   Thu, 22 Aug 2019 14:19:50 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <f33ee1bb-5b32-d14b-4e37-b8c114514e78@sandeen.net>
+In-Reply-To: <ac2a8c72-426a-acb2-6e76-0940d5eabb6e@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,66 +89,78 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/22/19 9:48 AM, Eric Sandeen wrote:
-> On 8/22/19 1:01 AM, Dave Chinner wrote:
-
-...
-
->> Hence scanning all the inodes in the first indoe chunk won't find
->> the root indoe if any of these situations has occurred, and we may
->> have to scan 1500 or more inodes in to find the root chunk (6 btree
->> roots - BNOBT,CNTBT,INOBT,FINOBT,RMAPBT,REFCBT - and 64k blocks).
+On 8/22/19 2:13 PM, Eric Sandeen wrote:
+> On 8/22/19 9:48 AM, Eric Sandeen wrote:
+>> On 8/22/19 1:01 AM, Dave Chinner wrote:
 > 
-> Hm.  So, the one report I had of this had a root inode of 128, and
-> bulkstat returned a first inode of 64, triggering the assert above.
-> (but even then you're right, scanning 64 isn't enough)
+> ...
 > 
-> If it really can be that far off then maybe this is a bad way to go,
-> although the long scan is going to be exceedingly rare I think.  Most
-> people will get the root inode on the first bulkstat call.
+>>> Hence scanning all the inodes in the first indoe chunk won't find
+>>> the root indoe if any of these situations has occurred, and we may
+>>> have to scan 1500 or more inodes in to find the root chunk (6 btree
+>>> roots - BNOBT,CNTBT,INOBT,FINOBT,RMAPBT,REFCBT - and 64k blocks).
+>>
+>> Hm.  So, the one report I had of this had a root inode of 128, and
+>> bulkstat returned a first inode of 64, triggering the assert above.
+>> (but even then you're right, scanning 64 isn't enough)
+>>
+>> If it really can be that far off then maybe this is a bad way to go,
+>> although the long scan is going to be exceedingly rare I think.  Most
+>> people will get the root inode on the first bulkstat call.
+>>
+>>> So I think the best thing to do here is try to calculate the root
+>>> inode number as per xfs_repair, and then bulkstat that. i.e. see
+>>> the calculation of "first_prealloc_ino" in repair/xfs_repair.c
+>>> (about line 450). Probably requires a XFS_IOC_FSGEOMETRY_V1 call to
+>>> get the necessary info to calculate it...
+>>
+>> I had started to go down that path and it seemed like a real mess.
+>> We need m_ag_maxlevels, m_rmap_maxlevels, sb_logstart, features,
+>> etc etc etc.  I guess I can revisit it.  I had thought about a common
+>> function to calculate this so we aren't coding it twice but I'm not
+>> sure we have the same sets of inputs for the various cases ...
 > 
->> So I think the best thing to do here is try to calculate the root
->> inode number as per xfs_repair, and then bulkstat that. i.e. see
->> the calculation of "first_prealloc_ino" in repair/xfs_repair.c
->> (about line 450). Probably requires a XFS_IOC_FSGEOMETRY_V1 call to
->> get the necessary info to calculate it...
+> I'm not sure it's possible without a ton of setup (or at all).
+> (repair has already done a full libxfs_mount setup, so it has what it needs.)
 > 
-> I had started to go down that path and it seemed like a real mess.
-> We need m_ag_maxlevels, m_rmap_maxlevels, sb_logstart, features,
-> etc etc etc.  I guess I can revisit it.  I had thought about a common
-> function to calculate this so we aren't coding it twice but I'm not
-> sure we have the same sets of inputs for the various cases ...
+> For example we need inode alignment; calculating that depends on whether
+> we have sparse inodes, and sparse inodes is an incompat feature not
+> reported by GEOM.  :(
+> 
+>         if (fp->inode_align) {
+>                 int     cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+> 
+>                 sbp->sb_versionnum |= XFS_SB_VERSION_ALIGNBIT;
+>                 if (cfg->sb_feat.crcs_enabled)
+>                         cluster_size *= cfg->inodesize / XFS_DINODE_MIN_SIZE;
+>                 sbp->sb_inoalignmt = cluster_size >> cfg->blocklog;
+>         } else
+>                 sbp->sb_inoalignmt = 0;
+> ...
+>         /*
+>          * Sparse inode chunk support has two main inode alignment requirements.
+>          * First, sparse chunk alignment must match the cluster size. Second,
+>          * full chunk alignment must match the inode chunk size.
+>          *
+>          * Copy the already calculated/scaled inoalignmt to spino_align and
+>          * update the former to the full inode chunk size.
+>          */
+>         if (fp->spinodes) {
+>                 sbp->sb_spino_align = sbp->sb_inoalignmt;
+>                 sbp->sb_inoalignmt = XFS_INODES_PER_CHUNK *
+>                                 cfg->inodesize >> cfg->blocklog;
+>                 sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
+>         }
+> 
+> -Eric
 
-I'm not sure it's possible without a ton of setup (or at all).
-(repair has already done a full libxfs_mount setup, so it has what it needs.)
+Should the root inode number always be a multiple of XFS_INODES_PER_CHUNK?
+if so I could speed up a longer search that way ... but this sucks.  :/
 
-For example we need inode alignment; calculating that depends on whether
-we have sparse inodes, and sparse inodes is an incompat feature not
-reported by GEOM.  :(
+Maybe I should just disallow dumping via a bind-mounted dir.  Stat the target dir,
+get the inode, bulkstat it, check the gen, and if it's not zero, bail out with
+an error.
 
-        if (fp->inode_align) {
-                int     cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
-
-                sbp->sb_versionnum |= XFS_SB_VERSION_ALIGNBIT;
-                if (cfg->sb_feat.crcs_enabled)
-                        cluster_size *= cfg->inodesize / XFS_DINODE_MIN_SIZE;
-                sbp->sb_inoalignmt = cluster_size >> cfg->blocklog;
-        } else
-                sbp->sb_inoalignmt = 0;
-...
-        /*
-         * Sparse inode chunk support has two main inode alignment requirements.
-         * First, sparse chunk alignment must match the cluster size. Second,
-         * full chunk alignment must match the inode chunk size.
-         *
-         * Copy the already calculated/scaled inoalignmt to spino_align and
-         * update the former to the full inode chunk size.
-         */
-        if (fp->spinodes) {
-                sbp->sb_spino_align = sbp->sb_inoalignmt;
-                sbp->sb_inoalignmt = XFS_INODES_PER_CHUNK *
-                                cfg->inodesize >> cfg->blocklog;
-                sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
-        }
+... that's probably better and less surprising anyway.
 
 -Eric
