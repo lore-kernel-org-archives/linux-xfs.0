@@ -2,133 +2,103 @@ Return-Path: <SRS0=94LY=WS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA360C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 22:41:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A502C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 22:43:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 84BD721655
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 22:41:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 24B0121655
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 22:43:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566513839;
+	bh=s9UpreVbzdyS4Fgw51ZKKIObTCpM1jHR8gsym+6vLU8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=giEf8hNnYUlKBDUuTLvmN1QS/fzbcyMcwaurKYLWkO1HUnPhcbahCZPUzYTAF9oVu
+	 nXDoQYqdBlrZG0V/Athm6bx8wXgP5OkDsO8sEFOPYko5eoLE7e6fOsS00IPkKNYCCt
+	 FKuf1ep/fEI4sX4WsyjKoRm9NTkcF26IDRZespXg=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731863AbfHVWlL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 18:41:11 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:34559 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731357AbfHVWlK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 18:41:10 -0400
-Received: from dread.disaster.area (pa49-181-142-13.pa.nsw.optusnet.com.au [49.181.142.13])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 23225361093;
-        Fri, 23 Aug 2019 08:41:07 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i0vkN-0006TR-Mk; Fri, 23 Aug 2019 08:39:59 +1000
-Date:   Fri, 23 Aug 2019 08:39:59 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/3] xfs: add kmem_alloc_io()
-Message-ID: <20190822223959.GC1119@dread.disaster.area>
-References: <20190821083820.11725-1-david@fromorbit.com>
- <20190821083820.11725-3-david@fromorbit.com>
- <20190821133533.GB19646@bfoster>
- <20190821211452.GN1119@dread.disaster.area>
- <20190822134017.GA24151@bfoster>
+        id S2394088AbfHVWn6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 18:43:58 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:35927 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394082AbfHVWn6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 18:43:58 -0400
+Received: by mail-pf1-f193.google.com with SMTP id w2so4960854pfi.3;
+        Thu, 22 Aug 2019 15:43:57 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=YQxy7LG7DNBTUMkrggpj64fW1gmhMtjURQTq0iGs9uE=;
+        b=hkVcYBdNtASV/n7ywYECSZj7gQmRXBZ+0SMzZK88ilkr84vNP4UDw7FqnU3gtpEZ4E
+         3bA22+3URwKP40saxjPQLq2J2L8SQKKjzo/aRRm+sR/fFdJVAmf4d5Yxgk/ePg1rguzv
+         tRPFEPOOSjEs8urUcvcUI8vimr9A/zom297hY3f9nL4wEVQLi9/4hjLjQ2cZiiC6pvu3
+         1rEim3NPSS1liI5A9nqfCgclkAnoVOFGJGbsMxEek6CrebbH1ShuF9SAW92oaNvVKBEu
+         1c3gzK37+cAzhTtXTAk4hDShvPDW9VtsVOG3gfc5wNEy0YgClUoIiAiQdsVACWrRsCqq
+         Opnw==
+X-Gm-Message-State: APjAAAUVmGt/bUdxBhrUWp4yoeEcCaQBe0vU9j6jOgQZ4/OwKmHx094Z
+        f7dG+N8+aiSq/F0eNQM0rjYV7rEj
+X-Google-Smtp-Source: APXvYqzq5MAdFE8W+s3h6x+elqgSyD7DLrYGhZaQ+mvzJpjFxObTVVGVt+YPpEiF2OQPYZXg8CFg/Q==
+X-Received: by 2002:a17:90a:3a8d:: with SMTP id b13mr2051805pjc.75.1566513837445;
+        Thu, 22 Aug 2019 15:43:57 -0700 (PDT)
+Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
+        by smtp.gmail.com with ESMTPSA id y8sm405397pfr.140.2019.08.22.15.43.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 22 Aug 2019 15:43:56 -0700 (PDT)
+Received: by 42.do-not-panic.com (Postfix, from userid 1000)
+        id 97286403DC; Thu, 22 Aug 2019 22:43:55 +0000 (UTC)
+Date:   Thu, 22 Aug 2019 22:43:55 +0000
+From:   Luis Chamberlain <mcgrof@kernel.org>
+To:     Damien Le Moal <damien.lemoal@wdc.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Christoph Hellwig <hch@lst.de>,
+        Johannes Thumshirn <jthumshirn@suse.de>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Hannes Reinecke <hare@suse.de>,
+        Matias Bjorling <matias.bjorling@wdc.com>
+Subject: Re: [PATCH V2] fs: New zonefs file system
+Message-ID: <20190822224355.GX30113@42.do-not-panic.com>
+References: <20190820081249.27353-1-damien.lemoal@wdc.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190822134017.GA24151@bfoster>
+In-Reply-To: <20190820081249.27353-1-damien.lemoal@wdc.com>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=pdRIKMFd4+xhzJrg6WzXNA==:117 a=pdRIKMFd4+xhzJrg6WzXNA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=ki5DeA7u2y6F-YruhzIA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 22, 2019 at 09:40:17AM -0400, Brian Foster wrote:
-> On Thu, Aug 22, 2019 at 07:14:52AM +1000, Dave Chinner wrote:
-> > On Wed, Aug 21, 2019 at 09:35:33AM -0400, Brian Foster wrote:
-> > > On Wed, Aug 21, 2019 at 06:38:19PM +1000, Dave Chinner wrote:
-> > > kmem_alloc_io() interface) to skip further kmem_alloc() calls from this
-> > > path once we see one unaligned allocation. That assumes this behavior is
-> > > tied to functionality that isn't dynamically configured at runtime, of
-> > > course.
-> > 
-> > vmalloc() has a _lot_ more overhead than kmalloc (especially when
-> > vmalloc has to do multiple allocations itself to set up page table
-> > entries) so there is still an overall gain to be had by trying
-> > kmalloc even if 50% of allocations are unaligned.
-> > 
+On Tue, Aug 20, 2019 at 05:12:49PM +0900, Damien Le Moal wrote:
+> The aggregated conventional zone file can be used as a regular file.
+> Operations such as the following work.
 > 
-> I had the impression that this unaligned allocation behavior is tied to
-> enablement of debug options that otherwise aren't enabled/disabled
-> dynamically. Hence, the unaligned allocation behavior is persistent for
-> a particular mount and repeated attempts are pointless once we see at
-> least one such result. Is that not the case?
+> mkfs.ext4 /mnt/cnv/0
+> mount -o loop /mnt/cnv/0 /data
 
-The alignment for a given slab is likely to be persistent, but it
-will be different for different sized slabs. e.g. I saw 128 offsets
-for 512 slabs, and 1024 byte offsets for 4k slabs. The 1024 byte
-offsets worked just fine (because multiple of 512 bytes!) but the
-128 byte ones didn't.
+Should BLK_DEV_LOOP_MIN_COUNT be increased if this is enabled to
+a mich higher sensible default? Right now the default is 8. Also,
+can we infer this later dynamically so so this can grow at proper
+scale without having to have user interaction?
 
-Hence it's not a black and white "everythign is unaligned and
-unsupportable" situation, nor is the alignment necessarily an issue
-for the underlying driver. e.g. most scsi and nvme handle 8
-byte alignment of buffers, and if the buffer is not aligned they
-bounce it (detected via the same blk_rq_alignment() check I added)
-and can still do the IO anyway. So a large amount of the IO stack
-just doesn't care about user buffers being unaligned....
+For now, I mean something like:
 
-> Again, I don't think performance is a huge deal so long as testing shows
-> that an fs is still usable with XFS running this kind of allocation
-> pattern.
+diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig
+index 1bb8ec575352..22ba4803b075 100644
+--- a/drivers/block/Kconfig
++++ b/drivers/block/Kconfig
+@@ -217,7 +217,8 @@ config BLK_DEV_LOOP
+ config BLK_DEV_LOOP_MIN_COUNT
+ 	int "Number of loop devices to pre-create at init time"
+ 	depends on BLK_DEV_LOOP
+-	default 8
++	default 8 if !ZONEFS FILESYSTEM
++	default 32 if ZONEFS FILESYSTEM
+ 	help
+ 	  Static number of loop devices to be unconditionally pre-created
+ 	  at init time.
 
-It's added 10 minutes to the runtime of a full auto run with KASAN
-enabled on pmem. To put that in context, the entire run took:
-
-real    461m36.831s
-user    44m31.779s
-sys     708m37.467s
-
-More than 7.5 hours to complete, so ten minutes here or there is
-noise.
-
-> In thinking further about it, aren't we essentially bypassing
-> these tools for associated allocations if they don't offer similar
-> functionality for vmalloc allocations?
-
-kasan uses guard pages around vmalloc allocations to detect out of
-bound accesses. It still tracks the page allocations, etc, so we
-still get use after free tracking, etc. i.e. AFAICT we don't
-actually lose any debugging functonality by using vmalloc here.
-
-> It might be worth 1.) noting that
-> as a consequence of this change in the commit log and 2.) having a
-> oneshot warning somewhere when we initially hit this problem so somebody
-> actually using one of these tools realizes that enabling it actually
-> changes allocation behavior. For example:
-> 
-> XFS ...: WARNING: Unaligned I/O memory allocation. VM debug enabled?
-> Disabling slab allocations for I/O.
-> 
-> ... or alternatively just add a WARN_ON_ONCE() or something with a
-> similar comment in the code.
-
-Well, the WARN_ON_ONCE is in xfs_bio_add_page() when it detects an
-invalid alignment. So we'll get this warning on production systems
-as well as debug/test systems. I think that's the important case to
-catch, because misalignment will result in silent data corruption...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+  Luis
