@@ -6,90 +6,101 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7309C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 12:38:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F82C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 12:45:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 713DD23400
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 12:38:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 936C52064A
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 12:45:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729450AbfHVMim (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 08:38:42 -0400
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60514 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729052AbfHVMil (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 08:38:41 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7MCZN5s101916
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2019 08:38:40 -0400
+        id S1729038AbfHVMpL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 08:45:11 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:57520 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S2387947AbfHVMpL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 08:45:11 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7MChI9x062109
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2019 08:45:10 -0400
 Received: from e06smtp04.uk.ibm.com (e06smtp04.uk.ibm.com [195.75.94.100])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2uhsvdupww-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2uhrhgxy24-1
         (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
-        for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2019 08:38:40 -0400
+        for <linux-xfs@vger.kernel.org>; Thu, 22 Aug 2019 08:45:05 -0400
 Received: from localhost
         by e06smtp04.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
-        Thu, 22 Aug 2019 13:38:37 +0100
-Received: from b06cxnps3075.portsmouth.uk.ibm.com (9.149.109.195)
+        Thu, 22 Aug 2019 13:44:59 +0100
+Received: from b06cxnps4076.portsmouth.uk.ibm.com (9.149.109.198)
         by e06smtp04.uk.ibm.com (192.168.101.134) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
         (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
-        Thu, 22 Aug 2019 13:38:35 +0100
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (b06wcsmtp001.portsmouth.uk.ibm.com [9.149.105.160])
-        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7MCcYqe59703342
+        Thu, 22 Aug 2019 13:44:57 +0100
+Received: from d06av22.portsmouth.uk.ibm.com (d06av22.portsmouth.uk.ibm.com [9.149.105.58])
+        by b06cxnps4076.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7MCiukq49610834
         (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 22 Aug 2019 12:38:34 GMT
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 9E1DFA4066;
-        Thu, 22 Aug 2019 12:38:34 +0000 (GMT)
-Received: from b06wcsmtp001.portsmouth.uk.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 459B0A405F;
-        Thu, 22 Aug 2019 12:38:33 +0000 (GMT)
+        Thu, 22 Aug 2019 12:44:56 GMT
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 79B034C044;
+        Thu, 22 Aug 2019 12:44:56 +0000 (GMT)
+Received: from d06av22.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id D677B4C04E;
+        Thu, 22 Aug 2019 12:44:54 +0000 (GMT)
 Received: from localhost.localdomain (unknown [9.199.46.110])
-        by b06wcsmtp001.portsmouth.uk.ibm.com (Postfix) with ESMTP;
-        Thu, 22 Aug 2019 12:38:33 +0000 (GMT)
+        by d06av22.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Thu, 22 Aug 2019 12:44:54 +0000 (GMT)
 From:   Chandan Rajendra <chandan@linux.ibm.com>
-To:     Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     Chandan Rajendra <chandanrlinux@gmail.com>,
         linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        hch@infradead.org
+        hch@infradead.org, david@fromorbit.com
 Subject: Re: [RFC] xfs: Flush iclog containing XLOG_COMMIT_TRANS before waiting for log space
-Date:   Thu, 22 Aug 2019 18:10:15 +0530
+Date:   Thu, 22 Aug 2019 18:16:37 +0530
 Organization: IBM
-In-Reply-To: <20190821221834.GQ1119@dread.disaster.area>
-References: <20190821110448.30161-1-chandanrlinux@gmail.com> <20190821221834.GQ1119@dread.disaster.area>
+In-Reply-To: <20190821164240.GD19646@bfoster>
+References: <20190821110448.30161-1-chandanrlinux@gmail.com> <20190821164240.GD19646@bfoster>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7Bit
 Content-Type: text/plain; charset="us-ascii"
 X-TM-AS-GCONF: 00
-x-cbid: 19082212-0016-0000-0000-000002A17FCE
+x-cbid: 19082212-0016-0000-0000-000002A18015
 X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
-x-cbparentid: 19082212-0017-0000-0000-00003301B8EF
-Message-Id: <3307362.yyVt9CMRau@localhost.localdomain>
+x-cbparentid: 19082212-0017-0000-0000-00003301B93E
+Message-Id: <1965562.CDkx7u9Umj@localhost.localdomain>
 X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-22_08:,,
  signatures=0
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
  malwarescore=0 suspectscore=5 phishscore=0 bulkscore=0 spamscore=0
- clxscore=1011 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
  mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.0.1-1906280000 definitions=main-1908220135
+ scancount=1 engine=8.0.1-1906280000 definitions=main-1908220137
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thursday, August 22, 2019 3:48 AM Dave Chinner wrote:
+On Wednesday, August 21, 2019 10:12 PM Brian Foster wrote:
 > On Wed, Aug 21, 2019 at 04:34:48PM +0530, Chandan Rajendra wrote:
 > > The following call trace is seen when executing generic/530 on a ppc64le
 > > machine,
 > > 
+> 
+> Could you provide xfs_info of the scratch device that reproduces this
+> problem? I'm curious because I don't recall seeing this, but I'm also
+> not sure I've run those iunlink tests on ppc64...
+
+# xfs_info /dev/loop1
+meta-data=/dev/loop1             isize=512    agcount=4, agsize=159648 blks
+         =                       sectsz=512   attr=2, projid32bit=1
+         =                       crc=1        finobt=1, sparse=1, rmapbt=1
+         =                       reflink=1
+data     =                       bsize=4096   blocks=638592, imaxpct=25
+         =                       sunit=0      swidth=0 blks
+naming   =version 2              bsize=4096   ascii-ci=0, ftype=1
+log      =internal log           bsize=4096   blocks=3693, version=2
+         =                       sectsz=512   sunit=0 blks, lazy-count=1
+realtime =none                   extsz=4096   blocks=0, rtextents=0
+
+> 
 > > INFO: task mount:7722 blocked for more than 122 seconds.
 > >       Not tainted 5.3.0-rc1-next-20190723-00001-g1867922e5cbf-dirty #6
-> 
-> can you reproduce this on 5.3-rc5? There were bugs in log recovery
-> IO in -rc1 that could result in things going wrong...
-
-Yes, I was able to recreate this bug on v5.3-rc5.
-
-> 
 > > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
 > > mount           D 8448  7722   7490 0x00040008
 > > Call Trace:
@@ -130,45 +141,69 @@ Yes, I was able to recreate this bug on v5.3-rc5.
 > > 2. During mount, a transaction started in the context of processing
 > >    unlinked inode list causes several iclogs to be filled up. All but
 > >    the last one is submitted for I/O.
+> 
+> So the inactivation transaction commits should basically start to
+> populate the CIL. At some point we cross a threshold and a commit
+> triggers a background CIL push (see xlog_cil_push_background()). I'm
+> assuming that occurs somewhere in here because otherwise we wouldn't
+> have started filling iclogs..
+> 
 > > 3. After writing XLOG_COMMIT_TRANS record into the iclog, we will have
 > >    18532 bytes of free space in the last iclog of the transaction which is
 > >    greater than 2*sizeof(xlog_op_header_t). Hence
 > >    xlog_state_get_iclog_space() does not switch over to using a newer iclog.
+> 
+> Ok, so we've sent a bunch of iclogs to disk and the commit record for
+> the checkpoint ends up in the current iclog log, which remains active on
+> return from xlog_commit_record() -> xlog_write() etc.
+> 
 > > 4. Meanwhile, the endio code processing iclogs of the transaction do not
 > >    insert items into the AIL since the iclog containing XLOG_COMMIT_TRANS
 > >    hasn't been submitted for I/O yet. Hence a major part of the on-disk
 > >    log cannot be freed yet.
 > 
-> So all those items are still pinned in memory.
+> Ok, so that final (still active) iclog holding the commit record is also
+> holding the ctx.
 > 
 > > 5. A new request for log space (via xfs_log_reserve()) will now wait
 > >    indefinitely for on-disk log space to be freed.
-> 
-> Because nothing has issued a xfs_log_force() for write the iclog to
-> disk, unpin the objects that it pins in memory, and allow the tail
-> to be moved forwards.
-> 
-> The xfsaild normally takes care of thisi - it gets pushed byt the
-> log reserve when there's not enough space to in the log for the
-> transaction before transaction reserve goes to sleep in
-> xlog_grant_head_wait(). The AIL pushing code is then responsible for
-> making sure log space is eventually freed. It will issue log forces
-> if it isn't making progress and so this problem shouldn't occur.
-> 
-> So, why has it occurred?
-> 
-> The xfsaild kthread should be running at this point, so if it was
-> pushed it should be trying to empty the journal to move the tail
-> forward. Why hasn't it issue a log force?
-> 
-> 
+> > 
 > > To fix this issue, before waiting for log space to be freed, this commit
 > > now submits xlog->l_iclog for write I/O if iclog->ic_state is
 > > XLOG_STATE_ACTIVE and iclog has metadata written into it. This causes
 > > AIL list to be populated and a later call to xlog_grant_push_ail() will
 > > free up the on-disk log space.
+> > 
 > 
-> hmmm.
+> Interesting, so I think I follow the issue at least and what the code is
+> trying to do to fix it. I'm not totally clear on what the ideal approach
+> is as this code is complex and I'd need to think about it some more. My
+> first thought was perhaps whether we needed a checkpoint size limit or
+> to change the background push threshold or some such, but the more I
+> think about that the less I think that fixes anything.
+> 
+> A follow up thought is that it seems somewhat unfortunate that we can
+> build up and hold so much reservation on essentially a single commit
+> record and then just let it sit around in-core waiting for somebody else
+> to come along and ask for reservation for something unrelated. I think a
+> background log force should eventually come around and push that last
+> record out, so we're not in that state indefinitely, but IIUC that's a
+> lot of log consumption essentially unaccounted for until the associated
+> items land in the AIL.
+> 
+> I'm wondering if we should have some measure (if we don't already) of
+> how much reservation is tied into a single iclog and use that as an
+> additional metric to determine when to switch iclogs a bit more
+> aggressively (as opposed to only based on how much space is physically
+> left in the iclog buffer). For example, if we end a huge checkpoint with
+> a commit record in an active iclog that has a cil context attached
+> associated with a hundreds of MBs (handwaving) of log data, perhaps we
+> should just switch out of that iclog before the CIL push returns so that
+> consumption can be immediately reflected by the AIL.
+> 
+> Anyways, perhaps there are other thoughts/ideas on this..
+> 
+> Brian
 > 
 > > Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
 > > ---
@@ -192,47 +227,6 @@ Yes, I was able to recreate this bug on v5.3-rc5.
 > >  			goto shutdown;
 > > +
 > > +		if (xfs_ail_min(log->l_ailp) == NULL) {
-> 
-> This is indicative of the situation. If the AIL is empty, and the
-> log does not have room for an entire transaction reservation, then
-> we need to be issuing synchronous transactions in recovery until
-> such time the AIL pushing can actually function correctly to
-> guarantee forwards progress for async transaction processing.
-
-Yes, In the case of this bug, the AIL list was empty.
-
-> 
-> sync transactions call xfs_log_force(XFS_LOG_SYNC) immediately after
-> writing the commit record, so this whole problem goes away.
-> 
-> perhaps in __xfs_trans_commit() we need somethign like this:
-> 
->  	/*
->  	 * If the transaction needs to be synchronous, then force the
->  	 * log out now and wait for it.
-> +	 *
-> +	 * If we are in recovery and the AIL is empty, the log may only
-> +	 * have enough room for a single transaction and the AIL
-> +	 * cannot push the tail forwards. Hence while the AIL is
-> +	 * empty and we are in recovery, do synchronous transactions
-> +	 * to ensure the commit hits the journal and move into the
-> +	 * AIL. Once there are items in the AIL, it can move the
-> +	 * tail of the log forwards itself.
->  	 */
-> -	if (sync) {
-> +	if (sync || 
-> +	    ((mp->m_flags & XFS_MOUNT_RECOVERY) && !xfs_ail_min(mp->m_ail)) {
->  		error = xfs_log_force_lsn(mp, commit_lsn, XFS_LOG_SYNC, NULL);
->  		XFS_STATS_INC(mp, xs_trans_sync);
-> 
-> The other option is that this can be put into the
-> xfs_trans_reserve() code to set the XFS_TRANS_SYNC flag to trigger
-> the log force in __xfs_trans_commit().
-
-I will implement the fixes, test and post the patch once again. Thanks for the
-review comments.
-
-> 
 > > +			spin_lock(&log->l_icloglock);
 > > +			iclog = log->l_iclog;
 > > +
@@ -245,19 +239,14 @@ review comments.
 > > +
 > > +				spin_lock(&log->l_icloglock);
 > > +				xlog_wait(&iclog->ic_force_wait, &log->l_icloglock);
-> 
-> As I suspected, that's just an open coded, cut down log force. And
-> it has a bug in it - you can't drop the l_icloglock, then pick it
-> back up and sleep immediately without redoing all the state checks
-> again. The log IO may have completed and run the wakeups before you
-> get the spinlock back, and so this will simply hang forever here.
-> 
-> So, yeah, I think getting log forces into the right places are
-> the right way to go here...
-> 
-> Cheers,
-> 
-> Dave.
+> > +			} else {
+> > +				spin_unlock(&log->l_icloglock);
+> > +			}
+> > +		}
+> > +
+> >  		xlog_grant_push_ail(log, need_bytes);
+> >  
+> >  		__set_current_state(TASK_UNINTERRUPTIBLE);
 > 
 
 
