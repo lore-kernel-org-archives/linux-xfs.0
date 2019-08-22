@@ -2,36 +2,35 @@ Return-Path: <SRS0=94LY=WS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 15256C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 17:17:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BAB8EC3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:13:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E814F233FD
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 17:17:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8E36021743
+	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 19:13:29 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389583AbfHVRRW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 13:17:22 -0400
-Received: from sandeen.net ([63.231.237.45]:51650 "EHLO sandeen.net"
+        id S2391684AbfHVTN3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 15:13:29 -0400
+Received: from sandeen.net ([63.231.237.45]:57400 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728125AbfHVRRW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 22 Aug 2019 13:17:22 -0400
+        id S1730531AbfHVTN3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 22 Aug 2019 15:13:29 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4824D4CDD38;
-        Thu, 22 Aug 2019 12:17:20 -0500 (CDT)
-Subject: Re: [PATCH 01/10] xfs: mount-api - add fs parameter description
-To:     Ian Kent <raven@themaw.net>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     Dave Chinner <dchinner@redhat.com>,
-        David Howells <dhowells@redhat.com>,
-        Al Viro <viro@ZenIV.linux.org.uk>
-References: <156134510205.2519.16185588460828778620.stgit@fedora-28>
- <a895b8c9-5a1c-b642-a7f3-2adc004351e6@sandeen.net>
- <2324bb616a5308b18f9e4a303f29e4229f198da2.camel@themaw.net>
+        by sandeen.net (Postfix) with ESMTPSA id A0A654A1354;
+        Thu, 22 Aug 2019 14:13:27 -0500 (CDT)
+Subject: Re: [PATCH] xfsdump: find root inode, not first inode
 From:   Eric Sandeen <sandeen@sandeen.net>
+To:     Dave Chinner <david@fromorbit.com>,
+        Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+References: <f66f26f7-5e29-80fc-206c-9a53cf4640fa@redhat.com>
+ <20190822060117.GW1119@dread.disaster.area>
+ <f33ee1bb-5b32-d14b-4e37-b8c114514e78@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -75,12 +74,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <4d9cb983-56e6-bb2a-1456-af592842b431@sandeen.net>
-Date:   Thu, 22 Aug 2019 12:17:19 -0500
+Message-ID: <ac2a8c72-426a-acb2-6e76-0940d5eabb6e@sandeen.net>
+Date:   Thu, 22 Aug 2019 14:13:26 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <2324bb616a5308b18f9e4a303f29e4229f198da2.camel@themaw.net>
+In-Reply-To: <f33ee1bb-5b32-d14b-4e37-b8c114514e78@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,43 +88,66 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On 8/22/19 9:48 AM, Eric Sandeen wrote:
+> On 8/22/19 1:01 AM, Dave Chinner wrote:
 
+...
 
-On 8/22/19 4:05 AM, Ian Kent wrote:
-> On Wed, 2019-08-21 at 09:52 -0500, Eric Sandeen wrote:
->> On 6/23/19 9:58 PM, Ian Kent wrote:
->>> The new mount-api uses an array of struct fs_parameter_spec for
->>> parameter parsing, create this table populated with the xfs mount
->>> parameters.
->>>
->>> The new mount-api table definition is wider than the token based
->>> parameter table and interleaving the option description comments
->>> between each table line is much less readable than adding them to
->>> the end of each table entry. So add the option description comment
->>> to each entry line even though it causes quite a few of the entries
->>> to be longer than 80 characters.
->>>
->>> Signed-off-by: Ian Kent <raven@themaw.net>
->>
->> Ian, I saw hints about a V2 in replies, is that still in the works?
+>> Hence scanning all the inodes in the first indoe chunk won't find
+>> the root indoe if any of these situations has occurred, and we may
+>> have to scan 1500 or more inodes in to find the root chunk (6 btree
+>> roots - BNOBT,CNTBT,INOBT,FINOBT,RMAPBT,REFCBT - and 64k blocks).
 > 
-> I have a v2 that should address the comments made on the initial
-> post.
+> Hm.  So, the one report I had of this had a root inode of 128, and
+> bulkstat returned a first inode of 64, triggering the assert above.
+> (but even then you're right, scanning 64 isn't enough)
 > 
-> My reluctance to post the v2 is because the series uses a patch
-> that's currently sitting in linux-next and that will cause a
-> conflict if the series is accepted.
+> If it really can be that far off then maybe this is a bad way to go,
+> although the long scan is going to be exceedingly rare I think.  Most
+> people will get the root inode on the first bulkstat call.
 > 
-> I'm thinking about doing an RFC post with that patch included
-> and a caution about the possible conflict.
+>> So I think the best thing to do here is try to calculate the root
+>> inode number as per xfs_repair, and then bulkstat that. i.e. see
+>> the calculation of "first_prealloc_ino" in repair/xfs_repair.c
+>> (about line 450). Probably requires a XFS_IOC_FSGEOMETRY_V1 call to
+>> get the necessary info to calculate it...
+> 
+> I had started to go down that path and it seemed like a real mess.
+> We need m_ag_maxlevels, m_rmap_maxlevels, sb_logstart, features,
+> etc etc etc.  I guess I can revisit it.  I had thought about a common
+> function to calculate this so we aren't coding it twice but I'm not
+> sure we have the same sets of inputs for the various cases ...
 
-That should be fine, just let everyone know what the patchset is based
-on and we can do another round of review & sort out the dependencies
-as needed, I think.
+I'm not sure it's possible without a ton of setup (or at all).
+(repair has already done a full libxfs_mount setup, so it has what it needs.)
 
-Thanks
+For example we need inode alignment; calculating that depends on whether
+we have sparse inodes, and sparse inodes is an incompat feature not
+reported by GEOM.  :(
+
+        if (fp->inode_align) {
+                int     cluster_size = XFS_INODE_BIG_CLUSTER_SIZE;
+
+                sbp->sb_versionnum |= XFS_SB_VERSION_ALIGNBIT;
+                if (cfg->sb_feat.crcs_enabled)
+                        cluster_size *= cfg->inodesize / XFS_DINODE_MIN_SIZE;
+                sbp->sb_inoalignmt = cluster_size >> cfg->blocklog;
+        } else
+                sbp->sb_inoalignmt = 0;
+...
+        /*
+         * Sparse inode chunk support has two main inode alignment requirements.
+         * First, sparse chunk alignment must match the cluster size. Second,
+         * full chunk alignment must match the inode chunk size.
+         *
+         * Copy the already calculated/scaled inoalignmt to spino_align and
+         * update the former to the full inode chunk size.
+         */
+        if (fp->spinodes) {
+                sbp->sb_spino_align = sbp->sb_inoalignmt;
+                sbp->sb_inoalignmt = XFS_INODES_PER_CHUNK *
+                                cfg->inodesize >> cfg->blocklog;
+                sbp->sb_features_incompat |= XFS_SB_FEAT_INCOMPAT_SPINODES;
+        }
+
 -Eric
- 
-> Not sure yet, I've only just yesterday been able to successfully
-> run xfstests on a kernel with the changes so deciding what to do
-> next is upon me now, ;)
