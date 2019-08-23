@@ -2,129 +2,220 @@ Return-Path: <SRS0=lWMA=WT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79C07C3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 15:45:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DF3DC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 15:53:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 500EF233FE
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 15:45:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566575103;
-	bh=JPXbJUb+5K4BXYZBJtUE67jFQpSlZgb28tmBEuX1ROE=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
-	b=x62tJ28Hjdm2nRKGBZvXiIxSjA7YnnJZpeht4FXafV7iVx13d9+2FsFXTtLrklF7z
-	 zR11Ps6ktlLZMU+Z9mOyQVZ5QcIRGyitUZj81SPsITDqXYUshmVEFUY3b2L9rEtS7F
-	 EMxkzi8dmg1F/Mf+/UcesITD+adVPFAF1AT1esbY=
+	by mail.kernel.org (Postfix) with ESMTP id 00A94233A0
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 15:53:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436513AbfHWPpC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Aug 2019 11:45:02 -0400
-Received: from mail-pl1-f195.google.com ([209.85.214.195]:45233 "EHLO
-        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387803AbfHWPpC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Aug 2019 11:45:02 -0400
-Received: by mail-pl1-f195.google.com with SMTP id y8so5789331plr.12;
-        Fri, 23 Aug 2019 08:45:01 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=d13wUvTcGWm9qSA2DfjkIYqexwd152oPkAxpgbt/a/I=;
-        b=tDSDgmSyi6YM9EItP+kOQqNgXFZo0vBq8/cdixyj8xNQLRzo6tD5QnxiJqPGiNaKdA
-         7mc74NXbtSd/0bfxsfqMNQR40a+ZxvOB8FSqIWgbThQ12AgbUSF8xFgVh7ilBCQrd/8O
-         bqKhxX8Xky7kJS4vX/D32G8oPcGRPRva8jtr/jSRa3A5PpwqRHNq/KXks79qTPx5m79u
-         MqG7s0huwOvdSqkwe+x+0nM5DWFfzVFQqBRKEmxOe+XHJyLTtWZmCRxzcKU/LXsAVaS3
-         3EJVgjYJzwC4y/bULzKOQgawKvMj4YW/dkWswQFTRzHOT7q0yh1CLDLf+mRCx5iZ6wP4
-         gx9w==
-X-Gm-Message-State: APjAAAUruNWKIsQLTZwwfR317OUVX0T6ciHRVml+wByB5Vw4HVWTAL4o
-        8863b9TeR7iC0L5d+acmW7w=
-X-Google-Smtp-Source: APXvYqzAgJ2AiT/6zWW+CtjuC3MArI9xkF4kBmeHNBX25UKeZChWozqkKMIWPCp8GYzSK9JZS2e2vg==
-X-Received: by 2002:a17:902:543:: with SMTP id 61mr5585600plf.20.1566575101259;
-        Fri, 23 Aug 2019 08:45:01 -0700 (PDT)
-Received: from 42.do-not-panic.com (42.do-not-panic.com. [157.230.128.187])
-        by smtp.gmail.com with ESMTPSA id x128sm6465741pfd.52.2019.08.23.08.44.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Aug 2019 08:45:00 -0700 (PDT)
-Received: by 42.do-not-panic.com (Postfix, from userid 1000)
-        id 56568404D5; Fri, 23 Aug 2019 15:44:59 +0000 (UTC)
-Date:   Fri, 23 Aug 2019 15:44:59 +0000
-From:   Luis Chamberlain <mcgrof@kernel.org>
-To:     linux-xfs@vger.kernel.org, Alexander.Levin@microsoft.com
-Cc:     gregkh@linuxfoundation.org, stable@vger.kernel.org,
-        amir73il@gmail.com
-Subject: Re: [PATCH 0/6] xfs: stable fixes for v4.19.y - circa v4.19.60
-Message-ID: <20190823154459.GU16384@42.do-not-panic.com>
-References: <20190724063451.26190-1-mcgrof@kernel.org>
+        id S2436632AbfHWPxu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Aug 2019 11:53:50 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:42950 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2436629AbfHWPxu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 23 Aug 2019 11:53:50 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 581C030860A6;
+        Fri, 23 Aug 2019 15:53:49 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0323E4142;
+        Fri, 23 Aug 2019 15:53:48 +0000 (UTC)
+Date:   Fri, 23 Aug 2019 11:53:47 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: bmap scrub should only scrub records once
+Message-ID: <20190823155347.GC54025@bfoster>
+References: <20190817020651.GH752159@magnolia>
+ <20190823150221.GB54025@bfoster>
+ <20190823152349.GJ1037350@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190724063451.26190-1-mcgrof@kernel.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190823152349.GJ1037350@magnolia>
+User-Agent: Mutt/1.12.0 (2019-05-25)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Fri, 23 Aug 2019 15:53:49 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Jul 24, 2019 at 06:34:45AM +0000, Luis Chamberlain wrote:
-> Sasha,
+On Fri, Aug 23, 2019 at 08:23:49AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 23, 2019 at 11:02:21AM -0400, Brian Foster wrote:
+> > On Fri, Aug 16, 2019 at 07:06:51PM -0700, Darrick J. Wong wrote:
+> > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > 
+> > > The inode block mapping scrub function does more work for btree format
+> > > extent maps than is absolutely necessary -- first it will walk the bmbt
+> > > and check all the entries, and then it will load the incore tree and
+> > > check every entry in that tree.
+> > > 
+> > > Reduce the run time of the ondisk bmbt walk if the incore tree is loaded
+> > > by checking that the incore tree has an exact match for the bmbt extent.
+> > > Similarly, skip the incore tree walk if we have to load it from the
+> > > bmbt, since we just checked that.
+> > > 
+> > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > ---
+> > >  fs/xfs/scrub/bmap.c |   40 +++++++++++++++++++++++++++++++++++++---
+> > >  1 file changed, 37 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/scrub/bmap.c b/fs/xfs/scrub/bmap.c
+> > > index 1bd29fdc2ab5..6170736fa94f 100644
+> > > --- a/fs/xfs/scrub/bmap.c
+> > > +++ b/fs/xfs/scrub/bmap.c
+> > > @@ -384,6 +384,7 @@ xchk_bmapbt_rec(
+> > >  	struct xfs_inode	*ip = bs->cur->bc_private.b.ip;
+> > >  	struct xfs_buf		*bp = NULL;
+> > >  	struct xfs_btree_block	*block;
+> > > +	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, info->whichfork);
+> > >  	uint64_t		owner;
+> > >  	int			i;
+> > >  
+> > > @@ -402,8 +403,30 @@ xchk_bmapbt_rec(
+> > >  		}
+> > >  	}
+> > >  
+> > > -	/* Set up the in-core record and scrub it. */
+> > > +	/*
+> > > +	 * If the incore bmap cache is already loaded, check that it contains
+> > > +	 * an extent that matches this one exactly.  We validate those cached
+> > > +	 * bmaps later, so we don't need to check here.
+> > > +	 *
+> > > +	 * If the cache is /not/ loaded, we need to validate the bmbt records
+> > > +	 * now.
+> > > +	 */
+> > >  	xfs_bmbt_disk_get_all(&rec->bmbt, &irec);
+> > > +        if (ifp->if_flags & XFS_IFEXTENTS) {
+> > 
+> > ^ looks like whitespace damage right here.
 > 
-> you merged my last set of XFS fixes. I asked for one patch to not be
-> merged yet as one issue was not yet properly fixed. After some further
-> review I have identified commits which do fix the kernel crash reported
-> on kz#204223 [0] with generic/388, this patch set applies on top of the
-> last one I sent you.
+> Oops.  Fixed.
 > 
-> These commits do quite a bit of code refactoring, and the actual fix
-> lies hidden in the last commit by Darrick. Due to the amount of changes
-> trying to extract the fix is riskier than just carring the code
-> refactoring. If we're OK with the code refactor for stable, its my
-> recommendation we keep the changes to match more with upstream and
-> benefit from other fixes. The code refactoring was merged on v4.20 and
-> Darrick's fix is the only fix upstream since the code was merged.
+> > > +		struct xfs_bmbt_irec	iext_irec;
+> > > +		struct xfs_iext_cursor	icur;
+> > > +
+> > > +		if (!xfs_iext_lookup_extent(ip, ifp, irec.br_startoff, &icur,
+> > > +					&iext_irec) ||
+> > > +		    irec.br_startoff != iext_irec.br_startoff ||
+> > > +		    irec.br_startblock != iext_irec.br_startblock ||
+> > > +		    irec.br_blockcount != iext_irec.br_blockcount ||
+> > > +		    irec.br_state != iext_irec.br_state)
+> > > +			xchk_fblock_set_corrupt(bs->sc, info->whichfork,
+> > > +					irec.br_startoff);
+> > > +		return 0;
+> > > +	}
+> > > +
+> > 
+> > Ok, so right now the bmbt walk makes no consideration of in-core state.
+> > With this change, we correlate every on-disk record with an in-core
+> > counterpart (if cached) and skip the additional extent checks...
+> > 
+> > >  	return xchk_bmap_extent(ip, bs->cur, info, &irec);
+> > >  }
+> > >  
+> > > @@ -671,11 +694,22 @@ xchk_bmap(
+> > >  	if (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+> > >  		goto out;
+> > >  
+> > > -	/* Now try to scrub the in-memory extent list. */
+> > > +	/*
+> > > +	 * If the incore bmap cache isn't loaded, then this inode has a bmap
+> > > +	 * btree and we already walked it to check all of the mappings.  Load
+> > > +	 * the cache now and skip ahead to rmap checking (which requires the
+> > > +	 * bmap cache to be loaded).  We don't need to check twice.
+> > > +	 *
+> > > +	 * If the cache /is/ loaded, then we haven't checked any mappings, so
+> > > +	 * iterate the incore cache and check the mappings now, because the
+> > > +	 * bmbt iteration code skipped the checks, assuming that we'd do them
+> > > +	 * here.
+> > > +	 */
+> > >          if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+> > >  		error = xfs_iread_extents(sc->tp, ip, whichfork);
+> > >  		if (!xchk_fblock_process_error(sc, whichfork, 0, &error))
+> > >  			goto out;
+> > > +		goto out_check_rmap;
+> > 
+> > ... because we end up doing that here. Otherwise, the bmbt walk did the
+> > extent checks, so we can skip it here.
 > 
-> If others disagree with this approach please speak up.
+> Yep.  On the stress test case (which is bmapbtd checking of mdrestore'd
+> sparse images of large filesystems), only doing the extent walk + check
+> once can cut down the runtime by ~30%.
 > 
-> I've run a full set of fstests against the following sections 12 times and
-> have found no regressions against the baseline:
+> > I think I follow, but I'm a little confused by the need for such split
+> > logic when we follow up with an unconditional read of the extent tree
+> > anyways. Maybe I'm missing something, but couldn't we just read the
+> > extent tree a little earlier and always do the extent checks in one
+> > place?
 > 
-> xfs
-> xfs_logdev
-> xfs_nocrc_512
-> xfs_nocrc
-> xfs_realtimedev
-> xfs_reflink_1024
-> xfs_reflink_dev
+> The original goal was that if the extent cache isn't loaded, we want to
+> check the bmbt records before we even bother to call xfs_iread_extents,
+> so that someone could find out from the trace data exactly where in the
+> bmbt was the corruption found.
 > 
-> Review from others is appreciated.
-> 
-> [0] https://bugzilla.kernel.org/show_bug.cgi?id=204223
-> 
-> Allison Henderson (4):
->   xfs: Move fs/xfs/xfs_attr.h to fs/xfs/libxfs/xfs_attr.h
->   xfs: Add helper function xfs_attr_try_sf_addname
->   xfs: Add attibute set and helper functions
->   xfs: Add attibute remove and helper functions
-> 
-> Brian Foster (1):
->   xfs: don't trip over uninitialized buffer on extent read of corrupted
->     inode
-> 
-> Darrick J. Wong (1):
->   xfs: always rejoin held resources during defer roll
-> 
->  fs/xfs/libxfs/xfs_attr.c       | 231 ++++++++++++++++++---------------
->  fs/xfs/{ => libxfs}/xfs_attr.h |   2 +
->  fs/xfs/libxfs/xfs_bmap.c       |  54 +++++---
->  fs/xfs/libxfs/xfs_bmap.h       |   1 +
->  fs/xfs/libxfs/xfs_defer.c      |  14 +-
->  fs/xfs/xfs_dquot.c             |  17 +--
->  6 files changed, 183 insertions(+), 136 deletions(-)
->  rename fs/xfs/{ => libxfs}/xfs_attr.h (98%)
 
-*poke*
+That certainly makes sense. There's also the line of thought that we
+probably shouldn't read the tree if we know the bmbt is corrupted
+on-disk (though I don't think anything prevents that from happening
+elsewhere). From a broader scrub performance perspective, wouldn't the
+clean inode case dominate performance anyways since we may have to scan
+through however many clean inodes before we find corruption?
 
-BTW I'm off on vacation for a while after today.
+> Granted, since we're reducing the scrub code to the bare minimum needed
+> to decide if something's good or bad due to the primary interface being
+> a bit field... I could unconditionally load the extent map earlier,
+> unconditionally check the iext records, and then the bmbt walk only
+> needs to check that the tree shape is ok and that each bmbt record
+> corresponds to an iext record.
+> 
 
-  Luis
+Yeah, I think logically it sort of makes sense to 1.) check the bmbt is
+safe enough to read 2.) read the extent tree 3.) check the extents via
+the extent tree, but the btree scanning iteration mechanism and whatnot
+make what you describe above more practical. I think that's a reasonable
+approach and makes the current logic easier to read without having to
+rework anything major.
+
+> The other way to go would be to convert xchk_bmap_check_rmaps to use a
+> bmbt cursor if the iext isn't loaded, in which case we wouldn't need to
+> load the iext cache at all.  That would reduce the kernel slab
+> perturbations at a cost of extra code complexity.
+> 
+
+Hmm, so that means we wouldn't read in the extent tree, but we'd have to
+look up each individual bmbt record from disk in xchk_bmap_check_rmap(),
+right? If so, it's not clear to me that's an overall win over the
+current implementation, particularly since some other random thing (i.e.
+xfs_reflink_inode_has_shared_extents() called via a couple places in
+scrub) might trigger reading an extent tree anyways. Perhaps this is
+something better considered separately if there's suspected value to
+it..
+
+Brian
+
+> Thoughts?
+> 
+> --D
+> 
+> > Brian
+> > 
+> > >  	}
+> > >  
+> > >  	/* Find the offset of the last extent in the mapping. */
+> > > @@ -689,7 +723,7 @@ xchk_bmap(
+> > >  	for_each_xfs_iext(ifp, &icur, &irec) {
+> > >  		if (xchk_should_terminate(sc, &error) ||
+> > >  		    (sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT))
+> > > -			break;
+> > > +			goto out;
+> > >  		if (isnullstartblock(irec.br_startblock))
+> > >  			continue;
+> > >  		if (irec.br_startoff >= endoff) {
