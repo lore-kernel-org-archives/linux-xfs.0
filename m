@@ -2,142 +2,145 @@ Return-Path: <SRS0=lWMA=WT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BE981C3A5A2
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 01:00:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A59F1C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 01:08:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9F9052089E
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 01:00:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 81FCB23402
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 01:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732542AbfHWBA3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 21:00:29 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42419 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731564AbfHWBA3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 21:00:29 -0400
-Received: from dread.disaster.area (pa49-181-142-13.pa.nsw.optusnet.com.au [49.181.142.13])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B22C8362588;
-        Fri, 23 Aug 2019 11:00:22 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i0xv8-0007PG-K9; Fri, 23 Aug 2019 10:59:14 +1000
-Date:   Fri, 23 Aug 2019 10:59:14 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190823005914.GF1119@dread.disaster.area>
-References: <20190814180848.GB31490@iweiny-DESK2.sc.intel.com>
- <20190815130558.GF14313@quack2.suse.cz>
- <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
- <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
+        id S2387629AbfHWBIp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 21:08:45 -0400
+Received: from icp-osb-irony-out2.external.iinet.net.au ([203.59.1.155]:5488
+        "EHLO icp-osb-irony-out2.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732613AbfHWBIo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 21:08:44 -0400
+X-Greylist: delayed 555 seconds by postgrey-1.27 at vger.kernel.org; Thu, 22 Aug 2019 21:08:42 EDT
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2A2AAAROl9d/3Wz0XYNWBwBAQEEAQE?=
+ =?us-ascii?q?HBAEBgVUFAQELAYFogkqEII9WAQEGgRGKEY8ogXsJAQEBAQEBAQEBNwEBhDo?=
+ =?us-ascii?q?DAgKDAjYHDgIJAQEBBAECAQEGAwGFWIYZAgEDI1YQGA0CJgICRxAGE4UZq1B?=
+ =?us-ascii?q?zgTIaikCBDCgBgWKKJHiBB4ERM4MdhB0BC4MmglgEjxSFMl1ClXcJgh+UWAy?=
+ =?us-ascii?q?NWwOKYIQgo1ELgX5NLgqDJ4JOF44vZYoEAYJRAQE?=
+X-IPAS-Result: =?us-ascii?q?A2A2AAAROl9d/3Wz0XYNWBwBAQEEAQEHBAEBgVUFAQELA?=
+ =?us-ascii?q?YFogkqEII9WAQEGgRGKEY8ogXsJAQEBAQEBAQEBNwEBhDoDAgKDAjYHDgIJA?=
+ =?us-ascii?q?QEBBAECAQEGAwGFWIYZAgEDI1YQGA0CJgICRxAGE4UZq1BzgTIaikCBDCgBg?=
+ =?us-ascii?q?WKKJHiBB4ERM4MdhB0BC4MmglgEjxSFMl1ClXcJgh+UWAyNWwOKYIQgo1ELg?=
+ =?us-ascii?q?X5NLgqDJ4JOF44vZYoEAYJRAQE?=
+X-IronPort-AV: E=Sophos;i="5.64,419,1559491200"; 
+   d="scan'208";a="231796638"
+Received: from unknown (HELO [192.168.1.222]) ([118.209.179.117])
+  by icp-osb-irony-out2.iinet.net.au with ESMTP; 23 Aug 2019 08:59:27 +0800
+Subject: [PATCH v2 02/15] xfs: mount-api - add fs parameter description
+From:   Ian Kent <raven@themaw.net>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     Dave Chinner <dchinner@redhat.com>,
+        David Howells <dhowells@redhat.com>,
+        Al Viro <viro@ZenIV.linux.org.uk>,
+        Eric Sandeen <sandeen@sandeen.net>
+Date:   Fri, 23 Aug 2019 08:59:27 +0800
+Message-ID: <156652196787.2607.5728754014477374931.stgit@fedora-28>
+In-Reply-To: <156652158924.2607.14608448087216437699.stgit@fedora-28>
+References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
+User-Agent: StGit/unknown-version
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=pdRIKMFd4+xhzJrg6WzXNA==:117 a=pdRIKMFd4+xhzJrg6WzXNA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=lzGJWfNdbh4cDx3VhMgA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 11:02:00AM -0700, Ira Weiny wrote:
-> On Tue, Aug 20, 2019 at 08:55:15AM -0300, Jason Gunthorpe wrote:
-> > On Tue, Aug 20, 2019 at 11:12:10AM +1000, Dave Chinner wrote:
-> > > On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
-> > > > On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
-> > > > 
-> > > > > So that leaves just the normal close() syscall exit case, where the
-> > > > > application has full control of the order in which resources are
-> > > > > released. We've already established that we can block in this
-> > > > > context.  Blocking in an interruptible state will allow fatal signal
-> > > > > delivery to wake us, and then we fall into the
-> > > > > fatal_signal_pending() case if we get a SIGKILL while blocking.
-> > > > 
-> > > > The major problem with RDMA is that it doesn't always wait on close() for the
-> > > > MR holding the page pins to be destoyed. This is done to avoid a
-> > > > deadlock of the form:
-> > > > 
-> > > >    uverbs_destroy_ufile_hw()
-> > > >       mutex_lock()
-> > > >        [..]
-> > > >         mmput()
-> > > >          exit_mmap()
-> > > >           remove_vma()
-> > > >            fput();
-> > > >             file_operations->release()
-> > > 
-> > > I think this is wrong, and I'm pretty sure it's an example of why
-> > > the final __fput() call is moved out of line.
-> > 
-> > Yes, I think so too, all I can say is this *used* to happen, as we
-> > have special code avoiding it, which is the code that is messing up
-> > Ira's lifetime model.
-> > 
-> > Ira, you could try unraveling the special locking, that solves your
-> > lifetime issues?
-> 
-> Yes I will try to prove this out...  But I'm still not sure this fully solves
-> the problem.
-> 
-> This only ensures that the process which has the RDMA context (RDMA FD) is safe
-> with regard to hanging the close for the "data file FD" (the file which has
-> pinned pages) in that _same_ process.  But what about the scenario.
-> 
-> Process A has the RDMA context FD and data file FD (with lease) open.
-> 
-> Process A uses SCM_RIGHTS to pass the RDMA context FD to Process B.
+The new mount-api uses an array of struct fs_parameter_spec for
+parameter parsing, create this table populated with the xfs mount
+parameters.
 
-Passing the RDMA context dependent on a file layout lease to another
-process that doesn't have a file layout lease or a reference to the
-original lease should be considered a violation of the layout lease.
-Process B does not have an active layout lease, and so by the rules
-of layout leases, it is not allowed to pin the layout of the file.
+The new mount-api table definition is wider than the token based
+parameter table and interleaving the option description comments
+between each table line is much less readable than adding them to
+the end of each table entry. So add the option description comment
+to each entry line even though it causes quite a few of the entries
+to be longer than 80 characters.
 
-> Process A attempts to exit (hangs because data file FD is pinned).
-> 
-> Admin kills process A.  kill works because we have allowed for it...
-> 
-> Process B _still_ has the RDMA context FD open _and_ therefore still holds the
-> file pins.
-> 
-> Truncation still fails.
-> 
-> Admin does not know which process is holding the pin.
-> 
-> What am I missing?
+Signed-off-by: Ian Kent <raven@themaw.net>
+---
+ fs/xfs/xfs_super.c |   48 +++++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 45 insertions(+), 3 deletions(-)
 
-Application does not hold the correct file layout lease references.
-Passing the fd via SCM_RIGHTS to a process without a layout lease
-is equivalent to not using layout leases in the first place.
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f9450235533c..74c88b92ce22 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -38,6 +38,8 @@
+ 
+ #include <linux/magic.h>
+ #include <linux/parser.h>
++#include <linux/fs_context.h>
++#include <linux/fs_parser.h>
+ 
+ static const struct super_operations xfs_super_operations;
+ struct bio_set xfs_ioend_bioset;
+@@ -47,9 +49,6 @@ static struct kset *xfs_kset;		/* top-level xfs sysfs dir */
+ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+ #endif
+ 
+-/*
+- * Table driven mount option parser.
+- */
+ enum {
+ 	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
+ 	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
+@@ -109,6 +108,49 @@ static const match_table_t tokens = {
+ 	{Opt_err,	NULL},
+ };
+ 
++static const struct fs_parameter_spec xfs_param_specs[] = {
++ fsparam_u32	("logbufs",    Opt_logbufs),   /* number of XFS log buffers */
++ fsparam_string ("logbsize",   Opt_logbsize),  /* size of XFS log buffers */
++ fsparam_string ("logdev",     Opt_logdev),    /* log device */
++ fsparam_string ("rtdev",      Opt_rtdev),     /* realtime I/O device */
++ fsparam_u32	("biosize",    Opt_biosize),   /* log2 of preferred buffered io size */
++ fsparam_flag	("wsync",      Opt_wsync),     /* safe-mode nfs compatible mount */
++ fsparam_flag	("noalign",    Opt_noalign),   /* turn off stripe alignment */
++ fsparam_flag	("swalloc",    Opt_swalloc),   /* turn on stripe width allocation */
++ fsparam_u32	("sunit",      Opt_sunit),     /* data volume stripe unit */
++ fsparam_u32	("swidth",     Opt_swidth),    /* data volume stripe width */
++ fsparam_flag	("nouuid",     Opt_nouuid),    /* ignore filesystem UUID */
++ fsparam_flag_no("grpid",      Opt_grpid),     /* group-ID from parent directory (or not) */
++ fsparam_flag	("bsdgroups",  Opt_bsdgroups), /* group-ID from parent directory */
++ fsparam_flag	("sysvgroups", Opt_sysvgroups),/* group-ID from current process */
++ fsparam_string ("allocsize",  Opt_allocsize), /* preferred allocation size */
++ fsparam_flag	("norecovery", Opt_norecovery),/* don't run XFS recovery */
++ fsparam_flag	("inode64",    Opt_inode64),   /* inodes can be allocated anywhere */
++ fsparam_flag	("inode32",    Opt_inode32),   /* inode allocation limited to XFS_MAXINUMBER_32 */
++ fsparam_flag_no("ikeep",      Opt_ikeep),     /* do not free (or keep) empty inode clusters */
++ fsparam_flag_no("largeio",    Opt_largeio),   /* report (or do not report) large I/O sizes in stat() */
++ fsparam_flag_no("attr2",      Opt_attr2),     /* do (or do not) use attr2 attribute format */
++ fsparam_flag	("filestreams",Opt_filestreams), /* use filestreams allocator */
++ fsparam_flag_no("quota",      Opt_quota),     /* disk quotas (user) */
++ fsparam_flag	("usrquota",   Opt_usrquota),  /* user quota enabled */
++ fsparam_flag	("grpquota",   Opt_grpquota),  /* group quota enabled */
++ fsparam_flag	("prjquota",   Opt_prjquota),  /* project quota enabled */
++ fsparam_flag	("uquota",     Opt_uquota),    /* user quota (IRIX variant) */
++ fsparam_flag	("gquota",     Opt_gquota),    /* group quota (IRIX variant) */
++ fsparam_flag	("pquota",     Opt_pquota),    /* project quota (IRIX variant) */
++ fsparam_flag	("uqnoenforce",Opt_uqnoenforce), /* user quota limit enforcement */
++ fsparam_flag	("gqnoenforce",Opt_gqnoenforce), /* group quota limit enforcement */
++ fsparam_flag	("pqnoenforce",Opt_pqnoenforce), /* project quota limit enforcement */
++ fsparam_flag	("qnoenforce", Opt_qnoenforce),  /* same as uqnoenforce */
++ fsparam_flag_no("discard",    Opt_discard),   /* Do (or do not) not discard unused blocks */
++ fsparam_flag	("dax",	       Opt_dax),       /* Enable direct access to bdev pages */
++ {}
++};
++
++static const struct fs_parameter_description xfs_fs_parameters = {
++	.name		= "XFS",
++	.specs		= xfs_param_specs,
++};
+ 
+ STATIC int
+ suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
