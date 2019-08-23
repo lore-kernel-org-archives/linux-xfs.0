@@ -2,209 +2,122 @@ Return-Path: <SRS0=lWMA=WT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82616C3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 14:07:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9647C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 14:37:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 590E222CEC
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 14:07:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BD4452054F
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 14:37:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="R/pnpxcm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388273AbfHWOHQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Aug 2019 10:07:16 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:50992 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726894AbfHWOHQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Aug 2019 10:07:16 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id F384B30833CB;
-        Fri, 23 Aug 2019 14:07:15 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id F32C6600F8;
-        Fri, 23 Aug 2019 14:07:14 +0000 (UTC)
-Date:   Fri, 23 Aug 2019 10:07:13 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     kaixuxia <xiakaixu1987@gmail.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <david@fromorbit.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH] xfs: Fix ABBA deadlock between AGI and AGF in rename()
-Message-ID: <20190823140713.GA54025@bfoster>
-References: <08753b9e-4da1-ca61-af12-0b4aad8ed516@gmail.com>
+        id S2390896AbfHWOhE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Aug 2019 10:37:04 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:45788 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389397AbfHWOhE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Aug 2019 10:37:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7NEYUam123236;
+        Fri, 23 Aug 2019 14:36:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=mCmlq0J5LHSJPNRvvnm2neJRgUpuAfyrZ5lnHyhradY=;
+ b=R/pnpxcmWf9H/bF/xaTGKEd408ITQ1foXqfBcaffWMDk17zlPcB91oo26FZ+dDuYdeqw
+ vmt3nJiLEHCAMqs1AkNnefywJxhttAf9mQbLwQWCP0vBq2/1S/B6HjFOEzfXvUU4tn99
+ 8a7JlY172Djx9I0GaxWBArPUb7OsWYXjjvOrlgwgkrBr4aH8u8UvFnldQ3wo97IpPd6u
+ Yk+k/p/J8EU8IPhP39x0/mvtVM/EVgGt3Un7P6fJlu/+A9/li1uozXCN26cVwzkqGWyx
+ oxxpGeOkgr8G8eusYtnsiGlE+nJvm9zHzhWXl/5XLEtQ4CNFeK/LKCj86EKuWlzdMQJX 1w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2ue9hq526a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 23 Aug 2019 14:36:53 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7NEY7TV080849;
+        Fri, 23 Aug 2019 14:36:52 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2uj1y0jr8x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 23 Aug 2019 14:36:52 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7NEapOq013969;
+        Fri, 23 Aug 2019 14:36:51 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 23 Aug 2019 07:36:51 -0700
+Date:   Fri, 23 Aug 2019 07:36:50 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] t_stripealign: Fix fibmap error handling
+Message-ID: <20190823143650.GI1037350@magnolia>
+References: <20190823092530.11797-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <08753b9e-4da1-ca61-af12-0b4aad8ed516@gmail.com>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Fri, 23 Aug 2019 14:07:16 +0000 (UTC)
+In-Reply-To: <20190823092530.11797-1-cmaiolino@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9358 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908230151
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9358 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908230152
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 12:56:53PM +0800, kaixuxia wrote:
-> When performing rename operation with RENAME_WHITEOUT flag, we will
-> hold AGF lock to allocate or free extents in manipulating the dirents
-> firstly, and then doing the xfs_iunlink_remove() call last to hold
-> AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+On Fri, Aug 23, 2019 at 11:25:30AM +0200, Carlos Maiolino wrote:
+> FIBMAP only returns a negative value when the underlying filesystem does
+> not support FIBMAP or on permission error. For the remaining errors,
+> i.e. those usually returned from the filesystem itself, zero will be
+> returned.
 > 
-> The big problem here is that we have an ordering constraint on AGF
-> and AGI locking - inode allocation locks the AGI, then can allocate
-> a new extent for new inodes, locking the AGF after the AGI. Hence
-> the ordering that is imposed by other parts of the code is AGI before
-> AGF. So we get an ABBA deadlock between the AGI and AGF here.
+> We can not trust a zero return from the FIBMAP, and such behavior made
+> generic/223 succeed when it should not.
 > 
-...
+> Also, we can't use perror() only to print errors when FIBMAP failed, or
+> it will simply print 'success' when a zero is returned.
 > 
-> In this patch we move the xfs_iunlink_remove() call to
-> before acquiring the AGF lock to preserve correct AGI/AGF locking
-> order.
-> 
-> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
 > ---
->  fs/xfs/xfs_inode.c | 85 +++++++++++++++++++++++++++---------------------------
->  1 file changed, 43 insertions(+), 42 deletions(-)
+>  src/t_stripealign.c | 7 +++++--
+>  1 file changed, 5 insertions(+), 2 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-> index 6467d5e..584b9d1 100644
-> --- a/fs/xfs/xfs_inode.c
-> +++ b/fs/xfs/xfs_inode.c
-> @@ -3282,9 +3282,10 @@ struct xfs_iunlink {
->  					spaceres);
+> diff --git a/src/t_stripealign.c b/src/t_stripealign.c
+> index 5cdadaae..164831f8 100644
+> --- a/src/t_stripealign.c
+> +++ b/src/t_stripealign.c
+> @@ -76,8 +76,11 @@ int main(int argc, char ** argv)
+>  		unsigned int	bmap = 0;
 >  
->  	/*
-> -	 * Set up the target.
-> +	 * Check for expected errors before we dirty the transaction
-> +	 * so we can return an error without a transaction abort.
->  	 */
-> -	if (target_ip == NULL) {
-> +	if (!target_ip) {
+>  		ret = ioctl(fd, FIBMAP, &bmap);
+> -		if (ret < 0) {
+> -			perror("fibmap");
+> +		if (ret <= 0) {
+> +			if (ret < 0)
+> +				perror("fibmap");
+> +			else
+> +				fprintf(stderr, "fibmap error\n");
 
-Not sure there's really a point to this change now.
+"fibmap returned no result"?
 
->  		/*
->  		 * If there's no space reservation, check the entry will
->  		 * fit before actually inserting it.
-> @@ -3294,6 +3295,46 @@ struct xfs_iunlink {
->  			if (error)
->  				goto out_trans_cancel;
->  		}
-> +	} else {
-> +		/*
-> +		 * If target exists and it's a directory, check that whether
-> +		 * it can be destroyed.
-> +		 */
-> +		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
-> +		    (!(xfs_dir_isempty(target_ip)) ||
-> +		    (VFS_I(target_ip)->i_nlink > 2))) {
+--D
 
-^ This line needs one more space of indent because it's encapsulated by
-the opening brace one line up. The braces around xfs_dir_isempty() also
-look spurious, FWIW. With those nits fixed, the rest looks good to me:
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
-Thanks for the patch.
-
-Brian
-
-> +			error = -EEXIST;
-> +			goto out_trans_cancel;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * Directory entry creation below may acquire the AGF. Remove
-> +	 * the whiteout from the unlinked list first to preserve correct
-> +	 * AGI/AGF locking order. This dirties the transaction so failures
-> +	 * after this point will abort and log recovery will clean up the
-> +	 * mess.
-> +	 *
-> +	 * For whiteouts, we need to bump the link count on the whiteout
-> +	 * inode. After this point, we have a real link, clear the tmpfile
-> +	 * state flag from the inode so it doesn't accidentally get misused
-> +	 * in future.
-> +	 */
-> +	if (wip) {
-> +		ASSERT(VFS_I(wip)->i_nlink == 0);
-> +		error = xfs_iunlink_remove(tp, wip);
-> +		if (error)
-> +			goto out_trans_cancel;
-> +
-> +		xfs_bumplink(tp, wip);
-> +		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
-> +		VFS_I(wip)->i_state &= ~I_LINKABLE;
-> +	}
-> +
-> +	/*
-> +	 * Set up the target.
-> +	 */
-> +	if (target_ip == NULL) {
->  		/*
->  		 * If target does not exist and the rename crosses
->  		 * directories, adjust the target directory link count
-> @@ -3312,22 +3353,6 @@ struct xfs_iunlink {
->  		}
->  	} else { /* target_ip != NULL */
->  		/*
-> -		 * If target exists and it's a directory, check that both
-> -		 * target and source are directories and that target can be
-> -		 * destroyed, or that neither is a directory.
-> -		 */
-> -		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
-> -			/*
-> -			 * Make sure target dir is empty.
-> -			 */
-> -			if (!(xfs_dir_isempty(target_ip)) ||
-> -			    (VFS_I(target_ip)->i_nlink > 2)) {
-> -				error = -EEXIST;
-> -				goto out_trans_cancel;
-> -			}
-> -		}
-> -
-> -		/*
->  		 * Link the source inode under the target name.
->  		 * If the source inode is a directory and we are moving
->  		 * it across directories, its ".." entry will be
-> @@ -3417,30 +3442,6 @@ struct xfs_iunlink {
->  	if (error)
->  		goto out_trans_cancel;
->  
-> -	/*
-> -	 * For whiteouts, we need to bump the link count on the whiteout inode.
-> -	 * This means that failures all the way up to this point leave the inode
-> -	 * on the unlinked list and so cleanup is a simple matter of dropping
-> -	 * the remaining reference to it. If we fail here after bumping the link
-> -	 * count, we're shutting down the filesystem so we'll never see the
-> -	 * intermediate state on disk.
-> -	 */
-> -	if (wip) {
-> -		ASSERT(VFS_I(wip)->i_nlink == 0);
-> -		xfs_bumplink(tp, wip);
-> -		error = xfs_iunlink_remove(tp, wip);
-> -		if (error)
-> -			goto out_trans_cancel;
-> -		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
-> -
-> -		/*
-> -		 * Now we have a real link, clear the "I'm a tmpfile" state
-> -		 * flag from the inode so it doesn't accidentally get misused in
-> -		 * future.
-> -		 */
-> -		VFS_I(wip)->i_state &= ~I_LINKABLE;
-> -	}
-> -
->  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
->  	if (new_parent)
+>  			free(fie);
+>  			close(fd);
+>  			return 1;
 > -- 
-> 1.8.3.1
+> 2.20.1
 > 
-> -- 
-> kaixuxia
