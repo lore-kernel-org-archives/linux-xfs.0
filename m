@@ -2,209 +2,137 @@ Return-Path: <SRS0=lWMA=WT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A6E6BC3A5A2
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 03:25:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47F93C3A589
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 03:56:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7E891208C3
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 03:25:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0FF822341A
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 03:56:05 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jS722GSi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389816AbfHWDZC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 23:25:02 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58696 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1732546AbfHWDZB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 23:25:01 -0400
-Received: from dread.disaster.area (pa49-181-142-13.pa.nsw.optusnet.com.au [49.181.142.13])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5B63B43D0B5;
-        Fri, 23 Aug 2019 13:24:53 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i10Az-0008A6-UL; Fri, 23 Aug 2019 13:23:45 +1000
-Date:   Fri, 23 Aug 2019 13:23:45 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190823032345.GG1119@dread.disaster.area>
-References: <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
- <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190821181343.GH8653@ziepe.ca>
- <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
- <20190821194810.GI8653@ziepe.ca>
- <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
+        id S2391160AbfHWD4E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 23:56:04 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:42964 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2390619AbfHWD4E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 23:56:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7N3s0AD173810;
+        Fri, 23 Aug 2019 03:55:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=P9/xShzr/HhOHDSmtLw5BDAywVlGdkFNff0MeGne26A=;
+ b=jS722GSiTwp3udXxS+Z4Lx0+dJRwu6/5daH76QTNWjOfnZ+dUsUBmR3E5pkuEUNXd0BY
+ F9hRFFvIkE3Ivsuk9WTAyoWkIgC2ONqrd36PTf7RD/tJR0Jmh5Zepmxjo7Y/S8ITHjMo
+ TFQJFXGREZh8zk7cf4vNIjrv8dQBg6QfzCXglrB2di7bYwV+HEkwm7M7kou+4CQ5OpU0
+ RWInjJHFE/w5MDAwDFyQZ2/2whPTvABjBBaVgCTHZ+tVsbIZgcCRlPftXYR3eGY0WJdw
+ 4MlF39HbamEDWyLsQpHcxN4fDGsCp0X4/qJzYCNvIxNufoVFWDMI7MhUvIKn5fKsbCro aQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2ue9hq1uq3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 23 Aug 2019 03:55:39 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7N3qqUp106451;
+        Fri, 23 Aug 2019 03:55:38 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2uj8kpr2wd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 23 Aug 2019 03:55:38 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7N3tUZ4019055;
+        Fri, 23 Aug 2019 03:55:30 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 22 Aug 2019 20:55:30 -0700
+Date:   Thu, 22 Aug 2019 20:55:28 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Salvatore Bonaccorso <carnil@debian.org>,
+        Security Officers <security@kernel.org>,
+        Debian Security Team <team@security.debian.org>,
+        benjamin.moody@gmail.com, Ben Hutchings <benh@debian.org>,
+        Christoph Hellwig <hch@infradead.org>
+Subject: [PATCH] xfs: fix missing ILOCK unlock when xfs_setattr_nonsize fails
+ due to EDQUOT
+Message-ID: <20190823035528.GH1037422@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=pdRIKMFd4+xhzJrg6WzXNA==:117 a=pdRIKMFd4+xhzJrg6WzXNA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=rm80kFlqY6Er904cOY0A:9 a=56S7X8Id4VG2n9yJ:21
-        a=ImN9Ga2Z1gCvYqWp:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9357 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908230040
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9357 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908230040
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 21, 2019 at 01:44:21PM -0700, Ira Weiny wrote:
-> On Wed, Aug 21, 2019 at 04:48:10PM -0300, Jason Gunthorpe wrote:
-> > On Wed, Aug 21, 2019 at 11:57:03AM -0700, Ira Weiny wrote:
-> > 
-> > > > Oh, I didn't think we were talking about that. Hanging the close of
-> > > > the datafile fd contingent on some other FD's closure is a recipe for
-> > > > deadlock..
-> > > 
-> > > The discussion between Jan and Dave was concerning what happens when a user
-> > > calls
-> > > 
-> > > fd = open()
-> > > fnctl(...getlease...)
-> > > addr = mmap(fd...)
-> > > ib_reg_mr() <pin>
-> > > munmap(addr...)
-> > > close(fd)
-> > 
-> > I don't see how blocking close(fd) could work.
-> 
-> Well Dave was saying this _could_ work. FWIW I'm not 100% sure it will but I
-> can't prove it won't..
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Right, I proposed it as a possible way of making sure application
-developers don't do this. It _could_ be made to work (e.g. recording
-longterm page pins on the vma->file), but this is tangential to 
-the discussion of requiring active references to all resources
-covered by the layout lease.
+Benjamin Moody reported to Debian that XFS partially wedges when a chgrp
+fails on account of being out of disk quota.  I ran his reproducer
+script:
 
-I think allowing applications to behave like the above is simply
-poor system level design, regardless of the interaction with
-filesystems and layout leases.
+# adduser dummy
+# adduser dummy plugdev
 
-> Maybe we are all just touching a different part of this
-> elephant[1] but the above scenario or one without munmap is very reasonably
-> something a user would do.  So we can either allow the close to complete (my
-> current patches) or try to make it block like Dave is suggesting.
-> 
-> I don't disagree with Dave with the semantics being nice and clean for the
-> filesystem.
+# dd if=/dev/zero bs=1M count=100 of=test.img
+# mkfs.xfs test.img
+# mount -t xfs -o gquota test.img /mnt
+# mkdir -p /mnt/dummy
+# chown -c dummy /mnt/dummy
+# xfs_quota -xc 'limit -g bsoft=100k bhard=100k plugdev' /mnt
 
-I'm not trying to make it "nice and clean for the filesystem".
+(and then as user dummy)
 
-The problem is not just RDMA/DAX - anything that is directly
-accessing the block device under the filesystem has the same set of
-issues. That is, the filesystem controls the life cycle of the
-blocks in the block device, so direct access to the blocks by any
-means needs to be co-ordinated with the filesystem. Pinning direct
-access to a file via page pins attached to a hardware context that
-the filesystem knows nothing about is not an access model that the
-filesystems can support.
+$ dd if=/dev/urandom bs=1M count=50 of=/mnt/dummy/foo
+$ chgrp plugdev /mnt/dummy/foo
 
-IOWs, anyone looking at this problem just from the RDMA POV of page
-pins is not seeing all the other direct storage access mechainsms
-that we need to support in the filesystems. RDMA on DAX is just one
-of them.  pNFS is another. Remote acces via NVMeOF is another. XDP
--> DAX (direct file data placement from the network hardware) is
-another. There are /lots/ of different direct storage access
-mechanisms that filesystems need to support and we sure as hell do
-not want to have to support special case semantics for every single
-one of them.
+and saw:
 
-Hence if we don't start with a sane model for arbitrating direct
-access to the storage at the filesystem level we'll never get this
-stuff to work reliably, let alone work together coherently.  An
-application that wants a direct data path to storage should have a
-single API that enables then to safely access the storage,
-regardless of how they are accessing the storage.
+================================================
+WARNING: lock held when returning to user space!
+5.3.0-rc5 #rc5 Tainted: G        W
+------------------------------------------------
+chgrp/47006 is leaving the kernel with locks still held!
+1 lock held by chgrp/47006:
+ #0: 000000006664ea2d (&xfs_nondir_ilock_class){++++}, at: xfs_ilock+0xd2/0x290 [xfs]
 
-From that perspective, what we are talking about here with RDMA
-doing "mmap, page pin, unmap, close" and "pass page pins via
-SCM_RIGHTS" are fundamentally unworkable from the filesystem
-perspective. They are use-after-free situations from the filesystem
-perspective - they do not hold direct references to anything in the
-filesystem, and so the filesytem is completely unaware of them.
+...which is clearly caused by xfs_setattr_nonsize failing to unlock the
+ILOCK after the xfs_qm_vop_chown_reserve call fails.  Add the missing
+unlock.
 
-The filesystem needs to be aware of /all users/ of it's resources if
-it's going to manage them sanely.  It needs to be able to corectly
-coordinate modifications to ownership of the underlying storage with
-all the users directly accessing that physical storage regardless of
-the mechanism being used to access the storage.  IOWs, access
-control must be independent of the mechanism used to gain access to
-the storage hardware.
+Reported-by: benjamin.moody@gmail.com
+Fixes: 253f4911f297 ("xfs: better xfs_trans_alloc interface")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/xfs_iops.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-That's what file layout leases are defining - the filesystem support
-model for allowing direct storage access from userspace. It's not
-defining "RDMA/FSDAX" access rules, it's defining a generic direct
-access model. And one of the rules in this model is "if you don't
-have an active reference to the file layout, you are not allowed to
-directly access the layout.".
-
-Anything else is unsupportable from the filesystem perspective -
-designing an access mechanism that allows userspace to retain access
-indefinitely by relying on hidden details of kernel subsystem
-implementations is a terrible architecture.  Not only does it bleed
-kernel implementation into the API and the behavioural model, it
-means we can't ever change that internal kernel behaviour because
-userspace may be dependent on it. I shouldn't be having to point out
-how bad this is from a system design perspective.
-
-That's where the "nice and clean" semantics come from - starting
-from "what can we actually support?", "what exactly do all the
-different direct access mechanisms actually require?", "does it work
-for future technologies not yet on our radar?" and working from
-there.  So I'm not just looking at what we are doing right now, I'm
-looking at 15 years down the track when we still have to support
-layout leases and we've got hardware we haven't dreamed of yet.  If
-the model is clean, simple, robust, implementation independent and
-has well defined semantics, then it should stand the test of time.
-i.e. the "nice and clean" semantics have nothign to do with the
-filesystem per se, but everything to do with ensuring the mechanism
-is generic and workable for direct storage access for a long time
-into the future.
-
-We can't force people to use layout leases - at all, let alone
-correctly - but if you want filesystems and enterprise distros to
-support direct access to filesystem controlled storage, then direct
-access applications need to follow a sane set of rules that are
-supportable at the filesystem level.
-
-> But the fact that RDMA, and potentially others, can "pass the
-> pins" to other processes is something I spent a lot of time trying to work out.
-
-There's nothing in file layout lease architecture that says you
-can't "pass the pins" to another process.  All the file layout lease
-requirements say is that if you are going to pass a resource for
-which the layout lease guarantees access for to another process,
-then the destination process already have a valid, active layout
-lease that covers the range of the pins being passed to it via the
-RDMA handle.
-
-i.e. as the pins pass from one process to another, they pass from
-the protection of the lease process A holds to the protection that
-the lease process B holds. This can probably even be done by
-duplicating the lease fd and passing it by SCM_RIGHTS first.....
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index dd4076ae228a..ea614b4ae052 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -804,6 +804,7 @@ xfs_setattr_nonsize(
+ 
+ out_cancel:
+ 	xfs_trans_cancel(tp);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out_dqrele:
+ 	xfs_qm_dqrele(udqp);
+ 	xfs_qm_dqrele(gdqp);
