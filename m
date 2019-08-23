@@ -1,156 +1,282 @@
-Return-Path: <SRS0=94LY=WS=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=lWMA=WT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39F7DC3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 23:05:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF59C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 00:07:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DDB38233A0
-	for <linux-xfs@archiver.kernel.org>; Thu, 22 Aug 2019 23:05:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F96C2173E
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 00:07:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389289AbfHVXFk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 22 Aug 2019 19:05:40 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56582 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731575AbfHVXFk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 19:05:40 -0400
+        id S1728137AbfHWAHt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 22 Aug 2019 20:07:49 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50789 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728122AbfHWAHt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 22 Aug 2019 20:07:49 -0400
 Received: from dread.disaster.area (pa49-181-142-13.pa.nsw.optusnet.com.au [49.181.142.13])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7D239361098;
-        Fri, 23 Aug 2019 09:05:36 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 974D443D7AF;
+        Fri, 23 Aug 2019 10:07:44 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i0w7Z-0006df-Rm; Fri, 23 Aug 2019 09:03:57 +1000
-Date:   Fri, 23 Aug 2019 09:03:57 +1000
+        id 1i0x6C-000705-RW; Fri, 23 Aug 2019 10:06:36 +1000
+Date:   Fri, 23 Aug 2019 10:06:36 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: alignment check bio buffers
-Message-ID: <20190822230357.GD1119@dread.disaster.area>
-References: <20190821083820.11725-1-david@fromorbit.com>
- <20190821083820.11725-4-david@fromorbit.com>
- <20190821133904.GC19646@bfoster>
- <20190821213930.GP1119@dread.disaster.area>
- <20190822134716.GB24151@bfoster>
+Cc:     Chandan Rajendra <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, chandan@linux.ibm.com,
+        darrick.wong@oracle.com, hch@infradead.org
+Subject: Re: [RFC] xfs: Flush iclog containing XLOG_COMMIT_TRANS before
+ waiting for log space
+Message-ID: <20190823000636.GE1119@dread.disaster.area>
+References: <20190821110448.30161-1-chandanrlinux@gmail.com>
+ <20190821221834.GQ1119@dread.disaster.area>
+ <20190822163446.GC24151@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190822134716.GB24151@bfoster>
+In-Reply-To: <20190822163446.GC24151@bfoster>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
         a=pdRIKMFd4+xhzJrg6WzXNA==:117 a=pdRIKMFd4+xhzJrg6WzXNA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=Eu_smMOfIVYlMVOBZEgA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        a=pGLkceISAAAA:8 a=7-415B0cAAAA:8 a=iyl9vMdxQlgTvNhdP8sA:9
+        a=H6NKNGA0WA0YYxnW:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 22, 2019 at 09:47:16AM -0400, Brian Foster wrote:
-> On Thu, Aug 22, 2019 at 07:39:30AM +1000, Dave Chinner wrote:
-> > On Wed, Aug 21, 2019 at 09:39:04AM -0400, Brian Foster wrote:
-> > > On Wed, Aug 21, 2019 at 06:38:20PM +1000, Dave Chinner wrote:
-> > Yes, because we really should wait for chained bios to complete
-> > before returning. we can only do that by waiting on completion for
-> > the entire chain, and the simplest way to do that is submit the
-> > bio...
-> > 
-> 
-> Ok. I guess that makes sense here because these are sync I/Os and this
-> appears to be the only way to wait on a partially constructed chain
-> (that I can tell).
-
-Same here. I can't find any code that manually waits for a partially
-submitted chain to complete...
-
-> > > If we're already seeing
-> > > weird behavior for bios with unaligned data memory, this seems like a
-> > > recipe for similar weirdness. We'd also end up doing a partial write in
-> > > scenarios where we already know we're returning an error.
-> > 
-> > THe partial write will happen anyway on a chained bio, something we
-> > know already happens from the bug in bio chaining that was found in
-> > this code earlier in the cycle.
-> > 
-> 
-> Sure, a failure in a bio chain is essentially a partial write similar to
-> if one such bio in the chain had failed. What about the non-chaining
-> case? What happens on submission of an empty read/write bio? Does
-> behavior depend on the underlying storage stack?
-
-Seems to work just fine when I tested the code without the aligned
-allocation patch. I do note that the block layer does allow zero
-length (non-data) bios for things like flush requests.
-Unsurprisingly, theres no checks to disallow completely empty bios
-from being submitted, so I'm asumming that it's handled just fine
-given the code worked when tested...
-
-> Note that I see this patch is likely going away. I'm just saying I think
-> we should have some confirmation on how the block layer behaves in these
-> situations before we take an approach that relies on it. Is an empty bio
-> essentially a no-op that serves as a serialization mechanism? Does the
-> block layer return an error? Etc.
-
-submit_bio_wait() didn't return an error, and even if it did it gets
-overridden by the error from misalignment.
-
-> > > Perhaps we
-> > > should create an error path or use a check similar to what is already in
-> > > xfs_buf_ioapply_map() (though I'm not a fan of submitting a partial I/O
-> > > when we already know we're going to return an error) to call bio_endio()
-> > > to undo any chaining.
-
-bio_endio() doesn't wait for chaining. If there's children chained,
-it just returns immediately and that leads to the use-after-free
-situation I described to Christoph...
-
-bio chaining just seems incredibly fragile in the face of errors
-during chain building...
-
-> > > > --- a/fs/xfs/xfs_buf.c
-> > > > +++ b/fs/xfs/xfs_buf.c
-> > > > @@ -1294,7 +1294,7 @@ xfs_buf_ioapply_map(
-> > > >  		if (nbytes > size)
-> > > >  			nbytes = size;
-> > > >  
-> > > > -		rbytes = bio_add_page(bio, bp->b_pages[page_index], nbytes,
-> > > > +		rbytes = xfs_bio_add_page(bio, bp->b_pages[page_index], nbytes,
-> > > >  				      offset);
+On Thu, Aug 22, 2019 at 12:34:46PM -0400, Brian Foster wrote:
+> On Thu, Aug 22, 2019 at 08:18:34AM +1000, Dave Chinner wrote:
+> > On Wed, Aug 21, 2019 at 04:34:48PM +0530, Chandan Rajendra wrote:
+> > > The following call trace is seen when executing generic/530 on a ppc64le
+> > > machine,
 > > > 
-> > > Similar concern here. The higher level code seems written under the
-> > > assumption that bio_add_page() returns success or zero. In this case the
-> > > error is basically tossed so we can also attempt to split/chain an empty
-> > > bio, or even better, submit a partial write and continue operating as if
-> > > nothing happened (outside of the warning). The latter case should be
-> > > handled as a log I/O error one way or another.
+> > > INFO: task mount:7722 blocked for more than 122 seconds.
+> > >       Not tainted 5.3.0-rc1-next-20190723-00001-g1867922e5cbf-dirty #6
 > > 
-> > See above - it does result in a failure when offset/nbytes is not
-> > aligned to the underlying device...
+> > can you reproduce this on 5.3-rc5? There were bugs in log recovery
+> > IO in -rc1 that could result in things going wrong...
+> > 
+> > > "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> > > mount           D 8448  7722   7490 0x00040008
+> > > Call Trace:
+> > > [c000000629343210] [0000000000000001] 0x1 (unreliable)
+> > > [c0000006293433f0] [c000000000021acc] __switch_to+0x2ac/0x490
+> > > [c000000629343450] [c000000000fbbbf4] __schedule+0x394/0xb50
+> > > [c000000629343510] [c000000000fbc3f4] schedule+0x44/0xf0
+> > > [c000000629343540] [c0000000007623b4] xlog_grant_head_wait+0x84/0x420
+> > > [c0000006293435b0] [c000000000762828] xlog_grant_head_check+0xd8/0x1e0
+> > > [c000000629343600] [c000000000762f6c] xfs_log_reserve+0x26c/0x310
+> > > [c000000629343690] [c00000000075defc] xfs_trans_reserve+0x28c/0x3e0
+> > > [c0000006293436e0] [c0000000007606ac] xfs_trans_alloc+0xfc/0x2f0
+> > > [c000000629343780] [c000000000749ca8] xfs_inactive_ifree+0x248/0x2a0
+> > > [c000000629343810] [c000000000749e58] xfs_inactive+0x158/0x300
+> > > [c000000629343850] [c000000000758554] xfs_fs_destroy_inode+0x104/0x3f0
+> > > [c000000629343890] [c00000000046850c] destroy_inode+0x6c/0xc0
+> > > [c0000006293438c0] [c00000000074c748] xfs_irele+0x168/0x1d0
+> > > [c000000629343900] [c000000000778c78] xlog_recover_process_one_iunlink+0x118/0x1e0
+> > > [c000000629343960] [c000000000778e10] xlog_recover_process_iunlinks+0xd0/0x130
+> > > [c0000006293439b0] [c000000000782408] xlog_recover_finish+0x58/0x130
+> > > [c000000629343a20] [c000000000763818] xfs_log_mount_finish+0xa8/0x1d0
+> > > [c000000629343a60] [c000000000750908] xfs_mountfs+0x6e8/0x9e0
+> > > [c000000629343b20] [c00000000075a210] xfs_fs_fill_super+0x5a0/0x7c0
+> > > [c000000629343bc0] [c00000000043e7fc] mount_bdev+0x25c/0x2a0
+> > > [c000000629343c60] [c000000000757c48] xfs_fs_mount+0x28/0x40
+> > > [c000000629343c80] [c0000000004956cc] legacy_get_tree+0x4c/0xb0
+> > > [c000000629343cb0] [c00000000043d690] vfs_get_tree+0x50/0x160
+> > > [c000000629343d30] [c0000000004775d4] do_mount+0xa14/0xc20
+> > > [c000000629343db0] [c000000000477d48] ksys_mount+0xc8/0x180
+> > > [c000000629343e00] [c000000000477e20] sys_mount+0x20/0x30
+> > > [c000000629343e20] [c00000000000b864] system_call+0x5c/0x70
+> > > 
+> > > i.e. the mount task gets hung indefinitely due to the following sequence
+> > > of events,
+> > > 
+> > > 1. Test creates lots of unlinked temp files and then shutsdown the
+> > >    filesystem.
+> > > 2. During mount, a transaction started in the context of processing
+> > >    unlinked inode list causes several iclogs to be filled up. All but
+> > >    the last one is submitted for I/O.
+> > > 3. After writing XLOG_COMMIT_TRANS record into the iclog, we will have
+> > >    18532 bytes of free space in the last iclog of the transaction which is
+> > >    greater than 2*sizeof(xlog_op_header_t). Hence
+> > >    xlog_state_get_iclog_space() does not switch over to using a newer iclog.
+> > > 4. Meanwhile, the endio code processing iclogs of the transaction do not
+> > >    insert items into the AIL since the iclog containing XLOG_COMMIT_TRANS
+> > >    hasn't been submitted for I/O yet. Hence a major part of the on-disk
+> > >    log cannot be freed yet.
+> > 
+> > So all those items are still pinned in memory.
+> > 
+> > > 5. A new request for log space (via xfs_log_reserve()) will now wait
+> > >    indefinitely for on-disk log space to be freed.
+> > 
+> > Because nothing has issued a xfs_log_force() for write the iclog to
+> > disk, unpin the objects that it pins in memory, and allow the tail
+> > to be moved forwards.
+> > 
+> > The xfsaild normally takes care of thisi - it gets pushed byt the
+> > log reserve when there's not enough space to in the log for the
+> > transaction before transaction reserve goes to sleep in
+> > xlog_grant_head_wait(). The AIL pushing code is then responsible for
+> > making sure log space is eventually freed. It will issue log forces
+> > if it isn't making progress and so this problem shouldn't occur.
+> > 
+> > So, why has it occurred?
+> > 
+> > The xfsaild kthread should be running at this point, so if it was
+> > pushed it should be trying to empty the journal to move the tail
+> > forward. Why hasn't it issue a log force?
+> > 
+> > 
+> > > To fix this issue, before waiting for log space to be freed, this commit
+> > > now submits xlog->l_iclog for write I/O if iclog->ic_state is
+> > > XLOG_STATE_ACTIVE and iclog has metadata written into it. This causes
+> > > AIL list to be populated and a later call to xlog_grant_push_ail() will
+> > > free up the on-disk log space.
+> > 
+> > hmmm.
+> > 
+> > > Signed-off-by: Chandan Rajendra <chandanrlinux@gmail.com>
+> > > ---
+> > >  fs/xfs/xfs_log.c | 21 +++++++++++++++++++++
+> > >  1 file changed, 21 insertions(+)
+> > > 
+> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > > index 00e9f5c388d3..dc785a6b9f47 100644
+> > > --- a/fs/xfs/xfs_log.c
+> > > +++ b/fs/xfs/xfs_log.c
+> > > @@ -236,11 +236,32 @@ xlog_grant_head_wait(
+> > >  	int			need_bytes) __releases(&head->lock)
+> > >  					    __acquires(&head->lock)
+> > >  {
+> > > +	struct xlog_in_core	*iclog;
+> > > +
+> > >  	list_add_tail(&tic->t_queue, &head->waiters);
+> > >  
+> > >  	do {
+> > >  		if (XLOG_FORCED_SHUTDOWN(log))
+> > >  			goto shutdown;
+> > > +
+> > > +		if (xfs_ail_min(log->l_ailp) == NULL) {
+> > 
+> > This is indicative of the situation. If the AIL is empty, and the
+> > log does not have room for an entire transaction reservation, then
+> > we need to be issuing synchronous transactions in recovery until
+> > such time the AIL pushing can actually function correctly to
+> > guarantee forwards progress for async transaction processing.
 > > 
 > 
-> Oops, this comment was misplaced. I meant to write this in response to
-> the changes to xlog_map_iclog_data(), not xfs_buf_ioapply_map() (hence
-> the note about handling log I/O errors above).
+> Hmm, I don't think that addresses the fundamental problem. This
+> phenomenon doesn't require log recovery. The same scenario can present
+> itself after a clean mount or from an idle fs. I think the scenario that
+> plays out here, at a high level, is as follows:
 > 
-> The former has no such error checks that I can see. AFAICT, if we
-> construct a partial or empty bio here, we'd warn and return.
-> xlog_map_iclog_data() is a void function so the caller has no indication
-> anything went wrong and submits the bio. If an empty (?) or partial bio
-> doesn't return an error on bio completion, we've completely failed to
-> account for the fact that we've written a partial iclog to disk.
 
-This is more a "make sure we don't get stuck in an endless loop"
-situation. If we've got unaligned iclogs, then a large, multi-page
-allocation (32-256k) has failed to be page aligned. This is not
-memory that comes from the slab, so alignment problems here indicate
-a major problem with the page allocation and/or vmalloc code. It
-just should never happen and if it does, then log writes failing are
-going to be the least of our worries.
+  - mount
+  - [log recovery]
+  - xfs_log_mount_finish
+    - calls xfs_log_work_queue()
+
+> - Heavy transaction workload commences. This continuously acquires log
+>   reservation and transfers it to the CIL as transactions commit.
+> - The CIL context grows until we cross the background threshold, at
+>   which point we schedule a background push.
+> - Background CIL push cycles the current context into the log via the
+>   iclog buffers. The commit record stays around in-core because the last
+>   iclog used for the CIL checkpoint isn't full. Hence, none of the
+>   associated log items make it into the AIL and the background CIL push
+>   had no effect with respect to freeing log reservation.
+> - The same transaction workload is still running and filling up the next
+>   CIL context. If we run out of log reservation before a second
+>   background CIL push comes along, we're basically stuck waiting on
+>   somebody to force the log.
+
+- every 30s xfs_log_worker() runs, sees the log dirty, triggers
+  a log force. pending commit is flushed to log, dirty objects get
+  moved to AIL, then xfs_log_worker() pushes on the AIL to do
+  periodic background metadata writeback.
+
+> The things that prevent this at normal runtime are timely execution of
+> background CIL pushes and the background log worker. If for some reason
+> the background CIL push is not timely enough that we consume all log
+> reservation before two background CIL pushes occur from the time the
+> racing workload begins (i.e. starting from an idle system such that the
+> AIL is empty), then we're stuck waiting on the background log worker to
+> force the log from the first background CIL push, populate the AIL and
+> get things moving again.
+
+Right, this does not deadlock - it might pause for a short while
+while waiting for the log worker to run and issue a log force. I
+have never actually seen it happen in all my years of "mkfs; mount;
+fsmark" testing that places a /massive/ metadata modification
+workload on a pristine, newly mounted filesystems....
+
+As it is, we've always used the log worker as a watchdog in this
+way. The fact is that we have very few situations left in the code
+where it needs to act as a watchdog - delayed logging actually
+negated the vast majority of problems that required the periodic log
+force to get out of trouble because individual transactions no
+longer needed to wait on iclog space to make progress...
+
+> IOW, the same essential problem is reproducible outside of log
+> recovery in the form of stalls as opposed to deadlocks via an
+> artificial background CIL push delay (i.e., think workqueue or
+> xc_cil_ctx lock starvation) and an elevated xfssyncd_centisecs.
+> We aren't stuck forever because the background log worker will run
+> eventually, but it could certainly be a dead stall of minutes
+> before that occurs.
+
+I don't think addressing it in xlog_grant_head_wait() fixes the
+problem fully, either.  If no other transaction comes in, then the
+ones already blocked (because the AIL was not empty when they tried
+to reserve space) will end up still blocked because nothing has
+kicked the code in the transaction reservation code. So putting the
+log force into the grant head wait code is not sufficient by itself.
+
+> I think this
+> could still be addressed at transaction commit or reservation time, but
+> I think the logic needs to be more generic and based on log reservation
+> pressure rather than the context from which this particular test happens
+> to reproduce.
+
+Log reservation pressure is what xlog_grant_push_ail() detects and
+that pressure is transferred to the AIL pushing code to clean dirty
+log items and move the tail of the log forward. It's right there
+where Chandan added the log force. :)
+
+IOWs, xlog_grant_push_ail() tells the xfsaild how much log space to
+make available. If the log is full, then xlog_grant_push_ail() will
+already be telling the AIL to push and will be waking it up.
+However, the aild will see the AIL empty and go right back to sleep.
+That's likely the runtime problem here - the mechanism that pushes
+the log tail forwards is not realising that the log needs pushing
+via a log force.
+
+IOWs, I suspect the xfsaild is the right place to take the action,
+because AIL pushing is triggered by much more than just log
+reservations. It gets kicked by memory reclaim, the log worker, new
+transactions, etc and so if a transaction doesn't kick it when it
+gest stuck like this, something else will.
+
+> If this is all on the right track, I'm still curious if/how you're
+> getting into a situation where all log reservation is held up in the CIL
+> before a couple background pushes occur.
+
+I'd guess that it could be reproduced via a single CPU machine and
+non-preempt kernel. We've already replayed all the unlink
+transactions, so the buffer/inode caches are fully primed. If all
+unlink removal transactions the buffer/inode cache, then it won't
+block anywhere and will never yield the CPU. Hence the CIL push
+kworker thread doesn't get to run before the unlinks run the log out
+of space.
 
 Cheers,
 
