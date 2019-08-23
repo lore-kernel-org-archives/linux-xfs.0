@@ -2,155 +2,98 @@ Return-Path: <SRS0=lWMA=WT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 934ECC3A5A2
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 17:15:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BB7EDC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 17:15:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 767FE2339D
-	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 17:15:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9558221019
+	for <linux-xfs@archiver.kernel.org>; Fri, 23 Aug 2019 17:15:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="blZ3otDA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732161AbfHWRPK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Aug 2019 13:15:10 -0400
-Received: from mga04.intel.com ([192.55.52.120]:6009 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726901AbfHWRPJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 23 Aug 2019 13:15:09 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 23 Aug 2019 10:15:08 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,422,1559545200"; 
-   d="scan'208";a="180736561"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga007.fm.intel.com with ESMTP; 23 Aug 2019 10:15:07 -0700
-Date:   Fri, 23 Aug 2019 10:15:04 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190823171504.GA1092@iweiny-DESK2.sc.intel.com>
-References: <20190815130558.GF14313@quack2.suse.cz>
- <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
- <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190823005914.GF1119@dread.disaster.area>
+        id S1733288AbfHWRPV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Aug 2019 13:15:21 -0400
+Received: from mail-io1-f66.google.com ([209.85.166.66]:44057 "EHLO
+        mail-io1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731264AbfHWRPU (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Aug 2019 13:15:20 -0400
+Received: by mail-io1-f66.google.com with SMTP id j4so13404375iog.11
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2019 10:15:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:in-reply-to:references:from:date:message-id:subject:to
+         :cc;
+        bh=SxHATtRu926HugxjAu6BiOlPt8IATF6kzeMEpmUwmWc=;
+        b=blZ3otDAIjHG7ycJLz+zd4Jofwj2etlStIogu+DHpa3jrnnKrJUwb6nFDGS4rCB4al
+         iAnojb0O2CnDDLyAGjsOUG0eSErnoxernFfnsBoZ1J/ozXrdVCDFKtzU6ZfDSSd8gU4j
+         1If6I75wP1kJno81uBpmRtxltmYOE65NFxlTtkxzGbSUfRwPF64IMZ5MWl99Nz8QoZaT
+         LRgW/2nBLiAXCTWZC5SKT5UoWHsDrAKe0sQfL61yg34LDgCnRHuZxJsiaruA4F2gQRHR
+         /98zJuc5/Q8tUoVueJQGNrkq1YGM/6hmwrZFFzx1Py4OWzs7BK4a8V5lQU485HK9Oii4
+         GFJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:in-reply-to:references:from:date
+         :message-id:subject:to:cc;
+        bh=SxHATtRu926HugxjAu6BiOlPt8IATF6kzeMEpmUwmWc=;
+        b=tHu9FzgTqmEcKoHmHZAfrZX+wGw95KxxZ7EJobaoEy0yGQUDJwTY3qW7mssZvnpwgm
+         FWqKthfnMthhf1LcYubvfhiVQVCiaA3yCZurmDKTzY5+GOS0cIfKCpkDAb8t/oyxBVkq
+         TfsgnDxBbTJUE+qYgeWndFcoXyapmZX4/FWAAe6XXVfJpCIqpjsYSua6rTLf16VyKnj7
+         8ttSc9kkUZ/RqKqXdmoKcA6UgbIlbaTewh6LROrdqBgSVt2B4nNFChuL+lhes4/skjL1
+         wyrqa5qFFrDGc6YFdDXP37xq1xoZ7Tr1/LvihYcPbfKOZspUteGcRPHhTYWbXKz3lDrQ
+         OnXA==
+X-Gm-Message-State: APjAAAVoHPuJRMN2CqsaUlxrVs0LXyro+mLxT3dbkmJZQrANyzIbJZhE
+        mZG2Z86h0zYU4IOrIzT8zctBytpZvrSqMK95w7s=
+X-Google-Smtp-Source: APXvYqwZqzrIqER/b+cnNyI/M8GMSd7WJncrZ3FefoF+esi1F9kSHQ6F3vxBo0qY0PSNiuQrQncAlZRo3SNmRTUvL9c=
+X-Received: by 2002:a5d:9a97:: with SMTP id c23mr8363807iom.260.1566580520026;
+ Fri, 23 Aug 2019 10:15:20 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190823005914.GF1119@dread.disaster.area>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+Received: by 2002:a02:d4a:0:0:0:0:0 with HTTP; Fri, 23 Aug 2019 10:15:19 -0700 (PDT)
+In-Reply-To: <CAHk-=wiE1zyj89=gpoCn8L0hy8WpS68s+13GOsHQ5Eq3DPWqEw@mail.gmail.com>
+References: <20190823035528.GH1037422@magnolia> <CAHk-=wiE1zyj89=gpoCn8L0hy8WpS68s+13GOsHQ5Eq3DPWqEw@mail.gmail.com>
+From:   Benjamin Moody <benjamin.moody@gmail.com>
+Date:   Fri, 23 Aug 2019 17:15:19 +0000
+Message-ID: <CAAk6P0Xhuyj+FBDWaYpj15RhfrgxAHG8uJxCkuCEbcR23_18Fg@mail.gmail.com>
+Subject: Re: [PATCH] xfs: fix missing ILOCK unlock when xfs_setattr_nonsize
+ fails due to EDQUOT
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Salvatore Bonaccorso <carnil@debian.org>,
+        Security Officers <security@kernel.org>,
+        Debian Security Team <team@security.debian.org>,
+        Ben Hutchings <benh@debian.org>,
+        Christoph Hellwig <hch@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 10:59:14AM +1000, Dave Chinner wrote:
-> On Wed, Aug 21, 2019 at 11:02:00AM -0700, Ira Weiny wrote:
-> > On Tue, Aug 20, 2019 at 08:55:15AM -0300, Jason Gunthorpe wrote:
-> > > On Tue, Aug 20, 2019 at 11:12:10AM +1000, Dave Chinner wrote:
-> > > > On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
-> > > > > On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
-> > > > > 
-> > > > > > So that leaves just the normal close() syscall exit case, where the
-> > > > > > application has full control of the order in which resources are
-> > > > > > released. We've already established that we can block in this
-> > > > > > context.  Blocking in an interruptible state will allow fatal signal
-> > > > > > delivery to wake us, and then we fall into the
-> > > > > > fatal_signal_pending() case if we get a SIGKILL while blocking.
-> > > > > 
-> > > > > The major problem with RDMA is that it doesn't always wait on close() for the
-> > > > > MR holding the page pins to be destoyed. This is done to avoid a
-> > > > > deadlock of the form:
-> > > > > 
-> > > > >    uverbs_destroy_ufile_hw()
-> > > > >       mutex_lock()
-> > > > >        [..]
-> > > > >         mmput()
-> > > > >          exit_mmap()
-> > > > >           remove_vma()
-> > > > >            fput();
-> > > > >             file_operations->release()
-> > > > 
-> > > > I think this is wrong, and I'm pretty sure it's an example of why
-> > > > the final __fput() call is moved out of line.
-> > > 
-> > > Yes, I think so too, all I can say is this *used* to happen, as we
-> > > have special code avoiding it, which is the code that is messing up
-> > > Ira's lifetime model.
-> > > 
-> > > Ira, you could try unraveling the special locking, that solves your
-> > > lifetime issues?
-> > 
-> > Yes I will try to prove this out...  But I'm still not sure this fully solves
-> > the problem.
-> > 
-> > This only ensures that the process which has the RDMA context (RDMA FD) is safe
-> > with regard to hanging the close for the "data file FD" (the file which has
-> > pinned pages) in that _same_ process.  But what about the scenario.
-> > 
-> > Process A has the RDMA context FD and data file FD (with lease) open.
-> > 
-> > Process A uses SCM_RIGHTS to pass the RDMA context FD to Process B.
-> 
-> Passing the RDMA context dependent on a file layout lease to another
-> process that doesn't have a file layout lease or a reference to the
-> original lease should be considered a violation of the layout lease.
-> Process B does not have an active layout lease, and so by the rules
-> of layout leases, it is not allowed to pin the layout of the file.
-> 
+On 8/23/19, Linus Torvalds <torvalds@linux-foundation.org> wrote:
+> On Thu, Aug 22, 2019 at 8:55 PM Darrick J. Wong <darrick.wong@oracle.com>
+> wrote:
+>>
+>> ...which is clearly caused by xfs_setattr_nonsize failing to unlock the
+>> ILOCK after the xfs_qm_vop_chown_reserve call fails.  Add the missing
+>> unlock.
+>
+> Thanks for the quick fix.
+>
+> I assume there's no real embargo on this, and we can just add it asap
+> to the xfs tree and mark it for stable, rather than do anything
+> outside the usual development path?
 
-I don't disagree with the semantics of this.  I just don't know how to enforce
-it.
+As the person who reported the issue, I don't see a problem with
+that.  I reported it to the Debian security team just to be on
+the safe side, in case the problem was something bigger than what
+I was seeing.
 
-> > Process A attempts to exit (hangs because data file FD is pinned).
-> > 
-> > Admin kills process A.  kill works because we have allowed for it...
-> > 
-> > Process B _still_ has the RDMA context FD open _and_ therefore still holds the
-> > file pins.
-> > 
-> > Truncation still fails.
-> > 
-> > Admin does not know which process is holding the pin.
-> > 
-> > What am I missing?
-> 
-> Application does not hold the correct file layout lease references.
-> Passing the fd via SCM_RIGHTS to a process without a layout lease
-> is equivalent to not using layout leases in the first place.
+I haven't yet tested the patch, but thank you, Darrick, for the
+quick response!
 
-Ok, So If I understand you correctly you would support a failure of SCM_RIGHTS
-in this case?  I'm ok with that but not sure how to implement it right now.
-
-To that end, I would like to simplify this slightly because I'm not convinced
-that SCM_RIGHTS is a problem we need to solve right now.  ie I don't know of a
-user who wants to do this.
-
-Right now duplication via SCM_RIGHTS could fail if _any_ file pins (and by
-definition leases) exist underneath the "RDMA FD" (or other direct access FD,
-like XDP etc) being duplicated.  Later, if this becomes a use case we will need
-to code up the proper checks, potentially within each of the subsystems.  This
-is because, with RDMA at least, there are potentially large numbers of MR's and
-file leases which may have to be checked.
-
-Ira
-
+Benjamin
