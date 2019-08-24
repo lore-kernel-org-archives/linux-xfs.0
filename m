@@ -2,167 +2,249 @@ Return-Path: <SRS0=f2ny=WU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2F3BC3A5A2
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Aug 2019 00:19:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B702EC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Aug 2019 02:21:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C6F6C2173B
-	for <linux-xfs@archiver.kernel.org>; Sat, 24 Aug 2019 00:19:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 718AD21726
+	for <linux-xfs@archiver.kernel.org>; Sat, 24 Aug 2019 02:21:35 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H5tsDi9y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726111AbfHXATy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 23 Aug 2019 20:19:54 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47613 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725886AbfHXATy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Aug 2019 20:19:54 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id A5FD843E73B;
-        Sat, 24 Aug 2019 10:19:46 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i1JlP-0007eP-Cg; Sat, 24 Aug 2019 10:18:39 +1000
-Date:   Sat, 24 Aug 2019 10:18:39 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190824001839.GJ1119@dread.disaster.area>
-References: <20190816190528.GB371@iweiny-DESK2.sc.intel.com>
- <20190817022603.GW6129@dread.disaster.area>
- <20190819063412.GA20455@quack2.suse.cz>
- <20190819092409.GM7777@dread.disaster.area>
- <20190819123841.GC5058@ziepe.ca>
- <20190820011210.GP7777@dread.disaster.area>
- <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190823005914.GF1119@dread.disaster.area>
- <20190823171504.GA1092@iweiny-DESK2.sc.intel.com>
+        id S1726385AbfHXCVf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 23 Aug 2019 22:21:35 -0400
+Received: from mail-pg1-f194.google.com ([209.85.215.194]:42087 "EHLO
+        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726111AbfHXCVe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 23 Aug 2019 22:21:34 -0400
+Received: by mail-pg1-f194.google.com with SMTP id p3so6782664pgb.9
+        for <linux-xfs@vger.kernel.org>; Fri, 23 Aug 2019 19:21:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=CeaUTY85fxTyh2AfMcEYRujcVq14tVtnSLD1MARzInU=;
+        b=H5tsDi9yxixfOhHCZnRdketVnZy+psqYg7Q1ytdYq2CMrw/T1EDz7OqXK135jsQxKU
+         FgUORYqp6N2ejmjSMGn2+i2XY7HGChsCq/2JGPr/EGk0xk+AoT/tC6N9a04SpF/2eRMA
+         O/Kou22KuJ3OORUCQ9Poggbh3Sq9F6NbrEcxYDr/kbowm+yLI8TJWniUz4521zdhkn11
+         BoVEboFgKDe80iepodsUM9Hl/XWi9rHAJTAYLHYZw0e8AkTXI+g8Io1pSzWsY1z3zaoE
+         zLRJqF3nIXaMUnu2zZu8I8ZvHEPSh5P+VKyNfZVIC821uyexEr1INrSQ9Jsn/LLYy73L
+         T13A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=CeaUTY85fxTyh2AfMcEYRujcVq14tVtnSLD1MARzInU=;
+        b=fwGPGwDBr+hqYCL206bpHF03ZzjZK+tr1Hh6znCl8Kryit74SsQGiBD92W4Wt+x3xf
+         hl8ls8aAFjYEXT3sRpgSxG6E0V7yKkFFAJaDFq2pmWF1qxNtQGRvdbA+tPac3jP89YK+
+         RWvyNQaqo2oS93K9PuJ8fh0OY19YgFwmNoJcloVBSHMRaToUJSWR9RdFTk2+HLJFmwPC
+         z5OCevEPxwFXg5KNlnZdjLypM2s/NruykcFoUgdppquuCX7i9IYvjFOfULpAWh8oIBSA
+         3mfqgKqGj3O3bddlGU5Vpq8spME6nYcTT4Ml6/dW81XT5nJy+CmuXjI/4akerMuz62MO
+         rlWw==
+X-Gm-Message-State: APjAAAU18oj5hvmN2G61F6+KMk+n2K+ZGsAJhu6xnp9tc1yXHp7znZlA
+        GofunHk52VyycOWUHwnOkQ==
+X-Google-Smtp-Source: APXvYqyOFFvbGIphQ0KxtKY5Lvl95sJ3TX80n1XH346U4snlryWLJBs55yutLN5H+5xWZAjZQnpo6A==
+X-Received: by 2002:a62:be0c:: with SMTP id l12mr8712244pff.224.1566613293932;
+        Fri, 23 Aug 2019 19:21:33 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id f7sm3960181pfd.43.2019.08.23.19.21.31
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 23 Aug 2019 19:21:33 -0700 (PDT)
+Subject: Re: [PATCH] xfs: Fix ABBA deadlock between AGI and AGF in rename()
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <david@fromorbit.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+References: <08753b9e-4da1-ca61-af12-0b4aad8ed516@gmail.com>
+ <20190823140713.GA54025@bfoster>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <318da25c-06d2-e22f-3cae-ae130f1bb013@gmail.com>
+Date:   Sat, 24 Aug 2019 10:21:28 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190823171504.GA1092@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=QZy_m0AoVJ59bLp0kawA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190823140713.GA54025@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 10:15:04AM -0700, Ira Weiny wrote:
-> On Fri, Aug 23, 2019 at 10:59:14AM +1000, Dave Chinner wrote:
-> > On Wed, Aug 21, 2019 at 11:02:00AM -0700, Ira Weiny wrote:
-> > > On Tue, Aug 20, 2019 at 08:55:15AM -0300, Jason Gunthorpe wrote:
-> > > > On Tue, Aug 20, 2019 at 11:12:10AM +1000, Dave Chinner wrote:
-> > > > > On Mon, Aug 19, 2019 at 09:38:41AM -0300, Jason Gunthorpe wrote:
-> > > > > > On Mon, Aug 19, 2019 at 07:24:09PM +1000, Dave Chinner wrote:
-> > > > > > 
-> > > > > > > So that leaves just the normal close() syscall exit case, where the
-> > > > > > > application has full control of the order in which resources are
-> > > > > > > released. We've already established that we can block in this
-> > > > > > > context.  Blocking in an interruptible state will allow fatal signal
-> > > > > > > delivery to wake us, and then we fall into the
-> > > > > > > fatal_signal_pending() case if we get a SIGKILL while blocking.
-> > > > > > 
-> > > > > > The major problem with RDMA is that it doesn't always wait on close() for the
-> > > > > > MR holding the page pins to be destoyed. This is done to avoid a
-> > > > > > deadlock of the form:
-> > > > > > 
-> > > > > >    uverbs_destroy_ufile_hw()
-> > > > > >       mutex_lock()
-> > > > > >        [..]
-> > > > > >         mmput()
-> > > > > >          exit_mmap()
-> > > > > >           remove_vma()
-> > > > > >            fput();
-> > > > > >             file_operations->release()
-> > > > > 
-> > > > > I think this is wrong, and I'm pretty sure it's an example of why
-> > > > > the final __fput() call is moved out of line.
-> > > > 
-> > > > Yes, I think so too, all I can say is this *used* to happen, as we
-> > > > have special code avoiding it, which is the code that is messing up
-> > > > Ira's lifetime model.
-> > > > 
-> > > > Ira, you could try unraveling the special locking, that solves your
-> > > > lifetime issues?
-> > > 
-> > > Yes I will try to prove this out...  But I'm still not sure this fully solves
-> > > the problem.
-> > > 
-> > > This only ensures that the process which has the RDMA context (RDMA FD) is safe
-> > > with regard to hanging the close for the "data file FD" (the file which has
-> > > pinned pages) in that _same_ process.  But what about the scenario.
-> > > 
-> > > Process A has the RDMA context FD and data file FD (with lease) open.
-> > > 
-> > > Process A uses SCM_RIGHTS to pass the RDMA context FD to Process B.
-> > 
-> > Passing the RDMA context dependent on a file layout lease to another
-> > process that doesn't have a file layout lease or a reference to the
-> > original lease should be considered a violation of the layout lease.
-> > Process B does not have an active layout lease, and so by the rules
-> > of layout leases, it is not allowed to pin the layout of the file.
-> > 
+
+
+On 2019/8/23 22:07, Brian Foster wrote:
+> On Fri, Aug 23, 2019 at 12:56:53PM +0800, kaixuxia wrote:
+>> When performing rename operation with RENAME_WHITEOUT flag, we will
+>> hold AGF lock to allocate or free extents in manipulating the dirents
+>> firstly, and then doing the xfs_iunlink_remove() call last to hold
+>> AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+>>
+>> The big problem here is that we have an ordering constraint on AGF
+>> and AGI locking - inode allocation locks the AGI, then can allocate
+>> a new extent for new inodes, locking the AGF after the AGI. Hence
+>> the ordering that is imposed by other parts of the code is AGI before
+>> AGF. So we get an ABBA deadlock between the AGI and AGF here.
+>>
+> ...
+>>
+>> In this patch we move the xfs_iunlink_remove() call to
+>> before acquiring the AGF lock to preserve correct AGI/AGF locking
+>> order.
+>>
+>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+>> ---
+>>  fs/xfs/xfs_inode.c | 85 +++++++++++++++++++++++++++---------------------------
+>>  1 file changed, 43 insertions(+), 42 deletions(-)
+>>
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 6467d5e..584b9d1 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -3282,9 +3282,10 @@ struct xfs_iunlink {
+>>  					spaceres);
+>>  
+>>  	/*
+>> -	 * Set up the target.
+>> +	 * Check for expected errors before we dirty the transaction
+>> +	 * so we can return an error without a transaction abort.
+>>  	 */
+>> -	if (target_ip == NULL) {
+>> +	if (!target_ip) {
 > 
-> I don't disagree with the semantics of this.  I just don't know how to enforce
-> it.
+> Not sure there's really a point to this change now.
 > 
-> > > Process A attempts to exit (hangs because data file FD is pinned).
-> > > 
-> > > Admin kills process A.  kill works because we have allowed for it...
-> > > 
-> > > Process B _still_ has the RDMA context FD open _and_ therefore still holds the
-> > > file pins.
-> > > 
-> > > Truncation still fails.
-> > > 
-> > > Admin does not know which process is holding the pin.
-> > > 
-> > > What am I missing?
-> > 
-> > Application does not hold the correct file layout lease references.
-> > Passing the fd via SCM_RIGHTS to a process without a layout lease
-> > is equivalent to not using layout leases in the first place.
+>>  		/*
+>>  		 * If there's no space reservation, check the entry will
+>>  		 * fit before actually inserting it.
+>> @@ -3294,6 +3295,46 @@ struct xfs_iunlink {
+>>  			if (error)
+>>  				goto out_trans_cancel;
+>>  		}
+>> +	} else {
+>> +		/*
+>> +		 * If target exists and it's a directory, check that whether
+>> +		 * it can be destroyed.
+>> +		 */
+>> +		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
+>> +		    (!(xfs_dir_isempty(target_ip)) ||
+>> +		    (VFS_I(target_ip)->i_nlink > 2))) {
 > 
-> Ok, So If I understand you correctly you would support a failure of SCM_RIGHTS
-> in this case?  I'm ok with that but not sure how to implement it right now.
+> ^ This line needs one more space of indent because it's encapsulated by
+> the opening brace one line up. The braces around xfs_dir_isempty() also
+> look spurious, FWIW. With those nits fixed, the rest looks good to me:
 > 
-> To that end, I would like to simplify this slightly because I'm not convinced
-> that SCM_RIGHTS is a problem we need to solve right now.  ie I don't know of a
-> user who wants to do this.
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-I don't think we can support it, let alone want to. SCM_RIGHTS was a
-mistake made years ago that has been causing bugs and complexity to
-try and avoid those bugs ever since.  I'm only taking about it
-because someone else raised it and I asummed they raised it because
-they want it to "work".
+Thanks! I will send the new patch to address them with your 
+Reviewed-by.
+> 
+> Thanks for the patch.
+> 
+> Brian
+> 
+>> +			error = -EEXIST;
+>> +			goto out_trans_cancel;
+>> +		}
+>> +	}
+>> +
+>> +	/*
+>> +	 * Directory entry creation below may acquire the AGF. Remove
+>> +	 * the whiteout from the unlinked list first to preserve correct
+>> +	 * AGI/AGF locking order. This dirties the transaction so failures
+>> +	 * after this point will abort and log recovery will clean up the
+>> +	 * mess.
+>> +	 *
+>> +	 * For whiteouts, we need to bump the link count on the whiteout
+>> +	 * inode. After this point, we have a real link, clear the tmpfile
+>> +	 * state flag from the inode so it doesn't accidentally get misused
+>> +	 * in future.
+>> +	 */
+>> +	if (wip) {
+>> +		ASSERT(VFS_I(wip)->i_nlink == 0);
+>> +		error = xfs_iunlink_remove(tp, wip);
+>> +		if (error)
+>> +			goto out_trans_cancel;
+>> +
+>> +		xfs_bumplink(tp, wip);
+>> +		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+>> +		VFS_I(wip)->i_state &= ~I_LINKABLE;
+>> +	}
+>> +
+>> +	/*
+>> +	 * Set up the target.
+>> +	 */
+>> +	if (target_ip == NULL) {
+>>  		/*
+>>  		 * If target does not exist and the rename crosses
+>>  		 * directories, adjust the target directory link count
+>> @@ -3312,22 +3353,6 @@ struct xfs_iunlink {
+>>  		}
+>>  	} else { /* target_ip != NULL */
+>>  		/*
+>> -		 * If target exists and it's a directory, check that both
+>> -		 * target and source are directories and that target can be
+>> -		 * destroyed, or that neither is a directory.
+>> -		 */
+>> -		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
+>> -			/*
+>> -			 * Make sure target dir is empty.
+>> -			 */
+>> -			if (!(xfs_dir_isempty(target_ip)) ||
+>> -			    (VFS_I(target_ip)->i_nlink > 2)) {
+>> -				error = -EEXIST;
+>> -				goto out_trans_cancel;
+>> -			}
+>> -		}
+>> -
+>> -		/*
+>>  		 * Link the source inode under the target name.
+>>  		 * If the source inode is a directory and we are moving
+>>  		 * it across directories, its ".." entry will be
+>> @@ -3417,30 +3442,6 @@ struct xfs_iunlink {
+>>  	if (error)
+>>  		goto out_trans_cancel;
+>>  
+>> -	/*
+>> -	 * For whiteouts, we need to bump the link count on the whiteout inode.
+>> -	 * This means that failures all the way up to this point leave the inode
+>> -	 * on the unlinked list and so cleanup is a simple matter of dropping
+>> -	 * the remaining reference to it. If we fail here after bumping the link
+>> -	 * count, we're shutting down the filesystem so we'll never see the
+>> -	 * intermediate state on disk.
+>> -	 */
+>> -	if (wip) {
+>> -		ASSERT(VFS_I(wip)->i_nlink == 0);
+>> -		xfs_bumplink(tp, wip);
+>> -		error = xfs_iunlink_remove(tp, wip);
+>> -		if (error)
+>> -			goto out_trans_cancel;
+>> -		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+>> -
+>> -		/*
+>> -		 * Now we have a real link, clear the "I'm a tmpfile" state
+>> -		 * flag from the inode so it doesn't accidentally get misused in
+>> -		 * future.
+>> -		 */
+>> -		VFS_I(wip)->i_state &= ~I_LINKABLE;
+>> -	}
+>> -
+>>  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>>  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+>>  	if (new_parent)
+>> -- 
+>> 1.8.3.1
+>>
+>> -- 
+>> kaixuxia
 
-> Right now duplication via SCM_RIGHTS could fail if _any_ file pins (and by
-> definition leases) exist underneath the "RDMA FD" (or other direct access FD,
-> like XDP etc) being duplicated.
-
-Sounds like a fine idea to me.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+kaixuxia
