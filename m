@@ -2,117 +2,114 @@ Return-Path: <SRS0=G8Dq=WV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D82F8C3A59E
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Aug 2019 03:13:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0F21C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Aug 2019 13:42:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA8A5214AF
-	for <linux-xfs@archiver.kernel.org>; Sun, 25 Aug 2019 03:13:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 761FD20870
+	for <linux-xfs@archiver.kernel.org>; Sun, 25 Aug 2019 13:42:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="Cbi6lx0+";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="UHXVHona"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="elDWHFcX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728243AbfHYDNW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 24 Aug 2019 23:13:22 -0400
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:43047 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727941AbfHYDNV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 24 Aug 2019 23:13:21 -0400
-Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
-        by mailout.nyi.internal (Postfix) with ESMTP id ED07C20EB0;
-        Sat, 24 Aug 2019 23:13:20 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute6.internal (MEProxy); Sat, 24 Aug 2019 23:13:20 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
-        date:from:to:cc:subject:message-id:references:mime-version
-        :content-type:in-reply-to; s=fm1; bh=dknbcyoZeFLLBhXxWIjkGwOLVSf
-        M1TAYdlB/lnK7ZMU=; b=Cbi6lx0+Js3KXLTawxk9BlaBSzHk4XPte/36i5R1SnQ
-        pn8fwFES463HHkAb6eGge/XtXhZ7mhSmhNCfQa9lgM1rpyyuOxrsvKiAEQ2/tAzA
-        d3AQUxza7mGFG03Bys64fzm1ou8pf/Kgz06U6KfvEAemqPrZSuSSjIhDtnQVz9J6
-        p5bn0rApGJVjZ/0oLv8AzVhkGKF+7wwNRwZrqNMjGLrJL/5a5QvVpHza0YPNLgaD
-        7fQWX/WnwLebODsCEezwTwsWTjFrzwypuQYafHkezWEV0n1qQGJafJKycSjTsEuI
-        wZbPqZx74dxqzwdhUpGMfh7WItDU9W35v6oLT1CEreg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-type:date:from:in-reply-to
-        :message-id:mime-version:references:subject:to:x-me-proxy
-        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; bh=dknbcy
-        oZeFLLBhXxWIjkGwOLVSfM1TAYdlB/lnK7ZMU=; b=UHXVHonarZRnRYKgZUyhrP
-        bB2iN+ooSqPzW3HLtHlcx/tGh/VsPG/Tfy+gTX6ELi+r7EdYPevv7l4kfTKF50wm
-        Bzr8jtNpkd1qfnjwMi0Tgo9hrMC/DxHdwKhWjtyIlalYtgGn8KywycCcbm2tWAoz
-        NOHfmyY7vdf8/tys6Ak/X4/33zxuNQns9YDuNhNNvuqqZKlEfaTda1xcbiHiOpvt
-        oYuR8X4i79IovUNCPMtFhRtpcLuwBCGOIa+uwtXzqly1aduvw9qB6RP14+erkIJS
-        ILsjipMEPj1/bxPBTUtzU1JYFL+mnzYkPQeDiOLh0S5i88eKCWYJOY6Zk1US5CmA
-        ==
-X-ME-Sender: <xms:0PxhXfBbPjTltJEeMLZl4Hqx4FhjnXcSNJWBqnEmPRn-8VAqk93Kbg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduvddrudehuddgieelucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepfffhvffukfhfgggtuggjfgesthdtredttdervdenucfhrhhomhepifhrvghg
-    ucfmjfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecukfhppeekfedrkeeirdekledrud
-    dtjeenucfrrghrrghmpehmrghilhhfrhhomhepghhrvghgsehkrhhorghhrdgtohhmnecu
-    vehluhhsthgvrhfuihiivgeptd
-X-ME-Proxy: <xmx:0PxhXZN_Bb0y84XuoERlR3lIitQd6Y_tTkpSk4y6ZzYKACXBuewh-g>
-    <xmx:0PxhXVpxy3dth6kdluhmstqjNNQkA3Ri9Ri4MrfTyHpIewlesNXBmw>
-    <xmx:0PxhXfP-5g9Kwy_s9V4h5JSpwYZsrNRnYM2by_G3SqReGT2pNU2QFQ>
-    <xmx:0PxhXSXS9snK7hRE76GvIhi_FW89mizO6WrM0yMLzgx9QKM42eIurw>
-Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 2F854D6005B;
-        Sat, 24 Aug 2019 23:13:20 -0400 (EDT)
-Date:   Sun, 25 Aug 2019 05:13:18 +0200
-From:   Greg KH <greg@kroah.com>
-To:     Linus Torvalds <torvalds@linux-foundation.org>
-Cc:     Salvatore Bonaccorso <carnil@debian.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Security Officers <security@kernel.org>,
-        Debian Security Team <team@security.debian.org>,
-        benjamin.moody@gmail.com, Ben Hutchings <benh@debian.org>,
-        Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] xfs: fix missing ILOCK unlock when xfs_setattr_nonsize
- fails due to EDQUOT
-Message-ID: <20190825031318.GB2590@kroah.com>
-References: <20190823035528.GH1037422@magnolia>
- <20190823192433.GA8736@eldamar.local>
- <CAHk-=wj2hX9Qohd8OFxjsOZEzhp4WwjDvvh3_jRw600xf=KhVw@mail.gmail.com>
+        id S1727749AbfHYNmH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 25 Aug 2019 09:42:07 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:46567 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727050AbfHYNmH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 25 Aug 2019 09:42:07 -0400
+Received: by mail-pg1-f193.google.com with SMTP id m3so8735280pgv.13;
+        Sun, 25 Aug 2019 06:42:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=o5pCbY5E8C+OJFZcqJHFZSYbH1+aXSJ5fCYxJd3QXOA=;
+        b=elDWHFcX9ZnlIgg+h1I9/Yqsw7MJGo3U5IrF8+khWUeBfojjcUVbGxbshc+xKJMtvQ
+         n9sQhQt0zcqye6ObEbZ4dUWzhLRfH9TD64Xb+DmuLPYRStDMFH5R5ZHwE8KNliR2VmM/
+         J0rzJIR57xBj7DMSz/9p0oD2s1fQYwbrnT+x73rrgveRwLkFuzZZ8/E3AwuVXZU8KJK2
+         E8UgRXYqoCihNhAaF+wW/mf5/vo87d5Z2geCv6RYjCbQJyDV+43gJwF+DaJMwECdzvoK
+         NljtQpw4nm+07fbYpKR0Z6KrAaem8oRoHGS++9ka4bHdT2t8Be3Csqsj7sk9+MoqW6/u
+         dG5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=o5pCbY5E8C+OJFZcqJHFZSYbH1+aXSJ5fCYxJd3QXOA=;
+        b=n6F4uRk2hY47AynDYrbNPwwuGk1mvGbbivQqX6XfBY3HLAr8q2StKMkt8z/xToJsrZ
+         KW4T1kv+OIkflkO6tMiWThPG9VHEo+A7IC52bhWeqPVpnQZCVrFn46ZwOE759UDqDPqQ
+         PvPR0lDySARe67wTIkvepDPuRnrJS+QyU0q73htL4r0QFG0c+PpC4YVvsIe0TAft2mg8
+         jwKX7UUSPAMLMudjSBtaVgntpjVQDJ86i4h2hpQQ5hi0jZ0ODy6k+WM+PbM5Zyejt4Z9
+         V1odSCmLxTuEe08IhxZOiDEEWveM31O7DbOZb7g8RLXSccwFdrXEo9vAPGVkBDHNbEho
+         kxlQ==
+X-Gm-Message-State: APjAAAVMcJcY22bCxlTmHteC6kF90P4lEAqK0341DWScMspq82yzkzAi
+        AueNzRdbveb7coQxDz77M10=
+X-Google-Smtp-Source: APXvYqyQ3I7cuy8OIAt776RDSOTdNmQEWqAFr2hrfrMtmXxEm4aRU8TWxp5itKfSCKrlrBJFflAOgg==
+X-Received: by 2002:a62:1444:: with SMTP id 65mr15027153pfu.145.1566740526921;
+        Sun, 25 Aug 2019 06:42:06 -0700 (PDT)
+Received: from localhost ([178.128.102.47])
+        by smtp.gmail.com with ESMTPSA id v8sm8621566pjb.6.2019.08.25.06.42.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 25 Aug 2019 06:42:05 -0700 (PDT)
+Date:   Sun, 25 Aug 2019 21:41:54 +0800
+From:   Eryu Guan <guaneryu@gmail.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Carlos Maiolino <cmaiolino@redhat.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] t_stripealign: Fix fibmap error handling
+Message-ID: <20190825134154.GB2622@desktop>
+References: <20190823092530.11797-1-cmaiolino@redhat.com>
+ <20190823143650.GI1037350@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <CAHk-=wj2hX9Qohd8OFxjsOZEzhp4WwjDvvh3_jRw600xf=KhVw@mail.gmail.com>
+In-Reply-To: <20190823143650.GI1037350@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 24, 2019 at 11:44:44AM -0700, Linus Torvalds wrote:
-> On Fri, Aug 23, 2019 at 12:24 PM Salvatore Bonaccorso <carnil@debian.org> wrote:
-> >
-> > Confirmed the fix work.
-> >
-> > Feel free to add a Tested-by if wanted.
-> >
-> > Can this be backported to the relevant stable versions as well?
+On Fri, Aug 23, 2019 at 07:36:50AM -0700, Darrick J. Wong wrote:
+> On Fri, Aug 23, 2019 at 11:25:30AM +0200, Carlos Maiolino wrote:
+> > FIBMAP only returns a negative value when the underlying filesystem does
+> > not support FIBMAP or on permission error. For the remaining errors,
+> > i.e. those usually returned from the filesystem itself, zero will be
+> > returned.
+> > 
+> > We can not trust a zero return from the FIBMAP, and such behavior made
+> > generic/223 succeed when it should not.
+> > 
+> > Also, we can't use perror() only to print errors when FIBMAP failed, or
+> > it will simply print 'success' when a zero is returned.
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
+> >  src/t_stripealign.c | 7 +++++--
+> >  1 file changed, 5 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/src/t_stripealign.c b/src/t_stripealign.c
+> > index 5cdadaae..164831f8 100644
+> > --- a/src/t_stripealign.c
+> > +++ b/src/t_stripealign.c
+> > @@ -76,8 +76,11 @@ int main(int argc, char ** argv)
+> >  		unsigned int	bmap = 0;
+> >  
+> >  		ret = ioctl(fd, FIBMAP, &bmap);
+> > -		if (ret < 0) {
+> > -			perror("fibmap");
+> > +		if (ret <= 0) {
+> > +			if (ret < 0)
+> > +				perror("fibmap");
+> > +			else
+> > +				fprintf(stderr, "fibmap error\n");
 > 
-> It's out there in my tree now. It's not explicitly marked for stable
-> per se, but it does have the "Fixes:" tag which should mean that Greg
-> and Sasha will pick it up automatically.
-> 
-> But just to make it explicit, since Greg is on the security list,
-> Darrick's fix is commit 1fb254aa983b ("xfs: fix missing ILOCK unlock
-> when xfs_setattr_nonsize fails due to EDQUOT").
+> "fibmap returned no result"?
 
-Thanks, I'll pick this up.
+Fixed on commit. Thanks!
 
-Note, "Fixes:" will never guarantee that a patch ends up in a stable
-release.  Sasha's scripts usually do a good job of catching a lot of
-them a week or so after-the-fact, but they are not guaranteed to do so.
-A CC: stable@ will always be caught by me, and I try to ensure that
-anything goes across the security@k.o list also gets picked up.
-
-thanks,
-
-greg k-h
+Eryu
