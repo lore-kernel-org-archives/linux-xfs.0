@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 59D5BC3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:30:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 509E1C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:30:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2960A21872
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:30:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1DFB52186A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:30:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MamS7JeL"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KzcCEqgU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728431AbfHZVaC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:30:02 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:33536 "EHLO
+        id S1728651AbfHZVaI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:30:08 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33650 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728649AbfHZVaC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:30:02 -0400
+        with ESMTP id S1728649AbfHZVaI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:30:08 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLDmsf000886;
-        Mon, 26 Aug 2019 21:30:00 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLDmif000900;
+        Mon, 26 Aug 2019 21:30:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=ZyAsPqSRv2iqxiL5+3N3+IWCjON64tVFNYNj2JNfG1E=;
- b=MamS7JeLF7PF2T6dL4igU+Qlce3TEcMD+S4CDU9oXIGwoXU1yLFqFkKsHPuPSOzpUi4Y
- HS3Mlxt9BjaecJC7WlOMN7GeyJXK8vmGPrS6pBgEEL8qSo9cNkvYLHWxQWe2uRStW2KF
- LvxT979ZPljfOh5xoPqx5kvp2MnIrVD9eC3KlXY+T14EmDcQzlQIyA0/U0DLoPhJeFz1
- AKwYQ5SIm4Iq3FVj5vZVQswW2WbAUDjsRQCvWowjVSHutk4jtgGipngnRfm8jHdrVAJ0
- 7iuY/IJX+4YwyixC6MtnxvR9ZMplktvL2hM/bUkQXoZlSIF8W8ui/avQe3iTWRWbVPaV fw== 
+ bh=c91cMDQaepibcKZys68185Vbwxp/s7TOXxyCzKCGv/E=;
+ b=KzcCEqgUhpLNNFekyrYhpUYLlMykSi70IhAGEukLVfMsxbODR89Zaa1mNVhSlsHMM/ob
+ +iV4wa0nCRgqVcOAc+z0c427srJQTTvOWXCsBSwq9POc6IYlYgkl+eUOUF0wGy9EUe46
+ H48oHoEO5rx8lzG2vVdDmoXWjrCxzW6SJRYquBomXL6n2LMIH+Ah3c3SdobDnZ3JEOqV
+ 6N5v3OfILXUR86FVkORmoEzKXFDq8vys80i6vMSZguwsebgri42bjzxY3kj1JG99F4uj
+ WeCVsk+CnKIHP/G8CZZ3GXuf8jToPQ9x1kwhryx+mH4sADH0Rvyt8YqzhSxiDwdpLCY7 kQ== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2umpxx05df-1
+        by aserp2120.oracle.com with ESMTP id 2umpxx05dw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:30:00 +0000
+        Mon, 26 Aug 2019 21:30:06 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIRPT024992;
-        Mon, 26 Aug 2019 21:29:59 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2umj1tk6ru-1
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIRaw025026;
+        Mon, 26 Aug 2019 21:30:05 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2umj1tk71f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:29:59 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLTw5A006492;
-        Mon, 26 Aug 2019 21:29:58 GMT
+        Mon, 26 Aug 2019 21:30:05 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7QLU4BL004385;
+        Mon, 26 Aug 2019 21:30:04 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:29:58 -0700
-Subject: [PATCH 01/11] xfs_scrub: fix handling of read-verify pool runtime
- errors
+        with ESMTP ; Mon, 26 Aug 2019 14:30:04 -0700
+Subject: [PATCH 02/11] xfs_scrub: abort all read verification work
+ immediately on error
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:29:57 -0700
-Message-ID: <156685499722.2841898.17281881491093468208.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:30:03 -0700
+Message-ID: <156685500339.2841898.8444017253685790369.stgit@magnolia>
 In-Reply-To: <156685499099.2841898.18430382226915450537.stgit@magnolia>
 References: <156685499099.2841898.18430382226915450537.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,87 +81,74 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fix some bogosity with how we handle runtime errors in the read verify
-pool functions.  First of all, memory allocation failures shouldn't be
-recorded as disk IO errors, they should just complain and abort the
-phase.  Second, we need to collect any other runtime errors in the IO
-thread and abort the phase instead of silently ignoring them.
+Add a new abort function to the read verify pool code so that the caller
+can immediately abort all pending verification work if things start
+going wrong.  There's no point in waiting for queued work to run if
+we've already decided to bail.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/read_verify.c |   23 +++++++++++++++++++----
- 1 file changed, 19 insertions(+), 4 deletions(-)
+ scrub/phase6.c      |    6 +++---
+ scrub/read_verify.c |   10 ++++++++++
+ scrub/read_verify.h |    1 +
+ 3 files changed, 14 insertions(+), 3 deletions(-)
 
 
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 35dda1f9..00b13d34 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -514,16 +514,16 @@ _("Could not create data device media verifier."));
+ 
+ out_rtpool:
+ 	if (vs.rvp_realtime) {
+-		read_verify_pool_flush(vs.rvp_realtime);
++		read_verify_pool_abort(vs.rvp_realtime);
+ 		read_verify_pool_destroy(vs.rvp_realtime);
+ 	}
+ out_logpool:
+ 	if (vs.rvp_log) {
+-		read_verify_pool_flush(vs.rvp_log);
++		read_verify_pool_abort(vs.rvp_log);
+ 		read_verify_pool_destroy(vs.rvp_log);
+ 	}
+ out_datapool:
+-	read_verify_pool_flush(vs.rvp_data);
++	read_verify_pool_abort(vs.rvp_data);
+ 	read_verify_pool_destroy(vs.rvp_data);
+ out_rbad:
+ 	bitmap_free(&vs.r_bad);
 diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 425342b4..573bc4e0 100644
+index 573bc4e0..82d4a16a 100644
 --- a/scrub/read_verify.c
 +++ b/scrub/read_verify.c
-@@ -53,6 +53,7 @@ struct read_verify_pool {
- 	struct disk		*disk;		/* which disk? */
- 	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
- 	size_t			miniosz;	/* minimum io size, bytes */
-+	int			errors_seen;
- };
- 
- /*
-@@ -91,6 +92,7 @@ read_verify_pool_init(
- 	rvp->ctx = ctx;
- 	rvp->disk = disk;
- 	rvp->ioerr_fn = ioerr_fn;
-+	rvp->errors_seen = false;
- 	error = ptvar_alloc(submitter_threads, sizeof(struct read_verify),
- 			&rvp->rvstate);
- 	if (error)
-@@ -149,6 +151,7 @@ read_verify(
- 	unsigned long long		verified = 0;
- 	ssize_t				sz;
- 	ssize_t				len;
-+	int				ret;
- 
- 	rvp = (struct read_verify_pool *)wq->wq_ctx;
- 	while (rv->io_length > 0) {
-@@ -173,7 +176,12 @@ read_verify(
- 	}
- 
- 	free(rv);
--	ptcounter_add(rvp->verified_bytes, verified);
-+	ret = ptcounter_add(rvp->verified_bytes, verified);
-+	if (ret) {
-+		str_liberror(rvp->ctx, ret,
-+				_("updating bytes verified counter"));
-+		rvp->errors_seen = true;
-+	}
+@@ -117,6 +117,16 @@ read_verify_pool_init(
+ 	return NULL;
  }
  
- /* Queue a read verify request. */
-@@ -188,18 +196,25 @@ read_verify_queue(
- 	dbg_printf("verify fd %d start %"PRIu64" len %"PRIu64"\n",
- 			rvp->disk->d_fd, rv->io_start, rv->io_length);
- 
-+	/* Worker thread saw a runtime error, don't queue more. */
-+	if (rvp->errors_seen)
-+		return false;
++/* Abort all verification work. */
++void
++read_verify_pool_abort(
++	struct read_verify_pool		*rvp)
++{
++	if (!rvp->errors_seen)
++		rvp->errors_seen = ECANCELED;
++	workqueue_terminate(&rvp->wq);
++}
 +
-+	/* Otherwise clone the request and queue the copy. */
- 	tmp = malloc(sizeof(struct read_verify));
- 	if (!tmp) {
--		rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start,
--				rv->io_length, errno, rv->io_end_arg);
--		return true;
-+		str_errno(rvp->ctx, _("allocating read-verify request"));
-+		rvp->errors_seen = true;
-+		return false;
- 	}
-+
- 	memcpy(tmp, rv, sizeof(*tmp));
+ /* Finish up any read verification work. */
+ void
+ read_verify_pool_flush(
+diff --git a/scrub/read_verify.h b/scrub/read_verify.h
+index 5fabe5e0..f0ed8902 100644
+--- a/scrub/read_verify.h
++++ b/scrub/read_verify.h
+@@ -19,6 +19,7 @@ struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
+ 		struct disk *disk, size_t miniosz,
+ 		read_verify_ioerr_fn_t ioerr_fn,
+ 		unsigned int submitter_threads);
++void read_verify_pool_abort(struct read_verify_pool *rvp);
+ void read_verify_pool_flush(struct read_verify_pool *rvp);
+ void read_verify_pool_destroy(struct read_verify_pool *rvp);
  
- 	ret = workqueue_add(&rvp->wq, read_verify, 0, tmp);
- 	if (ret) {
- 		str_liberror(rvp->ctx, ret, _("queueing read-verify work"));
- 		free(tmp);
-+		rvp->errors_seen = true;
- 		return false;
- 	}
- 	rv->io_length = 0;
 
