@@ -2,180 +2,120 @@ Return-Path: <SRS0=ZZxK=WW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 62453C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 05:55:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B8E2C3A59E
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 06:48:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 37D3421848
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 05:55:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 22DA6206BA
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 06:48:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729204AbfHZFzV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 01:55:21 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:36676 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725806AbfHZFzV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 01:55:21 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 1199A43F692;
-        Mon, 26 Aug 2019 15:55:12 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i27yA-0002Rg-EJ; Mon, 26 Aug 2019 15:55:10 +1000
-Date:   Mon, 26 Aug 2019 15:55:10 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190826055510.GL1119@dread.disaster.area>
-References: <20190820115515.GA29246@ziepe.ca>
- <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190821181343.GH8653@ziepe.ca>
- <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
- <20190821194810.GI8653@ziepe.ca>
- <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
- <20190823032345.GG1119@dread.disaster.area>
- <20190823120428.GA12968@ziepe.ca>
- <20190824001124.GI1119@dread.disaster.area>
- <20190824050836.GC1092@iweiny-DESK2.sc.intel.com>
+        id S1728033AbfHZGsv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 02:48:51 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:54420 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727933AbfHZGsv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Aug 2019 02:48:51 -0400
+Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com [209.85.128.71])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2CB0B80F79
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 06:48:51 +0000 (UTC)
+Received: by mail-wm1-f71.google.com with SMTP id c11so3836949wml.6
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Aug 2019 23:48:51 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=CcFDbD9TUQ2fa08YKYlJuwV0y2lJ4AYtyELPlx8Ewoo=;
+        b=RSv3KY1sc+BN/YKPDgQhWr0LbsLD9ozur8O5rOk1oWEld5ZuDEm854auBVeZG2ZFRW
+         ReC81fEzG8FkkZgiCiWapliCLkAEZQYn1rN/r9cxPnvj0MYw2TxIPTM7wYAWCNDJfMnA
+         RL7FJkH4AEr5WfsVVFA7ZTr44IzrQjuuU6dQvPO/3ywqdVqnI1OCcJqjlNYnPOj3HMfm
+         bFS+9+Xr+uuT09Ad/Ogr2S3DnMLKxRscUGEE6E8cUd0GEbZfFPNBoBIuJ+zPm2XokcbW
+         q7i0CbaexUM3mnEFE3ccGrMoFz1ZSGcXTxfbjzI41gha9l4dwSzXJ4b/eaynzGBrVt89
+         fi7Q==
+X-Gm-Message-State: APjAAAVuYK2JyOb52JaLgevso2cp8uYO9S6NSe5jMsLug2uLlNQxkeR9
+        AssNgGzr8albxch7XylD1h25S+ep64orwLmhei/VI64afXgoghXw1jVgnfSryq2luVfs1kOfl6E
+        n1es90JhmF0OYngyJsgSX
+X-Received: by 2002:a05:6000:4f:: with SMTP id k15mr19683742wrx.221.1566802129921;
+        Sun, 25 Aug 2019 23:48:49 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqwxbzsHGoiKFsZvDx2Rn9JzEBKdCmKH4gZ14956Rzy2iiWU8uK+27dbOhR9azINdizVxtRTSg==
+X-Received: by 2002:a05:6000:4f:: with SMTP id k15mr19683717wrx.221.1566802129701;
+        Sun, 25 Aug 2019 23:48:49 -0700 (PDT)
+Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id p7sm8801009wmh.38.2019.08.25.23.48.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 25 Aug 2019 23:48:49 -0700 (PDT)
+Date:   Mon, 26 Aug 2019 08:48:47 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Eryu Guan <guaneryu@gmail.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] t_stripealign: Fix fibmap error handling
+Message-ID: <20190826064846.vx5jb7ugrsxyd34x@pegasus.maiolino.io>
+Mail-Followup-To: Eryu Guan <guaneryu@gmail.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+References: <20190823092530.11797-1-cmaiolino@redhat.com>
+ <20190823143650.GI1037350@magnolia>
+ <20190825134154.GB2622@desktop>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190824050836.GC1092@iweiny-DESK2.sc.intel.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=l-5HZ6ThFU8XlB48y_YA:9 a=qRlaua0cGjGJrKa9:21
-        a=OEwtXWmnxFRK9C0v:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190825134154.GB2622@desktop>
+User-Agent: NeoMutt/20180716
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 10:08:36PM -0700, Ira Weiny wrote:
-> On Sat, Aug 24, 2019 at 10:11:24AM +1000, Dave Chinner wrote:
-> > On Fri, Aug 23, 2019 at 09:04:29AM -0300, Jason Gunthorpe wrote:
-> > > On Fri, Aug 23, 2019 at 01:23:45PM +1000, Dave Chinner wrote:
+On Sun, Aug 25, 2019 at 09:41:54PM +0800, Eryu Guan wrote:
+> On Fri, Aug 23, 2019 at 07:36:50AM -0700, Darrick J. Wong wrote:
+> > On Fri, Aug 23, 2019 at 11:25:30AM +0200, Carlos Maiolino wrote:
+> > > FIBMAP only returns a negative value when the underlying filesystem does
+> > > not support FIBMAP or on permission error. For the remaining errors,
+> > > i.e. those usually returned from the filesystem itself, zero will be
+> > > returned.
 > > > 
-> > > > > But the fact that RDMA, and potentially others, can "pass the
-> > > > > pins" to other processes is something I spent a lot of time trying to work out.
-> > > > 
-> > > > There's nothing in file layout lease architecture that says you
-> > > > can't "pass the pins" to another process.  All the file layout lease
-> > > > requirements say is that if you are going to pass a resource for
-> > > > which the layout lease guarantees access for to another process,
-> > > > then the destination process already have a valid, active layout
-> > > > lease that covers the range of the pins being passed to it via the
-> > > > RDMA handle.
+> > > We can not trust a zero return from the FIBMAP, and such behavior made
+> > > generic/223 succeed when it should not.
 > > > 
-> > > How would the kernel detect and enforce this? There are many ways to
-> > > pass a FD.
+> > > Also, we can't use perror() only to print errors when FIBMAP failed, or
+> > > it will simply print 'success' when a zero is returned.
+> > > 
+> > > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > > ---
+> > >  src/t_stripealign.c | 7 +++++--
+> > >  1 file changed, 5 insertions(+), 2 deletions(-)
+> > > 
+> > > diff --git a/src/t_stripealign.c b/src/t_stripealign.c
+> > > index 5cdadaae..164831f8 100644
+> > > --- a/src/t_stripealign.c
+> > > +++ b/src/t_stripealign.c
+> > > @@ -76,8 +76,11 @@ int main(int argc, char ** argv)
+> > >  		unsigned int	bmap = 0;
+> > >  
+> > >  		ret = ioctl(fd, FIBMAP, &bmap);
+> > > -		if (ret < 0) {
+> > > -			perror("fibmap");
+> > > +		if (ret <= 0) {
+> > > +			if (ret < 0)
+> > > +				perror("fibmap");
+> > > +			else
+> > > +				fprintf(stderr, "fibmap error\n");
 > > 
-> > AFAIC, that's not really a kernel problem. It's more of an
-> > application design constraint than anything else. i.e. if the app
-> > passes the IB context to another process without a lease, then the
-> > original process is still responsible for recalling the lease and
-> > has to tell that other process to release the IB handle and it's
-> > resources.
-> > 
-> > > IMHO it is wrong to try and create a model where the file lease exists
-> > > independently from the kernel object relying on it. In other words the
-> > > IB MR object itself should hold a reference to the lease it relies
-> > > upon to function properly.
-> > 
-> > That still doesn't work. Leases are not individually trackable or
-> > reference counted objects objects - they are attached to a struct
-> > file bUt, in reality, they are far more restricted than a struct
-> > file.
-> > 
-> > That is, a lease specifically tracks the pid and the _open fd_ it
-> > was obtained for, so it is essentially owned by a specific process
-> > context.  Hence a lease is not able to be passed to a separate
-> > process context and have it still work correctly for lease break
-> > notifications.  i.e. the layout break signal gets delivered to
-> > original process that created the struct file, if it still exists
-> > and has the original fd still open. It does not get sent to the
-> > process that currently holds a reference to the IB context.
-> >
+> > "fibmap returned no result"?
 > 
-> The fcntl man page says:
+> Fixed on commit. Thanks!
+
+TZ discrepancy. Thanks for fixing it on commit Eryu :)
+
+
 > 
-> "Leases are associated with an open file description (see open(2)).  This means
-> that duplicate file descriptors (created by, for example, fork(2) or dup(2))
-> refer to the same lease, and this lease may be modified or released using any
-> of these descriptors.  Furthermore,  the lease is released by either an
-> explicit F_UNLCK operation on any of these duplicate file descriptors, or when
-> all such file descriptors have been closed."
+> Eryu
 
-Right, the lease is attached to the struct file, so it follows
-where-ever the struct file goes. That doesn't mean it's actually
-useful when the struct file is duplicated and/or passed to another
-process. :/
-
-AFAICT, the problem is that when we take another reference to the
-struct file, or when the struct file is passed to a different
-process, nothing updates the lease or lease state attached to that
-struct file.
-
-> From this I took it that the child process FD would have the lease as well
-> _and_ could release it.  I _assumed_ that applied to SCM_RIGHTS but it does not
-> seem to work the same way as dup() so I'm not so sure.
-
-Sure, that part works because the struct file is passed. It doesn't
-end up with the same fd number in the other process, though.
-
-The issue is that layout leases need to notify userspace when they
-are broken by the kernel, so a lease stores the owner pid/tid in the
-file->f_owner field via __f_setown(). It also keeps a struct fasync
-attached to the file_lock that records the fd that the lease was
-created on.  When a signal needs to be sent to userspace for that
-lease, we call kill_fasync() and that walks the list of fasync
-structures on the lease and calls:
-
-	send_sigio(fown, fa->fa_fd, band);
-
-And it does for every fasync struct attached to a lease. Yes, a
-lease can track multiple fds, but it can only track them in a single
-process context. The moment the struct file is shared with another
-process, the lease is no longer capable of sending notifications to
-all the lease holders.
-
-Yes, you can change the owning process via F_SETOWNER, but that's
-still only a single process context, and you can't change the fd in
-the fasync list. You can add new fd to an existing lease by calling
-F_SETLEASE on the new fd, but you still only have a single process
-owner context for signal delivery.
-
-As such, leases that require callbacks to userspace are currently
-only valid within the process context the lease was taken in.
-Indeed, even closing the fd the lease was taken on without
-F_UNLCKing it first doesn't mean the lease has been torn down if
-there is some other reference to the struct file. That means the
-original lease owner will still get SIGIO delivered to that fd on a
-lease break regardless of whether it is open or not. ANd if we
-implement "layout lease not released within SIGIO response timeout"
-then that process will get killed, despite the fact it may not even
-have a reference to that file anymore.
-
-So, AFAICT, leases that require userspace callbacks only work within
-their original process context while they original fd is still open.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Carlos
