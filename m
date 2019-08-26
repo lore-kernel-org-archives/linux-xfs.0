@@ -2,101 +2,131 @@ Return-Path: <SRS0=ZZxK=WW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BF37C3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 10:24:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8E5C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 10:41:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDE382070B
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 10:24:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KIW4NnVK"
+	by mail.kernel.org (Postfix) with ESMTP id 42D1F2187F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 10:41:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1566816076;
+	bh=8ziD+meEXqXL5pLNd7FdOcpozYaNgK5kwHaeo4uhx28=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
+	b=EkzdoYs7jwgNipZKSIOmqMgrkQMVe4yPVUQnYmr2vhaJOn6wk4ryN/cEWHfRa6cFQ
+	 zAw0voBDfUMb+f21xcBsb5kIqqJU2ORB0PXCbExJtoLYqO4ftQdU45BpUkVpJJQ69g
+	 wTRHK+2dtxwaTV91i2XhEkABNBCYmPWr6S4XUCLI=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729813AbfHZKX7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 06:23:59 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:35319 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729713AbfHZKX7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 06:23:59 -0400
-Received: by mail-pf1-f193.google.com with SMTP id d85so11534924pfd.2
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 03:23:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to;
-        bh=f7BpKMzYiwVLYbz1/seN/OFx2QZ12+MnpHVjgj+/bSw=;
-        b=KIW4NnVKAmc+nPoHhhRSTl3nsY2cbnbjod6jLjwuBGTF6axLB5kNr3NTKt2IBY8KQa
-         m0/GGPDT7OK5nYiyRsPDvHrS4/Sd0Xc4EDwZaMrxUnJP+LE7nwbNZ0ZUYmOU2ixQVZSn
-         fg37hgDMx0vPk7MNO19MkuM6I2oJiHagoKH1rBOvAvjmstI+UC7HAac+P2EnOIrBWKvo
-         MxpiR1EB7sqgt+cmleHxRwO9aa027knNr+YzRu6TmrZvg6U9f/kIWUS2JOXLo1VHFLWW
-         RU7q7PkGo+Yj8XZ7WyOzoC1wGOPXODknthvLXw5eYfBXNgh6gB8YCQdvrKgloAe8W6bE
-         ZHgA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to;
-        bh=f7BpKMzYiwVLYbz1/seN/OFx2QZ12+MnpHVjgj+/bSw=;
-        b=cAtx7n3U75QVNjnJLtmqIif2nsLc85+BFGzI+IzUXKf1byQ5VNtPGSXl5kQMc4B6Az
-         GuqlwPr3ZHAhcETtPqRmE4rJGnzPAf0SSu9z/Iq2JFHWtJLRSE1wjlEEM0GF/jxAUevh
-         vMBu9KtL0Fnox7vEaEC1u2GPM3QOVswRN83ZPr8J8N7zdXtgs+7zCZ+TdIF4EMQQ13Ph
-         +MWkLjUMidvc+KDvscbnKUfRc2oLasSa59Ozo84pXqXdWnXPgJ/4kZ7s2D8MGz0jNHCs
-         +HOj579OwQR69zEGjT9vXMzCwWtC5MP1zmbv39p7bsm5q2ZpW3HoL63IbxUswmjo/YRU
-         M+Rg==
-X-Gm-Message-State: APjAAAXOyFKThuPS0Oc4fBxcCSpoyFPURkc5BqPku09RyXN8hoC3ZN0F
-        PaJceH9yPXcbU32/pV+AbrsMO8zD
-X-Google-Smtp-Source: APXvYqxKJDDmCXs+kHf9MC1wf6AWHfxC9uafSwv/R+bqhUUvvcQP5cQ5bxf0fPAZiOx05u6fppdroA==
-X-Received: by 2002:a62:5207:: with SMTP id g7mr19682180pfb.152.1566815038755;
-        Mon, 26 Aug 2019 03:23:58 -0700 (PDT)
-Received: from localhost ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id w2sm11617416pjr.27.2019.08.26.03.23.57
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Aug 2019 03:23:58 -0700 (PDT)
-Date:   Mon, 26 Aug 2019 18:23:50 +0800
-From:   Murphy Zhou <jencce.kernel@gmail.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Murphy Zhou <jencce.kernel@gmail.com>, linux-xfs@vger.kernel.org,
-        darrick.wong@oracle.com
-Subject: Re: [PATCH] xfsdump: fix compiling errors due to typedef removal in
- xfsprogs
-Message-ID: <20190826102350.h3rbysb63ojslkb5@XZHOUW.usersys.redhat.com>
-References: <20190826050130.eqzxbotjlblckmgu@XZHOUW.usersys.redhat.com>
- <20190826095253.GA1260@infradead.org>
+        id S1731013AbfHZKlM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 06:41:12 -0400
+Received: from mail.kernel.org ([198.145.29.99]:43258 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730640AbfHZKlM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Aug 2019 06:41:12 -0400
+Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 1E32920828;
+        Mon, 26 Aug 2019 10:41:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1566816070;
+        bh=8ziD+meEXqXL5pLNd7FdOcpozYaNgK5kwHaeo4uhx28=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=It43Y4jhI4WRMT7EOX/lr7UQrAHGcp7abrKi/dW/O0Kd9egEDPpQrb9qKy1oWb9pe
+         lnOftVy2OCBwYNxuaPQUMNRvYTlPGOmE5p+KJsXKHIySHdTnGKve5YDOmGidGBo/29
+         cnTh0m+X3A/MuYbOjoz90Mp0uG6r73lbyIxhL/QI=
+Message-ID: <e6f4f619967f4551adb5003d0364770fde2b8110.camel@kernel.org>
+Subject: Re: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user
+ Layout lease
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     ira.weiny@intel.com, Andrew Morton <akpm@linux-foundation.org>,
+        Jason Gunthorpe <jgg@ziepe.ca>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-ext4@vger.kernel.org, linux-mm@kvack.org
+Date:   Mon, 26 Aug 2019 06:41:07 -0400
+In-Reply-To: <20190814215630.GQ6129@dread.disaster.area>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+         <20190809225833.6657-3-ira.weiny@intel.com>
+         <fde2959db776616008fc5d31df700f5d7d899433.camel@kernel.org>
+         <20190814215630.GQ6129@dread.disaster.area>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190826095253.GA1260@infradead.org>
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 26, 2019 at 02:52:53AM -0700, Christoph Hellwig wrote:
-> On Mon, Aug 26, 2019 at 01:01:30PM +0800, Murphy Zhou wrote:
-> > Since xfsprogs commit
-> >   32dd7d9c xfs: remove various bulk request typedef usage
+On Thu, 2019-08-15 at 07:56 +1000, Dave Chinner wrote:
+> On Wed, Aug 14, 2019 at 10:15:06AM -0400, Jeff Layton wrote:
+> > On Fri, 2019-08-09 at 15:58 -0700, ira.weiny@intel.com wrote:
+> > > From: Ira Weiny <ira.weiny@intel.com>
+> > > 
+> > > Add an exclusive lease flag which indicates that the layout mechanism
+> > > can not be broken.
+> > > 
+> > > Exclusive layout leases allow the file system to know that pages may be
+> > > GUP pined and that attempts to change the layout, ie truncate, should be
+> > > failed.
+> > > 
+> > > A process which attempts to break it's own exclusive lease gets an
+> > > EDEADLOCK return to help determine that this is likely a programming bug
+> > > vs someone else holding a resource.
+> .....
+> > > diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
+> > > index baddd54f3031..88b175ceccbc 100644
+> > > --- a/include/uapi/asm-generic/fcntl.h
+> > > +++ b/include/uapi/asm-generic/fcntl.h
+> > > @@ -176,6 +176,8 @@ struct f_owner_ex {
+> > >  
+> > >  #define F_LAYOUT	16      /* layout lease to allow longterm pins such as
+> > >  				   RDMA */
+> > > +#define F_EXCLUSIVE	32      /* layout lease is exclusive */
+> > > +				/* FIXME or shoudl this be F_EXLCK??? */
+> > >  
+> > >  /* operations for bsd flock(), also used by the kernel implementation */
+> > >  #define LOCK_SH		1	/* shared lock */
 > > 
-> > Some typedef _t types have been removed, so did in header files.
+> > This interface just seems weird to me. The existing F_*LCK values aren't
+> > really set up to be flags, but are enumerated values (even if there are
+> > some gaps on some arches). For instance, on parisc and sparc:
 > 
-> I wonder if we need to add them back to xfsprogs to not break other
-> tools using the header.  But independent of that I think killing
-> them in xfsdump is good.
+> I don't think we need to worry about this - the F_WRLCK version of
+> the layout lease should have these exclusive access semantics (i.e
+> other ops fail rather than block waiting for lease recall) and hence
+> the API shouldn't need a new flag to specify them.
 > 
-> >  typedef char *(*gwbfp_t)(void *contextp, size_t wantedsz, size_t *szp);
-> >  typedef int (*wfp_t)(void *contextp, char *bufp, size_t bufsz);
-> > +typedef struct xfs_bstat xfs_bstat_t;
-> > +typedef struct xfs_inogrp xfs_inogrp_t;
-> > +typedef struct xfs_fsop_bulkreq xfs_fsop_bulkreq_t;
+> i.e. the primary difference between F_RDLCK and F_WRLCK layout
+> leases is that the F_RDLCK is a shared, co-operative lease model
+> where only delays in operations will be seen, while F_WRLCK is a
+> "guarantee exclusive access and I don't care what it breaks"
+> model... :)
 > 
-> I think we just need to stop using the typedefs, as this would break
-> a compile with the old xfsprogs headers.
 
-So we need to add typedefs back to xfsprogs to not breaking others.
-And kill it in xfsdump.
+Not exactly...
 
-Are there tools using xfsdump's libs and headers ? Breaking them?
+F_WRLCK and F_RDLCK leases can both be broken, and will eventually time
+out if there is conflicting access. The F_EXCLUSIVE flag on the other
+hand is there to prevent any sort of lease break from 
 
-Thanks,
-m
+I'm guessing what Ira really wants with the F_EXCLUSIVE flag is
+something akin to what happens when we set fl_break_time to 0 in the
+nfsd code. nfsd never wants the locks code to time out a lease of any
+sort, since it handles that timeout itself.
+
+If you're going to add this functionality, it'd be good to also convert
+knfsd to use it as well, so we don't end up with multiple ways to deal
+with that situation.
+-- 
+Jeff Layton <jlayton@kernel.org>
+
