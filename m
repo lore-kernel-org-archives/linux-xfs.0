@@ -2,179 +2,124 @@ Return-Path: <SRS0=ZZxK=WW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9D92C3A59E
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 04:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F35EC3A59E
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 05:01:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 731562190F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 04:39:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B8CB2080C
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 05:01:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Qm9omyy9";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="IxKKT3kX"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gwoMFN1q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726156AbfHZEjh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 00:39:37 -0400
-Received: from esa6.hgst.iphmx.com ([216.71.154.45]:47241 "EHLO
-        esa6.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729100AbfHZEjh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 00:39:37 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1566794377; x=1598330377;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=xJjqFcsR8vYMZBXNfORqW6HHhuJ85c9HAqRVtwNFXXs=;
-  b=Qm9omyy9nCkXksOGe8a9X4zoA0rzBOsSeDlC6q2FfxEdWibQHaAq2nau
-   hNSjOJDFDJTAJuK/VNcu2COoBO/wbPDG8u0KOfpf/HspRuq4swQmM6GfQ
-   MwdsiHdxAlC04e7fXjB6bnJohjoY3a+zRqPdYFo/+OFJ7Xc6YfG2JUcN8
-   FrRi6eH8DHFIYkcvOz4I4eOL8WfPczLKYtOAfXzT0BBsNl7RKThtRpV5Z
-   nHonvpjIrslQ9tBjVT7XJwzfqg55Hj+hIrHu3+Tf24LRTTPj08KKX4RVO
-   HlC0hNroHtHrJYAq+sPXzWXizyp8L13gsoad4JO7+VjV+baRhPVKr81Bs
-   A==;
-IronPort-SDR: QJDzR2vrW0KyoH40ksJHnUhkqCQ3u/bpVNJ2eEN7rO1vlUwlxQ7mD4kNbAeS+OTLsXMeKopNXo
- mrdVoBoj1IcQFb86ixYlW69BABzR4ILibsqhjXeCQ6IvHz/SAHlZn7WLhs1rmO/YUdXK7C2uDk
- /7+f3arXZJjJbCwMOkCQZ1HCCslOQF7saQvkH+ilZi9oDwUu7JCEvjYtfdnsxhV//9DjM3wJp7
- CyGS83AE31G/uz/z3Faf1MGJ7Ky+GIyzCtaC97juZ/doF6xSNYkVfQjzoFat/p4SYAR00Mw3VY
- YJc=
-X-IronPort-AV: E=Sophos;i="5.64,431,1559491200"; 
-   d="scan'208";a="118237847"
-Received: from mail-bl2nam02lp2050.outbound.protection.outlook.com (HELO NAM02-BL2-obe.outbound.protection.outlook.com) ([104.47.38.50])
-  by ob1.hgst.iphmx.com with ESMTP; 26 Aug 2019 12:39:35 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=e6VpeFUIB6KUdLYN/4q833raJZ4gcn8csNKc0pPg6bFazR/e4aWxv+Gs0L6NEIrD+wgH6JSNoRujOyCnB7YTdwLWFWGY/q/9AmxzmyqsoT1XhzHo32RWtuZuA4q8upWy6qIpJpwdiUL9i6byAppL61ZpPq8cZgA4mI0ZYUXNx1P48zc2n2iBLUJhJb7hyCQjxygxOvGibw/FMdg+E7inp50mM4ZbmJhqN47LAm4KsxPqR6sRjaEK+ei9fUp6T/P9VEHG4c2c9SKr7uQeIU5lpQnsuq7dazhsKB35Bgf3o3N8w9cb1MIr4a4HjLuHVX3dxrvDXIOMb9DDYc2vSt83yg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=I4gdoEBS+l1vtTuy5mzIX7VvxBpG50mZ3OQL31myG80=;
- b=P7tzWboaiR3Ds7PdyUVXs2gzMdpQo1XgMi8ihRQsgk+Jlf5khJk75JBDRW5E3s4Vj5LTSDMgWhr9PM1mXlkcLlmr++TVDbje2WdnljyjlzfPamiGJdqJa4OvFwo3X2JggHd2M5VU/rytNZTBtukOPxNR1om6s4yOWVMAmKS5E7Dy+Q/k9V7FdNWf8SLktCiTLg+p1zbRSePBZzHGh+dQWjh6am/8jfCtMa8gdIAZKwnuK49HQecPy1WsnrcWKoNIpXJ26FtaD9/KdPYp5iJiE7FOKiJ/d3NgxWrWgjqBniky3swpc/wp5oTaAHFJL25nxgvGOoGvkV5q7JJfcyCKmA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
+        id S1725933AbfHZFBj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 01:01:39 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:36168 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725868AbfHZFBj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 01:01:39 -0400
+Received: by mail-pf1-f195.google.com with SMTP id w2so10978567pfi.3
+        for <linux-xfs@vger.kernel.org>; Sun, 25 Aug 2019 22:01:39 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=I4gdoEBS+l1vtTuy5mzIX7VvxBpG50mZ3OQL31myG80=;
- b=IxKKT3kX6FUORKpxtuwwr0SbHkdPx72Zc2jomAb9JjQk3/whXcS/a01+b8jhAnSJd25cSwb6ma/fIs3ZlVBvVkNuUd9BmRD6d5Tny5HeY5Tls87whJbIHSqACpd0YaKNL3cgHir9V/jLDa89rkQG+orBcg/iVYBRg5w4/7eXlUU=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.58.207) by
- BYAPR04MB5062.namprd04.prod.outlook.com (52.135.235.20) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2199.19; Mon, 26 Aug 2019 04:39:34 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::a538:afd0:d62a:55bc]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::a538:afd0:d62a:55bc%7]) with mapi id 15.20.2199.021; Mon, 26 Aug 2019
- 04:39:34 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Luis Chamberlain <mcgrof@kernel.org>
-CC:     "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>
-Subject: Re: [PATCH V2] fs: New zonefs file system
-Thread-Topic: [PATCH V2] fs: New zonefs file system
-Thread-Index: AQHVVy8UVAVGvwSe4Um+ID5oFBsG3w==
-Date:   Mon, 26 Aug 2019 04:39:33 +0000
-Message-ID: <BYAPR04MB5816B9DAA7DACD2DF62A0B3FE7A10@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190820081249.27353-1-damien.lemoal@wdc.com>
- <20190822224355.GX30113@42.do-not-panic.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [199.255.47.9]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 7e1e556c-fb3e-48c6-0007-08d729df64b5
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600166)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:BYAPR04MB5062;
-x-ms-traffictypediagnostic: BYAPR04MB5062:
-x-ms-exchange-transport-forked: True
-x-microsoft-antispam-prvs: <BYAPR04MB50625801F83D68E2218BFD77E7A10@BYAPR04MB5062.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:5797;
-x-forefront-prvs: 01415BB535
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(346002)(376002)(39860400002)(136003)(396003)(199004)(189003)(52536014)(486006)(33656002)(2906002)(25786009)(81156014)(478600001)(9686003)(14454004)(53936002)(86362001)(316002)(6436002)(54906003)(55016002)(229853002)(91956017)(76116006)(53546011)(8936002)(102836004)(6506007)(26005)(66066001)(186003)(446003)(3846002)(71200400001)(71190400001)(5660300002)(6916009)(6116002)(66556008)(64756008)(74316002)(7736002)(305945005)(256004)(4326008)(99286004)(7696005)(66446008)(8676002)(66476007)(6246003)(81166006)(76176011)(66946007)(476003);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB5062;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: nS19F4qRB5ysQAFMbhuaRE8MjBTIdXHCfN+0llC4A4OEHjkJKxlx2TefNTioTovCifQiTvcKPmy5tqAKCfjl5t1Rq+4CEN82kflS1Zl4pn7b8TtoIVTXhFau+CSGX5WP5QF/4L4S3bESzCtLQuaUJ36hn6yUp8KSUNgtJFClmRAmTE12NczQjd+x2Pjy522Xk+E90SW7XkD90uemPJUtLI3iKYDh7/JXwSybGjnN8BcZp9mBUY22ou754c5wV9LY1cvcIY+2c+Hf4mGVESOK5DqRjAEEb5/185PUXGe+kH/69ATIINdqcW6JPjgz0Kf++BN08AZDaKXjcNfDSeU3/QKP4QtVeogDn5TIgZkhUlba2Mqk+QH7EtpllPt49386F9SvxImBcQ+2kKO0J7payNefx7c55JWMnhqAWjhu5Kg=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition;
+        bh=cyUh//eAT9qWAoLVx92E9pzcMoiLn3kTnguaZgRwico=;
+        b=gwoMFN1qx775xSafFhh0hW2UUDo/+6CpNnU5pZekLzJg91pril7IKcgDVmbhIM5Bry
+         FYPMRhWo1Q/aAqRYWYtmpErFFkVqIT9P4LKOIz/yuYXNr7qVZtDCZhk4Ow2PA2uUyPrw
+         sl53ICWXxAo1vC8pFm/PxSYZsJg9DSkKm2LLwHxIRqiqFTSn1ruZhomvoxvxTr2DxuU7
+         +o9FO/ey2YcXgJlIQovxIENoWLPZrjIhRih2/exFm1e83LtVhP2tkG+SEla7cmT8a2Qt
+         phLPEGawSdRgE21YaIQ2U/Je5wvVkT/SgnvvmL0P2SrWWcIeelh430aIP1m7379wnhN4
+         iUIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition;
+        bh=cyUh//eAT9qWAoLVx92E9pzcMoiLn3kTnguaZgRwico=;
+        b=SR0qGSNNTnoT/bvTIrUwN6Y5950Je4RD9eU8xu5tsYM5pRASaOZlDZt8uTlDjhmI10
+         HOz2Gl9tAtAb9Ten+440oo45/4Pyf4sq9L94MZ6M3yCHd3NuaYMYGP87ieRm1I9p9lGd
+         Xq3fQ8MFHqICFxYPHqXfokQoA74SCjyG3ddtFEOTfdnhi8SMaZ3odKBUPZKEqXDRTWmP
+         zjUr/sSTCSOqbz/9cc2cETVSUrofVc2P8tq8RJ2qjA1XEow8T64VUT+F/JahGqk1xJLP
+         FOivtvBvJTO1sD7g4bPyIjT4y8ynieUpi0t9zUK9HZz3N8oOL/hE4gsY2YkQjQNw2S7f
+         slFQ==
+X-Gm-Message-State: APjAAAWf5bfel72AQ0Q8toXMOit0l//2CJSf4uJaiUe1xYZogitN0pWq
+        VhII3Lj0ix4WQy8KN+KiJEqWRW4q
+X-Google-Smtp-Source: APXvYqyv9wKv/OfbfpqRpYnD71DjqaOtVOkHa9jx1vp9S6I3svlm82U594yEHucSRbcJrK9cFuewug==
+X-Received: by 2002:a17:90a:23c8:: with SMTP id g66mr17905178pje.123.1566795698632;
+        Sun, 25 Aug 2019 22:01:38 -0700 (PDT)
+Received: from localhost ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id 1sm10747496pfx.56.2019.08.25.22.01.37
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 25 Aug 2019 22:01:38 -0700 (PDT)
+Date:   Mon, 26 Aug 2019 13:01:30 +0800
+From:   Murphy Zhou <jencce.kernel@gmail.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com
+Subject: [PATCH] xfsdump: fix compiling errors due to typedef removal in
+ xfsprogs
+Message-ID: <20190826050130.eqzxbotjlblckmgu@XZHOUW.usersys.redhat.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7e1e556c-fb3e-48c6-0007-08d729df64b5
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Aug 2019 04:39:33.8974
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: EUwEpRdUwocWWzbF69Qfqdd4QyLfha3oEnqTMVCJwQICoL7zRPl0CAPv0Jb3bRrkBU/y3oH4QBunh49qMdSNwA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5062
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Luis,=0A=
-=0A=
-On 2019/08/23 7:44, Luis Chamberlain wrote:=0A=
-> On Tue, Aug 20, 2019 at 05:12:49PM +0900, Damien Le Moal wrote:=0A=
->> The aggregated conventional zone file can be used as a regular file.=0A=
->> Operations such as the following work.=0A=
->>=0A=
->> mkfs.ext4 /mnt/cnv/0=0A=
->> mount -o loop /mnt/cnv/0 /data=0A=
-> =0A=
-> Should BLK_DEV_LOOP_MIN_COUNT be increased if this is enabled to=0A=
-> a mich higher sensible default? Right now the default is 8. Also,=0A=
-> can we infer this later dynamically so so this can grow at proper=0A=
-> scale without having to have user interaction?=0A=
-=0A=
-I am not sure if this is really necessary, though I am not against it. I ad=
-ded=0A=
-this in the commit message as as an example, simply because it is a very ea=
-sy=0A=
-way to test that the aggregated conventional zone file is working correctly=
-. The=0A=
-tendency these days it for drives to have very little, if any at all,=0A=
-conventional zones. Even if they do, using dm-linear to chunk conventional =
-and=0A=
-sequential spaces into different block devices is probably a much better wa=
-y to=0A=
-separate the 2 zone types into different usage patterns.=0A=
-=0A=
-> =0A=
-> For now, I mean something like:=0A=
-> =0A=
-> diff --git a/drivers/block/Kconfig b/drivers/block/Kconfig=0A=
-> index 1bb8ec575352..22ba4803b075 100644=0A=
-> --- a/drivers/block/Kconfig=0A=
-> +++ b/drivers/block/Kconfig=0A=
-> @@ -217,7 +217,8 @@ config BLK_DEV_LOOP=0A=
->  config BLK_DEV_LOOP_MIN_COUNT=0A=
->  	int "Number of loop devices to pre-create at init time"=0A=
->  	depends on BLK_DEV_LOOP=0A=
-> -	default 8=0A=
-> +	default 8 if !ZONEFS FILESYSTEM=0A=
-> +	default 32 if ZONEFS FILESYSTEM=0A=
->  	help=0A=
->  	  Static number of loop devices to be unconditionally pre-created=0A=
->  	  at init time.=0A=
-=0A=
-Since this is a simple fix, I think we could reserve it for later if the ne=
-ed=0A=
-for this change increases due to zonefs ? The default value can also be=0A=
-automatically inferred by counting the number of zoned disk in the system a=
-nd=0A=
-assuming one extra loop device for each zoned drive.=0A=
-=0A=
-Best regards.=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+Since xfsprogs commit
+  32dd7d9c xfs: remove various bulk request typedef usage
+
+Some typedef _t types have been removed, so did in header files.
+
+Signed-off-by: Murphy Zhou <jencce.kernel@gmail.com>
+---
+ common/fs.c     | 2 +-
+ common/hsmapi.c | 1 +
+ common/util.h   | 3 +++
+ 3 files changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/common/fs.c b/common/fs.c
+index a4c175c..ff8c75a 100644
+--- a/common/fs.c
++++ b/common/fs.c
+@@ -204,7 +204,7 @@ fs_mounted(char *typs, char *chrs, char *mnts, uuid_t *idp)
+ int
+ fs_getid(char *mnts, uuid_t *idb)
+ {
+-	xfs_fsop_geom_v1_t geo;
++	struct xfs_fsop_geom_v1 geo;
+ 	int fd;
+ 
+ 	fd = open(mnts, O_RDONLY);
+diff --git a/common/hsmapi.c b/common/hsmapi.c
+index e3e18a7..0771895 100644
+--- a/common/hsmapi.c
++++ b/common/hsmapi.c
+@@ -36,6 +36,7 @@
+ #include "types.h"
+ #include "hsmapi.h"
+ #include "mlog.h"
++#include "util.h"
+ 
+ /* This version of the HSM API supports the DMF attribute used in the initial
+  * DMF release, as well as the attribute used in the pseudo multiple managed
+diff --git a/common/util.h b/common/util.h
+index 9a1729c..f43461f 100644
+--- a/common/util.h
++++ b/common/util.h
+@@ -34,6 +34,9 @@
+  */
+ typedef char *(*gwbfp_t)(void *contextp, size_t wantedsz, size_t *szp);
+ typedef int (*wfp_t)(void *contextp, char *bufp, size_t bufsz);
++typedef struct xfs_bstat xfs_bstat_t;
++typedef struct xfs_inogrp xfs_inogrp_t;
++typedef struct xfs_fsop_bulkreq xfs_fsop_bulkreq_t;
+ 
+ extern int write_buf(char *bufp,
+ 			   size_t bufsz,
+-- 
+2.18.1
+
+
