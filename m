@@ -2,62 +2,60 @@ Return-Path: <SRS0=ZZxK=WW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DF18C3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AE1FC3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0613021872
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F4302186A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WDDpHBRl"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="c6l3ypAl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728962AbfHZVcW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:32:22 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:36120 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728807AbfHZVcW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:32:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLDrlJ001023;
-        Mon, 26 Aug 2019 21:32:20 GMT
+        id S1728967AbfHZVcZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:32:25 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:52018 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728807AbfHZVcZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:32:25 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLF7xW162164;
+        Mon, 26 Aug 2019 21:32:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=zq1+yaKl/PDatoP88GAhJJ03OVlYBl5I5wvVoPv+S5c=;
- b=WDDpHBRlr6VrdgZrdBzBTipe8+EWHy9EwEf3lpsdG+sIW8YypMzbT0ZTMyv9XSH5uN0+
- OSWIm2tte3qf0Ny/Wphu5ZW4G6T8x+I+vp9tbjkuC+Vb74ryZM/rMHs9wksD/0E7BDLM
- rol7ngeqomPjrWWyWxjguRlmv+lz3OJJNass1N7hY6VU7Eg83TqkUgClkVjFgB/8h99U
- roEdyq2rZbe2rfcKobIWPrichMor0YqmTmOYR+p/pIevetgYbs7UMXMNDvCv5ohI44kY
- pZAeL8hldUQOwSUKh5J0wHH96/9jzId/o3Rj4Vzbz98+BsigC3Mdk2VKTrUsncSm1rGn 5A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2umpxx05rk-1
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=t0kydBrI7SUTsLEhNKwIHIZR55Vibq40h+ULNx0iGR0=;
+ b=c6l3ypAluywuG6oqtJJgOReLWatr9glOovXDiHbCFJSijAIjnaC7WnKAY7dmQn6ZGDxs
+ kRLxKt9OKerIculJfI/yRLYEX77haRogXtJN3m0+g8TbFMzbKbASV1VQ2hyUNXlVC4N3
+ vWbBlzMvoNKt0m1Sv3X6adXexyEwkKDEo3qsvEr80mjcYOIhHB1G/tZQ1cz7+3qx2UGO
+ 0/zFDCEXHgDUfgvZHYHxEEjDnmQJwluF0aD463OW4tFNz3kYvSqEx+DbxwXGLUQmd8lt
+ yRUhfPNiHQItZm3AFoqVofM3R3tXy8intVY3FIjc+pWetEMf0C+WrYCkcZme9B7q4QWp +Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2umq5t82h8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:32:20 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIRQV024992;
-        Mon, 26 Aug 2019 21:32:19 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2umj1tkane-1
+        Mon, 26 Aug 2019 21:32:23 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIw5u185531;
+        Mon, 26 Aug 2019 21:32:22 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2umj2xw0gu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:32:19 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7QLWIjL030371;
-        Mon, 26 Aug 2019 21:32:18 GMT
+        Mon, 26 Aug 2019 21:32:22 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7QLWMmm006243;
+        Mon, 26 Aug 2019 21:32:22 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 21:32:18 +0000
-Subject: [PATCH 11/11] xfs_scrub: create a new category for unfixable errors
+        with ESMTP ; Mon, 26 Aug 2019 14:32:22 -0700
+Subject: [PATCH 0/3] xfs_scrub: deferred labelling to save time
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:32:17 -0700
-Message-ID: <156685513738.2843133.13097768805699303210.stgit@magnolia>
-In-Reply-To: <156685506615.2843133.16536353613627426823.stgit@magnolia>
-References: <156685506615.2843133.16536353613627426823.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:32:21 -0700
+Message-ID: <156685514116.2843450.13345990837227741560.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -78,167 +76,21 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+Hi all,
 
-There's nothing that xfs_scrub (or XFS) can do about media errors for
-data file blocks -- the data are gone.  Create a new category for these
-unfixable errors so that we don't advise the user to take further action
-that won't fix the problem.
+I noticed from profiling xfs_scrub that the program spent a significant
+amount of time in phase 3 rendering descriptive strings in case we found
+an error and needed to report where we found them.  Most of the time
+there aren't going to be errors, so we can reduce the runtime by 10% by
+only rendering those strings when we need to report an error.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- scrub/common.c    |    9 ++++++++-
- scrub/common.h    |    3 +++
- scrub/phase4.c    |    3 ++-
- scrub/phase5.c    |    2 +-
- scrub/phase6.c    |    2 +-
- scrub/xfs_scrub.c |   15 +++++++++++++--
- scrub/xfs_scrub.h |    1 +
- 7 files changed, 29 insertions(+), 6 deletions(-)
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-diff --git a/scrub/common.c b/scrub/common.c
-index fdbbf294..1ca550dd 100644
---- a/scrub/common.c
-+++ b/scrub/common.c
-@@ -36,7 +36,8 @@ xfs_scrub_excessive_errors(
- 	bool			ret;
- 
- 	pthread_mutex_lock(&ctx->lock);
--	ret = ctx->max_errors > 0 && ctx->errors_found >= ctx->max_errors;
-+	ret = ctx->max_errors > 0 &&
-+	      (ctx->unfixable_errors + ctx->errors_found) >= ctx->max_errors;
- 	pthread_mutex_unlock(&ctx->lock);
- 
- 	return ret;
-@@ -47,6 +48,10 @@ static struct {
- 	int loglevel;
- } err_levels[] = {
- 	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
-+	[S_UNFIXABLE] = {
-+		.string = "Unfixable error",
-+		.loglevel = LOG_ERR
-+	},
- 	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
- 	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
- 	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
-@@ -108,6 +113,8 @@ __str_out(
- out_record:
- 	if (error)      /* A syscall failed */
- 		ctx->runtime_errors++;
-+	else if (level == S_UNFIXABLE)
-+		ctx->unfixable_errors++;
- 	else if (level == S_ERROR)
- 		ctx->errors_found++;
- 	else if (level == S_WARN)
-diff --git a/scrub/common.h b/scrub/common.h
-index b34cb4a6..886e6c2e 100644
---- a/scrub/common.h
-+++ b/scrub/common.h
-@@ -17,6 +17,7 @@ bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
- 
- enum error_level {
- 	S_ERROR	= 0,
-+	S_UNFIXABLE,
- 	S_WARN,
- 	S_REPAIR,
- 	S_INFO,
-@@ -40,6 +41,8 @@ void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
- 	__str_out(ctx, str, S_REPAIR,	0,	__FILE__, __LINE__, __VA_ARGS__)
- #define record_preen(ctx, str, ...) \
- 	__str_out(ctx, str, S_PREEN,	0,	__FILE__, __LINE__, __VA_ARGS__)
-+#define str_unfixable_error(ctx, str, ...) \
-+	__str_out(ctx, str, S_UNFIXABLE, 0,	__FILE__, __LINE__, __VA_ARGS__)
- 
- #define dbg_printf(fmt, ...) \
- 	do {if (debug > 1) {printf(fmt, __VA_ARGS__);}} while (0)
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 79c8a6b8..a030b1de 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -99,7 +99,8 @@ xfs_process_action_items(
- 	workqueue_destroy(&wq);
- 
- 	pthread_mutex_lock(&ctx->lock);
--	if (moveon && ctx->errors_found == 0 && want_fstrim) {
-+	if (moveon && ctx->errors_found == 0 && ctx->unfixable_errors == 0 &&
-+	    want_fstrim) {
- 		fstrim(ctx);
- 		progress_add(1);
- 	}
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 224081d5..d90b4028 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -336,7 +336,7 @@ xfs_scan_connections(
- 	bool			moveon = true;
- 	bool			ret;
- 
--	if (ctx->errors_found) {
-+	if (ctx->errors_found || ctx->unfixable_errors) {
- 		str_info(ctx, ctx->mntpoint,
- _("Filesystem has errors, skipping connectivity checks."));
- 		return true;
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 33ed75cc..1e55fad8 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -140,7 +140,7 @@ report_badfile(
- 	bad_length = min(start + length,
- 			 br->bmap->bm_physical + br->bmap->bm_length) - start;
- 
--	str_error(br->ctx, br->descr,
-+	str_unfixable_error(br->ctx, br->descr,
- _("media error at data offset %llu length %llu."),
- 			br->bmap->bm_offset + bad_offset, bad_length);
- 	return 0;
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 99bf54f5..645b2c50 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -515,12 +515,16 @@ report_outcome(
- 
- 	total_errors = ctx->errors_found + ctx->runtime_errors;
- 
--	if (total_errors == 0 && ctx->warnings_found == 0) {
-+	if (total_errors == 0 &&
-+	    ctx->unfixable_errors == 0 &&
-+	    ctx->warnings_found == 0) {
- 		log_info(ctx, _("No errors found."));
- 		return;
- 	}
- 
--	if (total_errors == 0) {
-+	if (total_errors == 0 && ctx->warnings_found == 0) {
-+		/* nothing to report */
-+	} else if (total_errors == 0) {
- 		fprintf(stderr, _("%s: warnings found: %llu\n"), ctx->mntpoint,
- 				ctx->warnings_found);
- 		log_warn(ctx, _("warnings found: %llu"), ctx->warnings_found);
-@@ -536,6 +540,13 @@ report_outcome(
- 				total_errors, ctx->warnings_found);
- 	}
- 
-+	if (ctx->unfixable_errors) {
-+		fprintf(stderr, _("%s: unfixable errors found: %llu\n"),
-+				ctx->mntpoint, ctx->unfixable_errors);
-+		log_err(ctx, _("unfixable errors found: %llu"),
-+				ctx->unfixable_errors);
-+	}
-+
- 	/*
- 	 * Don't advise the user to run repair unless we were successful in
- 	 * setting up the scrub and we actually saw corruptions.  Warnings
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index bce56b1d..6984d24c 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -74,6 +74,7 @@ struct scrub_ctx {
- 	unsigned long long	max_errors;
- 	unsigned long long	runtime_errors;
- 	unsigned long long	errors_found;
-+	unsigned long long	unfixable_errors;
- 	unsigned long long	warnings_found;
- 	unsigned long long	inodes_checked;
- 	unsigned long long	bytes_checked;
+--D
 
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=scrub-deferred-descriptions
