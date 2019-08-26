@@ -7,62 +7,61 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0D9FC3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C2D45C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87D522186A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 86E5D2186A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:32:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MbyAODab"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hwDY2dIm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728969AbfHZVcu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:32:50 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:52362 "EHLO
+        id S1729008AbfHZVcx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:32:53 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:52506 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728677AbfHZVcr (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:32:47 -0400
+        with ESMTP id S1728677AbfHZVcw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:32:52 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLElSs161898;
-        Mon, 26 Aug 2019 21:32:43 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLF5Kc162141;
+        Mon, 26 Aug 2019 21:32:49 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=01P+uYa7qTluvpzK1A421h86QagJI+Jtv33c8rv6Gys=;
- b=MbyAODabK2Y3fLAeejI8QZeCBkn7XgwB+8Vkrgy34GdgCKMBjDuWW4lHt9oAUVil5daz
- Vg8gU04jhS8HEryzG/PhvPZTaR+Kl2J6oydsvpkllerirR5XfYkjZybJWD5cl/fse9PR
- HPqTMzwA9+cvyVHBT4+I4Ys0pG5DSqlDhqaRG7nATTDP7oaOViO+MQnrxOR1AJfiSk7q
- Xc96762bYXwyAt0cA1IsYEO5ctDN5wCv+PNsMsyXswVka608tN9yul4Zvs81909pdJey
- Yt/4ZRgI7omcRg9CawjSybWc0e2gvKYfxLYHHnUQAL4+nfDCDhzEIxGW9JGk1uIARn6r yg== 
+ bh=yaGs/ds5kGsBhKNyMcNeVXrSonrxhIWbpirdQkKTD3s=;
+ b=hwDY2dImANy2mjwGZgM08nX6dmTqYK43bV5k8cLyRDogQDApD1JCIY73Ci0jKWw2WgDG
+ XsqhJEidNlGNDlIsEavcvSvwhQpEvu3QPoHkBJtAoYduTIHTuETf1B2Dp5Fg9/ckH03S
+ qccdtFaFSXxzJnIfwM0InrSNTH/cKgysoi45hrkuh1caXjjGJ4vcNkmNGHeiA1dqnsft
+ T9W5UHZrc5yAq8g5XDZAwDdqheB8x+YD9a0te/yaxkUlGZsyLhqZG/f7pX6i3VRV48TS
+ fV4FlTgUyf7/41uJuahlODlA8dhFqh0pcvrhP5gNiKWzSbMNzRZz4KAnOkTwsj+Ls/IM 0A== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2umq5t82jy-1
+        by userp2130.oracle.com with ESMTP id 2umq5t82ke-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:32:43 +0000
+        Mon, 26 Aug 2019 21:32:49 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIKi2170003;
-        Mon, 26 Aug 2019 21:32:42 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2umj278b91-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIPic170109;
+        Mon, 26 Aug 2019 21:32:49 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2umj278bbu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:32:42 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLWg2J031135;
-        Mon, 26 Aug 2019 21:32:42 GMT
+        Mon, 26 Aug 2019 21:32:49 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7QLWmYn030617;
+        Mon, 26 Aug 2019 21:32:48 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:32:41 -0700
-Subject: [PATCH 2/3] xfs_scrub: implement deferred description string
- rendering
+        with ESMTP ; Mon, 26 Aug 2019 14:32:48 -0700
+Subject: [PATCH 3/3] xfs_scrub: adapt phase5 to deferred descriptions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:32:33 -0700
-Message-ID: <156685515347.2843450.12844192480104385890.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:32:47 -0700
+Message-ID: <156685516698.2843450.5657240622652218872.stgit@magnolia>
 In-Reply-To: <156685514116.2843450.13345990837227741560.stgit@magnolia>
 References: <156685514116.2843450.13345990837227741560.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9361 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
@@ -81,486 +80,410 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-A flamegraph analysis of xfs_scrub runtimes showed that we spend 7-10%
-of the program's userspace runtime rendering prefix strings in case we
-want to show a message about something we're checking, whether or not
-that string ever actually gets used.
-
-For a non-verbose run on a clean filesystem, this work is totally
-unnecessary.  We could defer the message catalog lookup and snprintf
-call until we actually need that message, so build enough of a function
-closure mechanism so that we can capture some location information when
-its convenient and push that all the way to the edge of the call graph
-and only when we need it.
+Apply the deferred description mechanism to phase 5 so that we don't
+build inode prefix strings unless we actually want to say something
+about an inode's attributes or directory entries.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/Makefile    |    2 +
- scrub/descr.c     |  107 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/descr.h     |   29 ++++++++++++++
- scrub/scrub.c     |   75 +++++++++++++++++++++----------------
- scrub/xfs_scrub.c |    8 ++++
- 5 files changed, 188 insertions(+), 33 deletions(-)
- create mode 100644 scrub/descr.c
- create mode 100644 scrub/descr.h
+ scrub/phase5.c   |   74 ++++++++++++++++++++++++++++++++++++------------------
+ scrub/unicrash.c |   31 ++++++++++++-----------
+ scrub/unicrash.h |    6 ++--
+ 3 files changed, 69 insertions(+), 42 deletions(-)
 
 
-diff --git a/scrub/Makefile b/scrub/Makefile
-index 882da8fd..47c887eb 100644
---- a/scrub/Makefile
-+++ b/scrub/Makefile
-@@ -34,6 +34,7 @@ endif	# scrub_prereqs
- HFILES = \
- common.h \
- counter.h \
-+descr.h \
- disk.h \
- filemap.h \
- fscounters.h \
-@@ -50,6 +51,7 @@ xfs_scrub.h
- CFILES = \
- common.c \
- counter.c \
-+descr.c \
- disk.c \
- filemap.c \
- fscounters.c \
-diff --git a/scrub/descr.c b/scrub/descr.c
-new file mode 100644
-index 00000000..eedb57d6
---- /dev/null
-+++ b/scrub/descr.c
-@@ -0,0 +1,107 @@
-+// SPDX-License-Identifier: GPL-2.0-or-newer
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#include "xfs.h"
-+#include <assert.h>
-+#include <sys/statvfs.h>
-+#include "platform_defs.h"
-+#include "input.h"
-+#include "path.h"
-+#include "xfs_scrub.h"
-+#include "ptvar.h"
-+#include "common.h"
-+#include "descr.h"
-+
-+/*
-+ * Deferred String Description Renderer
-+ * ====================================
-+ * There are many places in xfs_scrub where some event occurred and we'd like
-+ * to be able to print some sort of message describing what happened, and
-+ * where.  However, we don't know whether we're going to need the description
-+ * of where ahead of time and there's little point in spending any time looking
-+ * up gettext strings and formatting buffers until we actually need to.
-+ *
-+ * This code provides enough of a function closure that we are able to record
-+ * some information about the program status but defer rendering the textual
-+ * description until we know that we need it.  Once we've rendered the string
-+ * we can skip it for subsequent calls.  We use per-thread storage for the
-+ * message buffer to amortize the memory allocation across calls.
-+ *
-+ * On a clean filesystem this can reduce the xfs_scrub runtime by 7-10% by
-+ * avoiding unnecessary work.
-+ */
-+
-+static struct ptvar *descr_ptvar;
-+
-+/* Global buffer for when we aren't running in threaded mode. */
-+static char global_dsc_buf[DESCR_BUFSZ];
-+
-+/*
-+ * Render a textual description string using the function and location stored
-+ * in the description context.
-+ */
-+const char *
-+__descr_render(
-+	struct descr		*dsc,
-+	const char		*file,
-+	int			line)
-+{
-+	char			*dsc_buf;
-+	int			ret;
-+
-+	if (descr_ptvar) {
-+		dsc_buf = ptvar_get(descr_ptvar, &ret);
-+		if (ret)
-+			return _("error finding description buffer");
-+	} else
-+		dsc_buf = global_dsc_buf;
-+
-+	ret = dsc->fn(dsc->ctx, dsc_buf, DESCR_BUFSZ, dsc->where);
-+	if (ret < 0) {
-+		snprintf(dsc_buf, DESCR_BUFSZ,
-+_("error %d while rendering description at %s line %d\n"),
-+				ret, file, line);
-+	}
-+
-+	return dsc_buf;
-+}
-+
-+/*
-+ * Set a new location for this deferred-rendering string and discard any
-+ * old rendering.
-+ */
-+void
-+descr_set(
-+	struct descr		*dsc,
-+	void			*where)
-+{
-+	dsc->where = where;
-+}
-+
-+/* Allocate all the description string buffers. */
-+bool
-+descr_init_phase(
-+	struct scrub_ctx	*ctx,
-+	unsigned int		nr_threads)
-+{
-+	int			ret;
-+
-+	assert(descr_ptvar == NULL);
-+	ret = ptvar_alloc(nr_threads, DESCR_BUFSZ, &descr_ptvar);
-+	if (ret) {
-+		str_liberror(ctx, ret, _("creating description buffer"));
-+		return false;
-+	}
-+	return true;
-+}
-+
-+/* Free all the description string buffers. */
-+void
-+descr_end_phase(void)
-+{
-+	if (descr_ptvar)
-+		ptvar_free(descr_ptvar);
-+	descr_ptvar = NULL;
-+}
-diff --git a/scrub/descr.h b/scrub/descr.h
-new file mode 100644
-index 00000000..598e5888
---- /dev/null
-+++ b/scrub/descr.h
-@@ -0,0 +1,29 @@
-+/* SPDX-License-Identifier: GPL-2.0-or-newer */
-+/*
-+ * Copyright (C) 2019 Oracle.  All Rights Reserved.
-+ * Author: Darrick J. Wong <darrick.wong@oracle.com>
-+ */
-+#ifndef XFS_SCRUB_DESCR_H_
-+#define XFS_SCRUB_DESCR_H_
-+
-+typedef int (*descr_fn)(struct scrub_ctx *ctx, char *buf, size_t buflen,
-+			void *data);
-+
-+struct descr {
-+	struct scrub_ctx	*ctx;
-+	descr_fn		fn;
-+	void			*where;
-+};
-+
-+#define DEFINE_DESCR(_name, _ctx, _fn) \
-+	struct descr _name = { .ctx = (_ctx), .fn = (_fn) }
-+
-+const char *__descr_render(struct descr *dsc, const char *file, int line);
-+#define descr_render(dsc) __descr_render((dsc), __FILE__, __LINE__)
-+
-+void descr_set(struct descr *dsc, void *where);
-+
-+bool descr_init_phase(struct scrub_ctx *ctx, unsigned int nr_threads);
-+void descr_end_phase(void);
-+
-+#endif /* XFS_SCRUB_DESCR_H_ */
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 82beb7ad..8c3ae2a6 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -18,6 +18,7 @@
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index d90b4028..0ed48122 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -21,6 +21,7 @@
+ #include "inodes.h"
+ #include "progress.h"
  #include "scrub.h"
- #include "xfs_errortag.h"
- #include "repair.h"
 +#include "descr.h"
+ #include "unicrash.h"
  
- /* Online scrub and repair wrappers. */
- 
-@@ -90,33 +91,35 @@ static const struct scrub_descr scrubbers[XFS_SCRUB_TYPE_NR] = {
- };
- 
- /* Format a scrub description. */
--static void
-+static int
- format_scrub_descr(
- 	struct scrub_ctx		*ctx,
- 	char				*buf,
- 	size_t				buflen,
--	struct xfs_scrub_metadata	*meta)
-+	void				*where)
+ /* Phase 5: Check directory connectivity. */
+@@ -34,7 +35,7 @@
+ static bool
+ xfs_scrub_check_name(
+ 	struct scrub_ctx	*ctx,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	const char		*namedescr,
+ 	const char		*name)
  {
-+	struct xfs_scrub_metadata	*meta = where;
- 	const struct scrub_descr	*sd = &scrubbers[meta->sm_type];
+@@ -44,7 +45,7 @@ xfs_scrub_check_name(
  
- 	switch (sd->type) {
- 	case ST_AGHEADER:
- 	case ST_PERAG:
--		snprintf(buf, buflen, _("AG %u %s"), meta->sm_agno,
-+		return snprintf(buf, buflen, _("AG %u %s"), meta->sm_agno,
- 				_(sd->name));
- 		break;
- 	case ST_INODE:
--		xfs_scrub_render_ino_suffix(ctx, buf, buflen,
-+		return xfs_scrub_render_ino_suffix(ctx, buf, buflen,
- 				meta->sm_ino, meta->sm_gen, " %s", _(sd->name));
- 		break;
- 	case ST_FS:
- 	case ST_SUMMARY:
--		snprintf(buf, buflen, _("%s"), _(sd->name));
-+		return snprintf(buf, buflen, _("%s"), _(sd->name));
- 		break;
- 	case ST_NONE:
- 		assert(0);
- 		break;
+ 	/* Complain about zero length names. */
+ 	if (*name == '\0' && should_warn_about_name(ctx)) {
+-		str_warn(ctx, descr, _("Zero length name found."));
++		str_warn(ctx, descr_render(dsc), _("Zero length name found."));
+ 		return true;
  	}
-+	return -1;
- }
  
- /* Predicates for scrub flag state. */
-@@ -161,21 +164,24 @@ static inline bool needs_repair(struct xfs_scrub_metadata *sm)
- static inline void
- xfs_scrub_warn_incomplete_scrub(
+@@ -59,10 +60,10 @@ xfs_scrub_check_name(
+ 	if (bad && should_warn_about_name(ctx)) {
+ 		errname = string_escape(name);
+ 		if (!errname) {
+-			str_errno(ctx, descr);
++			str_errno(ctx, descr_render(dsc));
+ 			return false;
+ 		}
+-		str_info(ctx, descr,
++		str_info(ctx, descr_render(dsc),
+ _("Control character found in %s name \"%s\"."),
+ 				namedescr, errname);
+ 		free(errname);
+@@ -78,7 +79,7 @@ _("Control character found in %s name \"%s\"."),
+ static bool
+ xfs_scrub_scan_dirents(
+ 	struct scrub_ctx	*ctx,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	int			*fd,
+ 	struct xfs_bulkstat	*bstat)
+ {
+@@ -89,7 +90,7 @@ xfs_scrub_scan_dirents(
+ 
+ 	dir = fdopendir(*fd);
+ 	if (!dir) {
+-		str_errno(ctx, descr);
++		str_errno(ctx, descr_render(dsc));
+ 		goto out;
+ 	}
+ 	*fd = -1; /* closedir will close *fd for us */
+@@ -101,9 +102,9 @@ xfs_scrub_scan_dirents(
+ 	dentry = readdir(dir);
+ 	while (dentry) {
+ 		if (uc)
+-			moveon = unicrash_check_dir_name(uc, descr, dentry);
++			moveon = unicrash_check_dir_name(uc, dsc, dentry);
+ 		else
+-			moveon = xfs_scrub_check_name(ctx, descr,
++			moveon = xfs_scrub_check_name(ctx, dsc,
+ 					_("directory"), dentry->d_name);
+ 		if (!moveon)
+ 			break;
+@@ -138,7 +139,7 @@ static const struct attrns_decode attr_ns[] = {
+ static bool
+ xfs_scrub_scan_fhandle_namespace_xattrs(
  	struct scrub_ctx		*ctx,
 -	const char			*descr,
 +	struct descr			*dsc,
- 	struct xfs_scrub_metadata	*meta)
- {
- 	if (is_incomplete(meta))
--		str_info(ctx, descr, _("Check incomplete."));
-+		str_info(ctx, descr_render(dsc), _("Check incomplete."));
- 
- 	if (is_suspicious(meta)) {
- 		if (debug)
--			str_info(ctx, descr, _("Possibly suspect metadata."));
-+			str_info(ctx, descr_render(dsc),
-+					_("Possibly suspect metadata."));
- 		else
--			str_warn(ctx, descr, _("Possibly suspect metadata."));
-+			str_warn(ctx, descr_render(dsc),
-+					_("Possibly suspect metadata."));
+ 	struct xfs_handle		*handle,
+ 	struct xfs_bulkstat		*bstat,
+ 	const struct attrns_decode	*attr_ns)
+@@ -169,10 +170,10 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+ 			snprintf(keybuf, XATTR_NAME_MAX, "%s.%s", attr_ns->name,
+ 					ent->a_name);
+ 			if (uc)
+-				moveon = unicrash_check_xattr_name(uc, descr,
++				moveon = unicrash_check_xattr_name(uc, dsc,
+ 						keybuf);
+ 			else
+-				moveon = xfs_scrub_check_name(ctx, descr,
++				moveon = xfs_scrub_check_name(ctx, dsc,
+ 						_("extended attribute"),
+ 						keybuf);
+ 			if (!moveon)
+@@ -185,7 +186,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+ 				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
  	}
- 
- 	if (xref_failed(meta))
--		str_info(ctx, descr, _("Cross-referencing failed."));
-+		str_info(ctx, descr_render(dsc),
-+				_("Cross-referencing failed."));
- }
- 
- /* Do a read-only check of some metadata. */
-@@ -186,16 +192,16 @@ xfs_check_metadata(
- 	struct xfs_scrub_metadata	*meta,
- 	bool				is_inode)
+ 	if (error && errno != ESTALE)
+-		str_errno(ctx, descr);
++		str_errno(ctx, descr_render(dsc));
+ out:
+ 	unicrash_free(uc);
+ 	return moveon;
+@@ -198,7 +199,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+ static bool
+ xfs_scrub_scan_fhandle_xattrs(
+ 	struct scrub_ctx		*ctx,
+-	const char			*descr,
++	struct descr			*dsc,
+ 	struct xfs_handle		*handle,
+ 	struct xfs_bulkstat		*bstat)
  {
--	char				buf[DESCR_BUFSZ];
-+	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
- 	unsigned int			tries = 0;
- 	int				code;
- 	int				error;
+@@ -206,7 +207,7 @@ xfs_scrub_scan_fhandle_xattrs(
+ 	bool				moveon = true;
  
- 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
- 	assert(meta->sm_type < XFS_SCRUB_TYPE_NR);
--	format_scrub_descr(ctx, buf, DESCR_BUFSZ, meta);
-+	descr_set(&dsc, meta);
+ 	for (ns = attr_ns; ns->name; ns++) {
+-		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, descr,
++		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, dsc,
+ 				handle, bstat, ns);
+ 		if (!moveon)
+ 			break;
+@@ -217,6 +218,19 @@ xfs_scrub_scan_fhandle_xattrs(
+ # define xfs_scrub_scan_fhandle_xattrs(c, d, h, b)	(true)
+ #endif /* HAVE_LIBATTR */
  
--	dbg_printf("check %s flags %xh\n", buf, meta->sm_flags);
-+	dbg_printf("check %s flags %xh\n", descr_render(&dsc), meta->sm_flags);
- retry:
- 	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, meta);
- 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !error)
-@@ -208,13 +214,13 @@ xfs_check_metadata(
- 			return CHECK_DONE;
- 		case ESHUTDOWN:
- 			/* FS already crashed, give up. */
--			str_info(ctx, buf,
-+			str_info(ctx, descr_render(&dsc),
- _("Filesystem is shut down, aborting."));
- 			return CHECK_ABORT;
- 		case EIO:
- 		case ENOMEM:
- 			/* Abort on I/O errors or insufficient memory. */
--			str_errno(ctx, buf);
++static int
++scrub_render_ino(
++	struct scrub_ctx	*ctx,
++	char			*buf,
++	size_t			buflen,
++	void			*data)
++{
++	struct xfs_bstat	*bstat = data;
++
++	return xfs_scrub_render_ino(ctx, buf, buflen, bstat->bs_ino,
++			bstat->bs_gen);
++}
++
+ /*
+  * Verify the connectivity of the directory tree.
+  * We know that the kernel's open-by-handle function will try to reconnect
+@@ -232,18 +246,17 @@ xfs_scrub_connections(
+ 	void			*arg)
+ {
+ 	bool			*pmoveon = arg;
+-	char			descr[DESCR_BUFSZ];
++	DEFINE_DESCR(dsc, ctx, scrub_render_ino);
+ 	bool			moveon = true;
+ 	int			fd = -1;
+ 	int			error;
+ 
+-	xfs_scrub_render_ino(ctx, descr, DESCR_BUFSZ, bstat->bs_ino,
+-			bstat->bs_gen);
++	descr_set(&dsc, bstat);
+ 	background_sleep();
+ 
+ 	/* Warn about naming problems in xattrs. */
+ 	if (bstat->bs_xflags & FS_XFLAG_HASATTR) {
+-		moveon = xfs_scrub_scan_fhandle_xattrs(ctx, descr, handle,
++		moveon = xfs_scrub_scan_fhandle_xattrs(ctx, &dsc, handle,
+ 				bstat);
+ 		if (!moveon)
+ 			goto out;
+@@ -255,14 +268,14 @@ xfs_scrub_connections(
+ 		if (fd < 0) {
+ 			if (errno == ESTALE)
+ 				return ESTALE;
+-			str_errno(ctx, descr);
 +			str_errno(ctx, descr_render(&dsc));
- 			return CHECK_ABORT;
- 		case EDEADLOCK:
- 		case EBUSY:
-@@ -224,12 +230,12 @@ _("Filesystem is shut down, aborting."));
- 			 * The first two should never escape the kernel,
- 			 * and the other two should be reported via sm_flags.
- 			 */
--			str_info(ctx, buf,
-+			str_info(ctx, descr_render(&dsc),
- _("Kernel bug!  errno=%d"), code);
- 			/* fall through */
- 		default:
- 			/* Operational error. */
--			str_errno(ctx, buf);
-+			str_errno(ctx, descr_render(&dsc));
- 			return CHECK_DONE;
+ 			goto out;
  		}
  	}
-@@ -247,7 +253,7 @@ _("Kernel bug!  errno=%d"), code);
+ 
+ 	/* Warn about naming problems in the directory entries. */
+ 	if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
+-		moveon = xfs_scrub_scan_dirents(ctx, descr, &fd, bstat);
++		moveon = xfs_scrub_scan_dirents(ctx, &dsc, &fd, bstat);
+ 		if (!moveon)
+ 			goto out;
  	}
+@@ -272,7 +285,7 @@ xfs_scrub_connections(
+ 	if (fd >= 0) {
+ 		error = close(fd);
+ 		if (error)
+-			str_errno(ctx, descr);
++			str_errno(ctx, descr_render(&dsc));
+ 	}
+ 	if (!moveon)
+ 		*pmoveon = false;
+@@ -284,6 +297,16 @@ xfs_scrub_connections(
+ # define FS_IOC_GETFSLABEL	_IOR(0x94, 49, char[FSLABEL_MAX])
+ #endif /* FS_IOC_GETFSLABEL */
  
- 	/* Complain about incomplete or suspicious metadata. */
--	xfs_scrub_warn_incomplete_scrub(ctx, buf, meta);
-+	xfs_scrub_warn_incomplete_scrub(ctx, &dsc, meta);
- 
- 	/*
- 	 * If we need repairs or there were discrepancies, schedule a
-@@ -255,7 +261,7 @@ _("Kernel bug!  errno=%d"), code);
- 	 */
- 	if (is_corrupt(meta) || xref_disagrees(meta)) {
- 		if (ctx->mode < SCRUB_MODE_REPAIR) {
--			str_error(ctx, buf,
-+			str_error(ctx, descr_render(&dsc),
- _("Repairs are required."));
- 			return CHECK_DONE;
- 		}
-@@ -271,7 +277,7 @@ _("Repairs are required."));
- 		if (ctx->mode != SCRUB_MODE_REPAIR) {
- 			if (!is_inode) {
- 				/* AG or FS metadata, always warn. */
--				str_info(ctx, buf,
-+				str_info(ctx, descr_render(&dsc),
- _("Optimization is possible."));
- 			} else if (!ctx->preen_triggers[meta->sm_type]) {
- 				/* File metadata, only warn once per type. */
-@@ -725,9 +731,9 @@ xfs_repair_metadata(
- 	struct action_item		*aitem,
- 	unsigned int			repair_flags)
++static int
++scrub_render_mountpoint(
++	struct scrub_ctx	*ctx,
++	char			*buf,
++	size_t			buflen,
++	void			*data)
++{
++	return snprintf(buf, buflen, _("%s"), ctx->mntpoint);
++}
++
+ /*
+  * Check the filesystem label for Unicode normalization problems or misleading
+  * sequences.
+@@ -292,6 +315,7 @@ static bool
+ xfs_scrub_fs_label(
+ 	struct scrub_ctx		*ctx)
  {
--	char				buf[DESCR_BUFSZ];
- 	struct xfs_scrub_metadata	meta = { 0 };
- 	struct xfs_scrub_metadata	oldm;
-+	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
- 	int				error;
++	DEFINE_DESCR(dsc, ctx, scrub_render_mountpoint);
+ 	char				label[FSLABEL_MAX];
+ 	struct unicrash			*uc = NULL;
+ 	bool				moveon = true;
+@@ -301,6 +325,8 @@ xfs_scrub_fs_label(
+ 	if (!moveon)
+ 		return false;
  
- 	assert(aitem->type < XFS_SCRUB_TYPE_NR);
-@@ -751,12 +757,13 @@ xfs_repair_metadata(
- 		return CHECK_RETRY;
- 
- 	memcpy(&oldm, &meta, sizeof(oldm));
--	format_scrub_descr(ctx, buf, DESCR_BUFSZ, &meta);
-+	descr_set(&dsc, &oldm);
- 
- 	if (needs_repair(&meta))
--		str_info(ctx, buf, _("Attempting repair."));
-+		str_info(ctx, descr_render(&dsc), _("Attempting repair."));
- 	else if (debug || verbose)
--		str_info(ctx, buf, _("Attempting optimization."));
-+		str_info(ctx, descr_render(&dsc),
-+				_("Attempting optimization."));
- 
- 	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, &meta);
++	descr_set(&dsc, NULL);
++
+ 	/* Retrieve label; quietly bail if we don't support that. */
+ 	error = ioctl(ctx->mnt.fd, FS_IOC_GETFSLABEL, &label);
  	if (error) {
-@@ -765,12 +772,12 @@ xfs_repair_metadata(
- 		case EBUSY:
- 			/* Filesystem is busy, try again later. */
- 			if (debug || verbose)
--				str_info(ctx, buf,
-+				str_info(ctx, descr_render(&dsc),
- _("Filesystem is busy, deferring repair."));
- 			return CHECK_RETRY;
- 		case ESHUTDOWN:
- 			/* Filesystem is already shut down, abort. */
--			str_info(ctx, buf,
-+			str_info(ctx, descr_render(&dsc),
- _("Filesystem is shut down, aborting."));
- 			return CHECK_ABORT;
- 		case ENOTTY:
-@@ -795,13 +802,13 @@ _("Filesystem is shut down, aborting."));
- 			/* fall through */
- 		case EINVAL:
- 			/* Kernel doesn't know how to repair this? */
--			str_error(ctx, buf,
-+			str_error(ctx, descr_render(&dsc),
- _("Don't know how to fix; offline repair required."));
- 			return CHECK_DONE;
- 		case EROFS:
- 			/* Read-only filesystem, can't fix. */
- 			if (verbose || debug || needs_repair(&oldm))
--				str_info(ctx, buf,
-+				str_info(ctx, descr_render(&dsc),
- _("Read-only filesystem; cannot make changes."));
- 			return CHECK_DONE;
- 		case ENOENT:
-@@ -822,12 +829,12 @@ _("Read-only filesystem; cannot make changes."));
- 			 */
- 			if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
- 				return CHECK_RETRY;
--			str_errno(ctx, buf);
-+			str_errno(ctx, descr_render(&dsc));
- 			return CHECK_DONE;
- 		}
- 	}
- 	if (repair_flags & XRM_COMPLAIN_IF_UNFIXED)
--		xfs_scrub_warn_incomplete_scrub(ctx, buf, &meta);
-+		xfs_scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
- 	if (needs_repair(&meta)) {
- 		/*
- 		 * Still broken; if we've been told not to complain then we
-@@ -836,14 +843,16 @@ _("Read-only filesystem; cannot make changes."));
- 		 */
- 		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
- 			return CHECK_RETRY;
--		str_error(ctx, buf,
-+		str_error(ctx, descr_render(&dsc),
- _("Repair unsuccessful; offline repair required."));
- 	} else {
- 		/* Clean operation, no corruption detected. */
- 		if (needs_repair(&oldm))
--			record_repair(ctx, buf, _("Repairs successful."));
-+			record_repair(ctx, descr_render(&dsc),
-+					_("Repairs successful."));
- 		else
--			record_preen(ctx, buf, _("Optimization successful."));
-+			record_preen(ctx, descr_render(&dsc),
-+					_("Optimization successful."));
- 	}
- 	return CHECK_DONE;
- }
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 378f53b4..7749637e 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -15,6 +15,7 @@
+@@ -317,10 +343,10 @@ xfs_scrub_fs_label(
+ 
+ 	/* Otherwise check for weirdness. */
+ 	if (uc)
+-		moveon = unicrash_check_fs_label(uc, ctx->mntpoint, label);
++		moveon = unicrash_check_fs_label(uc, &dsc, label);
+ 	else
+-		moveon = xfs_scrub_check_name(ctx, ctx->mntpoint,
+-				_("filesystem label"), label);
++		moveon = xfs_scrub_check_name(ctx, &dsc, _("filesystem label"),
++				label);
+ 	if (!moveon)
+ 		goto out;
+ out:
+diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+index 3ae91327..149e3b2d 100644
+--- a/scrub/unicrash.c
++++ b/scrub/unicrash.c
+@@ -16,6 +16,7 @@
  #include "path.h"
  #include "xfs_scrub.h"
  #include "common.h"
 +#include "descr.h"
  #include "unicrash.h"
- #include "progress.h"
  
-@@ -467,8 +468,14 @@ run_scrub_phases(
- 			work_threads++;
- 			moveon = progress_init_phase(ctx, progress_fp, phase,
- 					max_work, rshift, work_threads);
-+			if (!moveon)
-+				break;
-+			moveon = descr_init_phase(ctx, work_threads);
- 		} else {
- 			moveon = progress_init_phase(ctx, NULL, phase, 0, 0, 0);
-+			if (!moveon)
-+				break;
-+			moveon = descr_init_phase(ctx, 1);
- 		}
- 		if (!moveon)
- 			break;
-@@ -480,6 +487,7 @@ _("Scrub aborted after phase %d."),
- 			break;
- 		}
- 		progress_end_phase();
-+		descr_end_phase();
- 		moveon = phase_end(&pi, phase);
- 		if (!moveon)
- 			break;
+ /*
+@@ -501,7 +502,7 @@ unicrash_free(
+ static void
+ unicrash_complain(
+ 	struct unicrash		*uc,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	const char		*what,
+ 	struct name_entry	*entry,
+ 	unsigned int		badflags,
+@@ -520,7 +521,7 @@ unicrash_complain(
+ 	 * that makes "hig<rtl>gnp.sh" render like "highs.png".
+ 	 */
+ 	if (badflags & UNICRASH_BIDI_OVERRIDE) {
+-		str_warn(uc->ctx, descr,
++		str_warn(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s contains suspicious text direction overrides."),
+ 				bad1, what);
+ 		goto out;
+@@ -533,7 +534,7 @@ _("Unicode name \"%s\" in %s contains suspicious text direction overrides."),
+ 	 * sequences, but they both appear as "café".
+ 	 */
+ 	if (badflags & UNICRASH_NOT_UNIQUE) {
+-		str_warn(uc->ctx, descr,
++		str_warn(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s renders identically to \"%s\"."),
+ 				bad1, what, bad2);
+ 		goto out;
+@@ -546,7 +547,7 @@ _("Unicode name \"%s\" in %s renders identically to \"%s\"."),
+ 	 */
+ 	if ((badflags & UNICRASH_ZERO_WIDTH) &&
+ 	    (badflags & UNICRASH_CONFUSABLE)) {
+-		str_warn(uc->ctx, descr,
++		str_warn(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s could be confused with '%s' due to invisible characters."),
+ 				bad1, what, bad2);
+ 		goto out;
+@@ -557,7 +558,7 @@ _("Unicode name \"%s\" in %s could be confused with '%s' due to invisible charac
+ 	 * invisibly in filechooser UIs.
+ 	 */
+ 	if (badflags & UNICRASH_CONTROL_CHAR) {
+-		str_warn(uc->ctx, descr,
++		str_warn(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s contains control characters."),
+ 				bad1, what);
+ 		goto out;
+@@ -579,7 +580,7 @@ _("Unicode name \"%s\" in %s contains control characters."),
+ 	 * warn about this too loudly.
+ 	 */
+ 	if (badflags & UNICRASH_BIDI_MIXED) {
+-		str_info(uc->ctx, descr,
++		str_info(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s mixes bidirectional characters."),
+ 				bad1, what);
+ 		goto out;
+@@ -592,7 +593,7 @@ _("Unicode name \"%s\" in %s mixes bidirectional characters."),
+ 	 * and "moo.l" look the same, maybe they do not.
+ 	 */
+ 	if (badflags & UNICRASH_CONFUSABLE) {
+-		str_info(uc->ctx, descr,
++		str_info(uc->ctx, descr_render(dsc),
+ _("Unicode name \"%s\" in %s could be confused with \"%s\"."),
+ 				bad1, what, bad2);
+ 	}
+@@ -653,7 +654,7 @@ unicrash_add(
+ static bool
+ __unicrash_check_name(
+ 	struct unicrash		*uc,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	const char		*namedescr,
+ 	const char		*name,
+ 	xfs_ino_t		ino)
+@@ -674,7 +675,7 @@ __unicrash_check_name(
+ 		return false;
+ 
+ 	if (badflags)
+-		unicrash_complain(uc, descr, namedescr, new_entry, badflags,
++		unicrash_complain(uc, dsc, namedescr, new_entry, badflags,
+ 				dup_entry);
+ 
+ 	return true;
+@@ -684,12 +685,12 @@ __unicrash_check_name(
+ bool
+ unicrash_check_dir_name(
+ 	struct unicrash		*uc,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	struct dirent		*dentry)
+ {
+ 	if (!uc)
+ 		return true;
+-	return __unicrash_check_name(uc, descr, _("directory"),
++	return __unicrash_check_name(uc, dsc, _("directory"),
+ 			dentry->d_name, dentry->d_ino);
+ }
+ 
+@@ -700,12 +701,12 @@ unicrash_check_dir_name(
+ bool
+ unicrash_check_xattr_name(
+ 	struct unicrash		*uc,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	const char		*attrname)
+ {
+ 	if (!uc)
+ 		return true;
+-	return __unicrash_check_name(uc, descr, _("extended attribute"),
++	return __unicrash_check_name(uc, dsc, _("extended attribute"),
+ 			attrname, 0);
+ }
+ 
+@@ -715,11 +716,11 @@ unicrash_check_xattr_name(
+ bool
+ unicrash_check_fs_label(
+ 	struct unicrash		*uc,
+-	const char		*descr,
++	struct descr		*dsc,
+ 	const char		*label)
+ {
+ 	if (!uc)
+ 		return true;
+-	return __unicrash_check_name(uc, descr, _("filesystem label"),
++	return __unicrash_check_name(uc, dsc, _("filesystem label"),
+ 			label, 0);
+ }
+diff --git a/scrub/unicrash.h b/scrub/unicrash.h
+index feb9cc86..af96b230 100644
+--- a/scrub/unicrash.h
++++ b/scrub/unicrash.h
+@@ -19,11 +19,11 @@ bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+ 		struct xfs_bulkstat *bstat);
+ bool unicrash_fs_label_init(struct unicrash **ucp, struct scrub_ctx *ctx);
+ void unicrash_free(struct unicrash *uc);
+-bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
++bool unicrash_check_dir_name(struct unicrash *uc, struct descr *dsc,
+ 		struct dirent *dirent);
+-bool unicrash_check_xattr_name(struct unicrash *uc, const char *descr,
++bool unicrash_check_xattr_name(struct unicrash *uc, struct descr *dsc,
+ 		const char *attrname);
+-bool unicrash_check_fs_label(struct unicrash *uc, const char *descr,
++bool unicrash_check_fs_label(struct unicrash *uc, struct descr *dsc,
+ 		const char *label);
+ #else
+ # define unicrash_dir_init(u, c, b)		(true)
 
