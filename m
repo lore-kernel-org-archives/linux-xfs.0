@@ -6,37 +6,37 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0649FC3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 23:22:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E287FC3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 23:24:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC0BF206B7
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 23:22:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9FAD206B7
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 23:24:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726944AbfHZXWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 19:22:07 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43906 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726020AbfHZXWH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 19:22:07 -0400
+        id S1726278AbfHZXYS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 19:24:18 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:53791 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726250AbfHZXYS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 19:24:18 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7C00812E9AA;
-        Tue, 27 Aug 2019 09:22:05 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 2623243BE69;
+        Tue, 27 Aug 2019 09:24:15 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i2OJH-0000mC-VU; Tue, 27 Aug 2019 09:22:03 +1000
-Date:   Tue, 27 Aug 2019 09:22:03 +1000
+        id 1i2OLM-0000mP-9W; Tue, 27 Aug 2019 09:24:12 +1000
+Date:   Tue, 27 Aug 2019 09:24:12 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: remove unnecessary int returns from deferred
- rmap functions
-Message-ID: <20190826232203.GR1119@dread.disaster.area>
+Subject: Re: [PATCH 3/5] xfs: remove unnecessary int returns from deferred
+ refcount functions
+Message-ID: <20190826232412.GS1119@dread.disaster.area>
 References: <156685615360.2853674.5160169873645196259.stgit@magnolia>
- <156685616759.2853674.14113052736055839178.stgit@magnolia>
+ <156685617388.2853674.17040064326231302107.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156685616759.2853674.14113052736055839178.stgit@magnolia>
+In-Reply-To: <156685617388.2853674.17040064326231302107.stgit@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
@@ -49,25 +49,24 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 26, 2019 at 02:49:27PM -0700, Darrick J. Wong wrote:
+On Mon, Aug 26, 2019 at 02:49:33PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Remove the return value from the functions that schedule deferred rmap
-> operations since they never fail and do not return status.
+> Remove the return value from the functions that schedule deferred
+> refcount operations since they never fail and do not return status.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_bmap.c     |   36 ++++++++++++------------------------
->  fs/xfs/libxfs/xfs_refcount.c |    9 +++------
->  fs/xfs/libxfs/xfs_rmap.c     |   33 ++++++++++++++++-----------------
->  fs/xfs/libxfs/xfs_rmap.h     |   10 +++++-----
->  4 files changed, 36 insertions(+), 52 deletions(-)
+>  fs/xfs/libxfs/xfs_bmap.c     |   21 ++++++---------------
+>  fs/xfs/libxfs/xfs_refcount.c |   39 ++++++++++++++++-----------------------
+>  fs/xfs/libxfs/xfs_refcount.h |   12 ++++++------
+>  fs/xfs/xfs_refcount_item.c   |   10 ++++------
+>  fs/xfs/xfs_reflink.c         |   15 ++++-----------
+>  5 files changed, 36 insertions(+), 61 deletions(-)
 
-Amazing how much gunk a bit of unnecessary error checking adds...
-Looks good.
+looks good.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
