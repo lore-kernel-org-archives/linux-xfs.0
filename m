@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A93EC3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 18:38:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22BA8C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 18:38:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4814E206B7
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 18:38:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECA57206BA
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 18:38:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lH5LDDJI"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="psxkvsB0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728694AbfHZSiI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 14:38:08 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:42452 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727687AbfHZSiI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 14:38:08 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QIYDpm059818
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:07 GMT
+        id S1732515AbfHZSi0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 14:38:26 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39594 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727687AbfHZSi0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 14:38:26 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QIXvWd046915
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:25 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
  subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=21jz/Zgc82WoioF5CjnYrXDIae9uRzByav67Kzs5I3k=;
- b=lH5LDDJI4sp5jqiwEdVxvD05yS4QdaQBTEzdJDxuIAh36jkY5IG1j2lQCx9ljxQsOK8S
- 55uqu2X2GW4MO5ufIZEtwz8S69AhFm1LdSSmvI/0Fbkuu/6vPZcFndWmAhhiaAU3ncAZ
- J/KjLhpyfl0SrjHLa6YL+e/3G2iMxMPN5UDGCZzXe+OE+H4fJxdqfzRcwIF/VBOmSi4J
- crCDQUPj3cJ4crlXZKWFXgmgCIrJSnGBLljJBzIZ8BD/iZeyU7rnaB0NmY+rWFQDYIYB
- 0Go2goEnfMzdP6E4GAclQ8yo26ZuuGL31i5UXzs3LkopEa/AItljTREVu9mhk28SWzYZ /Q== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2ujw703byn-1
+ bh=BdUZ1jA6Y/9xb9TRgbT5yXqkXPlmaj8uNbX0wKiR580=;
+ b=psxkvsB0yuwbXl1BzAwhb9eI76uuRxUEm3+DlaIdOX43M7rHM7Z9Qp88u7FOLMc3vxjI
+ 2zQBBRiDxxLg0TG4xgdgz/a2cNN9YcAFpCIh2PAWsPXfqBmzkIFafRoVRt7FkpToDps0
+ P62otz3quTnG95Hl45y7GnkFAgXInDxcngyFvz9zTEDY9wOqAtdWmhbctdXKKLY62yW7
+ s08TrlKNqtz2+Eo6OK0guCBFkyV8kVvFYacgfqWWztAGyzwEDun0G7/IdgpfH1YAXFHF
+ +VD4ldlpnvTmQK4Ra9a/qM4TvpaZUoTyJs2+eeiR+nyu5VdX6l5+UQttGySx6yIINWkq 3w== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2ujwvqb7gq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:06 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QIY73v104150
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:06 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2umj1tan66-1
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:24 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QIXmMm078916
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:36:24 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2umhu7r1es-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:05 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7QIc4Fl003800
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:38:05 GMT
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:36:24 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QIaNvJ028171
+        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 18:36:23 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 11:38:04 -0700
-Date:   Mon, 26 Aug 2019 11:38:03 -0700
+        with ESMTP ; Mon, 26 Aug 2019 11:36:23 -0700
+Date:   Mon, 26 Aug 2019 11:36:22 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [PATCH] xfs: fix sign handling problem in xfs_bmbt_diff_two_keys
-Message-ID: <20190826183803.GQ1037350@magnolia>
+Subject: [PATCH] xfs: don't return _QUERY_ABORT from xfs_rmap_has_other_keys
+Message-ID: <20190826183622.GP1037350@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -76,42 +76,28 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In xfs_bmbt_diff_two_keys, we perform a signed int64_t subtraction with
-two unsigned 64-bit quantities.  If the second quantity is actually the
-"maximum" key (all ones) as used in _query_all, the subtraction
-effectively becomes addition of two positive numbers and the function
-returns incorrect results.  Fix this with explicit comparisons of the
-unsigned values.
+The xfs_rmap_has_other_keys helper aborts the iteration as soon as it
+has an answer.  Don't let this abort leak out to callers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_bmap_btree.c |   16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ fs/xfs/libxfs/xfs_rmap.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-index fbb18ba5d905..3c1a805b3775 100644
---- a/fs/xfs/libxfs/xfs_bmap_btree.c
-+++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-@@ -400,8 +400,20 @@ xfs_bmbt_diff_two_keys(
- 	union xfs_btree_key	*k1,
- 	union xfs_btree_key	*k2)
- {
--	return (int64_t)be64_to_cpu(k1->bmbt.br_startoff) -
--			  be64_to_cpu(k2->bmbt.br_startoff);
-+	uint64_t		a = be64_to_cpu(k1->bmbt.br_startoff);
-+	uint64_t		b = be64_to_cpu(k2->bmbt.br_startoff);
+diff --git a/fs/xfs/libxfs/xfs_rmap.c b/fs/xfs/libxfs/xfs_rmap.c
+index e6aeb390b2fb..819693ef852c 100644
+--- a/fs/xfs/libxfs/xfs_rmap.c
++++ b/fs/xfs/libxfs/xfs_rmap.c
+@@ -2540,8 +2540,11 @@ xfs_rmap_has_other_keys(
+ 
+ 	error = xfs_rmap_query_range(cur, &low, &high,
+ 			xfs_rmap_has_other_keys_helper, &rks);
++	if (error < 0)
++		return error;
 +
-+	/*
-+	 * Note: This routine previously casted a and b to int64 and subtracted
-+	 * them to generate a result.  This lead to problems if b was the
-+	 * "maximum" key value (all ones) being signed incorrectly, hence this
-+	 * somewhat less efficient version.
-+	 */
-+	if (a > b)
-+		return 1;
-+	else if (b > a)
-+		return -1;
+ 	*has_rmap = rks.has_rmap;
+-	return error;
 +	return 0;
  }
  
- static xfs_failaddr_t
+ const struct xfs_owner_info XFS_RMAP_OINFO_SKIP_UPDATE = {
