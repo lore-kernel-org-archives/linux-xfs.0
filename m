@@ -7,57 +7,58 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C07F3C3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:31:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E852EC3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:31:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 90E3921872
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:31:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B87C621881
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:31:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="liXP1aw9"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eKerFFj4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728697AbfHZVbI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:31:08 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52752 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728673AbfHZVbI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:31:08 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLQjXC003298;
-        Mon, 26 Aug 2019 21:31:05 GMT
+        id S1728704AbfHZVbR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:31:17 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:34934 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728673AbfHZVbR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:31:17 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLDl9P000864;
+        Mon, 26 Aug 2019 21:31:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=fNSAPzY8W1yyqujPnOtiqKr14rhvXtgnEmnhOiH7COQ=;
- b=liXP1aw9gd2d6rkKb7slPHYTn5wQRU7SisOmsg1JRhgYe6uE2DnWDQUNLzKsUXkrsw5B
- PWfL6DplSX4CXXsBYaStghkwVFFUPxmqAjTkZedtrSVRAV5sMlZGfia5fUe7MyCujYwO
- ELtNuDhJVxs0ruW3e7ZJDwJRQMDkBZlMJ2wDiKbS6M1Gk7YZ9ZdA5PEuv5gEWafIoknx
- fBZ9HqDR0ngOdVF2A2DbrZJx1HMV7sqWOGuthrwO4Gw5meZTXIwp9KdCyJ4TZZRWZJm8
- tFQT3CCJKRCPfQhwsmqz4YFHhstNWyXKbOn6sKXRm8told0KIAZD3rrtRwXgO+eT5LG9 ew== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2umqbe80jw-1
+ bh=X7LtZomcC3o24aWMUujYM4G8HTGAMm7mFUHqfyB9meE=;
+ b=eKerFFj4Q78j6fLZofwiQeieGTcY+htdw6xmYuc0MSnmn+tZr6n4Zm1/ObsUDoaV05qH
+ vmyYxInqG1ek39OBsUSBAgvp5/qQ+jE39vFi0Cgf1Kpa/JLGGHb2wOSl6yY2yAPnUEvj
+ jZ07lYl2ZngPw4R6UrTdbAJTsrhDeH+H3MUM/prox1cEtbtqbofTpSUOqN9qJZIGu+sO
+ gn0Bh0bclRKY14P2fr5bOCsehokDXNPmObH6ZtUX6UeFbvJYuK1K1g57xx6O65/dShYR
+ kmEF++0L5JLMXH20B/CioBUKwnUpVgJhz+ETOl0V2qRNgRdgkc9YOAC4gw1/y6kj1uRN vQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2umpxx05jw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:31:05 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIuw1185187;
-        Mon, 26 Aug 2019 21:31:04 GMT
+        Mon, 26 Aug 2019 21:31:15 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIR9w024995;
+        Mon, 26 Aug 2019 21:31:14 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2umj2xvyce-1
+        by userp3030.oracle.com with ESMTP id 2umj1tk8xe-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:31:04 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLV3Wg029837;
-        Mon, 26 Aug 2019 21:31:03 GMT
+        Mon, 26 Aug 2019 21:31:14 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLVDIY029979;
+        Mon, 26 Aug 2019 21:31:13 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:31:03 -0700
-Subject: [PATCH 11/11] xfs_scrub: simulate errors in the read-verify phase
+        with ESMTP ; Mon, 26 Aug 2019 14:31:13 -0700
+Subject: [PATCH 01/11] xfs_scrub: separate media error reporting for
+ attribute forks
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:31:02 -0700
-Message-ID: <156685506243.2841898.2647440855248405584.stgit@magnolia>
-In-Reply-To: <156685499099.2841898.18430382226915450537.stgit@magnolia>
-References: <156685499099.2841898.18430382226915450537.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:31:12 -0700
+Message-ID: <156685507246.2843133.6278494675997623986.stgit@magnolia>
+In-Reply-To: <156685506615.2843133.16536353613627426823.stgit@magnolia>
+References: <156685506615.2843133.16536353613627426823.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,112 +81,88 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add a debugging hook so that we can simulate disk errors during the
-media scan to test that the code works.
+Use different functions to warn about media errors that were detected
+underlying xattr data because logical offsets for attribute fork extents
+have no meaning to users.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/disk.c      |   67 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- scrub/xfs_scrub.c |    2 ++
- 2 files changed, 69 insertions(+)
+ scrub/phase6.c |   45 ++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 38 insertions(+), 7 deletions(-)
 
 
-diff --git a/scrub/disk.c b/scrub/disk.c
-index e34a8217..2178c528 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -276,6 +276,59 @@ disk_close(
- #define LBASIZE(d)		(1ULL << (d)->d_lbalog)
- #define BTOLBA(d, bytes)	(((uint64_t)(bytes) + LBASIZE(d) - 1) >> (d)->d_lbalog)
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index fec25c31..60355bb8 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -113,7 +113,7 @@ xfs_decode_special_owner(
  
-+/* Simulate disk errors. */
-+static int
-+disk_simulate_read_error(
-+	struct disk		*disk,
-+	uint64_t		start,
-+	uint64_t		*length)
+ /* Report if this extent overlaps a bad region. */
+ static bool
+-xfs_report_verify_inode_bmap(
++report_data_loss(
+ 	struct scrub_ctx		*ctx,
+ 	const char			*descr,
+ 	int				fd,
+@@ -142,6 +142,40 @@ _("offset %llu failed read verification."), bmap->bm_offset);
+ 	return true;
+ }
+ 
++/* Report if the extended attribute data overlaps a bad region. */
++static bool
++report_attr_loss(
++	struct scrub_ctx		*ctx,
++	const char			*descr,
++	int				fd,
++	int				whichfork,
++	struct fsxattr			*fsx,
++	struct xfs_bmap			*bmap,
++	void				*arg)
 +{
-+	static int64_t		interval;
-+	uint64_t		start_interval;
++	struct media_verify_state	*vs = arg;
++	struct bitmap			*bmp = vs->d_bad;
 +
-+	/* Simulated disk errors are disabled. */
-+	if (interval < 0)
-+		return 0;
-+
-+	/* Figure out the disk read error interval. */
-+	if (interval == 0) {
-+		char		*p;
-+
-+		/* Pretend there's bad media every so often, in bytes. */
-+		p = getenv("XFS_SCRUB_DISK_ERROR_INTERVAL");
-+		if (p == NULL) {
-+			interval = -1;
-+			return 0;
-+		}
-+		interval = strtoull(p, NULL, 10);
-+		interval &= ~((1U << disk->d_lbalog) - 1);
++	/* Complain about attr fork extents that don't look right. */
++	if (bmap->bm_flags & (BMV_OF_PREALLOC | BMV_OF_DELALLOC)) {
++		str_info(ctx, descr,
++_("found unexpected unwritten/delalloc attr fork extent."));
++		return true;
 +	}
 +
-+	/*
-+	 * We simulate disk errors by pretending that there are media errors at
-+	 * predetermined intervals across the disk.  If a read verify request
-+	 * crosses one of those intervals we shorten it so that the next read
-+	 * will start on an interval threshold.  If the read verify request
-+	 * starts on an interval threshold, we send back EIO as if it had
-+	 * failed.
-+	 */
-+	if ((start % interval) == 0) {
-+		dbg_printf("fd %d: simulating disk error at %"PRIu64".\n",
-+				disk->d_fd, start);
-+		return EIO;
++	if (fsx->fsx_xflags & FS_XFLAG_REALTIME) {
++		str_info(ctx, descr,
++_("found unexpected realtime attr fork extent."));
++		return true;
 +	}
 +
-+	start_interval = start / interval;
-+	if (start_interval != (start + *length) / interval) {
-+		*length = ((start_interval + 1) * interval) - start;
-+		dbg_printf(
-+"fd %d: simulating short read at %"PRIu64" to length %"PRIu64".\n",
-+				disk->d_fd, start, *length);
-+	}
++	if (bitmap_test(bmp, bmap->bm_physical, bmap->bm_length))
++		str_error(ctx, descr,
++_("media error in extended attribute data."));
 +
-+	return 0;
++	return true;
 +}
 +
- /* Read-verify an extent of a disk device. */
- ssize_t
- disk_read_verify(
-@@ -284,6 +337,20 @@ disk_read_verify(
- 	uint64_t		start,
- 	uint64_t		length)
- {
-+	if (debug) {
-+		int		ret;
-+
-+		ret = disk_simulate_read_error(disk, start, &length);
-+		if (ret) {
-+			errno = ret;
-+			return -1;
-+		}
-+
-+		/* Don't actually issue the IO */
-+		if (getenv("XFS_SCRUB_DISK_VERIFY_SKIP"))
-+			return length;
-+	}
-+
- 	/* Convert to logical block size. */
- 	if (disk->d_flags & DISK_FLAG_SCSI_VERIFY)
- 		return disk_scsi_verify(disk, BTOLBAT(disk, start),
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 71fc274f..d068634b 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -111,6 +111,8 @@
-  * XFS_SCRUB_NO_SCSI_VERIFY	-- disable SCSI VERIFY (if present)
-  * XFS_SCRUB_PHASE		-- run only this scrub phase
-  * XFS_SCRUB_THREADS		-- start exactly this number of threads
-+ * XFS_SCRUB_DISK_ERROR_INTERVAL-- simulate a disk error every this many bytes
-+ * XFS_SCRUB_DISK_VERIFY_SKIP	-- pretend disk verify read calls succeeded
-  *
-  * Available even in non-debug mode:
-  * SERVICE_MODE			-- compress all error codes to 1 for LSB
+ /* Iterate the extent mappings of a file to report errors. */
+ static bool
+ xfs_report_verify_fd(
+@@ -155,16 +189,13 @@ xfs_report_verify_fd(
+ 
+ 	/* data fork */
+ 	moveon = xfs_iterate_filemaps(ctx, descr, fd, XFS_DATA_FORK, &key,
+-			xfs_report_verify_inode_bmap, arg);
++			report_data_loss, arg);
+ 	if (!moveon)
+ 		return false;
+ 
+ 	/* attr fork */
+-	moveon = xfs_iterate_filemaps(ctx, descr, fd, XFS_ATTR_FORK, &key,
+-			xfs_report_verify_inode_bmap, arg);
+-	if (!moveon)
+-		return false;
+-	return true;
++	return xfs_iterate_filemaps(ctx, descr, fd, XFS_ATTR_FORK, &key,
++			report_attr_loss, arg);
+ }
+ 
+ /* Report read verify errors in unlinked (but still open) files. */
 
