@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 43E2FC3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE912C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 121442186A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ADCFE21872
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WU1Kb+Ow"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="N+oaSsbq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728560AbfHZV3C (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:29:02 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50490 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728431AbfHZV3A (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:29:00 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLQuNG003365;
-        Mon, 26 Aug 2019 21:28:58 GMT
+        id S1728579AbfHZV3H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:29:07 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48608 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728431AbfHZV3H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:29:07 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLF2vi162106;
+        Mon, 26 Aug 2019 21:29:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=1YniwNiLdOlMW9TPy9kWxX9URwtPJQywOrMmHK5EQkE=;
- b=WU1Kb+Owrf88jLRrlcnLi12SnLifOb+XBctWIhcKPwhr+IUg8PoE/UaLGPq6+gRGfhRx
- 0xnU+dOtYtoOTe4qRsLZyeg1tjYs8qsXdz9IC6DNOBJh/M+VqS2cx8/mqojUNJ93hQq+
- ck/uRAMG30heh4glPT7iXJ5MNnOwe0r6qKOdbgt/O0+NT6GPcRE7CE/pAizHy7WXy0fo
- 7oXFiRpyEk0PiZcAXIqEa/JDWYdoKWiSzqSIrJumnkRKXpDqyriPKn8zPNGmJtsGKgwN
- 50FnUF6+2c444Rqt/LPWIEJSyPoGnvDRN4MW77rrMrBo4fxBc0vqO0l+WwgS9rFArS9l vw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2umqbe80a5-1
+ bh=aRKcuZKWJbseS3ccJApkH8+U7BGshPuCCbBnI0QcBG4=;
+ b=N+oaSsbqrrmN8xcyW+R0pLzWELsP0aa2Z5MurpHSW8fDCfFvUglcZ8Wb1CtWEDHkspym
+ AR8026H5j2mozbavsekSqkbF2v7uI2hrfiMifApbGF0cmp9eX1unKK+EVa5V2CSc4Qfz
+ 5ewkWkKNZx/3Offi49D4rj9SdyEDqVnkbKWY2BDM29KupFDGa8I9yor+otvoGAX4q/Le
+ 572r8qnYG0SQSL4if0r9l1DB7xoQsA3O4wTGrm9x8FFd5KsIuLkambxZW8/jKXI98zQ+
+ niTaQbUqrjkdsrhcw/DLNpn7cUuCv7JgWT9osTbV8U6Nvq6hfE/SMru3xEhFF1ODu8a6 GA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2umq5t822n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:28:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIs7g184954;
-        Mon, 26 Aug 2019 21:28:58 GMT
+        Mon, 26 Aug 2019 21:29:05 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIcj1169601;
+        Mon, 26 Aug 2019 21:29:04 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2umj2xvwht-1
+        by aserp3030.oracle.com with ESMTP id 2umhu7wyh0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:28:57 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLSucT028500;
-        Mon, 26 Aug 2019 21:28:56 GMT
+        Mon, 26 Aug 2019 21:29:04 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLT3cd028542;
+        Mon, 26 Aug 2019 21:29:03 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:28:56 -0700
-Subject: [PATCH 06/13] libfrog: add missing per-thread variable error
- handling
+        with ESMTP ; Mon, 26 Aug 2019 14:29:02 -0700
+Subject: [PATCH 07/13] libfrog: fix bitmap error communication problems
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:28:55 -0700
-Message-ID: <156685493551.2841546.4155863321510387304.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:29:01 -0700
+Message-ID: <156685494177.2841546.14924730951051368538.stgit@magnolia>
 In-Reply-To: <156685489821.2841546.10616502094098044568.stgit@magnolia>
 References: <156685489821.2841546.10616502094098044568.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -64,13 +63,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9361 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1906280000 definitions=main-1908260198
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9361 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
  definitions=main-1908260198
@@ -81,76 +80,149 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Add missing return value checks for everything that the per-thread
-variable code calls.
+Convert all the libfrog code and callers away from the libc-style
+indirect errno returns to directly returning error codes to callers.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libfrog/ptvar.c |   28 ++++++++++++++++++++++++----
- 1 file changed, 24 insertions(+), 4 deletions(-)
+ include/bitmap.h |    2 +-
+ libfrog/bitmap.c |   13 +++++++------
+ repair/rmap.c    |    4 ++--
+ scrub/phase6.c   |   20 +++++++++++---------
+ 4 files changed, 21 insertions(+), 18 deletions(-)
 
 
-diff --git a/libfrog/ptvar.c b/libfrog/ptvar.c
-index 6cb58208..ecbbea61 100644
---- a/libfrog/ptvar.c
-+++ b/libfrog/ptvar.c
-@@ -44,8 +44,12 @@ ptvar_alloc(
- 	int		ret;
+diff --git a/include/bitmap.h b/include/bitmap.h
+index 99a2fb23..13154975 100644
+--- a/include/bitmap.h
++++ b/include/bitmap.h
+@@ -11,7 +11,7 @@ struct bitmap {
+ 	struct avl64tree_desc	*bt_tree;
+ };
  
- #ifdef _SC_LEVEL1_DCACHE_LINESIZE
-+	long		l1_dcache;
-+
- 	/* Try to prevent cache pingpong by aligning to cacheline size. */
--	size = max(size, sysconf(_SC_LEVEL1_DCACHE_LINESIZE));
-+	l1_dcache = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
-+	if (l1_dcache > 0)
-+		size = roundup(size, l1_dcache);
- #endif
+-int bitmap_init(struct bitmap **bmap);
++int bitmap_alloc(struct bitmap **bmap);
+ void bitmap_free(struct bitmap **bmap);
+ int bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
+ int bitmap_iterate(struct bitmap *bmap, int (*fn)(uint64_t, uint64_t, void *),
+diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
+index 4dafc4c9..be95965f 100644
+--- a/libfrog/bitmap.c
++++ b/libfrog/bitmap.c
+@@ -23,7 +23,8 @@
+  */
  
- 	ptv = malloc(PTVAR_SIZE(nr, size));
-@@ -88,17 +92,30 @@ ptvar_get(
- 	int		*retp)
+ #define avl_for_each_range_safe(pos, n, l, first, last) \
+-	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; pos != (l); \
++	for (pos = (first), n = pos->avl_nextino, l = (last)->avl_nextino; \
++			pos != (l); \
+ 			pos = n, n = pos ? pos->avl_nextino : NULL)
+ 
+ #define avl_for_each_safe(tree, pos, n) \
+@@ -67,18 +68,18 @@ static struct avl64ops bitmap_ops = {
+ 
+ /* Initialize a bitmap. */
+ int
+-bitmap_init(
++bitmap_alloc(
+ 	struct bitmap		**bmapp)
  {
- 	void		*p;
-+	int		ret;
+ 	struct bitmap		*bmap;
  
- 	p = pthread_getspecific(ptv->key);
- 	if (!p) {
--		pthread_mutex_lock(&ptv->lock);
-+		ret = pthread_mutex_lock(&ptv->lock);
-+		if (ret) {
-+			*retp = ret;
-+			return NULL;
-+		}
- 		assert(ptv->nr_used < ptv->nr_counters);
- 		p = &ptv->data[(ptv->nr_used++) * ptv->data_size];
--		pthread_setspecific(ptv->key, p);
-+		ret = pthread_setspecific(ptv->key, p);
-+		if (ret)
-+			goto out_unlock;
- 		pthread_mutex_unlock(&ptv->lock);
+ 	bmap = calloc(1, sizeof(struct bitmap));
+ 	if (!bmap)
+-		return -ENOMEM;
++		return errno;
+ 	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
+ 	if (!bmap->bt_tree) {
+ 		free(bmap);
+-		return -ENOMEM;
++		return errno;
  	}
- 	*retp = 0;
- 	return p;
-+
-+out_unlock:
-+	ptv->nr_used--;
-+	pthread_mutex_unlock(&ptv->lock);
-+	*retp = ret;
-+	return NULL;
- }
  
- /* Iterate all of the per-thread variables. */
-@@ -111,7 +128,10 @@ ptvar_foreach(
- 	size_t		i;
- 	int		ret;
+ 	pthread_mutex_init(&bmap->bt_lock, NULL);
+@@ -139,12 +140,12 @@ __bitmap_insert(
  
--	pthread_mutex_lock(&ptv->lock);
-+	ret = pthread_mutex_lock(&ptv->lock);
-+	if (ret)
-+		return ret;
-+
- 	for (i = 0; i < ptv->nr_used; i++) {
- 		ret = fn(ptv, &ptv->data[i * ptv->data_size], foreach_arg);
- 		if (ret)
+ 	ext = bitmap_node_init(start, length);
+ 	if (!ext)
+-		return -ENOMEM;
++		return errno;
+ 
+ 	node = avl64_insert(bmap->bt_tree, &ext->btn_node);
+ 	if (node == NULL) {
+ 		free(ext);
+-		return -EEXIST;
++		return EEXIST;
+ 	}
+ 
+ 	return 0;
+diff --git a/repair/rmap.c b/repair/rmap.c
+index 24251e9f..165c70c4 100644
+--- a/repair/rmap.c
++++ b/repair/rmap.c
+@@ -490,13 +490,13 @@ rmap_store_ag_btree_rec(
+ 	error = init_slab_cursor(ag_rmap->ar_raw_rmaps, rmap_compare, &rm_cur);
+ 	if (error)
+ 		goto err;
+-	error = -bitmap_init(&own_ag_bitmap);
++	error = bitmap_alloc(&own_ag_bitmap);
+ 	if (error)
+ 		goto err_slab;
+ 	while ((rm_rec = pop_slab_cursor(rm_cur)) != NULL) {
+ 		if (rm_rec->rm_owner != XFS_RMAP_OWN_AG)
+ 			continue;
+-		error = -bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
++		error = bitmap_set(own_ag_bitmap, rm_rec->rm_startblock,
+ 					rm_rec->rm_blockcount);
+ 		if (error) {
+ 			/*
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 3f80bca5..35dda1f9 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -341,6 +341,7 @@ xfs_check_rmap_ioerr(
+ 	struct media_verify_state	*vs = arg;
+ 	struct bitmap			*tree;
+ 	dev_t				dev;
++	int				ret;
+ 
+ 	dev = xfs_disk_to_dev(ctx, disk);
+ 
+@@ -355,9 +356,9 @@ xfs_check_rmap_ioerr(
+ 	else
+ 		tree = NULL;
+ 	if (tree) {
+-		errno = -bitmap_set(tree, start, length);
+-		if (errno)
+-			str_errno(ctx, ctx->mntpoint);
++		ret = bitmap_set(tree, start, length);
++		if (ret)
++			str_liberror(ctx, ret, _("setting bad block bitmap"));
+ 	}
+ 
+ 	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d ioerr @ %"PRIu64":%"PRIu64" "),
+@@ -454,16 +455,17 @@ xfs_scan_blocks(
+ {
+ 	struct media_verify_state	vs = { NULL };
+ 	bool				moveon = false;
++	int				ret;
+ 
+-	errno = -bitmap_init(&vs.d_bad);
+-	if (errno) {
+-		str_errno(ctx, ctx->mntpoint);
++	ret = bitmap_alloc(&vs.d_bad);
++	if (ret) {
++		str_liberror(ctx, ret, _("creating datadev badblock bitmap"));
+ 		goto out;
+ 	}
+ 
+-	errno = -bitmap_init(&vs.r_bad);
+-	if (errno) {
+-		str_errno(ctx, ctx->mntpoint);
++	ret = bitmap_alloc(&vs.r_bad);
++	if (ret) {
++		str_liberror(ctx, ret, _("creating realtime badblock bitmap"));
+ 		goto out_dbad;
+ 	}
+ 
 
