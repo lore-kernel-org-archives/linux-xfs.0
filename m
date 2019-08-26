@@ -2,131 +2,187 @@ Return-Path: <SRS0=ZZxK=WW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-4.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8E5C3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 10:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2255C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 11:16:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 42D1F2187F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 10:41:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1566816076;
-	bh=8ziD+meEXqXL5pLNd7FdOcpozYaNgK5kwHaeo4uhx28=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
-	b=EkzdoYs7jwgNipZKSIOmqMgrkQMVe4yPVUQnYmr2vhaJOn6wk4ryN/cEWHfRa6cFQ
-	 zAw0voBDfUMb+f21xcBsb5kIqqJU2ORB0PXCbExJtoLYqO4ftQdU45BpUkVpJJQ69g
-	 wTRHK+2dtxwaTV91i2XhEkABNBCYmPWr6S4XUCLI=
+	by mail.kernel.org (Postfix) with ESMTP id D37722070B
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 11:16:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731013AbfHZKlM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 06:41:12 -0400
-Received: from mail.kernel.org ([198.145.29.99]:43258 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730640AbfHZKlM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 26 Aug 2019 06:41:12 -0400
-Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 1E32920828;
-        Mon, 26 Aug 2019 10:41:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1566816070;
-        bh=8ziD+meEXqXL5pLNd7FdOcpozYaNgK5kwHaeo4uhx28=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=It43Y4jhI4WRMT7EOX/lr7UQrAHGcp7abrKi/dW/O0Kd9egEDPpQrb9qKy1oWb9pe
-         lnOftVy2OCBwYNxuaPQUMNRvYTlPGOmE5p+KJsXKHIySHdTnGKve5YDOmGidGBo/29
-         cnTh0m+X3A/MuYbOjoz90Mp0uG6r73lbyIxhL/QI=
-Message-ID: <e6f4f619967f4551adb5003d0364770fde2b8110.camel@kernel.org>
-Subject: Re: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user
- Layout lease
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     ira.weiny@intel.com, Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Date:   Mon, 26 Aug 2019 06:41:07 -0400
-In-Reply-To: <20190814215630.GQ6129@dread.disaster.area>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
-         <20190809225833.6657-3-ira.weiny@intel.com>
-         <fde2959db776616008fc5d31df700f5d7d899433.camel@kernel.org>
-         <20190814215630.GQ6129@dread.disaster.area>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1731236AbfHZLQq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 07:16:46 -0400
+Received: from mx2.suse.de ([195.135.220.15]:60062 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727125AbfHZLQo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 26 Aug 2019 07:16:44 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id DF8EFAC28;
+        Mon, 26 Aug 2019 11:16:41 +0000 (UTC)
+From:   Vlastimil Babka <vbabka@suse.cz>
+To:     Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org
+Cc:     linux-kernel@vger.kernel.org, Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-btrfs@vger.kernel.org, Vlastimil Babka <vbabka@suse.cz>
+Subject: [PATCH v2 1/2] mm, sl[ou]b: improve memory accounting
+Date:   Mon, 26 Aug 2019 13:16:26 +0200
+Message-Id: <20190826111627.7505-2-vbabka@suse.cz>
+X-Mailer: git-send-email 2.22.1
+In-Reply-To: <20190826111627.7505-1-vbabka@suse.cz>
+References: <20190826111627.7505-1-vbabka@suse.cz>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2019-08-15 at 07:56 +1000, Dave Chinner wrote:
-> On Wed, Aug 14, 2019 at 10:15:06AM -0400, Jeff Layton wrote:
-> > On Fri, 2019-08-09 at 15:58 -0700, ira.weiny@intel.com wrote:
-> > > From: Ira Weiny <ira.weiny@intel.com>
-> > > 
-> > > Add an exclusive lease flag which indicates that the layout mechanism
-> > > can not be broken.
-> > > 
-> > > Exclusive layout leases allow the file system to know that pages may be
-> > > GUP pined and that attempts to change the layout, ie truncate, should be
-> > > failed.
-> > > 
-> > > A process which attempts to break it's own exclusive lease gets an
-> > > EDEADLOCK return to help determine that this is likely a programming bug
-> > > vs someone else holding a resource.
-> .....
-> > > diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
-> > > index baddd54f3031..88b175ceccbc 100644
-> > > --- a/include/uapi/asm-generic/fcntl.h
-> > > +++ b/include/uapi/asm-generic/fcntl.h
-> > > @@ -176,6 +176,8 @@ struct f_owner_ex {
-> > >  
-> > >  #define F_LAYOUT	16      /* layout lease to allow longterm pins such as
-> > >  				   RDMA */
-> > > +#define F_EXCLUSIVE	32      /* layout lease is exclusive */
-> > > +				/* FIXME or shoudl this be F_EXLCK??? */
-> > >  
-> > >  /* operations for bsd flock(), also used by the kernel implementation */
-> > >  #define LOCK_SH		1	/* shared lock */
-> > 
-> > This interface just seems weird to me. The existing F_*LCK values aren't
-> > really set up to be flags, but are enumerated values (even if there are
-> > some gaps on some arches). For instance, on parisc and sparc:
-> 
-> I don't think we need to worry about this - the F_WRLCK version of
-> the layout lease should have these exclusive access semantics (i.e
-> other ops fail rather than block waiting for lease recall) and hence
-> the API shouldn't need a new flag to specify them.
-> 
-> i.e. the primary difference between F_RDLCK and F_WRLCK layout
-> leases is that the F_RDLCK is a shared, co-operative lease model
-> where only delays in operations will be seen, while F_WRLCK is a
-> "guarantee exclusive access and I don't care what it breaks"
-> model... :)
-> 
+SLOB currently doesn't account its pages at all, so in /proc/meminfo the Slab
+field shows zero. Modifying a counter on page allocation and freeing should be
+acceptable even for the small system scenarios SLOB is intended for.
+Since reclaimable caches are not separated in SLOB, account everything as
+unreclaimable.
 
-Not exactly...
+SLUB currently doesn't account kmalloc() and kmalloc_node() allocations larger
+than order-1 page, that are passed directly to the page allocator. As they also
+don't appear in /proc/slabinfo, it might look like a memory leak. For
+consistency, account them as well. (SLAB doesn't actually use page allocator
+directly, so no change there).
 
-F_WRLCK and F_RDLCK leases can both be broken, and will eventually time
-out if there is conflicting access. The F_EXCLUSIVE flag on the other
-hand is there to prevent any sort of lease break from 
+Ideally SLOB and SLUB would be handled in separate patches, but due to the
+shared kmalloc_order() function and different kfree() implementations, it's
+easier to patch both at once to prevent inconsistencies.
 
-I'm guessing what Ira really wants with the F_EXCLUSIVE flag is
-something akin to what happens when we set fl_break_time to 0 in the
-nfsd code. nfsd never wants the locks code to time out a lease of any
-sort, since it handles that timeout itself.
+Signed-off-by: Vlastimil Babka <vbabka@suse.cz>
+---
+ mm/slab_common.c |  8 ++++++--
+ mm/slob.c        | 20 ++++++++++++++++----
+ mm/slub.c        | 14 +++++++++++---
+ 3 files changed, 33 insertions(+), 9 deletions(-)
 
-If you're going to add this functionality, it'd be good to also convert
-knfsd to use it as well, so we don't end up with multiple ways to deal
-with that situation.
+diff --git a/mm/slab_common.c b/mm/slab_common.c
+index 807490fe217a..929c02a90fba 100644
+--- a/mm/slab_common.c
++++ b/mm/slab_common.c
+@@ -1250,12 +1250,16 @@ void __init create_kmalloc_caches(slab_flags_t flags)
+  */
+ void *kmalloc_order(size_t size, gfp_t flags, unsigned int order)
+ {
+-	void *ret;
++	void *ret = NULL;
+ 	struct page *page;
+ 
+ 	flags |= __GFP_COMP;
+ 	page = alloc_pages(flags, order);
+-	ret = page ? page_address(page) : NULL;
++	if (likely(page)) {
++		ret = page_address(page);
++		mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE,
++				    1 << order);
++	}
+ 	ret = kasan_kmalloc_large(ret, size, flags);
+ 	/* As ret might get tagged, call kmemleak hook after KASAN. */
+ 	kmemleak_alloc(ret, size, 1, flags);
+diff --git a/mm/slob.c b/mm/slob.c
+index 7f421d0ca9ab..3dcde9cf2b17 100644
+--- a/mm/slob.c
++++ b/mm/slob.c
+@@ -190,7 +190,7 @@ static int slob_last(slob_t *s)
+ 
+ static void *slob_new_pages(gfp_t gfp, int order, int node)
+ {
+-	void *page;
++	struct page *page;
+ 
+ #ifdef CONFIG_NUMA
+ 	if (node != NUMA_NO_NODE)
+@@ -202,14 +202,21 @@ static void *slob_new_pages(gfp_t gfp, int order, int node)
+ 	if (!page)
+ 		return NULL;
+ 
++	mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE,
++			    1 << order);
+ 	return page_address(page);
+ }
+ 
+ static void slob_free_pages(void *b, int order)
+ {
++	struct page *sp = virt_to_page(b);
++
+ 	if (current->reclaim_state)
+ 		current->reclaim_state->reclaimed_slab += 1 << order;
+-	free_pages((unsigned long)b, order);
++
++	mod_node_page_state(page_pgdat(sp), NR_SLAB_UNRECLAIMABLE,
++			    -(1 << order));
++	__free_pages(sp, order);
+ }
+ 
+ /*
+@@ -521,8 +528,13 @@ void kfree(const void *block)
+ 		int align = max_t(size_t, ARCH_KMALLOC_MINALIGN, ARCH_SLAB_MINALIGN);
+ 		unsigned int *m = (unsigned int *)(block - align);
+ 		slob_free(m, *m + align);
+-	} else
+-		__free_pages(sp, compound_order(sp));
++	} else {
++		unsigned int order = compound_order(sp);
++		mod_node_page_state(page_pgdat(sp), NR_SLAB_UNRECLAIMABLE,
++				    -(1 << order));
++		__free_pages(sp, order);
++
++	}
+ }
+ EXPORT_SYMBOL(kfree);
+ 
+diff --git a/mm/slub.c b/mm/slub.c
+index 8834563cdb4b..74365d083a1e 100644
+--- a/mm/slub.c
++++ b/mm/slub.c
+@@ -3819,11 +3819,15 @@ static void *kmalloc_large_node(size_t size, gfp_t flags, int node)
+ {
+ 	struct page *page;
+ 	void *ptr = NULL;
++	unsigned int order = get_order(size);
+ 
+ 	flags |= __GFP_COMP;
+-	page = alloc_pages_node(node, flags, get_order(size));
+-	if (page)
++	page = alloc_pages_node(node, flags, order);
++	if (page) {
+ 		ptr = page_address(page);
++		mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE,
++				    1 << order);
++	}
+ 
+ 	return kmalloc_large_node_hook(ptr, size, flags);
+ }
+@@ -3949,9 +3953,13 @@ void kfree(const void *x)
+ 
+ 	page = virt_to_head_page(x);
+ 	if (unlikely(!PageSlab(page))) {
++		unsigned int order = compound_order(page);
++
+ 		BUG_ON(!PageCompound(page));
+ 		kfree_hook(object);
+-		__free_pages(page, compound_order(page));
++		mod_node_page_state(page_pgdat(page), NR_SLAB_UNRECLAIMABLE,
++				    -(1 << order));
++		__free_pages(page, order);
+ 		return;
+ 	}
+ 	slab_free(page->slab_cache, page, object, NULL, 1, _RET_IP_);
 -- 
-Jeff Layton <jlayton@kernel.org>
+2.22.1
 
