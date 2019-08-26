@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 16A85C3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:20:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4DD0C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:20:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C874121872
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:20:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8608321881
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:20:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="G1tmvi7h"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="b3wtM3/Z"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727085AbfHZVUo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:20:44 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:39282 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727048AbfHZVUo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:20:44 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLEi7S161895;
-        Mon, 26 Aug 2019 21:20:41 GMT
+        id S1727235AbfHZVUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:20:50 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41870 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727935AbfHZVUt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:20:49 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLDmlq188911;
+        Mon, 26 Aug 2019 21:20:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=KJnTlXSicbnVmoNl58KqNsEqb7MXUnuofiYZ/O5WYrE=;
- b=G1tmvi7hPVxKSRBmD/v2gW7FRgxyXsaO8ZbPTxkW/khcVNB/1HZx/R/qVNI3/CxXvEJu
- eq1ObQJcB1R+tOZsECoDizS/EmQErHY1Uyaxw2iMjx83AGV9MJJMDxFfknOth359mldQ
- YSQfEehINxL6UZPu92ob0Ue6mkG5j0MhLr8v4KLchw9tSzIBe13YxNjUKRlmxusKW9CO
- Kh7qNI0jltAw+d19ubH4Wf+8FAf6o5x5c85w75oXt9ntlCHE3sM5TgsvWzfItzSzLx38
- XCywHbUD0Djm+MmufaRhLiB3wM2YaFWYPOL+HiD9SrRIv5JUJrQ6kiP228UiE4XZwDnu CQ== 
+ bh=pK1jvAL/ijjPhn3AFAQAQdQZdxNJ38rMsR/Tpt/WxlY=;
+ b=b3wtM3/ZQtwEX4ugfOSD6fh21JG3amzICnkoRisPOag0ZN1UV9GcuQ0zSbJ6Uw50QCRx
+ xTU9H9FUcZ1KERHdOefYg44L2jGRwyS/Qb4NOdsNtc+MV9Lo9Hxl5Geh3P+gH8vGkz3F
+ 1DZzaStfURvMDxlEWYwhmwmxylTqfOZi7XXfbmolxF5ibah9RXCs/pEbf11LiHSK6vD8
+ r40cC1qBF28+nKD36xANMyufexZw/RedAGqdTK/EOUBFFAUKZDmxCREH7R9ouzQxsMtU
+ nEQmTOQ+j3vrJE/xvWmInd2bENaVYxmcAiWt6+6k7JmQEGs2zkm6qVkurHOR1tL3air7 Ag== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2umq5t80uy-1
+        by userp2120.oracle.com with ESMTP id 2ujwvqc4em-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:20:41 +0000
+        Mon, 26 Aug 2019 21:20:47 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLItl3185061;
-        Mon, 26 Aug 2019 21:20:40 GMT
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIsSo184966;
+        Mon, 26 Aug 2019 21:20:47 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2umj2xvqk2-1
+        by aserp3020.oracle.com with ESMTP id 2umj2xvqnr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:20:40 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLKesk001300;
-        Mon, 26 Aug 2019 21:20:40 GMT
+        Mon, 26 Aug 2019 21:20:46 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLKkc8001325;
+        Mon, 26 Aug 2019 21:20:46 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:20:39 -0700
-Subject: [PATCH 3/4] xfs_spaceman: embed struct xfs_fd in struct fileio
+        with ESMTP ; Mon, 26 Aug 2019 14:20:46 -0700
+Subject: [PATCH 4/4] xfs_spaceman: convert open-coded unit conversions to
+ helpers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:20:38 -0700
-Message-ID: <156685443883.2839773.16670488313525688465.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:20:45 -0700
+Message-ID: <156685444520.2839773.6764652190281485485.stgit@magnolia>
 In-Reply-To: <156685442011.2839773.2684103942714886186.stgit@magnolia>
 References: <156685442011.2839773.2684103942714886186.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,433 +81,192 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the open-coded fd and geometry fields of struct fileio with a
-single xfs_fd, which will enable us to use it natively throughout
-xfs_spaceman in upcoming patches.
+Create xfrog analogues of the libxfs byte/sector/block conversion
+functions and convert spaceman to use them instead of open-coded
+arithmatic we do now.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- spaceman/file.c     |   27 +++++++++++++--------------
- spaceman/freesp.c   |   30 +++++++++++++++++-------------
- spaceman/info.c     |   18 ++----------------
- spaceman/init.c     |   11 +++++++----
- spaceman/prealloc.c |   15 ++++++++-------
- spaceman/space.h    |    9 +++++----
- spaceman/trim.c     |   40 +++++++++++++++++++++-------------------
- 7 files changed, 73 insertions(+), 77 deletions(-)
+ include/xfrog.h   |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+ libfrog/fsgeom.c  |    1 +
+ spaceman/freesp.c |   18 ++++++--------
+ spaceman/trim.c   |    9 ++++---
+ 4 files changed, 80 insertions(+), 14 deletions(-)
 
 
-diff --git a/spaceman/file.c b/spaceman/file.c
-index 5665da7d..9d550274 100644
---- a/spaceman/file.c
-+++ b/spaceman/file.c
-@@ -45,26 +45,27 @@ print_f(
- int
- openfile(
- 	char		*path,
--	struct xfs_fsop_geom *geom,
-+	struct xfs_fd	*xfd,
- 	struct fs_path	*fs_path)
- {
- 	struct fs_path	*fsp;
--	int		fd;
-+	int		ret;
+diff --git a/include/xfrog.h b/include/xfrog.h
+index 6b605dcf..5748e967 100644
+--- a/include/xfrog.h
++++ b/include/xfrog.h
+@@ -45,6 +45,9 @@ struct xfs_fd {
  
--	fd = open(path, 0);
--	if (fd < 0) {
-+	xfd->fd = open(path, 0);
-+	if (xfd->fd < 0) {
- 		perror(path);
- 		return -1;
- 	}
+ 	/* bits for agino in inum */
+ 	unsigned int		aginolog;
++
++	/* log2 of sb_blocksize / sb_sectsize */
++	unsigned int		blkbb_log;
+ };
  
--	if (xfrog_geometry(fd, geom) < 0) {
-+	ret = xfrog_prepare_geometry(xfd);
-+	if (ret < 0) {
- 		if (errno == ENOTTY)
- 			fprintf(stderr,
- _("%s: Not on a mounted XFS filesystem.\n"),
- 					path);
- 		else
- 			perror("XFS_IOC_FSGEOMETRY");
--		close(fd);
-+		xfrog_close(xfd);
- 		return -1;
- 	}
- 
-@@ -72,19 +73,18 @@ _("%s: Not on a mounted XFS filesystem.\n"),
- 	if (!fsp) {
- 		fprintf(stderr, _("%s: cannot find mount point."),
- 			path);
--		close(fd);
-+		xfrog_close(xfd);
- 		return -1;
- 	}
- 	memcpy(fs_path, fsp, sizeof(struct fs_path));
- 
--	return fd;
-+	return xfd->fd;
+ /* Static initializers */
+@@ -100,6 +103,69 @@ xfrog_b_to_fsbt(
+ 	return bytes >> xfd->blocklog;
  }
  
- int
- addfile(
- 	char		*name,
--	int		fd,
--	struct xfs_fsop_geom *geometry,
-+	struct xfs_fd	*xfd,
- 	struct fs_path	*fs_path)
- {
- 	char		*filename;
-@@ -92,7 +92,7 @@ addfile(
- 	filename = strdup(name);
- 	if (!filename) {
- 		perror("strdup");
--		close(fd);
-+		xfrog_close(xfd);
- 		return -1;
- 	}
- 
-@@ -103,15 +103,14 @@ addfile(
- 		perror("realloc");
- 		filecount = 0;
- 		free(filename);
--		close(fd);
-+		xfrog_close(xfd);
- 		return -1;
- 	}
- 
- 	/* Finally, make this the new active open file */
- 	file = &filetable[filecount - 1];
--	file->fd = fd;
- 	file->name = filename;
--	file->geom = *geometry;
-+	memcpy(&file->xfd, xfd, sizeof(struct xfs_fd));
- 	memcpy(&file->fs_path, fs_path, sizeof(file->fs_path));
++/* Convert sector number to bytes. */
++static inline uint64_t
++xfrog_bbtob(
++	uint64_t		daddr)
++{
++	return daddr << BBSHIFT;
++}
++
++/* Convert bytes to sector number, rounding down. */
++static inline uint64_t
++xfrog_btobbt(
++	uint64_t		bytes)
++{
++	return bytes >> BBSHIFT;
++}
++
++/* Convert fs block number to sector number. */
++static inline uint64_t
++xfrog_fsb_to_bb(
++	struct xfs_fd		*xfd,
++	uint64_t		fsbno)
++{
++	return fsbno << xfd->blkbb_log;
++}
++
++/* Convert sector number to fs block number, rounded down. */
++static inline uint64_t
++xfrog_bb_to_fsbt(
++	struct xfs_fd		*xfd,
++	uint64_t		daddr)
++{
++	return daddr >> xfd->blkbb_log;
++}
++
++/* Convert AG number and AG block to fs block number */
++static inline uint64_t
++xfrog_agb_to_daddr(
++	struct xfs_fd		*xfd,
++	uint32_t		agno,
++	uint32_t		agbno)
++{
++	return xfrog_fsb_to_bb(xfd,
++			(uint64_t)agno * xfd->fsgeom.agblocks + agbno);
++}
++
++/* Convert sector number to AG number. */
++static inline uint32_t
++xfrog_daddr_to_agno(
++	struct xfs_fd		*xfd,
++	uint64_t		daddr)
++{
++	return xfrog_bb_to_fsbt(xfd, daddr) / xfd->fsgeom.agblocks;
++}
++
++/* Convert sector number to AG block number. */
++static inline uint32_t
++xfrog_daddr_to_agbno(
++	struct xfs_fd		*xfd,
++	uint64_t		daddr)
++{
++	return xfrog_bb_to_fsbt(xfd, daddr) % xfd->fsgeom.agblocks;
++}
++
+ /* Bulkstat wrappers */
+ struct xfs_bstat;
+ int xfrog_bulkstat_single(struct xfs_fd *xfd, uint64_t ino,
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index 159738c5..17479e4a 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -114,6 +114,7 @@ xfrog_prepare_geometry(
+ 	xfd->inodelog = highbit32(xfd->fsgeom.inodesize);
+ 	xfd->inopblog = xfd->blocklog - xfd->inodelog;
+ 	xfd->aginolog = xfd->agblklog + xfd->inopblog;
++	xfd->blkbb_log = xfd->blocklog - BBSHIFT;
  	return 0;
  }
+ 
 diff --git a/spaceman/freesp.c b/spaceman/freesp.c
-index 4a7dcb9c..83cbecbd 100644
+index 83cbecbd..9e9f32a2 100644
 --- a/spaceman/freesp.c
 +++ b/spaceman/freesp.c
-@@ -8,6 +8,7 @@
- 
- #include "libxfs.h"
- #include <linux/fiemap.h>
-+#include "xfrog.h"
- #include "command.h"
- #include "init.h"
- #include "path.h"
-@@ -149,7 +150,8 @@ scan_ag(
+@@ -150,9 +150,7 @@ scan_ag(
  	struct fsmap		*extent;
  	struct fsmap		*l, *h;
  	struct fsmap		*p;
--	off64_t			blocksize = file->geom.blocksize;
-+	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
-+	off64_t			blocksize = fsgeom->blocksize;
- 	off64_t			bperag;
+-	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
+-	off64_t			blocksize = fsgeom->blocksize;
+-	off64_t			bperag;
++	struct xfs_fd		*xfd = &file->xfd;
  	off64_t			aglen;
  	xfs_agblock_t		agbno;
-@@ -158,7 +160,7 @@ scan_ag(
+ 	unsigned long long	freeblks = 0;
+@@ -160,8 +158,6 @@ scan_ag(
  	int			ret;
  	int			i;
  
--	bperag = (off64_t)file->geom.agblocks * blocksize;
-+	bperag = (off64_t)fsgeom->agblocks * blocksize;
- 
+-	bperag = (off64_t)fsgeom->agblocks * blocksize;
+-
  	fsmap = malloc(fsmap_sizeof(NR_EXTENTS));
  	if (!fsmap) {
-@@ -185,7 +187,7 @@ scan_ag(
- 	h->fmr_offset = ULLONG_MAX;
+ 		fprintf(stderr, _("%s: fsmap malloc failed.\n"), progname);
+@@ -174,8 +170,10 @@ scan_ag(
+ 	l = fsmap->fmh_keys;
+ 	h = fsmap->fmh_keys + 1;
+ 	if (agno != NULLAGNUMBER) {
+-		l->fmr_physical = agno * bperag;
+-		h->fmr_physical = ((agno + 1) * bperag) - 1;
++		l->fmr_physical = xfrog_bbtob(
++				xfrog_agb_to_daddr(xfd, agno, 0));
++		h->fmr_physical = xfrog_bbtob(
++				xfrog_agb_to_daddr(xfd, agno + 1, 0));
+ 		l->fmr_device = h->fmr_device = file->fs_path.fs_datadev;
+ 	} else {
+ 		l->fmr_physical = 0;
+@@ -206,9 +204,9 @@ scan_ag(
+ 			if (!(extent->fmr_flags & FMR_OF_SPECIAL_OWNER) ||
+ 			    extent->fmr_owner != XFS_FMR_OWN_FREE)
+ 				continue;
+-			agbno = (extent->fmr_physical - (bperag * agno)) /
+-								blocksize;
+-			aglen = extent->fmr_length / blocksize;
++			agbno = xfrog_daddr_to_agbno(xfd,
++					xfrog_btobbt(extent->fmr_physical));
++			aglen = xfrog_b_to_fsbt(xfd, extent->fmr_length);
+ 			freeblks += aglen;
+ 			freeexts++;
  
- 	while (true) {
--		ret = ioctl(file->fd, FS_IOC_GETFSMAP, fsmap);
-+		ret = ioctl(file->xfd.fd, FS_IOC_GETFSMAP, fsmap);
- 		if (ret < 0) {
- 			fprintf(stderr, _("%s: FS_IOC_GETFSMAP [\"%s\"]: %s\n"),
- 				progname, file->name, strerror(errno));
-@@ -248,12 +250,13 @@ aglistadd(
- 
- static int
- init(
--	int		argc,
--	char		**argv)
-+	int			argc,
-+	char			**argv)
- {
--	long long	x;
--	int		c;
--	int		speced = 0;	/* only one of -b -e -h or -m */
-+	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
-+	long long		x;
-+	int			c;
-+	int			speced = 0;	/* only one of -b -e -h or -m */
- 
- 	agcount = dumpflag = equalsize = multsize = optind = gflag = 0;
- 	histcount = seen1 = summaryflag = 0;
-@@ -321,7 +324,7 @@ init(
- 		return 0;
- 	if (!speced)
- 		multsize = 2;
--	histinit(file->geom.agblocks);
-+	histinit(fsgeom->agblocks);
- 	return 1;
- many_spec:
- 	return command_usage(&freesp_cmd);
-@@ -332,10 +335,11 @@ init(
-  */
- static int
- freesp_f(
--	int		argc,
--	char		**argv)
-+	int			argc,
-+	char			**argv)
- {
--	xfs_agnumber_t	agno;
-+	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
-+	xfs_agnumber_t		agno;
- 
- 	if (!init(argc, argv))
- 		return 0;
-@@ -343,7 +347,7 @@ freesp_f(
- 		printf(_("        AG    extents     blocks\n"));
- 	if (rtflag)
- 		scan_ag(NULLAGNUMBER);
--	for (agno = 0; !rtflag && agno < file->geom.agcount; agno++)  {
-+	for (agno = 0; !rtflag && agno < fsgeom->agcount; agno++) {
- 		if (inaglist(agno))
- 			scan_ag(agno);
- 	}
-diff --git a/spaceman/info.c b/spaceman/info.c
-index 5357b430..24360d28 100644
---- a/spaceman/info.c
-+++ b/spaceman/info.c
-@@ -29,27 +29,13 @@ info_f(
- 	int			argc,
- 	char			**argv)
- {
--	struct xfs_fsop_geom	geo;
--	int			error;
--
- 	if (fs_table_lookup_mount(file->name) == NULL) {
- 		fprintf(stderr, _("%s: Not a XFS mount point.\n"), file->name);
- 		return 1;
- 	}
- 
--	/* get the current filesystem size & geometry */
--	error = xfrog_geometry(file->fd, &geo);
--	if (error < 0) {
--		fprintf(stderr, _(
--			"%s: cannot determine geometry of filesystem"
--			" mounted at %s: %s\n"),
--			progname, file->name, strerror(errno));
--		exitcode = 1;
--		return 0;
--	}
--
--	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
--			file->fs_path.fs_rt);
-+	xfs_report_geom(&file->xfd.fsgeom, file->fs_path.fs_name,
-+			file->fs_path.fs_log, file->fs_path.fs_rt);
- 	return 0;
- }
- 
-diff --git a/spaceman/init.c b/spaceman/init.c
-index c845f920..2698f420 100644
---- a/spaceman/init.c
-+++ b/spaceman/init.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include "libxfs.h"
-+#include "xfrog.h"
- #include "command.h"
- #include "input.h"
- #include "init.h"
-@@ -60,7 +61,7 @@ init(
- 	char		**argv)
- {
- 	int		c;
--	struct xfs_fsop_geom geometry = { 0 };
-+	struct xfs_fd	xfd = XFS_FD_INIT(-1);
- 	struct fs_path	fsp;
- 
- 	progname = basename(argv[0]);
-@@ -88,11 +89,13 @@ init(
- 	if (optind != argc - 1)
- 		usage();
- 
--	if ((c = openfile(argv[optind], &geometry, &fsp)) < 0)
-+	c = openfile(argv[optind], &xfd, &fsp);
-+	if (c < 0)
- 		exit(1);
--	if (!platform_test_xfs_fd(c))
-+	if (!platform_test_xfs_fd(xfd.fd))
- 		printf(_("Not an XFS filesystem!\n"));
--	if (addfile(argv[optind], c, &geometry, &fsp) < 0)
-+	c = addfile(argv[optind], &xfd, &fsp);
-+	if (c < 0)
- 		exit(1);
- 
- 	init_commands();
-diff --git a/spaceman/prealloc.c b/spaceman/prealloc.c
-index 85dfc9ee..a899f548 100644
---- a/spaceman/prealloc.c
-+++ b/spaceman/prealloc.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include "libxfs.h"
-+#include "xfrog.h"
- #include "command.h"
- #include "input.h"
- #include "init.h"
-@@ -18,11 +19,12 @@ static cmdinfo_t prealloc_cmd;
-  */
- static int
- prealloc_f(
--	int	argc,
--	char	**argv)
-+	int			argc,
-+	char			**argv)
- {
- 	struct xfs_fs_eofblocks eofb = {0};
--	int	c;
-+	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
-+	int			c;
- 
- 	eofb.eof_version = XFS_EOFBLOCKS_VERSION;
- 
-@@ -51,9 +53,8 @@ prealloc_f(
- 			break;
- 		case 'm':
- 			eofb.eof_flags |= XFS_EOF_FLAGS_MINFILESIZE;
--			eofb.eof_min_file_size = cvtnum(file->geom.blocksize,
--							file->geom.sectsize,
--							optarg);
-+			eofb.eof_min_file_size = cvtnum(fsgeom->blocksize,
-+					fsgeom->sectsize, optarg);
- 			break;
- 		case '?':
- 		default:
-@@ -63,7 +64,7 @@ prealloc_f(
- 	if (optind != argc)
- 		return command_usage(&prealloc_cmd);
- 
--	if (ioctl(file->fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
-+	if (ioctl(file->xfd.fd, XFS_IOC_FREE_EOFBLOCKS, &eofb) < 0) {
- 		fprintf(stderr, _("%s: XFS_IOC_FREE_EOFBLOCKS on %s: %s\n"),
- 			progname, file->name, strerror(errno));
- 	}
-diff --git a/spaceman/space.h b/spaceman/space.h
-index 8b224aca..2c26884a 100644
---- a/spaceman/space.h
-+++ b/spaceman/space.h
-@@ -7,18 +7,19 @@
- #define XFS_SPACEMAN_SPACE_H_
- 
- struct fileio {
--	struct xfs_fsop_geom geom;		/* XFS filesystem geometry */
-+	struct xfs_fd	xfd;		/* XFS runtime support context */
- 	struct fs_path	fs_path;	/* XFS path information */
- 	char		*name;		/* file name at time of open */
--	int		fd;		/* open file descriptor */
- };
- 
- extern struct fileio	*filetable;	/* open file table */
- extern int		filecount;	/* number of open files */
- extern struct fileio	*file;		/* active file in file table */
- 
--extern int	openfile(char *, struct xfs_fsop_geom *, struct fs_path *);
--extern int	addfile(char *, int , struct xfs_fsop_geom *, struct fs_path *);
-+extern int	openfile(char *path, struct xfs_fd *xfd,
-+			 struct fs_path *fs_path);
-+extern int	addfile(char *path, struct xfs_fd *xfd,
-+			struct fs_path *fs_path);
- 
- extern void	print_init(void);
- extern void	help_init(void);
 diff --git a/spaceman/trim.c b/spaceman/trim.c
-index 88c75a57..ea1308f7 100644
+index ea1308f7..8741bab2 100644
 --- a/spaceman/trim.c
 +++ b/spaceman/trim.c
-@@ -5,6 +5,7 @@
-  */
- 
- #include "libxfs.h"
-+#include "xfrog.h"
- #include "command.h"
- #include "init.h"
- #include "path.h"
-@@ -18,18 +19,19 @@ static cmdinfo_t trim_cmd;
-  */
- static int
- trim_f(
--	int		argc,
--	char		**argv)
-+	int			argc,
-+	char			**argv)
+@@ -23,7 +23,8 @@ trim_f(
+ 	char			**argv)
  {
--	struct fstrim_range trim = {0};
--	xfs_agnumber_t	agno = 0;
--	off64_t		offset = 0;
--	ssize_t		length = 0;
--	ssize_t		minlen = 0;
--	int		aflag = 0;
--	int		fflag = 0;
--	int		ret;
--	int		c;
-+	struct fstrim_range	trim = {0};
-+	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
-+	xfs_agnumber_t		agno = 0;
-+	off64_t			offset = 0;
-+	ssize_t			length = 0;
-+	ssize_t			minlen = 0;
-+	int			aflag = 0;
-+	int			fflag = 0;
-+	int			ret;
-+	int			c;
- 
- 	while ((c = getopt(argc, argv, "a:fm:")) != EOF) {
- 		switch (c) {
-@@ -45,8 +47,8 @@ trim_f(
- 			fflag = 1;
- 			break;
- 		case 'm':
--			minlen = cvtnum(file->geom.blocksize,
--					file->geom.sectsize, optarg);
-+			minlen = cvtnum(fsgeom->blocksize, fsgeom->sectsize,
-+					optarg);
- 			break;
- 		default:
- 			return command_usage(&trim_cmd);
-@@ -59,23 +61,23 @@ trim_f(
- 	if (optind != argc - 2 && !(aflag || fflag))
- 		return command_usage(&trim_cmd);
- 	if (optind != argc) {
--		offset = cvtnum(file->geom.blocksize, file->geom.sectsize,
-+		offset = cvtnum(fsgeom->blocksize, fsgeom->sectsize,
- 				argv[optind]);
--		length = cvtnum(file->geom.blocksize, file->geom.sectsize,
-+		length = cvtnum(fsgeom->blocksize, fsgeom->sectsize,
+ 	struct fstrim_range	trim = {0};
+-	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
++	struct xfs_fd		*xfd = &file->xfd;
++	struct xfs_fsop_geom	*fsgeom = &xfd->fsgeom;
+ 	xfs_agnumber_t		agno = 0;
+ 	off64_t			offset = 0;
+ 	ssize_t			length = 0;
+@@ -66,11 +67,11 @@ trim_f(
+ 		length = cvtnum(fsgeom->blocksize, fsgeom->sectsize,
  				argv[optind + 1]);
  	} else if (agno) {
--		offset = (off64_t)agno * file->geom.agblocks * file->geom.blocksize;
--		length = file->geom.agblocks * file->geom.blocksize;
-+		offset = (off64_t)agno * fsgeom->agblocks * fsgeom->blocksize;
-+		length = fsgeom->agblocks * fsgeom->blocksize;
+-		offset = (off64_t)agno * fsgeom->agblocks * fsgeom->blocksize;
+-		length = fsgeom->agblocks * fsgeom->blocksize;
++		offset = xfrog_bbtob(xfrog_agb_to_daddr(xfd, agno, 0));
++		length = xfrog_fsb_to_b(xfd, fsgeom->agblocks);
  	} else {
  		offset = 0;
--		length = file->geom.datablocks * file->geom.blocksize;
-+		length = fsgeom->datablocks * fsgeom->blocksize;
+-		length = fsgeom->datablocks * fsgeom->blocksize;
++		length = xfrog_fsb_to_b(xfd, fsgeom->datablocks);
  	}
  
  	trim.start = offset;
- 	trim.len = length;
- 	trim.minlen = minlen;
- 
--	ret = ioctl(file->fd, FITRIM, (unsigned long)&trim);
-+	ret = ioctl(file->xfd.fd, FITRIM, (unsigned long)&trim);
- 	if (ret < 0) {
- 		fprintf(stderr, "%s: ioctl(FITRIM) [\"%s\"]: %s\n",
- 			progname, file->name, strerror(errno));
 
