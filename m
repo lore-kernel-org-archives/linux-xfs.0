@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF60CC3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 31A76C3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7FB9D2186A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ED8C62186A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eapLuvQr"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XRpvc8s2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728582AbfHZV3V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:29:21 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50892 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728431AbfHZV3V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:29:21 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLQoYZ003336;
-        Mon, 26 Aug 2019 21:29:19 GMT
+        id S1728584AbfHZV30 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:29:26 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48900 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728431AbfHZV30 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:29:26 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLEqee161918;
+        Mon, 26 Aug 2019 21:29:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=NZtazIXhZbJKGPUO439AuJ+SOMlMsoCx5DYshWf14Ec=;
- b=eapLuvQrLIfrR5jS+MMv/ceIUn0R6YhWnXD3s/KvfRcvPdr1p9KsNJHw5xKb/qlYc30e
- Bsqiuk/87mgHeNxl8BbAs8tv8tdWkz6HNyWa/ECRC2oG9vE0Tp7YXUDk18FVYIPDe4RS
- B8IyTU4iRyk+QPQlqZ8G7BpcxU+sRmw1BJLZsD8zic7qxn/Wg+AX3kgdeiNkfPQ9wYm4
- Cu/eSXomIbhBLC31TBAp/OwgPp9PHXzTMSNsya3V/Ccro15Q7dlAVlov+Z7MtcoyKDE9
- Ua/b8XqbLlqTXf6AKwz82oMLJS3eh9ouoYihUTYhX38flFGOVQKZIxsVE8S2JlNGkP3q Ug== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2umqbe80c1-1
+ bh=NnBrRSsM08n2PZatfIagb1iyvnUqd2XnP7pSVrCkzsU=;
+ b=XRpvc8s2tnkW+zGZciZtW3utBFt3q75YUi4mi7vvEpDi5o7zY8J8VcVSYzP3tUXKjRVN
+ P8yoIDivnOEyMBFrwWDIvnt2MsHkty7JMiG/Xx8uRdhooS+wc/3DofMYLrxTX8fUoa7m
+ AtOofEe/pwZbzsSAkM5903Xj/XHPIGPG2G4lmBSrBl2Z6X1ptFSiHZ2EknXfzvWf0DOY
+ aK3rlhh3abdni83Qf9HxiLnLAwMMWYuZ4sZY3s+2dqFnAowiX6zX0HLPaoBzdPh5YiKP
+ vNxnY2DilncSY4cA0gJC3AdDYNxGb2L/1YojJNUU3q/HO3Uh1RHxj/XbX8B20LXZmw6Y IA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2umq5t823x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:29:18 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIcJj169575;
-        Mon, 26 Aug 2019 21:29:18 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2umhu7wyp0-1
+        Mon, 26 Aug 2019 21:29:24 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIQck024952;
+        Mon, 26 Aug 2019 21:29:23 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2umj1tk5xx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:29:17 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7QLTGen028155;
-        Mon, 26 Aug 2019 21:29:17 GMT
+        Mon, 26 Aug 2019 21:29:23 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLTN3N028717;
+        Mon, 26 Aug 2019 21:29:23 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:29:16 -0700
-Subject: [PATCH 08/13] libfrog: fix missing error checking in bitmap code
+        with ESMTP ; Mon, 26 Aug 2019 14:29:22 -0700
+Subject: [PATCH 09/13] xfs_scrub: fix per-thread counter error communication
+ problems
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:29:08 -0700
-Message-ID: <156685494799.2841546.16122304263421924560.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:29:21 -0700
+Message-ID: <156685496182.2841546.117921668752691817.stgit@magnolia>
 In-Reply-To: <156685489821.2841546.10616502094098044568.stgit@magnolia>
 References: <156685489821.2841546.10616502094098044568.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,62 +81,226 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Check library calls for error codes being returned.
+Fix all the places in the per-thread counter functions either we fail to
+check for runtime errors or fail to communicate them properly to
+callers.  Then fix all the callers to report the error messages instead
+of hiding them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libfrog/bitmap.c |   20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ scrub/counter.c     |   33 ++++++++++++++++++---------------
+ scrub/counter.h     |    6 +++---
+ scrub/phase3.c      |   23 +++++++++++++++++------
+ scrub/progress.c    |   12 +++++++++---
+ scrub/read_verify.c |    9 ++++++---
+ 5 files changed, 53 insertions(+), 30 deletions(-)
 
 
-diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
-index be95965f..82ac8210 100644
---- a/libfrog/bitmap.c
-+++ b/libfrog/bitmap.c
-@@ -72,21 +72,30 @@ bitmap_alloc(
- 	struct bitmap		**bmapp)
+diff --git a/scrub/counter.c b/scrub/counter.c
+index 76a40532..54bdbb03 100644
+--- a/scrub/counter.c
++++ b/scrub/counter.c
+@@ -26,23 +26,25 @@ struct ptcounter {
+ 	struct ptvar	*var;
+ };
+ 
+-/* Initialize per-thread counter. */
+-struct ptcounter *
+-ptcounter_init(
+-	size_t			nr)
++/* Allocate per-thread counter. */
++int
++ptcounter_alloc(
++	size_t			nr,
++	struct ptcounter	**pp)
  {
- 	struct bitmap		*bmap;
-+	int			ret;
+ 	struct ptcounter	*p;
+ 	int			ret;
  
- 	bmap = calloc(1, sizeof(struct bitmap));
- 	if (!bmap)
- 		return errno;
- 	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
- 	if (!bmap->bt_tree) {
--		free(bmap);
--		return errno;
-+		ret = errno;
-+		goto out;
+ 	p = malloc(sizeof(struct ptcounter));
+ 	if (!p)
+-		return NULL;
++		return errno;
+ 	ret = ptvar_alloc(nr, sizeof(uint64_t), &p->var);
+ 	if (ret) {
+ 		free(p);
+-		return NULL;
++		return ret;
  	}
- 
--	pthread_mutex_init(&bmap->bt_lock, NULL);
-+	ret = pthread_mutex_init(&bmap->bt_lock, NULL);
-+	if (ret)
-+		goto out_tree;
-+
- 	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
- 	*bmapp = bmap;
- 
- 	return 0;
-+out_tree:
-+	free(bmap->bt_tree);
-+out:
-+	free(bmap);
-+	return ret;
+-	return p;
++	*pp = p;
++	return 0;
  }
  
- /* Free a bitmap. */
-@@ -217,7 +226,10 @@ bitmap_set(
+ /* Free per-thread counter. */
+@@ -55,7 +57,7 @@ ptcounter_free(
+ }
+ 
+ /* Add a quantity to the counter. */
+-void
++int
+ ptcounter_add(
+ 	struct ptcounter	*ptc,
+ 	int64_t			nr)
+@@ -64,8 +66,10 @@ ptcounter_add(
+ 	int			ret;
+ 
+ 	p = ptvar_get(ptc->var, &ret);
+-	assert(ret == 0);
++	if (ret)
++		return ret;
+ 	*p += nr;
++	return 0;
+ }
+ 
+ static int
+@@ -82,12 +86,11 @@ ptcounter_val_helper(
+ }
+ 
+ /* Return the approximate value of this counter. */
+-uint64_t
++int
+ ptcounter_value(
+-	struct ptcounter	*ptc)
++	struct ptcounter	*ptc,
++	uint64_t		*sum)
  {
- 	int			res;
+-	uint64_t		sum = 0;
+-
+-	ptvar_foreach(ptc->var, ptcounter_val_helper, &sum);
+-	return sum;
++	*sum = 0;
++	return ptvar_foreach(ptc->var, ptcounter_val_helper, sum);
+ }
+diff --git a/scrub/counter.h b/scrub/counter.h
+index 6c501b85..01b65056 100644
+--- a/scrub/counter.h
++++ b/scrub/counter.h
+@@ -7,9 +7,9 @@
+ #define XFS_SCRUB_COUNTER_H_
  
--	pthread_mutex_lock(&bmap->bt_lock);
-+	res = pthread_mutex_lock(&bmap->bt_lock);
-+	if (res)
-+		return res;
+ struct ptcounter;
+-struct ptcounter *ptcounter_init(size_t nr);
++int ptcounter_alloc(size_t nr, struct ptcounter **pp);
+ void ptcounter_free(struct ptcounter *ptc);
+-void ptcounter_add(struct ptcounter *ptc, int64_t nr);
+-uint64_t ptcounter_value(struct ptcounter *ptc);
++int ptcounter_add(struct ptcounter *ptc, int64_t nr);
++int ptcounter_value(struct ptcounter *ptc, uint64_t *sum);
+ 
+ #endif /* XFS_SCRUB_COUNTER_H_ */
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 7f1c528a..399f0e92 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -139,7 +139,12 @@ xfs_scrub_inode(
+ 		goto out;
+ 
+ out:
+-	ptcounter_add(icount, 1);
++	error = ptcounter_add(icount, 1);
++	if (error) {
++		str_liberror(ctx, error,
++				_("incrementing scanned inode counter"));
++		return false;
++	}
+ 	progress_add(1);
+ 	xfs_action_list_defer(ctx, agno, &alist);
+ 	if (fd >= 0) {
+@@ -158,12 +163,14 @@ xfs_scan_inodes(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	struct scrub_inode_ctx	ictx;
++	uint64_t		val;
++	int			err;
+ 	bool			ret;
+ 
+ 	ictx.moveon = true;
+-	ictx.icount = ptcounter_init(scrub_nproc(ctx));
+-	if (!ictx.icount) {
+-		str_info(ctx, ctx->mntpoint, _("Could not create counter."));
++	err = ptcounter_alloc(scrub_nproc(ctx), &ictx.icount);
++	if (err) {
++		str_liberror(ctx, err, _("creating scanned inode counter"));
+ 		return false;
+ 	}
+ 
+@@ -173,8 +180,12 @@ xfs_scan_inodes(
+ 	if (!ictx.moveon)
+ 		goto free;
+ 	xfs_scrub_report_preen_triggers(ctx);
+-	ctx->inodes_checked = ptcounter_value(ictx.icount);
+-
++	err = ptcounter_value(ictx.icount, &val);
++	if (err) {
++		str_liberror(ctx, err, _("summing scanned inode counter"));
++		return false;
++	}
++	ctx->inodes_checked = val;
+ free:
+ 	ptcounter_free(ictx.icount);
+ 	return ictx.moveon;
+diff --git a/scrub/progress.c b/scrub/progress.c
+index d0afe90a..e5ea1e90 100644
+--- a/scrub/progress.c
++++ b/scrub/progress.c
+@@ -119,6 +119,8 @@ progress_report_thread(void *arg)
+ 
+ 	pthread_mutex_lock(&pt.lock);
+ 	while (1) {
++		uint64_t	progress_val;
 +
- 	res = __bitmap_set(bmap, start, length);
- 	pthread_mutex_unlock(&bmap->bt_lock);
+ 		/* Every half second. */
+ 		ret = clock_gettime(CLOCK_REALTIME, &abstime);
+ 		if (ret)
+@@ -131,7 +133,9 @@ progress_report_thread(void *arg)
+ 		pthread_cond_timedwait(&pt.wakeup, &pt.lock, &abstime);
+ 		if (pt.terminate)
+ 			break;
+-		progress_report(ptcounter_value(pt.ptc));
++		ret = ptcounter_value(pt.ptc, &progress_val);
++		if (!ret)
++			progress_report(progress_val);
+ 	}
+ 	pthread_mutex_unlock(&pt.lock);
+ 	return NULL;
+@@ -187,9 +191,11 @@ progress_init_phase(
+ 	pt.twiddle = 0;
+ 	pt.terminate = false;
  
+-	pt.ptc = ptcounter_init(nr_threads);
+-	if (!pt.ptc)
++	ret = ptcounter_alloc(nr_threads, &pt.ptc);
++	if (ret) {
++		str_liberror(ctx, ret, _("allocating progress counter"));
+ 		goto out_max;
++	}
+ 
+ 	ret = pthread_create(&pt.thread, NULL, progress_report_thread, NULL);
+ 	if (ret)
+diff --git a/scrub/read_verify.c b/scrub/read_verify.c
+index 2cd4edfa..425342b4 100644
+--- a/scrub/read_verify.c
++++ b/scrub/read_verify.c
+@@ -84,8 +84,8 @@ read_verify_pool_init(
+ 			RVP_IO_MAX_SIZE);
+ 	if (error || !rvp->readbuf)
+ 		goto out_free;
+-	rvp->verified_bytes = ptcounter_init(nproc);
+-	if (!rvp->verified_bytes)
++	error = ptcounter_alloc(nproc, &rvp->verified_bytes);
++	if (error)
+ 		goto out_buf;
+ 	rvp->miniosz = miniosz;
+ 	rvp->ctx = ctx;
+@@ -282,5 +282,8 @@ uint64_t
+ read_verify_bytes(
+ 	struct read_verify_pool		*rvp)
+ {
+-	return ptcounter_value(rvp->verified_bytes);
++	uint64_t			ret;
++
++	ptcounter_value(rvp->verified_bytes, &ret);
++	return ret;
+ }
 
