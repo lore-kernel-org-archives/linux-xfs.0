@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88135C3A59F
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADD5EC3A59F
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 44D2E2186A
-	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EDB92186A
+	for <linux-xfs@archiver.kernel.org>; Mon, 26 Aug 2019 21:29:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KIKVOaml"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Tcz5JVvR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728595AbfHZV3d (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 17:29:33 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:51128 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728431AbfHZV3c (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:29:32 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLR2rC003451;
-        Mon, 26 Aug 2019 21:29:30 GMT
+        id S1728600AbfHZV3i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 26 Aug 2019 17:29:38 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33074 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728596AbfHZV3i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 17:29:38 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLDuLi001346;
+        Mon, 26 Aug 2019 21:29:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=35m8Z8fk2udN2PEnt01db1JLyKdqQpCxo58wMYrHf8I=;
- b=KIKVOamlWCixb0lXdxXvKpNXi9s7H30Hxd9ICZfTASfGVujlpRUciMDFL1GzgxiJocFU
- t8VmacdzO/MaE6jPcJpx7SndNmI7Uaw+7nFwiuNj6wRTzF7F3aMz9mzr+0ECFqDp4QtW
- tKEQ2GiTuKkxYmTCPF9lqIU/wjreTMNF3wUjm8xSYVY2JrE+wwLD0mcQKLZYTW4nhAf6
- /eNtO01jbQXv3LDKKHLVddg0TVyf4bJRF8LsWGI8TJ/VHNLV41wdzrOOWvozMQP+2IaM
- fqezvNKH0YjlZBPI24A9EtMaov4Pk0TP5SKcISl4Pkvnysb2G4ZZfhgQDNQF/uKcwvY0 /A== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2umqbe80cs-1
+ bh=o8oCYX2TrPhXcPo7Zx7xqrMalOrbv30bVL3T3MDc6gg=;
+ b=Tcz5JVvRPS5oZm1uRFFIN8ToVFf/0+vsWTdakK2Tm/slHk+ab/XsF5WrJK85SsMq75za
+ ZvsLwf5LUFs9Lzx0detjygqJsg0dO2iBNtLMtnwpJlf3dsTybuEIx6oPfwdFk1Ln5u5B
+ jG6DxYkEfhLm96fSR49lEaV4wE3P6tX6lYznL+y+SKowS0XUg/gXLcKeyARXLU/Th7IS
+ JNYe435PdmFYTm/2JRm/GjBHnKA4R43Df/MqvTa4fR9DlVn7geRxXvauhWz4MJ/9fBoc
+ kZ0nW40WSyzT8+3oI6towq4rUjKhmw3qP88e7v9lv52n1KT6dJruhnrQv14wAHsZmzZc Iw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2umpxx05c5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:29:30 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLILxQ170023;
-        Mon, 26 Aug 2019 21:29:30 GMT
+        Mon, 26 Aug 2019 21:29:36 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7QLIcRX169566;
+        Mon, 26 Aug 2019 21:29:36 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2umj278703-1
+        by aserp3030.oracle.com with ESMTP id 2umhu7wyw0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 26 Aug 2019 21:29:30 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLTTEg006221;
-        Mon, 26 Aug 2019 21:29:29 GMT
+        Mon, 26 Aug 2019 21:29:35 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7QLTZ9t006254;
+        Mon, 26 Aug 2019 21:29:35 GMT
 Received: from localhost (/10.159.144.227)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 26 Aug 2019 14:29:29 -0700
-Subject: [PATCH 10/13] xfs_scrub: report all progressbar creation failures
+        with ESMTP ; Mon, 26 Aug 2019 14:29:35 -0700
+Subject: [PATCH 11/13] xfs_scrub: check progress bar timedwait failures
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Mon, 26 Aug 2019 14:29:28 -0700
-Message-ID: <156685496805.2841546.8507696258514934036.stgit@magnolia>
+Date:   Mon, 26 Aug 2019 14:29:34 -0700
+Message-ID: <156685497449.2841546.7301983641781457889.stgit@magnolia>
 In-Reply-To: <156685489821.2841546.10616502094098044568.stgit@magnolia>
 References: <156685489821.2841546.10616502094098044568.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,7 +80,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Always report failures when creating progress bars.
+Check for failures in the timedwait for progressbar reporting.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
@@ -89,19 +89,18 @@ Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 
 diff --git a/scrub/progress.c b/scrub/progress.c
-index e5ea1e90..6d4f2c36 100644
+index 6d4f2c36..14eaf8d3 100644
 --- a/scrub/progress.c
 +++ b/scrub/progress.c
-@@ -198,8 +198,10 @@ progress_init_phase(
- 	}
- 
- 	ret = pthread_create(&pt.thread, NULL, progress_report_thread, NULL);
--	if (ret)
-+	if (ret) {
-+		str_liberror(ctx, ret, _("creating progress reporting thread"));
- 		goto out_ptcounter;
-+	}
- 
- 	return true;
- 
+@@ -130,7 +130,9 @@ progress_report_thread(void *arg)
+ 			abstime.tv_sec++;
+ 			abstime.tv_nsec -= NSEC_PER_SEC;
+ 		}
+-		pthread_cond_timedwait(&pt.wakeup, &pt.lock, &abstime);
++		ret = pthread_cond_timedwait(&pt.wakeup, &pt.lock, &abstime);
++		if (ret && ret != ETIMEDOUT)
++			break;
+ 		if (pt.terminate)
+ 			break;
+ 		ret = ptcounter_value(pt.ptc, &progress_val);
 
