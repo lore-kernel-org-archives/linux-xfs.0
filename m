@@ -2,141 +2,131 @@ Return-Path: <SRS0=DGLX=WX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5849CC3A5A3
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:19:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA45FC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:19:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29107217F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:19:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ptpJ6xil"
+	by mail.kernel.org (Postfix) with ESMTP id BB3F42070B
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:19:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726190AbfH0PTN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Aug 2019 11:19:13 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:60660 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726170AbfH0PTN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 11:19:13 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7RFBuxa113026;
-        Tue, 27 Aug 2019 15:19:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=i8K8iXvu+F4S3TlmhSzrwn8hrY0Eo6XBhihlcXSGjvQ=;
- b=ptpJ6xilt/e/zCialTzBimxGhpL6V2Vg+9TuIYrz4lEKk/KmgmLRmYFo5gcmQPs7tiqJ
- Ar9+GaJ4phbgJ62A/vvFaO2PvZZXzIA4Au9sYFiV+GzJ37nfCNdkauXpuOvsWfwfr/BZ
- zt+T/TR9u3mryUaXsTkWk4pXDLUL3+T5vRwGdknLSqsH6V+2qzh0F9oH/f56gjI1LVn+
- JtxYqrH4RqiYHXygBG8m1bE41huQCDM8ZqshQOEK7wM+/E22Ya8ZNshnEGYwNhsEZk0T
- nVm36l+z6SBaDu6QhEMf/Md7zz7g7O1qSuoBDi01o48WuAFFJjKHKwU9B3fmloUE+cWW aw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2un6x1r258-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Aug 2019 15:19:05 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7RFIXUd127774;
-        Tue, 27 Aug 2019 15:19:05 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2un5rjm32t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 27 Aug 2019 15:19:04 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7RFJ3PM029098;
-        Tue, 27 Aug 2019 15:19:03 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 27 Aug 2019 08:19:02 -0700
-Date:   Tue, 27 Aug 2019 08:19:01 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        bfoster@redhat.com
-Subject: Re: [PATCH 4/4] xfs: fix sign handling problem in
- xfs_bmbt_diff_two_keys
-Message-ID: <20190827151901.GB1037350@magnolia>
-References: <156685612356.2853532.10960947509015722027.stgit@magnolia>
- <156685614992.2853532.4191470495720238021.stgit@magnolia>
- <20190826231555.GP1119@dread.disaster.area>
- <4f959cf2-4381-ffa0-ad58-9e12a40534f1@sandeen.net>
+        id S1727219AbfH0PTk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Aug 2019 11:19:40 -0400
+Received: from Galois.linutronix.de ([193.142.43.55]:44131 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725987AbfH0PTk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 11:19:40 -0400
+Received: from p5de0b6c5.dip0.t-ipconnect.de ([93.224.182.197] helo=nanos)
+        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
+        (Exim 4.80)
+        (envelope-from <tglx@linutronix.de>)
+        id 1i2dFo-0000uH-Ac; Tue, 27 Aug 2019 17:19:28 +0200
+Date:   Tue, 27 Aug 2019 17:19:27 +0200 (CEST)
+From:   Thomas Gleixner <tglx@linutronix.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+cc:     Eryu Guan <guaneryu@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Salvatore Bonaccorso <carnil@debian.org>,
+        Security Officers <security@kernel.org>,
+        Debian Security Team <team@security.debian.org>,
+        benjamin.moody@gmail.com, Ben Hutchings <benh@debian.org>,
+        fstests <fstests@vger.kernel.org>,
+        Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v2] generic: test for failure to unlock inode after chgrp
+ fails with EDQUOT
+In-Reply-To: <20190827150451.GY1037350@magnolia>
+Message-ID: <alpine.DEB.2.21.1908271707400.1939@nanos.tec.linutronix.de>
+References: <20190827041816.GB1037528@magnolia> <alpine.DEB.2.21.1908270811030.1939@nanos.tec.linutronix.de> <20190827150451.GY1037350@magnolia>
+User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4f959cf2-4381-ffa0-ad58-9e12a40534f1@sandeen.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9362 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908270156
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9362 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908270155
+Content-Type: text/plain; charset=US-ASCII
+X-Linutronix-Spam-Score: -1.0
+X-Linutronix-Spam-Level: -
+X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 27, 2019 at 08:01:16AM -0500, Eric Sandeen wrote:
-> On 8/26/19 6:15 PM, Dave Chinner wrote:
-> > On Mon, Aug 26, 2019 at 02:49:09PM -0700, Darrick J. Wong wrote:
-> >> From: Darrick J. Wong <darrick.wong@oracle.com>
-> >>
-> >> In xfs_bmbt_diff_two_keys, we perform a signed int64_t subtraction with
-> >> two unsigned 64-bit quantities.  If the second quantity is actually the
-> >> "maximum" key (all ones) as used in _query_all, the subtraction
-> >> effectively becomes addition of two positive numbers and the function
-> >> returns incorrect results.  Fix this with explicit comparisons of the
-> >> unsigned values.  Nobody needs this now, but the online repair patches
-> >> will need this to work properly.
-> >>
-> >> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> >> ---
-> >>  fs/xfs/libxfs/xfs_bmap_btree.c |   16 ++++++++++++++--
-> >>  1 file changed, 14 insertions(+), 2 deletions(-)
-> >>
-> >>
-> >> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
-> >> index fbb18ba5d905..3c1a805b3775 100644
-> >> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
-> >> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
-> >> @@ -400,8 +400,20 @@ xfs_bmbt_diff_two_keys(
-> >>  	union xfs_btree_key	*k1,
-> >>  	union xfs_btree_key	*k2)
-> >>  {
-> >> -	return (int64_t)be64_to_cpu(k1->bmbt.br_startoff) -
-> >> -			  be64_to_cpu(k2->bmbt.br_startoff);
-> >> +	uint64_t		a = be64_to_cpu(k1->bmbt.br_startoff);
-> >> +	uint64_t		b = be64_to_cpu(k2->bmbt.br_startoff);
-> >> +
-> >> +	/*
-> >> +	 * Note: This routine previously casted a and b to int64 and subtracted
-> >> +	 * them to generate a result.  This lead to problems if b was the
-> >> +	 * "maximum" key value (all ones) being signed incorrectly, hence this
-> >> +	 * somewhat less efficient version.
-> >> +	 */
-> >> +	if (a > b)
-> >> +		return 1;
-> >> +	else if (b > a)
-> >> +		return -1;
+Darrick,
+
+On Tue, 27 Aug 2019, Darrick J. Wong wrote:
+
+> On Tue, Aug 27, 2019 at 08:13:19AM +0200, Thomas Gleixner wrote:
+> > On Mon, 26 Aug 2019, Darrick J. Wong wrote:
+> > > +++ b/tests/generic/719
+> > > @@ -0,0 +1,59 @@
+> > > +#! /bin/bash
+> > > +# SPDX-License-Identifier: GPL-2.0-or-newer
 > > 
-> > No need for an else here, but otherwise OK.
-> > 
-> > Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> > Please run scripts/spdxcheck.py on that file and consult the licensing
+> > documentation.
 > 
-> In fact having the else means the a == b case isn't handled, even if it
-> should never happen, so might a static checker eventually complain about
-> reaching the end of a non-void function?
-
-Hmm?  There's a return 0 after that which Dave's reply clipped.
-
---D
-
-> -Eric
+> -or-later, sorry.
 > 
+> So .... now that everyone who wanted these SPDX identifiers have spread
+> "GPL-2.0+" around the kernel and related projects (xfsprogs, xfstests)
+> just in time for SPDX 3.0 to deprecate the "+" syntax, what are we
+> supposed to do?  Another treewide change to fiddle with SPDX syntax?
+> Can we just put:
+> 
+> Valid-License-Identifier: GPL-2.0+
+> Valid-License-Identifier: GPL-2.0-or-later
+> 
+> in the LICENSES/GPL-2.0 file like the kernel does?
+
+The kernel is not going to change that because we have started with this
+before the s/+/-or-later/ happened. Tools need to read both.
+ 
+> Is that even going to stay that way?  I thought I heard that Greg was
+> working on phasing out the "2.0+" tags since SPDX deprecated that?
+
+For new stuff we should use -or-later methinks.
+
+> I think xfsprogs and xfstests just follow whatever the kernel does, but
+> AFAICT this whole initiative /continues/ to communicate poorly with the
+> maintainers about (1) how this is supposed to benefit us and (2) what we
+> are supposed to do to maintain all of it.
+
+We wrote lengthy documentation and a long explanation on LKML. So what's
+missing?
+
+Maintaining it is easy. All new files need a valid SPDX identifier which is
+documented in one of the licenses in the LICENSES directory. Preferrably
+the SPDX identifier comes without all that boiler plate nonsense which got
+copied and pasted, fatfingered and broken in the past.
+ 
+> Do we have to get lawyers involved to roll to a new SPDX version?  Will
+> LF do that for (at least) the projects hosted on kernel.org?  Should we
+> just do it and hope for the best since IANAFL?  I know how to review
+> code.  I don't know how to review licensing and all the tiny
+> implications that go along with things like this.  I don't even feel
+> confident that the two identifiers above are exactly the same, because
+> all I know is that I read it on a webpage somewhere.
+
+We have layers helping with that. 
+ 
+> I for one still have heard abso-f*cking-lutely nothing about what is
+> this SPDX change other than Greg shoving treewide changes in the kernel.
+> That sufficed to get the mechanical work done (at the cost of a lot of
+> frustration for Greg) but this doesn't help me sustain our community.
+> 
+> Guidance needed.  Apologies all around if this rant is misdirected, but
+> I have no idea who (if anyone) is maintaining SPDX tags.  There's no
+> entry for LICENSES/ in MAINTAINERS, which is where I looked first.
+
+The SPDX identifiers are maintained by the SPDX group which is independent
+of us. We use them and we document how to use them proper so tooling can do
+proper license identification.
+
+Yeah, we should add a MAINTAINERS entry for LICENSES. Greg and myself are
+going to be volunteered I fear.
+
+Thanks,
+
+	tglx
