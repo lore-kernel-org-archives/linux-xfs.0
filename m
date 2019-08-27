@@ -2,273 +2,186 @@ Return-Path: <SRS0=DGLX=WX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7C47C3A59F
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 02:54:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AD27C3A5A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 04:18:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A68B02070B
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 02:54:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5DB7421883
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 04:18:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aErBJl+0"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RA7rgHnX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728025AbfH0CyX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 26 Aug 2019 22:54:23 -0400
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:46569 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727493AbfH0CyX (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 26 Aug 2019 22:54:23 -0400
-Received: by mail-pf1-f193.google.com with SMTP id q139so13074686pfc.13
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 19:54:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=+UhsbPMtk6uIro0X+Ot52dErCXGlOIS4nCxSOBB63uM=;
-        b=aErBJl+0O7K3lisDqWHBmM15Tf9gOjAdGlWcRaF+22rdMcKnfFKQibsVIQxyZ83Vl2
-         0Sc7dT8zEMWB5PuBRh2vqth8h373dC4Pvl2lBt/zysaHbXuXmz8CbQBqyY0geV8xeJTv
-         6MI/VSX/5ucIpWTSW8nV9K6//C7LyITKY3oBuW04b3CxQx2rStTvqp3rcIDtGc/3J1ho
-         66QGuKJPW/C/aCVc1eRo9Ehpz4uBuphrOK9CqTaRJ3L43el+1AGY6AujgaTz6ftoOv7R
-         XuAgrlRSVeDqzXuFaHw/qWEm3yn0x1pb8994rrdrFGeio63t4pW9fTTbPVA1scWCNt7y
-         LeUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=+UhsbPMtk6uIro0X+Ot52dErCXGlOIS4nCxSOBB63uM=;
-        b=pw+oaMBHDoVd6eXHVN/JGpF29rZ4zVa6Dtd9ny/JiuoCkEZ+wdMq00zp6owt3GNZTe
-         MYAJGp9tH/+Ppom71NyXJ8URDrV+Q54ZLST7SgnsoFkaIoEE9ycvgQo8XUBoJ9xxgX9i
-         LWvtRVt86jR8i3tKHNeArsIy+u506dA0phEj+pmRdy48JcvOk6pV00M2xsdTSB43rfnz
-         HNPxIjtGFis7sDAK6VPyYJAMGYrGL+MQFwM382gzIlld3R2aLPbsNoEyOgZ8eqWPGM4w
-         w7ImdNjKWcidCP6l/R88qBRBfCSr+QW+awQrUYTn4oCrHraZZwmHRTl6wrmmBOVa3O1E
-         kKtQ==
-X-Gm-Message-State: APjAAAV4eIe/Ia3hr+0a45/jFMn6Hv7/JRKYE/IwOumSC/XGdjbS7/H5
-        +7vvkq8JKh6ldDBCagytAA==
-X-Google-Smtp-Source: APXvYqyTtahRaKE+HL3nMVHC67Mj/dT01OrSK5PqpuqhEVc2S5RXcnyeImSzfBSVQXM46xwyud0L2g==
-X-Received: by 2002:a17:90a:6d43:: with SMTP id z61mr23384578pjj.32.1566874462198;
-        Mon, 26 Aug 2019 19:54:22 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id b126sm18192835pfb.110.2019.08.26.19.54.16
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 26 Aug 2019 19:54:21 -0700 (PDT)
-To:     linux-xfs@vger.kernel.org
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        id S1725936AbfH0ESu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Aug 2019 00:18:50 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46712 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725874AbfH0ESu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 00:18:50 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7R4EMGZ111818;
+        Tue, 27 Aug 2019 04:18:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=DRhKG6FmEjXE42HwwOjj6heoYQe0uWwuBoaIuA7FfPA=;
+ b=RA7rgHnXHFdRymb+QjQUZy0tzn1+ACzQc93z9IXKxBmFU7E5qs+/cOFEJ9kMV2wFt0nJ
+ 1rU26Di6qMZ0jr6hu34j6oUnsI22bvT8bDkfutlDa5ZVtcHzoput5pO6QdY4WKgzciIr
+ zFG3z1AsNZH+eRV5dnx4+5NPVmC09XbtSdpsqY1sMdMShiZPIJaa1+QA2fsf/UebVVQn
+ zSbX1ZNskSLyDd6N16mj9nMS4s32TBWHCj5/I/MyqTdA9hQWw/xQ1KqLEcU17xcXs0bb
+ Kof/s5TLwzXCqF2EdjubK6VMA5zOXxqnkbpBrGp0lijaWx7FjhJUL+A29F5/Dzyj7VuE 6w== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2umw8j80xh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 27 Aug 2019 04:18:21 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7R4HsfB094977;
+        Tue, 27 Aug 2019 04:18:21 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2umj1u0ut3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 27 Aug 2019 04:18:21 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7R4IHkv013525;
+        Tue, 27 Aug 2019 04:18:18 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 26 Aug 2019 21:18:17 -0700
+Date:   Mon, 26 Aug 2019 21:18:16 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eryu Guan <guaneryu@gmail.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
         Dave Chinner <david@fromorbit.com>,
-        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
-        jasperwang@tencent.com, xiakaixu1987@gmail.com
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Subject: [PATCH v3] xfs: Fix ABBA deadlock between AGI and AGF when performing
- rename() with RENAME_WHITEOUT flag
-Message-ID: <55d0f202-62a7-0b1c-a386-2395b19b47c5@gmail.com>
-Date:   Tue, 27 Aug 2019 10:54:12 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        Salvatore Bonaccorso <carnil@debian.org>,
+        Security Officers <security@kernel.org>,
+        Debian Security Team <team@security.debian.org>,
+        benjamin.moody@gmail.com, Ben Hutchings <benh@debian.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: [PATCH v2] generic: test for failure to unlock inode after chgrp
+ fails with EDQUOT
+Message-ID: <20190827041816.GB1037528@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9361 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908270047
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9361 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908270046
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When performing rename operation with RENAME_WHITEOUT flag, we will
-hold AGF lock to allocate or free extents in manipulating the dirents
-firstly, and then doing the xfs_iunlink_remove() call last to hold
-AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-The big problem here is that we have an ordering constraint on AGF
-and AGI locking - inode allocation locks the AGI, then can allocate
-a new extent for new inodes, locking the AGF after the AGI. Hence
-the ordering that is imposed by other parts of the code is AGI before
-AGF. So we get an ABBA deadlock between the AGI and AGF here.
+This is a regression test that checks for xfs drivers that fail to
+unlock the inode after changing the group id fails with EDQUOT.  It
+pairs with "xfs: fix missing ILOCK unlock when xfs_setattr_nonsize fails
+due to EDQUOT".
 
-Process A:
-Call trace:
- ? __schedule+0x2bd/0x620
- schedule+0x33/0x90
- schedule_timeout+0x17d/0x290
- __down_common+0xef/0x125
- ? xfs_buf_find+0x215/0x6c0 [xfs]
- down+0x3b/0x50
- xfs_buf_lock+0x34/0xf0 [xfs]
- xfs_buf_find+0x215/0x6c0 [xfs]
- xfs_buf_get_map+0x37/0x230 [xfs]
- xfs_buf_read_map+0x29/0x190 [xfs]
- xfs_trans_read_buf_map+0x13d/0x520 [xfs]
- xfs_read_agf+0xa6/0x180 [xfs]
- ? schedule_timeout+0x17d/0x290
- xfs_alloc_read_agf+0x52/0x1f0 [xfs]
- xfs_alloc_fix_freelist+0x432/0x590 [xfs]
- ? down+0x3b/0x50
- ? xfs_buf_lock+0x34/0xf0 [xfs]
- ? xfs_buf_find+0x215/0x6c0 [xfs]
- xfs_alloc_vextent+0x301/0x6c0 [xfs]
- xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
- ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
- xfs_dialloc+0x116/0x290 [xfs]
- xfs_ialloc+0x6d/0x5e0 [xfs]
- ? xfs_log_reserve+0x165/0x280 [xfs]
- xfs_dir_ialloc+0x8c/0x240 [xfs]
- xfs_create+0x35a/0x610 [xfs]
- xfs_generic_create+0x1f1/0x2f0 [xfs]
- ...
-
-Process B:
-Call trace:
- ? __schedule+0x2bd/0x620
- ? xfs_bmapi_allocate+0x245/0x380 [xfs]
- schedule+0x33/0x90
- schedule_timeout+0x17d/0x290
- ? xfs_buf_find+0x1fd/0x6c0 [xfs]
- __down_common+0xef/0x125
- ? xfs_buf_get_map+0x37/0x230 [xfs]
- ? xfs_buf_find+0x215/0x6c0 [xfs]
- down+0x3b/0x50
- xfs_buf_lock+0x34/0xf0 [xfs]
- xfs_buf_find+0x215/0x6c0 [xfs]
- xfs_buf_get_map+0x37/0x230 [xfs]
- xfs_buf_read_map+0x29/0x190 [xfs]
- xfs_trans_read_buf_map+0x13d/0x520 [xfs]
- xfs_read_agi+0xa8/0x160 [xfs]
- xfs_iunlink_remove+0x6f/0x2a0 [xfs]
- ? current_time+0x46/0x80
- ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
- xfs_rename+0x57a/0xae0 [xfs]
- xfs_vn_rename+0xe4/0x150 [xfs]
- ...
-
-In this patch we move the xfs_iunlink_remove() call to
-before acquiring the AGF lock to preserve correct AGI/AGF locking
-order.
-
-Signed-off-by: kaixuxia <kaixuxia@tencent.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_inode.c | 83 +++++++++++++++++++++++++++---------------------------
- 1 file changed, 42 insertions(+), 41 deletions(-)
+v2: add commit id
+---
+ tests/generic/719     |   59 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/719.out |    2 ++
+ tests/generic/group   |    1 +
+ 3 files changed, 62 insertions(+)
+ create mode 100755 tests/generic/719
+ create mode 100644 tests/generic/719.out
 
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 6467d5e..8ffd44f 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -3282,7 +3282,8 @@ struct xfs_iunlink {
- 					spaceres);
- 
- 	/*
--	 * Set up the target.
-+	 * Check for expected errors before we dirty the transaction
-+	 * so we can return an error without a transaction abort.
- 	 */
- 	if (target_ip == NULL) {
- 		/*
-@@ -3294,6 +3295,46 @@ struct xfs_iunlink {
- 			if (error)
- 				goto out_trans_cancel;
- 		}
-+	} else {
-+		/*
-+		 * If target exists and it's a directory, check that whether
-+		 * it can be destroyed.
-+		 */
-+		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
-+		    (!xfs_dir_isempty(target_ip) ||
-+		     (VFS_I(target_ip)->i_nlink > 2))) {
-+			error = -EEXIST;
-+			goto out_trans_cancel;
-+		}
-+	}
+diff --git a/tests/generic/719 b/tests/generic/719
+new file mode 100755
+index 00000000..3da2539c
+--- /dev/null
++++ b/tests/generic/719
+@@ -0,0 +1,59 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-newer
++# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# FS QA Test No. 719
++#
++# Regression test for chgrp returning to userspace with ILOCK held after a
++# hard quota error.  This causes the filesystem to hang, so it is (for now)
++# a dangerous test.
++#
++# This test goes with commit 1fb254aa983bf ("xfs: fix missing ILOCK unlock when
++# xfs_setattr_nonsize fails due to EDQUOT")
 +
-+	/*
-+	 * Directory entry creation below may acquire the AGF. Remove
-+	 * the whiteout from the unlinked list first to preserve correct
-+	 * AGI/AGF locking order. This dirties the transaction so failures
-+	 * after this point will abort and log recovery will clean up the
-+	 * mess.
-+	 *
-+	 * For whiteouts, we need to bump the link count on the whiteout
-+	 * inode. After this point, we have a real link, clear the tmpfile
-+	 * state flag from the inode so it doesn't accidentally get misused
-+	 * in future.
-+	 */
-+	if (wip) {
-+		ASSERT(VFS_I(wip)->i_nlink == 0);
-+		error = xfs_iunlink_remove(tp, wip);
-+		if (error)
-+			goto out_trans_cancel;
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
-+		xfs_bumplink(tp, wip);
-+		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
-+		VFS_I(wip)->i_state &= ~I_LINKABLE;
-+	}
++here=`pwd`
++tmp=/tmp/$$
++status=1    # failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+	/*
-+	 * Set up the target.
-+	 */
-+	if (target_ip == NULL) {
- 		/*
- 		 * If target does not exist and the rename crosses
- 		 * directories, adjust the target directory link count
-@@ -3312,22 +3353,6 @@ struct xfs_iunlink {
- 		}
- 	} else { /* target_ip != NULL */
- 		/*
--		 * If target exists and it's a directory, check that both
--		 * target and source are directories and that target can be
--		 * destroyed, or that neither is a directory.
--		 */
--		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
--			/*
--			 * Make sure target dir is empty.
--			 */
--			if (!(xfs_dir_isempty(target_ip)) ||
--			    (VFS_I(target_ip)->i_nlink > 2)) {
--				error = -EEXIST;
--				goto out_trans_cancel;
--			}
--		}
--
--		/*
- 		 * Link the source inode under the target name.
- 		 * If the source inode is a directory and we are moving
- 		 * it across directories, its ".." entry will be
-@@ -3417,30 +3442,6 @@ struct xfs_iunlink {
- 	if (error)
- 		goto out_trans_cancel;
- 
--	/*
--	 * For whiteouts, we need to bump the link count on the whiteout inode.
--	 * This means that failures all the way up to this point leave the inode
--	 * on the unlinked list and so cleanup is a simple matter of dropping
--	 * the remaining reference to it. If we fail here after bumping the link
--	 * count, we're shutting down the filesystem so we'll never see the
--	 * intermediate state on disk.
--	 */
--	if (wip) {
--		ASSERT(VFS_I(wip)->i_nlink == 0);
--		xfs_bumplink(tp, wip);
--		error = xfs_iunlink_remove(tp, wip);
--		if (error)
--			goto out_trans_cancel;
--		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
--
--		/*
--		 * Now we have a real link, clear the "I'm a tmpfile" state
--		 * flag from the inode so it doesn't accidentally get misused in
--		 * future.
--		 */
--		VFS_I(wip)->i_state &= ~I_LINKABLE;
--	}
--
- 	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
- 	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
- 	if (new_parent)
--- 
-1.8.3.1
-
--- 
-kaixuxia
++_cleanup()
++{
++	cd /
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/quota
++. ./common/filter
++
++# real QA test starts here
++_supported_os Linux
++_supported_fs generic
++_require_scratch
++_require_quota
++_require_user
++
++rm -f $seqres.full
++
++_qmount_option "grpquota"
++_scratch_mkfs > $seqres.full
++_qmount
++
++dir="$SCRATCH_MNT/dummy"
++mkdir -p $dir
++chown $qa_user $dir
++$XFS_QUOTA_PROG -x -f -c "limit -g bsoft=100k bhard=100k $qa_user" $SCRATCH_MNT
++
++$XFS_IO_PROG -f -c 'pwrite -S 0x58 0 1m' $dir/foo >> $seqres.full
++chown $qa_user "${dir}/foo"
++su $qa_user -c "chgrp $qa_user ${dir}/foo" 2>&1 | _filter_scratch
++ls -la ${dir} >> $seqres.full
++$XFS_QUOTA_PROG -x -f -c 'report -hag' $SCRATCH_MNT >> $seqres.full
++
++# success, all done
++status=0
++exit
+diff --git a/tests/generic/719.out b/tests/generic/719.out
+new file mode 100644
+index 00000000..8f9d51b5
+--- /dev/null
++++ b/tests/generic/719.out
+@@ -0,0 +1,2 @@
++QA output created by 719
++chgrp: changing group of 'SCRATCH_MNT/dummy/foo': Disk quota exceeded
+diff --git a/tests/generic/group b/tests/generic/group
+index 2e4a6f79..cd418106 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -568,3 +568,4 @@
+ 563 auto quick
+ 564 auto quick copy_range
+ 565 auto quick copy_range
++719 auto quick quota metadata
