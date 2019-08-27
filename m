@@ -2,170 +2,143 @@ Return-Path: <SRS0=DGLX=WX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E6E2C3A5A3
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 13:38:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67936C3A5A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:05:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EBD5206BA
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 13:38:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3845E20828
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:05:27 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="F13eePTZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726125AbfH0NiW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Aug 2019 09:38:22 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:34308 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725825AbfH0NiV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Aug 2019 09:38:21 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9E0D9307CDEA
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2019 13:38:21 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 473905C258;
-        Tue, 27 Aug 2019 13:38:17 +0000 (UTC)
-Date:   Tue, 27 Aug 2019 09:38:16 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Carlos Maiolino <cmaiolino@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC] generic 223: Ensure xfs allocator will honor
- alignment requirements
-Message-ID: <20190827133816.GH10636@bfoster>
-References: <20190826144712.14614-1-cmaiolino@redhat.com>
+        id S1726140AbfH0PF0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Aug 2019 11:05:26 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:47746 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725920AbfH0PF0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 11:05:26 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7RExVbO112318;
+        Tue, 27 Aug 2019 15:04:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=CaqxpG6cu/CuJIX0T78e9xrLKshNO7dTQ4gOrc5/XMw=;
+ b=F13eePTZdr7qWPEogVVr1Hbby9SO8MJQHtea2D/L1j1EQsny/YKmdpnuXqnQPClf93rj
+ nPyLLEi2SC3QzwKuOgzti91DVsP0ZhKMQn1mkTy/EOrJFdQrYCXaZgg8xckYRF9Ki9ZO
+ bmjoWZDulMrb0U7r53pJWQxEaLCWg6eWsobcs+sjp6Ehl8U8HNKGYU4fyvJAfQcsKHNW
+ nHAltugDKXOluFIlDaSLUGdbI6TzRU961xfmh4uc4o0rJPRKCzcr8LaSDg65Hyz3wtXX
+ FkoGQZv12o2kFzfuXCO3diXiamVEi852Y4JbnyT5vVpCJkg6wpeR/zsHcOTh6iNsOOJE sw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2un6qtr24u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 27 Aug 2019 15:04:59 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7REwFAf185819;
+        Tue, 27 Aug 2019 15:04:58 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2umhu8v33h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 27 Aug 2019 15:04:58 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7RF4pAt022987;
+        Tue, 27 Aug 2019 15:04:53 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 27 Aug 2019 08:04:51 -0700
+Date:   Tue, 27 Aug 2019 08:04:51 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Thomas Gleixner <tglx@linutronix.de>
+Cc:     Eryu Guan <guaneryu@gmail.com>,
+        Christoph Hellwig <hch@infradead.org>,
+        xfs <linux-xfs@vger.kernel.org>,
+        Linus Torvalds <torvalds@linux-foundation.org>,
+        Dave Chinner <david@fromorbit.com>,
+        Salvatore Bonaccorso <carnil@debian.org>,
+        Security Officers <security@kernel.org>,
+        Debian Security Team <team@security.debian.org>,
+        benjamin.moody@gmail.com, Ben Hutchings <benh@debian.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [PATCH v2] generic: test for failure to unlock inode after chgrp
+ fails with EDQUOT
+Message-ID: <20190827150451.GY1037350@magnolia>
+References: <20190827041816.GB1037528@magnolia>
+ <alpine.DEB.2.21.1908270811030.1939@nanos.tec.linutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190826144712.14614-1-cmaiolino@redhat.com>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.49]); Tue, 27 Aug 2019 13:38:21 +0000 (UTC)
+In-Reply-To: <alpine.DEB.2.21.1908270811030.1939@nanos.tec.linutronix.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9362 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908270155
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9362 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908270155
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 26, 2019 at 04:47:12PM +0200, Carlos Maiolino wrote:
-> If the files being allocated during the test do not fit into a single
-> Allocation Group, XFS allocator may disable alignment requirements
-> causing the test to fail even though XFS was working as expected.
+On Tue, Aug 27, 2019 at 08:13:19AM +0200, Thomas Gleixner wrote:
+> On Mon, 26 Aug 2019, Darrick J. Wong wrote:
+> > +++ b/tests/generic/719
+> > @@ -0,0 +1,59 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-newer
 > 
-> Fix this by fixing a min AG size, so all files created during the test
-> will fit into a single AG not disabling XFS alignment requirements.
-> 
-> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> ---
-> 
-> Hi,
-> 
-> I am tagging this patch as a RFC mostly to start a discussion here, regarding
-> this issue found while running generic/223.
-> 
-> The generic/223 fails when running it with finobt disabled. Specifically, the
-> last file being fallocated are unaligned.
-> 
-> When the finobt is enabled, the allocator does not try to squeeze partial file
-> data into small available extents in AG 0, while it does when finobt is
-> disabled.
-> 
-> Here are the bmap of the same file after generic/223 finishes with and without
-> finobt:
-> 
-> finobt=0
-> 
-> /mnt/scratch/file-1073745920-falloc:
->  EXT: FILE-OFFSET         BLOCK-RANGE      AG AG-OFFSET           TOTAL FLAGS
->    0: [0..191]:           320..511          0 (320..511)            192 001011
->    1: [192..375]:         64..247           0 (64..247)             184 001111
->    2: [376..1287791]:     678400..1965815   0 (678400..1965815) 1287416 000111
->    3: [1287792..2097159]: 1966080..2775447  1 (256..809623)      809368 000101
-> 
-> 
-> finobt=1
-> 
-> /mnt/scratch/file-1073745920-falloc:
->  EXT: FILE-OFFSET         BLOCK-RANGE      AG AG-OFFSET           TOTAL FLAGS
->    0: [0..1285831]:       678400..1964231   0 (678400..1964231) 1285832 000111
->    1: [1285832..2097159]: 1966080..2777407  1 (256..811583)      811328 000101
-> 
-> 
-> I still don't know the details about why the allocator takes different decisions
-> depending on finobt being used or not, although I believe it's because the extra
-> space being used in each AG, and the default AG size when running the test, but
-> I'm still reading the code to try to understand this difference.
-> 
+> Please run scripts/spdxcheck.py on that file and consult the licensing
+> documentation.
 
-For reference, I think this behavior is related to a couple patches I
-posted a few months ago[1]. I reproduced similar behavior after some of
-extent allocation rework changes and ultimately determined that the
-changes I had at the time weren't really the root cause. The commit log
-for patch 1 in that series shows a straightforward example that IIRC
-doesn't have anything to do with finobt either.
+-or-later, sorry.
 
-> Even though I think there might be room for improvement in the XFS allocator
-> code to avoid this bypass of alignment requirements here, I still think the test
-> should be fixed to avoid forcing the filesystem to drop alignment constraints
-> during file allocation which basically invalidate the test, and that's why I
-> decided to start the discussion with a RFC patch for the test, but sending it to
-> xfs list instead of fstests.
-> 
+So .... now that everyone who wanted these SPDX identifiers have spread
+"GPL-2.0+" around the kernel and related projects (xfsprogs, xfstests)
+just in time for SPDX 3.0 to deprecate the "+" syntax, what are we
+supposed to do?  Another treewide change to fiddle with SPDX syntax?
+Can we just put:
 
-The question I have is is this test doing anything a user wouldn't
-expect to honor alignment? I understand that alignment is not
-guaranteed, but I wouldn't expect to play that card unless the
-filesystem is low on free space or aligned space in general (IIRC that's
-something we check by adding the worst case alignment to the size of the
-allocation request).
+Valid-License-Identifier: GPL-2.0+
+Valid-License-Identifier: GPL-2.0-or-later
 
-The example I had was a 1GB fallocate on an empty ~15GB/16AG fs (i.e.
-allocation larger than a single AG). That is a corner case, but one I'd
-expect to work. With regard to generic/223, what is it doing in this
-case to "force the filesystem to drop alignment?" I think you could make
-the argument that the test needs fixing if it's doing something that
-legitimately risks the ability to align allocations, but I also think
-you could argue that the test has done its job by finding this problem.
-:)
+in the LICENSES/GPL-2.0 file like the kernel does?
 
-Brian
+Is that even going to stay that way?  I thought I heard that Greg was
+working on phasing out the "2.0+" tags since SPDX deprecated that?
 
-[1] https://marc.info/?l=linux-xfs&m=155671950608062&w=2
+I think xfsprogs and xfstests just follow whatever the kernel does, but
+AFAICT this whole initiative /continues/ to communicate poorly with the
+maintainers about (1) how this is supposed to benefit us and (2) what we
+are supposed to do to maintain all of it.
 
-> Comments?
+Do we have to get lawyers involved to roll to a new SPDX version?  Will
+LF do that for (at least) the projects hosted on kernel.org?  Should we
+just do it and hope for the best since IANAFL?  I know how to review
+code.  I don't know how to review licensing and all the tiny
+implications that go along with things like this.  I don't even feel
+confident that the two identifiers above are exactly the same, because
+all I know is that I read it on a webpage somewhere.
+
+I for one still have heard abso-f*cking-lutely nothing about what is
+this SPDX change other than Greg shoving treewide changes in the kernel.
+That sufficed to get the mechanical work done (at the cost of a lot of
+frustration for Greg) but this doesn't help me sustain our community.
+
+Guidance needed.  Apologies all around if this rant is misdirected, but
+I have no idea who (if anyone) is maintaining SPDX tags.  There's no
+entry for LICENSES/ in MAINTAINERS, which is where I looked first.
+
+--D
+
+> Thanks,
 > 
-> Cheers
-> 
-> 
->  tests/generic/223 | 9 ++++++++-
->  1 file changed, 8 insertions(+), 1 deletion(-)
-> 
-> diff --git a/tests/generic/223 b/tests/generic/223
-> index dfd8c41b..782651e2 100755
-> --- a/tests/generic/223
-> +++ b/tests/generic/223
-> @@ -34,6 +34,13 @@ _require_xfs_io_command "falloc"
->  
->  rm -f $seqres.full
->  
-> +# Ensure we won't trick xfs allocator to disable alignment requirements
-> +if [ "$FSTYP" == "xfs" ]; then
-> +	mkfs_opts="-d agsize=2g"
-> +else
-> +	mkfs_opts=""
-> +fi
-> +
->  BLOCKSIZE=4096
->  
->  for SUNIT_K in 8 16 32 64 128; do
-> @@ -41,7 +48,7 @@ for SUNIT_K in 8 16 32 64 128; do
->  	let SUNIT_BLOCKS=$SUNIT_BYTES/$BLOCKSIZE
->  
->  	echo "=== mkfs with su $SUNIT_BLOCKS blocks x 4 ==="
-> -	export MKFS_OPTIONS=""
-> +	export MKFS_OPTIONS=$mkfs_opts
->  	_scratch_mkfs_geom $SUNIT_BYTES 4 $BLOCKSIZE >> $seqres.full 2>&1
->  	_scratch_mount
->  
-> -- 
-> 2.20.1
-> 
+> 	tglx
