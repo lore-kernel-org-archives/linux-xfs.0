@@ -4,120 +4,184 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07683C3A5A3
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 05:20:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9809BC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 05:27:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CECF5217F5
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 05:20:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6F42D20828
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 05:27:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725850AbfH0FUw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Aug 2019 01:20:52 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:49532 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725811AbfH0FUv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 27 Aug 2019 01:20:51 -0400
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com [209.85.221.69])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7A4B385363
-        for <linux-xfs@vger.kernel.org>; Tue, 27 Aug 2019 05:20:51 +0000 (UTC)
-Received: by mail-wr1-f69.google.com with SMTP id w11so10812820wru.17
-        for <linux-xfs@vger.kernel.org>; Mon, 26 Aug 2019 22:20:51 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=mBxlnfKYqmP8Z1+51l1s6eAlG7YCvyTWbZhjmeHRn6E=;
-        b=XJ9gRDt4XKTKdGHhIlHOTMF9EgF6b9o4Uoq3uc07onWtra4Job9YXciwxOEeKDmxlY
-         hAx+XIBDlCuMVEaEi+uhcvSh6rM9V4IDjY9bLu3uXo3JabnBmkfH1G871uV4h1uMdDJt
-         u5aFzJeh3rtC/BQ/66Id9hbSNmKn9R3XI47q0mAsdNNhVbbTBK7ge4s01A2DVOt1KI5s
-         nYDntSB7pzHX1+YyvCyear475jffcy29fNgLx8k5xMEMiswoUKlC2RRN6U8cDugWUw9H
-         BjtNeUSDNOdplCub+u1/HegecyT+JoQNf9YSIUJBaj1EiKlzjn1ivwrj3h4cL5+D7YxI
-         It6Q==
-X-Gm-Message-State: APjAAAUXHrsPWsGEp0XuRQOOJYMagle2V8hr+4UopTwBpc+kHbQagLxh
-        lvDYwn7IJWNNL0jXdKrkFxSgYZQ2YTJ8ByZzvh2KlAMtAqgZjUv8d6VWJF2lSqfYqIJIpKW87tT
-        YSMz05AgeTnQSkqupUG1n
-X-Received: by 2002:a05:600c:2056:: with SMTP id p22mr24019443wmg.159.1566883250265;
-        Mon, 26 Aug 2019 22:20:50 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzzVohFuaLix/bueFV/WdMh4Bkn5ZIjjRZE0HAsXWq5hlWwk7d4GAwu9j7mMpiGgoNApQGK8g==
-X-Received: by 2002:a05:600c:2056:: with SMTP id p22mr24019421wmg.159.1566883250044;
-        Mon, 26 Aug 2019 22:20:50 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id x9sm1855056wmi.10.2019.08.26.22.20.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Aug 2019 22:20:49 -0700 (PDT)
-Date:   Tue, 27 Aug 2019 07:20:47 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
+        id S1725850AbfH0F1c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Aug 2019 01:27:32 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34197 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725811AbfH0F1c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 01:27:32 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 23E3943D5FE;
+        Tue, 27 Aug 2019 15:27:27 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i2U0s-00035K-2J; Tue, 27 Aug 2019 15:27:26 +1000
+Date:   Tue, 27 Aug 2019 15:27:26 +1000
+From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: fix maxicount division by zero error
-Message-ID: <20190827052046.2l4wjcbyvyqevoog@pegasus.maiolino.io>
-Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>
-References: <20190826163436.GO1037350@magnolia>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs_scrub: check summary counters
+Message-ID: <20190827052726.GZ1119@dread.disaster.area>
+References: <156685445746.2839983.1426723444334605572.stgit@magnolia>
+ <156685446969.2839983.12626550627146659080.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190826163436.GO1037350@magnolia>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <156685446969.2839983.12626550627146659080.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=qCuZFA_DoIHLVE0PdMQA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi.
-
-On Mon, Aug 26, 2019 at 09:34:36AM -0700, Darrick J. Wong wrote:
+On Mon, Aug 26, 2019 at 02:21:09PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In xfs_ialloc_setup_geometry, it's possible for a malicious/corrupt fs
-> image to set an unreasonably large value for sb_inopblog which will
-> cause ialloc_blks to be zero.  If sb_imax_pct is also set, this results
-> in a division by zero error in the second do_div call.  Therefore, force
-> maxicount to zero if ialloc_blks is zero.
-> 
-> Note that the kernel metadata verifiers will catch the garbage inopblog
-> value and abort the fs mount long before it tries to set up the inode
-> geometry; this is needed to avoid a crash in xfs_db while setting up the
-> xfs_mount structure.
-> 
-> Found by fuzzing sb_inopblog to 122 in xfs/350.
-
-The patch looks good, but maybe a comment is worth so we don't need to check the
-git log to understand why we need to check ialloc_blks here?
-
+> Teach scrub to ask the kernel to check and repair summary counters
+> during phase 7.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/libxfs/xfs_ialloc.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  scrub/phase4.c |   12 ++++++++++++
+>  scrub/phase7.c |   14 ++++++++++++++
+>  scrub/repair.c |    3 +++
+>  scrub/scrub.c  |   13 +++++++++++++
+>  scrub/scrub.h  |    2 ++
+>  5 files changed, 44 insertions(+)
 > 
-> diff --git a/fs/xfs/libxfs/xfs_ialloc.c b/fs/xfs/libxfs/xfs_ialloc.c
-> index 1a14067aa4d4..5e95648c346c 100644
-> --- a/fs/xfs/libxfs/xfs_ialloc.c
-> +++ b/fs/xfs/libxfs/xfs_ialloc.c
-> @@ -2811,7 +2811,7 @@ xfs_ialloc_setup_geometry(
->  			inodes);
+> 
+> diff --git a/scrub/phase4.c b/scrub/phase4.c
+> index 49f00723..c4da4852 100644
+> --- a/scrub/phase4.c
+> +++ b/scrub/phase4.c
+> @@ -107,6 +107,18 @@ bool
+>  xfs_repair_fs(
+>  	struct scrub_ctx		*ctx)
+>  {
+> +	bool				moveon;
+> +
+> +	/*
+> +	 * Check the summary counters early.  Normally we do this during phase
+> +	 * seven, but some of the cross-referencing requires fairly-accurate
+> +	 * counters, so counter repairs have to be put on the list now so that
+> +	 * they get fixed before we stop retrying unfixed metadata repairs.
+> +	 */
+> +	moveon = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
+> +	if (!moveon)
+> +		return false;
 
-Something like:
+"moveon" doesn't really make sense to me here. i.e. I can't tell if
+"moveon = true" meant it failed or not, so I hav eno idea what the
+intent of the code here is, and the comment doesn't explain it at
+all, either.
 
+> +
+>  	return xfs_process_action_items(ctx);
+>  }
+>  
+> diff --git a/scrub/phase7.c b/scrub/phase7.c
+> index 1c459dfc..b3156fdf 100644
+> --- a/scrub/phase7.c
+> +++ b/scrub/phase7.c
+> @@ -7,12 +7,15 @@
+>  #include <stdint.h>
+>  #include <stdlib.h>
+>  #include <sys/statvfs.h>
+> +#include "list.h"
+>  #include "path.h"
+>  #include "ptvar.h"
+>  #include "xfs_scrub.h"
+>  #include "common.h"
+> +#include "scrub.h"
+>  #include "fscounters.h"
+>  #include "spacemap.h"
+> +#include "repair.h"
+>  
+>  /* Phase 7: Check summary counters. */
+>  
+> @@ -91,6 +94,7 @@ xfs_scan_summary(
+>  	struct scrub_ctx	*ctx)
+>  {
+>  	struct summary_counts	totalcount = {0};
+> +	struct xfs_action_list	alist;
+>  	struct ptvar		*ptvar;
+>  	unsigned long long	used_data;
+>  	unsigned long long	used_rt;
+> @@ -110,6 +114,16 @@ xfs_scan_summary(
+>  	int			ip;
+>  	int			error;
+>  
+> +	/* Check and fix the fs summary counters. */
+> +	xfs_action_list_init(&alist);
+> +	moveon = xfs_scrub_fs_summary(ctx, &alist);
+> +	if (!moveon)
+> +		return false;
+> +	moveon = xfs_action_list_process(ctx, ctx->mnt.fd, &alist,
+> +			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
+> +	if (!moveon)
+> +		return moveon;
 
-	/*
-	 * Set the maximum inode count for this filesystem, being careful
-	 * ialloc_blks is not zeroed due a corrupted sb_agblklog
-	 */
-	if (sbp->sb_imax_pct) {
-	if (sbp->sb_imax_pct && igeo->ialloc_blks) {
->  		/*
->  		 * Make sure the maximum inode count is a multiple
->  		 * of the units we allocate inodes in.
+same here - "moveon" doesn't tell me if we're returning because the
+scrub failed or passed....
 
-The comment is just a suggestion anyway, you can add to the patch:
+> +
+>  	/* Flush everything out to disk before we start counting. */
+>  	error = syncfs(ctx->mnt.fd);
+>  	if (error) {
+> diff --git a/scrub/repair.c b/scrub/repair.c
+> index 45450d8c..54639752 100644
+> --- a/scrub/repair.c
+> +++ b/scrub/repair.c
+> @@ -84,6 +84,9 @@ xfs_action_item_priority(
+>  	case XFS_SCRUB_TYPE_GQUOTA:
+>  	case XFS_SCRUB_TYPE_PQUOTA:
+>  		return PRIO(aitem, XFS_SCRUB_TYPE_UQUOTA);
+> +	case XFS_SCRUB_TYPE_FSCOUNTERS:
+> +		/* This should always go after AG headers no matter what. */
+> +		return PRIO(aitem, INT_MAX);
+>  	}
+>  	abort();
+>  }
+> diff --git a/scrub/scrub.c b/scrub/scrub.c
+> index 136ed529..a428b524 100644
+> --- a/scrub/scrub.c
+> +++ b/scrub/scrub.c
+> @@ -28,6 +28,7 @@ enum scrub_type {
+>  	ST_PERAG,	/* per-AG metadata */
+>  	ST_FS,		/* per-FS metadata */
+>  	ST_INODE,	/* per-inode metadata */
+> +	ST_SUMMARY,	/* summary counters (phase 7) */
+>  };
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Hmmm - the previous patch used ST_FS for the summary counters.
 
+Oh, wait, io/scrub.c has a duplicate scrub_type enum defined, and
+the table looks largely the same, too. Except now the summary type
+is different.
+
+/me looks a bit closer...
+
+Oh, the enum scrub_type definitions shadow the kernel enum
+xchk_type, but have different values for the same names. I'm
+just confused now...
+
+Cheers,
+
+Dave.
 -- 
-Carlos
+Dave Chinner
+david@fromorbit.com
