@@ -4,194 +4,125 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AB4FC3A5A3
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 06:31:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7EFBFC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 06:42:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6981E20828
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 06:31:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5606B206BB
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 06:42:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728715AbfH0GbA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Aug 2019 02:31:00 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43244 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725874AbfH0GbA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 02:31:00 -0400
+        id S1726134AbfH0GmC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Aug 2019 02:42:02 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58463 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726071AbfH0GmB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 02:42:01 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 0038743CDA9;
-        Tue, 27 Aug 2019 16:30:56 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5278A366D95;
+        Tue, 27 Aug 2019 16:41:59 +1000 (AEST)
 Received: from dave by dread.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i2V0I-0003VR-Os; Tue, 27 Aug 2019 16:30:54 +1000
-Date:   Tue, 27 Aug 2019 16:30:54 +1000
+        id 1i2VAz-0003WH-LG; Tue, 27 Aug 2019 16:41:57 +1000
+Date:   Tue, 27 Aug 2019 16:41:57 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/6] libfrog: refactor online geometry queries
-Message-ID: <20190827063054.GA1119@dread.disaster.area>
+Subject: Re: [PATCH 2/6] libfrog: introduce xfs_fd to wrap an fd to a file on
+ an xfs filesystem
+Message-ID: <20190827064157.GB1119@dread.disaster.area>
 References: <156633303230.1215733.4447734852671168748.stgit@magnolia>
- <156633303850.1215733.18439177963581003053.stgit@magnolia>
+ <156633304473.1215733.8975368605160374407.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156633303850.1215733.18439177963581003053.stgit@magnolia>
+In-Reply-To: <156633304473.1215733.8975368605160374407.stgit@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=lR75Ynq5BuUuQbJBLGoA:9
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=TePkaY-AX1GOuNOdnDEA:9
         a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 20, 2019 at 01:30:38PM -0700, Darrick J. Wong wrote:
+On Tue, Aug 20, 2019 at 01:30:44PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Refactor all the open-coded XFS_IOC_FSGEOMETRY queries into a single
-> helper that we can use to standardize behaviors across mixed xfslibs
-> versions.  This is the prelude to introducing a new FSGEOMETRY version
-> in 5.2 and needing to fix the (relatively few) client programs.
+> Introduce a new "xfs_fd" context structure where we can store a file
+> descriptor and all the runtime fs context (geometry, which ioctls work,
+> etc.) that goes with it.  We're going to create wrappers for the
+> bulkstat and inumbers ioctls in subsequent patches; and when we
+> introduce the v5 bulkstat/inumbers ioctls we'll need all that context to
+> downgrade gracefully on old kernels.  Start the transition by adopting
+> xfs_fd natively in scrub.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  Makefile            |    1 +
->  fsr/xfs_fsr.c       |   26 ++++----------------------
+>  include/xfrog.h    |   20 ++++++++++++++++++++
 
-Ok.
+naming.
 
->  growfs/xfs_growfs.c |   25 +++++++++----------------
-
-Nit.
-
->  include/xfrog.h     |   22 ++++++++++++++++++++++
-
-Copyright issue.
-
->  io/bmap.c           |    3 ++-
->  io/fsmap.c          |    3 ++-
->  io/open.c           |    3 ++-
->  io/stat.c           |    5 +++--
-
-ok.
-
->  libfrog/fsgeom.c    |   18 ++++++++++++++++++
-
-fallback question.
-
->  quota/free.c        |    6 +++---
->  repair/xfs_repair.c |    5 +++--
->  rtcp/Makefile       |    3 +++
-
-Linker question
-
->  rtcp/xfs_rtcp.c     |    7 ++++---
->  scrub/phase1.c      |    5 +++--
->  spaceman/file.c     |    3 ++-
->  spaceman/info.c     |   27 +++++++++------------------
-
-OK.
-
-
-> diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-> index 20089d2b..86b1d542 100644
-> --- a/growfs/xfs_growfs.c
-> +++ b/growfs/xfs_growfs.c
-> @@ -7,6 +7,7 @@
->  #include "libxfs.h"
->  #include "path.h"
->  #include "fsgeom.h"
-> +#include "xfrog.h"
->  
->  static void
->  usage(void)
-> @@ -165,22 +166,14 @@ main(int argc, char **argv)
->  	}
->  
->  	/* get the current filesystem size & geometry */
-> -	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
-> -		/*
-> -		 * OK, new xfsctl barfed - back off and try earlier version
-> -		 * as we're probably running an older kernel version.
-> -		 * Only field added in the v2 geometry xfsctl is "logsunit"
-> -		 * so we'll zero that out for later display (as zero).
-> -		 */
-> -		geo.logsunit = 0;
-> -		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
-> -			fprintf(stderr, _(
-> -				"%s: cannot determine geometry of filesystem"
-> -				" mounted at %s: %s\n"),
-> -				progname, fname, strerror(errno));
-> -			exit(1);
-> -		}
-> +	if (xfrog_geometry(ffd, &geo) < 0) {
-> +		fprintf(stderr, _(
-> +			"%s: cannot determine geometry of filesystem"
-> +			" mounted at %s: %s\n"),
-> +			progname, fname, strerror(errno));
-> +		exit(1);
-
-Can you run the format string into a single line?
-
+>  libfrog/fsgeom.c   |   25 +++++++++++++++++++++++++
+>  scrub/fscounters.c |   22 ++++++++++++----------
+>  scrub/inodes.c     |   10 +++++-----
+>  scrub/phase1.c     |   41 ++++++++++++++++++++---------------------
+>  scrub/phase2.c     |    2 +-
+>  scrub/phase3.c     |    4 ++--
+>  scrub/phase4.c     |    8 ++++----
+>  scrub/phase5.c     |    2 +-
+>  scrub/phase6.c     |    6 +++---
+>  scrub/phase7.c     |    2 +-
+>  scrub/repair.c     |    4 ++--
+>  scrub/scrub.c      |   12 ++++++------
+>  scrub/spacemap.c   |   12 ++++++------
+>  scrub/vfs.c        |    2 +-
+>  scrub/xfs_scrub.h  |    7 ++++---
+>  16 files changed, 113 insertions(+), 66 deletions(-)
+> 
+> 
 > diff --git a/include/xfrog.h b/include/xfrog.h
-> new file mode 100644
-> index 00000000..5420b47c
-> --- /dev/null
+> index 5420b47c..f3808911 100644
+> --- a/include/xfrog.h
 > +++ b/include/xfrog.h
-> @@ -0,0 +1,22 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2000-2002 Silicon Graphics, Inc.
-> + * All Rights Reserved.
-> + */
-
-I don't think that copyright is valid/appropriate for a new header
-file with new contents.
-
-...
-
-> @@ -67,3 +68,20 @@ xfs_report_geom(
->  		geo->rtextsize * geo->blocksize, (unsigned long long)geo->rtblocks,
->  			(unsigned long long)geo->rtextents);
->  }
-> +
-> +/* Try to obtain the xfs geometry. */
-> +int
-> +xfrog_geometry(
-> +	int			fd,
-> +	struct xfs_fsop_geom	*fsgeo)
-> +{
-> +	int			ret;
-> +
-> +	memset(fsgeo, 0, sizeof(*fsgeo));
-> +
-> +	ret = ioctl(fd, XFS_IOC_FSGEOMETRY, fsgeo);
-> +	if (!ret)
-> +		return 0;
-> +
-> +	return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, fsgeo);
-> +}
-
-Should this fall back to XFS_IOC_FSGEOMETRY_V4, then V1 if that
-fails (which it shouldn't on any supported kernel)?
-
-
-> diff --git a/rtcp/Makefile b/rtcp/Makefile
-> index 808b5378..264b4f27 100644
-> --- a/rtcp/Makefile
-> +++ b/rtcp/Makefile
-> @@ -9,6 +9,9 @@ LTCOMMAND = xfs_rtcp
->  CFILES = xfs_rtcp.c
->  LLDFLAGS = -static
+> @@ -19,4 +19,24 @@
+>  struct xfs_fsop_geom;
+>  int xfrog_geometry(int fd, struct xfs_fsop_geom *fsgeo);
 >  
-> +LLDLIBS = $(LIBFROG)
-> +LTDEPENDENCIES = $(LIBFROG)
+> +/*
+> + * Structure for recording whatever observations we want about the level of
+> + * xfs runtime support for this fd.  Right now we only store the fd and fs
+> + * geometry.
+> + */
+> +struct xfs_fd {
+> +	/* ioctl file descriptor */
+> +	int			fd;
+> +
+> +	/* filesystem geometry */
+> +	struct xfs_fsop_geom	fsgeom;
+> +};
+> +
+> +/* Static initializers */
+> +#define XFS_FD_INIT(_fd)	{ .fd = (_fd), }
+> +#define XFS_FD_INIT_EMPTY	XFS_FD_INIT(-1)
+> +
+> +int xfrog_prepare_geometry(struct xfs_fd *xfd);
+> +int xfrog_close(struct xfs_fd *xfd);
 
-Does this work correctly given LLDFLAGS sets -static and not
--libtools-static-libs?
+I'd much prefer to see these named xfd_prepare_geometry() and
+xfd_close()...
+
+>  	ci = calloc(1, sizeof(struct xfs_count_inodes) +
+> -			(ctx->geo.agcount * sizeof(uint64_t)));
+> +			(ctx->mnt.fsgeom.agcount * sizeof(uint64_t)));
+
+This gets a bit verbose, but.... <shrug> .... doesn't make that much
+of a mess...
+
+Ok, apart from the naming thing, this looks ok.
 
 Cheers,
 
