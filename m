@@ -2,131 +2,149 @@ Return-Path: <SRS0=DGLX=WX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DA45FC3A5A3
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:19:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EB3BCC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:20:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB3F42070B
-	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:19:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7B802070B
+	for <linux-xfs@archiver.kernel.org>; Tue, 27 Aug 2019 15:20:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727219AbfH0PTk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 27 Aug 2019 11:19:40 -0400
-Received: from Galois.linutronix.de ([193.142.43.55]:44131 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725987AbfH0PTk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 27 Aug 2019 11:19:40 -0400
-Received: from p5de0b6c5.dip0.t-ipconnect.de ([93.224.182.197] helo=nanos)
-        by Galois.linutronix.de with esmtpsa (TLS1.2:DHE_RSA_AES_256_CBC_SHA256:256)
-        (Exim 4.80)
-        (envelope-from <tglx@linutronix.de>)
-        id 1i2dFo-0000uH-Ac; Tue, 27 Aug 2019 17:19:28 +0200
-Date:   Tue, 27 Aug 2019 17:19:27 +0200 (CEST)
-From:   Thomas Gleixner <tglx@linutronix.de>
+        id S1726333AbfH0PUL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 27 Aug 2019 11:20:11 -0400
+Received: from sandeen.net ([63.231.237.45]:43230 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726190AbfH0PUL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 27 Aug 2019 11:20:11 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id B792C4CDD3A;
+        Tue, 27 Aug 2019 10:20:09 -0500 (CDT)
+Subject: Re: [PATCH 4/4] xfs: fix sign handling problem in
+ xfs_bmbt_diff_two_keys
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-cc:     Eryu Guan <guaneryu@gmail.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        Linus Torvalds <torvalds@linux-foundation.org>,
-        Dave Chinner <david@fromorbit.com>,
-        Salvatore Bonaccorso <carnil@debian.org>,
-        Security Officers <security@kernel.org>,
-        Debian Security Team <team@security.debian.org>,
-        benjamin.moody@gmail.com, Ben Hutchings <benh@debian.org>,
-        fstests <fstests@vger.kernel.org>,
-        Greg KH <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v2] generic: test for failure to unlock inode after chgrp
- fails with EDQUOT
-In-Reply-To: <20190827150451.GY1037350@magnolia>
-Message-ID: <alpine.DEB.2.21.1908271707400.1939@nanos.tec.linutronix.de>
-References: <20190827041816.GB1037528@magnolia> <alpine.DEB.2.21.1908270811030.1939@nanos.tec.linutronix.de> <20190827150451.GY1037350@magnolia>
-User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+References: <156685612356.2853532.10960947509015722027.stgit@magnolia>
+ <156685614992.2853532.4191470495720238021.stgit@magnolia>
+ <20190826231555.GP1119@dread.disaster.area>
+ <4f959cf2-4381-ffa0-ad58-9e12a40534f1@sandeen.net>
+ <20190827151901.GB1037350@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <9e7f9148-696a-98b0-584a-5097857ea7ab@sandeen.net>
+Date:   Tue, 27 Aug 2019 10:20:08 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-X-Linutronix-Spam-Score: -1.0
-X-Linutronix-Spam-Level: -
-X-Linutronix-Spam-Status: No , -1.0 points, 5.0 required,  ALL_TRUSTED=-1,SHORTCIRCUIT=-0.0001
+In-Reply-To: <20190827151901.GB1037350@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Darrick,
-
-On Tue, 27 Aug 2019, Darrick J. Wong wrote:
-
-> On Tue, Aug 27, 2019 at 08:13:19AM +0200, Thomas Gleixner wrote:
-> > On Mon, 26 Aug 2019, Darrick J. Wong wrote:
-> > > +++ b/tests/generic/719
-> > > @@ -0,0 +1,59 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0-or-newer
-> > 
-> > Please run scripts/spdxcheck.py on that file and consult the licensing
-> > documentation.
+On 8/27/19 10:19 AM, Darrick J. Wong wrote:
+> On Tue, Aug 27, 2019 at 08:01:16AM -0500, Eric Sandeen wrote:
+>> On 8/26/19 6:15 PM, Dave Chinner wrote:
+>>> On Mon, Aug 26, 2019 at 02:49:09PM -0700, Darrick J. Wong wrote:
+>>>> From: Darrick J. Wong <darrick.wong@oracle.com>
+>>>>
+>>>> In xfs_bmbt_diff_two_keys, we perform a signed int64_t subtraction with
+>>>> two unsigned 64-bit quantities.  If the second quantity is actually the
+>>>> "maximum" key (all ones) as used in _query_all, the subtraction
+>>>> effectively becomes addition of two positive numbers and the function
+>>>> returns incorrect results.  Fix this with explicit comparisons of the
+>>>> unsigned values.  Nobody needs this now, but the online repair patches
+>>>> will need this to work properly.
+>>>>
+>>>> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>>> ---
+>>>>  fs/xfs/libxfs/xfs_bmap_btree.c |   16 ++++++++++++++--
+>>>>  1 file changed, 14 insertions(+), 2 deletions(-)
+>>>>
+>>>>
+>>>> diff --git a/fs/xfs/libxfs/xfs_bmap_btree.c b/fs/xfs/libxfs/xfs_bmap_btree.c
+>>>> index fbb18ba5d905..3c1a805b3775 100644
+>>>> --- a/fs/xfs/libxfs/xfs_bmap_btree.c
+>>>> +++ b/fs/xfs/libxfs/xfs_bmap_btree.c
+>>>> @@ -400,8 +400,20 @@ xfs_bmbt_diff_two_keys(
+>>>>  	union xfs_btree_key	*k1,
+>>>>  	union xfs_btree_key	*k2)
+>>>>  {
+>>>> -	return (int64_t)be64_to_cpu(k1->bmbt.br_startoff) -
+>>>> -			  be64_to_cpu(k2->bmbt.br_startoff);
+>>>> +	uint64_t		a = be64_to_cpu(k1->bmbt.br_startoff);
+>>>> +	uint64_t		b = be64_to_cpu(k2->bmbt.br_startoff);
+>>>> +
+>>>> +	/*
+>>>> +	 * Note: This routine previously casted a and b to int64 and subtracted
+>>>> +	 * them to generate a result.  This lead to problems if b was the
+>>>> +	 * "maximum" key value (all ones) being signed incorrectly, hence this
+>>>> +	 * somewhat less efficient version.
+>>>> +	 */
+>>>> +	if (a > b)
+>>>> +		return 1;
+>>>> +	else if (b > a)
+>>>> +		return -1;
+>>>
+>>> No need for an else here, but otherwise OK.
+>>>
+>>> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+>>
+>> In fact having the else means the a == b case isn't handled, even if it
+>> should never happen, so might a static checker eventually complain about
+>> reaching the end of a non-void function?
 > 
-> -or-later, sorry.
-> 
-> So .... now that everyone who wanted these SPDX identifiers have spread
-> "GPL-2.0+" around the kernel and related projects (xfsprogs, xfstests)
-> just in time for SPDX 3.0 to deprecate the "+" syntax, what are we
-> supposed to do?  Another treewide change to fiddle with SPDX syntax?
-> Can we just put:
-> 
-> Valid-License-Identifier: GPL-2.0+
-> Valid-License-Identifier: GPL-2.0-or-later
-> 
-> in the LICENSES/GPL-2.0 file like the kernel does?
+> Hmm?  There's a return 0 after that which Dave's reply clipped.
 
-The kernel is not going to change that because we have started with this
-before the s/+/-or-later/ happened. Tools need to read both.
- 
-> Is that even going to stay that way?  I thought I heard that Greg was
-> working on phasing out the "2.0+" tags since SPDX deprecated that?
+Oh sorry, patch/thread reading skills lacking, too early in the AM.
 
-For new stuff we should use -or-later methinks.
-
-> I think xfsprogs and xfstests just follow whatever the kernel does, but
-> AFAICT this whole initiative /continues/ to communicate poorly with the
-> maintainers about (1) how this is supposed to benefit us and (2) what we
-> are supposed to do to maintain all of it.
-
-We wrote lengthy documentation and a long explanation on LKML. So what's
-missing?
-
-Maintaining it is easy. All new files need a valid SPDX identifier which is
-documented in one of the licenses in the LICENSES directory. Preferrably
-the SPDX identifier comes without all that boiler plate nonsense which got
-copied and pasted, fatfingered and broken in the past.
- 
-> Do we have to get lawyers involved to roll to a new SPDX version?  Will
-> LF do that for (at least) the projects hosted on kernel.org?  Should we
-> just do it and hope for the best since IANAFL?  I know how to review
-> code.  I don't know how to review licensing and all the tiny
-> implications that go along with things like this.  I don't even feel
-> confident that the two identifiers above are exactly the same, because
-> all I know is that I read it on a webpage somewhere.
-
-We have layers helping with that. 
- 
-> I for one still have heard abso-f*cking-lutely nothing about what is
-> this SPDX change other than Greg shoving treewide changes in the kernel.
-> That sufficed to get the mechanical work done (at the cost of a lot of
-> frustration for Greg) but this doesn't help me sustain our community.
-> 
-> Guidance needed.  Apologies all around if this rant is misdirected, but
-> I have no idea who (if anyone) is maintaining SPDX tags.  There's no
-> entry for LICENSES/ in MAINTAINERS, which is where I looked first.
-
-The SPDX identifiers are maintained by the SPDX group which is independent
-of us. We use them and we document how to use them proper so tooling can do
-proper license identification.
-
-Yeah, we should add a MAINTAINERS entry for LICENSES. Greg and myself are
-going to be volunteered I fear.
-
-Thanks,
-
-	tglx
+-Eric
