@@ -6,27 +6,27 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE787C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:27:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62956C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:27:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE0F22077B
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:27:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 419962077B
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:27:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726415AbfH1N12 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 09:27:28 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57552 "EHLO mx1.redhat.com"
+        id S1726429AbfH1N1h (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 09:27:37 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:60844 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726394AbfH1N12 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Aug 2019 09:27:28 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        id S1726394AbfH1N1h (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Aug 2019 09:27:37 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D6DDB3087958;
-        Wed, 28 Aug 2019 13:27:27 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id E615779705;
+        Wed, 28 Aug 2019 13:27:36 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C33FF60C5D;
-        Wed, 28 Aug 2019 13:27:25 +0000 (UTC)
-Date:   Wed, 28 Aug 2019 09:27:24 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3FBBC196AE;
+        Wed, 28 Aug 2019 13:27:36 +0000 (UTC)
+Date:   Wed, 28 Aug 2019 09:27:34 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Ian Kent <raven@themaw.net>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
@@ -34,106 +34,168 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         David Howells <dhowells@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v2 08/15] xfs: mount-api - add xfs_get_tree()
-Message-ID: <20190828132724.GA16389@bfoster>
+Subject: Re: [PATCH v2 09/15] xfs: mount-api - add xfs_remount_rw() helper
+Message-ID: <20190828132734.GB16389@bfoster>
 References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
- <156652199954.2607.8863934346265980917.stgit@fedora-28>
+ <156652200638.2607.17067626550015292418.stgit@fedora-28>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156652199954.2607.8863934346265980917.stgit@fedora-28>
+In-Reply-To: <156652200638.2607.17067626550015292418.stgit@fedora-28>
 User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Wed, 28 Aug 2019 13:27:27 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Wed, 28 Aug 2019 13:27:37 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 08:59:59AM +0800, Ian Kent wrote:
-> Add the fs_context_operations method .get_tree that validates
-> mount options and fills the super block as previously done
-> by the file_system_type .mount method.
+On Fri, Aug 23, 2019 at 09:00:06AM +0800, Ian Kent wrote:
+> Factor the remount read write code into a helper to simplify the
+> subsequent change from the super block method .remount_fs to the
+> mount-api fs_context_operations method .reconfigure.
 > 
 > Signed-off-by: Ian Kent <raven@themaw.net>
 > ---
->  fs/xfs/xfs_super.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 47 insertions(+)
+
+Seems fine:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_super.c |  115 +++++++++++++++++++++++++++++-----------------------
+>  1 file changed, 64 insertions(+), 51 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index d3fc9938987d..7de64808eb00 100644
+> index 7de64808eb00..9f7300958a38 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
-> @@ -1904,6 +1904,52 @@ xfs_fs_fill_super(
+> @@ -1341,6 +1341,68 @@ xfs_test_remount_options(
 >  	return error;
 >  }
 >  
 > +STATIC int
-> +xfs_fill_super(
-> +	struct super_block	*sb,
-> +	struct fs_context	*fc)
+> +xfs_remount_rw(
+> +	struct xfs_mount	*mp)
 > +{
-> +	struct xfs_fs_context	*ctx = fc->fs_private;
-> +	struct xfs_mount	*mp = sb->s_fs_info;
-> +	int			silent = fc->sb_flags & SB_SILENT;
-> +	int			error = -ENOMEM;
+> +	xfs_sb_t		*sbp = &mp->m_sb;
+> +	int error;
 > +
-> +	mp->m_super = sb;
+> +	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+> +		xfs_warn(mp,
+> +			"ro->rw transition prohibited on norecovery mount");
+> +		return -EINVAL;
+> +	}
+> +
+> +	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> +	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+> +		xfs_warn(mp,
+> +	"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
+> +			(sbp->sb_features_ro_compat &
+> +				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+> +		return -EINVAL;
+> +	}
+> +
+> +	mp->m_flags &= ~XFS_MOUNT_RDONLY;
 > +
 > +	/*
-> +	 * set up the mount name first so all the errors will refer to the
-> +	 * correct device.
+> +	 * If this is the first remount to writeable state we
+> +	 * might have some superblock changes to update.
 > +	 */
-> +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
-> +	if (!mp->m_fsname)
-> +		return -ENOMEM;
-> +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
+> +	if (mp->m_update_sb) {
+> +		error = xfs_sync_sb(mp, false);
+> +		if (error) {
+> +			xfs_warn(mp, "failed to write sb changes");
+> +			return error;
+> +		}
+> +		mp->m_update_sb = false;
+> +	}
 > +
-> +	error = xfs_validate_params(mp, ctx, false);
-> +	if (error)
-> +		goto out_free_fsname;
+> +	/*
+> +	 * Fill out the reserve pool if it is empty. Use the stashed
+> +	 * value if it is non-zero, otherwise go with the default.
+> +	 */
+> +	xfs_restore_resvblks(mp);
+> +	xfs_log_work_queue(mp);
 > +
-> +	error = __xfs_fs_fill_super(mp, silent);
-> +	if (error)
-> +		goto out_free_fsname;
+> +	/* Recover any CoW blocks that never got remapped. */
+> +	error = xfs_reflink_recover_cow(mp);
+> +	if (error) {
+> +		xfs_err(mp,
+> +			"Error %d recovering leftover CoW allocations.", error);
+> +			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> +		return error;
+> +	}
+> +	xfs_start_block_reaping(mp);
+> +
+> +	/* Create the per-AG metadata reservation pool .*/
+> +	error = xfs_fs_reserve_ag_blocks(mp);
+> +	if (error && error != -ENOSPC)
+> +		return error;
 > +
 > +	return 0;
-> +
-> + out_free_fsname:
-> +	sb->s_fs_info = NULL;
-> +	xfs_free_fsname(mp);
-> +	kfree(mp);
-
-So where is mp allocated in the updated mount sequence? Has that code
-been added yet or does this tie into the existing fill_super sequence?
-It's hard to tell because xfs_context_ops is still unused. It looks a
-little strange to free mp here when it's presumably been allocated
-somewhere else. If that is separate code, perhaps some of the patches
-should be combined (i.e. even if just setup/teardown bits) for easier
-review.
-
-Brian
-
-> +
-> +	return error;
 > +}
 > +
-> +STATIC int
-> +xfs_get_tree(
-> +	struct fs_context	*fc)
-> +{
-> +	return vfs_get_block_super(fc, xfs_fill_super);
-> +}
-> +
->  STATIC void
->  xfs_fs_put_super(
->  	struct super_block	*sb)
-> @@ -1976,6 +2022,7 @@ static const struct super_operations xfs_super_operations = {
+>  STATIC int
+>  xfs_fs_remount(
+>  	struct super_block	*sb,
+> @@ -1404,57 +1466,8 @@ xfs_fs_remount(
 >  
->  static const struct fs_context_operations xfs_context_ops = {
->  	.parse_param = xfs_parse_param,
-> +	.get_tree    = xfs_get_tree,
->  };
+>  	/* ro -> rw */
+>  	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & SB_RDONLY)) {
+> -		if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+> -			xfs_warn(mp,
+> -		"ro->rw transition prohibited on norecovery mount");
+> -			return -EINVAL;
+> -		}
+> -
+> -		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> -		    xfs_sb_has_ro_compat_feature(sbp,
+> -					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+> -			xfs_warn(mp,
+> -"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
+> -				(sbp->sb_features_ro_compat &
+> -					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+> -			return -EINVAL;
+> -		}
+> -
+> -		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+> -
+> -		/*
+> -		 * If this is the first remount to writeable state we
+> -		 * might have some superblock changes to update.
+> -		 */
+> -		if (mp->m_update_sb) {
+> -			error = xfs_sync_sb(mp, false);
+> -			if (error) {
+> -				xfs_warn(mp, "failed to write sb changes");
+> -				return error;
+> -			}
+> -			mp->m_update_sb = false;
+> -		}
+> -
+> -		/*
+> -		 * Fill out the reserve pool if it is empty. Use the stashed
+> -		 * value if it is non-zero, otherwise go with the default.
+> -		 */
+> -		xfs_restore_resvblks(mp);
+> -		xfs_log_work_queue(mp);
+> -
+> -		/* Recover any CoW blocks that never got remapped. */
+> -		error = xfs_reflink_recover_cow(mp);
+> -		if (error) {
+> -			xfs_err(mp,
+> -	"Error %d recovering leftover CoW allocations.", error);
+> -			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> -			return error;
+> -		}
+> -		xfs_start_block_reaping(mp);
+> -
+> -		/* Create the per-AG metadata reservation pool .*/
+> -		error = xfs_fs_reserve_ag_blocks(mp);
+> -		if (error && error != -ENOSPC)
+> +		error = xfs_remount_rw(mp);
+> +		if (error)
+>  			return error;
+>  	}
 >  
->  static struct file_system_type xfs_fs_type = {
 > 
