@@ -2,114 +2,349 @@ Return-Path: <SRS0=H+3G=WY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AD00FC3A5A1
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:34:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68BC7C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 14:24:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E79A23403
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:34:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CC4D22CED
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 14:24:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q0qOV458"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726397AbfH1NeW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 09:34:22 -0400
-Received: from sandeen.net ([63.231.237.45]:54280 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726394AbfH1NeV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Aug 2019 09:34:21 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1847617DC6;
-        Wed, 28 Aug 2019 08:34:20 -0500 (CDT)
-Subject: Re: [PATCH v2 14/15] xfs: mount-api - switch to new mount-api
-To:     Brian Foster <bfoster@redhat.com>, Ian Kent <raven@themaw.net>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Dave Chinner <dchinner@redhat.com>,
-        David Howells <dhowells@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>
-References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
- <156652203256.2607.18022916035406730007.stgit@fedora-28>
- <20190828132914.GG16389@bfoster>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Openpgp: preference=signencrypt
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <06cb4d91-4ee8-1830-02b6-c88ed83bef5e@sandeen.net>
-Date:   Wed, 28 Aug 2019 08:34:19 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.8.0
+        id S1726513AbfH1OYQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 10:24:16 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:33850 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726341AbfH1OYP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 10:24:15 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7SEJc2W082750;
+        Wed, 28 Aug 2019 14:23:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=vgrDwVHdmJZ9aYJbqbUl1TJIyAPUEDAJ1ALO9+oPAUw=;
+ b=q0qOV458W/bztCNufWPs26s3Ym+GRSQ1ziezYIQ0ZFdTRRngupxVv3OQaCUmcLUtLiLu
+ LnHrBMgGaR7OHU5wxRKNCF1KHDG4YVV4HdudKI68Sli0kgcA0fu0KDZSfyvlEXHxj3+3
+ rg//5L9oBD/UoXPRXQdeFNrMWzjPQ45kODxgFqxK0NXMFewF8oXglYMYFKMEWoNw34OY
+ 3FYbhLvRoAHcI7/MJ9IxOWjWWowXRCh5CGntTiZ3Cr+64eDmpx27R9t2k2oqIPrtqvLO
+ y0mBeYh+NHIsdnynZPgmhxbcvqC5MH3mKvHtKug+GkznZMFuTdm8stQG185jIyQsFqZE yQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2unu76829k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 28 Aug 2019 14:23:36 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7SEN4I9020552;
+        Wed, 28 Aug 2019 14:23:35 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2unduq14tx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 28 Aug 2019 14:23:35 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7SENY8U012960;
+        Wed, 28 Aug 2019 14:23:34 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 28 Aug 2019 07:23:33 -0700
+Date:   Wed, 28 Aug 2019 07:23:32 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Andreas =?iso-8859-1?Q?Gr=FCnbacher?= 
+        <andreas.gruenbacher@gmail.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, jencce.kernel@gmail.com,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        overlayfs <linux-unionfs@vger.kernel.org>,
+        Zorro Lang <zlang@redhat.com>,
+        fstests <fstests@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        cluster-devel <cluster-devel@redhat.com>
+Subject: Re: [PATCH v2 2/2] iomap: partially revert 4721a601099 (simulated
+ directio short read on EFAULT)
+Message-ID: <20190828142332.GT1037422@magnolia>
+References: <20181202180832.GR8125@magnolia>
+ <20181202181045.GS8125@magnolia>
+ <CAHpGcM+WQYFHOOC8SzKq+=DuHVZ4fw4RHLTMUDN-o6GX3YtGvQ@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190828132914.GG16389@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHpGcM+WQYFHOOC8SzKq+=DuHVZ4fw4RHLTMUDN-o6GX3YtGvQ@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908280151
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908280150
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 8/28/19 8:29 AM, Brian Foster wrote:
->>  static struct file_system_type xfs_fs_type = {
->>  	.owner			= THIS_MODULE,
->>  	.name			= "xfs",
->> -	.mount			= xfs_fs_mount,
->> +	.init_fs_context	= xfs_init_fs_context,
->> +	.parameters		= &xfs_fs_parameters,
-> Just a random observation.. we have a .name == "xfs" field here and the
-> parameters struct has a .name == "XFS" field. Perhaps we should be
-> consistent?
+On Wed, Aug 21, 2019 at 10:23:49PM +0200, Andreas Grünbacher wrote:
+> Hi Darrick,
 > 
-> Brian
+> Am So., 2. Dez. 2018 um 19:13 Uhr schrieb Darrick J. Wong
+> <darrick.wong@oracle.com>:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> >
+> > In commit 4721a601099, we tried to fix a problem wherein directio reads
+> > into a splice pipe will bounce EFAULT/EAGAIN all the way out to
+> > userspace by simulating a zero-byte short read.  This happens because
+> > some directio read implementations (xfs) will call
+> > bio_iov_iter_get_pages to grab pipe buffer pages and issue asynchronous
+> > reads, but as soon as we run out of pipe buffers that _get_pages call
+> > returns EFAULT, which the splice code translates to EAGAIN and bounces
+> > out to userspace.
+> >
+> > In that commit, the iomap code catches the EFAULT and simulates a
+> > zero-byte read, but that causes assertion errors on regular splice reads
+> > because xfs doesn't allow short directio reads.  This causes infinite
+> > splice() loops and assertion failures on generic/095 on overlayfs
+> > because xfs only permit total success or total failure of a directio
+> > operation.  The underlying issue in the pipe splice code has now been
+> > fixed by changing the pipe splice loop to avoid avoid reading more data
+> > than there is space in the pipe.
+> >
+> > Therefore, it's no longer necessary to simulate the short directio, so
+> > remove the hack from iomap.
+> >
+> > Fixes: 4721a601099 ("iomap: dio data corruption and spurious errors when pipes fill")
+> > Reported-by: Amir Goldstein <amir73il@gmail.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> > v2: split into two patches per hch request
+> > ---
+> >  fs/iomap.c |    9 ---------
+> >  1 file changed, 9 deletions(-)
+> >
+> > diff --git a/fs/iomap.c b/fs/iomap.c
+> > index 3ffb776fbebe..d6bc98ae8d35 100644
+> > --- a/fs/iomap.c
+> > +++ b/fs/iomap.c
+> > @@ -1877,15 +1877,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> >                                 dio->wait_for_completion = true;
+> >                                 ret = 0;
+> >                         }
+> > -
+> > -                       /*
+> > -                        * Splicing to pipes can fail on a full pipe. We have to
+> > -                        * swallow this to make it look like a short IO
+> > -                        * otherwise the higher splice layers will completely
+> > -                        * mishandle the error and stop moving data.
+> > -                        */
+> > -                       if (ret == -EFAULT)
+> > -                               ret = 0;
+> >                         break;
+> >                 }
+> >                 pos += ret;
 > 
+> I'm afraid this breaks the following test case on xfs and gfs2, the
+> two current users of iomap_dio_rw.
 
-I sent a patch to fsdevel to just remove the .name from the new mount parameters
-structure; it's not had any attention yet.  But I had the same concerns about
-consistency if we have to copy the same name to multiple places.
+Hmm, I had kinda wondered if regular pipes still needed this help.
+Evidently we don't have a lot of splice tests in fstests. :(
 
-[PATCH] fs: fs_parser: remove fs_parameter_description name field
+> Here, the splice system call fails with errno = EAGAIN when trying to
+> "move data" from a file opened with O_DIRECT into a pipe.
+> 
+> The test case can be run with option -d to not use O_DIRECT, which
+> makes the test succeed.
+> 
+> The -r option switches from reading from the pipe sequentially to
+> reading concurrently with the splice, which doesn't change the
+> behavior.
+> 
+> Any thoughts?
 
--Eric
+This would be great as an xfstest! :)
+
+Do you have one ready to go, or should I just make one from the source
+code?
+
+--D
+
+> Thanks,
+> Andreas
+> 
+> =================================== 8< ===================================
+> #define _GNU_SOURCE
+> #include <sys/types.h>
+> #include <sys/stat.h>
+> #include <sys/wait.h>
+> #include <unistd.h>
+> #include <fcntl.h>
+> #include <err.h>
+> 
+> #include <stdlib.h>
+> #include <stdio.h>
+> #include <stdbool.h>
+> #include <string.h>
+> #include <errno.h>
+> 
+> #define SECTOR_SIZE 512
+> #define BUFFER_SIZE (150 * SECTOR_SIZE)
+> 
+> void read_from_pipe(int fd, const char *filename, size_t size)
+> {
+>     char buffer[SECTOR_SIZE];
+>     size_t sz;
+>     ssize_t ret;
+> 
+>     while (size) {
+>         sz = size;
+>         if (sz > sizeof buffer)
+>             sz = sizeof buffer;
+>         ret = read(fd, buffer, sz);
+>         if (ret < 0)
+>             err(1, "read: %s", filename);
+>         if (ret == 0) {
+>             fprintf(stderr, "read: %s: unexpected EOF\n", filename);
+>             exit(1);
+>         }
+>         size -= sz;
+>     }
+> }
+> 
+> void do_splice1(int fd, const char *filename, size_t size)
+> {
+>     bool retried = false;
+>     int pipefd[2];
+> 
+>     if (pipe(pipefd) == -1)
+>         err(1, "pipe");
+>     while (size) {
+>         ssize_t spliced;
+> 
+>         spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+>         if (spliced == -1) {
+>             if (errno == EAGAIN && !retried) {
+>                 retried = true;
+>                 fprintf(stderr, "retrying splice\n");
+>                 sleep(1);
+>                 continue;
+>             }
+>             err(1, "splice");
+>         }
+>         read_from_pipe(pipefd[0], filename, spliced);
+>         size -= spliced;
+>     }
+>     close(pipefd[0]);
+>     close(pipefd[1]);
+> }
+> 
+> void do_splice2(int fd, const char *filename, size_t size)
+> {
+>     bool retried = false;
+>     int pipefd[2];
+>     int pid;
+> 
+>     if (pipe(pipefd) == -1)
+>         err(1, "pipe");
+> 
+>     pid = fork();
+>     if (pid == 0) {
+>         close(pipefd[1]);
+>         read_from_pipe(pipefd[0], filename, size);
+>         exit(0);
+>     } else {
+>         close(pipefd[0]);
+>         while (size) {
+>             ssize_t spliced;
+> 
+>             spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+>             if (spliced == -1) {
+>                 if (errno == EAGAIN && !retried) {
+>                     retried = true;
+>                     fprintf(stderr, "retrying splice\n");
+>                     sleep(1);
+>                     continue;
+>                 }
+>                 err(1, "splice");
+>             }
+>             size -= spliced;
+>         }
+>         close(pipefd[1]);
+>         waitpid(pid, NULL, 0);
+>     }
+> }
+> 
+> void usage(const char *argv0)
+> {
+>     fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
+>     exit(2);
+> }
+> 
+> int main(int argc, char *argv[])
+> {
+>     void (*do_splice)(int fd, const char *filename, size_t size);
+>     const char *filename;
+>     char *buffer;
+>     int opt, open_flags, fd;
+>     ssize_t ret;
+> 
+>     do_splice = do_splice1;
+>     open_flags = O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
+> 
+>     while ((opt = getopt(argc, argv, "rd")) != -1) {
+>         switch(opt) {
+>         case 'r':
+>             do_splice = do_splice2;
+>             break;
+>         case 'd':
+>             open_flags &= ~O_DIRECT;
+>             break;
+>         default:  /* '?' */
+>             usage(argv[0]);
+>         }
+>     }
+> 
+>     if (optind >= argc)
+>         usage(argv[0]);
+>     filename = argv[optind];
+> 
+>     printf("%s reader %s O_DIRECT\n",
+>            do_splice == do_splice1 ? "sequential" : "concurrent",
+>            (open_flags & O_DIRECT) ? "with" : "without");
+> 
+>     buffer = aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
+>     if (buffer == NULL)
+>         err(1, "aligned_alloc");
+> 
+>     fd = open(filename, open_flags, 0666);
+>     if (fd == -1)
+>         err(1, "open: %s", filename);
+> 
+>     memset(buffer, 'x', BUFFER_SIZE);
+>     ret = write(fd, buffer, BUFFER_SIZE);
+>     if (ret < 0)
+>         err(1, "write: %s", filename);
+>     if (ret != BUFFER_SIZE) {
+>         fprintf(stderr, "%s: short write\n", filename);
+>         exit(1);
+>     }
+> 
+>     ret = lseek(fd, 0, SEEK_SET);
+>     if (ret != 0)
+>         err(1, "lseek: %s", filename);
+> 
+>     do_splice(fd, filename, BUFFER_SIZE);
+> 
+>     if (unlink(filename) == -1)
+>         err(1, "unlink: %s", filename);
+> 
+>     return 0;
+> }
+> =================================== 8< ===================================
