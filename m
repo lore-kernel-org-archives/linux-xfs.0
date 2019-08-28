@@ -6,27 +6,27 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6634BC3A5A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:28:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54E79C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:28:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D9BF20828
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:28:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3390020828
+	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 13:28:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726394AbfH1N21 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 09:28:27 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:44724 "EHLO mx1.redhat.com"
+        id S1726669AbfH1N2p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 09:28:45 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56180 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726545AbfH1N2Y (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 28 Aug 2019 09:28:24 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        id S1726382AbfH1N2p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 28 Aug 2019 09:28:45 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 6535E308219F;
-        Wed, 28 Aug 2019 13:28:24 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 28C083D966;
+        Wed, 28 Aug 2019 13:28:45 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B24831001B05;
-        Wed, 28 Aug 2019 13:28:23 +0000 (UTC)
-Date:   Wed, 28 Aug 2019 09:28:22 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 732C65D9E2;
+        Wed, 28 Aug 2019 13:28:44 +0000 (UTC)
+Date:   Wed, 28 Aug 2019 09:28:42 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     Ian Kent <raven@themaw.net>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
@@ -34,77 +34,74 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         David Howells <dhowells@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [PATCH v2 12/15] xfs: mount-api - add xfs_fc_free()
-Message-ID: <20190828132822.GE16389@bfoster>
+Subject: Re: [PATCH v2 13/15] xfs: mount-api - dont set sb in
+ xfs_mount_alloc()
+Message-ID: <20190828132842.GF16389@bfoster>
 References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
- <156652202212.2607.8621137631843273531.stgit@fedora-28>
+ <156652202737.2607.3093583575197287887.stgit@fedora-28>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156652202212.2607.8621137631843273531.stgit@fedora-28>
+In-Reply-To: <156652202737.2607.3093583575197287887.stgit@fedora-28>
 User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.47]); Wed, 28 Aug 2019 13:28:24 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Wed, 28 Aug 2019 13:28:45 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 09:00:22AM +0800, Ian Kent wrote:
-> Add the fs_context_operations method .free that performs fs
-> context cleanup on context release.
+On Fri, Aug 23, 2019 at 09:00:27AM +0800, Ian Kent wrote:
+> When changing to use the new mount api the super block won't be
+> available when the xfs_mount info struct is allocated so move
+> setting the super block in xfs_mount to xfs_fs_fill_super().
+> 
+> Also change xfs_mount_alloc() decalaration static -> STATIC.
 > 
 > Signed-off-by: Ian Kent <raven@themaw.net>
 > ---
->  fs/xfs/xfs_super.c |   22 ++++++++++++++++++++++
->  1 file changed, 22 insertions(+)
+>  fs/xfs/xfs_super.c |    8 ++++----
+>  1 file changed, 4 insertions(+), 4 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index aae0098fecab..9976163dc537 100644
+> index 9976163dc537..d2a1a62a3edc 100644
 > --- a/fs/xfs/xfs_super.c
 > +++ b/fs/xfs/xfs_super.c
-> @@ -2129,10 +2129,32 @@ static const struct super_operations xfs_super_operations = {
->  	.free_cached_objects	= xfs_fs_free_cached_objects,
->  };
+> @@ -1766,9 +1766,9 @@ xfs_destroy_percpu_counters(
+>  	percpu_counter_destroy(&mp->m_delalloc_blks);
+>  }
 >  
-> +static void xfs_fc_free(struct fs_context *fc)
-> +{
-> +	struct xfs_fs_context	*ctx = fc->fs_private;
-> +	struct xfs_mount	*mp = fc->s_fs_info;
-> +
-> +	if (mp) {
-> +		/*
-> +		 * If an error occurs before ownership the xfs_mount
-> +		 * info struct is passed to xfs by the VFS (by assigning
-> +		 * it to sb->s_fs_info and clearing the corresponding
-> +		 * fs_context field, which is done before calling fill
-> +		 * super via .get_tree()) there may be some strings to
-> +		 * cleanup.
-> +		 */
+> -static struct xfs_mount *
+> +STATIC struct xfs_mount *
+>  xfs_mount_alloc(
+> -	struct super_block	*sb)
+> +	void)
 
-The code looks straightforward but I find the comment confusing. How can
-the VFS pass ownership of the xfs_mount if it's an XFS private data
-structure?
+No need to have the void on a separate line. With that fixed up:
 
-> +		kfree(mp->m_logname);
-> +		kfree(mp->m_rtname);
-> +		kfree(mp);
-> +	}
-> +	kfree(ctx);
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-Also, should we at least reassign associated fc pointers to NULL if we
-have multiple places to free things like ctx or mp?
-
-Brian
-
-> +}
-> +
->  static const struct fs_context_operations xfs_context_ops = {
->  	.parse_param = xfs_parse_param,
->  	.get_tree    = xfs_get_tree,
->  	.reconfigure = xfs_reconfigure,
-> +	.free	     = xfs_fc_free,
->  };
+>  {
+>  	struct xfs_mount	*mp;
 >  
->  static struct file_system_type xfs_fs_type = {
+> @@ -1776,7 +1776,6 @@ xfs_mount_alloc(
+>  	if (!mp)
+>  		return NULL;
+>  
+> -	mp->m_super = sb;
+>  	spin_lock_init(&mp->m_sb_lock);
+>  	spin_lock_init(&mp->m_agirotor_lock);
+>  	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+> @@ -1990,9 +1989,10 @@ xfs_fs_fill_super(
+>  	 * allocate mp and do all low-level struct initializations before we
+>  	 * attach it to the super
+>  	 */
+> -	mp = xfs_mount_alloc(sb);
+> +	mp = xfs_mount_alloc();
+>  	if (!mp)
+>  		goto out;
+> +	mp->m_super = sb;
+>  	sb->s_fs_info = mp;
+>  
+>  	error = xfs_parseargs(mp, (char *)data);
 > 
