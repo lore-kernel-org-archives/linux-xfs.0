@@ -2,116 +2,85 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33EF0C3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 08:45:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 67574C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 08:47:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0C9D1233A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 08:45:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2F3F22339E
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 08:47:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LRAILXXv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726839AbfH2Ipe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 04:45:34 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52217 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726417AbfH2Ipe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 04:45:34 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 78D0F43CEF5;
-        Thu, 29 Aug 2019 18:45:32 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i3G3e-0002I8-Ot; Thu, 29 Aug 2019 18:45:30 +1000
-Date:   Thu, 29 Aug 2019 18:45:30 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
+        id S1726384AbfH2IrK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 04:47:10 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:36766 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726223AbfH2IrK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 04:47:10 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=CuD4SWz0721E0EQB/pRyPaVVUqT7ihD7x00KoJEHSwo=; b=LRAILXXvy58w4brvmkeD/v5XY
+        NSKP+mQdibc0vIOGGcoUKAWQUaVTJZpWPAdFYsL0ZDJ6oUMWgyZLk5Vtq7fw+mYasap+6Qwh9YSbE
+        eyiguyj5yyfAWqRjV5fbpUFZLNYFUQBT04/gXkW3MUW72eoLKdCBtqW/wU/MqAdOf4KxF9V11QGZW
+        7yCWItPksZ3Ica4E/vtwtd6EtcXR6BgrGkFupKvHtCNsjHcnmslPy8hNDcguepoxbn79XBRPiaF2M
+        CHfWuybmVaUdnZ9TjGRwlqcb9DSAF9LlWDoCAVr+1E7YVMEgzBQWuvE66rg1LIrXYDn2gEhjHavHD
+        YvxErKJoQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i3G5F-0004vV-V4; Thu, 29 Aug 2019 08:47:09 +0000
+Date:   Thu, 29 Aug 2019 01:47:09 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH 4/5] xfs: speed up directory bestfree block scanning
-Message-ID: <20190829084530.GP1119@dread.disaster.area>
+Message-ID: <20190829084709.GA18853@infradead.org>
 References: <20190829063042.22902-1-david@fromorbit.com>
  <20190829063042.22902-5-david@fromorbit.com>
  <20190829081822.GD18195@infradead.org>
+ <20190829084530.GP1119@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190829081822.GD18195@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=8Y9nZHUPy7GPshHu2nAA:9 a=RQO7YIQPXt1mDet7:21
-        a=hoifpHtEMtUlgY3f:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190829084530.GP1119@dread.disaster.area>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 01:18:22AM -0700, Christoph Hellwig wrote:
-> On Thu, Aug 29, 2019 at 04:30:41PM +1000, Dave Chinner wrote:
-> > +		bests = dp->d_ops->free_bests_p(free);
-> > +		dp->d_ops->free_hdr_from_disk(&freehdr, free);
-> >  		if (findex >= 0) {
-> >  			/* caller already found the freespace for us. */
-> > -			bests = dp->d_ops->free_bests_p(free);
-> > -			dp->d_ops->free_hdr_from_disk(&freehdr, free);
-> > -
+On Thu, Aug 29, 2019 at 06:45:30PM +1000, Dave Chinner wrote:
+> > 
+> > The label rename while more descriptive also seems entirely unrelated.
 > 
-> I don't see any way how this is needed or helpful with this patch,
-> we are just going to ovewrite bests and freehdr before even looking
-> at them if the branch is not taken.
-
-*nod*
-
-The change is not useful anymore as a result of folding in your
-previous suggestions. I'll revert it.
-
-> >  			ASSERT(findex < freehdr.nvalid);
-> >  			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
-> >  			ASSERT(be16_to_cpu(bests[findex]) >= length);
-> >  			dbno = freehdr.firstdb + findex;
-> > -			goto out;
-> > +			goto found_block;
+> That was one of your previous suggestions :)
 > 
-> The label rename while more descriptive also seems entirely unrelated.
+> I'll push it back up one patch into the cleanup patch and leave this
+> as an optimisation only patch.
 
-That was one of your previous suggestions :)
+Oh well.  Just keep it then :)
 
-I'll push it back up one patch into the cleanup patch and leave this
-as an optimisation only patch.
-
-> > +		findex = 0;
-> > +		free = fbp->b_addr;
-> >  		bests = dp->d_ops->free_bests_p(free);
-> >  		dp->d_ops->free_hdr_from_disk(&freehdr, free);
-> > +
-> > +		/* Scan the free entry array for a large enough free space. */
-> > +		do {
-> > +			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
-> > +			    be16_to_cpu(bests[findex]) >= length) {
-> > +				dbno = freehdr.firstdb + findex;
-> > +				goto found_block;
-> >  			}
-> > +		} while (++findex < freehdr.nvalid);
+> > > +		/* Scan the free entry array for a large enough free space. */
+> > > +		do {
+> > > +			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
+> > > +			    be16_to_cpu(bests[findex]) >= length) {
+> > > +				dbno = freehdr.firstdb + findex;
+> > > +				goto found_block;
+> > >  			}
+> > > +		} while (++findex < freehdr.nvalid);
+> > 
+> > Nit: wou;dn't this be better written as a for loop also taking the
+> > initialization of findex into the loop?
 > 
-> Nit: wou;dn't this be better written as a for loop also taking the
-> initialization of findex into the loop?
+> Agreed - the next patch does that with the reversal of the search
+> order. The end result is what you're asking for, so I'll leave this
+> alone for now....
 
-Agreed - the next patch does that with the reversal of the search
-order. The end result is what you're asking for, so I'll leave this
-alone for now....
-
-> Otherwise this looks good.  I always like it when a speedup removes
-> code..
-
-I hadn't noticed that - I was more concerned with ending up with
-readable code :)
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+If you touch this patch anyway please just switch to the for loop
+here, that keeps the churn down in the next one.
