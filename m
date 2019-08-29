@@ -7,47 +7,47 @@ X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A02FBC3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:26:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DF46C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:27:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6947B20828
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:26:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 61B7F233A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:27:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WQviwaHe"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ivwrEWPL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725853AbfH2H04 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 03:26:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:39156 "EHLO
+        id S1725782AbfH2H1Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 03:27:25 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:40006 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725776AbfH2H0z (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 03:26:55 -0400
+        with ESMTP id S1725776AbfH2H1Z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 03:27:25 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=9ogpNk9DMEALe7V2/9b+SPF9lZWRgW9aEQ9LVRiB+60=; b=WQviwaHet1i0mI64BB0l5sCar
-        CPZPxtHmfn/nCMI5VVyr+3cquCmZ84eXRIoq87V/amYmPFs3lGatfnqkQUhNFxRkPUa38SJbjnT4w
-        ztTxVrUCRw+rWU8hMK1jLYWCwzr0XDj65x1Bh5uqXKp1fg3vjmtO8JDKs5cdgbBiKIBoHjx396AC6
-        GLnvO6XTo6FvxzgiBY/dnUFVLnQt2PmFLfvv+FjS+KILBGJ3c6fVFVvLwrssR6luj77rMpvly6/bx
-        tz6vhlPIfAW52DpLLeql48OnbfP0ep55ILrphwmpnegG8JAwfQ1BBnQILaiNlNLz6irDm18jVLV31
-        G9Ey17isg==;
+         bh=mVWTQeX+aElrwwuDZ3Zs0jyMDB+CNfF7ocRK2BN478k=; b=ivwrEWPL3rjU0QXLHF338fztZ
+        aj1J4+Naj2/GlVzztkvaPvROGP4moVv1sxDcxhbZbzycDWqHym6ExZJU5utOCbROcOVrXGRVUfotT
+        jOyal9QqymnlWGJ2KS7fmyHfIKkn0v+CCqcHRriOrVSHzwVo5n19CE2t5et39mjQi4BXo/mjMnzcH
+        lhZE6DqvIR7/RQi9wKs+uYD5yefwVtawF6mHhQtvMIIBKi4eDH0aGzb9WTcHsK+oLZq0PFNrSMlT6
+        h6Dx51TWHpgkCWOK1W8wyJHAgFIz4NeXgwA92etnRrcPR4l8/PWnjooI3A3VjffZkzR/9o2bQKY+M
+        RBLWW/oVg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i3Epb-0001sL-3S; Thu, 29 Aug 2019 07:26:55 +0000
-Date:   Thu, 29 Aug 2019 00:26:55 -0700
+        id 1i3Eq4-00023a-T2; Thu, 29 Aug 2019 07:27:24 +0000
+Date:   Thu, 29 Aug 2019 00:27:24 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/5] xfs: remove unnecessary int returns from deferred
- refcount functions
-Message-ID: <20190829072655.GD18102@infradead.org>
+Subject: Re: [PATCH 4/5] xfs: remove unnecessary int returns from deferred
+ bmap functions
+Message-ID: <20190829072724.GE18102@infradead.org>
 References: <156685615360.2853674.5160169873645196259.stgit@magnolia>
- <156685617388.2853674.17040064326231302107.stgit@magnolia>
+ <156685618004.2853674.8675927096254274691.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156685617388.2853674.17040064326231302107.stgit@magnolia>
+In-Reply-To: <156685618004.2853674.8675927096254274691.stgit@magnolia>
 User-Agent: Mutt/1.11.4 (2019-03-13)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -55,11 +55,11 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 26, 2019 at 02:49:33PM -0700, Darrick J. Wong wrote:
+On Mon, Aug 26, 2019 at 02:49:40PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Remove the return value from the functions that schedule deferred
-> refcount operations since they never fail and do not return status.
+> Remove the return value from the functions that schedule deferred bmap
+> operations since they never fail and do not return status.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
