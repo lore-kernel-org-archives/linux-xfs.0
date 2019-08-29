@@ -1,94 +1,282 @@
-Return-Path: <SRS0=H+3G=WY=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EE3C4C3A5A4
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 22:24:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AD199C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 01:27:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE1FF22CF8
-	for <linux-xfs@archiver.kernel.org>; Wed, 28 Aug 2019 22:24:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 74E29215EA
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 01:27:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UOON+qrM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726937AbfH1WYb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 18:24:31 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58774 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726828AbfH1WYb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 18:24:31 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 0CD40361493;
-        Thu, 29 Aug 2019 08:24:24 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i36MY-0004x3-2B; Thu, 29 Aug 2019 08:24:22 +1000
-Date:   Thu, 29 Aug 2019 08:24:22 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Matthew Wilcox <willy@infradead.org>
-Cc:     Christopher Lameter <cl@linux.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190828222422.GL1119@dread.disaster.area>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <0100016cd98bb2c1-a2af7539-706f-47ba-a68e-5f6a91f2f495-000000@email.amazonses.com>
- <20190828194607.GB6590@bombadil.infradead.org>
+        id S1726369AbfH2B1I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 21:27:08 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:45112 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726128AbfH2B1I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 21:27:08 -0400
+Received: by mail-pg1-f193.google.com with SMTP id o13so648027pgp.12
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2019 18:27:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=lybQwmkSywGY6VJPerqA1d4tZAxxHJ7vK0Gvnr9Vtvc=;
+        b=UOON+qrM0pHG7/vVxYs95AOICSCJJBMQPJ/kyngXdGrrwRqkIJ/xQXn6fluwvb9fkX
+         m1UPbT3XDkv1XtuUTuf7cuF6SVpd5ltUg3bG46RasNuZVHg9FNP4Myg8VW3+p8rPQolS
+         ISLrOkuhlodgYDKwyi2zJVI5Auh2e3pmQ5evLJKSA/Zc+g9ODMwYqXbv4FbToMRAUDzD
+         6/OHz+5esMRZ08aVkTravWkGJcDffoEIJe6Uaq5ilgb3zSI9N2VvlvJa94goKFpsyZBc
+         SVXwmpAx2robpKOLl2UXT3DRvde6grvO73gX3dSRPiibrqHUjvKfNezFhyGKHQPShcH0
+         VZBA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=lybQwmkSywGY6VJPerqA1d4tZAxxHJ7vK0Gvnr9Vtvc=;
+        b=jRbyYMKFUxoMpxkNmnD7UXDgRRxmzsepS+a9EEW/BNSWrQWBE6Tchte4VXKtOVClbJ
+         MJUxth2q5US4TDcIS0dkwktiBZEqu2ULW1KPxsnmNBORaJz0ZPrhoBWIy9VzGsQsrqD7
+         D0wq/h4TKhB8iqry24U9LpSOK2y/vsyht/abUqIzAwTjWyRTozo4sW5AT+05AX1Meipv
+         mHZlsu05mOqu0cC00BUGpBCBVS17xRHezWTnQUBxpmOTSzmB+9nVrtiR5G9patK4sJtb
+         S9To3wn0f3fyktKeC++Fp3CO0jkXAyy4uXhJCJujdMXiG/wuas82vaPEgKxXULNnN8V4
+         98qQ==
+X-Gm-Message-State: APjAAAXLG9X7dR7KEMtX6djEwm9fn9eCxauWpDew4EetL6dsEspPLmOX
+        sqhFyqLYX9qjoOEbK2HgsA==
+X-Google-Smtp-Source: APXvYqxKwYyhErFUJ+yBeO0bv3zh7DPhc/FNPqy+6qbaF5DA2yk0pxgsmOSdTIBDhiZMiFMr3Ae6gg==
+X-Received: by 2002:a63:c246:: with SMTP id l6mr6097961pgg.210.1567042027426;
+        Wed, 28 Aug 2019 18:27:07 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id 65sm672853pff.148.2019.08.28.18.27.04
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 28 Aug 2019 18:27:06 -0700 (PDT)
+Subject: Re: [PATCH v3] xfs: Fix ABBA deadlock between AGI and AGF when
+ performing rename() with RENAME_WHITEOUT flag
+To:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+References: <55d0f202-62a7-0b1c-a386-2395b19b47c5@gmail.com>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <51bf333b-7694-68dc-4434-d15cbb24ccfb@gmail.com>
+Date:   Thu, 29 Aug 2019 09:27:03 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190828194607.GB6590@bombadil.infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=wUb5uO5YJnghlZLzW24A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <55d0f202-62a7-0b1c-a386-2395b19b47c5@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 28, 2019 at 12:46:08PM -0700, Matthew Wilcox wrote:
-> On Wed, Aug 28, 2019 at 06:45:07PM +0000, Christopher Lameter wrote:
-> > I still think implicit exceptions to alignments are a bad idea. Those need
-> > to be explicity specified and that is possible using kmem_cache_create().
+ping...
+Because there isn't this patch in the latest xfs-for-next branch 
+update...
+
+
+On 2019/8/27 10:54, kaixuxia wrote:
+> When performing rename operation with RENAME_WHITEOUT flag, we will
+> hold AGF lock to allocate or free extents in manipulating the dirents
+> firstly, and then doing the xfs_iunlink_remove() call last to hold
+> AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
 > 
-> I swear we covered this last time the topic came up, but XFS would need
-> to create special slab caches for each size between 512 and PAGE_SIZE.
-> Potentially larger, depending on whether the MM developers are willing to
-> guarantee that kmalloc(PAGE_SIZE * 2, GFP_KERNEL) will return a PAGE_SIZE
-> aligned block of memory indefinitely.
+> The big problem here is that we have an ordering constraint on AGF
+> and AGI locking - inode allocation locks the AGI, then can allocate
+> a new extent for new inodes, locking the AGF after the AGI. Hence
+> the ordering that is imposed by other parts of the code is AGI before
+> AGF. So we get an ABBA deadlock between the AGI and AGF here.
+> 
+> Process A:
+> Call trace:
+>  ? __schedule+0x2bd/0x620
+>  schedule+0x33/0x90
+>  schedule_timeout+0x17d/0x290
+>  __down_common+0xef/0x125
+>  ? xfs_buf_find+0x215/0x6c0 [xfs]
+>  down+0x3b/0x50
+>  xfs_buf_lock+0x34/0xf0 [xfs]
+>  xfs_buf_find+0x215/0x6c0 [xfs]
+>  xfs_buf_get_map+0x37/0x230 [xfs]
+>  xfs_buf_read_map+0x29/0x190 [xfs]
+>  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+>  xfs_read_agf+0xa6/0x180 [xfs]
+>  ? schedule_timeout+0x17d/0x290
+>  xfs_alloc_read_agf+0x52/0x1f0 [xfs]
+>  xfs_alloc_fix_freelist+0x432/0x590 [xfs]
+>  ? down+0x3b/0x50
+>  ? xfs_buf_lock+0x34/0xf0 [xfs]
+>  ? xfs_buf_find+0x215/0x6c0 [xfs]
+>  xfs_alloc_vextent+0x301/0x6c0 [xfs]
+>  xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
+>  ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
+>  xfs_dialloc+0x116/0x290 [xfs]
+>  xfs_ialloc+0x6d/0x5e0 [xfs]
+>  ? xfs_log_reserve+0x165/0x280 [xfs]
+>  xfs_dir_ialloc+0x8c/0x240 [xfs]
+>  xfs_create+0x35a/0x610 [xfs]
+>  xfs_generic_create+0x1f1/0x2f0 [xfs]
+>  ...
+> 
+> Process B:
+> Call trace:
+>  ? __schedule+0x2bd/0x620
+>  ? xfs_bmapi_allocate+0x245/0x380 [xfs]
+>  schedule+0x33/0x90
+>  schedule_timeout+0x17d/0x290
+>  ? xfs_buf_find+0x1fd/0x6c0 [xfs]
+>  __down_common+0xef/0x125
+>  ? xfs_buf_get_map+0x37/0x230 [xfs]
+>  ? xfs_buf_find+0x215/0x6c0 [xfs]
+>  down+0x3b/0x50
+>  xfs_buf_lock+0x34/0xf0 [xfs]
+>  xfs_buf_find+0x215/0x6c0 [xfs]
+>  xfs_buf_get_map+0x37/0x230 [xfs]
+>  xfs_buf_read_map+0x29/0x190 [xfs]
+>  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+>  xfs_read_agi+0xa8/0x160 [xfs]
+>  xfs_iunlink_remove+0x6f/0x2a0 [xfs]
+>  ? current_time+0x46/0x80
+>  ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
+>  xfs_rename+0x57a/0xae0 [xfs]
+>  xfs_vn_rename+0xe4/0x150 [xfs]
+>  ...
+> 
+> In this patch we move the xfs_iunlink_remove() call to
+> before acquiring the AGF lock to preserve correct AGI/AGF locking
+> order.
+> 
+> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> ---
+>  fs/xfs/xfs_inode.c | 83 +++++++++++++++++++++++++++---------------------------
+>  1 file changed, 42 insertions(+), 41 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 6467d5e..8ffd44f 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3282,7 +3282,8 @@ struct xfs_iunlink {
+>  					spaceres);
+>  
+>  	/*
+> -	 * Set up the target.
+> +	 * Check for expected errors before we dirty the transaction
+> +	 * so we can return an error without a transaction abort.
+>  	 */
+>  	if (target_ip == NULL) {
+>  		/*
+> @@ -3294,6 +3295,46 @@ struct xfs_iunlink {
+>  			if (error)
+>  				goto out_trans_cancel;
+>  		}
+> +	} else {
+> +		/*
+> +		 * If target exists and it's a directory, check that whether
+> +		 * it can be destroyed.
+> +		 */
+> +		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
+> +		    (!xfs_dir_isempty(target_ip) ||
+> +		     (VFS_I(target_ip)->i_nlink > 2))) {
+> +			error = -EEXIST;
+> +			goto out_trans_cancel;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * Directory entry creation below may acquire the AGF. Remove
+> +	 * the whiteout from the unlinked list first to preserve correct
+> +	 * AGI/AGF locking order. This dirties the transaction so failures
+> +	 * after this point will abort and log recovery will clean up the
+> +	 * mess.
+> +	 *
+> +	 * For whiteouts, we need to bump the link count on the whiteout
+> +	 * inode. After this point, we have a real link, clear the tmpfile
+> +	 * state flag from the inode so it doesn't accidentally get misused
+> +	 * in future.
+> +	 */
+> +	if (wip) {
+> +		ASSERT(VFS_I(wip)->i_nlink == 0);
+> +		error = xfs_iunlink_remove(tp, wip);
+> +		if (error)
+> +			goto out_trans_cancel;
+> +
+> +		xfs_bumplink(tp, wip);
+> +		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+> +		VFS_I(wip)->i_state &= ~I_LINKABLE;
+> +	}
+> +
+> +	/*
+> +	 * Set up the target.
+> +	 */
+> +	if (target_ip == NULL) {
+>  		/*
+>  		 * If target does not exist and the rename crosses
+>  		 * directories, adjust the target directory link count
+> @@ -3312,22 +3353,6 @@ struct xfs_iunlink {
+>  		}
+>  	} else { /* target_ip != NULL */
+>  		/*
+> -		 * If target exists and it's a directory, check that both
+> -		 * target and source are directories and that target can be
+> -		 * destroyed, or that neither is a directory.
+> -		 */
+> -		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
+> -			/*
+> -			 * Make sure target dir is empty.
+> -			 */
+> -			if (!(xfs_dir_isempty(target_ip)) ||
+> -			    (VFS_I(target_ip)->i_nlink > 2)) {
+> -				error = -EEXIST;
+> -				goto out_trans_cancel;
+> -			}
+> -		}
+> -
+> -		/*
+>  		 * Link the source inode under the target name.
+>  		 * If the source inode is a directory and we are moving
+>  		 * it across directories, its ".." entry will be
+> @@ -3417,30 +3442,6 @@ struct xfs_iunlink {
+>  	if (error)
+>  		goto out_trans_cancel;
+>  
+> -	/*
+> -	 * For whiteouts, we need to bump the link count on the whiteout inode.
+> -	 * This means that failures all the way up to this point leave the inode
+> -	 * on the unlinked list and so cleanup is a simple matter of dropping
+> -	 * the remaining reference to it. If we fail here after bumping the link
+> -	 * count, we're shutting down the filesystem so we'll never see the
+> -	 * intermediate state on disk.
+> -	 */
+> -	if (wip) {
+> -		ASSERT(VFS_I(wip)->i_nlink == 0);
+> -		xfs_bumplink(tp, wip);
+> -		error = xfs_iunlink_remove(tp, wip);
+> -		if (error)
+> -			goto out_trans_cancel;
+> -		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+> -
+> -		/*
+> -		 * Now we have a real link, clear the "I'm a tmpfile" state
+> -		 * flag from the inode so it doesn't accidentally get misused in
+> -		 * future.
+> -		 */
+> -		VFS_I(wip)->i_state &= ~I_LINKABLE;
+> -	}
+> -
+>  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+>  	if (new_parent)
+> 
 
-Page size alignment of multi-page heap allocations is ncessary. The
-current behaviour w/ KASAN is to offset so a 8KB allocation spans 3
-pages and is not page aligned. That causes just as much in way
-of alignment problems as unaligned objects in multi-object-per-page
-slabs.
-
-As I said in the lastest discussion of this problem on XFS (pmem
-devices w/ KASAN enabled), all we -need- is a GFP flag that tells the
-slab allocator to give us naturally aligned object or fail if it
-can't. I don't care how that gets implemented (e.g. another set of
-heap slabs like the -rcl slabs), I just don't want every high level
-subsystem that allocates heap memory for IO buffers to have to
-implement their own aligned slab caches.
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+kaixuxia
