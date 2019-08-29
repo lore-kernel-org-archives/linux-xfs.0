@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 03E24C3A5A6
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 35451C3A5A3
 	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 10:47:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA0472339E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 10:47:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15CDC2189D
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 10:47:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726985AbfH2KrR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726232AbfH2KrR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 29 Aug 2019 06:47:17 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58218 "EHLO
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:58234 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726232AbfH2KrR (ORCPT
+        by vger.kernel.org with ESMTP id S1726416AbfH2KrR (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 06:47:17 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E984043DE23
-        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 20:47:13 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 154BA43D74E
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 20:47:14 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i3HxQ-00032T-GM
+        id 1i3HxQ-00032c-K5
         for linux-xfs@vger.kernel.org; Thu, 29 Aug 2019 20:47:12 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i3HxQ-0007O2-ES
+        id 1i3HxQ-0007OB-II
         for linux-xfs@vger.kernel.org; Thu, 29 Aug 2019 20:47:12 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/5] xfs: move xfs_dir2_addname()
-Date:   Thu, 29 Aug 2019 20:47:06 +1000
-Message-Id: <20190829104710.28239-2-david@fromorbit.com>
+Subject: [PATCH 4/5] xfs: speed up directory bestfree block scanning
+Date:   Thu, 29 Aug 2019 20:47:09 +1000
+Message-Id: <20190829104710.28239-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190829104710.28239-1-david@fromorbit.com>
 References: <20190829104710.28239-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=FmdZ9Uzk2mMA:10 a=20KFwNOVAAAA:8
-        a=xTgIVNI2wHdG23_4b9gA:9
+        a=6DkO27ogrPW1xkOiNbQA:9 a=9pmo21znTE8r5vfF:21 a=BqtYXfbjRhmUaEUB:21
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,180 +52,181 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This gets rid of the need for a forward  declaration of the static
-function xfs_dir2_addname_int() and readies the code for factoring
-of xfs_dir2_addname_int().
+When running a "create millions inodes in a directory" test
+recently, I noticed we were spending a huge amount of time
+converting freespace block headers from disk format to in-memory
+format:
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
+ 31.47%  [kernel]  [k] xfs_dir2_node_addname
+ 17.86%  [kernel]  [k] xfs_dir3_free_hdr_from_disk
+  3.55%  [kernel]  [k] xfs_dir3_free_bests_p
+
+We shouldn't be hitting the best free block scanning code so hard
+when doing sequential directory creates, and it turns out there's
+a highly suboptimal loop searching the the best free array in
+the freespace block - it decodes the block header before checking
+each entry inside a loop, instead of decoding the header once before
+running the entry search loop.
+
+This makes a massive difference to create rates. Profile now looks
+like this:
+
+  13.15%  [kernel]  [k] xfs_dir2_node_addname
+   3.52%  [kernel]  [k] xfs_dir3_leaf_check_int
+   3.11%  [kernel]  [k] xfs_log_commit_cil
+
+And the wall time/average file create rate differences are
+just as stark:
+
+		create time(sec) / rate (files/s)
+File count	     vanilla		    patched
+  10k		   0.41 / 24.3k		   0.42 / 23.8k
+  20k		   0.74	/ 27.0k		   0.76 / 26.3k
+ 100k		   3.81	/ 26.4k		   3.47 / 28.8k
+ 200k		   8.58	/ 23.3k		   7.19 / 27.8k
+   1M		  85.69	/ 11.7k		  48.53 / 20.6k
+   2M		 280.31	/  7.1k		 130.14 / 15.3k
+
+The larger the directory, the bigger the performance improvement.
+
+Signed-Off-By: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/libxfs/xfs_dir2_node.c | 140 +++++++++++++++++-----------------
- 1 file changed, 69 insertions(+), 71 deletions(-)
+ fs/xfs/libxfs/xfs_dir2_node.c | 97 ++++++++++++-----------------------
+ 1 file changed, 34 insertions(+), 63 deletions(-)
 
 diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-index 1fc44efc344d..e40986cc0759 100644
+index 93254f45a5f9..a81f56d9e538 100644
 --- a/fs/xfs/libxfs/xfs_dir2_node.c
 +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-@@ -32,8 +32,6 @@ static void xfs_dir2_leafn_rebalance(xfs_da_state_t *state,
- static int xfs_dir2_leafn_remove(xfs_da_args_t *args, struct xfs_buf *bp,
- 				 int index, xfs_da_state_blk_t *dblk,
- 				 int *rval);
--static int xfs_dir2_node_addname_int(xfs_da_args_t *args,
--				     xfs_da_state_blk_t *fblk);
+@@ -1750,8 +1750,8 @@ xfs_dir2_node_find_freeblk(
+ 	xfs_dir2_db_t		dbno = -1;
+ 	xfs_dir2_db_t		fbno = -1;
+ 	xfs_fileoff_t		fo;
+-	__be16			*bests;
+-	int			findex;
++	__be16			*bests = NULL;
++	int			findex = 0;
+ 	int			error;
  
- /*
-  * Check internal consistency of a leafn block.
-@@ -1610,75 +1608,6 @@ xfs_dir2_leafn_unbalance(
- 	xfs_dir3_leaf_check(dp, drop_blk->bp);
- }
+ 	/*
+@@ -1781,14 +1781,14 @@ xfs_dir2_node_find_freeblk(
+ 		 */
+ 		ifbno = fblk->blkno;
+ 		fbno = ifbno;
++		xfs_trans_brelse(tp, fbp);
++		fbp = NULL;
++		fblk->bp = NULL;
+ 	}
+-	ASSERT(dbno == -1);
+-	findex = 0;
  
--/*
-- * Top-level node form directory addname routine.
-- */
--int						/* error */
--xfs_dir2_node_addname(
--	xfs_da_args_t		*args)		/* operation arguments */
--{
--	xfs_da_state_blk_t	*blk;		/* leaf block for insert */
--	int			error;		/* error return value */
--	int			rval;		/* sub-return value */
--	xfs_da_state_t		*state;		/* btree cursor */
--
--	trace_xfs_dir2_node_addname(args);
--
+ 	/*
+ 	 * If we don't have a data block yet, we're going to scan the freespace
+-	 * blocks looking for one.  Figure out what the highest freespace block
+-	 * number is.
++	 * data for a data block with enough free space in it.
+ 	 */
+ 	error = xfs_bmap_last_offset(dp, &fo, XFS_DATA_FORK);
+ 	if (error)
+@@ -1799,70 +1799,41 @@ xfs_dir2_node_find_freeblk(
+ 	if (fbno == -1)
+ 		fbno = xfs_dir2_byte_to_db(args->geo, XFS_DIR2_FREE_OFFSET);
+ 
 -	/*
--	 * Allocate and initialize the state (btree cursor).
+-	 * While we haven't identified a data block, search the freeblock
+-	 * data for a good data block.  If we find a null freeblock entry,
+-	 * indicating a hole in the data blocks, remember that.
 -	 */
--	state = xfs_da_state_alloc();
--	state->args = args;
--	state->mp = args->dp->i_mount;
--	/*
--	 * Look up the name.  We're not supposed to find it, but
--	 * this gives us the insertion point.
--	 */
--	error = xfs_da3_node_lookup_int(state, &rval);
--	if (error)
--		rval = error;
--	if (rval != -ENOENT) {
--		goto done;
--	}
--	/*
--	 * Add the data entry to a data block.
--	 * Extravalid is set to a freeblock found by lookup.
--	 */
--	rval = xfs_dir2_node_addname_int(args,
--		state->extravalid ? &state->extrablk : NULL);
--	if (rval) {
--		goto done;
--	}
--	blk = &state->path.blk[state->path.active - 1];
--	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
--	/*
--	 * Add the new leaf entry.
--	 */
--	rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
--	if (rval == 0) {
+-	while (dbno == -1) {
 -		/*
--		 * It worked, fix the hash values up the btree.
+-		 * If we don't have a freeblock in hand, get the next one.
 -		 */
--		if (!(args->op_flags & XFS_DA_OP_JUSTCHECK))
--			xfs_da3_fixhashpath(state, &state->path);
--	} else {
--		/*
--		 * It didn't work, we need to split the leaf block.
--		 */
--		if (args->total == 0) {
--			ASSERT(rval == -ENOSPC);
--			goto done;
+-		if (fbp == NULL) {
+-			/*
+-			 * If it's ifbno we already looked at it.
+-			 */
+-			if (++fbno == ifbno)
+-				fbno++;
+-			/*
+-			 * If it's off the end we're done.
+-			 */
+-			if (fbno >= lastfbno)
+-				break;
+-			/*
+-			 * Read the block.  There can be holes in the
+-			 * freespace blocks, so this might not succeed.
+-			 * This should be really rare, so there's no reason
+-			 * to avoid it.
+-			 */
+-			error = xfs_dir2_free_try_read(tp, dp,
+-					xfs_dir2_db_to_da(args->geo, fbno),
+-					&fbp);
+-			if (error)
+-				return error;
+-			if (!fbp)
+-				continue;
+-			free = fbp->b_addr;
+-			findex = 0;
 -		}
--		/*
--		 * Split the leaf block and insert the new entry.
--		 */
--		rval = xfs_da3_split(state);
--	}
--done:
--	xfs_da_state_free(state);
--	return rval;
--}
--
- /*
-  * Add the data entry for a node-format directory name addition.
-  * The leaf entry is added in xfs_dir2_leafn_add.
-@@ -2056,6 +1985,75 @@ xfs_dir2_node_addname_int(
- 	return 0;
- }
- 
-+/*
-+ * Top-level node form directory addname routine.
-+ */
-+int						/* error */
-+xfs_dir2_node_addname(
-+	xfs_da_args_t		*args)		/* operation arguments */
-+{
-+	xfs_da_state_blk_t	*blk;		/* leaf block for insert */
-+	int			error;		/* error return value */
-+	int			rval;		/* sub-return value */
-+	xfs_da_state_t		*state;		/* btree cursor */
++	for ( ; fbno < lastfbno; fbno++) {
++		/* If it's ifbno we already looked at it. */
++		if (fbno == ifbno)
++			continue;
 +
-+	trace_xfs_dir2_node_addname(args);
+ 		/*
+-		 * Look at the current free entry.  Is it good enough?
+-		 *
+-		 * The bests initialisation should be where the bufer is read in
+-		 * the above branch. But gcc is too stupid to realise that bests
+-		 * and the freehdr are actually initialised if they are placed
+-		 * there, so we have to do it here to avoid warnings. Blech.
++		 * Read the block.  There can be holes in the freespace blocks,
++		 * so this might not succeed.  This should be really rare, so
++		 * there's no reason to avoid it.
+ 		 */
++		error = xfs_dir2_free_try_read(tp, dp,
++				xfs_dir2_db_to_da(args->geo, fbno),
++				&fbp);
++		if (error)
++			return error;
++		if (!fbp)
++			continue;
 +
-+	/*
-+	 * Allocate and initialize the state (btree cursor).
-+	 */
-+	state = xfs_da_state_alloc();
-+	state->args = args;
-+	state->mp = args->dp->i_mount;
-+	/*
-+	 * Look up the name.  We're not supposed to find it, but
-+	 * this gives us the insertion point.
-+	 */
-+	error = xfs_da3_node_lookup_int(state, &rval);
-+	if (error)
-+		rval = error;
-+	if (rval != -ENOENT) {
-+		goto done;
-+	}
-+	/*
-+	 * Add the data entry to a data block.
-+	 * Extravalid is set to a freeblock found by lookup.
-+	 */
-+	rval = xfs_dir2_node_addname_int(args,
-+		state->extravalid ? &state->extrablk : NULL);
-+	if (rval) {
-+		goto done;
-+	}
-+	blk = &state->path.blk[state->path.active - 1];
-+	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
-+	/*
-+	 * Add the new leaf entry.
-+	 */
-+	rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
-+	if (rval == 0) {
-+		/*
-+		 * It worked, fix the hash values up the btree.
-+		 */
-+		if (!(args->op_flags & XFS_DA_OP_JUSTCHECK))
-+			xfs_da3_fixhashpath(state, &state->path);
-+	} else {
-+		/*
-+		 * It didn't work, we need to split the leaf block.
-+		 */
-+		if (args->total == 0) {
-+			ASSERT(rval == -ENOSPC);
-+			goto done;
-+		}
-+		/*
-+		 * Split the leaf block and insert the new entry.
-+		 */
-+		rval = xfs_da3_split(state);
-+	}
-+done:
-+	xfs_da_state_free(state);
-+	return rval;
-+}
++		free = fbp->b_addr;
+ 		bests = dp->d_ops->free_bests_p(free);
+ 		dp->d_ops->free_hdr_from_disk(&freehdr, free);
+-		if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
+-		    be16_to_cpu(bests[findex]) >= length)
+-			dbno = freehdr.firstdb + findex;
+-		else {
+-			/*
+-			 * Are we done with the freeblock?
+-			 */
+-			if (++findex == freehdr.nvalid) {
+-				/*
+-				 * Drop the block.
+-				 */
+-				xfs_trans_brelse(tp, fbp);
+-				fbp = NULL;
+-				if (fblk && fblk->bp)
+-					fblk->bp = NULL;
 +
- /*
-  * Lookup an entry in a node-format directory.
-  * All the real work happens in xfs_da3_node_lookup_int.
++		/* Scan the free entry array for a large enough free space. */
++		for (findex = 0; findex < freehdr.nvalid; findex++) {
++			if (be16_to_cpu(bests[findex]) != NULLDATAOFF &&
++			    be16_to_cpu(bests[findex]) >= length) {
++				dbno = freehdr.firstdb + findex;
++				goto found_block;
+ 			}
+ 		}
++
++		/* Didn't find free space, go on to next free block */
++		xfs_trans_brelse(tp, fbp);
+ 	}
++
+ found_block:
+ 	*dbnop = dbno;
+ 	*fbpp = fbp;
 -- 
 2.23.0.rc1
 
