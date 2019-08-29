@@ -2,162 +2,266 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FD3C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 18:52:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B15C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 20:52:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DAB2A2166E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 18:52:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9746522CEA
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 20:52:21 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="T70/VLd9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728207AbfH2SwR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 14:52:17 -0400
-Received: from mga17.intel.com ([192.55.52.151]:43358 "EHLO mga17.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727798AbfH2SwR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Aug 2019 14:52:17 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Aug 2019 11:52:15 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,444,1559545200"; 
-   d="scan'208";a="180965850"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga008.fm.intel.com with ESMTP; 29 Aug 2019 11:52:15 -0700
-Date:   Thu, 29 Aug 2019 11:52:15 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Vivek Goyal <vgoyal@redhat.com>
-Cc:     Andrew Morton <akpm@linux-foundation.org>,
-        Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>,
-        linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
-        John Hubbard <jhubbard@nvidia.com>,
-        Dave Chinner <david@fromorbit.com>,
-        linux-kernel@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
-        linux-xfs@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>,
-        linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 06/19] fs/ext4: Teach dax_layout_busy_page() to
- operate on a sub-range
-Message-ID: <20190829185215.GC18249@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-7-ira.weiny@intel.com>
- <20190823151826.GB11009@redhat.com>
+        id S1726245AbfH2UwV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 16:52:21 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:45238 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726512AbfH2UwV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 16:52:21 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TKpK3H122797;
+        Thu, 29 Aug 2019 20:52:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=0wAnVZZf8gHaC6r8vcV2ij2EaBGL8kVzMcjqsJCmcVg=;
+ b=T70/VLd9DV9jDdrmjq/cEN35gcx7mZeP3xszqqnRBKQl7bn9gscqleeg5MyzRcb3JsxF
+ IBbDG/vN+U2Bj/IMnVZJ1dQBysM4BCVTUuisXbz3OgeL4Tyw3H2UQlS+2CyL1PL3beTO
+ sOuytd1Fgmu7VdTpQDxLfDPtGCak63VnANcLzdwEOp7/5eHAnSkXWm/LS3tyIRgz0C8A
+ AGJU/zrTXXHjn3a1bwN5AhLN8UUiBPZKpAKUG6blqIzq3v6FsqfSVBxESimagq2zXnt9
+ JPzFa6jy+x3N3SN4KhVZ3i4QjqY4IV18or0WljsEo3w+IHouBwneE2XpaSB43QmU+CL8 iw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2upp3u80aq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 20:52:18 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TKm06J166822;
+        Thu, 29 Aug 2019 20:52:17 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2upc8v4f6k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 20:52:17 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7TKqGWV011609;
+        Thu, 29 Aug 2019 20:52:16 GMT
+Received: from localhost (/10.145.178.11)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Aug 2019 13:52:15 -0700
+Date:   Thu, 29 Aug 2019 13:52:15 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/5] xfs: move xfs_dir2_addname()
+Message-ID: <20190829205215.GI5354@magnolia>
+References: <20190829104710.28239-1-david@fromorbit.com>
+ <20190829104710.28239-2-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190823151826.GB11009@redhat.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20190829104710.28239-2-david@fromorbit.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290209
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290210
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 23, 2019 at 11:18:26AM -0400, Vivek Goyal wrote:
-> On Fri, Aug 09, 2019 at 03:58:20PM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > Callers of dax_layout_busy_page() are only rarely operating on the
-> > entire file of concern.
-> > 
-> > Teach dax_layout_busy_page() to operate on a sub-range of the
-> > address_space provided.  Specifying 0 - ULONG_MAX however, will continue
-> > to operate on the "entire file" and XFS is split out to a separate patch
-> > by this method.
-> > 
-> > This could potentially speed up dax_layout_busy_page() as well.
+On Thu, Aug 29, 2019 at 08:47:06PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> I need this functionality as well for virtio_fs and posted a patch for
-> this.
+> This gets rid of the need for a forward  declaration of the static
+> function xfs_dir2_addname_int() and readies the code for factoring
+> of xfs_dir2_addname_int().
 > 
-> https://lkml.org/lkml/2019/8/21/825
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/libxfs/xfs_dir2_node.c | 140 +++++++++++++++++-----------------
+>  1 file changed, 69 insertions(+), 71 deletions(-)
 > 
-> Given this is an optimization which existing users can benefit from already,
-> this patch could probably be pushed upstream independently.
-
-I'm ok with that.
-
-However, this patch does not apply cleanly to head as I had some other
-additions to dax.h.
-
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index 1fc44efc344d..e40986cc0759 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -32,8 +32,6 @@ static void xfs_dir2_leafn_rebalance(xfs_da_state_t *state,
+>  static int xfs_dir2_leafn_remove(xfs_da_args_t *args, struct xfs_buf *bp,
+>  				 int index, xfs_da_state_blk_t *dblk,
+>  				 int *rval);
+> -static int xfs_dir2_node_addname_int(xfs_da_args_t *args,
+> -				     xfs_da_state_blk_t *fblk);
+>  
+>  /*
+>   * Check internal consistency of a leafn block.
+> @@ -1610,75 +1608,6 @@ xfs_dir2_leafn_unbalance(
+>  	xfs_dir3_leaf_check(dp, drop_blk->bp);
+>  }
+>  
+> -/*
+> - * Top-level node form directory addname routine.
+> - */
+> -int						/* error */
+> -xfs_dir2_node_addname(
+> -	xfs_da_args_t		*args)		/* operation arguments */
+> -{
+> -	xfs_da_state_blk_t	*blk;		/* leaf block for insert */
+> -	int			error;		/* error return value */
+> -	int			rval;		/* sub-return value */
+> -	xfs_da_state_t		*state;		/* btree cursor */
+> -
+> -	trace_xfs_dir2_node_addname(args);
+> -
+> -	/*
+> -	 * Allocate and initialize the state (btree cursor).
+> -	 */
+> -	state = xfs_da_state_alloc();
+> -	state->args = args;
+> -	state->mp = args->dp->i_mount;
+> -	/*
+> -	 * Look up the name.  We're not supposed to find it, but
+> -	 * this gives us the insertion point.
+> -	 */
+> -	error = xfs_da3_node_lookup_int(state, &rval);
+> -	if (error)
+> -		rval = error;
+> -	if (rval != -ENOENT) {
+> -		goto done;
+> -	}
+> -	/*
+> -	 * Add the data entry to a data block.
+> -	 * Extravalid is set to a freeblock found by lookup.
+> -	 */
+> -	rval = xfs_dir2_node_addname_int(args,
+> -		state->extravalid ? &state->extrablk : NULL);
+> -	if (rval) {
+> -		goto done;
+> -	}
+> -	blk = &state->path.blk[state->path.active - 1];
+> -	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
+> -	/*
+> -	 * Add the new leaf entry.
+> -	 */
+> -	rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
+> -	if (rval == 0) {
+> -		/*
+> -		 * It worked, fix the hash values up the btree.
+> -		 */
+> -		if (!(args->op_flags & XFS_DA_OP_JUSTCHECK))
+> -			xfs_da3_fixhashpath(state, &state->path);
+> -	} else {
+> -		/*
+> -		 * It didn't work, we need to split the leaf block.
+> -		 */
+> -		if (args->total == 0) {
+> -			ASSERT(rval == -ENOSPC);
+> -			goto done;
+> -		}
+> -		/*
+> -		 * Split the leaf block and insert the new entry.
+> -		 */
+> -		rval = xfs_da3_split(state);
+> -	}
+> -done:
+> -	xfs_da_state_free(state);
+> -	return rval;
+> -}
+> -
+>  /*
+>   * Add the data entry for a node-format directory name addition.
+>   * The leaf entry is added in xfs_dir2_leafn_add.
+> @@ -2056,6 +1985,75 @@ xfs_dir2_node_addname_int(
+>  	return 0;
+>  }
+>  
+> +/*
+> + * Top-level node form directory addname routine.
+> + */
+> +int						/* error */
+> +xfs_dir2_node_addname(
+> +	xfs_da_args_t		*args)		/* operation arguments */
+> +{
+> +	xfs_da_state_blk_t	*blk;		/* leaf block for insert */
+> +	int			error;		/* error return value */
+> +	int			rval;		/* sub-return value */
+> +	xfs_da_state_t		*state;		/* btree cursor */
+> +
+> +	trace_xfs_dir2_node_addname(args);
+> +
+> +	/*
+> +	 * Allocate and initialize the state (btree cursor).
+> +	 */
+> +	state = xfs_da_state_alloc();
+> +	state->args = args;
+> +	state->mp = args->dp->i_mount;
+> +	/*
+> +	 * Look up the name.  We're not supposed to find it, but
+> +	 * this gives us the insertion point.
+> +	 */
+> +	error = xfs_da3_node_lookup_int(state, &rval);
+> +	if (error)
+> +		rval = error;
+> +	if (rval != -ENOENT) {
+> +		goto done;
+> +	}
+> +	/*
+> +	 * Add the data entry to a data block.
+> +	 * Extravalid is set to a freeblock found by lookup.
+> +	 */
+> +	rval = xfs_dir2_node_addname_int(args,
+> +		state->extravalid ? &state->extrablk : NULL);
+> +	if (rval) {
+> +		goto done;
+> +	}
+> +	blk = &state->path.blk[state->path.active - 1];
+> +	ASSERT(blk->magic == XFS_DIR2_LEAFN_MAGIC);
+> +	/*
+> +	 * Add the new leaf entry.
+> +	 */
+> +	rval = xfs_dir2_leafn_add(blk->bp, args, blk->index);
+> +	if (rval == 0) {
+> +		/*
+> +		 * It worked, fix the hash values up the btree.
+> +		 */
+> +		if (!(args->op_flags & XFS_DA_OP_JUSTCHECK))
+> +			xfs_da3_fixhashpath(state, &state->path);
+> +	} else {
+> +		/*
+> +		 * It didn't work, we need to split the leaf block.
+> +		 */
+> +		if (args->total == 0) {
+> +			ASSERT(rval == -ENOSPC);
+> +			goto done;
+> +		}
+> +		/*
+> +		 * Split the leaf block and insert the new entry.
+> +		 */
+> +		rval = xfs_da3_split(state);
+> +	}
+> +done:
+> +	xfs_da_state_free(state);
+> +	return rval;
+> +}
+> +
+>  /*
+>   * Lookup an entry in a node-format directory.
+>   * All the real work happens in xfs_da3_node_lookup_int.
+> -- 
+> 2.23.0.rc1
 > 
-> > 
-> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
-> > 
-> > ---
-> > Changes from RFC v1
-> > 	Fix 0-day build errors
-> > 
-> >  fs/dax.c            | 15 +++++++++++----
-> >  fs/ext4/ext4.h      |  2 +-
-> >  fs/ext4/extents.c   |  6 +++---
-> >  fs/ext4/inode.c     | 19 ++++++++++++-------
-> >  fs/xfs/xfs_file.c   |  3 ++-
-> >  include/linux/dax.h |  6 ++++--
-> >  6 files changed, 33 insertions(+), 18 deletions(-)
-> > 
-> > diff --git a/fs/dax.c b/fs/dax.c
-> > index a14ec32255d8..3ad19c384454 100644
-> > --- a/fs/dax.c
-> > +++ b/fs/dax.c
-> > @@ -573,8 +573,11 @@ bool dax_mapping_is_dax(struct address_space *mapping)
-> >  EXPORT_SYMBOL_GPL(dax_mapping_is_dax);
-> >  
-> >  /**
-> > - * dax_layout_busy_page - find first pinned page in @mapping
-> > + * dax_layout_busy_page - find first pinned page in @mapping within
-> > + *                        the range @off - @off + @len
-> >   * @mapping: address space to scan for a page with ref count > 1
-> > + * @off: offset to start at
-> > + * @len: length to scan through
-> >   *
-> >   * DAX requires ZONE_DEVICE mapped pages. These pages are never
-> >   * 'onlined' to the page allocator so they are considered idle when
-> > @@ -587,9 +590,13 @@ EXPORT_SYMBOL_GPL(dax_mapping_is_dax);
-> >   * to be able to run unmap_mapping_range() and subsequently not race
-> >   * mapping_mapped() becoming true.
-> >   */
-> > -struct page *dax_layout_busy_page(struct address_space *mapping)
-> > +struct page *dax_layout_busy_page(struct address_space *mapping,
-> > +				  loff_t off, loff_t len)
-> >  {
-> > -	XA_STATE(xas, &mapping->i_pages, 0);
-> > +	unsigned long start_idx = off >> PAGE_SHIFT;
-> > +	unsigned long end_idx = (len == ULONG_MAX) ? ULONG_MAX
-> > +				: start_idx + (len >> PAGE_SHIFT);
-> > +	XA_STATE(xas, &mapping->i_pages, start_idx);
-> >  	void *entry;
-> >  	unsigned int scanned = 0;
-> >  	struct page *page = NULL;
-> > @@ -612,7 +619,7 @@ struct page *dax_layout_busy_page(struct address_space *mapping)
-> >  	unmap_mapping_range(mapping, 0, 0, 1);
-> 
-> Should we unmap only those pages which fall in the range specified by caller.
-> Unmapping whole file seems to be less efficient.
-
-Seems reasonable to me.  I was focused on getting pages which were busy not
-necessarily on what got unmapped.  So I did not consider this.  Thanks for the
-suggestion.
-
-However, I don't understand the math you do for length?  Is this comment/code
-correct?
-
-+  /* length is being calculated from lstart and not start.
-+   * This is due to behavior of unmap_mapping_range(). If
-+   * start is say 4094 and end is on 4093 then want to
-+   * unamp two pages, idx 0 and 1. But unmap_mapping_range()
-+   * will unmap only page at idx 0. If we calculate len
-+   * from the rounded down start, this problem should not
-+   * happen.
-+   */
-+  len = end - lstart + 1;
-
-
-How can end (4093) be < start (4094)?  Is that valid?  And why would a start of
-4094 unmap idx 0?
-
-Ira
-
