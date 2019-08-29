@@ -2,109 +2,88 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D719C3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 21:32:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B480C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 22:00:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A05322CEA
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 21:32:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ny3gqUKx"
+	by mail.kernel.org (Postfix) with ESMTP id 55FC922CEA
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 22:00:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727440AbfH2VcI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 17:32:08 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:36618 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727108AbfH2VcI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 17:32:08 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TLOCbw165604;
-        Thu, 29 Aug 2019 21:31:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=meD1AJcjB58HSh5RiddbdpzMipNjFGRy49OPDOO89vk=;
- b=Ny3gqUKx1+mTUnu338pmlZELa9kXF+GvScLG/6j3UqY3HeFnT/K3kJJ5RAV5CDw5OaR1
- etvPJYWrgwK0oVU9/MlfUHHD+QpD3K+XiphAoGQvY00fFIIrutN66r9ZImAl6ur+LCsY
- FwMEV6S+UhTgoJM/QRL5jnouRhRZU0wqCK0RF/MCmWo3KwJXBSRpqQA20iqJ8pQqXmjA
- igqZ/JGPuCsnptfoXI+NYXNFP/j/y6K7s4RifTB27h7DR0YcvK1Cdso2uDQf6BVohrHA
- ZFjklM19CsWLeCFt69qyAQKvvNstHLsby5aRL5vxIGm8EkTpaR92ClPVd8KtB/GFrRk5 sg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2uppjc01s1-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 21:31:52 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TLTAao053713;
-        Thu, 29 Aug 2019 21:31:52 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2unvu0mmy7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 21:31:51 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7TLVpQP031255;
-        Thu, 29 Aug 2019 21:31:51 GMT
-Received: from localhost (/10.145.178.11)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Aug 2019 14:31:51 -0700
-Date:   Thu, 29 Aug 2019 14:31:50 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] xfs: log proper length of btree block in scrub/repair
-Message-ID: <20190829213150.GS5354@magnolia>
-References: <f66b01bb-b4ce-8713-c3db-fbbd39703737@redhat.com>
+        id S1727991AbfH2WAu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 18:00:50 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60534 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727969AbfH2WAt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 18:00:49 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 85CDA361399;
+        Fri, 30 Aug 2019 08:00:47 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i3STF-00014l-Lm; Fri, 30 Aug 2019 08:00:45 +1000
+Date:   Fri, 30 Aug 2019 08:00:45 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH 1/2] xfs: remove all *_ITER_ABORT values
+Message-ID: <20190829220045.GV1119@dread.disaster.area>
+References: <20190829162122.GH5354@magnolia>
+ <20190829162229.GB5360@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f66b01bb-b4ce-8713-c3db-fbbd39703737@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908290215
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908290215
+In-Reply-To: <20190829162229.GB5360@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=gkw7ESRJ6vXp_dHBzmIA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 27, 2019 at 02:17:36PM -0500, Eric Sandeen wrote:
-> xfs_trans_log_buf() takes a final argument of the last byte to
-> log in the buffer; b_length is in basic blocks, so this isn't
-> the correct last byte.  Fix it.
+On Thu, Aug 29, 2019 at 09:22:29AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
+> Use -ECANCELED to signal "stop iterating" instead of these magical
+> *_ITER_ABORT values, since it's duplicative.
 > 
-> just found by inspection/pattern matching, not tested TBH...
-> 
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index 4cfeec57fb05..7bcc755beb40 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -351,7 +351,7 @@ xrep_init_btblock(
->  	xfs_buf_zero(bp, 0, BBTOB(bp->b_length));
->  	xfs_btree_init_block(mp, bp, btnum, 0, 0, sc->sa.agno);
->  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_BTREE_BUF);
-> -	xfs_trans_log_buf(tp, bp, 0, bp->b_length);
-> +	xfs_trans_log_buf(tp, bp, 0, BBTOB(bp->b_length) - 1);
->  	bp->b_ops = ops;
->  	*bpp = bp;
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Looks fine to me. One nit:
+
+> diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+> index fa3cd8ab9aba..0099053d2a18 100644
+> --- a/fs/xfs/libxfs/xfs_btree.h
+> +++ b/fs/xfs/libxfs/xfs_btree.h
+> @@ -466,7 +466,6 @@ unsigned long long xfs_btree_calc_size(uint *limits, unsigned long long len);
 >  
-> 
+>  /* return codes */
+>  #define XFS_BTREE_QUERY_RANGE_CONTINUE	(XFS_ITER_CONTINUE) /* keep iterating */
+> -#define XFS_BTREE_QUERY_RANGE_ABORT	(XFS_ITER_ABORT)    /* stop iterating */
+>  typedef int (*xfs_btree_query_range_fn)(struct xfs_btree_cur *cur,
+>  		union xfs_btree_rec *rec, void *priv);
+
+Can you add an explicit comment to describe the iteration return
+values here so that a reader will know what behaviour to expect
+from the query range functions...
+
+I'd suggest the same thing for each of the iteration functions
+that we're removing the special defines from if they don't already
+have them.
+
+Same for the next patch, which also looks fine apart from
+describing the "return 0 means continue" comments.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
