@@ -2,134 +2,211 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A478CC3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:29:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0B50C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:51:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7AB9F2339E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:29:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9775C23403
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:51:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="br5k4UQ1"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CP9LBitI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727174AbfH2D3Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 23:29:24 -0400
-Received: from hqemgate15.nvidia.com ([216.228.121.64]:13912 "EHLO
-        hqemgate15.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726128AbfH2D3Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 23:29:24 -0400
-Received: from hqpgpgate101.nvidia.com (Not Verified[216.228.121.13]) by hqemgate15.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
-        id <B5d6746950001>; Wed, 28 Aug 2019 20:29:25 -0700
-Received: from hqmail.nvidia.com ([172.20.161.6])
-  by hqpgpgate101.nvidia.com (PGP Universal service);
-  Wed, 28 Aug 2019 20:29:23 -0700
-X-PGP-Universal: processed;
-        by hqpgpgate101.nvidia.com on Wed, 28 Aug 2019 20:29:23 -0700
-Received: from [10.2.174.243] (172.20.13.39) by HQMAIL107.nvidia.com
- (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Thu, 29 Aug
- 2019 03:29:22 +0000
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-To:     Ira Weiny <ira.weiny@intel.com>, Dave Chinner <david@fromorbit.com>
-CC:     Jason Gunthorpe <jgg@ziepe.ca>, Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>,
-        <linux-xfs@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
-        <linux-nvdimm@lists.01.org>, <linux-ext4@vger.kernel.org>,
-        <linux-mm@kvack.org>
-References: <20190821180200.GA5965@iweiny-DESK2.sc.intel.com>
- <20190821181343.GH8653@ziepe.ca>
- <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
- <20190821194810.GI8653@ziepe.ca>
- <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
- <20190823032345.GG1119@dread.disaster.area> <20190823120428.GA12968@ziepe.ca>
- <20190824001124.GI1119@dread.disaster.area>
- <20190824050836.GC1092@iweiny-DESK2.sc.intel.com>
- <20190826055510.GL1119@dread.disaster.area>
- <20190829020230.GA18249@iweiny-DESK2.sc.intel.com>
-X-Nvconfidentiality: public
-From:   John Hubbard <jhubbard@nvidia.com>
-Message-ID: <3e5c5053-a74a-509c-660c-a6075ed87f11@nvidia.com>
-Date:   Wed, 28 Aug 2019 20:27:23 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726245AbfH2Dv2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 23:51:28 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:41728 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726128AbfH2Dv2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 23:51:28 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7T3ovVi156503;
+        Thu, 29 Aug 2019 03:51:25 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=qQD6r4NUqDV6pUgfMyaZA78hD69e0kwLe5cJjja2n+A=;
+ b=CP9LBitIjrMmyY4IMYRF8E6DLe15t4VxZakwTPueLO1F5iajVknOaQQlc4Nsp2rHSrCs
+ MI0mXKXUIYIzTuq1tGoUbq4SpfnZFxpH2JYFotzQlaRLg77PsinVXM4WYuGb3ELAZ9XT
+ wqQiy0abm1ubSDBQimjoB3cChP1k98lLBaiEi9hIkJCIw0Gx/pldzJ+EacwJAxyPeyeH
+ wq7L6XD+0gxq14zGm70qpU+yu9+5wP4qpGhNEqgtNgxkTrcVmoh0qx06sjk0NfWs2jQ3
+ rV3uaO3uR35UfPpsl7+y1jjU1gGe7k1ebSW02dlmWuHpResk57py0zrR051yJpvuPuMo Rw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2up74tg057-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 03:51:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7T3n0cR096118;
+        Thu, 29 Aug 2019 03:51:24 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2unteuaaxm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 03:50:13 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7T3mlnF024753;
+        Thu, 29 Aug 2019 03:48:47 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 28 Aug 2019 20:48:46 -0700
+Date:   Wed, 28 Aug 2019 20:48:45 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 4/4] xfs_spaceman: convert open-coded unit conversions to
+ helpers
+Message-ID: <20190829034845.GN1037350@magnolia>
+References: <156685442011.2839773.2684103942714886186.stgit@magnolia>
+ <156685444520.2839773.6764652190281485485.stgit@magnolia>
+ <20190827081528.GH1119@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20190829020230.GA18249@iweiny-DESK2.sc.intel.com>
-X-Originating-IP: [172.20.13.39]
-X-ClientProxiedBy: HQMAIL107.nvidia.com (172.20.187.13) To
- HQMAIL107.nvidia.com (172.20.187.13)
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
-        t=1567049365; bh=U2zxSkDmfFQFUW8ITCuFuqzogPoHzY3eUcatrjlA5a8=;
-        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
-         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
-         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
-         Content-Transfer-Encoding;
-        b=br5k4UQ1c3ttyAEINc727xSgtnH39dAWjWSCaXGTLwro1CU1YneuoppDXhLMmA4uD
-         aDQ3MTA6HOZLsrWjeRsmclmc+9VuPFDc3mjUYq5LVFTaiCoeFJ5fy4G3b324J/gsUa
-         1/2Te/7AfanbM290SQcF7x/TWeee+3u45vwvCyED11F/dogTN4V6SByz3yIloOJ3jT
-         cLvs8UFo3vWu0RzGtWuxTuxbTth7a/DwXWriVQxLCn7BVTFeq34iQK1UkdryZj/+oB
-         pVGut1zha9UABjnIclmX/RBYsT1gxtKg14OYbEVTjMUr+uzTVtNuUOwSxrEb1ZPXtX
-         CMDU/9O7s997Q==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190827081528.GH1119@dread.disaster.area>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290040
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290040
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/28/19 7:02 PM, Ira Weiny wrote:
-> On Mon, Aug 26, 2019 at 03:55:10PM +1000, Dave Chinner wrote:
->> On Fri, Aug 23, 2019 at 10:08:36PM -0700, Ira Weiny wrote:
->>> On Sat, Aug 24, 2019 at 10:11:24AM +1000, Dave Chinner wrote:
->>>> On Fri, Aug 23, 2019 at 09:04:29AM -0300, Jason Gunthorpe wrote:
-...
->>
->> Sure, that part works because the struct file is passed. It doesn't
->> end up with the same fd number in the other process, though.
->>
->> The issue is that layout leases need to notify userspace when they
->> are broken by the kernel, so a lease stores the owner pid/tid in the
->> file->f_owner field via __f_setown(). It also keeps a struct fasync
->> attached to the file_lock that records the fd that the lease was
->> created on.  When a signal needs to be sent to userspace for that
->> lease, we call kill_fasync() and that walks the list of fasync
->> structures on the lease and calls:
->>
->> 	send_sigio(fown, fa->fa_fd, band);
->>
->> And it does for every fasync struct attached to a lease. Yes, a
->> lease can track multiple fds, but it can only track them in a single
->> process context. The moment the struct file is shared with another
->> process, the lease is no longer capable of sending notifications to
->> all the lease holders.
->>
->> Yes, you can change the owning process via F_SETOWNER, but that's
->> still only a single process context, and you can't change the fd in
->> the fasync list. You can add new fd to an existing lease by calling
->> F_SETLEASE on the new fd, but you still only have a single process
->> owner context for signal delivery.
->>
->> As such, leases that require callbacks to userspace are currently
->> only valid within the process context the lease was taken in.
+On Tue, Aug 27, 2019 at 06:15:28PM +1000, Dave Chinner wrote:
+> On Mon, Aug 26, 2019 at 02:20:45PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create xfrog analogues of the libxfs byte/sector/block conversion
+> > functions and convert spaceman to use them instead of open-coded
+> > arithmatic we do now.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  include/xfrog.h   |   66 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  libfrog/fsgeom.c  |    1 +
+> >  spaceman/freesp.c |   18 ++++++--------
+> >  spaceman/trim.c   |    9 ++++---
+> >  4 files changed, 80 insertions(+), 14 deletions(-)
 > 
-> But for long term pins we are not requiring callbacks.
+> ....
+> > +/* Convert fs block number to sector number. */
+> > +static inline uint64_t
+> > +xfrog_fsb_to_bb(
+> > +	struct xfs_fd		*xfd,
+> > +	uint64_t		fsbno)
+> > +{
+> > +	return fsbno << xfd->blkbb_log;
+> > +}
+> > +
+> > +/* Convert sector number to fs block number, rounded down. */
+> > +static inline uint64_t
+> > +xfrog_bb_to_fsbt(
+> > +	struct xfs_fd		*xfd,
+> > +	uint64_t		daddr)
+> > +{
+> > +	return daddr >> xfd->blkbb_log;
+> > +}
 > 
+> Same comment as previous ones about off_fsb_to_<foo> and vice versa.
+> 
+> And the more I see it, the less "xfrog" really means in these unit
+> conversion functions. How about we prefix them "cvt_"?
+> 
+> Then the name of the function actually does exactly what is says.
+> i.e. "convert basic blocks to offset in filesystem blocks"
 
-Hi Ira,
+Ok.  prefix conversion done.
 
-If "require callbacks to userspace" means sending SIGIO, then actually
-FOLL_LONGTERM *does* require those callbacks. Because we've been, so
-far, equating FOLL_LONGTERM with the vaddr_pin struct and with a lease.
+> > @@ -174,8 +170,10 @@ scan_ag(
+> >  	l = fsmap->fmh_keys;
+> >  	h = fsmap->fmh_keys + 1;
+> >  	if (agno != NULLAGNUMBER) {
+> > -		l->fmr_physical = agno * bperag;
+> > -		h->fmr_physical = ((agno + 1) * bperag) - 1;
+> > +		l->fmr_physical = xfrog_bbtob(
+> > +				xfrog_agb_to_daddr(xfd, agno, 0));
+> > +		h->fmr_physical = xfrog_bbtob(
+> > +				xfrog_agb_to_daddr(xfd, agno + 1, 0));
+> >  		l->fmr_device = h->fmr_device = file->fs_path.fs_datadev;
+> >  	} else {
+> >  		l->fmr_physical = 0;
+> 
+> This is why - that's quite hard to read. A simple wrapper might be
+> better:
+> 
+> static inline uint64_t
+> cvt_agbno_to_off_b(
+> 	struct xfs_fd		*xfd,
+> 	xfs_agnumber_t		agno,
+> 	xfs_agblock_t		agbno)
+> {
+> 	return cvt_bbtob(cvt_agbno_to_daddr(xfd, agno, agbno));
+> }
+> 
+> And then we have:
+> 
+> 		l->fmr_physical = cvt_agbno_to_off_b(xfd, agno, 0);
+> 		h->fmr_physical = cvt_agbno_to_off_b(xfd, agno + 1, 0);
+> 
+> 
+> > @@ -206,9 +204,9 @@ scan_ag(
+> >  			if (!(extent->fmr_flags & FMR_OF_SPECIAL_OWNER) ||
+> >  			    extent->fmr_owner != XFS_FMR_OWN_FREE)
+> >  				continue;
+> > -			agbno = (extent->fmr_physical - (bperag * agno)) /
+> > -								blocksize;
+> > -			aglen = extent->fmr_length / blocksize;
+> > +			agbno = xfrog_daddr_to_agbno(xfd,
+> > +					xfrog_btobbt(extent->fmr_physical));
+> 
+> That's the reverse - cvt_off_b_to_agbno().
+> 
+> > +			aglen = xfrog_b_to_fsbt(xfd, extent->fmr_length);
+> >  			freeblks += aglen;
+> >  			freeexts++;
+> >  
+> > diff --git a/spaceman/trim.c b/spaceman/trim.c
+> > index ea1308f7..8741bab2 100644
+> > --- a/spaceman/trim.c
+> > +++ b/spaceman/trim.c
+> > @@ -23,7 +23,8 @@ trim_f(
+> >  	char			**argv)
+> >  {
+> >  	struct fstrim_range	trim = {0};
+> > -	struct xfs_fsop_geom	*fsgeom = &file->xfd.fsgeom;
+> > +	struct xfs_fd		*xfd = &file->xfd;
+> > +	struct xfs_fsop_geom	*fsgeom = &xfd->fsgeom;
+> >  	xfs_agnumber_t		agno = 0;
+> >  	off64_t			offset = 0;
+> >  	ssize_t			length = 0;
+> > @@ -66,11 +67,11 @@ trim_f(
+> >  		length = cvtnum(fsgeom->blocksize, fsgeom->sectsize,
+> >  				argv[optind + 1]);
+> >  	} else if (agno) {
+> > -		offset = (off64_t)agno * fsgeom->agblocks * fsgeom->blocksize;
+> > -		length = fsgeom->agblocks * fsgeom->blocksize;
+> > +		offset = xfrog_bbtob(xfrog_agb_to_daddr(xfd, agno, 0));
+> > +		length = xfrog_fsb_to_b(xfd, fsgeom->agblocks);
+> 
+> cvt_agbno_to_off_b() again...
 
-What am I missing here?
+Done.
 
-thanks,
--- 
-John Hubbard
-NVIDIA
+--D
+
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
