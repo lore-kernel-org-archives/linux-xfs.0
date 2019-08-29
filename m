@@ -2,98 +2,162 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C9BC3A5A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FD3C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 18:52:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69FFE2077B
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:51:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DAB2A2166E
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 18:52:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728141AbfH2Qvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 12:51:36 -0400
-Received: from mail-wr1-f65.google.com ([209.85.221.65]:37267 "EHLO
-        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728109AbfH2Qvd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 12:51:33 -0400
-Received: by mail-wr1-f65.google.com with SMTP id z11so4170157wrt.4;
-        Thu, 29 Aug 2019 09:51:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references:mime-version:content-transfer-encoding;
-        bh=1BnYpBfZLwpA0PUdACNai/emnPM3Y0NcYvtOEszcGUE=;
-        b=EIeLKmLcL0KJYL9wF2ooxeC8hphqrPj9AFFs5bS1DdJoCZIBJs/rnI3r0Hm5qhDceB
-         3bH6oQFBtZpbU6+MYkS3tbg4fwzipNwYmWE82LlPA5zVd1T11OulwVU4fqap70lHFObe
-         aiddbBMNiwZcj8obVH+Aqg1VKC8ZoDUxR+4uplhh3gsw1+uUR43KGcVMJVvkgm3zUrOv
-         4E7txLTPmo5UO5C0eo07oTvbSxeYfc+HVudv+k+yKzLeVU0KzXpny2NxMTjmhuRHZdMG
-         W7n/XaXfcKcdaNmnb5xi+nGeG8b5l9a5CGVEFdpTMTe0/yx6Nfg6dNsM2IcQAN5ahLM5
-         FONg==
-X-Gm-Message-State: APjAAAUtHusYk2mh0ssSEEAuX6G9DK6M0ZAGJwPkcxaBa8HslKVHjoLb
-        1AbY8TY5t0nDX0YWWNQHgWDC9E9YYyo=
-X-Google-Smtp-Source: APXvYqw6h0QF/9Cp8h4AVqAPs4yZPsk7HvUFQPF0LVIItR+ycMCqidhPckPzdmSWxM7kIZu0fL5qKg==
-X-Received: by 2002:adf:e708:: with SMTP id c8mr13068496wrm.25.1567097491287;
-        Thu, 29 Aug 2019 09:51:31 -0700 (PDT)
-Received: from green.intra.ispras.ru (bran.ispras.ru. [83.149.199.196])
-        by smtp.googlemail.com with ESMTPSA id o14sm8340770wrg.64.2019.08.29.09.51.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Aug 2019 09:51:30 -0700 (PDT)
-From:   Denis Efremov <efremov@linux.com>
-To:     linux-kernel@vger.kernel.org
-Cc:     Denis Efremov <efremov@linux.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Joe Perches <joe@perches.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        linux-xfs@vger.kernel.org
-Subject: [PATCH v3 07/11] xfs: remove unlikely() from WARN_ON() condition
-Date:   Thu, 29 Aug 2019 19:50:21 +0300
-Message-Id: <20190829165025.15750-7-efremov@linux.com>
-X-Mailer: git-send-email 2.21.0
-In-Reply-To: <20190829165025.15750-1-efremov@linux.com>
-References: <20190829165025.15750-1-efremov@linux.com>
+        id S1728207AbfH2SwR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 14:52:17 -0400
+Received: from mga17.intel.com ([192.55.52.151]:43358 "EHLO mga17.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727798AbfH2SwR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Aug 2019 14:52:17 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga008.fm.intel.com ([10.253.24.58])
+  by fmsmga107.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Aug 2019 11:52:15 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.64,444,1559545200"; 
+   d="scan'208";a="180965850"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by fmsmga008.fm.intel.com with ESMTP; 29 Aug 2019 11:52:15 -0700
+Date:   Thu, 29 Aug 2019 11:52:15 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Vivek Goyal <vgoyal@redhat.com>
+Cc:     Andrew Morton <akpm@linux-foundation.org>,
+        Michal Hocko <mhocko@suse.com>, Jan Kara <jack@suse.cz>,
+        linux-nvdimm@lists.01.org, linux-rdma@vger.kernel.org,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dave Chinner <david@fromorbit.com>,
+        linux-kernel@vger.kernel.org, Matthew Wilcox <willy@infradead.org>,
+        linux-xfs@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>,
+        linux-fsdevel@vger.kernel.org, Theodore Ts'o <tytso@mit.edu>,
+        linux-ext4@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [RFC PATCH v2 06/19] fs/ext4: Teach dax_layout_busy_page() to
+ operate on a sub-range
+Message-ID: <20190829185215.GC18249@iweiny-DESK2.sc.intel.com>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-7-ira.weiny@intel.com>
+ <20190823151826.GB11009@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190823151826.GB11009@redhat.com>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-"unlikely(WARN_ON(x))" is excessive. WARN_ON() already uses unlikely()
-internally.
+On Fri, Aug 23, 2019 at 11:18:26AM -0400, Vivek Goyal wrote:
+> On Fri, Aug 09, 2019 at 03:58:20PM -0700, ira.weiny@intel.com wrote:
+> > From: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > Callers of dax_layout_busy_page() are only rarely operating on the
+> > entire file of concern.
+> > 
+> > Teach dax_layout_busy_page() to operate on a sub-range of the
+> > address_space provided.  Specifying 0 - ULONG_MAX however, will continue
+> > to operate on the "entire file" and XFS is split out to a separate patch
+> > by this method.
+> > 
+> > This could potentially speed up dax_layout_busy_page() as well.
+> 
+> I need this functionality as well for virtio_fs and posted a patch for
+> this.
+> 
+> https://lkml.org/lkml/2019/8/21/825
+> 
+> Given this is an optimization which existing users can benefit from already,
+> this patch could probably be pushed upstream independently.
 
-Signed-off-by: Denis Efremov <efremov@linux.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Joe Perches <joe@perches.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-xfs@vger.kernel.org
----
- fs/xfs/xfs_buf.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I'm ok with that.
 
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index ca0849043f54..4389d87ff0f0 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -2096,7 +2096,7 @@ xfs_verify_magic(
- 	int			idx;
- 
- 	idx = xfs_sb_version_hascrc(&mp->m_sb);
--	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic[idx])))
-+	if (WARN_ON(!bp->b_ops || !bp->b_ops->magic[idx]))
- 		return false;
- 	return dmagic == bp->b_ops->magic[idx];
- }
-@@ -2114,7 +2114,7 @@ xfs_verify_magic16(
- 	int			idx;
- 
- 	idx = xfs_sb_version_hascrc(&mp->m_sb);
--	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic16[idx])))
-+	if (WARN_ON(!bp->b_ops || !bp->b_ops->magic16[idx]))
- 		return false;
- 	return dmagic == bp->b_ops->magic16[idx];
- }
--- 
-2.21.0
+However, this patch does not apply cleanly to head as I had some other
+additions to dax.h.
+
+> 
+> > 
+> > Signed-off-by: Ira Weiny <ira.weiny@intel.com>
+> > 
+> > ---
+> > Changes from RFC v1
+> > 	Fix 0-day build errors
+> > 
+> >  fs/dax.c            | 15 +++++++++++----
+> >  fs/ext4/ext4.h      |  2 +-
+> >  fs/ext4/extents.c   |  6 +++---
+> >  fs/ext4/inode.c     | 19 ++++++++++++-------
+> >  fs/xfs/xfs_file.c   |  3 ++-
+> >  include/linux/dax.h |  6 ++++--
+> >  6 files changed, 33 insertions(+), 18 deletions(-)
+> > 
+> > diff --git a/fs/dax.c b/fs/dax.c
+> > index a14ec32255d8..3ad19c384454 100644
+> > --- a/fs/dax.c
+> > +++ b/fs/dax.c
+> > @@ -573,8 +573,11 @@ bool dax_mapping_is_dax(struct address_space *mapping)
+> >  EXPORT_SYMBOL_GPL(dax_mapping_is_dax);
+> >  
+> >  /**
+> > - * dax_layout_busy_page - find first pinned page in @mapping
+> > + * dax_layout_busy_page - find first pinned page in @mapping within
+> > + *                        the range @off - @off + @len
+> >   * @mapping: address space to scan for a page with ref count > 1
+> > + * @off: offset to start at
+> > + * @len: length to scan through
+> >   *
+> >   * DAX requires ZONE_DEVICE mapped pages. These pages are never
+> >   * 'onlined' to the page allocator so they are considered idle when
+> > @@ -587,9 +590,13 @@ EXPORT_SYMBOL_GPL(dax_mapping_is_dax);
+> >   * to be able to run unmap_mapping_range() and subsequently not race
+> >   * mapping_mapped() becoming true.
+> >   */
+> > -struct page *dax_layout_busy_page(struct address_space *mapping)
+> > +struct page *dax_layout_busy_page(struct address_space *mapping,
+> > +				  loff_t off, loff_t len)
+> >  {
+> > -	XA_STATE(xas, &mapping->i_pages, 0);
+> > +	unsigned long start_idx = off >> PAGE_SHIFT;
+> > +	unsigned long end_idx = (len == ULONG_MAX) ? ULONG_MAX
+> > +				: start_idx + (len >> PAGE_SHIFT);
+> > +	XA_STATE(xas, &mapping->i_pages, start_idx);
+> >  	void *entry;
+> >  	unsigned int scanned = 0;
+> >  	struct page *page = NULL;
+> > @@ -612,7 +619,7 @@ struct page *dax_layout_busy_page(struct address_space *mapping)
+> >  	unmap_mapping_range(mapping, 0, 0, 1);
+> 
+> Should we unmap only those pages which fall in the range specified by caller.
+> Unmapping whole file seems to be less efficient.
+
+Seems reasonable to me.  I was focused on getting pages which were busy not
+necessarily on what got unmapped.  So I did not consider this.  Thanks for the
+suggestion.
+
+However, I don't understand the math you do for length?  Is this comment/code
+correct?
+
++  /* length is being calculated from lstart and not start.
++   * This is due to behavior of unmap_mapping_range(). If
++   * start is say 4094 and end is on 4093 then want to
++   * unamp two pages, idx 0 and 1. But unmap_mapping_range()
++   * will unmap only page at idx 0. If we calculate len
++   * from the rounded down start, this problem should not
++   * happen.
++   */
++  len = end - lstart + 1;
+
+
+How can end (4093) be < start (4094)?  Is that valid?  And why would a start of
+4094 unmap idx 0?
+
+Ira
 
