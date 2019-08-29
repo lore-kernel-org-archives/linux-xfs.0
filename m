@@ -4,73 +4,55 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEE4DC3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:50:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C9BC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:51:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA5DE2189D
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:50:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 69FFE2077B
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:51:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727546AbfH2Quy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 12:50:54 -0400
-Received: from mail-wm1-f67.google.com ([209.85.128.67]:38855 "EHLO
-        mail-wm1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726973AbfH2Qux (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 12:50:53 -0400
-Received: by mail-wm1-f67.google.com with SMTP id o184so4553699wme.3;
-        Thu, 29 Aug 2019 09:50:51 -0700 (PDT)
+        id S1728141AbfH2Qvg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 12:51:36 -0400
+Received: from mail-wr1-f65.google.com ([209.85.221.65]:37267 "EHLO
+        mail-wr1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728109AbfH2Qvd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 12:51:33 -0400
+Received: by mail-wr1-f65.google.com with SMTP id z11so4170157wrt.4;
+        Thu, 29 Aug 2019 09:51:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:mime-version
-         :content-transfer-encoding;
-        bh=EAPNXwtNcvomkAv43HK7BcSQSi3ID9bH+hr63tWVdSI=;
-        b=B5HGm8Y0d+BC3TOmZ23uuf+WqGqYOV7ombVlzG70cKlsV5JRtEvvNhzfPX4mECWFhx
-         u5j/9cXAx5IqdKYxp7N//EOr02YdCxMO9TImOTBYGSfNXGWuDvoj6pJX11SgB//Tt5im
-         yYal4ni8RQu92gT5EGlqUSz2C0ZgmGFTTf+a6stQq6hqSBqIOsB4/FaV7WQu1kPe6C3X
-         +xLocX36sKRkLLs3x2PB2D+myD7iamK/wRKiMKBKp2+VCm7/qCDUbUDyTARThORMu67E
-         QuOMPvFXZtlfAMMmQxgNFbLz16ewEqahiYYT8vzew1IHcjJ1Y165M5UTbENb5n3dJ24k
-         kxqA==
-X-Gm-Message-State: APjAAAX+kGHw6qYwNcIPCIAbgM17lyiHVPh/qD8mC15U8cFFX3Ij61QJ
-        D4+f5ZSeYUoFEP3fmz575wgwXYvwuHo=
-X-Google-Smtp-Source: APXvYqyG8Uv9qqAEzfuwRYVShx38vJV1pUSPq3W7ZBAlPx5+N1oEiU4zijmswr1WDwZJj2S7mhEW8w==
-X-Received: by 2002:a1c:f704:: with SMTP id v4mr361727wmh.90.1567097450438;
-        Thu, 29 Aug 2019 09:50:50 -0700 (PDT)
+        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
+         :references:mime-version:content-transfer-encoding;
+        bh=1BnYpBfZLwpA0PUdACNai/emnPM3Y0NcYvtOEszcGUE=;
+        b=EIeLKmLcL0KJYL9wF2ooxeC8hphqrPj9AFFs5bS1DdJoCZIBJs/rnI3r0Hm5qhDceB
+         3bH6oQFBtZpbU6+MYkS3tbg4fwzipNwYmWE82LlPA5zVd1T11OulwVU4fqap70lHFObe
+         aiddbBMNiwZcj8obVH+Aqg1VKC8ZoDUxR+4uplhh3gsw1+uUR43KGcVMJVvkgm3zUrOv
+         4E7txLTPmo5UO5C0eo07oTvbSxeYfc+HVudv+k+yKzLeVU0KzXpny2NxMTjmhuRHZdMG
+         W7n/XaXfcKcdaNmnb5xi+nGeG8b5l9a5CGVEFdpTMTe0/yx6Nfg6dNsM2IcQAN5ahLM5
+         FONg==
+X-Gm-Message-State: APjAAAUtHusYk2mh0ssSEEAuX6G9DK6M0ZAGJwPkcxaBa8HslKVHjoLb
+        1AbY8TY5t0nDX0YWWNQHgWDC9E9YYyo=
+X-Google-Smtp-Source: APXvYqw6h0QF/9Cp8h4AVqAPs4yZPsk7HvUFQPF0LVIItR+ycMCqidhPckPzdmSWxM7kIZu0fL5qKg==
+X-Received: by 2002:adf:e708:: with SMTP id c8mr13068496wrm.25.1567097491287;
+        Thu, 29 Aug 2019 09:51:31 -0700 (PDT)
 Received: from green.intra.ispras.ru (bran.ispras.ru. [83.149.199.196])
-        by smtp.googlemail.com with ESMTPSA id o14sm8340770wrg.64.2019.08.29.09.50.47
+        by smtp.googlemail.com with ESMTPSA id o14sm8340770wrg.64.2019.08.29.09.51.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 Aug 2019 09:50:49 -0700 (PDT)
+        Thu, 29 Aug 2019 09:51:30 -0700 (PDT)
 From:   Denis Efremov <efremov@linux.com>
 To:     linux-kernel@vger.kernel.org
 Cc:     Denis Efremov <efremov@linux.com>,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        Anton Altaparmakov <anton@tuxera.com>,
-        Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-        Boris Pismenny <borisp@mellanox.com>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        "David S. Miller" <davem@davemloft.net>,
-        Dennis Dalessandro <dennis.dalessandro@intel.com>,
-        Dmitry Torokhov <dmitry.torokhov@gmail.com>,
-        Inaky Perez-Gonzalez <inaky.perez-gonzalez@intel.com>,
-        Juergen Gross <jgross@suse.com>,
-        Leon Romanovsky <leon@kernel.org>,
-        Mike Marciniszyn <mike.marciniszyn@intel.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali.rohar@gmail.com>,
-        Rob Clark <robdclark@gmail.com>,
-        Saeed Mahameed <saeedm@mellanox.com>,
-        Sean Paul <sean@poorly.run>, linux-arm-msm@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-input@vger.kernel.org,
-        linux-ntfs-dev@lists.sourceforge.net, linux-rdma@vger.kernel.org,
-        linux-wimax@intel.com, linux-xfs@vger.kernel.org,
-        xen-devel@lists.xenproject.org, netdev@vger.kernel.org,
-        dri-devel@lists.freedesktop.org, Joe Perches <joe@perches.com>,
+        Joe Perches <joe@perches.com>,
         Andrew Morton <akpm@linux-foundation.org>,
-        Andy Whitcroft <apw@canonical.com>
-Subject: [PATCH v3 01/11] checkpatch: check for nested (un)?likely() calls
-Date:   Thu, 29 Aug 2019 19:50:15 +0300
-Message-Id: <20190829165025.15750-1-efremov@linux.com>
+        linux-xfs@vger.kernel.org
+Subject: [PATCH v3 07/11] xfs: remove unlikely() from WARN_ON() condition
+Date:   Thu, 29 Aug 2019 19:50:21 +0300
+Message-Id: <20190829165025.15750-7-efremov@linux.com>
 X-Mailer: git-send-email 2.21.0
+In-Reply-To: <20190829165025.15750-1-efremov@linux.com>
+References: <20190829165025.15750-1-efremov@linux.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
@@ -78,38 +60,40 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-IS_ERR(), IS_ERR_OR_NULL(), IS_ERR_VALUE() and WARN*() already contain
-unlikely() optimization internally. Thus, there is no point in calling
-these functions and defines under likely()/unlikely().
-
-This check is based on the coccinelle rule developed by Enrico Weigelt
-https://lore.kernel.org/lkml/1559767582-11081-1-git-send-email-info@metux.net/
+"unlikely(WARN_ON(x))" is excessive. WARN_ON() already uses unlikely()
+internally.
 
 Signed-off-by: Denis Efremov <efremov@linux.com>
+Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc: Joe Perches <joe@perches.com>
 Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Andy Whitcroft <apw@canonical.com>
+Cc: linux-xfs@vger.kernel.org
 ---
- scripts/checkpatch.pl | 6 ++++++
- 1 file changed, 6 insertions(+)
+ fs/xfs/xfs_buf.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index 93a7edfe0f05..56969ce06df4 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -6480,6 +6480,12 @@ sub process {
- 			     "Using $1 should generally have parentheses around the comparison\n" . $herecurr);
- 		}
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index ca0849043f54..4389d87ff0f0 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -2096,7 +2096,7 @@ xfs_verify_magic(
+ 	int			idx;
  
-+# nested likely/unlikely calls
-+		if ($line =~ /\b(?:(?:un)?likely)\s*\(\s*!?\s*(IS_ERR(?:_OR_NULL|_VALUE)?|WARN)/) {
-+			WARN("LIKELY_MISUSE",
-+			     "nested (un)?likely() calls, $1 already uses unlikely() internally\n" . $herecurr);
-+		}
-+
- # whine mightly about in_atomic
- 		if ($line =~ /\bin_atomic\s*\(/) {
- 			if ($realfile =~ m@^drivers/@) {
+ 	idx = xfs_sb_version_hascrc(&mp->m_sb);
+-	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic[idx])))
++	if (WARN_ON(!bp->b_ops || !bp->b_ops->magic[idx]))
+ 		return false;
+ 	return dmagic == bp->b_ops->magic[idx];
+ }
+@@ -2114,7 +2114,7 @@ xfs_verify_magic16(
+ 	int			idx;
+ 
+ 	idx = xfs_sb_version_hascrc(&mp->m_sb);
+-	if (unlikely(WARN_ON(!bp->b_ops || !bp->b_ops->magic16[idx])))
++	if (WARN_ON(!bp->b_ops || !bp->b_ops->magic16[idx]))
+ 		return false;
+ 	return dmagic == bp->b_ops->magic16[idx];
+ }
 -- 
 2.21.0
 
