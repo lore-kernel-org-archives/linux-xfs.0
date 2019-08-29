@@ -2,131 +2,83 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9DD3BC3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:16:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9444C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:21:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7CD462339E
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:16:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BB282339E
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 16:21:26 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sezUp59y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728032AbfH2QQb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 12:16:31 -0400
-Received: from mga05.intel.com ([192.55.52.43]:19642 "EHLO mga05.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727066AbfH2QQb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Aug 2019 12:16:31 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Aug 2019 09:16:29 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,444,1559545200"; 
-   d="scan'208";a="183523268"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by orsmga003.jf.intel.com with ESMTP; 29 Aug 2019 09:16:28 -0700
-Date:   Thu, 29 Aug 2019 09:16:28 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     John Hubbard <jhubbard@nvidia.com>
-Cc:     Dave Chinner <david@fromorbit.com>, Jason Gunthorpe <jgg@ziepe.ca>,
-        Jan Kara <jack@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>,
-        linux-xfs@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-ext4@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 00/19] RDMA/FS DAX truncate proposal V1,000,002 ;-)
-Message-ID: <20190829161627.GB18249@iweiny-DESK2.sc.intel.com>
-References: <20190821185703.GB5965@iweiny-DESK2.sc.intel.com>
- <20190821194810.GI8653@ziepe.ca>
- <20190821204421.GE5965@iweiny-DESK2.sc.intel.com>
- <20190823032345.GG1119@dread.disaster.area>
- <20190823120428.GA12968@ziepe.ca>
- <20190824001124.GI1119@dread.disaster.area>
- <20190824050836.GC1092@iweiny-DESK2.sc.intel.com>
- <20190826055510.GL1119@dread.disaster.area>
- <20190829020230.GA18249@iweiny-DESK2.sc.intel.com>
- <3e5c5053-a74a-509c-660c-a6075ed87f11@nvidia.com>
+        id S1726784AbfH2QV0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 12:21:26 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:40438 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726739AbfH2QVZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 12:21:25 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TGJ3vM050412
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 16:21:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=Tf1qOUxhDikqWTH4ZtDItu54I7CUoMqyUwo9C3Rog5I=;
+ b=sezUp59yoDs0rtokSsFHpNxoYsQnacxXMyI+RW4hJlwxF8aR2lDg8ZGyXC88fMC4RwgZ
+ QDKXNO86Vp4Iuaqsl4Gq4oHPgzCcZXSIVI1RPiwjZStMDBRIiJAZfnJHUYTrIKeJ9oji
+ r7uMlTc9iBmQWXg28/fcDIZASMJE9Xi/++G7HiI1dOShM12gSAAr6zN+NgyFWUX/6JXJ
+ KemGz5Yeeue414g5c5YU2iR5go0DA4SldiBP9g62XpfGOZqZMRgoV0+s3uf32o8S2SMA
+ ZEVu/qOSIAPNv3sAaD8AIU6k9wMP8pe3PwXNvTO9W/TMYTD4H/q1/7pJ/mDsR3pXSR8j mQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2uphyc0318-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 16:21:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TGIx0J162674
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 16:21:24 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2untev9kqk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 16:21:24 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7TGLNxC002598
+        for <linux-xfs@vger.kernel.org>; Thu, 29 Aug 2019 16:21:23 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Aug 2019 09:21:23 -0700
+Date:   Thu, 29 Aug 2019 09:21:22 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>, darrick.wong@oracle.com
+Subject: [PATCH 0/2] xfs: get rid of _ITER_{ABORT,CONTINUE}
+Message-ID: <20190829162122.GH5354@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <3e5c5053-a74a-509c-660c-a6075ed87f11@nvidia.com>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=534
+ adultscore=1 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290172
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=603 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290172
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Aug 28, 2019 at 08:27:23PM -0700, John Hubbard wrote:
-> On 8/28/19 7:02 PM, Ira Weiny wrote:
-> > On Mon, Aug 26, 2019 at 03:55:10PM +1000, Dave Chinner wrote:
-> > > On Fri, Aug 23, 2019 at 10:08:36PM -0700, Ira Weiny wrote:
-> > > > On Sat, Aug 24, 2019 at 10:11:24AM +1000, Dave Chinner wrote:
-> > > > > On Fri, Aug 23, 2019 at 09:04:29AM -0300, Jason Gunthorpe wrote:
-> ...
-> > > 
-> > > Sure, that part works because the struct file is passed. It doesn't
-> > > end up with the same fd number in the other process, though.
-> > > 
-> > > The issue is that layout leases need to notify userspace when they
-> > > are broken by the kernel, so a lease stores the owner pid/tid in the
-> > > file->f_owner field via __f_setown(). It also keeps a struct fasync
-> > > attached to the file_lock that records the fd that the lease was
-> > > created on.  When a signal needs to be sent to userspace for that
-> > > lease, we call kill_fasync() and that walks the list of fasync
-> > > structures on the lease and calls:
-> > > 
-> > > 	send_sigio(fown, fa->fa_fd, band);
-> > > 
-> > > And it does for every fasync struct attached to a lease. Yes, a
-> > > lease can track multiple fds, but it can only track them in a single
-> > > process context. The moment the struct file is shared with another
-> > > process, the lease is no longer capable of sending notifications to
-> > > all the lease holders.
-> > > 
-> > > Yes, you can change the owning process via F_SETOWNER, but that's
-> > > still only a single process context, and you can't change the fd in
-> > > the fasync list. You can add new fd to an existing lease by calling
-> > > F_SETLEASE on the new fd, but you still only have a single process
-> > > owner context for signal delivery.
-> > > 
-> > > As such, leases that require callbacks to userspace are currently
-> > > only valid within the process context the lease was taken in.
-> > 
-> > But for long term pins we are not requiring callbacks.
-> > 
-> 
-> Hi Ira,
-> 
-> If "require callbacks to userspace" means sending SIGIO, then actually
-> FOLL_LONGTERM *does* require those callbacks. Because we've been, so
-> far, equating FOLL_LONGTERM with the vaddr_pin struct and with a lease.
-> 
-> What am I missing here?
+Hi all,
 
-We agreed back in June that the layout lease would have 2 "levels".  The
-"normal" layout lease would cause SIGIO and could be broken and another
-"exclusive" level which could _not_ be broken.
+I have recently realized that the _ITER_CONTINUE/_ITER_ABORT defines are
+a giant thinko -- the _CONTINUE variants map to zero, and -ECANCELED can
+handle the _ABORT case just fine.  This series scrapes both of them out
+of the kernel.
 
-Because we _can't_ _trust_ user space to react to the SIGIO properly the
-"exclusive" lease is required to take the longterm pins.  Also this is the
-lease which causes the truncate to fail (return ETXTBSY) because the kernel
-can't break the lease.
-
-The vaddr_pin struct in the current RFC is there for a couple of reasons.
-
-1) To ensure that we have a way to correlate the long term pin user with the
-   file if the data file FD's are closed.  (ie the application has zombie'd the
-   lease).
-
-2) And more importantly as a token the vaddr_pin*() callers use to be able to
-   properly ref count the file itself while in use.
-
-Ira
-
+--D
