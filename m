@@ -2,88 +2,90 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 627DDC3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:29:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5DDA7C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:39:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2AA0E208C2
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:29:58 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="VchlnaJi"
+	by mail.kernel.org (Postfix) with ESMTP id 356F9233FF
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 07:39:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1567064368;
+	bh=xZtw9k9/PshDiNUS3oHy6mH6yreqj1u3O90gY5RjPlA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=erAmo5dQx0XaqI8F5bHFUh5XJMM1RESbLaTxUdVDJg3nhs37V+m3J3yiNYb9jevE8
+	 kKkbu9lIC4hUtrvrY3arbsIGq7Dr2e8NJIgK+Z9zGYPwQ1A8K7MxsRxNhFohrYPsr+
+	 C3NvmosuIIQYKW9gzqLL6JAiVVwoDPpksG59uq60=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727866AbfH2H35 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 03:29:57 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:41572 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725853AbfH2H35 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 03:29:57 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=/o0S+flrUCxLJfmLzMcxld2gIePSg5sUlxDPtzJofbA=; b=VchlnaJi0t+uLr3FfQwZKKVnH
-        J0i3YSv7/PRoQCblAKzvsf0njdAH7WEYjm5wMKcN7snedSegt92DvMAolyPhdL5u96a1R4u3Drark
-        LqOXKV+2ZYAhxihtSZRms2fp2P+cNglAca+D/erXz1tyi88dXIMdQmsAfdVzvSrwHEDJgrnxjeJtX
-        psLJJIG+YwnlC+XW2+AI13O/ZBsYK9pYn8EsMmTnZaDGQfiOBcVEwjskr3F9PPjK46NAt5FVeAg1S
-        MKHOtKVe+WMuKfY34pN35qBfOveAdZRWJW4LBD+pdtGkcLhqNLhbKpjsj3riLsh0oUvq2Gibbf0Xl
-        6jU2cOJfw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i3EsX-0002vM-88; Thu, 29 Aug 2019 07:29:57 +0000
-Date:   Thu, 29 Aug 2019 00:29:57 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: reinitialize rm_flags when unpacking an offset
- into an rmap irec
-Message-ID: <20190829072957.GF18102@infradead.org>
-References: <156685615360.2853674.5160169873645196259.stgit@magnolia>
- <156685618619.2853674.16603505107055424362.stgit@magnolia>
+        id S1727372AbfH2HjY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 03:39:24 -0400
+Received: from mx2.suse.de ([195.135.220.15]:44172 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1726330AbfH2HjY (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 29 Aug 2019 03:39:24 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 78FB3B03B;
+        Thu, 29 Aug 2019 07:39:22 +0000 (UTC)
+Date:   Thu, 29 Aug 2019 09:39:21 +0200
+From:   Michal Hocko <mhocko@kernel.org>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christopher Lameter <cl@linux.com>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
+ kmalloc(power-of-two)
+Message-ID: <20190829073921.GA21880@dhcp22.suse.cz>
+References: <20190826111627.7505-1-vbabka@suse.cz>
+ <20190826111627.7505-3-vbabka@suse.cz>
+ <0100016cd98bb2c1-a2af7539-706f-47ba-a68e-5f6a91f2f495-000000@email.amazonses.com>
+ <20190828194607.GB6590@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156685618619.2853674.16603505107055424362.stgit@magnolia>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20190828194607.GB6590@bombadil.infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Aug 26, 2019 at 02:49:46PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed 28-08-19 12:46:08, Matthew Wilcox wrote:
+> On Wed, Aug 28, 2019 at 06:45:07PM +0000, Christopher Lameter wrote:
+[...]
+> > be suprising and it limits the optimizations that slab allocators may use
+> > for optimizing data use. The SLOB allocator was designed in such a way
+> > that data wastage is limited. The changes here sabotage that goal and show
+> > that future slab allocators may be similarly constrained with the
+> > exceptional alignents implemented. Additional debugging features etc etc
+> > must all support the exceptional alignment requirements.
 > 
-> In xfs_rmap_irec_offset_unpack, we should always clear the contents of
-> rm_flags before we begin unpacking the encoded (ondisk) offset into the
-> incore rm_offset and incore rm_flags fields.  Remove the open-coded
-> field zeroing as this encourages api misuse.
+> While I sympathise with the poor programmer who has to write the
+> fourth implementation of the sl*b interface, it's more for the pain of
+> picking a new letter than the pain of needing to honour the alignment
+> of allocations.
+> 
+> There are many places in the kernel which assume alignment.  They break
+> when it's not supplied.  I believe we have a better overall system if
+> the MM developers provide stronger guarantees than the MM consumers have
+> to work around only weak guarantees.
 
-This one doesn't fit the series' theme, does it? :)
-
-> +++ b/fs/xfs/libxfs/xfs_rmap.c
-> @@ -168,7 +168,6 @@ xfs_rmap_btrec_to_irec(
->  	union xfs_btree_rec	*rec,
->  	struct xfs_rmap_irec	*irec)
->  {
-> -	irec->rm_flags = 0;
->  	irec->rm_startblock = be32_to_cpu(rec->rmap.rm_startblock);
->  	irec->rm_blockcount = be32_to_cpu(rec->rmap.rm_blockcount);
->  	irec->rm_owner = be64_to_cpu(rec->rmap.rm_owner);
-> diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-> index 0c2c3cb73429..abe633403fd1 100644
-> --- a/fs/xfs/libxfs/xfs_rmap.h
-> +++ b/fs/xfs/libxfs/xfs_rmap.h
-> @@ -68,6 +68,7 @@ xfs_rmap_irec_offset_unpack(
->  	if (offset & ~(XFS_RMAP_OFF_MASK | XFS_RMAP_OFF_FLAGS))
->  		return -EFSCORRUPTED;
->  	irec->rm_offset = XFS_RMAP_OFF(offset);
-> +	irec->rm_flags = 0;
-
-The change looks sensible-ish.  But why do we even have a separate
-xfs_rmap_irec_offset_unpack with a single caller nd out of the
-way in a header?  Wouldn't it make sense to just merge the two
-functions?
+I absolutely agree. A hypothetical benefit of a new implementation
+doesn't outweigh the complexity the existing code has to jump over or
+worse is not aware of and it is broken silently. My general experience
+is that the later is more likely with a large variety of drivers we have
+in the tree and odd things they do in general.
+-- 
+Michal Hocko
+SUSE Labs
