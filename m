@@ -2,348 +2,267 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A6ADC3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:06:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7444DC3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:12:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 62415214DA
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:06:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 349C222CED
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:12:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="VKQ+UtKN"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BP92QdFN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726514AbfH2DGO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 23:06:14 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:46999 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726128AbfH2DGN (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 23:06:13 -0400
-Received: by mail-pf1-f196.google.com with SMTP id q139so1035583pfc.13
-        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2019 20:06:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=jNbybCAejOTYU0omhpmbPo4W5i7s/dvniGE8ASUw9CE=;
-        b=VKQ+UtKNY8nFdlr80zl6cYE/gXf6t47bITracnKv6FAHJl1SHVtc17VrUbD+IgcGRM
-         JijmrcY1aGBXloRvZo3ZiW/qt+dpbOgtDgBRmbdmmJ9CJeVy7eFCxHwvcLUcHTf31/O8
-         PX9D/6Cn4NHcCHoIyzKIsqPe3KlwzANqtfSmqvI+Gjb+gkp7/1OhOigvGDlDeP3lm+26
-         Nwhn7wY9dLtLjZCwte3888qY2b35BcxkVTWuV+S/iKjWyXWivwKk1e8tDnghzzQk0UkZ
-         jmBssjw8ncd6VQ3EnMqO/AfFo7L5PmsTS/R8dHQH1XgNA5sI0ZyVXCr4fP8/kmlcyIjv
-         E8eQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=jNbybCAejOTYU0omhpmbPo4W5i7s/dvniGE8ASUw9CE=;
-        b=YUCVbnvvxokvLmgg6wy12Nc9+xoB5EJ7EZFER9BKx95RLioJ3X3E9DIMSSJgxxifY6
-         W7dmlBVnxCSG65EssUHURdqR3a5k5/EXOKcwrlvddtt9lVpiaUIpcGUGnv4QD8mT7A6e
-         +JUZNF4tDSXv+TXPPvIOn7IXwmsdhEJkTQj35pxOXRRKDolkxHLdc4E7/Z+2PO7F9bja
-         Eo0jQXyCQ9f2swacwCp2zD83b5t+ga2fEMvz0G0JFV3aD3dhYYbtaWpUVH+sTeLDOBi1
-         HYoyZFtZdDDP62nGXpzc51qs/kNakW4546AyMlKrEJdLtHCl+Qfw/F5zDrXxHC3D78us
-         0HrA==
-X-Gm-Message-State: APjAAAW+dnjvonmfld2m77kTyZEjH+RYFXM+edJqnx2CNV/POvsfIeO9
-        gtJOlpmw1j/EkxwQBEgBag==
-X-Google-Smtp-Source: APXvYqzf6i96RqDB+cfsucdWuIYnV/6eZ0yJF8sB2oUjjxvj3jjQdaiGWuL9dRDjmkOSmbIid2MpAQ==
-X-Received: by 2002:a17:90a:fe0c:: with SMTP id ck12mr7709756pjb.74.1567047972496;
-        Wed, 28 Aug 2019 20:06:12 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id u1sm504932pgi.28.2019.08.28.20.06.10
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 28 Aug 2019 20:06:12 -0700 (PDT)
-Subject: Re: [PATCH v2] xfs: Fix ABBA deadlock between AGI and AGF in rename()
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        Dave Chinner <david@fromorbit.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-References: <fe64be10-d7af-81ab-03e9-274c5a86407b@gmail.com>
- <20190827004142.GW1037350@magnolia>
- <44bd28e6-0061-0f25-a512-d9bf6d7a326f@gmail.com>
- <20190827021321.GX1037350@magnolia>
- <15e9295a-58e5-fa92-5db8-d5593ef159c1@gmail.com>
- <20190829023227.GL1037350@magnolia>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <970b2621-2dc7-df82-2941-b004d9fdd082@gmail.com>
-Date:   Thu, 29 Aug 2019 11:06:09 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726384AbfH2DMn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 23:12:43 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44068 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726079AbfH2DMn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 23:12:43 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7T34MnA125004;
+        Thu, 29 Aug 2019 03:12:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=IQaZ36+vxcvWv0TBA6kYGf1So8gSKZviXUcYpVtYvko=;
+ b=BP92QdFNBVg5+FTlgWVw2UxFp6sUjaWDC28/mNHm6+DV76vouDd46UFTuRqXQWuxLH8o
+ Zaptf+CvIhqvxsV3FG9ZlH3svaEbSzyueYZkVlxUUlK6AYSA1+77aFxjuv/CymVrg2az
+ IuLaiIeTti1invRuB5GcLTAGOlS5ncxeVij6v+ptOMs9hEbw43dOJ4GE1D1wx8Cg79iq
+ pZgh0QDSk+9jGpq/MsMOw7QX7PIL6VdJt1t0/5RjntOMvLnRaCEW0S223Pe1do08wlDn
+ RStil+npcHEQycT5thql/Q95BNpvBHmaKGQVw8qhlQghLTH5Tnl7/EE3b8OrEBoA/aPW VA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2up69702k6-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 03:12:24 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7T34LtQ013256;
+        Thu, 29 Aug 2019 03:12:23 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2unteu9kke-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 03:12:23 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7T3CITo028285;
+        Thu, 29 Aug 2019 03:12:18 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 28 Aug 2019 20:12:18 -0700
+Date:   Wed, 28 Aug 2019 20:12:16 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Andreas =?iso-8859-1?Q?Gr=FCnbacher?= 
+        <andreas.gruenbacher@gmail.com>
+Cc:     Amir Goldstein <amir73il@gmail.com>,
+        Dave Chinner <david@fromorbit.com>, jencce.kernel@gmail.com,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        overlayfs <linux-unionfs@vger.kernel.org>,
+        Zorro Lang <zlang@redhat.com>,
+        fstests <fstests@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        cluster-devel <cluster-devel@redhat.com>
+Subject: Re: [PATCH v2 2/2] iomap: partially revert 4721a601099 (simulated
+ directio short read on EFAULT)
+Message-ID: <20190829031216.GW1037422@magnolia>
+References: <20181202180832.GR8125@magnolia>
+ <20181202181045.GS8125@magnolia>
+ <CAHpGcM+WQYFHOOC8SzKq+=DuHVZ4fw4RHLTMUDN-o6GX3YtGvQ@mail.gmail.com>
+ <20190828142332.GT1037422@magnolia>
+ <CAHpGcMLGWVssWAC1PqBJevr1+1rE_hj4QN27D26j7-Fp_Kzpsg@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20190829023227.GL1037350@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHpGcMLGWVssWAC1PqBJevr1+1rE_hj4QN27D26j7-Fp_Kzpsg@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290033
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290033
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2019/8/29 10:32, Darrick J. Wong wrote:
-> On Tue, Aug 27, 2019 at 10:28:22AM +0800, kaixuxia wrote:
->>
->>
->> On 2019/8/27 10:13, Darrick J. Wong wrote:
->>> On Tue, Aug 27, 2019 at 10:07:43AM +0800, kaixuxia wrote:
->>>> On 2019/8/27 8:41, Darrick J. Wong wrote:
->>>>> On Sat, Aug 24, 2019 at 11:45:15AM +0800, kaixuxia wrote:
->>>>>> When performing rename operation with RENAME_WHITEOUT flag, we will
->>>>>> hold AGF lock to allocate or free extents in manipulating the dirents
->>>>>> firstly, and then doing the xfs_iunlink_remove() call last to hold
->>>>>> AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
->>>>>>
->>>>>> The big problem here is that we have an ordering constraint on AGF
->>>>>> and AGI locking - inode allocation locks the AGI, then can allocate
->>>>>> a new extent for new inodes, locking the AGF after the AGI. Hence
->>>>>> the ordering that is imposed by other parts of the code is AGI before
->>>>>> AGF. So we get an ABBA deadlock between the AGI and AGF here.
->>>>>>
->>>>>> Process A:
->>>>>> Call trace:
->>>>>>  ? __schedule+0x2bd/0x620
->>>>>>  schedule+0x33/0x90
->>>>>>  schedule_timeout+0x17d/0x290
->>>>>>  __down_common+0xef/0x125
->>>>>>  ? xfs_buf_find+0x215/0x6c0 [xfs]
->>>>>>  down+0x3b/0x50
->>>>>>  xfs_buf_lock+0x34/0xf0 [xfs]
->>>>>>  xfs_buf_find+0x215/0x6c0 [xfs]
->>>>>>  xfs_buf_get_map+0x37/0x230 [xfs]
->>>>>>  xfs_buf_read_map+0x29/0x190 [xfs]
->>>>>>  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
->>>>>>  xfs_read_agf+0xa6/0x180 [xfs]
->>>>>>  ? schedule_timeout+0x17d/0x290
->>>>>>  xfs_alloc_read_agf+0x52/0x1f0 [xfs]
->>>>>>  xfs_alloc_fix_freelist+0x432/0x590 [xfs]
->>>>>>  ? down+0x3b/0x50
->>>>>>  ? xfs_buf_lock+0x34/0xf0 [xfs]
->>>>>>  ? xfs_buf_find+0x215/0x6c0 [xfs]
->>>>>>  xfs_alloc_vextent+0x301/0x6c0 [xfs]
->>>>>>  xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
->>>>>>  ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
->>>>>>  xfs_dialloc+0x116/0x290 [xfs]
->>>>>>  xfs_ialloc+0x6d/0x5e0 [xfs]
->>>>>>  ? xfs_log_reserve+0x165/0x280 [xfs]
->>>>>>  xfs_dir_ialloc+0x8c/0x240 [xfs]
->>>>>>  xfs_create+0x35a/0x610 [xfs]
->>>>>>  xfs_generic_create+0x1f1/0x2f0 [xfs]
->>>>>>  ...
->>>>>>
->>>>>> Process B:
->>>>>> Call trace:
->>>>>>  ? __schedule+0x2bd/0x620
->>>>>>  ? xfs_bmapi_allocate+0x245/0x380 [xfs]
->>>>>>  schedule+0x33/0x90
->>>>>>  schedule_timeout+0x17d/0x290
->>>>>>  ? xfs_buf_find+0x1fd/0x6c0 [xfs]
->>>>>>  __down_common+0xef/0x125
->>>>>>  ? xfs_buf_get_map+0x37/0x230 [xfs]
->>>>>>  ? xfs_buf_find+0x215/0x6c0 [xfs]
->>>>>>  down+0x3b/0x50
->>>>>>  xfs_buf_lock+0x34/0xf0 [xfs]
->>>>>>  xfs_buf_find+0x215/0x6c0 [xfs]
->>>>>>  xfs_buf_get_map+0x37/0x230 [xfs]
->>>>>>  xfs_buf_read_map+0x29/0x190 [xfs]
->>>>>>  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
->>>>>>  xfs_read_agi+0xa8/0x160 [xfs]
->>>>>>  xfs_iunlink_remove+0x6f/0x2a0 [xfs]
->>>>>>  ? current_time+0x46/0x80
->>>>>>  ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
->>>>>>  xfs_rename+0x57a/0xae0 [xfs]
->>>>>>  xfs_vn_rename+0xe4/0x150 [xfs]
->>>>>>  ...
->>>>>>
->>>>>> In this patch we move the xfs_iunlink_remove() call to
->>>>>> before acquiring the AGF lock to preserve correct AGI/AGF locking
->>>>>> order.
->>>>>>
->>>>>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
->>>>>> Reviewed-by: Brian Foster <bfoster@redhat.com>
->>>>>> ---
->>>>>>  fs/xfs/xfs_inode.c | 83 +++++++++++++++++++++++++++---------------------------
->>>>>>  1 file changed, 42 insertions(+), 41 deletions(-)
->>>>>>
->>>>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->>>>>> index 6467d5e..8ffd44f 100644
->>>>>> --- a/fs/xfs/xfs_inode.c
->>>>>> +++ b/fs/xfs/xfs_inode.c
->>>>>> @@ -3282,7 +3282,8 @@ struct xfs_iunlink {
->>>>>>  					spaceres);
->>>>>>  
->>>>>>  	/*
->>>>>> -	 * Set up the target.
->>>>>> +	 * Check for expected errors before we dirty the transaction
->>>>>> +	 * so we can return an error without a transaction abort.
->>>>>>  	 */
->>>>>>  	if (target_ip == NULL) {
->>>>>>  		/*
->>>>>> @@ -3294,6 +3295,46 @@ struct xfs_iunlink {
->>>>>>  			if (error)
->>>>>>  				goto out_trans_cancel;
->>>>>>  		}
->>>>>> +	} else {
->>>>>> +		/*
->>>>>> +		 * If target exists and it's a directory, check that whether
->>>>>> +		 * it can be destroyed.
->>>>>> +		 */
->>>>>> +		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
->>>>>> +		    (!xfs_dir_isempty(target_ip) ||
->>>>>> +		     (VFS_I(target_ip)->i_nlink > 2))) {
->>>>>> +			error = -EEXIST;
->>>>>> +			goto out_trans_cancel;
->>>>>> +		}
->>>>>> +	}
->>>>>> +
->>>>>> +	/*
->>>>>> +	 * Directory entry creation below may acquire the AGF. Remove
->>>>>> +	 * the whiteout from the unlinked list first to preserve correct
->>>>>> +	 * AGI/AGF locking order. This dirties the transaction so failures
->>>>>> +	 * after this point will abort and log recovery will clean up the
->>>>>> +	 * mess.
->>>>>> +	 *
->>>>>> +	 * For whiteouts, we need to bump the link count on the whiteout
->>>>>> +	 * inode. After this point, we have a real link, clear the tmpfile
->>>>>> +	 * state flag from the inode so it doesn't accidentally get misused
->>>>>> +	 * in future.
->>>>>> +	 */
->>>>>> +	if (wip) {
->>>>>> +		ASSERT(VFS_I(wip)->i_nlink == 0);
->>>>>> +		error = xfs_iunlink_remove(tp, wip);
->>>>>> +		if (error)
->>>>>> +			goto out_trans_cancel;
->>>>>> +
->>>>>> +		xfs_bumplink(tp, wip);
->>>>>> +		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
->>>>>> +		VFS_I(wip)->i_state &= ~I_LINKABLE;
->>>>>> +	}
->>>>>> +
->>>>>> +	/*
->>>>>> +	 * Set up the target.
->>>>>> +	 */
->>>>>> +	if (target_ip == NULL) {
->>>>>>  		/*
->>>>>>  		 * If target does not exist and the rename crosses
->>>>>>  		 * directories, adjust the target directory link count
->>>>>> @@ -3312,22 +3353,6 @@ struct xfs_iunlink {
->>>>>>  		}
->>>>>>  	} else { /* target_ip != NULL */
->>>>>>  		/*
->>>>>> -		 * If target exists and it's a directory, check that both
->>>>>> -		 * target and source are directories and that target can be
->>>>>> -		 * destroyed, or that neither is a directory.
->>>>>> -		 */
->>>>>> -		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
->>>>>> -			/*
->>>>>> -			 * Make sure target dir is empty.
->>>>>> -			 */
->>>>>> -			if (!(xfs_dir_isempty(target_ip)) ||
->>>>>> -			    (VFS_I(target_ip)->i_nlink > 2)) {
->>>>>> -				error = -EEXIST;
->>>>>> -				goto out_trans_cancel;
->>>>>> -			}
->>>>>> -		}
->>>>>> -
->>>>>> -		/*
->>>>>>  		 * Link the source inode under the target name.
->>>>>>  		 * If the source inode is a directory and we are moving
->>>>>>  		 * it across directories, its ".." entry will be
->>>>>
->>>>> ...will be replaced and then we droplink the target_ip.
->>>>>
->>>>> Question: Will we have the same ABBA deadlock potential here if we have
->>>>> to allocate a block from AG 2 to hold the directory entry, but then we
->>>>> drop target_ip onto the unlinked list, and target_ip was also from AG 2?
->>>>> We also have to lock the AGI to put things on the unlinked list.
->>>>>
->>>>> Granted, that's a slightly different use case, but they seem related...
->>>>
->>>> Right, we will have the ABBA deadlock here if we have to allocate the
->>>> block fist and then put the target_ip on the unlinked list. Of course,
->>>> we need to fix it, but these two deadlock problems have different use
->>>> case and different reasons, maybe it's better that we fix them with
->>>> different patches, and then the subject of this patch need to be
->>>> changed...
->>>> I also can send another patch to fix the new deadlock problem.
->>>
->>> Ok.  By the way, do you have a quick reproducer that we can put into
->>> xfstests?
->>
->> Yeah, I have a quick reproducer that mkfs.xfs the disk with agcount=1
->> or agcount=2, and I can send the testcase to xfstests.
->>
->> In a word, I will send two patches to fix the different deadlock
->> problems, and then the corresponding quick reproducers will also
->> be sent later.
+On Wed, Aug 28, 2019 at 04:37:59PM +0200, Andreas Grünbacher wrote:
+> Am Mi., 28. Aug. 2019 um 16:23 Uhr schrieb Darrick J. Wong
+> <darrick.wong@oracle.com>:
+> > On Wed, Aug 21, 2019 at 10:23:49PM +0200, Andreas Grünbacher wrote:
+> > > Hi Darrick,
+> > >
+> > > Am So., 2. Dez. 2018 um 19:13 Uhr schrieb Darrick J. Wong
+> > > <darrick.wong@oracle.com>:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > >
+> > > > In commit 4721a601099, we tried to fix a problem wherein directio reads
+> > > > into a splice pipe will bounce EFAULT/EAGAIN all the way out to
+> > > > userspace by simulating a zero-byte short read.  This happens because
+> > > > some directio read implementations (xfs) will call
+> > > > bio_iov_iter_get_pages to grab pipe buffer pages and issue asynchronous
+> > > > reads, but as soon as we run out of pipe buffers that _get_pages call
+> > > > returns EFAULT, which the splice code translates to EAGAIN and bounces
+> > > > out to userspace.
+> > > >
+> > > > In that commit, the iomap code catches the EFAULT and simulates a
+> > > > zero-byte read, but that causes assertion errors on regular splice reads
+> > > > because xfs doesn't allow short directio reads.  This causes infinite
+> > > > splice() loops and assertion failures on generic/095 on overlayfs
+> > > > because xfs only permit total success or total failure of a directio
+> > > > operation.  The underlying issue in the pipe splice code has now been
+> > > > fixed by changing the pipe splice loop to avoid avoid reading more data
+> > > > than there is space in the pipe.
+> > > >
+> > > > Therefore, it's no longer necessary to simulate the short directio, so
+> > > > remove the hack from iomap.
+> > > >
+> > > > Fixes: 4721a601099 ("iomap: dio data corruption and spurious errors when pipes fill")
+> > > > Reported-by: Amir Goldstein <amir73il@gmail.com>
+> > > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > > v2: split into two patches per hch request
+> > > > ---
+> > > >  fs/iomap.c |    9 ---------
+> > > >  1 file changed, 9 deletions(-)
+> > > >
+> > > > diff --git a/fs/iomap.c b/fs/iomap.c
+> > > > index 3ffb776fbebe..d6bc98ae8d35 100644
+> > > > --- a/fs/iomap.c
+> > > > +++ b/fs/iomap.c
+> > > > @@ -1877,15 +1877,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+> > > >                                 dio->wait_for_completion = true;
+> > > >                                 ret = 0;
+> > > >                         }
+> > > > -
+> > > > -                       /*
+> > > > -                        * Splicing to pipes can fail on a full pipe. We have to
+> > > > -                        * swallow this to make it look like a short IO
+> > > > -                        * otherwise the higher splice layers will completely
+> > > > -                        * mishandle the error and stop moving data.
+> > > > -                        */
+> > > > -                       if (ret == -EFAULT)
+> > > > -                               ret = 0;
+> > > >                         break;
+> > > >                 }
+> > > >                 pos += ret;
+> > >
+> > > I'm afraid this breaks the following test case on xfs and gfs2, the
+> > > two current users of iomap_dio_rw.
+> >
+> > Hmm, I had kinda wondered if regular pipes still needed this help.
+> > Evidently we don't have a lot of splice tests in fstests. :(
 > 
-> Er... did you send the second patch to fix the droplink deadlock?  Or
-> the reproducers?
+> So what do you suggest as a fix?
 
-Yeah, they are on the way.
-By the way, the second patch to fix the droplink deadlock will be 
-a separate patch that not contains this iunlink_remove() deadlock
-patch because they have different use and different reasons, so 
-I'm worry about that this patch will be forget after that, so
-send a ping...
-For the reproducers, the original testcase will cost about ten
-minutes to reproduce the problem, so I am trying to reduce this
-time and send it when done.
+(See below)
 
+> > > Here, the splice system call fails with errno = EAGAIN when trying to
+> > > "move data" from a file opened with O_DIRECT into a pipe.
+> > >
+> > > The test case can be run with option -d to not use O_DIRECT, which
+> > > makes the test succeed.
+> > >
+> > > The -r option switches from reading from the pipe sequentially to
+> > > reading concurrently with the splice, which doesn't change the
+> > > behavior.
+> > >
+> > > Any thoughts?
+> >
+> > This would be great as an xfstest! :)
 > 
-> --D
+> Or perhaps something generalized from it.
 > 
->>> --D
->>>
->>>>
->>>>>
->>>>> --D
->>>>>
->>>>>> @@ -3417,30 +3442,6 @@ struct xfs_iunlink {
->>>>>>  	if (error)
->>>>>>  		goto out_trans_cancel;
->>>>>>  
->>>>>> -	/*
->>>>>> -	 * For whiteouts, we need to bump the link count on the whiteout inode.
->>>>>> -	 * This means that failures all the way up to this point leave the inode
->>>>>> -	 * on the unlinked list and so cleanup is a simple matter of dropping
->>>>>> -	 * the remaining reference to it. If we fail here after bumping the link
->>>>>> -	 * count, we're shutting down the filesystem so we'll never see the
->>>>>> -	 * intermediate state on disk.
->>>>>> -	 */
->>>>>> -	if (wip) {
->>>>>> -		ASSERT(VFS_I(wip)->i_nlink == 0);
->>>>>> -		xfs_bumplink(tp, wip);
->>>>>> -		error = xfs_iunlink_remove(tp, wip);
->>>>>> -		if (error)
->>>>>> -			goto out_trans_cancel;
->>>>>> -		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
->>>>>> -
->>>>>> -		/*
->>>>>> -		 * Now we have a real link, clear the "I'm a tmpfile" state
->>>>>> -		 * flag from the inode so it doesn't accidentally get misused in
->>>>>> -		 * future.
->>>>>> -		 */
->>>>>> -		VFS_I(wip)->i_state &= ~I_LINKABLE;
->>>>>> -	}
->>>>>> -
->>>>>>  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
->>>>>>  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
->>>>>>  	if (new_parent)
->>>>>> -- 
->>>>>> 1.8.3.1
->>>>>>
->>>>>> -- 
->>>>>> kaixuxia
->>>>
->>>> -- 
->>>> kaixuxia
->>
->> -- 
->> kaixuxia
+> > Do you have one ready to go, or should I just make one from the source
+> > code?
+> 
+> The bug originally triggered in our internal cluster test system and
+> I've recreated the test case I've included from the strace. That's all
+> I have for now; feel free to take it, of course.
+> 
+> It could be that the same condition can be triggered with one of the
+> existing utilities (fio/fsstress/...).
 
--- 
-kaixuxia
+Hm, so I made an xfstest out of the program you sent me, and indeed
+reverting that chunk makes the failure go away, but that got me
+wondering -- that iomap kludge was a workaround for the splice code
+telling iomap to try to stuff XXXX bytes into a pipe that only has X
+bytes of free buffer space.  We fixed splice_direct_to_actor to clamp
+the length parameter to the available pipe space, but we never did the
+same to do_splice:
+
+	/* Don't try to read more the pipe has space for. */
+	read_len = min_t(size_t, len,
+			 (pipe->buffers - pipe->nrbufs) << PAGE_SHIFT);
+	ret = do_splice_to(in, &pos, pipe, read_len, flags);
+
+Applying similar logic to the two (opipe != NULL) cases of do_splice()
+seem to make the EAGAIN problem go away too.  So why don't we teach
+do_splice to only ask for as many bytes as the pipe has space here too?
+
+Does the following patch fix it for you?
+
+--D
+
+From: Darrick J. Wong <darrick.wong@oracle.com>
+Subject: [PATCH] splice: only read in as much information as there is pipe buffer space
+
+Andreas Gruenbacher reports that on the two filesystems that support
+iomap directio, it's possible for splice() to return -EAGAIN (instead of
+a short splice) if the pipe being written to has less space available in
+its pipe buffers than the length supplied by the calling process.
+
+Months ago we fixed splice_direct_to_actor to clamp the length of the
+read request to the size of the splice pipe.  Do the same to do_splice.
+
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/splice.c |   12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/fs/splice.c b/fs/splice.c
+index 98412721f056..50335515d7c1 100644
+--- a/fs/splice.c
++++ b/fs/splice.c
+@@ -1101,6 +1101,7 @@ static long do_splice(struct file *in, loff_t __user *off_in,
+ 	struct pipe_inode_info *ipipe;
+ 	struct pipe_inode_info *opipe;
+ 	loff_t offset;
++	unsigned int pipe_pages;
+ 	long ret;
+ 
+ 	ipipe = get_pipe_info(in);
+@@ -1123,6 +1124,10 @@ static long do_splice(struct file *in, loff_t __user *off_in,
+ 		if ((in->f_flags | out->f_flags) & O_NONBLOCK)
+ 			flags |= SPLICE_F_NONBLOCK;
+ 
++		/* Don't try to read more the pipe has space for. */
++		pipe_pages = opipe->buffers - opipe->nrbufs;
++		len = min_t(size_t, len, pipe_pages << PAGE_SHIFT);
++
+ 		return splice_pipe_to_pipe(ipipe, opipe, len, flags);
+ 	}
+ 
+@@ -1180,8 +1185,13 @@ static long do_splice(struct file *in, loff_t __user *off_in,
+ 
+ 		pipe_lock(opipe);
+ 		ret = wait_for_space(opipe, flags);
+-		if (!ret)
++		if (!ret) {
++			/* Don't try to read more the pipe has space for. */
++			pipe_pages = opipe->buffers - opipe->nrbufs;
++			len = min_t(size_t, len, pipe_pages << PAGE_SHIFT);
++
+ 			ret = do_splice_to(in, &offset, opipe, len, flags);
++		}
+ 		pipe_unlock(opipe);
+ 		if (ret > 0)
+ 			wakeup_pipe_readers(opipe);
