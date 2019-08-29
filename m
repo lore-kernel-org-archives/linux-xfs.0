@@ -2,225 +2,303 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19D83C3A5A1
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:16:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 466C8C3A5A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:20:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D779322CED
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:16:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0873A233A1
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 03:20:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="KWADQzDy"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T6GrTf7J"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726245AbfH2DQa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 28 Aug 2019 23:16:30 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:40214 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726081AbfH2DQa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 23:16:30 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7T3Fi8h133659;
-        Thu, 29 Aug 2019 03:16:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=ahyE6UtWVXYU+a6VoTmgR1NkDhfi/IO1/mse5C+HNLw=;
- b=KWADQzDyCg53tmwCCE2hHYtK0Xq57V3OMbZEztgIR8Wcg7nY1sO9XIw5P+g0LAKzStft
- AERPajuWR5XWvoNMtxJMTrq9L681ADUBOaHPPsQCEOmuYxf987XFPQKCbwKGLBWYbazN
- DPfrUj3HFPAO4SCdPgNZkkmC/a08pzrnjNqZVc8HasJDymmcdgy2vc7IDk0bWNwSYrjZ
- uhgq4/4Xw4Y9/CFROCVu4oD69u+5HPes5m7Kky725EFEVNDUh9sWjujpmWy34H9NenzY
- GEUZ00i6oAuubfWlMVncfTpkv6m6v13BrsKSwOCG1cBH+I1qPZOGsLI2PYuSWml2qkgL ZQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2up6n0r04g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 03:16:25 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7T34O1i015083;
-        Thu, 29 Aug 2019 03:16:00 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2unvty7dau-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 29 Aug 2019 03:16:00 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7T3Fxn6030439;
-        Thu, 29 Aug 2019 03:15:59 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 28 Aug 2019 20:15:59 -0700
-Date:   Wed, 28 Aug 2019 20:15:58 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_scrub: check summary counters
-Message-ID: <20190829031558.GM1037350@magnolia>
-References: <156685445746.2839983.1426723444334605572.stgit@magnolia>
- <156685446969.2839983.12626550627146659080.stgit@magnolia>
- <20190827052726.GZ1119@dread.disaster.area>
+        id S1726245AbfH2DUm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 28 Aug 2019 23:20:42 -0400
+Received: from mail-pf1-f195.google.com ([209.85.210.195]:44696 "EHLO
+        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726081AbfH2DUm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 28 Aug 2019 23:20:42 -0400
+Received: by mail-pf1-f195.google.com with SMTP id c81so1062654pfc.11
+        for <linux-xfs@vger.kernel.org>; Wed, 28 Aug 2019 20:20:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=cq4OPpVJVOeIBqltO8AzyqM7LtdVYrzA1X/zJiJ+2wo=;
+        b=T6GrTf7J4OM3oAyVVsjjibNtShF0EvvQbDImA7iAuNdGUbsH3iat9TP/ekORP253zB
+         ZbNzSQuPZqB5ey4+aFho/FjFRC3nqXXFAT7QStevm7oV0wrjwyyhUlRUflcMiC6ShRnk
+         U1+2wLG4QmmTW+pXGZUuT/A49rGNYc93HUMe1Q229Pwfo3cKuj0/hSP/vZEQGbosHzcC
+         35+ueJhi0B2QeTbRFlS8wDUeWIrHAfCf1XE/mVHVlzizt1R4hdCpXf4/xyM/hb92Gcnn
+         6bta9yyIovneRftpB/towidnqSUfY0ynsbYgK9ryHHA4HWW1U8/OsYsHE0ImBFiizqN9
+         szPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=cq4OPpVJVOeIBqltO8AzyqM7LtdVYrzA1X/zJiJ+2wo=;
+        b=q3turHszNEq9T1PD71cZATboFjtf8G47DE35uFD0ELpaUCHcH/tKAld0UNoshDrdIK
+         uxTE4TtsFZw9Ib1EGsk+S361ob7cpEuGP75rh3A2vTtzXITbIek3uFYS4rd/sOuKZwH5
+         /DHe+njFETH/7nT5CFfBsCS+530Qv6287p74blbQt5gnCC6XCy7uqyh6kxApMLzuq0si
+         cy0exfAyZLhpXi/FESiZ2MAuwzXyKyQXqeenWL9kM4iCFgvMI9Jq/Wm546jJZptjE5bS
+         Mrb6Rs29uqPmR89fCitYWRnFVbunZGScJW1vSivcl3pmREen/S0rkNk2w0jlIpHDEUBT
+         CZIg==
+X-Gm-Message-State: APjAAAV72hLMRF5YeqN16sC1geZB8kIf/+kS6165n3gSRn2qDEXvNJ8J
+        gN/esH+gvJGZVR1xlTN1aA==
+X-Google-Smtp-Source: APXvYqzywVltBunxxgHKVjeLjarAAJd+utywU+gjLzjmoZTiN4z03xdwnEyVQFORl4EC85X9n6GJyA==
+X-Received: by 2002:a62:7912:: with SMTP id u18mr9023029pfc.254.1567048841539;
+        Wed, 28 Aug 2019 20:20:41 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id g14sm906784pfb.150.2019.08.28.20.20.38
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 28 Aug 2019 20:20:40 -0700 (PDT)
+Subject: Re: [PATCH v3] xfs: Fix ABBA deadlock between AGI and AGF when
+ performing rename() with RENAME_WHITEOUT flag
+To:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+References: <55d0f202-62a7-0b1c-a386-2395b19b47c5@gmail.com>
+ <51bf333b-7694-68dc-4434-d15cbb24ccfb@gmail.com>
+ <51f1096c-6828-5249-16f8-63996ecfa2f4@sandeen.net>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <ff809542-5b25-d204-47e8-a75bd3e0320b@gmail.com>
+Date:   Thu, 29 Aug 2019 11:20:37 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190827052726.GZ1119@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908290033
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9363 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908290033
+In-Reply-To: <51f1096c-6828-5249-16f8-63996ecfa2f4@sandeen.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Aug 27, 2019 at 03:27:26PM +1000, Dave Chinner wrote:
-> On Mon, Aug 26, 2019 at 02:21:09PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Teach scrub to ask the kernel to check and repair summary counters
-> > during phase 7.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  scrub/phase4.c |   12 ++++++++++++
-> >  scrub/phase7.c |   14 ++++++++++++++
-> >  scrub/repair.c |    3 +++
-> >  scrub/scrub.c  |   13 +++++++++++++
-> >  scrub/scrub.h  |    2 ++
-> >  5 files changed, 44 insertions(+)
-> > 
-> > 
-> > diff --git a/scrub/phase4.c b/scrub/phase4.c
-> > index 49f00723..c4da4852 100644
-> > --- a/scrub/phase4.c
-> > +++ b/scrub/phase4.c
-> > @@ -107,6 +107,18 @@ bool
-> >  xfs_repair_fs(
-> >  	struct scrub_ctx		*ctx)
-> >  {
-> > +	bool				moveon;
-> > +
-> > +	/*
-> > +	 * Check the summary counters early.  Normally we do this during phase
-> > +	 * seven, but some of the cross-referencing requires fairly-accurate
-> > +	 * counters, so counter repairs have to be put on the list now so that
-> > +	 * they get fixed before we stop retrying unfixed metadata repairs.
-> > +	 */
-> > +	moveon = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
-> > +	if (!moveon)
-> > +		return false;
-> 
-> "moveon" doesn't really make sense to me here. i.e. I can't tell if
-> "moveon = true" meant it failed or not, so I hav eno idea what the
-> intent of the code here is, and the comment doesn't explain it at
-> all, either.
 
-FWIW I created Yet Another Cleanup Series that replaces all the moveon
-things with regular old "returns 0 for success, nonzero for error GTFO"
-semantics.  I'll tack that on the end of all the stuff I've sent so far.
 
---D
+On 2019/8/29 11:04, Eric Sandeen wrote:
+> On 8/28/19 8:27 PM, kaixuxia wrote:
+>> ping...
+>> Because there isn't this patch in the latest xfs-for-next branch 
+>> update...
+> 
+> 1) V3 appears to have no changes from V2.  Why was V3 sent?
+> 
+The V3 subject has been changed to distinguish from another droplink 
+deadlock patch that will be sent soon. This V3 patch aim to fix the 
+rename whiteout deadlock.
 
-> > +
-> >  	return xfs_process_action_items(ctx);
-> >  }
-> >  
-> > diff --git a/scrub/phase7.c b/scrub/phase7.c
-> > index 1c459dfc..b3156fdf 100644
-> > --- a/scrub/phase7.c
-> > +++ b/scrub/phase7.c
-> > @@ -7,12 +7,15 @@
-> >  #include <stdint.h>
-> >  #include <stdlib.h>
-> >  #include <sys/statvfs.h>
-> > +#include "list.h"
-> >  #include "path.h"
-> >  #include "ptvar.h"
-> >  #include "xfs_scrub.h"
-> >  #include "common.h"
-> > +#include "scrub.h"
-> >  #include "fscounters.h"
-> >  #include "spacemap.h"
-> > +#include "repair.h"
-> >  
-> >  /* Phase 7: Check summary counters. */
-> >  
-> > @@ -91,6 +94,7 @@ xfs_scan_summary(
-> >  	struct scrub_ctx	*ctx)
-> >  {
-> >  	struct summary_counts	totalcount = {0};
-> > +	struct xfs_action_list	alist;
-> >  	struct ptvar		*ptvar;
-> >  	unsigned long long	used_data;
-> >  	unsigned long long	used_rt;
-> > @@ -110,6 +114,16 @@ xfs_scan_summary(
-> >  	int			ip;
-> >  	int			error;
-> >  
-> > +	/* Check and fix the fs summary counters. */
-> > +	xfs_action_list_init(&alist);
-> > +	moveon = xfs_scrub_fs_summary(ctx, &alist);
-> > +	if (!moveon)
-> > +		return false;
-> > +	moveon = xfs_action_list_process(ctx, ctx->mnt.fd, &alist,
-> > +			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
-> > +	if (!moveon)
-> > +		return moveon;
+> 2) Neither version has a reviewed-by yet, Darrick has questions outstanding
+>    AFAICT, they may need to be answered prior to review and merge.
+
+Maybe it is mainly about the reproducer that will be put into xfstests,
+I am trying to reduce the reproduce time and will send it when done.
+
 > 
-> same here - "moveon" doesn't tell me if we're returning because the
-> scrub failed or passed....
-> 
-> > +
-> >  	/* Flush everything out to disk before we start counting. */
-> >  	error = syncfs(ctx->mnt.fd);
-> >  	if (error) {
-> > diff --git a/scrub/repair.c b/scrub/repair.c
-> > index 45450d8c..54639752 100644
-> > --- a/scrub/repair.c
-> > +++ b/scrub/repair.c
-> > @@ -84,6 +84,9 @@ xfs_action_item_priority(
-> >  	case XFS_SCRUB_TYPE_GQUOTA:
-> >  	case XFS_SCRUB_TYPE_PQUOTA:
-> >  		return PRIO(aitem, XFS_SCRUB_TYPE_UQUOTA);
-> > +	case XFS_SCRUB_TYPE_FSCOUNTERS:
-> > +		/* This should always go after AG headers no matter what. */
-> > +		return PRIO(aitem, INT_MAX);
-> >  	}
-> >  	abort();
-> >  }
-> > diff --git a/scrub/scrub.c b/scrub/scrub.c
-> > index 136ed529..a428b524 100644
-> > --- a/scrub/scrub.c
-> > +++ b/scrub/scrub.c
-> > @@ -28,6 +28,7 @@ enum scrub_type {
-> >  	ST_PERAG,	/* per-AG metadata */
-> >  	ST_FS,		/* per-FS metadata */
-> >  	ST_INODE,	/* per-inode metadata */
-> > +	ST_SUMMARY,	/* summary counters (phase 7) */
-> >  };
-> 
-> Hmmm - the previous patch used ST_FS for the summary counters.
-> 
-> Oh, wait, io/scrub.c has a duplicate scrub_type enum defined, and
-> the table looks largely the same, too. Except now the summary type
-> is different.
-> 
-> /me looks a bit closer...
-> 
-> Oh, the enum scrub_type definitions shadow the kernel enum
-> xchk_type, but have different values for the same names. I'm
-> just confused now...
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> -Eric
+>  
+>>
+>> On 2019/8/27 10:54, kaixuxia wrote:
+>>> When performing rename operation with RENAME_WHITEOUT flag, we will
+>>> hold AGF lock to allocate or free extents in manipulating the dirents
+>>> firstly, and then doing the xfs_iunlink_remove() call last to hold
+>>> AGI lock to modify the tmpfile info, so we the lock order AGI->AGF.
+>>>
+>>> The big problem here is that we have an ordering constraint on AGF
+>>> and AGI locking - inode allocation locks the AGI, then can allocate
+>>> a new extent for new inodes, locking the AGF after the AGI. Hence
+>>> the ordering that is imposed by other parts of the code is AGI before
+>>> AGF. So we get an ABBA deadlock between the AGI and AGF here.
+>>>
+>>> Process A:
+>>> Call trace:
+>>>  ? __schedule+0x2bd/0x620
+>>>  schedule+0x33/0x90
+>>>  schedule_timeout+0x17d/0x290
+>>>  __down_common+0xef/0x125
+>>>  ? xfs_buf_find+0x215/0x6c0 [xfs]
+>>>  down+0x3b/0x50
+>>>  xfs_buf_lock+0x34/0xf0 [xfs]
+>>>  xfs_buf_find+0x215/0x6c0 [xfs]
+>>>  xfs_buf_get_map+0x37/0x230 [xfs]
+>>>  xfs_buf_read_map+0x29/0x190 [xfs]
+>>>  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+>>>  xfs_read_agf+0xa6/0x180 [xfs]
+>>>  ? schedule_timeout+0x17d/0x290
+>>>  xfs_alloc_read_agf+0x52/0x1f0 [xfs]
+>>>  xfs_alloc_fix_freelist+0x432/0x590 [xfs]
+>>>  ? down+0x3b/0x50
+>>>  ? xfs_buf_lock+0x34/0xf0 [xfs]
+>>>  ? xfs_buf_find+0x215/0x6c0 [xfs]
+>>>  xfs_alloc_vextent+0x301/0x6c0 [xfs]
+>>>  xfs_ialloc_ag_alloc+0x182/0x700 [xfs]
+>>>  ? _xfs_trans_bjoin+0x72/0xf0 [xfs]
+>>>  xfs_dialloc+0x116/0x290 [xfs]
+>>>  xfs_ialloc+0x6d/0x5e0 [xfs]
+>>>  ? xfs_log_reserve+0x165/0x280 [xfs]
+>>>  xfs_dir_ialloc+0x8c/0x240 [xfs]
+>>>  xfs_create+0x35a/0x610 [xfs]
+>>>  xfs_generic_create+0x1f1/0x2f0 [xfs]
+>>>  ...
+>>>
+>>> Process B:
+>>> Call trace:
+>>>  ? __schedule+0x2bd/0x620
+>>>  ? xfs_bmapi_allocate+0x245/0x380 [xfs]
+>>>  schedule+0x33/0x90
+>>>  schedule_timeout+0x17d/0x290
+>>>  ? xfs_buf_find+0x1fd/0x6c0 [xfs]
+>>>  __down_common+0xef/0x125
+>>>  ? xfs_buf_get_map+0x37/0x230 [xfs]
+>>>  ? xfs_buf_find+0x215/0x6c0 [xfs]
+>>>  down+0x3b/0x50
+>>>  xfs_buf_lock+0x34/0xf0 [xfs]
+>>>  xfs_buf_find+0x215/0x6c0 [xfs]
+>>>  xfs_buf_get_map+0x37/0x230 [xfs]
+>>>  xfs_buf_read_map+0x29/0x190 [xfs]
+>>>  xfs_trans_read_buf_map+0x13d/0x520 [xfs]
+>>>  xfs_read_agi+0xa8/0x160 [xfs]
+>>>  xfs_iunlink_remove+0x6f/0x2a0 [xfs]
+>>>  ? current_time+0x46/0x80
+>>>  ? xfs_trans_ichgtime+0x39/0xb0 [xfs]
+>>>  xfs_rename+0x57a/0xae0 [xfs]
+>>>  xfs_vn_rename+0xe4/0x150 [xfs]
+>>>  ...
+>>>
+>>> In this patch we move the xfs_iunlink_remove() call to
+>>> before acquiring the AGF lock to preserve correct AGI/AGF locking
+>>> order.
+>>>
+>>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+>>> Reviewed-by: Brian Foster <bfoster@redhat.com>
+>>> ---
+>>>  fs/xfs/xfs_inode.c | 83 +++++++++++++++++++++++++++---------------------------
+>>>  1 file changed, 42 insertions(+), 41 deletions(-)
+>>>
+>>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>>> index 6467d5e..8ffd44f 100644
+>>> --- a/fs/xfs/xfs_inode.c
+>>> +++ b/fs/xfs/xfs_inode.c
+>>> @@ -3282,7 +3282,8 @@ struct xfs_iunlink {
+>>>  					spaceres);
+>>>  
+>>>  	/*
+>>> -	 * Set up the target.
+>>> +	 * Check for expected errors before we dirty the transaction
+>>> +	 * so we can return an error without a transaction abort.
+>>>  	 */
+>>>  	if (target_ip == NULL) {
+>>>  		/*
+>>> @@ -3294,6 +3295,46 @@ struct xfs_iunlink {
+>>>  			if (error)
+>>>  				goto out_trans_cancel;
+>>>  		}
+>>> +	} else {
+>>> +		/*
+>>> +		 * If target exists and it's a directory, check that whether
+>>> +		 * it can be destroyed.
+>>> +		 */
+>>> +		if (S_ISDIR(VFS_I(target_ip)->i_mode) &&
+>>> +		    (!xfs_dir_isempty(target_ip) ||
+>>> +		     (VFS_I(target_ip)->i_nlink > 2))) {
+>>> +			error = -EEXIST;
+>>> +			goto out_trans_cancel;
+>>> +		}
+>>> +	}
+>>> +
+>>> +	/*
+>>> +	 * Directory entry creation below may acquire the AGF. Remove
+>>> +	 * the whiteout from the unlinked list first to preserve correct
+>>> +	 * AGI/AGF locking order. This dirties the transaction so failures
+>>> +	 * after this point will abort and log recovery will clean up the
+>>> +	 * mess.
+>>> +	 *
+>>> +	 * For whiteouts, we need to bump the link count on the whiteout
+>>> +	 * inode. After this point, we have a real link, clear the tmpfile
+>>> +	 * state flag from the inode so it doesn't accidentally get misused
+>>> +	 * in future.
+>>> +	 */
+>>> +	if (wip) {
+>>> +		ASSERT(VFS_I(wip)->i_nlink == 0);
+>>> +		error = xfs_iunlink_remove(tp, wip);
+>>> +		if (error)
+>>> +			goto out_trans_cancel;
+>>> +
+>>> +		xfs_bumplink(tp, wip);
+>>> +		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+>>> +		VFS_I(wip)->i_state &= ~I_LINKABLE;
+>>> +	}
+>>> +
+>>> +	/*
+>>> +	 * Set up the target.
+>>> +	 */
+>>> +	if (target_ip == NULL) {
+>>>  		/*
+>>>  		 * If target does not exist and the rename crosses
+>>>  		 * directories, adjust the target directory link count
+>>> @@ -3312,22 +3353,6 @@ struct xfs_iunlink {
+>>>  		}
+>>>  	} else { /* target_ip != NULL */
+>>>  		/*
+>>> -		 * If target exists and it's a directory, check that both
+>>> -		 * target and source are directories and that target can be
+>>> -		 * destroyed, or that neither is a directory.
+>>> -		 */
+>>> -		if (S_ISDIR(VFS_I(target_ip)->i_mode)) {
+>>> -			/*
+>>> -			 * Make sure target dir is empty.
+>>> -			 */
+>>> -			if (!(xfs_dir_isempty(target_ip)) ||
+>>> -			    (VFS_I(target_ip)->i_nlink > 2)) {
+>>> -				error = -EEXIST;
+>>> -				goto out_trans_cancel;
+>>> -			}
+>>> -		}
+>>> -
+>>> -		/*
+>>>  		 * Link the source inode under the target name.
+>>>  		 * If the source inode is a directory and we are moving
+>>>  		 * it across directories, its ".." entry will be
+>>> @@ -3417,30 +3442,6 @@ struct xfs_iunlink {
+>>>  	if (error)
+>>>  		goto out_trans_cancel;
+>>>  
+>>> -	/*
+>>> -	 * For whiteouts, we need to bump the link count on the whiteout inode.
+>>> -	 * This means that failures all the way up to this point leave the inode
+>>> -	 * on the unlinked list and so cleanup is a simple matter of dropping
+>>> -	 * the remaining reference to it. If we fail here after bumping the link
+>>> -	 * count, we're shutting down the filesystem so we'll never see the
+>>> -	 * intermediate state on disk.
+>>> -	 */
+>>> -	if (wip) {
+>>> -		ASSERT(VFS_I(wip)->i_nlink == 0);
+>>> -		xfs_bumplink(tp, wip);
+>>> -		error = xfs_iunlink_remove(tp, wip);
+>>> -		if (error)
+>>> -			goto out_trans_cancel;
+>>> -		xfs_trans_log_inode(tp, wip, XFS_ILOG_CORE);
+>>> -
+>>> -		/*
+>>> -		 * Now we have a real link, clear the "I'm a tmpfile" state
+>>> -		 * flag from the inode so it doesn't accidentally get misused in
+>>> -		 * future.
+>>> -		 */
+>>> -		VFS_I(wip)->i_state &= ~I_LINKABLE;
+>>> -	}
+>>> -
+>>>  	xfs_trans_ichgtime(tp, src_dp, XFS_ICHGTIME_MOD | XFS_ICHGTIME_CHG);
+>>>  	xfs_trans_log_inode(tp, src_dp, XFS_ILOG_CORE);
+>>>  	if (new_parent)
+>>>
+>>
+
+-- 
+kaixuxia
