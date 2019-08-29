@@ -2,192 +2,516 @@ Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED707C3A59F
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 23:08:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 07533C3A59F
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 23:17:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5BF4208C2
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 23:08:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB48F21670
+	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 23:17:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iKJhTV18"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727924AbfH2XIZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 19:08:25 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55824 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727826AbfH2XIZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 19:08:25 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 71AD143E86D;
-        Fri, 30 Aug 2019 09:08:19 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i3TWb-0001Ro-9P; Fri, 30 Aug 2019 09:08:17 +1000
-Date:   Fri, 30 Aug 2019 09:08:17 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Chandan Rajendra <chandan@linux.ibm.com>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        hch@infradead.org
-Subject: Re: [RFC] xfs: Flush iclog containing XLOG_COMMIT_TRANS before
- waiting for log space
-Message-ID: <20190829230817.GW1119@dread.disaster.area>
-References: <20190821110448.30161-1-chandanrlinux@gmail.com>
- <3457989.EyS6152c1k@localhost.localdomain>
- <20190826003253.GK1119@dread.disaster.area>
- <783535067.D5oYYkGoWf@localhost.localdomain>
+        id S1727907AbfH2XRC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 19:17:02 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:44522 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727673AbfH2XRC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 19:17:02 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TNDpAs063081;
+        Thu, 29 Aug 2019 23:16:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=Fsi1NTnWYKXABsrq350OCzIKrr2Pdqwc15ulcM0xUjA=;
+ b=iKJhTV18SQW77jrwRfzXfGKjs2gMcpG3tsLLZQCBR6AuF6u211tVLeKw+PYK3S++EyWb
+ DfFG+PpZMVfFxODOXGaeDyy2Lh0R3dvVVmNMczE3OnfRSS0v3/vE4RLXdWB92GdvHSRh
+ t0ro5EafHFz4WvcQYWLoWdvjtxJjRMsdssrGjk0W5AZMzSc/n9kAwfslo1405qf1uv1U
+ dTLIbJYpxvA1G1m/02wuXc8khNBVHtq8VndKdiY0BMQNGJx4CENc3CXwMu5TCR089eBD
+ kUBFOfSLLsD4tacqqwPrWyp943g6dJ45Gnm3rlPs9QSr98V6nIWWt5wQqjFPyKzfJ62V Zw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2upqyn82b3-2
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 23:16:59 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7TKxGxV191161;
+        Thu, 29 Aug 2019 21:02:26 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2upc8v4r13-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 29 Aug 2019 21:02:26 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7TL2PW0004607;
+        Thu, 29 Aug 2019 21:02:26 GMT
+Received: from localhost (/10.145.178.11)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Aug 2019 14:02:25 -0700
+Date:   Thu, 29 Aug 2019 14:02:25 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/5] xfs: factor data block addition from
+ xfs_dir2_node_addname_int()
+Message-ID: <20190829210224.GJ5354@magnolia>
+References: <20190829104710.28239-1-david@fromorbit.com>
+ <20190829104710.28239-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <783535067.D5oYYkGoWf@localhost.localdomain>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=7-415B0cAAAA:8 a=NAwevfv__Z65nvar3uUA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190829104710.28239-3-david@fromorbit.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908290211
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908290232
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 10:51:59AM +0530, Chandan Rajendra wrote:
-> On Monday, August 26, 2019 6:02 AM Dave Chinner wrote: 
-> > On Sun, Aug 25, 2019 at 08:35:17PM +0530, Chandan Rajendra wrote:
-> > > On Friday, August 23, 2019 7:08 PM Chandan Rajendra wrote:
-> > > 
-> > > Dave, With the above changes made in xfs_trans_reserve(), mount task is
-> > > deadlocking due to the following,
-> > > 1. With synchronous transactions, __xfs_trans_commit() now causes iclogs to be
-> > > flushed to the disk and hence log items to be ultimately moved to AIL.
-> > > 2. xfsaild task is woken up, which acts in items on AIL.
-> > > 3. After some time, we stop issuing synchronous transactions because AIL has
-> > >    log items in its list and hence !xfs_ail_min(tp->t_mountp->m_ail) evaluates to
-> > >    false. In xfsaild_push(), "XFS_LSN_CMP(lip->li_lsn, target) <= 0"
-> > >    evaluates to false on the first iteration of the while loop. This means we
-> > >    have a log item whose LSN is larger than xfs_ail->ail_target at the
-> > >    beginning of the AIL.
-> > 
-> > The push target for xlog_grant_push_ail() is to free 25% of the log
-> > space. So if all the items in the AIL are not within 25% of the tail
-> > end of the log, there's nothing for the AIL to push. This indicates
-> > that there is at least 25% of physical log space free.
+On Thu, Aug 29, 2019 at 08:47:07PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Sorry for the late response. I was trying to understand the code flow.
+> Factor out the code that adds a data block to a directory from
+> xfs_dir2_node_addname_int(). This makes the code flow cleaner and
+> more obvious and provides clear isolation of upcoming optimsations.
 > 
-> Here is a snippet of perf trace explaining what is going on,
+> Signed-off-By: Dave Chinner <dchinner@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/libxfs/xfs_dir2_node.c | 324 +++++++++++++++++-----------------
+>  1 file changed, 158 insertions(+), 166 deletions(-)
 > 
-> 	 760881:           mount  8654 [002]   216.813041:                         probe:xlog_grant_push_ail: (c000000000765864) comm="xfsaild/loop1" threshold_cycle_s32=3 threshold_block_s32=3970 need_bytes_s32=389328 last_sync_cycle_u32=2 last_sync_block_u32=19330 free_threshold_s32=5120 free_bytes_s32=383756 free_blocks_s32=749 l_logsize=10485760 reserve_cycle_s32=3 reserve_block_s32=9513204(~18580 blocks) tail_cycle_s32=2 tail_block_s32=19330
+> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
+> index e40986cc0759..cc1f1c505a2b 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_node.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
+> @@ -1608,6 +1608,129 @@ xfs_dir2_leafn_unbalance(
+>  	xfs_dir3_leaf_check(dp, drop_blk->bp);
+>  }
+>  
+> +/*
+> + * Add a new data block to the directory at the free space index that the caller
+> + * has specified.
+> + */
+> +static int
+> +xfs_dir2_node_add_datablk(
+> +	struct xfs_da_args	*args,
+> +	struct xfs_da_state_blk	*fblk,
+> +	xfs_dir2_db_t		*dbno,
+> +	struct xfs_buf		**dbpp,
+> +	struct xfs_buf		**fbpp,
+> +	int			*findex)
+> +{
+> +	struct xfs_inode	*dp = args->dp;
+> +	struct xfs_trans	*tp = args->trans;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_dir3_icfree_hdr freehdr;
+> +	struct xfs_dir2_data_free *bf;
+> +	struct xfs_dir2_data_hdr *hdr;
+> +	struct xfs_dir2_free	*free = NULL;
+> +	xfs_dir2_db_t		fbno;
+> +	struct xfs_buf		*fbp;
+> +	struct xfs_buf		*dbp;
+> +	__be16			*bests = NULL;
+> +	int			error;
+> +
+> +	/* Not allowed to allocate, return failure. */
+> +	if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
+> +		return -ENOSPC;
+> +
+> +	/* Allocate and initialize the new data block.  */
+> +	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, dbno);
+> +	if (error)
+> +		return error;
+> +	error = xfs_dir3_data_init(args, *dbno, &dbp);
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * Get the freespace block corresponding to the data block
+> +	 * that was just allocated.
+> +	 */
+> +	fbno = dp->d_ops->db_to_fdb(args->geo, *dbno);
+> +	error = xfs_dir2_free_try_read(tp, dp,
+> +			       xfs_dir2_db_to_da(args->geo, fbno), &fbp);
+> +	if (error)
+> +		return error;
+> +
+> +	/*
+> +	 * If there wasn't a freespace block, the read will
+> +	 * return a NULL fbp.  Allocate and initialize a new one.
+> +	 */
+> +	if (!fbp) {
+> +		error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE, &fbno);
+> +		if (error)
+> +			return error;
+> +
+> +		if (dp->d_ops->db_to_fdb(args->geo, *dbno) != fbno) {
 
-So this looks like last_sync_lsn is 2/19330, and the transaction
-reservation is ~380kB, or close on 3% of the log. The reserve grant
-head is at 3/18580, so we're ~700 * 512 = ~350kB of reservation
-remaining. Yup, so we are definitely in the "go to sleep and wait"
-situation here.
+As a straight "cut this huge function into smaller pieces, no functional
+changes" patch I guess this is fine, but ... when can this happen?
 
-> 	 786576: kworker/4:1H-kb  1825 [004]   217.041079:                       xfs:xfs_log_assign_tail_lsn: dev 7:1 new tail lsn 2/19333, old lsn 2/19330, last sync 3/18501
+AFAICT the only way that would happen is if either the dir geometry
+changes out from under us (??) or if someone messed with *dbno (???)
+right?
 
-200ms later the tail has moved, and last_sync_lsn is now 3/18501.
-i.e. the iclog writes have made it to disk, and the items have been
-moved into the AIL. I don't know where that came from, but I'm
-assuming it's an IO completion based on it being run from a
-kworker context that doesn't have an "xfs-" name prefix(*).
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-As the tail has moved, this should have woken the anything sleeping
-on the log tail in xlog_grant_head_wait() via a call to
-xfs_log_space_wake(). The first waiter should wake, see that there
-still isn't room in the log (only 3 sectors were freed in the log,
-we need at least 60). That woken process should then run
-xlog_grant_push_ail() again and go back to sleep.
+--D
 
-(*) I have a patch that shortens "s/kworker/kw/" so that you can
-actually see the name of the kworker in the 16 byte field we have
-for the task name. We really should just increase current->comm to
-32 bytes.
-
-> 	 786577: kworker/4:1H-kb  1825 [004]   217.041087:                       xfs:xfs_log_assign_tail_lsn: dev 7:1 new tail lsn 2/19333, old lsn 2/19330, last sync 3/18501
-> 	 793653:   xfsaild/loop1  8661 [004]   265.407708:                probe:xfsaild_push_last_pushed_lsn: (c000000000784644) comm="xfsaild/loop1" cycle_lsn_u32=0 block_lsn_u32=0 target_cycle_lsn_u32=2 target_block_lsn_u32=19330
-> 	 793654:   xfsaild/loop1  8661 [004]   265.407717:              probe:xfsaild_push_min_lsn_less_than: (c0000000007846a0) comm="xfsaild/loop1" less_than_s32=0 cycle_lsn_u32=2 block_lsn_u32=19333 lip_x64=0xc000000303fb4a48
-
-Ans some 40s later the xfsaild is woken by something, sees there's
-nothing to do, and goes back to sleep. I don't see the process
-sleeping on the grant head being ever being woken and calling
-xlog_grant_push_ail(), which would see the new last_sync_lsn and
-move the push target....
-
-From this trace, it looks like the problem here is a missing or
-incorrectly processed wakeup when the log tail moves.
-
-Unfortunately, you haven't used the built in trace points for
-debugging log space hangs so I can't tell anything more than this.
-i.e the trace we need contains these build in tracepoints:
-
-# trace-cmd record -e xfs_log\* -e xfs_ail\* sleep 120 &
-# <run workload that hangs within 120s>
-
-<wait for trace-cmd to exit>
-# trace-cmd report | gzip > trace.txt.gz
-
-as that will record all transaction reservations, grant head
-manipulations, changes to the tail lsn, when processes sleep on the
-grant head and are worken, AIL insert/move/delete, etc.
-
-This will generate a -lot- of data. I often generate and analyse
-traces in the order of tens of GBs of events to track down issues
-like this, because the problem is often only seen in a single trace
-event in amongst the millions that are recorded....
-
-And if we need more info, then we add the appropriate tracepoints
-into xlog_grant_push_ail, xfsaild_push, etc under those tracepoint
-namespaces, so next time we have a problem we don't ahve to write
-custom tracepoints.....
-
-> i.e the log size was 2560 * 4096 = 10485760 bytes.
-
-The default minimum size.
-
-> > I suspect that this means the CIL is overruning it's background push
-> > target by more than expected probably because the log is so small. That leads
-> > to the outstanding CIL pending commit size (the current CIL context
-> > and the previous CIL commit that is held off by the uncommited
-> > iclog) is greater than the AIL push target, and so nothing will free
-> > up more log space and wake up the transaction waiting for grant
-> > space.
-> > 
-> > e.g. the previous CIL context commit might take 15% of the log
-> > space, and the current CIL has reserved 11% of the log space.
-> > Now new transactions reservations have run out of grant space and we
-> > push on the ail, but it's lowest item is at 26%, and so the AIL push
-> > does nothing and we're stuck because the CIL has pinned 26% of the
-> > log space.
-> > 
-> > As a test, can you run the test with larger log sizes? I think
-> > the default used was about ~3600 blocks, so it you step that up by
-> > 500 blocks at a time we should get an idea of the size of the
-> > overrun by the size of the log where the hang goes away. A
-> > trace of the transaction reservations and AIL pushing would also be
-> > insightful.
+> +			xfs_alert(mp,
+> +"%s: dir ino %llu needed freesp block %lld for data block %lld, got %lld",
+> +				__func__, (unsigned long long)dp->i_ino,
+> +				(long long)dp->d_ops->db_to_fdb(args->geo, *dbno),
+> +				(long long)*dbno, (long long)fbno);
+> +			if (fblk) {
+> +				xfs_alert(mp,
+> +			" fblk "PTR_FMT" blkno %llu index %d magic 0x%x",
+> +					fblk, (unsigned long long)fblk->blkno,
+> +					fblk->index, fblk->magic);
+> +			} else {
+> +				xfs_alert(mp, " ... fblk is NULL");
+> +			}
+> +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+> +			return -EFSCORRUPTED;
+> +		}
+> +
+> +		/* Get a buffer for the new block. */
+> +		error = xfs_dir3_free_get_buf(args, fbno, &fbp);
+> +		if (error)
+> +			return error;
+> +		free = fbp->b_addr;
+> +		bests = dp->d_ops->free_bests_p(free);
+> +		dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> +
+> +		/* Remember the first slot as our empty slot. */
+> +		freehdr.firstdb = (fbno - xfs_dir2_byte_to_db(args->geo,
+> +							XFS_DIR2_FREE_OFFSET)) *
+> +				dp->d_ops->free_max_bests(args->geo);
+> +	} else {
+> +		free = fbp->b_addr;
+> +		bests = dp->d_ops->free_bests_p(free);
+> +		dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> +	}
+> +
+> +	/* Set the freespace block index from the data block number. */
+> +	*findex = dp->d_ops->db_to_fdindex(args->geo, *dbno);
+> +
+> +	/* Extend the freespace table if the new data block is off the end. */
+> +	if (*findex >= freehdr.nvalid) {
+> +		ASSERT(*findex < dp->d_ops->free_max_bests(args->geo));
+> +		freehdr.nvalid = *findex + 1;
+> +		bests[*findex] = cpu_to_be16(NULLDATAOFF);
+> +	}
+> +
+> +	/*
+> +	 * If this entry was for an empty data block (this should always be
+> +	 * true) then update the header.
+> +	 */
+> +	if (bests[*findex] == cpu_to_be16(NULLDATAOFF)) {
+> +		freehdr.nused++;
+> +		dp->d_ops->free_hdr_to_disk(fbp->b_addr, &freehdr);
+> +		xfs_dir2_free_log_header(args, fbp);
+> +	}
+> +
+> +	/* Update the freespace value for the new block in the table. */
+> +	hdr = dbp->b_addr;
+> +	bf = dp->d_ops->data_bestfree_p(hdr);
+> +	bests[*findex] = bf[0].length;
+> +
+> +	*dbpp = dbp;
+> +	*fbpp = fbp;
+> +	return 0;
+> +}
+> +
+>  /*
+>   * Add the data entry for a node-format directory name addition.
+>   * The leaf entry is added in xfs_dir2_leafn_add.
+> @@ -1632,10 +1755,9 @@ xfs_dir2_node_addname_int(
+>  	xfs_dir2_db_t		ifbno;		/* initial freespace block no */
+>  	xfs_dir2_db_t		lastfbno=0;	/* highest freespace block no */
+>  	int			length;		/* length of the new entry */
+> -	int			logfree;	/* need to log free entry */
+> -	xfs_mount_t		*mp;		/* filesystem mount point */
+> -	int			needlog;	/* need to log data header */
+> -	int			needscan;	/* need to rescan data frees */
+> +	int			logfree = 0;	/* need to log free entry */
+> +	int			needlog = 0;	/* need to log data header */
+> +	int			needscan = 0;	/* need to rescan data frees */
+>  	__be16			*tagp;		/* data entry tag pointer */
+>  	xfs_trans_t		*tp;		/* transaction pointer */
+>  	__be16			*bests;
+> @@ -1644,7 +1766,6 @@ xfs_dir2_node_addname_int(
+>  	xfs_dir2_data_aoff_t	aoff;
+>  
+>  	dp = args->dp;
+> -	mp = dp->i_mount;
+>  	tp = args->trans;
+>  	length = dp->d_ops->data_entsize(args->namelen);
+>  	/*
+> @@ -1673,6 +1794,7 @@ xfs_dir2_node_addname_int(
+>  			ASSERT(be16_to_cpu(bests[findex]) != NULLDATAOFF);
+>  			ASSERT(be16_to_cpu(bests[findex]) >= length);
+>  			dbno = freehdr.firstdb + findex;
+> +			goto found_block;
+>  		} else {
+>  			/*
+>  			 * The data block looked at didn't have enough room.
+> @@ -1774,168 +1896,46 @@ xfs_dir2_node_addname_int(
+>  			}
+>  		}
+>  	}
+> +
+>  	/*
+>  	 * If we don't have a data block, we need to allocate one and make
+>  	 * the freespace entries refer to it.
+>  	 */
+> -	if (unlikely(dbno == -1)) {
+> -		/*
+> -		 * Not allowed to allocate, return failure.
+> -		 */
+> -		if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
+> -			return -ENOSPC;
+> -
+> -		/*
+> -		 * Allocate and initialize the new data block.
+> -		 */
+> -		if (unlikely((error = xfs_dir2_grow_inode(args,
+> -							 XFS_DIR2_DATA_SPACE,
+> -							 &dbno)) ||
+> -		    (error = xfs_dir3_data_init(args, dbno, &dbp))))
+> -			return error;
+> -
+> -		/*
+> -		 * If (somehow) we have a freespace block, get rid of it.
+> -		 */
+> -		if (fbp)
+> -			xfs_trans_brelse(tp, fbp);
+> -		if (fblk && fblk->bp)
+> -			fblk->bp = NULL;
+> -
+> -		/*
+> -		 * Get the freespace block corresponding to the data block
+> -		 * that was just allocated.
+> -		 */
+> -		fbno = dp->d_ops->db_to_fdb(args->geo, dbno);
+> -		error = xfs_dir2_free_try_read(tp, dp,
+> -				       xfs_dir2_db_to_da(args->geo, fbno),
+> -				       &fbp);
+> +	if (dbno == -1) {
+> +		error = xfs_dir2_node_add_datablk(args, fblk, &dbno, &dbp, &fbp,
+> +						  &findex);
+>  		if (error)
+>  			return error;
+>  
+> -		/*
+> -		 * If there wasn't a freespace block, the read will
+> -		 * return a NULL fbp.  Allocate and initialize a new one.
+> -		 */
+> -		if (!fbp) {
+> -			error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE,
+> -						    &fbno);
+> -			if (error)
+> -				return error;
+> -
+> -			if (dp->d_ops->db_to_fdb(args->geo, dbno) != fbno) {
+> -				xfs_alert(mp,
+> -"%s: dir ino %llu needed freesp block %lld for data block %lld, got %lld ifbno %llu lastfbno %d",
+> -					__func__, (unsigned long long)dp->i_ino,
+> -					(long long)dp->d_ops->db_to_fdb(
+> -								args->geo, dbno),
+> -					(long long)dbno, (long long)fbno,
+> -					(unsigned long long)ifbno, lastfbno);
+> -				if (fblk) {
+> -					xfs_alert(mp,
+> -				" fblk "PTR_FMT" blkno %llu index %d magic 0x%x",
+> -						fblk,
+> -						(unsigned long long)fblk->blkno,
+> -						fblk->index,
+> -						fblk->magic);
+> -				} else {
+> -					xfs_alert(mp, " ... fblk is NULL");
+> -				}
+> -				XFS_ERROR_REPORT("xfs_dir2_node_addname_int",
+> -						 XFS_ERRLEVEL_LOW, mp);
+> -				return -EFSCORRUPTED;
+> -			}
+> -
+> -			/*
+> -			 * Get a buffer for the new block.
+> -			 */
+> -			error = xfs_dir3_free_get_buf(args, fbno, &fbp);
+> -			if (error)
+> -				return error;
+> -			free = fbp->b_addr;
+> -			bests = dp->d_ops->free_bests_p(free);
+> -			dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> -
+> -			/*
+> -			 * Remember the first slot as our empty slot.
+> -			 */
+> -			freehdr.firstdb =
+> -				(fbno - xfs_dir2_byte_to_db(args->geo,
+> -							XFS_DIR2_FREE_OFFSET)) *
+> -					dp->d_ops->free_max_bests(args->geo);
+> -		} else {
+> -			free = fbp->b_addr;
+> -			bests = dp->d_ops->free_bests_p(free);
+> -			dp->d_ops->free_hdr_from_disk(&freehdr, free);
+> -		}
+> +		/* setup current free block buffer */
+> +		free = fbp->b_addr;
+>  
+> -		/*
+> -		 * Set the freespace block index from the data block number.
+> -		 */
+> -		findex = dp->d_ops->db_to_fdindex(args->geo, dbno);
+> -		/*
+> -		 * If it's after the end of the current entries in the
+> -		 * freespace block, extend that table.
+> -		 */
+> -		if (findex >= freehdr.nvalid) {
+> -			ASSERT(findex < dp->d_ops->free_max_bests(args->geo));
+> -			freehdr.nvalid = findex + 1;
+> -			/*
+> -			 * Tag new entry so nused will go up.
+> -			 */
+> -			bests[findex] = cpu_to_be16(NULLDATAOFF);
+> -		}
+> -		/*
+> -		 * If this entry was for an empty data block
+> -		 * (this should always be true) then update the header.
+> -		 */
+> -		if (bests[findex] == cpu_to_be16(NULLDATAOFF)) {
+> -			freehdr.nused++;
+> -			dp->d_ops->free_hdr_to_disk(fbp->b_addr, &freehdr);
+> -			xfs_dir2_free_log_header(args, fbp);
+> -		}
+> -		/*
+> -		 * Update the real value in the table.
+> -		 * We haven't allocated the data entry yet so this will
+> -		 * change again.
+> -		 */
+> -		hdr = dbp->b_addr;
+> -		bf = dp->d_ops->data_bestfree_p(hdr);
+> -		bests[findex] = bf[0].length;
+> +		/* we're going to have to log the free block index later */
+>  		logfree = 1;
+> -	}
+> -	/*
+> -	 * We had a data block so we don't have to make a new one.
+> -	 */
+> -	else {
+> -		/*
+> -		 * If just checking, we succeeded.
+> -		 */
+> +	} else {
+> +found_block:
+> +		/* If just checking, we succeeded. */
+>  		if (args->op_flags & XFS_DA_OP_JUSTCHECK)
+>  			return 0;
+>  
+> -		/*
+> -		 * Read the data block in.
+> -		 */
+> +		/* Read the data block in. */
+>  		error = xfs_dir3_data_read(tp, dp,
+>  					   xfs_dir2_db_to_da(args->geo, dbno),
+>  					   -1, &dbp);
+>  		if (error)
+>  			return error;
+> -		hdr = dbp->b_addr;
+> -		bf = dp->d_ops->data_bestfree_p(hdr);
+> -		logfree = 0;
+>  	}
+> +
+> +	/* setup for data block up now */
+> +	hdr = dbp->b_addr;
+> +	bf = dp->d_ops->data_bestfree_p(hdr);
+>  	ASSERT(be16_to_cpu(bf[0].length) >= length);
+> -	/*
+> -	 * Point to the existing unused space.
+> -	 */
+> +
+> +	/* Point to the existing unused space. */
+>  	dup = (xfs_dir2_data_unused_t *)
+>  	      ((char *)hdr + be16_to_cpu(bf[0].offset));
+> -	needscan = needlog = 0;
+> -	/*
+> -	 * Mark the first part of the unused space, inuse for us.
+> -	 */
+> +
+> +	/* Mark the first part of the unused space, inuse for us. */
+>  	aoff = (xfs_dir2_data_aoff_t)((char *)dup - (char *)hdr);
+>  	error = xfs_dir2_data_use_free(args, dbp, dup, aoff, length,
+>  			&needlog, &needscan);
+> @@ -1943,9 +1943,8 @@ xfs_dir2_node_addname_int(
+>  		xfs_trans_brelse(tp, dbp);
+>  		return error;
+>  	}
+> -	/*
+> -	 * Fill in the new entry and log it.
+> -	 */
+> +
+> +	/* Fill in the new entry and log it. */
+>  	dep = (xfs_dir2_data_entry_t *)dup;
+>  	dep->inumber = cpu_to_be64(args->inumber);
+>  	dep->namelen = args->namelen;
+> @@ -1954,32 +1953,25 @@ xfs_dir2_node_addname_int(
+>  	tagp = dp->d_ops->data_entry_tag_p(dep);
+>  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
+>  	xfs_dir2_data_log_entry(args, dbp, dep);
+> -	/*
+> -	 * Rescan the block for bestfree if needed.
+> -	 */
+> +
+> +	/* Rescan the freespace and log the data block if needed. */
+>  	if (needscan)
+>  		xfs_dir2_data_freescan(dp, hdr, &needlog);
+> -	/*
+> -	 * Log the data block header if needed.
+> -	 */
+>  	if (needlog)
+>  		xfs_dir2_data_log_header(args, dbp);
+> -	/*
+> -	 * If the freespace entry is now wrong, update it.
+> -	 */
+> -	bests = dp->d_ops->free_bests_p(free); /* gcc is so stupid */
+> -	if (be16_to_cpu(bests[findex]) != be16_to_cpu(bf[0].length)) {
+> +
+> +	/* If the freespace block entry is now wrong, update it. */
+> +	bests = dp->d_ops->free_bests_p(free);
+> +	if (bests[findex] != bf[0].length) {
+>  		bests[findex] = bf[0].length;
+>  		logfree = 1;
+>  	}
+> -	/*
+> -	 * Log the freespace entry if needed.
+> -	 */
+> +
+> +	/* Log the freespace entry if needed. */
+>  	if (logfree)
+>  		xfs_dir2_free_log_bests(args, fbp, findex, findex);
+> -	/*
+> -	 * Return the data block and offset in args, then drop the data block.
+> -	 */
+> +
+> +	/* Return the data block and offset in args. */
+>  	args->blkno = (xfs_dablk_t)dbno;
+>  	args->index = be16_to_cpu(*tagp);
+>  	return 0;
+> -- 
+> 2.23.0.rc1
 > 
-> After increasing the log size to 4193 blocks (i.e. 4193 * 4k = 17174528
-> bytes) and also the patch applied, I don't see the dead lock happening.
-
-Likely because now the 380k transaction reservation is only 2% of the
-log instead of close to 4% of the log, and so the overrun isn't
-large enough to trigger whatever wakeup issue we have....
-
-> Meanwhile, I am planning to read more code to map the explaination
-> provided below.
-
-Can you get a complete trace (as per above) of a hang? we're going
-to need that trace to validate any analysis you do yourself,
-anyway...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
