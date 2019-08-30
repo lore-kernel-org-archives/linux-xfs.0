@@ -7,187 +7,148 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F5C4C3A59B
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 20:48:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD1B3C3A59B
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 20:52:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E89F02343B
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 20:48:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 998D120820
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 20:52:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jofVSPS9"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PLwYR/7m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbfH3Us6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 16:48:58 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:44396 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728086AbfH3Us6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 16:48:58 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7UKmMGr040259;
-        Fri, 30 Aug 2019 20:48:55 GMT
+        id S1728079AbfH3Uwz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 16:52:55 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48598 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728058AbfH3Uwy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 16:52:54 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7UKo2DQ029740;
+        Fri, 30 Aug 2019 20:52:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=geOxkpglc6xMtafmsQK3DC1UHjWPxf7FQL92nicwMJ8=;
- b=jofVSPS9o+3D+2Pjpr69YHdaeJJtVNvhEKJnVu9XX6ZNp8l2YcKImJJkOvdoSa1Eqjyg
- uc4ewMw/NQgNqMV25VEw3P3EHZ6tOmtT6HAuXq8ZGtz/8LDnufx1+x12Xe5KqnPyBRaJ
- EvN2ysEbm/trBJUNARXOySgFQhXDiL1bNIrKh0UkwhOeKh8FFOXVILYYCZdlmLW+qB8z
- OSm1ohXEudFwCmAo4HWcQDU6lqWXXcmBguessWCfixzsZqu8wPmVUxBuT5YjJwKZkRP6
- GXJARsXKxMcAW09AwDYlPvum3H0DrF7AWQrbbYgF++W9TgGbI+S0cVZP0GomO7i+DmbT YA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2uqb5fr04c-1
+ bh=xKN42u5/K88J6ycooimruTkeMEC8+h8kDQoOWEKO5kQ=;
+ b=PLwYR/7mKFEWV56BUFB1ZTYmaak1vL3svJNIfOgLzddYkB8ejIF50SRS4p2wsx+s4Myd
+ Hn3paFyGFchjTIq7gXahSHm63aXhqujAMhVsniiWtjuhvZBkMTpr2LNewGo4bgkxvqLU
+ HwyRPlasEIIRRYnxYDe5p79HyOgA0W6JbkvIrRi5u10MIYgune10w9etbGGSN9xW/jlJ
+ ohpib98XuvUeYLRU1rkVSLddvVG4gfee4GSLANeuflgqw21S3XUYLZDjV1XvvX15y9yX
+ 8G/FUuCPmf9Pl/pXK3Ad8UqHgmnR2IKyseTbh0M58zAJgcHmBu2AtWf0GJY6A1KrLXAI Ew== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2uqb6a80bc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Aug 2019 20:48:54 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7UKmjF9128553;
-        Fri, 30 Aug 2019 20:48:54 GMT
+        Fri, 30 Aug 2019 20:52:51 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7UKmMXT105888;
+        Fri, 30 Aug 2019 20:52:51 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2upc8xwrsd-1
+        by userp3020.oracle.com with ESMTP id 2upkrgujud-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Aug 2019 20:48:53 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7UKmoTB007596;
-        Fri, 30 Aug 2019 20:48:50 GMT
+        Fri, 30 Aug 2019 20:52:51 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7UKqoAq009739;
+        Fri, 30 Aug 2019 20:52:50 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 30 Aug 2019 13:48:50 -0700
-Date:   Fri, 30 Aug 2019 13:48:49 -0700
+        with ESMTP ; Fri, 30 Aug 2019 13:52:49 -0700
+Date:   Fri, 30 Aug 2019 13:52:48 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 06/12] man: document the new allocation group geometry
- ioctl
-Message-ID: <20190830204849.GH5354@magnolia>
+Subject: Re: [PATCH 11/12] xfs_repair: use precomputed inode geometry values
+Message-ID: <20190830205248.GI5354@magnolia>
 References: <156633307176.1215978.17394956977918540525.stgit@magnolia>
- <156633310832.1215978.10494838202211430225.stgit@magnolia>
- <20190830055347.GH1119@dread.disaster.area>
+ <156633314305.1215978.18190917724979571824.stgit@magnolia>
+ <20190830061734.GM1119@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190830055347.GH1119@dread.disaster.area>
+In-Reply-To: <20190830061734.GM1119@dread.disaster.area>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1906280000 definitions=main-1908300199
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908300198
+ definitions=main-1908300199
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 30, 2019 at 03:53:47PM +1000, Dave Chinner wrote:
-> On Tue, Aug 20, 2019 at 01:31:48PM -0700, Darrick J. Wong wrote:
+On Fri, Aug 30, 2019 at 04:17:34PM +1000, Dave Chinner wrote:
+> On Tue, Aug 20, 2019 at 01:32:23PM -0700, Darrick J. Wong wrote:
 > > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Document the new ioctl to describe an allocation group's geometry.
+> > Use the precomputed inode geometry values instead of open-coding them.
 > > 
 > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
-> >  man/man2/ioctl_xfs_ag_geometry.2 |   74 ++++++++++++++++++++++++++++++++++++++
-> >  man/man3/xfsctl.3                |    6 +++
-> >  2 files changed, 80 insertions(+)
-> >  create mode 100644 man/man2/ioctl_xfs_ag_geometry.2
-> > 
-> > 
-> > diff --git a/man/man2/ioctl_xfs_ag_geometry.2 b/man/man2/ioctl_xfs_ag_geometry.2
-> > new file mode 100644
-> > index 00000000..5dfe0d08
-> > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_ag_geometry.2
-> > @@ -0,0 +1,74 @@
-> > +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> > +.\"
-> > +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> > +.\" SPDX-License-Identifier: GPL-2.0+
-> > +.\" %%%LICENSE_END
-> > +.TH IOCTL-XFS-AG-GEOMETRY 2 2019-04-11 "XFS"
-> > +.SH NAME
-> > +ioctl_xfs_ag_geometry \- query XFS allocation group geometry information
-> > +.SH SYNOPSIS
-> > +.br
-> > +.B #include <xfs/xfs_fs.h>
-> > +.PP
-> > +.BI "int ioctl(int " fd ", XFS_IOC_AG_GEOMETRY, struct xfs_ag_geometry *" arg );
-> > +.SH DESCRIPTION
-> > +This XFS ioctl retrieves the geometry information for a given allocation group.
-> > +The geometry information is conveyed in a structure of the following form:
-> > +.PP
-> > +.in +4n
-> > +.nf
-> > +struct xfs_ag_geometry {
-> > +	uint32_t  ag_number;
-> > +	uint32_t  ag_length;
-> > +	uint32_t  ag_freeblks;
-> > +	uint32_t  ag_icount;
-> > +	uint32_t  ag_ifree;
-> > +	uint32_t  ag_sick;
-> > +	uint32_t  ag_checked;
-> > +	uint32_t  ag_reserved32;
-> > +	uint64_t  ag_reserved[12];
+> >  repair/dino_chunks.c |   22 +++++++++++-----------
+> >  repair/dinode.c      |   13 ++++---------
+> >  repair/globals.c     |    1 -
+> >  repair/globals.h     |    1 -
+> >  repair/prefetch.c    |   21 ++++++++-------------
+> >  repair/xfs_repair.c  |    2 --
+> >  6 files changed, 23 insertions(+), 37 deletions(-)
 > 
-> Where's the flags field for feature versioning? Please don't tell me
-> we merged an ioctl structure without a flags or version field in
-> it...
-
-Yes, we did, though the "reserved fields are always zeroed" enables us
-to retroactively define this to v0 of the structure.
-
-> > +};
-> > +.fi
-> > +.in
-> > +.TP
-> > +.I ag_number
-> > +The number of allocation group that the caller wishes to learn about.
+> two minor nits:
 > 
-> "the index of"....
+> > diff --git a/repair/prefetch.c b/repair/prefetch.c
+> > index 2fecfd68..5a725a51 100644
+> > --- a/repair/prefetch.c
+> > +++ b/repair/prefetch.c
+> > @@ -710,17 +710,12 @@ pf_queuing_worker(
+> >  	int			num_inos;
+> >  	ino_tree_node_t		*irec;
+> >  	ino_tree_node_t		*cur_irec;
+> > -	int			blks_per_cluster;
+> >  	xfs_agblock_t		bno;
+> >  	int			i;
+> >  	int			err;
+> >  	uint64_t		sparse;
+> >  	struct xfs_ino_geometry	*igeo = M_IGEO(mp);
+> >  
+> > -	blks_per_cluster = igeo->inode_cluster_size >> mp->m_sb.sb_blocklog;
+> > -	if (blks_per_cluster == 0)
+> > -		blks_per_cluster = 1;
+> > -
+> >  	for (i = 0; i < PF_THREAD_COUNT; i++) {
+> >  		err = pthread_create(&args->io_threads[i], NULL,
+> >  				pf_io_worker, args);
+> > @@ -786,21 +781,22 @@ pf_queuing_worker(
+> >  			struct xfs_buf_map	map;
+> >  
+> >  			map.bm_bn = XFS_AGB_TO_DADDR(mp, args->agno, bno);
+> > -			map.bm_len = XFS_FSB_TO_BB(mp, blks_per_cluster);
+> > +			map.bm_len = XFS_FSB_TO_BB(mp,
+> > +					M_IGEO(mp)->blocks_per_cluster);
 > 
-> "The number of" is easily confused with a quantity....
+> 	igeo->blocks_per_cluster
 > 
-> Is this an input or an output?
-
-Purely an input.
-
-"The caller must set this field to the index of the allocation group
-that the caller wishes to learn about." ?
-
-> > +.TP
-> > +.I ag_length
-> > +Length of the allocation group, in units of filesystem blocks.
+> >  
+> >  			/*
+> >  			 * Queue I/O for each non-sparse cluster. We can check
+> >  			 * sparse state in cluster sized chunks as cluster size
+> >  			 * is the min. granularity of sparse irec regions.
+> >  			 */
+> > -			if ((sparse & ((1ULL << inodes_per_cluster) - 1)) == 0)
+> > +			if ((sparse & ((1ULL << M_IGEO(mp)->inodes_per_cluster) - 1)) == 0)
 > 
-> The length of the AG is returned in this field, in units....
-> 
-> Same for the rest...
+> 	igeo->inodes_per_cluster and 80 columns....
 
-Ok.
-
-> > +.TP
-> > +.I ag_freeblks
-> > +Number of free blocks in the allocation group, in units of filesystem blocks.
-> > +.TP
-> > +.I ag_icount
-> > +Number of inode records allocated in this allocation group.
-> > +.TP
-> > +.I ag_ifree
-> > +Number of unused inode records (of the space allocated) in this allocation
-> > +group.
-> > +.TP
-> > +.IR ag_reserved " and " ag_reserved32
-> > +Will be set to zero.
-> 
-> It would be better to say "all reserved feilds will be set to zero
-> on return" so that we don't have to change this every time we rev
-> the structure....
-
-Ok.
+Will fix.
 
 --D
 
+> Otherwise,
+> 
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> 
 > Cheers,
 > 
 > Dave.
