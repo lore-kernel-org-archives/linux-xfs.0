@@ -7,64 +7,64 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 83BBCC3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:32:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FEB8C3A5A4
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:33:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4B32D21670
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:32:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 729A021670
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:33:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="CykdbSwd";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="JJ4uLsRi"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="qu1pha4Y";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="HoNdQg5k"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726902AbfH3KcH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 06:32:07 -0400
-Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:52725 "EHLO
+        id S1727170AbfH3Kda (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 06:33:30 -0400
+Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:34843 "EHLO
         wout2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726660AbfH3KcH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 06:32:07 -0400
+        by vger.kernel.org with ESMTP id S1726969AbfH3Kd3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 06:33:29 -0400
 Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 4D7C1512;
-        Fri, 30 Aug 2019 06:32:06 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id 9E379507;
+        Fri, 30 Aug 2019 06:33:28 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Fri, 30 Aug 2019 06:32:06 -0400
+  by compute1.internal (MEProxy); Fri, 30 Aug 2019 06:33:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
         message-id:subject:from:to:cc:date:in-reply-to:references
         :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        +KdMOurHw5PuFiai16e9+2xtDGFMv/MAKoBBjr1SMUc=; b=CykdbSwdSF216uxl
-        V9m6FRAOjkKpn738MuHRmPJw7ZX6hgHQfKuKzG2tRxDzh4AuD5UrYx7MbIu9H4Uz
-        WOwlp3/MvEAWKHBtsngk6ixAkCB3tCDBPVxlnt30QSR4Wpy+MwBYCmT6HCsNcr0q
-        xp4uqo5Tnikq+1meMZcFE6P4H8GxFAFGI42bw+OJWyYMRXwQCmC/+MWyPKtstBmq
-        ypfQEQ2blQ0jaRwoyc6/7H2fZ4zU0IydDlCxO4QHuHUn+jf20Cv8AbCNyk6nvZa2
-        ZYWmftJ0VKT/hAz47sNSMVQlUaGxVC42c/Ek2wUbxc4075TSFSfipiUuczSQ1Vcg
-        vKE9lA==
+        A+vNto/3MG3yIefLLsJIRF3nYGvhEcaYLEDNyOaxtaA=; b=qu1pha4YZBngUWFU
+        Dn0Ttmr3sNc492BEQZXjA6YAtjgamvsNwdi6WhoGzJ2ldDx3oAGd4elGzTviQzVh
+        0KUP4YjKM3TheOGspUxMnKVJhpaqAtCrw/MY63dH/vRSdXNC/PQJcrw4SPHEDuEN
+        /AJFGW3j9JF+lPOYRob8eNSGryVpyxG3T0cYZnKGUTkd7XIR0t0yoYIE2X6WKSYf
+        JH/TlzrpOBTz0FUuB4NNHONEm8f/K4VW9M74ZWcRql66SLI1DQ3cb9FJjQfQSGWm
+        9jeLgXGT4p0tKggBl1tKAIpvt7llpwbUGM3RR2NQJ+9mAInEmfZRCeKtE2w2kB6D
+        d6TnIg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:content-type
         :date:from:in-reply-to:message-id:mime-version:references
         :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=+KdMOurHw5PuFiai16e9+2xtDGFMv/MAKoBBjr1SM
-        Uc=; b=JJ4uLsRiVLn+SvW41t8zOkalf71d87bxcrqGup9qqf/tmjHM0sRKwdlIZ
-        FWUTfteFZ87AFERIL5JdBZJj13RIu6YlrXpQx7M68Oir8XgxAaTbN85tPirB9QIL
-        2jaUjtiE6X77mhaq3PkwvtaOdrLz2BW2K2Rrjw3EibeAZcViDS3vzTRdCe75hlaz
-        V4K2sNWcK98VvEE+ncRJpcPidPJp/5oTZJX8rbSVDro79ud8mtpFf508XPvQnSmW
-        0YO/i/e2pxDr7N9cUsSqH7ORDiqUdttAny3L+AltraQ2DexCmhF74BuSk8hkSF2b
-        VJkn9uFVtY9QgV7LVLoeNOAVCKJRQ==
-X-ME-Sender: <xms:JftoXbn9li-BpkjR-mbcqwIeU_w0l8CiaRV0xsc7nF26G9to3DyAzw>
+        :x-sasl-enc; s=fm3; bh=A+vNto/3MG3yIefLLsJIRF3nYGvhEcaYLEDNyOaxt
+        aA=; b=HoNdQg5kZpCJnUJDRbLw0ZDlbqZ7ez3ZwbczcJ333mGgYgx2USPXDR9Dc
+        CcM0eBTIDbcpUQMIF/dMFfpEhnhQLLRxYx7ZqVs3Y8vfdjfALGlMjMehmUVPdZJh
+        mvE/sXLJlM+yltR4nUfAk2JcxPP2NlTBcmItXidKCsVTipZ3nr0nAHbF/HK1a1yq
+        QWcOfjS3G6Y9g8J1qEHDYhM8iB7tWJiWyg81JCGtJasJF/zBl86P10olJI6In9tN
+        XEFXIiA2JOc3LPpAvbJ7Gxbkfx444N2shEJYg5OvR+pFx2WK+SfPDKhS/grgspvC
+        0ChN7PG7YDdhH+fX+2losdLn2tB2w==
+X-ME-Sender: <xms:d_toXRH6YvOFMnpJqLJXrFgP3nN2__MW7hzIleHc6_qMuII9BtxRRg>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduvddrudeigedgfedtucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
     cujfgurhepkffuhffvffgjfhgtfggggfesthejredttderjeenucfhrhhomhepkfgrnhcu
     mfgvnhhtuceorhgrvhgvnhesthhhvghmrgifrdhnvghtqeenucfkphepuddukedrvddtke
     drudekgedrudefkeenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghm
-    rgifrdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
-X-ME-Proxy: <xmx:JftoXeZ86N0C_Inc8e6vL-sX1a16d0YlonRT55Or3otd6RqyupZ4oA>
-    <xmx:JftoXV9lt9b9fN9yZMrE8SL_tMBmGzNRJj3rtpCa33C8CDzFxTMYYQ>
-    <xmx:JftoXWEDnkdFcDf4KGif3WvWbh9xrdvxaJRNc1NtJDiZoBQZqGgCVg>
-    <xmx:JftoXcZbHzMGHekHQQT26rASCUKMlB_Q9BRdoGgzCyHqmKXaymVQqA>
+    rgifrdhnvghtnecuvehluhhsthgvrhfuihiivgepud
+X-ME-Proxy: <xmx:d_toXTOUmVqpj5ie4Iw4QYQ-Iy7ETLaSlrp_FoKLLA-ENSxeAeJHKA>
+    <xmx:d_toXS6hGnUGHZclnElzmQku0wuGT3GcS1iCq4fsU1f7rYWfMyo6WA>
+    <xmx:d_toXWgkDsW4lQATMfeqvqUCJTi_P46CMZUmc1h01nrYxsnVlnq2bA>
+    <xmx:ePtoXQ1UJq0r9hy-gvEPC4G05cX9AD1RVMPneDWaRErePPLu-XAMQw>
 Received: from mickey.themaw.net (unknown [118.208.184.138])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 2E8F580059;
-        Fri, 30 Aug 2019 06:32:01 -0400 (EDT)
-Message-ID: <382570ef63437dec56927a0d969890f686831310.camel@themaw.net>
-Subject: Re: [PATCH v2 02/15] xfs: mount-api - add fs parameter description
+        by mail.messagingengine.com (Postfix) with ESMTPA id 39C008005B;
+        Fri, 30 Aug 2019 06:33:24 -0400 (EDT)
+Message-ID: <44dbdc61f4fe5ccd4c15c3f835ea078900e56902.camel@themaw.net>
+Subject: Re: [PATCH v2 03/15] xfs: mount-api - refactor suffix_kstrtoint()
 From:   Ian Kent <raven@themaw.net>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
@@ -72,11 +72,11 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         David Howells <dhowells@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Date:   Fri, 30 Aug 2019 18:31:58 +0800
-In-Reply-To: <20190827123945.GA10636@bfoster>
+Date:   Fri, 30 Aug 2019 18:33:22 +0800
+In-Reply-To: <20190827124000.GB10636@bfoster>
 References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
-         <156652196787.2607.5728754014477374931.stgit@fedora-28>
-         <20190827123945.GA10636@bfoster>
+         <156652197305.2607.14039510188924939054.stgit@fedora-28>
+         <20190827124000.GB10636@bfoster>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
@@ -86,171 +86,102 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2019-08-27 at 08:39 -0400, Brian Foster wrote:
-> On Fri, Aug 23, 2019 at 08:59:27AM +0800, Ian Kent wrote:
-> > The new mount-api uses an array of struct fs_parameter_spec for
-> > parameter parsing, create this table populated with the xfs mount
-> > parameters.
+On Tue, 2019-08-27 at 08:40 -0400, Brian Foster wrote:
+> On Fri, Aug 23, 2019 at 08:59:33AM +0800, Ian Kent wrote:
+> > The mount-api doesn't have a "human unit" parse type yet so
+> > the options that have values like "10k" etc. still need to
+> > be converted by the fs.
 > > 
-> > The new mount-api table definition is wider than the token based
-> > parameter table and interleaving the option description comments
-> > between each table line is much less readable than adding them to
-> > the end of each table entry. So add the option description comment
-> > to each entry line even though it causes quite a few of the entries
-> > to be longer than 80 characters.
+> > But the value comes to the fs as a string (not a substring_t
+> > type) so there's a need to change the conversion function to
+> > take a character string instead.
+> > 
+> > After refactoring xfs_parseargs() and changing it to use
+> > xfs_parse_param() match_kstrtoint() will no longer be used
+> > and will be removed.
 > > 
 > > Signed-off-by: Ian Kent <raven@themaw.net>
 > > ---
-> >  fs/xfs/xfs_super.c |   48
-> > +++++++++++++++++++++++++++++++++++++++++++++---
-> >  1 file changed, 45 insertions(+), 3 deletions(-)
+> >  fs/xfs/xfs_super.c |   22 ++++++++++++++++++----
+> >  1 file changed, 18 insertions(+), 4 deletions(-)
 > > 
 > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index f9450235533c..74c88b92ce22 100644
+> > index 74c88b92ce22..49c87fb921f1 100644
 > > --- a/fs/xfs/xfs_super.c
 > > +++ b/fs/xfs/xfs_super.c
-> > @@ -38,6 +38,8 @@
-> >  
-> >  #include <linux/magic.h>
-> >  #include <linux/parser.h>
-> > +#include <linux/fs_context.h>
-> > +#include <linux/fs_parser.h>
-> >  
-> >  static const struct super_operations xfs_super_operations;
-> >  struct bio_set xfs_ioend_bioset;
-> > @@ -47,9 +49,6 @@ static struct kset *xfs_kset;		/* top-
-> > level xfs sysfs dir */
-> >  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs
-> > attrs */
-> >  #endif
-> >  
-> > -/*
-> > - * Table driven mount option parser.
-> > - */
-
-You would rather it be kept?
-
-Strictly speaking it's still a table driven parser so it
-could be kept.
-
-I just thought it was a useles comment since it doesn't add
-value in terms of understanding what's going on, IOW I think
-it's just noise.
-
-> 
-> Not sure why this is comment is removed here if the associated code
-> is
-> staying put in this patch..?
-> 
-> >  enum {
-> >  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
-> >  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth,
-> > Opt_nouuid,
-> > @@ -109,6 +108,49 @@ static const match_table_t tokens = {
-> >  	{Opt_err,	NULL},
+> > @@ -153,13 +153,13 @@ static const struct fs_parameter_description
+> > xfs_fs_parameters = {
 > >  };
 > >  
-> > +static const struct fs_parameter_spec xfs_param_specs[] = {
-> > + fsparam_u32	("logbufs",    Opt_logbufs),   /* number of XFS
-> > log buffers */
-> > + fsparam_string ("logbsize",   Opt_logbsize),  /* size of XFS log
-> > buffers */
-> > + fsparam_string ("logdev",     Opt_logdev),    /* log device */
-> > + fsparam_string ("rtdev",      Opt_rtdev),     /* realtime I/O
-> > device */
-> > + fsparam_u32	("biosize",    Opt_biosize),   /* log2 of
-> > preferred buffered io size */
+> >  STATIC int
+> > -suffix_kstrtoint(const substring_t *s, unsigned int base, int
+> > *res)
+> > +suffix_kstrtoint(const char *s, unsigned int base, int *res)
+> >  {
+> >  	int	last, shift_left_factor = 0, _res;
+> >  	char	*value;
+> >  	int	ret = 0;
+> >  
+> > -	value = match_strdup(s);
+> > +	value = kstrdup(s, GFP_KERNEL);
+> >  	if (!value)
+> >  		return -ENOMEM;
+> >  
+> > @@ -184,6 +184,20 @@ suffix_kstrtoint(const substring_t *s,
+> > unsigned int base, int *res)
+> >  	return ret;
+> >  }
+> >  
+> > +STATIC int
+> > +match_kstrtoint(const substring_t *s, unsigned int base, int *res)
+> > +{
+> > +	const char	*value;
+> > +	int ret;
+> > +
+> > +	value = match_strdup(s);
+> > +	if (!value)
+> > +		return -ENOMEM;
+> > +	ret = suffix_kstrtoint(value, base, res);
+> > +	kfree(value);
+> > +	return ret;
+> > +}
+> > +
 > 
-> Hmm.. it looks like the difference between numerical values as
-> strings
-> vs. numeric types is whether we support things like unit suffixes
-> (i.e.
-> "64k"). That said, Opt_biosize uses suffix_kstrtoint() similar to
-> Opt_logbsize yet is defined here as a u32 (and Opt_allocsize falls
-> into
-> the same parsing code but is a string). Is that wrong or am I just
-> missing something wrt to the type specifiers here?
+> I guess the use case isn't clear to me yet and it's not critical if
+> this
+> code is going away by the end of the series, but why not refactor
+> into a
+> __suffix_kstrtoint(char *s, ...) variant that accepts an already
+> duplicated string so we don't have to duplicate each string twice in
+> the
+> match_kstrtoint() case?
 
-Dave Chinner (and IIRC Darrick) made roughly comments about the
-need for human unit values in the parser.
-
-I know David has some patches to implement this but I hadn't
-seen anything posted, he's probably over loaded with higher
-priority work atm. so this is probably follow up patch fodder.
+Yeah, sounds good, I'll have a go at that for v3.
 
 > 
 > Brian
 > 
-> > + fsparam_flag	("wsync",      Opt_wsync),     /* safe-mode nfs
-> > compatible mount */
-> > + fsparam_flag	("noalign",    Opt_noalign),   /* turn off
-> > stripe alignment */
-> > + fsparam_flag	("swalloc",    Opt_swalloc),   /* turn on
-> > stripe width allocation */
-> > + fsparam_u32	("sunit",      Opt_sunit),     /* data volume
-> > stripe unit */
-> > + fsparam_u32	("swidth",     Opt_swidth),    /* data volume
-> > stripe width */
-> > + fsparam_flag	("nouuid",     Opt_nouuid),    /* ignore
-> > filesystem UUID */
-> > + fsparam_flag_no("grpid",      Opt_grpid),     /* group-ID from
-> > parent directory (or not) */
-> > + fsparam_flag	("bsdgroups",  Opt_bsdgroups), /* group-ID from
-> > parent directory */
-> > + fsparam_flag	("sysvgroups", Opt_sysvgroups),/* group-ID from
-> > current process */
-> > + fsparam_string ("allocsize",  Opt_allocsize), /* preferred
-> > allocation size */
-> > + fsparam_flag	("norecovery", Opt_norecovery),/* don't run XFS
-> > recovery */
-> > + fsparam_flag	("inode64",    Opt_inode64),   /* inodes can be
-> > allocated anywhere */
-> > + fsparam_flag	("inode32",    Opt_inode32),   /* inode
-> > allocation limited to XFS_MAXINUMBER_32 */
-> > + fsparam_flag_no("ikeep",      Opt_ikeep),     /* do not free (or
-> > keep) empty inode clusters */
-> > + fsparam_flag_no("largeio",    Opt_largeio),   /* report (or do
-> > not report) large I/O sizes in stat() */
-> > + fsparam_flag_no("attr2",      Opt_attr2),     /* do (or do not)
-> > use attr2 attribute format */
-> > + fsparam_flag	("filestreams",Opt_filestreams), /* use
-> > filestreams allocator */
-> > + fsparam_flag_no("quota",      Opt_quota),     /* disk quotas
-> > (user) */
-> > + fsparam_flag	("usrquota",   Opt_usrquota),  /* user quota
-> > enabled */
-> > + fsparam_flag	("grpquota",   Opt_grpquota),  /* group quota
-> > enabled */
-> > + fsparam_flag	("prjquota",   Opt_prjquota),  /* project quota
-> > enabled */
-> > + fsparam_flag	("uquota",     Opt_uquota),    /* user quota
-> > (IRIX variant) */
-> > + fsparam_flag	("gquota",     Opt_gquota),    /* group quota
-> > (IRIX variant) */
-> > + fsparam_flag	("pquota",     Opt_pquota),    /* project quota
-> > (IRIX variant) */
-> > + fsparam_flag	("uqnoenforce",Opt_uqnoenforce), /* user quota
-> > limit enforcement */
-> > + fsparam_flag	("gqnoenforce",Opt_gqnoenforce), /* group quota
-> > limit enforcement */
-> > + fsparam_flag	("pqnoenforce",Opt_pqnoenforce), /* project
-> > quota limit enforcement */
-> > + fsparam_flag	("qnoenforce", Opt_qnoenforce),  /* same as
-> > uqnoenforce */
-> > + fsparam_flag_no("discard",    Opt_discard),   /* Do (or do not)
-> > not discard unused blocks */
-> > + fsparam_flag	("dax",	       Opt_dax),       /* Enable
-> > direct access to bdev pages */
-> > + {}
-> > +};
-> > +
-> > +static const struct fs_parameter_description xfs_fs_parameters = {
-> > +	.name		= "XFS",
-> > +	.specs		= xfs_param_specs,
-> > +};
-> >  
-> >  STATIC int
-> >  suffix_kstrtoint(const substring_t *s, unsigned int base, int
-> > *res)
+> >  /*
+> >   * This function fills in xfs_mount_t fields based on mount args.
+> >   * Note: the superblock has _not_ yet been read in.
+> > @@ -255,7 +269,7 @@ xfs_parseargs(
+> >  				return -EINVAL;
+> >  			break;
+> >  		case Opt_logbsize:
+> > -			if (suffix_kstrtoint(args, 10, &mp-
+> > >m_logbsize))
+> > +			if (match_kstrtoint(args, 10, &mp->m_logbsize))
+> >  				return -EINVAL;
+> >  			break;
+> >  		case Opt_logdev:
+> > @@ -272,7 +286,7 @@ xfs_parseargs(
+> >  			break;
+> >  		case Opt_allocsize:
+> >  		case Opt_biosize:
+> > -			if (suffix_kstrtoint(args, 10, &iosize))
+> > +			if (match_kstrtoint(args, 10, &iosize))
+> >  				return -EINVAL;
+> >  			iosizelog = ffs(iosize) - 1;
+> >  			break;
 > > 
 
