@@ -7,63 +7,63 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73A88C3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C257FC3A5A4
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:20:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 49F1622CE3
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:19:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9466122CE3
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:20:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="Sw1xDkp5";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="PVh7Chyw"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="Zg5KWpQg";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="XNBInWhj"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727386AbfH3LTW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 07:19:22 -0400
-Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:37291 "EHLO
+        id S1727410AbfH3LU2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 07:20:28 -0400
+Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:51855 "EHLO
         wout2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727323AbfH3LTW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 07:19:22 -0400
+        by vger.kernel.org with ESMTP id S1727323AbfH3LU2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 07:20:28 -0400
 Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 2B3E050E;
-        Fri, 30 Aug 2019 07:19:21 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id 8BED251E;
+        Fri, 30 Aug 2019 07:20:26 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Fri, 30 Aug 2019 07:19:21 -0400
+  by compute1.internal (MEProxy); Fri, 30 Aug 2019 07:20:26 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
         message-id:subject:from:to:cc:date:in-reply-to:references
         :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        uqzR8kK3fURsCdRcNzGewWuzGwq52r/MFa2o8mc8jI8=; b=Sw1xDkp5dkJgme7n
-        /5v04y56focbciW1tNOhUyh6JZSfq+gOVIRe+0StP3ViH+4bEcLGtH+xzHHuKc8Z
-        Cz4MVkWN59GNjGvlY6Xmal1A2qBxjn02pxiKV4mJYXSqId5xvZf5qaUyVlzySIRF
-        I3Z/raUbaTyd/Iu6Iym5Lv93JU4ZPIY4htXEJKhiglKn+rrvF9z4J/vNUzPaS+O8
-        lXF9lgebJ7TXl60KmjLE3S0754Je5GjJS96CcNYDzsSccj7DyVM/MhGsvTfV18Vh
-        CmoFW/39oXWbeo2UT/m6MMqHiOq8B3OdJoD4+raIyNatdsLWW7H68nYa39/cR6z0
-        csX+eg==
+        m71ZnLgcV2sKd4B74MUstS7ZMkp+/n5YCvmlnzIlbPA=; b=Zg5KWpQgp2lwwmFp
+        6i1wlj5SsMRDSD9bRQX3mS+OjxWTIzTEAEXX5wcp/dfE1inYKCidvbxAob6CiDbw
+        WskUM38tDPVoBbvh9lkhcjM840TCp5niSdPvj1Yze8YLFKctBUedkBwE6sry0kPk
+        yT1ymgrcewvItyxYUcHZE/kRopB9QfvWBhl3aK2YYXJAKaBsIvTycBUpAaJx0s+P
+        YHQ029KB+Zwza92Ybjroep1N0u5uI/12QiiSTMa3Jqq85Xm4h9j+jiVu6O6FxxvR
+        PIrG0RXtQ62KIcguOQJxUuXsVVbCgTBDHAIclLM17TNaUP0TAaDGribhY0rcV/HL
+        AzGrvQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:content-type
         :date:from:in-reply-to:message-id:mime-version:references
         :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=uqzR8kK3fURsCdRcNzGewWuzGwq52r/MFa2o8mc8j
-        I8=; b=PVh7ChywKIFFa34ya59oDzppam/43abXKTOidGAyD6kIxONs1c8y5OsOK
-        2uSlGxLD6FB1eAvs42AruowHBUNiI9rhBucU13KolHn2wCIgsmrJ82faaaRX9vZB
-        5jm38nTA0lR9PFd7+4Dq+hryI+NVSQmiTyC430SsNvY6fHy/IQWZC+89Fo1ynpkq
-        IG5x5bIDGxxswVsYmrS5sels+EaRg8TxGGL4GA1IqjkEYGEmCz87WcmXQauDVAlA
-        NOcfS1iGmwQwUrCq2Bpi6gOD2JmrULOiBtsfMsQTF0t2bgJjQBGpMHJbOtHCJQKE
-        4A4qppSSrbBimdBSA7BhOI3m4RDrQ==
-X-ME-Sender: <xms:OAZpXR_1Emo-t8KSfVa-4ScJ9YyxI7uUkN3ykmvSHKLATsEefUQ2xg>
+        :x-sasl-enc; s=fm3; bh=m71ZnLgcV2sKd4B74MUstS7ZMkp+/n5YCvmlnzIlb
+        PA=; b=XNBInWhj31XQUdapcksZt8XDYD6P0KOlrM1/4pq0QLJAKaRiHXf/ZMjuV
+        WcdNwJHCiB0YEI8hVj9HvBCc8tc2n6/MWM3UsEPzn7s+94dGXCH2KROgJVSlKmUe
+        fz/yJTMFRRDXPiPWutc2E+mBkISZ81cy31epewnhoQcswZ4d0I9Mo3bnDLLRyUxu
+        FKVcFB8QQ2ZGeVxfx3Xmiu+Voe7k/8lcF0QA290hnhTloAYyOPGcpF+k/pYxzm1D
+        BRsCQBD4MlpTXCs1MK9d8dRoy3TyQogq7N+x331YwKpaVNIlKTm5/27PxhGkqPIT
+        FFVvnf0As+GaMQR8Wud/yoVWg8wFg==
+X-ME-Sender: <xms:egZpXZLt9jmjAG0XG4KMxI1s7Qm7DW-7Urb-CIIXqUBjtVY8rM05rw>
 X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduvddrudeigedgfeelucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
     cujfgurhepkffuhffvffgjfhgtfggggfesthejredttderjeenucfhrhhomhepkfgrnhcu
     mfgvnhhtuceorhgrvhgvnhesthhhvghmrgifrdhnvghtqeenucfkphepuddukedrvddtke
     drudekgedrudefkeenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghm
-    rgifrdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
-X-ME-Proxy: <xmx:OAZpXQmgRTnSIuFizu0j2JiGpgEGtQt_ZmipzvH1SCV-SNw1Xg8ZEQ>
-    <xmx:OAZpXf8ZwbRHSC_Zn_km5LI1XguvI7fdxmG0r6IBKkmoirWZYEYbTQ>
-    <xmx:OAZpXceJfYcyIpTX4KHpl7y_ObLtkJ0reBXaUufmWr5LTOOKFA3QUw>
-    <xmx:OAZpXfkDDGbMoMFiHpu7FAXgGX6mslGO-YJkzYuj713syD6rhj0o4g>
+    rgifrdhnvghtnecuvehluhhsthgvrhfuihiivgepud
+X-ME-Proxy: <xmx:egZpXXCr8FCGxUg6-qCzJk0hx8WTkxnAvgeT_YPolHeIsKsUbRzPFg>
+    <xmx:egZpXW3QHc2Qo6zOABEla06gQib8S5gseih73KpUTwdP3qBSoVhyqw>
+    <xmx:egZpXakVQRNwPK_b_hazBIDjKvKPeZdLF4OhULPvTNHnDb8ORrq3uA>
+    <xmx:egZpXRqGdku0eVa9pUVQjeebR_sDRBa1ESIaGqnJ6XzAtqUf5nS4bA>
 Received: from mickey.themaw.net (unknown [118.208.184.138])
-        by mail.messagingengine.com (Postfix) with ESMTPA id B5C7380062;
-        Fri, 30 Aug 2019 07:19:17 -0400 (EDT)
-Message-ID: <c6c4c6d0334407ca671b2b0337e027ef31d11b8e.camel@themaw.net>
+        by mail.messagingengine.com (Postfix) with ESMTPA id 77D0080059;
+        Fri, 30 Aug 2019 07:20:23 -0400 (EDT)
+Message-ID: <460f56fe87c595aa2d9c7c305ae2ea3438ba3b34.camel@themaw.net>
 Subject: Re: [PATCH v2 12/15] xfs: mount-api - add xfs_fc_free()
 From:   Ian Kent <raven@themaw.net>
 To:     Brian Foster <bfoster@redhat.com>
@@ -72,7 +72,7 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         David Howells <dhowells@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Date:   Fri, 30 Aug 2019 19:19:13 +0800
+Date:   Fri, 30 Aug 2019 19:20:20 +0800
 In-Reply-To: <20190828132822.GE16389@bfoster>
 References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
          <156652202212.2607.8621137631843273531.stgit@fedora-28>
@@ -125,25 +125,6 @@ On Wed, 2019-08-28 at 09:28 -0400, Brian Foster wrote:
 > can
 > the VFS pass ownership of the xfs_mount if it's an XFS private data
 > structure?
-
-*sigh*, Darrick was similarly confused about my original
-comment so it seems it's still not good enough.
-
-The mount context holds values for various things as the
-VFS allocates/constructs them and when they get assigned
-to an object owned by the file system they are NULLed in
-the moun t context structure.
-
-I'm calling that process "ownership" in the above comment
-and, perhaps mistenly, extending that to the xfs_mount
-object which might never actually make it to the "file
-system" in term of that ownership, such as when an error
-occurs in the VFS during the mount procedure before the
-mount context is realeased.
-
-I can try and re-word the comment again, clearly it's
-still not good enough ...
-
 > 
 > > +		kfree(mp->m_logname);
 > > +		kfree(mp->m_rtname);
@@ -154,6 +135,12 @@ still not good enough ...
 > Also, should we at least reassign associated fc pointers to NULL if
 > we
 > have multiple places to free things like ctx or mp?
+
+Not sure about that, I think the next thing to happen
+here is the mount context is freed by the VFS.
+
+I'll check.
+
 > 
 > Brian
 > 
