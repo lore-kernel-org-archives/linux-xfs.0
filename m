@@ -2,146 +2,76 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B4BDC3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:24:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 448EBC3A59B
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:30:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69E1C23407
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:24:53 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0B52B22CE9
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:30:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="hUeE1zRJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727751AbfH3PYw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 11:24:52 -0400
-Received: from mx2.suse.de ([195.135.220.15]:40034 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727135AbfH3PYw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Aug 2019 11:24:52 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 17DFEAD49;
-        Fri, 30 Aug 2019 15:24:50 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 82B441E43A8; Fri, 30 Aug 2019 17:24:49 +0200 (CEST)
-Date:   Fri, 30 Aug 2019 17:24:49 +0200
-From:   Jan Kara <jack@suse.cz>
+        id S1727791AbfH3PaJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 11:30:09 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:55956 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727751AbfH3PaJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 11:30:09 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=ZH30THQl3g0mpihwpN8qwSCogyaOh6ecy9cPAcRRZgs=; b=hUeE1zRJidoWmF0NQ0J/0jwdR
+        qykFyKOdycSQ1UmRvYXX8fFSrZc9VkqRu9Wbg2cEKMN0QtMMbQwAKjg+KllbTrCCSPk8qKMuWwa/r
+        eHGUAV1nKapkPkFk3/Vz6Mo5wOyvOS7yq2JCJc/hOPu5k4EYvc1Y8QrUktgXaZgpSXaD9/7d/YUWM
+        Vcy2VyjZumyHoHnkAhTTqxclG2EotKlAxp28WVVdBS9C3igyRuACowLIpyE8KoLA+Cc6GjmE+zGhS
+        KQB4yZcSa8u9Cc2FLhT7RuwQigHrvjTlbi85zRgcMPy0OUtIjxHtYMlC5qp87iDPybyYiGNEGtriz
+        5HYqWXHew==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i3iqm-00070y-Ur; Fri, 30 Aug 2019 15:30:08 +0000
+Date:   Fri, 30 Aug 2019 08:30:08 -0700
+From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, Amir Goldstein <amir73il@gmail.com>,
-        Boaz Harrosh <boaz@plexistor.com>,
-        linux-fsdevel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: Fix stale data exposure when readahead races
- with hole punch
-Message-ID: <20190830152449.GA25069@quack2.suse.cz>
-References: <20190829131034.10563-1-jack@suse.cz>
- <20190829131034.10563-4-jack@suse.cz>
- <20190829155204.GD5354@magnolia>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH] xfs: fix sign handling problem in xfs_bmbt_diff_two_keys
+Message-ID: <20190830153008.GA13924@infradead.org>
+References: <20190826183803.GQ1037350@magnolia>
+ <20190829072318.GA18102@infradead.org>
+ <20190829154158.GB5354@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190829155204.GD5354@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190829154158.GB5354@magnolia>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu 29-08-19 08:52:04, Darrick J. Wong wrote:
-> On Thu, Aug 29, 2019 at 03:10:34PM +0200, Jan Kara wrote:
-> > Hole puching currently evicts pages from page cache and then goes on to
-> > remove blocks from the inode. This happens under both XFS_IOLOCK_EXCL
-> > and XFS_MMAPLOCK_EXCL which provides appropriate serialization with
-> > racing reads or page faults. However there is currently nothing that
-> > prevents readahead triggered by fadvise() or madvise() from racing with
-> > the hole punch and instantiating page cache page after hole punching has
-> > evicted page cache in xfs_flush_unmap_range() but before it has removed
-> > blocks from the inode. This page cache page will be mapping soon to be
-> > freed block and that can lead to returning stale data to userspace or
-> > even filesystem corruption.
-> > 
-> > Fix the problem by protecting handling of readahead requests by
-> > XFS_IOLOCK_SHARED similarly as we protect reads.
-> > 
-> > CC: stable@vger.kernel.org
-> > Link: https://lore.kernel.org/linux-fsdevel/CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com/
-> > Reported-by: Amir Goldstein <amir73il@gmail.com>
-> > Signed-off-by: Jan Kara <jack@suse.cz>
+On Thu, Aug 29, 2019 at 08:41:58AM -0700, Darrick J. Wong wrote:
+> A signed s64 comparison would just break the diff_two_keys function
+> again.  The reason for the big dorky comment is to point out that the
+> signed comparison doesn't work for xfs_btree_query_all, because it does:
+
+Even more reason to have a good helper encapsulating and documenting
+all the caveats :)
+
+> I wouldn't mind you cooking up a patch (I think I'm going to be busy
+> for a few hours digging through all of Dave's patches) but the helper
+> needs to be cmp_u64.  Though ... I also think the logic in the patched
+> bmbt diff_two_keys is easy enough to follow along.
 > 
-> Is there a test on xfstests to demonstrate this race?
+> (Personally I find the subtraction logic harder to follow, though it
+> generates less asm code on x64...)
 
-No, but I can try to create one.
+The subtraction is a little weird, but very efficient if it works.
+I'm not sure any of our users is worth the micro-optimization, though.
 
-> Will test it out though...
-> 
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Thanks. BTW, will you pick up these patches please?
-
-								Honza
-
-> 
-> --D
-> 
-> > ---
-> >  fs/xfs/xfs_file.c | 26 ++++++++++++++++++++++++++
-> >  1 file changed, 26 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> > index 28101bbc0b78..d952d5962e93 100644
-> > --- a/fs/xfs/xfs_file.c
-> > +++ b/fs/xfs/xfs_file.c
-> > @@ -28,6 +28,7 @@
-> >  #include <linux/falloc.h>
-> >  #include <linux/backing-dev.h>
-> >  #include <linux/mman.h>
-> > +#include <linux/fadvise.h>
-> >  
-> >  static const struct vm_operations_struct xfs_file_vm_ops;
-> >  
-> > @@ -933,6 +934,30 @@ xfs_file_fallocate(
-> >  	return error;
-> >  }
-> >  
-> > +STATIC int
-> > +xfs_file_fadvise(
-> > +	struct file	*file,
-> > +	loff_t		start,
-> > +	loff_t		end,
-> > +	int		advice)
-> > +{
-> > +	struct xfs_inode *ip = XFS_I(file_inode(file));
-> > +	int ret;
-> > +	int lockflags = 0;
-> > +
-> > +	/*
-> > +	 * Operations creating pages in page cache need protection from hole
-> > +	 * punching and similar ops
-> > +	 */
-> > +	if (advice == POSIX_FADV_WILLNEED) {
-> > +		lockflags = XFS_IOLOCK_SHARED;
-> > +		xfs_ilock(ip, lockflags);
-> > +	}
-> > +	ret = generic_fadvise(file, start, end, advice);
-> > +	if (lockflags)
-> > +		xfs_iunlock(ip, lockflags);
-> > +	return ret;
-> > +}
-> >  
-> >  STATIC loff_t
-> >  xfs_file_remap_range(
-> > @@ -1232,6 +1257,7 @@ const struct file_operations xfs_file_operations = {
-> >  	.fsync		= xfs_file_fsync,
-> >  	.get_unmapped_area = thp_get_unmapped_area,
-> >  	.fallocate	= xfs_file_fallocate,
-> > +	.fadvise	= xfs_file_fadvise,
-> >  	.remap_file_range = xfs_file_remap_range,
-> >  };
-> >  
-> > -- 
-> > 2.16.4
-> > 
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I'll cook up a series over the weekend.
