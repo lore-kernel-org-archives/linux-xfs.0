@@ -2,98 +2,65 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD2AC3A5A3
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:37:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D433C3A5A3
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:37:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6BD5C21897
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:37:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 164C621721
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:37:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OoqvZ/vU"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gjfe8Gqa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725902AbfH3FhN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 01:37:13 -0400
-Received: from mail-pg1-f196.google.com ([209.85.215.196]:39345 "EHLO
-        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725901AbfH3FhM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 01:37:12 -0400
-Received: by mail-pg1-f196.google.com with SMTP id u17so2935699pgi.6;
-        Thu, 29 Aug 2019 22:37:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=w7YEtGvCAOlZwrqQsoF3/LXuqZDGNstU9nE89n8+OrQ=;
-        b=OoqvZ/vUxFI6labySN8wIMZm111YgA8EMKBCc/9d+kIVWKKSin8fyuSZnHLsWgLCew
-         ucpeOlhTMWY/3XccH57aPaaRSUs/diAwe3Uq5tnKvbXz2YWI2XLJwYvjHYugLOL7dcJ5
-         z2S2kVX3VITtcrRpOpGi7VBGg9/ni0MaTzvjHq+s4BVlghaZ42k7q2+v37oDlSj4vbgn
-         ELIwuPI2Dy1pDMHiFEAUPGdDyX/KmZnFi5sAW3sW7ndbb1BTdrN9BEvy4VG/8Enz7sQt
-         IqrOIk/goJQAIVCLOZ3JvQPylCAWWLjCOp2sOFDSS2+2yKrNw8WynGCl7eXDBZ+KDT18
-         LeeQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=w7YEtGvCAOlZwrqQsoF3/LXuqZDGNstU9nE89n8+OrQ=;
-        b=VGFdsB8gFfBgrJwy7o1Hyj0R61tKsgN39mXGBwru/oG/VQMJvhVP+XRFl89P1LoHI+
-         4btrbvq9+4WlH1Rb3QaLk601RWrY3AUn9/lnEzliz5sEQ+FJaqll/LsL0IWVqHONXLkn
-         KwVrHn/tXe+XXuMBRnMlXNhffUO8AnimVKu19dmr9IlJZ80WG0AC1sCYxGxpl/e6XkOn
-         d0Ix419XvfeKEsIqG4IDBaogKkK4UM7d6IZByCFuN+9+Wwbe0+ObvJMeDdR46GxW4iCL
-         MkL+GTZGMAv+RFLgQLqi+TCOI5QUyhkJF0LTnMwjXTVF6YqqTim3CIjr3AUaUV5HCBmv
-         NXcg==
-X-Gm-Message-State: APjAAAVRVTP7urfnZui2N33YdkwMgc8kaE8mR4csu+GdZI4eDe8GyrmR
-        6z2FdRqC4hzDsgZDKM+KTiZhalk90X8=
-X-Google-Smtp-Source: APXvYqyvlY5W7ohXFLAalwW3xB8x2eN8NPb55vlospRd7LBCyNqXx91dMIigqQ9sWAOQd24JrosIeA==
-X-Received: by 2002:a62:8344:: with SMTP id h65mr16090697pfe.85.1567143431949;
-        Thu, 29 Aug 2019 22:37:11 -0700 (PDT)
-Received: from LGEARND20B15 ([27.122.242.75])
-        by smtp.gmail.com with ESMTPSA id e129sm11854174pfa.92.2019.08.29.22.37.10
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 29 Aug 2019 22:37:11 -0700 (PDT)
-Date:   Fri, 30 Aug 2019 14:37:07 +0900
-From:   Austin Kim <austindh.kim@gmail.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        austindh.kim@gmail.com
-Subject: [PATCH] xfs: Initialize label array properly
-Message-ID: <20190830053707.GA69101@LGEARND20B15>
+        id S1727216AbfH3FhV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 01:37:21 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50848 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbfH3FhV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 01:37:21 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=6A5D5n4as+RLhjD7IzB/hCU5xfcTxaIxONW3roni/AM=; b=Gjfe8GqaEkVPz04gWrDJ17jK3
+        BpT3gPt7e1zml7cMPX+mdmSfmBBF0Nt8s3bGaXpywhokh5e+9pj+WEfr87hUayOMKEalf+cNgBioj
+        yFRAdMxs6CMQQk/q9ufLMhfvM+ZB0kSMsALRJMcvYgMxfyizMMCofbGeqzby8Cb/xXOstEy1m2X0m
+        O3ACm7cp2hPKA8w0syL1zyftDgVYWJE/bPSq/tOxJhbV7Cr8w8d+lvcOgGVFv926J7ft0IXEC5bQq
+        kUl4f6xYSJ8vIWAA0AiVI3ypC/RhI3aZ9Wy0XH/O4K4Ytsvu6tAXUT8leIIRE5KgWTOMYt8sKDV4m
+        JDVn8TPeQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i3Zb6-0007Oq-Fr; Fri, 30 Aug 2019 05:37:20 +0000
+Date:   Thu, 29 Aug 2019 22:37:20 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Denis Efremov <efremov@linux.com>
+Cc:     linux-kernel@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Joe Perches <joe@perches.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 07/11] xfs: remove unlikely() from WARN_ON() condition
+Message-ID: <20190830053720.GI6077@infradead.org>
+References: <20190829165025.15750-1-efremov@linux.com>
+ <20190829165025.15750-7-efremov@linux.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20190829165025.15750-7-efremov@linux.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-In case kernel stack variable is not initialized properly,
-there is a risk of kernel information disclosure.
+On Thu, Aug 29, 2019 at 07:50:21PM +0300, Denis Efremov wrote:
+> "unlikely(WARN_ON(x))" is excessive. WARN_ON() already uses unlikely()
+> internally.
 
-So, initialize 'char label[]' array with null characters.
+Looks good,
 
-Signed-off-by: Austin Kim <austindh.kim@gmail.com>
----
- fs/xfs/xfs_ioctl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9ea5166..09b3bee 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -2037,7 +2037,7 @@ xfs_ioc_setlabel(
- 	char			__user *newlabel)
- {
- 	struct xfs_sb		*sbp = &mp->m_sb;
--	char			label[XFSLABEL_MAX + 1];
-+	char			label[XFSLABEL_MAX + 1] = {0};
- 	size_t			len;
- 	int			error;
- 
--- 
-2.6.2
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
