@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1585C3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:22:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E9DDC3A5A4
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:23:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ADC1523428
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:22:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FE6C21721
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 10:23:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="r+EWr8It"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Bp6dda9V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727417AbfH3KWb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 06:22:31 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:60204 "EHLO
+        id S1728042AbfH3KXS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 06:23:18 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:34634 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727170AbfH3KWa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 06:22:30 -0400
+        with ESMTP id S1727976AbfH3KXS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 06:23:18 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=zHgky+w/fhZ6xZZ95EZJ6DeN26pTgMkWDHq025jCYjQ=; b=r+EWr8ItVK/kg/AeDRDmG9Y1i
-        XuCGnB6a1ffvDT/7JaIbsQcVl/d7x2J8c2aqjsSq//A7CHBNlu49JVwDR2yZcb9vUbBbiXkt9rEnp
-        sigD0RKHclEuSdZ/VhhFZXYlWJ6VZZsdIGN4m1MBQerMLK5bHX+yYdj80IwJ1ywsOuNbvK+0mZiwd
-        YJAyP0kd/Vh3gPtzLc43QPuKqjXzf2zpbo4GIY8nU4E6OYjJFWjINCRJ1V8FFp8s5Pyn5CPl6ufrw
-        siaLmtr+OMTDnIT1jTjmNNNkLiEL1tQAnIR7epXvrYUlarDsLgpPUiGk19BCN/4E7BP0Dn3MymQSd
-        o20DsU0Bg==;
+         bh=w6a1pesTyPSJ1F0b0xfS2IRTp25MeefqEssqvqkRLpE=; b=Bp6dda9V3bIJaeKGTJmXEwShJ
+        z07FrqJjXljQD8JgtImEJ4yzQPh/p5TLJBh3dvRwJuVLYkspEu4d7tdmKCn/XFOjsyg5I5ZuZL4lV
+        VFB75p8YRi61NqewkW7/gl1ZZiEt6eM0tII9rHGsidxAOo2BbQrFg9k4mdqoiGsOq/+ueUwVedfp9
+        vMQkQiEqDQGOClEPmpEWkSlI9PSpqtdpaQJ3jaEqKw3jcY2IXDAliGRwFWhwdfRveK8rzfa0ymzMF
+        KxloJmHTocu/93DyROm1NSSFo3FKRObMPM+kvq297oFWKMXxuhUxsptCdcc/WKKS5SL2BW1O14pt9
+        2sLTg3bfA==;
 Received: from [2001:4bb8:180:3f4c:863:2ead:e9d4:da9f] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1i3e33-0003Ih-Uh; Fri, 30 Aug 2019 10:22:30 +0000
+        id 1i3e3p-0003mv-US
+        for linux-xfs@vger.kernel.org; Fri, 30 Aug 2019 10:23:18 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     Murphy Zhou <jencce.kernel@gmail.com>
-Subject: [PATCH] xfsprogs: provide a few compatibility typedefs
-Date:   Fri, 30 Aug 2019 12:22:27 +0200
-Message-Id: <20190830102227.20932-1-hch@lst.de>
+Subject: [PATCH] xfs: fix the dax supported check in xfs_ioctl_setattr_dax_invalidate
+Date:   Fri, 30 Aug 2019 12:23:15 +0200
+Message-Id: <20190830102315.27325-1-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -51,33 +51,29 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add back four typedefs that allow xfsdump to compile against the
-headers from the latests xfsprogs.
+Setting the DAX flag on the directory of a file system that is not on a
+DAX capable device makes as little sense as setting it on a regular file
+on the same file system.
 
-Reported-by: Murphy Zhou <jencce.kernel@gmail.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- include/xfs.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
+ fs/xfs/xfs_ioctl.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/xfs.h b/include/xfs.h
-index f2f675df..9ae067dc 100644
---- a/include/xfs.h
-+++ b/include/xfs.h
-@@ -37,4 +37,13 @@ extern int xfs_assert_largefile[sizeof(off_t)-8];
- #include <xfs/xfs_types.h>
- #include <xfs/xfs_fs.h>
- 
-+/*
-+ * Backards compatibility for users of this header, now that the kernel
-+ * removed these typedefs from xfs_fs.h.
-+ */
-+typedef struct xfs_bstat xfs_bstat_t;
-+typedef struct xfs_fsop_bulkreq xfs_fsop_bulkreq_t;
-+typedef struct xfs_fsop_geom_v1 xfs_fsop
-+typedef struct xfs_inogrp xfs_inogrp_t;
-+
- #endif	/* __XFS_H__ */
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 9ea51664932e..d1d0929aa462 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1309,8 +1309,7 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+ 		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+ 			return -EINVAL;
+-		if (S_ISREG(inode->i_mode) &&
+-		    !bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
++		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
+ 				sb->s_blocksize))
+ 			return -EINVAL;
+ 	}
 -- 
 2.20.1
 
