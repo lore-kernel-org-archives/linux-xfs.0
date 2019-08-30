@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B6B52C3A5A3
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 04:21:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2873BC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 04:22:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 749D021897
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 04:21:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D3D692186A
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 04:22:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qvzGyYtl"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MsLhj9n7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726090AbfH3EVl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 00:21:41 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:38784 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725819AbfH3EVk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 00:21:40 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7U4IjH2103433;
-        Fri, 30 Aug 2019 04:21:24 GMT
+        id S1725901AbfH3EWq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 00:22:46 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:37668 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725852AbfH3EWq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 00:22:46 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7U4IiTj116136;
+        Fri, 30 Aug 2019 04:22:43 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=JVaPi0UJPZuq3eVN4A6GtxbTMBsp47Zckf7EVXaKEvU=;
- b=qvzGyYtlBKmyhPdP+oroNoDXXEROpcllAn0iSaeC13tABtYXPnE7fwgaZjC1vSONdXGD
- NjJQBkFfxzQdoDyKC2ULKUXHonFZXewpemfqPPj+jMwIU5sBPSHCKcJoTnmq1HYZ3Id5
- 4TTRTFnz8GSWS6tcNndlSwSUGyMGu91WmK/hFMI/9+4SX0iIDcEjKmjhAMSpXoOBiDYF
- q+OFb90tReM1TJsxnakPN5ZAKPm1A9/EMyLWN/CXUlDd8x7+AWDPrR4CcMmUHe3cGDxS
- IF6RD//jHzGx3e7PiX92SeXhNsGPHZ8CtZB4reCIQrzBx1u4QSLlow6OaP5mEQpIrNgX jA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2upvj7g1df-1
+ bh=uxNSNK9VQv+EZVQndja7GQbcc2hixpES/MBNFtK281g=;
+ b=MsLhj9n7eruZB4k/WnAn+keYYJTlTtrY0iptu0+tcOCtvASKrxIjIW3Vjv4f0nrO+pmb
+ jfsaejwsgWA9FxsbbQ3HTlMyaVrlmuX8H4qoJlSabNxrnCQKzYT49ISj2wBewfWQWMdg
+ gfwdOAldV7Bevzox9Uk+YGj6NaoWhaEPn8AWiU35pD/f1BTx4EZLlQppBDyXvZAuu+ZI
+ u4qbvuZtGtqOqkuwqmwXDryOtcDd2I5N8KuMlFvafkqoY6F6weDc31vlz7kQySBnN7/T
+ 1cTsSGhf/aESuldctsv7TvWXX/If5fnHV1PNCL9eveX1a6OX2Du2OkK9YKjIa0Ubod/8 4A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2upvjjr1e1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Aug 2019 04:21:24 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7U4IZVe132444;
-        Fri, 30 Aug 2019 04:21:24 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2unvu0y94t-1
+        Fri, 30 Aug 2019 04:22:43 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7U4Ie2I072808;
+        Fri, 30 Aug 2019 04:20:43 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2upkrfs571-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 30 Aug 2019 04:21:24 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7U4LNFW009600;
-        Fri, 30 Aug 2019 04:21:23 GMT
+        Fri, 30 Aug 2019 04:20:43 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7U4KgHE026310;
+        Fri, 30 Aug 2019 04:20:42 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 29 Aug 2019 21:21:23 -0700
-Subject: [PATCH 9/9] libfrog: refactor open-coded INUMBERS calls
+        with ESMTP ; Thu, 29 Aug 2019 21:20:42 -0700
+Subject: [PATCH 3/9] libfrog: refactor online geometry queries
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Date:   Thu, 29 Aug 2019 21:21:22 -0700
-Message-ID: <156713888219.386621.15662668758929652470.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 29 Aug 2019 21:20:41 -0700
+Message-ID: <156713884111.386621.9787907535188945064.stgit@magnolia>
 In-Reply-To: <156713882070.386621.8501281965010809034.stgit@magnolia>
 References: <156713882070.386621.8501281965010809034.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,280 +80,602 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor all the INUMBERS ioctl callsites into helper functions.
+Refactor all the open-coded XFS_IOC_FSGEOMETRY queries into a single
+helper that we can use to standardize behaviors across mixed xfslibs
+versions.  This is the prelude to introducing a new FSGEOMETRY version
+in 5.2 and needing to fix the (relatively few) client programs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- include/xfrog.h    |    4 ++++
- io/imap.c          |   33 ++++++++++++++++-----------------
- io/open.c          |   24 ++++++++++++------------
- libfrog/bulkstat.c |   26 ++++++++++++++++++++++++++
- scrub/fscounters.c |   20 ++++++++------------
- scrub/inodes.c     |   17 ++++++-----------
- 6 files changed, 72 insertions(+), 52 deletions(-)
+ Makefile            |    1 +
+ fsr/xfs_fsr.c       |   28 ++++++----------------------
+ growfs/xfs_growfs.c |   29 ++++++++++++-----------------
+ include/xfrog.h     |   22 ++++++++++++++++++++++
+ io/bmap.c           |    7 ++++---
+ io/fsmap.c          |    5 +++--
+ io/open.c           |   15 +++++++++++----
+ io/stat.c           |    8 ++++++--
+ libfrog/fsgeom.c    |   26 ++++++++++++++++++++++++++
+ quota/free.c        |   10 ++++++----
+ repair/xfs_repair.c |    8 +++++---
+ rtcp/Makefile       |    3 +++
+ rtcp/xfs_rtcp.c     |    9 +++++----
+ scrub/common.h      |    2 ++
+ scrub/phase1.c      |    5 +++--
+ spaceman/file.c     |   12 ++++++++----
+ spaceman/info.c     |   24 +++++++-----------------
+ 17 files changed, 130 insertions(+), 84 deletions(-)
+ create mode 100644 include/xfrog.h
 
 
-diff --git a/include/xfrog.h b/include/xfrog.h
-index 3a49acc3..d16481ce 100644
---- a/include/xfrog.h
-+++ b/include/xfrog.h
-@@ -116,4 +116,8 @@ int xfrog_bulkstat_single(struct xfs_fd *xfd, uint64_t ino,
- int xfrog_bulkstat(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
- 		struct xfs_bstat *ubuffer, uint32_t *ocount);
+diff --git a/Makefile b/Makefile
+index 9204bed8..0edc2700 100644
+--- a/Makefile
++++ b/Makefile
+@@ -107,6 +107,7 @@ copy: libxlog
+ mkfs: libxcmd
+ spaceman: libxcmd
+ scrub: libhandle libxcmd
++rtcp: libfrog
  
-+struct xfs_inogrp;
-+int xfrog_inumbers(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
-+		struct xfs_inogrp *ubuffer, uint32_t *ocount);
+ ifeq ($(HAVE_BUILDDEFS), yes)
+ include $(BUILDRULES)
+diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+index 1963a05e..4b239a30 100644
+--- a/fsr/xfs_fsr.c
++++ b/fsr/xfs_fsr.c
+@@ -11,6 +11,7 @@
+ #include "xfs_bmap_btree.h"
+ #include "xfs_attr_sf.h"
+ #include "path.h"
++#include "xfrog.h"
+ 
+ #include <fcntl.h>
+ #include <errno.h>
+@@ -83,9 +84,8 @@ int cmp(const void *, const void *);
+ static void tmp_init(char *mnt);
+ static char * tmp_next(char *mnt);
+ static void tmp_close(char *mnt);
+-int xfs_getgeom(int , struct xfs_fsop_geom_v1 * );
+ 
+-static struct xfs_fsop_geom_v1 fsgeom;	/* geometry of active mounted system */
++static struct xfs_fsop_geom fsgeom;	/* geometry of active mounted system */
+ 
+ #define NMOUNT 64
+ static int numfs;
+@@ -102,12 +102,6 @@ static int	nfrags = 0;	/* Debug option: Coerse into specific number
+ 				 * of extents */
+ static int	openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
+ 
+-static int
+-xfs_fsgeometry(int fd, struct xfs_fsop_geom_v1 *geom)
+-{
+-    return ioctl(fd, XFS_IOC_FSGEOMETRY_V1, geom);
+-}
+-
+ static int
+ xfs_bulkstat_single(int fd, xfs_ino_t *lastip, struct xfs_bstat *ubuffer)
+ {
+@@ -630,7 +624,8 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+ 		return -1;
+ 	}
+ 
+-	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
++	ret = xfrog_geometry(fsfd, &fsgeom);
++	if (ret) {
+ 		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
+ 			  mntdir);
+ 		close(fsfd);
+@@ -772,7 +767,8 @@ fsrfile(char *fname, xfs_ino_t ino)
+ 	}
+ 
+ 	/* Get the fs geometry */
+-	if (xfs_getgeom(fsfd, &fsgeom) < 0 ) {
++	error = xfrog_geometry(fsfd, &fsgeom);
++	if (error) {
+ 		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
+ 		goto out;
+ 	}
+@@ -1612,18 +1608,6 @@ getnextents(int fd)
+ 	return(nextents);
+ }
+ 
+-/*
+- * Get the fs geometry
+- */
+-int
+-xfs_getgeom(int fd, struct xfs_fsop_geom_v1 *fsgeom)
+-{
+-	if (xfs_fsgeometry(fd, fsgeom) < 0) {
+-		return -1;
+-	}
+-	return 0;
+-}
+-
+ /*
+  * Get xfs realtime space information
+  */
+diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
+index 20089d2b..5c881375 100644
+--- a/growfs/xfs_growfs.c
++++ b/growfs/xfs_growfs.c
+@@ -7,6 +7,7 @@
+ #include "libxfs.h"
+ #include "path.h"
+ #include "fsgeom.h"
++#include "xfrog.h"
+ 
+ static void
+ usage(void)
+@@ -63,6 +64,7 @@ main(int argc, char **argv)
+ 	fs_path_t		*fs;	/* mount point information */
+ 	libxfs_init_t		xi;	/* libxfs structure */
+ 	char			rpath[PATH_MAX];
++	int			ret;
+ 
+ 	progname = basename(argv[0]);
+ 	setlocale(LC_ALL, "");
+@@ -165,22 +167,14 @@ main(int argc, char **argv)
+ 	}
+ 
+ 	/* get the current filesystem size & geometry */
+-	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY, &geo) < 0) {
+-		/*
+-		 * OK, new xfsctl barfed - back off and try earlier version
+-		 * as we're probably running an older kernel version.
+-		 * Only field added in the v2 geometry xfsctl is "logsunit"
+-		 * so we'll zero that out for later display (as zero).
+-		 */
+-		geo.logsunit = 0;
+-		if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &geo) < 0) {
+-			fprintf(stderr, _(
+-				"%s: cannot determine geometry of filesystem"
+-				" mounted at %s: %s\n"),
+-				progname, fname, strerror(errno));
+-			exit(1);
+-		}
++	ret = xfrog_geometry(ffd, &geo);
++	if (ret) {
++		fprintf(stderr,
++	_("%s: cannot determine geometry of filesystem mounted at %s: %s\n"),
++			progname, fname, strerror(ret));
++		exit(1);
+ 	}
 +
- #endif	/* __XFROG_H__ */
-diff --git a/io/imap.c b/io/imap.c
-index 9667289a..053ac28e 100644
---- a/io/imap.c
-+++ b/io/imap.c
-@@ -8,18 +8,20 @@
+ 	isint = geo.logstart > 0;
+ 
+ 	/*
+@@ -359,9 +353,10 @@ main(int argc, char **argv)
+ 		}
+ 	}
+ 
+-	if (xfsctl(fname, ffd, XFS_IOC_FSGEOMETRY_V1, &ngeo) < 0) {
++	ret = xfrog_geometry(ffd, &ngeo);
++	if (ret) {
+ 		fprintf(stderr, _("%s: XFS_IOC_FSGEOMETRY xfsctl failed: %s\n"),
+-			progname, strerror(errno));
++			progname, strerror(ret));
+ 		exit(1);
+ 	}
+ 	if (geo.datablocks != ngeo.datablocks)
+diff --git a/include/xfrog.h b/include/xfrog.h
+new file mode 100644
+index 00000000..f3541193
+--- /dev/null
++++ b/include/xfrog.h
+@@ -0,0 +1,22 @@
++/* SPDX-License-Identifier: GPL-2.0-or-later */
++/*
++ * Copyright (c) 2019 Oracle, Inc.
++ * All Rights Reserved.
++ */
++#ifndef __XFROG_H__
++#define __XFROG_H__
++
++/*
++ * XFS Filesystem Random Online Gluecode
++ * =====================================
++ *
++ * These support functions wrap the more complex xfs ioctls so that xfs
++ * utilities can take advantage of them without having to deal with graceful
++ * degradation in the face of new ioctls.  They will also provide higher level
++ * abstractions when possible.
++ */
++
++struct xfs_fsop_geom;
++int xfrog_geometry(int fd, struct xfs_fsop_geom *fsgeo);
++
++#endif	/* __XFROG_H__ */
+diff --git a/io/bmap.c b/io/bmap.c
+index d408826a..8f792a09 100644
+--- a/io/bmap.c
++++ b/io/bmap.c
+@@ -9,6 +9,7 @@
  #include "input.h"
  #include "init.h"
  #include "io.h"
 +#include "xfrog.h"
  
- static cmdinfo_t imap_cmd;
+ static cmdinfo_t bmap_cmd;
  
- static int
- imap_f(int argc, char **argv)
- {
--	int		count;
--	int		nent;
--	int		i;
--	__u64		last = 0;
--	struct xfs_inogrp *t;
--	struct xfs_fsop_bulkreq bulkreq;
-+	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-+	struct xfs_inogrp	*t;
-+	uint64_t		last = 0;
-+	uint32_t		count;
-+	uint32_t		nent;
-+	int			i;
-+	int			error;
+@@ -105,11 +106,11 @@ bmap_f(
+ 		bmv_iflags &= ~(BMV_IF_PREALLOC|BMV_IF_NO_DMAPI_READ);
  
- 	if (argc != 2)
- 		nent = 1;
-@@ -30,14 +32,8 @@ imap_f(int argc, char **argv)
- 	if (!t)
- 		return 0;
- 
--	bulkreq.lastip  = &last;
--	bulkreq.icount  = nent;
--	bulkreq.ubuffer = (void *)t;
--	bulkreq.ocount  = &count;
--
--	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
--		if (count == 0)
--			goto out_free;
-+	while ((error = xfrog_inumbers(&xfd, &last, nent, t, &count)) == 0 &&
-+	       count > 0) {
- 		for (i = 0; i < count; i++) {
- 			printf(_("ino %10llu count %2d mask %016llx\n"),
- 				(unsigned long long)t[i].xi_startino,
-@@ -45,9 +41,12 @@ imap_f(int argc, char **argv)
- 				(unsigned long long)t[i].xi_allocmask);
- 		}
- 	}
--	perror("xfsctl(XFS_IOC_FSINUMBERS)");
--	exitcode = 1;
--out_free:
-+
-+	if (error) {
-+		errno = error;
-+		perror("xfsctl(XFS_IOC_FSINUMBERS)");
-+		exitcode = 1;
-+	}
- 	free(t);
- 	return 0;
- }
-diff --git a/io/open.c b/io/open.c
-index 35e6131b..c0d0f1e9 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -675,24 +675,24 @@ inode_help(void)
- "\n"));
- }
- 
-+#define IGROUP_NR	(1024)
- static __u64
- get_last_inode(void)
- {
--	__u64			lastip = 0;
--	__u64			lastgrp = 0;
--	__s32			ocount = 0;
-+	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-+	uint64_t		lastip = 0;
-+	uint32_t		lastgrp = 0;
-+	uint32_t		ocount = 0;
- 	__u64			last_ino;
--	struct xfs_inogrp	igroup[1024];
--	struct xfs_fsop_bulkreq	bulkreq;
--
--	bulkreq.lastip = &lastip;
--	bulkreq.ubuffer = &igroup;
--	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
--	bulkreq.ocount = &ocount;
-+	struct xfs_inogrp	igroup[IGROUP_NR];
- 
- 	for (;;) {
--		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
--				&bulkreq)) {
-+		int		ret;
-+
-+		ret = xfrog_inumbers(&xfd, &lastip, IGROUP_NR, igroup,
-+				&ocount);
-+		if (ret) {
-+			errno = ret;
- 			perror("XFS_IOC_FSINUMBERS");
+ 	if (vflag) {
+-		c = xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo);
+-		if (c < 0) {
++		c = xfrog_geometry(file->fd, &fsgeo);
++		if (c) {
+ 			fprintf(stderr,
+ 				_("%s: can't get geometry [\"%s\"]: %s\n"),
+-				progname, file->name, strerror(errno));
++				progname, file->name, strerror(c));
+ 			exitcode = 1;
  			return 0;
  		}
-diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-index 0e11ccea..18fffb20 100644
---- a/libfrog/bulkstat.c
-+++ b/libfrog/bulkstat.c
-@@ -50,3 +50,29 @@ xfrog_bulkstat(
- 		return errno;
- 	return 0;
+diff --git a/io/fsmap.c b/io/fsmap.c
+index 477c36fc..bf741e2a 100644
+--- a/io/fsmap.c
++++ b/io/fsmap.c
+@@ -9,6 +9,7 @@
+ #include "path.h"
+ #include "io.h"
+ #include "input.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t	fsmap_cmd;
+ static dev_t		xfs_data_dev;
+@@ -447,8 +448,8 @@ fsmap_f(
+ 	}
+ 
+ 	if (vflag) {
+-		c = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &fsgeo);
+-		if (c < 0) {
++		c = xfrog_geometry(file->fd, &fsgeo);
++		if (c) {
+ 			fprintf(stderr,
+ 				_("%s: can't get geometry [\"%s\"]: %s\n"),
+ 				progname, file->name, strerror(errno));
+diff --git a/io/open.c b/io/open.c
+index c7f5248a..8b24a4f9 100644
+--- a/io/open.c
++++ b/io/open.c
+@@ -9,6 +9,7 @@
+ #include "init.h"
+ #include "io.h"
+ #include "libxfs.h"
++#include "xfrog.h"
+ 
+ #ifndef __O_TMPFILE
+ #if defined __alpha__
+@@ -118,10 +119,16 @@ openfile(
+ 	if (flags & IO_PATH) {
+ 		/* Can't call ioctl() on O_PATH fds */
+ 		memset(geom, 0, sizeof(*geom));
+-	} else if (xfsctl(path, fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+-		perror("XFS_IOC_FSGEOMETRY");
+-		close(fd);
+-		return -1;
++	} else {
++		int	ret;
++
++		ret = xfrog_geometry(fd, geom);
++		if (ret) {
++			errno = ret;
++			perror("XFS_IOC_FSGEOMETRY");
++			close(fd);
++			return -1;
++		}
+ 	}
+ 
+ 	if (!(flags & (IO_READONLY | IO_PATH)) && (flags & IO_REALTIME)) {
+diff --git a/io/stat.c b/io/stat.c
+index 37c0b2e8..865407b1 100644
+--- a/io/stat.c
++++ b/io/stat.c
+@@ -12,6 +12,7 @@
+ #include "io.h"
+ #include "statx.h"
+ #include "libxfs.h"
++#include "xfrog.h"
+ 
+ #include <fcntl.h>
+ 
+@@ -178,6 +179,7 @@ statfs_f(
+ 	struct xfs_fsop_counts	fscounts;
+ 	struct xfs_fsop_geom	fsgeo;
+ 	struct statfs		st;
++	int			ret;
+ 
+ 	printf(_("fd.path = \"%s\"\n"), file->name);
+ 	if (platform_fstatfs(file->fd, &st) < 0) {
+@@ -194,8 +196,10 @@ statfs_f(
+ 	}
+ 	if (file->flags & IO_FOREIGN)
+ 		return 0;
+-	if ((xfsctl(file->name, file->fd, XFS_IOC_FSGEOMETRY_V1, &fsgeo)) < 0) {
+-		perror("XFS_IOC_FSGEOMETRY_V1");
++	ret = xfrog_geometry(file->fd, &fsgeo);
++	if (ret) {
++		errno = ret;
++		perror("XFS_IOC_FSGEOMETRY");
+ 	} else {
+ 		printf(_("geom.bsize = %u\n"), fsgeo.blocksize);
+ 		printf(_("geom.agcount = %u\n"), fsgeo.agcount);
+diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+index 8879d161..69d24774 100644
+--- a/libfrog/fsgeom.c
++++ b/libfrog/fsgeom.c
+@@ -4,6 +4,7 @@
+  */
+ #include "libxfs.h"
+ #include "fsgeom.h"
++#include "xfrog.h"
+ 
+ void
+ xfs_report_geom(
+@@ -67,3 +68,28 @@ xfs_report_geom(
+ 		geo->rtextsize * geo->blocksize, (unsigned long long)geo->rtblocks,
+ 			(unsigned long long)geo->rtextents);
  }
 +
-+/*
-+ * Query inode allocation bitmask information.  Returns zero or a positive
-+ * error code.
-+ */
++/* Try to obtain the xfs geometry.  On error returns a positive error code. */
 +int
-+xfrog_inumbers(
-+	struct xfs_fd		*xfd,
-+	uint64_t		*lastino,
-+	uint32_t		icount,
-+	struct xfs_inogrp	*ubuffer,
-+	uint32_t		*ocount)
++xfrog_geometry(
++	int			fd,
++	struct xfs_fsop_geom	*fsgeo)
 +{
-+	struct xfs_fsop_bulkreq	bulkreq = {
-+		.lastip		= (__u64 *)lastino,
-+		.icount		= icount,
-+		.ubuffer	= ubuffer,
-+		.ocount		= (__s32 *)ocount,
-+	};
 +	int			ret;
 +
-+	ret = ioctl(xfd->fd, XFS_IOC_FSINUMBERS, &bulkreq);
-+	if (ret)
-+		return errno;
-+	return 0;
++	memset(fsgeo, 0, sizeof(*fsgeo));
++
++	ret = ioctl(fd, XFS_IOC_FSGEOMETRY, fsgeo);
++	if (!ret)
++		return 0;
++
++	ret = ioctl(fd, XFS_IOC_FSGEOMETRY_V4, fsgeo);
++	if (!ret)
++		return 0;
++
++	ret = ioctl(fd, XFS_IOC_FSGEOMETRY_V1, fsgeo);
++	if (!ret)
++		return 0;
++
++	return errno;
 +}
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index ea6af156..3915822e 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -15,6 +15,7 @@
- #include "xfs_scrub.h"
- #include "common.h"
- #include "fscounters.h"
+diff --git a/quota/free.c b/quota/free.c
+index 1d13006e..65cb1e21 100644
+--- a/quota/free.c
++++ b/quota/free.c
+@@ -8,6 +8,7 @@
+ #include "command.h"
+ #include "init.h"
+ #include "quota.h"
++#include "xfrog.h"
+ 
+ static cmdinfo_t free_cmd;
+ 
+@@ -51,7 +52,7 @@ mount_free_space_data(
+ 	struct xfs_fsop_geom	fsgeo;
+ 	struct statfs		st;
+ 	uint64_t		logsize, count, free;
+-	int			fd;
++	int			fd, ret;
+ 
+ 	if ((fd = open(mount->fs_dir, O_RDONLY)) < 0) {
+ 		exitcode = 1;
+@@ -67,9 +68,10 @@ mount_free_space_data(
+ 	}
+ 
+ 	if (!(mount->fs_flags & FS_FOREIGN)) {
+-		if ((xfsctl(mount->fs_dir, fd, XFS_IOC_FSGEOMETRY_V1,
+-							&fsgeo)) < 0) {
+-			perror("XFS_IOC_FSGEOMETRY_V1");
++		ret = xfrog_geometry(fd, &fsgeo);
++		if (ret) {
++			errno = ret;
++			perror("XFS_IOC_FSGEOMETRY");
+ 			close(fd);
+ 			return 0;
+ 		}
+diff --git a/repair/xfs_repair.c b/repair/xfs_repair.c
+index ce70e2de..32c9a96e 100644
+--- a/repair/xfs_repair.c
++++ b/repair/xfs_repair.c
+@@ -22,6 +22,7 @@
+ #include "dinode.h"
+ #include "slab.h"
+ #include "rmap.h"
 +#include "xfrog.h"
  
  /*
-  * Filesystem counter collection routines.  We can count the number of
-@@ -41,30 +42,25 @@ xfs_count_inodes_range(
- 	uint64_t		last_ino,
- 	uint64_t		*count)
+  * option tables for getsubopt calls
+@@ -634,13 +635,14 @@ static void
+ check_fs_vs_host_sectsize(
+ 	struct xfs_sb	*sb)
  {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_inogrp	inogrp;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		nr = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	int			error;
+-	int	fd;
++	int	fd, ret;
+ 	long	old_flags;
+-	struct xfs_fsop_geom_v1 geom = { 0 };
++	struct xfs_fsop_geom	geom = { 0 };
  
- 	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
- 	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
+ 	fd = libxfs_device_to_fd(x.ddev);
  
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
--	while (!error && igrplen && inogrp.xi_startino < last_ino) {
-+	while (!(error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
-+			&igrplen))) {
-+		if (igrplen == 0 || inogrp.xi_startino >= last_ino)
-+			break;
- 		nr += inogrp.xi_alloccount;
--		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+-	if (ioctl(fd, XFS_IOC_FSGEOMETRY_V1, &geom) < 0) {
++	ret = xfrog_geometry(fd, &geom);
++	if (ret) {
+ 		do_log(_("Cannot get host filesystem geometry.\n"
+ 	"Repair may fail if there is a sector size mismatch between\n"
+ 	"the image and the host filesystem.\n"));
+diff --git a/rtcp/Makefile b/rtcp/Makefile
+index 808b5378..264b4f27 100644
+--- a/rtcp/Makefile
++++ b/rtcp/Makefile
+@@ -9,6 +9,9 @@ LTCOMMAND = xfs_rtcp
+ CFILES = xfs_rtcp.c
+ LLDFLAGS = -static
+ 
++LLDLIBS = $(LIBFROG)
++LTDEPENDENCIES = $(LIBFROG)
++
+ default: depend $(LTCOMMAND)
+ 
+ include $(BUILDRULES)
+diff --git a/rtcp/xfs_rtcp.c b/rtcp/xfs_rtcp.c
+index 1027c913..6d012dda 100644
+--- a/rtcp/xfs_rtcp.c
++++ b/rtcp/xfs_rtcp.c
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include "libxfs.h"
++#include "xfrog.h"
+ 
+ int rtcp(char *, char *, int);
+ int xfsrtextsize(char *path);
+@@ -368,8 +369,8 @@ rtcp( char *source, char *target, int fextsize)
+ int
+ xfsrtextsize( char *path)
+ {
+-	int fd, rval, rtextsize;
+-	struct xfs_fsop_geom_v1 geo;
++	struct xfs_fsop_geom	geo;
++	int			fd, rval, rtextsize;
+ 
+ 	fd = open( path, O_RDONLY );
+ 	if ( fd < 0 ) {
+@@ -377,9 +378,9 @@ xfsrtextsize( char *path)
+ 			progname, path, strerror(errno));
+ 		return -1;
+ 	}
+-	rval = xfsctl( path, fd, XFS_IOC_FSGEOMETRY_V1, &geo );
++	rval = xfrog_geometry(fd, &geo);
+ 	close(fd);
+-	if ( rval < 0 )
++	if (rval)
+ 		return -1;
+ 
+ 	rtextsize = geo.rtextsize * geo.blocksize;
+diff --git a/scrub/common.h b/scrub/common.h
+index e85a0333..33555891 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -28,6 +28,8 @@ void __str_out(struct scrub_ctx *ctx, const char *descr, enum error_level level,
+ 
+ #define str_errno(ctx, str) \
+ 	__str_out(ctx, str, S_ERROR,	errno,	__FILE__, __LINE__, NULL)
++#define str_liberror(ctx, error, str) \
++	__str_out(ctx, str, S_ERROR,	error,	__FILE__, __LINE__, NULL)
+ #define str_error(ctx, str, ...) \
+ 	__str_out(ctx, str, S_ERROR,	0,	__FILE__, __LINE__, __VA_ARGS__)
+ #define str_warn(ctx, str, ...) \
+diff --git a/scrub/phase1.c b/scrub/phase1.c
+index 04a5f4a9..bdd23d26 100644
+--- a/scrub/phase1.c
++++ b/scrub/phase1.c
+@@ -26,6 +26,7 @@
+ #include "disk.h"
+ #include "scrub.h"
+ #include "repair.h"
++#include "xfrog.h"
+ 
+ /* Phase 1: Find filesystem geometry (and clean up after) */
+ 
+@@ -129,9 +130,9 @@ _("Does not appear to be an XFS filesystem!"));
  	}
  
+ 	/* Retrieve XFS geometry. */
+-	error = ioctl(ctx->mnt_fd, XFS_IOC_FSGEOMETRY, &ctx->geo);
++	error = xfrog_geometry(ctx->mnt_fd, &ctx->geo);
  	if (error) {
--		str_errno(ctx, descr);
-+		str_liberror(ctx, error, descr);
+-		str_errno(ctx, ctx->mntpoint);
++		str_liberror(ctx, error, _("Retrieving XFS geometry"));
  		return false;
  	}
  
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 413037d8..acad9b16 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -90,16 +90,15 @@ xfs_iterate_inodes_range(
- 	xfs_inode_iter_fn	fn,
- 	void			*arg)
+diff --git a/spaceman/file.c b/spaceman/file.c
+index 7e33e07e..9dba1e58 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -6,6 +6,7 @@
+  */
+ 
+ #include "libxfs.h"
++#include "xfrog.h"
+ #include <sys/mman.h>
+ #include "command.h"
+ #include "input.h"
+@@ -48,7 +49,7 @@ openfile(
+ 	struct fs_path	*fs_path)
  {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_handle	handle;
- 	struct xfs_inogrp	inogrp;
- 	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
- 	char			idescr[DESCR_BUFSZ];
- 	struct xfs_bstat	*bs;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		ino;
- 	uint32_t		bulklen = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	bool			moveon = true;
- 	int			i;
- 	int			error;
-@@ -108,11 +107,6 @@ xfs_iterate_inodes_range(
+ 	struct fs_path	*fsp;
+-	int		fd;
++	int		fd, ret;
  
- 	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
- 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
- 			sizeof(handle.ha_fid.fid_len);
-@@ -120,7 +114,7 @@ xfs_iterate_inodes_range(
- 
- 	/* Find the inode chunk & alloc mask */
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp, &igrplen);
- 	while (!error && igrplen) {
- 		/* Load the inodes. */
- 		ino = inogrp.xi_startino - 1;
-@@ -176,12 +170,13 @@ _("Changed too many times during scan; giving up."));
- 
- 		stale_count = 0;
- igrp_retry:
--		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+		error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
-+				&igrplen);
+ 	fd = open(path, 0);
+ 	if (fd < 0) {
+@@ -56,13 +57,16 @@ openfile(
+ 		return -1;
  	}
  
- err:
+-	if (ioctl(fd, XFS_IOC_FSGEOMETRY, geom) < 0) {
+-		if (errno == ENOTTY)
++	ret = xfrog_geometry(fd, geom);
++	if (ret) {
++		if (ret == ENOTTY)
+ 			fprintf(stderr,
+ _("%s: Not on a mounted XFS filesystem.\n"),
+ 					path);
+-		else
++		else {
++			errno = ret;
+ 			perror("XFS_IOC_FSGEOMETRY");
++		}
+ 		close(fd);
+ 		return -1;
+ 	}
+diff --git a/spaceman/info.c b/spaceman/info.c
+index 01d0744a..d32db6ab 100644
+--- a/spaceman/info.c
++++ b/spaceman/info.c
+@@ -4,6 +4,7 @@
+  * Author: Darrick J. Wong <darrick.wong@oracle.com>
+  */
+ #include "libxfs.h"
++#include "xfrog.h"
+ #include "command.h"
+ #include "init.h"
+ #include "path.h"
+@@ -37,24 +38,13 @@ info_f(
+ 	}
+ 
+ 	/* get the current filesystem size & geometry */
+-	error = ioctl(file->fd, XFS_IOC_FSGEOMETRY, &geo);
++	error = xfrog_geometry(file->fd, &geo);
  	if (error) {
--		str_errno(ctx, descr);
-+		str_liberror(ctx, error, descr);
- 		moveon = false;
+-		/*
+-		 * OK, new xfsctl barfed - back off and try earlier version
+-		 * as we're probably running an older kernel version.
+-		 * Only field added in the v2 geometry xfsctl is "logsunit"
+-		 * so we'll zero that out for later display (as zero).
+-		 */
+-		geo.logsunit = 0;
+-		error = ioctl(file->fd, XFS_IOC_FSGEOMETRY_V1, &geo);
+-		if (error) {
+-			fprintf(stderr, _(
+-				"%s: cannot determine geometry of filesystem"
+-				" mounted at %s: %s\n"),
+-				progname, file->name, strerror(errno));
+-			exitcode = 1;
+-			return 0;
+-		}
++		fprintf(stderr,
++	_("%s: cannot determine geometry of filesystem mounted at %s: %s\n"),
++			progname, file->name, strerror(error));
++		exitcode = 1;
++		return 0;
  	}
- out:
+ 
+ 	xfs_report_geom(&geo, file->fs_path.fs_name, file->fs_path.fs_log,
 
