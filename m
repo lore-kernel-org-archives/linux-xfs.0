@@ -2,80 +2,62 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D20BC3A59B
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:31:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26B78C3A59B
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:32:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6855922CE9
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:31:32 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PCXPCcCF"
+	by mail.kernel.org (Postfix) with ESMTP id 0045123429
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:32:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727991AbfH3Pbb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 11:31:31 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56086 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727751AbfH3Pbb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 11:31:31 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=bIzG1jGsQuMTGAuQ2DDC3ZA7tgwfkwza6fvkhDfPJcA=; b=PCXPCcCFTmpEeYY1gXy9O3Ot/
-        0EW+7a3XSBKQ4MRRgf+QjRxpywjKFOzED5ijGU29m924rSK/oUnflnAHuRAGDno6VHFdmGNB9gNyP
-        /GpwibHbcz2bIHNog42JzclBz1EvWpb7BOQi+h1An2p664Q3tYiBzfo2BGWFvhbPZ/b/FnRMs8sDV
-        8J1srsgH95JewpW2+6EtC8gjIeJVFD8aSdTZwpu0ieOp4d1zxUJ7xIIruzf+hqRiGUaLnQNICGQlC
-        SLryH2PRvLMi8blitQ8Qfzzwfn7gH3kCf9V5Ezdr/gyKJCQvTKzL2O1JrWkpASCsjr6DNo0KDfUvY
-        NCpgBbhQA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i3is7-0007aj-6g; Fri, 30 Aug 2019 15:31:31 +0000
-Date:   Fri, 30 Aug 2019 08:31:31 -0700
-From:   Christoph Hellwig <hch@infradead.org>
+        id S1727904AbfH3Pc4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 11:32:56 -0400
+Received: from verein.lst.de ([213.95.11.211]:56556 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727751AbfH3Pc4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 30 Aug 2019 11:32:56 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 8050168BFE; Fri, 30 Aug 2019 17:32:53 +0200 (CEST)
+Date:   Fri, 30 Aug 2019 17:32:53 +0200
+From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: reinitialize rm_flags when unpacking an offset
- into an rmap irec
-Message-ID: <20190830153131.GB13924@infradead.org>
-References: <156685615360.2853674.5160169873645196259.stgit@magnolia>
- <156685618619.2853674.16603505107055424362.stgit@magnolia>
- <20190829072957.GF18102@infradead.org>
- <20190829160118.GG5354@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/3] xfs: add a xfs_valid_startblock helper
+Message-ID: <20190830153253.GA20550@lst.de>
+References: <20190830102411.519-1-hch@lst.de> <20190830102411.519-2-hch@lst.de> <20190830150650.GA5354@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190829160118.GG5354@magnolia>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20190830150650.GA5354@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 09:01:18AM -0700, Darrick J. Wong wrote:
-> > >  	irec->rm_owner = be64_to_cpu(rec->rmap.rm_owner);
-> > > diff --git a/fs/xfs/libxfs/xfs_rmap.h b/fs/xfs/libxfs/xfs_rmap.h
-> > > index 0c2c3cb73429..abe633403fd1 100644
-> > > --- a/fs/xfs/libxfs/xfs_rmap.h
-> > > +++ b/fs/xfs/libxfs/xfs_rmap.h
-> > > @@ -68,6 +68,7 @@ xfs_rmap_irec_offset_unpack(
-> > >  	if (offset & ~(XFS_RMAP_OFF_MASK | XFS_RMAP_OFF_FLAGS))
-> > >  		return -EFSCORRUPTED;
-> > >  	irec->rm_offset = XFS_RMAP_OFF(offset);
-> > > +	irec->rm_flags = 0;
-> > 
-> > The change looks sensible-ish.  But why do we even have a separate
-> > xfs_rmap_irec_offset_unpack with a single caller nd out of the
-> > way in a header?  Wouldn't it make sense to just merge the two
-> > functions?
+On Fri, Aug 30, 2019 at 08:06:50AM -0700, Darrick J. Wong wrote:
+> > --- a/fs/xfs/libxfs/xfs_bmap.h
+> > +++ b/fs/xfs/libxfs/xfs_bmap.h
+> > @@ -171,6 +171,9 @@ static inline bool xfs_bmap_is_real_extent(struct xfs_bmbt_irec *irec)
+> >  		!isnullstartblock(irec->br_startblock);
+> >  }
+> >  
+> > +#define xfs_valid_startblock(ip, startblock) \
+> > +	((startblock) != 0 || XFS_IS_REALTIME_INODE(ip))
 > 
-> xfs_repair uses libxfs_rmap_irec_offset_unpack, which is why it's a
-> separate function.
+> We have more robust validators for data/rtdev fsblock_t, so why not:
+> 
+> #define xfs_valid_startblock(ip, startblock) \
+> 	(XFS_IS_REALTIME_INODE(ip) ? xfs_verify_rtbno(startblock) : \
+> 				     xfs_verify_fsbno(startblock))
+> 
+> and why not make it a static inline function too?
 
-True.  Athough repair would also benefit a lot from a version of
-xfs_rmap_btrec_to_irec that just takes a bmbt_key instead, but that is
-for another time.
+I tried an inline function, but I could not find a header to place
+it that would actually easily compile everywhere...  Maybe we should
+just make that a xfs_verify_bno(mp, startblock) and move that out of
+line such in a way that a smart compiler avoids the function call
+overhead for xfs_verify_rtbno / xfs_verify_fsbno.  I'll take another
+stab at this.
