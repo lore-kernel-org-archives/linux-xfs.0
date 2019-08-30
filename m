@@ -2,98 +2,204 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BF30C3A59F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 01:41:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FD79C3A59F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 02:13:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 23844208C2
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 01:41:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="T5UsmuqO"
+	by mail.kernel.org (Postfix) with ESMTP id F342A21874
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 02:13:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726825AbfH3BlP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 21:41:15 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:46371 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727139AbfH3BlP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 21:41:15 -0400
-Received: by mail-pg1-f193.google.com with SMTP id m3so2598661pgv.13;
-        Thu, 29 Aug 2019 18:41:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
-         :user-agent;
-        bh=/Lp6+wPpOLr+QBiQVP34X35aQP4sAer1yeUvbRho3WA=;
-        b=T5UsmuqOFpHuAdyZzaXOpR+04JgvYjmBsGflC74rtgqqOGyLZDvtmkTMXnemun2joX
-         YgtGwUgDEMXuCyLXBnEDOZEYWWd8xFxz/YnxKyZpp0Ss7dzuKzBEUo53xRd4+Dr+uDvs
-         ck58yTFepfXbmsOhFwHO6XBVVUk8YXA6sW5g8t6tuwNArBkoQm0NWIjevhFhcFXf9hET
-         Xd2jfjAN5V8jox3+CyQmRHyp0btS4wxXUME9w+KuL7aIL/aNq5Nj/p+wS10u/XJtDWtn
-         kKKQ8NGK+N7/G31PJKepPShzFGT51zro8UbF0Y/ooETsSPPmOW5Tuhdl3Gq1mEWYstlI
-         AUwA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
-         :content-disposition:user-agent;
-        bh=/Lp6+wPpOLr+QBiQVP34X35aQP4sAer1yeUvbRho3WA=;
-        b=HJB+rP+cCWwRotKx2C0P6eldupe/fhYc9M2KpObF4UABgSFjl90K6pt01IYdMWvx8R
-         MLdAOS33gIuigGp4yI5NmwD7HknG2gDQsISFAXCWQfzCTHcm4W5Ht5ppIXaakP0tVkM7
-         ArNZuFoxmemh+SawM8BqAKno//z6X4FYDyK2T079bOF5raW4E1xKH7TvAbHq51JFGC70
-         JlqqOOCCRMQBbeWyncr8bGocnLOYesBUTfPzg7sm3FANw3Vua9G7GyeYmQQqcHlNCRDj
-         s8WIRdvWtW/CHC/pDxjPEqliGTc7nI8cTmhNjlArq4LLo2xJzZHPyJ3FyRiFb8F8fqqu
-         35Rw==
-X-Gm-Message-State: APjAAAUaZDP7PZaZYRh6SZvDv3Rq4a4lDAITO4ChHgINwPtojddD20fn
-        dgtmXeg/tfZ5HFzgRJsWl20=
-X-Google-Smtp-Source: APXvYqy56Dojsx1uG8CmI2owUoO3zuSJKyuuHDcRiaTez1U9zNaQOO1K7i3PF+AyNn11MKaRIONcDA==
-X-Received: by 2002:a63:290:: with SMTP id 138mr9984863pgc.402.1567129274662;
-        Thu, 29 Aug 2019 18:41:14 -0700 (PDT)
-Received: from LGEARND20B15 ([27.122.242.75])
-        by smtp.gmail.com with ESMTPSA id t23sm4549984pfl.154.2019.08.29.18.41.12
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 29 Aug 2019 18:41:14 -0700 (PDT)
-Date:   Fri, 30 Aug 2019 10:41:10 +0900
-From:   Austin Kim <austindh.kim@gmail.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        austindh.kim@gmail.com
-Subject: [PATCH] xfs: Use WARN_ON_ONCE for bailout mount-operation
-Message-ID: <20190830014110.GA20651@LGEARND20B15>
+        id S1727110AbfH3CNk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 22:13:40 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45763 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727066AbfH3CNk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 22:13:40 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id EB0B043E96A;
+        Fri, 30 Aug 2019 12:13:31 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i3WPp-0002YW-LG; Fri, 30 Aug 2019 12:13:29 +1000
+Date:   Fri, 30 Aug 2019 12:13:29 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Chandan Rajendra <chandan@linux.ibm.com>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        hch@infradead.org
+Subject: Re: [RFC] xfs: Flush iclog containing XLOG_COMMIT_TRANS before
+ waiting for log space
+Message-ID: <20190830021329.GB1119@dread.disaster.area>
+References: <20190821110448.30161-1-chandanrlinux@gmail.com>
+ <3457989.EyS6152c1k@localhost.localdomain>
+ <20190826003253.GK1119@dread.disaster.area>
+ <783535067.D5oYYkGoWf@localhost.localdomain>
+ <20190829230817.GW1119@dread.disaster.area>
+ <20190830003441.GY1119@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.5.24 (2015-08-30)
+In-Reply-To: <20190830003441.GY1119@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
+        a=7-415B0cAAAA:8 a=20KFwNOVAAAA:8 a=7Q2-SO56R8pWWUt_uDsA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-If the CONFIG_BUG is enabled, BUG is executed and then system is crashed.
-However, the bailout for mount is no longer proceeding.
+On Fri, Aug 30, 2019 at 10:34:41AM +1000, Dave Chinner wrote:
+> On Fri, Aug 30, 2019 at 09:08:17AM +1000, Dave Chinner wrote:
+> > On Thu, Aug 29, 2019 at 10:51:59AM +0530, Chandan Rajendra wrote:
+> > > 	 786576: kworker/4:1H-kb  1825 [004]   217.041079:                       xfs:xfs_log_assign_tail_lsn: dev 7:1 new tail lsn 2/19333, old lsn 2/19330, last sync 3/18501
+> > 
+> > 200ms later the tail has moved, and last_sync_lsn is now 3/18501.
+> > i.e. the iclog writes have made it to disk, and the items have been
+> > moved into the AIL. I don't know where that came from, but I'm
+> > assuming it's an IO completion based on it being run from a
+> > kworker context that doesn't have an "xfs-" name prefix(*).
+> > 
+> > As the tail has moved, this should have woken the anything sleeping
+> > on the log tail in xlog_grant_head_wait() via a call to
+> > xfs_log_space_wake(). The first waiter should wake, see that there
+> > still isn't room in the log (only 3 sectors were freed in the log,
+> > we need at least 60). That woken process should then run
+> > xlog_grant_push_ail() again and go back to sleep.
+> 
+> Actually, it doesn't get woken because xlog_grant_head_wake() checks
+> how much space is available before waking waiters, and there clearly
+> isn't enough here. So that's one likely vector. Can you try this
+> patch?
 
-Using WARN_ON_ONCE rather than BUG can prevent this situation.
+And this one on top to address the situation the previous patch
+doesn't....
 
-Signed-off-by: Austin Kim <austindh.kim@gmail.com>
----
- fs/xfs/xfs_mount.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index 322da69..3ab2acf 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -214,7 +214,7 @@ xfs_initialize_perag(
- 
- 		spin_lock(&mp->m_perag_lock);
- 		if (radix_tree_insert(&mp->m_perag_tree, index, pag)) {
--			BUG();
-+			WARN_ON_ONCE(1);
- 			spin_unlock(&mp->m_perag_lock);
- 			radix_tree_preload_end();
- 			error = -EEXIST;
+-Dave.
 -- 
-2.6.2
+Dave Chinner
+david@fromorbit.com
 
+xfs: push the grant head when the log head moves forward
+
+From: Dave Chinner <dchinner@redhat.com>
+
+When the log fills up, we can get into the state where the
+outstanding items in the CIL being committed and aggregated are
+larger than the range that the reservation grant head tail pushing
+will attempt to clean. This can result in the tail pushing range
+being trimmed back to the the log head (l_last_sync_lsn) and so
+may not actually move the push target at all.
+
+When the iclogs associated with the CIL commit finally land, the
+log head moves forward, and this removes the restriction on the AIL
+push target. However, if we already have transactions sleeping on
+the grant head, and there's nothing in the AIL still to flush from
+the current push target, then nothing will move the tail of the log
+and trigger a log reservation wakeup.
+
+Hence the there is nothing that will trigger xlog_grant_push_ail()
+to recalculate the AIL push target and start pushing on the AIL
+again to write back the metadata objects that pin the tail of the
+log and hence free up space and allow the transaction reservations
+to be woken and make progress.
+
+Hence we need to push on the grant head when we move the log head
+forward, as this may be the only trigger we have that can move the
+AIL push target forwards in this situation.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c | 65 ++++++++++++++++++++++++++++++++++----------------------
+ 1 file changed, 40 insertions(+), 25 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 941f10ff99d9..ce46bb244442 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2612,6 +2612,45 @@ xlog_get_lowest_lsn(
+ 	return lowest_lsn;
+ }
+ 
++
++/*
++ * Completion of a iclog IO does not imply that a transaction has completed, as
++ * transactions can be large enough to span many iclogs. We cannot change the
++ * tail of the log half way through a transaction as this may be the only
++ * transaction in the log and moving the tail to point to the middle of it
++ * will prevent recovery from finding the start of the transaction. Hence we
++ * should only update the last_sync_lsn if this iclog contains transaction
++ * completion callbacks on it.
++ *
++ * We have to do this before we drop the icloglock to ensure we are the only one
++ * that can update it.
++ *
++ * If we are moving the last_sync_lsn forwards, we also need to ensure we kick
++ * the reservation grant head pushing. This is due to the fact that the push
++ * target is bound by the current last_sync_lsn value. Hence if we have a large
++ * amount of log space bound up in this committing transaction then the
++ * last_sync_lsn value may be the limiting factor preventing tail pushing from
++ * freeing space in the log. Hence once we've updated the last_sync_lsn we
++ * should push the AIL to ensure the push target (and hence the grant head) is
++ * no longer bound by the old log head location and can move forwards and make
++ * progress again.
++ */
++static void
++xlog_iclog_iodone(
++	struct xlog		*log,
++	struct xlog_in_core	*iclog)
++{
++	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
++		be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
++
++	if (list_empty_careful(&iclog->ic_callbacks))
++		return;
++
++	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(iclog->ic_header.h_lsn));
++	xlog_grant_push_ail(log, 0);
++
++}
++
+ STATIC void
+ xlog_state_do_callback(
+ 	struct xlog		*log,
+@@ -2710,31 +2749,7 @@ xlog_state_do_callback(
+ 				}
+ 
+ 				iclog->ic_state = XLOG_STATE_CALLBACK;
+-
+-
+-				/*
+-				 * Completion of a iclog IO does not imply that
+-				 * a transaction has completed, as transactions
+-				 * can be large enough to span many iclogs. We
+-				 * cannot change the tail of the log half way
+-				 * through a transaction as this may be the only
+-				 * transaction in the log and moving th etail to
+-				 * point to the middle of it will prevent
+-				 * recovery from finding the start of the
+-				 * transaction. Hence we should only update the
+-				 * last_sync_lsn if this iclog contains
+-				 * transaction completion callbacks on it.
+-				 *
+-				 * We have to do this before we drop the
+-				 * icloglock to ensure we are the only one that
+-				 * can update it.
+-				 */
+-				ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
+-					be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
+-				if (!list_empty_careful(&iclog->ic_callbacks))
+-					atomic64_set(&log->l_last_sync_lsn,
+-						be64_to_cpu(iclog->ic_header.h_lsn));
+-
++				xlog_iclog_iodone(log, iclog);
+ 			} else
+ 				ioerrors++;
+ 
