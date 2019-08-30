@@ -2,246 +2,769 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C0E8C3A59B
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 23:18:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA872C3A59B
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 23:26:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4737223431
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 23:18:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9541A2343A
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 23:26:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Y3P/U2WB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728217AbfH3XSd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 19:18:33 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:53636 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728122AbfH3XSd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 30 Aug 2019 19:18:33 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ACB827FDF4;
-        Fri, 30 Aug 2019 23:18:32 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id DA3285C1D4;
-        Fri, 30 Aug 2019 23:18:31 +0000 (UTC)
-Date:   Fri, 30 Aug 2019 19:18:30 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Chandan Rajendra <chandan@linux.ibm.com>,
-        Chandan Rajendra <chandanrlinux@gmail.com>,
-        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        hch@infradead.org
-Subject: Re: [RFC] xfs: Flush iclog containing XLOG_COMMIT_TRANS before
- waiting for log space
-Message-ID: <20190830231830.GA29850@bfoster>
-References: <20190821110448.30161-1-chandanrlinux@gmail.com>
- <3457989.EyS6152c1k@localhost.localdomain>
- <20190826003253.GK1119@dread.disaster.area>
- <783535067.D5oYYkGoWf@localhost.localdomain>
- <20190829230817.GW1119@dread.disaster.area>
- <20190830003441.GY1119@dread.disaster.area>
- <20190830021329.GB1119@dread.disaster.area>
- <20190830172447.GE26520@bfoster>
- <20190830221046.GP1119@dread.disaster.area>
+        id S1728122AbfH3X0L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 19:26:11 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:34654 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727304AbfH3X0K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 19:26:10 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7UNP1oB136197;
+        Fri, 30 Aug 2019 23:26:05 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ly0yJPXHWk5btZ015Qus3FrTydp8JBQ679PoyYMWxKs=;
+ b=Y3P/U2WB4ACcVIqWlSaBtBZzs2qpSwlnKovgvxUIXs6906LE+Q8tgmXIbv78Ei8NkJXE
+ IB7A0kReHWzJv0FSkPn9yBu36h5H59RxY6sqZqy9GLgd6N9JfyQkDom9/sz/VJMejBCs
+ eEJaSKrMls+ZwV/5yNnOEitCBAFfu8aTgXP/yHXdio6SY5HEwNV2RAZJS9GBOs+6tFRB
+ 11or9/BWGcve3q1HaArAf6Qz9qoeiTVcppXXoF3bQivsD9h0GsXXWiBqbFwA0qSYI5jJ
+ 2gU6IhqHWVUZ24xpznSW4msfSw4RyT9wXcJtGyk81FkMMNUvWE5eG3zxgGHW96CbZc7Q wQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2uqdbt80gj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 30 Aug 2019 23:26:05 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7UNNlfA062873;
+        Fri, 30 Aug 2019 23:26:04 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2upxabxmht-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 30 Aug 2019 23:26:04 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x7UNQ3L1002914;
+        Fri, 30 Aug 2019 23:26:03 GMT
+Received: from localhost (/10.159.246.201)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 30 Aug 2019 16:26:03 -0700
+Date:   Fri, 30 Aug 2019 16:26:02 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     sandeen@sandeen.net
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/9] libfrog: refactor open-coded bulkstat calls
+Message-ID: <20190830232602.GJ5354@magnolia>
+References: <156713882070.386621.8501281965010809034.stgit@magnolia>
+ <156713886958.386621.13098819870887683837.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190830221046.GP1119@dread.disaster.area>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Fri, 30 Aug 2019 23:18:32 +0000 (UTC)
+In-Reply-To: <156713886958.386621.13098819870887683837.stgit@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908300229
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908300229
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 31, 2019 at 08:10:46AM +1000, Dave Chinner wrote:
-> On Fri, Aug 30, 2019 at 01:24:47PM -0400, Brian Foster wrote:
-> > On Fri, Aug 30, 2019 at 12:13:29PM +1000, Dave Chinner wrote:
-> > > On Fri, Aug 30, 2019 at 10:34:41AM +1000, Dave Chinner wrote:
-> > > > On Fri, Aug 30, 2019 at 09:08:17AM +1000, Dave Chinner wrote:
-> > > > > On Thu, Aug 29, 2019 at 10:51:59AM +0530, Chandan Rajendra wrote:
-> > > > > > 	 786576: kworker/4:1H-kb  1825 [004]   217.041079:                       xfs:xfs_log_assign_tail_lsn: dev 7:1 new tail lsn 2/19333, old lsn 2/19330, last sync 3/18501
-> > > > > 
-> > > > > 200ms later the tail has moved, and last_sync_lsn is now 3/18501.
-> > > > > i.e. the iclog writes have made it to disk, and the items have been
-> > > > > moved into the AIL. I don't know where that came from, but I'm
-> > > > > assuming it's an IO completion based on it being run from a
-> > > > > kworker context that doesn't have an "xfs-" name prefix(*).
-> > > > > 
-> > > > > As the tail has moved, this should have woken the anything sleeping
-> > > > > on the log tail in xlog_grant_head_wait() via a call to
-> > > > > xfs_log_space_wake(). The first waiter should wake, see that there
-> > > > > still isn't room in the log (only 3 sectors were freed in the log,
-> > > > > we need at least 60). That woken process should then run
-> > > > > xlog_grant_push_ail() again and go back to sleep.
-> > > > 
-> > > > Actually, it doesn't get woken because xlog_grant_head_wake() checks
-> > > > how much space is available before waking waiters, and there clearly
-> > > > isn't enough here. So that's one likely vector. Can you try this
-> > > > patch?
-> > > 
-> > > And this one on top to address the situation the previous patch
-> > > doesn't....
-> > > 
-> > > -Dave.
-> > > -- 
-> > > Dave Chinner
-> > > david@fromorbit.com
-> > > 
-> > > xfs: push the grant head when the log head moves forward
-> > > 
-> > > From: Dave Chinner <dchinner@redhat.com>
-> > > 
-> > > When the log fills up, we can get into the state where the
-> > > outstanding items in the CIL being committed and aggregated are
-> > > larger than the range that the reservation grant head tail pushing
-> > > will attempt to clean. This can result in the tail pushing range
-> > > being trimmed back to the the log head (l_last_sync_lsn) and so
-> > > may not actually move the push target at all.
-> > > 
-> > > When the iclogs associated with the CIL commit finally land, the
-> > > log head moves forward, and this removes the restriction on the AIL
-> > > push target. However, if we already have transactions sleeping on
-> > > the grant head, and there's nothing in the AIL still to flush from
-> > > the current push target, then nothing will move the tail of the log
-> > > and trigger a log reservation wakeup.
-> > > 
-> > > Hence the there is nothing that will trigger xlog_grant_push_ail()
-> > > to recalculate the AIL push target and start pushing on the AIL
-> > > again to write back the metadata objects that pin the tail of the
-> > > log and hence free up space and allow the transaction reservations
-> > > to be woken and make progress.
-> > > 
-> > > Hence we need to push on the grant head when we move the log head
-> > > forward, as this may be the only trigger we have that can move the
-> > > AIL push target forwards in this situation.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > ---
-> > >  fs/xfs/xfs_log.c | 65 ++++++++++++++++++++++++++++++++++----------------------
-> > >  1 file changed, 40 insertions(+), 25 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> > > index 941f10ff99d9..ce46bb244442 100644
-> > > --- a/fs/xfs/xfs_log.c
-> > > +++ b/fs/xfs/xfs_log.c
-> > > @@ -2612,6 +2612,45 @@ xlog_get_lowest_lsn(
-> > >  	return lowest_lsn;
-> > >  }
-> > >  
-> > > +
-> > > +/*
-> > > + * Completion of a iclog IO does not imply that a transaction has completed, as
-> > > + * transactions can be large enough to span many iclogs. We cannot change the
-> > > + * tail of the log half way through a transaction as this may be the only
-> > > + * transaction in the log and moving the tail to point to the middle of it
-> > > + * will prevent recovery from finding the start of the transaction. Hence we
-> > > + * should only update the last_sync_lsn if this iclog contains transaction
-> > > + * completion callbacks on it.
-> > > + *
-> > > + * We have to do this before we drop the icloglock to ensure we are the only one
-> > > + * that can update it.
-> > > + *
-> > > + * If we are moving the last_sync_lsn forwards, we also need to ensure we kick
-> > > + * the reservation grant head pushing. This is due to the fact that the push
-> > > + * target is bound by the current last_sync_lsn value. Hence if we have a large
-> > > + * amount of log space bound up in this committing transaction then the
-> > > + * last_sync_lsn value may be the limiting factor preventing tail pushing from
-> > > + * freeing space in the log. Hence once we've updated the last_sync_lsn we
-> > > + * should push the AIL to ensure the push target (and hence the grant head) is
-> > > + * no longer bound by the old log head location and can move forwards and make
-> > > + * progress again.
-> > > + */
-> > > +static void
-> > > +xlog_iclog_iodone(
-> > > +	struct xlog		*log,
-> > > +	struct xlog_in_core	*iclog)
-> > > +{
-> > > +	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
-> > > +		be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
-> > > +
-> > > +	if (list_empty_careful(&iclog->ic_callbacks))
-> > > +		return;
-> > > +
-> > > +	atomic64_set(&log->l_last_sync_lsn, be64_to_cpu(iclog->ic_header.h_lsn));
-> > > +	xlog_grant_push_ail(log, 0);
-> > 
-> > I think the intent of the patch makes sense but the wakeup is misplaced.
-> > First, this wakeup technically occurs before AIL population because we
-> > haven't invoked the iclog callbacks yet.
+On Thu, Aug 29, 2019 at 09:21:09PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> I *think* it's fine - we just need to push the AIL once the l_last_sync_lsn
-> has been updated. The items going into the AIL from this commit
-> will be at the head, anyway, so it won't make any difference to
-> pushing the items at tail of the AIL. What matters is the push
-> threshold is no longer truncated down by the l_last_sync_lsn....
+> Refactor the BULKSTAT_SINGLE and BULKSTAT ioctl callsites into helper
+> functions.
 > 
-
-Hmm.. but that assumes the AIL is populated, which isn't what I'm
-seeing. Sure, xlog_grant_push_ail() truncates the push target based on
-->l_last_sync_lsn, but the AIL push itself is a no-op if the AIL is
-empty.
-
-> Really, though, I just did this quick change because I didn't want
-> to have to do a major rework of this code without first knowing
-> whether it fixed the problem. This whole iclog completion function
-> needs cleaning up....
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fsr/xfs_fsr.c      |  110 ++++++++++++++++++++++------------------------------
+>  include/xfrog.h    |    7 +++
+>  io/open.c          |   72 +++++++++++++++++-----------------
+>  io/swapext.c       |   20 ++-------
+>  libfrog/Makefile   |    1 
+>  libfrog/bulkstat.c |   52 +++++++++++++++++++++++++
+>  quota/quot.c       |   33 ++++++++--------
+>  scrub/inodes.c     |   32 ++++-----------
+>  8 files changed, 172 insertions(+), 155 deletions(-)
+>  create mode 100644 libfrog/bulkstat.c
 > 
-
-Yep...
-
-> > Second, your first patch
-> > already adds an AIL push in the log I/O completion path via
-> > xfs_trans_ail_update_bulk() -> xfs_log_space_wake().
 > 
-> That will only trigger if we move something from the tail of the log
-> during insertion. There is no guarantee that will happen from this
-> iclog completion - there may be no relogging at all, so no wakeup
-> from the AIL insert process....
-> 
+> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> index 4b239a30..36402252 100644
+> --- a/fsr/xfs_fsr.c
+> +++ b/fsr/xfs_fsr.c
+> @@ -102,31 +102,6 @@ static int	nfrags = 0;	/* Debug option: Coerse into specific number
+>  				 * of extents */
+>  static int	openopts = O_CREAT|O_EXCL|O_RDWR|O_DIRECT;
+>  
+> -static int
+> -xfs_bulkstat_single(int fd, xfs_ino_t *lastip, struct xfs_bstat *ubuffer)
+> -{
+> -    struct xfs_fsop_bulkreq  bulkreq;
+> -
+> -    bulkreq.lastip = (__u64 *)lastip;
+> -    bulkreq.icount = 1;
+> -    bulkreq.ubuffer = ubuffer;
+> -    bulkreq.ocount = NULL;
+> -    return ioctl(fd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
+> -}
+> -
+> -static int
+> -xfs_bulkstat(int fd, xfs_ino_t *lastip, int icount,
+> -                    struct xfs_bstat *ubuffer, __s32 *ocount)
+> -{
+> -    struct xfs_fsop_bulkreq  bulkreq;
+> -
+> -    bulkreq.lastip = (__u64 *)lastip;
+> -    bulkreq.icount = icount;
+> -    bulkreq.ubuffer = ubuffer;
+> -    bulkreq.ocount = ocount;
+> -    return ioctl(fd, XFS_IOC_FSBULKSTAT, &bulkreq);
+> -}
+> -
+>  static int
+>  xfs_swapext(int fd, xfs_swapext_t *sx)
+>  {
+> @@ -596,11 +571,11 @@ fsrall_cleanup(int timeout)
+>  static int
+>  fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+>  {
+> -
+> -	int	fsfd, fd;
+> +	struct xfs_fd	fsxfd = XFS_FD_INIT_EMPTY;
+> +	int	fd;
+>  	int	count = 0;
+>  	int	ret;
+> -	__s32	buflenout;
+> +	uint32_t buflenout;
+>  	struct xfs_bstat buf[GRABSZ];
+>  	char	fname[64];
+>  	char	*tname;
+> @@ -617,26 +592,27 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+>  		return -1;
+>  	}
+>  
+> -	if ((fsfd = open(mntdir, O_RDONLY)) < 0) {
+> +	if ((fsxfd.fd = open(mntdir, O_RDONLY)) < 0) {
+>  		fsrprintf(_("unable to open: %s: %s\n"),
+>  		          mntdir, strerror( errno ));
+>  		free(fshandlep);
+>  		return -1;
+>  	}
+>  
+> -	ret = xfrog_geometry(fsfd, &fsgeom);
+> +	ret = xfd_prepare_geometry(&fsxfd);
+>  	if (ret) {
+>  		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
+>  			  mntdir);
+> -		close(fsfd);
+> +		xfd_close(&fsxfd);
+>  		free(fshandlep);
+>  		return -1;
+>  	}
+> +	memcpy(&fsgeom, &fsxfd.fsgeom, sizeof(fsgeom));
+>  
+>  	tmp_init(mntdir);
+>  
+> -	while ((ret = xfs_bulkstat(fsfd,
+> -				&lastino, GRABSZ, &buf[0], &buflenout)) == 0) {
+> +	while ((ret = xfrog_bulkstat(&fsxfd, &lastino, GRABSZ, &buf[0],
+> +				&buflenout)) == 0) {
+>  		struct xfs_bstat *p;
+>  		struct xfs_bstat *endp;
+>  
+> @@ -685,16 +661,16 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+>  		}
+>  		if (endtime && endtime < time(NULL)) {
+>  			tmp_close(mntdir);
+> -			close(fsfd);
+> +			xfd_close(&fsxfd);
+>  			fsrall_cleanup(1);
+>  			exit(1);
+>  		}
+>  	}
+> -	if (ret < 0)
+> -		fsrprintf(_("%s: xfs_bulkstat: %s\n"), progname, strerror(errno));
+> +	if (ret)
+> +		fsrprintf(_("%s: bulkstat: %s\n"), progname, strerror(ret));
+>  out0:
+>  	tmp_close(mntdir);
+> -	close(fsfd);
+> +	xfd_close(&fsxfd);
+>  	free(fshandlep);
+>  	return 0;
+>  }
+> @@ -727,13 +703,16 @@ fsrdir(char *dirname)
+>   * an open on the file and passes this all to fsrfile_common.
+>   */
+>  static int
+> -fsrfile(char *fname, xfs_ino_t ino)
+> +fsrfile(
+> +	char			*fname,
+> +	xfs_ino_t		ino)
+>  {
+> -	struct xfs_bstat statbuf;
+> -	jdm_fshandle_t	*fshandlep;
+> -	int	fd = -1, fsfd = -1;
+> -	int	error = -1;
+> -	char	*tname;
+> +	struct xfs_fd		fsxfd = XFS_FD_INIT_EMPTY;
+> +	struct xfs_bstat	statbuf;
+> +	jdm_fshandle_t		*fshandlep;
+> +	int			fd = -1;
+> +	int			error = -1;
+> +	char			*tname;
+>  
+>  	fshandlep = jdm_getfshandle(getparent (fname) );
+>  	if (!fshandlep) {
+> @@ -746,16 +725,23 @@ fsrfile(char *fname, xfs_ino_t ino)
+>  	 * Need to open something on the same filesystem as the
+>  	 * file.  Open the parent.
+>  	 */
+> -	fsfd = open(getparent(fname), O_RDONLY);
+> -	if (fsfd < 0) {
+> +	fsxfd.fd = open(getparent(fname), O_RDONLY);
+> +	if (fsxfd.fd < 0) {
+>  		fsrprintf(_("unable to open sys handle for %s: %s\n"),
+>  			fname, strerror(errno));
+>  		goto out;
+>  	}
+>  
+> -	if ((xfs_bulkstat_single(fsfd, &ino, &statbuf)) < 0) {
+> +	error = xfd_prepare_geometry(&fsxfd);
+> +	if (error) {
+> +		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
+> +		goto out;
+> +	}
+> +
+> +	error = xfrog_bulkstat_single(&fsxfd, ino, &statbuf);
+> +	if (error) {
+>  		fsrprintf(_("unable to get bstat on %s: %s\n"),
+> -			fname, strerror(errno));
+> +			fname, strerror(error));
+>  		goto out;
+>  	}
+>  
+> @@ -766,12 +752,8 @@ fsrfile(char *fname, xfs_ino_t ino)
+>  		goto out;
+>  	}
+>  
+> -	/* Get the fs geometry */
+> -	error = xfrog_geometry(fsfd, &fsgeom);
+> -	if (error) {
+> -		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
+> -		goto out;
+> -	}
+> +	/* Stash the fs geometry for general use. */
+> +	memcpy(&fsgeom, &fsxfd.fsgeom, sizeof(fsgeom));
+>  
+>  	tname = gettmpname(fname);
+>  
+> @@ -779,8 +761,7 @@ fsrfile(char *fname, xfs_ino_t ino)
+>  		error = fsrfile_common(fname, tname, NULL, fd, &statbuf);
+>  
+>  out:
+> -	if (fsfd >= 0)
+> -		close(fsfd);
+> +	xfd_close(&fsxfd);
+>  	if (fd >= 0)
+>  		close(fd);
+>  	free(fshandlep);
+> @@ -947,6 +928,7 @@ fsr_setup_attr_fork(
+>  	struct xfs_bstat *bstatp)
+>  {
+>  #ifdef HAVE_FSETXATTR
+> +	struct xfs_fd	txfd = XFS_FD_INIT(tfd);
+>  	struct stat	tstatbuf;
+>  	int		i;
+>  	int		diff = 0;
+> @@ -964,7 +946,7 @@ fsr_setup_attr_fork(
+>  	if (!(fsgeom.flags & XFS_FSOP_GEOM_FLAGS_ATTR2) ||
+>  	    bstatp->bs_forkoff == 0) {
+>  		/* attr1 */
+> -		ret = fsetxattr(tfd, "user.X", "X", 1, XATTR_CREATE);
+> +		ret = fsetxattr(txfd.fd, "user.X", "X", 1, XATTR_CREATE);
+>  		if (ret) {
+>  			fsrprintf(_("could not set ATTR\n"));
+>  			return -1;
+> @@ -974,7 +956,7 @@ fsr_setup_attr_fork(
+>  
+>  	/* attr2 w/ fork offsets */
+>  
+> -	if (fstat(tfd, &tstatbuf) < 0) {
+> +	if (fstat(txfd.fd, &tstatbuf) < 0) {
+>  		fsrprintf(_("unable to stat temp file: %s\n"),
+>  					strerror(errno));
+>  		return -1;
+> @@ -983,18 +965,18 @@ fsr_setup_attr_fork(
+>  	i = 0;
+>  	do {
+>  		struct xfs_bstat tbstat;
+> -		xfs_ino_t	ino;
+>  		char		name[64];
+> +		int		ret;
+>  
+>  		/*
+>  		 * bulkstat the temp inode to see what the forkoff is.  Use
+>  		 * this to compare against the target and determine what we
+>  		 * need to do.
+>  		 */
+> -		ino = tstatbuf.st_ino;
+> -		if ((xfs_bulkstat_single(tfd, &ino, &tbstat)) < 0) {
+> +		ret = xfrog_bulkstat_single(&txfd, tstatbuf.st_ino, &tbstat);
+> +		if (ret) {
+>  			fsrprintf(_("unable to get bstat on temp file: %s\n"),
+> -						strerror(errno));
+> +						strerror(ret));
+>  			return -1;
+>  		}
+>  		if (dflag)
+> @@ -1014,7 +996,7 @@ fsr_setup_attr_fork(
+>  		 */
+>  		if (!tbstat.bs_forkoff) {
+>  			ASSERT(i == 0);
+> -			ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
+> +			ret = fsetxattr(txfd.fd, name, "XX", 2, XATTR_CREATE);
+>  			if (ret) {
+>  				fsrprintf(_("could not set ATTR\n"));
+>  				return -1;
+> @@ -1050,7 +1032,7 @@ fsr_setup_attr_fork(
+>  			if (diff < 0) {
+>  				char val[2048];
+>  				memset(val, 'X', 2048);
+> -				if (fsetxattr(tfd, name, val, 2048, 0)) {
+> +				if (fsetxattr(txfd.fd, name, val, 2048, 0)) {
+>  					fsrprintf(_("big ATTR set failed\n"));
+>  					return -1;
+>  				}
+> @@ -1094,7 +1076,7 @@ fsr_setup_attr_fork(
+>  		}
+>  
+>  		/* we need to grow the attr fork, so create another attr */
+> -		ret = fsetxattr(tfd, name, "XX", 2, XATTR_CREATE);
+> +		ret = fsetxattr(txfd.fd, name, "XX", 2, XATTR_CREATE);
+>  		if (ret) {
+>  			fsrprintf(_("could not set ATTR\n"));
+>  			return -1;
+> diff --git a/include/xfrog.h b/include/xfrog.h
+> index a08f6464..7bda9810 100644
+> --- a/include/xfrog.h
+> +++ b/include/xfrog.h
+> @@ -108,4 +108,11 @@ cvt_b_to_off_fsbt(
+>  	return bytes >> xfd->blocklog;
+>  }
+>  
+> +/* Bulkstat wrappers */
+> +struct xfs_bstat;
+> +int xfrog_bulkstat_single(struct xfs_fd *xfd, uint64_t ino,
+> +		struct xfs_bstat *ubuffer);
+> +int xfrog_bulkstat(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
+> +		struct xfs_bstat *ubuffer, uint32_t *ocount);
+> +
+>  #endif	/* __XFROG_H__ */
+> diff --git a/io/open.c b/io/open.c
+> index 8b24a4f9..35e6131b 100644
+> --- a/io/open.c
+> +++ b/io/open.c
+> @@ -719,19 +719,18 @@ get_last_inode(void)
+>  
+>  static int
+>  inode_f(
+> -	  int			argc,
+> -	  char			**argv)
+> +	int			argc,
+> +	char			**argv)
+>  {
+> -	__s32			count = 0;
+> -	__u64			result_ino = 0;
+> -	__u64			userino = NULLFSINO;
+> +	struct xfs_bstat	bstat;
+> +	uint32_t		count = 0;
+> +	uint64_t		result_ino = 0;
+> +	uint64_t		userino = NULLFSINO;
+>  	char			*p;
+>  	int			c;
+>  	int			verbose = 0;
+>  	int			ret_next = 0;
+> -	int			cmd = 0;
+> -	struct xfs_fsop_bulkreq	bulkreq;
+> -	struct xfs_bstat	bstat;
+> +	int			ret;
+>  
+>  	while ((c = getopt(argc, argv, "nv")) != EOF) {
+>  		switch (c) {
+> @@ -773,35 +772,38 @@ inode_f(
+>  			exitcode = 1;
+>  			return 0;
+>  		}
+> +	} else if (ret_next) {
+> +		struct xfs_fd	xfd = XFS_FD_INIT(file->fd);
+> +
+> +		/* get next inode */
+> +		ret = xfrog_bulkstat(&xfd, &userino, 1, &bstat, &count);
+> +		if (ret) {
+> +			errno = ret;
+> +			perror("bulkstat");
+> +			exitcode = 1;
+> +			return 0;
+> +		}
+> +
+> +		/* The next inode in use, or 0 if none */
+> +		if (count)
+> +			result_ino = bstat.bs_ino;
+> +		else
+> +			result_ino = 0;
+>  	} else {
+> -		if (ret_next)	/* get next inode */
+> -			cmd = XFS_IOC_FSBULKSTAT;
+> -		else		/* get this inode */
+> -			cmd = XFS_IOC_FSBULKSTAT_SINGLE;
+> -
+> -		bulkreq.lastip = &userino;
+> -		bulkreq.icount = 1;
+> -		bulkreq.ubuffer = &bstat;
+> -		bulkreq.ocount = &count;
+> -
+> -		if (xfsctl(file->name, file->fd, cmd, &bulkreq)) {
+> -			if (!ret_next && errno == EINVAL) {
+> -				/* Not in use */
+> -				result_ino = 0;
+> -			} else {
+> -				perror("xfsctl");
+> -				exitcode = 1;
+> -				return 0;
+> -			}
+> -		} else if (ret_next) {
+> -			/* The next inode in use, or 0 if none */
+> -			if (*bulkreq.ocount)
+> -				result_ino = bstat.bs_ino;
+> -			else
+> -				result_ino = 0;
+> +		struct xfs_fd	xfd = XFS_FD_INIT(file->fd);
+> +
+> +		/* get this inode */
+> +		ret = xfrog_bulkstat_single(&xfd, userino, &bstat);
+> +		if (ret == EINVAL) {
+> +			/* Not in use */
+> +			result_ino = 0;
+> +		} else if (ret) {
+> +			errno = ret;
+> +			perror("bulkstat_single");
+> +			exitcode = 1;
+> +			return 0;
+>  		} else {
+> -			/* The inode we asked about */
+> -			result_ino = userino;
+> +			result_ino = bstat.bs_ino;
+>  		}
+>  	}
+>  
+> diff --git a/io/swapext.c b/io/swapext.c
+> index d360c221..fbf4fff5 100644
+> --- a/io/swapext.c
+> +++ b/io/swapext.c
+> @@ -8,6 +8,7 @@
+>  #include "input.h"
+>  #include "init.h"
+>  #include "io.h"
+> +#include "xfrog.h"
+>  
+>  static cmdinfo_t swapext_cmd;
+>  
+> @@ -20,26 +21,12 @@ swapext_help(void)
+>  "\n"));
+>  }
+>  
+> -static int
+> -xfs_bulkstat_single(
+> -	int			fd,
+> -	xfs_ino_t		*lastip,
+> -	struct xfs_bstat	*ubuffer)
+> -{
+> -	struct xfs_fsop_bulkreq	bulkreq;
+> -
+> -	bulkreq.lastip = (__u64 *)lastip;
+> -	bulkreq.icount = 1;
+> -	bulkreq.ubuffer = ubuffer;
+> -	bulkreq.ocount = NULL;
+> -	return ioctl(fd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
+> -}
+> -
+>  static int
+>  swapext_f(
+>  	int			argc,
+>  	char			**argv)
+>  {
+> +	struct xfs_fd		fxfd = XFS_FD_INIT(file->fd);
+>  	int			fd;
+>  	int			error;
+>  	struct xfs_swapext	sx;
+> @@ -60,8 +47,9 @@ swapext_f(
+>  		goto out;
+>  	}
+>  
+> -	error = xfs_bulkstat_single(file->fd, &stat.st_ino, &sx.sx_stat);
+> +	error = xfrog_bulkstat_single(&fxfd, stat.st_ino, &sx.sx_stat);
+>  	if (error) {
+> +		errno = error;
+>  		perror("bulkstat");
+>  		goto out;
+>  	}
+> diff --git a/libfrog/Makefile b/libfrog/Makefile
+> index f5a0539b..05c6f701 100644
+> --- a/libfrog/Makefile
+> +++ b/libfrog/Makefile
+> @@ -13,6 +13,7 @@ LT_AGE = 0
+>  CFILES = \
+>  avl64.c \
+>  bitmap.c \
+> +bulkstat.c \
+>  convert.c \
+>  crc32.c \
+>  fsgeom.c \
+> diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
+> new file mode 100644
+> index 00000000..0e11ccea
+> --- /dev/null
+> +++ b/libfrog/bulkstat.c
+> @@ -0,0 +1,52 @@
+> +// SPDX-License-Identifier: GPL-2.0+
+> +/*
+> + * Copyright (C) 2019 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + */
+> +#include "xfs.h"
+> +#include "xfrog.h"
+> +
+> +/* Bulkstat a single inode.  Returns zero or a positive error code. */
+> +int
+> +xfrog_bulkstat_single(
+> +	struct xfs_fd		*xfd,
+> +	uint64_t		ino,
+> +	struct xfs_bstat	*ubuffer)
+> +{
+> +	__u64			i = ino;
+> +	struct xfs_fsop_bulkreq	bulkreq = {
+> +		.lastip		= &i,
+> +		.icount		= 1,
+> +		.ubuffer	= ubuffer,
+> +		.ocount		= NULL,
+> +	};
+> +	int			ret;
+> +
+> +	ret = ioctl(xfd->fd, XFS_IOC_FSBULKSTAT_SINGLE, &bulkreq);
+> +	if (ret)
+> +		return errno;
+> +	return 0;
+> +}
+> +
+> +/* Bulkstat a bunch of inodes.  Returns zero or a positive error code. */
+> +int
+> +xfrog_bulkstat(
+> +	struct xfs_fd		*xfd,
+> +	uint64_t		*lastino,
+> +	uint32_t		icount,
+> +	struct xfs_bstat	*ubuffer,
+> +	uint32_t		*ocount)
+> +{
+> +	struct xfs_fsop_bulkreq	bulkreq = {
+> +		.lastip		= (__u64 *)lastino,
+> +		.icount		= icount,
+> +		.ubuffer	= ubuffer,
+> +		.ocount		= (__s32 *)ocount,
+> +	};
+> +	int			ret;
+> +
+> +	ret = ioctl(xfd->fd, XFS_IOC_FSBULKSTAT, &bulkreq);
+> +	if (ret)
+> +		return errno;
+> +	return 0;
+> +}
+> diff --git a/quota/quot.c b/quota/quot.c
+> index 6bc91171..1e970819 100644
+> --- a/quota/quot.c
+> +++ b/quota/quot.c
+> @@ -11,6 +11,7 @@
+>  #include <grp.h>
+>  #include "init.h"
+>  #include "quota.h"
+> +#include "xfrog.h"
+>  
+>  typedef struct du {
+>  	struct du	*next;
+> @@ -124,13 +125,13 @@ quot_bulkstat_add(
+>  static void
+>  quot_bulkstat_mount(
+>  	char			*fsdir,
+> -	uint			flags)
+> +	unsigned int		flags)
+>  {
+> -	struct xfs_fsop_bulkreq	bulkreq;
+> +	struct xfs_fd		fsxfd = XFS_FD_INIT_EMPTY;
+>  	struct xfs_bstat	*buf;
+> -	__u64			last = 0;
+> -	__s32			count;
+> -	int			i, sts, fsfd;
+> +	uint64_t		last = 0;
+> +	uint32_t		count;
+> +	int			i, sts;
+>  	du_t			**dp;
+>  
+>  	/*
+> @@ -145,8 +146,8 @@ quot_bulkstat_mount(
+>  			*dp = NULL;
+>  	ndu[0] = ndu[1] = ndu[2] = 0;
+>  
+> -	fsfd = open(fsdir, O_RDONLY);
+> -	if (fsfd < 0) {
+> +	fsxfd.fd = open(fsdir, O_RDONLY);
+> +	if (fsxfd.fd < 0) {
+>  		perror(fsdir);
+>  		return;
+>  	}
+> @@ -154,25 +155,23 @@ quot_bulkstat_mount(
+>  	buf = (struct xfs_bstat *)calloc(NBSTAT, sizeof(struct xfs_bstat));
+>  	if (!buf) {
+>  		perror("calloc");
+> -		close(fsfd);
+> +		xfd_close(&fsxfd);
+>  		return;
+>  	}
+>  
+> -	bulkreq.lastip = &last;
+> -	bulkreq.icount = NBSTAT;
+> -	bulkreq.ubuffer = buf;
+> -	bulkreq.ocount = &count;
+> -
+> -	while ((sts = xfsctl(fsdir, fsfd, XFS_IOC_FSBULKSTAT, &bulkreq)) == 0) {
+> +	while ((sts = xfrog_bulkstat(&fsxfd, &last, NBSTAT, buf,
+> +				&count)) == 0) {
+>  		if (count == 0)
+>  			break;
+>  		for (i = 0; i < count; i++)
+>  			quot_bulkstat_add(&buf[i], flags);
+>  	}
+> -	if (sts < 0)
+> -		perror("XFS_IOC_FSBULKSTAT"),
+> +	if (sts < 0) {
+> +		errno = sts;
+> +		perror("XFS_IOC_FSBULKSTAT");
+> +	}
+>  	free(buf);
+> -	close(fsfd);
+> +	xfd_close(&fsxfd);
+>  }
+>  
+>  static int
+> diff --git a/scrub/inodes.c b/scrub/inodes.c
+> index 700e5200..413037d8 100644
+> --- a/scrub/inodes.c
+> +++ b/scrub/inodes.c
+> @@ -17,6 +17,7 @@
+>  #include "xfs_scrub.h"
+>  #include "common.h"
+>  #include "inodes.h"
+> +#include "xfrog.h"
+>  
+>  /*
+>   * Iterate a range of inodes.
+> @@ -50,17 +51,10 @@ xfs_iterate_inodes_range_check(
+>  	struct xfs_inogrp	*inogrp,
+>  	struct xfs_bstat	*bstat)
+>  {
+> -	struct xfs_fsop_bulkreq	onereq = {NULL};
+>  	struct xfs_bstat	*bs;
+> -	__u64			oneino;
+> -	__s32			onelen = 0;
+>  	int			i;
+>  	int			error;
+>  
+> -	onereq.lastip  = &oneino;
+> -	onereq.icount  = 1;
+> -	onereq.ocount  = &onelen;
+> -
+>  	for (i = 0, bs = bstat; i < XFS_INODES_PER_CHUNK; i++) {
+>  		if (!(inogrp->xi_allocmask & (1ULL << i)))
+>  			continue;
+> @@ -70,10 +64,8 @@ xfs_iterate_inodes_range_check(
+>  		}
+>  
+>  		/* Load the one inode. */
+> -		oneino = inogrp->xi_startino + i;
+> -		onereq.ubuffer = bs;
+> -		error = ioctl(ctx->mnt.fd, XFS_IOC_FSBULKSTAT_SINGLE,
+> -				&onereq);
+> +		error = xfrog_bulkstat_single(&ctx->mnt,
+> +				inogrp->xi_startino + i, bs);
+>  		if (error || bs->bs_ino != inogrp->xi_startino + i) {
+>  			memset(bs, 0, sizeof(struct xfs_bstat));
+>  			bs->bs_ino = inogrp->xi_startino + i;
+> @@ -99,16 +91,14 @@ xfs_iterate_inodes_range(
+>  	void			*arg)
+>  {
+>  	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+> -	struct xfs_fsop_bulkreq	bulkreq = {NULL};
+>  	struct xfs_handle	handle;
+>  	struct xfs_inogrp	inogrp;
+>  	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
+>  	char			idescr[DESCR_BUFSZ];
+> -	char			buf[DESCR_BUFSZ];
+>  	struct xfs_bstat	*bs;
+>  	__u64			igrp_ino;
+> -	__u64			ino;
+> -	__s32			bulklen = 0;
+> +	uint64_t		ino;
+> +	uint32_t		bulklen = 0;
+>  	__s32			igrplen = 0;
+>  	bool			moveon = true;
+>  	int			i;
+> @@ -117,10 +107,6 @@ xfs_iterate_inodes_range(
+>  
+>  
+>  	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
+> -	bulkreq.lastip  = &ino;
+> -	bulkreq.icount  = XFS_INODES_PER_CHUNK;
+> -	bulkreq.ubuffer = &bstat;
+> -	bulkreq.ocount  = &bulklen;
+>  
+>  	igrpreq.lastip  = &igrp_ino;
+>  	igrpreq.icount  = 1;
+> @@ -138,17 +124,17 @@ xfs_iterate_inodes_range(
+>  	while (!error && igrplen) {
+>  		/* Load the inodes. */
+>  		ino = inogrp.xi_startino - 1;
+> -		bulkreq.icount = inogrp.xi_alloccount;
+> +
+>  		/*
+>  		 * We can have totally empty inode chunks on filesystems where
+>  		 * there are more than 64 inodes per block.  Skip these.
+>  		 */
+>  		if (inogrp.xi_alloccount == 0)
+>  			goto igrp_retry;
+> -		error = ioctl(ctx->mnt.fd, XFS_IOC_FSBULKSTAT, &bulkreq);
+> +		error = xfrog_bulkstat(&ctx->mnt, &ino, inogrp.xi_alloccount,
+> +				bstat, &bulklen);
+>  		if (error)
+> -			str_info(ctx, descr, "%s", strerror_r(errno,
+> -						buf, DESCR_BUFSZ));
+> +			str_liberror(ctx, error, descr);
 
-Which is exactly why I noted below that we should probably check for
-mlip == NULL there as well. I.e.:
+This converts an informational message to a runtime error, which causes
+xfstests regression failures.  NAK.
 
-	if (!mlip || mlip_changed) {
-		...
-		xfs_log_space_wake()
-	}
+--D
 
-Of course, that's based on my thinking that this was intended to address
-the "pushing an empty AIL" case. Even if there is some other problematic
-case, this patch is still basically a racy variant of just making that
-existing wake in xfs_trans_ail_update_bulk() unconditional. FWIW, this
-call also properly communicates the log reservation requirement of the
-next transaction in the queue back to the AIL, particularly if the
-request happens to be larger than whatever the min threshold heuristic
-is in xlog_grant_push_ail().
-
-Brian
-
-> > The problem may
-> > just be that it's only invoked on tail changes and not empty ->
-> > populated state changes. If so, that could be addressed with a check for
-> > mlip == NULL in xfs_trans_ail_update_bulk().
-> > 
-> > (Actually, the first patch alone seems to be enough to prevent the
-> > problem in my tests. I suppose I could be seeing a variation of the race
-> > from what Chandan sees and a wakeup from the second CIL ctx ticket
-> > release or something is saving me...).
+>  
+>  		xfs_iterate_inodes_range_check(ctx, &inogrp, bstat);
+>  
 > 
-> Right, the first patch addresses the hang where a tail update occurs
-> after this iclog hits the disk and inserts everything into the AIL.
-> This patch addresses the variant (that is much harder to hit) where
-> no tail updates occur after this iclog hits the disk and completes.
-> 
-> Both are necessary, AFAICT.
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
