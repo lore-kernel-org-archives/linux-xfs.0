@@ -2,69 +2,69 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 229EAC3A5A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:01:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20685C3A5A4
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:10:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E841C21726
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:01:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD3EE21897
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 11:10:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="on1/gSyV";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ZfQrBpd3"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="HMBFKSgH";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="F0JXAmtL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727170AbfH3LBR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 07:01:17 -0400
-Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:58753 "EHLO
+        id S1727105AbfH3LKy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 07:10:54 -0400
+Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:41359 "EHLO
         wout2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726969AbfH3LBR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 07:01:17 -0400
+        by vger.kernel.org with ESMTP id S1726902AbfH3LKy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 07:10:54 -0400
 Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 0481B3D4;
-        Fri, 30 Aug 2019 07:01:15 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id 9E37751C;
+        Fri, 30 Aug 2019 07:10:52 -0400 (EDT)
 Received: from mailfrontend2 ([10.202.2.163])
-  by compute1.internal (MEProxy); Fri, 30 Aug 2019 07:01:16 -0400
+  by compute1.internal (MEProxy); Fri, 30 Aug 2019 07:10:53 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
         message-id:subject:from:to:cc:date:in-reply-to:references
         :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        kWVDfj9YD9joQFTbEcnIrgogabVCHrMEZCv34MxeHOc=; b=on1/gSyVdyV+v1Tn
-        KVvwVYnGGHX//H0fUB+qN+uX1y8/oQVdV2DH/D4fe93zN+efbPQLgcVhLfwXUlIb
-        D31ORZhI2peqdoanbVu6vw0UDgagZQK8VjANv8mI/Z4UGbBh8XbkHqd28VeMIIbQ
-        8o2ivo/147APY0BhT3FiZ16jaFxmaKYZU9KEz0rGVGiLmsNMrqjNlKdIpGweih+3
-        igpWLZep89xxqh5h/1ZaTQRlV15c359J/bwFo70BlewDfBCCIxNZSOgquRjym7rA
-        e240EXf3lWSry16XKNsehenFeQPWuzrMfWrp1MBv1gWX1AJI2oMzRmmkEqtyCK8q
-        Ptp7aA==
+        A96OFP1y5veSsW2QjqBuy7qzCesSYeToEfgqT6eZmWo=; b=HMBFKSgHO/RGhCia
+        uyLi077+EDTqgd9YLI1TrzRmxuIRaS5FTTYplFwPSqHMuS/t/srBX4p3BU/3+qOo
+        7uK1GQilvaBC4DHxVeF+FB9wQl/7wjlj6ya1zn5s1N9Cw1OJNfLhwm1L+n4Aoc3L
+        lMf7jriBZGq6fuc8w0pf98f6ArtX3u9LwQjEn11RcbpovPkbEULA6IuAovrnG4Ra
+        buARVRo/1elk6fHuSSXYQRpncNxbZsFGdncDd+sMt1p1CvgFJSrm0AA6paKGYdXx
+        4ScZVoYje2wRmpfH3iU/yavLalECxjH0iCuwYA1zC5d2akoElxL3TEtZswoTxORg
+        2rxzaA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:content-type
         :date:from:in-reply-to:message-id:mime-version:references
         :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=kWVDfj9YD9joQFTbEcnIrgogabVCHrMEZCv34MxeH
-        Oc=; b=ZfQrBpd3dl1QZIbUFUDAQpt4aPif6QobjOaJkhTdv68wce9zpyuFUju3n
-        KOISBuGdaLNgvoEfz/GubSwsS9682BBYz9iRLTXclJVX1t0mB2pHu7clRnkZ80n7
-        m+UuC8ScVcgKdVMA99nHo6hPiXbzUVQRqjGsTU3Y+QzEuWkkRAZSMTfgniMbLV7L
-        KZYOTUzXz6Kt8+AD3xI2k1Bs990GAxz98S8n7r4Q3dUCVdqtBkmKw9SELAU0aEiJ
-        gnlg4IKooCZgeGYEEbdkolSg3Vv2a3Z4/UyBJs7wvPgc2yED5R6PKKCNNLp9A/cm
-        EZmk8OUl6j9DqijhBcq4QxG0V+T0A==
-X-ME-Sender: <xms:-wFpXcWmuIozyiNBUwXqW2TdYMlz5-Z9YXq6HkKeOmrVIU-nvo5ooA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduvddrudeigedgfeeiucetufdoteggodetrfdotf
+        :x-sasl-enc; s=fm3; bh=A96OFP1y5veSsW2QjqBuy7qzCesSYeToEfgqT6eZm
+        Wo=; b=F0JXAmtL0djkae3kd1AL2/U6uQY930lEWNrYK/nU9Kn4fywcYp0jnvg/o
+        hCuh+fxUKnovmjHVB0/bzSR4wAAfZEzHPjw/KlCW2UCz/4moS0ZmoaeegmW0KTzK
+        BCcwX43q881gSPt5Q2TzocSE3rq56REVvOxAWIQA4UZbdgi3p9ujzhloiw9FhSax
+        8y7/N55ly1jTKkd9W36/wvmqyXyPVM5aJP8YsSh5axH3Pmj9bunrjtyxMLJKvqP4
+        ygnrJf2PfWCYBDrm1LZ9D7kzhtzpLn/dVWXtybURDgvxq7m7+EEoSfX9O0e8FWFT
+        2hff8WhKxr/jE759ySnOgaeL4yg2Q==
+X-ME-Sender: <xms:OwRpXUspHtaIsSMyIdOY4jWI1vY2dIArj97wJH6cUkoA8j96Zc-ocQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeduvddrudeigedgfeejucetufdoteggodetrfdotf
     fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
     uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
     cujfgurhepkffuhffvffgjfhgtfggggfesthejredttderjeenucfhrhhomhepkfgrnhcu
     mfgvnhhtuceorhgrvhgvnhesthhhvghmrgifrdhnvghtqeenucfkphepuddukedrvddtke
     drudekgedrudefkeenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghm
     rgifrdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
-X-ME-Proxy: <xmx:-wFpXU31NCsEFlzOjZA7VC6aBMJ2FsebTHcYBDXvZTcELYPbeaAySw>
-    <xmx:-wFpXbaMlqRkKqaLqejDFiyvPAeiq_ABqV8YVl13qVPcCx2LJR5uWA>
-    <xmx:-wFpXfp2TPE76i-7sTzLPyL3YFGXD5bawLSDH1XAO1sWij1dhJVqCA>
-    <xmx:-wFpXTmWX24BQ6OmGZGvyT8hlWcGieQ62sw_mdwqYGI6XvmvC9sFPA>
+X-ME-Proxy: <xmx:OwRpXX9soVDNWBgl5mQA4fq5tMO-bDyqO3VRnW4W_DklQXA0x_umMA>
+    <xmx:OwRpXS_tReLidPKxMuMfRSN311TsBUfGm8QLUT7jcKwJuogcPfy5Fg>
+    <xmx:OwRpXRPMktKUBAGo_yJuTNfQwU0IJJouNgVnW9cQ2kQ8Sg0wvzDxfw>
+    <xmx:PARpXeJk3KjLOpbtLjqMYrfalGwfZGMbCFIQzq10GXP3luWqWe6FgA>
 Received: from mickey.themaw.net (unknown [118.208.184.138])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 91924D6005E;
-        Fri, 30 Aug 2019 07:01:12 -0400 (EDT)
-Message-ID: <27e6eb5eb43a5bf0cef4db7036429cc7b522d437.camel@themaw.net>
-Subject: Re: [PATCH v2 08/15] xfs: mount-api - add xfs_get_tree()
+        by mail.messagingengine.com (Postfix) with ESMTPA id 1A75CD6005B;
+        Fri, 30 Aug 2019 07:10:48 -0400 (EDT)
+Message-ID: <47ce837c1e282ca679678ef7aba3320e2a570555.camel@themaw.net>
+Subject: Re: [PATCH v2 11/15] xfs: mount api - add xfs_reconfigure()
 From:   Ian Kent <raven@themaw.net>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
@@ -72,11 +72,11 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         David Howells <dhowells@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Date:   Fri, 30 Aug 2019 19:01:09 +0800
-In-Reply-To: <20190828132724.GA16389@bfoster>
+Date:   Fri, 30 Aug 2019 19:10:44 +0800
+In-Reply-To: <20190828132803.GD16389@bfoster>
 References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
-         <156652199954.2607.8863934346265980917.stgit@fedora-28>
-         <20190828132724.GA16389@bfoster>
+         <156652201687.2607.7837619342391140067.stgit@fedora-28>
+         <20190828132803.GD16389@bfoster>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
@@ -86,100 +86,176 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2019-08-28 at 09:27 -0400, Brian Foster wrote:
-> On Fri, Aug 23, 2019 at 08:59:59AM +0800, Ian Kent wrote:
-> > Add the fs_context_operations method .get_tree that validates
-> > mount options and fills the super block as previously done
-> > by the file_system_type .mount method.
+On Wed, 2019-08-28 at 09:28 -0400, Brian Foster wrote:
+> On Fri, Aug 23, 2019 at 09:00:16AM +0800, Ian Kent wrote:
+> > Add the fs_context_operations method .reconfigure that performs
+> > remount validation as previously done by the super_operations
+> > .remount_fs method.
+> > 
+> > An attempt has also been made to update the comment about options
+> > handling problems with mount(8) to reflect the current situation.
 > > 
 > > Signed-off-by: Ian Kent <raven@themaw.net>
 > > ---
-> >  fs/xfs/xfs_super.c |   47
-> > +++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 47 insertions(+)
+> >  fs/xfs/xfs_super.c |   84
+> > ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 84 insertions(+)
 > > 
 > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index d3fc9938987d..7de64808eb00 100644
+> > index 76374d602257..aae0098fecab 100644
 > > --- a/fs/xfs/xfs_super.c
 > > +++ b/fs/xfs/xfs_super.c
-> > @@ -1904,6 +1904,52 @@ xfs_fs_fill_super(
-> >  	return error;
+> > @@ -1522,6 +1522,89 @@ xfs_fs_remount(
+> >  	return 0;
 > >  }
 > >  
-> > +STATIC int
-> > +xfs_fill_super(
-> > +	struct super_block	*sb,
-> > +	struct fs_context	*fc)
-> > +{
-> > +	struct xfs_fs_context	*ctx = fc->fs_private;
-> > +	struct xfs_mount	*mp = sb->s_fs_info;
-> > +	int			silent = fc->sb_flags & SB_SILENT;
-> > +	int			error = -ENOMEM;
-> > +
-> > +	mp->m_super = sb;
-> > +
-> > +	/*
-> > +	 * set up the mount name first so all the errors will refer to
-> > the
-> > +	 * correct device.
-> > +	 */
-> > +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
-> > +	if (!mp->m_fsname)
-> > +		return -ENOMEM;
-> > +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
-> > +
-> > +	error = xfs_validate_params(mp, ctx, false);
-> > +	if (error)
-> > +		goto out_free_fsname;
-> > +
-> > +	error = __xfs_fs_fill_super(mp, silent);
-> > +	if (error)
-> > +		goto out_free_fsname;
-> > +
-> > +	return 0;
-> > +
-> > + out_free_fsname:
-> > +	sb->s_fs_info = NULL;
-> > +	xfs_free_fsname(mp);
-> > +	kfree(mp);
+> > +/*
+> > + * There have been problems in the past with options passed from
+> > mount(8).
+> > + *
+> > + * The problem being that options passed by mount(8) in the case
+> > where only
+> > + * the the mount point path is given would consist of the existing
+> > fstab
+> > + * options with the options from mtab for the current mount merged
+> > in and
+> > + * the options given on the command line last. But the result
+> > couldn't be
+> > + * relied upon to accurately reflect the current mount options so
+> > that
+> > + * rejecting options that can't be changed on reconfigure could
+> > erronously
+> > + * cause mount failure.
+> > + *
+> > + * The mount-api uses a legacy mount options handler in the VFS to
+> > handle
+> > + * mount(8) so these options will continue to be passed. Even if
+> > mount(8)
+> > + * is updated to use fsopen()/fsconfig()/fsmount() it's likely to
+> > continue
+> > + * to set the existing options so options problems with
+> > reconfigure could
+> > + * continue.
+> > + *
+> > + * For the longest time mtab locking was a problem and this could
+> > have been
+> > + * one possible cause. It's also possible there could have been
+> > options
+> > + * order problems.
+> > + *
+> > + * That has changed now as mtab is a link to the proc file system
+> > mount
+> > + * table so mtab options should be always accurate.
+> > + *
+> > + * Consulting the util-linux maintainer (Karel Zak) he is
+> > confident that,
+> > + * in this case, the options passed by mount(8) will be those of
+> > the current
+> > + * mount and the options order should be a correct merge of fstab
+> > and mtab
+> > + * options, and new options given on the command line.
+> > + *
+> > + * So, in theory, it should be possible to compare incoming
+> > options and
+> > + * return an error for options that differ from the current mount
+> > and can't
+> > + * be changed on reconfigure to prevent users from believing they
+> > might have
+> > + * changed mount options using remount which can't be changed.
+> > + *
+> > + * But for now continue to return success for every reconfigure
+> > request, and
+> > + * silently ignore all options that can't actually be changed.
+> > + */
 > 
-> So where is mp allocated in the updated mount sequence? Has that code
-> been added yet or does this tie into the existing fill_super
-> sequence?
-> It's hard to tell because xfs_context_ops is still unused. It looks a
-> little strange to free mp here when it's presumably been allocated
-> somewhere else. If that is separate code, perhaps some of the patches
-> should be combined (i.e. even if just setup/teardown bits) for easier
-> review.
+> This seems like all good information for a commit log description or
+> perhaps to land in a common header where some of these fs context
+> bits
+> are declared, but overly broad for a function header comment for an
+> XFS
+> callback. I'd more expect some information around the fundamental
+> difference between 'mp' and 'new_mp,' where those come from, what
+> they
+> mean, etc. From the code, it seems like new_mp is transient and
+> reflects
+> changes that we need to incorporate in the original mp..?
 
-Umm, good question, and good suggestion.
+The reason I looked into this is becuase of a fairly lengthy
+comment in the original source and that lead to this rather
+verbose tail about what I found.
 
-I haven't looked at what I'm doing there so I'll keep your
-suggestion in mind when I'm working through it.
+It's not so much a mount context problem becuase it's due
+to the way user space constructs the mount options from
+various sources where options are present.
+
+So I don't think it's something that the mount context
+code can resolve.
+
+Which leaves a bunch of (I think) useful information
+without a palce to live so it can be referred to ...
+suggestions?
 
 > 
 > Brian
 > 
-> > +
-> > +	return error;
-> > +}
-> > +
 > > +STATIC int
-> > +xfs_get_tree(
-> > +	struct fs_context	*fc)
+> > +xfs_reconfigure(
+> > +	struct fs_context *fc)
 > > +{
-> > +	return vfs_get_block_super(fc, xfs_fill_super);
+> > +	struct xfs_fs_context	*ctx = fc->fs_private;
+> > +	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
+> > +	struct xfs_mount        *new_mp = fc->s_fs_info;
+> > +	xfs_sb_t		*sbp = &mp->m_sb;
+> > +	int			flags = fc->sb_flags;
+> > +	int			error;
+> > +
+> > +	error = xfs_validate_params(new_mp, ctx, false);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* inode32 -> inode64 */
+> > +	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+> > +	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
+> > +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
+> > >sb_agcount);
+> > +	}
+> > +
+> > +	/* inode64 -> inode32 */
+> > +	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+> > +	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
+> > +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
+> > >sb_agcount);
+> > +	}
+> > +
+> > +	/* ro -> rw */
+> > +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
+> > +		error = xfs_remount_rw(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> > +	/* rw -> ro */
+> > +	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
+> > +		error = xfs_remount_ro(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> > +	return 0;
 > > +}
 > > +
-> >  STATIC void
-> >  xfs_fs_put_super(
-> >  	struct super_block	*sb)
-> > @@ -1976,6 +2022,7 @@ static const struct super_operations
+> >  /*
+> >   * Second stage of a freeze. The data is already frozen so we only
+> >   * need to take care of the metadata. Once that's done sync the
+> > superblock
+> > @@ -2049,6 +2132,7 @@ static const struct super_operations
 > > xfs_super_operations = {
-> >  
 > >  static const struct fs_context_operations xfs_context_ops = {
 > >  	.parse_param = xfs_parse_param,
-> > +	.get_tree    = xfs_get_tree,
+> >  	.get_tree    = xfs_get_tree,
+> > +	.reconfigure = xfs_reconfigure,
 > >  };
 > >  
 > >  static struct file_system_type xfs_fs_type = {
