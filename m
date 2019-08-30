@@ -1,144 +1,87 @@
-Return-Path: <SRS0=CuST=WZ=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.3 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E77DC3A5A3
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 23:34:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 80966C3A59F
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 00:28:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 79F9921874
-	for <linux-xfs@archiver.kernel.org>; Thu, 29 Aug 2019 23:34:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4625121874
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 00:28:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LweIiZho"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727190AbfH2XeK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 29 Aug 2019 19:34:10 -0400
-Received: from mga01.intel.com ([192.55.52.88]:30261 "EHLO mga01.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725847AbfH2XeK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 29 Aug 2019 19:34:10 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga007.jf.intel.com ([10.7.209.58])
-  by fmsmga101.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 29 Aug 2019 16:34:09 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.64,445,1559545200"; 
-   d="scan'208";a="172060373"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by orsmga007.jf.intel.com with ESMTP; 29 Aug 2019 16:34:08 -0700
-Date:   Thu, 29 Aug 2019 16:34:08 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Jeff Layton <jlayton@kernel.org>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Subject: Re: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user Layout
- lease
-Message-ID: <20190829233408.GD18249@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
- <20190809225833.6657-3-ira.weiny@intel.com>
- <fde2959db776616008fc5d31df700f5d7d899433.camel@kernel.org>
- <20190814215630.GQ6129@dread.disaster.area>
- <e6f4f619967f4551adb5003d0364770fde2b8110.camel@kernel.org>
+        id S1726988AbfH3A17 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 29 Aug 2019 20:27:59 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34556 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726825AbfH3A17 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 29 Aug 2019 20:27:59 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7U0ROkl124739;
+        Fri, 30 Aug 2019 00:27:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=vwYDtLZZYmhYEjqEJ2D8o0b7hy8AuzjU53SxSoSaNz4=;
+ b=LweIiZho//EcL1LnVovjepxAD+byGzBnZAN4b5//A7Xsw+UTr7niuGmhu9KNukaF29Tj
+ TWYXO+QbwzTSIYzf5G7IuJ+TRidCrqxa5tXXsy3Sx+PIFLVb7YnyFF9eQ/92vmBsoAL8
+ nzKB/JteiS0YdqNtLgsFGSRes+VBI/nQetRETOBi4btF0ht7s6RyuhFdmN12QwdM1Vnn
+ 1iR6E1HG0aaua7forXkklmUtLNAk/LhY1FiLnW6V+X2q2z/9KiL389MmEr5k5sOh8xu6
+ Nt8CeMGu4KIhpxoCXP48GV7aSGqXLhG9GnuB0PQpV8zQxpdDbxZQKKoaLe/09LWGriKw Kg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2ups7c80hh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 30 Aug 2019 00:27:56 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7U0NhlM097709;
+        Fri, 30 Aug 2019 00:25:55 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2uphauf0j8-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 30 Aug 2019 00:25:55 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7U0Psvp004889;
+        Fri, 30 Aug 2019 00:25:54 GMT
+Received: from localhost (/10.145.178.11)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 29 Aug 2019 17:25:54 -0700
+Date:   Thu, 29 Aug 2019 17:25:54 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
+Subject: [PATCH v2 0/2] xfs: get rid of _ITER_{ABORT,CONTINUE}
+Message-ID: <20190830002554.GT5354@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <e6f4f619967f4551adb5003d0364770fde2b8110.camel@kernel.org>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=508
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908300001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9364 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=576 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908300001
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Missed this.  sorry.
+Hi all,
 
-On Mon, Aug 26, 2019 at 06:41:07AM -0400, Jeff Layton wrote:
-> On Thu, 2019-08-15 at 07:56 +1000, Dave Chinner wrote:
-> > On Wed, Aug 14, 2019 at 10:15:06AM -0400, Jeff Layton wrote:
-> > > On Fri, 2019-08-09 at 15:58 -0700, ira.weiny@intel.com wrote:
-> > > > From: Ira Weiny <ira.weiny@intel.com>
-> > > > 
-> > > > Add an exclusive lease flag which indicates that the layout mechanism
-> > > > can not be broken.
-> > > > 
-> > > > Exclusive layout leases allow the file system to know that pages may be
-> > > > GUP pined and that attempts to change the layout, ie truncate, should be
-> > > > failed.
-> > > > 
-> > > > A process which attempts to break it's own exclusive lease gets an
-> > > > EDEADLOCK return to help determine that this is likely a programming bug
-> > > > vs someone else holding a resource.
-> > .....
-> > > > diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
-> > > > index baddd54f3031..88b175ceccbc 100644
-> > > > --- a/include/uapi/asm-generic/fcntl.h
-> > > > +++ b/include/uapi/asm-generic/fcntl.h
-> > > > @@ -176,6 +176,8 @@ struct f_owner_ex {
-> > > >  
-> > > >  #define F_LAYOUT	16      /* layout lease to allow longterm pins such as
-> > > >  				   RDMA */
-> > > > +#define F_EXCLUSIVE	32      /* layout lease is exclusive */
-> > > > +				/* FIXME or shoudl this be F_EXLCK??? */
-> > > >  
-> > > >  /* operations for bsd flock(), also used by the kernel implementation */
-> > > >  #define LOCK_SH		1	/* shared lock */
-> > > 
-> > > This interface just seems weird to me. The existing F_*LCK values aren't
-> > > really set up to be flags, but are enumerated values (even if there are
-> > > some gaps on some arches). For instance, on parisc and sparc:
-> > 
-> > I don't think we need to worry about this - the F_WRLCK version of
-> > the layout lease should have these exclusive access semantics (i.e
-> > other ops fail rather than block waiting for lease recall) and hence
-> > the API shouldn't need a new flag to specify them.
-> > 
-> > i.e. the primary difference between F_RDLCK and F_WRLCK layout
-> > leases is that the F_RDLCK is a shared, co-operative lease model
-> > where only delays in operations will be seen, while F_WRLCK is a
-> > "guarantee exclusive access and I don't care what it breaks"
-> > model... :)
-> > 
-> 
-> Not exactly...
-> 
-> F_WRLCK and F_RDLCK leases can both be broken, and will eventually time
-> out if there is conflicting access. The F_EXCLUSIVE flag on the other
-> hand is there to prevent any sort of lease break from 
+I have recently realized that the _ITER_CONTINUE/_ITER_ABORT defines are
+a giant thinko -- the _CONTINUE variants map to zero, and -ECANCELED can
+handle the _ABORT case just fine.  This series scrapes both of them out
+of the kernel.
 
-Right EXCLUSIVE will not break for any reason.  It will fail truncate and hole
-punch as we discussed back in June.  This is for the use case where the user
-has handed this file/pages off to some hardware for which removing the lease
-would be impossible.  _And_ we don't anticipate any valid use case that someone
-will need to truncate short of killing the process to free up file system
-space.
+In this v2 of the patch we add comments to point out the special meaning
+of 0 and -ECANCELED, which replace the _ITER_* defines.
 
-> 
-> I'm guessing what Ira really wants with the F_EXCLUSIVE flag is
-> something akin to what happens when we set fl_break_time to 0 in the
-> nfsd code. nfsd never wants the locks code to time out a lease of any
-> sort, since it handles that timeout itself.
-> 
-> If you're going to add this functionality, it'd be good to also convert
-> knfsd to use it as well, so we don't end up with multiple ways to deal
-> with that situation.
-
-Could you point me at the source for knfsd?  I looked in 
-
-git://git.linux-nfs.org/projects/steved/nfs-utils.git
-
-but I don't see anywhere leases are used in that source?
-
-Thanks,
-Ira
-
+--D
