@@ -2,96 +2,98 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 63385C3A5A3
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:36:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AAD2AC3A5A3
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:37:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2FF6C2087F
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:36:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6BD5C21897
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 05:37:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ui/epanL"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OoqvZ/vU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727216AbfH3Fgy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 01:36:54 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50830 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727156AbfH3Fgy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 01:36:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=RqeQfdGM7IEwsTCZ+rpo18ojOXpaBswX9P8yXP0zrKY=; b=ui/epanLEaMBftqYe3ya565uF
-        uocOrI3w2l4PhhV7IVMxRlAtXGLEqrdO/suqBUdinu8EWdNGfXkIw3C1o88qOLc+bVpZik3mFEJzH
-        Po9PIsqIQaC9CXhSoskWj1M2iJb7ehGeS+TzURw/hOYKRLvXaBegNh4dlPXdBiSh/ronAK3ObU/BO
-        WfYsHlmuMubVKSGtm5/DKNnXUYvJHQ8nnT/UEQXDcOYC1KMDhjaMRCcRgiTNNLHFQOrDUmSWieK5a
-        6tQ2S7P5Fr2P5qnPn9fSfOiDfF06ck0TiIrUgxC9rboQFJ/O7e/9M+DHUEbsrKqWxhgiVFv7NVtC7
-        2ypzZCOKA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i3Zag-0007Lv-D9; Fri, 30 Aug 2019 05:36:54 +0000
-Date:   Thu, 29 Aug 2019 22:36:54 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/5] xfs: allocate xattr buffer on demand
-Message-ID: <20190830053654.GH6077@infradead.org>
-References: <20190829113505.27223-1-david@fromorbit.com>
- <20190829113505.27223-6-david@fromorbit.com>
+        id S1725902AbfH3FhN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 01:37:13 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:39345 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725901AbfH3FhM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 01:37:12 -0400
+Received: by mail-pg1-f196.google.com with SMTP id u17so2935699pgi.6;
+        Thu, 29 Aug 2019 22:37:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:mime-version:content-disposition
+         :user-agent;
+        bh=w7YEtGvCAOlZwrqQsoF3/LXuqZDGNstU9nE89n8+OrQ=;
+        b=OoqvZ/vUxFI6labySN8wIMZm111YgA8EMKBCc/9d+kIVWKKSin8fyuSZnHLsWgLCew
+         ucpeOlhTMWY/3XccH57aPaaRSUs/diAwe3Uq5tnKvbXz2YWI2XLJwYvjHYugLOL7dcJ5
+         z2S2kVX3VITtcrRpOpGi7VBGg9/ni0MaTzvjHq+s4BVlghaZ42k7q2+v37oDlSj4vbgn
+         ELIwuPI2Dy1pDMHiFEAUPGdDyX/KmZnFi5sAW3sW7ndbb1BTdrN9BEvy4VG/8Enz7sQt
+         IqrOIk/goJQAIVCLOZ3JvQPylCAWWLjCOp2sOFDSS2+2yKrNw8WynGCl7eXDBZ+KDT18
+         LeeQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:mime-version
+         :content-disposition:user-agent;
+        bh=w7YEtGvCAOlZwrqQsoF3/LXuqZDGNstU9nE89n8+OrQ=;
+        b=VGFdsB8gFfBgrJwy7o1Hyj0R61tKsgN39mXGBwru/oG/VQMJvhVP+XRFl89P1LoHI+
+         4btrbvq9+4WlH1Rb3QaLk601RWrY3AUn9/lnEzliz5sEQ+FJaqll/LsL0IWVqHONXLkn
+         KwVrHn/tXe+XXuMBRnMlXNhffUO8AnimVKu19dmr9IlJZ80WG0AC1sCYxGxpl/e6XkOn
+         d0Ix419XvfeKEsIqG4IDBaogKkK4UM7d6IZByCFuN+9+Wwbe0+ObvJMeDdR46GxW4iCL
+         MkL+GTZGMAv+RFLgQLqi+TCOI5QUyhkJF0LTnMwjXTVF6YqqTim3CIjr3AUaUV5HCBmv
+         NXcg==
+X-Gm-Message-State: APjAAAVRVTP7urfnZui2N33YdkwMgc8kaE8mR4csu+GdZI4eDe8GyrmR
+        6z2FdRqC4hzDsgZDKM+KTiZhalk90X8=
+X-Google-Smtp-Source: APXvYqyvlY5W7ohXFLAalwW3xB8x2eN8NPb55vlospRd7LBCyNqXx91dMIigqQ9sWAOQd24JrosIeA==
+X-Received: by 2002:a62:8344:: with SMTP id h65mr16090697pfe.85.1567143431949;
+        Thu, 29 Aug 2019 22:37:11 -0700 (PDT)
+Received: from LGEARND20B15 ([27.122.242.75])
+        by smtp.gmail.com with ESMTPSA id e129sm11854174pfa.92.2019.08.29.22.37.10
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 29 Aug 2019 22:37:11 -0700 (PDT)
+Date:   Fri, 30 Aug 2019 14:37:07 +0900
+From:   Austin Kim <austindh.kim@gmail.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+        austindh.kim@gmail.com
+Subject: [PATCH] xfs: Initialize label array properly
+Message-ID: <20190830053707.GA69101@LGEARND20B15>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190829113505.27223-6-david@fromorbit.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+User-Agent: Mutt/1.5.24 (2015-08-30)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 09:35:05PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> When doing file lookups and checking for permissions, we end up in
-> xfs_get_acl() to see if there are any ACLs on the inode. This
-> requires and xattr lookup, and to do that we have to supply a buffer
-> large enough to hold an maximum sized xattr.
-> 
-> On workloads were we are accessing a wide range of cache cold files
-> under memory pressure (e.g. NFS fileservers) we end up spending a
-> lot of time allocating the buffer. The buffer is 64k in length, so
-> is a contiguous multi-page allocation, and if that then fails we
-> fall back to vmalloc(). Hence the allocation here is /expensive/
-> when we are looking up hundreds of thousands of files a second.
-> 
-> Initial numbers from a bpf trace show average time in xfs_get_acl()
-> is ~32us, with ~19us of that in the memory allocation. Note these
-> are average times, so there are going to be affected by the worst
-> case allocations more than the common fast case...
-> 
-> To avoid this, we could just do a "null"  lookup to see if the ACL
-> xattr exists and then only do the allocation if it exists. This,
-> however, optimises the path for the "no ACL present" case at the
-> expense of the "acl present" case. i.e. we can halve the time in
-> xfs_get_acl() for the no acl case (i.e down to ~10-15us), but that
-> then increases the ACL case by 30% (i.e. up to 40-45us).
-> 
-> To solve this and speed up both cases, drive the xattr buffer
-> allocation into the attribute code once we know what the actual
-> xattr length is. For the no-xattr case, we avoid the allocation
-> completely, speeding up that case. For the common ACL case, we'll
-> end up with a fast heap allocation (because it'll be smaller than a
-> page), and only for the rarer "we have a remote xattr" will we have
-> a multi-page allocation occur. Hence the common ACL case will be
-> much faster, too.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+In case kernel stack variable is not initialized properly,
+there is a risk of kernel information disclosure.
 
-Looks good,
+So, initialize 'char label[]' array with null characters.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Austin Kim <austindh.kim@gmail.com>
+---
+ fs/xfs/xfs_ioctl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 9ea5166..09b3bee 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -2037,7 +2037,7 @@ xfs_ioc_setlabel(
+ 	char			__user *newlabel)
+ {
+ 	struct xfs_sb		*sbp = &mp->m_sb;
+-	char			label[XFSLABEL_MAX + 1];
++	char			label[XFSLABEL_MAX + 1] = {0};
+ 	size_t			len;
+ 	int			error;
+ 
+-- 
+2.6.2
+
