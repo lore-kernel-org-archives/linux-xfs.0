@@ -2,113 +2,82 @@ Return-Path: <SRS0=FA12=W2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26FBAC3A59B
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 14:53:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 325ADC3A59B
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:03:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EC83423429
-	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 14:53:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07C0121670
+	for <linux-xfs@archiver.kernel.org>; Fri, 30 Aug 2019 15:03:32 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FLzNB5xX"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PZenZRzA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727901AbfH3OxR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 10:53:17 -0400
-Received: from mail-qk1-f193.google.com ([209.85.222.193]:40725 "EHLO
-        mail-qk1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727135AbfH3OxR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 10:53:17 -0400
-Received: by mail-qk1-f193.google.com with SMTP id f10so6367614qkg.7;
-        Fri, 30 Aug 2019 07:53:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=elBMA7XStNQqn0xnx17M5IleJjwTUUXWgaglfXsybBk=;
-        b=FLzNB5xXAXrVENogWaDCuVt1rfRYsBVVUMJdaR/Da4BqDSG84guWmY7CTISXgHkCLd
-         3SL8vvScXbqB4Nu/2H/g0F3j8MjXsIuBOSIjXG2XT8Ua9Pmwkc9PQS3Z/iDoR42G+IFJ
-         IdhkSyj0AhT6d0EBttvT/qC5+qFIUbI6/YGdI1nvxsUFQWe1kaZJaOFu0lZL5L93zNL8
-         T/A71rhoyNavJU8Fm3cX5q4/Wii+GNqb9bD890/eFR8sXSJBE4HDmF7b00cpsI/G2qQi
-         Bi+r/nvwJa5fpwG/czdxl8zXo2msjgCGNQjY19iSVHug+FDC/3xrg/h0/D3//5CuQBV2
-         6hxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=elBMA7XStNQqn0xnx17M5IleJjwTUUXWgaglfXsybBk=;
-        b=S9l2L0pneDyDbxDBRSOso7h/OCs3//Xcb+adBgqi9heb4KLZjY0ef2g9ciMRW3BiT5
-         NEl93iyrPejeTZHWIEFNN0AbbAXCuAiNUwPfs5MNbEmaD3zZ5767EFKZ+eBFqkWdQmtY
-         QDEDzrVGGWtH2cbgqC1hkYM13G363/AdfT33pp8c/tduyoxPXqOTNy8aQNCPdIQ8ntTC
-         seYv205vlhOfJiBOQUVcsBI3jaSJD1rbPD2DgAHG0FVCZaRroz3TDFnetBigScZgCd/G
-         9iKpcCgeSNzfiPso9dpI+C2LMrBv1WmPxoxIiS6aj0zW4GRDoCyRt4AYNtfG0PD/eLIy
-         KTlA==
-X-Gm-Message-State: APjAAAWJ9os19JBQ6Q83rzr9cJfZgeCtDBfXL/ejCoSKFSDJERtxMOQB
-        Nn9HKRqQk3nWwLuxzZhXx0qmtDU4cBP+ZyG4J0s=
-X-Google-Smtp-Source: APXvYqx8V+U14X5ZOkymoLRGvOmUGRSj4Iv2MrQEv1E8NH7cdtmdiapBnrQ5HQJDqHJzP/Gf3RC33CVuDzVaClVSq+M=
-X-Received: by 2002:a37:b07:: with SMTP id 7mr14362304qkl.386.1567176796337;
- Fri, 30 Aug 2019 07:53:16 -0700 (PDT)
+        id S1727938AbfH3PDb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 30 Aug 2019 11:03:31 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:44328 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727919AbfH3PDa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 11:03:30 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=+u7q9SAdE+sULaMVsu/w2nPWeQ/Xu7Zw4HzIXUzGRTE=; b=PZenZRzADV3WE3b1cs5CTKfrq
+        +Z/vhKjiStDqwueWBbBO2eK7dR3IVve47CFRGBwKq/DfpB6Yp6X3/TnaTzFWAv72nHX+Wu2Wv3fsD
+        nlszvDLtVNaoNXXtpjiNA8XFtZ0VKrqDrTgcaYBD388oBMwCBwBoUCCyGnnuckSduYQXE8rMSwjTD
+        t/5YOt4wwZEKP6LHhGbgaUDaJQzeL9syzcthQgs3BuIVQXxSKqoyUnJrCUo6A0t9mTdzHDHt7b12i
+        9qkhRAghff9KwziXBNcdok/K7kFTSRrMl6g8yxXcM+AMjEXMLkPe6pYtQU5x1MRu2z+AzdTF/gDLa
+        ro1xht78g==;
+Received: from [2001:4bb8:180:3f4c:863:2ead:e9d4:da9f] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
+        id 1i3iQz-0004kt-Pt; Fri, 30 Aug 2019 15:03:30 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     linux-xfs@vger.kernel.org
+Cc:     Murphy Zhou <jencce.kernel@gmail.com>
+Subject: [PATCH v2] xfsprogs: provide a few compatibility typedefs
+Date:   Fri, 30 Aug 2019 17:03:27 +0200
+Message-Id: <20190830150327.20874-1-hch@lst.de>
+X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
-References: <20190830053707.GA69101@LGEARND20B15> <20190830053945.GX5354@magnolia>
-In-Reply-To: <20190830053945.GX5354@magnolia>
-From:   Austin Kim <austindh.kim@gmail.com>
-Date:   Fri, 30 Aug 2019 23:53:06 +0900
-Message-ID: <CADLLry6yf1a_8ruR=DV78hUdgNAi+kN8ReciEgwjozjahpCgrQ@mail.gmail.com>
-Subject: Re: [PATCH] xfs: Initialize label array properly
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-2019=EB=85=84 8=EC=9B=94 30=EC=9D=BC (=EA=B8=88) =EC=98=A4=ED=9B=84 2:39, D=
-arrick J. Wong <darrick.wong@oracle.com>=EB=8B=98=EC=9D=B4 =EC=9E=91=EC=84=
-=B1:
->
-> On Fri, Aug 30, 2019 at 02:37:07PM +0900, Austin Kim wrote:
-> > In case kernel stack variable is not initialized properly,
-> > there is a risk of kernel information disclosure.
-> >
-> > So, initialize 'char label[]' array with null characters.
->
-> Got a testcase for this?  At least a couple other filesystems implement
-> this ioctl too, which means they all should be checked/tested on a
-> regular basis.
+Add back four typedefs that allow xfsdump to compile against the
+headers from the latests xfsprogs.
 
-Thanks for feedback.
-As you pointed out, I figured out ioctl(e.g: ext4_ioctl, f2fs_ioctl)
-of other file system is implemented with the same ways.
-Please ignore the patch in this mail thread.
+Reported-by: Murphy Zhou <jencce.kernel@gmail.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ include/xfs.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-BR,
-Austin Kim
+diff --git a/include/xfs.h b/include/xfs.h
+index f2f675df..35435b18 100644
+--- a/include/xfs.h
++++ b/include/xfs.h
+@@ -37,4 +37,13 @@ extern int xfs_assert_largefile[sizeof(off_t)-8];
+ #include <xfs/xfs_types.h>
+ #include <xfs/xfs_fs.h>
+ 
++/*
++ * Backards compatibility for users of this header, now that the kernel
++ * removed these typedefs from xfs_fs.h.
++ */
++typedef struct xfs_bstat xfs_bstat_t;
++typedef struct xfs_fsop_bulkreq xfs_fsop_bulkreq_t;
++typedef struct xfs_fsop_geom_v1 xfs_fsop;
++typedef struct xfs_inogrp xfs_inogrp_t;
++
+ #endif	/* __XFS_H__ */
+-- 
+2.20.1
 
->
-> --D
->
-> > Signed-off-by: Austin Kim <austindh.kim@gmail.com>
-> > ---
-> >  fs/xfs/xfs_ioctl.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> > index 9ea5166..09b3bee 100644
-> > --- a/fs/xfs/xfs_ioctl.c
-> > +++ b/fs/xfs/xfs_ioctl.c
-> > @@ -2037,7 +2037,7 @@ xfs_ioc_setlabel(
-> >       char                    __user *newlabel)
-> >  {
-> >       struct xfs_sb           *sbp =3D &mp->m_sb;
-> > -     char                    label[XFSLABEL_MAX + 1];
-> > +     char                    label[XFSLABEL_MAX + 1] =3D {0};
-> >       size_t                  len;
-> >       int                     error;
-> >
-> > --
-> > 2.6.2
-> >
