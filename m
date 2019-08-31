@@ -2,293 +2,260 @@ Return-Path: <SRS0=0uIH=W3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F26C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 05:11:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA3C5C3A59F
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 06:57:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 41E0D2342E
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 05:11:38 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iv3b/vGU"
+	by mail.kernel.org (Postfix) with ESMTP id AC9952343A
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 06:57:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726231AbfHaFLh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 31 Aug 2019 01:11:37 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:44950 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725298AbfHaFLh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 31 Aug 2019 01:11:37 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7V5BZRx162094;
-        Sat, 31 Aug 2019 05:11:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=36Efk3NKTrPV7t1UA95TweqQgNnlT84IiYnOMidizo0=;
- b=iv3b/vGU2+8NgWLRTw1Vj+cjBoXbKUtCq6GJAREIqTjU/BFO7M9uZj5bGWEekRJB4wEA
- w+XWjxTmC6ZhbtP816jJMQDExD30YCDwYCNz+bw5/JAWxTFtIopze6Q0LPAsc6q82pfN
- 4CBDlZx2Bc66BIpRQY5d2C1TDOwqyGufqv6twqnnuMpwD5bCOulP/YaXxx9ws+FlqOy1
- XofgvkH3AHFKEaFA/sAuQrCYPkXtVEqEtK1/AfdjZKfaC+gKMyhLrzOe+8LFdy7exyGJ
- 71Y/KUDdcBXnt1cBQOZ8tSM+xGb4hmq1XS4YHkY1DwlubnQfWJjQT0TNCNBM6ai0Lm2X SA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2uqjh2001k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 31 Aug 2019 05:11:35 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7V58kqx091222;
-        Sat, 31 Aug 2019 05:11:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2uqe19xsmf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 31 Aug 2019 05:11:34 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7V5BXCw024258;
-        Sat, 31 Aug 2019 05:11:34 GMT
-Received: from [192.168.1.9] (/67.1.183.122)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 30 Aug 2019 22:11:33 -0700
-Subject: Re: [PATCH 6/9] libfrog: create online fs geometry converters
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
-References: <156713882070.386621.8501281965010809034.stgit@magnolia>
- <156713886338.386621.8386764562465509319.stgit@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <78fe4231-da82-1bfa-62a6-b8827e73d5be@oracle.com>
-Date:   Fri, 30 Aug 2019 22:11:32 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1726130AbfHaG5L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 31 Aug 2019 02:57:11 -0400
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:55528 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725903AbfHaG5K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 31 Aug 2019 02:57:10 -0400
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.27/8.16.0.27) with SMTP id x7V6q8R1033226
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Aug 2019 02:57:09 -0400
+Received: from e06smtp03.uk.ibm.com (e06smtp03.uk.ibm.com [195.75.94.99])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 2uqjgujgv9-1
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=NOT)
+        for <linux-xfs@vger.kernel.org>; Sat, 31 Aug 2019 02:57:09 -0400
+Received: from localhost
+        by e06smtp03.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-xfs@vger.kernel.org> from <chandan@linux.ibm.com>;
+        Sat, 31 Aug 2019 07:57:07 +0100
+Received: from b06avi18878370.portsmouth.uk.ibm.com (9.149.26.194)
+        by e06smtp03.uk.ibm.com (192.168.101.133) with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted;
+        (version=TLSv1/SSLv3 cipher=AES256-GCM-SHA384 bits=256/256)
+        Sat, 31 Aug 2019 07:57:04 +0100
+Received: from d06av25.portsmouth.uk.ibm.com (d06av25.portsmouth.uk.ibm.com [9.149.105.61])
+        by b06avi18878370.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id x7V6v3K124314132
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 31 Aug 2019 06:57:03 GMT
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id BD04711C04A;
+        Sat, 31 Aug 2019 06:57:03 +0000 (GMT)
+Received: from d06av25.portsmouth.uk.ibm.com (unknown [127.0.0.1])
+        by IMSVA (Postfix) with ESMTP id 2510E11C050;
+        Sat, 31 Aug 2019 06:57:02 +0000 (GMT)
+Received: from localhost.localdomain (unknown [9.199.43.18])
+        by d06av25.portsmouth.uk.ibm.com (Postfix) with ESMTP;
+        Sat, 31 Aug 2019 06:57:01 +0000 (GMT)
+From:   Chandan Rajendra <chandan@linux.ibm.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        Chandan Rajendra <chandanrlinux@gmail.com>,
+        linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        hch@infradead.org
+Subject: Re: [RFC] xfs: Flush iclog containing XLOG_COMMIT_TRANS before waiting for log space
+Date:   Sat, 31 Aug 2019 12:28:47 +0530
+Organization: IBM
+In-Reply-To: <2367290.sgLJaTIShl@localhost.localdomain>
+References: <20190821110448.30161-1-chandanrlinux@gmail.com> <20190830164750.GD26520@bfoster> <2367290.sgLJaTIShl@localhost.localdomain>
 MIME-Version: 1.0
-In-Reply-To: <156713886338.386621.8386764562465509319.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1908310057
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1908310058
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
+X-TM-AS-GCONF: 00
+x-cbid: 19083106-0012-0000-0000-00000344E202
+X-IBM-AV-DETECTION: SAVI=unused REMOTE=unused XFE=unused
+x-cbparentid: 19083106-0013-0000-0000-0000217F278F
+Message-Id: <54049584.qczpgOBqR6@localhost.localdomain>
+X-Proofpoint-Virus-Version: vendor=fsecure engine=2.50.10434:,, definitions=2019-08-31_02:,,
+ signatures=0
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ malwarescore=0 suspectscore=5 phishscore=0 bulkscore=0 spamscore=0
+ clxscore=1015 lowpriorityscore=0 mlxscore=0 impostorscore=0
+ mlxlogscore=999 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.0.1-1906280000 definitions=main-1908310078
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 8/29/19 9:21 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Saturday, August 31, 2019 10:29 AM Chandan Rajendra wrote: 
+> On Friday, August 30, 2019 10:17 PM Brian Foster wrote: 
+> > On Fri, Aug 30, 2019 at 09:08:17AM +1000, Dave Chinner wrote:
+> > > On Thu, Aug 29, 2019 at 10:51:59AM +0530, Chandan Rajendra wrote:
+> > > > On Monday, August 26, 2019 6:02 AM Dave Chinner wrote: 
+> > > > > On Sun, Aug 25, 2019 at 08:35:17PM +0530, Chandan Rajendra wrote:
+> > > > > > On Friday, August 23, 2019 7:08 PM Chandan Rajendra wrote:
+> > > > > > 
+> > > > > > Dave, With the above changes made in xfs_trans_reserve(), mount task is
+> > > > > > deadlocking due to the following,
+> > > > > > 1. With synchronous transactions, __xfs_trans_commit() now causes iclogs to be
+> > > > > > flushed to the disk and hence log items to be ultimately moved to AIL.
+> > > > > > 2. xfsaild task is woken up, which acts in items on AIL.
+> > > > > > 3. After some time, we stop issuing synchronous transactions because AIL has
+> > > > > >    log items in its list and hence !xfs_ail_min(tp->t_mountp->m_ail) evaluates to
+> > > > > >    false. In xfsaild_push(), "XFS_LSN_CMP(lip->li_lsn, target) <= 0"
+> > > > > >    evaluates to false on the first iteration of the while loop. This means we
+> > > > > >    have a log item whose LSN is larger than xfs_ail->ail_target at the
+> > > > > >    beginning of the AIL.
+> > > > > 
+> > > > > The push target for xlog_grant_push_ail() is to free 25% of the log
+> > > > > space. So if all the items in the AIL are not within 25% of the tail
+> > > > > end of the log, there's nothing for the AIL to push. This indicates
+> > > > > that there is at least 25% of physical log space free.
+> > > > 
+> > > > Sorry for the late response. I was trying to understand the code flow.
+> > > > 
+> > > > Here is a snippet of perf trace explaining what is going on,
+> > > > 
+> > > > 	 760881:           mount  8654 [002]   216.813041:                         probe:xlog_grant_push_ail: (c000000000765864) comm="xfsaild/loop1" threshold_cycle_s32=3 threshold_block_s32=3970 need_bytes_s32=389328 last_sync_cycle_u32=2 last_sync_block_u32=19330 free_threshold_s32=5120 free_bytes_s32=383756 free_blocks_s32=749 l_logsize=10485760 reserve_cycle_s32=3 reserve_block_s32=9513204(~18580 blocks) tail_cycle_s32=2 tail_block_s32=19330
+> > > 
+> > > So this looks like last_sync_lsn is 2/19330, and the transaction
+> > > reservation is ~380kB, or close on 3% of the log. The reserve grant
+> > > head is at 3/18580, so we're ~700 * 512 = ~350kB of reservation
+> > > remaining. Yup, so we are definitely in the "go to sleep and wait"
+> > > situation here.
+> > > 
+> > > > 	 786576: kworker/4:1H-kb  1825 [004]   217.041079:                       xfs:xfs_log_assign_tail_lsn: dev 7:1 new tail lsn 2/19333, old lsn 2/19330, last sync 3/18501
+> > > 
+> > > 200ms later the tail has moved, and last_sync_lsn is now 3/18501.
+> > > i.e. the iclog writes have made it to disk, and the items have been
+> > > moved into the AIL. I don't know where that came from, but I'm
+> > > assuming it's an IO completion based on it being run from a
+> > > kworker context that doesn't have an "xfs-" name prefix(*).
+> > > 
+> > > As the tail has moved, this should have woken the anything sleeping
+> > > on the log tail in xlog_grant_head_wait() via a call to
+> > > xfs_log_space_wake(). The first waiter should wake, see that there
+> > > still isn't room in the log (only 3 sectors were freed in the log,
+> > > we need at least 60). That woken process should then run
+> > > xlog_grant_push_ail() again and go back to sleep.
+> > > 
+> > > (*) I have a patch that shortens "s/kworker/kw/" so that you can
+> > > actually see the name of the kworker in the 16 byte field we have
+> > > for the task name. We really should just increase current->comm to
+> > > 32 bytes.
+> > > 
+> > > > 	 786577: kworker/4:1H-kb  1825 [004]   217.041087:                       xfs:xfs_log_assign_tail_lsn: dev 7:1 new tail lsn 2/19333, old lsn 2/19330, last sync 3/18501
+> > > > 	 793653:   xfsaild/loop1  8661 [004]   265.407708:                probe:xfsaild_push_last_pushed_lsn: (c000000000784644) comm="xfsaild/loop1" cycle_lsn_u32=0 block_lsn_u32=0 target_cycle_lsn_u32=2 target_block_lsn_u32=19330
+> > > > 	 793654:   xfsaild/loop1  8661 [004]   265.407717:              probe:xfsaild_push_min_lsn_less_than: (c0000000007846a0) comm="xfsaild/loop1" less_than_s32=0 cycle_lsn_u32=2 block_lsn_u32=19333 lip_x64=0xc000000303fb4a48
+> > > 
+> > > Ans some 40s later the xfsaild is woken by something, sees there's
+> > > nothing to do, and goes back to sleep. I don't see the process
+> > > sleeping on the grant head being ever being woken and calling
+> > > xlog_grant_push_ail(), which would see the new last_sync_lsn and
+> > > move the push target....
+> > > 
+> > > From this trace, it looks like the problem here is a missing or
+> > > incorrectly processed wakeup when the log tail moves.
+> > > 
+> > > Unfortunately, you haven't used the built in trace points for
+> > > debugging log space hangs so I can't tell anything more than this.
+> > > i.e the trace we need contains these build in tracepoints:
+> > > 
+> > > # trace-cmd record -e xfs_log\* -e xfs_ail\* sleep 120 &
+> > > # <run workload that hangs within 120s>
+> > > 
+> > > <wait for trace-cmd to exit>
+> > > # trace-cmd report | gzip > trace.txt.gz
+> > > 
+> > > as that will record all transaction reservations, grant head
+> > > manipulations, changes to the tail lsn, when processes sleep on the
+> > > grant head and are worken, AIL insert/move/delete, etc.
+> > > 
+> > > This will generate a -lot- of data. I often generate and analyse
+> > > traces in the order of tens of GBs of events to track down issues
+> > > like this, because the problem is often only seen in a single trace
+> > > event in amongst the millions that are recorded....
+> > > 
+> > > And if we need more info, then we add the appropriate tracepoints
+> > > into xlog_grant_push_ail, xfsaild_push, etc under those tracepoint
+> > > namespaces, so next time we have a problem we don't ahve to write
+> > > custom tracepoints.....
+> > > 
+> > > > i.e the log size was 2560 * 4096 = 10485760 bytes.
+> > > 
+> > > The default minimum size.
+> > > 
+> > > > > I suspect that this means the CIL is overruning it's background push
+> > > > > target by more than expected probably because the log is so small. That leads
+> > > > > to the outstanding CIL pending commit size (the current CIL context
+> > > > > and the previous CIL commit that is held off by the uncommited
+> > > > > iclog) is greater than the AIL push target, and so nothing will free
+> > > > > up more log space and wake up the transaction waiting for grant
+> > > > > space.
+> > > > > 
+> > > > > e.g. the previous CIL context commit might take 15% of the log
+> > > > > space, and the current CIL has reserved 11% of the log space.
+> > > > > Now new transactions reservations have run out of grant space and we
+> > > > > push on the ail, but it's lowest item is at 26%, and so the AIL push
+> > > > > does nothing and we're stuck because the CIL has pinned 26% of the
+> > > > > log space.
+> > > > > 
+> > > > > As a test, can you run the test with larger log sizes? I think
+> > > > > the default used was about ~3600 blocks, so it you step that up by
+> > > > > 500 blocks at a time we should get an idea of the size of the
+> > > > > overrun by the size of the log where the hang goes away. A
+> > > > > trace of the transaction reservations and AIL pushing would also be
+> > > > > insightful.
+> > > > 
+> > > > After increasing the log size to 4193 blocks (i.e. 4193 * 4k = 17174528
+> > > > bytes) and also the patch applied, I don't see the dead lock happening.
+> > > 
+> > > Likely because now the 380k transaction reservation is only 2% of the
+> > > log instead of close to 4% of the log, and so the overrun isn't
+> > > large enough to trigger whatever wakeup issue we have....
+> > > 
+> > > > Meanwhile, I am planning to read more code to map the explaination
+> > > > provided below.
+> > > 
+> > > Can you get a complete trace (as per above) of a hang? we're going
+> > > to need that trace to validate any analysis you do yourself,
+> > > anyway...
+> > > 
+> > 
+> > FWIW, I finally managed to reproduce this (trace dump attached for
+> > reference). I ultimately moved to another system, starting using loop
+> > devices and bumped up the fstests LOAD_FACTOR. What I see is essentially
+> > what looks like the lack of a wake up problem described above. More
+> > specifically:
+> > 
+> > - Workload begins, background CIL push occurs for ~1.25MB context.
+> > - While the first checkpoint is being written out, another background
+> >   push is requested. By the time we can execute the next CIL push, the
+> >   second context accrues to ~8MB in size, basically consuming the rest of
+> >   the log.
+> > 
+> > So that essentially describes the delay. It's just a matter of timing
+> > due to the amount of time it takes to complete the first checkpoint and
+> > start the second vs. the log reservation consumption workload.
+> > 
+> > - The next CIL push executes, but all transaction waiters block before
+> >   the iclog with the commit record for the first checkpoint hits the
+> >   log.
+> > 
+> > So the AIL doesn't actually remain empty indefinitely here. Shortly
+> > after the second CIL push starts doing I/O, the items from the first
+> > checkpoint make it into the AIL. The problem is just that the AIL stays
+> > empty long enough to absorb all of the AIL pushes that occur due to
+> > log reservation pressure before everything stops.
+> > 
+> > I think the two extra AIL push patches Dave has posted are enough to
+> > keep things moving. So far I haven't been able to reproduce with those
+> > applied (though I applied a modified variant of the second)...
+> > 
 > 
-> Create helper functions to perform unit conversions against a runtime
-> filesystem, then remove the open-coded versions in scrub.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Looks good.  I think the helpers make the logic more readable.
+> I am able to recreate the bug without the "synchronous transaction" patch. I
+> am attaching the trace file with this mail.
 
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+I think it essentially boils down to the fact that without "synchronous
+transactions" during log recovery, the last iclog containing the commit record
+wouldn't be submitted for I/O since in the case of this bug we have more than
+"2*sizeof(xlog_op_header_t)" space left in it.
 
-> ---
->   include/xfrog.h    |   57 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->   libfrog/fsgeom.c   |    1 +
->   scrub/fscounters.c |    4 ++--
->   scrub/inodes.c     |    4 ++--
->   scrub/phase3.c     |    6 +++--
->   scrub/phase5.c     |    4 ++--
->   scrub/phase6.c     |    3 ++-
->   scrub/phase7.c     |    6 +++--
->   8 files changed, 72 insertions(+), 13 deletions(-)
-> 
-> 
-> diff --git a/include/xfrog.h b/include/xfrog.h
-> index 008cc155..a08f6464 100644
-> --- a/include/xfrog.h
-> +++ b/include/xfrog.h
-> @@ -42,6 +42,9 @@ struct xfs_fd {
->   
->   	/* log2 of sb_inopblock */
->   	unsigned int		inopblog;
-> +
-> +	/* bits for agino in inum */
-> +	unsigned int		aginolog;
->   };
->   
->   /* Static initializers */
-> @@ -51,4 +54,58 @@ struct xfs_fd {
->   int xfd_prepare_geometry(struct xfs_fd *xfd);
->   int xfd_close(struct xfs_fd *xfd);
->   
-> +/* Convert AG number and AG inode number into fs inode number. */
-> +static inline uint64_t
-> +cvt_agino_to_ino(
-> +	const struct xfs_fd	*xfd,
-> +	uint32_t		agno,
-> +	uint32_t		agino)
-> +{
-> +	return ((uint64_t)agno << xfd->aginolog) + agino;
-> +}
-> +
-> +/* Convert fs inode number into AG number. */
-> +static inline uint32_t
-> +cvt_ino_to_agno(
-> +	const struct xfs_fd	*xfd,
-> +	uint64_t		ino)
-> +{
-> +	return ino >> xfd->aginolog;
-> +}
-> +
-> +/* Convert fs inode number into AG inode number. */
-> +static inline uint32_t
-> +cvt_ino_to_agino(
-> +	const struct xfs_fd	*xfd,
-> +	uint64_t		ino)
-> +{
-> +	return ino & ((1ULL << xfd->aginolog) - 1);
-> +}
-> +
-> +/*
-> + * Convert a linear fs block offset number into bytes.  This is the runtime
-> + * equivalent of XFS_FSB_TO_B, which means that it is /not/ for segmented fsbno
-> + * format (= agno | agbno) that we use internally for the data device.
-> + */
-> +static inline uint64_t
-> +cvt_off_fsb_to_b(
-> +	const struct xfs_fd	*xfd,
-> +	uint64_t		fsb)
-> +{
-> +	return fsb << xfd->blocklog;
-> +}
-> +
-> +/*
-> + * Convert bytes into a (rounded down) linear fs block offset number.  This is
-> + * the runtime equivalent of XFS_B_TO_FSBT.  It does not produce segmented
-> + * fsbno numbers (= agno | agbno).
-> + */
-> +static inline uint64_t
-> +cvt_b_to_off_fsbt(
-> +	const struct xfs_fd	*xfd,
-> +	uint64_t		bytes)
-> +{
-> +	return bytes >> xfd->blocklog;
-> +}
-> +
->   #endif	/* __XFROG_H__ */
-> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-> index b8873598..cf9323c1 100644
-> --- a/libfrog/fsgeom.c
-> +++ b/libfrog/fsgeom.c
-> @@ -113,6 +113,7 @@ xfd_prepare_geometry(
->   	xfd->blocklog = highbit32(xfd->fsgeom.blocksize);
->   	xfd->inodelog = highbit32(xfd->fsgeom.inodesize);
->   	xfd->inopblog = xfd->blocklog - xfd->inodelog;
-> +	xfd->aginolog = xfd->agblklog + xfd->inopblog;
->   	return 0;
->   }
->   
-> diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-> index ac898764..ea6af156 100644
-> --- a/scrub/fscounters.c
-> +++ b/scrub/fscounters.c
-> @@ -91,8 +91,8 @@ xfs_count_ag_inodes(
->   				minor(ctx->fsinfo.fs_datadev),
->   				agno);
->   
-> -	ag_ino = (__u64)agno << (ctx->mnt.inopblog + ctx->mnt.agblklog);
-> -	next_ag_ino = (__u64)(agno + 1) << (ctx->mnt.inopblog + ctx->mnt.agblklog);
-> +	ag_ino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
-> +	next_ag_ino = cvt_agino_to_ino(&ctx->mnt, agno + 1, 0);
->   
->   	moveon = xfs_count_inodes_range(ctx, descr, ag_ino, next_ag_ino - 1,
->   			&ci->counters[agno]);
-> diff --git a/scrub/inodes.c b/scrub/inodes.c
-> index 873ad425..700e5200 100644
-> --- a/scrub/inodes.c
-> +++ b/scrub/inodes.c
-> @@ -228,8 +228,8 @@ xfs_scan_ag_inodes(
->   				minor(ctx->fsinfo.fs_datadev),
->   				agno);
->   
-> -	ag_ino = (__u64)agno << (ctx->mnt.inopblog + ctx->mnt.agblklog);
-> -	next_ag_ino = (__u64)(agno + 1) << (ctx->mnt.inopblog + ctx->mnt.agblklog);
-> +	ag_ino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
-> +	next_ag_ino = cvt_agino_to_ino(&ctx->mnt, agno + 1, 0);
->   
->   	moveon = xfs_iterate_inodes_range(ctx, descr, ctx->fshandle, ag_ino,
->   			next_ag_ino - 1, si->fn, si->arg);
-> diff --git a/scrub/phase3.c b/scrub/phase3.c
-> index 579e08c3..8c02f1cb 100644
-> --- a/scrub/phase3.c
-> +++ b/scrub/phase3.c
-> @@ -52,8 +52,8 @@ xfs_scrub_inode_vfs_error(
->   	xfs_agino_t		agino;
->   	int			old_errno = errno;
->   
-> -	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-> -	agino = bstat->bs_ino % (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-> +	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
-> +	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
->   	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
->   			(uint64_t)bstat->bs_ino, agno, agino);
->   	errno = old_errno;
-> @@ -77,7 +77,7 @@ xfs_scrub_inode(
->   	int			error;
->   
->   	xfs_action_list_init(&alist);
-> -	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-> +	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
->   	background_sleep();
->   
->   	/* Try to open the inode to pin it. */
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index 36ec27b3..f3ee22e6 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -239,8 +239,8 @@ xfs_scrub_connections(
->   	int			fd = -1;
->   	int			error;
->   
-> -	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-> -	agino = bstat->bs_ino % (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
-> +	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
-> +	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
->   	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
->   			(uint64_t)bstat->bs_ino, agno, agino);
->   	background_sleep();
-> diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index 48971270..5628b926 100644
-> --- a/scrub/phase6.c
-> +++ b/scrub/phase6.c
-> @@ -547,7 +547,8 @@ xfs_estimate_verify_work(
->   	if (!moveon)
->   		return moveon;
->   
-> -	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->mnt.blocklog;
-> +	*items = cvt_off_fsb_to_b(&ctx->mnt,
-> +			(d_blocks - d_bfree) + (r_blocks - r_bfree));
->   	*nr_threads = disk_heads(ctx->datadev);
->   	*rshift = 20;
->   	return moveon;
-> diff --git a/scrub/phase7.c b/scrub/phase7.c
-> index 41a77356..8a028e19 100644
-> --- a/scrub/phase7.c
-> +++ b/scrub/phase7.c
-> @@ -148,11 +148,11 @@ xfs_scan_summary(
->   	 * filesystem treats them as "free", but since we scanned
->   	 * them, we'll consider them used.
->   	 */
-> -	d_bfree -= totalcount.agbytes >> ctx->mnt.blocklog;
-> +	d_bfree -= cvt_b_to_off_fsbt(&ctx->mnt, totalcount.agbytes);
->   
->   	/* Report on what we found. */
-> -	used_data = (d_blocks - d_bfree) << ctx->mnt.blocklog;
-> -	used_rt = (r_blocks - r_bfree) << ctx->mnt.blocklog;
-> +	used_data = cvt_off_fsb_to_b(&ctx->mnt, d_blocks - d_bfree);
-> +	used_rt = cvt_off_fsb_to_b(&ctx->mnt, r_blocks - r_bfree);
->   	used_files = f_files - f_free;
->   	stat_data = totalcount.dbytes;
->   	stat_rt = totalcount.rbytes;
-> 
+Without the "synchronous transaction" change, the patch which initiates the
+AIL push from the iclog endio function would be ineffective.
+
+-- 
+chandan
+
+
+
