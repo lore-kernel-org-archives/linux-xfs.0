@@ -2,147 +2,293 @@ Return-Path: <SRS0=0uIH=W3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 91A07C3A59B
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 01:00:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 87F26C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 05:11:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 60B6023431
-	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 01:00:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41E0D2342E
+	for <linux-xfs@archiver.kernel.org>; Sat, 31 Aug 2019 05:11:38 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iv3b/vGU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728251AbfHaBAj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 30 Aug 2019 21:00:39 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41389 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727708AbfHaBAi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 30 Aug 2019 21:00:38 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 349C543D47C;
-        Sat, 31 Aug 2019 11:00:35 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i3rkn-0002u8-D9; Sat, 31 Aug 2019 11:00:33 +1000
-Date:   Sat, 31 Aug 2019 11:00:33 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1726231AbfHaFLh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 31 Aug 2019 01:11:37 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44950 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725298AbfHaFLh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 31 Aug 2019 01:11:37 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7V5BZRx162094;
+        Sat, 31 Aug 2019 05:11:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=36Efk3NKTrPV7t1UA95TweqQgNnlT84IiYnOMidizo0=;
+ b=iv3b/vGU2+8NgWLRTw1Vj+cjBoXbKUtCq6GJAREIqTjU/BFO7M9uZj5bGWEekRJB4wEA
+ w+XWjxTmC6ZhbtP816jJMQDExD30YCDwYCNz+bw5/JAWxTFtIopze6Q0LPAsc6q82pfN
+ 4CBDlZx2Bc66BIpRQY5d2C1TDOwqyGufqv6twqnnuMpwD5bCOulP/YaXxx9ws+FlqOy1
+ XofgvkH3AHFKEaFA/sAuQrCYPkXtVEqEtK1/AfdjZKfaC+gKMyhLrzOe+8LFdy7exyGJ
+ 71Y/KUDdcBXnt1cBQOZ8tSM+xGb4hmq1XS4YHkY1DwlubnQfWJjQT0TNCNBM6ai0Lm2X SA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2uqjh2001k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 31 Aug 2019 05:11:35 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x7V58kqx091222;
+        Sat, 31 Aug 2019 05:11:34 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2uqe19xsmf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 31 Aug 2019 05:11:34 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x7V5BXCw024258;
+        Sat, 31 Aug 2019 05:11:34 GMT
+Received: from [192.168.1.9] (/67.1.183.122)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 30 Aug 2019 22:11:33 -0700
+Subject: Re: [PATCH 6/9] libfrog: create online fs geometry converters
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/5] xfs: factor data block addition from
- xfs_dir2_node_addname_int()
-Message-ID: <20190831010033.GQ1119@dread.disaster.area>
-References: <20190829104710.28239-1-david@fromorbit.com>
- <20190829104710.28239-3-david@fromorbit.com>
- <20190829210224.GJ5354@magnolia>
+References: <156713882070.386621.8501281965010809034.stgit@magnolia>
+ <156713886338.386621.8386764562465509319.stgit@magnolia>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <78fe4231-da82-1bfa-62a6-b8827e73d5be@oracle.com>
+Date:   Fri, 30 Aug 2019 22:11:32 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190829210224.GJ5354@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=FmdZ9Uzk2mMA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=JkGj8qbl2v7pUztNvXkA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <156713886338.386621.8386764562465509319.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1908310057
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9365 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1908310058
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Aug 29, 2019 at 02:02:25PM -0700, Darrick J. Wong wrote:
-> On Thu, Aug 29, 2019 at 08:47:07PM +1000, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Factor out the code that adds a data block to a directory from
-> > xfs_dir2_node_addname_int(). This makes the code flow cleaner and
-> > more obvious and provides clear isolation of upcoming optimsations.
-> > 
-> > Signed-off-By: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > ---
-> >  fs/xfs/libxfs/xfs_dir2_node.c | 324 +++++++++++++++++-----------------
-> >  1 file changed, 158 insertions(+), 166 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> > index e40986cc0759..cc1f1c505a2b 100644
-> > --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> > +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> > @@ -1608,6 +1608,129 @@ xfs_dir2_leafn_unbalance(
-> >  	xfs_dir3_leaf_check(dp, drop_blk->bp);
-> >  }
-> >  
-> > +/*
-> > + * Add a new data block to the directory at the free space index that the caller
-> > + * has specified.
-> > + */
-> > +static int
-> > +xfs_dir2_node_add_datablk(
-> > +	struct xfs_da_args	*args,
-> > +	struct xfs_da_state_blk	*fblk,
-> > +	xfs_dir2_db_t		*dbno,
-> > +	struct xfs_buf		**dbpp,
-> > +	struct xfs_buf		**fbpp,
-> > +	int			*findex)
-> > +{
-> > +	struct xfs_inode	*dp = args->dp;
-> > +	struct xfs_trans	*tp = args->trans;
-> > +	struct xfs_mount	*mp = dp->i_mount;
-> > +	struct xfs_dir3_icfree_hdr freehdr;
-> > +	struct xfs_dir2_data_free *bf;
-> > +	struct xfs_dir2_data_hdr *hdr;
-> > +	struct xfs_dir2_free	*free = NULL;
-> > +	xfs_dir2_db_t		fbno;
-> > +	struct xfs_buf		*fbp;
-> > +	struct xfs_buf		*dbp;
-> > +	__be16			*bests = NULL;
-> > +	int			error;
-> > +
-> > +	/* Not allowed to allocate, return failure. */
-> > +	if ((args->op_flags & XFS_DA_OP_JUSTCHECK) || args->total == 0)
-> > +		return -ENOSPC;
-> > +
-> > +	/* Allocate and initialize the new data block.  */
-> > +	error = xfs_dir2_grow_inode(args, XFS_DIR2_DATA_SPACE, dbno);
-> > +	if (error)
-> > +		return error;
-> > +	error = xfs_dir3_data_init(args, *dbno, &dbp);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/*
-> > +	 * Get the freespace block corresponding to the data block
-> > +	 * that was just allocated.
-> > +	 */
-> > +	fbno = dp->d_ops->db_to_fdb(args->geo, *dbno);
-> > +	error = xfs_dir2_free_try_read(tp, dp,
-> > +			       xfs_dir2_db_to_da(args->geo, fbno), &fbp);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/*
-> > +	 * If there wasn't a freespace block, the read will
-> > +	 * return a NULL fbp.  Allocate and initialize a new one.
-> > +	 */
-> > +	if (!fbp) {
-> > +		error = xfs_dir2_grow_inode(args, XFS_DIR2_FREE_SPACE, &fbno);
-> > +		if (error)
-> > +			return error;
-> > +
-> > +		if (dp->d_ops->db_to_fdb(args->geo, *dbno) != fbno) {
+On 8/29/19 9:21 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> As a straight "cut this huge function into smaller pieces, no functional
-> changes" patch I guess this is fine, but ... when can this happen?
+> Create helper functions to perform unit conversions against a runtime
+> filesystem, then remove the open-coded versions in scrub.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Looks good.  I think the helpers make the logic more readable.
 
-No idea. We're growing the free space segment, and it's checking
-that we allocated a new block over the free block index for the
-data segment block we just allocated. It's a sanity check more than
-anything, I think, because if we have a hole in the free block index
-for a give data block bad things are going to happen later...
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> ---
+>   include/xfrog.h    |   57 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>   libfrog/fsgeom.c   |    1 +
+>   scrub/fscounters.c |    4 ++--
+>   scrub/inodes.c     |    4 ++--
+>   scrub/phase3.c     |    6 +++--
+>   scrub/phase5.c     |    4 ++--
+>   scrub/phase6.c     |    3 ++-
+>   scrub/phase7.c     |    6 +++--
+>   8 files changed, 72 insertions(+), 13 deletions(-)
+> 
+> 
+> diff --git a/include/xfrog.h b/include/xfrog.h
+> index 008cc155..a08f6464 100644
+> --- a/include/xfrog.h
+> +++ b/include/xfrog.h
+> @@ -42,6 +42,9 @@ struct xfs_fd {
+>   
+>   	/* log2 of sb_inopblock */
+>   	unsigned int		inopblog;
+> +
+> +	/* bits for agino in inum */
+> +	unsigned int		aginolog;
+>   };
+>   
+>   /* Static initializers */
+> @@ -51,4 +54,58 @@ struct xfs_fd {
+>   int xfd_prepare_geometry(struct xfs_fd *xfd);
+>   int xfd_close(struct xfs_fd *xfd);
+>   
+> +/* Convert AG number and AG inode number into fs inode number. */
+> +static inline uint64_t
+> +cvt_agino_to_ino(
+> +	const struct xfs_fd	*xfd,
+> +	uint32_t		agno,
+> +	uint32_t		agino)
+> +{
+> +	return ((uint64_t)agno << xfd->aginolog) + agino;
+> +}
+> +
+> +/* Convert fs inode number into AG number. */
+> +static inline uint32_t
+> +cvt_ino_to_agno(
+> +	const struct xfs_fd	*xfd,
+> +	uint64_t		ino)
+> +{
+> +	return ino >> xfd->aginolog;
+> +}
+> +
+> +/* Convert fs inode number into AG inode number. */
+> +static inline uint32_t
+> +cvt_ino_to_agino(
+> +	const struct xfs_fd	*xfd,
+> +	uint64_t		ino)
+> +{
+> +	return ino & ((1ULL << xfd->aginolog) - 1);
+> +}
+> +
+> +/*
+> + * Convert a linear fs block offset number into bytes.  This is the runtime
+> + * equivalent of XFS_FSB_TO_B, which means that it is /not/ for segmented fsbno
+> + * format (= agno | agbno) that we use internally for the data device.
+> + */
+> +static inline uint64_t
+> +cvt_off_fsb_to_b(
+> +	const struct xfs_fd	*xfd,
+> +	uint64_t		fsb)
+> +{
+> +	return fsb << xfd->blocklog;
+> +}
+> +
+> +/*
+> + * Convert bytes into a (rounded down) linear fs block offset number.  This is
+> + * the runtime equivalent of XFS_B_TO_FSBT.  It does not produce segmented
+> + * fsbno numbers (= agno | agbno).
+> + */
+> +static inline uint64_t
+> +cvt_b_to_off_fsbt(
+> +	const struct xfs_fd	*xfd,
+> +	uint64_t		bytes)
+> +{
+> +	return bytes >> xfd->blocklog;
+> +}
+> +
+>   #endif	/* __XFROG_H__ */
+> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+> index b8873598..cf9323c1 100644
+> --- a/libfrog/fsgeom.c
+> +++ b/libfrog/fsgeom.c
+> @@ -113,6 +113,7 @@ xfd_prepare_geometry(
+>   	xfd->blocklog = highbit32(xfd->fsgeom.blocksize);
+>   	xfd->inodelog = highbit32(xfd->fsgeom.inodesize);
+>   	xfd->inopblog = xfd->blocklog - xfd->inodelog;
+> +	xfd->aginolog = xfd->agblklog + xfd->inopblog;
+>   	return 0;
+>   }
+>   
+> diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+> index ac898764..ea6af156 100644
+> --- a/scrub/fscounters.c
+> +++ b/scrub/fscounters.c
+> @@ -91,8 +91,8 @@ xfs_count_ag_inodes(
+>   				minor(ctx->fsinfo.fs_datadev),
+>   				agno);
+>   
+> -	ag_ino = (__u64)agno << (ctx->mnt.inopblog + ctx->mnt.agblklog);
+> -	next_ag_ino = (__u64)(agno + 1) << (ctx->mnt.inopblog + ctx->mnt.agblklog);
+> +	ag_ino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
+> +	next_ag_ino = cvt_agino_to_ino(&ctx->mnt, agno + 1, 0);
+>   
+>   	moveon = xfs_count_inodes_range(ctx, descr, ag_ino, next_ag_ino - 1,
+>   			&ci->counters[agno]);
+> diff --git a/scrub/inodes.c b/scrub/inodes.c
+> index 873ad425..700e5200 100644
+> --- a/scrub/inodes.c
+> +++ b/scrub/inodes.c
+> @@ -228,8 +228,8 @@ xfs_scan_ag_inodes(
+>   				minor(ctx->fsinfo.fs_datadev),
+>   				agno);
+>   
+> -	ag_ino = (__u64)agno << (ctx->mnt.inopblog + ctx->mnt.agblklog);
+> -	next_ag_ino = (__u64)(agno + 1) << (ctx->mnt.inopblog + ctx->mnt.agblklog);
+> +	ag_ino = cvt_agino_to_ino(&ctx->mnt, agno, 0);
+> +	next_ag_ino = cvt_agino_to_ino(&ctx->mnt, agno + 1, 0);
+>   
+>   	moveon = xfs_iterate_inodes_range(ctx, descr, ctx->fshandle, ag_ino,
+>   			next_ag_ino - 1, si->fn, si->arg);
+> diff --git a/scrub/phase3.c b/scrub/phase3.c
+> index 579e08c3..8c02f1cb 100644
+> --- a/scrub/phase3.c
+> +++ b/scrub/phase3.c
+> @@ -52,8 +52,8 @@ xfs_scrub_inode_vfs_error(
+>   	xfs_agino_t		agino;
+>   	int			old_errno = errno;
+>   
+> -	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
+> -	agino = bstat->bs_ino % (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
+> +	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+> +	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
+>   	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+>   			(uint64_t)bstat->bs_ino, agno, agino);
+>   	errno = old_errno;
+> @@ -77,7 +77,7 @@ xfs_scrub_inode(
+>   	int			error;
+>   
+>   	xfs_action_list_init(&alist);
+> -	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
+> +	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+>   	background_sleep();
+>   
+>   	/* Try to open the inode to pin it. */
+> diff --git a/scrub/phase5.c b/scrub/phase5.c
+> index 36ec27b3..f3ee22e6 100644
+> --- a/scrub/phase5.c
+> +++ b/scrub/phase5.c
+> @@ -239,8 +239,8 @@ xfs_scrub_connections(
+>   	int			fd = -1;
+>   	int			error;
+>   
+> -	agno = bstat->bs_ino / (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
+> -	agino = bstat->bs_ino % (1ULL << (ctx->mnt.inopblog + ctx->mnt.agblklog));
+> +	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+> +	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
+>   	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+>   			(uint64_t)bstat->bs_ino, agno, agino);
+>   	background_sleep();
+> diff --git a/scrub/phase6.c b/scrub/phase6.c
+> index 48971270..5628b926 100644
+> --- a/scrub/phase6.c
+> +++ b/scrub/phase6.c
+> @@ -547,7 +547,8 @@ xfs_estimate_verify_work(
+>   	if (!moveon)
+>   		return moveon;
+>   
+> -	*items = ((d_blocks - d_bfree) + (r_blocks - r_bfree)) << ctx->mnt.blocklog;
+> +	*items = cvt_off_fsb_to_b(&ctx->mnt,
+> +			(d_blocks - d_bfree) + (r_blocks - r_bfree));
+>   	*nr_threads = disk_heads(ctx->datadev);
+>   	*rshift = 20;
+>   	return moveon;
+> diff --git a/scrub/phase7.c b/scrub/phase7.c
+> index 41a77356..8a028e19 100644
+> --- a/scrub/phase7.c
+> +++ b/scrub/phase7.c
+> @@ -148,11 +148,11 @@ xfs_scan_summary(
+>   	 * filesystem treats them as "free", but since we scanned
+>   	 * them, we'll consider them used.
+>   	 */
+> -	d_bfree -= totalcount.agbytes >> ctx->mnt.blocklog;
+> +	d_bfree -= cvt_b_to_off_fsbt(&ctx->mnt, totalcount.agbytes);
+>   
+>   	/* Report on what we found. */
+> -	used_data = (d_blocks - d_bfree) << ctx->mnt.blocklog;
+> -	used_rt = (r_blocks - r_bfree) << ctx->mnt.blocklog;
+> +	used_data = cvt_off_fsb_to_b(&ctx->mnt, d_blocks - d_bfree);
+> +	used_rt = cvt_off_fsb_to_b(&ctx->mnt, r_blocks - r_bfree);
+>   	used_files = f_files - f_free;
+>   	stat_data = totalcount.dbytes;
+>   	stat_rt = totalcount.rbytes;
+> 
