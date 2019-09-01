@@ -6,99 +6,58 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 80A18C41514
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 00:52:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7831CC3A5A4
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 07:33:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 53EDC2186A
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 00:52:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4B90F208CB
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 07:33:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="eBz5M1QV"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="OE3Y1t4b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728545AbfIAAwM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 31 Aug 2019 20:52:12 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:56238 "EHLO
+        id S1728698AbfIAHdM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Sep 2019 03:33:12 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:42380 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726150AbfIAAwL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 31 Aug 2019 20:52:11 -0400
+        with ESMTP id S1725854AbfIAHdM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Sep 2019 03:33:12 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=jXXM66EKtvmEAYvb1Llji9/A136eINaxlL5uqBe0OBY=; b=eBz5M1QVpKJZMQDzXUQ9MXhMT
-        rIK2EkzUbSraojFclMxJ7OU+sf7tbq9mwzo0REl3yaDUt2YpbGdUBXr1PBULu2aic9sZuNzSPwoCp
-        owngjkSk9HrwVrtscNCYj+aZ/17/cGG88hXmrwj3PKy0BJCvg4ElKAVolJU/MnnAZSwlpMqAmc62e
-        AMUhgpKdATQQ056Kf77qv58BUxrXE6ktixwa0beiRV9gpk+ZAtbCCa1VAH88gCyyf5jTc6PxLSazv
-        wV7o8Fq43JPBfe5nZRIUcQcvYRvRzMraHjUnFk9kNgyg6rLAwcalK0UgYckSGwX3KhjlxftyTplES
-        EIwb3V+yg==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i4E69-0007JD-OE; Sun, 01 Sep 2019 00:52:05 +0000
-Date:   Sat, 31 Aug 2019 17:52:05 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christopher Lameter <cl@linux.com>
-Cc:     Michal Hocko <mhocko@kernel.org>, Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190901005205.GA2431@bombadil.infradead.org>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <0100016cd98bb2c1-a2af7539-706f-47ba-a68e-5f6a91f2f495-000000@email.amazonses.com>
- <20190828194607.GB6590@bombadil.infradead.org>
- <20190829073921.GA21880@dhcp22.suse.cz>
- <0100016ce39e6bb9-ad20e033-f3f4-4e6d-85d6-87e7d07823ae-000000@email.amazonses.com>
+         bh=bdUqwCHyTuNXqhhXdWpQ4uCbSX0pTVrvNTFnO0RL+9M=; b=OE3Y1t4bk2i5AGTzoyws9wjxc
+        2flVzPYarijE8gaoJY3I2kVBAkH90zCDcToPaKkHsSQDAa0AWO84I9908+1E185Bx/ir+t8LumLcY
+        0Pf7GZEvI2uUV6LT6jKI4oWqQpdyI+rrDCjfJ0iDvBqFJajBbSZjNoNFp0W/1O6GSgjbLZoGFBGex
+        yGtmyMtpt8yN9Xr2hvEdOnbgMYLIcKe7MKFjX/UTs7opbm6ET06efNQF0snSxwMJDycI+Nph5Hho9
+        iX9clxEjd7wlYCjRovwz8sFBhW8QoNSbq0cMqsU5Q2BDenEJQYqFJbfxPLW+z6UHio+duMXcIQv47
+        LvkkppEKw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i4KMJ-0003kd-VN; Sun, 01 Sep 2019 07:33:11 +0000
+Date:   Sun, 1 Sep 2019 00:33:11 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 1baa2800e62d
+Message-ID: <20190901073311.GA13954@infradead.org>
+References: <20190831193917.GA568270@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0100016ce39e6bb9-ad20e033-f3f4-4e6d-85d6-87e7d07823ae-000000@email.amazonses.com>
+In-Reply-To: <20190831193917.GA568270@magnolia>
 User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 30, 2019 at 05:41:46PM +0000, Christopher Lameter wrote:
-> On Thu, 29 Aug 2019, Michal Hocko wrote:
-> > > There are many places in the kernel which assume alignment.  They break
-> > > when it's not supplied.  I believe we have a better overall system if
-> > > the MM developers provide stronger guarantees than the MM consumers have
-> > > to work around only weak guarantees.
-> >
-> > I absolutely agree. A hypothetical benefit of a new implementation
-> > doesn't outweigh the complexity the existing code has to jump over or
-> > worse is not aware of and it is broken silently. My general experience
-> > is that the later is more likely with a large variety of drivers we have
-> > in the tree and odd things they do in general.
-> 
-> The current behavior without special alignment for these caches has been
-> in the wild for over a decade. And this is now coming up?
+On Sat, Aug 31, 2019 at 12:39:17PM -0700, Darrick J. Wong wrote:
+> Dave Chinner (13):
+>       [0ad95687c3ad] xfs: add kmem allocation trace points
+>       [d916275aa4dd] xfs: get allocation alignment from the buftarg
+>       [f8f9ee479439] xfs: add kmem_alloc_io()
 
-In the wild ... and rarely enabled.  When it is enabled, it may or may
-not be noticed as data corruption, or tripping other debugging asserts.
-Users then turn off the rare debugging option.
-
-> There is one case now it seems with a broken hardware that has issues and
-> we now move to an alignment requirement from the slabs with exceptions and
-> this and that?
-
-Perhaps you could try reading what hasa been written instead of sticking
-to a strawman of your own invention?
-
-> If there is an exceptional alignment requirement then that needs to be
-> communicated to the allocator. A special flag or create a special
-> kmem_cache or something.
-
-The only way I'd agree to that is if we deliberately misalign every
-allocation that doesn't have this special flag set.  Because right now,
-breakage happens everywhere when these debug options are enabled, and
-the very people who need to be helped are being hurt by the debugging.
+Btw, shouldn't these go into 5.3-rc?  Linus also mentioned to me in a
+private mail that he is going to do a -rc8 due to his travel schedule,
+so we'd at least have some soaking time.
