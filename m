@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A28AC3A5A4
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 20:55:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 17051C3A5A4
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 20:57:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E541C233A2
-	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 20:55:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B5BBE2190F
+	for <linux-xfs@archiver.kernel.org>; Sun,  1 Sep 2019 20:57:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lzwcjQHq"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PndYk1VB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728942AbfIAUzR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 1 Sep 2019 16:55:17 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:50520 "EHLO
+        id S1728900AbfIAU5w (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 1 Sep 2019 16:57:52 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:52750 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728941AbfIAUzR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Sep 2019 16:55:17 -0400
+        with ESMTP id S1728879AbfIAU5w (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 1 Sep 2019 16:57:52 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x81KsLxb148952;
-        Sun, 1 Sep 2019 20:55:15 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x81Ku9i0149782;
+        Sun, 1 Sep 2019 20:57:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : subject : to :
  cc : references : message-id : date : mime-version : in-reply-to :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=wf7gE3mKkRsc4VDdqYkGpk336cF5orVYmXTWfkwM9Ak=;
- b=lzwcjQHq5ob2nJeQApPDKXp+GL9rjK4rz1wDoTxq1U5viq1AGo88u9r128Hz3d8KUELT
- ldOtMj8AdwzLOuB8Uj5rhxUIhF9sm/7xqZo+Gsb2Y0fj0zQxZGHMKvKGM17m9y3bhcp3
- t9wKzE7gzBkgAYk5SOq0EZDnqCPtnmub5yFcAbaEKBVum3xUCWTNbBj/kv93cOO1HgmW
- ssi/HPatoOZNJ8ZGvXJlRqdnTRawErLgnlvjoedFfIlh1gQGlKLm5IXd8pNa2456Lx8+
- GPP28GEznX3dHN5Ji6T1PWjrV6w2Se4ygC5yQCKWgTu5lAs6p8FhmPkcsLcY+/ts7qy6 OA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2urne7r00q-1
+ bh=uMSi9wtTcp/Zadi15MEbCNxvpdW+2V0ci+XEWBoG04Y=;
+ b=PndYk1VBb5mnPspYWCTsC4yk88kYqzSPBNQCSSFy8dJ6L8gOuELNyj5My8dAHhREcWfz
+ wLgYU6a1zCGXYdAPZq9KaLhvYZUwxErmCSz75QXlfvQ5rbnz4teRKAHpppWbjRyx2pZo
+ K+2u1vm8wd5Z4vyDFqvLMWJPDWD4w7AX8fM2h16adrxmHrN6IlLZZgitAb+xCvRZoFxA
+ rxVa3vsM9XHsvQMvYk7VbtVAp5xKYuYEs0R+mOI0HCYxgDDBUcUCLRE9L6cxVS9mweaH
+ CIG+ITvUi7mrRg9sQNdU8eSmFHr+HHC96Asqf2pTtDQ4vH4lP+c0Kg85wUdxlFJPuR87 RQ== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2urne7r03y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 01 Sep 2019 20:55:15 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x81Ks9gw078533;
-        Sun, 1 Sep 2019 20:55:14 GMT
+        Sun, 01 Sep 2019 20:57:35 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x81KrJ8N006843;
+        Sun, 1 Sep 2019 20:55:34 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2uqg827qgw-1
+        by userp3030.oracle.com with ESMTP id 2uqe1betbs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 01 Sep 2019 20:55:14 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x81KtDc8012485;
-        Sun, 1 Sep 2019 20:55:13 GMT
+        Sun, 01 Sep 2019 20:55:34 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x81KtXdw012597;
+        Sun, 1 Sep 2019 20:55:33 GMT
 Received: from [192.168.1.9] (/67.1.183.122)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 01 Sep 2019 13:55:13 -0700
+        with ESMTP ; Sun, 01 Sep 2019 13:55:31 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 8/9] libfrog: create xfd_open function
+Subject: Re: [PATCH 9/9] libfrog: refactor open-coded INUMBERS calls
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 References: <156713882070.386621.8501281965010809034.stgit@magnolia>
- <156713887587.386621.8656028056753211579.stgit@magnolia>
-Message-ID: <98cd2e1b-17d9-617a-87f4-d5c46bf231ab@oracle.com>
-Date:   Sun, 1 Sep 2019 13:55:12 -0700
+ <156713888219.386621.15662668758929652470.stgit@magnolia>
+Message-ID: <07c35c39-c320-692c-ba1b-34eb9bc4c07b@oracle.com>
+Date:   Sun, 1 Sep 2019 13:55:30 -0700
 User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
  Thunderbird/60.8.0
 MIME-Version: 1.0
-In-Reply-To: <156713887587.386621.8656028056753211579.stgit@magnolia>
+In-Reply-To: <156713888219.386621.15662668758929652470.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8; format=flowed
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -84,189 +84,284 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 8/29/19 9:21 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Create a helper to open a file and initialize the xfd structure.
+> Refactor all the INUMBERS ioctl callsites into helper functions.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Looks good!  I think it looks a lot cleaner.  Thanks!
 
-Looks good
 Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 
 > ---
->   fsr/xfs_fsr.c    |   26 ++++++--------------------
->   include/xfrog.h  |    1 +
->   libfrog/fsgeom.c |   22 ++++++++++++++++++++++
->   quota/quot.c     |    7 ++++---
->   scrub/phase1.c   |   25 ++++++++-----------------
->   5 files changed, 41 insertions(+), 40 deletions(-)
+>   include/xfrog.h    |    4 ++++
+>   io/imap.c          |   33 ++++++++++++++++-----------------
+>   io/open.c          |   24 ++++++++++++------------
+>   libfrog/bulkstat.c |   26 ++++++++++++++++++++++++++
+>   scrub/fscounters.c |   20 ++++++++------------
+>   scrub/inodes.c     |   17 ++++++-----------
+>   6 files changed, 72 insertions(+), 52 deletions(-)
 > 
 > 
-> diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
-> index 36402252..e8d41aaf 100644
-> --- a/fsr/xfs_fsr.c
-> +++ b/fsr/xfs_fsr.c
-> @@ -592,18 +592,10 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
->   		return -1;
->   	}
->   
-> -	if ((fsxfd.fd = open(mntdir, O_RDONLY)) < 0) {
-> -		fsrprintf(_("unable to open: %s: %s\n"),
-> -		          mntdir, strerror( errno ));
-> -		free(fshandlep);
-> -		return -1;
-> -	}
-> -
-> -	ret = xfd_prepare_geometry(&fsxfd);
-> +	ret = xfd_open(&fsxfd, mntdir, O_RDONLY);
->   	if (ret) {
-> -		fsrprintf(_("Skipping %s: could not get XFS geometry\n"),
-> -			  mntdir);
-> -		xfd_close(&fsxfd);
-> +		fsrprintf(_("unable to open XFS file: %s: %s\n"),
-> +		          mntdir, strerror(ret));
->   		free(fshandlep);
->   		return -1;
->   	}
-> @@ -725,16 +717,10 @@ fsrfile(
->   	 * Need to open something on the same filesystem as the
->   	 * file.  Open the parent.
->   	 */
-> -	fsxfd.fd = open(getparent(fname), O_RDONLY);
-> -	if (fsxfd.fd < 0) {
-> -		fsrprintf(_("unable to open sys handle for %s: %s\n"),
-> -			fname, strerror(errno));
-> -		goto out;
-> -	}
-> -
-> -	error = xfd_prepare_geometry(&fsxfd);
-> +	error = xfd_open(&fsxfd, getparent(fname), O_RDONLY);
->   	if (error) {
-> -		fsrprintf(_("Unable to get geom on fs for: %s\n"), fname);
-> +		fsrprintf(_("unable to open sys handle for XFS file %s: %s\n"),
-> +			fname, strerror(error));
->   		goto out;
->   	}
->   
 > diff --git a/include/xfrog.h b/include/xfrog.h
-> index 7bda9810..3a49acc3 100644
+> index 3a49acc3..d16481ce 100644
 > --- a/include/xfrog.h
 > +++ b/include/xfrog.h
-> @@ -52,6 +52,7 @@ struct xfs_fd {
->   #define XFS_FD_INIT_EMPTY	XFS_FD_INIT(-1)
+> @@ -116,4 +116,8 @@ int xfrog_bulkstat_single(struct xfs_fd *xfd, uint64_t ino,
+>   int xfrog_bulkstat(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
+>   		struct xfs_bstat *ubuffer, uint32_t *ocount);
 >   
->   int xfd_prepare_geometry(struct xfs_fd *xfd);
-> +int xfd_open(struct xfs_fd *xfd, const char *pathname, int flags);
->   int xfd_close(struct xfs_fd *xfd);
+> +struct xfs_inogrp;
+> +int xfrog_inumbers(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
+> +		struct xfs_inogrp *ubuffer, uint32_t *ocount);
+> +
+>   #endif	/* __XFROG_H__ */
+> diff --git a/io/imap.c b/io/imap.c
+> index 9667289a..053ac28e 100644
+> --- a/io/imap.c
+> +++ b/io/imap.c
+> @@ -8,18 +8,20 @@
+>   #include "input.h"
+>   #include "init.h"
+>   #include "io.h"
+> +#include "xfrog.h"
 >   
->   /* Convert AG number and AG inode number into fs inode number. */
-> diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
-> index cf9323c1..47644dc3 100644
-> --- a/libfrog/fsgeom.c
-> +++ b/libfrog/fsgeom.c
-> @@ -117,6 +117,28 @@ xfd_prepare_geometry(
+>   static cmdinfo_t imap_cmd;
+>   
+>   static int
+>   imap_f(int argc, char **argv)
+>   {
+> -	int		count;
+> -	int		nent;
+> -	int		i;
+> -	__u64		last = 0;
+> -	struct xfs_inogrp *t;
+> -	struct xfs_fsop_bulkreq bulkreq;
+> +	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
+> +	struct xfs_inogrp	*t;
+> +	uint64_t		last = 0;
+> +	uint32_t		count;
+> +	uint32_t		nent;
+> +	int			i;
+> +	int			error;
+>   
+>   	if (argc != 2)
+>   		nent = 1;
+> @@ -30,14 +32,8 @@ imap_f(int argc, char **argv)
+>   	if (!t)
+>   		return 0;
+>   
+> -	bulkreq.lastip  = &last;
+> -	bulkreq.icount  = nent;
+> -	bulkreq.ubuffer = (void *)t;
+> -	bulkreq.ocount  = &count;
+> -
+> -	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
+> -		if (count == 0)
+> -			goto out_free;
+> +	while ((error = xfrog_inumbers(&xfd, &last, nent, t, &count)) == 0 &&
+> +	       count > 0) {
+>   		for (i = 0; i < count; i++) {
+>   			printf(_("ino %10llu count %2d mask %016llx\n"),
+>   				(unsigned long long)t[i].xi_startino,
+> @@ -45,9 +41,12 @@ imap_f(int argc, char **argv)
+>   				(unsigned long long)t[i].xi_allocmask);
+>   		}
+>   	}
+> -	perror("xfsctl(XFS_IOC_FSINUMBERS)");
+> -	exitcode = 1;
+> -out_free:
+> +
+> +	if (error) {
+> +		errno = error;
+> +		perror("xfsctl(XFS_IOC_FSINUMBERS)");
+> +		exitcode = 1;
+> +	}
+>   	free(t);
 >   	return 0;
 >   }
+> diff --git a/io/open.c b/io/open.c
+> index 35e6131b..c0d0f1e9 100644
+> --- a/io/open.c
+> +++ b/io/open.c
+> @@ -675,24 +675,24 @@ inode_help(void)
+>   "\n"));
+>   }
 >   
-> +/* Open a file on an XFS filesystem.  Returns zero or a positive error code. */
+> +#define IGROUP_NR	(1024)
+>   static __u64
+>   get_last_inode(void)
+>   {
+> -	__u64			lastip = 0;
+> -	__u64			lastgrp = 0;
+> -	__s32			ocount = 0;
+> +	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
+> +	uint64_t		lastip = 0;
+> +	uint32_t		lastgrp = 0;
+> +	uint32_t		ocount = 0;
+>   	__u64			last_ino;
+> -	struct xfs_inogrp	igroup[1024];
+> -	struct xfs_fsop_bulkreq	bulkreq;
+> -
+> -	bulkreq.lastip = &lastip;
+> -	bulkreq.ubuffer = &igroup;
+> -	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
+> -	bulkreq.ocount = &ocount;
+> +	struct xfs_inogrp	igroup[IGROUP_NR];
+>   
+>   	for (;;) {
+> -		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
+> -				&bulkreq)) {
+> +		int		ret;
+> +
+> +		ret = xfrog_inumbers(&xfd, &lastip, IGROUP_NR, igroup,
+> +				&ocount);
+> +		if (ret) {
+> +			errno = ret;
+>   			perror("XFS_IOC_FSINUMBERS");
+>   			return 0;
+>   		}
+> diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
+> index 0e11ccea..18fffb20 100644
+> --- a/libfrog/bulkstat.c
+> +++ b/libfrog/bulkstat.c
+> @@ -50,3 +50,29 @@ xfrog_bulkstat(
+>   		return errno;
+>   	return 0;
+>   }
+> +
+> +/*
+> + * Query inode allocation bitmask information.  Returns zero or a positive
+> + * error code.
+> + */
 > +int
-> +xfd_open(
+> +xfrog_inumbers(
 > +	struct xfs_fd		*xfd,
-> +	const char		*pathname,
-> +	int			flags)
+> +	uint64_t		*lastino,
+> +	uint32_t		icount,
+> +	struct xfs_inogrp	*ubuffer,
+> +	uint32_t		*ocount)
 > +{
+> +	struct xfs_fsop_bulkreq	bulkreq = {
+> +		.lastip		= (__u64 *)lastino,
+> +		.icount		= icount,
+> +		.ubuffer	= ubuffer,
+> +		.ocount		= (__s32 *)ocount,
+> +	};
 > +	int			ret;
 > +
-> +	xfd->fd = open(pathname, O_RDONLY);
-> +	if (xfd->fd < 0)
+> +	ret = ioctl(xfd->fd, XFS_IOC_FSINUMBERS, &bulkreq);
+> +	if (ret)
 > +		return errno;
-> +
-> +	ret = xfd_prepare_geometry(xfd);
-> +	if (ret) {
-> +		xfd_close(xfd);
-> +		return ret;
-> +	}
-> +
 > +	return 0;
 > +}
-> +
+> diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+> index ea6af156..3915822e 100644
+> --- a/scrub/fscounters.c
+> +++ b/scrub/fscounters.c
+> @@ -15,6 +15,7 @@
+>   #include "xfs_scrub.h"
+>   #include "common.h"
+>   #include "fscounters.h"
+> +#include "xfrog.h"
+>   
 >   /*
->    * Release any resources associated with this xfs_fd structure.  Returns zero
->    * or a positive error code.
-> diff --git a/quota/quot.c b/quota/quot.c
-> index 1e970819..4614f684 100644
-> --- a/quota/quot.c
-> +++ b/quota/quot.c
-> @@ -131,7 +131,7 @@ quot_bulkstat_mount(
->   	struct xfs_bstat	*buf;
->   	uint64_t		last = 0;
->   	uint32_t		count;
-> -	int			i, sts;
-> +	int			i, sts, ret;
->   	du_t			**dp;
+>    * Filesystem counter collection routines.  We can count the number of
+> @@ -41,30 +42,25 @@ xfs_count_inodes_range(
+>   	uint64_t		last_ino,
+>   	uint64_t		*count)
+>   {
+> -	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+>   	struct xfs_inogrp	inogrp;
+> -	__u64			igrp_ino;
+> +	uint64_t		igrp_ino;
+>   	uint64_t		nr = 0;
+> -	__s32			igrplen = 0;
+> +	uint32_t		igrplen = 0;
+>   	int			error;
 >   
->   	/*
-> @@ -146,8 +146,9 @@ quot_bulkstat_mount(
->   			*dp = NULL;
->   	ndu[0] = ndu[1] = ndu[2] = 0;
+>   	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
+>   	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
 >   
-> -	fsxfd.fd = open(fsdir, O_RDONLY);
-> -	if (fsxfd.fd < 0) {
-> +	ret = xfd_open(&fsxfd, fsdir, O_RDONLY);
-> +	if (ret) {
-> +		errno = ret;
->   		perror(fsdir);
->   		return;
->   	}
-> diff --git a/scrub/phase1.c b/scrub/phase1.c
-> index cbdbd010..15e67e37 100644
-> --- a/scrub/phase1.c
-> +++ b/scrub/phase1.c
-> @@ -84,13 +84,17 @@ xfs_setup_fs(
->   	 * CAP_SYS_ADMIN, which we probably need to do anything fancy
->   	 * with the (XFS driver) kernel.
->   	 */
-> -	ctx->mnt.fd = open(ctx->mntpoint, O_RDONLY | O_NOATIME | O_DIRECTORY);
-> -	if (ctx->mnt.fd < 0) {
-> -		if (errno == EPERM)
-> +	error = xfd_open(&ctx->mnt, ctx->mntpoint,
-> +			O_RDONLY | O_NOATIME | O_DIRECTORY);
-> +	if (error) {
-> +		if (error == EPERM)
->   			str_info(ctx, ctx->mntpoint,
->   _("Must be root to run scrub."));
-> +		else if (error == ENOTTY)
-> +			str_error(ctx, ctx->mntpoint,
-> +_("Not an XFS filesystem."));
->   		else
-> -			str_errno(ctx, ctx->mntpoint);
-> +			str_liberror(ctx, error, ctx->mntpoint);
->   		return false;
->   	}
->   
-> @@ -110,12 +114,6 @@ _("Must be root to run scrub."));
->   		return false;
->   	}
->   
-> -	if (!platform_test_xfs_fd(ctx->mnt.fd)) {
-> -		str_info(ctx, ctx->mntpoint,
-> -_("Does not appear to be an XFS filesystem!"));
-> -		return false;
-> -	}
+> -	igrpreq.lastip  = &igrp_ino;
+> -	igrpreq.icount  = 1;
+> -	igrpreq.ubuffer = &inogrp;
+> -	igrpreq.ocount  = &igrplen;
 > -
->   	/*
->   	 * Flush everything out to disk before we start checking.
->   	 * This seems to reduce the incidence of stale file handle
-> @@ -127,13 +125,6 @@ _("Does not appear to be an XFS filesystem!"));
+>   	igrp_ino = first_ino;
+> -	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+> -	while (!error && igrplen && inogrp.xi_startino < last_ino) {
+> +	while (!(error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
+> +			&igrplen))) {
+> +		if (igrplen == 0 || inogrp.xi_startino >= last_ino)
+> +			break;
+>   		nr += inogrp.xi_alloccount;
+> -		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+>   	}
+>   
+>   	if (error) {
+> -		str_errno(ctx, descr);
+> +		str_liberror(ctx, error, descr);
 >   		return false;
 >   	}
 >   
-> -	/* Retrieve XFS geometry. */
-> -	error = xfd_prepare_geometry(&ctx->mnt);
-> -	if (error) {
-> -		str_liberror(ctx, error, _("Retrieving XFS geometry"));
-> -		return false;
-> -	}
+> diff --git a/scrub/inodes.c b/scrub/inodes.c
+> index 413037d8..acad9b16 100644
+> --- a/scrub/inodes.c
+> +++ b/scrub/inodes.c
+> @@ -90,16 +90,15 @@ xfs_iterate_inodes_range(
+>   	xfs_inode_iter_fn	fn,
+>   	void			*arg)
+>   {
+> -	struct xfs_fsop_bulkreq	igrpreq = {NULL};
+>   	struct xfs_handle	handle;
+>   	struct xfs_inogrp	inogrp;
+>   	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
+>   	char			idescr[DESCR_BUFSZ];
+>   	struct xfs_bstat	*bs;
+> -	__u64			igrp_ino;
+> +	uint64_t		igrp_ino;
+>   	uint64_t		ino;
+>   	uint32_t		bulklen = 0;
+> -	__s32			igrplen = 0;
+> +	uint32_t		igrplen = 0;
+>   	bool			moveon = true;
+>   	int			i;
+>   	int			error;
+> @@ -108,11 +107,6 @@ xfs_iterate_inodes_range(
+>   
+>   	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
+>   
+> -	igrpreq.lastip  = &igrp_ino;
+> -	igrpreq.icount  = 1;
+> -	igrpreq.ubuffer = &inogrp;
+> -	igrpreq.ocount  = &igrplen;
 > -
->   	if (!xfs_action_lists_alloc(ctx->mnt.fsgeom.agcount,
->   				&ctx->action_lists)) {
->   		str_error(ctx, ctx->mntpoint, _("Not enough memory."));
+>   	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
+>   	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+>   			sizeof(handle.ha_fid.fid_len);
+> @@ -120,7 +114,7 @@ xfs_iterate_inodes_range(
+>   
+>   	/* Find the inode chunk & alloc mask */
+>   	igrp_ino = first_ino;
+> -	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+> +	error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp, &igrplen);
+>   	while (!error && igrplen) {
+>   		/* Load the inodes. */
+>   		ino = inogrp.xi_startino - 1;
+> @@ -176,12 +170,13 @@ _("Changed too many times during scan; giving up."));
+>   
+>   		stale_count = 0;
+>   igrp_retry:
+> -		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
+> +		error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
+> +				&igrplen);
+>   	}
+>   
+>   err:
+>   	if (error) {
+> -		str_errno(ctx, descr);
+> +		str_liberror(ctx, error, descr);
+>   		moveon = false;
+>   	}
+>   out:
 > 
