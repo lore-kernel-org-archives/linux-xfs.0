@@ -2,202 +2,406 @@ Return-Path: <SRS0=DNa4=W5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0940BC3A59E
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Sep 2019 13:54:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 263E1C3A5A7
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Sep 2019 16:56:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE3A1217F4
-	for <linux-xfs@archiver.kernel.org>; Mon,  2 Sep 2019 13:54:06 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EBAF82173E
+	for <linux-xfs@archiver.kernel.org>; Mon,  2 Sep 2019 16:56:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gbEAstr8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730769AbfIBNyG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Sep 2019 09:54:06 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:33608 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730535AbfIBNyG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Sep 2019 09:54:06 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C616D10C6975;
-        Mon,  2 Sep 2019 13:54:05 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-12-107.pek2.redhat.com [10.72.12.107])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 241C9194BB;
-        Mon,  2 Sep 2019 13:54:03 +0000 (UTC)
-From:   Zorro Lang <zlang@redhat.com>
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH] fstests: new helper to skip xfs_check
-Date:   Mon,  2 Sep 2019 21:53:58 +0800
-Message-Id: <20190902135358.22134-1-zlang@redhat.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.65]); Mon, 02 Sep 2019 13:54:05 +0000 (UTC)
+        id S1726275AbfIBQ4a (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 2 Sep 2019 12:56:30 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:38742 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726124AbfIBQ4a (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 2 Sep 2019 12:56:30 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x82GsDsa066023;
+        Mon, 2 Sep 2019 16:56:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=gKP6VtINXrGhCH1Y78M6w6vv/iClRo/m8/DLUxFvxfk=;
+ b=gbEAstr8q/8zlFHsZ9Qx8/nDrBHE59uMVEnXTPB2Aty7oMogkXob946Q6YJm0kpaDNZX
+ aaCFOr1xCq+/1NbDsBhsV+CuRIGGIxXS9dLOr71g8iiO5kRp4mRgHlqOlC4l0odtqw5U
+ 98UcPmPh9KWYWF8caaD3y450IJjEfiM2Z/be4i0gZE91NAHXBpmeCqSNH8YrzddBjFjO
+ TVwrjndlXUygdQVsc2DsfhIrBBV8jmh/B9mmrsdZAPDp1JS6+UrSzLmStXEsP87TWQoO
+ 18NrlvY0KfHshffJMriLSu5SmUIul1+YBl+91mGNqNiA9nKoWGk8wavtiO4Wfx3zB5Mf mw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2us70ar0e5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 02 Sep 2019 16:56:17 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x82GqsY9028540;
+        Mon, 2 Sep 2019 16:56:17 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2us4wckvxx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 02 Sep 2019 16:56:17 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x82GuGiA026901;
+        Mon, 2 Sep 2019 16:56:16 GMT
+Received: from localhost (/10.159.145.213)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 02 Sep 2019 09:56:15 -0700
+Date:   Mon, 2 Sep 2019 09:56:07 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     andreas.gruenbacher@gmail.com, xfs <linux-xfs@vger.kernel.org>,
+        viro@zeniv.linux.org.uk,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        fstests <fstests@vger.kernel.org>
+Subject: Re: [RFC PATCH] generic: test splice() with pipes
+Message-ID: <20190902165607.GA725229@magnolia>
+References: <20190829161155.GA5360@magnolia>
+ <20190830004407.GA5340@magnolia>
+ <20190902022052.GR7239@dhcp-12-102.nay.redhat.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20190902022052.GR7239@dhcp-12-102.nay.redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9368 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909020190
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9368 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909020190
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The _xfs_check sometimes need to take too much memory, some quota
-related cases (e.g: xfs/442, generic/232 etc) always trigger OOM
-killer.
+On Mon, Sep 02, 2019 at 10:20:52AM +0800, Zorro Lang wrote:
+> On Thu, Aug 29, 2019 at 05:44:07PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Andreas Grünbacher reports that on the two filesystems that support
+> > iomap directio, it's possible for splice() to return -EAGAIN (instead of
+> > a short splice) if the pipe being written to has less space available in
+> > its pipe buffers than the length supplied by the calling process.
+> > 
+> > This is a regression test to check for correct operation.
+> > 
+> > XXX Andreas: Since you wrote the C reproducer, can you send me the
+> > proper copyright and author attribution statement for the C program?
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> 
+> Hi Darrick,
+> 
+> I tried to add a splice_f operation into xfs_io long time ago:
+> https://marc.info/?l=linux-xfs&m=155828702128047&w=2
+> 
+> For we can easily write more splice related test case later, I'd like to have
+> a xfs_io to help that (if it can). Would you like to help to review that patch,
+> if it can match your requirement to write this case? Or it can be improved to
+> cover more testing conditions? I'm really appreciate that:)
 
-  [93334.020194] xfs_db invoked oom-killer: gfp_mask=0x6200ca(GFP_HIGHUSER_MOVABLE), nodemask=(null), order=0, oom_score_adj=-1000
-  [93334.020206] xfs_db cpuset=/ mems_allowed=0
-  [93334.020213] CPU: 2 PID: 977 Comm: xfs_db Kdump: loaded Not tainted 4.18.0-139.el8.ppc64le+debug #1
-  [93334.020217] Call Trace:
-  [93334.020223] [c0000001cb163640] [c000000001035754] dump_stack+0xe8/0x164 (unreliable)
-  [93334.020229] [c0000001cb163690] [c0000000004a77dc] dump_header+0x7c/0x670
-  [93334.020234] [c0000001cb1637b0] [c0000000004a872c] oom_kill_process+0x26c/0x3d0
-  [93334.020239] [c0000001cb163800] [c0000000004aa438] out_of_memory+0x278/0x930
-  [93334.020244] [c0000001cb1638a0] [c0000000004bd6c8] __alloc_pages_nodemask+0x1ab8/0x1b70
-  [93334.020248] [c0000001cb163ae0] [c00000000058b8dc] alloc_pages_vma+0xec/0x660
-  [93334.020253] [c0000001cb163b50] [c00000000052b544] do_anonymous_page+0x124/0xac0
-  [93334.020258] [c0000001cb163bc0] [c000000000534918] __handle_mm_fault+0xda8/0x1b60
-  [93334.020263] [c0000001cb163cb0] [c000000000535948] handle_mm_fault+0x278/0x5a0
-  [93334.020268] [c0000001cb163d00] [c00000000008b30c] __do_page_fault+0x27c/0xe00
-  [93334.020273] [c0000001cb163df0] [c00000000008bec8] do_page_fault+0x38/0xf0
-  [93334.020278] [c0000001cb163e30] [c00000000000a904] handle_page_fault+0x18/0x38
-  [93334.020281] Mem-Info:
-  [93334.020286] active_anon:93769 inactive_anon:13540 isolated_anon:0
-  [93334.020286]  active_file:23 inactive_file:8 isolated_file:0
-  [93334.020286]  unevictable:0 dirty:0 writeback:0 unstable:0
-  [93334.020286]  slab_reclaimable:1543 slab_unreclaimable:8926
-  [93334.020286]  mapped:69 shmem:15 pagetables:76 bounce:0
-  [93334.020286]  free:2756 free_pcp:0 free_cma:0
+Yeah, I'll try to have a look this week.
 
-The xfs_check related code is old, and nearly won't be maintained
-too much, test xfs_repair and xfs_scrub is much more important than
-xfs_check. But the xfstests always do a POST-xfs_check at the end of
-each cases. So I'd like to add a new helper named
-_require_scratch_no_xfs_check to skip xfs_check from some sub-cases.
+(FWIW I think Eric is backed up with dozens of xfsprogs patches...)
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
+--D
 
-Hi,
-
-Maybe this patch not the best way to deal with this issue. Please feel free to
-tell me if you have better idea.
-
-Thanks,
-Zorro
-
- common/rc         |  1 +
- common/xfs        | 26 ++++++++++++++++++++++++++
- tests/generic/232 |  2 ++
- tests/generic/233 |  2 ++
- tests/generic/234 |  2 ++
- tests/xfs/442     |  2 ++
- 6 files changed, 35 insertions(+)
-
-diff --git a/common/rc b/common/rc
-index e0b087c1..86eeda16 100644
---- a/common/rc
-+++ b/common/rc
-@@ -1570,6 +1570,7 @@ _require_scratch()
- {
- 	_require_scratch_nocheck
- 	touch ${RESULT_DIR}/require_scratch
-+	touch ${RESULT_DIR}/require_scratch.xfs_check
- }
- 
- # require a scratch dev of a minimum size (in kb)
-diff --git a/common/xfs b/common/xfs
-index 1bce3c18..80e6d1e8 100644
---- a/common/xfs
-+++ b/common/xfs
-@@ -168,11 +168,37 @@ _scratch_mkfs_xfs()
- 	return $mkfs_status
- }
- 
-+# Usage: _require_scratch_no_xfs_check [limit_memsize]
-+#
-+# Due to xfs_check costs too much memory, sometimes it cause OOM when test on
-+# low memory machine. This function is used to skip xfs_check conditionally
-+# or unconditionally.
-+#
-+# Note: must be called after _require_scratch.
-+_require_scratch_no_xfs_check()
-+{
-+	local bound=$1
-+	local freemem
-+
-+	freemem=`_free_memory_bytes`
-+	if [ -n "$bound" ];then
-+		if [ $freemem -lt $bound ];then
-+			rm -f ${RESULT_DIR}/require_scratch.xfs_check
-+		fi
-+	else
-+		rm -f ${RESULT_DIR}/require_scratch.xfs_check
-+	fi
-+}
-+
- # xfs_check script is planned to be deprecated. But, we want to
- # be able to invoke "xfs_check" behavior in xfstests in order to
- # maintain the current verification levels.
- _xfs_check()
- {
-+	if [ ! -f "${RESULT_DIR}/require_scratch.xfs_check" ];then
-+		return 0
-+	fi
-+
- 	OPTS=" "
- 	DBOPTS=" "
- 	USAGE="Usage: xfs_check [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
-diff --git a/tests/generic/232 b/tests/generic/232
-index d5c20249..20841313 100755
---- a/tests/generic/232
-+++ b/tests/generic/232
-@@ -52,6 +52,8 @@ _fsstress()
- _supported_fs generic
- _supported_os Linux
- _require_scratch
-+# Do post xfs_check, if free memory size > 16G
-+_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
- _require_quota
- 
- _scratch_mkfs > $seqres.full 2>&1
-diff --git a/tests/generic/233 b/tests/generic/233
-index c49bf252..7933d4b8 100755
---- a/tests/generic/233
-+++ b/tests/generic/233
-@@ -56,6 +56,8 @@ _fsstress()
- _supported_fs generic
- _supported_os Linux
- _require_scratch
-+# Do post xfs_check, if free memory size > 16G
-+_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
- _require_quota
- _require_user
- 
-diff --git a/tests/generic/234 b/tests/generic/234
-index dc296df8..e843dc10 100755
---- a/tests/generic/234
-+++ b/tests/generic/234
-@@ -72,6 +72,8 @@ test_setting()
- _supported_fs generic
- _supported_os Linux
- _require_scratch
-+# Do post xfs_check, if free memory size > 16G
-+_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
- _require_quota
- 
- # real QA test starts here
-diff --git a/tests/xfs/442 b/tests/xfs/442
-index 7a5f2e8e..9e891b51 100755
---- a/tests/xfs/442
-+++ b/tests/xfs/442
-@@ -36,6 +36,8 @@ _supported_fs xfs
- _supported_os Linux
- 
- _require_scratch_reflink
-+# Do post xfs_check, if free memory size > 16G
-+_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
- _require_quota
- _require_command "$KILLALL_PROG" "killall"
- 
--- 
-2.17.2
-
+> Thanks,
+> Zorro
+> 
+> >  .gitignore            |    1 
+> >  src/Makefile          |    2 -
+> >  src/splice-test.c     |  173 +++++++++++++++++++++++++++++++++++++++++++++++++
+> >  tests/generic/720     |   41 ++++++++++++
+> >  tests/generic/720.out |    7 ++
+> >  tests/generic/group   |    1 
+> >  6 files changed, 224 insertions(+), 1 deletion(-)
+> >  create mode 100644 src/splice-test.c
+> >  create mode 100755 tests/generic/720
+> >  create mode 100644 tests/generic/720.out
+> > 
+> > diff --git a/.gitignore b/.gitignore
+> > index c8c815f9..26d4da11 100644
+> > --- a/.gitignore
+> > +++ b/.gitignore
+> > @@ -112,6 +112,7 @@
+> >  /src/runas
+> >  /src/seek_copy_test
+> >  /src/seek_sanity_test
+> > +/src/splice-test
+> >  /src/stale_handle
+> >  /src/stat_test
+> >  /src/swapon
+> > diff --git a/src/Makefile b/src/Makefile
+> > index c4fcf370..2920dfb1 100644
+> > --- a/src/Makefile
+> > +++ b/src/Makefile
+> > @@ -28,7 +28,7 @@ LINUX_TARGETS = xfsctl bstat t_mtab getdevicesize preallo_rw_pattern_reader \
+> >  	attr-list-by-handle-cursor-test listxattr dio-interleaved t_dir_type \
+> >  	dio-invalidate-cache stat_test t_encrypted_d_revalidate \
+> >  	attr_replace_test swapon mkswap t_attr_corruption t_open_tmpfiles \
+> > -	fscrypt-crypt-util bulkstat_null_ocount
+> > +	fscrypt-crypt-util bulkstat_null_ocount splice-test
+> >  
+> >  SUBDIRS = log-writes perf
+> >  
+> > diff --git a/src/splice-test.c b/src/splice-test.c
+> > new file mode 100644
+> > index 00000000..d3c12075
+> > --- /dev/null
+> > +++ b/src/splice-test.c
+> > @@ -0,0 +1,173 @@
+> > +// SPDX-License-Identifier: GPL-2.0-or-later
+> > +/*
+> > + * Copyright (C) 2019 ?????????????????????????????
+> > + * Author: 
+> > + *
+> > + * Make sure that reading and writing to a pipe via splice.
+> > + */
+> > +#include <sys/types.h>
+> > +#include <sys/stat.h>
+> > +#include <sys/wait.h>
+> > +#include <unistd.h>
+> > +#include <fcntl.h>
+> > +#include <err.h>
+> > +
+> > +#include <stdlib.h>
+> > +#include <stdio.h>
+> > +#include <stdbool.h>
+> > +#include <string.h>
+> > +#include <errno.h>
+> > +
+> > +#define SECTOR_SIZE 512
+> > +#define BUFFER_SIZE (150 * SECTOR_SIZE)
+> > +
+> > +void read_from_pipe(int fd, const char *filename, size_t size)
+> > +{
+> > +	char buffer[SECTOR_SIZE];
+> > +	size_t sz;
+> > +	ssize_t ret;
+> > +
+> > +	while (size) {
+> > +		sz = size;
+> > +		if (sz > sizeof buffer)
+> > +			sz = sizeof buffer;
+> > +		ret = read(fd, buffer, sz);
+> > +		if (ret < 0)
+> > +			err(1, "read: %s", filename);
+> > +		if (ret == 0) {
+> > +			fprintf(stderr, "read: %s: unexpected EOF\n", filename);
+> > +			exit(1);
+> > +		}
+> > +		size -= sz;
+> > +	}
+> > +}
+> > +
+> > +void do_splice1(int fd, const char *filename, size_t size)
+> > +{
+> > +	bool retried = false;
+> > +	int pipefd[2];
+> > +
+> > +	if (pipe(pipefd) == -1)
+> > +		err(1, "pipe");
+> > +	while (size) {
+> > +		ssize_t spliced;
+> > +
+> > +		spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+> > +		if (spliced == -1) {
+> > +			if (errno == EAGAIN && !retried) {
+> > +				retried = true;
+> > +				fprintf(stderr, "retrying splice\n");
+> > +				sleep(1);
+> > +				continue;
+> > +			}
+> > +			err(1, "splice");
+> > +		}
+> > +		read_from_pipe(pipefd[0], filename, spliced);
+> > +		size -= spliced;
+> > +	}
+> > +	close(pipefd[0]);
+> > +	close(pipefd[1]);
+> > +}
+> > +
+> > +void do_splice2(int fd, const char *filename, size_t size)
+> > +{
+> > +	bool retried = false;
+> > +	int pipefd[2];
+> > +	int pid;
+> > +
+> > +	if (pipe(pipefd) == -1)
+> > +		err(1, "pipe");
+> > +
+> > +	pid = fork();
+> > +	if (pid == 0) {
+> > +		close(pipefd[1]);
+> > +		read_from_pipe(pipefd[0], filename, size);
+> > +		exit(0);
+> > +	} else {
+> > +		close(pipefd[0]);
+> > +		while (size) {
+> > +			ssize_t spliced;
+> > +
+> > +			spliced = splice(fd, NULL, pipefd[1], NULL, size, SPLICE_F_MOVE);
+> > +			if (spliced == -1) {
+> > +				if (errno == EAGAIN && !retried) {
+> > +					retried = true;
+> > +					fprintf(stderr, "retrying splice\n");
+> > +					sleep(1);
+> > +					continue;
+> > +				}
+> > +				err(1, "splice");
+> > +			}
+> > +			size -= spliced;
+> > +		}
+> > +		close(pipefd[1]);
+> > +		waitpid(pid, NULL, 0);
+> > +	}
+> > +}
+> > +
+> > +void usage(const char *argv0)
+> > +{
+> > +	fprintf(stderr, "USAGE: %s [-rd] {filename}\n", basename(argv0));
+> > +	exit(2);
+> > +}
+> > +
+> > +int main(int argc, char *argv[])
+> > +{
+> > +	void (*do_splice)(int fd, const char *filename, size_t size);
+> > +	const char *filename;
+> > +	char *buffer;
+> > +	int opt, open_flags, fd;
+> > +	ssize_t ret;
+> > +
+> > +	do_splice = do_splice1;
+> > +	open_flags = O_CREAT | O_TRUNC | O_RDWR | O_DIRECT;
+> > +
+> > +	while ((opt = getopt(argc, argv, "rd")) != -1) {
+> > +		switch(opt) {
+> > +		case 'r':
+> > +			do_splice = do_splice2;
+> > +			break;
+> > +		case 'd':
+> > +			open_flags &= ~O_DIRECT;
+> > +			break;
+> > +		default:  /* '?' */
+> > +			usage(argv[0]);
+> > +		}
+> > +	}
+> > +
+> > +	if (optind >= argc)
+> > +		usage(argv[0]);
+> > +	filename = argv[optind];
+> > +
+> > +	printf("%s reader %s O_DIRECT\n",
+> > +		   do_splice == do_splice1 ? "sequential" : "concurrent",
+> > +		   (open_flags & O_DIRECT) ? "with" : "without");
+> > +
+> > +	buffer = aligned_alloc(SECTOR_SIZE, BUFFER_SIZE);
+> > +	if (buffer == NULL)
+> > +		err(1, "aligned_alloc");
+> > +
+> > +	fd = open(filename, open_flags, 0666);
+> > +	if (fd == -1)
+> > +		err(1, "open: %s", filename);
+> > +
+> > +	memset(buffer, 'x', BUFFER_SIZE);
+> > +	ret = write(fd, buffer, BUFFER_SIZE);
+> > +	if (ret < 0)
+> > +		err(1, "write: %s", filename);
+> > +	if (ret != BUFFER_SIZE) {
+> > +		fprintf(stderr, "%s: short write\n", filename);
+> > +		exit(1);
+> > +	}
+> > +
+> > +	ret = lseek(fd, 0, SEEK_SET);
+> > +	if (ret != 0)
+> > +		err(1, "lseek: %s", filename);
+> > +
+> > +	do_splice(fd, filename, BUFFER_SIZE);
+> > +
+> > +	if (unlink(filename) == -1)
+> > +		err(1, "unlink: %s", filename);
+> > +
+> > +	return 0;
+> > +}
+> > diff --git a/tests/generic/720 b/tests/generic/720
+> > new file mode 100755
+> > index 00000000..b7f09c40
+> > --- /dev/null
+> > +++ b/tests/generic/720
+> > @@ -0,0 +1,41 @@
+> > +#! /bin/bash
+> > +# SPDX-License-Identifier: GPL-2.0-or-later
+> > +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
+> > +#
+> > +# FS QA Test No. 720
+> > +#
+> > +# Test using splice() to read from pipes.
+> > +
+> > +seq=`basename $0`
+> > +seqres=$RESULT_DIR/$seq
+> > +echo "QA output created by $seq"
+> > +
+> > +here=`pwd`
+> > +tmp=/tmp/$$
+> > +status=1    # failure is the default!
+> > +trap "_cleanup; exit \$status" 0 1 2 3 15
+> > +
+> > +_cleanup()
+> > +{
+> > +	cd /
+> > +	rm -f $TEST_DIR/a
+> > +}
+> > +
+> > +# get standard environment, filters and checks
+> > +. ./common/rc
+> > +
+> > +# real QA test starts here
+> > +_supported_os Linux
+> > +_supported_fs generic
+> > +_require_test
+> > +
+> > +rm -f $seqres.full
+> > +
+> > +src/splice-test -r $TEST_DIR/a
+> > +src/splice-test -rd $TEST_DIR/a
+> > +src/splice-test $TEST_DIR/a
+> > +src/splice-test -d $TEST_DIR/a
+> > +
+> > +# success, all done
+> > +status=0
+> > +exit
+> > diff --git a/tests/generic/720.out b/tests/generic/720.out
+> > new file mode 100644
+> > index 00000000..b0fc9935
+> > --- /dev/null
+> > +++ b/tests/generic/720.out
+> > @@ -0,0 +1,7 @@
+> > +QA output created by 720
+> > +concurrent reader with O_DIRECT
+> > +concurrent reader with O_DIRECT
+> > +concurrent reader without O_DIRECT
+> > +concurrent reader without O_DIRECT
+> > +sequential reader with O_DIRECT
+> > +sequential reader without O_DIRECT
+> > diff --git a/tests/generic/group b/tests/generic/group
+> > index cd418106..f75d4e60 100644
+> > --- a/tests/generic/group
+> > +++ b/tests/generic/group
+> > @@ -569,3 +569,4 @@
+> >  564 auto quick copy_range
+> >  565 auto quick copy_range
+> >  719 auto quick quota metadata
+> > +720 auto quick rw pipe splice
