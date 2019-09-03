@@ -2,112 +2,136 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F33AC3A5A2
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 11:19:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A07BAC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 11:52:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6C78122CF8
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 11:19:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 797D122CF7
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 11:52:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727639AbfICLTQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 07:19:16 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:53068 "EHLO mx1.redhat.com"
+        id S1728270AbfICLwr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 07:52:47 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51670 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726631AbfICLTQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 3 Sep 2019 07:19:16 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        id S1727005AbfICLwr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Sep 2019 07:52:47 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 797898AC6E1;
-        Tue,  3 Sep 2019 11:19:16 +0000 (UTC)
-Received: from dhcp-12-115.nay.redhat.com (dhcp-12-115.nay.redhat.com [10.66.12.115])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 4107E196AE;
-        Tue,  3 Sep 2019 11:19:08 +0000 (UTC)
-From:   "Jianhong.Yin" <yin-jianhong@163.com>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Cc:     lsahlber@redhat.com, alexander198961@gmail.com,
-        fengxiaoli0714@gmail.com, dchinner@redhat.com, sandeen@redhat.com,
-        "Jianhong.Yin" <yin-jianhong@163.com>
-Subject: [PATCH v2] xfsprogs: io/copy_range: cover corner case (fd_in == fd_out)
-Date:   Tue,  3 Sep 2019 19:19:03 +0800
-Message-Id: <20190903111903.12231-1-yin-jianhong@163.com>
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.69]); Tue, 03 Sep 2019 11:19:16 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 9F8FEC010923;
+        Tue,  3 Sep 2019 11:52:46 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id D8F3B5D6B7;
+        Tue,  3 Sep 2019 11:52:43 +0000 (UTC)
+Date:   Tue, 3 Sep 2019 19:59:43 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Jianhong.Yin" <yin-jianhong@163.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        lsahlber@redhat.com, alexander198961@gmail.com,
+        fengxiaoli0714@gmail.com, dchinner@redhat.com, sandeen@redhat.com
+Subject: Re: [PATCH] xfsprogs: io/copy_range: cover corner case (fd_in ==
+ fd_out)
+Message-ID: <20190903115943.GU7239@dhcp-12-102.nay.redhat.com>
+References: <20190903105632.11667-1-yin-jianhong@163.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190903105632.11667-1-yin-jianhong@163.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.31]); Tue, 03 Sep 2019 11:52:46 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Related bug:
-  copy_file_range return "Invalid argument" when copy in the same file
-  https://bugzilla.kernel.org/show_bug.cgi?id=202935
+On Tue, Sep 03, 2019 at 06:56:32PM +0800, Jianhong.Yin wrote:
+> Related bug:
+>   copy_file_range return "Invalid argument" when copy in the same file
+>   https://bugzilla.kernel.org/show_bug.cgi?id=202935
+> 
+> if argument of option -f is "-", use current file->fd as fd_in
+> 
+> Usage:
+>   xfs_io -c 'copy_range -f -' some_file
+> 
+> Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+> ---
 
-if argument of option -f is "-", use current file->fd as fd_in
+Hi,
 
-Usage:
-  xfs_io -c 'copy_range -f -' some_file
+Actually, I'm thinking about if you need same 'fd' or same file path?
+If you just need same file path, I think
 
-Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
----
- io/copy_file_range.c | 27 ++++++++++++++++++---------
- 1 file changed, 18 insertions(+), 9 deletions(-)
+  # xfs_io -c "copy_range testfile" testfile
 
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index b7b9fd88..2dde8a31 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -28,6 +28,7 @@ copy_range_help(void)
-                           at position 0\n\
-  'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
-                           at position 0\n\
-+ 'copy_range -f -' - copies all bytes from current open file append the current open file\n\
- "));
- }
- 
-@@ -114,11 +115,15 @@ copy_range_f(int argc, char **argv)
- 			}
- 			break;
- 		case 'f':
--			src_file_nr = atoi(argv[1]);
--			if (src_file_nr < 0 || src_file_nr >= filecount) {
--				printf(_("file value %d is out of range (0-%d)\n"),
--					src_file_nr, filecount - 1);
--				return 0;
-+			if (strcmp(argv[1], "-") == 0)
-+				src_file_nr = (file - &filetable[0]) / sizeof(fileio_t);
-+			else {
-+				src_file_nr = atoi(argv[1]);
-+				if (src_file_nr < 0 || src_file_nr >= filecount) {
-+					printf(_("file value %d is out of range (0-%d)\n"),
-+						src_file_nr, filecount - 1);
-+					return 0;
-+				}
- 			}
- 			/* Expect no src_path arg */
- 			src_path_arg = 0;
-@@ -147,10 +152,14 @@ copy_range_f(int argc, char **argv)
- 		}
- 		len = sz;
- 
--		ret = copy_dst_truncate();
--		if (ret < 0) {
--			ret = 1;
--			goto out;
-+		if (fd != file->fd) {
-+			ret = copy_dst_truncate();
-+			if (ret < 0) {
-+				ret = 1;
-+				goto out;
-+			}
-+		} else {
-+			dst = sz;
- 		}
- 	}
- 
--- 
-2.17.2
+already can help that. The only one problem stop you doing that is
+"copy_dst_truncate()".
 
+If all above I suppose is right, we can turn to talk about if that
+copy_dst_truncate() is necessary, or how can we skip it.
+
+Thanks,
+Zorro
+
+>  io/copy_file_range.c | 27 ++++++++++++++++++---------
+>  1 file changed, 18 insertions(+), 9 deletions(-)
+> 
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index b7b9fd88..2dde8a31 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -28,6 +28,7 @@ copy_range_help(void)
+>                            at position 0\n\
+>   'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
+>                            at position 0\n\
+> + 'copy_range -f -' - copies all bytes from current open file append the current open file\n\
+>  "));
+>  }
+>  
+> @@ -114,11 +115,15 @@ copy_range_f(int argc, char **argv)
+>  			}
+>  			break;
+>  		case 'f':
+> -			src_file_nr = atoi(argv[1]);
+> -			if (src_file_nr < 0 || src_file_nr >= filecount) {
+> -				printf(_("file value %d is out of range (0-%d)\n"),
+> -					src_file_nr, filecount - 1);
+> -				return 0;
+> +			if (strcmp(argv[1], "-"))
+> +				src_file_nr = (file - &filetable[0]) / sizeof(fileio_t);
+> +			else {
+> +				src_file_nr = atoi(argv[1]);
+> +				if (src_file_nr < 0 || src_file_nr >= filecount) {
+> +					printf(_("file value %d is out of range (0-%d)\n"),
+> +						src_file_nr, filecount - 1);
+> +					return 0;
+> +				}
+>  			}
+>  			/* Expect no src_path arg */
+>  			src_path_arg = 0;
+> @@ -147,10 +152,14 @@ copy_range_f(int argc, char **argv)
+>  		}
+>  		len = sz;
+>  
+> -		ret = copy_dst_truncate();
+> -		if (ret < 0) {
+> -			ret = 1;
+> -			goto out;
+> +		if (fd != file->fd) {
+> +			ret = copy_dst_truncate();
+> +			if (ret < 0) {
+> +				ret = 1;
+> +				goto out;
+> +			}
+> +		} else {
+> +			dst = sz;
+>  		}
+>  	}
+>  
+> -- 
+> 2.17.2
+> 
