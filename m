@@ -2,82 +2,112 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 370ADC3A5A5
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 06:24:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE0A2C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 10:56:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 092BF21897
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 06:24:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aqUrBKoG"
+	by mail.kernel.org (Postfix) with ESMTP id BAA7622CF8
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 10:56:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726473AbfICGYO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 02:24:14 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55242 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726408AbfICGYO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 02:24:14 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=klPLnvUccpQZCH53OTFKR/8SWIz98cjkWp1cNaTwaYM=; b=aqUrBKoGkBk7RUTs21xZC4EVv
-        9k6eFLV+fp4QiCehIZ4ZlNYiwqFizUuP/T6KN2VWtM5ELjHGBRn2vKIIxLPAD8bxMvHLEQ5QvGKX6
-        //PJXptSFd6m/ndGn2oMdcE6+YS5o/T21eeAtaVB1YmCpW1EsU6A2+zWzlhFPW7SDsphSX8EvWAuk
-        8SyBaDUTz2YOm0vU0Z9oVWzzJGfBFNpzGrYtmH62bNb291Ohud2hV7/cGrEG5NqHQzDE4RZPDz7nV
-        5yOo8/ed+TfQepmmDHJ+noMZxo2XL+wM2qduty9nCxmzMGX+dXjBnTS070R3pubpCdqmKB5luxqUr
-        p3ON6jnig==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i52Ed-00027p-Uv; Tue, 03 Sep 2019 06:24:11 +0000
-Date:   Mon, 2 Sep 2019 23:24:11 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Damien Le Moal <Damien.LeMoal@wdc.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
-        Johannes Thumshirn <jthumshirn@suse.de>,
-        Naohiro Aota <Naohiro.Aota@wdc.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Hannes Reinecke <hare@suse.de>,
-        Matias Bjorling <Matias.Bjorling@wdc.com>
-Subject: Re: [PATCH V4] fs: New zonefs file system
-Message-ID: <20190903062411.GA7944@infradead.org>
-References: <20190826065750.11674-1-damien.lemoal@wdc.com>
- <BYAPR04MB5816E881D9881D5F559A3947E7B90@BYAPR04MB5816.namprd04.prod.outlook.com>
- <20190903032601.GV5354@magnolia>
- <20190903061602.GB26583@infradead.org>
- <BYAPR04MB5816D246389AAFD484D600C0E7B90@BYAPR04MB5816.namprd04.prod.outlook.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <BYAPR04MB5816D246389AAFD484D600C0E7B90@BYAPR04MB5816.namprd04.prod.outlook.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+        id S1728802AbfICK4p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 06:56:45 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:38068 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728587AbfICK4p (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Sep 2019 06:56:45 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A2200C055673;
+        Tue,  3 Sep 2019 10:56:44 +0000 (UTC)
+Received: from dhcp-12-115.nay.redhat.com (dhcp-12-115.nay.redhat.com [10.66.12.115])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 5D63060C83;
+        Tue,  3 Sep 2019 10:56:38 +0000 (UTC)
+From:   "Jianhong.Yin" <yin-jianhong@163.com>
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Cc:     lsahlber@redhat.com, alexander198961@gmail.com,
+        fengxiaoli0714@gmail.com, dchinner@redhat.com, sandeen@redhat.com,
+        "Jianhong.Yin" <yin-jianhong@163.com>
+Subject: [PATCH] xfsprogs: io/copy_range: cover corner case (fd_in == fd_out)
+Date:   Tue,  3 Sep 2019 18:56:32 +0800
+Message-Id: <20190903105632.11667-1-yin-jianhong@163.com>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Tue, 03 Sep 2019 10:56:44 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 06:21:38AM +0000, Damien Le Moal wrote:
-> On 2019/09/03 15:16, Christoph Hellwig wrote:
-> > On Mon, Sep 02, 2019 at 08:26:01PM -0700, Darrick J. Wong wrote:
-> >>
-> >> Given that the merge window apparently won't close until Sept. 29, that
-> >> gives us more time to make any more minor tweaks.
-> > 
-> > I think 5.3 final should be out at about Sep 15.  Isn't that the
-> > traditional definition of closing the merge window?
-> > 
-> 
-> If we have an rc8, yes, 5.3 final will be on Sep 15. And then the merge window
-> for 5.4 opens for 2 weeks until Sep 29, no ?
+Related bug:
+  copy_file_range return "Invalid argument" when copy in the same file
+  https://bugzilla.kernel.org/show_bug.cgi?id=202935
 
-I've always considered the merge window the time to queue up patches
-in the maintainer trees, which would end with the release of the
-previous release.
+if argument of option -f is "-", use current file->fd as fd_in
+
+Usage:
+  xfs_io -c 'copy_range -f -' some_file
+
+Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+---
+ io/copy_file_range.c | 27 ++++++++++++++++++---------
+ 1 file changed, 18 insertions(+), 9 deletions(-)
+
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index b7b9fd88..2dde8a31 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -28,6 +28,7 @@ copy_range_help(void)
+                           at position 0\n\
+  'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
+                           at position 0\n\
++ 'copy_range -f -' - copies all bytes from current open file append the current open file\n\
+ "));
+ }
+ 
+@@ -114,11 +115,15 @@ copy_range_f(int argc, char **argv)
+ 			}
+ 			break;
+ 		case 'f':
+-			src_file_nr = atoi(argv[1]);
+-			if (src_file_nr < 0 || src_file_nr >= filecount) {
+-				printf(_("file value %d is out of range (0-%d)\n"),
+-					src_file_nr, filecount - 1);
+-				return 0;
++			if (strcmp(argv[1], "-"))
++				src_file_nr = (file - &filetable[0]) / sizeof(fileio_t);
++			else {
++				src_file_nr = atoi(argv[1]);
++				if (src_file_nr < 0 || src_file_nr >= filecount) {
++					printf(_("file value %d is out of range (0-%d)\n"),
++						src_file_nr, filecount - 1);
++					return 0;
++				}
+ 			}
+ 			/* Expect no src_path arg */
+ 			src_path_arg = 0;
+@@ -147,10 +152,14 @@ copy_range_f(int argc, char **argv)
+ 		}
+ 		len = sz;
+ 
+-		ret = copy_dst_truncate();
+-		if (ret < 0) {
+-			ret = 1;
+-			goto out;
++		if (fd != file->fd) {
++			ret = copy_dst_truncate();
++			if (ret < 0) {
++				ret = 1;
++				goto out;
++			}
++		} else {
++			dst = sz;
+ 		}
+ 	}
+ 
+-- 
+2.17.2
+
