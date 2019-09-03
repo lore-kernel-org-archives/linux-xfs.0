@@ -2,303 +2,94 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD931C3A5A5
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 03:53:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E6E4C3A5A5
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 06:15:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A03CD22DBF
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 03:53:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3E874215EA
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 06:15:03 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CI2pEn4O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725928AbfICDxD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 2 Sep 2019 23:53:03 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52310 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725848AbfICDxD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 2 Sep 2019 23:53:03 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 4418D10A812B;
-        Tue,  3 Sep 2019 03:53:02 +0000 (UTC)
-Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id AE50D60BE0;
-        Tue,  3 Sep 2019 03:53:01 +0000 (UTC)
-Date:   Tue, 3 Sep 2019 12:00:00 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] fstests: new helper to skip xfs_check
-Message-ID: <20190903040000.GT7239@dhcp-12-102.nay.redhat.com>
-References: <20190902135358.22134-1-zlang@redhat.com>
- <20190902170701.GT5354@magnolia>
+        id S1725888AbfICGPC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 02:15:02 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:52244 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725878AbfICGPC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 02:15:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=NVibb4QhR/IS/0LLvBWYWaLt+UDUTXbRwVdItDc8cK8=; b=CI2pEn4OjG+2zojvAO46bnfU9
+        HXD4PsJsTsVtpdOY2hqdK2OIZMawLjC2yaKm8v+4fe+H73iA7J50SBftEF27i/8Pmw9/oKBA7golW
+        iLgHcjIOvHA98isTvDR28x+7W6TOurC7RtrbG9sjFJofnAQuIE/h4I9Fc5MKELejstcFweiy/HyEG
+        2o6Sh50/jV3w7hMxUjlwwbQ8XyHZOxnEr9cPsBbz4kG0HBy0/iRtQyYt5UdhQnG3M2PXt1yGdv/Og
+        vvnCc/IEpIpX8JriqiqW+8BUGpknO+vqXNhaSuqqt7UYp7n1mmJLKrG849gWBHvOmkjbWDMtBTgsw
+        TTBykVE5A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i525j-0007CH-6B; Tue, 03 Sep 2019 06:14:59 +0000
+Date:   Mon, 2 Sep 2019 23:14:59 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/9] libxfs: revert FSGEOMETRY v5 -> v4 hack
+Message-ID: <20190903061459.GA26583@infradead.org>
+References: <156713882070.386621.8501281965010809034.stgit@magnolia>
+ <156713882716.386621.4791011879331220967.stgit@magnolia>
+ <20190902224952.GU1119@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190902170701.GT5354@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.64]); Tue, 03 Sep 2019 03:53:02 +0000 (UTC)
+In-Reply-To: <20190902224952.GU1119@dread.disaster.area>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 02, 2019 at 10:07:01AM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 02, 2019 at 09:53:58PM +0800, Zorro Lang wrote:
-> > The _xfs_check sometimes need to take too much memory, some quota
-> > related cases (e.g: xfs/442, generic/232 etc) always trigger OOM
-> > killer.
+On Tue, Sep 03, 2019 at 08:49:52AM +1000, Dave Chinner wrote:
+> On Thu, Aug 29, 2019 at 09:20:27PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> >   [93334.020194] xfs_db invoked oom-killer: gfp_mask=0x6200ca(GFP_HIGHUSER_MOVABLE), nodemask=(null), order=0, oom_score_adj=-1000
-> >   [93334.020206] xfs_db cpuset=/ mems_allowed=0
-> >   [93334.020213] CPU: 2 PID: 977 Comm: xfs_db Kdump: loaded Not tainted 4.18.0-139.el8.ppc64le+debug #1
-> >   [93334.020217] Call Trace:
-> >   [93334.020223] [c0000001cb163640] [c000000001035754] dump_stack+0xe8/0x164 (unreliable)
-> >   [93334.020229] [c0000001cb163690] [c0000000004a77dc] dump_header+0x7c/0x670
-> >   [93334.020234] [c0000001cb1637b0] [c0000000004a872c] oom_kill_process+0x26c/0x3d0
-> >   [93334.020239] [c0000001cb163800] [c0000000004aa438] out_of_memory+0x278/0x930
-> >   [93334.020244] [c0000001cb1638a0] [c0000000004bd6c8] __alloc_pages_nodemask+0x1ab8/0x1b70
-> >   [93334.020248] [c0000001cb163ae0] [c00000000058b8dc] alloc_pages_vma+0xec/0x660
-> >   [93334.020253] [c0000001cb163b50] [c00000000052b544] do_anonymous_page+0x124/0xac0
-> >   [93334.020258] [c0000001cb163bc0] [c000000000534918] __handle_mm_fault+0xda8/0x1b60
-> >   [93334.020263] [c0000001cb163cb0] [c000000000535948] handle_mm_fault+0x278/0x5a0
-> >   [93334.020268] [c0000001cb163d00] [c00000000008b30c] __do_page_fault+0x27c/0xe00
-> >   [93334.020273] [c0000001cb163df0] [c00000000008bec8] do_page_fault+0x38/0xf0
-> >   [93334.020278] [c0000001cb163e30] [c00000000000a904] handle_page_fault+0x18/0x38
-> >   [93334.020281] Mem-Info:
-> >   [93334.020286] active_anon:93769 inactive_anon:13540 isolated_anon:0
-> >   [93334.020286]  active_file:23 inactive_file:8 isolated_file:0
-> >   [93334.020286]  unevictable:0 dirty:0 writeback:0 unstable:0
-> >   [93334.020286]  slab_reclaimable:1543 slab_unreclaimable:8926
-> >   [93334.020286]  mapped:69 shmem:15 pagetables:76 bounce:0
-> >   [93334.020286]  free:2756 free_pcp:0 free_cma:0
+> > Revert the #define redirection of XFS_IOC_FSGEOMETRY to the old V4
+> > ioctl.
 > > 
-> > The xfs_check related code is old, and nearly won't be maintained
-> > too much, test xfs_repair and xfs_scrub is much more important than
-> > xfs_check. But the xfstests always do a POST-xfs_check at the end of
-> > each cases. So I'd like to add a new helper named
-> > _require_scratch_no_xfs_check to skip xfs_check from some sub-cases.
-> > 
-> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
+> >  libxfs/xfs_fs.h |    4 +---
+> >  1 file changed, 1 insertion(+), 3 deletions(-)
 > > 
-> > Hi,
 > > 
-> > Maybe this patch not the best way to deal with this issue. Please feel free to
-> > tell me if you have better idea.
+> > diff --git a/libxfs/xfs_fs.h b/libxfs/xfs_fs.h
+> > index 67fceffc..31ac6323 100644
+> > --- a/libxfs/xfs_fs.h
+> > +++ b/libxfs/xfs_fs.h
+> > @@ -822,9 +822,7 @@ struct xfs_scrub_metadata {
+> >  #define XFS_IOC_ATTRMULTI_BY_HANDLE  _IOW ('X', 123, struct xfs_fsop_attrmulti_handlereq)
+> >  #define XFS_IOC_FSGEOMETRY_V4	     _IOR ('X', 124, struct xfs_fsop_geom_v4)
+> >  #define XFS_IOC_GOINGDOWN	     _IOR ('X', 125, uint32_t)
+> > -/* For compatibility, for now */
+> > -/* #define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom_v5) */
+> > -#define XFS_IOC_FSGEOMETRY XFS_IOC_FSGEOMETRY_V4
+> > +#define XFS_IOC_FSGEOMETRY	     _IOR ('X', 126, struct xfs_fsop_geom)
+> >  #define XFS_IOC_BULKSTAT	     _IOR ('X', 127, struct xfs_bulkstat_req)
+> >  #define XFS_IOC_INUMBERS	     _IOR ('X', 128, struct xfs_inumbers_req)
 > 
-> I would just get rid of it (and have tried several times) but have not
-> had the time to check that xfs_repair can detect every corruption that
-> xfs_check can.
+> Looks fine, but can we change the order of this patch in the series
+> until after all the geometry callers have been converted to use the
+> common function with fallback from v5 to v4 calls?
 > 
-> (To get started, I think it involves forking the dangerous_repair group
-> tests to run _xfs_check and xfs_repair -n one after the other to compare
-> outputs.)
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
 
-JFYI, I remembered I hit once xfs_check failure[1] which xfs_repair -n didn't
-find. And then, this bug fixed by another bug(CLOSE DUPLICATE):
-https://bugzilla.kernel.org/show_bug.cgi?id=200137
-
-Thanks,
-Zorro
-
-
-_check_xfs_filesystem: filesystem on /dev/mapper/xxxx-xfstest is inconsistent (c)
-*** xfs_check output ***
-bad nblocks 2 for free inode 1028
-block 0/549 type unknown not expected
-block 0/550 type unknown not expected
-
-# xfs_repair -n /dev/mapper/xxxx-xfstest
-Phase 1 - find and verify superblock...
-        - reporting progress in intervals of 15 minutes
-Phase 2 - using internal log
-        - zero log...
-        - scan filesystem freespace and inode maps...
-        - 05:54:54: scanning filesystem freespace - 16 of 16 allocation groups done
-        - found root inode chunk
-Phase 3 - for each AG...
-        - scan (but don't clear) agi unlinked lists...
-        - 05:54:54: scanning agi unlinked lists - 16 of 16 allocation groups done
-        - process known inodes and perform inode discovery...
-        - agno = 15
-        - agno = 0
-        - agno = 1
-        - agno = 2
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 6
-        - agno = 7
-        - agno = 8
-        - agno = 9
-        - agno = 10
-        - agno = 11
-        - agno = 12
-        - agno = 13
-        - agno = 14
-        - 05:54:54: process known inodes and inode discovery - 64 of 64 inodes done
-        - process newly discovered inodes...
-        - 05:54:54: process newly discovered inodes - 16 of 16 allocation groups done
-Phase 4 - check for duplicate blocks...
-        - setting up duplicate extent list...
-        - 05:54:54: setting up duplicate extent list - 16 of 16 allocation groups done
-        - check for inodes claiming duplicate blocks...
-        - agno = 0
-        - agno = 6
-        - agno = 10
-        - agno = 3
-        - agno = 4
-        - agno = 5
-        - agno = 8
-        - agno = 7
-        - agno = 1
-        - agno = 9
-        - agno = 15
-        - agno = 11
-        - agno = 12
-        - agno = 14
-        - agno = 13
-        - agno = 2
-        - 05:54:54: check for inodes claiming duplicate blocks - 64 of 64 inodes done
-No modify flag set, skipping phase 5
-Phase 6 - check inode connectivity...
-        - traversing filesystem ... 
-        - traversal finished ...
-        - moving disconnected inodes to lost+found ...
-Phase 7 - verify link counts...
-        - 05:54:54: verify and correct link counts - 16 of 16 allocation groups done
-No modify flag set, skipping filesystem flush and exiting.
-
-# xfs_db -F -i -p xfs_check -c "check" /dev/mapper/xxxx-xfstest                                                                             
-bad nblocks 2 for free inode 1028              
-block 0/549 type unknown not expected          
-block 0/550 type unknown not expected
-
-
-> 
-> --D
-> 
-> > Thanks,
-> > Zorro
-> > 
-> >  common/rc         |  1 +
-> >  common/xfs        | 26 ++++++++++++++++++++++++++
-> >  tests/generic/232 |  2 ++
-> >  tests/generic/233 |  2 ++
-> >  tests/generic/234 |  2 ++
-> >  tests/xfs/442     |  2 ++
-> >  6 files changed, 35 insertions(+)
-> > 
-> > diff --git a/common/rc b/common/rc
-> > index e0b087c1..86eeda16 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -1570,6 +1570,7 @@ _require_scratch()
-> >  {
-> >  	_require_scratch_nocheck
-> >  	touch ${RESULT_DIR}/require_scratch
-> > +	touch ${RESULT_DIR}/require_scratch.xfs_check
-> >  }
-> >  
-> >  # require a scratch dev of a minimum size (in kb)
-> > diff --git a/common/xfs b/common/xfs
-> > index 1bce3c18..80e6d1e8 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -168,11 +168,37 @@ _scratch_mkfs_xfs()
-> >  	return $mkfs_status
-> >  }
-> >  
-> > +# Usage: _require_scratch_no_xfs_check [limit_memsize]
-> > +#
-> > +# Due to xfs_check costs too much memory, sometimes it cause OOM when test on
-> > +# low memory machine. This function is used to skip xfs_check conditionally
-> > +# or unconditionally.
-> > +#
-> > +# Note: must be called after _require_scratch.
-> > +_require_scratch_no_xfs_check()
-> > +{
-> > +	local bound=$1
-> > +	local freemem
-> > +
-> > +	freemem=`_free_memory_bytes`
-> > +	if [ -n "$bound" ];then
-> > +		if [ $freemem -lt $bound ];then
-> > +			rm -f ${RESULT_DIR}/require_scratch.xfs_check
-> > +		fi
-> > +	else
-> > +		rm -f ${RESULT_DIR}/require_scratch.xfs_check
-> > +	fi
-> > +}
-> > +
-> >  # xfs_check script is planned to be deprecated. But, we want to
-> >  # be able to invoke "xfs_check" behavior in xfstests in order to
-> >  # maintain the current verification levels.
-> >  _xfs_check()
-> >  {
-> > +	if [ ! -f "${RESULT_DIR}/require_scratch.xfs_check" ];then
-> > +		return 0
-> > +	fi
-> > +
-> >  	OPTS=" "
-> >  	DBOPTS=" "
-> >  	USAGE="Usage: xfs_check [-fsvV] [-l logdev] [-i ino]... [-b bno]... special"
-> > diff --git a/tests/generic/232 b/tests/generic/232
-> > index d5c20249..20841313 100755
-> > --- a/tests/generic/232
-> > +++ b/tests/generic/232
-> > @@ -52,6 +52,8 @@ _fsstress()
-> >  _supported_fs generic
-> >  _supported_os Linux
-> >  _require_scratch
-> > +# Do post xfs_check, if free memory size > 16G
-> > +_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
-> >  _require_quota
-> >  
-> >  _scratch_mkfs > $seqres.full 2>&1
-> > diff --git a/tests/generic/233 b/tests/generic/233
-> > index c49bf252..7933d4b8 100755
-> > --- a/tests/generic/233
-> > +++ b/tests/generic/233
-> > @@ -56,6 +56,8 @@ _fsstress()
-> >  _supported_fs generic
-> >  _supported_os Linux
-> >  _require_scratch
-> > +# Do post xfs_check, if free memory size > 16G
-> > +_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
-> >  _require_quota
-> >  _require_user
-> >  
-> > diff --git a/tests/generic/234 b/tests/generic/234
-> > index dc296df8..e843dc10 100755
-> > --- a/tests/generic/234
-> > +++ b/tests/generic/234
-> > @@ -72,6 +72,8 @@ test_setting()
-> >  _supported_fs generic
-> >  _supported_os Linux
-> >  _require_scratch
-> > +# Do post xfs_check, if free memory size > 16G
-> > +_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
-> >  _require_quota
-> >  
-> >  # real QA test starts here
-> > diff --git a/tests/xfs/442 b/tests/xfs/442
-> > index 7a5f2e8e..9e891b51 100755
-> > --- a/tests/xfs/442
-> > +++ b/tests/xfs/442
-> > @@ -36,6 +36,8 @@ _supported_fs xfs
-> >  _supported_os Linux
-> >  
-> >  _require_scratch_reflink
-> > +# Do post xfs_check, if free memory size > 16G
-> > +_require_scratch_no_xfs_check $((16 * 1024 * 1024 * 1024))
-> >  _require_quota
-> >  _require_command "$KILLALL_PROG" "killall"
-> >  
-> > -- 
-> > 2.17.2
-> > 
+I don't really remember this history here, but can we please avoid
+using XFS_IOC_FSGEOMETRY for what I assume is the v4 structure, and just
+version all of them instead?
