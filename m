@@ -2,180 +2,154 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BFFCC3A5A5
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 13:03:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 803DAC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 13:12:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5D2E23401
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 13:03:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="M2R2avZS"
+	by mail.kernel.org (Postfix) with ESMTP id 5FCED2341E
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 13:12:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729260AbfICNDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 09:03:34 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:54890 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729245AbfICNDd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 09:03:33 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=N5Og9wjEkwUlnbhil/yRtZ2URQCtIN3Nil87tCMqQiE=; b=M2R2avZSJSvvP8a/TY7zjLFb86
-        3wAo5UcQglIbynf+AyoigA54uce9k1VVAbxpYbSGMm8z+1VSE+RV9AVM2asiATKN+Hyj9AgqIlgUl
-        zp3Aegrw8diUEF5DA0mXofHFduOv+SAmf03J9ntdIojNrCz/j4vfEDBoHOHkTIOrubPL4ZDNfmAcY
-        3Uqg2awlEXTDViDuJ7i3LKS6PHH9a9epToJhMwHV5VHXyyueLyhcYCk1lXY6rEXRxWSbCHGiTVmBI
-        +TSJbOVPoa6ppwwGzM8dKYiMJ7rG0gBpmcCy2PXb8mwKxtbAZbBpAGvZcgJh+yL4qaPtytlk0d1BZ
-        n/U3qAqA==;
-Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1i58T7-0003t6-9P; Tue, 03 Sep 2019 13:03:33 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Cc:     Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: [PATCH 2/2] iomap: move the iomap_dio_rw ->end_io callback into a structure
-Date:   Tue,  3 Sep 2019 15:03:27 +0200
-Message-Id: <20190903130327.6023-3-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190903130327.6023-1-hch@lst.de>
-References: <20190903130327.6023-1-hch@lst.de>
+        id S1729079AbfICNMd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 09:12:33 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:39562 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728969AbfICNMc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Sep 2019 09:12:32 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 8038FCF20;
+        Tue,  3 Sep 2019 13:12:32 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 98A965D6B7;
+        Tue,  3 Sep 2019 13:12:29 +0000 (UTC)
+Date:   Tue, 3 Sep 2019 21:19:29 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Jianhong.Yin" <yin-jianhong@163.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        lsahlber@redhat.com, alexander198961@gmail.com,
+        fengxiaoli0714@gmail.com, dchinner@redhat.com, sandeen@redhat.com
+Subject: Re: [PATCH] xfsprogs: io/copy_range: cover corner case (fd_in ==
+ fd_out)
+Message-ID: <20190903131928.GV7239@dhcp-12-102.nay.redhat.com>
+References: <20190903105632.11667-1-yin-jianhong@163.com>
+ <20190903115943.GU7239@dhcp-12-102.nay.redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190903115943.GU7239@dhcp-12-102.nay.redhat.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Tue, 03 Sep 2019 13:12:32 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add a new iomap_dio_ops structure that for now just contains the end_io
-handler.  This avoid storing the function pointer in a mutable structure,
-which is a possible exploit vector for kernel code execution, and prepares
-for adding a submit_io handler that btrfs needs.
+On Tue, Sep 03, 2019 at 07:59:43PM +0800, Zorro Lang wrote:
+> On Tue, Sep 03, 2019 at 06:56:32PM +0800, Jianhong.Yin wrote:
+> > Related bug:
+> >   copy_file_range return "Invalid argument" when copy in the same file
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=202935
+> > 
+> > if argument of option -f is "-", use current file->fd as fd_in
+> > 
+> > Usage:
+> >   xfs_io -c 'copy_range -f -' some_file
+> > 
+> > Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+> > ---
+> 
+> Hi,
+> 
+> Actually, I'm thinking about if you need same 'fd' or same file path?
+> If you just need same file path, I think
+> 
+>   # xfs_io -c "copy_range testfile" testfile
+> 
+> already can help that. The only one problem stop you doing that is
+> "copy_dst_truncate()".
+> 
+> If all above I suppose is right, we can turn to talk about if that
+> copy_dst_truncate() is necessary, or how can we skip it.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/iomap/direct-io.c  | 21 ++++++++++-----------
- fs/xfs/xfs_file.c     |  6 +++++-
- include/linux/iomap.h | 10 +++++++---
- 3 files changed, 22 insertions(+), 15 deletions(-)
+I just checked, the copy_dst_truncate() is only called when:
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 2ccf1c6460d4..1fc28c2da279 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -24,7 +24,7 @@
- 
- struct iomap_dio {
- 	struct kiocb		*iocb;
--	iomap_dio_end_io_t	*end_io;
-+	const struct iomap_dio_ops *dops;
- 	loff_t			i_size;
- 	loff_t			size;
- 	atomic_t		ref;
-@@ -72,15 +72,14 @@ static void iomap_dio_submit_bio(struct iomap_dio *dio, struct iomap *iomap,
- 
- static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- {
-+	const struct iomap_dio_ops *dops = dio->dops;
- 	struct kiocb *iocb = dio->iocb;
- 	struct inode *inode = file_inode(iocb->ki_filp);
- 	loff_t offset = iocb->ki_pos;
--	ssize_t ret;
-+	ssize_t ret = dio->error;
- 
--	if (dio->end_io)
--		ret = dio->end_io(iocb, dio->size, dio->error, dio->flags);
--	else
--		ret = dio->error;
-+	if (dops && dops->end_io)
-+		ret = dops->end_io(iocb, dio->size, ret, dio->flags);
- 
- 	if (likely(!ret)) {
- 		ret = dio->size;
-@@ -98,9 +97,9 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
- 	 * one is a pretty crazy thing to do, so we don't support it 100%.  If
- 	 * this invalidation fails, tough, the write still worked...
- 	 *
--	 * And this page cache invalidation has to be after dio->end_io(), as
--	 * some filesystems convert unwritten extents to real allocations in
--	 * end_io() when necessary, otherwise a racing buffer read would cache
-+	 * And this page cache invalidation has to be after ->end_io(), as some
-+	 * filesystems convert unwritten extents to real allocations in
-+	 * ->end_io() when necessary, otherwise a racing buffer read would cache
- 	 * zeros from unwritten extents.
- 	 */
- 	if (!dio->error &&
-@@ -393,7 +392,7 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-  */
- ssize_t
- iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops, iomap_dio_end_io_t end_io)
-+		const struct iomap_ops *ops, const struct iomap_dio_ops *dops)
- {
- 	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = file_inode(iocb->ki_filp);
-@@ -418,7 +417,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	atomic_set(&dio->ref, 1);
- 	dio->size = 0;
- 	dio->i_size = i_size_read(inode);
--	dio->end_io = end_io;
-+	dio->dops = dops;
- 	dio->error = 0;
- 	dio->flags = 0;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 3d8e6db9ef77..1ffb179f35d2 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -443,6 +443,10 @@ xfs_dio_write_end_io(
- 	return error;
- }
- 
-+static const struct iomap_dio_ops xfs_dio_write_ops = {
-+	.end_io		= xfs_dio_write_end_io,
-+};
-+
- /*
-  * xfs_file_dio_aio_write - handle direct IO writes
-  *
-@@ -543,7 +547,7 @@ xfs_file_dio_aio_write(
- 	}
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
--	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, xfs_dio_write_end_io);
-+	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, &xfs_dio_write_ops);
- 
- 	/*
- 	 * If unaligned, this is the only IO in-flight. If it has not yet
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 50bb746d2216..7aa5d6117936 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -188,10 +188,14 @@ sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
-  */
- #define IOMAP_DIO_UNWRITTEN	(1 << 0)	/* covers unwritten extent(s) */
- #define IOMAP_DIO_COW		(1 << 1)	/* covers COW extent(s) */
--typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t size, int error,
--				 unsigned int flags);
-+
-+struct iomap_dio_ops {
-+	int (*end_io)(struct kiocb *iocb, ssize_t size, int error,
-+		      unsigned flags);
-+};
-+
- ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
-+		const struct iomap_ops *ops, const struct iomap_dio_ops *dops);
- int iomap_dio_iopoll(struct kiocb *kiocb, bool spin);
- 
- #ifdef CONFIG_SWAP
--- 
-2.20.1
+  if (src == 0 && dst == 0 && len == 0) {
 
+So if you can give your reproducer a "length"(or offset), likes:
+
+  # xfs_io -c "copy_range -l 64k testfile" testfile
+
+You can avoid the copy_dst_truncate() too.
+
+Is that helpful?
+
+Thanks,
+Zorro
+
+> 
+> Thanks,
+> Zorro
+> 
+> >  io/copy_file_range.c | 27 ++++++++++++++++++---------
+> >  1 file changed, 18 insertions(+), 9 deletions(-)
+> > 
+> > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> > index b7b9fd88..2dde8a31 100644
+> > --- a/io/copy_file_range.c
+> > +++ b/io/copy_file_range.c
+> > @@ -28,6 +28,7 @@ copy_range_help(void)
+> >                            at position 0\n\
+> >   'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
+> >                            at position 0\n\
+> > + 'copy_range -f -' - copies all bytes from current open file append the current open file\n\
+> >  "));
+> >  }
+> >  
+> > @@ -114,11 +115,15 @@ copy_range_f(int argc, char **argv)
+> >  			}
+> >  			break;
+> >  		case 'f':
+> > -			src_file_nr = atoi(argv[1]);
+> > -			if (src_file_nr < 0 || src_file_nr >= filecount) {
+> > -				printf(_("file value %d is out of range (0-%d)\n"),
+> > -					src_file_nr, filecount - 1);
+> > -				return 0;
+> > +			if (strcmp(argv[1], "-"))
+> > +				src_file_nr = (file - &filetable[0]) / sizeof(fileio_t);
+> > +			else {
+> > +				src_file_nr = atoi(argv[1]);
+> > +				if (src_file_nr < 0 || src_file_nr >= filecount) {
+> > +					printf(_("file value %d is out of range (0-%d)\n"),
+> > +						src_file_nr, filecount - 1);
+> > +					return 0;
+> > +				}
+> >  			}
+> >  			/* Expect no src_path arg */
+> >  			src_path_arg = 0;
+> > @@ -147,10 +152,14 @@ copy_range_f(int argc, char **argv)
+> >  		}
+> >  		len = sz;
+> >  
+> > -		ret = copy_dst_truncate();
+> > -		if (ret < 0) {
+> > -			ret = 1;
+> > -			goto out;
+> > +		if (fd != file->fd) {
+> > +			ret = copy_dst_truncate();
+> > +			if (ret < 0) {
+> > +				ret = 1;
+> > +				goto out;
+> > +			}
+> > +		} else {
+> > +			dst = sz;
+> >  		}
+> >  	}
+> >  
+> > -- 
+> > 2.17.2
+> > 
