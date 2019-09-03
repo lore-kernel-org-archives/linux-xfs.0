@@ -2,46 +2,46 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1C86C3A5A2
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 12:58:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D07D0C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 13:03:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A466D215EA
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 12:58:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9FDB322D6D
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 13:03:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="jyujePWH"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FXHY8RkG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728865AbfICM6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 08:58:48 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53442 "EHLO
+        id S1729247AbfICNDb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 09:03:31 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:54872 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728587AbfICM6s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 08:58:48 -0400
+        with ESMTP id S1728094AbfICNDb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 09:03:31 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
         Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
         Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=GhN3+WoxNvQMngqF1ztQTG3k+kEspfiMsAZgttnYtCU=; b=jyujePWHMjtkTx2aHb5Utnb/u
-        c20iwgMfJeNNB+vDmnNIapvYhN+1nc78XVx/mi14NmX9GEHXsgyEgWW84VpmYnDAdVhTI1bZpfi3W
-        yjAkLyAKlYlpcC+S0QvixZGDogxJMW5OqK2BiHkDjrM9VidJi94bJIzR320UBx0ClwqOkvQ/YLEz+
-        BMrbZDb4jy01SguRv/vZF1ndnd4u/lATQAo6Vb2tPlaNfVEGDFzdX1p4yHzi26fKzIDThfqt6bGHP
-        gPQZ274EakNTKOb/i+d8KWezjfMNqKBz2WIOGXGJl6WgkjgnxO5WOpYyyTM/Qo30FzhGp2TShbMrC
-        lnXxppLNA==;
+         bh=lG/RehJLtxGv7aGgAnzqIyR3HiGn5znk8fnu1OiIaW8=; b=FXHY8RkGYklZuelJSJMA9Z8ni
+        Bsfi6fSSr8mQcHRjsRorq9x77w+JgSl3/p4yIJmTeWQZrQpvp+e7F+OnrsFFEkYwOiCJ4Xm5MNgig
+        0lDtn0q2AoaNrlS0xDWJ/CZOWcjH9DSPSInAoclSRmWCEqOWN5lpB5FXkH8JVR48NnhB5CA5BXSVr
+        7gYpG/PihJs4O3xx6AlTSAMl5kfd2CEhHn+nmDnr2QCmfxBhjiFykzW7zQVhQo76aG8pbGtITfLcX
+        BbJswDuQon0q1cA4MAmTNnlXecJITxLaSArQple6+GT/bhDiEfObVE1v+I3FRJ+AZksax7o5aYVNq
+        bPECO9pbw==;
 Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1i58OV-0002EP-BG; Tue, 03 Sep 2019 12:58:47 +0000
+        id 1i58T2-0003sr-Sa; Tue, 03 Sep 2019 13:03:29 +0000
 From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     Murphy Zhou <jencce.kernel@gmail.com>
-Subject: [PATCH v3] xfsprogs: provide a few compatibility typedefs
-Date:   Tue,  3 Sep 2019 14:58:45 +0200
-Message-Id: <20190903125845.3117-1-hch@lst.de>
+To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     Goldwyn Rodrigues <rgoldwyn@suse.de>,
+        Matthew Bobrowski <mbobrowski@mbobrowski.org>
+Subject: iomap_dio_rw ->end_io improvements
+Date:   Tue,  3 Sep 2019 15:03:25 +0200
+Message-Id: <20190903130327.6023-1-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
@@ -51,33 +51,12 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add back four typedefs that allow xfsdump to compile against the
-headers from the latests xfsprogs.
+Hi all,
 
-Reported-by: Murphy Zhou <jencce.kernel@gmail.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- include/xfs.h | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/include/xfs.h b/include/xfs.h
-index f2f675df..9c03d6bd 100644
---- a/include/xfs.h
-+++ b/include/xfs.h
-@@ -37,4 +37,13 @@ extern int xfs_assert_largefile[sizeof(off_t)-8];
- #include <xfs/xfs_types.h>
- #include <xfs/xfs_fs.h>
- 
-+/*
-+ * Backards compatibility for users of this header, now that the kernel
-+ * removed these typedefs from xfs_fs.h.
-+ */
-+typedef struct xfs_bstat xfs_bstat_t;
-+typedef struct xfs_fsop_bulkreq xfs_fsop_bulkreq_t;
-+typedef struct xfs_fsop_geom_v1 xfs_fsop_geom_v1_t;
-+typedef struct xfs_inogrp xfs_inogrp_t;
-+
- #endif	/* __XFS_H__ */
--- 
-2.20.1
-
+this series contains two updates to the end_io handling for the iomap
+direct I/O code.  The first patch is from Matthew and passes the size and
+error separately, and has been taken from his series to convert ext4 to
+use iomap for direct I/O.  The second one moves the end_io handler into a
+separate ops structure.  This should help with Goldwyns series to use the
+iomap code in btrfs, but as-is already ensures that we don't store a
+function pointer in a mutable data structure.
