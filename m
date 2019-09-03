@@ -2,116 +2,123 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60720C3A5A2
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 23:07:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43B27C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 23:37:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E09022CED
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 23:07:19 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 15DE322CED
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 23:37:15 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Dqygawpc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="amaSCeaK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726105AbfICXHS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 19:07:18 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:43176 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726009AbfICXHS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 19:07:18 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x83N3Zwt183426;
-        Tue, 3 Sep 2019 23:07:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=tHuVk4TkGyopl9fzYU75+2XW2xtZfWofOJMLp4Vnn8c=;
- b=Dqygawpc/EQ1MAQ4ry3ZWaYUxOvT57fTKH9SsVgkb4LPNtIs2RtPkvk6uKBhn2lq7Wh1
- le7xDUgr6210y0conO/Exmts630fzvnFJzcYdUlJbl+fHXu2h01os7ykmAFP4kdmt5or
- CNLfwBBu6TRXNKO2Jd6vH4FTOq5G/OkbMiNfATrG8qdCVcwmpNkByzJrS5hq31c15eNX
- 4I4DcjYXTuXFTcHw+B+1dhVGkjHQkcugi+AMs1JKifNQzOogAcjCWgF/19FnpjJwPbnt
- /5YntU04z2hU0ZWJ3+QU6xasFEH2+jTk35uQlZTEY62QErq4sGV2KgOPFVzLwuZgHmSr Vw== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2ut1e7r11s-1
+        id S1726090AbfICXhO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 19:37:14 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:60650 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727257AbfICXhO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 19:37:14 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x83NYUgf190762;
+        Tue, 3 Sep 2019 23:37:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=qFs5Sq+vJkwEd3ZF0fL6P9ZO9MlY41piSI72es2vJpQ=;
+ b=amaSCeaKsK9GEYyw9rr/cTBAQG89ivj6QBNSRCEwib3sEgrEhxXYCGYDbgiT4vRnkPAr
+ 2faCRZhMyDJq8HF9T1Eo9bDncuDqvsayOTh3/c9pGThKgkDJGKevyFqBpxq4dIgl9KFs
+ /buj/ISAIZfQnwCclisx5aIClBAiw7qriUM46SI39/Kmo0i000qoqDCnbDgizuh6Igzq
+ ef0hITPAkkOKWD3PKwl54xvrlNCuBdCNs51c3uOajudebR2r0KLR56OZHP7be2t5h/FE
+ MiuHMZ4su7XTLutA8sGPUiOea2YTZc0umNVpvfP2fE2UG1UxB/1stySFK3C/qbg7Kz/h rg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2ut1x1g0np-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Sep 2019 23:07:16 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x83N5AEO136281;
-        Tue, 3 Sep 2019 23:05:40 GMT
+        Tue, 03 Sep 2019 23:37:11 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x83NXTUx033260;
+        Tue, 3 Sep 2019 23:37:10 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2usu514vqu-1
+        by aserp3020.oracle.com with ESMTP id 2us5phe8wn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Sep 2019 23:05:40 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x83N5cOx007910;
-        Tue, 3 Sep 2019 23:05:39 GMT
+        Tue, 03 Sep 2019 23:37:10 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x83Nb9Vu025019;
+        Tue, 3 Sep 2019 23:37:09 GMT
 Received: from localhost (/10.145.178.11)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Sep 2019 16:05:38 -0700
-Date:   Tue, 3 Sep 2019 16:05:37 -0700
+        with ESMTP ; Tue, 03 Sep 2019 16:37:08 -0700
+Date:   Tue, 3 Sep 2019 16:37:07 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>, Dave Chinner <david@fromorbit.com>
-Subject: [PATCH v3] xfs: define a flags field for the AG geometry ioctl
- structure
-Message-ID: <20190903230537.GI5340@magnolia>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] libfrog: create xfd_open function
+Message-ID: <20190903233707.GI568270@magnolia>
+References: <156713882070.386621.8501281965010809034.stgit@magnolia>
+ <156713887587.386621.8656028056753211579.stgit@magnolia>
+ <20190903230121.GZ1119@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190903230121.GZ1119@dread.disaster.area>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=849
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909030231
+ engine=8.0.1-1906280000 definitions=main-1909030237
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=911 adultscore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1909030231
+ definitions=main-1909030237
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Sep 04, 2019 at 09:01:21AM +1000, Dave Chinner wrote:
+> On Thu, Aug 29, 2019 at 09:21:15PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Create a helper to open a file and initialize the xfd structure.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ....
+> 
+> >  
+> > +/* Open a file on an XFS filesystem.  Returns zero or a positive error code. */
+> > +int
+> > +xfd_open(
+> > +	struct xfs_fd		*xfd,
+> > +	const char		*pathname,
+> > +	int			flags)
+> > +{
+> > +	int			ret;
+> > +
+> > +	xfd->fd = open(pathname, O_RDONLY);
+> 
+> open(pathname, flags)
 
-Define a flags field for the AG geometry ioctl structure.
+Will fix, good catch!
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
-v3: define ag_flags as an in/out field and check required zeroness
----
- fs/xfs/libxfs/xfs_fs.h |    2 +-
- fs/xfs/xfs_ioctl.c     |    4 ++++
- 2 files changed, 5 insertions(+), 1 deletion(-)
+> And, to handle all future uses, shouldn't it also pass a mode?
+> Though I think that can be done as a separate patch when we need
+> O_RDWR for open....
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index 52d03a3a02a4..39dd2b908106 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -287,7 +287,7 @@ struct xfs_ag_geometry {
- 	uint32_t	ag_ifree;	/* o: inodes free */
- 	uint32_t	ag_sick;	/* o: sick things in ag */
- 	uint32_t	ag_checked;	/* o: checked metadata in ag */
--	uint32_t	ag_reserved32;	/* o: zero */
-+	uint32_t	ag_flags;	/* i/o: flags for this ag */
- 	uint64_t	ag_reserved[12];/* o: zero */
- };
- #define XFS_AG_GEOM_SICK_SB	(1 << 0)  /* superblock */
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 9a6823e29661..c93501f42675 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1038,6 +1038,10 @@ xfs_ioc_ag_geometry(
- 
- 	if (copy_from_user(&ageo, arg, sizeof(ageo)))
- 		return -EFAULT;
-+	if (ageo.ag_flags)
-+		return -EINVAL;
-+	if (memchr_inv(&ageo.ag_reserved, 0, sizeof(ageo.ag_reserved)))
-+		return -EINVAL;
- 
- 	error = xfs_ag_get_geometry(mp, ageo.ag_number, &ageo);
- 	if (error)
+<nod> Let's fix that when someone needs it, seeing as libfrog is an
+internal static library anyway. :)
+
+--D
+
+> Otherwise it looks ok.
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
