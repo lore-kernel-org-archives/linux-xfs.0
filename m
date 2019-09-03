@@ -2,107 +2,88 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 565C9C3A5A8
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 20:53:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8DD1EC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 21:33:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2BB2021883
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 20:53:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 523A6204EC
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 21:33:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="q6PKtm2q"
+	dkim=pass (2048-bit key) header.d=mbobrowski-org.20150623.gappssmtp.com header.i=@mbobrowski-org.20150623.gappssmtp.com header.b="W7+Hedgg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726948AbfICUxQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 16:53:16 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:39632 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726005AbfICUxQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 16:53:16 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=9j9Ys3SKrunuUdWnpddWrlF3hlzVX+dYskTpGsMVRdg=; b=q6PKtm2qHXC4ZxDd1oWAesGqt
-        mkef31ksS0DE/m+V94xxk8mY4E4NK7/D6yceAd4IMOYEtng6UUMmitBiFDXkmyC3VsZShsSIDhDxA
-        spbPZghZh0gaSPUEaq9m2Id0riRmEJzPcniu1pE5CxkkCA32WDRJ3NzR/05hgewKmdlszxQcADztH
-        z19osbBcPHxeseNqIEdEFRXQ1AGIdZ5S6kJBEUtzqgvVeooolY2oxTjjKG+adYErsSQPK+86v+0qP
-        AK7u61q/Rmd8W04N+VU/Ik4OalyMQ207Yu/0eA5EaNXbWRdvGCZGHdJNie5vvkiHaECkD4l0efUVb
-        n2xH0iMQA==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i5Fnc-0005w9-SY; Tue, 03 Sep 2019 20:53:12 +0000
-Date:   Tue, 3 Sep 2019 13:53:12 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christopher Lameter <cl@linux.com>
-Cc:     Michal Hocko <mhocko@kernel.org>, Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190903205312.GK29434@bombadil.infradead.org>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <0100016cd98bb2c1-a2af7539-706f-47ba-a68e-5f6a91f2f495-000000@email.amazonses.com>
- <20190828194607.GB6590@bombadil.infradead.org>
- <20190829073921.GA21880@dhcp22.suse.cz>
- <0100016ce39e6bb9-ad20e033-f3f4-4e6d-85d6-87e7d07823ae-000000@email.amazonses.com>
- <20190901005205.GA2431@bombadil.infradead.org>
- <0100016cf8c3033d-bbcc9ba3-2d59-4654-a7c2-8ba094f8a7de-000000@email.amazonses.com>
+        id S1726853AbfICVdC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 17:33:02 -0400
+Received: from mail-pg1-f174.google.com ([209.85.215.174]:38925 "EHLO
+        mail-pg1-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726375AbfICVdB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 17:33:01 -0400
+Received: by mail-pg1-f174.google.com with SMTP id u17so9927743pgi.6
+        for <linux-xfs@vger.kernel.org>; Tue, 03 Sep 2019 14:33:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mbobrowski-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=jDbxMpS5LYlU984Ph/2POHc4fiXRIXts9atICT35mak=;
+        b=W7+HedggPYfelbnF2mNp2MgXt6yq39eQ5U0S/eunv5h7VyOJsUjY3WxYV1VOGCFg01
+         FBPGMSXd78dl+fmodCCV6GycFuRQIj4wy+Qm9ZR/FyI9IWuaxCt3taUjwQDxiOw7Qvj7
+         Pz5upHS/tpw3d0XlH5Er6ELX2n9ldPoXy1h7UozC1TB4eUJ9DYouBWA+PH6Ur6Mxzpwg
+         5oeLTK0W0IUzcRjHG9UyuP8qai3ltqd7cR5CUjOuROCBAdbhPVV5h1PsLMn5Yecm4VD/
+         juQ90TR6xfpH/l7OzZKEdUqqh61t5tJlBv7gmT/fhBz1a3by4GgkTOHD6/tEMREsx6/G
+         iHIQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=jDbxMpS5LYlU984Ph/2POHc4fiXRIXts9atICT35mak=;
+        b=eQxmzVanq6g5r6068invG6zik7WP3APh6+RpVKX+XssbYpqLc3vYmDF0lJHp7lfnpy
+         Z7IqLQ7bkroVRgAsWqLZn8vbPlhUnnn2+X13BXm7KzFdPNy6A0gpbfV3NPyWu9FHQIgn
+         Ux30c3He9AGp75uxStlihhS8hDCnVZYO8Y6vrcdLL4RIwP/VFIbil5vfKOFQnlx5iYOh
+         1lNt3F1j8SXnUJfDcNuGejAsl0wptYfBGa38Q52sZYPONM44qFq7fnMiR385UoxFxssH
+         skqeaP6W64yY2smEBAezSJLfdHeg3onJDIgaAAW2CwtRP20wQrM8kJ8vlj+fbiswMmYe
+         WocQ==
+X-Gm-Message-State: APjAAAWzffQbTex3Vu3BtpdAfmYRaeqZy5dg1mcFcLboep8gk6DqmaNv
+        Q2aoecH7usho7oHCzHVx44mScMre1g==
+X-Google-Smtp-Source: APXvYqyuVwjmgWE0sbpgq0U+4HHtdaZ9+1HZBl9RuZm0YIgALjcuYBmXyHUJorZFLVyXvTYKe8hmtA==
+X-Received: by 2002:a63:29c4:: with SMTP id p187mr32639330pgp.330.1567546380976;
+        Tue, 03 Sep 2019 14:33:00 -0700 (PDT)
+Received: from athena.bobrowski.net ([120.17.56.123])
+        by smtp.gmail.com with ESMTPSA id 15sm20485962pfh.188.2019.09.03.14.32.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Sep 2019 14:33:00 -0700 (PDT)
+Date:   Wed, 4 Sep 2019 07:32:54 +1000
+From:   Matthew Bobrowski <mbobrowski@mbobrowski.org>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Goldwyn Rodrigues <rgoldwyn@suse.de>
+Subject: Re: iomap_dio_rw ->end_io improvements
+Message-ID: <20190903213254.GA11431@athena.bobrowski.net>
+References: <20190903130327.6023-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0100016cf8c3033d-bbcc9ba3-2d59-4654-a7c2-8ba094f8a7de-000000@email.amazonses.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
+In-Reply-To: <20190903130327.6023-1-hch@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 08:13:45PM +0000, Christopher Lameter wrote:
-> On Sat, 31 Aug 2019, Matthew Wilcox wrote:
-> 
-> > > The current behavior without special alignment for these caches has been
-> > > in the wild for over a decade. And this is now coming up?
-> >
-> > In the wild ... and rarely enabled.  When it is enabled, it may or may
-> > not be noticed as data corruption, or tripping other debugging asserts.
-> > Users then turn off the rare debugging option.
-> 
-> Its enabled in all full debug session as far as I know. Fedora for
-> example has been running this for ages to find breakage in device drivers
-> etc etc.
+Hey Christoph!
 
-Are you telling me nobody uses the ramdisk driver on fedora?  Because
-that's one of the affected drivers.
-
-> > > If there is an exceptional alignment requirement then that needs to be
-> > > communicated to the allocator. A special flag or create a special
-> > > kmem_cache or something.
-> >
-> > The only way I'd agree to that is if we deliberately misalign every
-> > allocation that doesn't have this special flag set.  Because right now,
-> > breakage happens everywhere when these debug options are enabled, and
-> > the very people who need to be helped are being hurt by the debugging.
+On Tue, Sep 03, 2019 at 03:03:25PM +0200, Christoph Hellwig wrote:
+> Hi all,
 > 
-> That is customarily occurring for testing by adding "slub_debug" to the
-> kernel commandline (or adding debug kernel options) and since my
-> information is that this is done frequently (and has been for over a
-> decade now) I am having a hard time believing the stories of great
-> breakage here. These drivers were not tested with debugging on before?
-> Never ran with a debug kernel?
+> this series contains two updates to the end_io handling for the iomap
+> direct I/O code.  The first patch is from Matthew and passes the size and
+> error separately, and has been taken from his series to convert ext4 to
+> use iomap for direct I/O.
 
-Whatever is being done is clearly not enough to trigger the bug.  So how
-about it?  Create an option to slab/slub to always return misaligned
-memory.
+Great, looks good and thank you for expediting this change for
+me. I'll make sure to drop these changes in the series that I'll be
+posting through very shortly.
+
+--M
 
