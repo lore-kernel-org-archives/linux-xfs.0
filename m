@@ -2,74 +2,66 @@ Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E1A84C3A5A2
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 15:24:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E5D82C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 16:14:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA85C23431
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 15:24:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BB0DB23711
+	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 16:14:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kdOkIQ3y"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="braltILK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728854AbfICPYK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 11:24:10 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:49810 "EHLO
+        id S1729873AbfICQOr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 12:14:47 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:34032 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728679AbfICPYK (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 11:24:10 -0400
+        with ESMTP id S1729117AbfICQOr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 12:14:47 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=B/m96XoqXZdtmIUr0ndgNK1S7ZlN6PGhtrgoOXX9AHs=; b=kdOkIQ3ykwPFMvL89bXdzp9yz
-        Zlcfo3rwKJ6LYbfJszaCVWLv/nwTs3Xy3oPjOox5oABK4Y41CXWOTO8QKXCJEVS4gr3tUM7GVSXD0
-        E4fxalZ85nAZRl3jLzwiZ15LZ79aLrkqMYWWBa7KK1l4pRpeajbajXaBwhkvSWLQzzI1bs3cGGq/c
-        tgBpccqszhBKtfej3k/IdiFSVZWViOGf/Q8EhyqtkSxbOdzpVnCODFLn52pw47wzQ0+dNO0pDIzO4
-        N+EvQ4U1Hvj1hPRj9FTZ8xBiht4HJQNi365k8rQjylskke2ptWnOF1bSFj0B2TzrG/SLkRZDWKwdq
-        sZRqNYeRA==;
+         bh=Xj4IHJqHeJYYEcSgLS8shkVMaZQkrGWsskT7oJMqUYw=; b=braltILKIgR7j+bolyl/Am74e
+        GA5G1h6/SRog8go9YljYnQJGGe7DA41jxF8zDlYAafT7IVyCksFyLhNL9F35EuoE8UcfOVS+UfYG+
+        JcKM8aUTBsgQhUlvE511gF9YEz21J0bJkG3ccXze7VFIuGRwQCRG4TlzeOqJAw8NjXKOIoCT6fO9q
+        TBr8ur0ndaELuFGhQ/+dQpAOQ7y85///3bVUHWQQRncGd+fvM+8uHTep2v26SAm+8TR31Ach0eI+r
+        89PUlHQevRg1roi5EudlaZkn+K9IDuf34Vgk2XGwE34o9gLggDB/mcmFOufQo/T9EyRzeXRp5JxBg
+        v+LNBrjTQ==;
 Received: from willy by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i5Af9-0004IB-HX; Tue, 03 Sep 2019 15:24:07 +0000
-Date:   Tue, 3 Sep 2019 08:24:07 -0700
+        id 1i5BSA-0004kf-5q; Tue, 03 Sep 2019 16:14:46 +0000
+Date:   Tue, 3 Sep 2019 09:14:46 -0700
 From:   Matthew Wilcox <willy@infradead.org>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
         Goldwyn Rodrigues <rgoldwyn@suse.de>,
         Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: [PATCH 1/2] iomap: split size and error for iomap_dio_rw ->end_io
-Message-ID: <20190903152407.GG29434@bombadil.infradead.org>
+Subject: Re: [PATCH 2/2] iomap: move the iomap_dio_rw ->end_io callback into
+ a structure
+Message-ID: <20190903161446.GH29434@bombadil.infradead.org>
 References: <20190903130327.6023-1-hch@lst.de>
- <20190903130327.6023-2-hch@lst.de>
+ <20190903130327.6023-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190903130327.6023-2-hch@lst.de>
+In-Reply-To: <20190903130327.6023-3-hch@lst.de>
 User-Agent: Mutt/1.11.4 (2019-03-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 03:03:26PM +0200, Christoph Hellwig wrote:
-> From: Matthew Bobrowski <mbobrowski@mbobrowski.org>
-> 
-> Modify the calling convention for the iomap_dio_rw ->end_io() callback.
-> Rather than passing either dio->error or dio->size as the 'size' argument,
-> instead pass both the dio->error and the dio->size value separately.
-> 
-> In the instance that an error occurred during a write, we currently cannot
-> determine whether any blocks have been allocated beyond the current EOF and
-> data has subsequently been written to these blocks within the ->end_io()
-> callback. As a result, we cannot judge whether we should take the truncate
-> failed write path. Having both dio->error and dio->size will allow us to
-> perform such checks within this callback.
-> 
-> Signed-off-by: Matthew Bobrowski <mbobrowski@mbobrowski.org>
-> [hch: minor cleanups]
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Tue, Sep 03, 2019 at 03:03:27PM +0200, Christoph Hellwig wrote:
+> Add a new iomap_dio_ops structure that for now just contains the end_io
+> handler.  This avoid storing the function pointer in a mutable structure,
+> which is a possible exploit vector for kernel code execution, and prepares
+> for adding a submit_io handler that btrfs needs.
 
-Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+Is it really a security win?  If I can overwrite dio->end_io, I can as
+well overwrite dio->dops.
+
+The patch itself looks sane, but I'm not sure about this particular reason.
