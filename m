@@ -4,127 +4,114 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E95D3C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C7A3C3A5A7
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C55DB21883
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3BF4021883
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725908AbfIDEYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1725791AbfIDEYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 4 Sep 2019 00:24:55 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41173 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725791AbfIDEYz (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40635 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725864AbfIDEYz (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:24:55 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6514543E36C
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CE72C36148E
         for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2019 14:24:53 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5Mqi-0007OO-UL
+        id 1i5Mqi-0007OL-TK
         for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:52 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5Mqi-0002UL-So
+        id 1i5Mqi-0002UI-RW
         for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:52 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/7] xfs: fix missed wakeup on l_flush_wait
-Date:   Wed,  4 Sep 2019 14:24:46 +1000
-Message-Id: <20190904042451.9314-3-david@fromorbit.com>
+Subject: [PATCH 1/7] xfs: push the AIL in xlog_grant_head_wake
+Date:   Wed,  4 Sep 2019 14:24:45 +1000
+Message-Id: <20190904042451.9314-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190904042451.9314-1-david@fromorbit.com>
 References: <20190904042451.9314-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=fwyzoN0nAAAA:8
-        a=FOH2dFAWAAAA:8 a=20KFwNOVAAAA:8 a=TIbIJjZQYPkjqnKAcywA:9
-        a=Sc3RvPAMVtkGz6dGeUiH:22 a=i3VuKzQdj-NEYjvDI-p3:22
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=20KFwNOVAAAA:8
+        a=iJFTkyUmMBOPLpsSiA4A:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Rik van Riel <riel@surriel.com>
+From: Dave Chinner <dchinner@redhat.com>
 
-The code in xlog_wait uses the spinlock to make adding the task to
-the wait queue, and setting the task state to UNINTERRUPTIBLE atomic
-with respect to the waker.
+In the situation where the log is full and the CIL has not recently
+flushed, the AIL push threshold is throttled back to the where the
+last write of the head of the log was completed. This is stored in
+log->l_last_sync_lsn. Hence if the CIL holds > 25% of the log space
+pinned by flushes and/or aggregation in progress, we can get the
+situation where the head of the log lags a long way behind the
+reservation grant head.
 
-Doing the wakeup after releasing the spinlock opens up the following
-race condition:
+When this happens, the AIL push target is trimmed back from where
+the reservation grant head wants to push the log tail to, back to
+where the head of the log currently is. This means the push target
+doesn't reach far enough into the log to actually move the tail
+before the transaction reservation goes to sleep.
 
-Task 1					task 2
-add task to wait queue
-					wake up task
-set task state to UNINTERRUPTIBLE
+When the CIL push completes, it moves the log head forward such that
+the AIL push target can now be moved, but that has no mechanism for
+puhsing the log tail. Further, if the next tail movement of the log
+is not large enough wake the waiter (i.e. still not enough space for
+it to have a reservation granted), we don't wake anything up, and
+hence we do not update the AIL push target to take into account the
+head of the log moving and allowing the push target to be moved
+forwards.
 
-This issue was found through code inspection as a result of kworkers
-being observed stuck in UNINTERRUPTIBLE state with an empty
-wait queue. It is rare and largely unreproducable.
+To avoid this particular condition, if we fail to wake the first
+waiter on the grant head because we don't have enough space,
+push on the AIL again. This will pick up any movement of the log
+head and allow the push target to move forward due to completion of
+CIL pushing.
 
-Simply moving the spin_unlock to after the wake_up_all results
-in the waker not being able to see a task on the waitqueue before
-it has set its state to UNINTERRUPTIBLE.
-
-This bug dates back to the conversion of this code to generic
-waitqueue infrastructure from a counting semaphore back in 2008
-which didn't place the wakeups consistently w.r.t. to the relevant
-spin locks.
-
-[dchinner: Also fix a similar issue in the shutdown path on
-xc_commit_wait. Update commit log with more details of the issue.]
-
-Fixes: d748c62367eb ("[XFS] Convert l_flushsema to a sv_t")
-Reported-by: Chris Mason <clm@fb.com>
-Signed-off-by: Rik van Riel <riel@surriel.com>
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_log.c | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 941f10ff99d9..6f494f6369e8 100644
+index b159a9e9fef0..941f10ff99d9 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2628,7 +2628,6 @@ xlog_state_do_callback(
- 	int		   funcdidcallbacks; /* flag: function did callbacks */
- 	int		   repeats;	/* for issuing console warnings if
- 					 * looping too many times */
--	int		   wake = 0;
+@@ -214,15 +214,20 @@ xlog_grant_head_wake(
+ {
+ 	struct xlog_ticket	*tic;
+ 	int			need_bytes;
++	bool			woken_task = false;
  
- 	spin_lock(&log->l_icloglock);
- 	first_iclog = iclog = log->l_iclog;
-@@ -2824,11 +2823,9 @@ xlog_state_do_callback(
- #endif
+ 	list_for_each_entry(tic, &head->waiters, t_queue) {
+ 		need_bytes = xlog_ticket_reservation(log, head, tic);
+-		if (*free_bytes < need_bytes)
++		if (*free_bytes < need_bytes) {
++			if (!woken_task)
++				xlog_grant_push_ail(log, need_bytes);
+ 			return false;
++		}
  
- 	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR))
--		wake = 1;
--	spin_unlock(&log->l_icloglock);
--
--	if (wake)
- 		wake_up_all(&log->l_flush_wait);
-+
-+	spin_unlock(&log->l_icloglock);
- }
+ 		*free_bytes -= need_bytes;
+ 		trace_xfs_log_grant_wake_up(log, tic);
+ 		wake_up_process(tic->t_task);
++		woken_task = true;
+ 	}
  
- 
-@@ -3928,7 +3925,9 @@ xfs_log_force_umount(
- 	 * item committed callback functions will do this again under lock to
- 	 * avoid races.
- 	 */
-+	spin_lock(&log->l_cilp->xc_push_lock);
- 	wake_up_all(&log->l_cilp->xc_commit_wait);
-+	spin_unlock(&log->l_cilp->xc_push_lock);
- 	xlog_state_do_callback(log, true, NULL);
- 
- #ifdef XFSERRORDEBUG
+ 	return true;
 -- 
 2.23.0.rc1
 
