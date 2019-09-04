@@ -2,63 +2,143 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A5A9C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:26:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 112AAC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:40:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D5F082339D
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:26:01 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oaWDoHSv"
+	by mail.kernel.org (Postfix) with ESMTP id E0A7E20870
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:40:16 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726046AbfIDF0B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 01:26:01 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42804 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725938AbfIDF0B (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 01:26:01 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=iTTXQZO9r1ioRQbqNZ9gFQdejVsGffSnxJuk8XCIi48=; b=oaWDoHSvpIFuFqqHK1vsLbh0K
-        xiWpKr7StHkNL7Vgovh3m29r6mbTr0mFebKPmNplQQflOOoQBrx/dyMg3ZuJ4we63OOhkR02gCMK5
-        0hz6VOv63QcjCgoG7ggdjej7sAAm8qBiDAf4ulslxD+/X3s59Mz+ji3aKpCIc21oiXEWHMt1kw2sf
-        Yo/1F1NxZ6oFc/AFHy8XDoiulf5j/F6cpI/6zgsCA3taf+FOnw51sMKAUvIAasz+rqvIFTrLuMNt7
-        XCbkVYNxCdXYUGmPiJWl5HfIHl313YKgJSUSc9hXnkhkdqxt8z6l1os/vJeAhqeOcddmFSbZLZgOV
-        lWuXWnp3w==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
-        id 1i5Nns-0000Aa-QR; Wed, 04 Sep 2019 05:26:00 +0000
-Date:   Tue, 3 Sep 2019 22:26:00 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/7] xfs: log race fixes and cleanups
-Message-ID: <20190904052600.GA27276@infradead.org>
-References: <20190904042451.9314-1-david@fromorbit.com>
+        id S1728598AbfIDFkQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 01:40:16 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51192 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726045AbfIDFkQ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Sep 2019 01:40:16 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id EB67DC056808;
+        Wed,  4 Sep 2019 05:40:15 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 6504D5C220;
+        Wed,  4 Sep 2019 05:40:15 +0000 (UTC)
+Date:   Wed, 4 Sep 2019 13:47:16 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [PATCH v2] xfs_io: support splice data between two files
+Message-ID: <20190904054715.GX7239@dhcp-12-102.nay.redhat.com>
+References: <20190519150026.24626-1-zlang@redhat.com>
+ <CAOQ4uxiHZzF5VdC-v3jzorc26RSUdou0v=Vx-XwYT3BAzSwyZA@mail.gmail.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190904042451.9314-1-david@fromorbit.com>
-User-Agent: Mutt/1.11.4 (2019-03-13)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <CAOQ4uxiHZzF5VdC-v3jzorc26RSUdou0v=Vx-XwYT3BAzSwyZA@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Wed, 04 Sep 2019 05:40:15 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 04, 2019 at 02:24:44PM +1000, Dave Chinner wrote:
-> HI folks,
+On Wed, Sep 04, 2019 at 08:20:34AM +0300, Amir Goldstein wrote:
+> On Sun, May 19, 2019 at 8:31 PM Zorro Lang <zlang@redhat.com> wrote:
+> >
+> > Add splice command into xfs_io, by calling splice(2) system call.
+> >
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> >
+> > Hi,
+> >
+> > Thanks the reviewing from Eric.
+> >
+> > If 'length' or 'soffset' or 'length + soffset' out of source file
+> > range, splice hanging there. V2 fix this issue.
+> >
+> > Thanks,
+> > Zorro
+> >
+> >  io/Makefile       |   2 +-
+> >  io/init.c         |   1 +
+> >  io/io.h           |   1 +
+> >  io/splice.c       | 194 ++++++++++++++++++++++++++++++++++++++++++++++
+> >  man/man8/xfs_io.8 |  26 +++++++
+> >  5 files changed, 223 insertions(+), 1 deletion(-)
+> >  create mode 100644 io/splice.c
+> >
+> ...
+> > +static void
+> > +splice_help(void)
+> > +{
+> > +       printf(_(
+> > +"\n"
+> > +" Splice a range of bytes from the given offset between files through pipe\n"
+> > +"\n"
+> > +" Example:\n"
+> > +" 'splice filename 0 4096 32768' - splice 32768 bytes from filename at offset\n"
+> > +"                                  0 into the open file at position 4096\n"
+> > +" 'splice filename' - splice all bytes from filename into the open file at\n"
+> > +" '                   position 0\n"
+> > +"\n"
+> > +" Copies data between one file and another.  Because this copying is done\n"
+> > +" within the kernel, sendfile does not need to transfer data to and from user\n"
+> > +" space.\n"
+> > +" -m -- SPLICE_F_MOVE flag, attempt to move pages instead of copying.\n"
+> > +" Offset and length in the source/destination file can be optionally specified.\n"
+> > +"\n"));
+> > +}
+> > +
 > 
-> This series of patches contain fixes for the generic/530 hangs that
-> Chandan and Jan reported recently. The first patch in the series is
-> the main fix for this, though in theory the last patch in the series
-> is necessary to totally close the problem off.
+> splice belongs to a family of syscalls that can be used to transfer
+> data between files.
+> 
+> xfs_io already has several different sets of arguments for commands
+> from that family, providing different subset of control to user:
+> 
+> copy_range [-s src_off] [-d dst_off] [-l len] src_file | -f N -- Copy
+> a range of data between two files
+> dedupe infile src_off dst_off len -- dedupes a number of bytes at a
+> specified offset
+> reflink infile [src_off dst_off len] -- reflinks an entire file, or a
+> number of bytes at a specified offset
+> sendfile -i infile | -f N [off len] -- Transfer data directly between
+> file descriptors
+> 
+> I recently added '-f N' option to copy_range that was needed by a test.
+> Since you are adding a new command I must ask if it would not be
+> appropriate to add this capability in the first place.
+> Even if not added now, we should think about how the command options
+> would look like if we do want to add it later.
+> I would really hate to see a forth mutation of argument list...
+> 
+> An extreme solution would be to use the super set of all explicit options:
+> 
+> splice [-m] <-i infile | -f N> [-s src_off] [-d dst_off] [-l len]
+> 
+> We could later add optional support for -s -d -l -i flags to all of the
+> commands above and then we will have a unified format.
 
-While I haven't been active in the thread I already reported this weeks
-ago as well..
+I'd like to see an uniform option format too. When I write this patch,
+I don't know which 'format' is *official*, so I have to choose one I prefer
+personally. How to decide which one is better?
+
+Another problem is, if we're going to make all these commands' format
+to unify, it'll cause incompatible issue, for example xfstests has lots
+of cases use xfs_io commands.
+
+Thanks,
+Zorro
+
+> 
+> Personally, I have no objection that splice could also use the
+> "simple" arguments list as you implemented it, since reflink is
+> going to have to continue to support this usage anyway.
+> 
+> Thanks,
+> Amir.
