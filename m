@@ -1,98 +1,216 @@
-Return-Path: <SRS0=8CmW=W6=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74E51C3A5A2
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 23:40:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 44029C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 01:56:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4370622CED
-	for <linux-xfs@archiver.kernel.org>; Tue,  3 Sep 2019 23:40:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sU6dsZ8x"
+	by mail.kernel.org (Postfix) with ESMTP id 1924722DBF
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 01:56:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725977AbfICXkj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 3 Sep 2019 19:40:39 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:46798 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725882AbfICXkj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 3 Sep 2019 19:40:39 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x83NckBZ009263;
-        Tue, 3 Sep 2019 23:40:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=7YLWe2rAbu4YL4rdGNPAV+/nwitQljiZIsggDRIACTQ=;
- b=sU6dsZ8xXsSlvN6XEMHFj+PvYjJSsiERodPiCdZ1aJ/E0ezsBaIljB+A0xAwRz0fRtiQ
- 8LYxGGHYAfOb9AftO3CVLIClaDbVSl3EeNKO5oMDuug0BOCCXZ//t7OHNLPtlfVSO7pe
- wVSflJZl0zBXwQ/EM8q7wcnVrFiDkiei9/OcJgmHCpyUNT4DUxW7qPYsgqe+s9BF5+gY
- XuznlPjcPcAdtV5/sThDw6WOxPhhZhqX5d5a3yUYYCshuR0CA1JILCAeVw/dfFQ3y/Qf
- +ghKzQwy+LffKK8Fx1IffSWu0QjtlDyGqY/+PAtYbXQn/CF41LAfBivU1R9KjwcLoxzR LQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2ut1xeg0nf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Sep 2019 23:40:27 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x83NcYqJ008531;
-        Tue, 3 Sep 2019 23:40:27 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2ut1hmh4kh-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 03 Sep 2019 23:40:27 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x83NePYr026367;
-        Tue, 3 Sep 2019 23:40:26 GMT
-Received: from localhost (/10.145.178.11)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Sep 2019 16:40:24 -0700
-Date:   Tue, 3 Sep 2019 16:40:24 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 1baa2800e62d
-Message-ID: <20190903234023.GJ568270@magnolia>
-References: <20190831193917.GA568270@magnolia>
- <20190901073311.GA13954@infradead.org>
+        id S1726770AbfIDB45 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 3 Sep 2019 21:56:57 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53468 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726009AbfIDB45 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 3 Sep 2019 21:56:57 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BB49E8980F8;
+        Wed,  4 Sep 2019 01:56:56 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 327A319C4F;
+        Wed,  4 Sep 2019 01:56:55 +0000 (UTC)
+Date:   Wed, 4 Sep 2019 10:03:57 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     =?gb2312?B?0vy9o7rn?= <yin-jianhong@163.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] xfsprogs: io/copy_range: cover corner case (fd_in ==
+ fd_out)
+Message-ID: <20190904020357.GW7239@dhcp-12-102.nay.redhat.com>
+References: <20190903105632.11667-1-yin-jianhong@163.com>
+ <20190903115943.GU7239@dhcp-12-102.nay.redhat.com>
+ <20190903131928.GV7239@dhcp-12-102.nay.redhat.com>
+ <7689497e.d24e.16cf7f750d6.Coremail.yin-jianhong@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=gb2312
 Content-Disposition: inline
-In-Reply-To: <20190901073311.GA13954@infradead.org>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909030238
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1909030238
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7689497e.d24e.16cf7f750d6.Coremail.yin-jianhong@163.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.67]); Wed, 04 Sep 2019 01:56:56 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 01, 2019 at 12:33:11AM -0700, Christoph Hellwig wrote:
-> On Sat, Aug 31, 2019 at 12:39:17PM -0700, Darrick J. Wong wrote:
-> > Dave Chinner (13):
-> >       [0ad95687c3ad] xfs: add kmem allocation trace points
-> >       [d916275aa4dd] xfs: get allocation alignment from the buftarg
-> >       [f8f9ee479439] xfs: add kmem_alloc_io()
+On Wed, Sep 04, 2019 at 12:31:16AM +0800, Òü½£ºç wrote:
+> We need cover the scenario that fd_in == fd_out
+> not just same path.
+
+Please reply to mail list, not 'me' only, to get more review:)
+
+The patch which you're trying to cover is commit 9ab70ca653 as below[1].
+From the code, I really doubt if you need same `struct file`, looks like
+you need same `struct inode`.
+
+Have you tried to test on same inode but not same 'fd'? I'm not a CIFS
+expert, can CIFS have same file with different inode?
+
+Thanks,
+Zorro
+
+[1]
+commit 9ab70ca653307771589e1414102c552d8dbdbbef
+Author: Kovtunenko Oleksandr <alexander198961@gmail.com>
+Date:   Tue May 14 05:52:34 2019 +0000
+
+    Fixed https://bugzilla.kernel.org/show_bug.cgi?id=202935 allow write on the same file
+    
+    Copychunk allows source and target to be on the same file.
+    For details on restrictions see MS-SMB2 3.3.5.15.6
+    
+    Signed-off-by: Kovtunenko Oleksandr <alexander198961@gmail.com>
+    Signed-off-by: Steve French <stfrench@microsoft.com>
+
+diff --git a/fs/cifs/cifsfs.c b/fs/cifs/cifsfs.c
+index b1a5fcfa3ce1..d0cb042732cb 100644
+--- a/fs/cifs/cifsfs.c
++++ b/fs/cifs/cifsfs.c
+@@ -1070,11 +1070,6 @@ ssize_t cifs_file_copychunk_range(unsigned int xid,
+ 
+        cifs_dbg(FYI, "copychunk range\n");
+ 
+-       if (src_inode == target_inode) {
+-               rc = -EINVAL;
+-               goto out;
+-       }
+-
+        if (!src_file->private_data || !dst_file->private_data) {
+                rc = -EBADF;
+                cifs_dbg(VFS, "missing cifsFileInfo on copy range src file\n");
+
 > 
-> Btw, shouldn't these go into 5.3-rc?  Linus also mentioned to me in a
-> private mail that he is going to do a -rc8 due to his travel schedule,
-> so we'd at least have some soaking time.
-
-/me shrugs -- it's been broken for years, apparently, and we've been
-arguing with almost no action for months.  Developers who are building
-things off of 5.3 should probably just add the patch (or turn off slub
-debugging)....
-
---D
+> #Did you read the summary and commit log?
+> 
+> 
+> | |
+> Òü½£ºç
+> |
+> |
+> ÓÊÏä£ºyin-jianhong@163.com
+> |
+> 
+> Ç©ÃûÓÉ ÍøÒ×ÓÊÏä´óÊ¦ ¶¨ÖÆ
+> 
+> On 09/03/2019 21:19, Zorro Lang wrote:
+> On Tue, Sep 03, 2019 at 07:59:43PM +0800, Zorro Lang wrote:
+> > On Tue, Sep 03, 2019 at 06:56:32PM +0800, Jianhong.Yin wrote:
+> > > Related bug:
+> > >   copy_file_range return "Invalid argument" when copy in the same file
+> > >   https://bugzilla.kernel.org/show_bug.cgi?id=202935
+> > >
+> > > if argument of option -f is "-", use current file->fd as fd_in
+> > >
+> > > Usage:
+> > >   xfs_io -c 'copy_range -f -' some_file
+> > >
+> > > Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+> > > ---
+> >
+> > Hi,
+> >
+> > Actually, I'm thinking about if you need same 'fd' or same file path?
+> > If you just need same file path, I think
+> >
+> >   # xfs_io -c "copy_range testfile" testfile
+> >
+> > already can help that. The only one problem stop you doing that is
+> > "copy_dst_truncate()".
+> >
+> > If all above I suppose is right, we can turn to talk about if that
+> > copy_dst_truncate() is necessary, or how can we skip it.
+> 
+> I just checked, the copy_dst_truncate() is only called when:
+> 
+>  if (src == 0 && dst == 0 && len == 0) {
+> 
+> So if you can give your reproducer a "length"(or offset), likes:
+> 
+>  # xfs_io -c "copy_range -l 64k testfile" testfile
+> 
+> You can avoid the copy_dst_truncate() too.
+> 
+> Is that helpful?
+> 
+> Thanks,
+> Zorro
+> 
+> >
+> > Thanks,
+> > Zorro
+> >
+> > >  io/copy_file_range.c | 27 ++++++++++++++++++---------
+> > >  1 file changed, 18 insertions(+), 9 deletions(-)
+> > >
+> > > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> > > index b7b9fd88..2dde8a31 100644
+> > > --- a/io/copy_file_range.c
+> > > +++ b/io/copy_file_range.c
+> > > @@ -28,6 +28,7 @@ copy_range_help(void)
+> > >                            at position 0\n\
+> > >   'copy_range -f 2' - copies all bytes from open file 2 into the current open file\n\
+> > >                            at position 0\n\
+> > > + 'copy_range -f -' - copies all bytes from current open file append the current open file\n\
+> > >  "));
+> > >  }
+> > >  
+> > > @@ -114,11 +115,15 @@ copy_range_f(int argc, char **argv)
+> > >                 }
+> > >                 break;
+> > >            case 'f':
+> > > -               src_file_nr = atoi(argv[1]);
+> > > -               if (src_file_nr < 0 || src_file_nr >= filecount) {
+> > > -                    printf(_("file value %d is out of range (0-%d)\n"),
+> > > -                         src_file_nr, filecount - 1);
+> > > -                    return 0;
+> > > +               if (strcmp(argv[1], "-"))
+> > > +                    src_file_nr = (file - &filetable[0]) / sizeof(fileio_t);
+> > > +               else {
+> > > +                    src_file_nr = atoi(argv[1]);
+> > > +                    if (src_file_nr < 0 || src_file_nr >= filecount) {
+> > > +                         printf(_("file value %d is out of range (0-%d)\n"),
+> > > +                              src_file_nr, filecount - 1);
+> > > +                         return 0;
+> > > +                    }
+> > >                 }
+> > >                 /* Expect no src_path arg */
+> > >                 src_path_arg = 0;
+> > > @@ -147,10 +152,14 @@ copy_range_f(int argc, char **argv)
+> > >            }
+> > >            len = sz;
+> > >  
+> > > -          ret = copy_dst_truncate();
+> > > -          if (ret < 0) {
+> > > -               ret = 1;
+> > > -               goto out;
+> > > +          if (fd != file->fd) {
+> > > +               ret = copy_dst_truncate();
+> > > +               if (ret < 0) {
+> > > +                    ret = 1;
+> > > +                    goto out;
+> > > +               }
+> > > +          } else {
+> > > +               dst = sz;
+> > >            }
+> > >       }
+> > >  
+> > > --
+> > > 2.17.2
+> > >
