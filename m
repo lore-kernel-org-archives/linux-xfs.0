@@ -2,106 +2,75 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
-	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9032BC3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:36:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D21AAC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:37:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6A2192087E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:36:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A2E6F21883
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:37:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729253AbfIDXgm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 19:36:42 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52872 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726240AbfIDXgm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Sep 2019 19:36:42 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7ADF130860C0;
-        Wed,  4 Sep 2019 23:36:42 +0000 (UTC)
-Received: from dhcp-12-115.nay.redhat.com (dhcp-12-115.nay.redhat.com [10.66.12.115])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id EBA7D600F8;
-        Wed,  4 Sep 2019 23:36:40 +0000 (UTC)
-From:   "Jianhong.Yin" <yin-jianhong@163.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     jiyin@redhat.com, darrick.wong@oracle.com,
-        "Jianhong.Yin" <yin-jianhong@163.com>
-Subject: [PATCH v2] xfsprogs: copy_range don't truncate dstfile
-Date:   Thu,  5 Sep 2019 07:36:34 +0800
-Message-Id: <20190904233634.12261-1-yin-jianhong@163.com>
+        id S1727741AbfIDXht (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 19:37:49 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46533 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726240AbfIDXht (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 19:37:49 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 412A543C91A;
+        Thu,  5 Sep 2019 09:37:47 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i5eqP-0000AH-W6; Thu, 05 Sep 2019 09:37:46 +1000
+Date:   Thu, 5 Sep 2019 09:37:45 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 09/12] libfrog: move crc32c.h to libfrog/
+Message-ID: <20190904233745.GX1119@dread.disaster.area>
+References: <156757174409.1838135.8885359673458816401.stgit@magnolia>
+ <156757180043.1838135.11634514432069514810.stgit@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Wed, 04 Sep 2019 23:36:42 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156757180043.1838135.11634514432069514810.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
+        a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=YzrtGEa2EzT6gmsZrrwA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-now if we do copy_range from srcfile to dstfile without any option
-will truncate the dstfile, and not any document indicate this default
-action. that's unexpected and confuse people.
+On Tue, Sep 03, 2019 at 09:36:40PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Move this header to libfrog since the code is there already.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  include/crc32c.h         |   11 -
+>  include/crc32cselftest.h |  706 ----------------------------------------------
+>  io/crc32cselftest.c      |    4 
+>  libfrog/Makefile         |    2 
+>  libfrog/crc32c.h         |   11 +
+>  libfrog/crc32cselftest.h |  706 ++++++++++++++++++++++++++++++++++++++++++++++
+>  libxfs/libxfs_priv.h     |    2 
+>  7 files changed, 722 insertions(+), 720 deletions(-)
+>  delete mode 100644 include/crc32c.h
+>  delete mode 100644 include/crc32cselftest.h
+>  create mode 100644 libfrog/crc32c.h
+>  create mode 100644 libfrog/crc32cselftest.h
 
-'''
-$ ./xfs_io -f -c 'copy_range copy_file_range.c'  testfile
-$ ll testfile
--rw-rw-r--. 1 yjh yjh 3534 Sep  5 07:15 testfile
-$ ./xfs_io -c 'copy_range testfile'  testfile
-$ ll testfile
--rw-rw-r--. 1 yjh yjh 3534 Sep  5 07:16 testfile
-$ ./xfs_io -c 'copy_range testfile -l 3534 -d 3534' testfile
-$ ll testfile
--rw-rw-r--. 1 yjh yjh 7068 Sep  5 07:17 testfile
-$ ./xfs_io -c 'copy_range copy_file_range.c'  testfile
-$ ll testfile
--rw-rw-r--. 1 yjh yjh 7068 Sep  5 07:18 testfile
-$ cmp -n 3534 copy_file_range.c testfile
-$ cmp -i 0:3534 copy_file_range.c testfile
-'''
+Looks good.
 
-Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
----
- io/copy_file_range.c | 15 ---------------
- 1 file changed, 15 deletions(-)
-
-diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-index b7b9fd88..283f5094 100644
---- a/io/copy_file_range.c
-+++ b/io/copy_file_range.c
-@@ -66,15 +66,6 @@ copy_src_filesize(int fd)
- 	return st.st_size;
- }
- 
--static int
--copy_dst_truncate(void)
--{
--	int ret = ftruncate(file->fd, 0);
--	if (ret < 0)
--		perror("ftruncate");
--	return ret;
--}
--
- static int
- copy_range_f(int argc, char **argv)
- {
-@@ -146,12 +137,6 @@ copy_range_f(int argc, char **argv)
- 			goto out;
- 		}
- 		len = sz;
--
--		ret = copy_dst_truncate();
--		if (ret < 0) {
--			ret = 1;
--			goto out;
--		}
- 	}
- 
- 	ret = copy_file_range_cmd(fd, &src, &dst, len);
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 -- 
-2.21.0
-
+Dave Chinner
+david@fromorbit.com
