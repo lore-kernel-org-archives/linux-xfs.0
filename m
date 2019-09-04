@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E4027C3A5A4
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 47CFCC3A5A7
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:25:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C5BFF21883
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2577C21883
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:25:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725938AbfIDEY7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 00:24:59 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40867 "EHLO
+        id S1725945AbfIDEZA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 00:25:00 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41049 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725945AbfIDEY6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:24:58 -0400
+        by vger.kernel.org with ESMTP id S1725877AbfIDEZA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:25:00 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E9A9A3617E2
-        for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2019 14:24:53 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 7E7C6361B48
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2019 14:24:54 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5Mqj-0007OT-08
+        id 1i5Mqj-0007Oa-2v
         for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:53 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5Mqi-0002UU-Up
-        for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:52 +1000
+        id 1i5Mqj-0002Ua-1D
+        for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:53 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 4/7] xfs: factor callbacks out of xlog_state_do_callback()
-Date:   Wed,  4 Sep 2019 14:24:48 +1000
-Message-Id: <20190904042451.9314-5-david@fromorbit.com>
+Subject: [PATCH 6/7] xfs: push iclog state cleaning into xlog_state_clean_log
+Date:   Wed,  4 Sep 2019 14:24:50 +1000
+Message-Id: <20190904042451.9314-7-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190904042451.9314-1-david@fromorbit.com>
 References: <20190904042451.9314-1-david@fromorbit.com>
@@ -44,7 +44,7 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=20KFwNOVAAAA:8
-        a=lng_JIwEjGLabVi12EoA:9
+        a=2D6X0XNKtPc4CptNA_0A:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,110 +52,123 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Simplify the code flow by lifting the iclog callback work out of
-the main iclog iteration loop. This isolates the log juggling and
-callbacks from the iclog state change logic in the loop.
+xlog_state_clean_log() is only called from one place, and it occurs
+when an iclog is transitioning back to ACTIVE. Prior to calling
+xlog_state_clean_log, the iclog we are processing has a hard coded
+state check to DIRTY so that xlog_state_clean_log() processes it
+correctly. We also have a hard coded wakeup after
+xlog_state_clean_log() to enfore log force waiters on that iclog
+are woken correctly.
+
+Both of these things are operations required to finish processing an
+iclog and return it to the ACTIVE state again, so they make little
+sense to be separated from the rest of the clean state transition
+code.
+
+Hence push these things inside xlog_state_clean_log(), document the
+behaviour and rename it xlog_state_clean_iclog() to indicate that
+it's being driven by an iclog state change and does the iclog state
+change work itself.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 69 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 45 insertions(+), 24 deletions(-)
+ fs/xfs/xfs_log.c | 57 ++++++++++++++++++++++++++++--------------------
+ 1 file changed, 33 insertions(+), 24 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index b3d8dbb3b956..c3a43fe023ea 100644
+index c3efece72847..6a59d71d4c60 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2612,6 +2612,47 @@ xlog_get_lowest_lsn(
- 	return lowest_lsn;
- }
+@@ -2505,21 +2505,35 @@ xlog_write(
+  *****************************************************************************
+  */
  
+-/* Clean iclogs starting from the head.  This ordering must be
+- * maintained, so an iclog doesn't become ACTIVE beyond one that
+- * is SYNCING.  This is also required to maintain the notion that we use
+- * a ordered wait queue to hold off would be writers to the log when every
+- * iclog is trying to sync to disk.
 +/*
-+ * Keep processing entries in the iclog callback list until we come around and
-+ * it is empty.  We need to atomically see that the list is empty and change the
-+ * state to DIRTY so that we don't miss any more callbacks being added.
++ * An iclog has just finished it's completion processing, so we need to update
++ * the iclog state and propagate that up into the overall log state. Hence we
++ * prepare the iclog for cleaning, and then clean all the pending dirty iclogs
++ * starting from the head, and then wake up any threads that are waiting for the
++ * iclog to be marked clean.
 + *
-+ * This function is called with the icloglock held and returns with it held. We
-+ * drop it while running callbacks, however, as holding it over thousands of
-+ * callbacks is unnecessary and causes excessive contention if we do.
-+ */
-+static bool
-+xlog_state_do_iclog_callbacks(
++ * The ordering of marking iclogs ACTIVE must be maintained, so an iclog
++ * doesn't become ACTIVE beyond one that is SYNCING.  This is also required to
++ * maintain the notion that we use a ordered wait queue to hold off would be
++ * writers to the log when every iclog is trying to sync to disk.
++ *
++ * Caller must hold the icloglock before calling us.
+  *
+- * State Change: DIRTY -> ACTIVE
++ * State Change: !IOERROR -> DIRTY -> ACTIVE
+  */
+ STATIC void
+-xlog_state_clean_log(
+-	struct xlog *log)
++xlog_state_clean_iclog(
 +	struct xlog		*log,
-+	struct xlog_in_core	*iclog,
-+	bool			aborted)
-+{
-+	bool			ret = false;
++	struct xlog_in_core	*dirty_iclog)
+ {
+-	xlog_in_core_t	*iclog;
+-	int changed = 0;
++	struct xlog_in_core	*iclog;
++	int			changed = 0;
 +
-+	spin_unlock(&log->l_icloglock);
-+
-+	spin_lock(&iclog->ic_callback_lock);
-+	while (!list_empty(&iclog->ic_callbacks)) {
-+		LIST_HEAD(tmp);
-+
-+		list_splice_init(&iclog->ic_callbacks, &tmp);
-+
-+		spin_unlock(&iclog->ic_callback_lock);
-+		xlog_cil_process_committed(&tmp, aborted);
-+		spin_lock(&iclog->ic_callback_lock);
-+		ret = true;
-+	}
++	/* Prepare the completed iclog. */
++	if (!(dirty_iclog->ic_state & XLOG_STATE_IOERROR))
++		dirty_iclog->ic_state = XLOG_STATE_DIRTY;
+ 
++	/* Walk all the iclogs to update the ordered active state. */
+ 	iclog = log->l_iclog;
+ 	do {
+ 		if (iclog->ic_state == XLOG_STATE_DIRTY) {
+@@ -2557,7 +2571,13 @@ xlog_state_clean_log(
+ 		iclog = iclog->ic_next;
+ 	} while (iclog != log->l_iclog);
+ 
+-	/* log is locked when we are called */
 +
 +	/*
-+	 * Pick up the icloglock while still holding the callback lock so we
-+	 * serialise against anyone trying to add more callbacks to this iclog
-+	 * now we've finished processing.
++	 * Wake up threads waiting in xfs_log_force() for the dirty iclog
++	 * to be cleaned.
 +	 */
-+	spin_lock(&log->l_icloglock);
-+	spin_unlock(&iclog->ic_callback_lock);
-+	return ret;
-+}
++	wake_up_all(&dirty_iclog->ic_force_wait);
 +
- #ifdef DEBUG
- /*
-  * Make one last gasp attempt to see if iclogs are being left in limbo.  If the
-@@ -2784,31 +2825,9 @@ xlog_state_do_callback(
- 			} else
- 				ioerrors++;
+ 	/*
+ 	 * Change state for the dummy log recording.
+ 	 * We usually go to NEED. But we go to NEED2 if the changed indicates
+@@ -2591,7 +2611,7 @@ xlog_state_clean_log(
+ 			ASSERT(0);
+ 		}
+ 	}
+-}	/* xlog_state_clean_log */
++}
  
--			spin_unlock(&log->l_icloglock);
-+			if (xlog_state_do_iclog_callbacks(log, iclog, aborted))
-+				loopdidcallbacks++;
+ STATIC xfs_lsn_t
+ xlog_get_lowest_lsn(
+@@ -2835,18 +2855,7 @@ xlog_state_do_callback(
+ 			if (xlog_state_do_iclog_callbacks(log, iclog, aborted))
+ 				loopdidcallbacks++;
  
+-			if (!(iclog->ic_state & XLOG_STATE_IOERROR))
+-				iclog->ic_state = XLOG_STATE_DIRTY;
+-
 -			/*
--			 * Keep processing entries in the callback list until
--			 * we come around and it is empty.  We need to
--			 * atomically see that the list is empty and change the
--			 * state to DIRTY so that we don't miss any more
--			 * callbacks being added.
+-			 * Transition from DIRTY to ACTIVE if applicable.
+-			 * NOP if STATE_IOERROR.
 -			 */
--			spin_lock(&iclog->ic_callback_lock);
--			while (!list_empty(&iclog->ic_callbacks)) {
--				LIST_HEAD(tmp);
+-			xlog_state_clean_log(log);
 -
--				list_splice_init(&iclog->ic_callbacks, &tmp);
+-			/* wake up threads waiting in xfs_log_force() */
+-			wake_up_all(&iclog->ic_force_wait);
 -
--				spin_unlock(&iclog->ic_callback_lock);
--				xlog_cil_process_committed(&tmp, aborted);
--				spin_lock(&iclog->ic_callback_lock);
--			}
--
--			loopdidcallbacks++;
--			funcdidcallbacks++;
--
--			spin_lock(&log->l_icloglock);
--			spin_unlock(&iclog->ic_callback_lock);
- 			if (!(iclog->ic_state & XLOG_STATE_IOERROR))
- 				iclog->ic_state = XLOG_STATE_DIRTY;
- 
-@@ -2824,6 +2843,8 @@ xlog_state_do_callback(
++			xlog_state_clean_iclog(log, iclog);
  			iclog = iclog->ic_next;
  		} while (first_iclog != iclog);
  
-+		funcdidcallbacks += loopdidcallbacks;
-+
- 		if (repeats > 5000) {
- 			flushcnt += repeats;
- 			repeats = 0;
 -- 
 2.23.0.rc1
 
