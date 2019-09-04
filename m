@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 96F13C3A5A7
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:37:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 646A7C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:37:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5B96522CF7
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:37:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 35F3722DBF
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:37:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iP5IeWml"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cYovUOQH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726589AbfIDEht (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 00:37:49 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58974 "EHLO
+        id S1728222AbfIDEhv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 00:37:51 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:59094 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725947AbfIDEht (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:37:49 -0400
+        with ESMTP id S1725947AbfIDEhv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:37:51 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844aQVx040106;
-        Wed, 4 Sep 2019 04:37:43 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844am5a040715;
+        Wed, 4 Sep 2019 04:37:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=4gJr5DJSa4hVHYROKw6fgAlTUhLMODPmOxYUtMHMHD8=;
- b=iP5IeWmlsEi4SEZfxwhW2a6LKyRrGD7upL5UO2zvi6xhBwt5b2iQGyMpkMDIpBViiS3n
- XJZavPKPdXtGDgOgUgdMVgI8iARaPP/rLQ4eJuqvOyRCR0LBZdVpp3oFER43Iwr4hQXa
- igYLEfEMvm9aY5cQBRUqj5BQLUaQmF9pijL5k+vfDpTjQS6lTugTjzEzlneUY4nhYGik
- whwFVxayTxzCP4dGY7R2OZT8vEvfHEQQjFFdZw9alvu79GXtlVmZWaCKN0f2dR9cLE2g
- v5X8myEMnIsv1FdzeXwgDSzaowOJ2nxh6K3bTU8tQ/lXabMf9MM2T2PXLSHhjOIqgF9K NA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2ut6d1r0b6-1
+ bh=coUo8uX6myA1hiLCtCsVIwjVSy8cp0L9pS2vjytEPJM=;
+ b=cYovUOQHKYyfXWFHafrTEYx1gzbci2n2pSnxa7gzaCtjjUvJ/ZRR3Mpy2w0O/nwedAXe
+ 9l7YLhMXtwtIPJw/LNqnL9DTpZNpBoxtGQv+P1GR2wjgr6LZpmj63ll82lqDOZh5wQr0
+ uUbAoCcdHfJe8JxM+hbGIbNwyRt+dW7fDZFoUkVlu0lFeydK9AtmwhVD4bPaymdFVe70
+ Z5HzNchoNFlxv4+pC5dqxpeq3mDL1gtF9EzfLRN/1uWPUurvZaW1zme3H2ck68q2O6c3
+ i6dc1L7gYbrS/at0nuoNtOvES9BdBB+1IvwB5SqaoxjVQ1WGFo9OecdbPyUWbaP37Uip RQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2ut6d1r0ap-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Sep 2019 04:37:43 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844XkQW163008;
-        Wed, 4 Sep 2019 04:35:43 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2usu52bfym-1
+        Wed, 04 Sep 2019 04:37:40 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844XFQT027462;
+        Wed, 4 Sep 2019 04:37:39 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2ut1hmtvud-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Sep 2019 04:35:43 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x844Zgfq003765;
-        Wed, 4 Sep 2019 04:35:42 GMT
+        Wed, 04 Sep 2019 04:37:39 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x844bcXG016383;
+        Wed, 4 Sep 2019 04:37:38 GMT
 Received: from localhost (/10.159.228.126)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Sep 2019 21:35:42 -0700
-Subject: [PATCH 8/8] libfrog: refactor open-coded INUMBERS calls
+        with ESMTP ; Tue, 03 Sep 2019 21:37:38 -0700
+Subject: [PATCH 05/10] xfs_db: remove db/convert.h
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Date:   Tue, 03 Sep 2019 21:35:40 -0700
-Message-ID: <156757174089.1836891.5922232574019988618.stgit@magnolia>
-In-Reply-To: <156757168368.1836891.15043200811666785244.stgit@magnolia>
-References: <156757168368.1836891.15043200811666785244.stgit@magnolia>
+Date:   Tue, 03 Sep 2019 21:37:34 -0700
+Message-ID: <156757185424.1838441.6515170778646159040.stgit@magnolia>
+In-Reply-To: <156757182283.1838441.193482978701233436.stgit@magnolia>
+References: <156757182283.1838441.193482978701233436.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1906280000 definitions=main-1909040047
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
  definitions=main-1909040047
@@ -80,281 +80,88 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor all the INUMBERS ioctl callsites into helper functions.
+db/convert.h conflicts with include/convert.h and since the former only
+has one declaration in it anyway, just get rid of it.  We'll need this
+in the next patch to avoid an ugly include mess.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- io/imap.c          |   34 +++++++++++++++++-----------------
- io/open.c          |   24 ++++++++++++------------
- libfrog/bulkstat.c |   26 ++++++++++++++++++++++++++
- libfrog/bulkstat.h |    4 ++++
- scrub/fscounters.c |   20 ++++++++------------
- scrub/inodes.c     |   17 ++++++-----------
- 6 files changed, 73 insertions(+), 52 deletions(-)
+ db/Makefile  |    4 ++--
+ db/command.c |    1 -
+ db/command.h |    1 +
+ db/convert.c |    1 -
+ db/convert.h |    7 -------
+ 5 files changed, 3 insertions(+), 11 deletions(-)
+ delete mode 100644 db/convert.h
 
 
-diff --git a/io/imap.c b/io/imap.c
-index 9667289a..86d8bda3 100644
---- a/io/imap.c
-+++ b/io/imap.c
-@@ -8,18 +8,21 @@
- #include "input.h"
+diff --git a/db/Makefile b/db/Makefile
+index 8fecfc1c..0941b32e 100644
+--- a/db/Makefile
++++ b/db/Makefile
+@@ -8,13 +8,13 @@ include $(TOPDIR)/include/builddefs
+ LTCOMMAND = xfs_db
+ 
+ HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+-	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
++	btblock.h bmroot.h check.h command.h crc.h debug.h \
+ 	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+ 	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+ 	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+ 	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+ 	fuzz.h
+-CFILES = $(HFILES:.h=.c) btdump.c info.c
++CFILES = $(HFILES:.h=.c) btdump.c convert.c info.c
+ LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+ 
+ LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+diff --git a/db/command.c b/db/command.c
+index c7c52342..89a78f03 100644
+--- a/db/command.c
++++ b/db/command.c
+@@ -11,7 +11,6 @@
+ #include "bmap.h"
+ #include "check.h"
+ #include "command.h"
+-#include "convert.h"
+ #include "debug.h"
+ #include "type.h"
+ #include "echo.h"
+diff --git a/db/command.h b/db/command.h
+index eacfd465..2f9a7e16 100644
+--- a/db/command.h
++++ b/db/command.h
+@@ -28,5 +28,6 @@ extern int		command(int argc, char **argv);
+ extern const cmdinfo_t	*find_command(const char *cmd);
+ extern void		init_commands(void);
+ 
++extern void		convert_init(void);
+ extern void		btdump_init(void);
+ extern void		info_init(void);
+diff --git a/db/convert.c b/db/convert.c
+index 01a08823..e1466057 100644
+--- a/db/convert.c
++++ b/db/convert.c
+@@ -6,7 +6,6 @@
+ 
+ #include "libxfs.h"
+ #include "command.h"
+-#include "convert.h"
+ #include "output.h"
  #include "init.h"
- #include "io.h"
-+#include "fsgeom.h"
-+#include "libfrog/bulkstat.h"
  
- static cmdinfo_t imap_cmd;
- 
- static int
- imap_f(int argc, char **argv)
- {
--	int		count;
--	int		nent;
--	int		i;
--	__u64		last = 0;
--	struct xfs_inogrp *t;
--	struct xfs_fsop_bulkreq bulkreq;
-+	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-+	struct xfs_inogrp	*t;
-+	uint64_t		last = 0;
-+	uint32_t		count;
-+	uint32_t		nent;
-+	int			i;
-+	int			error;
- 
- 	if (argc != 2)
- 		nent = 1;
-@@ -30,14 +33,8 @@ imap_f(int argc, char **argv)
- 	if (!t)
- 		return 0;
- 
--	bulkreq.lastip  = &last;
--	bulkreq.icount  = nent;
--	bulkreq.ubuffer = (void *)t;
--	bulkreq.ocount  = &count;
+diff --git a/db/convert.h b/db/convert.h
+deleted file mode 100644
+index 3660cabe..00000000
+--- a/db/convert.h
++++ /dev/null
+@@ -1,7 +0,0 @@
+-// SPDX-License-Identifier: GPL-2.0
+-/*
+- * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
+- * All Rights Reserved.
+- */
 -
--	while (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS, &bulkreq) == 0) {
--		if (count == 0)
--			goto out_free;
-+	while ((error = xfrog_inumbers(&xfd, &last, nent, t, &count)) == 0 &&
-+	       count > 0) {
- 		for (i = 0; i < count; i++) {
- 			printf(_("ino %10llu count %2d mask %016llx\n"),
- 				(unsigned long long)t[i].xi_startino,
-@@ -45,9 +42,12 @@ imap_f(int argc, char **argv)
- 				(unsigned long long)t[i].xi_allocmask);
- 		}
- 	}
--	perror("xfsctl(XFS_IOC_FSINUMBERS)");
--	exitcode = 1;
--out_free:
-+
-+	if (error) {
-+		errno = error;
-+		perror("xfsctl(XFS_IOC_FSINUMBERS)");
-+		exitcode = 1;
-+	}
- 	free(t);
- 	return 0;
- }
-diff --git a/io/open.c b/io/open.c
-index eab85fd7..169f375c 100644
---- a/io/open.c
-+++ b/io/open.c
-@@ -676,24 +676,24 @@ inode_help(void)
- "\n"));
- }
- 
-+#define IGROUP_NR	(1024)
- static __u64
- get_last_inode(void)
- {
--	__u64			lastip = 0;
--	__u64			lastgrp = 0;
--	__s32			ocount = 0;
-+	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-+	uint64_t		lastip = 0;
-+	uint32_t		lastgrp = 0;
-+	uint32_t		ocount = 0;
- 	__u64			last_ino;
--	struct xfs_inogrp	igroup[1024];
--	struct xfs_fsop_bulkreq	bulkreq;
--
--	bulkreq.lastip = &lastip;
--	bulkreq.ubuffer = &igroup;
--	bulkreq.icount = sizeof(igroup) / sizeof(struct xfs_inogrp);
--	bulkreq.ocount = &ocount;
-+	struct xfs_inogrp	igroup[IGROUP_NR];
- 
- 	for (;;) {
--		if (xfsctl(file->name, file->fd, XFS_IOC_FSINUMBERS,
--				&bulkreq)) {
-+		int		ret;
-+
-+		ret = xfrog_inumbers(&xfd, &lastip, IGROUP_NR, igroup,
-+				&ocount);
-+		if (ret) {
-+			errno = ret;
- 			perror("XFS_IOC_FSINUMBERS");
- 			return 0;
- 		}
-diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-index a61e2fd3..fa10f298 100644
---- a/libfrog/bulkstat.c
-+++ b/libfrog/bulkstat.c
-@@ -51,3 +51,29 @@ xfrog_bulkstat(
- 		return errno;
- 	return 0;
- }
-+
-+/*
-+ * Query inode allocation bitmask information.  Returns zero or a positive
-+ * error code.
-+ */
-+int
-+xfrog_inumbers(
-+	struct xfs_fd		*xfd,
-+	uint64_t		*lastino,
-+	uint32_t		icount,
-+	struct xfs_inogrp	*ubuffer,
-+	uint32_t		*ocount)
-+{
-+	struct xfs_fsop_bulkreq	bulkreq = {
-+		.lastip		= (__u64 *)lastino,
-+		.icount		= icount,
-+		.ubuffer	= ubuffer,
-+		.ocount		= (__s32 *)ocount,
-+	};
-+	int			ret;
-+
-+	ret = ioctl(xfd->fd, XFS_IOC_FSINUMBERS, &bulkreq);
-+	if (ret)
-+		return errno;
-+	return 0;
-+}
-diff --git a/libfrog/bulkstat.h b/libfrog/bulkstat.h
-index 17520913..83ac0e37 100644
---- a/libfrog/bulkstat.h
-+++ b/libfrog/bulkstat.h
-@@ -13,4 +13,8 @@ int xfrog_bulkstat_single(struct xfs_fd *xfd, uint64_t ino,
- int xfrog_bulkstat(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
- 		struct xfs_bstat *ubuffer, uint32_t *ocount);
- 
-+struct xfs_inogrp;
-+int xfrog_inumbers(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
-+		struct xfs_inogrp *ubuffer, uint32_t *ocount);
-+
- #endif	/* __LIBFROG_BULKSTAT_H__ */
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index ea6af156..f8cc1e94 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -15,6 +15,7 @@
- #include "xfs_scrub.h"
- #include "common.h"
- #include "fscounters.h"
-+#include "libfrog/bulkstat.h"
- 
- /*
-  * Filesystem counter collection routines.  We can count the number of
-@@ -41,30 +42,25 @@ xfs_count_inodes_range(
- 	uint64_t		last_ino,
- 	uint64_t		*count)
- {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_inogrp	inogrp;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		nr = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	int			error;
- 
- 	ASSERT(!(first_ino & (XFS_INODES_PER_CHUNK - 1)));
- 	ASSERT((last_ino & (XFS_INODES_PER_CHUNK - 1)));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
--	while (!error && igrplen && inogrp.xi_startino < last_ino) {
-+	while (!(error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
-+			&igrplen))) {
-+		if (igrplen == 0 || inogrp.xi_startino >= last_ino)
-+			break;
- 		nr += inogrp.xi_alloccount;
--		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
- 	}
- 
- 	if (error) {
--		str_errno(ctx, descr);
-+		str_liberror(ctx, error, descr);
- 		return false;
- 	}
- 
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index c2cbe260..bf98f6ee 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -91,16 +91,15 @@ xfs_iterate_inodes_range(
- 	xfs_inode_iter_fn	fn,
- 	void			*arg)
- {
--	struct xfs_fsop_bulkreq	igrpreq = {NULL};
- 	struct xfs_handle	handle;
- 	struct xfs_inogrp	inogrp;
- 	struct xfs_bstat	bstat[XFS_INODES_PER_CHUNK];
- 	char			idescr[DESCR_BUFSZ];
- 	struct xfs_bstat	*bs;
--	__u64			igrp_ino;
-+	uint64_t		igrp_ino;
- 	uint64_t		ino;
- 	uint32_t		bulklen = 0;
--	__s32			igrplen = 0;
-+	uint32_t		igrplen = 0;
- 	bool			moveon = true;
- 	int			i;
- 	int			error;
-@@ -109,11 +108,6 @@ xfs_iterate_inodes_range(
- 
- 	memset(bstat, 0, XFS_INODES_PER_CHUNK * sizeof(struct xfs_bstat));
- 
--	igrpreq.lastip  = &igrp_ino;
--	igrpreq.icount  = 1;
--	igrpreq.ubuffer = &inogrp;
--	igrpreq.ocount  = &igrplen;
--
- 	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
- 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
- 			sizeof(handle.ha_fid.fid_len);
-@@ -121,7 +115,7 @@ xfs_iterate_inodes_range(
- 
- 	/* Find the inode chunk & alloc mask */
- 	igrp_ino = first_ino;
--	error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+	error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp, &igrplen);
- 	while (!error && igrplen) {
- 		/* Load the inodes. */
- 		ino = inogrp.xi_startino - 1;
-@@ -181,12 +175,13 @@ _("Changed too many times during scan; giving up."));
- 
- 		stale_count = 0;
- igrp_retry:
--		error = ioctl(ctx->mnt.fd, XFS_IOC_FSINUMBERS, &igrpreq);
-+		error = xfrog_inumbers(&ctx->mnt, &igrp_ino, 1, &inogrp,
-+				&igrplen);
- 	}
- 
- err:
- 	if (error) {
--		str_errno(ctx, descr);
-+		str_liberror(ctx, error, descr);
- 		moveon = false;
- 	}
- out:
+-extern void	convert_init(void);
 
