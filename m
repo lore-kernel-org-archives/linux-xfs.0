@@ -7,57 +7,57 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66A65C3A5A7
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 977BEC41514
 	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:37:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3E88A22CED
+	by mail.kernel.org (Postfix) with ESMTP id 673E322CF7
 	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:37:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PcBQIDCc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ALlnQeNi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725908AbfIDEhZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1727994AbfIDEhZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 4 Sep 2019 00:37:25 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58484 "EHLO
+Received: from userp2120.oracle.com ([156.151.31.85]:58454 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725938AbfIDEhZ (ORCPT
+        with ESMTP id S1725908AbfIDEhZ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:37:25 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844aQVp040106;
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844aYU3040540;
         Wed, 4 Sep 2019 04:37:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=vDXz6QILu96WOKc1YAKbpi7icpvhs+bNhFT/X8CX1zU=;
- b=PcBQIDCcdQM6G235mNDmf5SWumhV7ejZVWVx2npJ6v/gNktdzGIa5k/JP07M3RavLR2I
- fywu6cmZV4ev+NTRj821+BmrVSrqXo4hQ7S6JnDALLlyfb9rcIuLBIhXD9ZU3t/2734L
- 6Vrlu2IC+xHEFl62yV2vIWno42DHP4FhD4PXTd7VsHCTUDiW8n4Ht94Mvtl+Y37YCJjK
- cgzAANGEO8osbs2rWzjWUPQY05GbqbAKwxaRq9Rd6bCopmQEgSLD/ZRxp5c2uBhsSxnQ
- jpNQl7nauJHhlZIazCZffbOxwvAkLYteEtJGRonnfqNsQcBRjvcTdoL4XZuHsTHnl3QZ GA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2ut6d1r041-1
+ bh=ZLj2L1NzQibXuvDAwxj0Er0j9S0C8V3zyLNdHHJ/664=;
+ b=ALlnQeNihlsp/nX0pFtD3GDZasZ4IZKJj5CqDaU4Drx44ro1zy3HPxpY6xrX138yU4Xe
+ HtUxxpBJ+Jgp5A7WD2ApWEUUV8OHyNnDkXep1D6rTM7KiJQG1Y+AI38BH2gcEXO1ZyYT
+ AwYBAiAcnuQt1EyonT0fnwyOPCCskOQ83xf8+6pUEaeqehSjtMzDel3klzF1zRGxleXB
+ fIO/b37ztB44/2hjKHHvYWSAOKKUC1UJaEoRVihFxXWpvqOfvDaBQMS7S98XJ1U1LXc8
+ ozzcUWC1vU12qYg3yR2xMpUgI1pWhe4Zb0eCVeMJfDmMGbFS5ceSAy1biWwa/DaN+lJ7 5w== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2ut6d1r05p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Sep 2019 04:37:22 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844XkF0163016;
-        Wed, 4 Sep 2019 04:36:55 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2usu52bhng-1
+        Wed, 04 Sep 2019 04:37:23 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844XEor055516;
+        Wed, 4 Sep 2019 04:37:11 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2us5phmt3q-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Sep 2019 04:36:55 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x844as15030929;
-        Wed, 4 Sep 2019 04:36:54 GMT
+        Wed, 04 Sep 2019 04:37:11 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x844bACZ023997;
+        Wed, 4 Sep 2019 04:37:10 GMT
 Received: from localhost (/10.159.228.126)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Sep 2019 21:36:54 -0700
-Subject: [PATCH 11/12] libfrog: move workqueue.h to libfrog/
+        with ESMTP ; Tue, 03 Sep 2019 21:37:10 -0700
+Subject: [PATCH 01/10] man: document the new v5 fs geometry ioctl structures
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 03 Sep 2019 21:36:53 -0700
-Message-ID: <156757181354.1838135.14750040578517707289.stgit@magnolia>
-In-Reply-To: <156757174409.1838135.8885359673458816401.stgit@magnolia>
-References: <156757174409.1838135.8885359673458816401.stgit@magnolia>
+Date:   Tue, 03 Sep 2019 21:37:09 -0700
+Message-ID: <156757182904.1838441.1851639472366955352.stgit@magnolia>
+In-Reply-To: <156757182283.1838441.193482978701233436.stgit@magnolia>
+References: <156757182283.1838441.193482978701233436.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,187 +80,45 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Move this header to libfrog since the code is there already.
+Amend the fs geometry ioctl documentation to cover the new v5 structure.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- include/Makefile   |    1 -
- include/input.h    |    2 +-
- include/project.h  |   39 ---------------------------------------
- libfrog/Makefile   |    1 +
- libfrog/paths.c    |    2 +-
- libfrog/projects.c |    2 +-
- libfrog/projects.h |   39 +++++++++++++++++++++++++++++++++++++++
- quota/quota.h      |    2 +-
- 8 files changed, 44 insertions(+), 44 deletions(-)
- delete mode 100644 include/project.h
- create mode 100644 libfrog/projects.h
+ man/man2/ioctl_xfs_fsop_geometry.2 |    8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 
-diff --git a/include/Makefile b/include/Makefile
-index fc90bc48..a80867e4 100644
---- a/include/Makefile
-+++ b/include/Makefile
-@@ -28,7 +28,6 @@ LIBHFILES = libxfs.h \
- 	xfs_trans.h \
- 	command.h \
- 	input.h \
--	project.h \
- 	platform_defs.h
+diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsop_geometry.2
+index 68e3387d..365bda8b 100644
+--- a/man/man2/ioctl_xfs_fsop_geometry.2
++++ b/man/man2/ioctl_xfs_fsop_geometry.2
+@@ -12,6 +12,8 @@ ioctl_xfs_fsop_geometry \- report XFS filesystem layout and features
+ .PP
+ .BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY, struct xfs_fsop_geom*" arg );
+ .br
++.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V4, struct xfs_fsop_geom_v4 *" arg );
++.br
+ .BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V1, struct xfs_fsop_geom_v1 *" arg );
+ .SH DESCRIPTION
+ Report the details of an XFS filesystem layout, features, and other descriptive items.
+@@ -43,6 +45,9 @@ struct xfs_fsop_geom {
+ 	/* struct xfs_fsop_geom_v1 stops here. */
  
- HFILES = handle.h \
-diff --git a/include/input.h b/include/input.h
-index 57fdd343..3c3fa116 100644
---- a/include/input.h
-+++ b/include/input.h
-@@ -9,7 +9,7 @@
- #include <pwd.h>
- #include <grp.h>
- #include <sys/types.h>
--#include "project.h"
-+#include "libfrog/projects.h"
- #include "libfrog/convert.h"
- #include <stdbool.h>
- 
-diff --git a/include/project.h b/include/project.h
-deleted file mode 100644
-index 3577dadb..00000000
---- a/include/project.h
-+++ /dev/null
-@@ -1,39 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2005 Silicon Graphics, Inc.
-- * All Rights Reserved.
-- */
--#ifndef __PROJECT_H__
--#define __PROJECT_H__
--
--#include "platform_defs.h"
--#include "xfs.h"
--
--extern int setprojid(const char *__name, int __fd, prid_t __id);
--extern int getprojid(const char *__name, int __fd, prid_t *__id);
--
--typedef struct fs_project {
--	prid_t		pr_prid;	/* project identifier */
--	char		*pr_name;	/* project name */
--} fs_project_t;
--
--extern void setprent(void);
--extern void endprent(void);
--extern fs_project_t *getprent(void);
--extern fs_project_t *getprnam(char *__name);
--extern fs_project_t *getprprid(prid_t __id);
--
--typedef struct fs_project_path {
--	prid_t		pp_prid;	/* project identifier */
--	char		*pp_pathname;	/* pathname to root of project tree */
--} fs_project_path_t;
--
--extern void setprpathent(void);
--extern void endprpathent(void);
--extern fs_project_path_t *getprpathent(void);
--
--extern void setprfiles(void);
--extern char *projid_file;
--extern char *projects_file;
--
--#endif	/* __PROJECT_H__ */
-diff --git a/libfrog/Makefile b/libfrog/Makefile
-index f8f7de68..25b5a03c 100644
---- a/libfrog/Makefile
-+++ b/libfrog/Makefile
-@@ -38,6 +38,7 @@ crc32defs.h \
- crc32table.h \
- fsgeom.h \
- paths.h \
-+projects.h \
- ptvar.h \
- radix-tree.h \
- topology.h \
-diff --git a/libfrog/paths.c b/libfrog/paths.c
-index f0f4548e..32737223 100644
---- a/libfrog/paths.c
-+++ b/libfrog/paths.c
-@@ -14,7 +14,7 @@
- #include <sys/stat.h>
- #include "paths.h"
- #include "input.h"
--#include "project.h"
-+#include "projects.h"
- #include <limits.h>
- 
- extern char *progname;
-diff --git a/libfrog/projects.c b/libfrog/projects.c
-index 91bc78f2..dbde9702 100644
---- a/libfrog/projects.c
-+++ b/libfrog/projects.c
-@@ -7,7 +7,7 @@
- #include <stdio.h>
- #include <stdlib.h>
- #include <string.h>
--#include "project.h"
-+#include "projects.h"
- 
- #define PROJID		"/etc/projid"
- #define PROJECT_PATHS	"/etc/projects"
-diff --git a/libfrog/projects.h b/libfrog/projects.h
-new file mode 100644
-index 00000000..77919474
---- /dev/null
-+++ b/libfrog/projects.h
-@@ -0,0 +1,39 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Copyright (c) 2005 Silicon Graphics, Inc.
-+ * All Rights Reserved.
-+ */
-+#ifndef __LIBFROG_PROJECTS_H__
-+#define __LIBFROG_PROJECTS_H__
+ 	__u32         logsunit;
++	/* struct xfs_fsop_geom_v4 stops here. */
 +
-+#include "platform_defs.h"
-+#include "xfs.h"
-+
-+extern int setprojid(const char *__name, int __fd, prid_t __id);
-+extern int getprojid(const char *__name, int __fd, prid_t *__id);
-+
-+typedef struct fs_project {
-+	prid_t		pr_prid;	/* project identifier */
-+	char		*pr_name;	/* project name */
-+} fs_project_t;
-+
-+extern void setprent(void);
-+extern void endprent(void);
-+extern fs_project_t *getprent(void);
-+extern fs_project_t *getprnam(char *__name);
-+extern fs_project_t *getprprid(prid_t __id);
-+
-+typedef struct fs_project_path {
-+	prid_t		pp_prid;	/* project identifier */
-+	char		*pp_pathname;	/* pathname to root of project tree */
-+} fs_project_path_t;
-+
-+extern void setprpathent(void);
-+extern void endprpathent(void);
-+extern fs_project_path_t *getprpathent(void);
-+
-+extern void setprfiles(void);
-+extern char *projid_file;
-+extern char *projects_file;
-+
-+#endif	/* __LIBFROG_PROJECTS_H__ */
-diff --git a/quota/quota.h b/quota/quota.h
-index 5db0a741..025d8877 100644
---- a/quota/quota.h
-+++ b/quota/quota.h
-@@ -6,7 +6,7 @@
- 
- #include "xqm.h"
- #include "libfrog/paths.h"
--#include "project.h"
-+#include "libfrog/projects.h"
- #include <stdbool.h>
- 
- /*
++	__u64         reserved[18];
+ };
+ .fi
+ .in
+@@ -124,6 +129,9 @@ underlying log device, in filesystem blocks.
+ This field is meaningful only if the flag
+ .B  XFS_FSOP_GEOM_FLAGS_LOGV2
+ is set.
++.PP
++.I reserved
++is set to zero.
+ .SH FILESYSTEM FEATURE FLAGS
+ Filesystem features are reported to userspace as a combination the following
+ flags:
 
