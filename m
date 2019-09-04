@@ -2,95 +2,129 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFE8BC3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:01:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E95D3C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AD2FF22CF5
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:01:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C55DB21883
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:24:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725963AbfIDEBD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 00:01:03 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38257 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725947AbfIDEBC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:01:02 -0400
+        id S1725908AbfIDEYz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 00:24:55 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41173 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725791AbfIDEYz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:24:55 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 49D45360E83;
-        Wed,  4 Sep 2019 14:01:00 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 6514543E36C
+        for <linux-xfs@vger.kernel.org>; Wed,  4 Sep 2019 14:24:53 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5MTc-0007Hw-8F; Wed, 04 Sep 2019 14:01:00 +1000
-Date:   Wed, 4 Sep 2019 14:01:00 +1000
+        id 1i5Mqi-0007OO-UL
+        for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:52 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i5Mqi-0002UL-So
+        for linux-xfs@vger.kernel.org; Wed, 04 Sep 2019 14:24:52 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v3] xfs: define a flags field for the AG geometry ioctl
- structure
-Message-ID: <20190904040100.GA1119@dread.disaster.area>
-References: <20190903230537.GI5340@magnolia>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH 2/7] xfs: fix missed wakeup on l_flush_wait
+Date:   Wed,  4 Sep 2019 14:24:46 +1000
+Message-Id: <20190904042451.9314-3-david@fromorbit.com>
+X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20190904042451.9314-1-david@fromorbit.com>
+References: <20190904042451.9314-1-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190903230537.GI5340@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=sg_cNFlFF0uKCH_A41YA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=fwyzoN0nAAAA:8
+        a=FOH2dFAWAAAA:8 a=20KFwNOVAAAA:8 a=TIbIJjZQYPkjqnKAcywA:9
+        a=Sc3RvPAMVtkGz6dGeUiH:22 a=i3VuKzQdj-NEYjvDI-p3:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 04:05:37PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Define a flags field for the AG geometry ioctl structure.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v3: define ag_flags as an in/out field and check required zeroness
-> ---
->  fs/xfs/libxfs/xfs_fs.h |    2 +-
->  fs/xfs/xfs_ioctl.c     |    4 ++++
->  2 files changed, 5 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index 52d03a3a02a4..39dd2b908106 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -287,7 +287,7 @@ struct xfs_ag_geometry {
->  	uint32_t	ag_ifree;	/* o: inodes free */
->  	uint32_t	ag_sick;	/* o: sick things in ag */
->  	uint32_t	ag_checked;	/* o: checked metadata in ag */
-> -	uint32_t	ag_reserved32;	/* o: zero */
-> +	uint32_t	ag_flags;	/* i/o: flags for this ag */
->  	uint64_t	ag_reserved[12];/* o: zero */
->  };
->  #define XFS_AG_GEOM_SICK_SB	(1 << 0)  /* superblock */
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 9a6823e29661..c93501f42675 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1038,6 +1038,10 @@ xfs_ioc_ag_geometry(
->  
->  	if (copy_from_user(&ageo, arg, sizeof(ageo)))
->  		return -EFAULT;
-> +	if (ageo.ag_flags)
-> +		return -EINVAL;
-> +	if (memchr_inv(&ageo.ag_reserved, 0, sizeof(ageo.ag_reserved)))
-> +		return -EINVAL;
+From: Rik van Riel <riel@surriel.com>
 
-Looks good. All that should be zero until we start using them. :)
+The code in xlog_wait uses the spinlock to make adding the task to
+the wait queue, and setting the task state to UNINTERRUPTIBLE atomic
+with respect to the waker.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
+Doing the wakeup after releasing the spinlock opens up the following
+race condition:
 
+Task 1					task 2
+add task to wait queue
+					wake up task
+set task state to UNINTERRUPTIBLE
+
+This issue was found through code inspection as a result of kworkers
+being observed stuck in UNINTERRUPTIBLE state with an empty
+wait queue. It is rare and largely unreproducable.
+
+Simply moving the spin_unlock to after the wake_up_all results
+in the waker not being able to see a task on the waitqueue before
+it has set its state to UNINTERRUPTIBLE.
+
+This bug dates back to the conversion of this code to generic
+waitqueue infrastructure from a counting semaphore back in 2008
+which didn't place the wakeups consistently w.r.t. to the relevant
+spin locks.
+
+[dchinner: Also fix a similar issue in the shutdown path on
+xc_commit_wait. Update commit log with more details of the issue.]
+
+Fixes: d748c62367eb ("[XFS] Convert l_flushsema to a sv_t")
+Reported-by: Chris Mason <clm@fb.com>
+Signed-off-by: Rik van Riel <riel@surriel.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 941f10ff99d9..6f494f6369e8 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2628,7 +2628,6 @@ xlog_state_do_callback(
+ 	int		   funcdidcallbacks; /* flag: function did callbacks */
+ 	int		   repeats;	/* for issuing console warnings if
+ 					 * looping too many times */
+-	int		   wake = 0;
+ 
+ 	spin_lock(&log->l_icloglock);
+ 	first_iclog = iclog = log->l_iclog;
+@@ -2824,11 +2823,9 @@ xlog_state_do_callback(
+ #endif
+ 
+ 	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR))
+-		wake = 1;
+-	spin_unlock(&log->l_icloglock);
+-
+-	if (wake)
+ 		wake_up_all(&log->l_flush_wait);
++
++	spin_unlock(&log->l_icloglock);
+ }
+ 
+ 
+@@ -3928,7 +3925,9 @@ xfs_log_force_umount(
+ 	 * item committed callback functions will do this again under lock to
+ 	 * avoid races.
+ 	 */
++	spin_lock(&log->l_cilp->xc_push_lock);
+ 	wake_up_all(&log->l_cilp->xc_commit_wait);
++	spin_unlock(&log->l_cilp->xc_push_lock);
+ 	xlog_state_do_callback(log, true, NULL);
+ 
+ #ifdef XFSERRORDEBUG
 -- 
-Dave Chinner
-david@fromorbit.com
+2.23.0.rc1
+
