@@ -2,85 +2,115 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46B50C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 22:57:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 40710C3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:12:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1911221883
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 22:57:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1312C21726
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:12:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=nvidia.com header.i=@nvidia.com header.b="G4fn03uV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727156AbfIDW5V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 18:57:21 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:41985 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727125AbfIDW5V (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 18:57:21 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 9D34143E78B;
-        Thu,  5 Sep 2019 08:57:18 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i5eDE-0008Ep-Lf; Thu, 05 Sep 2019 08:57:16 +1000
-Date:   Thu, 5 Sep 2019 08:57:16 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 0/7] xfs: log race fixes and cleanups
-Message-ID: <20190904225716.GM1119@dread.disaster.area>
-References: <20190904042451.9314-1-david@fromorbit.com>
- <20190904052600.GA27276@infradead.org>
- <20190904055619.GA2279@infradead.org>
+        id S1729740AbfIDXMh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 19:12:37 -0400
+Received: from hqemgate14.nvidia.com ([216.228.121.143]:18618 "EHLO
+        hqemgate14.nvidia.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727741AbfIDXMg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 19:12:36 -0400
+Received: from hqpgpgate102.nvidia.com (Not Verified[216.228.121.13]) by hqemgate14.nvidia.com (using TLS: TLSv1.2, DES-CBC3-SHA)
+        id <B5d7044e40000>; Wed, 04 Sep 2019 16:12:36 -0700
+Received: from hqmail.nvidia.com ([172.20.161.6])
+  by hqpgpgate102.nvidia.com (PGP Universal service);
+  Wed, 04 Sep 2019 16:12:35 -0700
+X-PGP-Universal: processed;
+        by hqpgpgate102.nvidia.com on Wed, 04 Sep 2019 16:12:35 -0700
+Received: from [10.110.48.28] (10.124.1.5) by HQMAIL107.nvidia.com
+ (172.20.187.13) with Microsoft SMTP Server (TLS) id 15.0.1473.3; Wed, 4 Sep
+ 2019 23:12:35 +0000
+Subject: Re: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user Layout
+ lease
+To:     <ira.weiny@intel.com>, Andrew Morton <akpm@linux-foundation.org>
+CC:     Jason Gunthorpe <jgg@ziepe.ca>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
+        Theodore Ts'o <tytso@mit.edu>, Michal Hocko <mhocko@suse.com>,
+        Dave Chinner <david@fromorbit.com>,
+        <linux-xfs@vger.kernel.org>, <linux-rdma@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <linux-nvdimm@lists.01.org>, <linux-ext4@vger.kernel.org>,
+        <linux-mm@kvack.org>
+References: <20190809225833.6657-1-ira.weiny@intel.com>
+ <20190809225833.6657-3-ira.weiny@intel.com>
+X-Nvconfidentiality: public
+From:   John Hubbard <jhubbard@nvidia.com>
+Message-ID: <69a7c037-6b4b-dbe3-2b42-77f85043b9eb@nvidia.com>
+Date:   Wed, 4 Sep 2019 16:12:35 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190904055619.GA2279@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=7-415B0cAAAA:8 a=nUVinjYgH7fI6QFPfPIA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190809225833.6657-3-ira.weiny@intel.com>
+X-Originating-IP: [10.124.1.5]
+X-ClientProxiedBy: HQMAIL101.nvidia.com (172.20.187.10) To
+ HQMAIL107.nvidia.com (172.20.187.13)
+Content-Type: text/plain; charset="utf-8"
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nvidia.com; s=n1;
+        t=1567638756; bh=KcHEqM2TNQedobjZznlViJ4AvUuHmWBw0j98IvGFhfc=;
+        h=X-PGP-Universal:Subject:To:CC:References:X-Nvconfidentiality:From:
+         Message-ID:Date:User-Agent:MIME-Version:In-Reply-To:
+         X-Originating-IP:X-ClientProxiedBy:Content-Type:Content-Language:
+         Content-Transfer-Encoding;
+        b=G4fn03uVMA7J4UC1m9Yj7DhfsqKE5JCNHVM+oBqTe0AR3ZAlGEFmH7YKmkjPCmtCQ
+         LUvXJdUANpLjlNJVqXY9TBqjeHx+L53SCBVVR7cf/kJBTDzGJICMvneFxnJ/bznKdv
+         dNrJ4yQD+F1DCobVh03UMVVgaQfrILzPPrM7GeO2NaLVNZG5LHBQIJvvbOmoaMH7bs
+         msCDq0E+I3UeIhdWC/toHOT1SlxdWDyKPOg3HjVgFJReZrxpb8PrvSxEcypog9tmYA
+         zj992eW84rG8B8gGL5qOlDh0yQONipgKi9UW/dLLh2vAF7f5ffKJVuuRAS6ttv/Rev
+         x8kDOD2mdY4mQ==
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 10:56:19PM -0700, Christoph Hellwig wrote:
-> On Tue, Sep 03, 2019 at 10:26:00PM -0700, Christoph Hellwig wrote:
-> > On Wed, Sep 04, 2019 at 02:24:44PM +1000, Dave Chinner wrote:
-> > > HI folks,
-> > > 
-> > > This series of patches contain fixes for the generic/530 hangs that
-> > > Chandan and Jan reported recently. The first patch in the series is
-> > > the main fix for this, though in theory the last patch in the series
-> > > is necessary to totally close the problem off.
-> > 
-> > While I haven't been active in the thread I already reported this weeks
-> > ago as well..
+On 8/9/19 3:58 PM, ira.weiny@intel.com wrote:
+> From: Ira Weiny <ira.weiny@intel.com>
+> 
+> Add an exclusive lease flag which indicates that the layout mechanism
+> can not be broken.
 
-Ok, I didn't know that, and now that I look there's no information
-that I can use to determine what went wrong...
+After studying the rest of these discussions extensively, I think in all
+cases FL_EXCLUSIVE is better named "unbreakable", rather than exclusive.
 
-> And unfortunately generic/530 still hangs for me with this series.
+If you read your sentence above, it basically reinforces that idea: "add an
+exclusive flag to mean it is unbreakable" is a bit of a disconnect. It 
+would be better to say,
 
-Where does it hang?
+Add an "unbreakable" lease flag which indicates that the layout lease
+cannot be broken.
 
-> This is an x86-64 VM with 4G of RAM and virtio-blk, default mkfs.xfs
-> options from current xfsprogs, 20G test and scratch fs.
+Furthermore, while this may or may not be a way forward on the "we cannot
+have more than one process take a layout lease on a file/range", it at
+least stops making it impossible. In other words, no one is going to
+write a patch that allows sharing an exclusive layout lease--but someone
+might well update some of these patches here to make it possible to
+have multiple processes take unbreakable leases on the same file/range.
 
-That's pretty much what one of my test rigs is, except iscsi luns
-rather than virtio-blk. I haven't been able to reproduce the issues,
-so I'm kinda flying blind w.r.t. to testing them here. Can you
-get a trace of what is happening (xfs_trans*, xfs_log*, xfs_ail*
-tracepoints) so I can have a deeper look?
+I haven't worked through everything there yet, but again:
 
-Cheers,
+* FL_UNBREAKABLE is the name you're looking for here, and
 
-Dave.
+* I think we want to allow multiple processes to take FL_UNBREAKABLE
+leases on the same file/range, so that we can make RDMA setups
+reasonable. By "reasonable" I mean, "no need to have a lead process
+that owns all the leases".
+
+
+
+thanks,
 -- 
-Dave Chinner
-david@fromorbit.com
+John Hubbard
+NVIDIA
