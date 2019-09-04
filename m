@@ -2,72 +2,138 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E10BDC3A5A9
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D9DCC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:34:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B85192073F
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:33:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 559FF21881
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 23:34:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728196AbfIDXdi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 19:33:38 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44134 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727156AbfIDXdi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 19:33:38 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3946A43E044;
-        Thu,  5 Sep 2019 09:33:36 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i5emN-00009Z-KM; Thu, 05 Sep 2019 09:33:35 +1000
-Date:   Thu, 5 Sep 2019 09:33:35 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        id S1730102AbfIDXeo convert rfc822-to-8bit (ORCPT
+        <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 19:34:44 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:54034 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728008AbfIDXeo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Sep 2019 19:34:44 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E2997300DA3A;
+        Wed,  4 Sep 2019 23:34:43 +0000 (UTC)
+Received: from colo-mx.corp.redhat.com (colo-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.20])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id DA1855C1D6;
+        Wed,  4 Sep 2019 23:34:43 +0000 (UTC)
+Received: from zmail21.collab.prod.int.phx2.redhat.com (zmail21.collab.prod.int.phx2.redhat.com [10.5.83.24])
+        by colo-mx.corp.redhat.com (Postfix) with ESMTP id CE4A91800B74;
+        Wed,  4 Sep 2019 23:34:43 +0000 (UTC)
+Date:   Wed, 4 Sep 2019 19:34:43 -0400 (EDT)
+From:   Jianhong Yin <jiyin@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 07/12] libfrog: move radix-tree.h to libfrog/
-Message-ID: <20190904233335.GV1119@dread.disaster.area>
-References: <156757174409.1838135.8885359673458816401.stgit@magnolia>
- <156757178787.1838135.2734255452017147470.stgit@magnolia>
+Cc:     "Jianhong.Yin" <yin-jianhong@163.com>, linux-xfs@vger.kernel.org
+Message-ID: <1308604014.12711742.1567640083503.JavaMail.zimbra@redhat.com>
+In-Reply-To: <20190904172736.GD5354@magnolia>
+References: <20190904063222.21253-1-yin-jianhong@163.com> <20190904172736.GD5354@magnolia>
+Subject: Re: [PATCH] xfsprogs: copy_range don't truncate dstfile if same
+ with srcfile
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <156757178787.1838135.2734255452017147470.stgit@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=JG3OxdjgbXikRlrtpAQA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
+X-Originating-IP: [10.68.5.41, 10.4.195.12]
+Thread-Topic: xfsprogs: copy_range don't truncate dstfile if same with srcfile
+Thread-Index: UUI6jKkxwnvglQAqiZM6gT9QNKhUjQ==
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Wed, 04 Sep 2019 23:34:43 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 09:36:27PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Move this header to libfrog since the code is there already.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  include/Makefile     |    1 -
->  include/libxfs.h     |    2 +-
->  include/radix-tree.h |   63 --------------------------------------------------
->  libfrog/Makefile     |    1 +
->  libfrog/radix-tree.h |   63 ++++++++++++++++++++++++++++++++++++++++++++++++++
->  libxfs/libxfs_priv.h |    2 +-
->  6 files changed, 66 insertions(+), 66 deletions(-)
->  delete mode 100644 include/radix-tree.h
->  create mode 100644 libfrog/radix-tree.h
 
-Looks good.
 
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+----- 原始邮件 -----
+> 发件人: "Darrick J. Wong" <darrick.wong@oracle.com>
+> 收件人: "Jianhong.Yin" <yin-jianhong@163.com>
+> 抄送: linux-xfs@vger.kernel.org, jiyin@redhat.com
+> 发送时间: 星期四, 2019年 9 月 05日 上午 1:27:36
+> 主题: Re: [PATCH] xfsprogs: copy_range don't truncate dstfile if same with srcfile
+> 
+> On Wed, Sep 04, 2019 at 02:32:22PM +0800, Jianhong.Yin wrote:
+> > now if we do copy_range in same file without any extra option
+> > will truncate the file, and not any document indicate this default
+> > action. that's risky to users.
+> > 
+> > '''
+> > $ LANG=C ll testfile
+> > -rw-rw-r--. 1 yjh yjh 4054 Sep  4 14:22 testfile
+> > $ ./xfs_io -c 'copy_range testfile' testfile
+> > $ LANG=C ll testfile
+> > -rw-rw-r--. 1 yjh yjh 4054 Sep  4 14:23 testfile
+> > '''
+> > 
+> > Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+> > ---
+> >  io/copy_file_range.c | 23 +++++++++++++++++++----
+> >  1 file changed, 19 insertions(+), 4 deletions(-)
+> > 
+> > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> > index b7b9fd88..487041c0 100644
+> > --- a/io/copy_file_range.c
+> > +++ b/io/copy_file_range.c
+> > @@ -75,6 +75,19 @@ copy_dst_truncate(void)
+> >  	return ret;
+> >  }
+> >  
+> > +int is_same_file(int fd1, int fd2) {
+> > +	struct stat stat1, stat2;
+> > +	if (fstat(fd1, &stat1) < 0) {
+> > +		perror("fstat");
+> > +		return -1;
+> > +	}
+> > +	if (fstat(fd2, &stat2) < 0) {
+> > +		perror("fstat");
+> > +		return -1;
+> > +	}
+> > +	return (stat1.st_dev == stat2.st_dev) && (stat1.st_ino == stat2.st_ino);
+> > +}
+> > +
+> >  static int
+> >  copy_range_f(int argc, char **argv)
+> >  {
+> > @@ -147,10 +160,12 @@ copy_range_f(int argc, char **argv)
+> >  		}
+> >  		len = sz;
+> >  
+> > -		ret = copy_dst_truncate();
+> > -		if (ret < 0) {
+> > -			ret = 1;
+> > -			goto out;
+> > +		if (!is_same_file(fd, file->fd)) {
+> 
+> Uggggh, why does xfs_io copy_range have this weird behavior?  It should
+> be a simple wrapper for copy_file_range (the syscall) and nothing else.
+> 
+> The code patch looks fine for solving this edge case, but we really
+> shouldn't have this "extra" functionality in a debugging tool that
+> should be athin wrapper around the syscall for xfstests purposes.
+
+right, agree.
+
+> 
+> --D
+> 
+> > +			ret = copy_dst_truncate();
+> > +			if (ret < 0) {
+> > +				ret = 1;
+> > +				goto out;
+> > +			}
+> >  		}
+> >  	}
+> >  
+> > --
+> > 2.17.2
+> > 
+> 
