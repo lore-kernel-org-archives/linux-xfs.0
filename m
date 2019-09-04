@@ -6,49 +6,62 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 51969C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:12:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25C1CC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:19:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 27FA92339E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:12:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EC30E2073F
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 05:19:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726240AbfIDFMd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 01:12:33 -0400
-Received: from verein.lst.de ([213.95.11.211]:35889 "EHLO verein.lst.de"
+        id S1725966AbfIDFTi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 01:19:38 -0400
+Received: from verein.lst.de ([213.95.11.211]:35930 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726046AbfIDFMd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Sep 2019 01:12:33 -0400
+        id S1725877AbfIDFTi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 4 Sep 2019 01:19:38 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id E869E68AEF; Wed,  4 Sep 2019 07:12:29 +0200 (CEST)
-Date:   Wed, 4 Sep 2019 07:12:29 +0200
+        id 7B64868AEF; Wed,  4 Sep 2019 07:19:33 +0200 (CEST)
+Date:   Wed, 4 Sep 2019 07:19:33 +0200
 From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, agruenba@redhat.com,
-        Damien.LeMoal@wdc.com, Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: iomap_dio_rw ->end_io improvements
-Message-ID: <20190904051229.GA9970@lst.de>
-References: <20190903130327.6023-1-hch@lst.de> <20190903221621.GH568270@magnolia>
+To:     Matthew Wilcox <willy@infradead.org>
+Cc:     Christopher Lameter <cl@linux.com>,
+        Michal Hocko <mhocko@kernel.org>,
+        Vlastimil Babka <vbabka@suse.cz>,
+        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        linux-btrfs@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
+ kmalloc(power-of-two)
+Message-ID: <20190904051933.GA10218@lst.de>
+References: <20190826111627.7505-1-vbabka@suse.cz> <20190826111627.7505-3-vbabka@suse.cz> <0100016cd98bb2c1-a2af7539-706f-47ba-a68e-5f6a91f2f495-000000@email.amazonses.com> <20190828194607.GB6590@bombadil.infradead.org> <20190829073921.GA21880@dhcp22.suse.cz> <0100016ce39e6bb9-ad20e033-f3f4-4e6d-85d6-87e7d07823ae-000000@email.amazonses.com> <20190901005205.GA2431@bombadil.infradead.org> <0100016cf8c3033d-bbcc9ba3-2d59-4654-a7c2-8ba094f8a7de-000000@email.amazonses.com> <20190903205312.GK29434@bombadil.infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190903221621.GH568270@magnolia>
+In-Reply-To: <20190903205312.GK29434@bombadil.infradead.org>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 03, 2019 at 03:16:21PM -0700, Darrick J. Wong wrote:
-> The biggest problem with merging these patches (and while we're at it,
-> Goldwyn's patch adding a srcmap parameter to ->iomap_begin) for 5.4 is
-> that they'll break whatever Andreas and Damien have been preparing for
-> gfs2 and zonefs (respectively) based off the iomap-writeback work branch
-> that I created off of 5.3-rc2 a month ago.
+On Tue, Sep 03, 2019 at 01:53:12PM -0700, Matthew Wilcox wrote:
+> > Its enabled in all full debug session as far as I know. Fedora for
+> > example has been running this for ages to find breakage in device drivers
+> > etc etc.
+> 
+> Are you telling me nobody uses the ramdisk driver on fedora?  Because
+> that's one of the affected drivers.
 
-Does Andreas have changes pending that actually pass an end_io call
-back to gfs2?  So far it just passed NULL so nothing should change.
-If my memory serves me correctly zonefs uses ->end_io, but then again
-Damien is asking you to queue it up with the iomap tree, so doing
-that trivial rebase shouldn't be an issue.
+For pmem/brd misaligned memory alone doesn't seem to be the problem.
+Misaligned memory that cross a page barrier is.  And at least XFS
+before my log recovery changes only used kmalloc for smaller than
+page size allocation, so this case probably didn't hit.  But other
+cases where alignment and not just not crossing a page boundary
+occurred and we had problems with those before.  It just too a long
+time for people to root cause them.
