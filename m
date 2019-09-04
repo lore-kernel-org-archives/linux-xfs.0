@@ -2,158 +2,260 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AEE10C41514
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 12:52:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FB5CC3A5A7
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 14:51:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8887D20674
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 12:52:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1567601575;
-	bh=XG+z6BHhOmv9W2OyuDcqw63mHyObz78oeswsmfEdF1U=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
-	b=Rkb2UAoURiQY5Cok03Qs96/CuUxY+PGrUDZzJUufzkgHEC4CrduQqkv3WWe7+oEu5
-	 vZzLZjndn0hKZ3cvD7WFznXIGIjses+m3c26SUEB9YKzP9A04vWfttXg0fMfBYecB6
-	 NXF3Lq4R9fLt5Jh5iG2OcCHo/gP7DwTUP8tQNVOA=
+	by mail.kernel.org (Postfix) with ESMTP id 3B00D208E4
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 14:51:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="csEM7PqW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730125AbfIDMwv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 08:52:51 -0400
-Received: from mail.kernel.org ([198.145.29.99]:39552 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727083AbfIDMwv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Sep 2019 08:52:51 -0400
-Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 8B30F21883;
-        Wed,  4 Sep 2019 12:52:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1567601569;
-        bh=XG+z6BHhOmv9W2OyuDcqw63mHyObz78oeswsmfEdF1U=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=QOvybiJzp85IlBNCfwgLsBnLV9DR4UQ+d3iO+92iuV9rSa0S6OBqWysT1ufEq9jPg
-         Uc8pw3mW3WhdRGHShvIhIShiLbWPqR1oIpH89892Mb1phi9Lqta58kkyAJU+pCa6lo
-         XwT3v0mpqc9uUS8Hbn+5AeFK7k62BlqLx2/zGjmo=
-Message-ID: <2227b44d9e36f9bd129c73ee77c03b35d023236a.camel@kernel.org>
-Subject: Re: [RFC PATCH v2 02/19] fs/locks: Add Exclusive flag to user
- Layout lease
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Matthew Wilcox <willy@infradead.org>, Jan Kara <jack@suse.cz>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Michal Hocko <mhocko@suse.com>, linux-xfs@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-ext4@vger.kernel.org, linux-mm@kvack.org
-Date:   Wed, 04 Sep 2019 08:52:47 -0400
-In-Reply-To: <20190829233408.GD18249@iweiny-DESK2.sc.intel.com>
-References: <20190809225833.6657-1-ira.weiny@intel.com>
-         <20190809225833.6657-3-ira.weiny@intel.com>
-         <fde2959db776616008fc5d31df700f5d7d899433.camel@kernel.org>
-         <20190814215630.GQ6129@dread.disaster.area>
-         <e6f4f619967f4551adb5003d0364770fde2b8110.camel@kernel.org>
-         <20190829233408.GD18249@iweiny-DESK2.sc.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1727789AbfIDOvb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 10:51:31 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:33718 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730067AbfIDOvb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 10:51:31 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x84Emnjn187705;
+        Wed, 4 Sep 2019 14:51:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=H+ZKVhHX0FPa+ZhrP2F5KoNBH0Blfl4rbVrA14/nNOU=;
+ b=csEM7PqWGUfVsnBdygOuJ4ao07YrF0LZz6Ov9++SQ/eNkEiA0u/aI6PCrn3WIUCazIk5
+ tCuuYs4T73KiiNoyI/ZwQBLgtxJ8LMKPvdIUg5i+XrQHSxpq+JCNPd6NaNNOeGiqFfuW
+ dNvJNrgu8k9ZXDWHIEZoV9lqkS/P49c+fXb6qWQTWeUwjzORcl5fDOYEuYLJLOOzvgXp
+ JRWgl3zcOp1Pz1J1b6xkj/lAFtxdpAq1r4v2UxQsFCH1vWtJ2xjiOYMT8JjzOHahsrwC
+ MnIZGZPmyB+7JgfYMdgym4xmT3gCWBhukJVeJYwC0UbeqeLUd2KDCDsV6aZKcGDpAndN gw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2utf01r6m9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 04 Sep 2019 14:51:28 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x84EnAQZ068592;
+        Wed, 4 Sep 2019 14:51:27 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2utepg1gjt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 04 Sep 2019 14:51:27 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x84EpQr2021113;
+        Wed, 4 Sep 2019 14:51:27 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 04 Sep 2019 07:51:26 -0700
+Date:   Wed, 4 Sep 2019 07:51:25 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/1] xfs_spaceman: report health problems
+Message-ID: <20190904145125.GB5354@magnolia>
+References: <156685444816.2839912.12432359726352663923.stgit@magnolia>
+ <156685445446.2839912.426160608673674011.stgit@magnolia>
+ <20190904045240.GB1119@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190904045240.GB1119@dread.disaster.area>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909040145
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9369 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909040145
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2019-08-29 at 16:34 -0700, Ira Weiny wrote:
-> Missed this.  sorry.
-> 
-> On Mon, Aug 26, 2019 at 06:41:07AM -0400, Jeff Layton wrote:
-> > On Thu, 2019-08-15 at 07:56 +1000, Dave Chinner wrote:
-> > > On Wed, Aug 14, 2019 at 10:15:06AM -0400, Jeff Layton wrote:
-> > > > On Fri, 2019-08-09 at 15:58 -0700, ira.weiny@intel.com wrote:
-> > > > > From: Ira Weiny <ira.weiny@intel.com>
-> > > > > 
-> > > > > Add an exclusive lease flag which indicates that the layout mechanism
-> > > > > can not be broken.
-> > > > > 
-> > > > > Exclusive layout leases allow the file system to know that pages may be
-> > > > > GUP pined and that attempts to change the layout, ie truncate, should be
-> > > > > failed.
-> > > > > 
-> > > > > A process which attempts to break it's own exclusive lease gets an
-> > > > > EDEADLOCK return to help determine that this is likely a programming bug
-> > > > > vs someone else holding a resource.
-> > > .....
-> > > > > diff --git a/include/uapi/asm-generic/fcntl.h b/include/uapi/asm-generic/fcntl.h
-> > > > > index baddd54f3031..88b175ceccbc 100644
-> > > > > --- a/include/uapi/asm-generic/fcntl.h
-> > > > > +++ b/include/uapi/asm-generic/fcntl.h
-> > > > > @@ -176,6 +176,8 @@ struct f_owner_ex {
-> > > > >  
-> > > > >  #define F_LAYOUT	16      /* layout lease to allow longterm pins such as
-> > > > >  				   RDMA */
-> > > > > +#define F_EXCLUSIVE	32      /* layout lease is exclusive */
-> > > > > +				/* FIXME or shoudl this be F_EXLCK??? */
-> > > > >  
-> > > > >  /* operations for bsd flock(), also used by the kernel implementation */
-> > > > >  #define LOCK_SH		1	/* shared lock */
-> > > > 
-> > > > This interface just seems weird to me. The existing F_*LCK values aren't
-> > > > really set up to be flags, but are enumerated values (even if there are
-> > > > some gaps on some arches). For instance, on parisc and sparc:
-> > > 
-> > > I don't think we need to worry about this - the F_WRLCK version of
-> > > the layout lease should have these exclusive access semantics (i.e
-> > > other ops fail rather than block waiting for lease recall) and hence
-> > > the API shouldn't need a new flag to specify them.
-> > > 
-> > > i.e. the primary difference between F_RDLCK and F_WRLCK layout
-> > > leases is that the F_RDLCK is a shared, co-operative lease model
-> > > where only delays in operations will be seen, while F_WRLCK is a
-> > > "guarantee exclusive access and I don't care what it breaks"
-> > > model... :)
-> > > 
+On Wed, Sep 04, 2019 at 02:52:40PM +1000, Dave Chinner wrote:
+> On Mon, Aug 26, 2019 at 02:20:54PM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > Not exactly...
+> > Use the fs and ag geometry ioctls to report health problems to users.
 > > 
-> > F_WRLCK and F_RDLCK leases can both be broken, and will eventually time
-> > out if there is conflicting access. The F_EXCLUSIVE flag on the other
-> > hand is there to prevent any sort of lease break from 
-> 
-> Right EXCLUSIVE will not break for any reason.  It will fail truncate and hole
-> punch as we discussed back in June.  This is for the use case where the user
-> has handed this file/pages off to some hardware for which removing the lease
-> would be impossible.  _And_ we don't anticipate any valid use case that someone
-> will need to truncate short of killing the process to free up file system
-> space.
-> 
-> > I'm guessing what Ira really wants with the F_EXCLUSIVE flag is
-> > something akin to what happens when we set fl_break_time to 0 in the
-> > nfsd code. nfsd never wants the locks code to time out a lease of any
-> > sort, since it handles that timeout itself.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  include/xfrog.h         |    2 
+> >  libfrog/fsgeom.c        |   11 +
+> >  man/man8/xfs_spaceman.8 |   28 +++
+> >  spaceman/Makefile       |    2 
+> >  spaceman/health.c       |  432 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  spaceman/init.c         |    1 
+> >  spaceman/space.h        |    1 
+> >  7 files changed, 476 insertions(+), 1 deletion(-)
+> >  create mode 100644 spaceman/health.c
 > > 
-> > If you're going to add this functionality, it'd be good to also convert
-> > knfsd to use it as well, so we don't end up with multiple ways to deal
-> > with that situation.
+> > 
+> > diff --git a/include/xfrog.h b/include/xfrog.h
+> > index 5748e967..3a43a403 100644
+> > --- a/include/xfrog.h
+> > +++ b/include/xfrog.h
+> > @@ -177,4 +177,6 @@ struct xfs_inogrp;
+> >  int xfrog_inumbers(struct xfs_fd *xfd, uint64_t *lastino, uint32_t icount,
+> >  		struct xfs_inogrp *ubuffer, uint32_t *ocount);
+> >  
+> > +int xfrog_ag_geometry(int fd, unsigned int agno, struct xfs_ag_geometry *ageo);
+> > +
+> >  #endif	/* __XFROG_H__ */
+> > diff --git a/libfrog/fsgeom.c b/libfrog/fsgeom.c
+> > index 17479e4a..cddb5a39 100644
+> > --- a/libfrog/fsgeom.c
+> > +++ b/libfrog/fsgeom.c
+> > @@ -131,3 +131,14 @@ xfrog_close(
+> >  	xfd->fd = -1;
+> >  	return ret;
+> >  }
+> > +
+> > +/* Try to obtain an AG's geometry. */
+> > +int
+> > +xfrog_ag_geometry(
+> > +	int			fd,
+> > +	unsigned int		agno,
+> > +	struct xfs_ag_geometry	*ageo)
+> > +{
+> > +	ageo->ag_number = agno;
+> > +	return ioctl(fd, XFS_IOC_AG_GEOMETRY, ageo);
 > 
-> Could you point me at the source for knfsd?  I looked in 
+> Does it need this first:
 > 
-> git://git.linux-nfs.org/projects/steved/nfs-utils.git
+> 	memset(ageo, 0, sizeof(*ageo));
 > 
-> but I don't see anywhere leases are used in that source?
-> 
+> Because I don't think the callers zero it....
 
-Ahh sorry that wasn't clear. It's the fs/nfsd directory in the Linux
-kernel sources. See nfsd4_layout_lm_break and nfsd_break_deleg_cb in
-particular.
+Yep, and the caller was fixed up when I, er, twiddled the AG geometry
+ioctl definition last week.
 
--- 
-Jeff Layton <jlayton@kernel.org>
+> > +static const struct flag_map inode_flags[] = {
+> > +	{
+> > +		.mask = XFS_BS_SICK_INODE,
+> > +		.descr = "inode core",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_BMBTD,
+> > +		.descr = "data fork",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_BMBTA,
+> > +		.descr = "extended attribute fork",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_BMBTC,
+> > +		.descr = "copy on write fork",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_DIR,
+> > +		.descr = "directory",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_XATTR,
+> > +		.descr = "extended attributes",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_SYMLINK,
+> > +		.descr = "symbolic link target",
+> > +	},
+> > +	{
+> > +		.mask = XFS_BS_SICK_PARENT,
+> > +		.descr = "parent pointers",
+> 
+> This needs a "has_parent_pointers" feature check function,
+> doesn't it? Or is this already a valid status for directory inodes?
 
+It's already a valid status for directories, since xscrub checks that
+a directory's '..' points to another valid directory that points back.
+
+> > +static int
+> > +report_bulkstat_health(
+> > +	xfs_agnumber_t		agno)
+> > +{
+> > +	struct xfs_bstat	bstat[128];
+> > +	char			descr[256];
+> > +	uint64_t		startino = 0;
+> > +	uint64_t		lastino = -1ULL;
+> > +	uint32_t		ocount;
+> > +	uint32_t		i;
+> > +	int			error;
+> > +
+> > +	if (agno != NULLAGNUMBER) {
+> > +		startino = xfrog_agino_to_ino(&file->xfd, agno, 0);
+> > +		lastino = xfrog_agino_to_ino(&file->xfd, agno + 1, 0) - 1;
+> > +	}
+> > +
+> > +	while ((error = xfrog_bulkstat(&file->xfd, &startino, 128, bstat,
+> 
+> Nit: use a define for the number of inodes to bulkstat.
+
+Ok.  IIRC the xfrog_bulkstat conversion later on will zap most of this.
+
+> > +health_f(
+> > +	int			argc,
+> > +	char			**argv)
+> > +{
+> > +	unsigned long long	x;
+> > +	xfs_agnumber_t		agno;
+> > +	bool			default_report = true;
+> > +	int			c;
+> > +	int			ret;
+> > +
+> > +	reported = 0;
+> > +
+> > +	if (file->xfd.fsgeom.version != XFS_FSOP_GEOM_VERSION_V5) {
+> > +		perror("health");
+> > +		return 1;
+> > +	}
+> > +
+> > +	while ((c = getopt(argc, argv, "a:cfi:q")) != EOF) {
+> > +		switch (c) {
+> > +		case 'a':
+> > +			default_report = false;
+> > +			errno = 0;
+> > +			x = strtoll(optarg, NULL, 10);
+> > +			if (!errno && x >= NULLAGNUMBER)
+> > +				errno = ERANGE;
+> > +			if (errno) {
+> > +				perror("ag health");
+> > +				return 1;
+> > +			}
+> > +			agno = x;
+> > +			ret = report_ag_sick(agno);
+> > +			if (!ret && comprehensive)
+> > +				ret = report_bulkstat_health(agno);
+> > +			if (ret)
+> > +				return 1;
+> > +			break;
+> > +		case 'c':
+> > +			comprehensive = true;
+> > +			break;
+> 
+> There's a command line ordering problem here - - "-a" and "-f" 
+> check the comprehensive flag and do additional stuff based on it.
+> 
+> So I think the -a and -f processing need to be done outside
+> the args processing loop, or we need two loops to extract the
+> -c first...
+> 
+> Otherwise looks OK.
+
+Ok, will do.  Thanks for the review. :)
+
+--D
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
