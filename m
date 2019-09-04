@@ -7,58 +7,57 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C6A1C3A59E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:38:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EAFBBC3A59E
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:38:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF84C22CED
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:38:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C251E22DBF
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 04:38:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GxvQV2fT"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jhteXk7c"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728236AbfIDEis (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 00:38:48 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54358 "EHLO
+        id S1728252AbfIDEiu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 00:38:50 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:54380 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725840AbfIDEis (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:38:48 -0400
+        with ESMTP id S1725840AbfIDEiu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 00:38:50 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844c2Ix028006;
-        Wed, 4 Sep 2019 04:38:42 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844cCqs028040;
+        Wed, 4 Sep 2019 04:38:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=mwFPWkXQR69JJHJqfi5e1TTravkNncs8shgdGadv2oA=;
- b=GxvQV2fTJtvlsmSL6Sd9blKRmqmkDr0jUgoZK9mxcjoI4tZbilVEXjgKQZLkKcXnVPeu
- WdvqcaDt+cijCkmr72TGPOTiH6DPZmv8SDK6JvmeGuai6u2fTVPjXGoZ3TkkGGoqXYZJ
- 1012OGLWogOO6cw4X3IJBPoPvNfnNukGf2Ce4YWkDx5mvxxL+XlYgBa6vPVPNL0pmmpJ
- mhjdqRQl6SDCZ76hm+sOiKctkKi4qlTJ9dg96RH9xea77dmIwFuYJs9NzPMBk9xBcAoc
- JSnjNFUzQdBSoRI8H4/hD1exZZCSpTxn6e+wHjyIosUHn0in23v1Qr1oROv7IyuLe0Qw SA== 
+ bh=d9HCJDkR8wEFk3ujtzkNq6UOfieQ9oUXPzHrmlbYyyc=;
+ b=jhteXk7cJJSn+U8QG1hLPcDNSPi+cdzpLnQtdUdJuM9KwWjGfikpJ1qjoC5e+ujjNfrJ
+ 9fzeZAlndJXsdUfCYkTjaeEyYMD6Co8M5XEfbc0JTHKmDcveMxHTN6oiGKv9EuiwWM/Q
+ IYbXTnIzpy8nyxzxa8uLQgCvnoqPWdLtv12wzUMyOSj6DCFl5db411czAOPz5czhK+5v
+ W4wZHo9tzVm9S9zMusZK61OvrxxmqxrmWNDOJIvc9VidWu0dYZ9sJRllaYZ6NVgoMkku
+ joAeTy8oIHlg6nTZbmie8UZ74jB/JRr6FR/ZPW60/QMWB5rICes4WYGTD8DVbVfvwX0H mg== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2ut6ds0042-1
+        by aserp2120.oracle.com with ESMTP id 2ut6ds002t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Sep 2019 04:38:41 +0000
+        Wed, 04 Sep 2019 04:38:37 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844cZm8176160;
-        Wed, 4 Sep 2019 04:38:41 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2usu52bke5-1
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x844cYug176154;
+        Wed, 4 Sep 2019 04:38:37 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2usu52bkm7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 04 Sep 2019 04:38:39 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x844c7GC016603;
-        Wed, 4 Sep 2019 04:38:07 GMT
+        Wed, 04 Sep 2019 04:38:36 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x844cOSt005143;
+        Wed, 4 Sep 2019 04:38:24 GMT
 Received: from localhost (/10.159.228.126)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 03 Sep 2019 21:38:06 -0700
-Subject: [PATCH 09/10] xfs_repair: reduce the amount of "clearing reflink
- flag" messages
+        with ESMTP ; Tue, 03 Sep 2019 21:38:23 -0700
+Subject: [PATCH 1/4] xfs_spaceman: remove typedef usage
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Date:   Tue, 03 Sep 2019 21:38:05 -0700
-Message-ID: <156757188583.1838441.18008361702211038370.stgit@magnolia>
-In-Reply-To: <156757182283.1838441.193482978701233436.stgit@magnolia>
-References: <156757182283.1838441.193482978701233436.stgit@magnolia>
+Date:   Tue, 03 Sep 2019 21:38:22 -0700
+Message-ID: <156757190251.1838733.11346599101227268283.stgit@magnolia>
+In-Reply-To: <156757189636.1838733.8025635445292375382.stgit@magnolia>
+References: <156757189636.1838733.8025635445292375382.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -81,68 +80,106 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Clearing the reflink flag on files that don't share blocks is an
-optimization, not a repair, so it's not critical to log a message every
-single time we clear a flag.  Only log one message that we're clearing
-these flags unless verbose mode is enabled.
+Kill off the struct typedefs inside spaceman.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- repair/rmap.c |   34 +++++++++++++++++++++++++++++++---
- 1 file changed, 31 insertions(+), 3 deletions(-)
+ spaceman/file.c   |   10 +++++-----
+ spaceman/freesp.c |    8 ++++----
+ spaceman/space.h  |    8 ++++----
+ 3 files changed, 13 insertions(+), 13 deletions(-)
 
 
-diff --git a/repair/rmap.c b/repair/rmap.c
-index 5dd6557a..b907383e 100644
---- a/repair/rmap.c
-+++ b/repair/rmap.c
-@@ -1170,6 +1170,36 @@ record_inode_reflink_flag(
- 		(unsigned long long)lino, (unsigned long long)irec->ino_was_rl);
+diff --git a/spaceman/file.c b/spaceman/file.c
+index f96a29e5..5647ca7d 100644
+--- a/spaceman/file.c
++++ b/spaceman/file.c
+@@ -16,13 +16,13 @@
+ 
+ static cmdinfo_t print_cmd;
+ 
+-fileio_t	*filetable;
++struct fileio	*filetable;
+ int		filecount;
+-fileio_t	*file;
++struct fileio	*file;
+ 
+ static void
+ print_fileio(
+-	fileio_t	*file,
++	struct fileio	*file,
+ 	int		index,
+ 	int		braces)
+ {
+@@ -101,8 +101,8 @@ addfile(
+ 	}
+ 
+ 	/* Extend the table of currently open files */
+-	filetable = (fileio_t *)realloc(filetable,	/* growing */
+-					++filecount * sizeof(fileio_t));
++	filetable = (struct fileio *)realloc(filetable,	/* growing */
++					++filecount * sizeof(struct fileio));
+ 	if (!filetable) {
+ 		perror("realloc");
+ 		filecount = 0;
+diff --git a/spaceman/freesp.c b/spaceman/freesp.c
+index 034f2340..527ecb52 100644
+--- a/spaceman/freesp.c
++++ b/spaceman/freesp.c
+@@ -14,17 +14,17 @@
+ #include "space.h"
+ #include "input.h"
+ 
+-typedef struct histent
++struct histent
+ {
+ 	long long	low;
+ 	long long	high;
+ 	long long	count;
+ 	long long	blocks;
+-} histent_t;
++};
+ 
+ static int		agcount;
+ static xfs_agnumber_t	*aglist;
+-static histent_t	*hist;
++static struct histent	*hist;
+ static int		dumpflag;
+ static long long	equalsize;
+ static long long	multsize;
+@@ -82,7 +82,7 @@ hcmp(
+ 	const void	*a,
+ 	const void	*b)
+ {
+-	return ((histent_t *)a)->low - ((histent_t *)b)->low;
++	return ((struct histent *)a)->low - ((struct histent *)b)->low;
  }
  
-+/*
-+ * Inform the user that we're clearing the reflink flag on an inode that
-+ * doesn't actually share any blocks.  This is an optimization (the kernel
-+ * skips refcount checks for non-reflink files) and not a corruption repair,
-+ * so we don't need to log every time we clear a flag unless verbose mode is
-+ * enabled.
-+ */
-+static void
-+warn_clearing_reflink(
-+	xfs_ino_t		ino)
-+{
-+	static bool		warned = false;
-+	static pthread_mutex_t	lock = PTHREAD_MUTEX_INITIALIZER;
-+
-+	if (verbose) {
-+		do_warn(_("clearing reflink flag on inode %"PRIu64"\n"), ino);
-+		return;
-+	}
-+
-+	if (warned)
-+		return;
-+
-+	pthread_mutex_lock(&lock);
-+	if (!warned) {
-+		do_warn(_("clearing reflink flag on inodes when possible\n"));
-+		warned = true;
-+	}
-+	pthread_mutex_unlock(&lock);
-+}
-+
- /*
-  * Fix an inode's reflink flag.
-  */
-@@ -1188,9 +1218,7 @@ fix_inode_reflink_flag(
- _("setting reflink flag on inode %"PRIu64"\n"),
- 			XFS_AGINO_TO_INO(mp, agno, agino));
- 	else if (!no_modify) /* && !set */
--		do_warn(
--_("clearing reflink flag on inode %"PRIu64"\n"),
--			XFS_AGINO_TO_INO(mp, agno, agino));
-+		warn_clearing_reflink(XFS_AGINO_TO_INO(mp, agno, agino));
- 	if (no_modify)
- 		return 0;
+ static void
+diff --git a/spaceman/space.h b/spaceman/space.h
+index b246f602..8b224aca 100644
+--- a/spaceman/space.h
++++ b/spaceman/space.h
+@@ -6,16 +6,16 @@
+ #ifndef XFS_SPACEMAN_SPACE_H_
+ #define XFS_SPACEMAN_SPACE_H_
  
+-typedef struct fileio {
++struct fileio {
+ 	struct xfs_fsop_geom geom;		/* XFS filesystem geometry */
+ 	struct fs_path	fs_path;	/* XFS path information */
+ 	char		*name;		/* file name at time of open */
+ 	int		fd;		/* open file descriptor */
+-} fileio_t;
++};
+ 
+-extern fileio_t		*filetable;	/* open file table */
++extern struct fileio	*filetable;	/* open file table */
+ extern int		filecount;	/* number of open files */
+-extern fileio_t		*file;		/* active file in file table */
++extern struct fileio	*file;		/* active file in file table */
+ 
+ extern int	openfile(char *, struct xfs_fsop_geom *, struct fs_path *);
+ extern int	addfile(char *, int , struct xfs_fsop_geom *, struct fs_path *);
 
