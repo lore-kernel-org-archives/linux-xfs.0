@@ -2,87 +2,95 @@ Return-Path: <SRS0=tdPo=W7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 037C5C3A5A7
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 06:41:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D94F7C3A5A7
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 06:42:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC28C2339E
-	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 06:41:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1BE022CF5
+	for <linux-xfs@archiver.kernel.org>; Wed,  4 Sep 2019 06:42:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fiWSXoH2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726045AbfIDGlA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 02:41:00 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:54784 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726004AbfIDGlA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 4 Sep 2019 02:41:00 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9D48E315C006;
-        Wed,  4 Sep 2019 06:40:59 +0000 (UTC)
-Received: from ming.t460p (ovpn-8-23.pek2.redhat.com [10.72.8.23])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C585C60BFB;
-        Wed,  4 Sep 2019 06:40:48 +0000 (UTC)
-Date:   Wed, 4 Sep 2019 14:40:44 +0800
-From:   Ming Lei <ming.lei@redhat.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        Christopher Lameter <cl@linux.com>,
-        Michal Hocko <mhocko@kernel.org>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190904064043.GA7578@ming.t460p>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <0100016cd98bb2c1-a2af7539-706f-47ba-a68e-5f6a91f2f495-000000@email.amazonses.com>
- <20190828194607.GB6590@bombadil.infradead.org>
- <20190829073921.GA21880@dhcp22.suse.cz>
- <0100016ce39e6bb9-ad20e033-f3f4-4e6d-85d6-87e7d07823ae-000000@email.amazonses.com>
- <20190901005205.GA2431@bombadil.infradead.org>
- <0100016cf8c3033d-bbcc9ba3-2d59-4654-a7c2-8ba094f8a7de-000000@email.amazonses.com>
- <20190903205312.GK29434@bombadil.infradead.org>
- <20190904051933.GA10218@lst.de>
+        id S1728209AbfIDGmW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 4 Sep 2019 02:42:22 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:48190 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725267AbfIDGmW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 02:42:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=v2hY/JpPG1NEVG2Ukyajn+iZ+yBR41D2aihQ/4vMtSk=; b=fiWSXoH25SPChUoxItkr9tSFr
+        4C9H1t2RedYLfuqKQ/6on8FXsw35Uq/beT58fZf9s/GFcAMyeOrafKIxhdTpDUzHvbkM+HCraQBUK
+        nFPUV6GSxhQSoEngreWsKRWQsb/YUmI/hFBsG+EJHYPFFV51ceHXBjQjLuk8xVTQZqxWxsSpQchHW
+        QBEVJujeYIY/EKLwx1tyyYMzDOFoeAUeZS98uQjVRqq6MYxGcJeYwT14MTH7KTt3OMDLV/53Ewe88
+        0E55ySxx4O/1MbECtmG00Pffq3XU/BtoW+vl6qd98lUy+PkVlyk1hw10ztxY9C8LT8e8V9tXwhONq
+        F3qLpQC1Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i5Ozl-0002rU-Jt; Wed, 04 Sep 2019 06:42:21 +0000
+Date:   Tue, 3 Sep 2019 23:42:21 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 5/7] xfs: factor iclog state processing out of
+ xlog_state_do_callback()
+Message-ID: <20190904064221.GA3960@infradead.org>
+References: <20190904042451.9314-1-david@fromorbit.com>
+ <20190904042451.9314-6-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190904051933.GA10218@lst.de>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Wed, 04 Sep 2019 06:41:00 +0000 (UTC)
+In-Reply-To: <20190904042451.9314-6-david@fromorbit.com>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 04, 2019 at 07:19:33AM +0200, Christoph Hellwig wrote:
-> On Tue, Sep 03, 2019 at 01:53:12PM -0700, Matthew Wilcox wrote:
-> > > Its enabled in all full debug session as far as I know. Fedora for
-> > > example has been running this for ages to find breakage in device drivers
-> > > etc etc.
-> > 
-> > Are you telling me nobody uses the ramdisk driver on fedora?  Because
-> > that's one of the affected drivers.
-> 
-> For pmem/brd misaligned memory alone doesn't seem to be the problem.
-> Misaligned memory that cross a page barrier is.  And at least XFS
-> before my log recovery changes only used kmalloc for smaller than
-> page size allocation, so this case probably didn't hit.
+On Wed, Sep 04, 2019 at 02:24:49PM +1000, Dave Chinner wrote:
+> +	/* Skip all iclogs in the ACTIVE & DIRTY states */
+> +	if (iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_DIRTY))
+> +		return false;
 
-BTW, does sl[aou]b guarantee that smaller than page size allocation via kmalloc()
-won't cross page boundary any time?
+Please use spaces around the "|".
 
-Thanks,
-Ming
+> +			if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +				ioerrors++;
+
+This now also counts the ierrror flag for dirty and active iclogs.
+Not sure it matters given our state machine, but it does change
+behavior.
+
+> +			ret = xlog_state_iodone_process_iclog(log, iclog,
+> +								ciclog);
+> +			if (ret)
+> +				break;
+
+No need for the ret variable.
+
+>  
+> -			} else
+> -				ioerrors++;
+> +			if (!(iclog->ic_state &
+> +			      (XLOG_STATE_CALLBACK | XLOG_STATE_IOERROR))) {
+> +				iclog = iclog->ic_next;
+> +				continue;
+> +			}
+
+Btw, one cleanup I had pending is that all our loops ovr the iclog
+list can be cleaned up nicely so that continue does that right thing
+without all these manual "iclog = iclog->ic_next" next statements.  Just
+turn the loop into:
+
+	do {
+		..
+	} while ((iclog = iclog->ic_next) != first_iclog);
+
+this might be applicable to a few of your patches.
