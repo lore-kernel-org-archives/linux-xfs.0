@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3E07C00312
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6BDC9C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 361FB2070C
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 965742070C
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U71MyTAz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZXqukSGX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391177AbfIEWTT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 18:19:19 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33354 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391182AbfIEWTO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:19:14 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJD2Q078272
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:13 GMT
+        id S2389476AbfIEWTY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 18:19:24 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:39336 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389368AbfIEWTY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:19:24 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ84R084693
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:23 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2019-08-05;
- bh=c9tDv0TrmOw73eoD8J+rfB6hMSH9s0Hs6bbNC8z2NKw=;
- b=U71MyTAzQ7YVunqyCFSJsF+eyDOjUohtZMsBz+n1ye77TG573niQNiNKRnM9uY2aVn1Q
- s+Ic8cw1ayHvQLRE38ceG0NpVegLjaa4xtS7WjWz6BlpQas+bfVx80QqRRmaWzUgrKE0
- n8RG4QjH4fnh3cQ1CDKZ4bpD1yZHTi0KDWhRbzWO3PxkByZAuqOx2Dgr0KsWgRrkk+iB
- TxD3KfM/rdK1cReQTqQ8YlnkEuQ/uM3LSlb4mqXANMtGnXgVBJfHIEj7EXjJnDOyvclV
- mleETdo1Hk8LZ6SIQ3vuAAx7JxWkAhKrn+5ZAxvZ/7jLQvKkLcKzabjPpFzGMxrjFz7Q wQ== 
+ bh=bmum3NnWX5T8XNcKTD1sm+/CbQOuetqgo5UZZD3oAko=;
+ b=ZXqukSGX4FQEEqVFg+gG151az27rEKLtD79H1P6P7Dp6UfIBkkcAKeZi/DgzVeLIWIhl
+ lYdq23UMC43FpYpmjgSbbeJI/bjVKQrhk9rD4WTtuiMek5HLp418MWaHJJUH8rNdE/6G
+ RogRwJtlK2emvkoljU9khumz7zmJEQobEpH11S4toYXYbx2Vk2iJl4cvkZDbDnP24KFl
+ bdAJAwAjL5qVSSsQnwpna7L+mB+BGni0y/PTh//1/JZXVufOieIAusQlpuYpYCN+05B2
+ jQr2zlAg/RIAQ6ePhQN9p5rwgZo0DKTaHd5bPQUOY5AbCBAK8j32yExiYWccMMpOumK4 Hw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2uuaqj02nw-1
+        by userp2130.oracle.com with ESMTP id 2uuaqxr2fb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:12 +0000
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:23 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ5CM076815
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:12 GMT
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ5aI076753
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:22 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2utvr4a0s3-1
+        by userp3020.oracle.com with ESMTP id 2utvr4a18x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:09 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x85MIjVn032474
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:18:45 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:22 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x85MJLLV032764
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:21 GMT
 Received: from localhost.localdomain (/67.1.183.122)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 15:18:45 -0700
+        with ESMTP ; Thu, 05 Sep 2019 15:19:21 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 05/19] xfs: Factor out new helper functions xfs_attr_rmtval_set
-Date:   Thu,  5 Sep 2019 15:18:23 -0700
-Message-Id: <20190905221837.17388-6-allison.henderson@oracle.com>
+Subject: [PATCH v2 1/1] xfstests: Add Delayed Attribute test
+Date:   Thu,  5 Sep 2019 15:19:17 -0700
+Message-Id: <20190905221917.17733-2-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190905221837.17388-1-allison.henderson@oracle.com>
-References: <20190905221837.17388-1-allison.henderson@oracle.com>
+In-Reply-To: <20190905221917.17733-1-allison.henderson@oracle.com>
+References: <20190905221917.17733-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
@@ -73,139 +73,305 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Break xfs_attr_rmtval_set into two helper functions
-xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
-xfs_attr_rmtval_set rolls the transaction between the
-helpers, but delayed operations cannot.  We will use
-the helpers later when constructing new delayed
-attribute routines.
+This patch adds a test to exercise the delayed attribute error
+inject and log replay.  Attributes are added in increaseing
+sizes up to 64k, and the error inject is used to replay them
+from the log
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_remote.c | 72 +++++++++++++++++++++++++++++++----------
- fs/xfs/libxfs/xfs_attr_remote.h |  3 +-
- 2 files changed, 57 insertions(+), 18 deletions(-)
+ common/rc         |   3 ++
+ common/xfs        |   7 +++
+ tests/xfs/512     | 101 +++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/512.out | 131 ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/group   |   1 +
+ 5 files changed, 243 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
-index db9247a..080a284 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.c
-+++ b/fs/xfs/libxfs/xfs_attr_remote.c
-@@ -21,6 +21,7 @@
- #include "xfs_attr.h"
- #include "xfs_trace.h"
- #include "xfs_error.h"
-+#include "xfs_attr_remote.h"
+diff --git a/common/rc b/common/rc
+index feb001b..e2d2eb8 100644
+--- a/common/rc
++++ b/common/rc
+@@ -2116,6 +2116,9 @@ _require_xfs_io_command()
+ 		rm -f $testcopy > /dev/null 2>&1
+ 		param_checked="$param"
+ 		;;
++	"delayed_attr")
++		testio=`$XFS_IO_PROG -x -c "delayed_attr" $TEST_DIR 2>&1`
++		;;
+ 	"falloc" )
+ 		testio=`$XFS_IO_PROG -F -f -c "falloc $param 0 1m" $testfile 2>&1`
+ 		param_checked="$param"
+diff --git a/common/xfs b/common/xfs
+index 1bce3c1..b8a4734 100644
+--- a/common/xfs
++++ b/common/xfs
+@@ -262,6 +262,13 @@ _require_projid32bit()
+ 	   || _notrun "mkfs.xfs doesn't have projid32bit feature"
+ }
  
- #define ATTR_RMTVALUE_MAPSIZE	1	/* # of map entries at once */
- 
-@@ -432,34 +433,20 @@ xfs_attr_rmtval_set(
- 	struct xfs_da_args	*args)
++_require_delattr()
++{
++	echo "_require_delattr"
++	_scratch_mkfs_xfs_supported -n delattr >/dev/null 2>&1 \
++	   || _notrun "mkfs.xfs doesn't have delattr feature"
++}
++
+ _require_projid16bit()
  {
- 	struct xfs_inode	*dp = args->dp;
--	struct xfs_mount	*mp = dp->i_mount;
- 	struct xfs_bmbt_irec	map;
- 	xfs_dablk_t		lblkno;
--	xfs_fileoff_t		lfileoff = 0;
--	uint8_t			*src = args->value;
- 	int			blkcnt;
--	int			valuelen;
- 	int			nmap;
- 	int			error;
--	int			offset = 0;
- 
- 	trace_xfs_attr_rmtval_set(args);
- 
--	/*
--	 * Find a "hole" in the attribute address space large enough for
--	 * us to drop the new attribute's value into. Because CRC enable
--	 * attributes have headers, we can't just do a straight byte to FSB
--	 * conversion and have to take the header space into account.
--	 */
--	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
--	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
--						   XFS_ATTR_FORK);
-+	error = xfs_attr_rmt_find_hole(args);
- 	if (error)
- 		return error;
- 
--	args->rmtblkno = lblkno = (xfs_dablk_t)lfileoff;
--	args->rmtblkcnt = blkcnt;
--
-+	blkcnt = args->rmtblkcnt;
-+	lblkno = (xfs_dablk_t)args->rmtblkno;
- 	/*
- 	 * Roll through the "value", allocating blocks on disk as required.
- 	 */
-@@ -500,6 +487,57 @@ xfs_attr_rmtval_set(
- 			return error;
- 	}
- 
-+	error = xfs_attr_rmtval_set_value(args);
-+	return error;
+ 	_scratch_mkfs_xfs_supported -i projid32bit=0 >/dev/null 2>&1 \
+diff --git a/tests/xfs/512 b/tests/xfs/512
+new file mode 100755
+index 0000000..0efae05
+--- /dev/null
++++ b/tests/xfs/512
+@@ -0,0 +1,101 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
++#
++# FS QA Test No. 512
++#
++# Delayed attr log replay test
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
++
++here=`pwd`
++tmp=/tmp/$$
++status=0	# success is the default!
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/attr
++. ./common/inject
++
++_cleanup()
++{
++	echo "*** unmount"
++	_scratch_unmount 2>/dev/null
++	rm -f $tmp.*
++}
++trap "_cleanup; exit \$status" 0 1 2 3 15
++
++_test_attr_replay()
++{
++	attr_name=$1
++	attr_value=$2
++	touch $testfile.1
++
++	echo "Inject error"
++	_scratch_inject_error "delayed_attr"
++
++	echo "Set attribute"
++	echo "$attr_value" | ${ATTR_PROG} -s "$attr_name" $testfile.1 | \
++			    _filter_scratch
++
++	echo "FS should be shut down, touch will fail"
++	touch $testfile.1
++
++	echo "Remount to replay log"
++	_scratch_inject_logprint >> $seqres.full
++
++	echo "FS should be online, touch should succeed"
++	touch $testfile.1
++
++	echo "Verify attr recovery"
++	_getfattr --absolute-names $testfile.1 | _filter_scratch
 +}
 +
 +
-+/*
-+ * Find a "hole" in the attribute address space large enough for us to drop the
-+ * new attribute's value into
-+ */
-+int
-+xfs_attr_rmt_find_hole(
-+	struct xfs_da_args	*args)
-+{
-+	struct xfs_inode        *dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	int			error;
-+	int			blkcnt;
-+	xfs_fileoff_t		lfileoff = args->rmtblkno;
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
 +
-+	/*
-+	 * Because CRC enable attributes have headers, we can't just do a
-+	 * straight byte to FSB conversion and have to take the header space
-+	 * into account.
-+	 */
-+	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
-+	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
-+						   XFS_ATTR_FORK);
-+	if (error)
-+		return error;
++_require_scratch
++_require_attrs
++_require_xfs_io_error_injection "delayed_attr"
++_require_delattr
 +
-+	args->rmtblkno = (xfs_dablk_t)lfileoff;
-+	args->rmtblkcnt = blkcnt;
++# turn on delayed attributes
++MKFS_OPTIONS="-n delattr"
 +
-+	return 0;
-+}
++rm -f $seqres.full
++_scratch_unmount >/dev/null 2>&1
 +
-+int
-+xfs_attr_rmtval_set_value(
-+	struct xfs_da_args	*args)
-+{
-+	struct xfs_inode	*dp = args->dp;
-+	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_bmbt_irec	map;
-+	xfs_dablk_t		lblkno;
-+	uint8_t			*src = args->value;
-+	int			blkcnt;
-+	int			valuelen;
-+	int			nmap;
-+	int			error;
-+	int			offset = 0;
++#attributes of increaseing sizes
++attr16="0123456789ABCDEFG"
++attr64="$attr16$attr16$attr16$attr16"
++attr256="$attr64$attr64$attr64$attr64"
++attr1k="$attr256$attr256$attr256$attr256"
++attr4k="$attr1k$attr1k$attr1k$attr1k"
++attr8k="$attr4k$attr4k$attr4k$attr4k"
++attr32k="$attr8k$attr8k$attr8k$attr8k"
++attr64k="$attr32k$attr32k"
 +
- 	/*
- 	 * Roll through the "value", copying the attribute value to the
- 	 * already-allocated blocks.  Blocks are written synchronously
-diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
-index 9d20b66..cd7670d 100644
---- a/fs/xfs/libxfs/xfs_attr_remote.h
-+++ b/fs/xfs/libxfs/xfs_attr_remote.h
-@@ -11,5 +11,6 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
- int xfs_attr_rmtval_get(struct xfs_da_args *args);
- int xfs_attr_rmtval_set(struct xfs_da_args *args);
- int xfs_attr_rmtval_remove(struct xfs_da_args *args);
--
-+int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
-+int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
- #endif /* __XFS_ATTR_REMOTE_H__ */
++echo "*** mkfs"
++_scratch_mkfs_xfs >/dev/null
++
++echo "*** mount FS"
++_scratch_mount
++
++testfile=$SCRATCH_MNT/testfile
++echo "*** make test file 1"
++
++_test_attr_replay "attr_name1" $attr16
++_test_attr_replay "attr_name2" $attr64
++_test_attr_replay "attr_name3" $attr256
++_test_attr_replay "attr_name4" $attr1k
++_test_attr_replay "attr_name5" $attr4k
++_test_attr_replay "attr_name6" $attr8k
++_test_attr_replay "attr_name7" $attr32k
++_test_attr_replay "attr_name8" $attr64k
++
++echo "*** done"
++exit
+diff --git a/tests/xfs/512.out b/tests/xfs/512.out
+new file mode 100644
+index 0000000..53843ad
+--- /dev/null
++++ b/tests/xfs/512.out
+@@ -0,0 +1,131 @@
++QA output created by 512
++_require_delattr
++*** mkfs
++*** mount FS
++*** make test file 1
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name1" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name2" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name3" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++user.attr_name3
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name4" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++user.attr_name3
++user.attr_name4
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name5" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++user.attr_name3
++user.attr_name4
++user.attr_name5
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name6" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++user.attr_name3
++user.attr_name4
++user.attr_name5
++user.attr_name6
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name7" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++user.attr_name3
++user.attr_name4
++user.attr_name5
++user.attr_name6
++user.attr_name7
++
++Inject error
++Set attribute
++attr_set: Input/output error
++Could not set "attr_name8" for /mnt/scratch/testfile.1
++FS should be shut down, touch will fail
++touch: cannot touch '/mnt/scratch/testfile.1': Input/output error
++Remount to replay log
++FS should be online, touch should succeed
++Verify attr recovery
++# file: SCRATCH_MNT/testfile.1
++user.attr_name1
++user.attr_name2
++user.attr_name3
++user.attr_name4
++user.attr_name5
++user.attr_name6
++user.attr_name7
++user.attr_name8
++
++*** done
++*** unmount
+diff --git a/tests/xfs/group b/tests/xfs/group
+index a7ad300..a9dab7c 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -509,3 +509,4 @@
+ 509 auto ioctl
+ 510 auto ioctl quick
+ 511 auto quick quota
++512 auto quick attr
 -- 
 2.7.4
 
