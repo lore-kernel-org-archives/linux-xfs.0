@@ -2,275 +2,178 @@ Return-Path: <SRS0=/Wyv=XA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46338C00306
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:07:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08FEEC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:18:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BB762070C
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:07:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66A8B2082C
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:18:32 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DWF//hnG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390343AbfIEPHa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 11:07:30 -0400
-Received: from mx2.suse.de ([195.135.220.15]:57002 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2390307AbfIEPHX (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Sep 2019 11:07:23 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2AD96B68B;
-        Thu,  5 Sep 2019 15:07:22 +0000 (UTC)
-From:   Goldwyn Rodrigues <rgoldwyn@suse.de>
-To:     linux-fsdevel@vger.kernel.org
-Cc:     linux-btrfs@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de,
-        linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH 13/15] btrfs: Remove btrfs_dio_data and __btrfs_direct_write
-Date:   Thu,  5 Sep 2019 10:06:48 -0500
-Message-Id: <20190905150650.21089-14-rgoldwyn@suse.de>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20190905150650.21089-1-rgoldwyn@suse.de>
-References: <20190905150650.21089-1-rgoldwyn@suse.de>
+        id S1733116AbfIEPSb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 11:18:31 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:36366 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732125AbfIEPSb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 11:18:31 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85FBHnX087744;
+        Thu, 5 Sep 2019 15:18:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ipdx4c86PDdLDNVrqJqocjaP4OSTXq4HneN8qxwR8OE=;
+ b=DWF//hnG/bn3oRBLfjJSBOnHVRjFdh4wjmaLtvsKPTQs7Ri0rblubm6XMwDjIF/pNhgd
+ cRMiN27WKzKVIg02x5avp4ELcKbjctYxwTiowOLf0eSm0A9v0hu2mk2//lV7tXpkxkag
+ ey2aP9mXLOdtT1NX2YhFZ0CSNRhoZrD/UiT5hc2Yf/TagWzqregZI308lvGW2+ARJmL1
+ EXMXXR5K8kxI5Qj+jOqmgQ5lO0BKwwW+j23J7PliA/ShW/V9EnU2CdOWs/YbN7dAdeQN
+ y5Q3zNOPaSx+xz/52UspONHsludZTrJspEyTgbHplAwYbCj80evsakqyiBVMNVqir3hd Xg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2uu4rxg1sb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 05 Sep 2019 15:18:29 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85FB6Os140886;
+        Thu, 5 Sep 2019 15:18:28 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2uthq1ummh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 05 Sep 2019 15:18:28 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x85FIRwV022060;
+        Thu, 5 Sep 2019 15:18:28 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 05 Sep 2019 08:18:27 -0700
+Date:   Thu, 5 Sep 2019 08:18:28 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: push the AIL in xlog_grant_head_wake
+Message-ID: <20190905151828.GB2229799@magnolia>
+References: <20190905084717.30308-1-david@fromorbit.com>
+ <20190905084717.30308-2-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190905084717.30308-2-david@fromorbit.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909050144
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909050144
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Goldwyn Rodrigues <rgoldwyn@suse.com>
+On Thu, Sep 05, 2019 at 06:47:10PM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> In the situation where the log is full and the CIL has not recently
+> flushed, the AIL push threshold is throttled back to the where the
+> last write of the head of the log was completed. This is stored in
+> log->l_last_sync_lsn. Hence if the CIL holds > 25% of the log space
+> pinned by flushes and/or aggregation in progress, we can get the
+> situation where the head of the log lags a long way behind the
+> reservation grant head.
+> 
+> When this happens, the AIL push target is trimmed back from where
+> the reservation grant head wants to push the log tail to, back to
+> where the head of the log currently is. This means the push target
+> doesn't reach far enough into the log to actually move the tail
+> before the transaction reservation goes to sleep.
+> 
+> When the CIL push completes, it moves the log head forward such that
+> the AIL push target can now be moved, but that has no mechanism for
+> puhsing the log tail. Further, if the next tail movement of the log
+> is not large enough wake the waiter (i.e. still not enough space for
+> it to have a reservation granted), we don't wake anything up, and
+> hence we do not update the AIL push target to take into account the
+> head of the log moving and allowing the push target to be moved
+> forwards.
+> 
+> To avoid this particular condition, if we fail to wake the first
+> waiter on the grant head because we don't have enough space,
+> push on the AIL again. This will pick up any movement of the log
+> head and allow the push target to move forward due to completion of
+> CIL pushing.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log.c | 23 ++++++++++++++++++++++-
+>  1 file changed, 22 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index b159a9e9fef0..5e21450fb8f5 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -214,15 +214,36 @@ xlog_grant_head_wake(
+>  {
+>  	struct xlog_ticket	*tic;
+>  	int			need_bytes;
+> +	bool			woken_task = false;
+>  
+>  	list_for_each_entry(tic, &head->waiters, t_queue) {
+> +		/*
+> +		 * The is a chance that the size of the CIL checkpoints in
+> +		 * progress result at the last AIL push resulted in the log head
+> +		 * (l_last_sync_lsn) not reflecting where the log head now is.
 
-btrfs_dio_data is unnecessary since we are now storing all
-informaiton in btrfs_iomap.
+That's a bit difficult to understand...
 
-Advantage: We don't abuse current->journal_info anymore :)
+"There is a chance that the size of the CIL checkpoints in progress at
+the last AIL push results in the last committed log head (l_last_sync_lsn)
+not reflecting where the log head is now." ?
 
-Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
----
- fs/btrfs/file.c  | 40 ----------------------------
- fs/btrfs/inode.c | 81 ++------------------------------------------------------
- 2 files changed, 2 insertions(+), 119 deletions(-)
+(Did I get that right?)
 
-diff --git a/fs/btrfs/file.c b/fs/btrfs/file.c
-index 5d4347e12cdc..e6c1ffd74660 100644
---- a/fs/btrfs/file.c
-+++ b/fs/btrfs/file.c
-@@ -1350,46 +1350,6 @@ static noinline int check_can_nocow(struct btrfs_inode *inode, loff_t pos,
- 	return ret;
- }
- 
--static ssize_t __btrfs_direct_write(struct kiocb *iocb, struct iov_iter *from)
--{
--	struct file *file = iocb->ki_filp;
--	struct inode *inode = file_inode(file);
--	loff_t pos;
--	ssize_t written;
--	ssize_t written_buffered;
--	loff_t endbyte;
--	int err;
--
--	written = generic_file_direct_write(iocb, from);
--
--	if (written < 0 || !iov_iter_count(from))
--		return written;
--
--	pos = iocb->ki_pos;
--	written_buffered = btrfs_buffered_iomap_write(iocb, from);
--	if (written_buffered < 0) {
--		err = written_buffered;
--		goto out;
--	}
--	/*
--	 * Ensure all data is persisted. We want the next direct IO read to be
--	 * able to read what was just written.
--	 */
--	endbyte = pos + written_buffered - 1;
--	err = btrfs_fdatawrite_range(inode, pos, endbyte);
--	if (err)
--		goto out;
--	err = filemap_fdatawait_range(inode->i_mapping, pos, endbyte);
--	if (err)
--		goto out;
--	written += written_buffered;
--	iocb->ki_pos = pos + written_buffered;
--	invalidate_mapping_pages(file->f_mapping, pos >> PAGE_SHIFT,
--				 endbyte >> PAGE_SHIFT);
--out:
--	return written ? written : err;
--}
--
- static void update_time_for_write(struct inode *inode)
- {
- 	struct timespec64 now;
-diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
-index 323d72858c9c..87fbe73ca2e4 100644
---- a/fs/btrfs/inode.c
-+++ b/fs/btrfs/inode.c
-@@ -54,13 +54,6 @@ struct btrfs_iget_args {
- 	struct btrfs_root *root;
- };
- 
--struct btrfs_dio_data {
--	u64 reserve;
--	u64 unsubmitted_oe_range_start;
--	u64 unsubmitted_oe_range_end;
--	int overwrite;
--};
--
- static const struct inode_operations btrfs_dir_inode_operations;
- static const struct inode_operations btrfs_symlink_inode_operations;
- static const struct inode_operations btrfs_dir_ro_inode_operations;
-@@ -7664,7 +7657,6 @@ int btrfs_get_extent_map_write(struct extent_map **map,
- static int btrfs_get_blocks_direct_write(struct extent_map **map,
- 					 struct buffer_head *bh_result,
- 					 struct inode *inode,
--					 struct btrfs_dio_data *dio_data,
- 					 u64 start, u64 len)
- {
- 	int ret;
-@@ -7686,17 +7678,6 @@ static int btrfs_get_blocks_direct_write(struct extent_map **map,
- 	if (!test_bit(EXTENT_FLAG_PREALLOC, &em->flags))
- 		set_buffer_new(bh_result);
- 
--	/*
--	 * Need to update the i_size under the extent lock so buffered
--	 * readers will get the updated i_size when we unlock.
--	 */
--	if (!dio_data->overwrite && start + len > i_size_read(inode))
--		i_size_write(inode, start + len);
--
--	WARN_ON(dio_data->reserve < len);
--	dio_data->reserve -= len;
--	dio_data->unsubmitted_oe_range_end = start + len;
--	current->journal_info = dio_data;
- 	return ret;
- }
- 
-@@ -7706,7 +7687,6 @@ static int btrfs_get_blocks_direct(struct inode *inode, sector_t iblock,
- 	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
- 	struct extent_map *em;
- 	struct extent_state *cached_state = NULL;
--	struct btrfs_dio_data *dio_data = NULL;
- 	u64 start = iblock << inode->i_blkbits;
- 	u64 lockstart, lockend;
- 	u64 len = bh_result->b_size;
-@@ -7721,16 +7701,6 @@ static int btrfs_get_blocks_direct(struct inode *inode, sector_t iblock,
- 	lockstart = start;
- 	lockend = start + len - 1;
- 
--	if (current->journal_info) {
--		/*
--		 * Need to pull our outstanding extents and set journal_info to NULL so
--		 * that anything that needs to check if there's a transaction doesn't get
--		 * confused.
--		 */
--		dio_data = current->journal_info;
--		current->journal_info = NULL;
--	}
--
- 	/*
- 	 * If this errors out it's because we couldn't invalidate pagecache for
- 	 * this range and we need to fallback to buffered.
-@@ -7770,7 +7740,7 @@ static int btrfs_get_blocks_direct(struct inode *inode, sector_t iblock,
- 
- 	if (create) {
- 		ret = btrfs_get_blocks_direct_write(&em, bh_result, inode,
--						    dio_data, start, len);
-+						    start, len);
- 		if (ret < 0)
- 			goto unlock_err;
- 
-@@ -7808,8 +7778,6 @@ static int btrfs_get_blocks_direct(struct inode *inode, sector_t iblock,
- 	clear_extent_bit(&BTRFS_I(inode)->io_tree, lockstart, lockend,
- 			 unlock_bits, 1, 0, &cached_state);
- err:
--	if (dio_data)
--		current->journal_info = dio_data;
- 	return ret;
- }
- 
-@@ -8498,21 +8466,6 @@ void btrfs_submit_direct(struct bio *dio_bio, struct inode *inode,
- 		dip->subio_endio = btrfs_subio_endio_read;
- 	}
- 
--	/*
--	 * Reset the range for unsubmitted ordered extents (to a 0 length range)
--	 * even if we fail to submit a bio, because in such case we do the
--	 * corresponding error handling below and it must not be done a second
--	 * time by btrfs_direct_IO().
--	 */
--	if (write) {
--		struct btrfs_dio_data *dio_data = current->journal_info;
--
--		dio_data->unsubmitted_oe_range_end = dip->logical_offset +
--			dip->bytes;
--		dio_data->unsubmitted_oe_range_start =
--			dio_data->unsubmitted_oe_range_end;
--	}
--
- 	ret = btrfs_submit_direct_hook(dip);
- 	if (!ret)
- 		return;
-@@ -8598,7 +8551,6 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 	struct file *file = iocb->ki_filp;
- 	struct inode *inode = file->f_mapping->host;
- 	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
--	struct btrfs_dio_data dio_data = { 0 };
- 	struct extent_changeset *data_reserved = NULL;
- 	loff_t offset = iocb->ki_pos;
- 	size_t count = 0;
-@@ -8631,7 +8583,6 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 		 * not unlock the i_mutex at this case.
- 		 */
- 		if (offset + count <= inode->i_size) {
--			dio_data.overwrite = 1;
- 			inode_unlock(inode);
- 			relock = true;
- 		} else if (iocb->ki_flags & IOCB_NOWAIT) {
-@@ -8643,16 +8594,6 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 		if (ret)
- 			goto out;
- 
--		/*
--		 * We need to know how many extents we reserved so that we can
--		 * do the accounting properly if we go over the number we
--		 * originally calculated.  Abuse current->journal_info for this.
--		 */
--		dio_data.reserve = round_up(count,
--					    fs_info->sectorsize);
--		dio_data.unsubmitted_oe_range_start = (u64)offset;
--		dio_data.unsubmitted_oe_range_end = (u64)offset;
--		current->journal_info = &dio_data;
- 		down_read(&BTRFS_I(inode)->dio_sem);
- 	} else if (test_bit(BTRFS_INODE_READDIO_NEED_LOCK,
- 				     &BTRFS_I(inode)->runtime_flags)) {
-@@ -8667,25 +8608,7 @@ static ssize_t btrfs_direct_IO(struct kiocb *iocb, struct iov_iter *iter)
- 				   btrfs_submit_direct, flags);
- 	if (iov_iter_rw(iter) == WRITE) {
- 		up_read(&BTRFS_I(inode)->dio_sem);
--		current->journal_info = NULL;
--		if (ret < 0 && ret != -EIOCBQUEUED) {
--			if (dio_data.reserve)
--				btrfs_delalloc_release_space(inode, data_reserved,
--					offset, dio_data.reserve, true);
--			/*
--			 * On error we might have left some ordered extents
--			 * without submitting corresponding bios for them, so
--			 * cleanup them up to avoid other tasks getting them
--			 * and waiting for them to complete forever.
--			 */
--			if (dio_data.unsubmitted_oe_range_start <
--			    dio_data.unsubmitted_oe_range_end)
--				btrfs_update_ordered_extent(inode,
--					dio_data.unsubmitted_oe_range_start,
--					dio_data.unsubmitted_oe_range_end -
--					dio_data.unsubmitted_oe_range_start,
--					false);
--		} else if (ret >= 0 && (size_t)ret < count)
-+		if (ret >= 0 && (size_t)ret < count)
- 			btrfs_delalloc_release_space(inode, data_reserved,
- 					offset, count - (size_t)ret, true);
- 		btrfs_delalloc_release_extents(BTRFS_I(inode), count, false);
--- 
-2.16.4
+> +		 * Hence when we are woken here, it may be the head of the log
+> +		 * that has moved rather than the tail. In that case, the tail
+> +		 * didn't move and there won't be space available until the AIL
+> +		 * push target is updated and the tail pushed again. If the AIL
+> +		 * is already pushed to it's target, we will hang here until
 
+Nit: "its", not "it is".
+
+Other than that I think I can tell what this is doing now. :)
+
+--D
+
+> +		 * something else updates the AIL push target.
+> +		 *
+> +		 * Hence if there isn't space to wake the first waiter on the
+> +		 * grant head, we need to push the AIL again to ensure the
+> +		 * target reflects the current log tail and log head position
+> +		 * before we wait for the tail to move again.
+> +		 */
+>  		need_bytes = xlog_ticket_reservation(log, head, tic);
+> -		if (*free_bytes < need_bytes)
+> +		if (*free_bytes < need_bytes) {
+> +			if (!woken_task)
+> +				xlog_grant_push_ail(log, need_bytes);
+>  			return false;
+> +		}
+>  
+>  		*free_bytes -= need_bytes;
+>  		trace_xfs_log_grant_wake_up(log, tic);
+>  		wake_up_process(tic->t_task);
+> +		woken_task = true;
+>  	}
+>  
+>  	return true;
+> -- 
+> 2.23.0.rc1
+> 
