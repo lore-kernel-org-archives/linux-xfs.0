@@ -2,113 +2,216 @@ Return-Path: <SRS0=/Wyv=XA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 70021C43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:17:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D6BCC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A879B2070C
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:17:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A477B20825
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:10 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DF6vWxUT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391112AbfIEWR7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 18:17:59 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:35566 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2388847AbfIEWR6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:17:58 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6B2113623B7;
-        Fri,  6 Sep 2019 08:17:56 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i604h-0002iC-DP; Fri, 06 Sep 2019 08:17:55 +1000
-Date:   Fri, 6 Sep 2019 08:17:55 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/8] xfs: factor callbacks out of xlog_state_do_callback()
-Message-ID: <20190905221755.GI1119@dread.disaster.area>
-References: <20190905084717.30308-1-david@fromorbit.com>
- <20190905084717.30308-6-david@fromorbit.com>
- <20190905153907.GF2229799@magnolia>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190905153907.GF2229799@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=7-415B0cAAAA:8 a=olxPpyrDeu9dZ1i6yc4A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        id S2391171AbfIEWTJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 18:19:09 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:58914 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391119AbfIEWTJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:19:09 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ8Cd049693
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : in-reply-to : references; s=corp-2019-08-05;
+ bh=W0Rpav6y4yCAYNHpiuMqANcngv6yK3uru8QBwssvXGc=;
+ b=DF6vWxUTzKlbjx8Wk/Mdy6fPaORj2IjCc2PCFVZaTv0ERoMxnlj/u27TgL3HEYI5JYPE
+ D77geW5zFr/uG5dN50J05/GlOHNRQRsptZ0Lk7eCWMz+Nuj35th0xftOVi1WDSuNgai8
+ skpD97aFxxvXez5/8WBinvKLjLs3VsF/AT8F04NY6WOr7zp22EmkgNwHp5sq37a67dpk
+ oyeDvaFXq4YdKS+Ln7FelDFKCqOzzN2nrQVW6S/w+Bz7iDhQXj4toi+GiNx78Wkr0dgE
+ ZtJ9cowxueutklZfLM/zJqqgAS/zHv57zyDTzHHxh4Ktz41HVfyPexLBaFkO9b2DfIvk UQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2uuarc81yg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:08 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MIOhf101602
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:18:49 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2uu1b946k5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:18:49 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x85MInkU001642
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:18:49 GMT
+Received: from localhost.localdomain (/67.1.183.122)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 05 Sep 2019 15:18:48 -0700
+From:   Allison Collins <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v3 16/19] xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+Date:   Thu,  5 Sep 2019 15:18:34 -0700
+Message-Id: <20190905221837.17388-17-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190905221837.17388-1-allison.henderson@oracle.com>
+References: <20190905221837.17388-1-allison.henderson@oracle.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909050207
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909050207
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 05, 2019 at 08:39:07AM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 05, 2019 at 06:47:14PM +1000, Dave Chinner wrote:
-> > @@ -2795,31 +2831,13 @@ xlog_state_do_callback(
-> >  			} else
-> >  				ioerrors++;
-> >  
-> > -			spin_unlock(&log->l_icloglock);
-> > -
-> >  			/*
-> > -			 * Keep processing entries in the callback list until
-> > -			 * we come around and it is empty.  We need to
-> > -			 * atomically see that the list is empty and change the
-> > -			 * state to DIRTY so that we don't miss any more
-> > -			 * callbacks being added.
-> > +			 * Running callbacks will drop the icloglock which means
-> > +			 * we'll have to run at least one more complete loop.
-> >  			 */
-> > -			spin_lock(&iclog->ic_callback_lock);
-> > -			while (!list_empty(&iclog->ic_callbacks)) {
-> > -				LIST_HEAD(tmp);
-> > +			cycled_icloglock = true;
-> > +			xlog_state_do_iclog_callbacks(log, iclog, aborted);
-> >  
-> > -				list_splice_init(&iclog->ic_callbacks, &tmp);
-> > -
-> > -				spin_unlock(&iclog->ic_callback_lock);
-> > -				xlog_cil_process_committed(&tmp, aborted);
-> > -				spin_lock(&iclog->ic_callback_lock);
-> > -			}
-> > -
-> > -			loopdidcallbacks++;
-> > -			funcdidcallbacks++;
-> > -
-> > -			spin_lock(&log->l_icloglock);
-> > -			spin_unlock(&iclog->ic_callback_lock);
-> >  			if (!(iclog->ic_state & XLOG_STATE_IOERROR))
-> >  				iclog->ic_state = XLOG_STATE_DIRTY;
-> >  
-> > @@ -2835,6 +2853,8 @@ xlog_state_do_callback(
-> >  			iclog = iclog->ic_next;
-> >  		} while (first_iclog != iclog);
-> >  
-> > +		funcdidcallbacks += cycled_icloglock;
-> 
-> funcdidcallbacks is effectively a yes/no state flag, so maybe it should
-> be turned into a boolean and this statement becomes:
-> 
-> 	funcdidcallbacks |= cycled_icloglock;
+From: Allison Henderson <allison.henderson@oracle.com>
 
-Fixed. I renamed it to did_callbacks at the same time, just to be a
-little less eye-bleedy...
+These routines set up set and start a new deferred attribute
+operation.  These functions are meant to be called by other
+code needing to initiate a deferred attribute operation.
+New helper function xfs_attr_item_init also added
 
-> Though I guess we're not at huge risk of integer overflow and it
-> controls whether or not we run a debugging check so maybe we don't care?
+Signed-off-by: Allison Henderson <allison.henderson@oracle.com>
+Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++++
+ fs/xfs/libxfs/xfs_attr.h |  5 +++
+ 2 files changed, 90 insertions(+)
 
-All that really matters is we don't need a branch to calculate it :P
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 7680789..f502396 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -25,6 +25,7 @@
+ #include "xfs_trans_space.h"
+ #include "xfs_trace.h"
+ #include "xfs_attr_item.h"
++#include "xfs_attr.h"
+ 
+ /*
+  * xfs_attr.c
+@@ -622,6 +623,70 @@ xfs_attr_set(
+ 	goto out_unlock;
+ }
+ 
++STATIC int
++xfs_attr_item_init(
++	struct xfs_inode	*dp,		/* inode for attr operation */
++	struct xfs_trans	*tp,		/* transaction for attr op */
++	struct xfs_name		*name,		/* attr name, len and flags */
++	const unsigned char	*value,		/* attr value */
++	unsigned int		valuelen,	/* attr value len */
++	int			op_flags,	/* op flag (set or remove) */
++	struct xfs_attr_item	**attr)		/* new xfs_attr_item */
++{
++
++	struct xfs_attr_item	*new;
++	char			*name_value;
++
++	/*
++	 * All set operations must have a name but not necessarily a value.
++	 */
++	if (!name->len) {
++		ASSERT(0);
++		return -EINVAL;
++	}
++
++	new = kmem_alloc_large(XFS_ATTR_ITEM_SIZEOF(name->len, valuelen),
++			 KM_NOFS);
++	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
++	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(name->len, valuelen));
++	new->xattri_ip = dp;
++	new->xattri_op_flags = op_flags;
++	new->xattri_name_len = name->len;
++	new->xattri_value_len = valuelen;
++	new->xattri_flags = name->type;
++	memcpy(&name_value[0], name->name, name->len);
++	new->xattri_name = name_value;
++	new->xattri_value = name_value + name->len;
++
++	if (valuelen > 0)
++		memcpy(&name_value[name->len], value, valuelen);
++
++	*attr = new;
++	return 0;
++}
++
++/* Sets an attribute for an inode as a deferred operation */
++int
++xfs_attr_set_deferred(
++	struct xfs_inode	*dp,
++	struct xfs_trans	*tp,
++	struct xfs_name		*name,
++	const unsigned char	*value,
++	unsigned int		valuelen)
++{
++	struct xfs_attr_item	*new;
++	int			error = 0;
++
++	error = xfs_attr_item_init(dp, tp, name, value, valuelen,
++				 XFS_ATTR_OP_FLAGS_SET, &new);
++	if (error)
++		return error;
++
++	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
++}
++
+ /*
+  * Generic handler routine to remove a name from an attribute list.
+  * Transitions attribute list from Btree to shortform as necessary.
+@@ -703,6 +768,26 @@ xfs_attr_remove(
+ 	return error;
+ }
+ 
++/* Removes an attribute for an inode as a deferred operation */
++int
++xfs_attr_remove_deferred(
++	struct xfs_inode        *dp,
++	struct xfs_trans	*tp,
++	struct xfs_name		*name)
++{
++
++	struct xfs_attr_item *new;
++
++	int error  = xfs_attr_item_init(dp, tp, name, NULL, 0,
++				  XFS_ATTR_OP_FLAGS_REMOVE, &new);
++	if (error)
++		return error;
++
++	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
++
++	return 0;
++}
++
+ /*========================================================================
+  * External routines when attribute list is inside the inode
+  *========================================================================*/
+diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+index 1e0c25e..0dfec5c 100644
+--- a/fs/xfs/libxfs/xfs_attr.h
++++ b/fs/xfs/libxfs/xfs_attr.h
+@@ -190,5 +190,10 @@ bool xfs_attr_namecheck(const void *name, size_t length);
+ int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
+ 		       struct xfs_name *name);
+ int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
++int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
++			  struct xfs_name *name, const unsigned char *value,
++			  unsigned int valuelen);
++int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
++			    struct xfs_name *name);
+ 
+ #endif	/* __XFS_ATTR_H__ */
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
