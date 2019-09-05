@@ -7,29 +7,29 @@ X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6FE0EC0030D
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:07:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C0C8C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:07:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D00B92070C
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:07:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 762D22082E
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 15:07:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390284AbfIEPHL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 11:07:11 -0400
-Received: from mx2.suse.de ([195.135.220.15]:56408 "EHLO mx1.suse.de"
+        id S2390299AbfIEPHP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 11:07:15 -0400
+Received: from mx2.suse.de ([195.135.220.15]:56592 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2390255AbfIEPHK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Sep 2019 11:07:10 -0400
+        id S2390297AbfIEPHP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 5 Sep 2019 11:07:15 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 7F560B635;
-        Thu,  5 Sep 2019 15:07:09 +0000 (UTC)
+        by mx1.suse.de (Postfix) with ESMTP id BCD29B647;
+        Thu,  5 Sep 2019 15:07:13 +0000 (UTC)
 From:   Goldwyn Rodrigues <rgoldwyn@suse.de>
 To:     linux-fsdevel@vger.kernel.org
 Cc:     linux-btrfs@vger.kernel.org, darrick.wong@oracle.com, hch@lst.de,
         linux-xfs@vger.kernel.org, Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: [PATCH 07/15] fs: Export generic_file_buffered_read()
-Date:   Thu,  5 Sep 2019 10:06:42 -0500
-Message-Id: <20190905150650.21089-8-rgoldwyn@suse.de>
+Subject: [PATCH 09/15] btrfs: Carve out btrfs_get_extent_map_write() out of btrfs_get_blocks_write()
+Date:   Thu,  5 Sep 2019 10:06:44 -0500
+Message-Id: <20190905150650.21089-10-rgoldwyn@suse.de>
 X-Mailer: git-send-email 2.16.4
 In-Reply-To: <20190905150650.21089-1-rgoldwyn@suse.de>
 References: <20190905150650.21089-1-rgoldwyn@suse.de>
@@ -40,78 +40,102 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 
-Export generic_file_buffered_read() to be used to
-supplement incomplete direct reads.
-
-While we are at it, correct the comments and variable names.
+This makes btrfs_get_extent_map_write() independent of Direct
+I/O code.
 
 Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
 ---
- include/linux/fs.h |  2 ++
- mm/filemap.c       | 13 +++++++------
- 2 files changed, 9 insertions(+), 6 deletions(-)
+ fs/btrfs/ctree.h |  2 ++
+ fs/btrfs/inode.c | 40 +++++++++++++++++++++++++++-------------
+ 2 files changed, 29 insertions(+), 13 deletions(-)
 
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 997a530ff4e9..26d827434060 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -3041,6 +3041,8 @@ extern int generic_file_rw_checks(struct file *file_in, struct file *file_out);
- extern int generic_copy_file_checks(struct file *file_in, loff_t pos_in,
- 				    struct file *file_out, loff_t pos_out,
- 				    size_t *count, unsigned int flags);
-+extern ssize_t generic_file_buffered_read(struct kiocb *iocb,
-+		struct iov_iter *to, ssize_t already_read);
- extern ssize_t generic_file_read_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t __generic_file_write_iter(struct kiocb *, struct iov_iter *);
- extern ssize_t generic_file_write_iter(struct kiocb *, struct iov_iter *);
-diff --git a/mm/filemap.c b/mm/filemap.c
-index d0cf700bf201..2121ae01eae8 100644
---- a/mm/filemap.c
-+++ b/mm/filemap.c
-@@ -2014,7 +2014,7 @@ static void shrink_readahead_size_eio(struct file *filp,
-  * generic_file_buffered_read - generic file read routine
-  * @iocb:	the iocb to read
-  * @iter:	data destination
-- * @written:	already copied
-+ * @copied:	already copied
-  *
-  * This is a generic file read routine, and uses the
-  * mapping->a_ops->readpage() function for the actual low-level stuff.
-@@ -2023,11 +2023,11 @@ static void shrink_readahead_size_eio(struct file *filp,
-  * of the logic when it comes to error handling etc.
-  *
-  * Return:
-- * * total number of bytes copied, including those the were already @written
-+ * * total number of bytes copied, including those the were @copied
-  * * negative error code if nothing was copied
-  */
--static ssize_t generic_file_buffered_read(struct kiocb *iocb,
--		struct iov_iter *iter, ssize_t written)
-+ssize_t generic_file_buffered_read(struct kiocb *iocb,
-+		struct iov_iter *iter, ssize_t copied)
- {
- 	struct file *filp = iocb->ki_filp;
- 	struct address_space *mapping = filp->f_mapping;
-@@ -2168,7 +2168,7 @@ static ssize_t generic_file_buffered_read(struct kiocb *iocb,
- 		prev_offset = offset;
- 
- 		put_page(page);
--		written += ret;
-+		copied += ret;
- 		if (!iov_iter_count(iter))
- 			goto out;
- 		if (ret < nr) {
-@@ -2276,8 +2276,9 @@ static ssize_t generic_file_buffered_read(struct kiocb *iocb,
- 
- 	*ppos = ((loff_t)index << PAGE_SHIFT) + offset;
- 	file_accessed(filp);
--	return written ? written : error;
-+	return copied ? copied : error;
+diff --git a/fs/btrfs/ctree.h b/fs/btrfs/ctree.h
+index 5ca3a365e639..c25dfd8e619b 100644
+--- a/fs/btrfs/ctree.h
++++ b/fs/btrfs/ctree.h
+@@ -3168,6 +3168,8 @@ struct inode *btrfs_iget_path(struct super_block *s, struct btrfs_key *location,
+ 			      struct btrfs_path *path);
+ struct inode *btrfs_iget(struct super_block *s, struct btrfs_key *location,
+ 			 struct btrfs_root *root, int *was_new);
++int btrfs_get_extent_map_write(struct extent_map **map, struct buffer_head *bh,
++		struct inode *inode, u64 start, u64 len);
+ struct extent_map *btrfs_get_extent(struct btrfs_inode *inode,
+ 				    struct page *page, size_t pg_offset,
+ 				    u64 start, u64 end, int create);
+diff --git a/fs/btrfs/inode.c b/fs/btrfs/inode.c
+index 258bacefdf5f..24895793fd91 100644
+--- a/fs/btrfs/inode.c
++++ b/fs/btrfs/inode.c
+@@ -7592,11 +7592,10 @@ static int btrfs_get_blocks_direct_read(struct extent_map *em,
+ 	return 0;
  }
-+EXPORT_SYMBOL_GPL(generic_file_buffered_read);
  
- /**
-  * generic_file_read_iter - generic filesystem read routine
+-static int btrfs_get_blocks_direct_write(struct extent_map **map,
+-					 struct buffer_head *bh_result,
+-					 struct inode *inode,
+-					 struct btrfs_dio_data *dio_data,
+-					 u64 start, u64 len)
++int btrfs_get_extent_map_write(struct extent_map **map,
++		struct buffer_head *bh,
++		struct inode *inode,
++		u64 start, u64 len)
+ {
+ 	struct btrfs_fs_info *fs_info = btrfs_sb(inode->i_sb);
+ 	struct extent_map *em = *map;
+@@ -7650,22 +7649,38 @@ static int btrfs_get_blocks_direct_write(struct extent_map **map,
+ 			 */
+ 			btrfs_free_reserved_data_space_noquota(inode, start,
+ 							       len);
+-			goto skip_cow;
++			/* skip COW */
++			goto out;
+ 		}
+ 	}
+ 
+ 	/* this will cow the extent */
+-	len = bh_result->b_size;
++	if (bh)
++		len = bh->b_size;
+ 	free_extent_map(em);
+ 	*map = em = btrfs_new_extent_direct(inode, start, len);
+-	if (IS_ERR(em)) {
+-		ret = PTR_ERR(em);
+-		goto out;
+-	}
++	if (IS_ERR(em))
++		return PTR_ERR(em);
++out:
++	return ret;
++}
+ 
++static int btrfs_get_blocks_direct_write(struct extent_map **map,
++					 struct buffer_head *bh_result,
++					 struct inode *inode,
++					 struct btrfs_dio_data *dio_data,
++					 u64 start, u64 len)
++{
++	int ret;
++	struct extent_map *em;
++
++	ret = btrfs_get_extent_map_write(map, bh_result, inode,
++			start, len);
++	if (ret < 0)
++		return ret;
++	em = *map;
+ 	len = min(len, em->len - (start - em->start));
+ 
+-skip_cow:
+ 	bh_result->b_blocknr = (em->block_start + (start - em->start)) >>
+ 		inode->i_blkbits;
+ 	bh_result->b_size = len;
+@@ -7686,7 +7701,6 @@ static int btrfs_get_blocks_direct_write(struct extent_map **map,
+ 	dio_data->reserve -= len;
+ 	dio_data->unsubmitted_oe_range_end = start + len;
+ 	current->journal_info = dio_data;
+-out:
+ 	return ret;
+ }
+ 
 -- 
 2.16.4
 
