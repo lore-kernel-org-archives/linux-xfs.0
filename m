@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0751C0030B
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CD47C43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2308B20825
+	by mail.kernel.org (Postfix) with ESMTP id 8CD232070C
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:12 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TfdSK76N"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oEOEJBL7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391135AbfIEWTK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 18:19:10 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33162 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391120AbfIEWTK (ORCPT
+        id S2388847AbfIEWTL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 18:19:11 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:39020 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391142AbfIEWTK (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:19:10 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ7bA078093
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ8Vn084661
         for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2019-08-05;
- bh=SxZoZ+Um1+fEIDu1FefnRlC0gz4cDKlPGBaqgrhh0oI=;
- b=TfdSK76NYmItLBH/52WiwroTZpcK8MY+TselLFaPcVJ/CU2KZtRHTFAhLVOGz83JKwEw
- jcyaMVreDQ3gHW2GjsTzAB7ZMvPwYqZJAhzrs5MZxnN+dHVbVvbtQd8lEB+V48v6Yj1f
- DEycuuOnATy1iYEtKPtomYpRjXrPFuTJ0S2URng11LJU67bG7c1MRXgYQE7u1k3jvHe4
- b3gS3xMUZB6eN+13yrcbRxrvkDcTbfO3q1ni0d0gSAQEK36ENxXbeEjeO4IXxLnhzVlm
- IUJdaxWQFSSnBNGtSEV7istf6mM3LVoaij6kC+YuTr31IOUR7WP+FlSjKE/gkT56wqOx cA== 
+ bh=VwxFcv2X5X6kYJK6h2ON69zCvDMdPPyN7lEpiedzQqg=;
+ b=oEOEJBL7VawSI4mmc9R++sO2ME2DzIxvf7BzKbBYRDKhIDI0gOUYZhOnZxw9320CfIT3
+ facpIlYUHfx7FHneptcmpydsmlOnQbMrf8LhOSylszdCxpQ7tgXEpWwONqmL3BmFnMD9
+ J8zSM7X/m7OpqZnBHv5CBbdjXjyA65nd+hK7Iz0ARZ3X/3E/VpFzTmADooy0/O2bIhjX
+ 7c/WWW3FRldx5F77IboNqD7pgj4KCfiqHaBLRSGd96leLb+0rytuiQvqd5YArfO6g5yF
+ +UuCGPzbe2kbZUQ3KKMKKfdBijra/tmjwkE1xNu/0KZtiFafUP6pI0U9EuxPQA2FbZta gA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2uuaqj02mw-1
+        by userp2130.oracle.com with ESMTP id 2uuaqxr2e0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:08 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MIPrQ101777
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:04 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2uu1b946sk-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MIONi101679
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:05 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2uu1b946u3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:04 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x85MInul008743
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:18:49 GMT
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x85MJ3LU011682
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:04 GMT
 Received: from localhost.localdomain (/67.1.183.122)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 15:18:49 -0700
+        with ESMTP ; Thu, 05 Sep 2019 15:19:03 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 18/19] xfs: Enable delayed attributes
-Date:   Thu,  5 Sep 2019 15:18:36 -0700
-Message-Id: <20190905221837.17388-19-allison.henderson@oracle.com>
+Subject: [PATCH v2 13/21] xfsprogs: Add delay context to xfs_da_args
+Date:   Thu,  5 Sep 2019 15:18:47 -0700
+Message-Id: <20190905221855.17555-14-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190905221837.17388-1-allison.henderson@oracle.com>
-References: <20190905221837.17388-1-allison.henderson@oracle.com>
+In-Reply-To: <20190905221855.17555-1-allison.henderson@oracle.com>
+References: <20190905221855.17555-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
@@ -73,88 +73,63 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Finally enable delayed attributes in xfs_attr_set and
-xfs_attr_remove.  We only do this for new filesystems that have
-the feature bit enabled because we cant add new log entries to
-older filesystems
+This patch adds a new struct xfs_delay_context, which we
+will use to keep track of the current state of a delayed
+attribute operation.
+
+The flags member is used to track various operations that
+are in progress so that we know not to repeat them, and
+resume where we left off before EAGAIN was returned to
+cycle out the transaction.  Other members take the place
+of local variables that need to retain their values
+across multiple function recalls.
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr.c | 40 ++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 38 insertions(+), 2 deletions(-)
+ libxfs/xfs_da_btree.h | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
-diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
-index f502396..1040479 100644
---- a/fs/xfs/libxfs/xfs_attr.c
-+++ b/fs/xfs/libxfs/xfs_attr.c
-@@ -532,6 +532,7 @@ xfs_attr_set(
- 	int			valuelen)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_sb		*sbp = &mp->m_sb;
- 	struct xfs_da_args	args;
- 	struct xfs_trans_res	tres;
- 	int			rsvd = (name->type & ATTR_ROOT) != 0;
-@@ -590,7 +591,34 @@ xfs_attr_set(
- 		goto out_trans_cancel;
+diff --git a/libxfs/xfs_da_btree.h b/libxfs/xfs_da_btree.h
+index eb3eb95..11fe9da 100644
+--- a/libxfs/xfs_da_btree.h
++++ b/libxfs/xfs_da_btree.h
+@@ -42,6 +42,28 @@ enum xfs_dacmp {
+ 	XFS_CMP_CASE		/* names are same but differ in case */
+ };
  
- 	xfs_trans_ijoin(args.trans, dp, 0);
--	error = xfs_attr_set_args(&args);
-+	if (xfs_sb_version_hasdelattr(sbp)) {
-+		error = xfs_has_attr(&args);
++#define		XFS_DC_INIT		0x01 /* Init delay info */
++#define		XFS_DC_FOUND_LBLK	0x02 /* We found leaf blk for attr */
++#define		XFS_DC_FOUND_NBLK	0x04 /* We found node blk for attr */
++#define		XFS_DC_ALLOC_LEAF	0x08 /* We are allocating leaf blocks */
++#define		XFS_DC_ALLOC_NODE	0x10 /* We are allocating node blocks */
++#define		XFS_DC_RM_LEAF_BLKS	0x20 /* We are removing leaf blocks */
++#define		XFS_DC_RM_NODE_BLKS	0x40 /* We are removing node blocks */
 +
-+		if (error == -EEXIST) {
-+			if (name->type & ATTR_CREATE)
-+				goto out_trans_cancel;
-+			else
-+				name->type |= ATTR_REPLACE;
-+		}
++/*
++ * Context used for keeping track of delayed attribute operations
++ */
++struct xfs_delay_context {
++	unsigned int		flags;
++	struct xfs_buf		*leaf_bp;
++	struct xfs_bmbt_irec	map;
++	xfs_dablk_t		lblkno;
++	xfs_fileoff_t		lfileoff;
++	int			blkcnt;
++	struct xfs_da_state	*state;
++	struct xfs_da_state_blk *blk;
++};
 +
-+		if (error == -ENOATTR && (name->type & ATTR_REPLACE))
-+			goto out_trans_cancel;
-+
-+		if (name->type & ATTR_REPLACE) {
-+			name->type &= ~ATTR_REPLACE;
-+			error = xfs_attr_remove_deferred(dp, args.trans, name);
-+			if (error)
-+				goto out_trans_cancel;
-+
-+			name->type |= ATTR_CREATE;
-+		}
-+
-+		error = xfs_attr_set_deferred(dp, args.trans, name, value,
-+					      valuelen);
-+	} else {
-+		error = xfs_attr_set_args(&args);
-+	}
-+
- 	if (error)
- 		goto out_trans_cancel;
- 	if (!args.trans) {
-@@ -697,6 +725,7 @@ xfs_attr_remove(
- 	struct xfs_name		*name)
- {
- 	struct xfs_mount	*mp = dp->i_mount;
-+	struct xfs_sb		*sbp = &mp->m_sb;
- 	struct xfs_da_args	args;
- 	int			error;
+ /*
+  * Structure to ease passing around component names.
+  */
+@@ -69,6 +91,7 @@ typedef struct xfs_da_args {
+ 	int		rmtvaluelen2;	/* remote attr value length in bytes */
+ 	int		op_flags;	/* operation flags */
+ 	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
++	struct xfs_delay_context  dc;	/* context used for delay attr ops */
+ } xfs_da_args_t;
  
-@@ -738,7 +767,14 @@ xfs_attr_remove(
- 	 */
- 	xfs_trans_ijoin(args.trans, dp, 0);
- 
--	error = xfs_attr_remove_args(&args);
-+	error = xfs_has_attr(&args);
-+	if (error == -ENOATTR)
-+		goto out;
-+
-+	if (xfs_sb_version_hasdelattr(sbp))
-+		error = xfs_attr_remove_deferred(dp, args.trans, name);
-+	else
-+		error = xfs_attr_remove_args(&args);
- 	if (error)
- 		goto out;
- 
+ /*
 -- 
 2.7.4
 
