@@ -2,84 +2,129 @@ Return-Path: <SRS0=/Wyv=XA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A77AC3A5A5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D67DCC3A5AC
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 08:47:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4068C2070C
+	by mail.kernel.org (Postfix) with ESMTP id B9B5520820
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 08:47:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730710AbfIEIrZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 04:47:25 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:41091 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1731881AbfIEIrZ (ORCPT
+        id S1731881AbfIEIr0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 04:47:26 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44155 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1732495AbfIEIrZ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 04:47:25 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 445E936309C
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4108D43D717
         for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2019 18:47:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5nQE-0004Ca-Pl
+        id 1i5nQE-0004Ce-S0
         for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:18 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5nQE-0007xl-LN
+        id 1i5nQE-0007xq-QE
         for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:18 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 1/8 v2] xfs: log race fixes and cleanups
-Date:   Thu,  5 Sep 2019 18:47:09 +1000
-Message-Id: <20190905084717.30308-1-david@fromorbit.com>
+Subject: [PATCH 2/8] xfs: fix missed wakeup on l_flush_wait
+Date:   Thu,  5 Sep 2019 18:47:11 +1000
+Message-Id: <20190905084717.30308-3-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
+In-Reply-To: <20190905084717.30308-1-david@fromorbit.com>
+References: <20190905084717.30308-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=J70Eh1EUuV4A:10 a=VwQbUJbxAAAA:8 a=6b9XNPVGxMwJ31f6U04A:9
-        a=AjGcO6oz07-iQ99wixmX:22
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=fwyzoN0nAAAA:8
+        a=FOH2dFAWAAAA:8 a=20KFwNOVAAAA:8 a=TIbIJjZQYPkjqnKAcywA:9
+        a=Sc3RvPAMVtkGz6dGeUiH:22 a=i3VuKzQdj-NEYjvDI-p3:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+From: Rik van Riel <riel@surriel.com>
 
-This is a followup to the original patchset here:
+The code in xlog_wait uses the spinlock to make adding the task to
+the wait queue, and setting the task state to UNINTERRUPTIBLE atomic
+with respect to the waker.
 
-https://lore.kernel.org/linux-xfs/20190905072856.GE1119@dread.disaster.area/T/#m8ae6bdccbf4248b5d219ad40ab5caa92f9e0a979
+Doing the wakeup after releasing the spinlock opens up the following
+race condition:
 
-It is aimed at solving the hangs occurring in generic/530 and
-cleaning up the code around the iclog completion. This version is
-largely just changes for review comments, though there is a new
-patch (#3) to address what is probably the underlying cause of
-all the issues.
+Task 1					task 2
+add task to wait queue
+					wake up task
+set task state to UNINTERRUPTIBLE
 
-Chandan has tested the new unbound workqueue change and it solved
-the hang on his test machine, passes all the log group tests on my
-test machines.
+This issue was found through code inspection as a result of kworkers
+being observed stuck in UNINTERRUPTIBLE state with an empty
+wait queue. It is rare and largely unreproducable.
 
-Cheers,
+Simply moving the spin_unlock to after the wake_up_all results
+in the waker not being able to see a task on the waitqueue before
+it has set its state to UNINTERRUPTIBLE.
 
-Dave.
+This bug dates back to the conversion of this code to generic
+waitqueue infrastructure from a counting semaphore back in 2008
+which didn't place the wakeups consistently w.r.t. to the relevant
+spin locks.
 
-Version 3:
-- add patch to yeild the CPU in AGI unlinked list processing and to
-  allow the CIL push work to be done on any CPU so it doesn't get
-  stuck on a CPU that isn't being yeilded.
-- Added comment to explain the AIL push added to an unsuccessful
-  wakeup in xlog_grant_head_wake()
-- removed "did callbacks" parameter from
-  xlog_state_callback_check_state and cleaned up comments
-- fixed detection of the icloglock being dropped during the iclog
-  state scan.
-- fixed unintended logic change with iclogs in IOERROR state when
-  factoring out state processing
-- other small whitespace and cleanup bits.
+[dchinner: Also fix a similar issue in the shutdown path on
+xc_commit_wait. Update commit log with more details of the issue.]
 
+Fixes: d748c62367eb ("[XFS] Convert l_flushsema to a sv_t")
+Reported-by: Chris Mason <clm@fb.com>
+Signed-off-by: Rik van Riel <riel@surriel.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/xfs_log.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index 5e21450fb8f5..8380ed065608 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -2644,7 +2644,6 @@ xlog_state_do_callback(
+ 	int		   funcdidcallbacks; /* flag: function did callbacks */
+ 	int		   repeats;	/* for issuing console warnings if
+ 					 * looping too many times */
+-	int		   wake = 0;
+ 
+ 	spin_lock(&log->l_icloglock);
+ 	first_iclog = iclog = log->l_iclog;
+@@ -2840,11 +2839,9 @@ xlog_state_do_callback(
+ #endif
+ 
+ 	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR))
+-		wake = 1;
+-	spin_unlock(&log->l_icloglock);
+-
+-	if (wake)
+ 		wake_up_all(&log->l_flush_wait);
++
++	spin_unlock(&log->l_icloglock);
+ }
+ 
+ 
+@@ -3944,7 +3941,9 @@ xfs_log_force_umount(
+ 	 * item committed callback functions will do this again under lock to
+ 	 * avoid races.
+ 	 */
++	spin_lock(&log->l_cilp->xc_push_lock);
+ 	wake_up_all(&log->l_cilp->xc_commit_wait);
++	spin_unlock(&log->l_cilp->xc_push_lock);
+ 	xlog_state_do_callback(log, true, NULL);
+ 
+ #ifdef XFSERRORDEBUG
+-- 
+2.23.0.rc1
 
