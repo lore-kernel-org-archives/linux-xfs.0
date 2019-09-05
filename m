@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CFB4FC00306
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B99AC43140
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 115AC20825
+	by mail.kernel.org (Postfix) with ESMTP id 71A4420828
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:19:11 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QBYQmalP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bDWRPLQV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391119AbfIEWTK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S2391113AbfIEWTK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 5 Sep 2019 18:19:10 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58918 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391122AbfIEWTJ (ORCPT
+Received: from userp2130.oracle.com ([156.151.31.86]:39010 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391135AbfIEWTJ (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:19:09 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ8Hs049682
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ8hm084689
         for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
  date : message-id : in-reply-to : references; s=corp-2019-08-05;
- bh=tGJZgU+N63f56nFpLJJ64qxtAballDAylJRmFLtMlZE=;
- b=QBYQmalPftkNsBmidKJ98fZ5a/sXMyGWaqmVWxcpPS6lQUBbUqlr6S2vmBEdZD2uQGjf
- akCKxWOPvd3h7/f1DiHEn8st26zU3LDrDc5Q62LEpgExYyEENaqTD8NmLXF3oILCYNHU
- 8zaUent+1Y80EtL1sFR8AEW206PERoDqMF+V7Y/21ZvuBvZ1uhDm/8VTotyD/iixnDZR
- fgowTMAs9L/tIaNc5q8BaqezCa3rK+a/vnjAuDXc4F2celHE2agNJY96YKpSDztw5r5T
- 67VYYF1+7TeJ91AE6UkJVwrDZG3LJMc06B3wsOUgrOqFS0R+Qbd9CQhftXHsUhzvtDIT ag== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2uuarc820d-1
+ bh=UlSFkqdOpMH+nq3BChQlqSxIXpkeKNC16SLKBxmpghU=;
+ b=bDWRPLQVKitcN1X+QHr6hMlNEolDXIuNT1yT0/rXggRO9AcQfPFllMPZus53Kdngd4vx
+ D3GuLZXua1G6hwr0V01lO5Wp3YRjXuH706shizDXO6p02za0ObluFaH+Q7eVIcsEPQh6
+ FSsUAe7NcLCiiM339y/Oy0VvcyxThva3fxrn3WnkhmJpaiuOtfbIG7CRYJD5cdrZrM3R
+ aHYQhVKKrUo9uzBCWFKU4ie0lCjcFdLb7kxam3mYQ/b0HdfI06atp3nZVMpmsZ7P2D5t
+ 5w3p59Dx4lESiv8bdCNxYkfK1W1jL3kUql0Kkuq5A6NnO0qPrOpNERNz/SbYdUiri+61 AA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2uuaqxr2cv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
         for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:08 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MIeSO123392
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:05 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2uthq27v3s-1
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MIO3d101648
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:18:47 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2uu1b946ja-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:05 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x85MJ4HV032571
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:04 GMT
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:18:47 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x85MIkkx011584
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:18:46 GMT
 Received: from localhost.localdomain (/67.1.183.122)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 15:19:04 -0700
+        with ESMTP ; Thu, 05 Sep 2019 15:18:46 -0700
 From:   Allison Collins <allison.henderson@oracle.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 16/21] xfsprogs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-Date:   Thu,  5 Sep 2019 15:18:50 -0700
-Message-Id: <20190905221855.17555-17-allison.henderson@oracle.com>
+Subject: [PATCH v3 08/19] xfs: Factor up commit from xfs_attr_try_sf_addname
+Date:   Thu,  5 Sep 2019 15:18:26 -0700
+Message-Id: <20190905221837.17388-9-allison.henderson@oracle.com>
 X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190905221855.17555-1-allison.henderson@oracle.com>
-References: <20190905221855.17555-1-allison.henderson@oracle.com>
+In-Reply-To: <20190905221837.17388-1-allison.henderson@oracle.com>
+References: <20190905221837.17388-1-allison.henderson@oracle.com>
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
@@ -73,142 +73,61 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-These routines set up set and start a new deferred attribute
-operation.  These functions are meant to be called by other
-code needing to initiate a deferred attribute operation.
-New helper function xfs_attr_item_init also added
+New delayed attribute routines cannot handle transactions,
+so factor this up to the calling function.
 
 Signed-off-by: Allison Collins <allison.henderson@oracle.com>
 ---
- libxfs/xfs_attr.c | 85 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- libxfs/xfs_attr.h |  5 ++++
- 2 files changed, 90 insertions(+)
+ fs/xfs/libxfs/xfs_attr.c | 15 ++++++++-------
+ 1 file changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/libxfs/xfs_attr.c b/libxfs/xfs_attr.c
-index 919a5da..43ecf45 100644
---- a/libxfs/xfs_attr.c
-+++ b/libxfs/xfs_attr.c
-@@ -24,6 +24,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_attr_item.h"
-+#include "xfs_attr.h"
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index f27e2c6..318c543 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -227,7 +227,7 @@ xfs_attr_try_sf_addname(
+ {
  
- /*
-  * xfs_attr.c
-@@ -588,6 +589,70 @@ out_trans_cancel:
- 	goto out_unlock;
+ 	struct xfs_mount	*mp = dp->i_mount;
+-	int			error, error2;
++	int			error;
+ 
+ 	error = xfs_attr_shortform_addname(args);
+ 	if (error == -ENOSPC)
+@@ -243,9 +243,7 @@ xfs_attr_try_sf_addname(
+ 	if (mp->m_flags & XFS_MOUNT_WSYNC)
+ 		xfs_trans_set_sync(args->trans);
+ 
+-	error2 = xfs_trans_commit(args->trans);
+-	args->trans = NULL;
+-	return error ? error : error2;
++	return error;
  }
  
-+STATIC int
-+xfs_attr_item_init(
-+	struct xfs_inode	*dp,		/* inode for attr operation */
-+	struct xfs_trans	*tp,		/* transaction for attr op */
-+	struct xfs_name		*name,		/* attr name, len and flags */
-+	const unsigned char	*value,		/* attr value */
-+	unsigned int		valuelen,	/* attr value len */
-+	int			op_flags,	/* op flag (set or remove) */
-+	struct xfs_attr_item	**attr)		/* new xfs_attr_item */
-+{
-+
-+	struct xfs_attr_item	*new;
-+	char			*name_value;
-+
-+	/*
-+	 * All set operations must have a name but not necessarily a value.
-+	 */
-+	if (!name->len) {
-+		ASSERT(0);
-+		return -EINVAL;
-+	}
-+
-+	new = kmem_alloc(XFS_ATTR_ITEM_SIZEOF(name->len, valuelen),
-+			 KM_NOFS);
-+	name_value = ((char *)new) + sizeof(struct xfs_attr_item);
-+	memset(new, 0, XFS_ATTR_ITEM_SIZEOF(name->len, valuelen));
-+	new->xattri_ip = dp;
-+	new->xattri_op_flags = op_flags;
-+	new->xattri_name_len = name->len;
-+	new->xattri_value_len = valuelen;
-+	new->xattri_flags = name->type;
-+	memcpy(&name_value[0], name->name, name->len);
-+	new->xattri_name = name_value;
-+	new->xattri_value = name_value + name->len;
-+
-+	if (valuelen > 0)
-+		memcpy(&name_value[name->len], value, valuelen);
-+
-+	*attr = new;
-+	return 0;
-+}
-+
-+/* Sets an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_set_deferred(
-+	struct xfs_inode	*dp,
-+	struct xfs_trans	*tp,
-+	struct xfs_name		*name,
-+	const unsigned char	*value,
-+	unsigned int		valuelen)
-+{
-+	struct xfs_attr_item	*new;
-+	int			error = 0;
-+
-+	error = xfs_attr_item_init(dp, tp, name, value, valuelen,
-+				 XFS_ATTR_OP_FLAGS_SET, &new);
-+	if (error)
-+		return error;
-+
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
  /*
-  * Generic handler routine to remove a name from an attribute list.
-  * Transitions attribute list from Btree to shortform as necessary.
-@@ -669,6 +734,26 @@ out:
- 	return error;
- }
+@@ -257,7 +255,7 @@ xfs_attr_set_args(
+ {
+ 	struct xfs_inode	*dp = args->dp;
+ 	struct xfs_buf          *leaf_bp = NULL;
+-	int			error;
++	int			error, error2 = 0;;
  
-+/* Removes an attribute for an inode as a deferred operation */
-+int
-+xfs_attr_remove_deferred(
-+	struct xfs_inode        *dp,
-+	struct xfs_trans	*tp,
-+	struct xfs_name		*name)
-+{
-+
-+	struct xfs_attr_item *new;
-+
-+	int error  = xfs_attr_item_init(dp, tp, name, NULL, 0,
-+				  XFS_ATTR_OP_FLAGS_REMOVE, &new);
-+	if (error)
-+		return error;
-+
-+	xfs_defer_add(tp, XFS_DEFER_OPS_TYPE_ATTR, &new->xattri_list);
-+
-+	return 0;
-+}
-+
- /*========================================================================
-  * External routines when attribute list is inside the inode
-  *========================================================================*/
-diff --git a/libxfs/xfs_attr.h b/libxfs/xfs_attr.h
-index a651f4e..743d00e 100644
---- a/libxfs/xfs_attr.h
-+++ b/libxfs/xfs_attr.h
-@@ -188,5 +188,10 @@ bool xfs_attr_namecheck(const void *name, size_t length);
- int xfs_attr_args_init(struct xfs_da_args *args, struct xfs_inode *dp,
- 		       struct xfs_name *name);
- int xfs_attr_calc_size(struct xfs_da_args *args, int *local);
-+int xfs_attr_set_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-+			  struct xfs_name *name, const unsigned char *value,
-+			  unsigned int valuelen);
-+int xfs_attr_remove_deferred(struct xfs_inode *dp, struct xfs_trans *tp,
-+			    struct xfs_name *name);
+ 	/*
+ 	 * If the attribute list is non-existent or a shortform list,
+@@ -277,8 +275,11 @@ xfs_attr_set_args(
+ 		 * Try to add the attr to the attribute list in the inode.
+ 		 */
+ 		error = xfs_attr_try_sf_addname(dp, args);
+-		if (error != -ENOSPC)
+-			return error;
++		if (!error) {
++			error2 = xfs_trans_commit(args->trans);
++			args->trans = NULL;
++			return error ? error : error2;
++		}
  
- #endif	/* __XFS_ATTR_H__ */
+ 		/*
+ 		 * It won't fit in the shortform, transform to a leaf block.
 -- 
 2.7.4
 
