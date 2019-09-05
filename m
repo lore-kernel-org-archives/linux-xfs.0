@@ -2,95 +2,156 @@ Return-Path: <SRS0=/Wyv=XA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0183FC43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:44:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C969AC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:51:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46D9320825
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:44:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 17EDE20692
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:51:11 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="O/B9sAnI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728590AbfIEWoI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 18:44:08 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:48353 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725290AbfIEWoI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:44:08 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 2D13836142E;
-        Fri,  6 Sep 2019 08:44:05 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i60Tz-00031P-Qh; Fri, 06 Sep 2019 08:44:03 +1000
-Date:   Fri, 6 Sep 2019 08:44:03 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     David Howells <dhowells@redhat.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Carlos Maiolino <cmaiolino@redhat.com>,
-        linux-fsdevel@vger.kernel.org, adilger@dilger.ca,
-        jaegeuk@kernel.org, darrick.wong@oracle.com, miklos@szeredi.hu,
-        rpeterso@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/9] cachefiles: drop direct usage of ->bmap method.
-Message-ID: <20190905224403.GK1119@dread.disaster.area>
-References: <20190830165920.GA28182@lst.de>
- <20190829071312.GE11909@lst.de>
- <20190820115731.bed7gwfygk66nj43@pegasus.maiolino.io>
- <20190808082744.31405-1-cmaiolino@redhat.com>
- <20190808082744.31405-3-cmaiolino@redhat.com>
- <20190814111535.GC1885@lst.de>
- <7003.1566305430@warthog.procyon.org.uk>
- <2587.1567181871@warthog.procyon.org.uk>
- <28402.1567212357@warthog.procyon.org.uk>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <28402.1567212357@warthog.procyon.org.uk>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=7-415B0cAAAA:8 a=yx1zXdAvrB0BR2aM9G4A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+        id S1727213AbfIEWvK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 18:51:10 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:46300 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727115AbfIEWvK (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:51:10 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85Mn2vc106366
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:51:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
+ date : message-id : in-reply-to : references; s=corp-2019-08-05;
+ bh=lDyjioxqXEZ+ZKVeAR1gBCazZkWfEf54cA+eCM7kw8E=;
+ b=O/B9sAnI5LL32FFgzjE8kntpRj1ltgdvlnUerc0VCNSK8siLYY45/L/p+3tx67qKPCgz
+ N5uPaGxWjmAP1Q9FnnAmbhlk9jjlshHmym7B6lnH0hSApIDTiBKdSgqKuboMwPAopgZm
+ vaqQQydQ5OllrIXN5ydq7yXPccyamyMUIvufRzBwjvsWsnuFwx1KA70DICIn2JBqdTaz
+ 9eKxXbYwHgA8L1fpYukmIXjop8DQZsd5mzolxAqizttVFzfS38SzG7FurTi4VgLY/3aO
+ eDVt3XpLFbBEr9+tf6VpOGHdR2h4tCQtwjnK88QN66v4g8Q3UB8zFdXgATYAFL1licOz hw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2uubg780ag-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:51:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85Mn22H187729
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:51:07 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2uthq28hwx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:51:07 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x85Mp7c6020769
+        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:51:07 GMT
+Received: from localhost.localdomain (/67.1.183.122)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 05 Sep 2019 15:18:45 -0700
+From:   Allison Collins <allison.henderson@oracle.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v3 07/19] xfs: Factor out xfs_attr_leaf_addname helper
+Date:   Thu,  5 Sep 2019 15:18:25 -0700
+Message-Id: <20190905221837.17388-8-allison.henderson@oracle.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20190905221837.17388-1-allison.henderson@oracle.com>
+References: <20190905221837.17388-1-allison.henderson@oracle.com>
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909050212
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909050212
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Aug 31, 2019 at 01:45:57AM +0100, David Howells wrote:
-> Christoph Hellwig <hch@lst.de> wrote:
-> 
-> > We'll you'd need to implement a IOCB_NOHOLE, but that wouldn't be all
-> > that hard.  Having a READ_PLUS like interface that actually tells you
-> > how large the hole is might be hard.
-> 
-> Actually, that raises another couple of questions:
-> 
->  (1) Is a filesystem allowed to join up two disjoint blocks of data with a
->      block of zeros to make a single extent?  If this happens, I'll see the
->      inserted block of zeros to be valid data.
+Factor out new helper function xfs_attr_leaf_try_add.
+Because new delayed attribute routines cannot roll
+transactions, we carve off the parts of
+xfs_attr_leaf_addname that we can use.  This will help
+to reduce repetitive code later when we introduce
+delayed attributes.
 
-Yes.
+Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+---
+ fs/xfs/libxfs/xfs_attr.c | 43 +++++++++++++++++++++++++++++--------------
+ 1 file changed, 29 insertions(+), 14 deletions(-)
 
->  (2) Is a filesystem allowed to punch out a block of valid zero data to make a
->      hole?  This would cause me to refetch the data.
-
-Yes.
-
-Essentially, assumptions that filesystems will not change the file
-layout even if the data does not change are invalid. copy-on-write,
-deduplication, speculative preallocation, etc mean the file layout
-can change even if the file data itself is not directly modified.
-
-If you want to cache physical file layout information and be
-notified when they may change, then that's what layout leases are
-for....
-
-Cheers,
-
-Dave.
+diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+index 7a6dd37..f27e2c6 100644
+--- a/fs/xfs/libxfs/xfs_attr.c
++++ b/fs/xfs/libxfs/xfs_attr.c
+@@ -593,19 +593,12 @@ xfs_attr_shortform_addname(xfs_da_args_t *args)
+  * External routines when attribute list is one block
+  *========================================================================*/
+ 
+-/*
+- * Add a name to the leaf attribute list structure
+- *
+- * This leaf block cannot have a "remote" value, we only call this routine
+- * if bmap_one_block() says there is only one block (ie: no remote blks).
+- */
+ STATIC int
+-xfs_attr_leaf_addname(
+-	struct xfs_da_args	*args)
++xfs_attr_leaf_try_add(
++	struct xfs_da_args	*args,
++	struct xfs_buf		*bp)
+ {
+-	struct xfs_buf		*bp;
+-	int			retval, error, forkoff;
+-	struct xfs_inode	*dp = args->dp;
++	int			retval, error;
+ 
+ 	trace_xfs_attr_leaf_addname(args);
+ 
+@@ -650,13 +643,35 @@ xfs_attr_leaf_addname(
+ 	retval = xfs_attr3_leaf_add(bp, args);
+ 	if (retval == -ENOSPC) {
+ 		/*
+-		 * Promote the attribute list to the Btree format, then
+-		 * Commit that transaction so that the node_addname() call
+-		 * can manage its own transactions.
++		 * Promote the attribute list to the Btree format.
+ 		 */
+ 		error = xfs_attr3_leaf_to_node(args);
+ 		if (error)
+ 			return error;
++	}
++	return retval;
++}
++
++
++/*
++ * Add a name to the leaf attribute list structure
++ *
++ * This leaf block cannot have a "remote" value, we only call this routine
++ * if bmap_one_block() says there is only one block (ie: no remote blks).
++ */
++STATIC int
++xfs_attr_leaf_addname(struct xfs_da_args	*args)
++{
++	int			retval, error, forkoff;
++	struct xfs_buf		*bp = NULL;
++	struct xfs_inode	*dp = args->dp;
++
++	retval = xfs_attr_leaf_try_add(args, bp);
++	if (retval == -ENOSPC) {
++		/*
++		 * Commit that transaction so that the node_addname() call
++		 * can manage its own transactions.
++		 */
+ 		error = xfs_defer_finish(&args->trans);
+ 		if (error)
+ 			return error;
 -- 
-Dave Chinner
-david@fromorbit.com
+2.7.4
+
