@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D1298C3A5AC
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A6311C3A5AA
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 08:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1D3F2070C
+	by mail.kernel.org (Postfix) with ESMTP id 882C62070C
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 08:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731412AbfIEIrY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 04:47:24 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40751 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730710AbfIEIrX (ORCPT
+        id S1731557AbfIEIrX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 04:47:23 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43795 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731412AbfIEIrX (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 04:47:23 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id E4375363055
-        for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2019 18:47:19 +1000 (AEST)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 4389843DD49
+        for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2019 18:47:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5nQF-0004Cq-2z
-        for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:19 +1000
+        id 1i5nQE-0004Ck-VO
+        for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:18 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5nQF-0007y8-0j
-        for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:19 +1000
+        id 1i5nQE-0007xz-Tc
+        for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:18 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 8/8] xfs: push the grant head when the log head moves forward
-Date:   Thu,  5 Sep 2019 18:47:17 +1000
-Message-Id: <20190905084717.30308-9-david@fromorbit.com>
+Subject: [PATCH 5/8] xfs: factor callbacks out of xlog_state_do_callback()
+Date:   Thu,  5 Sep 2019 18:47:14 +1000
+Message-Id: <20190905084717.30308-6-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190905084717.30308-1-david@fromorbit.com>
 References: <20190905084717.30308-1-david@fromorbit.com>
@@ -44,7 +44,7 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=20KFwNOVAAAA:8
-        a=7Q2-SO56R8pWWUt_uDsA:9
+        a=1nV49z84FmvGlTHZwfMA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,135 +52,143 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When the log fills up, we can get into the state where the
-outstanding items in the CIL being committed and aggregated are
-larger than the range that the reservation grant head tail pushing
-will attempt to clean. This can result in the tail pushing range
-being trimmed back to the the log head (l_last_sync_lsn) and so
-may not actually move the push target at all.
+Simplify the code flow by lifting the iclog callback work out of
+the main iclog iteration loop. This isolates the log juggling and
+callbacks from the iclog state change logic in the loop.
 
-When the iclogs associated with the CIL commit finally land, the
-log head moves forward, and this removes the restriction on the AIL
-push target. However, if we already have transactions sleeping on
-the grant head, and there's nothing in the AIL still to flush from
-the current push target, then nothing will move the tail of the log
-and trigger a log reservation wakeup.
-
-Hence the there is nothing that will trigger xlog_grant_push_ail()
-to recalculate the AIL push target and start pushing on the AIL
-again to write back the metadata objects that pin the tail of the
-log and hence free up space and allow the transaction reservations
-to be woken and make progress.
-
-Hence we need to push on the grant head when we move the log head
-forward, as this may be the only trigger we have that can move the
-AIL push target forwards in this situation.
+Note that the loopdidcallbacks variable is not actually tracking
+whether callbacks are actually run - it is tracking whether the
+icloglock was dropped during the loop and so determines if we
+completed the entire iclog scan loop atomically. Hence we know for
+certain there are either no more ordered completions to run or
+that the next completion will run the remaining ordered iclog
+completions. Hence rename that variable appropriately for it's
+function.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 72 +++++++++++++++++++++++++++++++-----------------
- 1 file changed, 47 insertions(+), 25 deletions(-)
+ fs/xfs/xfs_log.c | 70 +++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 45 insertions(+), 25 deletions(-)
 
 diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index bef314361bc4..f90765af6916 100644
+index 2904bf0d17f3..73aa8e152c83 100644
 --- a/fs/xfs/xfs_log.c
 +++ b/fs/xfs/xfs_log.c
-@@ -2648,6 +2648,46 @@ xlog_get_lowest_lsn(
+@@ -2628,6 +2628,42 @@ xlog_get_lowest_lsn(
  	return lowest_lsn;
  }
  
 +/*
-+ * Completion of a iclog IO does not imply that a transaction has completed, as
-+ * transactions can be large enough to span many iclogs. We cannot change the
-+ * tail of the log half way through a transaction as this may be the only
-+ * transaction in the log and moving the tail to point to the middle of it
-+ * will prevent recovery from finding the start of the transaction. Hence we
-+ * should only update the last_sync_lsn if this iclog contains transaction
-+ * completion callbacks on it.
++ * Keep processing entries in the iclog callback list until we come around and
++ * it is empty.  We need to atomically see that the list is empty and change the
++ * state to DIRTY so that we don't miss any more callbacks being added.
 + *
-+ * We have to do this before we drop the icloglock to ensure we are the only one
-+ * that can update it.
-+ *
-+ * If we are moving the last_sync_lsn forwards, we also need to ensure we kick
-+ * the reservation grant head pushing. This is due to the fact that the push
-+ * target is bound by the current last_sync_lsn value. Hence if we have a large
-+ * amount of log space bound up in this committing transaction then the
-+ * last_sync_lsn value may be the limiting factor preventing tail pushing from
-+ * freeing space in the log. Hence once we've updated the last_sync_lsn we
-+ * should push the AIL to ensure the push target (and hence the grant head) is
-+ * no longer bound by the old log head location and can move forwards and make
-+ * progress again.
++ * This function is called with the icloglock held and returns with it held. We
++ * drop it while running callbacks, however, as holding it over thousands of
++ * callbacks is unnecessary and causes excessive contention if we do.
 + */
 +static void
-+xlog_state_set_callback(
++xlog_state_do_iclog_callbacks(
 +	struct xlog		*log,
 +	struct xlog_in_core	*iclog,
-+	xfs_lsn_t		header_lsn)
++	bool			aborted)
 +{
-+	iclog->ic_state = XLOG_STATE_CALLBACK;
++	spin_unlock(&log->l_icloglock);
++	spin_lock(&iclog->ic_callback_lock);
++	while (!list_empty(&iclog->ic_callbacks)) {
++		LIST_HEAD(tmp);
 +
-+	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
-+			   header_lsn) <= 0);
++		list_splice_init(&iclog->ic_callbacks, &tmp);
 +
-+	if (list_empty_careful(&iclog->ic_callbacks))
-+		return;
++		spin_unlock(&iclog->ic_callback_lock);
++		xlog_cil_process_committed(&tmp, aborted);
++		spin_lock(&iclog->ic_callback_lock);
++	}
 +
-+	atomic64_set(&log->l_last_sync_lsn, header_lsn);
-+	xlog_grant_push_ail(log, 0);
++	/*
++	 * Pick up the icloglock while still holding the callback lock so we
++	 * serialise against anyone trying to add more callbacks to this iclog
++	 * now we've finished processing.
++	 */
++	spin_lock(&log->l_icloglock);
++	spin_unlock(&iclog->ic_callback_lock);
 +}
 +
+ #ifdef DEBUG
  /*
-  * Return true if we need to stop processing, false to continue to the next
-  * iclog. The caller will need to run callbacks if the iclog is returned in the
-@@ -2661,6 +2701,7 @@ xlog_state_iodone_process_iclog(
- 	bool			*ioerror)
- {
- 	xfs_lsn_t		lowest_lsn;
-+	xfs_lsn_t		header_lsn;
+  * Make one last gasp attempt to see if iclogs are being left in limbo.  If the
+@@ -2682,7 +2718,7 @@ xlog_state_do_callback(
+ 	int		   flushcnt = 0;
+ 	xfs_lsn_t	   lowest_lsn;
+ 	int		   ioerrors;	/* counter: iclogs with errors */
+-	int		   loopdidcallbacks; /* flag: inner loop did callbacks*/
++	bool		   cycled_icloglock;
+ 	int		   funcdidcallbacks; /* flag: function did callbacks */
+ 	int		   repeats;	/* for issuing console warnings if
+ 					 * looping too many times */
+@@ -2704,7 +2740,7 @@ xlog_state_do_callback(
+ 		 */
+ 		first_iclog = log->l_iclog;
+ 		iclog = log->l_iclog;
+-		loopdidcallbacks = 0;
++		cycled_icloglock = false;
+ 		repeats++;
  
- 	/* Skip all iclogs in the ACTIVE & DIRTY states */
- 	if (iclog->ic_state & (XLOG_STATE_ACTIVE | XLOG_STATE_DIRTY))
-@@ -2700,34 +2741,15 @@ xlog_state_iodone_process_iclog(
- 	 * callbacks) see the above if.
- 	 *
- 	 * We will do one more check here to see if we have chased our tail
--	 * around.
-+	 * around. If this is not the lowest lsn iclog, then we will leave it
-+	 * for another completion to process.
- 	 */
-+	header_lsn = be64_to_cpu(iclog->ic_header.h_lsn);
- 	lowest_lsn = xlog_get_lowest_lsn(log);
--	if (lowest_lsn &&
--	    XFS_LSN_CMP(lowest_lsn, be64_to_cpu(iclog->ic_header.h_lsn)) < 0)
--		return false; /* Leave this iclog for another thread */
+ 		do {
+@@ -2795,31 +2831,13 @@ xlog_state_do_callback(
+ 			} else
+ 				ioerrors++;
+ 
+-			spin_unlock(&log->l_icloglock);
 -
--	iclog->ic_state = XLOG_STATE_CALLBACK;
+ 			/*
+-			 * Keep processing entries in the callback list until
+-			 * we come around and it is empty.  We need to
+-			 * atomically see that the list is empty and change the
+-			 * state to DIRTY so that we don't miss any more
+-			 * callbacks being added.
++			 * Running callbacks will drop the icloglock which means
++			 * we'll have to run at least one more complete loop.
+ 			 */
+-			spin_lock(&iclog->ic_callback_lock);
+-			while (!list_empty(&iclog->ic_callbacks)) {
+-				LIST_HEAD(tmp);
++			cycled_icloglock = true;
++			xlog_state_do_iclog_callbacks(log, iclog, aborted);
+ 
+-				list_splice_init(&iclog->ic_callbacks, &tmp);
 -
--	/*
--	 * Completion of a iclog IO does not imply that a transaction has
--	 * completed, as transactions can be large enough to span many iclogs.
--	 * We cannot change the tail of the log half way through a transaction
--	 * as this may be the only transaction in the log and moving th etail to
--	 * point to the middle of it will prevent recovery from finding the
--	 * start of the transaction.  Hence we should only update the
--	 * last_sync_lsn if this iclog contains transaction completion callbacks
--	 * on it.
--	 *
--	 * We have to do this before we drop the icloglock to ensure we are the
--	 * only one that can update it.
--	 */
--	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn),
--			be64_to_cpu(iclog->ic_header.h_lsn)) <= 0);
--	if (!list_empty_careful(&iclog->ic_callbacks))
--		atomic64_set(&log->l_last_sync_lsn,
--			be64_to_cpu(iclog->ic_header.h_lsn));
-+	if (lowest_lsn && XFS_LSN_CMP(lowest_lsn, header_lsn) < 0)
-+		return false;
+-				spin_unlock(&iclog->ic_callback_lock);
+-				xlog_cil_process_committed(&tmp, aborted);
+-				spin_lock(&iclog->ic_callback_lock);
+-			}
+-
+-			loopdidcallbacks++;
+-			funcdidcallbacks++;
+-
+-			spin_lock(&log->l_icloglock);
+-			spin_unlock(&iclog->ic_callback_lock);
+ 			if (!(iclog->ic_state & XLOG_STATE_IOERROR))
+ 				iclog->ic_state = XLOG_STATE_DIRTY;
  
-+	xlog_state_set_callback(log, iclog, header_lsn);
- 	return false;
+@@ -2835,6 +2853,8 @@ xlog_state_do_callback(
+ 			iclog = iclog->ic_next;
+ 		} while (first_iclog != iclog);
  
- }
++		funcdidcallbacks += cycled_icloglock;
++
+ 		if (repeats > 5000) {
+ 			flushcnt += repeats;
+ 			repeats = 0;
+@@ -2842,7 +2862,7 @@ xlog_state_do_callback(
+ 				"%s: possible infinite loop (%d iterations)",
+ 				__func__, flushcnt);
+ 		}
+-	} while (!ioerrors && loopdidcallbacks);
++	} while (!ioerrors && cycled_icloglock);
+ 
+ 	if (funcdidcallbacks)
+ 		xlog_state_callback_check_state(log);
 -- 
 2.23.0.rc1
 
