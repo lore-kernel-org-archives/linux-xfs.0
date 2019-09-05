@@ -2,115 +2,103 @@ Return-Path: <SRS0=/Wyv=XA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CDFFEC43331
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 60B8DC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:28:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A56F2070C
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:21:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="K9MvH1JO"
+	by mail.kernel.org (Postfix) with ESMTP id 9B5412070C
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 22:28:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387436AbfIEWVn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 18:21:43 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:41800 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731541AbfIEWVn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:21:43 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ89h084633
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:21:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : subject :
- date : message-id : in-reply-to : references; s=corp-2019-08-05;
- bh=ybaR7O04sdUp707V9Ry344ybR5dP8nhnT08Dqe+1B6Y=;
- b=K9MvH1JO1/t7XtM0/sDCNRH8G1zGFusj1iwxQuRY9b2dQgsFSMIEoqGTKVP3h9Nr5ZGX
- +FYIT5zjyeaslUqW/ONLnTbtugTuRk/7N7B3jSrMccGHk4+Be+ZTUBjaFdDBmic70N4O
- 45pgR80WyY4CyPp73gWUf3gOQMy4H47B+PabTQr0LbrE7C9JKAUUdef+T2kXJV9wWBvg
- 7wL26Ww0Czv6uyE/n8shX3ybDAqDGNzJHkQBS1fKqsl8jK7qugd23V89C90zuzwXdFoP
- R001zkew+5xqb4pzi9raANXSWOo856PbZ1yf2FrjwvAtVl2peUKwlGK58v45Xa0m5Mb5 nQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2uuaqxr2q4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:21:41 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x85MJ2Ro076436
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:41 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2utvr4a1dm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 05 Sep 2019 22:19:41 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x85MJ1kk001680
-        for <linux-xfs@vger.kernel.org>; Thu, 5 Sep 2019 22:19:01 GMT
-Received: from localhost.localdomain (/67.1.183.122)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 15:19:01 -0700
-From:   Allison Collins <allison.henderson@oracle.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 03/21] xfsprogs: Add xfs_dabuf defines
-Date:   Thu,  5 Sep 2019 15:18:37 -0700
-Message-Id: <20190905221855.17555-4-allison.henderson@oracle.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20190905221855.17555-1-allison.henderson@oracle.com>
-References: <20190905221855.17555-1-allison.henderson@oracle.com>
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=942
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909050207
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1909050207
+        id S1730617AbfIEW2E (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 18:28:04 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55070 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725290AbfIEW2E (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 18:28:04 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 86E49361C11;
+        Fri,  6 Sep 2019 08:28:02 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i60EU-0002uS-2g; Fri, 06 Sep 2019 08:28:02 +1000
+Date:   Fri, 6 Sep 2019 08:28:02 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/8] xfs: push iclog state cleaning into
+ xlog_state_clean_log
+Message-ID: <20190905222802.GJ1119@dread.disaster.area>
+References: <20190905084717.30308-1-david@fromorbit.com>
+ <20190905084717.30308-8-david@fromorbit.com>
+ <20190905154853.GH2229799@magnolia>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190905154853.GH2229799@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=nsMOOVYl7cPwjwDxCrcA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This patch adds two new defines XFS_DABUF_MAP_NOMAPPING and
-XFS_DABUF_MAP_HOLE_OK.  This helps to clean up hard numbers and
-makes the code easier to read
+On Thu, Sep 05, 2019 at 08:48:53AM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 05, 2019 at 06:47:16PM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > xlog_state_clean_log() is only called from one place, and it occurs
+> > when an iclog is transitioning back to ACTIVE. Prior to calling
+> > xlog_state_clean_log, the iclog we are processing has a hard coded
+> > state check to DIRTY so that xlog_state_clean_log() processes it
+> > correctly. We also have a hard coded wakeup after
+> > xlog_state_clean_log() to enfore log force waiters on that iclog
+> > are woken correctly.
+> > 
+> > Both of these things are operations required to finish processing an
+> > iclog and return it to the ACTIVE state again, so they make little
+> > sense to be separated from the rest of the clean state transition
+> > code.
+> > 
+> > Hence push these things inside xlog_state_clean_log(), document the
+> > behaviour and rename it xlog_state_clean_iclog() to indicate that
+> > it's being driven by an iclog state change and does the iclog state
+> > change work itself.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > ---
+> >  fs/xfs/xfs_log.c | 57 ++++++++++++++++++++++++++++--------------------
+> >  1 file changed, 33 insertions(+), 24 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> > index 356204ddf865..bef314361bc4 100644
+> > --- a/fs/xfs/xfs_log.c
+> > +++ b/fs/xfs/xfs_log.c
+> > @@ -2521,21 +2521,35 @@ xlog_write(
+> >   *****************************************************************************
+> >   */
+> >  
+> > -/* Clean iclogs starting from the head.  This ordering must be
+> > - * maintained, so an iclog doesn't become ACTIVE beyond one that
+> > - * is SYNCING.  This is also required to maintain the notion that we use
+> > - * a ordered wait queue to hold off would be writers to the log when every
+> > - * iclog is trying to sync to disk.
+> > +/*
+> > + * An iclog has just finished it's completion processing, so we need to update
+> 
+> it's -> its, but I can fix that on import.
 
-Signed-off-by: Allison Collins <allison.henderson@oracle.com>
----
- libxfs/xfs_attr_leaf.h | 3 +++
- libxfs/xfs_da_btree.c  | 3 ++-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+Fixed - "just finished IO completion processing"...
 
-diff --git a/libxfs/xfs_attr_leaf.h b/libxfs/xfs_attr_leaf.h
-index 7b74e18..536a290 100644
---- a/libxfs/xfs_attr_leaf.h
-+++ b/libxfs/xfs_attr_leaf.h
-@@ -16,6 +16,9 @@ struct xfs_da_state_blk;
- struct xfs_inode;
- struct xfs_trans;
- 
-+#define XFS_DABUF_MAP_NOMAPPING	(-1) /* Caller doesn't have a mapping. */
-+#define XFS_DABUF_MAP_HOLE_OK	(-2) /* don't complain if we land in a hole. */
-+
- /*
-  * Used to keep a list of "remote value" extents when unlinking an inode.
-  */
-diff --git a/libxfs/xfs_da_btree.c b/libxfs/xfs_da_btree.c
-index f8e0432..0a7c601 100644
---- a/libxfs/xfs_da_btree.c
-+++ b/libxfs/xfs_da_btree.c
-@@ -2531,7 +2531,8 @@ xfs_dabuf_map(
- 	 * Caller doesn't have a mapping.  -2 means don't complain
- 	 * if we land in a hole.
- 	 */
--	if (mappedbno == -1 || mappedbno == -2) {
-+	if (mappedbno == XFS_DABUF_MAP_NOMAPPING ||
-+	    mappedbno == XFS_DABUF_MAP_HOLE_OK) {
- 		/*
- 		 * Optimize the one-block case.
- 		 */
+-Dave.
 -- 
-2.7.4
-
+Dave Chinner
+david@fromorbit.com
