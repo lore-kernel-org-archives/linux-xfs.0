@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4DD91C3A5A5
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68AE9C3A5AB
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 08:47:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2C2702070C
+	by mail.kernel.org (Postfix) with ESMTP id 4B07722CF6
 	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 08:47:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731840AbfIEIrX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1730939AbfIEIrX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 5 Sep 2019 04:47:23 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40749 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730939AbfIEIrX (ORCPT
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43787 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731557AbfIEIrX (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 04:47:23 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 11B21363098
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 197C443D536
         for <linux-xfs@vger.kernel.org>; Thu,  5 Sep 2019 18:47:20 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5nQE-0004Ci-UE
+        id 1i5nQE-0004Cg-TE
         for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:18 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i5nQE-0007xw-SX
+        id 1i5nQE-0007xt-RR
         for linux-xfs@vger.kernel.org; Thu, 05 Sep 2019 18:47:18 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 4/8] xfs: factor debug code out of xlog_state_do_callback()
-Date:   Thu,  5 Sep 2019 18:47:13 +1000
-Message-Id: <20190905084717.30308-5-david@fromorbit.com>
+Subject: [PATCH 3/8] xfs: prevent CIL push holdoff in log recovery
+Date:   Thu,  5 Sep 2019 18:47:12 +1000
+Message-Id: <20190905084717.30308-4-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190905084717.30308-1-david@fromorbit.com>
 References: <20190905084717.30308-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=20KFwNOVAAAA:8
-        a=01-YKpV87fXUuJaNMYAA:9
+        a=t6etOladE1_Vxw6LjJkA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,111 +52,70 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Start making this function readable by lifting the debug code into
-a conditional function.
+generic/530 on a machine with enough ram and a non-preemptible
+kernel can run the AGI processing phase of log recovery enitrely out
+of cache. This means it never blocks on locks, never waits for IO
+and runs entirely through the unlinked lists until it either
+completes or blocks and hangs because it has run out of log space.
+
+It runs out of log space because the background CIL push is
+scheduled but never runs. queue_work() queues the CIL work on the
+current CPU that is busy, and the workqueue code will not run it on
+any other CPU. Hence if the unlinked list processing never yields
+the CPU voluntarily, the push work is delayed indefinitely. This
+results in the CIL aggregating changes until all the log space is
+consumed.
+
+When the log recoveyr processing evenutally blocks, the CIL flushes
+but because the last iclog isn't submitted for IO because it isn't
+full, the CIL flush never completes and nothing ever moves the log
+head forwards, or indeed inserts anything into the tail of the log,
+and hence nothing is able to get the log moving again and recovery
+hangs.
+
+There are several problems here, but the two obvious ones from
+the trace are that:
+	a) log recovery does not yield the CPU for over 4 seconds,
+	b) binding CIL pushes to a single CPU is a really bad idea.
+
+This patch addresses just these two aspects of the problem, and are
+suitable for backporting to work around any issues in older kernels.
+The more fundamental problem of preventing the CIL from consuming
+more than 50% of the log without committing will take more invasive
+and complex work, so will be done as followup work.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log.c | 79 +++++++++++++++++++++++++++---------------------
- 1 file changed, 44 insertions(+), 35 deletions(-)
+ fs/xfs/xfs_log_recover.c | 1 +
+ fs/xfs/xfs_super.c       | 3 ++-
+ 2 files changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 8380ed065608..2904bf0d17f3 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -2628,6 +2628,48 @@ xlog_get_lowest_lsn(
- 	return lowest_lsn;
- }
- 
-+#ifdef DEBUG
-+/*
-+ * Make one last gasp attempt to see if iclogs are being left in limbo.  If the
-+ * above loop finds an iclog earlier than the current iclog and in one of the
-+ * syncing states, the current iclog is put into DO_CALLBACK and the callbacks
-+ * are deferred to the completion of the earlier iclog. Walk the iclogs in order
-+ * and make sure that no iclog is in DO_CALLBACK unless an earlier iclog is in
-+ * one of the syncing states.
-+ *
-+ * Note that SYNCING|IOERROR is a valid state so we cannot just check for
-+ * ic_state == SYNCING.
-+ */
-+static void
-+xlog_state_callback_check_state(
-+	struct xlog		*log)
-+{
-+	struct xlog_in_core	*first_iclog = log->l_iclog;
-+	struct xlog_in_core	*iclog = first_iclog;
-+
-+	do {
-+		ASSERT(iclog->ic_state != XLOG_STATE_DO_CALLBACK);
-+		/*
-+		 * Terminate the loop if iclogs are found in states
-+		 * which will cause other threads to clean up iclogs.
-+		 *
-+		 * SYNCING - i/o completion will go through logs
-+		 * DONE_SYNC - interrupt thread should be waiting for
-+		 *              l_icloglock
-+		 * IOERROR - give up hope all ye who enter here
-+		 */
-+		if (iclog->ic_state == XLOG_STATE_WANT_SYNC ||
-+		    iclog->ic_state & XLOG_STATE_SYNCING ||
-+		    iclog->ic_state == XLOG_STATE_DONE_SYNC ||
-+		    iclog->ic_state == XLOG_STATE_IOERROR )
-+			break;
-+		iclog = iclog->ic_next;
-+	} while (first_iclog != iclog);
-+}
-+#else
-+#define xlog_state_callback_check_state(l)	((void)0)
-+#endif
-+
- STATIC void
- xlog_state_do_callback(
- 	struct xlog		*log,
-@@ -2802,41 +2844,8 @@ xlog_state_do_callback(
+diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+index f05c6c99c4f3..c9665455431e 100644
+--- a/fs/xfs/xfs_log_recover.c
++++ b/fs/xfs/xfs_log_recover.c
+@@ -5080,6 +5080,7 @@ xlog_recover_process_iunlinks(
+ 			while (agino != NULLAGINO) {
+ 				agino = xlog_recover_process_one_iunlink(mp,
+ 							agno, agino, bucket);
++				cond_resched();
+ 			}
  		}
- 	} while (!ioerrors && loopdidcallbacks);
+ 		xfs_buf_rele(agibp);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index f9450235533c..55a268997bde 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -818,7 +818,8 @@ xfs_init_mount_workqueues(
+ 		goto out_destroy_buf;
  
--#ifdef DEBUG
--	/*
--	 * Make one last gasp attempt to see if iclogs are being left in limbo.
--	 * If the above loop finds an iclog earlier than the current iclog and
--	 * in one of the syncing states, the current iclog is put into
--	 * DO_CALLBACK and the callbacks are deferred to the completion of the
--	 * earlier iclog. Walk the iclogs in order and make sure that no iclog
--	 * is in DO_CALLBACK unless an earlier iclog is in one of the syncing
--	 * states.
--	 *
--	 * Note that SYNCING|IOABORT is a valid state so we cannot just check
--	 * for ic_state == SYNCING.
--	 */
--	if (funcdidcallbacks) {
--		first_iclog = iclog = log->l_iclog;
--		do {
--			ASSERT(iclog->ic_state != XLOG_STATE_DO_CALLBACK);
--			/*
--			 * Terminate the loop if iclogs are found in states
--			 * which will cause other threads to clean up iclogs.
--			 *
--			 * SYNCING - i/o completion will go through logs
--			 * DONE_SYNC - interrupt thread should be waiting for
--			 *              l_icloglock
--			 * IOERROR - give up hope all ye who enter here
--			 */
--			if (iclog->ic_state == XLOG_STATE_WANT_SYNC ||
--			    iclog->ic_state & XLOG_STATE_SYNCING ||
--			    iclog->ic_state == XLOG_STATE_DONE_SYNC ||
--			    iclog->ic_state == XLOG_STATE_IOERROR )
--				break;
--			iclog = iclog->ic_next;
--		} while (first_iclog != iclog);
--	}
--#endif
-+	if (funcdidcallbacks)
-+		xlog_state_callback_check_state(log);
+ 	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
+-			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
++			WQ_MEM_RECLAIM|WQ_FREEZABLE|WQ_UNBOUND,
++			0, mp->m_fsname);
+ 	if (!mp->m_cil_workqueue)
+ 		goto out_destroy_unwritten;
  
- 	if (log->l_iclog->ic_state & (XLOG_STATE_ACTIVE|XLOG_STATE_IOERROR))
- 		wake_up_all(&log->l_flush_wait);
 -- 
 2.23.0.rc1
 
