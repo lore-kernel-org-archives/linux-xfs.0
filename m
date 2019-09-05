@@ -2,163 +2,189 @@ Return-Path: <SRS0=/Wyv=XA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0BABC3A5A5
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 03:42:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A0C0FC3A5A5
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 04:55:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A272D2168B
-	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 03:42:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="E7zmV4kJ"
+	by mail.kernel.org (Postfix) with ESMTP id 7A876206DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  5 Sep 2019 04:55:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727544AbfIEDmy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 4 Sep 2019 23:42:54 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48114 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727156AbfIEDmy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 4 Sep 2019 23:42:54 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x853drHV071484;
-        Thu, 5 Sep 2019 03:42:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=CZ9GC/xCyxYBCZEsULjoPlvnVpgyagWMVy5s78BkHGc=;
- b=E7zmV4kJ7SgENtvBys5VLJ/ADfUVU7n4eaDzPvRq6zVtFmKDxA/vtzfqbrJ8x1RURKun
- jZdJC4L2X6e7J/4mml1LfhylZyBGpkWVgDb1tvYlKCusfu/YpBPZr0T/uKstX9gRg+pg
- echwrWjgRGa4CzRHsMIh8l7ewwucwLqynyJAXR1VM7GOKY1ItLDX13yI4oGEPtMG9UXh
- Jm3+VTR/AyVv/DPEkMi8TbTG5DC14ukM8L0H4xdc1S/STekVARB1jAEFV7mSaetE4peN
- Vv1mj9r6TQFpC8La9KBakVNcVJKME9jTO3UkRAD+vp+1AnDmKF2hL0fM0cKU/6SoRKmH Dg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2uttna808g-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Sep 2019 03:42:48 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x853XFPs126157;
-        Thu, 5 Sep 2019 03:42:47 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2usu52jx9t-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 05 Sep 2019 03:42:47 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x853gj4O023946;
-        Thu, 5 Sep 2019 03:42:45 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 04 Sep 2019 20:42:45 -0700
-Date:   Wed, 4 Sep 2019 20:42:44 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     viro@zeniv.linux.org.uk, andreas.gruenbacher@gmail.com
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>
-Subject: Re: [PATCH v2] splice: only read in as much information as there is
- pipe buffer space
-Message-ID: <20190905034244.GL5340@magnolia>
-References: <20190829161155.GA5360@magnolia>
- <20190830210603.GB5340@magnolia>
+        id S1730804AbfIEEze (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 00:55:34 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:44370 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726042AbfIEEzd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 5 Sep 2019 00:55:33 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 46F0C3016631;
+        Thu,  5 Sep 2019 04:55:33 +0000 (UTC)
+Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id BA53D10018F9;
+        Thu,  5 Sep 2019 04:55:32 +0000 (UTC)
+Date:   Thu, 5 Sep 2019 13:02:35 +0800
+From:   Zorro Lang <zlang@redhat.com>
+To:     "Jianhong.Yin" <yin-jianhong@163.com>
+Cc:     linux-xfs@vger.kernel.org, jiyin@redhat.com
+Subject: Re: [PATCH] xfsprogs: copy_range don't truncate dstfile if same with
+ srcfile
+Message-ID: <20190905050235.GA7239@dhcp-12-102.nay.redhat.com>
+References: <20190904063222.21253-1-yin-jianhong@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190830210603.GB5340@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9370 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909050038
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9370 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1909050038
+In-Reply-To: <20190904063222.21253-1-yin-jianhong@163.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Thu, 05 Sep 2019 04:55:33 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Aug 30, 2019 at 02:06:03PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Sep 04, 2019 at 02:32:22PM +0800, Jianhong.Yin wrote:
+> now if we do copy_range in same file without any extra option
+> will truncate the file, and not any document indicate this default
+> action. that's risky to users.
 > 
-> Andreas Grünbacher reports that on the two filesystems that support
-> iomap directio, it's possible for splice() to return -EAGAIN (instead of
-> a short splice) if the pipe being written to has less space available in
-> its pipe buffers than the length supplied by the calling process.
+> '''
+> $ LANG=C ll testfile
+> -rw-rw-r--. 1 yjh yjh 4054 Sep  4 14:22 testfile
+> $ ./xfs_io -c 'copy_range testfile' testfile
+> $ LANG=C ll testfile
+> -rw-rw-r--. 1 yjh yjh 4054 Sep  4 14:23 testfile
+> '''
 > 
-> Months ago we fixed splice_direct_to_actor to clamp the length of the
-> read request to the size of the splice pipe.  Do the same to do_splice.
-> 
-> Fixes: 17614445576b6 ("splice: don't read more than available pipe space")
-> Reported-by: Andreas Grünbacher <andreas.gruenbacher@gmail.com>
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
 > ---
-> v2: tidy up the other call site per Andreas' request
-
-Ping?  Anyone want to add a RVB to this?
-
---D
-
-> ---
->  fs/splice.c |   17 ++++++++++++++---
->  1 file changed, 14 insertions(+), 3 deletions(-)
+>  io/copy_file_range.c | 23 +++++++++++++++++++----
+>  1 file changed, 19 insertions(+), 4 deletions(-)
 > 
-> diff --git a/fs/splice.c b/fs/splice.c
-> index 98412721f056..2ddbace9129f 100644
-> --- a/fs/splice.c
-> +++ b/fs/splice.c
-> @@ -945,12 +945,13 @@ ssize_t splice_direct_to_actor(struct file *in, struct splice_desc *sd,
->  	WARN_ON_ONCE(pipe->nrbufs != 0);
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index b7b9fd88..487041c0 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -75,6 +75,19 @@ copy_dst_truncate(void)
+>  	return ret;
+>  }
 >  
->  	while (len) {
-> +		unsigned int pipe_pages;
->  		size_t read_len;
->  		loff_t pos = sd->pos, prev_pos = pos;
->  
->  		/* Don't try to read more the pipe has space for. */
-> -		read_len = min_t(size_t, len,
-> -				 (pipe->buffers - pipe->nrbufs) << PAGE_SHIFT);
-> +		pipe_pages = pipe->buffers - pipe->nrbufs;
-> +		read_len = min(len, (size_t)pipe_pages << PAGE_SHIFT);
->  		ret = do_splice_to(in, &pos, pipe, read_len, flags);
->  		if (unlikely(ret <= 0))
->  			goto out_release;
-> @@ -1101,6 +1102,7 @@ static long do_splice(struct file *in, loff_t __user *off_in,
->  	struct pipe_inode_info *ipipe;
->  	struct pipe_inode_info *opipe;
->  	loff_t offset;
-> +	unsigned int pipe_pages;
->  	long ret;
->  
->  	ipipe = get_pipe_info(in);
-> @@ -1123,6 +1125,10 @@ static long do_splice(struct file *in, loff_t __user *off_in,
->  		if ((in->f_flags | out->f_flags) & O_NONBLOCK)
->  			flags |= SPLICE_F_NONBLOCK;
->  
-> +		/* Don't try to read more the pipe has space for. */
-> +		pipe_pages = opipe->buffers - opipe->nrbufs;
-> +		len = min(len, (size_t)pipe_pages << PAGE_SHIFT);
+> +int is_same_file(int fd1, int fd2) {
+> +	struct stat stat1, stat2;
+> +	if (fstat(fd1, &stat1) < 0) {
+> +		perror("fstat");
+> +		return -1;
+> +	}
+> +	if (fstat(fd2, &stat2) < 0) {
+> +		perror("fstat");
+> +		return -1;
+> +	}
+> +	return (stat1.st_dev == stat2.st_dev) && (stat1.st_ino == stat2.st_ino);
+> +}
 > +
->  		return splice_pipe_to_pipe(ipipe, opipe, len, flags);
+>  static int
+>  copy_range_f(int argc, char **argv)
+>  {
+> @@ -147,10 +160,12 @@ copy_range_f(int argc, char **argv)
+>  		}
+>  		len = sz;
+>  
+> -		ret = copy_dst_truncate();
+> -		if (ret < 0) {
+> -			ret = 1;
+> -			goto out;
+> +		if (!is_same_file(fd, file->fd)) {
+> +			ret = copy_dst_truncate();
+> +			if (ret < 0) {
+> +				ret = 1;
+> +				goto out;
+> +			}
+
+Finally we turn to talk about this part now:) The patch itself looks fine to me.
+
+I just have one question to other xfsprogs developers, why the copy_range would
+like to truncate(0) the target file by default (len=0 by default)? I think this's
+not a same or not same files problem, this's why we truncate the target file?
+
+Why not set the 'len' to the size of srcfile(copy_src_filesize) by default if
+there's not a '-l N' specified? And never truncate the target file (if someone need
+to truncate target file, do it by -c 'truncate N' or '-t').
+
+Anyway, talk is cheap, show my demo code to explain what I mean:
+
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index b7b9fd88..51c3dc55 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -66,15 +66,6 @@ copy_src_filesize(int fd)
+        return st.st_size;
+ }
+ 
+-static int
+-copy_dst_truncate(void)
+-{
+-       int ret = ftruncate(file->fd, 0);
+-       if (ret < 0)
+-               perror("ftruncate");
+-       return ret;
+-}
+-
+ static int
+ copy_range_f(int argc, char **argv)
+ {
+@@ -87,6 +78,7 @@ copy_range_f(int argc, char **argv)
+        int src_path_arg = 1;
+        int src_file_nr = 0;
+        size_t fsblocksize, fssectsize;
++       int lflag=0;
+ 
+        init_cvtnum(&fsblocksize, &fssectsize);
+ 
+@@ -112,6 +104,7 @@ copy_range_f(int argc, char **argv)
+                                printf(_("invalid length -- %s\n"), optarg);
+                                return 0;
+                        }
++                       lflag = 1;
+                        break;
+                case 'f':
+                        src_file_nr = atoi(argv[1]);
+@@ -137,23 +130,15 @@ copy_range_f(int argc, char **argv)
+                fd = filetable[src_file_nr].fd;
+        }
+ 
+-       if (src == 0 && dst == 0 && len == 0) {
++       if (!lflag) {
+                off64_t sz;
+-
+                sz = copy_src_filesize(fd);
+-               if (sz < 0 || (unsigned long long)sz > SIZE_MAX) {
+-                       ret = 1;
+-                       goto out;
+-               }
+-               len = sz;
+-
+-               ret = copy_dst_truncate();
+-               if (ret < 0) {
++               if (sz < 0 || (unsigned long long)sz > SIZE_MAX || sz < src) {
+                        ret = 1;
+                        goto out;
+                }
++               len = sz - src;
+        }
+-
+        ret = copy_file_range_cmd(fd, &src, &dst, len);
+ out:
+        close(fd);
+
+Thanks,
+Zorro
+
+>  		}
 >  	}
 >  
-> @@ -1180,8 +1186,13 @@ static long do_splice(struct file *in, loff_t __user *off_in,
->  
->  		pipe_lock(opipe);
->  		ret = wait_for_space(opipe, flags);
-> -		if (!ret)
-> +		if (!ret) {
-> +			/* Don't try to read more the pipe has space for. */
-> +			pipe_pages = opipe->buffers - opipe->nrbufs;
-> +			len = min(len, (size_t)pipe_pages << PAGE_SHIFT);
-> +
->  			ret = do_splice_to(in, &offset, opipe, len, flags);
-> +		}
->  		pipe_unlock(opipe);
->  		if (ret > 0)
->  			wakeup_pipe_readers(opipe);
+> -- 
+> 2.17.2
+> 
