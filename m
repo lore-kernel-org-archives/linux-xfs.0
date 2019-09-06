@@ -2,177 +2,114 @@ Return-Path: <SRS0=UMh5=XB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D5D0C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 00:46:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4ECBC43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 01:04:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03CD9207E0
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 00:46:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A5067206DE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 01:04:50 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PqMP+azE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390137AbfIFAqx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 20:46:53 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:46688 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1733029AbfIFAqx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 5 Sep 2019 20:46:53 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id DF933369DA;
-        Fri,  6 Sep 2019 00:46:52 +0000 (UTC)
-Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 58B3B60A97;
-        Fri,  6 Sep 2019 00:46:52 +0000 (UTC)
-Date:   Fri, 6 Sep 2019 08:53:56 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     Jianhong Yin <jiyin@redhat.com>
-Cc:     "Jianhong.Yin" <yin-jianhong@163.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfsprogs: copy_range: let = (src_size - src_offset)
- if len omitted
-Message-ID: <20190906005356.GD7239@dhcp-12-102.nay.redhat.com>
-References: <20190905053152.15701-1-yin-jianhong@163.com>
- <20190905053152.15701-2-yin-jianhong@163.com>
- <20190905060131.GB7239@dhcp-12-102.nay.redhat.com>
- <1290281207.12741020.1567663471691.JavaMail.zimbra@redhat.com>
- <20190905081315.GC7239@dhcp-12-102.nay.redhat.com>
+        id S2391856AbfIFBEu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 21:04:50 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:44296 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731344AbfIFBEt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 21:04:49 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x860xoX7190708;
+        Fri, 6 Sep 2019 01:04:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=SOR6tC4N6DYGI4BUXDQBAxEfjk4rHTg1hIgkQbDNcdA=;
+ b=PqMP+azExfcXdpM10r37NVzuOdthjvhhFhaz9//EIMPIP8k18U0uLwYIYY1gADoYKwaN
+ m39oIXNHO55RfzyBJVr/JDiE0CsH8+m/vZPj5y9Ny2cSPyPPYU7E4cna9x73l+HGkWdy
+ 7Vk5jq5U0oSVsjuh31ZMWlnyqgECMDBZ71L54pjaNC70wW1f+UVpUVAs5vzHWlucBVwX
+ 4cHKuq8Sq1UQcXJOeQClc6dxGpTm4LTh+ZCVlEgcTJx7Qe3QaJhIfmXTC0ryIOOc6jYn
+ nZVhRxUG0inMwFxzl3xQnVbTYkWzlg5gXrAwxPFaBCruYu9f0exUkeeWNrp79mQPwE03 Wg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2uud78g1eh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Sep 2019 01:04:45 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8614U3R031692;
+        Fri, 6 Sep 2019 01:04:45 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2uu1b97awj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Sep 2019 01:04:37 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8613hU0018937;
+        Fri, 6 Sep 2019 01:03:43 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 05 Sep 2019 18:03:42 -0700
+Date:   Thu, 5 Sep 2019 18:03:41 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: fix the dax supported check in
+ xfs_ioctl_setattr_dax_invalidate
+Message-ID: <20190906010341.GO2229799@magnolia>
+References: <20190830102315.27325-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=gb2312
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20190905081315.GC7239@dhcp-12-102.nay.redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Fri, 06 Sep 2019 00:46:52 +0000 (UTC)
+In-Reply-To: <20190830102315.27325-1-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909060008
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909060008
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 05, 2019 at 04:13:15PM +0800, Zorro Lang wrote:
-> On Thu, Sep 05, 2019 at 02:04:31AM -0400, Jianhong Yin wrote:
-> > 
-> > 
-> > ----- 原始邮件 -----
-> > > 发件人: "Zorro Lang" <zlang@redhat.com>
-> > > 收件人: "Jianhong.Yin" <yin-jianhong@163.com>
-> > > 抄送: linux-xfs@vger.kernel.org, jiyin@redhat.com
-> > > 发送时间: 星期四, 2019年 9 月 05日 下午 2:01:32
-> > > 主题: Re: [PATCH 2/2] xfsprogs: copy_range: let = (src_size - src_offset) if len omitted
-> > > 
-> > > On Thu, Sep 05, 2019 at 01:31:52PM +0800, Jianhong.Yin wrote:
-> > > > add update man page.
-> > > > 
-> > > > Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
-> > > > ---
-> > > 
-> > > I think these can be in one patch, but anyway...
-> > > 
-> > > >  io/copy_file_range.c | 7 +++++--
-> > > >  man/man8/xfs_io.8    | 9 +++------
-> > > >  2 files changed, 8 insertions(+), 8 deletions(-)
-> > > > 
-> > > > diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> > > > index 283f5094..02d50e53 100644
-> > > > --- a/io/copy_file_range.c
-> > > > +++ b/io/copy_file_range.c
-> > > > @@ -72,6 +72,7 @@ copy_range_f(int argc, char **argv)
-> > > >  	long long src = 0;
-> > > >  	long long dst = 0;
-> > > >  	size_t len = 0;
-> > > > +	int len_ommited = 1;
-> > > >  	int opt;
-> > > >  	int ret;
-> > > >  	int fd;
-> > > > @@ -103,6 +104,7 @@ copy_range_f(int argc, char **argv)
-> > > >  				printf(_("invalid length -- %s\n"), optarg);
-> > > >  				return 0;
-> > > >  			}
-> > > > +			len_ommited = 0;
-> > > >  			break;
-> > > >  		case 'f':
-> > > >  			src_file_nr = atoi(argv[1]);
-> > > > @@ -128,7 +130,7 @@ copy_range_f(int argc, char **argv)
-> > > >  		fd = filetable[src_file_nr].fd;
-> > > >  	}
-> > > >  
-> > > > -	if (src == 0 && dst == 0 && len == 0) {
-> > > > +	if (len_ommited) {
-> > > >  		off64_t	sz;
-> > > >  
-> > > >  		sz = copy_src_filesize(fd);
-> > > > @@ -136,7 +138,8 @@ copy_range_f(int argc, char **argv)
-> > > >  			ret = 1;
-> > > >  			goto out;
-> > > >  		}
-> > > > -		len = sz;
-> > > > +		if (sz > src)
-> > > > +			len = sz - src;
-> > > 
-> > > What about file size < offset?
-> > just keep the default value 0,
-> > 
-> > because QE/tester might want to see what happen
-> > when give an offset(> fsize) to copy_file_range()
-> >   #note: This tool was made for test/debug copy_file_range()
+On Fri, Aug 30, 2019 at 12:23:15PM +0200, Christoph Hellwig wrote:
+> Setting the DAX flag on the directory of a file system that is not on a
+> DAX capable device makes as little sense as setting it on a regular file
+> on the same file system.
 > 
-> Hmm, that's a good reason:)
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+
+Weirdly, I never explicitly acknoweledged this...
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
+>  fs/xfs/xfs_ioctl.c | 3 +--
+>  1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> > 
-> > Jianhong
-> > 
-> > > 
-> > > Maybe we can do like this?:
-> > > 
-> > >     sz = copy_src_filesize(fd);
-> > >     if (sz < 0 || (unsigned long long)sz > SIZE_MAX || sz < src) {
-> > >         ret = 1;
-> > >         goto out;
-> > >     }
-> > >     len = sz - src;
-> > > 
-> > > Thanks,
-> > > Zorro
-> > > 
-> > > >  	}
-> > > >  
-> > > >  	ret = copy_file_range_cmd(fd, &src, &dst, len);
-> > > > diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> > > > index 6e064bdd..f5f1c4fc 100644
-> > > > --- a/man/man8/xfs_io.8
-> > > > +++ b/man/man8/xfs_io.8
-> > > > @@ -669,13 +669,10 @@ The source must be specified either by path
-> > > >  or as another open file
-> > > >  .RB ( \-f ).
-> > > >  If
-> > > > -.I src_file
-> > > > -.IR src_offset ,
-> > > > -.IR dst_offset ,
-> > > > -and
-> > > >  .I length
-> > > > -are omitted the contents of src_file will be copied to the beginning of
-> > > > the
-> > > > -open file, overwriting any data already there.
-> > > > +is omitted will use
-> > > > +.I src_file
-> > > > +(file size - src_offset) instead.
-
-BTW, When I tried to merge this patch, I got below warning:
-
-  Applying: xfsprogs: copy_range: let = (src_size - src_offset) if len omitted
-  .git/rebase-apply/patch:61: trailing whitespace.
-  .I src_file 
-  warning: 1 line adds whitespace errors.
-
-Thanks,
-Zorro
-
-> > > >  .RS 1.0i
-> > > >  .PD 0
-> > > >  .TP 0.4i
-> > > > --
-> > > > 2.21.0
-> > > > 
-> > > 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index 9ea51664932e..d1d0929aa462 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -1309,8 +1309,7 @@ xfs_ioctl_setattr_dax_invalidate(
+>  	if (fa->fsx_xflags & FS_XFLAG_DAX) {
+>  		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
+>  			return -EINVAL;
+> -		if (S_ISREG(inode->i_mode) &&
+> -		    !bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
+> +		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
+>  				sb->s_blocksize))
+>  			return -EINVAL;
+>  	}
+> -- 
+> 2.20.1
+> 
