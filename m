@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EF130C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:42:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F670C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:42:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE3E9206BB
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:42:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0711E206BB
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:42:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kocdPcV7"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="U48TJ87P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392171AbfIFDmQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:42:16 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:55842 "EHLO
+        id S1731760AbfIFDmW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:42:22 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:55974 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392168AbfIFDmQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:42:16 -0400
+        with ESMTP id S1727041AbfIFDmW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:42:22 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863dOcg113188;
-        Fri, 6 Sep 2019 03:42:13 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863eOaV113874;
+        Fri, 6 Sep 2019 03:42:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=QuZ5jJze+dPMCHOmV0dOrdu2sXxSS+VT9PxAf8ss/kI=;
- b=kocdPcV7yFrlT/3/F8uFyB1LgPVIjky6V1Yclrn3UFNDS0JJTYvOC0K2HttNuqNAXzus
- J3KPGW0escGu0onwEVbDznPGV06kapjEUM1Zmgn496IhCibeSAqeMCq6tV26Wzs9Y+DL
- 5D7qtSj7k3syeen686PLEfxHNtKmFMqDYu55UynnMWUt15QwEL+g513vj4PSYwR3jMS3
- vN/jKQjW4tNer8tYtS+xCUONS6WlWCx0WB/IjWPGX3y+leVArNF9oRijvbPiHV55UUUG
- bzUcmix1B07O0BYK4rZoVRLy2XUEuLavAx3tWm6O8iUirNAeZPB44DhN3vkwy+R4sJb7 bw== 
+ bh=uPCaCvq4kAEZoJrj50QdLII1h8aPkcsY428Dxb/DCsY=;
+ b=U48TJ87PpoYk0IZgkm7dBUaH0dSeMHiNdE2uuFULaHfsY9ZKTlKVxtay4YPN0RyuDPMH
+ iwR3eEzbCfzUsiceTxBHJSTTynKNCCdjW9G5jXLzw/6smwerygvdcEUGVJBwfeB6NdxX
+ ITyVLG85CCHcTRtzfwmo6e+2l0iQB7WFSO/g+H0feuytpo2CxQ7YfW9nu/99wxlC3+C/
+ 8OKxvy/NpdTFWED/jjR8q4/9ksEOc5NJ81Yv6QGa0S3paTxDTEHapIs0FybDg7LO9KI+
+ ttYBVuINIeKlyN1lUVEHpjg4wsW5xpaurQvgwDTFjBA5qIVJiS4Hc2iICw4xIqirulNU sA== 
 Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2uufr080df-1
+        by userp2130.oracle.com with ESMTP id 2uufr080dv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:42:13 +0000
+        Fri, 06 Sep 2019 03:42:20 +0000
 Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863dHq2112790;
-        Fri, 6 Sep 2019 03:42:12 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2uud7p2u5s-1
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863dGb0112714;
+        Fri, 6 Sep 2019 03:42:19 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2uud7p2u72-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:42:12 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863gCvM023983;
-        Fri, 6 Sep 2019 03:42:12 GMT
+        Fri, 06 Sep 2019 03:42:19 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x863gI1Y021658;
+        Fri, 6 Sep 2019 03:42:18 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:42:11 -0700
-Subject: [PATCH 12/18] xfs_scrub: remove moveon from phase 5 functions
+        with ESMTP ; Thu, 05 Sep 2019 20:42:18 -0700
+Subject: [PATCH 13/18] xfs_scrub: remove moveon from phase 4 functions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 05 Sep 2019 20:42:11 -0700
-Message-ID: <156774133131.2646807.1236554154558864701.stgit@magnolia>
+Date:   Thu, 05 Sep 2019 20:42:17 -0700
+Message-ID: <156774133771.2646807.525204510621724636.stgit@magnolia>
 In-Reply-To: <156774125578.2646807.1183436616735969617.stgit@magnolia>
 References: <156774125578.2646807.1183436616735969617.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -63,13 +63,13 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1906280000 definitions=main-1909060040
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
  definitions=main-1909060040
@@ -80,417 +80,179 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the moveon returns in the phase 5 code with a direct integer
+Replace the moveon returns in the phase 4 code with a direct integer
 error return.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase5.c |  184 ++++++++++++++++++++++++++++++--------------------------
- 1 file changed, 97 insertions(+), 87 deletions(-)
+ scrub/phase4.c |   85 +++++++++++++++++++++++++++++++++-----------------------
+ 1 file changed, 50 insertions(+), 35 deletions(-)
 
 
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index cb79752f..1aaa0086 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -31,9 +31,11 @@
-  * terminal control characters and escape sequences, since that could be used
-  * to do something naughty to the user's computer and/or break scripts.  XFS
-  * doesn't consider any byte sequence invalid, so don't flag these as errors.
-+ *
-+ * Returns 0 for success or -1 for error.  This function logs errors.
-  */
--static bool
--xfs_scrub_check_name(
-+static int
-+simple_check_name(
- 	struct scrub_ctx	*ctx,
- 	struct descr		*dsc,
- 	const char		*namedescr,
-@@ -46,7 +48,7 @@ xfs_scrub_check_name(
- 	/* Complain about zero length names. */
- 	if (*name == '\0' && should_warn_about_name(ctx)) {
- 		str_warn(ctx, descr_render(dsc), _("Zero length name found."));
--		return true;
-+		return 0;
- 	}
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index ba60a1db..9c9c3e8e 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -22,13 +22,13 @@
  
- 	/* control characters */
-@@ -61,7 +63,7 @@ xfs_scrub_check_name(
- 		errname = string_escape(name);
- 		if (!errname) {
- 			str_errno(ctx, descr_render(dsc));
--			return false;
-+			return -1;
- 		}
- 		str_info(ctx, descr_render(dsc),
- _("Control character found in %s name \"%s\"."),
-@@ -69,15 +71,15 @@ _("Control character found in %s name \"%s\"."),
- 		free(errname);
- 	}
- 
--	return true;
-+	return 0;
- }
- 
- /*
-  * Iterate a directory looking for filenames with problematic
-  * characters.
-  */
--static bool
--xfs_scrub_scan_dirents(
-+static int
-+check_dirent_names(
- 	struct scrub_ctx	*ctx,
- 	struct descr		*dsc,
- 	int			*fd,
-@@ -86,45 +88,45 @@ xfs_scrub_scan_dirents(
- 	struct unicrash		*uc = NULL;
- 	DIR			*dir;
- 	struct dirent		*dentry;
--	bool			moveon = true;
- 	int			ret;
- 
- 	dir = fdopendir(*fd);
- 	if (!dir) {
- 		str_errno(ctx, descr_render(dsc));
--		moveon = false;
--		goto out;
-+		return errno;
- 	}
- 	*fd = -1; /* closedir will close *fd for us */
- 
- 	ret = unicrash_dir_init(&uc, ctx, bstat);
- 	if (ret) {
- 		str_liberror(ctx, ret, descr_render(dsc));
--		moveon = false;
- 		goto out_unicrash;
- 	}
- 
-+	errno = 0;
- 	dentry = readdir(dir);
- 	while (dentry) {
--		if (uc) {
-+		if (uc)
- 			ret = unicrash_check_dir_name(uc, dsc, dentry);
--			if (ret) {
--				str_liberror(ctx, ret, descr_render(dsc));
--				moveon = false;
--			}
--		} else
--			moveon = xfs_scrub_check_name(ctx, dsc,
--					_("directory"), dentry->d_name);
--		if (!moveon)
-+		else
-+			ret = simple_check_name(ctx, dsc, _("directory"),
-+					dentry->d_name);
-+		if (ret) {
-+			str_liberror(ctx, ret, descr_render(dsc));
- 			break;
-+		}
-+		errno = 0;
- 		dentry = readdir(dir);
- 	}
-+	if (errno) {
-+		ret = errno;
-+		str_liberror(ctx, ret, descr_render(dsc));
-+	}
- 	unicrash_free(uc);
- 
- out_unicrash:
- 	closedir(dir);
--out:
--	return moveon;
-+	return ret;
- }
- 
- #ifdef HAVE_LIBATTR
-@@ -145,8 +147,8 @@ static const struct attrns_decode attr_ns[] = {
-  * Check all the xattr names in a particular namespace of a file handle
-  * for Unicode normalization problems or collisions.
-  */
--static bool
--xfs_scrub_scan_fhandle_namespace_xattrs(
-+static int
-+check_xattr_ns_names(
- 	struct scrub_ctx		*ctx,
- 	struct descr			*dsc,
- 	struct xfs_handle		*handle,
-@@ -159,14 +161,13 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
- 	struct attrlist_ent		*ent;
- 	struct unicrash			*uc = NULL;
--	bool				moveon = true;
- 	int				i;
- 	int				error;
- 
- 	error = unicrash_xattr_init(&uc, ctx, bstat);
- 	if (error) {
- 		str_liberror(ctx, error, descr_render(dsc));
--		return false;
-+		return error;
- 	}
- 
- 	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
-@@ -180,20 +181,17 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 			ent = ATTR_ENTRY(attrlist, i);
- 			snprintf(keybuf, XATTR_NAME_MAX, "%s.%s", attr_ns->name,
- 					ent->a_name);
--			if (uc) {
-+			if (uc)
- 				error = unicrash_check_xattr_name(uc, dsc,
- 						keybuf);
--				if (error) {
--					str_liberror(ctx, error,
--							descr_render(dsc));
--					moveon = false;
--				}
--			} else
--				moveon = xfs_scrub_check_name(ctx, dsc,
-+			else
-+				error = simple_check_name(ctx, dsc,
- 						_("extended attribute"),
- 						keybuf);
--			if (!moveon)
-+			if (error) {
-+				str_liberror(ctx, error, descr_render(dsc));
- 				goto out;
-+			}
- 		}
- 
- 		if (!attrlist->al_more)
-@@ -201,37 +199,40 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
- 		error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
- 				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
- 	}
--	if (error && errno != ESTALE)
--		str_errno(ctx, descr_render(dsc));
-+	if (error) {
-+		if (errno == ESTALE)
-+			errno = 0;
-+		if (errno)
-+			str_errno(ctx, descr_render(dsc));
-+	}
- out:
- 	unicrash_free(uc);
--	return moveon;
-+	return error;
- }
- 
- /*
-  * Check all the xattr names in all the xattr namespaces for problematic
-  * characters.
-  */
--static bool
--xfs_scrub_scan_fhandle_xattrs(
-+static int
-+check_xattr_names(
- 	struct scrub_ctx		*ctx,
- 	struct descr			*dsc,
- 	struct xfs_handle		*handle,
- 	struct xfs_bulkstat		*bstat)
+ /* Fix all the problems in our per-AG list. */
+ static void
+-xfs_repair_ag(
++repair_ag(
+ 	struct workqueue		*wq,
+ 	xfs_agnumber_t			agno,
+ 	void				*priv)
  {
- 	const struct attrns_decode	*ns;
--	bool				moveon = true;
-+	int				ret;
- 
- 	for (ns = attr_ns; ns->name; ns++) {
--		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, dsc,
--				handle, bstat, ns);
--		if (!moveon)
-+		ret = check_xattr_ns_names(ctx, dsc, handle, bstat, ns);
-+		if (ret)
+ 	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
+-	bool				*pmoveon = priv;
++	bool				*aborted = priv;
+ 	struct action_list		*alist;
+ 	size_t				unfixed;
+ 	size_t				new_unfixed;
+@@ -42,76 +42,74 @@ xfs_repair_ag(
+ 	do {
+ 		ret = action_list_process(ctx, ctx->mnt.fd, alist, flags);
+ 		if (ret) {
+-			*pmoveon = false;
++			*aborted = true;
+ 			return;
+ 		}
+ 		new_unfixed = action_list_length(alist);
+ 		if (new_unfixed == unfixed)
  			break;
- 	}
--	return moveon;
-+	return ret;
- }
- #else
--# define xfs_scrub_scan_fhandle_xattrs(c, d, h, b)	(true)
-+# define check_xattr_names(c, d, h, b)	(0)
- #endif /* HAVE_LIBATTR */
+ 		unfixed = new_unfixed;
+-	} while (unfixed > 0 && *pmoveon);
+-
+-	if (!*pmoveon)
+-		return;
++		if (*aborted)
++			return;
++	} while (unfixed > 0);
  
- static int
-@@ -255,26 +256,25 @@ render_ino_from_handle(
-  * Check for potential Unicode collisions in names.
-  */
- static int
--xfs_scrub_connections(
-+check_inode_names(
- 	struct scrub_ctx	*ctx,
- 	struct xfs_handle	*handle,
- 	struct xfs_bulkstat	*bstat,
- 	void			*arg)
- {
--	bool			*pmoveon = arg;
- 	DEFINE_DESCR(dsc, ctx, render_ino_from_handle);
--	bool			moveon = true;
-+	bool			*aborted = arg;
- 	int			fd = -1;
--	int			error;
-+	int			error = 0;
-+	int			err2;
- 
- 	descr_set(&dsc, bstat);
- 	background_sleep();
- 
- 	/* Warn about naming problems in xattrs. */
- 	if (bstat->bs_xflags & FS_XFLAG_HASATTR) {
--		moveon = xfs_scrub_scan_fhandle_xattrs(ctx, &dsc, handle,
--				bstat);
--		if (!moveon)
-+		error = check_xattr_names(ctx, &dsc, handle, bstat);
-+		if (error)
- 			goto out;
- 	}
- 
-@@ -282,7 +282,8 @@ xfs_scrub_connections(
- 	if (S_ISDIR(bstat->bs_mode)) {
- 		fd = scrub_open_handle(handle);
- 		if (fd < 0) {
--			if (errno == ESTALE)
-+			error = errno;
-+			if (error == ESTALE)
- 				return ESTALE;
- 			str_errno(ctx, descr_render(&dsc));
- 			goto out;
-@@ -291,21 +292,27 @@ xfs_scrub_connections(
- 
- 	/* Warn about naming problems in the directory entries. */
- 	if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
--		moveon = xfs_scrub_scan_dirents(ctx, &dsc, &fd, bstat);
--		if (!moveon)
-+		error = check_dirent_names(ctx, &dsc, &fd, bstat);
-+		if (error)
- 			goto out;
- 	}
- 
- out:
- 	progress_add(1);
- 	if (fd >= 0) {
--		error = close(fd);
--		if (error)
-+		err2 = close(fd);
-+		if (err2)
- 			str_errno(ctx, descr_render(&dsc));
-+		if (!error && err2)
-+			error = err2;
- 	}
--	if (!moveon)
+ 	/* Try once more, but this time complain if we can't fix things. */
+ 	flags |= ALP_COMPLAIN_IF_UNFIXED;
+ 	ret = action_list_process(ctx, ctx->mnt.fd, alist, flags);
+ 	if (ret)
 -		*pmoveon = false;
--	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
-+
-+	if (error)
 +		*aborted = true;
-+	if (!error && *aborted)
-+		error = ECANCELED;
-+
-+	return error;
  }
  
- #ifndef FS_IOC_GETFSLABEL
-@@ -327,20 +334,19 @@ scrub_render_mountpoint(
-  * Check the filesystem label for Unicode normalization problems or misleading
-  * sequences.
-  */
+ /* Process all the action items. */
 -static bool
--xfs_scrub_fs_label(
+-xfs_process_action_items(
 +static int
-+check_fs_label(
++repair_everything(
  	struct scrub_ctx		*ctx)
  {
- 	DEFINE_DESCR(dsc, ctx, scrub_render_mountpoint);
- 	char				label[FSLABEL_MAX];
- 	struct unicrash			*uc = NULL;
+ 	struct workqueue		wq;
+ 	xfs_agnumber_t			agno;
 -	bool				moveon = true;
- 	int				error;
++	bool				aborted = false;
+ 	int				ret;
  
- 	error = unicrash_fs_label_init(&uc, ctx);
- 	if (error) {
- 		str_liberror(ctx, error, descr_render(&dsc));
+ 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
+ 			scrub_nproc_workqueue(ctx));
+ 	if (ret) {
+ 		str_liberror(ctx, ret, _("creating repair workqueue"));
 -		return false;
-+		return error;
++		return ret;
  	}
- 
- 	descr_set(&dsc, NULL);
-@@ -349,7 +355,7 @@ xfs_scrub_fs_label(
- 	error = ioctl(ctx->mnt.fd, FS_IOC_GETFSLABEL, &label);
- 	if (error) {
- 		if (errno != EOPNOTSUPP && errno != ENOTTY) {
--			moveon = false;
-+			error = errno;
- 			perror(ctx->mntpoint);
- 		}
- 		goto out;
-@@ -360,45 +366,49 @@ xfs_scrub_fs_label(
- 		goto out;
- 
- 	/* Otherwise check for weirdness. */
--	if (uc) {
-+	if (uc)
- 		error = unicrash_check_fs_label(uc, &dsc, label);
--		if (error) {
--			str_liberror(ctx, error, descr_render(&dsc));
--			moveon = false;
+-	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
+-		if (action_list_length(&ctx->action_lists[agno]) > 0) {
+-			ret = workqueue_add(&wq, xfs_repair_ag, agno, &moveon);
+-			if (ret) {
+-				moveon = false;
+-				str_liberror(ctx, ret,
+-						_("queueing repair work"));
+-				break;
+-			}
 -		}
--	} else
--		moveon = xfs_scrub_check_name(ctx, &dsc, _("filesystem label"),
-+	else
-+		error = simple_check_name(ctx, &dsc, _("filesystem label"),
- 				label);
--	if (!moveon)
--		goto out;
-+	if (error)
-+		str_liberror(ctx, error, descr_render(&dsc));
- out:
- 	unicrash_free(uc);
--	return moveon;
-+	return error;
- }
- 
- /* Check directory connectivity. */
--bool
--xfs_scan_connections(
-+int
-+phase5_func(
- 	struct scrub_ctx	*ctx)
- {
--	bool			moveon = true;
-+	bool			aborted = false;
- 	int			ret;
- 
- 	if (ctx->errors_found || ctx->unfixable_errors) {
- 		str_info(ctx, ctx->mntpoint,
- _("Filesystem has errors, skipping connectivity checks."));
--		return true;
-+		return 0;
+-		if (!moveon)
++	for (agno = 0; !aborted && agno < ctx->mnt.fsgeom.agcount; agno++) {
++		if (action_list_length(&ctx->action_lists[agno]) == 0)
++			continue;
++
++		ret = workqueue_add(&wq, repair_ag, agno, &aborted);
++		if (ret) {
++			str_liberror(ctx, ret, _("queueing repair work"));
+ 			break;
++		}
  	}
  
--	ret = xfs_scrub_fs_label(ctx);
-+	ret = check_fs_label(ctx);
- 	if (ret)
--		return false;
-+		return ret;
+ 	ret = workqueue_terminate(&wq);
+-	if (ret) {
+-		moveon = false;
++	if (ret)
+ 		str_liberror(ctx, ret, _("finishing repair work"));
+-	}
+ 	workqueue_destroy(&wq);
  
--	ret = scrub_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
-+	ret = scrub_scan_all_inodes(ctx, check_inode_names, &aborted);
- 	if (ret)
--		return false;
--	if (!moveon)
--		return false;
-+		return ret;
 +	if (aborted)
 +		return ECANCELED;
 +
- 	xfs_scrub_report_preen_triggers(ctx);
+ 	pthread_mutex_lock(&ctx->lock);
+-	if (moveon && ctx->errors_found == 0 && ctx->unfixable_errors == 0 &&
++	if (ctx->errors_found == 0 &&
++	    ctx->unfixable_errors == 0 &&
+ 	    want_fstrim) {
+ 		fstrim(ctx);
+ 		progress_add(1);
+ 	}
+ 	pthread_mutex_unlock(&ctx->lock);
+ 
+-	return moveon;
++	return 0;
+ }
+ 
+ /* Fix everything that needs fixing. */
+-bool
+-xfs_repair_fs(
++int
++phase4_func(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	int			ret;
+@@ -124,14 +122,21 @@ xfs_repair_fs(
+ 	 */
+ 	ret = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
+ 	if (ret)
+-		return false;
++		return ret;
+ 
+-	return xfs_process_action_items(ctx);
++	return repair_everything(ctx);
+ }
+ 
+-/* Estimate how much work we're going to do. */
+ bool
+-xfs_estimate_repair_work(
++xfs_repair_fs(
++	struct scrub_ctx	*ctx)
++{
++	return phase4_func(ctx) == 0;
++}
++
++/* Estimate how much work we're going to do. */
++int
++phase4_estimate(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		*items,
+ 	unsigned int		*nr_threads,
+@@ -146,5 +151,15 @@ xfs_estimate_repair_work(
+ 	*items = need_fixing;
+ 	*nr_threads = scrub_nproc(ctx) + 1;
+ 	*rshift = 0;
 -	return true;
 +	return 0;
 +}
 +
 +bool
-+xfs_scan_connections(
-+	struct scrub_ctx	*ctx)
++xfs_estimate_repair_work(
++	struct scrub_ctx	*ctx,
++	uint64_t		*items,
++	unsigned int		*nr_threads,
++	int			*rshift)
 +{
-+	return phase5_func(ctx) == 0;
++	return phase4_estimate(ctx, items, nr_threads, rshift) == 0;
  }
 
