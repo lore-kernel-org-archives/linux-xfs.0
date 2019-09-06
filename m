@@ -2,221 +2,200 @@ Return-Path: <SRS0=UMh5=XB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F8ADC43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 13:10:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C2BFC43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 16:17:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 07370206CD
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 13:10:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E0505218AE
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 16:17:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="pnv6fpfm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388670AbfIFNKR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Sep 2019 09:10:17 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:21055 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727970AbfIFNKR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 6 Sep 2019 09:10:17 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AABF518C893C;
-        Fri,  6 Sep 2019 13:10:16 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 42B5D1EE;
-        Fri,  6 Sep 2019 13:10:16 +0000 (UTC)
-Date:   Fri, 6 Sep 2019 09:10:14 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: push the grant head when the log head moves
- forward
-Message-ID: <20190906131014.GA62719@bfoster>
-References: <20190904042451.9314-1-david@fromorbit.com>
- <20190904042451.9314-8-david@fromorbit.com>
- <20190904193442.GA52970@bfoster>
- <20190904225056.GL1119@dread.disaster.area>
- <20190905162533.GA59149@bfoster>
- <20190906000205.GL1119@dread.disaster.area>
+        id S1728349AbfIFQRo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Sep 2019 12:17:44 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38824 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727805AbfIFQRo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Sep 2019 12:17:44 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x86GESWc124588;
+        Fri, 6 Sep 2019 16:17:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=l/040P4QW7+JM3PW8YadH03j1RBWt/KrwbSqTwdxSBI=;
+ b=pnv6fpfmMe5nS70CSEL060llVcC5BIJSFjlC9FIR2Tdu/pvBni8RCOB6Y6QN8e4CBBAz
+ ADvO1D1KT0Z+cJpeRls5fkXkax6ll+U+6os6oTBhx+kpDInFOffx80IzbujRTIWM6K16
+ K/yCGXRAtuoPDcHsrgi6WlRp23QKH0WBCF00+XTQF78laJPk1WwCc4+slEV11H4IUbVx
+ VHeOkLwJjCxgvdpx4644DM8deosDGJJlYO74zIIa+xy9eL+Iu0FdyYiou7kUC6SERLCc
+ kowYWhcRmtipcjBZ8Ji/AzGnCU+GHsQmJ5CVy3C7/QpxJ7+rwmkrHtncMIxeMpsxj9MG AQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2uutdcr5g2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Sep 2019 16:17:25 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x86GDKNP182711;
+        Fri, 6 Sep 2019 16:17:25 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2uum4h9k57-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 06 Sep 2019 16:17:24 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x86GHNnh008246;
+        Fri, 6 Sep 2019 16:17:23 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 06 Sep 2019 09:17:23 -0700
+Date:   Fri, 6 Sep 2019 09:17:22 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     "Jianhong.Yin" <yin-jianhong@163.com>
+Cc:     linux-xfs@vger.kernel.org, jiyin@redhat.com
+Subject: Re: [PATCH] xfs_io: copy_range don't truncate dst_file, and add
+ smart length.
+Message-ID: <20190906161722.GT2229799@magnolia>
+References: <20190906053927.8394-1-yin-jianhong@163.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190906000205.GL1119@dread.disaster.area>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.70]); Fri, 06 Sep 2019 13:10:16 +0000 (UTC)
+In-Reply-To: <20190906053927.8394-1-yin-jianhong@163.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9372 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1906280000 definitions=main-1909060172
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9372 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
+ definitions=main-1909060172
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 06, 2019 at 10:02:05AM +1000, Dave Chinner wrote:
-> On Thu, Sep 05, 2019 at 12:25:33PM -0400, Brian Foster wrote:
-> > On Thu, Sep 05, 2019 at 08:50:56AM +1000, Dave Chinner wrote:
-> > > On Wed, Sep 04, 2019 at 03:34:42PM -0400, Brian Foster wrote:
-> > > > On Wed, Sep 04, 2019 at 02:24:51PM +1000, Dave Chinner wrote:
-> > > > > From: Dave Chinner <dchinner@redhat.com>
-> > > > > +/*
-> > > > > + * Completion of a iclog IO does not imply that a transaction has completed, as
-> > > > > + * transactions can be large enough to span many iclogs. We cannot change the
-> > > > > + * tail of the log half way through a transaction as this may be the only
-> > > > > + * transaction in the log and moving the tail to point to the middle of it
-> > > > > + * will prevent recovery from finding the start of the transaction. Hence we
-> > > > > + * should only update the last_sync_lsn if this iclog contains transaction
-> > > > > + * completion callbacks on it.
-> > > > > + *
-> > > > > + * We have to do this before we drop the icloglock to ensure we are the only one
-> > > > > + * that can update it.
-> > > > > + *
-> > > > > + * If we are moving the last_sync_lsn forwards, we also need to ensure we kick
-> > > > > + * the reservation grant head pushing. This is due to the fact that the push
-> > > > > + * target is bound by the current last_sync_lsn value. Hence if we have a large
-> > > > > + * amount of log space bound up in this committing transaction then the
-> > > > > + * last_sync_lsn value may be the limiting factor preventing tail pushing from
-> > > > > + * freeing space in the log. Hence once we've updated the last_sync_lsn we
-> > > > > + * should push the AIL to ensure the push target (and hence the grant head) is
-> > > > > + * no longer bound by the old log head location and can move forwards and make
-> > > > > + * progress again.
-> > > > > + */
-> > > > > +static void
-> > > > > +xlog_state_set_callback(
-> > > > > +	struct xlog		*log,
-> > > > > +	struct xlog_in_core	*iclog,
-> > > > > +	xfs_lsn_t		header_lsn)
-> > > > > +{
-> > > > > +	iclog->ic_state = XLOG_STATE_CALLBACK;
-> > > > > +
-> > > > > +	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn), header_lsn) <= 0);
-> > > > > +
-> > > > > +	if (list_empty_careful(&iclog->ic_callbacks))
-> > > > > +		return;
-> > > > > +
-> > > > > +	atomic64_set(&log->l_last_sync_lsn, header_lsn);
-> > > > > +	xlog_grant_push_ail(log, 0);
-> > > > > +
-> > > > 
-> > > > Nit: extra whitespace line above.
-> > > 
-> > > Fixed.
-> > > 
-> > > > This still seems racy to me, FWIW. What if the AIL is empty (i.e. the
-> > > > push is skipped)?
-> > > 
-> > > If the AIL is empty, then it's a no-op because pushing on the AIL is
-> > > not going to make more log space become free. Besides, that's not
-> > > the problem being solved here - reservation wakeups on first insert
-> > > into the AIL are already handled by xfs_trans_ail_update_bulk() and
-> > > hence the first patch in the series. This patch is addressing the
-> > 
-> > Nothing currently wakes up reservation waiters on first AIL insertion.
+On Fri, Sep 06, 2019 at 01:39:27PM +0800, Jianhong.Yin wrote:
+> 1. copy_range should be a simple wrapper for copy_file_range(2)
+> and nothing else. and there's already -t option for truncate.
+> so here we remove the truncate action in copy_range.
+> see: https://patchwork.kernel.org/comment/22863587/#1
 > 
-> Nor should it be necessary - it's the removal from the AIL that
-> frees up log space, not insertion. The update operation is a
-> remove followed by an insert - the remove part of that operation is
-> what may free up log space, not the insert.
+> 2. improve the default length value generation:
+> if -l option is omitted use the length that from src_offset to end
+> (src_file's size - src_offset) instead.
+> if src_offset is greater than file size, length is 0.
 > 
-
-Just above you wrote: "reservation wakeups on first insert into the AIL
-are already handled by xfs_trans_ail_update_bulk()". My reply was just
-to point out that there are no wakeups in that case.
-
-> Hence if we need to wake the log reservation waiters on first AIL
-> insert to fix a bug, we haven't found the underlying problem is
-> preventing log space from being freed...
-> >
-> > > i.e. the AIL is for moving the tail of the log - this code moves the
-> > > head of the log. But both impact on the AIL push target (it is based on
-> > > the distance between the head and tail), so we need
-> > > to update the push target just in case this commit does not move
-> > > the tail...
-> > > 
-> > > > What if xfsaild completes this push before the
-> > > > associated log items land in the AIL or we race with xfsaild emptying
-> > > > the AIL? Why not just reuse/update the existing grant head wake up logic
-> > > > in the iclog callback itself? E.g., something like the following
-> > > > (untested):
-> > > > 
-> > 
-> > And the raciness concerns..? AFAICT this still opens a race window where
-> > the AIL can idle on the push target before AIL insertion.
+> 3. update manpage
 > 
-> I don't know what race you see - if the AIL completes a push before
-> we insert new objects at the head from the current commit, then it
-> does not matter one bit because the items are being inserted at the
-> log head, not the log tail where the pushing occurs at. If we are
-> inserting objects into the AIL within the push target window, then
-> there is something else very wrong going on, because when the log is
-> out of space the push target should be nowhere near the LSN we are
-> inserting inew objects into the AIL at. (i.e. they should be 3/4s of
-> the log apart...)
+> and have confirmed that this change will not affect xfstests.
 > 
-
-I'm not following your reasoning. It sounds to me that you're arguing it
-doesn't matter that the AIL is not populated from the current commit
-because the push target should be much farther behind the head. If
-that's the case, why does this patch order the AIL push after a
-->l_last_sync_lsn update? That's the LSN of the most recent commit
-record to hit the log and hence the new physical log head.
-
-Side note: I think the LSN of the commit record iclog is different and
-actually ahead of the LSN associated with AIL insertion. I don't
-necessarily think that's a problem given how the log subsystem behaves
-today, but it's another subtle/undocumented (and easily avoidable) quirk
-that may not always be so benign.
-
-> > > So, from #1 we see that unconditional wakeups are not necessary in
-> > > the scenario you pose, and from #2 it's not a viable solution even
-> > > if it was required.
-> > > 
-> > > However, #1 indicates other problems if a xfs_log_space_wake() call
-> > > is necessary in this case. No reservations space and an empty AIL
-> > > implies that the CIL pins the entire log - a pending commit that
-> > > hasn't finished flushing and the current context that is
-> > > aggregating. This implies we've violated a much more important rule
-> > > of the on-disk log format: finding the head and tail of the log
-> > > requires no individual commit be larger than 50% of the log.
-> > > 
-> > 
-> > I described this exact problem days ago in the original thread. There's
-> > no need to rehash it here. FWIW, I can reproduce much worse than 50% log
-> > consumption aggregated outside of the AIL with the current code and it
-> > doesn't depend on a nonpreemptible kernel (though the workqueue fix
-> > looks legit to me).
+> Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+> ---
+>  io/copy_file_range.c | 22 +++++-----------------
+>  man/man8/xfs_io.8    |  9 +++------
+>  2 files changed, 8 insertions(+), 23 deletions(-)
 > 
-...
+> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+> index b7b9fd88..02d50e53 100644
+> --- a/io/copy_file_range.c
+> +++ b/io/copy_file_range.c
+> @@ -66,21 +66,13 @@ copy_src_filesize(int fd)
+>  	return st.st_size;
+>  }
+>  
+> -static int
+> -copy_dst_truncate(void)
+> -{
+> -	int ret = ftruncate(file->fd, 0);
+> -	if (ret < 0)
+> -		perror("ftruncate");
+> -	return ret;
+> -}
+> -
+>  static int
+>  copy_range_f(int argc, char **argv)
+>  {
+>  	long long src = 0;
+>  	long long dst = 0;
+>  	size_t len = 0;
+> +	int len_ommited = 1;
+
+Nit: The correct spelling is "omitted", not "ommited".  As in,
+
+bool len_omitted = true;
+
+(You could also call it "len_specified" since it's a little odd to
+declare that it's ommitted before we even parse the arguments but now
+we're just splitting hairs...)
+
+>  	int opt;
+>  	int ret;
+>  	int fd;
+> @@ -112,6 +104,7 @@ copy_range_f(int argc, char **argv)
+>  				printf(_("invalid length -- %s\n"), optarg);
+>  				return 0;
+>  			}
+> +			len_ommited = 0;
+>  			break;
+>  		case 'f':
+>  			src_file_nr = atoi(argv[1]);
+> @@ -137,7 +130,7 @@ copy_range_f(int argc, char **argv)
+>  		fd = filetable[src_file_nr].fd;
+>  	}
+>  
+> -	if (src == 0 && dst == 0 && len == 0) {
+> +	if (len_ommited) {
+>  		off64_t	sz;
+>  
+>  		sz = copy_src_filesize(fd);
+> @@ -145,13 +138,8 @@ copy_range_f(int argc, char **argv)
+>  			ret = 1;
+>  			goto out;
+>  		}
+> -		len = sz;
+> -
+> -		ret = copy_dst_truncate();
+> -		if (ret < 0) {
+> -			ret = 1;
+> -			goto out;
+> -		}
+> +		if (sz > src)
+> +			len = sz - src;
+>  	}
+>  
+>  	ret = copy_file_range_cmd(fd, &src, &dst, len);
+> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> index 6e064bdd..8bfaeeba 100644
+> --- a/man/man8/xfs_io.8
+> +++ b/man/man8/xfs_io.8
+> @@ -669,13 +669,10 @@ The source must be specified either by path
+>  or as another open file
+>  .RB ( \-f ).
+>  If
+> -.I src_file
+> -.IR src_offset ,
+> -.IR dst_offset ,
+> -and
+>  .I length
+> -are omitted the contents of src_file will be copied to the beginning of the
+> -open file, overwriting any data already there.
+> +is omitted will use ( src_size - 
+> +.I src_offset
+> +) instead.
+
+"If length is not specified, this command copies data from src_offset to
+the end of the src_file into the dst_file at dst_offset." ?
+
+--D
+
+>  .RS 1.0i
+>  .PD 0
+>  .TP 0.4i
+> -- 
+> 2.21.0
 > 
-> i.e. we changed the unlinked inode processing in a way that
-> the kernel can now runs tens of thousands of unlink transactions
-> without yeilding the CPU. That violated the "CIL push work will run
-> within a few transactions of the background push occurring"
-> mechanism the workqueue provided us with and that, fundamentally, is
-> the underlying issue here. It's not a CIL vs empty AIL vs log
-> reservation exhaustion race condition - that's just an observable
-> symptom.
-> 
-
-Yes, but the point is that's not the only thing that can delay CIL push
-work. Since the AIL is not populated until the commit record iclog is
-written out, and background CIL pushing doesn't flush the commit record
-for the associated checkpoint before it completes, and CIL pushing
-itself is serialized, a stalled commit record iclog I/O is enough to
-create "log full, empty AIL" conditions.
-
-> To that end, I have been prototyping patches to fix this exact problem
-> as part of the non-blocking inode reclaim series. I've been looking at
-> this because the CIL pins so much memory on large logs and I wanted to
-> put an upper bound on it that wasn't measured in GBs of RAM. Hence I'm
-> planning to pull these out into a separate series now as it's clear
-> that non-preemptible kernels and workqueues do not play well together
-> and that the more we use workqueues for async processing, the more we
-> introduce a potential real-world vector for CIL overruns...
-> 
-
-Yes, I think a separate series for CIL management makes sense.
-
-Brian
-
-> Cheers,
-> 
-> Dave.  -- Dave Chinner david@fromorbit.com
