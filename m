@@ -4,60 +4,61 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6780AC43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 120BFC00306
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 652EF20820
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0A25A206B8
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BNN/jIcR"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VFMNq8bF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392135AbfIFDem (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:34:42 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48278 "EHLO
+        id S2404421AbfIFDen (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:34:43 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48298 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392128AbfIFDem (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:42 -0400
+        with ESMTP id S2392134AbfIFDen (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:43 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YPff110089;
-        Fri, 6 Sep 2019 03:34:37 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YfuS110279;
+        Fri, 6 Sep 2019 03:34:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=49tm2aKcDFlLPoWd3aYMcNWLlMIIeQl9xfm45RAks24=;
- b=BNN/jIcRQS1WvB5VPtHHvhh2N9Hl0kIdn4YKhcDscAeJKrJ984f/dl9fQmIsFS1JSwDr
- vbHchOg2rMkJY8nicmHPrwIolDtaZBRjLG4AjO6z9zWEcw+K1/IhxonFbGEN/t7e59Qr
- Q4wGi8XGWpxxNR7dSM7EAW8ZuJ7J94wupwCKwCm/7rwZeF7sB/ly1bLEzfL0YSm2YQEL
- e/cn8LPBt+ZsouO8sjo1bJ3lNgflVb66UZNCbp4VyMESKEeMPs/868ejYcIzTAG1JzI0
- U8YkGdqPQygcfXdr1M3/AVwZTMJhEugVt0GXiR0aU/s4f7q5oWIrApjW/Y/scCiWU9AY Pw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2uuf4n0357-1
+ bh=t/xoy+e+BlDcuXsCV3x8SN3FNV7jnPSIQkXURxbGowM=;
+ b=VFMNq8bF0puxBFrCSGRjXREM8pp3hXfzfNLK+zeKXSpyM2OvQqmY0EA3eWxQRcahTQQ8
+ yHU7VjRDEgt0zRem1ptEzUG6KkenIvapXffmoL1ZEnmK8wDRVtfkJrbI1RFqnuHSfpg8
+ 0vEfgflHNa+s2W/0hJ52huLKqG6u0pzfrvLsHoMGvwHrf2Tj2W3RINg/aOmtcHVK/2Ab
+ xQDC3xaJfS5oJIFHNSyj46ERRLwnbjQZfFuuHBW/hovYsoj/naVGpVLdT9Qlkq2Ojno2
+ gbiQvsH0LRGLehX9uGZTcwZyI1TjbJa3Grxa+HHSKnCnl8v/TxNR/ieVk1HjkYGKbZOq DQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2uuf4n035f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:37 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863Xa6x069093;
-        Fri, 6 Sep 2019 03:34:37 GMT
+        Fri, 06 Sep 2019 03:34:41 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YXtw104082;
+        Fri, 6 Sep 2019 03:34:40 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2utvr4jt7w-1
+        by aserp3020.oracle.com with ESMTP id 2uud7p2p9p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:37 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863YYxI014244;
-        Fri, 6 Sep 2019 03:34:34 GMT
+        Fri, 06 Sep 2019 03:34:39 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863XT23013835;
+        Fri, 6 Sep 2019 03:33:29 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:34:34 -0700
-Subject: [PATCH 2/4] libxfs: fix buffer refcounting in delwri_queue
+        with ESMTP ; Thu, 05 Sep 2019 20:33:28 -0700
+Subject: [PATCH 1/5] xfs_scrub: remove unnecessary fd parameter from file
+ scrubbers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Date:   Thu, 05 Sep 2019 20:34:33 -0700
-Message-ID: <156774087342.2643362.6934117999460507337.stgit@magnolia>
-In-Reply-To: <156774086083.2643362.4042713521116931635.stgit@magnolia>
-References: <156774086083.2643362.4042713521116931635.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 05 Sep 2019 20:33:28 -0700
+Message-ID: <156774080821.2643094.5031489896405041648.stgit@magnolia>
+In-Reply-To: <156774080205.2643094.9791648860536208060.stgit@magnolia>
+References: <156774080205.2643094.9791648860536208060.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,49 +81,233 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-In the kernel, xfs_buf_delwri_queue increments the buffer reference
-count before putting the buffer on the buffer list, and the refcount is
-decremented after the io completes for a net refcount change of zero.
-
-In userspace, delwri_queue calls libxfs_writebuf, which puts the buffer.
-delwri_queue is a no-op, for a net refcount change of -1.  This creates
-problems for any callers that expect a net change of zero, so increment
-the buffer refcount before calling writebuf.
+xfs_scrub's scrub ioctl wrapper functions always take a scrub_ctx and an
+fd, but we always set the fd to ctx->mnt.fd.  Remove the redundant
+parameter.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- libxfs/libxfs_io.h   |    7 +++++++
- libxfs/libxfs_priv.h |    1 -
- 2 files changed, 7 insertions(+), 1 deletion(-)
+ scrub/phase3.c |   10 +++++-----
+ scrub/scrub.c  |   34 ++++++++++++----------------------
+ scrub/scrub.h  |   16 ++++++++--------
+ 3 files changed, 25 insertions(+), 35 deletions(-)
 
 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 7dcb4bff..09ed043b 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -245,4 +245,11 @@ xfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags)
- 	return bp;
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 5eff7907..81c64cd1 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -28,12 +28,12 @@
+ static bool
+ xfs_scrub_fd(
+ 	struct scrub_ctx	*ctx,
+-	bool			(*fn)(struct scrub_ctx *, uint64_t,
+-				      uint32_t, int, struct xfs_action_list *),
++	bool			(*fn)(struct scrub_ctx *ctx, uint64_t ino,
++				      uint32_t gen, struct xfs_action_list *a),
+ 	struct xfs_bstat	*bs,
+ 	struct xfs_action_list	*alist)
+ {
+-	return fn(ctx, bs->bs_ino, bs->bs_gen, ctx->mnt.fd, alist);
++	return fn(ctx, bs->bs_ino, bs->bs_gen, alist);
  }
  
-+static inline void
-+xfs_buf_delwri_queue(struct xfs_buf *bp, struct list_head *buffer_list)
-+{
-+	bp->b_node.cn_count++;
-+	libxfs_writebuf(bp, 0);
-+}
-+
- #endif	/* __LIBXFS_IO_H__ */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index b05e082a..13dab58a 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -382,7 +382,6 @@ roundup_64(uint64_t x, uint32_t y)
- #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
- #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
- #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
--#define xfs_buf_delwri_queue(bp, bl)	libxfs_writebuf((bp), 0)
- #define xfs_buf_delwri_submit(bl)	(0)
- #define xfs_buf_oneshot(bp)		((void) 0)
+ struct scrub_inode_ctx {
+@@ -114,8 +114,8 @@ xfs_scrub_inode(
  
+ 	if (S_ISLNK(bstat->bs_mode)) {
+ 		/* Check symlink contents. */
+-		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino,
+-				bstat->bs_gen, ctx->mnt.fd, &alist);
++		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino, bstat->bs_gen,
++				&alist);
+ 	} else if (S_ISDIR(bstat->bs_mode)) {
+ 		/* Check the directory entries. */
+ 		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat, &alist);
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index ac67f8ec..62edc361 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -176,7 +176,6 @@ xfs_scrub_warn_incomplete_scrub(
+ static enum check_outcome
+ xfs_check_metadata(
+ 	struct scrub_ctx		*ctx,
+-	int				fd,
+ 	struct xfs_scrub_metadata	*meta,
+ 	bool				is_inode)
+ {
+@@ -191,7 +190,7 @@ xfs_check_metadata(
+ 
+ 	dbg_printf("check %s flags %xh\n", buf, meta->sm_flags);
+ retry:
+-	error = ioctl(fd, XFS_IOC_SCRUB_METADATA, meta);
++	error = ioctl(ctx->mnt.fd, XFS_IOC_SCRUB_METADATA, meta);
+ 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !error)
+ 		meta->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+ 	if (error) {
+@@ -363,7 +362,7 @@ xfs_scrub_metadata(
+ 		background_sleep();
+ 
+ 		/* Check the item. */
+-		fix = xfs_check_metadata(ctx, ctx->mnt.fd, &meta, false);
++		fix = xfs_check_metadata(ctx, &meta, false);
+ 		progress_add(1);
+ 		switch (fix) {
+ 		case CHECK_ABORT:
+@@ -399,7 +398,7 @@ xfs_scrub_primary_super(
+ 	enum check_outcome		fix;
+ 
+ 	/* Check the item. */
+-	fix = xfs_check_metadata(ctx, ctx->mnt.fd, &meta, false);
++	fix = xfs_check_metadata(ctx, &meta, false);
+ 	switch (fix) {
+ 	case CHECK_ABORT:
+ 		return false;
+@@ -478,7 +477,6 @@ __xfs_scrub_file(
+ 	struct scrub_ctx		*ctx,
+ 	uint64_t			ino,
+ 	uint32_t			gen,
+-	int				fd,
+ 	unsigned int			type,
+ 	struct xfs_action_list		*alist)
+ {
+@@ -493,7 +491,7 @@ __xfs_scrub_file(
+ 	meta.sm_gen = gen;
+ 
+ 	/* Scrub the piece of metadata. */
+-	fix = xfs_check_metadata(ctx, fd, &meta, true);
++	fix = xfs_check_metadata(ctx, &meta, true);
+ 	if (fix == CHECK_ABORT)
+ 		return false;
+ 	if (fix == CHECK_DONE)
+@@ -507,10 +505,9 @@ xfs_scrub_inode_fields(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_INODE, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_INODE, alist);
+ }
+ 
+ bool
+@@ -518,10 +515,9 @@ xfs_scrub_data_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTD, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTD, alist);
+ }
+ 
+ bool
+@@ -529,10 +525,9 @@ xfs_scrub_attr_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTA, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTA, alist);
+ }
+ 
+ bool
+@@ -540,10 +535,9 @@ xfs_scrub_cow_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_BMBTC, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTC, alist);
+ }
+ 
+ bool
+@@ -551,10 +545,9 @@ xfs_scrub_dir(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_DIR, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_DIR, alist);
+ }
+ 
+ bool
+@@ -562,10 +555,9 @@ xfs_scrub_attr(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_XATTR, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_XATTR, alist);
+ }
+ 
+ bool
+@@ -573,10 +565,9 @@ xfs_scrub_symlink(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_SYMLINK, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_SYMLINK, alist);
+ }
+ 
+ bool
+@@ -584,10 +575,9 @@ xfs_scrub_parent(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+ 	uint32_t		gen,
+-	int			fd,
+ 	struct xfs_action_list	*alist)
+ {
+-	return __xfs_scrub_file(ctx, ino, gen, fd, XFS_SCRUB_TYPE_PARENT, alist);
++	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_PARENT, alist);
+ }
+ 
+ /* Test the availability of a kernel scrub command. */
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index e6e3f16f..7e28b522 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -36,21 +36,21 @@ bool xfs_can_scrub_parent(struct scrub_ctx *ctx);
+ bool xfs_can_repair(struct scrub_ctx *ctx);
+ 
+ bool xfs_scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_data_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_attr_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_cow_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_dir(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_attr(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ bool xfs_scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+-		int fd, struct xfs_action_list *alist);
++		struct xfs_action_list *alist);
+ 
+ /* Repair parameters are the scrub inputs and retry count. */
+ struct action_item {
 
