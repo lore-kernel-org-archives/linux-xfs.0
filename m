@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D13D6C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E0B59C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA95E2082C
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DC69E206B8
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="loVyS6yl"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ba9liCPv"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392152AbfIFDih (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:38:37 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:44662 "EHLO
+        id S2392153AbfIFDin (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:38:43 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:44766 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392146AbfIFDih (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:38:37 -0400
+        with ESMTP id S2392146AbfIFDin (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:38:43 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YUqd074698;
-        Fri, 6 Sep 2019 03:38:35 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863XpYf074291;
+        Fri, 6 Sep 2019 03:38:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=on1+A8FomuxiRkvyrWNovC5Tib37Rb5iUHxgWJMkgEI=;
- b=loVyS6ylRxYjuQUKjtcMfPvrh0coVBcARsz4yGiwugNFeUTdZm7PinDkXpI7zYaFpAUw
- 3bsySNuc1d66gjsRYDtczhiD/YcdiwDjTrG2+oKiEZtbxfydasm3GG7Qw2Sy8m/tcCN2
- hHq65VzU7pgaM+MOaz/B/GhgdmiLFx5EyASQ2fZVo3hT2y7WHdxW3a8GLni4iCY1Xr8N
- 9aakRnNj8x8K2XCP5etXO192G//xG/KeANJ8tPK5x4oLzNRjRYTGS6bXL4QAY5ymfGql
- q7E+RRH1BA+ES7a1JjFjFJHZBFUXEsnhkhp4yy1FBxiblZ4LRky7tPS6pjiG//c42JYX HA== 
+ bh=zAjXva+PC8/QMXuOkpSNqIOC7Z7vSbnIAH9MIXKr3ME=;
+ b=Ba9liCPvx7FrXUigZBFbGVcoqVU3+WtYwVIlOLToC6N24JPGu6gOmQZiWdtGVpR+xfNq
+ cgTEZl3d7z9wdWY/jWRaO02h2MXL9GVUIcx9cUSOp4KuSzEbqvrkGllk416oi1z/pkSA
+ 6KPODdIQYByxNsdDjH2ic0bdxgnUL/goY3NxGKfhCTlnEfcki/nVO0m9n7uE24a9dFDa
+ DbSm2wFYZbQYAaindvkprkdVZ2RxmtU4OD9aTFdGqpR56USunl/5MFFTsEZFaZ8jNzae
+ ZBizBKirOh5IwtbPmcjYQp48jzH+gGfFnNdVM56Veemp6NWX79i3GHY5TukrCkrpMgiH Gw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2uuf51g3bw-1
+        by aserp2120.oracle.com with ESMTP id 2uuf51g3c1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:38:35 +0000
+        Fri, 06 Sep 2019 03:38:41 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863cRQl078087;
-        Fri, 6 Sep 2019 03:38:34 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2utvr4jxvk-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863cPlD077880;
+        Fri, 6 Sep 2019 03:38:40 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2utvr4jy03-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:38:34 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x863cXLj005667;
-        Fri, 6 Sep 2019 03:38:33 GMT
+        Fri, 06 Sep 2019 03:38:40 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x863cdFi019844;
+        Fri, 6 Sep 2019 03:38:39 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:38:33 -0700
-Subject: [PATCH 08/11] xfs_scrub: enforce read verify pool minimum io size
+        with ESMTP ; Thu, 05 Sep 2019 20:38:39 -0700
+Subject: [PATCH 09/11] xfs_scrub: return bytes verified from a SCSI VERIFY
+ command
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 05 Sep 2019 20:38:32 -0700
-Message-ID: <156774111276.2645135.1979781895407724434.stgit@magnolia>
+Date:   Thu, 05 Sep 2019 20:38:39 -0700
+Message-ID: <156774111898.2645135.3530205346306381964.stgit@magnolia>
 In-Reply-To: <156774106064.2645135.2756383874064764589.stgit@magnolia>
 References: <156774106064.2645135.2756383874064764589.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,46 +81,37 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make sure we always issue media verification requests aligned to the
-minimum IO size that the caller cares about.  Concretely, this means
-that we only care about doing IO in filesystem block-sized chunks.
+Since disk_scsi_verify and pread are interchangeably called from
+disk_read_verify(), we must return the number of bytes verified (or -1)
+just like what pread returns.  This doesn't matter now due to bugs in
+scrub, but we're about to fix those bugs.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/read_verify.c |   14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ scrub/disk.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 73d30817..9d9be68d 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -77,6 +77,15 @@ read_verify_pool_alloc(
- 	struct read_verify_pool		*rvp;
- 	int				ret;
+diff --git a/scrub/disk.c b/scrub/disk.c
+index d2101cc6..bf9c795a 100644
+--- a/scrub/disk.c
++++ b/scrub/disk.c
+@@ -144,7 +144,7 @@ disk_scsi_verify(
+ 	iohdr.timeout = 30000; /* 30s */
  
-+	/*
-+	 * The minimum IO size must be a multiple of the disk sector size
-+	 * and a factor of the max io size.
-+	 */
-+	if (miniosz % disk->d_lbasize)
-+		return EINVAL;
-+	if (RVP_IO_MAX_SIZE % miniosz)
-+		return EINVAL;
-+
- 	rvp = calloc(1, sizeof(struct read_verify_pool));
- 	if (!rvp)
- 		return errno;
-@@ -245,6 +254,11 @@ read_verify_schedule_io(
- 	int				ret;
+ 	error = ioctl(disk->d_fd, SG_IO, &iohdr);
+-	if (error)
++	if (error < 0)
+ 		return error;
  
- 	assert(rvp->readbuf);
-+
-+	/* Round up and down to the start of a miniosz chunk. */
-+	start &= ~(rvp->miniosz - 1);
-+	length = roundup(length, rvp->miniosz);
-+
- 	rv = ptvar_get(rvp->rvstate, &ret);
- 	if (ret)
- 		return ret;
+ 	dbg_printf("VERIFY(16) fd %d lba %"PRIu64" len %"PRIu64" info %x "
+@@ -163,7 +163,7 @@ disk_scsi_verify(
+ 		return -1;
+ 	}
+ 
+-	return error;
++	return blockcount << BBSHIFT;
+ }
+ #else
+ # define disk_scsi_verify(...)		(ENOTTY)
 
