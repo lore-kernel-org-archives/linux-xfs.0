@@ -2,196 +2,106 @@ Return-Path: <SRS0=UMh5=XB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 019F1C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:01:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D8A3C00306
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:33:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 034F9206DE
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:01:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9CD1520842
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:33:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UM3cWCBZ"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jo5a9DYN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389424AbfIFDBm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:01:42 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:43938 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731491AbfIFDBm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:01:42 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8630ubw086925;
-        Fri, 6 Sep 2019 03:01:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=Ysh6zeGVoskBNQpeiqFHRIbIOIWBXBDy6jaFThdBEUQ=;
- b=UM3cWCBZzUkgtK9LYTSulOJMdDk0DhiDc+vnR3KsDK6eyoVfBMBcZLlWUkUy/wByiGzK
- 7dbAkY/SAMUbo0sd5kNrMp9s94KFjqo2ABXLDiq1o/3MZCYYuUzKpHzxFGnxyiBZJFQv
- LNBihNFl7dDatETjX+cEg57dDYYkcgFB4yK0Pb1ntNC9QeC8FV+eTdmW4cdEYEpYmS4c
- 7ZXvKMa/m+MbHc10AI7ULGWq12hOI09Ts0b0BPagmzMj0qEksLzKYDkMv++A8cMyEBDs
- SJN+O4ZB3ArS00M+PynYn1/Wrf9bi3OO9DXlG4o49ENfo3l77sl7AibFK+b3NifkDhNk EA== 
+        id S2392125AbfIFDdQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:33:16 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:38684 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2392118AbfIFDdQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:33:16 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863TC1P070761;
+        Fri, 6 Sep 2019 03:33:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=uwP/l0uVlHAYSswOoZpszhvWvqehcFhWM9/Cie3lxlw=;
+ b=jo5a9DYNbys73kRDXfhwPkWlWg+vJDsaHbGu0floj4ZDsmqAFbh78FEcfoSms7m37+EN
+ IacFPYXuQ1NB5q71lYuwanJNRejgktSC4OPwvldrtF8opQ43zcU1/pYitIVCmAMnW4iZ
+ 9m7EU9CKEXdC7A7Je8PcCujVPz7Zu+ANaDvqzBj3L+bzsgrt44xDOGNp/tP1jcdLH/83
+ sgI3cCPL6abXFvIuEsrBD6bmG6E9YoQxvqfeDpdyVEqNrdPeq3W5Q/uE2mnTOgBWLJ5m
+ LKPK0MDkYq/rjWZbPSF9Ck9wTUNhRouOVBrO+cTI+3/wrAbsrio58P+yFDZmRHfQvvC7 yw== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2uuf4n00jn-1
+        by aserp2120.oracle.com with ESMTP id 2uuf51g2wb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:01:39 +0000
+        Fri, 06 Sep 2019 03:33:13 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x862r7GR021945;
-        Fri, 6 Sep 2019 03:01:38 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2uu1b996qn-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863NvDs072728;
+        Fri, 6 Sep 2019 03:33:13 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2uu1b99pd2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:01:38 +0000
-Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8631b7L000829;
-        Fri, 6 Sep 2019 03:01:37 GMT
-Received: from localhost (/67.169.218.210)
+        Fri, 06 Sep 2019 03:33:13 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863XCns018388;
+        Fri, 6 Sep 2019 03:33:12 GMT
+Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:01:36 -0700
-Date:   Thu, 5 Sep 2019 20:01:36 -0700
+        with ESMTP ; Thu, 05 Sep 2019 20:33:12 -0700
+Subject: [PATCH 0/1] xfsprogs: online health tracking support
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
+To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/8 v2] xfs: prevent CIL push holdoff in log recovery
-Message-ID: <20190906030136.GR2229799@magnolia>
-References: <20190906000553.6740-1-david@fromorbit.com>
- <20190906000553.6740-4-david@fromorbit.com>
- <20190906001550.GM2229799@magnolia>
- <20190906020132.GM1119@dread.disaster.area>
- <20190906020813.GN1119@dread.disaster.area>
+Date:   Thu, 05 Sep 2019 20:33:11 -0700
+Message-ID: <156774079152.2643029.531526071920135871.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190906020813.GN1119@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909060031
+ engine=8.0.1-1906280000 definitions=main-1909060037
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
- definitions=main-1909060032
+ definitions=main-1909060038
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 06, 2019 at 12:08:13PM +1000, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> generic/530 on a machine with enough ram and a non-preemptible
-> kernel can run the AGI processing phase of log recovery enitrely out
-> of cache. This means it never blocks on locks, never waits for IO
-> and runs entirely through the unlinked lists until it either
-> completes or blocks and hangs because it has run out of log space.
-> 
-> It runs out of log space because the background CIL push is
-> scheduled but never runs. queue_work() queues the CIL work on the
-> current CPU that is busy, and the workqueue code will not run it on
-> any other CPU. Hence if the unlinked list processing never yields
-> the CPU voluntarily, the push work is delayed indefinitely. This
-> results in the CIL aggregating changes until all the log space is
-> consumed.
-> 
-> When the log recoveyr processing evenutally blocks, the CIL flushes
-> but because the last iclog isn't submitted for IO because it isn't
-> full, the CIL flush never completes and nothing ever moves the log
-> head forwards, or indeed inserts anything into the tail of the log,
-> and hence nothing is able to get the log moving again and recovery
-> hangs.
-> 
-> There are several problems here, but the two obvious ones from
-> the trace are that:
-> 	a) log recovery does not yield the CPU for over 4 seconds,
-> 	b) binding CIL pushes to a single CPU is a really bad idea.
-> 
-> This patch addresses just these two aspects of the problem, and are
-> suitable for backporting to work around any issues in older kernels.
-> The more fundamental problem of preventing the CIL from consuming
-> more than 50% of the log without committing will take more invasive
-> and complex work, so will be done as followup work.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_log_recover.c | 30 +++++++++++++++++++++---------
->  fs/xfs/xfs_super.c       |  3 ++-
->  2 files changed, 23 insertions(+), 10 deletions(-)
-> 
-> V2: big comment update
-> 
-> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-> index f05c6c99c4f3..508319039dce 100644
-> --- a/fs/xfs/xfs_log_recover.c
-> +++ b/fs/xfs/xfs_log_recover.c
-> @@ -5024,16 +5024,27 @@ xlog_recover_process_one_iunlink(
->  }
->  
->  /*
-> - * xlog_iunlink_recover
-> + * Recover AGI unlinked lists
->   *
-> - * This is called during recovery to process any inodes which
-> - * we unlinked but not freed when the system crashed.  These
-> - * inodes will be on the lists in the AGI blocks.  What we do
-> - * here is scan all the AGIs and fully truncate and free any
-> - * inodes found on the lists.  Each inode is removed from the
-> - * lists when it has been fully truncated and is freed.  The
-> - * freeing of the inode and its removal from the list must be
-> - * atomic.
-> + * This is called during recovery to process any inodes which we unlinked but
-> + * not freed when the system crashed.  These inodes will be on the lists in the
-> + * AGI blocks. What we do here is scan all the AGIs and fully truncate and free
-> + * any inodes found on the lists. Each inode is removed from the lists when it
-> + * has been fully truncated and is freed. The freeing of the inode and its
-> + * removal from the list must be atomic.
-> + *
-> + * If everything we touch in the agi processing loop is already in memory, this
-> + * loop can hold the cpu for a long time. It runs without lock contention,
-> + * memory allocation contention, the need wait for IO, etc, and so will run
-> + * until we either run out of inodes to process, run low on memory or we run out
-> + * of log space.
-> + *
-> + * This behaviour is bad for latency on single CPU and non-preemptible kernels,
-> + * and can prevent other filesytem work (such as CIL pushes) from running. This
-> + * can lead to deadlocks if the recovery process runs out of log reservation
-> + * space. Hence we need to yield the CPU when there is other kernel work
-> + * scheduled on this CPU to ensure other scheduled work can run without undue
-> + * latency.
+Hi all,
 
-I agree that this is a much better comment for the function.  Thanks for
-writing this. :)
+This series adds online health tracking capabilities to XFS, which
+enables userspace to discover if any metadata corruptions have been
+found (and not fixed) within a given class of metadata.
+
+Reporting to userspace is handled by three ioctl modifications:
+enhancements of the existing fs geometry ioctl to include a health
+field; enhancement of the existing bulkstat ioctl to report health, and
+a totally new ioctl to report allocation group geometry and status.
+
+At this point we've merged everything but the changes to spaceman.
+
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
+
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
 --D
 
->   */
->  STATIC void
->  xlog_recover_process_iunlinks(
-> @@ -5080,6 +5091,7 @@ xlog_recover_process_iunlinks(
->  			while (agino != NULLAGINO) {
->  				agino = xlog_recover_process_one_iunlink(mp,
->  							agno, agino, bucket);
-> +				cond_resched();
->  			}
->  		}
->  		xfs_buf_rele(agibp);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index f9450235533c..391b4748cae3 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -818,7 +818,8 @@ xfs_init_mount_workqueues(
->  		goto out_destroy_buf;
->  
->  	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
-> -			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
-> +			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_UNBOUND,
-> +			0, mp->m_fsname);
->  	if (!mp->m_cil_workqueue)
->  		goto out_destroy_unwritten;
->  
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=health-tracking
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=health-tracking
+
+fstests git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfstests-dev.git/log/?h=health-tracking
