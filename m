@@ -7,53 +7,53 @@ X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CA635C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 16:28:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 906F0C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 16:29:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97412206CD
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 16:28:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 547E820838
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 16:29:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qkHWRuoj"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qUwFP7Pq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389035AbfIFQ2v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Sep 2019 12:28:51 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52834 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388816AbfIFQ2v (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Sep 2019 12:28:51 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x86GSnS6166609
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2019 16:28:49 GMT
+        id S2390253AbfIFQ3U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 6 Sep 2019 12:29:20 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51594 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389180AbfIFQ3U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Sep 2019 12:29:20 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x86GSxNH137571
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2019 16:29:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
  subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=DMpW4e0Ib23DkYIhSTY69QYRYAikq/PHLWcwvj19iZM=;
- b=qkHWRuojkyB7rqHqDgpPMffHmI7jYp3OV0IzLAG4I8CFaplx10f8PPWIqfq1DRaGz1ru
- ncFwIYPrSwO2tWzkKpKR4azDrFXTO1BdqyJHKcxKQ8f0MBN8EzyI1BKT651r6w65Qcl0
- raugocPzMtoVI4MeaDMVQ1f0oFLQkLEteJyWrJ4XmB3GHtML2ZGZvpNuW4Af0CMvhojR
- 9JPN8kCIPA0uCJgt44lyPE+fxNB0EBL1HbmXZ2gwv7qE2rUuo9NGvQ1sc6AAQB6KzEJm
- el2v6693iZQRI9f7ak3CfX9VKnLezdLWoaoAlLIYW1i0/Y0D2PPdBEGnzeZEaA3X/7kt 6Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2uutys80g1-1
+ bh=f/513KqCD2kaGlh8EltztKCGIlQSA6tsMvsDCv49sqI=;
+ b=qUwFP7PqysWFoYOUYMuPDlySlXBiOWb/AOjQwc4ohd6cSEaATI9fwf3L2kBT+BJDYgBa
+ BdnIew+M8vkIcx3n+SRXyneBrt37va2qCCkBSK9EwkgPq4zb3h2XhKZZwpaJJE8qxA3s
+ DBxPSaJYo2JKLoQtDC0rhe8W5UJnj1hqpQVFXoMs212p/fUxHsmTogUct/Cq3NDX22SE
+ DQxi9qUEsOdG2y2oXVDH3CN234qIn5aaCx20KV0fpwDRvY26SdWwQLXqvlXw95hZpOtP
+ skqDTmeij6xaUlp+pRlytKfqP7XoZK3RmwloyRecdoIMNMnGVb0b46wUEaA+SGaigXAd 4A== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2uuu07g0bs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2019 16:28:49 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x86GSafZ003100
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2019 16:28:44 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2uud7ppjsn-1
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2019 16:29:18 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x86GJLFN001202
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2019 16:27:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2uum4ha11v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2019 16:28:39 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x86GS2oS028012
-        for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2019 16:28:02 GMT
+        for <linux-xfs@vger.kernel.org>; Fri, 06 Sep 2019 16:27:17 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x86GRFdn015280
+        for <linux-xfs@vger.kernel.org>; Fri, 6 Sep 2019 16:27:17 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 06 Sep 2019 09:28:02 -0700
-Date:   Fri, 6 Sep 2019 09:27:57 -0700
+        with ESMTP ; Fri, 06 Sep 2019 09:27:15 -0700
+Date:   Fri, 6 Sep 2019 09:27:15 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 14e15f1bcd73
-Message-ID: <20190906162757.GV2229799@magnolia>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to eb2e99943c5b
+Message-ID: <20190906162715.GU2229799@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -62,7 +62,7 @@ X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9372 signatures=6
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1906280000 definitions=main-1909060175
+ engine=8.0.1-1906280000 definitions=main-1909060173
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9372 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
@@ -85,12 +85,13 @@ has just been updated.
 Patches often get missed, so please check if your outstanding patches
 were in this update. If they have not been in this update, please
 resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I think this is pretty much it for 5.4, though bug
-fixes can of course be sent at any time.
+the next update.  This is the last commit before Dave's logging fixes,
+which probably ought to soak for a week or two longer than everything
+else.
 
 The new head of the for-next branch is commit:
 
-14e15f1bcd73 xfs: push the grant head when the log head moves forward
+eb2e99943c5b xfs: Use WARN_ON_ONCE for bailout mount-operation
 
 New Commits:
 
@@ -117,7 +118,7 @@ Darrick J. Wong (12):
       [39ee2239a5a2] xfs: remove all *_ITER_CONTINUE values
       [76f1793359db] xfs: define a flags field for the AG geometry ioctl structure
 
-Dave Chinner (20):
+Dave Chinner (13):
       [0ad95687c3ad] xfs: add kmem allocation trace points
       [d916275aa4dd] xfs: get allocation alignment from the buftarg
       [f8f9ee479439] xfs: add kmem_alloc_io()
@@ -131,13 +132,6 @@ Dave Chinner (20):
       [e3cc4554ce1b] xfs: move remote attr retrieval into xfs_attr3_leaf_getvalue
       [9df243a1a9e6] xfs: consolidate attribute value copying
       [ddbca70cc45c] xfs: allocate xattr buffer on demand
-      [7c107afb871a] xfs: push the AIL in xlog_grant_head_wake
-      [8ab39f11d974] xfs: prevent CIL push holdoff in log recovery
-      [6769aa2a4f2b] xfs: factor debug code out of xlog_state_do_callback()
-      [6546818c8570] xfs: factor callbacks out of xlog_state_do_callback()
-      [5e96fa8d2b09] xfs: factor iclog state processing out of xlog_state_do_callback()
-      [0383f543d870] xfs: push iclog state cleaning into xlog_state_clean_log
-      [14e15f1bcd73] xfs: push the grant head when the log head moves forward
 
 Eric Sandeen (1):
       [7f313eda8fcc] xfs: log proper length of btree block in scrub/repair
@@ -146,9 +140,6 @@ Jan Kara (3):
       [692fe62433d4] mm: Handle MADV_WILLNEED through vfs_fadvise()
       [cf1ea0592dbf] fs: Export generic_fadvise()
       [40144e49ff84] xfs: Fix stale data exposure when readahead races with hole punch
-
-Rik van Riel (1):
-      [cdea5459ce26] xfs: fix missed wakeup on l_flush_wait
 
 Tetsuo Handa (1):
       [707e0ddaf67e] fs: xfs: Remove KM_NOSLEEP and KM_SLEEP.
@@ -224,9 +215,9 @@ Code Diffstat:
  fs/xfs/xfs_itable.h             |  13 +-
  fs/xfs/xfs_iwalk.c              |   4 +-
  fs/xfs/xfs_iwalk.h              |  13 +-
- fs/xfs/xfs_log.c                | 466 ++++++++++++++++-----------
+ fs/xfs/xfs_log.c                |   8 +-
  fs/xfs/xfs_log_cil.c            |  10 +-
- fs/xfs/xfs_log_recover.c        |  50 +--
+ fs/xfs/xfs_log_recover.c        |  20 +-
  fs/xfs/xfs_mount.c              |   4 +-
  fs/xfs/xfs_mount.h              |   7 -
  fs/xfs/xfs_mru_cache.c          |   4 +-
@@ -235,7 +226,6 @@ Code Diffstat:
  fs/xfs/xfs_reflink.c            |  23 +-
  fs/xfs/xfs_rmap_item.c          |   6 +-
  fs/xfs/xfs_rtalloc.c            |   4 +-
- fs/xfs/xfs_super.c              |   3 +-
  fs/xfs/xfs_trace.h              |  34 ++
  fs/xfs/xfs_trans.c              |   4 +-
  fs/xfs/xfs_trans_dquot.c        |   2 +-
@@ -243,4 +233,4 @@ Code Diffstat:
  include/linux/fs.h              |   2 +
  mm/fadvise.c                    |   4 +-
  mm/madvise.c                    |  22 +-
- 81 files changed, 1315 insertions(+), 1089 deletions(-)
+ 80 files changed, 1020 insertions(+), 893 deletions(-)
