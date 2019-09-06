@@ -6,45 +6,45 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCF7AC43140
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E9B8EC00306
 	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 00:05:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E23C92082C
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 00:05:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B765206BB
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 00:06:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389126AbfIFAF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1730718AbfIFAF7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 5 Sep 2019 20:05:59 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:37816 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730718AbfIFAF7 (ORCPT
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54381 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2388922AbfIFAF7 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 20:05:59 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E23FD43D423
-        for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2019 10:05:55 +1000 (AEST)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8DC5836277D
+        for <linux-xfs@vger.kernel.org>; Fri,  6 Sep 2019 10:05:56 +1000 (AEST)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i61lD-0003ZS-Gw
+        id 1i61lD-0003ZL-EU
         for linux-xfs@vger.kernel.org; Fri, 06 Sep 2019 10:05:55 +1000
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1i61lD-0001mX-F4
+        id 1i61lD-0001mQ-CZ
         for linux-xfs@vger.kernel.org; Fri, 06 Sep 2019 10:05:55 +1000
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 3/8] xfs: prevent CIL push holdoff in log recovery
-Date:   Fri,  6 Sep 2019 10:05:48 +1000
-Message-Id: <20190906000553.6740-4-david@fromorbit.com>
+Subject: [PATCH 1/8] xfs: push the AIL in xlog_grant_head_wake
+Date:   Fri,  6 Sep 2019 10:05:46 +1000
+Message-Id: <20190906000553.6740-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20190906000553.6740-1-david@fromorbit.com>
 References: <20190906000553.6740-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=J70Eh1EUuV4A:10 a=20KFwNOVAAAA:8
-        a=t6etOladE1_Vxw6LjJkA:9
+        a=eu_1AKrEyvAHeJIYhIUA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,70 +52,88 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-generic/530 on a machine with enough ram and a non-preemptible
-kernel can run the AGI processing phase of log recovery enitrely out
-of cache. This means it never blocks on locks, never waits for IO
-and runs entirely through the unlinked lists until it either
-completes or blocks and hangs because it has run out of log space.
+In the situation where the log is full and the CIL has not recently
+flushed, the AIL push threshold is throttled back to the where the
+last write of the head of the log was completed. This is stored in
+log->l_last_sync_lsn. Hence if the CIL holds > 25% of the log space
+pinned by flushes and/or aggregation in progress, we can get the
+situation where the head of the log lags a long way behind the
+reservation grant head.
 
-It runs out of log space because the background CIL push is
-scheduled but never runs. queue_work() queues the CIL work on the
-current CPU that is busy, and the workqueue code will not run it on
-any other CPU. Hence if the unlinked list processing never yields
-the CPU voluntarily, the push work is delayed indefinitely. This
-results in the CIL aggregating changes until all the log space is
-consumed.
+When this happens, the AIL push target is trimmed back from where
+the reservation grant head wants to push the log tail to, back to
+where the head of the log currently is. This means the push target
+doesn't reach far enough into the log to actually move the tail
+before the transaction reservation goes to sleep.
 
-When the log recoveyr processing evenutally blocks, the CIL flushes
-but because the last iclog isn't submitted for IO because it isn't
-full, the CIL flush never completes and nothing ever moves the log
-head forwards, or indeed inserts anything into the tail of the log,
-and hence nothing is able to get the log moving again and recovery
-hangs.
+When the CIL push completes, it moves the log head forward such that
+the AIL push target can now be moved, but that has no mechanism for
+puhsing the log tail. Further, if the next tail movement of the log
+is not large enough wake the waiter (i.e. still not enough space for
+it to have a reservation granted), we don't wake anything up, and
+hence we do not update the AIL push target to take into account the
+head of the log moving and allowing the push target to be moved
+forwards.
 
-There are several problems here, but the two obvious ones from
-the trace are that:
-	a) log recovery does not yield the CPU for over 4 seconds,
-	b) binding CIL pushes to a single CPU is a really bad idea.
-
-This patch addresses just these two aspects of the problem, and are
-suitable for backporting to work around any issues in older kernels.
-The more fundamental problem of preventing the CIL from consuming
-more than 50% of the log without committing will take more invasive
-and complex work, so will be done as followup work.
+To avoid this particular condition, if we fail to wake the first
+waiter on the grant head because we don't have enough space,
+push on the AIL again. This will pick up any movement of the log
+head and allow the push target to move forward due to completion of
+CIL pushing.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_log_recover.c | 1 +
- fs/xfs/xfs_super.c       | 3 ++-
- 2 files changed, 3 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_log.c | 29 ++++++++++++++++++++++++++++-
+ 1 file changed, 28 insertions(+), 1 deletion(-)
 
-diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
-index f05c6c99c4f3..c9665455431e 100644
---- a/fs/xfs/xfs_log_recover.c
-+++ b/fs/xfs/xfs_log_recover.c
-@@ -5080,6 +5080,7 @@ xlog_recover_process_iunlinks(
- 			while (agino != NULLAGINO) {
- 				agino = xlog_recover_process_one_iunlink(mp,
- 							agno, agino, bucket);
-+				cond_resched();
- 			}
- 		}
- 		xfs_buf_rele(agibp);
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f9450235533c..391b4748cae3 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -818,7 +818,8 @@ xfs_init_mount_workqueues(
- 		goto out_destroy_buf;
+diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+index b159a9e9fef0..c2862b1a2780 100644
+--- a/fs/xfs/xfs_log.c
++++ b/fs/xfs/xfs_log.c
+@@ -214,15 +214,42 @@ xlog_grant_head_wake(
+ {
+ 	struct xlog_ticket	*tic;
+ 	int			need_bytes;
++	bool			woken_task = false;
  
- 	mp->m_cil_workqueue = alloc_workqueue("xfs-cil/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
-+			WQ_MEM_RECLAIM | WQ_FREEZABLE | WQ_UNBOUND,
-+			0, mp->m_fsname);
- 	if (!mp->m_cil_workqueue)
- 		goto out_destroy_unwritten;
+ 	list_for_each_entry(tic, &head->waiters, t_queue) {
++
++		/*
++		 * The is a chance that the size of the CIL checkpoints in
++		 * progress at the last AIL push target calculation resulted in
++		 * limiting the target to the log head (l_last_sync_lsn) at the
++		 * time. This may not reflect where the log head is now as the
++		 * CIL checkpoints may have completed.
++		 *
++		 * Hence when we are woken here, it may be that the head of the
++		 * log that has moved rather than the tail. As the tail didn't
++		 * move, there still won't be space available for the
++		 * reservation we require.  However, if the AIL has already
++		 * pushed to the target defined by the old log head location, we
++		 * will hang here waiting for something else to update the AIL
++		 * push target.
++		 *
++		 * Therefore, if there isn't space to wake the first waiter on
++		 * the grant head, we need to push the AIL again to ensure the
++		 * target reflects both the current log tail and log head
++		 * position before we wait for the tail to move again.
++		 */
++
+ 		need_bytes = xlog_ticket_reservation(log, head, tic);
+-		if (*free_bytes < need_bytes)
++		if (*free_bytes < need_bytes) {
++			if (!woken_task)
++				xlog_grant_push_ail(log, need_bytes);
+ 			return false;
++		}
  
+ 		*free_bytes -= need_bytes;
+ 		trace_xfs_log_grant_wake_up(log, tic);
+ 		wake_up_process(tic->t_task);
++		woken_task = true;
+ 	}
+ 
+ 	return true;
 -- 
 2.23.0.rc1
 
