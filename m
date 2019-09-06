@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56C11C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BC267C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57DDE20820
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B86E8206B8
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CO8+wBeT"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HOvBb8Bs"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404437AbfIFDeq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:34:46 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48324 "EHLO
+        id S1730914AbfIFDes (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:34:48 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48344 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404423AbfIFDeq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:46 -0400
+        with ESMTP id S2404422AbfIFDer (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:47 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YfHd110282;
-        Fri, 6 Sep 2019 03:34:41 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YROH110101;
+        Fri, 6 Sep 2019 03:34:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=uP4IyuRfuHCEAChnI0vS0qLm57WFRpeJa8Q+yl7RFu4=;
- b=CO8+wBeTALOUGVqsZWg6HDvaVNJFCQAk+cqmfZ0d1EGjPThlKxcnNiCD+Xir9uDDF2G4
- 0jyD3um6/1tCnRyyRvYFUHgI/yhbD9Dg9Wijf4yhk1jortgZAcDMEo9iycGHmb4VXXsg
- e9WBggUkFGZjsg98P94jQdzaIcjW3hghfwRT4aDztxk2RaX3crjtYuqkNruKtNEmJMYs
- 6IWsB1VXFKph+z2RxztsP5c/GVDauRSV7tL2d214R8mqcMkPjKf6x0vW0vef3CEShcqs
- 9jXAn/jcbEdOrg2QjBXStPpHCyc1JQeT4zt0V79dUnQMaiwrQr9AYM/Ws9eY12ng4ICI bQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2uuf4n035g-1
+ bh=PLGCz0g+q3R0fzk//ee5GCzfpWRIQI0a75gt/FydX4k=;
+ b=HOvBb8BsPoAMRHkof3LSp2sHPQRwzFkLkG5YXfMfeumUdnvx4icuIA9XF6IVQrrS9o7t
+ p37uPAQZL7rivNDgBhtjgO3uZ+UtxeaehnraX3vi+d5rhXAl11p5me+raaURNFgsLy9Q
+ FZYalIt4HH9lNGho/REICehZ9y6n0QI33a5uqJ3H17pUYItGlfYJmSAp7YedlbTxbpTL
+ Y7r1vkWf/Mk18cnHaHuBuXVLinNkBB26k923eYNMsPdwGVv+XbrnWJkDgldTlhgXej5L
+ RdEhU0V4DR1JSBQjWveYuK/yjaRxx/P2XNHpopivYIQ4zBxEUoBhT89UQradB8X+s60l GA== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2uuf4n0350-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:41 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863XbbY069151;
-        Fri, 6 Sep 2019 03:34:41 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2utvr4jtbk-1
+        Fri, 06 Sep 2019 03:34:35 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YVx3103620;
+        Fri, 6 Sep 2019 03:34:35 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2uud7p2pmv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:41 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863YeSV014281;
-        Fri, 6 Sep 2019 03:34:40 GMT
+        Fri, 06 Sep 2019 03:34:31 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863YA1U018732;
+        Fri, 6 Sep 2019 03:34:10 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:34:40 -0700
-Subject: [PATCH 3/4] libxfs: make xfs_buf_delwri_submit actually do something
+        with ESMTP ; Thu, 05 Sep 2019 20:34:10 -0700
+Subject: [PATCH 2/3] xfs_scrub: fix nr_dirs accounting problems
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Date:   Thu, 05 Sep 2019 20:34:39 -0700
-Message-ID: <156774087984.2643362.3110363143998046856.stgit@magnolia>
-In-Reply-To: <156774086083.2643362.4042713521116931635.stgit@magnolia>
-References: <156774086083.2643362.4042713521116931635.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Date:   Thu, 05 Sep 2019 20:34:09 -0700
+Message-ID: <156774084974.2643257.15403943146639779829.stgit@magnolia>
+In-Reply-To: <156774083707.2643257.15738851266613887341.stgit@magnolia>
+References: <156774083707.2643257.15738851266613887341.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,93 +80,87 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-xfs_buf_delwri_queue doesn't report errors, which means that if the
-buffer write fails we have no way of knowing that something bad
-happened.  In the kernel we queue and then submit buffers, and the
-submit call communicates errors to callers.  Do the same here since
-we're going to start using the AG header initialization functions, which
-use delwri_{queue,submit} heavily.
+When we're scanning the directory tree, we bump nr_dirs every time we
+think we're going to queue a new directory to process, and we decrement
+it every time we're finished doing something with a directory
+(successful or not).  We forgot to undo a counter increment when
+workqueue_add fails, so refactor the code into helpers and call them
+as necessary for correct operation.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- libxfs/libxfs_io.h   |    6 +++++-
- libxfs/libxfs_priv.h |    1 -
- libxfs/rdwr.c        |   25 +++++++++++++++++++++++++
- 3 files changed, 30 insertions(+), 2 deletions(-)
+ scrub/vfs.c |   42 +++++++++++++++++++++++++++++-------------
+ 1 file changed, 29 insertions(+), 13 deletions(-)
 
 
-diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
-index 09ed043b..579df52b 100644
---- a/libxfs/libxfs_io.h
-+++ b/libxfs/libxfs_io.h
-@@ -71,6 +71,7 @@ typedef struct xfs_buf {
- 	struct xfs_buf_map	*b_maps;
- 	struct xfs_buf_map	__b_map;
- 	int			b_nmaps;
-+	struct list_head	b_list;
- #ifdef XFS_BUF_TRACING
- 	struct list_head	b_lock_list;
- 	const char		*b_func;
-@@ -245,11 +246,14 @@ xfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags)
- 	return bp;
- }
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index add4e815..f8bc98c0 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -45,6 +45,32 @@ struct scan_fs_tree_dir {
  
-+/* Push a single buffer on a delwri queue. */
- static inline void
- xfs_buf_delwri_queue(struct xfs_buf *bp, struct list_head *buffer_list)
- {
- 	bp->b_node.cn_count++;
--	libxfs_writebuf(bp, 0);
-+	list_add_tail(&bp->b_list, buffer_list);
- }
+ static void scan_fs_dir(struct workqueue *wq, xfs_agnumber_t agno, void *arg);
  
-+int xfs_buf_delwri_submit(struct list_head *buffer_list);
-+
- #endif	/* __LIBXFS_IO_H__ */
-diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
-index 13dab58a..ff35c51e 100644
---- a/libxfs/libxfs_priv.h
-+++ b/libxfs/libxfs_priv.h
-@@ -382,7 +382,6 @@ roundup_64(uint64_t x, uint32_t y)
- #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
- #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
- #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
--#define xfs_buf_delwri_submit(bl)	(0)
- #define xfs_buf_oneshot(bp)		((void) 0)
- 
- #define XBRW_READ			LIBXFS_BREAD
-diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
-index 3282f6de..0d3e6089 100644
---- a/libxfs/rdwr.c
-+++ b/libxfs/rdwr.c
-@@ -1473,3 +1473,28 @@ libxfs_irele(
- 	libxfs_idestroy(ip);
- 	kmem_zone_free(xfs_inode_zone, ip);
- }
++/* Increment the number of directories that are queued for processing. */
++static void
++inc_nr_dirs(
++	struct scan_fs_tree	*sft)
++{
++	pthread_mutex_lock(&sft->lock);
++	sft->nr_dirs++;
++	pthread_mutex_unlock(&sft->lock);
++}
 +
 +/*
-+ * Write out a buffer list synchronously.
-+ *
-+ * This will take the @buffer_list, write all buffers out and wait for I/O
-+ * completion on all of the buffers. @buffer_list is consumed by the function,
-+ * so callers must have some other way of tracking buffers if they require such
-+ * functionality.
++ * Decrement the number of directories that are queued for processing and if
++ * we ran out of dirs to process, wake up anyone who was waiting for processing
++ * to finish.
 + */
-+int
-+xfs_buf_delwri_submit(
-+	struct list_head	*buffer_list)
++static void
++dec_nr_dirs(
++	struct scan_fs_tree	*sft)
 +{
-+	struct xfs_buf		*bp, *n;
-+	int			error = 0, error2;
-+
-+	list_for_each_entry_safe(bp, n, buffer_list, b_list) {
-+		list_del_init(&bp->b_list);
-+		error2 = libxfs_writebuf(bp, 0);
-+		if (!error)
-+			error = error2;
-+	}
-+
-+	return error;
++	pthread_mutex_lock(&sft->lock);
++	sft->nr_dirs--;
++	if (sft->nr_dirs == 0)
++		pthread_cond_signal(&sft->wakeup);
++	pthread_mutex_unlock(&sft->lock);
 +}
++
+ /* Queue a directory for scanning. */
+ static bool
+ queue_subdir(
+@@ -72,15 +98,10 @@ queue_subdir(
+ 	new_sftd->sft = sft;
+ 	new_sftd->rootdir = is_rootdir;
+ 
+-	pthread_mutex_lock(&sft->lock);
+-	sft->nr_dirs++;
+-	pthread_mutex_unlock(&sft->lock);
++	inc_nr_dirs(sft);
+ 	error = workqueue_add(wq, scan_fs_dir, 0, new_sftd);
+ 	if (error) {
+-		/*
+-		 * XXX: need to decrement nr_dirs here; will do that in the
+-		 * next patch.
+-		 */
++		dec_nr_dirs(sft);
+ 		str_info(ctx, ctx->mntpoint,
+ _("Could not queue subdirectory scan work."));
+ 		goto out_path;
+@@ -180,12 +201,7 @@ scan_fs_dir(
+ 		str_errno(ctx, sftd->path);
+ 
+ out:
+-	pthread_mutex_lock(&sft->lock);
+-	sft->nr_dirs--;
+-	if (sft->nr_dirs == 0)
+-		pthread_cond_signal(&sft->wakeup);
+-	pthread_mutex_unlock(&sft->lock);
+-
++	dec_nr_dirs(sft);
+ 	free(sftd->path);
+ 	free(sftd);
+ }
 
