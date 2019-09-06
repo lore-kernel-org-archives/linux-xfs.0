@@ -4,72 +4,72 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6AB20C00306
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 28358C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:35:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 627FD20820
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1C0A3206B8
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:35:08 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jntowI0Z"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H/4C35t8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404423AbfIFDey (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:34:54 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33772 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2404422AbfIFDey (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:54 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863Xr0C104870;
-        Fri, 6 Sep 2019 03:34:49 GMT
+        id S2404422AbfIFDfH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:35:07 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48848 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733034AbfIFDfH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:35:07 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863Ywfh110548;
+        Fri, 6 Sep 2019 03:35:05 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=Dycnl933oLH8Ajj6s/0zroM1vbcvSfmG1ehoVYrHB78=;
- b=jntowI0ZvUBEH/Mo1TY+BbjLj+QUUhRalOSE3LuHizq2xXeprvRQgPHXREZetJhX714v
- KgZTL53hvRbB+sUTEA55/GTYRpkr8vbcHoFGz0aH/dRK1vsoVVghH0Pd1vimlZ79/GJY
- RYx6eaGvjFBk+ZiF8pVpN5t3gttjHRH9qNABhyzRFmVLT/UxReJqPboUwGHUPiD3nOFB
- juGaCJUcpXZZgdoxv08WmTSyO9enyd37Ia8h2QbWqlvRzHCnMgplMhEYhM/R70nNAOCR
- 4datQExrdzprr15pf1ZYKZaD0shn91MnacM02+LOyer8sHSp6wkUJ5+lg9QHpLJjec5s OQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2uuf5f82w4-1
+ bh=vOvmZSwrnhJWdeB7AucKkR3As9vfS9DSQJQy2DAsTmU=;
+ b=H/4C35t8XwEYR4AZ2EwDjtixXHMZICyWmaFTq3Qn7tawI5Q2pV+ZgtwN9jpBWUjVNSSR
+ owTkZXdhWJYlQc1TYjVW2z1bcp+J5k1njYoby5/UY68z4vBwcJ8VRnZfswiQqjLuyrZT
+ O/ZhaW2b3Mv8+YmF+y0ymonE0/MeJoo77jJxswnlPZ7vfEhpQU0lo8vu8tBcK9QxkHiu
+ SZ7Kw3IJ0vYmtSQNYat3Eu7opHSn457aPUC8jMO80G/6KBvDUaMkYRROgO/U4nHLnq5Y
+ k3icwe+CiqPRdObCtjtoAzrL8op9QI5k29KQec4k9pGNapCgGpx0RB917UsISduH7iD8 Fw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2uuf4n036y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:49 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863XbEE069198;
-        Fri, 6 Sep 2019 03:34:48 GMT
+        Fri, 06 Sep 2019 03:35:05 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YOIw088493;
+        Fri, 6 Sep 2019 03:35:04 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2utvr4jtgg-1
+        by aserp3030.oracle.com with ESMTP id 2uu1b99qwn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:48 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863YlaJ019028;
-        Fri, 6 Sep 2019 03:34:47 GMT
+        Fri, 06 Sep 2019 03:35:04 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863Z3UJ019187;
+        Fri, 6 Sep 2019 03:35:03 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:34:46 -0700
-Subject: [PATCH 4/4] mkfs: use libxfs to write out new AGs
+        with ESMTP ; Thu, 05 Sep 2019 20:35:03 -0700
+Subject: [PATCH 1/6] man: add documentation for v5 bulkstat ioctl
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
-Date:   Thu, 05 Sep 2019 20:34:46 -0700
-Message-ID: <156774088606.2643362.8569456137160399628.stgit@magnolia>
-In-Reply-To: <156774086083.2643362.4042713521116931635.stgit@magnolia>
-References: <156774086083.2643362.4042713521116931635.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 05 Sep 2019 20:34:56 -0700
+Message-ID: <156774089663.2643497.7520759665881798589.stgit@magnolia>
+In-Reply-To: <156774089024.2643497.2754524603021685770.stgit@magnolia>
+References: <156774089024.2643497.2754524603021685770.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1906280000 definitions=main-1909060039
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9371 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1906280000
  definitions=main-1909060039
@@ -80,456 +80,367 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use the libxfs AG initialization functions to write out the new
-filesystem instead of open-coding everything.
+Add a new manpage describing the V5 XFS_IOC_BULKSTAT ioctl.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- include/libxfs.h         |    1 
- libxfs/libxfs_api_defs.h |    3 
- libxfs/util.c            |    1 
- mkfs/xfs_mkfs.c          |  371 ++++------------------------------------------
- 4 files changed, 41 insertions(+), 335 deletions(-)
+ man/man2/ioctl_xfs_bulkstat.2   |  330 +++++++++++++++++++++++++++++++++++++++
+ man/man2/ioctl_xfs_fsbulkstat.2 |    6 +
+ 2 files changed, 336 insertions(+)
+ create mode 100644 man/man2/ioctl_xfs_bulkstat.2
 
 
-diff --git a/include/libxfs.h b/include/libxfs.h
-index 663063bc..63696df5 100644
---- a/include/libxfs.h
-+++ b/include/libxfs.h
-@@ -63,6 +63,7 @@ extern uint32_t crc32c_le(uint32_t crc, unsigned char const *p, size_t len);
- #include "xfs_bmap.h"
- #include "xfs_trace.h"
- #include "xfs_trans.h"
-+#include "xfs_ag.h"
- #include "xfs_rmap_btree.h"
- #include "xfs_rmap.h"
- #include "xfs_refcount_btree.h"
-diff --git a/libxfs/libxfs_api_defs.h b/libxfs/libxfs_api_defs.h
-index 0ae21318..645c9b1b 100644
---- a/libxfs/libxfs_api_defs.h
-+++ b/libxfs/libxfs_api_defs.h
-@@ -154,4 +154,7 @@
- #define LIBXFS_ATTR_CREATE		ATTR_CREATE
- #define LIBXFS_ATTR_REPLACE		ATTR_REPLACE
- 
-+#define xfs_ag_init_headers		libxfs_ag_init_headers
-+#define xfs_buf_delwri_submit		libxfs_buf_delwri_submit
+diff --git a/man/man2/ioctl_xfs_bulkstat.2 b/man/man2/ioctl_xfs_bulkstat.2
+new file mode 100644
+index 00000000..f687cfe8
+--- /dev/null
++++ b/man/man2/ioctl_xfs_bulkstat.2
+@@ -0,0 +1,330 @@
++.\" Copyright (c) 2019, Oracle.  All rights reserved.
++.\"
++.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
++.\" SPDX-License-Identifier: GPL-2.0+
++.\" %%%LICENSE_END
++.TH IOCTL-XFS-BULKSTAT 2 2019-05-23 "XFS"
++.SH NAME
++ioctl_xfs_bulkstat \- query information for a batch of XFS inodes
++.SH SYNOPSIS
++.br
++.B #include <xfs/xfs_fs.h>
++.PP
++.BI "int ioctl(int " fd ", XFS_IOC_BULKSTAT, struct xfs_bulkstat_req *" arg );
++.SH DESCRIPTION
++Query stat information for a group of XFS inodes.
++This ioctl uses
++.B struct xfs_bulkstat_req
++to set up a bulk transfer with the kernel:
++.PP
++.in +4n
++.nf
++struct xfs_bulkstat_req {
++	struct xfs_bulk_ireq    hdr;
++	struct xfs_bulkstat     bulkstat[];
++};
 +
- #endif /* __LIBXFS_API_DEFS_H__ */
-diff --git a/libxfs/util.c b/libxfs/util.c
-index 95054094..885dd42b 100644
---- a/libxfs/util.c
-+++ b/libxfs/util.c
-@@ -762,3 +762,4 @@ xfs_fs_mark_healthy(
- 	spin_unlock(&mp->m_sb_lock);
- }
- 
-+void xfs_ag_geom_health(struct xfs_perag *pag, struct xfs_ag_geometry *ageo) { }
-diff --git a/mkfs/xfs_mkfs.c b/mkfs/xfs_mkfs.c
-index 6254fd42..10a40cd4 100644
---- a/mkfs/xfs_mkfs.c
-+++ b/mkfs/xfs_mkfs.c
-@@ -3430,349 +3430,30 @@ initialise_ag_headers(
- 	struct xfs_mount	*mp,
- 	struct xfs_sb		*sbp,
- 	xfs_agnumber_t		agno,
--	int			*worst_freelist)
-+	int			*worst_freelist,
-+	struct list_head	*buffer_list)
- {
-+	struct aghdr_init_data	id = {
-+		.agno		= agno,
-+		.agsize		= cfg->agsize,
-+	};
- 	struct xfs_perag	*pag = libxfs_perag_get(mp, agno);
--	struct xfs_agfl		*agfl;
--	struct xfs_agf		*agf;
--	struct xfs_agi		*agi;
--	struct xfs_buf		*buf;
--	struct xfs_btree_block	*block;
--	struct xfs_alloc_rec	*arec;
--	struct xfs_alloc_rec	*nrec;
--	int			bucket;
--	uint64_t		agsize = cfg->agsize;
--	xfs_agblock_t		agblocks;
--	bool			is_log_ag = false;
--	int			c;
--
--	if (cfg->loginternal && agno == cfg->logagno)
--		is_log_ag = true;
--
--	/*
--	 * Superblock.
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, agno, XFS_SB_DADDR),
--			XFS_FSS_TO_BB(mp, 1));
--	buf->b_ops = &xfs_sb_buf_ops;
--	memset(buf->b_addr, 0, cfg->sectorsize);
--	libxfs_sb_to_disk(buf->b_addr, sbp);
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
-+	int			error;
- 
--	/*
--	 * AG header block: freespace
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, agno, XFS_AGF_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1));
--	buf->b_ops = &xfs_agf_buf_ops;
--	agf = XFS_BUF_TO_AGF(buf);
--	memset(agf, 0, cfg->sectorsize);
- 	if (agno == cfg->agcount - 1)
--		agsize = cfg->dblocks - (xfs_rfsblock_t)(agno * agsize);
--	agf->agf_magicnum = cpu_to_be32(XFS_AGF_MAGIC);
--	agf->agf_versionnum = cpu_to_be32(XFS_AGF_VERSION);
--	agf->agf_seqno = cpu_to_be32(agno);
--	agf->agf_length = cpu_to_be32(agsize);
--	agf->agf_roots[XFS_BTNUM_BNOi] = cpu_to_be32(XFS_BNO_BLOCK(mp));
--	agf->agf_roots[XFS_BTNUM_CNTi] = cpu_to_be32(XFS_CNT_BLOCK(mp));
--	agf->agf_levels[XFS_BTNUM_BNOi] = cpu_to_be32(1);
--	agf->agf_levels[XFS_BTNUM_CNTi] = cpu_to_be32(1);
--	pag->pagf_levels[XFS_BTNUM_BNOi] = 1;
--	pag->pagf_levels[XFS_BTNUM_CNTi] = 1;
--
--	if (xfs_sb_version_hasrmapbt(sbp)) {
--		agf->agf_roots[XFS_BTNUM_RMAPi] = cpu_to_be32(XFS_RMAP_BLOCK(mp));
--		agf->agf_levels[XFS_BTNUM_RMAPi] = cpu_to_be32(1);
--		agf->agf_rmap_blocks = cpu_to_be32(1);
--	}
-+		id.agsize = cfg->dblocks - (xfs_rfsblock_t)(agno * cfg->agsize);
- 
--	if (xfs_sb_version_hasreflink(sbp)) {
--		agf->agf_refcount_root = cpu_to_be32(libxfs_refc_block(mp));
--		agf->agf_refcount_level = cpu_to_be32(1);
--		agf->agf_refcount_blocks = cpu_to_be32(1);
-+	INIT_LIST_HEAD(&id.buffer_list);
-+	error = -libxfs_ag_init_headers(mp, &id);
-+	if (error) {
-+		fprintf(stderr, _("AG header init failed, error %d\n"), error);
-+		exit(1);
- 	}
- 
--	agf->agf_flfirst = 0;
--	agf->agf_fllast = cpu_to_be32(libxfs_agfl_size(mp) - 1);
--	agf->agf_flcount = 0;
--	agblocks = (xfs_agblock_t)(agsize - libxfs_prealloc_blocks(mp));
--	agf->agf_freeblks = cpu_to_be32(agblocks);
--	agf->agf_longest = cpu_to_be32(agblocks);
-+	list_splice_tail_init(&id.buffer_list, buffer_list);
- 
--	if (xfs_sb_version_hascrc(sbp))
--		platform_uuid_copy(&agf->agf_uuid, &sbp->sb_uuid);
--
--	if (is_log_ag) {
--		be32_add_cpu(&agf->agf_freeblks, -(int64_t)cfg->logblocks);
--		agf->agf_longest = cpu_to_be32(agsize -
--			XFS_FSB_TO_AGBNO(mp, cfg->logstart) - cfg->logblocks);
--	}
- 	if (libxfs_alloc_min_freelist(mp, pag) > *worst_freelist)
- 		*worst_freelist = libxfs_alloc_min_freelist(mp, pag);
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--
--	/*
--	 * AG freelist header block
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, agno, XFS_AGFL_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1));
--	buf->b_ops = &xfs_agfl_buf_ops;
--	agfl = XFS_BUF_TO_AGFL(buf);
--	/* setting to 0xff results in initialisation to NULLAGBLOCK */
--	memset(agfl, 0xff, cfg->sectorsize);
--	if (xfs_sb_version_hascrc(sbp)) {
--		agfl->agfl_magicnum = cpu_to_be32(XFS_AGFL_MAGIC);
--		agfl->agfl_seqno = cpu_to_be32(agno);
--		platform_uuid_copy(&agfl->agfl_uuid, &sbp->sb_uuid);
--		for (bucket = 0; bucket < libxfs_agfl_size(mp); bucket++)
--			agfl->agfl_bno[bucket] = cpu_to_be32(NULLAGBLOCK);
--	}
--
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--
--	/*
--	 * AG header block: inodes
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AG_DADDR(mp, agno, XFS_AGI_DADDR(mp)),
--			XFS_FSS_TO_BB(mp, 1));
--	agi = XFS_BUF_TO_AGI(buf);
--	buf->b_ops = &xfs_agi_buf_ops;
--	memset(agi, 0, cfg->sectorsize);
--	agi->agi_magicnum = cpu_to_be32(XFS_AGI_MAGIC);
--	agi->agi_versionnum = cpu_to_be32(XFS_AGI_VERSION);
--	agi->agi_seqno = cpu_to_be32(agno);
--	agi->agi_length = cpu_to_be32(agsize);
--	agi->agi_count = 0;
--	agi->agi_root = cpu_to_be32(XFS_IBT_BLOCK(mp));
--	agi->agi_level = cpu_to_be32(1);
--	if (xfs_sb_version_hasfinobt(sbp)) {
--		agi->agi_free_root = cpu_to_be32(XFS_FIBT_BLOCK(mp));
--		agi->agi_free_level = cpu_to_be32(1);
--	}
--	agi->agi_freecount = 0;
--	agi->agi_newino = cpu_to_be32(NULLAGINO);
--	agi->agi_dirino = cpu_to_be32(NULLAGINO);
--	if (xfs_sb_version_hascrc(sbp))
--		platform_uuid_copy(&agi->agi_uuid, &sbp->sb_uuid);
--	for (c = 0; c < XFS_AGI_UNLINKED_BUCKETS; c++)
--		agi->agi_unlinked[c] = cpu_to_be32(NULLAGINO);
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--
--	/*
--	 * BNO btree root block
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AGB_TO_DADDR(mp, agno, XFS_BNO_BLOCK(mp)),
--			BTOBB(cfg->blocksize));
--	buf->b_ops = &xfs_bnobt_buf_ops;
--	block = XFS_BUF_TO_BLOCK(buf);
--	memset(block, 0, cfg->blocksize);
--	libxfs_btree_init_block(mp, buf, XFS_BTNUM_BNO, 0, 1, agno);
--
--	arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
--	arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
--	if (is_log_ag) {
--		xfs_agblock_t	start = XFS_FSB_TO_AGBNO(mp, cfg->logstart);
--
--		ASSERT(start >= libxfs_prealloc_blocks(mp));
--		if (start != libxfs_prealloc_blocks(mp)) {
--			/*
--			 * Modify first record to pad stripe align of log
--			 */
--			arec->ar_blockcount = cpu_to_be32(start -
--						libxfs_prealloc_blocks(mp));
--			nrec = arec + 1;
--			/*
--			 * Insert second record at start of internal log
--			 * which then gets trimmed.
--			 */
--			nrec->ar_startblock = cpu_to_be32(
--					be32_to_cpu(arec->ar_startblock) +
--					be32_to_cpu(arec->ar_blockcount));
--			arec = nrec;
--			be16_add_cpu(&block->bb_numrecs, 1);
--		}
--		/*
--		 * Change record start to after the internal log
--		 */
--		be32_add_cpu(&arec->ar_startblock, cfg->logblocks);
--	}
--	/*
--	 * Calculate the record block count and check for the case where
--	 * the log might have consumed all available space in the AG. If
--	 * so, reset the record count to 0 to avoid exposure of an invalid
--	 * record start block.
--	 */
--	arec->ar_blockcount = cpu_to_be32(agsize -
--					  be32_to_cpu(arec->ar_startblock));
--	if (!arec->ar_blockcount)
--		block->bb_numrecs = 0;
--
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--
--	/*
--	 * CNT btree root block
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AGB_TO_DADDR(mp, agno, XFS_CNT_BLOCK(mp)),
--			BTOBB(cfg->blocksize));
--	buf->b_ops = &xfs_cntbt_buf_ops;
--	block = XFS_BUF_TO_BLOCK(buf);
--	memset(block, 0, cfg->blocksize);
--	libxfs_btree_init_block(mp, buf, XFS_BTNUM_CNT, 0, 1, agno);
--
--	arec = XFS_ALLOC_REC_ADDR(mp, block, 1);
--	arec->ar_startblock = cpu_to_be32(libxfs_prealloc_blocks(mp));
--	if (is_log_ag) {
--		xfs_agblock_t	start = XFS_FSB_TO_AGBNO(mp, cfg->logstart);
--
--		ASSERT(start >= libxfs_prealloc_blocks(mp));
--		if (start != libxfs_prealloc_blocks(mp)) {
--			arec->ar_blockcount = cpu_to_be32(start -
--					libxfs_prealloc_blocks(mp));
--			nrec = arec + 1;
--			nrec->ar_startblock = cpu_to_be32(
--					be32_to_cpu(arec->ar_startblock) +
--					be32_to_cpu(arec->ar_blockcount));
--			arec = nrec;
--			be16_add_cpu(&block->bb_numrecs, 1);
--		}
--		be32_add_cpu(&arec->ar_startblock, cfg->logblocks);
--	}
--	/*
--	 * Calculate the record block count and check for the case where
--	 * the log might have consumed all available space in the AG. If
--	 * so, reset the record count to 0 to avoid exposure of an invalid
--	 * record start block.
--	 */
--	arec->ar_blockcount = cpu_to_be32(agsize -
--					  be32_to_cpu(arec->ar_startblock));
--	if (!arec->ar_blockcount)
--		block->bb_numrecs = 0;
--
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--
--	/*
--	 * refcount btree root block
--	 */
--	if (xfs_sb_version_hasreflink(sbp)) {
--		buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AGB_TO_DADDR(mp, agno, libxfs_refc_block(mp)),
--			BTOBB(cfg->blocksize));
--		buf->b_ops = &xfs_refcountbt_buf_ops;
--
--		block = XFS_BUF_TO_BLOCK(buf);
--		memset(block, 0, cfg->blocksize);
--		libxfs_btree_init_block(mp, buf, XFS_BTNUM_REFC, 0, 0, agno);
--		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--	}
--
--	/*
--	 * INO btree root block
--	 */
--	buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AGB_TO_DADDR(mp, agno, XFS_IBT_BLOCK(mp)),
--			BTOBB(cfg->blocksize));
--	buf->b_ops = &xfs_inobt_buf_ops;
--	block = XFS_BUF_TO_BLOCK(buf);
--	memset(block, 0, cfg->blocksize);
--	libxfs_btree_init_block(mp, buf, XFS_BTNUM_INO, 0, 0, agno);
--	libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--
--	/*
--	 * Free INO btree root block
--	 */
--	if (xfs_sb_version_hasfinobt(sbp)) {
--		buf = libxfs_getbuf(mp->m_ddev_targp,
--				XFS_AGB_TO_DADDR(mp, agno, XFS_FIBT_BLOCK(mp)),
--				BTOBB(cfg->blocksize));
--		buf->b_ops = &xfs_finobt_buf_ops;
--		block = XFS_BUF_TO_BLOCK(buf);
--		memset(block, 0, cfg->blocksize);
--		libxfs_btree_init_block(mp, buf, XFS_BTNUM_FINO, 0, 0, agno);
--		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--	}
--
--	/* RMAP btree root block */
--	if (xfs_sb_version_hasrmapbt(sbp)) {
--		struct xfs_rmap_rec	*rrec;
--
--		buf = libxfs_getbuf(mp->m_ddev_targp,
--			XFS_AGB_TO_DADDR(mp, agno, XFS_RMAP_BLOCK(mp)),
--			BTOBB(cfg->blocksize));
--		buf->b_ops = &xfs_rmapbt_buf_ops;
--		block = XFS_BUF_TO_BLOCK(buf);
--		memset(block, 0, cfg->blocksize);
--
--		libxfs_btree_init_block(mp, buf, XFS_BTNUM_RMAP, 0, 0, agno);
--
--		/*
--		 * mark the AG header regions as static metadata
--		 * The BNO btree block is the first block after the
--		 * headers, so it's location defines the size of region
--		 * the static metadata consumes.
--		 */
--		rrec = XFS_RMAP_REC_ADDR(block, 1);
--		rrec->rm_startblock = 0;
--		rrec->rm_blockcount = cpu_to_be32(XFS_BNO_BLOCK(mp));
--		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_FS);
--		rrec->rm_offset = 0;
--		be16_add_cpu(&block->bb_numrecs, 1);
--
--		/* account freespace btree root blocks */
--		rrec = XFS_RMAP_REC_ADDR(block, 2);
--		rrec->rm_startblock = cpu_to_be32(XFS_BNO_BLOCK(mp));
--		rrec->rm_blockcount = cpu_to_be32(2);
--		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
--		rrec->rm_offset = 0;
--		be16_add_cpu(&block->bb_numrecs, 1);
--
--		/* account inode btree root blocks */
--		rrec = XFS_RMAP_REC_ADDR(block, 3);
--		rrec->rm_startblock = cpu_to_be32(XFS_IBT_BLOCK(mp));
--		rrec->rm_blockcount = cpu_to_be32(XFS_RMAP_BLOCK(mp) -
--						XFS_IBT_BLOCK(mp));
--		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_INOBT);
--		rrec->rm_offset = 0;
--		be16_add_cpu(&block->bb_numrecs, 1);
--
--		/* account for rmap btree root */
--		rrec = XFS_RMAP_REC_ADDR(block, 4);
--		rrec->rm_startblock = cpu_to_be32(XFS_RMAP_BLOCK(mp));
--		rrec->rm_blockcount = cpu_to_be32(1);
--		rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_AG);
--		rrec->rm_offset = 0;
--		be16_add_cpu(&block->bb_numrecs, 1);
--
--		/* account for refcount btree root */
--		if (xfs_sb_version_hasreflink(sbp)) {
--			rrec = XFS_RMAP_REC_ADDR(block, 5);
--			rrec->rm_startblock = cpu_to_be32(libxfs_refc_block(mp));
--			rrec->rm_blockcount = cpu_to_be32(1);
--			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_REFC);
--			rrec->rm_offset = 0;
--			be16_add_cpu(&block->bb_numrecs, 1);
--		}
--
--		/* account for the log space */
--		if (is_log_ag) {
--			rrec = XFS_RMAP_REC_ADDR(block,
--					be16_to_cpu(block->bb_numrecs) + 1);
--			rrec->rm_startblock = cpu_to_be32(
--					XFS_FSB_TO_AGBNO(mp, cfg->logstart));
--			rrec->rm_blockcount = cpu_to_be32(cfg->logblocks);
--			rrec->rm_owner = cpu_to_be64(XFS_RMAP_OWN_LOG);
--			rrec->rm_offset = 0;
--			be16_add_cpu(&block->bb_numrecs, 1);
--		}
--
--		libxfs_writebuf(buf, LIBXFS_EXIT_ON_FAILURE);
--	}
--
- 	libxfs_perag_put(pag);
- }
- 
-@@ -3895,6 +3576,8 @@ main(
- 		},
- 	};
- 
-+	struct list_head	buffer_list;
++struct xfs_bulk_ireq {
++	uint64_t                ino;
++	uint32_t                flags;
++	uint32_t                icount;
++	uint32_t                ocount;
++	uint32_t                agno;
++	uint64_t                reserved[5];
++};
++.fi
++.in
++.PP
++.I hdr.ino
++should be set to the number of the first inode for which the caller wants
++information, or zero to start with the first inode in the filesystem.
++Note that this is a different semantic than the
++.B lastip
++in the old
++.B FSBULKSTAT
++ioctl.
++After the call, this value will be set to the number of the next inode for
++which information could supplied.
++This sets up the next call for an iteration loop.
++.PP
++If the
++.B XFS_BULK_REQ_SPECIAL
++flag is set, this field is interpreted as follows:
++.RS 0.4i
++.TP
++.B XFS_BULK_IREQ_SPECIAL_ROOT
++Return stat information for the root directory inode.
++.RE
++.PP
++.PP
++.I hdr.flags
++is a bit set of operational flags:
++.RS 0.4i
++.TP
++.B XFS_BULK_REQ_AGNO
++If this is set, the call will only return results for the allocation group (AG)
++set in
++.BR hdr.agno .
++If
++.B hdr.ino
++is set to zero, results will be returned starting with the first inode in the
++AG.
++This flag may not be set at the same time as the
++.B XFS_BULK_REQ_SPECIAL
++flag.
++.TP
++.B XFS_BULK_REQ_SPECIAL
++If this is set, results will be returned for only the special inode
++specified in the
++.B hdr.ino
++field.
++This flag may not be set at the same time as the
++.B XFS_BULK_REQ_AGNO
++flag.
++.RE
++.PP
++.I hdr.icount
++is the number of inodes to examine.
++.PP
++.I hdr.ocount
++will be set to the number of records returned.
++.PP
++.I hdr.agno
++is the number of the allocation group (AG) for which we want results.
++If the
++.B XFS_BULK_REQ_AGNO
++flag is not set, this field is ignored.
++.PP
++.I hdr.reserved
++must be set to zero.
 +
- 	platform_uuid_generate(&cli.uuid);
- 	progname = basename(argv[0]);
- 	setlocale(LC_ALL, "");
-@@ -4086,8 +3769,26 @@ main(
- 	/*
- 	 * Initialise all the static on disk metadata.
- 	 */
--	for (agno = 0; agno < cfg.agcount; agno++)
--		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist);
-+	INIT_LIST_HEAD(&buffer_list);
-+	for (agno = 0; agno < cfg.agcount; agno++) {
-+		initialise_ag_headers(&cfg, mp, sbp, agno, &worst_freelist,
-+				&buffer_list);
++.PP
++.I bulkstat
++is an array of
++.B struct xfs_bulkstat
++which is described below.
++The array must have at least
++.I icount
++elements.
++.PP
++.in +4n
++.nf
++struct xfs_bulkstat {
++	uint64_t                bs_ino;
++	uint64_t                bs_size;
 +
-+		if (agno % 16)
-+			continue;
++	uint64_t                bs_blocks;
++	uint64_t                bs_xflags;
 +
-+		if (libxfs_buf_delwri_submit(&buffer_list)) {
-+			fprintf(stderr, _("%s: writing AG headers failed\n"),
-+					progname);
-+			exit(1);
-+		}
-+	}
++	uint64_t                bs_atime;
++	uint64_t                bs_mtime;
 +
-+	if (libxfs_buf_delwri_submit(&buffer_list)) {
-+		fprintf(stderr, _("%s: writing AG headers failed\n"),
-+				progname);
-+		exit(1);
-+	}
- 
- 	/*
- 	 * Initialise the freespace freelists (i.e. AGFLs) in each AG.
++	uint64_t                bs_ctime;
++	uint64_t                bs_btime;
++
++	uint32_t                bs_gen;
++	uint32_t                bs_uid;
++	uint32_t                bs_gid;
++	uint32_t                bs_projectid;
++
++	uint32_t                bs_atime_nsec;
++	uint32_t                bs_mtime_nsec;
++	uint32_t                bs_ctime_nsec;
++	uint32_t                bs_btime_nsec;
++
++	uint32_t                bs_blksize;
++	uint32_t                bs_rdev;
++	uint32_t                bs_cowextsize_blks;
++	uint32_t                bs_extsize_blks;
++
++	uint32_t                bs_nlink;
++	uint32_t                bs_extents;
++	uint32_t                bs_aextents;
++	uint16_t                bs_version;
++	uint16_t                bs_forkoff;
++
++	uint16_t                bs_sick;
++	uint16_t                bs_checked;
++	uint16_t                bs_mode;
++	uint16_t                bs_pad2;
++
++	uint64_t                bs_pad[7];
++};
++.fi
++.in
++.PP
++.I bs_ino
++is the inode number of this record.
++.PP
++.I bs_size
++is the size of the file, in bytes.
++.PP
++.I bs_blocks
++is the number of filesystem blocks allocated to this file, including metadata.
++.PP
++.I bs_xflags
++tell us what extended flags are set this inode.
++These flags are the same values as those defined in the
++.B XFS INODE FLAGS
++section of the
++.BR ioctl_xfs_fsgetxattr (2)
++manpage.
++.PP
++.I bs_atime
++is the last time this file was accessed, in seconds.
++.PP
++.I bs_mtime
++is the last time the contents of this file were modified, in seconds.
++.PP
++.I bs_ctime
++is the last time this inode record was modified, in seconds.
++.PP
++.I bs_btime
++is the time this inode record was created, in seconds.
++.PP
++.I bs_gen
++is the generation number of the inode record.
++.PP
++.I bs_uid
++is the user id.
++.PP
++.I bs_gid
++is the group id.
++.PP
++.I bs_projectid
++is the the project id.
++.PP
++.I bs_atime_nsec
++is the nanoseconds component of the last time this file was accessed.
++.PP
++.I bs_mtime_nsec
++is the nanoseconds component of the last time the contents of this file were
++modified.
++.PP
++.I bs_ctime_nsec
++is the nanoseconds component of the last time this inode record was modified.
++.PP
++.I bs_btime_nsec
++is the nanoseconds component of the time this inode record was created.
++.PP
++.I bs_blksize
++is the size of a data block for this file, in units of bytes.
++.PP
++.I bs_rdev
++is the encoded device id if this is a special file.
++.PP
++.I bs_cowextsize_blks
++is the Copy on Write extent size hint for this file, in units of data blocks.
++.PP
++.I bs_extsize_blks
++is the extent size hint for this file, in units of data blocks.
++.PP
++.I bs_nlink
++is the number of hard links to this inode.
++.PP
++.I bs_extents
++is the number of storage mappings associated with this file's data.
++.PP
++.I bs_aextents
++is the number of storage mappings associated with this file's extended
++attributes.
++.PP
++.I bs_version
++is the version of this data structure.
++Currently, only 1 or 5 are supported.
++.PP
++.I bs_forkoff
++is the offset of the attribute fork in the inode record, in bytes.
++.PP
++The fields
++.IR bs_sick " and " bs_checked
++indicate the relative health of various allocation group metadata.
++Please see the section
++.B XFS INODE METADATA HEALTH REPORTING
++for more information.
++.PP
++.I bs_mode
++is the file type and mode.
++.PP
++.I bs_pad[7]
++is zeroed.
++.SH RETURN VALUE
++On error, \-1 is returned, and
++.I errno
++is set to indicate the error.
++.PP
++.SH XFS INODE METADATA HEALTH REPORTING
++.PP
++The online filesystem checking utility scans inode metadata and records what it
++finds in the kernel incore state.
++The following scheme is used for userspace to read the incore health status of
++an inode:
++.IP \[bu] 2
++If a given sick flag is set in
++.IR bs_sick ,
++then that piece of metadata has been observed to be damaged.
++The same bit should be set in
++.IR bs_checked .
++.IP \[bu]
++If a given sick flag is set in
++.I bs_checked
++but is not set in
++.IR bs_sick ,
++then that piece of metadata has been checked and is not faulty.
++.IP \[bu]
++If a given sick flag is not set in
++.IR bs_checked ,
++then no conclusion can be made.
++.PP
++The following flags apply to these fields:
++.RS 0.4i
++.TP
++.B XFS_BS_SICK_INODE
++The inode's record itself.
++.TP
++.B XFS_BS_SICK_BMBTD
++File data extent mappings.
++.TP
++.B XFS_BS_SICK_BMBTA
++Extended attribute extent mappings.
++.TP
++.B XFS_BS_SICK_BMBTC
++Copy on Write staging extent mappings.
++.TP
++.B XFS_BS_SICK_DIR
++Directory information.
++.TP
++.B XFS_BS_SICK_XATTR
++Extended attribute data.
++.TP
++.B XFS_BS_SICK_SYMLINK
++Symbolic link target.
++.TP
++.B XFS_BS_SICK_PARENT
++Parent pointers.
++.RE
++.SH ERRORS
++Error codes can be one of, but are not limited to, the following:
++.TP
++.B EFAULT
++The kernel was not able to copy into the userspace buffer.
++.TP
++.B EFSBADCRC
++Metadata checksum validation failed while performing the query.
++.TP
++.B EFSCORRUPTED
++Metadata corruption was encountered while performing the query.
++.TP
++.B EINVAL
++One of the arguments was not valid.
++.TP
++.B EIO
++An I/O error was encountered while performing the query.
++.TP
++.B ENOMEM
++There was insufficient memory to perform the query.
++.SH CONFORMING TO
++This API is specific to XFS filesystem on the Linux kernel.
++.SH SEE ALSO
++.BR ioctl (2),
++.BR ioctl_xfs_fsgetxattr (2)
+diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
+index 3e13cfa8..81f9d9bf 100644
+--- a/man/man2/ioctl_xfs_fsbulkstat.2
++++ b/man/man2/ioctl_xfs_fsbulkstat.2
+@@ -15,6 +15,12 @@ ioctl_xfs_fsbulkstat \- query information for a batch of XFS inodes
+ .BI "int ioctl(int " fd ", XFS_IOC_FSBULKSTAT_SINGLE, struct xfs_fsop_bulkreq *" arg );
+ .SH DESCRIPTION
+ Query stat information for a group of XFS inodes.
++.PP
++NOTE: This ioctl has been superseded.
++Please see the
++.BR ioctl_xfs_bulkstat (2)
++manpage for information about its replacement.
++.PP
+ These ioctls use
+ .B struct xfs_fsop_bulkreq
+ to set up a bulk transfer with the kernel:
 
