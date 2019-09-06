@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DBBA6C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D13D6C43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D98A02082C
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA95E2082C
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:38:37 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hTCN77Ww"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="loVyS6yl"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392151AbfIFDid (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:38:33 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:44572 "EHLO
+        id S2392152AbfIFDih (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:38:37 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:44662 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392146AbfIFDid (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:38:33 -0400
+        with ESMTP id S2392146AbfIFDih (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:38:37 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YcEx074767;
-        Fri, 6 Sep 2019 03:38:31 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YUqd074698;
+        Fri, 6 Sep 2019 03:38:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=R70hgIyKXJJpl4QuH/sILArckwUjy35P4RsDGzar/2c=;
- b=hTCN77Ww2QbyKEzX7xwklCR320E4PgNSIiOKtvbl2isH7LnpMnA7lP0hVQ2pau1pHfk6
- 5Gz9r7mnwLxmxAs8oOMukYxWnXRoB/GKyDnkG5AIrcEEDJ6KgOdTp7rgLc/nIhYn+WhP
- qm978v1xne2T33VG2NFw7SsB1TRQjR7VfKfeFuynIea3B8EpvOtBIqG0Lh4BD652Wd2Z
- Sh0P7m4g2yxgoBpwen8BeF8P9HFVHsSgzIajSZzLT/Oe4QhLtWELQlA+lvW+7snWeUUG
- PtxdquUDnjLXSTdaJKvX7/UAgJt6kJU+3dnXcbZu2BqgJJn5tX5vEdDRiI66fTmKsICp cA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2uuf51g3bh-1
+ bh=on1+A8FomuxiRkvyrWNovC5Tib37Rb5iUHxgWJMkgEI=;
+ b=loVyS6ylRxYjuQUKjtcMfPvrh0coVBcARsz4yGiwugNFeUTdZm7PinDkXpI7zYaFpAUw
+ 3bsySNuc1d66gjsRYDtczhiD/YcdiwDjTrG2+oKiEZtbxfydasm3GG7Qw2Sy8m/tcCN2
+ hHq65VzU7pgaM+MOaz/B/GhgdmiLFx5EyASQ2fZVo3hT2y7WHdxW3a8GLni4iCY1Xr8N
+ 9aakRnNj8x8K2XCP5etXO192G//xG/KeANJ8tPK5x4oLzNRjRYTGS6bXL4QAY5ymfGql
+ q7E+RRH1BA+ES7a1JjFjFJHZBFUXEsnhkhp4yy1FBxiblZ4LRky7tPS6pjiG//c42JYX HA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2uuf51g3bw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:38:31 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863cTXk096134;
-        Fri, 6 Sep 2019 03:38:30 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2uu1b99sqy-1
+        Fri, 06 Sep 2019 03:38:35 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863cRQl078087;
+        Fri, 6 Sep 2019 03:38:34 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2utvr4jxvk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:38:30 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863cFYT015906;
-        Fri, 6 Sep 2019 03:38:15 GMT
+        Fri, 06 Sep 2019 03:38:34 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x863cXLj005667;
+        Fri, 6 Sep 2019 03:38:33 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:38:14 -0700
-Subject: [PATCH 05/11] xfs_scrub: only call read_verify_force_io once per
- pool
+        with ESMTP ; Thu, 05 Sep 2019 20:38:33 -0700
+Subject: [PATCH 08/11] xfs_scrub: enforce read verify pool minimum io size
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 05 Sep 2019 20:38:13 -0700
-Message-ID: <156774109332.2645135.1085596269768224961.stgit@magnolia>
+Date:   Thu, 05 Sep 2019 20:38:32 -0700
+Message-ID: <156774111276.2645135.1979781895407724434.stgit@magnolia>
 In-Reply-To: <156774106064.2645135.2756383874064764589.stgit@magnolia>
 References: <156774106064.2645135.2756383874064764589.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,100 +80,46 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-There's no reason we need to call read_verify_force_io every AG; we can
-just let the request aggregation code do its thing and push when we're
-totally done browsing the fsmap information.
+Make sure we always issue media verification requests aligned to the
+minimum IO size that the caller cares about.  Concretely, this means
+that we only care about doing IO in filesystem block-sized chunks.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase6.c      |   16 +++++-----------
- scrub/read_verify.c |   26 +++++++++++++++++---------
- 2 files changed, 22 insertions(+), 20 deletions(-)
+ scrub/read_verify.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index f6274a49..8063d6ce 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -411,7 +411,7 @@ xfs_check_rmap(
- 	 */
- 	if (map->fmr_flags & (FMR_OF_PREALLOC | FMR_OF_ATTR_FORK |
- 			      FMR_OF_EXTENT_MAP | FMR_OF_SPECIAL_OWNER))
--		goto out;
-+		return true;
- 
- 	/* XXX: Filter out directory data blocks. */
- 
-@@ -423,16 +423,6 @@ xfs_check_rmap(
- 		return false;
- 	}
- 
--out:
--	/* Is this the last extent?  Fire off the read. */
--	if (map->fmr_flags & FMR_OF_LAST) {
--		ret = read_verify_force_io(rvp);
--		if (ret) {
--			str_liberror(ctx, ret, descr);
--			return false;
--		}
--	}
--
- 	return true;
- }
- 
-@@ -448,6 +438,10 @@ clean_pool(
- 	if (!rvp)
- 		return 0;
- 
-+	ret = read_verify_force_io(rvp);
-+	if (ret)
-+		return ret;
-+
- 	ret = read_verify_pool_flush(rvp);
- 	if (ret)
- 		goto out_destroy;
 diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 980b92b8..73d30817 100644
+index 73d30817..9d9be68d 100644
 --- a/scrub/read_verify.c
 +++ b/scrub/read_verify.c
-@@ -282,22 +282,30 @@ read_verify_schedule_io(
- 	return 0;
- }
+@@ -77,6 +77,15 @@ read_verify_pool_alloc(
+ 	struct read_verify_pool		*rvp;
+ 	int				ret;
  
-+/* Force any per-thread stashed IOs into the verifier. */
-+static int
-+force_one_io(
-+	struct ptvar		*ptv,
-+	void			*data,
-+	void			*foreach_arg)
-+{
-+	struct read_verify_pool	*rvp = foreach_arg;
-+	struct read_verify	*rv = data;
++	/*
++	 * The minimum IO size must be a multiple of the disk sector size
++	 * and a factor of the max io size.
++	 */
++	if (miniosz % disk->d_lbasize)
++		return EINVAL;
++	if (RVP_IO_MAX_SIZE % miniosz)
++		return EINVAL;
 +
-+	if (rv->io_length == 0)
-+		return 0;
-+
-+	return read_verify_queue(rvp, rv);
-+}
-+
- /* Force any stashed IOs into the verifier. */
- int
- read_verify_force_io(
- 	struct read_verify_pool		*rvp)
- {
--	struct read_verify		*rv;
--	int				ret;
--
+ 	rvp = calloc(1, sizeof(struct read_verify_pool));
+ 	if (!rvp)
+ 		return errno;
+@@ -245,6 +254,11 @@ read_verify_schedule_io(
+ 	int				ret;
+ 
  	assert(rvp->readbuf);
--	rv = ptvar_get(rvp->rvstate, &ret);
--	if (ret)
--		return ret;
--	if (rv->io_length == 0)
--		return 0;
- 
--	return read_verify_queue(rvp, rv);
-+	return ptvar_foreach(rvp->rvstate, force_one_io, rvp);
- }
- 
- /* How many bytes has this process verified? */
++
++	/* Round up and down to the start of a miniosz chunk. */
++	start &= ~(rvp->miniosz - 1);
++	length = roundup(length, rvp->miniosz);
++
+ 	rv = ptvar_get(rvp->rvstate, &ret);
+ 	if (ret)
+ 		return ret;
 
