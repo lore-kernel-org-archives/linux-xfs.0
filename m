@@ -4,60 +4,60 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2368C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6780AC43331
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2641206B8
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 652EF20820
+	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 03:34:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="k08GIbME"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BNN/jIcR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392133AbfIFDed (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 5 Sep 2019 23:34:33 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48072 "EHLO
+        id S2392135AbfIFDem (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 5 Sep 2019 23:34:42 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48278 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392128AbfIFDed (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:33 -0400
+        with ESMTP id S2392128AbfIFDem (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 5 Sep 2019 23:34:42 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YUPx110133;
-        Fri, 6 Sep 2019 03:34:30 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YPff110089;
+        Fri, 6 Sep 2019 03:34:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=lDybE/dGXoCeqWOx4qhEVfSkmi9oq5ttvlxS/Ntj+CQ=;
- b=k08GIbMEBkVrDJERFxX9fLEQp+rYlS4hs8X7hWKNXs3IqC9GbhThYp+Sz9Vy5xUc9X4d
- 2FExz+NGUYs6/QzXcIob0ASEJF1/esdAZxVqZH4onYNjE9oeRgPXh0bsu5OT9EUfYMPq
- 5rYdmqLL6kJH0LV8zjFArQWoVBQAQ7ZEnf62mrIpIVTaB3FpEN/RgyyZV+ZE+/bCYMhB
- uUJ5s+56v7sOKyZSR8DZMdP2lZq+CRC5OFx6+vTnE/z1/VlWTm+VQn3fs3Jdd+09CBQW
- EfUhYcrIl9Pyfpk7T+qTOzQ7KSe5p5maOW+ESk5zni9YiyLVwzJ55utVVm/t6p17AGar PA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2uuf4n034q-1
+ bh=49tm2aKcDFlLPoWd3aYMcNWLlMIIeQl9xfm45RAks24=;
+ b=BNN/jIcRQS1WvB5VPtHHvhh2N9Hl0kIdn4YKhcDscAeJKrJ984f/dl9fQmIsFS1JSwDr
+ vbHchOg2rMkJY8nicmHPrwIolDtaZBRjLG4AjO6z9zWEcw+K1/IhxonFbGEN/t7e59Qr
+ Q4wGi8XGWpxxNR7dSM7EAW8ZuJ7J94wupwCKwCm/7rwZeF7sB/ly1bLEzfL0YSm2YQEL
+ e/cn8LPBt+ZsouO8sjo1bJ3lNgflVb66UZNCbp4VyMESKEeMPs/868ejYcIzTAG1JzI0
+ U8YkGdqPQygcfXdr1M3/AVwZTMJhEugVt0GXiR0aU/s4f7q5oWIrApjW/Y/scCiWU9AY Pw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2uuf4n0357-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:30 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863YOId088493;
-        Fri, 6 Sep 2019 03:34:29 GMT
+        Fri, 06 Sep 2019 03:34:37 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x863Xa6x069093;
+        Fri, 6 Sep 2019 03:34:37 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2uu1b99pqq-1
+        by userp3020.oracle.com with ESMTP id 2utvr4jt7w-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 06 Sep 2019 03:34:26 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863Xscv013872;
-        Fri, 6 Sep 2019 03:33:54 GMT
+        Fri, 06 Sep 2019 03:34:37 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x863YYxI014244;
+        Fri, 6 Sep 2019 03:34:34 GMT
 Received: from localhost (/10.159.148.70)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 05 Sep 2019 20:33:53 -0700
-Subject: [PATCH 5/5] xfs_scrub: check summary counters
+        with ESMTP ; Thu, 05 Sep 2019 20:34:34 -0700
+Subject: [PATCH 2/4] libxfs: fix buffer refcounting in delwri_queue
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 05 Sep 2019 20:33:53 -0700
-Message-ID: <156774083337.2643094.8024666518194752231.stgit@magnolia>
-In-Reply-To: <156774080205.2643094.9791648860536208060.stgit@magnolia>
-References: <156774080205.2643094.9791648860536208060.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Date:   Thu, 05 Sep 2019 20:34:33 -0700
+Message-ID: <156774087342.2643362.6934117999460507337.stgit@magnolia>
+In-Reply-To: <156774086083.2643362.4042713521116931635.stgit@magnolia>
+References: <156774086083.2643362.4042713521116931635.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,133 +80,49 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Teach scrub to ask the kernel to check and repair summary counters
-during phase 7.
+In the kernel, xfs_buf_delwri_queue increments the buffer reference
+count before putting the buffer on the buffer list, and the refcount is
+decremented after the io completes for a net refcount change of zero.
+
+In userspace, delwri_queue calls libxfs_writebuf, which puts the buffer.
+delwri_queue is a no-op, for a net refcount change of -1.  This creates
+problems for any callers that expect a net change of zero, so increment
+the buffer refcount before calling writebuf.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- scrub/phase4.c |   12 ++++++++++++
- scrub/phase7.c |   14 ++++++++++++++
- scrub/repair.c |    3 +++
- scrub/scrub.c  |   12 ++++++++++++
- scrub/scrub.h  |    2 ++
- 5 files changed, 43 insertions(+)
+ libxfs/libxfs_io.h   |    7 +++++++
+ libxfs/libxfs_priv.h |    1 -
+ 2 files changed, 7 insertions(+), 1 deletion(-)
 
 
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 589777f6..25fedc83 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -107,6 +107,18 @@ bool
- xfs_repair_fs(
- 	struct scrub_ctx		*ctx)
- {
-+	bool				moveon;
-+
-+	/*
-+	 * Check the summary counters early.  Normally we do this during phase
-+	 * seven, but some of the cross-referencing requires fairly-accurate
-+	 * counters, so counter repairs have to be put on the list now so that
-+	 * they get fixed before we stop retrying unfixed metadata repairs.
-+	 */
-+	moveon = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
-+	if (!moveon)
-+		return false;
-+
- 	return xfs_process_action_items(ctx);
+diff --git a/libxfs/libxfs_io.h b/libxfs/libxfs_io.h
+index 7dcb4bff..09ed043b 100644
+--- a/libxfs/libxfs_io.h
++++ b/libxfs/libxfs_io.h
+@@ -245,4 +245,11 @@ xfs_buf_get_uncached(struct xfs_buftarg *targ, size_t bblen, int flags)
+ 	return bp;
  }
  
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index f82b60d6..308b8bb3 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -9,10 +9,13 @@
- #include <sys/statvfs.h>
- #include "libfrog/paths.h"
- #include "libfrog/ptvar.h"
-+#include "list.h"
- #include "xfs_scrub.h"
- #include "common.h"
-+#include "scrub.h"
- #include "fscounters.h"
- #include "spacemap.h"
-+#include "repair.h"
- 
- /* Phase 7: Check summary counters. */
- 
-@@ -91,6 +94,7 @@ xfs_scan_summary(
- 	struct scrub_ctx	*ctx)
- {
- 	struct summary_counts	totalcount = {0};
-+	struct xfs_action_list	alist;
- 	struct ptvar		*ptvar;
- 	unsigned long long	used_data;
- 	unsigned long long	used_rt;
-@@ -110,6 +114,16 @@ xfs_scan_summary(
- 	int			ip;
- 	int			error;
- 
-+	/* Check and fix the fs summary counters. */
-+	xfs_action_list_init(&alist);
-+	moveon = xfs_scrub_fs_summary(ctx, &alist);
-+	if (!moveon)
-+		return false;
-+	moveon = xfs_action_list_process(ctx, ctx->mnt.fd, &alist,
-+			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
-+	if (!moveon)
-+		return moveon;
-+
- 	/* Flush everything out to disk before we start counting. */
- 	error = syncfs(ctx->mnt.fd);
- 	if (error) {
-diff --git a/scrub/repair.c b/scrub/repair.c
-index 0e5afb20..04a9dccf 100644
---- a/scrub/repair.c
-+++ b/scrub/repair.c
-@@ -84,6 +84,9 @@ xfs_action_item_priority(
- 	case XFS_SCRUB_TYPE_GQUOTA:
- 	case XFS_SCRUB_TYPE_PQUOTA:
- 		return PRIO(aitem, XFS_SCRUB_TYPE_UQUOTA);
-+	case XFS_SCRUB_TYPE_FSCOUNTERS:
-+		/* This should always go after AG headers no matter what. */
-+		return PRIO(aitem, INT_MAX);
- 	}
- 	abort();
- }
-diff --git a/scrub/scrub.c b/scrub/scrub.c
-index b1927f38..0e30bb2f 100644
---- a/scrub/scrub.c
-+++ b/scrub/scrub.c
-@@ -384,6 +384,18 @@ xfs_scrub_fs_metadata(
- 	return xfs_scrub_meta_type(ctx, XFROG_SCRUB_TYPE_FS, 0, alist);
- }
- 
-+/* Scrub FS summary metadata. */
-+bool
-+xfs_scrub_fs_summary(
-+	struct scrub_ctx		*ctx,
-+	struct xfs_action_list		*alist)
++static inline void
++xfs_buf_delwri_queue(struct xfs_buf *bp, struct list_head *buffer_list)
 +{
-+	int				ret;
-+
-+	ret = xfs_scrub_meta(ctx, XFS_SCRUB_TYPE_FSCOUNTERS, 0, alist);
-+	return ret == 0;
++	bp->b_node.cn_count++;
++	libxfs_writebuf(bp, 0);
 +}
 +
- /* How many items do we have to check? */
- unsigned int
- xfs_scrub_estimate_ag_work(
-diff --git a/scrub/scrub.h b/scrub/scrub.h
-index 7e28b522..d407abb0 100644
---- a/scrub/scrub.h
-+++ b/scrub/scrub.h
-@@ -25,6 +25,8 @@ bool xfs_scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
- 		struct xfs_action_list *alist);
- bool xfs_scrub_fs_metadata(struct scrub_ctx *ctx,
- 		struct xfs_action_list *alist);
-+bool xfs_scrub_fs_summary(struct scrub_ctx *ctx,
-+		struct xfs_action_list *alist);
+ #endif	/* __LIBXFS_IO_H__ */
+diff --git a/libxfs/libxfs_priv.h b/libxfs/libxfs_priv.h
+index b05e082a..13dab58a 100644
+--- a/libxfs/libxfs_priv.h
++++ b/libxfs/libxfs_priv.h
+@@ -382,7 +382,6 @@ roundup_64(uint64_t x, uint32_t y)
+ #define xfs_buf_relse(bp)		libxfs_putbuf(bp)
+ #define xfs_buf_get(devp,blkno,len)	(libxfs_getbuf((devp), (blkno), (len)))
+ #define xfs_bwrite(bp)			libxfs_writebuf((bp), 0)
+-#define xfs_buf_delwri_queue(bp, bl)	libxfs_writebuf((bp), 0)
+ #define xfs_buf_delwri_submit(bl)	(0)
+ #define xfs_buf_oneshot(bp)		((void) 0)
  
- bool xfs_can_scrub_fs_metadata(struct scrub_ctx *ctx);
- bool xfs_can_scrub_inode(struct scrub_ctx *ctx);
 
