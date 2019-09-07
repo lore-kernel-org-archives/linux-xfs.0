@@ -1,103 +1,253 @@
-Return-Path: <SRS0=UMh5=XB=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=58aD=XC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.2 required=3.0
-	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C005C43331
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 23:28:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 56434C43331
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Sep 2019 15:10:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C7F420838
-	for <linux-xfs@archiver.kernel.org>; Fri,  6 Sep 2019 23:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1BEEC21848
+	for <linux-xfs@archiver.kernel.org>; Sat,  7 Sep 2019 15:10:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2405332AbfIFX2R (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 6 Sep 2019 19:28:17 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:60386 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2405045AbfIFX2R (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 6 Sep 2019 19:28:17 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D5462360F92;
-        Sat,  7 Sep 2019 09:28:13 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1i6NeG-0004os-7p; Sat, 07 Sep 2019 09:28:12 +1000
-Date:   Sat, 7 Sep 2019 09:28:12 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Goldwyn Rodrigues <rgoldwyn@suse.de>,
-        linux-fsdevel@vger.kernel.org, linux-btrfs@vger.kernel.org,
-        darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>
-Subject: Re: [PATCH 15/15] xfs: Use the new iomap infrastructure for CoW
-Message-ID: <20190906232812.GB16973@dread.disaster.area>
-References: <20190905150650.21089-1-rgoldwyn@suse.de>
- <20190905150650.21089-16-rgoldwyn@suse.de>
- <20190906165507.GA12842@lst.de>
+        id S1731885AbfIGPKx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 7 Sep 2019 11:10:53 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:54808 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726936AbfIGPKx (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sat, 7 Sep 2019 11:10:53 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 6E3E61801586;
+        Sat,  7 Sep 2019 15:10:52 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 041B35C1B2;
+        Sat,  7 Sep 2019 15:10:51 +0000 (UTC)
+Date:   Sat, 7 Sep 2019 11:10:50 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 7/7] xfs: push the grant head when the log head moves
+ forward
+Message-ID: <20190907151050.GA3967@bfoster>
+References: <20190904042451.9314-1-david@fromorbit.com>
+ <20190904042451.9314-8-david@fromorbit.com>
+ <20190904193442.GA52970@bfoster>
+ <20190904225056.GL1119@dread.disaster.area>
+ <20190905162533.GA59149@bfoster>
+ <20190906000205.GL1119@dread.disaster.area>
+ <20190906131014.GA62719@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190906165507.GA12842@lst.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=JfrnYn6hAAAA:8 a=7-415B0cAAAA:8 a=kd9TP_cp1AsMHmmDf5oA:9
-        a=CjuIK1q_8ugA:10 a=1CNFftbPRP8L7MoqJWF3:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190906131014.GA62719@bfoster>
+User-Agent: Mutt/1.12.0 (2019-05-25)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.63]); Sat, 07 Sep 2019 15:10:52 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 06, 2019 at 06:55:07PM +0200, Christoph Hellwig wrote:
-> On Thu, Sep 05, 2019 at 10:06:50AM -0500, Goldwyn Rodrigues wrote:
-> > diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> > index 8321733c16c3..13495d8a1ee2 100644
-> > --- a/fs/xfs/xfs_iomap.c
-> > +++ b/fs/xfs/xfs_iomap.c
-> > @@ -1006,7 +1006,10 @@ xfs_file_iomap_begin(
-> >  		 */
-> >  		if (directio || imap.br_startblock == HOLESTARTBLOCK)
-> >  			imap = cmap;
-> > +		else
-> > +			xfs_bmbt_to_iomap(ip, srcmap, &cmap, false);
-> >  
-> > +		iomap->flags |= IOMAP_F_COW;
+On Fri, Sep 06, 2019 at 09:10:14AM -0400, Brian Foster wrote:
+> On Fri, Sep 06, 2019 at 10:02:05AM +1000, Dave Chinner wrote:
+> > On Thu, Sep 05, 2019 at 12:25:33PM -0400, Brian Foster wrote:
+> > > On Thu, Sep 05, 2019 at 08:50:56AM +1000, Dave Chinner wrote:
+> > > > On Wed, Sep 04, 2019 at 03:34:42PM -0400, Brian Foster wrote:
+> > > > > On Wed, Sep 04, 2019 at 02:24:51PM +1000, Dave Chinner wrote:
+> > > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > > +/*
+> > > > > > + * Completion of a iclog IO does not imply that a transaction has completed, as
+> > > > > > + * transactions can be large enough to span many iclogs. We cannot change the
+> > > > > > + * tail of the log half way through a transaction as this may be the only
+> > > > > > + * transaction in the log and moving the tail to point to the middle of it
+> > > > > > + * will prevent recovery from finding the start of the transaction. Hence we
+> > > > > > + * should only update the last_sync_lsn if this iclog contains transaction
+> > > > > > + * completion callbacks on it.
+> > > > > > + *
+> > > > > > + * We have to do this before we drop the icloglock to ensure we are the only one
+> > > > > > + * that can update it.
+> > > > > > + *
+> > > > > > + * If we are moving the last_sync_lsn forwards, we also need to ensure we kick
+> > > > > > + * the reservation grant head pushing. This is due to the fact that the push
+> > > > > > + * target is bound by the current last_sync_lsn value. Hence if we have a large
+> > > > > > + * amount of log space bound up in this committing transaction then the
+> > > > > > + * last_sync_lsn value may be the limiting factor preventing tail pushing from
+> > > > > > + * freeing space in the log. Hence once we've updated the last_sync_lsn we
+> > > > > > + * should push the AIL to ensure the push target (and hence the grant head) is
+> > > > > > + * no longer bound by the old log head location and can move forwards and make
+> > > > > > + * progress again.
+> > > > > > + */
+> > > > > > +static void
+> > > > > > +xlog_state_set_callback(
+> > > > > > +	struct xlog		*log,
+> > > > > > +	struct xlog_in_core	*iclog,
+> > > > > > +	xfs_lsn_t		header_lsn)
+> > > > > > +{
+> > > > > > +	iclog->ic_state = XLOG_STATE_CALLBACK;
+> > > > > > +
+> > > > > > +	ASSERT(XFS_LSN_CMP(atomic64_read(&log->l_last_sync_lsn), header_lsn) <= 0);
+> > > > > > +
+> > > > > > +	if (list_empty_careful(&iclog->ic_callbacks))
+> > > > > > +		return;
+> > > > > > +
+> > > > > > +	atomic64_set(&log->l_last_sync_lsn, header_lsn);
+> > > > > > +	xlog_grant_push_ail(log, 0);
+> > > > > > +
+> > > > > 
+> > > > > Nit: extra whitespace line above.
+> > > > 
+> > > > Fixed.
+> > > > 
+> > > > > This still seems racy to me, FWIW. What if the AIL is empty (i.e. the
+> > > > > push is skipped)?
+> > > > 
+> > > > If the AIL is empty, then it's a no-op because pushing on the AIL is
+> > > > not going to make more log space become free. Besides, that's not
+> > > > the problem being solved here - reservation wakeups on first insert
+> > > > into the AIL are already handled by xfs_trans_ail_update_bulk() and
+> > > > hence the first patch in the series. This patch is addressing the
+> > > 
+> > > Nothing currently wakes up reservation waiters on first AIL insertion.
+> > 
+> > Nor should it be necessary - it's the removal from the AIL that
+> > frees up log space, not insertion. The update operation is a
+> > remove followed by an insert - the remove part of that operation is
+> > what may free up log space, not the insert.
+> > 
 > 
-> I don't think this is correct.  We should only set IOMAP_F_COW
-> when we actually fill out the srcmap.  Which is a very good agument
-> for Darrick's suggestion to check for a non-emptry srcmap.
+> Just above you wrote: "reservation wakeups on first insert into the AIL
+> are already handled by xfs_trans_ail_update_bulk()". My reply was just
+> to point out that there are no wakeups in that case.
 > 
-> Also this is missing the actually interesting part in
-> xfs_file_iomap_begin_delay.
+> > Hence if we need to wake the log reservation waiters on first AIL
+> > insert to fix a bug, we haven't found the underlying problem is
+> > preventing log space from being freed...
+> > >
+> > > > i.e. the AIL is for moving the tail of the log - this code moves the
+> > > > head of the log. But both impact on the AIL push target (it is based on
+> > > > the distance between the head and tail), so we need
+> > > > to update the push target just in case this commit does not move
+> > > > the tail...
+> > > > 
+> > > > > What if xfsaild completes this push before the
+> > > > > associated log items land in the AIL or we race with xfsaild emptying
+> > > > > the AIL? Why not just reuse/update the existing grant head wake up logic
+> > > > > in the iclog callback itself? E.g., something like the following
+> > > > > (untested):
+> > > > > 
+> > > 
+> > > And the raciness concerns..? AFAICT this still opens a race window where
+> > > the AIL can idle on the push target before AIL insertion.
+> > 
+> > I don't know what race you see - if the AIL completes a push before
+> > we insert new objects at the head from the current commit, then it
+> > does not matter one bit because the items are being inserted at the
+> > log head, not the log tail where the pushing occurs at. If we are
+> > inserting objects into the AIL within the push target window, then
+> > there is something else very wrong going on, because when the log is
+> > out of space the push target should be nowhere near the LSN we are
+> > inserting inew objects into the AIL at. (i.e. they should be 3/4s of
+> > the log apart...)
+> > 
 > 
-> I ended up spending the better half of the day trying to implement
-> that and did run into a few bugs in the core iomap changes, mostly
-> due to a confusion which iomap to use.  So I ended up reworking those
-> a bit to:
+> I'm not following your reasoning. It sounds to me that you're arguing it
+> doesn't matter that the AIL is not populated from the current commit
+> because the push target should be much farther behind the head. If
+> that's the case, why does this patch order the AIL push after a
+> ->l_last_sync_lsn update? That's the LSN of the most recent commit
+> record to hit the log and hence the new physical log head.
 > 
->   a) check srcmap->type to see if there is a valid srcmap
->   b) set the srcmap pointer to iomap so that it doesn't need to
->      be special cased all over
->   c) fixed up a few more places to use the srcmap
+> Side note: I think the LSN of the commit record iclog is different and
+> actually ahead of the LSN associated with AIL insertion. I don't
+> necessarily think that's a problem given how the log subsystem behaves
+> today, but it's another subtle/undocumented (and easily avoidable) quirk
+> that may not always be so benign.
 > 
-> This now at least survives xfstests -g quick on a 4k xfs file system
-> for.  Here is my current tree:
-> 
-> http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/xfs-cow-iomap
 
-That looks somewhat reasonable. The XFS mapping function is turning
-into spagetti and getting really hard to follow again, though.
-Perhaps we should consider splitting the shared/COW path out of
-it...
+Just to put a finer point on this (and since this seems to be the only
+way I can get you to consider nontrivial feedback to your patches):
 
-Cheers,
+kworker/0:1H-220   [000] ...1  3869.403829: xlog_state_do_callback: 2691: l_last_sync_lsn 0x15000021f6
+kworker/0:1H-220   [000] ...1  3869.403864: xfs_ail_push: 639: ail_target 0x15000021f6
+      <...>-215246 [002] ...1  3875.568561: xfsaild: 403: empty (target 0x15000021f6)
+      <...>-215246 [002] ....  3875.568649: xfsaild: 589: idle
+kworker/0:1H-220   [000] ...1  3889.843872: xfs_trans_ail_update_bulk: 746: inserted lsn 0x1500001bf6
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+This is an instance of xfsaild going idle between the time this new AIL
+push sets the target based on the iclog about to be committed and AIL
+insertion of the associated log items, reproduced via a bit of timing
+instrumentation. Don't be distracted by the timestamps or the fact that
+the LSNs do not match because the log items in the AIL end up indexed by
+the start lsn of the CIL checkpoint (whereas last_sync_lsn refers to the
+commit record). The point is simply that xfsaild has completed a push of
+a target that hasn't been inserted yet.
+
+A couple additional notes.. I don't see further side effects in the
+variant I reproduced, I suspect because we have other wakeups that
+squash this transient state created by the race, but I'm not totally
+sure of that. I'm also not totally convinced this is the only vector to
+this problem, FWIW. It wouldn't surprise me a ton if we had some other
+scenario that could result in the same problem with actual side effects,
+but this is beside the point.
+
+Brian
+
+> > > > So, from #1 we see that unconditional wakeups are not necessary in
+> > > > the scenario you pose, and from #2 it's not a viable solution even
+> > > > if it was required.
+> > > > 
+> > > > However, #1 indicates other problems if a xfs_log_space_wake() call
+> > > > is necessary in this case. No reservations space and an empty AIL
+> > > > implies that the CIL pins the entire log - a pending commit that
+> > > > hasn't finished flushing and the current context that is
+> > > > aggregating. This implies we've violated a much more important rule
+> > > > of the on-disk log format: finding the head and tail of the log
+> > > > requires no individual commit be larger than 50% of the log.
+> > > > 
+> > > 
+> > > I described this exact problem days ago in the original thread. There's
+> > > no need to rehash it here. FWIW, I can reproduce much worse than 50% log
+> > > consumption aggregated outside of the AIL with the current code and it
+> > > doesn't depend on a nonpreemptible kernel (though the workqueue fix
+> > > looks legit to me).
+> > 
+> ...
+> > 
+> > i.e. we changed the unlinked inode processing in a way that
+> > the kernel can now runs tens of thousands of unlink transactions
+> > without yeilding the CPU. That violated the "CIL push work will run
+> > within a few transactions of the background push occurring"
+> > mechanism the workqueue provided us with and that, fundamentally, is
+> > the underlying issue here. It's not a CIL vs empty AIL vs log
+> > reservation exhaustion race condition - that's just an observable
+> > symptom.
+> > 
+> 
+> Yes, but the point is that's not the only thing that can delay CIL push
+> work. Since the AIL is not populated until the commit record iclog is
+> written out, and background CIL pushing doesn't flush the commit record
+> for the associated checkpoint before it completes, and CIL pushing
+> itself is serialized, a stalled commit record iclog I/O is enough to
+> create "log full, empty AIL" conditions.
+> 
+> > To that end, I have been prototyping patches to fix this exact problem
+> > as part of the non-blocking inode reclaim series. I've been looking at
+> > this because the CIL pins so much memory on large logs and I wanted to
+> > put an upper bound on it that wasn't measured in GBs of RAM. Hence I'm
+> > planning to pull these out into a separate series now as it's clear
+> > that non-preemptible kernels and workqueues do not play well together
+> > and that the more we use workqueues for async processing, the more we
+> > introduce a potential real-world vector for CIL overruns...
+> > 
+> 
+> Yes, I think a separate series for CIL management makes sense.
+> 
+> Brian
+> 
+> > Cheers,
+> > 
+> > Dave.  -- Dave Chinner david@fromorbit.com
