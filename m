@@ -6,29 +6,28 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EDDDC4740C
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:24:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AB2C4740C
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:25:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 30EAC218AF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:24:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E8469218AF
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:25:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730938AbfIISYl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Sep 2019 14:24:41 -0400
-Received: from sandeen.net ([63.231.237.45]:38438 "EHLO sandeen.net"
+        id S1730943AbfIISZz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Sep 2019 14:25:55 -0400
+Received: from sandeen.net ([63.231.237.45]:38536 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730561AbfIISYl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Sep 2019 14:24:41 -0400
+        id S1730733AbfIISZz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Sep 2019 14:25:55 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C9BAC4507C1;
-        Mon,  9 Sep 2019 13:24:39 -0500 (CDT)
-Subject: Re: [PATCH 01/10] man: document the new v5 fs geometry ioctl
- structures
+        by sandeen.net (Postfix) with ESMTPSA id 8EBCD4507C1;
+        Mon,  9 Sep 2019 13:25:54 -0500 (CDT)
+Subject: Re: [PATCH 02/10] man: document new fs summary counter scrub command
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156757182283.1838441.193482978701233436.stgit@magnolia>
- <156757182904.1838441.1851639472366955352.stgit@magnolia>
+ <156757183522.1838441.14863203188193553450.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,15 +72,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <93bd2586-abca-0185-f0a3-6eb1bcdc148f@sandeen.net>
-Date:   Mon, 9 Sep 2019 13:24:39 -0500
+Message-ID: <743934ff-2327-18c3-5178-4867e9421402@sandeen.net>
+Date:   Mon, 9 Sep 2019 13:25:53 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156757182904.1838441.1851639472366955352.stgit@magnolia>
+In-Reply-To: <156757183522.1838441.14863203188193553450.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -90,52 +89,32 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/3/19 11:37 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Amend the fs geometry ioctl documentation to cover the new v5 structure.
+> Update the scrub ioctl documentation to include the new fs summary
+> counter scrubber.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Seems fine; I wonder if we should have a some details in here about how
-we rev this interface as it's a bit unusual, but this follows history
-I guess.
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
 > ---
->  man/man2/ioctl_xfs_fsop_geometry.2 |    8 ++++++++
->  1 file changed, 8 insertions(+)
+>  man/man2/ioctl_xfs_scrub_metadata.2 |    5 +++++
+>  1 file changed, 5 insertions(+)
 > 
 > 
-> diff --git a/man/man2/ioctl_xfs_fsop_geometry.2 b/man/man2/ioctl_xfs_fsop_geometry.2
-> index 68e3387d..365bda8b 100644
-> --- a/man/man2/ioctl_xfs_fsop_geometry.2
-> +++ b/man/man2/ioctl_xfs_fsop_geometry.2
-> @@ -12,6 +12,8 @@ ioctl_xfs_fsop_geometry \- report XFS filesystem layout and features
->  .PP
->  .BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY, struct xfs_fsop_geom*" arg );
->  .br
-> +.BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V4, struct xfs_fsop_geom_v4 *" arg );
-> +.br
->  .BI "int ioctl(int " fd ", XFS_IOC_FSOP_GEOMETRY_V1, struct xfs_fsop_geom_v1 *" arg );
->  .SH DESCRIPTION
->  Report the details of an XFS filesystem layout, features, and other descriptive items.
-> @@ -43,6 +45,9 @@ struct xfs_fsop_geom {
->  	/* struct xfs_fsop_geom_v1 stops here. */
->  
->  	__u32         logsunit;
-> +	/* struct xfs_fsop_geom_v4 stops here. */
+> diff --git a/man/man2/ioctl_xfs_scrub_metadata.2 b/man/man2/ioctl_xfs_scrub_metadata.2
+> index 1e80ee71..046e3e36 100644
+> --- a/man/man2/ioctl_xfs_scrub_metadata.2
+> +++ b/man/man2/ioctl_xfs_scrub_metadata.2
+> @@ -159,6 +159,11 @@ corruption.
+>  .TP
+>  .B XFS_SCRUB_TYPE_PQUOTA
+>  Examine all user, group, or project quota records for corruption.
 > +
-> +	__u64         reserved[18];
->  };
->  .fi
->  .in
-> @@ -124,6 +129,9 @@ underlying log device, in filesystem blocks.
->  This field is meaningful only if the flag
->  .B  XFS_FSOP_GEOM_FLAGS_LOGV2
->  is set.
-> +.PP
-> +.I reserved
-> +is set to zero.
->  .SH FILESYSTEM FEATURE FLAGS
->  Filesystem features are reported to userspace as a combination the following
->  flags:
+> +.TP
+> +.B XFS_SCRUB_TYPE_FSCOUNTERS
+> +Examine all filesystem summary counters (free blocks, inode count, free inode
+> +count) for errors.
+>  .RE
+>  
+>  .PD 1
 > 
