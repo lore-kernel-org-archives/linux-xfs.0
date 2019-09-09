@@ -4,31 +4,30 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 77EEBC4740A
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 19:19:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 613C3C4740A
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 19:24:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57D67218AF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 19:19:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3DF4D218AF
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 19:24:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387497AbfIITTo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Sep 2019 15:19:44 -0400
-Received: from sandeen.net ([63.231.237.45]:42254 "EHLO sandeen.net"
+        id S2387784AbfIITYV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Sep 2019 15:24:21 -0400
+Received: from sandeen.net ([63.231.237.45]:42598 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726814AbfIITTo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Sep 2019 15:19:44 -0400
+        id S1726814AbfIITYV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Sep 2019 15:24:21 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 56D214507C1;
-        Mon,  9 Sep 2019 14:19:43 -0500 (CDT)
-Subject: Re: [PATCH 04/10] man: document the new health reporting fields in
- various ioctls
+        by sandeen.net (Postfix) with ESMTPSA id 226974507C1;
+        Mon,  9 Sep 2019 14:24:20 -0500 (CDT)
+Subject: Re: [PATCH 05/10] xfs_db: remove db/convert.h
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 References: <156757182283.1838441.193482978701233436.stgit@magnolia>
- <156757184781.1838441.4746750117807426676.stgit@magnolia>
+ <156757185424.1838441.6515170778646159040.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,15 +72,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <36de43a2-9adb-73db-81a1-eecb665113ea@sandeen.net>
-Date:   Mon, 9 Sep 2019 14:19:42 -0500
+Message-ID: <b3498d50-d7c3-9659-4735-c22e76df49f8@sandeen.net>
+Date:   Mon, 9 Sep 2019 14:24:19 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156757184781.1838441.4746750117807426676.stgit@magnolia>
+In-Reply-To: <156757185424.1838441.6515170778646159040.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -90,48 +89,93 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/3/19 11:37 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Update the manpages to conver the new health reporting fields in the
-> fs geometry, ag geometry, and bulkstat ioctls.
-> 
+> db/convert.h conflicts with include/convert.h and since the former only
+> has one declaration in it anyway, just get rid of it.  We'll need this
+> in the next patch to avoid an ugly include mess.
+
+larf ok :)
+
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > Reviewed-by: Dave Chinner <dchinner@redhat.com>
-> ---
->  man/man2/ioctl_xfs_ag_geometry.2   |   48 +++++++++++++++++++++++++++++++
->  man/man2/ioctl_xfs_fsbulkstat.2    |   52 +++++++++++++++++++++++++++++++++
->  man/man2/ioctl_xfs_fsop_geometry.2 |   56 +++++++++++++++++++++++++++++++++++-
->  3 files changed, 154 insertions(+), 2 deletions(-)
-> 
-> 
-...
-
-> diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
-> index a8b22dc4..3e13cfa8 100644
-> --- a/man/man2/ioctl_xfs_fsbulkstat.2
-> +++ b/man/man2/ioctl_xfs_fsbulkstat.2
-> @@ -94,7 +94,9 @@ struct xfs_bstat {
->  	__u16             bs_projid_lo;
->  	__u16             bs_forkoff;
->  	__u16             bs_projid_hi;
-> -	unsigned char     bs_pad[6];
-> +	uint16_t          bs_sick;
-> +	uint16_t          bs_checked;
-> +	unsigned char     bs_pad[2];
->  	__u32             bs_cowextsize;
->  	__u32             bs_dmevmask;
->  	__u16             bs_dmstate;
-> @@ -184,6 +186,54 @@ is unused on Linux.
->  .I bs_aextents
->  is the number of storage mappings associated with this file's extended
->  attributes.
-> +.PP
-> +The fields
-> +.IR bs_sick " and " bs_checked
-> +indicate the relative health of various allocation group metadata:
-
-
-This should probably say "inode metadata?" 
-
-I can fix that on the way in, the rest looks ok
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
+> ---
+>  db/Makefile  |    4 ++--
+>  db/command.c |    1 -
+>  db/command.h |    1 +
+>  db/convert.c |    1 -
+>  db/convert.h |    7 -------
+>  5 files changed, 3 insertions(+), 11 deletions(-)
+>  delete mode 100644 db/convert.h
+> 
+> 
+> diff --git a/db/Makefile b/db/Makefile
+> index 8fecfc1c..0941b32e 100644
+> --- a/db/Makefile
+> +++ b/db/Makefile
+> @@ -8,13 +8,13 @@ include $(TOPDIR)/include/builddefs
+>  LTCOMMAND = xfs_db
+>  
+>  HFILES = addr.h agf.h agfl.h agi.h attr.h attrshort.h bit.h block.h bmap.h \
+> -	btblock.h bmroot.h check.h command.h convert.h crc.h debug.h \
+> +	btblock.h bmroot.h check.h command.h crc.h debug.h \
+>  	dir2.h dir2sf.h dquot.h echo.h faddr.h field.h \
+>  	flist.h fprint.h frag.h freesp.h hash.h help.h init.h inode.h input.h \
+>  	io.h logformat.h malloc.h metadump.h output.h print.h quit.h sb.h \
+>  	sig.h strvec.h text.h type.h write.h attrset.h symlink.h fsmap.h \
+>  	fuzz.h
+> -CFILES = $(HFILES:.h=.c) btdump.c info.c
+> +CFILES = $(HFILES:.h=.c) btdump.c convert.c info.c
+>  LSRCFILES = xfs_admin.sh xfs_ncheck.sh xfs_metadump.sh
+>  
+>  LLDLIBS	= $(LIBXFS) $(LIBXLOG) $(LIBFROG) $(LIBUUID) $(LIBRT) $(LIBPTHREAD)
+> diff --git a/db/command.c b/db/command.c
+> index c7c52342..89a78f03 100644
+> --- a/db/command.c
+> +++ b/db/command.c
+> @@ -11,7 +11,6 @@
+>  #include "bmap.h"
+>  #include "check.h"
+>  #include "command.h"
+> -#include "convert.h"
+>  #include "debug.h"
+>  #include "type.h"
+>  #include "echo.h"
+> diff --git a/db/command.h b/db/command.h
+> index eacfd465..2f9a7e16 100644
+> --- a/db/command.h
+> +++ b/db/command.h
+> @@ -28,5 +28,6 @@ extern int		command(int argc, char **argv);
+>  extern const cmdinfo_t	*find_command(const char *cmd);
+>  extern void		init_commands(void);
+>  
+> +extern void		convert_init(void);
+>  extern void		btdump_init(void);
+>  extern void		info_init(void);
+> diff --git a/db/convert.c b/db/convert.c
+> index 01a08823..e1466057 100644
+> --- a/db/convert.c
+> +++ b/db/convert.c
+> @@ -6,7 +6,6 @@
+>  
+>  #include "libxfs.h"
+>  #include "command.h"
+> -#include "convert.h"
+>  #include "output.h"
+>  #include "init.h"
+>  
+> diff --git a/db/convert.h b/db/convert.h
+> deleted file mode 100644
+> index 3660cabe..00000000
+> --- a/db/convert.h
+> +++ /dev/null
+> @@ -1,7 +0,0 @@
+> -// SPDX-License-Identifier: GPL-2.0
+> -/*
+> - * Copyright (c) 2000-2001,2005 Silicon Graphics, Inc.
+> - * All Rights Reserved.
+> - */
+> -
+> -extern void	convert_init(void);
+> 
