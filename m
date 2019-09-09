@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3FC5C4740C
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:27:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 22FFCC4740A
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:27:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA431218AF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:27:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EE93621924
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:27:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="mqwZi+lX"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Qlq14sYP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731262AbfIIS1g (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Sep 2019 14:27:36 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:35792 "EHLO
+        id S1731280AbfIIS1i (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Sep 2019 14:27:38 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:35800 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730720AbfIIS1g (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Sep 2019 14:27:36 -0400
+        with ESMTP id S1730720AbfIIS1i (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Sep 2019 14:27:38 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
         Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=h8zMHCpnwN+r3QtQfEIESvTg1f4EQL98cPoBjx3kxwM=; b=mqwZi+lXsRulfBL8zJcvTDocb
-        vdXRdO1Wz8zwlTzOszCOXjnZwDkWzlnGNIZNk/aSdULPPKssJ6XJGWkQG0txmkqT+G2fQphxEjC7E
-        r9i9JsWKSeh14V9KV4Wui4PwQwI9CFNU5wlA+MPa0HF55rVWISvgpqJYac0KRVBWo0vwVJz+S4Qtq
-        +Fe3UhIXZQMCNug7ubyp+s9C60BWVSpqol896n9zwTgHY+PO4j2quZltfYZFdYTbHu4P36Vc7SZkd
-        H45zEnAI9w6kt4ZzisatKbl9LaQ8HwKBHkfl+1TgaMUFJ6pXIm7xhmeYQ8fmaJgP6JphODE1WQZAA
-        TF3UqGgGA==;
+         bh=nsHXJCbKKhtEHp3V5FIKlgukR9a0XDTWcYxud/JBjJI=; b=Qlq14sYPq3JRo+GoOu4UwyA2l
+        qneNjUJQ1Oj/78vMkzOixA+TYcA15XHRpn6Yctksq9Ad3LYj5TGRWwP14w+bm3pxe5moAurnCeNnB
+        46CMa5WC5gmRd25OqBRE1gsZrSXwEy268LMH7MvCG1dLqzbxpbMcU6KMANOt+2+1RuJMoAY24G5CX
+        PRQotvLM1shdGUGPI1SKvwPuT5mqy0nhCYlBzNZAAbt+e9GScAkaAz//E64T8kKb0Pra27luDg9AK
+        IxS/ChC2PvgZPcEAjJmcbLWfe8L/0WyKAfTG8CaXiMEgTEfIzEQg1Z4YwPyypID0CEReQ20LSfHrj
+        bc50/Pzww==;
 Received: from [2001:4bb8:180:57ff:412:4333:4bf9:9db2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92 #3 (Red Hat Linux))
-        id 1i7ONz-0001ug-A1; Mon, 09 Sep 2019 18:27:35 +0000
+        id 1i7OO1-0001vt-Mo; Mon, 09 Sep 2019 18:27:38 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: [PATCH 03/19] iomap: always use AOP_FLAG_NOFS in iomap_write_begin
-Date:   Mon,  9 Sep 2019 20:27:06 +0200
-Message-Id: <20190909182722.16783-4-hch@lst.de>
+Subject: [PATCH 04/19] iomap: ignore non-shared or non-data blocks in xfs_file_dirty
+Date:   Mon,  9 Sep 2019 20:27:07 +0200
+Message-Id: <20190909182722.16783-5-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20190909182722.16783-1-hch@lst.de>
 References: <20190909182722.16783-1-hch@lst.de>
@@ -53,75 +53,95 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-All callers pass AOP_FLAG_NOFS, so lift that flag to iomap_write_begin
-to allow reusing the flags arguments for an internal flags namespace
-soon.  Also remove the local index variable that is only used once.
+xfs_file_dirty is used to unshare reflink blocks.  Rename the function
+to xfs_file_unshare to better document that purpose, and skip iomaps
+that are not shared are don't need zeroing.  This will allow to simplify
+the caller.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/iomap/buffered-io.c | 14 +++++---------
- 1 file changed, 5 insertions(+), 9 deletions(-)
+ fs/iomap/buffered-io.c | 15 +++++++++++----
+ fs/xfs/xfs_reflink.c   |  2 +-
+ include/linux/iomap.h  |  2 +-
+ 3 files changed, 13 insertions(+), 6 deletions(-)
 
 diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 2a9b41352495..33e03992d8a7 100644
+index 33e03992d8a7..0b05551d9b5a 100644
 --- a/fs/iomap/buffered-io.c
 +++ b/fs/iomap/buffered-io.c
-@@ -606,7 +606,6 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 		struct page **pagep, struct iomap *iomap)
+@@ -872,12 +872,19 @@ __iomap_read_page(struct inode *inode, loff_t offset)
+ }
+ 
+ static loff_t
+-iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
++iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap)
  {
- 	const struct iomap_page_ops *page_ops = iomap->page_ops;
--	pgoff_t index = pos >> PAGE_SHIFT;
- 	struct page *page;
- 	int status = 0;
- 
-@@ -621,7 +620,8 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
- 			return status;
- 	}
- 
--	page = grab_cache_page_write_begin(inode->i_mapping, index, flags);
-+	page = grab_cache_page_write_begin(inode->i_mapping, pos >> PAGE_SHIFT,
-+			AOP_FLAG_NOFS);
- 	if (!page) {
- 		status = -ENOMEM;
- 		goto out_no_page;
-@@ -763,7 +763,6 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	struct iov_iter *i = data;
  	long status = 0;
  	ssize_t written = 0;
--	unsigned int flags = AOP_FLAG_NOFS;
  
++	/* don't bother with blocks that are not shared to start with */
++	if (!(iomap->flags & IOMAP_F_SHARED))
++		return length;
++	/* don't bother with holes or unwritten extents */
++	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
++		return length;
++
  	do {
- 		struct page *page;
-@@ -793,8 +792,7 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 			break;
- 		}
+ 		struct page *page, *rpage;
+ 		unsigned long offset;	/* Offset into pagecache page */
+@@ -917,14 +924,14 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ }
  
--		status = iomap_write_begin(inode, pos, bytes, flags, &page,
--				iomap);
-+		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
- 		if (unlikely(status))
- 			break;
+ int
+-iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
++iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops)
+ {
+ 	loff_t ret;
  
-@@ -892,8 +890,7 @@ iomap_dirty_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		if (IS_ERR(rpage))
- 			return PTR_ERR(rpage);
+ 	while (len) {
+ 		ret = iomap_apply(inode, pos, len, IOMAP_WRITE, ops, NULL,
+-				iomap_dirty_actor);
++				iomap_unshare_actor);
+ 		if (ret <= 0)
+ 			return ret;
+ 		pos += ret;
+@@ -933,7 +940,7 @@ iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
  
--		status = iomap_write_begin(inode, pos, bytes,
--					   AOP_FLAG_NOFS, &page, iomap);
-+		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
- 		put_page(rpage);
- 		if (unlikely(status))
- 			return status;
-@@ -944,8 +941,7 @@ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
- 	struct page *page;
- 	int status;
+ 	return 0;
+ }
+-EXPORT_SYMBOL_GPL(iomap_file_dirty);
++EXPORT_SYMBOL_GPL(iomap_file_unshare);
  
--	status = iomap_write_begin(inode, pos, bytes, AOP_FLAG_NOFS, &page,
--				   iomap);
-+	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
- 	if (status)
- 		return status;
- 
+ static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+ 		unsigned bytes, struct iomap *iomap)
+diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+index c4ec7afd1170..cadc0456804d 100644
+--- a/fs/xfs/xfs_reflink.c
++++ b/fs/xfs/xfs_reflink.c
+@@ -1442,7 +1442,7 @@ xfs_reflink_dirty_extents(
+ 			flen = XFS_FSB_TO_B(mp, rlen);
+ 			if (fpos + flen > isize)
+ 				flen = isize - fpos;
+-			error = iomap_file_dirty(VFS_I(ip), fpos, flen,
++			error = iomap_file_unshare(VFS_I(ip), fpos, flen,
+ 					&xfs_iomap_ops);
+ 			xfs_ilock(ip, XFS_ILOCK_EXCL);
+ 			if (error)
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index 8adcc8dd4498..3a0f0975a57e 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -183,7 +183,7 @@ int iomap_migrate_page(struct address_space *mapping, struct page *newpage,
+ #else
+ #define iomap_migrate_page NULL
+ #endif
+-int iomap_file_dirty(struct inode *inode, loff_t pos, loff_t len,
++int iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+ 		const struct iomap_ops *ops);
+ int iomap_zero_range(struct inode *inode, loff_t pos, loff_t len,
+ 		bool *did_zero, const struct iomap_ops *ops);
 -- 
 2.20.1
 
