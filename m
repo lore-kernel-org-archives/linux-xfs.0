@@ -2,106 +2,194 @@ Return-Path: <SRS0=Pnyc=XE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.0 required=3.0 tests=FREEMAIL_FORGED_FROMDOMAIN,
+	FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C816DC433EF
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 06:21:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 53DA2C00307
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 07:29:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9E0FF2081B
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 06:21:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 254A221D82
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 07:29:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727917AbfIIGVA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Sep 2019 02:21:00 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:48624 "EHLO mx1.redhat.com"
+        id S1727285AbfIIH3O (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Sep 2019 03:29:14 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:39394 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727898AbfIIGVA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Sep 2019 02:21:00 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        id S1726988AbfIIH3O (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Sep 2019 03:29:14 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C3B4A30A00CF;
-        Mon,  9 Sep 2019 06:20:59 +0000 (UTC)
-Received: from rh (ovpn-116-55.phx2.redhat.com [10.3.116.55])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 7E92110016EB;
-        Mon,  9 Sep 2019 06:20:59 +0000 (UTC)
-Received: from [::1] (helo=rh)
-        by rh with esmtps (TLSv1.3:TLS_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <dchinner@redhat.com>)
-        id 1i7D2i-0001wB-HC; Mon, 09 Sep 2019 16:20:52 +1000
-Date:   Mon, 9 Sep 2019 16:20:49 +1000
-From:   Dave Chinner <dchinner@redhat.com>
-To:     Rong Chen <rong.a.chen@intel.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        LKML <linux-kernel@vger.kernel.org>, linux-xfs@vger.kernel.org,
-        lkp@01.org
-Subject: Re: [xfs] 610125ab1e: fsmark.app_overhead -71.2% improvement
-Message-ID: <20190909062049.GQ2254@rh>
-References: <20190909015849.GN15734@shao2-debian>
- <20190909053236.GP2254@rh>
- <df5f4105-58a9-492d-882e-0963fd5cb23f@intel.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 498D910CC200;
+        Mon,  9 Sep 2019 07:29:14 +0000 (UTC)
+Received: from dhcp-12-115.nay.redhat.com (dhcp-12-115.nay.redhat.com [10.66.12.115])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id EEF6C60923;
+        Mon,  9 Sep 2019 07:29:09 +0000 (UTC)
+From:   "Jianhong.Yin" <yin-jianhong@163.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     jiyin@redhat.com, darrick.wong@oracle.com, sandeen@redhat.com,
+        "Jianhong.Yin" <yin-jianhong@163.com>
+Subject: [PATCH v3] xfs_io: copy_range don't truncate dst_file, and add smart length
+Date:   Mon,  9 Sep 2019 15:29:03 +0800
+Message-Id: <20190909072903.2749-1-yin-jianhong@163.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <df5f4105-58a9-492d-882e-0963fd5cb23f@intel.com>
-User-Agent: Mutt/1.11.3 (2019-02-01)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.43]); Mon, 09 Sep 2019 06:20:59 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.65]); Mon, 09 Sep 2019 07:29:14 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 09, 2019 at 02:06:54PM +0800, Rong Chen wrote:
-> Hi Dave,
-> 
-> On 9/9/19 1:32 PM, Dave Chinner wrote:
-> > On Mon, Sep 09, 2019 at 09:58:49AM +0800, kernel test robot wrote:
-> > > Greeting,
-> > > 
-> > > FYI, we noticed a -71.2% improvement of fsmark.app_overhead due to commit:
-> > A negative improvement? That's somewhat ambiguous...
-> 
-> Sorry for causing the misunderstanding, it's a improvement not a regression.
-> 
-> 
-> > 
-> > > 0e822255f95db400 610125ab1e4b1b48dcffe74d9d8
-> > > ---------------- ---------------------------
-> > >           %stddev     %change         %stddev
-> > >               \          |                \
-> > >   1.095e+08           -71.2%   31557568        fsmark.app_overhead
-> > >        6157           +95.5%      12034        fsmark.files_per_sec
-> > So, the files/s rate doubled, and the amount of time spent in
-> > userspace by the fsmark app dropped by 70%.
-> > 
-> > >      167.31           -47.3%      88.25        fsmark.time.elapsed_time
-> > >      167.31           -47.3%      88.25        fsmark.time.elapsed_time.max
-> > Wall time went down by 50%.
-> > 
-> > >       91.00            -8.8%      83.00        fsmark.time.percent_of_cpu_this_job_got
-> > >      148.15           -53.2%      69.38        fsmark.time.system_time
-> > As did system CPU.
-> > 
-> > IOWs, this change has changed create performance by a factor of 4 -
-> > the file create is 2x faster for half the CPU spent.
-> > 
-> > I don't think this is a negative improvement - it's a large positive
-> > improvement.  I suspect that you need to change the metric
-> > classifications for this workload...
-> To avoid misunderstanding, we'll use fsmark.files_per_sec instead of
-> fsmark.app_overhead in the subject.
+1. copy_range should be a simple wrapper for copy_file_range(2)
+and nothing else. and there's already -t option for truncate.
+so here we remove the truncate action in copy_range.
+see: https://patchwork.kernel.org/comment/22863587/#1
 
-Well, the two are separate ways of measuring improvement. A change
-in one without a change in the other is just as significant as
-a change in both...
+2. improve the default length value generation:
+if -l option is omitted use the length that from src_offset to end
+(src_file's size - src_offset) instead.
+if src_offset is greater than file size, length is 0.
 
-Cheers,
+3. update manpage
 
-Dave.
+4. rename var name from 'src, dst' to 'src_off, dst_off'
+
+and have confirmed that this change will not affect xfstests.
+
+Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+---
+ io/copy_file_range.c | 40 ++++++++++++++--------------------------
+ man/man8/xfs_io.8    | 12 ++++++------
+ 2 files changed, 20 insertions(+), 32 deletions(-)
+
+diff --git a/io/copy_file_range.c b/io/copy_file_range.c
+index b7b9fd88..c2105115 100644
+--- a/io/copy_file_range.c
++++ b/io/copy_file_range.c
+@@ -36,12 +36,12 @@ copy_range_help(void)
+  * glibc buffered copy fallback.
+  */
+ static loff_t
+-copy_file_range_cmd(int fd, long long *src, long long *dst, size_t len)
++copy_file_range_cmd(int fd, long long *src_off, long long *dst_off, size_t len)
+ {
+ 	loff_t ret;
+ 
+ 	do {
+-		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst,
++		ret = syscall(__NR_copy_file_range, fd, src_off, file->fd, dst_off,
+ 				len, 0);
+ 		if (ret == -1) {
+ 			perror("copy_range");
+@@ -66,21 +66,13 @@ copy_src_filesize(int fd)
+ 	return st.st_size;
+ }
+ 
+-static int
+-copy_dst_truncate(void)
+-{
+-	int ret = ftruncate(file->fd, 0);
+-	if (ret < 0)
+-		perror("ftruncate");
+-	return ret;
+-}
+-
+ static int
+ copy_range_f(int argc, char **argv)
+ {
+-	long long src = 0;
+-	long long dst = 0;
++	long long src_off = 0;
++	long long dst_off = 0;
+ 	size_t len = 0;
++	bool len_specified = false;
+ 	int opt;
+ 	int ret;
+ 	int fd;
+@@ -93,15 +85,15 @@ copy_range_f(int argc, char **argv)
+ 	while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
+ 		switch (opt) {
+ 		case 's':
+-			src = cvtnum(fsblocksize, fssectsize, optarg);
+-			if (src < 0) {
++			src_off = cvtnum(fsblocksize, fssectsize, optarg);
++			if (src_off < 0) {
+ 				printf(_("invalid source offset -- %s\n"), optarg);
+ 				return 0;
+ 			}
+ 			break;
+ 		case 'd':
+-			dst = cvtnum(fsblocksize, fssectsize, optarg);
+-			if (dst < 0) {
++			dst_off = cvtnum(fsblocksize, fssectsize, optarg);
++			if (dst_off < 0) {
+ 				printf(_("invalid destination offset -- %s\n"), optarg);
+ 				return 0;
+ 			}
+@@ -112,6 +104,7 @@ copy_range_f(int argc, char **argv)
+ 				printf(_("invalid length -- %s\n"), optarg);
+ 				return 0;
+ 			}
++			len_specified = true;
+ 			break;
+ 		case 'f':
+ 			src_file_nr = atoi(argv[1]);
+@@ -137,7 +130,7 @@ copy_range_f(int argc, char **argv)
+ 		fd = filetable[src_file_nr].fd;
+ 	}
+ 
+-	if (src == 0 && dst == 0 && len == 0) {
++	if (!len_specified) {
+ 		off64_t	sz;
+ 
+ 		sz = copy_src_filesize(fd);
+@@ -145,16 +138,11 @@ copy_range_f(int argc, char **argv)
+ 			ret = 1;
+ 			goto out;
+ 		}
+-		len = sz;
+-
+-		ret = copy_dst_truncate();
+-		if (ret < 0) {
+-			ret = 1;
+-			goto out;
+-		}
++		if (sz > src_off)
++			len = sz - src_off;
+ 	}
+ 
+-	ret = copy_file_range_cmd(fd, &src, &dst, len);
++	ret = copy_file_range_cmd(fd, &src_off, &dst_off, len);
+ out:
+ 	close(fd);
+ 	return ret;
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 6e064bdd..61c35c8e 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -669,13 +669,13 @@ The source must be specified either by path
+ or as another open file
+ .RB ( \-f ).
+ If
+-.I src_file
+-.IR src_offset ,
+-.IR dst_offset ,
+-and
+ .I length
+-are omitted the contents of src_file will be copied to the beginning of the
+-open file, overwriting any data already there.
++is not specified, this command copies data from
++.I src_offset
++to the end of
++.BI src_file
++into the dst_file at
++.IR dst_offset .
+ .RS 1.0i
+ .PD 0
+ .TP 0.4i
 -- 
-Dave Chinner
-dchinner@redhat.com
+2.21.0
+
