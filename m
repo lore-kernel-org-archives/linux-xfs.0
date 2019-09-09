@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52EAEC4740A
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:51:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77EEBC4740A
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 19:19:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B2EB21D6C
-	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 18:51:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57D67218AF
+	for <linux-xfs@archiver.kernel.org>; Mon,  9 Sep 2019 19:19:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726674AbfIISvy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Sep 2019 14:51:54 -0400
-Received: from sandeen.net ([63.231.237.45]:40350 "EHLO sandeen.net"
+        id S2387497AbfIITTo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 9 Sep 2019 15:19:44 -0400
+Received: from sandeen.net ([63.231.237.45]:42254 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732391AbfIISvy (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 9 Sep 2019 14:51:54 -0400
+        id S1726814AbfIITTo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 9 Sep 2019 15:19:44 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4BC414507C1;
-        Mon,  9 Sep 2019 13:51:53 -0500 (CDT)
-Subject: Re: [PATCH 03/10] man: document the new allocation group geometry
- ioctl
+        by sandeen.net (Postfix) with ESMTPSA id 56D214507C1;
+        Mon,  9 Sep 2019 14:19:43 -0500 (CDT)
+Subject: Re: [PATCH 04/10] man: document the new health reporting fields in
+ various ioctls
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
 References: <156757182283.1838441.193482978701233436.stgit@magnolia>
- <156757184149.1838441.15095911482164413079.stgit@magnolia>
+ <156757184781.1838441.4746750117807426676.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,12 +73,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <031a48ec-2066-89e0-f464-185cc15c40a5@sandeen.net>
-Date:   Mon, 9 Sep 2019 13:51:52 -0500
+Message-ID: <36de43a2-9adb-73db-81a1-eecb665113ea@sandeen.net>
+Date:   Mon, 9 Sep 2019 14:19:42 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156757184149.1838441.15095911482164413079.stgit@magnolia>
+In-Reply-To: <156757184781.1838441.4746750117807426676.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,126 +90,48 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/3/19 11:37 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Document the new ioctl to describe an allocation group's geometry.
+> Update the manpages to conver the new health reporting fields in the
+> fs geometry, ag geometry, and bulkstat ioctls.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Reviewed-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  man/man2/ioctl_xfs_ag_geometry.2   |   48 +++++++++++++++++++++++++++++++
+>  man/man2/ioctl_xfs_fsbulkstat.2    |   52 +++++++++++++++++++++++++++++++++
+>  man/man2/ioctl_xfs_fsop_geometry.2 |   56 +++++++++++++++++++++++++++++++++++-
+>  3 files changed, 154 insertions(+), 2 deletions(-)
+> 
+> 
+...
 
-Ok - it's kind of interesting to get back EFSCORRUPTED failure from an
-ioctl that is designed to report corruption details, but that detail can
-be fleshed out more later.
+> diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
+> index a8b22dc4..3e13cfa8 100644
+> --- a/man/man2/ioctl_xfs_fsbulkstat.2
+> +++ b/man/man2/ioctl_xfs_fsbulkstat.2
+> @@ -94,7 +94,9 @@ struct xfs_bstat {
+>  	__u16             bs_projid_lo;
+>  	__u16             bs_forkoff;
+>  	__u16             bs_projid_hi;
+> -	unsigned char     bs_pad[6];
+> +	uint16_t          bs_sick;
+> +	uint16_t          bs_checked;
+> +	unsigned char     bs_pad[2];
+>  	__u32             bs_cowextsize;
+>  	__u32             bs_dmevmask;
+>  	__u16             bs_dmstate;
+> @@ -184,6 +186,54 @@ is unused on Linux.
+>  .I bs_aextents
+>  is the number of storage mappings associated with this file's extended
+>  attributes.
+> +.PP
+> +The fields
+> +.IR bs_sick " and " bs_checked
+> +indicate the relative health of various allocation group metadata:
+
+
+This should probably say "inode metadata?" 
+
+I can fix that on the way in, the rest looks ok
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> ---
->  man/man2/ioctl_xfs_ag_geometry.2 |   82 ++++++++++++++++++++++++++++++++++++++
->  man/man3/xfsctl.3                |    6 +++
->  2 files changed, 88 insertions(+)
->  create mode 100644 man/man2/ioctl_xfs_ag_geometry.2
-> 
-> 
-> diff --git a/man/man2/ioctl_xfs_ag_geometry.2 b/man/man2/ioctl_xfs_ag_geometry.2
-> new file mode 100644
-> index 00000000..ddd54265
-> --- /dev/null
-> +++ b/man/man2/ioctl_xfs_ag_geometry.2
-> @@ -0,0 +1,82 @@
-> +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> +.\"
-> +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> +.\" SPDX-License-Identifier: GPL-2.0+
-> +.\" %%%LICENSE_END
-> +.TH IOCTL-XFS-AG-GEOMETRY 2 2019-08-30 "XFS"
-> +.SH NAME
-> +ioctl_xfs_ag_geometry \- query XFS allocation group geometry information
-> +.SH SYNOPSIS
-> +.br
-> +.B #include <xfs/xfs_fs.h>
-> +.PP
-> +.BI "int ioctl(int " fd ", XFS_IOC_AG_GEOMETRY, struct xfs_ag_geometry *" arg );
-> +.SH DESCRIPTION
-> +This XFS ioctl retrieves the geometry information for a given allocation group.
-> +The geometry information is conveyed in a structure of the following form:
-> +.PP
-> +.in +4n
-> +.nf
-> +struct xfs_ag_geometry {
-> +	uint32_t  ag_number;
-> +	uint32_t  ag_length;
-> +	uint32_t  ag_freeblks;
-> +	uint32_t  ag_icount;
-> +	uint32_t  ag_ifree;
-> +	uint32_t  ag_sick;
-> +	uint32_t  ag_checked;
-> +	uint32_t  ag_flags;
-> +	uint64_t  ag_reserved[12];
-> +};
-> +.fi
-> +.in
-> +.TP
-> +.I ag_number
-> +The caller must set this field to the index of the allocation group that the
-> +caller wishes to learn about.
-> +.TP
-> +.I ag_length
-> +The length of the allocation group is returned in this field, in units of
-> +filesystem blocks.
-> +.TP
-> +.I ag_freeblks
-> +The number of free blocks in the allocation group is returned in this field, in
-> +units of filesystem blocks.
-> +.TP
-> +.I ag_icount
-> +The number of inode records allocated in this allocation group is returned in
-> +this field.
-> +.TP
-> +.I ag_ifree
-> +The number of unused inode records (of the space allocated) in this allocation
-> +group is returned in this field.
-> +.TP
-> +.I ag_flags
-> +The caller can set this field to change the operational behavior of the ioctl.
-> +Currently no flags are defined, so this field must be zero.
-> +.TP
-> +.IR ag_reserved
-> +All reserved fields will be set to zero on return.
-> +.SH RETURN VALUE
-> +On error, \-1 is returned, and
-> +.I errno
-> +is set to indicate the error.
-> +.PP
-> +.SH ERRORS
-> +Error codes can be one of, but are not limited to, the following:
-> +.TP
-> +.B EFSBADCRC
-> +Metadata checksum validation failed while performing the query.
-> +.TP
-> +.B EFSCORRUPTED
-> +Metadata corruption was encountered while performing the query.
-> +.TP
-> +.B EINVAL
-> +The specified allocation group number is not valid for this filesystem.
-> +.TP
-> +.B EIO
-> +An I/O error was encountered while performing the query.
-> +.SH CONFORMING TO
-> +This API is specific to XFS filesystem on the Linux kernel.
-> +.SH SEE ALSO
-> +.BR ioctl (2)
-> diff --git a/man/man3/xfsctl.3 b/man/man3/xfsctl.3
-> index 7e6588b8..dfebd12d 100644
-> --- a/man/man3/xfsctl.3
-> +++ b/man/man3/xfsctl.3
-> @@ -336,6 +336,12 @@ See
->  .BR ioctl_xfs_fsop_geometry (2)
->  for more information.
->  
-> +.TP
-> +.B XFS_IOC_AG_GEOMETRY
-> +See
-> +.BR ioctl_xfs_ag_geometry (2)
-> +for more information.
-> +
->  .TP
->  .BR XFS_IOC_FSBULKSTAT " or " XFS_IOC_FSBULKSTAT_SINGLE
->  See
-> 
