@@ -2,64 +2,74 @@ Return-Path: <SRS0=fGHA=XF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76D6EC4740C
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Sep 2019 01:04:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F3F46C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Sep 2019 05:56:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FEF121726
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Sep 2019 01:04:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAA9621D6C
+	for <linux-xfs@archiver.kernel.org>; Tue, 10 Sep 2019 05:56:08 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="pCC6cloc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390710AbfIJBE2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 9 Sep 2019 21:04:28 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49231 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727115AbfIJBE2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 9 Sep 2019 21:04:28 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5CAF6361CB5;
-        Tue, 10 Sep 2019 11:04:26 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1i7Ua1-0006sl-RY; Tue, 10 Sep 2019 11:04:25 +1000
-Date:   Tue, 10 Sep 2019 11:04:25 +1000
-From:   Dave Chinner <david@fromorbit.com>
+        id S1730158AbfIJF4I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Sep 2019 01:56:08 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:43568 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726155AbfIJF4H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Sep 2019 01:56:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=XPTSgi1wQbnoYHyU0OhJehZyudOfjuQmII/QsS6+IQ0=; b=pCC6clocU6gPohrFZySTMksJl
+        GQYmDePKhP0Q1Y3hzuS3/2tobX6F1ghpSECO4VGti5mXzdLEBjixBmmxaL/SISJ+oYso3SHB4nG2l
+        SRhmrZkt+q2yyAhHLg9k540+GpQWxEIhXipo5DZJgDZtPEHTvlLPBL6URONa44d4l5JV3EbwgT7+y
+        Aor/gFVm+f7PFMPo299qvjUH/wP0zl1eWF1yRHb3BKM8XHijigwrts/2RfCvmsBEsZ4O+PVkauZVG
+        2Y+MYBPO8gwn0uxX1Km9MYbqLnC++n3RqczLAdQbeCZ9whxmkwSevabdsVyF6HQMQg1e0s8uBOGYd
+        fwD8AwE8A==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92 #3 (Red Hat Linux))
+        id 1i7Z8I-0001LM-V4; Tue, 10 Sep 2019 05:56:06 +0000
+Date:   Mon, 9 Sep 2019 22:56:06 -0700
+From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs_scrub: refactor queueing of subdir scan work item
-Message-ID: <20190910010425.GK16973@dread.disaster.area>
-References: <156774083707.2643257.15738851266613887341.stgit@magnolia>
- <156774084332.2643257.12234848325153797756.stgit@magnolia>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: Re: [ANNOUNCE] xfs-linux: for-next updated to 1baa2800e62d
+Message-ID: <20190910055606.GA5132@infradead.org>
+References: <20190831193917.GA568270@magnolia>
+ <20190901073311.GA13954@infradead.org>
+ <20190903234023.GJ568270@magnolia>
+ <20190904050627.GA2569@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156774084332.2643257.12234848325153797756.stgit@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=JuDxSlhT3OO6blO4plAA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190904050627.GA2569@infradead.org>
+User-Agent: Mutt/1.11.4 (2019-03-13)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 05, 2019 at 08:34:03PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Sep 03, 2019 at 10:06:27PM -0700, Christoph Hellwig wrote:
+> On Tue, Sep 03, 2019 at 04:40:24PM -0700, Darrick J. Wong wrote:
+> > /me shrugs -- it's been broken for years, apparently, and we've been
+> > arguing with almost no action for months.  Developers who are building
+> > things off of 5.3 should probably just add the patch (or turn off slub
+> > debugging)....
 > 
-> Replace the open-coded process of queueing a subdirectory for scanning
-> with a single helper function.
+> Well, this is a new breakage with the same old root cause.  The root
+> cause is that slub with debugging enabled gives us unaligned memory.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> But with my log recovery changes we may now use slub for allocations
+> larger than a single page (before we only used it for smaller than
+> page sizes allocations in the buffer cache), and that newly trips
+> up in the pmem driver (and a few others).
 
-Looks good.
-
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
--- 
-Dave Chinner
-david@fromorbit.com
+Another ping.  It would be really sad to release 5.3 with a known
+regression we've fixed two weeks before the release.
