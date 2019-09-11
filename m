@@ -1,176 +1,312 @@
-Return-Path: <SRS0=fGHA=XF=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=7YMi=XG=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.0 required=3.0
+	tests=HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6B7F4C49ED9
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Sep 2019 23:39:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B4EEEC49ED7
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Sep 2019 01:21:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2971E21D7B
-	for <linux-xfs@archiver.kernel.org>; Tue, 10 Sep 2019 23:39:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8291A21A4C
+	for <linux-xfs@archiver.kernel.org>; Wed, 11 Sep 2019 01:21:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725965AbfIJXjD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 10 Sep 2019 19:39:03 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:44594 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725957AbfIJXjD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Sep 2019 19:39:03 -0400
+        id S1726171AbfIKBVM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 10 Sep 2019 21:21:12 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:54211 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726043AbfIKBVM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 10 Sep 2019 21:21:12 -0400
 Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B1C3543E87C;
-        Wed, 11 Sep 2019 09:38:58 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 8429736217B;
+        Wed, 11 Sep 2019 11:21:08 +1000 (AEST)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1i7pis-0006nF-4c; Wed, 11 Sep 2019 09:38:58 +1000
-Date:   Wed, 11 Sep 2019 09:38:58 +1000
+        id 1i7rJj-0007L8-SQ; Wed, 11 Sep 2019 11:21:07 +1000
+Received: from dave by discord.disaster.area with local (Exim 4.92)
+        (envelope-from <david@fromorbit.com>)
+        id 1i7rJj-0006v0-Pl; Wed, 11 Sep 2019 11:21:07 +1000
 From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 7/7] xfs: push the grant head when the log head moves
- forward
-Message-ID: <20190910233858.GM16973@dread.disaster.area>
-References: <20190904042451.9314-1-david@fromorbit.com>
- <20190904042451.9314-8-david@fromorbit.com>
- <20190904193442.GA52970@bfoster>
- <20190904225056.GL1119@dread.disaster.area>
- <20190905162533.GA59149@bfoster>
- <20190906000205.GL1119@dread.disaster.area>
- <20190906131014.GA62719@bfoster>
- <20190907151050.GA3967@bfoster>
- <20190908232632.GD16973@dread.disaster.area>
- <20190910095628.GA16331@bfoster>
+To:     linux-xfs@vger.kernel.org
+Cc:     zlang@redhat.com
+Subject: [PATCH] [RFC] xfs: fix inode fork extent count overflow
+Date:   Wed, 11 Sep 2019 11:21:07 +1000
+Message-Id: <20190911012107.26553-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.23.0.rc1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190910095628.GA16331@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=7-415B0cAAAA:8 a=rulXVUxBDzVKczav9bQA:9 a=lmzFM_kOEwoBC5IQ:21
-        a=dZFMB0mr9m0UF6ok:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+        a=J70Eh1EUuV4A:10 a=20KFwNOVAAAA:8 a=JSeHFwRWeCT4pU4pvvkA:9
+        a=XfLDDxEWqkuWDfPq:21 a=rF4dOvUkqbJcsH0H:21
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 10, 2019 at 05:56:28AM -0400, Brian Foster wrote:
-> On Mon, Sep 09, 2019 at 09:26:32AM +1000, Dave Chinner wrote:
-> > On Sat, Sep 07, 2019 at 11:10:50AM -0400, Brian Foster wrote:
-> > > This is an instance of xfsaild going idle between the time this
-> > > new AIL push sets the target based on the iclog about to be
-> > > committed and AIL insertion of the associated log items,
-> > > reproduced via a bit of timing instrumentation.  Don't be
-> > > distracted by the timestamps or the fact that the LSNs do not
-> > > match because the log items in the AIL end up indexed by the start
-> > > lsn of the CIL checkpoint (whereas last_sync_lsn refers to the
-> > > commit record). The point is simply that xfsaild has completed a
-> > > push of a target that hasn't been inserted yet.
-> > 
-> > AFAICT, what you are showing requires delaying of the CIL push to the
-> > point it violates a fundamental assumption about commit sizes, which
-> > is why I largely think it's irrelevant.
-> > 
-> 
-> The CIL checkpoint size is an unrelated side effect of the test I
-> happened to use, not a fundamental cause of the problem it demonstrates.
-> Fixing CIL checkpoint size issues won't change anything. Here's a
-> different variant of the same problem with a small enough number of log
-> items such that background CIL pushing is not a factor:
-> 
->        <...>-79670 [000] ...1 56126.015522: xfs_log_force: dev 253:4 lsn 0x0 caller xfs_log_worker+0x2f/0xf0 [xfs]
-> kworker/0:1H-220   [000] ...1 56126.030587: __xlog_grant_push_ail: 1596: threshold_lsn 0x1000032e4
-> 	...
->        <...>-81293 [000] ...2 56126.032647: xfs_ail_delete: dev 253:4 lip 00000000cbe82125 old lsn 1/13026 new lsn 1/13026 type XFS_LI_INODE flags IN_AIL
->        <...>-81633 [000] .... 56126.053544: xfsaild: 588: idle ->ail_target 0x1000032e4
-> kworker/0:1H-220   [000] ...2 56127.038835: xfs_ail_insert: dev 253:4 lip 00000000a44ab1ef old lsn 0/0 new lsn 1/13028 type XFS_LI_INODE flags IN_AIL
-> kworker/0:1H-220   [000] ...2 56127.038911: xfs_ail_insert: dev 253:4 lip 0000000028d2061f old lsn 0/0 new lsn 1/13028 type XFS_LI_INODE flags IN_AIL
-> 	....
->
-> This sequence starts with one log item in the AIL and some number of
-> items in the CIL such that a checkpoint executes from the background log
-> worker. The worker forces the CIL and log I/O completion issues an AIL
-> push that is truncated by the recently updated ->l_last_sync_lsn due to
-> outstanding transaction reservation and small AIL size. This push races
-> with completion of a previous push that empties the AIL and iclog
-> callbacks insert log items for the current checkpoint at the LSN target
-> xfsaild just idled at.
+From: Dave Chinner <dchinner@redhat.com>
 
-I'm just not seeing what the problem here is. The behaviour you are
-describing has been around since day zero and doesn't require the
-addition of an ail push from iclog completion to trigger.  Prior to
-this series, it would be:
+[commit message is verbose for discussion purposes - will trim it
+down later. Some questions about implementation details at the end.]
 
-process 1	reservation	log completion	xfsaild
-<completes metadata IO>
-  xfs_ail_delete()
-    mlip_changed
-    xlog_assign_tail_lsn_locked()
-      ail empty, sets l_last_sync = 0x1000032e2
-    xfs_log_space_wake()
-				xlog_state_do_callback
-				  sets CALLBACK
-				  sets last_sync_lsn to iclog head
-				    -> 0x1000032e4
-				  <drops icloglock, gets preempted>
-		<wakes>
-		xlog_grant_head_wait
-		  free_bytes < need_bytes
-		    xlog_grant_push_ail()
-		      xlog_push_ail()
-		        ->ail_target 0x1000032e4
-		<sleeps>
-						<wakes>
-						sets prev target to 0x1000032e4
-						sees empty AIL
-						<sleeps>
-				    <runs again>
-				    runs callbacks
-				      xfs_ail_insert(lsn = 0x1000032e4)
+Zorro Lang recently ran a new test to stress single inode extent
+counts now that they are no longer limited by memory allocation.
+The test was simply:
 
-and now we have the AIL push thread asleep with items in it at the
-push threshold.  IOWs, what you describe has always been possible,
-and before the CIL was introduced this sort of thing happened quite
-a bit because iclog completions freed up much less space in the log
-than a CIL commit completion.
+# xfs_io -f -c "falloc 0 40t" /mnt/scratch/big-file
+# ~/src/xfstests-dev/punch-alternating /mnt/scratch/big-file
 
-It's not a problem, however, because if we are out of transaction
-reservation space we must have transactions in progress, and as long
-as they make progress then the commit of each transaction will end
-up calling xlog_ungrant_log_space() to return the unused portion of
-the transaction reservation. That calls xfs_log_space_wake() to
-allow reservation waiters to try to make progress.
+This test uncovered a problem where the hole punching operation
+appeared to finish with no error, but apparently only created 268M
+extents instead of the 10 billion it was supposed to.
 
-If there's still not enough space reservation after the transaction
-in progress has released it's reservation, then it goes back to
-sleep. As long as we have active transactions in progress while
-there are transaction reservations waiting on reservation space,
-there will be a wakeup vector for the reservation independent of
-the CIL, iclogs and AIL behaviour.
+Further, trying to punch out extents that should have been present
+resulted in success, but no change in the extent count. It looked
+like a silent failure.
 
-[ Yes, there was a bug here, in the case xfs_log_space_wake() did
-not issue a wakeup because of not enough space being availble and
-the push target was limited by the old log head location. i.e.
-nothing ever updated the push target to reflect the new log head and
-so the tail might never get moved now. That particular bug was fixed
-by a an earlier patch in the series, so we can ignore it here. ]
+While running the test and observing the behaviour in real time,
+I observed the extent coutn growing at ~2M extents/minute, and saw
+this after about an hour:
 
-IOWs, if the AIL is empty, the CIL cannot consume more than 25% of
-the log space, and we have transactions waiting on log reservation
-space, then we must have enough transactions in progress to cover at
-least 75% of the log space. Completion of those transactions will
-wake waiters and, if necessary, push the AIL again to keep the log
-tail moving appropriately. This handles the AIL empty and "insert
-before target" situations you are concerned about just fine, as long
-as we have a guarantee of forwards progress. Bounding the CIL size
-provides that forwards progress guarantee for the CIL...
+# xfs_io -f -c "stat" /mnt/scratch/big-file |grep next ; \
+> sleep 60 ; \
+> xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+fsxattr.nextents = 127657993
+fsxattr.nextents = 129683339
+#
 
-Cheers,
+And a few minutes later this:
 
-Dave.
+# xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+fsxattr.nextents = 4177861124
+#
+
+Ah, what? Where did that 4 billion extra extents suddenly come from?
+
+Stop the workload, unmount, mount:
+
+# xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+fsxattr.nextents = 166044375
+#
+
+And it's back at the expected number. i.e. the extent count is
+correct on disk, but it's screwed up in memory. I loaded up the
+extent list, and immediately:
+
+# xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+fsxattr.nextents = 4192576215
+#
+
+It's bad again. So, where does that number come from?
+xfs_fill_fsxattr():
+
+                if (ip->i_df.if_flags & XFS_IFEXTENTS)
+                        fa->fsx_nextents = xfs_iext_count(&ip->i_df);
+                else
+                        fa->fsx_nextents = ip->i_d.di_nextents;
+
+And that's the behaviour I just saw in a nutshell. The on disk count
+is correct, but once the tree is loaded into memory, it goes whacky.
+Clearly there's something wrong with xfs_iext_count():
+
+inline xfs_extnum_t xfs_iext_count(struct xfs_ifork *ifp)
+{
+        return ifp->if_bytes / sizeof(struct xfs_iext_rec);
+}
+
+Simple enough, but 134M extents is 2**27, and that's right about
+where things went wrong. A struct xfs_iext_rec is 16 bytes in size,
+which means 2**27 * 2**4 = 2**31 and we're right on target for an
+integer overflow. And, sure enough:
+
+struct xfs_ifork {
+        int                     if_bytes;       /* bytes in if_u1 */
+....
+
+Once we get 2**27 extents in a file, we overflow if_bytes and the
+in-core extent count goes wrong. And when we reach 2**28 extents,
+if_bytes wraps back to zero and things really start to go wrong
+there. This is where the silent failure comes from - only the first
+2**28 extents can be looked up directly due to the overflow, all the
+extents above this index wrap back to somewhere in the first 2**28
+extents. Hence with a regular pattern, trying to punch a hole in the
+range that didn't have holes mapped to a hole in the first 2**28
+extents and so "succeeded" without changing anything. Hence "silent
+failure"...
+
+Fix this by converting if_bytes to a int64_t and converting all the
+index variables and size calculations to use int64_t types to avoid
+overflows in future. Signed integers are still used to enable easy
+detection of extent count underflows. This enables scalability of
+extent counts to the limits of the on-disk format - MAXEXTNUM
+(2**31) extents.
+
+Current testing is at over 500M extents and still going:
+
+fsxattr.nextents = 517310478
+
+Reported-by: Zorro Lang <zlang@redhat.com>
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
+---
+ fs/xfs/libxfs/xfs_attr_leaf.c  | 18 ++++++++++--------
+ fs/xfs/libxfs/xfs_dir2_sf.c    |  2 +-
+ fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
+ fs/xfs/libxfs/xfs_inode_fork.h | 14 ++++++++------
+ 5 files changed, 24 insertions(+), 20 deletions(-)
+
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index b9f019603d0b..0bfb1ba919e2 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -453,13 +453,15 @@ xfs_attr_copy_value(
+  * special case for dev/uuid inodes, they have fixed size data forks.
+  */
+ int
+-xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
++xfs_attr_shortform_bytesfit(
++	struct xfs_inode	*dp,
++	int			bytes)
+ {
+-	int offset;
+-	int minforkoff;	/* lower limit on valid forkoff locations */
+-	int maxforkoff;	/* upper limit on valid forkoff locations */
+-	int dsize;
+-	xfs_mount_t *mp = dp->i_mount;
++	struct xfs_mount	*mp = dp->i_mount;
++	int64_t			dsize;
++	int			minforkoff;
++	int			maxforkoff;
++	int			offset;
+ 
+ 	/* rounded down */
+ 	offset = (XFS_LITINO(mp, dp->i_d.di_version) - bytes) >> 3;
+@@ -525,7 +527,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
+ 	 * A data fork btree root must have space for at least
+ 	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+ 	 */
+-	minforkoff = max(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
++	minforkoff = max_t(int64_t, dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+ 	minforkoff = roundup(minforkoff, 8) >> 3;
+ 
+ 	/* attr fork btree root can have at least this many key/ptr pairs */
+@@ -939,7 +941,7 @@ xfs_attr_shortform_verify(
+ 	char				*endp;
+ 	struct xfs_ifork		*ifp;
+ 	int				i;
+-	int				size;
++	int64_t				size;
+ 
+ 	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
+ 	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+index 85f14fc2a8da..ae16ca7c422a 100644
+--- a/fs/xfs/libxfs/xfs_dir2_sf.c
++++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+@@ -628,7 +628,7 @@ xfs_dir2_sf_verify(
+ 	int				i;
+ 	int				i8count;
+ 	int				offset;
+-	int				size;
++	int64_t				size;
+ 	int				error;
+ 	uint8_t				filetype;
+ 
+diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+index 7bc87408f1a0..52451809c478 100644
+--- a/fs/xfs/libxfs/xfs_iext_tree.c
++++ b/fs/xfs/libxfs/xfs_iext_tree.c
+@@ -596,7 +596,7 @@ xfs_iext_realloc_root(
+ 	struct xfs_ifork	*ifp,
+ 	struct xfs_iext_cursor	*cur)
+ {
+-	size_t new_size = ifp->if_bytes + sizeof(struct xfs_iext_rec);
++	int64_t new_size = ifp->if_bytes + sizeof(struct xfs_iext_rec);
+ 	void *new;
+ 
+ 	/* account for the prev/next pointers */
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+index c643beeb5a24..8fdd0424070e 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.c
++++ b/fs/xfs/libxfs/xfs_inode_fork.c
+@@ -129,7 +129,7 @@ xfs_init_local_fork(
+ 	struct xfs_inode	*ip,
+ 	int			whichfork,
+ 	const void		*data,
+-	int			size)
++	int64_t			size)
+ {
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	int			mem_size = size, real_size = 0;
+@@ -467,11 +467,11 @@ xfs_iroot_realloc(
+ void
+ xfs_idata_realloc(
+ 	struct xfs_inode	*ip,
+-	int			byte_diff,
++	int64_t			byte_diff,
+ 	int			whichfork)
+ {
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+-	int			new_size = (int)ifp->if_bytes + byte_diff;
++	int64_t			new_size = ifp->if_bytes + byte_diff;
+ 
+ 	ASSERT(new_size >= 0);
+ 	ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));
+@@ -552,7 +552,7 @@ xfs_iextents_copy(
+ 	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+ 	struct xfs_iext_cursor	icur;
+ 	struct xfs_bmbt_irec	rec;
+-	int			copied = 0;
++	int64_t			copied = 0;
+ 
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+ 	ASSERT(ifp->if_bytes > 0);
+diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+index 00c62ce170d0..7b845c052fb4 100644
+--- a/fs/xfs/libxfs/xfs_inode_fork.h
++++ b/fs/xfs/libxfs/xfs_inode_fork.h
+@@ -13,16 +13,16 @@ struct xfs_dinode;
+  * File incore extent information, present for each of data & attr forks.
+  */
+ struct xfs_ifork {
+-	int			if_bytes;	/* bytes in if_u1 */
+-	unsigned int		if_seq;		/* fork mod counter */
++	int64_t			if_bytes;	/* bytes in if_u1 */
+ 	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+-	short			if_broot_bytes;	/* bytes allocated for root */
+-	unsigned char		if_flags;	/* per-fork flags */
++	unsigned int		if_seq;		/* fork mod counter */
+ 	int			if_height;	/* height of the extent tree */
+ 	union {
+ 		void		*if_root;	/* extent tree root */
+ 		char		*if_data;	/* inline file data */
+ 	} if_u1;
++	short			if_broot_bytes;	/* bytes allocated for root */
++	unsigned char		if_flags;	/* per-fork flags */
+ };
+ 
+ /*
+@@ -93,12 +93,14 @@ int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+ void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+ 				struct xfs_inode_log_item *, int);
+ void		xfs_idestroy_fork(struct xfs_inode *, int);
+-void		xfs_idata_realloc(struct xfs_inode *, int, int);
++void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
++				int whichfork);
+ void		xfs_iroot_realloc(struct xfs_inode *, int, int);
+ int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
+ int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
+ 				  int);
+-void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int);
++void		xfs_init_local_fork(struct xfs_inode *ip, int whichfork,
++				const void *data, int64_t size);
+ 
+ xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
+ void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.23.0.rc1
+
