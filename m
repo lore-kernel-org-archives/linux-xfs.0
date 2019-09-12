@@ -2,156 +2,320 @@ Return-Path: <SRS0=88Vy=XH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9047AC4CEC7
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 23:42:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0459EC4CEC7
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 23:51:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 646A8206CD
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 23:42:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TlS1T+x5"
+	by mail.kernel.org (Postfix) with ESMTP id CB58220663
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 23:51:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726905AbfILXmn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Sep 2019 19:42:43 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:44580 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726032AbfILXmm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Sep 2019 19:42:42 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8CNdSuN067637;
-        Thu, 12 Sep 2019 23:42:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=k/CFDnKqe4y4NsC0RWVLwlCc3B/bvXvBz1ZbA7LXbu8=;
- b=TlS1T+x5pNyl4EU6lvuyU1QmGY8QUxwlXQezWT8psZU/IoAN5ozfgJkNBMyXVTCAusjG
- XbxZF+Co01WqQYFpgSjHIFqwWyYsWOONePU73SjlZ3OCHScW+MgOzFqsSz3YOdMHoKqG
- 0jhOn+wlAcpLI9lXHDVzhn86ujjLCFY8l6kHTWPWxWB+vGY0Tw2TzKGiSxQ+i8UMaIaZ
- WH1aMVB0NoyZdlhu61XnrjsnCSC3hCFOFUHZc/z0YQLGS57mh16reLg1G3f6UJsbwsAT
- /9LB+u4kGk8KQyzQx9kuLNGr6IYP34QD3DW+tKdRSU+rJlerwro5rtDgxpUBbDh4zNEb /g== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2uytd31g9r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Sep 2019 23:42:39 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8CNcGjV120399;
-        Thu, 12 Sep 2019 23:42:38 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2uytdw2f7m-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 12 Sep 2019 23:42:38 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8CNgbFo003164;
-        Thu, 12 Sep 2019 23:42:37 GMT
-Received: from [192.168.1.9] (/67.1.21.243)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 12 Sep 2019 16:42:37 -0700
-Subject: Re: [PATCH 3/3] xfs_scrub: relabel verified data block counts in
- output
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>, sandeen@sandeen.net
-Cc:     linux-xfs@vger.kernel.org
-References: <156774123336.2646704.1827381294403838403.stgit@magnolia>
- <156774125207.2646704.16836517557282368220.stgit@magnolia>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <adf29487-d3d9-4f84-3af2-2934dfb0a6c4@oracle.com>
-Date:   Thu, 12 Sep 2019 16:42:36 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1727540AbfILXvW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Sep 2019 19:51:22 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:37570 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727529AbfILXvW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Sep 2019 19:51:22 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8A02343E20A;
+        Fri, 13 Sep 2019 09:51:18 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1i8Yru-0007wx-17; Fri, 13 Sep 2019 09:51:18 +1000
+Date:   Fri, 13 Sep 2019 09:51:18 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs_io: add a bulkstat command
+Message-ID: <20190912235117.GR16973@dread.disaster.area>
+References: <156774093859.2644581.13218735172589605186.stgit@magnolia>
+ <156774094490.2644581.8349943022595761350.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <156774125207.2646704.16836517557282368220.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9378 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909120242
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9378 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909120242
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <156774094490.2644581.8349943022595761350.stgit@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=1ET26MayxucR28D5ntsA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Ok, you can add my review:
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
-
-On 9/5/19 8:40 PM, Darrick J. Wong wrote:
+On Thu, Sep 05, 2019 at 08:35:44PM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Relabel the count of verified data blocks to make it more obvious that
-> we were only looking for file data.
+> Add a bulkstat command to xfs_io so that we can test our new xfrog code.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->   scrub/phase7.c    |   13 ++++++++-----
->   scrub/xfs_scrub.c |    2 ++
->   2 files changed, 10 insertions(+), 5 deletions(-)
+>  io/Makefile        |    9 -
+>  io/bulkstat.c      |  533 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  io/init.c          |    1 
+>  io/io.h            |    1 
+>  libfrog/bulkstat.c |   20 ++
+>  libfrog/bulkstat.h |    3 
+>  man/man8/xfs_io.8  |   68 +++++++
+>  7 files changed, 631 insertions(+), 4 deletions(-)
+>  create mode 100644 io/bulkstat.c
 > 
 > 
-> diff --git a/scrub/phase7.c b/scrub/phase7.c
-> index 570ceb3f..2622bc45 100644
-> --- a/scrub/phase7.c
-> +++ b/scrub/phase7.c
-> @@ -116,6 +116,7 @@ xfs_scan_summary(
->   	unsigned long long	f_free;
->   	bool			moveon;
->   	bool			complain;
-> +	bool			scrub_all = scrub_data > 1;
->   	int			ip;
->   	int			error;
->   
-> @@ -244,14 +245,15 @@ _("%.*f%s inodes counted; %.*f%s inodes checked.\n"),
->   	}
->   
->   	/*
-> -	 * Complain if the checked block counts are off, which
-> +	 * Complain if the data file verification block counts are off, which
->   	 * implies an incomplete check.
->   	 */
-> -	if (ctx->bytes_checked &&
-> +	if (scrub_data &&
->   	    (verbose ||
->   	     !within_range(ctx, used_data + used_rt,
->   			ctx->bytes_checked, absdiff, 1, 10,
-> -			_("verified blocks")))) {
-> +			scrub_all ? _("verified blocks") :
-> +				    _("verified file data blocks")))) {
->   		double		b1, b2;
->   		char		*b1u, *b2u;
->   
-> @@ -262,8 +264,9 @@ _("%.*f%s inodes counted; %.*f%s inodes checked.\n"),
->   
->   		b1 = auto_space_units(used_data + used_rt, &b1u);
->   		b2 = auto_space_units(ctx->bytes_checked, &b2u);
-> -		fprintf(stdout,
-> -_("%.1f%s data counted; %.1f%s data verified.\n"),
-> +		fprintf(stdout, scrub_all ?
-> +_("%.1f%s data counted; %.1f%s disk media verified.\n") :
-> +_("%.1f%s data counted; %.1f%s file data media verified.\n"),
->   				b1, b1u, b2, b2u);
->   		fflush(stdout);
->   	}
-> diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-> index 46876522..89f6c96a 100644
-> --- a/scrub/xfs_scrub.c
-> +++ b/scrub/xfs_scrub.c
-> @@ -432,6 +432,8 @@ run_scrub_phases(
->   		/* Turn on certain phases if user said to. */
->   		if (sp->fn == DATASCAN_DUMMY_FN && scrub_data) {
->   			sp->fn = xfs_scan_blocks;
-> +			if (scrub_data > 1)
-> +				sp->descr = _("Verify disk integrity.");
->   		} else if (sp->fn == REPAIR_DUMMY_FN &&
->   			   ctx->mode == SCRUB_MODE_REPAIR) {
->   			sp->descr = _("Repair filesystem.");
-> 
+> diff --git a/io/Makefile b/io/Makefile
+> index 484e2b5a..1112605e 100644
+> --- a/io/Makefile
+> +++ b/io/Makefile
+> @@ -9,10 +9,11 @@ LTCOMMAND = xfs_io
+>  LSRCFILES = xfs_bmap.sh xfs_freeze.sh xfs_mkfile.sh
+>  HFILES = init.h io.h
+>  CFILES = init.c \
+> -	attr.c bmap.c crc32cselftest.c cowextsize.c encrypt.c file.c freeze.c \
+> -	fsync.c getrusage.c imap.c inject.c label.c link.c mmap.c open.c \
+> -	parent.c pread.c prealloc.c pwrite.c reflink.c resblks.c scrub.c \
+> -	seek.c shutdown.c stat.c swapext.c sync.c truncate.c utimes.c
+> +	attr.c bmap.c bulkstat.c crc32cselftest.c cowextsize.c encrypt.c \
+> +	file.c freeze.c fsync.c getrusage.c imap.c inject.c label.c link.c \
+> +	mmap.c open.c parent.c pread.c prealloc.c pwrite.c reflink.c \
+> +	resblks.c scrub.c seek.c shutdown.c stat.c swapext.c sync.c \
+> +	truncate.c utimes.c
+>  
+>  LLDLIBS = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG) $(LIBPTHREAD)
+>  LTDEPENDENCIES = $(LIBXCMD) $(LIBHANDLE) $(LIBFROG)
+> diff --git a/io/bulkstat.c b/io/bulkstat.c
+> new file mode 100644
+> index 00000000..76ba682b
+> --- /dev/null
+> +++ b/io/bulkstat.c
+> @@ -0,0 +1,533 @@
+> +// SPDX-License-Identifier: GPL-2.0+
+> +/*
+> + * Copyright (C) 2019 Oracle.  All Rights Reserved.
+> + * Author: Darrick J. Wong <darrick.wong@oracle.com>
+> + */
+> +#include "xfs.h"
+> +#include "platform_defs.h"
+> +#include "command.h"
+> +#include "init.h"
+> +#include "libfrog/fsgeom.h"
+> +#include "libfrog/bulkstat.h"
+> +#include "libfrog/paths.h"
+> +#include "io.h"
+> +#include "input.h"
+> +
+> +static bool debug;
+> +
+> +static void
+> +dump_bulkstat_time(
+> +	const char		*tag,
+> +	uint64_t		sec,
+> +	uint32_t		nsec)
+> +{
+> +	printf("\t%s = %"PRIu64".%"PRIu32"\n", tag, sec, nsec);
+> +}
+> +
+> +static void
+> +dump_bulkstat(
+> +	struct xfs_bulkstat	*bstat)
+> +{
+> +	printf("bs_ino = %"PRIu64"\n", bstat->bs_ino);
+> +	printf("\tbs_size = %"PRIu64"\n", bstat->bs_size);
+> +
+> +	printf("\tbs_blocks = %"PRIu64"\n", bstat->bs_blocks);
+> +	printf("\tbs_xflags = 0x%"PRIx64"\n", bstat->bs_xflags);
+> +
+> +	dump_bulkstat_time("bs_atime", bstat->bs_atime, bstat->bs_atime_nsec);
+> +	dump_bulkstat_time("bs_ctime", bstat->bs_ctime, bstat->bs_ctime_nsec);
+> +	dump_bulkstat_time("bs_mtime", bstat->bs_mtime, bstat->bs_mtime_nsec);
+> +	dump_bulkstat_time("bs_btime", bstat->bs_btime, bstat->bs_btime_nsec);
+> +
+> +	printf("\tbs_gen = 0x%"PRIx32"\n", bstat->bs_gen);
+> +	printf("\tbs_uid = %"PRIu32"\n", bstat->bs_uid);
+> +	printf("\tbs_gid = %"PRIu32"\n", bstat->bs_gid);
+> +	printf("\tbs_projectid = %"PRIu32"\n", bstat->bs_projectid);
+> +
+> +	printf("\tbs_blksize = %"PRIu32"\n", bstat->bs_blksize);
+> +	printf("\tbs_rdev = %"PRIu32"\n", bstat->bs_rdev);
+> +	printf("\tbs_cowextsize_blks = %"PRIu32"\n", bstat->bs_cowextsize_blks);
+> +	printf("\tbs_extsize_blks = %"PRIu32"\n", bstat->bs_extsize_blks);
+> +
+> +	printf("\tbs_nlink = %"PRIu32"\n", bstat->bs_nlink);
+> +	printf("\tbs_extents = %"PRIu32"\n", bstat->bs_extents);
+> +	printf("\tbs_aextents = %"PRIu32"\n", bstat->bs_aextents);
+> +	printf("\tbs_version = %"PRIu16"\n", bstat->bs_version);
+> +	printf("\tbs_forkoff = %"PRIu16"\n", bstat->bs_forkoff);
+> +
+> +	printf("\tbs_sick = 0x%"PRIx16"\n", bstat->bs_sick);
+> +	printf("\tbs_checked = 0x%"PRIx16"\n", bstat->bs_checked);
+> +	printf("\tbs_mode = 0%"PRIo16"\n", bstat->bs_mode);
+> +};
+> +
+> +static void
+> +bulkstat_help(void)
+> +{
+> +	printf(_(
+> +"Bulk-queries the filesystem for inode stat information and prints it.\n"
+> +"\n"
+> +"   -a   Only iterate this AG.\n"
+> +"   -d   Print debugging output.\n"
+> +"   -e   Stop after this inode.\n"
+> +"   -n   Ask for this many results at once.\n"
+> +"   -s   Inode to start with.\n"
+> +"   -v   Use this version of the ioctl (1 or 5).\n"));
+> +}
+> +
+> +static int
+> +bulkstat_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
+> +	struct xfs_bulkstat_req	*breq;
+> +	unsigned long long	startino = 0;
+> +	unsigned long long	endino = -1ULL;
+> +	unsigned long		batch_size = 4096;
+> +	unsigned long		agno = 0;
+> +	unsigned long		ver = 0;
+> +	bool			has_agno = false;
+> +	unsigned int		i;
+> +	int			c;
+> +	int			ret;
+> +
+> +	while ((c = getopt(argc, argv, "a:cde:n:qs:v:")) != -1) {
+
+options c and q are not documented above, and not handled in the
+case statement below.
+
+> +		switch (c) {
+> +		case 'a':
+> +			errno = 0;
+> +			agno = strtoul(optarg, NULL, 10);
+> +			if (errno) {
+> +				perror(optarg);
+> +				return 1;
+> +			}
+> +			has_agno = true;
+> +			break;
+
+Why not use cvt_u32() and friends for these so they are directly
+converted to the correct type and overflow checked at the same time?
+
+[...]
+
+> +static void
+> +inumbers_help(void)
+> +{
+> +	printf(_(
+> +"Queries the filesystem for inode group information and prints it.\n"
+> +"\n"
+> +"   -a   Only iterate this AG.\n"
+> +"   -d   Print debugging output.\n"
+> +"   -e   Stop after this inode.\n"
+> +"   -n   Ask for this many results at once.\n"
+> +"   -s   Inode to start with.\n"
+> +"   -v   Use this version of the ioctl (1 or 5).\n"));
+> +}
+> +
+> +static int
+> +inumbers_f(
+> +	int			argc,
+> +	char			**argv)
+> +{
+> +	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
+> +	struct xfs_inumbers_req	*ireq;
+> +	unsigned long long	startino = 0;
+> +	unsigned long long	endino = -1ULL;
+> +	unsigned long		batch_size = 4096;
+> +	unsigned long		agno = 0;
+> +	unsigned long		ver = 0;
+> +	bool			has_agno = false;
+> +	unsigned int		i;
+> +	int			c;
+> +	int			ret;
+> +
+> +	while ((c = getopt(argc, argv, "a:cde:n:qs:v:")) != -1) {
+
+Again, c and q not defined. Same comments about cvt_type() as
+well...
+
+> +	if (has_agno)
+> +		xfrog_inumbers_set_ag(ireq, agno);
+> +
+> +	switch (ver) {
+> +	case 1:
+> +		xfd.flags |= XFROG_FLAG_BULKSTAT_FORCE_V1;
+> +		break;
+> +	case 5:
+> +		xfd.flags |= XFROG_FLAG_BULKSTAT_FORCE_V5;
+> +		break;
+> +	default:
+> +		break;
+> +	}
+
+Common helper?
+
+> +static cmdinfo_t	bulkstat_cmd = {
+> +	.name = "bulkstat",
+> +	.cfunc = bulkstat_f,
+> +	.argmin = 0,
+> +	.argmax = -1,
+> +	.flags = CMD_NOMAP_OK,
+> +	.help = bulkstat_help,
+> +};
+
+Theres are all oneshot commands, right?
+
+> +
+> +static cmdinfo_t	bulkstat_single_cmd = {
+> +	.name = "bulkstat_single",
+> +	.cfunc = bulkstat_single_f,
+> +	.argmin = 0,
+> +	.argmax = -1,
+> +	.flags = CMD_NOMAP_OK,
+> +	.help = bulkstat_single_help,
+> +};
+
+Doesn't this require at least one parameter?
+
+>  
+>  .SH FILESYSTEM COMMANDS
+>  .TP
+> +.BI "bulkstat [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-n " batchsize " ] [ \-s " startino " ]
+> +Display raw stat information about a bunch of inodes in an XFS filesystem.
+> +Options are as follows:
+> +.RS 1.0i
+> +.PD 0
+> +.TP
+> +.BI \-a " agno"
+> +Display only results from the given allocation group.
+> +Defaults to zero.
+
+Need to say "If not specified, will all AGs in the fielsystem"
+
+> @@ -1067,6 +1106,35 @@ was specified on the command line, the maximum possible inode number in
+>  the system will be printed along with its size.
+>  .PD
+>  .TP
+> +.BI "inumbers [ \-a " agno " ] [ \-d ] [ \-e " endino " ] [ \-n " batchsize " ] [ \-s " startino " ]
+> +Prints allocation information about groups of inodes in an XFS filesystem.
+> +Callers can use this information to figure out which inodes are allocated.
+> +Options are as follows:
+> +.RS 1.0i
+> +.PD 0
+> +.TP
+> +.BI \-a " agno"
+> +Display only results from the given allocation group.
+> +Defaults to zero.
+
+Same again.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
