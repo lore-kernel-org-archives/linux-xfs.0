@@ -2,82 +2,174 @@ Return-Path: <SRS0=88Vy=XH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-13.5 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB48C49ED6
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 01:08:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0AC9C4CECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 11:04:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B97D720863
-	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 01:08:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8202420693
+	for <linux-xfs@archiver.kernel.org>; Thu, 12 Sep 2019 11:04:23 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=mbobrowski-org.20150623.gappssmtp.com header.i=@mbobrowski-org.20150623.gappssmtp.com header.b="JK3FoqCS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727329AbfILBIn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 11 Sep 2019 21:08:43 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:55440 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727256AbfILBIn (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 11 Sep 2019 21:08:43 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8AEDD43D5AA;
-        Thu, 12 Sep 2019 11:08:39 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1i8DbC-0007qy-Bx; Thu, 12 Sep 2019 11:08:38 +1000
-Date:   Thu, 12 Sep 2019 11:08:38 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org, zlang@redhat.com
-Subject: Re: [PATCH] [RFC] xfs: fix inode fork extent count overflow
-Message-ID: <20190912010838.GO16973@dread.disaster.area>
-References: <20190911012107.26553-1-david@fromorbit.com>
- <20190911105550.GA23676@infradead.org>
+        id S1731359AbfILLEW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 12 Sep 2019 07:04:22 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:44320 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731319AbfILLEW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Sep 2019 07:04:22 -0400
+Received: by mail-pf1-f194.google.com with SMTP id q21so15768092pfn.11
+        for <linux-xfs@vger.kernel.org>; Thu, 12 Sep 2019 04:04:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mbobrowski-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=dbT9Gzja88v34bZ54PPwipztlVvb7Cbzf1uTT2py4ow=;
+        b=JK3FoqCSHgOcmM/KEL4cSKXMEXAeIM7R5i16B9X5F1+ca6ZzRMGbluCVpJWZEqWiJi
+         l1OQ4Y81CbmmqS0M3kcjd1CcQQtanAkZTrEm09PfMt88clNXzdM3tfZ9mxmUewf+DC46
+         OJtwIw5NLxx2qvtr9WKvVy5wBAcewzx33pXKQ6LkKSZ+0T4Ttluns7lLqSyPHIVDDb84
+         sTCkB3XiNDJtSmRJuOz6RZol3JhYD9nuzNQlsy/XD6DmZTgsc+3qCzFsi/zAKqRwMFIQ
+         Stj1feHcCbkHKtRfir/GdlqPwEiSq+7P1c0tq2Fddf7Eu+b6a6lzOeXjvcvY6XnGybOR
+         EenA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=dbT9Gzja88v34bZ54PPwipztlVvb7Cbzf1uTT2py4ow=;
+        b=oN77pxZ1WOHobclURDBzZgdWpR+f6+5lgOmCUEgIDKc7kmjRfsvB4nPoZDYYH2U8Va
+         gqm0XOau26NxKRUrI2+JzCov4YK85XTmf3KvrA6eKkG3esIUa0dNteEqX5Y5X5/+uE2z
+         24XhaaxNm37zZ9hi+Yub1STL/wgOlHZyHHc5A7RoJ4sVFcul21ud212qXr88KiuJ5MAh
+         KyP0cwovf0KS/SRKJL5pLsAVr1LYGqidvIRv7o1UtjNGSSitofRSlAZ/GoeJ032DxqC6
+         6Jfl6ZI3LHFk57PflNVI5SuMjxpk2SzOvyweNzRPJ5xQ1+OC3acs/vsxCmSjv8W5V4NI
+         gxaA==
+X-Gm-Message-State: APjAAAVBNwqQQbX0aA6G5bHPjxHSRvvbi3DGLf5u7J0mGFvADXFiE4A9
+        9L3s+STfazUdCbvhdiyaOVhZ
+X-Google-Smtp-Source: APXvYqwjiq/8JM0dMTcMGX4OzvWoHNIfIr/xv1kJwkchLLJF2ALKgbn2BU6kj/gYTtEiMOC2sPDysw==
+X-Received: by 2002:a63:e610:: with SMTP id g16mr36727746pgh.392.1568286261654;
+        Thu, 12 Sep 2019 04:04:21 -0700 (PDT)
+Received: from poseidon.bobrowski.net ([114.78.226.167])
+        by smtp.gmail.com with ESMTPSA id j126sm17563076pfb.186.2019.09.12.04.04.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Sep 2019 04:04:20 -0700 (PDT)
+Date:   Thu, 12 Sep 2019 21:04:14 +1000
+From:   Matthew Bobrowski <mbobrowski@mbobrowski.org>
+To:     tytso@mit.edu, jack@suse.cz, adilger.kernel@dilger.ca
+Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, david@fromorbit.com,
+        hch@infradead.org, darrick.wong@oracle.com
+Subject: [PATCH v3 3/6] iomap: split size and error for iomap_dio_rw ->end_io
+Message-ID: <a9772c8cd3db191c8039c24cb0f3861b55cdc1ca.1568282664.git.mbobrowski@mbobrowski.org>
+References: <cover.1568282664.git.mbobrowski@mbobrowski.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190911105550.GA23676@infradead.org>
+In-Reply-To: <cover.1568282664.git.mbobrowski@mbobrowski.org>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=7-415B0cAAAA:8 a=Ao7XzL8_WaSlczhuA6wA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 11, 2019 at 03:55:51AM -0700, Christoph Hellwig wrote:
-> ... and there went my hopes to eventually squeeze xfs_ifork into
-> a single 64-byte cacheline.  But the analys looks sensible.
+Modify the calling convention for the iomap_dio_rw ->end_io() callback.
+Rather than passing either dio->error or dio->size as the 'size' argument,
+instead pass both the dio->error and the dio->size value separately.
 
-Not sure what the issue is here:
+In the instance that an error occurred during a write, we currently cannot
+determine whether any blocks have been allocated beyond the current EOF and
+data has subsequently been written to these blocks within the ->end_io()
+callback. As a result, we cannot judge whether we should take the truncate
+failed write path. Having both dio->error and dio->size will allow us to
+perform such checks within this callback.
 
-struct xfs_ifork {
-        int64_t                    if_bytes;             /*     0     8 */
-        struct xfs_btree_block *   if_broot;             /*     8     8 */
-        unsigned int               if_seq;               /*    16     4 */
-        int                        if_height;            /*    20     4 */
-        union {
-                void *             if_root;              /*    24     8 */
-                char *             if_data;              /*    24     8 */
-        } if_u1;                                         /*    24     8 */
-        short int                  if_broot_bytes;       /*    32     2 */
-        unsigned char              if_flags;             /*    34     1 */
+Signed-off-by: Matthew Bobrowski <mbobrowski@mbobrowski.org>
+[hch: minor cleanups]
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Matthew Wilcox (Oracle) <willy@infradead.org>
+---
 
-        /* size: 40, cachelines: 1, members: 7 */
-        /* padding: 5 */
-        /* last cacheline: 40 bytes */
-};
+Note, this patch is already queued in the 'iomap-5.4-merge' branch here:
+https://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git/log/?h=iomap-5.4-merge.
 
-it's already well inside a 64-byte single cacheline, even with a
-64bit if_bytes. Yes, I've just pushed it from 32 to 40 bytes, but
-but if that is a problem we could pack some things more tightly...
+Just adding it within this patch series to highlight that it's a
+dependency.
 
-Cheers,
+ fs/iomap/direct-io.c  | 9 +++------
+ fs/xfs/xfs_file.c     | 8 +++++---
+ include/linux/iomap.h | 4 ++--
+ 3 files changed, 10 insertions(+), 11 deletions(-)
 
-Dave.
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 10517cea9682..2ccf1c6460d4 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -77,13 +77,10 @@ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+ 	loff_t offset = iocb->ki_pos;
+ 	ssize_t ret;
+ 
+-	if (dio->end_io) {
+-		ret = dio->end_io(iocb,
+-				dio->error ? dio->error : dio->size,
+-				dio->flags);
+-	} else {
++	if (dio->end_io)
++		ret = dio->end_io(iocb, dio->size, dio->error, dio->flags);
++	else
+ 		ret = dio->error;
+-	}
+ 
+ 	if (likely(!ret)) {
+ 		ret = dio->size;
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 28101bbc0b78..74411296f6b5 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -369,21 +369,23 @@ static int
+ xfs_dio_write_end_io(
+ 	struct kiocb		*iocb,
+ 	ssize_t			size,
++	int			error,
+ 	unsigned		flags)
+ {
+ 	struct inode		*inode = file_inode(iocb->ki_filp);
+ 	struct xfs_inode	*ip = XFS_I(inode);
+ 	loff_t			offset = iocb->ki_pos;
+ 	unsigned int		nofs_flag;
+-	int			error = 0;
+ 
+ 	trace_xfs_end_io_direct_write(ip, offset, size);
+ 
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
+ 		return -EIO;
+ 
+-	if (size <= 0)
+-		return size;
++	if (error)
++		return error;
++	if (!size)
++		return 0;
+ 
+ 	/*
+ 	 * Capture amount written on completion as we can't reliably account
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index bc499ceae392..50bb746d2216 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -188,8 +188,8 @@ sector_t iomap_bmap(struct address_space *mapping, sector_t bno,
+  */
+ #define IOMAP_DIO_UNWRITTEN	(1 << 0)	/* covers unwritten extent(s) */
+ #define IOMAP_DIO_COW		(1 << 1)	/* covers COW extent(s) */
+-typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t ret,
+-		unsigned flags);
++typedef int (iomap_dio_end_io_t)(struct kiocb *iocb, ssize_t size, int error,
++				 unsigned int flags);
+ ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
+ 		const struct iomap_ops *ops, iomap_dio_end_io_t end_io);
+ int iomap_dio_iopoll(struct kiocb *kiocb, bool spin);
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
+
