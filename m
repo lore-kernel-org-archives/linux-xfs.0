@@ -4,252 +4,264 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDF69C4CEC6
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Sep 2019 01:10:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27C5BC49ED7
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Sep 2019 14:58:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AF294206A4
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Sep 2019 01:10:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1C0A20830
+	for <linux-xfs@archiver.kernel.org>; Fri, 13 Sep 2019 14:58:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728354AbfIMBKl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 12 Sep 2019 21:10:41 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40292 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728352AbfIMBKk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 12 Sep 2019 21:10:40 -0400
-Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 46A4136196A;
-        Fri, 13 Sep 2019 11:10:37 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1i8a6e-0008TV-6v; Fri, 13 Sep 2019 11:10:36 +1000
-Date:   Fri, 13 Sep 2019 11:10:36 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] misc: convert from XFS_IOC_FSINUMBERS to
- XFS_IOC_INUMBERS
-Message-ID: <20190913011036.GX16973@dread.disaster.area>
-References: <156774089024.2643497.2754524603021685770.stgit@magnolia>
- <156774092832.2643497.11735239040494298471.stgit@magnolia>
+        id S2388214AbfIMO6J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Sep 2019 10:58:09 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49910 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388211AbfIMO6J (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 13 Sep 2019 10:58:09 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 97E3F50F45;
+        Fri, 13 Sep 2019 14:58:08 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id CD07C100EBA2;
+        Fri, 13 Sep 2019 14:58:03 +0000 (UTC)
+Date:   Fri, 13 Sep 2019 10:58:02 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH REPOST 1/2] xfs: drop minlen before tossing alignment on
+ bmap allocs
+Message-ID: <20190913145802.GB28512@bfoster>
+References: <20190912143223.24194-1-bfoster@redhat.com>
+ <20190912143223.24194-2-bfoster@redhat.com>
+ <20190912223519.GP16973@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156774092832.2643497.11735239040494298471.stgit@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=frpxc3HnMu-ZR7MooOwA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20190912223519.GP16973@dread.disaster.area>
+User-Agent: Mutt/1.12.0 (2019-05-25)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Fri, 13 Sep 2019 14:58:08 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 05, 2019 at 08:35:28PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Sep 13, 2019 at 08:35:19AM +1000, Dave Chinner wrote:
+> On Thu, Sep 12, 2019 at 10:32:22AM -0400, Brian Foster wrote:
+> > The bmap block allocation code issues a sequence of retries to
+> > perform an optimal allocation, gradually loosening constraints as
+> > allocations fail. For example, the first attempt might begin at a
+> > particular bno, with maxlen == minlen and alignment incorporated. As
+> > allocations fail, the parameters fall back to different modes, drop
+> > alignment requirements and reduce the minlen and total block
+> > requirements.
+> > 
+> > For large extent allocations with an args.total value that exceeds
+> > the allocation length (i.e., non-delalloc), the total value tends to
+> > dominate despite these fallbacks. For example, an aligned extent
+> > allocation request of tens to hundreds of MB that cannot be
+> > satisfied from a particular AG will not succeed after dropping
+> > alignment or minlen because xfs_alloc_space_available() never
+> > selects an AG that can't satisfy args.total. The retry sequence
+> > eventually reduces total and ultimately succeeds if a minlen extent
+> > is available somewhere, but the first several retries are
+> > effectively pointless in this scenario.
+> > 
+> > Beyond simply being inefficient, another side effect of this
+> > behavior is that we drop alignment requirements too aggressively.
+> > Consider a 1GB fallocate on a 15GB fs with 16 AGs and 128k stripe
+> > unit:
+> > 
+> >  # xfs_io -c "falloc 0 1g" /mnt/file
+> >  # <xfstests>/src/t_stripealign /mnt/file 32
+> >  /mnt/file: Start block 347176 not multiple of sunit 32
 > 
-> Convert all programs to use the v5 inumbers ioctl.
+> Ok, so what Carlos and I found last night was an issue with the
+> the agresv code leading to the maximum free extent calculated
+> by xfs_alloc_longest_free_extent() being longer than the largest
+> allowable extent allocation (mp->m_ag_max_usable) resulting in the
+> situation where blen > args->maxlen, and so in the case of initial
+> allocation here, we never run this:
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 	/*
+> 	 * Adjust for alignment
+> 	 */
+> 	if (blen > args.alignment && blen <= args.maxlen)
+> 		args.minlen = blen - args.alignment;
+> 	args.minalignslop = 0;
+> 
+
+Interesting, I think I missed this logic when I looked at this
+originally. It makes sense that we should be allowing this to handle the
+maxlen = minlen alignment case.
+
+> this is how we end up with args.minlen = args.maxlen and the
+> initial allocation failing.
+> 
+> The issue is the way mp->m_ag_max_usable is calculated versus how
+> the pag->pag_meta_resv.ar_reserved value is set up for the finobt.
+> That is, "ask" = max tree size, and "used" = 1 because we have a
+> root block allocated. that code does:
+> 
+
+Ok, I see that this behavior changes without perag reservations in the
+mix (i.e., disable finobt, reflink, etc.). The perag reservation
+calculation stuff always confuses me, however..
+
+> 	mp->m_ag_max_unused -= ask;
+> ...
+> 	pag->pag_meta_resv.ar_reserved = ask - used
+> 
+> That means when we calculate the longest extent in the AG, we do:
+> 
+> 	longest = pag->pagf_longest - min_needed - resv(NONE)
+> 		= pag->pagf_longest - min_needed - pag->pag_meta_resv.ar_reserved
+> 
+
+So here we use ar_reserved, which reflects outstanding and so far unused
+reservation for the metadata type.
+
+> whilst mp->m_ag_max_usable is calculated as
+> 
+> 	usable = agf_length - AG header blocks - AGFL - resv(ask)
+> 
+
+And here we apparently use the total reservation requirement, regardless
+of how much is used, because we're calculating the maximum amount ever
+available from the AG.
+
+> When the AG is empty, this ends up with
+> 
+> 	pag->pagf_longest = agf_length - AG header blocks
+> and
+> 	min_needed = AGFL blocks
+> and
+> 	resv(ask) = pag->pag_meta_resv.ar_reserved + 1
+> 
+> and so:
+> 	longest = usable + 1
+> 
+> And that's how we get blen = maxlen + 1, and that's why alignment is
+> being dropped for the initial allocation in this "allocate full AG"
+> corner case.
+> 
+
+And maxlen is capped to ->m_ag_max_usable, hence the delta between the
+two values. I think this makes sense. Thanks for the breakdown.
+
+> > Despite the filesystem being completely empty, the fact that the
+> > allocation request cannot be satisifed from a single AG means the
+> > allocation doesn't succeed until xfs_bmap_btalloc() drops total from
+> > the original value based on maxlen. This occurs after we've dropped
+> > minlen and alignment (unnecessarily).
+> 
+> Right, we'll continue to fail until minlen is reduced appropriately.
+> But that's not an issue in the fallback algorithms, that's a problem
+> with the initial conditions not being set up correctly.
+> 
+> > As a step towards addressing this problem, insert a new retry in the
+> > bmap allocation sequence to drop minlen (from maxlen) before tossing
+> > alignment. This should still result in as large of an extent as
+> > possible as the block allocator prioritizes extent size in all but
+> > exact allocation modes. By itself, this does not change the behavior
+> > of the command above because the preallocation code still specifies
+> > total based on maxlen. Instead, this facilitates preservation of
+> > alignment once extra reservation is separated from the extent length
+> > portion of the total block requirement.
+> 
+> AFAICT this is not necessary. The prototypoe patch I wrote last
+> night while working through this with Carlos is attached below. I
+> updated with a variant of your patch 2 to demonstrate that it does
+> actually solve the problem of full AG allocation failing to be
+> aligned.
+> 
+
+I agree that this addresses the reported issue, but I can reproduce
+other corner cases affected by the original patch that aren't affected
+by this one. For example, if the allocation request happens to be
+slightly less than blen but not enough to allow for alignment, minlen
+isn't dropped and we can run through the same allocation retry sequence
+that kills off alignment before success.
+
+This does raise an interesting question in that current allocation
+behavior allocates one extent out of whatever that largest free extent
+happened to be in the AG, regardless of whether it's aligned (because
+args.alignment drops to 1 before minlen). With the retry in this patch,
+we'd satisfy alignment but end up allocating two extents in the file
+after chopping alignment off the first free extent.
+
+I could see a reasonable argument for either. On one hand contiguity may
+be preferable to alignment. On the other, the difference between one or
+two extents in this case is basically the alignment size. Getting back
+an unaligned extent of say 200MB over an aligned extent 128k smaller
+might not be worth it, or at the very least unexpected to users who
+don't understand XFS geometry when there are multiples of that amount of
+free space still available in the broader fs. I don't feel too strongly
+about it either way, but figured it's worth noting..
+
+...
+> 
+> xfs: cap longest free extent to maximum allocatable
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Cap longest extent to the largest we can allocate based on limits
+> calculated at mount time. Dynamic state (such as finobt blocks)
+> can result in the longest free extent exceeding the size we can
+> allocate, and that results in failure to align full AG allocations
+> when the AG is empty.
+> 
+...
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  io/imap.c          |   26 +++++-----
->  io/open.c          |   27 +++++++----
->  libfrog/bulkstat.c |  132 ++++++++++++++++++++++++++++++++++++++++++++++------
->  libfrog/bulkstat.h |   10 +++-
->  scrub/fscounters.c |   21 +++++---
->  scrub/inodes.c     |   36 ++++++++------
->  6 files changed, 189 insertions(+), 63 deletions(-)
 
-....
-> diff --git a/io/open.c b/io/open.c
-> index e1979501..e198bcd8 100644
-> --- a/io/open.c
-> +++ b/io/open.c
-> @@ -681,39 +681,46 @@ static __u64
->  get_last_inode(void)
->  {
->  	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-> -	uint64_t		lastip = 0;
-> +	struct xfs_inumbers_req	*ireq;
->  	uint32_t		lastgrp = 0;
-> -	uint32_t		ocount = 0;
->  	__u64			last_ino;
+Are either of you guys planning to post this patch without the
+bmapi.total hack?
 
-	__u64			last_ino = 0;
+Brian
 
-> -	struct xfs_inogrp	igroup[IGROUP_NR];
-> +
-> +	ireq = xfrog_inumbers_alloc_req(IGROUP_NR, 0);
-> +	if (!ireq) {
-> +		perror("alloc req");
-> +		return 0;
-> +	}
+>  fs/xfs/libxfs/xfs_alloc.c |  3 ++-
+>  fs/xfs/libxfs/xfs_bmap.c  | 14 ++++++++++++++
+>  2 files changed, 16 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 533b04aaf6f6..9dead25d2e70 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1989,7 +1989,8 @@ xfs_alloc_longest_free_extent(
+>  	 * reservations and AGFL rules in place, we can return this extent.
+>  	 */
+>  	if (pag->pagf_longest > delta)
+> -		return pag->pagf_longest - delta;
+> +		return min_t(xfs_extlen_t, pag->pag_mount->m_ag_max_usable,
+> +				pag->pagf_longest - delta);
 >  
->  	for (;;) {
->  		int		ret;
+>  	/* Otherwise, let the caller try for 1 block if there's space. */
+>  	return pag->pagf_flcount > 0 || pag->pagf_longest > 0;
+> diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> index 054b4ce30033..b05683f649a6 100644
+> --- a/fs/xfs/libxfs/xfs_bmap.c
+> +++ b/fs/xfs/libxfs/xfs_bmap.c
+> @@ -4286,6 +4286,20 @@ xfs_bmapi_write(
+>  #endif
+>  	whichfork = xfs_bmapi_whichfork(flags);
 >  
-> -		ret = xfrog_inumbers(&xfd, &lastip, IGROUP_NR, igroup,
-> -				&ocount);
-> +		ret = xfrog_inumbers(&xfd, ireq);
->  		if (ret) {
->  			errno = ret;
->  			perror("XFS_IOC_FSINUMBERS");
-> +			free(ireq);
->  			return 0;
-
-			goto out;
->  		}
->  
->  		/* Did we reach the last inode? */
-> -		if (ocount == 0)
-> +		if (ireq->hdr.ocount == 0)
->  			break;
->  
->  		/* last inode in igroup table */
-> -		lastgrp = ocount;
-> +		lastgrp = ireq->hdr.ocount;
->  	}
->  
-> -	if (lastgrp == 0)
-> +	if (lastgrp == 0) {
-> +		free(ireq);
->  		return 0;
-
-		goto out;
-> +	}
->  
->  	lastgrp--;
->  
->  	/* The last inode number in use */
-> -	last_ino = igroup[lastgrp].xi_startino +
-> -		  libxfs_highbit64(igroup[lastgrp].xi_allocmask);
-> +	last_ino = ireq->inumbers[lastgrp].xi_startino +
-> +		  libxfs_highbit64(ireq->inumbers[lastgrp].xi_allocmask);
-
-out:
-> +	free(ireq);
->  
->  	return last_ino;
->  }
-> diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-> index 2a70824e..748d0f32 100644
-> --- a/libfrog/bulkstat.c
-> +++ b/libfrog/bulkstat.c
-> @@ -387,6 +387,86 @@ xfrog_bulkstat_alloc_req(
->  	return breq;
->  }
->  
-> +/* Convert an inumbers (v5) struct to a inogrp (v1) struct. */
-> +void
-> +xfrog_inumbers_to_inogrp(
-> +	struct xfs_inogrp		*ig1,
-> +	const struct xfs_inumbers	*ig)
-> +{
-> +	ig1->xi_startino = ig->xi_startino;
-> +	ig1->xi_alloccount = ig->xi_alloccount;
-> +	ig1->xi_allocmask = ig->xi_allocmask;
-
-Same thing - inumbers_v5_to_v1(from, to);
-
-> +}
+> +	/*
+> +	 * XXX: Hack!
+> +	 *
+> +	 * If the total blocks requested is larger than an AG, we can't allocate
+> +	 * all the space atomically and within a single AG. This will be a
+> +	 * "short" allocation. In this case, just ignore the total block count
+> +	 * and rely on minleft calculations to ensure the allocation we do fits
+> +	 * inside an AG properly.
+> +	 *
+> +	 * Based on a patch from Brian.
+> +	 */
+> +	if (bma.total > mp->m_ag_max_usable)
+> +		bma.total = 0;
 > +
-> +/* Convert an inogrp (v1) struct to a inumbers (v5) struct. */
-> +void
-> +xfrog_inogrp_to_inumbers(
-> +	struct xfs_inumbers		*ig,
-> +	const struct xfs_inogrp		*ig1)
-
-ditto.
-
-> +{
-> +	memset(ig, 0, sizeof(*ig));
-> +	ig->xi_version = XFS_INUMBERS_VERSION_V1;
-> +
-> +	ig->xi_startino = ig1->xi_startino;
-> +	ig->xi_alloccount = ig1->xi_alloccount;
-> +	ig->xi_allocmask = ig1->xi_allocmask;
-> +}
-> +
-> +static uint64_t xfrog_inum_ino(void *v1_rec)
-> +{
-> +	return ((struct xfs_inogrp *)v1_rec)->xi_startino;
-> +}
-> +
-> +static void xfrog_inum_cvt(struct xfs_fd *xfd, void *v5, void *v1)
-> +{
-> +	xfrog_inogrp_to_inumbers(v5, v1);
-> +}
-
-what's the point of this wrapper?
-
-> +
-> +/* Query inode allocation bitmask information using v5 ioctl. */
-> +static int
-> +xfrog_inumbers5(
-> +	struct xfs_fd		*xfd,
-> +	struct xfs_inumbers_req	*req)
-> +{
-> +	int			ret;
-> +
-> +	ret = ioctl(xfd->fd, XFS_IOC_INUMBERS, req);
-> +	if (ret)
-> +		return errno;
-> +	return 0;
-
-negative errors.
-
-> +}
-> +
-> +/* Query inode allocation bitmask information using v1 ioctl. */
-> +static int
-> +xfrog_inumbers1(
-> +	struct xfs_fd		*xfd,
-> +	struct xfs_inumbers_req	*req)
-> +{
-> +	struct xfs_fsop_bulkreq	bulkreq = { 0 };
-> +	int			error;
-> +
-> +	error = xfrog_bulkstat_prep_v1_emulation(xfd);
-> +	if (error)
-> +		return error;
-> +
-> +	error = xfrog_bulk_req_setup(xfd, &req->hdr, &bulkreq,
-> +			sizeof(struct xfs_inogrp));
-> +	if (error == ECANCELED)
-> +		goto out_teardown;
-> +	if (error)
-> +		return error;
-> +
-> +	error = ioctl(xfd->fd, XFS_IOC_FSINUMBERS, &bulkreq);
-> +	if (error)
-> +		error = errno;
-
-negative errors.
-
-> +
-> +out_teardown:
-> +	return xfrog_bulk_req_teardown(xfd, &req->hdr, &bulkreq,
-> +			sizeof(struct xfs_inogrp), xfrog_inum_ino,
-> +			&req->inumbers, sizeof(struct xfs_inumbers),
-> +			xfrog_inum_cvt, 64, error);
-> +}
-....
-
->  	struct xfs_bulkstat	*bs;
-> -	uint64_t		igrp_ino;
-> -	uint32_t		igrplen = 0;
-> +	struct xfs_inumbers	*inogrp;
-
-Isn't that mixing v1 structure names with v5 operations? Aren't we
-pulling infomration out in inode records?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  	ASSERT(*nmap >= 1);
+>  	ASSERT(*nmap <= XFS_BMAP_MAX_NMAP);
+>  	ASSERT(tp != NULL);
