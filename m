@@ -1,236 +1,117 @@
-Return-Path: <SRS0=/CVM=XI=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=TPER=XJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AF49C49ED7
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Sep 2019 17:36:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DDFC49ED7
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Sep 2019 00:42:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0EEC62081B
-	for <linux-xfs@archiver.kernel.org>; Fri, 13 Sep 2019 17:36:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A450720830
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Sep 2019 00:42:29 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ixEjTpwi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731054AbfIMRg2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Sep 2019 13:36:28 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:53366 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728811AbfIMRg1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 13 Sep 2019 13:36:27 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 242B518C4273;
-        Fri, 13 Sep 2019 17:36:27 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 5AB915C207;
-        Fri, 13 Sep 2019 17:36:26 +0000 (UTC)
-Date:   Fri, 13 Sep 2019 13:36:24 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     kaixuxia <xiakaixu1987@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eryu Guan <guaneryu@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH 2/2] xfs: test the deadlock between the AGI and AGF with
- RENAME_WHITEOUT
-Message-ID: <20190913173624.GD28512@bfoster>
-References: <58163375-dcd9-b954-c8d2-89fef20b8246@gmail.com>
+        id S2388877AbfINAm3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 13 Sep 2019 20:42:29 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:58566 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388296AbfINAm2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Sep 2019 20:42:28 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8E0cdP1053691;
+        Sat, 14 Sep 2019 00:42:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : subject : to :
+ references : message-id : date : mime-version : in-reply-to : content-type
+ : content-transfer-encoding; s=corp-2019-08-05;
+ bh=6d2cvRfdJN50GU1V/daRJGyYVSGwGk6V686nfsANX4c=;
+ b=ixEjTpwi/cnsLqTFKYAqCgWo3WKIEb/AEronGfkSXPUcAW2Xh7cPTXg3TNpV5AtFbMYN
+ IfepcDwF7HU/AlD0f2yqX4sTBT69EBqeHGKbqSEKjCeOa+6amnqqewvi7pG9P3D/3fok
+ lcIX0uDvWRfgV9QjTJ2eKNa3HNFASdkqpoLtGWOQv19NSRuv2T0lvEMAjy9koLF338WF
+ fubT4SD83HK3JkmXpe6O8GwCxerl6FrTBo6Je7tqCXyZDx5v2e9PZlaE47ldoGTz6x8G
+ W/RBuSE02vw4aiFxMCpl7VVVDczPKOfdDsuABuxqNOlB0qS6kxNE07LbdVaRGXvJA+r3 bg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2uytd37kdq-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 14 Sep 2019 00:42:22 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8E0cOTR174500;
+        Sat, 14 Sep 2019 00:42:21 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3030.oracle.com with ESMTP id 2v0nb11196-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 14 Sep 2019 00:42:21 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8E0gKBS026322;
+        Sat, 14 Sep 2019 00:42:20 GMT
+Received: from [192.168.1.9] (/67.1.21.243)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 13 Sep 2019 17:42:20 -0700
+From:   Allison Collins <allison.henderson@oracle.com>
+Subject: Re: [PATCH 02/19] iomap: remove the unused iomap argument to
+ __iomap_write_end
+To:     Christoph Hellwig <hch@lst.de>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+References: <20190909182722.16783-1-hch@lst.de>
+ <20190909182722.16783-3-hch@lst.de>
+Message-ID: <62b2c42f-f4ac-aa7f-25e8-9c7e4e1ccacf@oracle.com>
+Date:   Fri, 13 Sep 2019 17:42:19 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <58163375-dcd9-b954-c8d2-89fef20b8246@gmail.com>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.62]); Fri, 13 Sep 2019 17:36:27 +0000 (UTC)
+In-Reply-To: <20190909182722.16783-3-hch@lst.de>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9379 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909140004
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9379 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909140004
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 11, 2019 at 09:17:08PM +0800, kaixuxia wrote:
-> There is ABBA deadlock bug between the AGI and AGF when performing
-> rename() with RENAME_WHITEOUT flag, and add this testcase to make
-> sure the rename() call works well.
-> 
-> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+Looks fine:
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+
+On 9/9/19 11:27 AM, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  tests/xfs/512     | 99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/512.out |  2 ++
->  tests/xfs/group   |  1 +
->  3 files changed, 102 insertions(+)
->  create mode 100755 tests/xfs/512
->  create mode 100644 tests/xfs/512.out
+>   fs/iomap/buffered-io.c | 4 ++--
+>   1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/tests/xfs/512 b/tests/xfs/512
-> new file mode 100755
-> index 0000000..754f102
-> --- /dev/null
-> +++ b/tests/xfs/512
-> @@ -0,0 +1,99 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Tencent.  All Rights Reserved.
-> +#
-> +# FS QA Test 512
-> +#
-> +# Test the ABBA deadlock case between the AGI and AGF When performing
-> +# rename operation with RENAME_WHITEOUT flag.
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1	# failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/renameat2
-> +
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_scratch_nocheck
-
-Why _nocheck? AFAICT the filesystem shouldn't end up intentionally
-corrupted.
-
-> +_requires_renameat2 whiteout
-> +
-> +prepare_file()
-> +{
-> +	# create many small files for the rename with RENAME_WHITEOUT
-> +	i=0
-> +	while [ $i -le $files ]; do
-> +		file=$SCRATCH_MNT/f$i
-> +		echo > $file >/dev/null 2>&1
-> +		let i=$i+1
-> +	done
-
-Something like the following is a bit more simple, IMO:
-
-	for i in $(seq 1 $files); do
-		touch $SCRATCH_MNT/f.$i
-	done
-
-The same goes for the other while loops below that increment up to
-$files.
-
-> +}
-> +
-> +rename_whiteout()
-> +{
-> +	# create the rename targetdir
-> +	renamedir=$SCRATCH_MNT/renamedir
-> +	mkdir $renamedir
-> +
-> +	# a long filename could increase the possibility that target_dp
-> +	# allocate new blocks(acquire the AGF lock) to store the filename
-> +	longnamepre=FFFsafdsagafsadfagasdjfalskdgakdlsglkasdg
-> +
-
-The max filename length is 256 bytes. You could do something like the
-following to increase name length (leaving room for the file index and
-terminating NULL) if it helps the test:
-
-	prefix=`for i in $(seq 0 245); do echo -n a; done`
-
-> +	# now try to do rename with RENAME_WHITEOUT flag
-> +	i=0
-> +	while [ $i -le $files ]; do
-> +		src/renameat2 -w $SCRATCH_MNT/f$i $renamedir/$longnamepre$i >/dev/null 2>&1
-> +		let i=$i+1
-> +	done
-> +}
-> +
-> +create_file()
-> +{
-> +	# create the targetdir
-> +	createdir=$SCRATCH_MNT/createdir
-> +	mkdir $createdir
-> +
-> +	# try to create file at the same time to hit the deadlock
-> +	i=0
-> +	while [ $i -le $files ]; do
-> +		file=$createdir/f$i
-> +		echo > $file >/dev/null 2>&1
-> +		let i=$i+1
-> +	done
-> +}
-
-You could generalize this function to take a target directory parameter
-and just call it twice (once to prepare and again for the create
-workload).
-
-> +
-> +_scratch_mkfs_xfs -bsize=1024 -dagcount=1 >> $seqres.full 2>&1 ||
-> +	_fail "mkfs failed"
-
-Why -bsize=1k? Does that make the reproducer more effective?
-
-> +_scratch_mount
-> +
-> +files=250000
-> +
-
-Have you tested effectiveness of reproducing the issue with smaller file
-counts? A brief comment here to document where the value comes from
-might be useful. Somewhat related, how long does this test take on fixed
-kernels?
-
-> +prepare_file
-> +rename_whiteout &
-> +create_file &
-> +
-> +wait
-> +echo Silence is golden
-> +
-> +# Failure comes in the form of a deadlock.
-> +
-
-I wonder if this should be in the dangerous group as well. I go back and
-forth on that though because I tend to filter out dangerous tests and
-the test won't be so risky once the fix proliferates. Perhaps that's
-just a matter of removing it from the dangerous group after a long
-enough period of time.
-
-Brian
-
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/512.out b/tests/xfs/512.out
-> new file mode 100644
-> index 0000000..0aabdef
-> --- /dev/null
-> +++ b/tests/xfs/512.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 512
-> +Silence is golden
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index a7ad300..ed250d6 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -509,3 +509,4 @@
->  509 auto ioctl
->  510 auto ioctl quick
->  511 auto quick quota
-> +512 auto rename
-> -- 
-> 1.8.3.1
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index 051b8ec326ba..2a9b41352495 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -678,7 +678,7 @@ EXPORT_SYMBOL_GPL(iomap_set_page_dirty);
+>   
+>   static int
+>   __iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> -		unsigned copied, struct page *page, struct iomap *iomap)
+> +		unsigned copied, struct page *page)
+>   {
+>   	flush_dcache_page(page);
+>   
+> @@ -731,7 +731,7 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>   		ret = block_write_end(NULL, inode->i_mapping, pos, len, copied,
+>   				page, NULL);
+>   	} else {
+> -		ret = __iomap_write_end(inode, pos, len, copied, page, iomap);
+> +		ret = __iomap_write_end(inode, pos, len, copied, page);
+>   	}
+>   
+>   	/*
 > 
-> -- 
-> kaixuxia
