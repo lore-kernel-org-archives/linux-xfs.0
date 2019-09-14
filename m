@@ -2,173 +2,145 @@ Return-Path: <SRS0=TPER=XJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8AE5C49ED7
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Sep 2019 00:43:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6381AC4CEC9
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Sep 2019 22:00:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B39372084F
-	for <linux-xfs@archiver.kernel.org>; Sat, 14 Sep 2019 00:43:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="E+taBmH2"
+	by mail.kernel.org (Postfix) with ESMTP id 3AA14206CD
+	for <linux-xfs@archiver.kernel.org>; Sat, 14 Sep 2019 22:00:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388951AbfINAny (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 13 Sep 2019 20:43:54 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:59892 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388296AbfINAnx (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 13 Sep 2019 20:43:53 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8E0cqgx053730;
-        Sat, 14 Sep 2019 00:43:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : subject : to :
- references : message-id : date : mime-version : in-reply-to : content-type
- : content-transfer-encoding; s=corp-2019-08-05;
- bh=/9lz0sqsErrNF84LRJY5KKsEVh0/tZO5PskEvqD/CgM=;
- b=E+taBmH2uqJEk9s62PWdBT1U7ewMHu5iYgkQGR2PcdpgSCz3vbVCZUcFMg05DzouioeB
- wJaoqG8zxPneIAExCaJvvzbhciU+fQBQQ55K56XIgaeQKlc9yplnSPQRnSPswtWTcMYy
- rRp8W7dZ9GyyLMbNP7/dvk/bfV/1gKvz5DCbHhlOXRRFCupKjXR0lTTEDDBGxBAjcQCY
- AQdlziSFLeE/vFRAN7dipjHCuCN3SXzn8iGGowwXE5QvQPXMsbjFvxOfg06LDbJMSBLG
- ViqGFnidT0rVkgLSYduzOwjDQFI0N82NR+AarFK3DsU81hJ06WnJk302Y9+oQaHocbEz Gg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2uytd37kf7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Sep 2019 00:43:25 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8E0hNKu181499;
-        Sat, 14 Sep 2019 00:43:24 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2v0nb111md-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 14 Sep 2019 00:43:24 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8E0gsv6010404;
-        Sat, 14 Sep 2019 00:42:55 GMT
-Received: from [192.168.1.9] (/67.1.21.243)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 13 Sep 2019 17:42:54 -0700
-From:   Allison Collins <allison.henderson@oracle.com>
-Subject: Re: [PATCH 17/19] xfs: rename the whichfork variable in
- xfs_buffered_write_iomap_begin
-To:     Christoph Hellwig <hch@lst.de>,
-        Goldwyn Rodrigues <rgoldwyn@suse.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-References: <20190909182722.16783-1-hch@lst.de>
- <20190909182722.16783-18-hch@lst.de>
-Message-ID: <bcee3337-2168-bb58-b22a-ec7e93f2d07e@oracle.com>
-Date:   Fri, 13 Sep 2019 17:42:54 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1725997AbfINWAm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 14 Sep 2019 18:00:42 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47407 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725987AbfINWAm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 14 Sep 2019 18:00:42 -0400
+Received: from dread.disaster.area (pa49-181-255-194.pa.nsw.optusnet.com.au [49.181.255.194])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 229C243D6B7;
+        Sun, 15 Sep 2019 08:00:37 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1i9G5r-0008JG-LN; Sun, 15 Sep 2019 08:00:35 +1000
+Date:   Sun, 15 Sep 2019 08:00:35 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH REPOST 1/2] xfs: drop minlen before tossing alignment on
+ bmap allocs
+Message-ID: <20190914220035.GY16973@dread.disaster.area>
+References: <20190912143223.24194-1-bfoster@redhat.com>
+ <20190912143223.24194-2-bfoster@redhat.com>
+ <20190912223519.GP16973@dread.disaster.area>
+ <20190913145802.GB28512@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20190909182722.16783-18-hch@lst.de>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9379 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909140005
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9379 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909140004
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190913145802.GB28512@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=YO9NNpcXwc8z/SaoS+iAiA==:117 a=YO9NNpcXwc8z/SaoS+iAiA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
+        a=7-415B0cAAAA:8 a=HEocU51HWeMWV6XgE6AA:9 a=G3gcFbx62owFV0H6:21
+        a=sKYRloo1DlErS7dn:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks fine:
-Reviewed-by: Allison Collins <allison.henderson@oracle.com>
+On Fri, Sep 13, 2019 at 10:58:02AM -0400, Brian Foster wrote:
+> On Fri, Sep 13, 2019 at 08:35:19AM +1000, Dave Chinner wrote:
+> > On Thu, Sep 12, 2019 at 10:32:22AM -0400, Brian Foster wrote:
+> > > The bmap block allocation code issues a sequence of retries to
+> > > perform an optimal allocation, gradually loosening constraints as
+> > > allocations fail. For example, the first attempt might begin at a
+> > > particular bno, with maxlen == minlen and alignment incorporated. As
+> > > allocations fail, the parameters fall back to different modes, drop
+> > > alignment requirements and reduce the minlen and total block
+> > > requirements.
+> > > 
+> > > For large extent allocations with an args.total value that exceeds
+> > > the allocation length (i.e., non-delalloc), the total value tends to
+> > > dominate despite these fallbacks. For example, an aligned extent
+> > > allocation request of tens to hundreds of MB that cannot be
+> > > satisfied from a particular AG will not succeed after dropping
+> > > alignment or minlen because xfs_alloc_space_available() never
+> > > selects an AG that can't satisfy args.total. The retry sequence
+> > > eventually reduces total and ultimately succeeds if a minlen extent
+> > > is available somewhere, but the first several retries are
+> > > effectively pointless in this scenario.
+> > > 
+> > > Beyond simply being inefficient, another side effect of this
+> > > behavior is that we drop alignment requirements too aggressively.
+> > > Consider a 1GB fallocate on a 15GB fs with 16 AGs and 128k stripe
+> > > unit:
+> > > 
+> > >  # xfs_io -c "falloc 0 1g" /mnt/file
+> > >  # <xfstests>/src/t_stripealign /mnt/file 32
+> > >  /mnt/file: Start block 347176 not multiple of sunit 32
+> > 
+> > Ok, so what Carlos and I found last night was an issue with the
+> > the agresv code leading to the maximum free extent calculated
+> > by xfs_alloc_longest_free_extent() being longer than the largest
+> > allowable extent allocation (mp->m_ag_max_usable) resulting in the
+> > situation where blen > args->maxlen, and so in the case of initial
+> > allocation here, we never run this:
+> > 
+> > 	/*
+> > 	 * Adjust for alignment
+> > 	 */
+> > 	if (blen > args.alignment && blen <= args.maxlen)
+> > 		args.minlen = blen - args.alignment;
+> > 	args.minalignslop = 0;
+> > 
+....
+> > > As a step towards addressing this problem, insert a new retry in the
+> > > bmap allocation sequence to drop minlen (from maxlen) before tossing
+> > > alignment. This should still result in as large of an extent as
+> > > possible as the block allocator prioritizes extent size in all but
+> > > exact allocation modes. By itself, this does not change the behavior
+> > > of the command above because the preallocation code still specifies
+> > > total based on maxlen. Instead, this facilitates preservation of
+> > > alignment once extra reservation is separated from the extent length
+> > > portion of the total block requirement.
+> > 
+> > AFAICT this is not necessary. The prototypoe patch I wrote last
+> > night while working through this with Carlos is attached below. I
+> > updated with a variant of your patch 2 to demonstrate that it does
+> > actually solve the problem of full AG allocation failing to be
+> > aligned.
+> > 
+> 
+> I agree that this addresses the reported issue, but I can reproduce
+> other corner cases affected by the original patch that aren't affected
+> by this one. For example, if the allocation request happens to be
+> slightly less than blen but not enough to allow for alignment, minlen
+> isn't dropped and we can run through the same allocation retry sequence
+> that kills off alignment before success.
 
-On 9/9/19 11:27 AM, Christoph Hellwig wrote:
-> Renaming whichfork to allocfork in xfs_buffered_write_iomap_begin makes
-> the usage of this variable a little more clear.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   fs/xfs/xfs_iomap.c | 22 +++++++++++-----------
->   1 file changed, 11 insertions(+), 11 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index 6dd143374d75..0e575ca1e3fc 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -862,7 +862,7 @@ xfs_buffered_write_iomap_begin(
->   	struct xfs_iext_cursor	icur, ccur;
->   	xfs_fsblock_t		prealloc_blocks = 0;
->   	bool			eof = false, cow_eof = false, shared = false;
-> -	int			whichfork = XFS_DATA_FORK;
-> +	int			allocfork = XFS_DATA_FORK;
->   	int			error = 0;
->   
->   	/* we can't use delayed allocations when using extent size hints */
-> @@ -959,7 +959,7 @@ xfs_buffered_write_iomap_begin(
->   		 * Fork all the shared blocks from our write offset until the
->   		 * end of the extent.
->   		 */
-> -		whichfork = XFS_COW_FORK;
-> +		allocfork = XFS_COW_FORK;
->   		end_fsb = imap.br_startoff + imap.br_blockcount;
->   	} else {
->   		/*
-> @@ -975,7 +975,7 @@ xfs_buffered_write_iomap_begin(
->   		end_fsb = xfs_iomap_end_fsb(mp, offset, count);
->   
->   		if (xfs_is_always_cow_inode(ip))
-> -			whichfork = XFS_COW_FORK;
-> +			allocfork = XFS_COW_FORK;
->   	}
->   
->   	error = xfs_qm_dqattach_locked(ip, false);
-> @@ -983,7 +983,7 @@ xfs_buffered_write_iomap_begin(
->   		goto out_unlock;
->   
->   	if (eof) {
-> -		prealloc_blocks = xfs_iomap_prealloc_size(ip, whichfork, offset,
-> +		prealloc_blocks = xfs_iomap_prealloc_size(ip, allocfork, offset,
->   				count, &icur);
->   		if (prealloc_blocks) {
->   			xfs_extlen_t	align;
-> @@ -1006,11 +1006,11 @@ xfs_buffered_write_iomap_begin(
->   	}
->   
->   retry:
-> -	error = xfs_bmapi_reserve_delalloc(ip, whichfork, offset_fsb,
-> +	error = xfs_bmapi_reserve_delalloc(ip, allocfork, offset_fsb,
->   			end_fsb - offset_fsb, prealloc_blocks,
-> -			whichfork == XFS_DATA_FORK ? &imap : &cmap,
-> -			whichfork == XFS_DATA_FORK ? &icur : &ccur,
-> -			whichfork == XFS_DATA_FORK ? eof : cow_eof);
-> +			allocfork == XFS_DATA_FORK ? &imap : &cmap,
-> +			allocfork == XFS_DATA_FORK ? &icur : &ccur,
-> +			allocfork == XFS_DATA_FORK ? eof : cow_eof);
->   	switch (error) {
->   	case 0:
->   		break;
-> @@ -1027,8 +1027,8 @@ xfs_buffered_write_iomap_begin(
->   		goto out_unlock;
->   	}
->   
-> -	if (whichfork == XFS_COW_FORK) {
-> -		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &cmap);
-> +	if (allocfork == XFS_COW_FORK) {
-> +		trace_xfs_iomap_alloc(ip, offset, count, allocfork, &cmap);
->   		goto found_cow;
->   	}
->   
-> @@ -1037,7 +1037,7 @@ xfs_buffered_write_iomap_begin(
->   	 * them out if the write happens to fail.
->   	 */
->   	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> -	trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
-> +	trace_xfs_iomap_alloc(ip, offset, count, allocfork, &imap);
->   	return xfs_bmbt_to_iomap(ip, iomap, &imap, IOMAP_F_NEW);
->   
->   found_imap:
-> 
+But isn't that just another variation of the initial conditions
+(minlen/maxlen) not being set up correctly for alignment when the AG
+is empty?
+
+i.e. Take the above condition and change it like this:
+
+ 	/*
+ 	 * Adjust for alignment
+ 	 */
+-	if (blen > args.alignment && blen <= args.maxlen)
++	if (blen > args.alignment && blen <= args.maxlen + args.alignment)
+ 		args.minlen = blen - args.alignment;
+ 	args.minalignslop = 0;
+
+and now we cover all the cases when blen covers an aligned maxlen
+allocation...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
