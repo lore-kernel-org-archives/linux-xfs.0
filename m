@@ -2,119 +2,161 @@ Return-Path: <SRS0=NVxF=XK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A195C4CECC
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 12:44:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16351C4CECC
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 13:09:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E2C8214C6
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 12:44:17 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AGjdb0oR"
+	by mail.kernel.org (Postfix) with ESMTP id E59E42077C
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 13:09:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726350AbfIOMoR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Sep 2019 08:44:17 -0400
-Received: from mail-lf1-f41.google.com ([209.85.167.41]:46859 "EHLO
-        mail-lf1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726340AbfIOMoQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Sep 2019 08:44:16 -0400
-Received: by mail-lf1-f41.google.com with SMTP id t8so25284405lfc.13
-        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2019 05:44:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=pNtjcXHhpcuAME7H1OmW5QzSvs05ZjD0K2wsTIsxBq4=;
-        b=AGjdb0oRe9IsFb0AWkNKbIYeRD79wi2r4p++QcTvt9R0dZWhjf9Mj4VGLuy0VREnZ8
-         KNlk5RYf3aD26+fary5eecDe9vbBdOalCOaAT/JumSQy9mquqjZqaxg9HBIKUk6AEkjI
-         Z2yeV4nvlcyyBwxhYyDFSf4VheNqr9gYl71tQg5DZdNEGiZH8v+Wm6mPe3j3naeHYM/3
-         wFlUOIK0nbrJveCXUxGfyHhrL+UjL/12FfJUxT62iL8xM3mIQgt6rUeKk60EHdVKJolT
-         0mzjW392wjjkPgSq1Rwfay5SuoZtwJKjniWGcgMaZ349popijiTdQMaYhfzOIAMSbPkC
-         i4PQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=pNtjcXHhpcuAME7H1OmW5QzSvs05ZjD0K2wsTIsxBq4=;
-        b=r4mZBbRK0tDbg1cgWAUc8m4TpeX1U58xkh1TIdukrSICiq1yoDxmHUGqbjxz0nJQII
-         fd+WSNqiGlh4I5rCTEkm4OESX3vF/0wqvA7u+a49KcMKWjYAQVP6kCgPRMvBHbn9ZThe
-         AIxP1izKdres5ZJobtz3SOQZSh+tWS0VBRejKNSkbWKD5x5XWFZ2b/X5HriwXvOsb5FV
-         kHAadFmFRVaUHmya8bXYN9ukhkM0RyiK9VbFlLkgpwBLqtsSqKnOzx97rX9ASv+8rnN+
-         ouoGmPPRVBllqq+qVsWdsENjMC/pujMA6qnwhs8BpsT8VkYPEEO4HaLvB8UdiuAqjgxz
-         +Gfw==
-X-Gm-Message-State: APjAAAU9PEF6KUOdyHYDMSu/DA+xb/tpdvbkIpLP0XeyilQtg0gN3Hx8
-        GHV8Bq9bL7r2S4b0vhoEOnowbbcG
-X-Google-Smtp-Source: APXvYqwS8+TI0LkckfhmGCOeY6Yj9Jc6BI8URvF6P7F3m6k87RnGeQg/a53pAYQIH6Nfz5eOd97mxQ==
-X-Received: by 2002:a19:5d53:: with SMTP id p19mr14294529lfj.109.1568551454301;
-        Sun, 15 Sep 2019 05:44:14 -0700 (PDT)
-Received: from amb.local (31-179-17-47.dynamic.chello.pl. [31.179.17.47])
-        by smtp.gmail.com with ESMTPSA id z21sm7563702ljn.100.2019.09.15.05.44.13
-        for <linux-xfs@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Sun, 15 Sep 2019 05:44:13 -0700 (PDT)
-To:     linux-xfs@vger.kernel.org
-From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
-Subject: xfs_repair: phase6.c:1129: mv_orphanage: Assertion `err == 2' failed.
-Message-ID: <7097d965-1676-a70e-56c7-b6cf048057f5@gmail.com>
-Date:   Sun, 15 Sep 2019 14:44:09 +0200
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.9.0
+        id S1727727AbfIONJg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Sep 2019 09:09:36 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:58372 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726268AbfIONJg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 15 Sep 2019 09:09:36 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id D3D687FDCA;
+        Sun, 15 Sep 2019 13:09:35 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id E01DC608C0;
+        Sun, 15 Sep 2019 13:09:32 +0000 (UTC)
+Date:   Sun, 15 Sep 2019 09:09:31 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH REPOST 1/2] xfs: drop minlen before tossing alignment on
+ bmap allocs
+Message-ID: <20190915130931.GB37752@bfoster>
+References: <20190912143223.24194-1-bfoster@redhat.com>
+ <20190912143223.24194-2-bfoster@redhat.com>
+ <20190912223519.GP16973@dread.disaster.area>
+ <20190913145802.GB28512@bfoster>
+ <20190914220035.GY16973@dread.disaster.area>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190914220035.GY16973@dread.disaster.area>
+User-Agent: Mutt/1.12.0 (2019-05-25)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.27]); Sun, 15 Sep 2019 13:09:35 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Sun, Sep 15, 2019 at 08:00:35AM +1000, Dave Chinner wrote:
+> On Fri, Sep 13, 2019 at 10:58:02AM -0400, Brian Foster wrote:
+> > On Fri, Sep 13, 2019 at 08:35:19AM +1000, Dave Chinner wrote:
+> > > On Thu, Sep 12, 2019 at 10:32:22AM -0400, Brian Foster wrote:
+> > > > The bmap block allocation code issues a sequence of retries to
+> > > > perform an optimal allocation, gradually loosening constraints as
+> > > > allocations fail. For example, the first attempt might begin at a
+> > > > particular bno, with maxlen == minlen and alignment incorporated. As
+> > > > allocations fail, the parameters fall back to different modes, drop
+> > > > alignment requirements and reduce the minlen and total block
+> > > > requirements.
+> > > > 
+> > > > For large extent allocations with an args.total value that exceeds
+> > > > the allocation length (i.e., non-delalloc), the total value tends to
+> > > > dominate despite these fallbacks. For example, an aligned extent
+> > > > allocation request of tens to hundreds of MB that cannot be
+> > > > satisfied from a particular AG will not succeed after dropping
+> > > > alignment or minlen because xfs_alloc_space_available() never
+> > > > selects an AG that can't satisfy args.total. The retry sequence
+> > > > eventually reduces total and ultimately succeeds if a minlen extent
+> > > > is available somewhere, but the first several retries are
+> > > > effectively pointless in this scenario.
+> > > > 
+> > > > Beyond simply being inefficient, another side effect of this
+> > > > behavior is that we drop alignment requirements too aggressively.
+> > > > Consider a 1GB fallocate on a 15GB fs with 16 AGs and 128k stripe
+> > > > unit:
+> > > > 
+> > > >  # xfs_io -c "falloc 0 1g" /mnt/file
+> > > >  # <xfstests>/src/t_stripealign /mnt/file 32
+> > > >  /mnt/file: Start block 347176 not multiple of sunit 32
+> > > 
+> > > Ok, so what Carlos and I found last night was an issue with the
+> > > the agresv code leading to the maximum free extent calculated
+> > > by xfs_alloc_longest_free_extent() being longer than the largest
+> > > allowable extent allocation (mp->m_ag_max_usable) resulting in the
+> > > situation where blen > args->maxlen, and so in the case of initial
+> > > allocation here, we never run this:
+> > > 
+> > > 	/*
+> > > 	 * Adjust for alignment
+> > > 	 */
+> > > 	if (blen > args.alignment && blen <= args.maxlen)
+> > > 		args.minlen = blen - args.alignment;
+> > > 	args.minalignslop = 0;
+> > > 
+> ....
+> > > > As a step towards addressing this problem, insert a new retry in the
+> > > > bmap allocation sequence to drop minlen (from maxlen) before tossing
+> > > > alignment. This should still result in as large of an extent as
+> > > > possible as the block allocator prioritizes extent size in all but
+> > > > exact allocation modes. By itself, this does not change the behavior
+> > > > of the command above because the preallocation code still specifies
+> > > > total based on maxlen. Instead, this facilitates preservation of
+> > > > alignment once extra reservation is separated from the extent length
+> > > > portion of the total block requirement.
+> > > 
+> > > AFAICT this is not necessary. The prototypoe patch I wrote last
+> > > night while working through this with Carlos is attached below. I
+> > > updated with a variant of your patch 2 to demonstrate that it does
+> > > actually solve the problem of full AG allocation failing to be
+> > > aligned.
+> > > 
+> > 
+> > I agree that this addresses the reported issue, but I can reproduce
+> > other corner cases affected by the original patch that aren't affected
+> > by this one. For example, if the allocation request happens to be
+> > slightly less than blen but not enough to allow for alignment, minlen
+> > isn't dropped and we can run through the same allocation retry sequence
+> > that kills off alignment before success.
+> 
+> But isn't that just another variation of the initial conditions
+> (minlen/maxlen) not being set up correctly for alignment when the AG
+> is empty?
+> 
 
-Hello.
+Perhaps, though I don't think it's exclusive to an empty AG.
 
-xfsprogs 5.2.1 and:
+> i.e. Take the above condition and change it like this:
+> 
+>  	/*
+>  	 * Adjust for alignment
+>  	 */
+> -	if (blen > args.alignment && blen <= args.maxlen)
+> +	if (blen > args.alignment && blen <= args.maxlen + args.alignment)
+>  		args.minlen = blen - args.alignment;
+>  	args.minalignslop = 0;
+> 
+> and now we cover all the cases when blen covers an aligned maxlen
+> allocation...
+> 
 
-disconnected dir inode 9185193405, moving to lost+found
-disconnected dir inode 9185193417, moving to lost+found
-disconnected dir inode 9185194001, moving to lost+found
-disconnected dir inode 9185194004, moving to lost+found
-disconnected dir inode 9185194010, moving to lost+found
-disconnected dir inode 9185194012, moving to lost+found
-disconnected dir inode 9185194018, moving to lost+found
-disconnected dir inode 9185194027, moving to lost+found
-disconnected dir inode 9185205370, moving to lost+found
-disconnected dir inode 9185209007, moving to lost+found
-corrupt dinode 9185209007, (btree extents).
-Metadata corruption detected at 0x449621, inode 0x2237b2aaf
-libxfs_iread_extents
-xfs_repair: phase6.c:1129: mv_orphanage: Assertion `err == 2' failed.
-Aborted
+Do we want to consider whether minlen goes to 1? Otherwise that looks
+reasonable to me. What I was trying to get at is just that we should
+consider whether there are any other corner cases (that we might care
+about) where this particular allocation might not behave as expected vs.
+just the example used in the original commit log.
 
+If somebody wants to send a finalized patch or two with these fixes
+along with the bma.total one (or I can tack it on in reply..?), I'll
+think about it further on review as well..
 
+Brian
 
-# grep -A1 -B1 9185209007 log
-entry ".." at block 0 offset 80 in directory inode 9185141346 references
-non-existent inode 6454491396
-entry ".." at block 0 offset 80 in directory inode 9185209007 references
-free inode 62881485764
-entry ".." at block 0 offset 80 in directory inode 9185220220 references
-free inode 6454492606
---
-rebuilding directory inode 9185141346
-entry ".." in directory inode 9185209007 points to free inode
-62881485764, marking entry to be junked
-rebuilding directory inode 9185209007
-name create failed in ino 9185209007 (117), filesystem may be out of space
-entry ".." in directory inode 9185220220 points to free inode
-6454492606, marking entry to be junked
---
-disconnected dir inode 9185205370, moving to lost+found
-disconnected dir inode 9185209007, moving to lost+found
-corrupt dinode 9185209007, (btree extents).
-Metadata corruption detected at 0x449621, inode 0x2237b2aaf
-libxfs_iread_extents
-
--- 
-Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
