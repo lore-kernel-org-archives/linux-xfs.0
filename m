@@ -2,279 +2,119 @@ Return-Path: <SRS0=NVxF=XK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0F3BFC4CECC
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 11:47:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9A195C4CECC
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 12:44:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CFA02214C6
-	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 11:47:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E2C8214C6
+	for <linux-xfs@archiver.kernel.org>; Sun, 15 Sep 2019 12:44:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AGjdb0oR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730374AbfIOLrz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 15 Sep 2019 07:47:55 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:48630 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730371AbfIOLrz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Sun, 15 Sep 2019 07:47:55 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id ADE08308402E;
-        Sun, 15 Sep 2019 11:47:54 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 9241119C78;
-        Sun, 15 Sep 2019 11:47:53 +0000 (UTC)
-Date:   Sun, 15 Sep 2019 07:47:51 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Eryu Guan <guaneryu@gmail.com>
-Cc:     kaixuxia <xiakaixu1987@gmail.com>, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH 2/2] xfs: test the deadlock between the AGI and AGF with
- RENAME_WHITEOUT
-Message-ID: <20190915114751.GA37752@bfoster>
-References: <58163375-dcd9-b954-c8d2-89fef20b8246@gmail.com>
- <20190913173624.GD28512@bfoster>
- <20190915033353.GJ2622@desktop>
+        id S1726350AbfIOMoR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 15 Sep 2019 08:44:17 -0400
+Received: from mail-lf1-f41.google.com ([209.85.167.41]:46859 "EHLO
+        mail-lf1-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726340AbfIOMoQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 15 Sep 2019 08:44:16 -0400
+Received: by mail-lf1-f41.google.com with SMTP id t8so25284405lfc.13
+        for <linux-xfs@vger.kernel.org>; Sun, 15 Sep 2019 05:44:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=to:from:subject:message-id:date:user-agent:mime-version
+         :content-language:content-transfer-encoding;
+        bh=pNtjcXHhpcuAME7H1OmW5QzSvs05ZjD0K2wsTIsxBq4=;
+        b=AGjdb0oRe9IsFb0AWkNKbIYeRD79wi2r4p++QcTvt9R0dZWhjf9Mj4VGLuy0VREnZ8
+         KNlk5RYf3aD26+fary5eecDe9vbBdOalCOaAT/JumSQy9mquqjZqaxg9HBIKUk6AEkjI
+         Z2yeV4nvlcyyBwxhYyDFSf4VheNqr9gYl71tQg5DZdNEGiZH8v+Wm6mPe3j3naeHYM/3
+         wFlUOIK0nbrJveCXUxGfyHhrL+UjL/12FfJUxT62iL8xM3mIQgt6rUeKk60EHdVKJolT
+         0mzjW392wjjkPgSq1Rwfay5SuoZtwJKjniWGcgMaZ349popijiTdQMaYhfzOIAMSbPkC
+         i4PQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:to:from:subject:message-id:date:user-agent
+         :mime-version:content-language:content-transfer-encoding;
+        bh=pNtjcXHhpcuAME7H1OmW5QzSvs05ZjD0K2wsTIsxBq4=;
+        b=r4mZBbRK0tDbg1cgWAUc8m4TpeX1U58xkh1TIdukrSICiq1yoDxmHUGqbjxz0nJQII
+         fd+WSNqiGlh4I5rCTEkm4OESX3vF/0wqvA7u+a49KcMKWjYAQVP6kCgPRMvBHbn9ZThe
+         AIxP1izKdres5ZJobtz3SOQZSh+tWS0VBRejKNSkbWKD5x5XWFZ2b/X5HriwXvOsb5FV
+         kHAadFmFRVaUHmya8bXYN9ukhkM0RyiK9VbFlLkgpwBLqtsSqKnOzx97rX9ASv+8rnN+
+         ouoGmPPRVBllqq+qVsWdsENjMC/pujMA6qnwhs8BpsT8VkYPEEO4HaLvB8UdiuAqjgxz
+         +Gfw==
+X-Gm-Message-State: APjAAAU9PEF6KUOdyHYDMSu/DA+xb/tpdvbkIpLP0XeyilQtg0gN3Hx8
+        GHV8Bq9bL7r2S4b0vhoEOnowbbcG
+X-Google-Smtp-Source: APXvYqwS8+TI0LkckfhmGCOeY6Yj9Jc6BI8URvF6P7F3m6k87RnGeQg/a53pAYQIH6Nfz5eOd97mxQ==
+X-Received: by 2002:a19:5d53:: with SMTP id p19mr14294529lfj.109.1568551454301;
+        Sun, 15 Sep 2019 05:44:14 -0700 (PDT)
+Received: from amb.local (31-179-17-47.dynamic.chello.pl. [31.179.17.47])
+        by smtp.gmail.com with ESMTPSA id z21sm7563702ljn.100.2019.09.15.05.44.13
+        for <linux-xfs@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sun, 15 Sep 2019 05:44:13 -0700 (PDT)
+To:     linux-xfs@vger.kernel.org
+From:   =?UTF-8?Q?Arkadiusz_Mi=c5=9bkiewicz?= <a.miskiewicz@gmail.com>
+Subject: xfs_repair: phase6.c:1129: mv_orphanage: Assertion `err == 2' failed.
+Message-ID: <7097d965-1676-a70e-56c7-b6cf048057f5@gmail.com>
+Date:   Sun, 15 Sep 2019 14:44:09 +0200
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190915033353.GJ2622@desktop>
-User-Agent: Mutt/1.12.0 (2019-05-25)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Sun, 15 Sep 2019 11:47:54 +0000 (UTC)
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 15, 2019 at 11:34:35AM +0800, Eryu Guan wrote:
-> On Fri, Sep 13, 2019 at 01:36:24PM -0400, Brian Foster wrote:
-> > On Wed, Sep 11, 2019 at 09:17:08PM +0800, kaixuxia wrote:
-> > > There is ABBA deadlock bug between the AGI and AGF when performing
-> > > rename() with RENAME_WHITEOUT flag, and add this testcase to make
-> > > sure the rename() call works well.
-> > > 
-> > > Signed-off-by: kaixuxia <kaixuxia@tencent.com>
-> > > ---
-> > >  tests/xfs/512     | 99 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-> > >  tests/xfs/512.out |  2 ++
-> > >  tests/xfs/group   |  1 +
-> > >  3 files changed, 102 insertions(+)
-> > >  create mode 100755 tests/xfs/512
-> > >  create mode 100644 tests/xfs/512.out
-> > > 
-> > > diff --git a/tests/xfs/512 b/tests/xfs/512
-> > > new file mode 100755
-> > > index 0000000..754f102
-> > > --- /dev/null
-> > > +++ b/tests/xfs/512
-> > > @@ -0,0 +1,99 @@
-> > > +#! /bin/bash
-> > > +# SPDX-License-Identifier: GPL-2.0
-> > > +# Copyright (c) 2019 Tencent.  All Rights Reserved.
-> > > +#
-> > > +# FS QA Test 512
-> > > +#
-> > > +# Test the ABBA deadlock case between the AGI and AGF When performing
-> > > +# rename operation with RENAME_WHITEOUT flag.
-> > > +#
-> > > +seq=`basename $0`
-> > > +seqres=$RESULT_DIR/$seq
-> > > +echo "QA output created by $seq"
-> > > +
-> > > +here=`pwd`
-> > > +tmp=/tmp/$$
-> > > +status=1	# failure is the default!
-> > > +trap "_cleanup; exit \$status" 0 1 2 3 15
-> > > +
-> > > +_cleanup()
-> > > +{
-> > > +	cd /
-> > > +	rm -f $tmp.*
-> > > +}
-> > > +
-> > > +# get standard environment, filters and checks
-> > > +. ./common/rc
-> > > +. ./common/filter
-> > > +. ./common/renameat2
-> > > +
-> > > +rm -f $seqres.full
-> > > +
-> > > +# real QA test starts here
-> > > +_supported_fs xfs
-> > > +_supported_os Linux
-> > > +_require_scratch_nocheck
-> > 
-> > Why _nocheck? AFAICT the filesystem shouldn't end up intentionally
-> > corrupted.
-> 
-> There was a comment in v1, but not in this v2, we should keep that
-> comment.
-> 
-> > 
-> > > +_requires_renameat2 whiteout
-> > > +
-> > > +prepare_file()
-> > > +{
-> > > +	# create many small files for the rename with RENAME_WHITEOUT
-> > > +	i=0
-> > > +	while [ $i -le $files ]; do
-> > > +		file=$SCRATCH_MNT/f$i
-> > > +		echo > $file >/dev/null 2>&1
-> > > +		let i=$i+1
-> > > +	done
-> > 
-> > Something like the following is a bit more simple, IMO:
-> > 
-> > 	for i in $(seq 1 $files); do
-> > 		touch $SCRATCH_MNT/f.$i
-> > 	done
-> > 
-> > The same goes for the other while loops below that increment up to
-> > $files.
-> 
-> Agreed, but looks like echo (which is a bash builtin) is faster than
-> touch (which requires forking new process every loop).
-> 
 
-Ah, interesting. I suppose that makes sense if there's tangible benefit.
-Would that benefit stand if we created an internal _touch helper or some
-such instead of open-coding it everywhere?
+Hello.
 
-> > 
-> > > +}
-> > > +
-> > > +rename_whiteout()
-> > > +{
-> > > +	# create the rename targetdir
-> > > +	renamedir=$SCRATCH_MNT/renamedir
-> > > +	mkdir $renamedir
-> > > +
-> > > +	# a long filename could increase the possibility that target_dp
-> > > +	# allocate new blocks(acquire the AGF lock) to store the filename
-> > > +	longnamepre=FFFsafdsagafsadfagasdjfalskdgakdlsglkasdg
-> > > +
-> > 
-> > The max filename length is 256 bytes. You could do something like the
-> > following to increase name length (leaving room for the file index and
-> > terminating NULL) if it helps the test:
-> > 
-> > 	prefix=`for i in $(seq 0 245); do echo -n a; done`
-> 
-> Or
-> 
-> 	prefix=`$PERL_PROG -e 'print "a"x256;'`
-> 
-> ? Which seems a bit simpler to me.
-> 
-> > 
-> > > +	# now try to do rename with RENAME_WHITEOUT flag
-> > > +	i=0
-> > > +	while [ $i -le $files ]; do
-> > > +		src/renameat2 -w $SCRATCH_MNT/f$i $renamedir/$longnamepre$i >/dev/null 2>&1
-> > > +		let i=$i+1
-> > > +	done
-> > > +}
-> > > +
-> > > +create_file()
-> > > +{
-> > > +	# create the targetdir
-> > > +	createdir=$SCRATCH_MNT/createdir
-> > > +	mkdir $createdir
-> > > +
-> > > +	# try to create file at the same time to hit the deadlock
-> > > +	i=0
-> > > +	while [ $i -le $files ]; do
-> > > +		file=$createdir/f$i
-> > > +		echo > $file >/dev/null 2>&1
-> > > +		let i=$i+1
-> > > +	done
-> > > +}
-> > 
-> > You could generalize this function to take a target directory parameter
-> > and just call it twice (once to prepare and again for the create
-> > workload).
-> > 
-> > > +
-> > > +_scratch_mkfs_xfs -bsize=1024 -dagcount=1 >> $seqres.full 2>&1 ||
-> > > +	_fail "mkfs failed"
-> > 
-> > Why -bsize=1k? Does that make the reproducer more effective?
-> > 
-> > > +_scratch_mount
-> > > +
-> > > +files=250000
-> > > +
-> > 
-> > Have you tested effectiveness of reproducing the issue with smaller file
-> > counts? A brief comment here to document where the value comes from
-> > might be useful. Somewhat related, how long does this test take on fixed
-> > kernels?
-> > 
-> > > +prepare_file
-> > > +rename_whiteout &
-> > > +create_file &
-> > > +
-> > > +wait
-> > > +echo Silence is golden
-> > > +
-> > > +# Failure comes in the form of a deadlock.
-> > > +
-> > 
-> > I wonder if this should be in the dangerous group as well. I go back and
-> > forth on that though because I tend to filter out dangerous tests and
-> > the test won't be so risky once the fix proliferates. Perhaps that's
-> > just a matter of removing it from the dangerous group after a long
-> > enough period of time.
-> 
-> The deadlock has been fixed, so I think it's fine to leave dangerous
-> group.
-> 
+xfsprogs 5.2.1 and:
 
-Do you mean to leave it in or out?
+disconnected dir inode 9185193405, moving to lost+found
+disconnected dir inode 9185193417, moving to lost+found
+disconnected dir inode 9185194001, moving to lost+found
+disconnected dir inode 9185194004, moving to lost+found
+disconnected dir inode 9185194010, moving to lost+found
+disconnected dir inode 9185194012, moving to lost+found
+disconnected dir inode 9185194018, moving to lost+found
+disconnected dir inode 9185194027, moving to lost+found
+disconnected dir inode 9185205370, moving to lost+found
+disconnected dir inode 9185209007, moving to lost+found
+corrupt dinode 9185209007, (btree extents).
+Metadata corruption detected at 0x449621, inode 0x2237b2aaf
+libxfs_iread_extents
+xfs_repair: phase6.c:1129: mv_orphanage: Assertion `err == 2' failed.
+Aborted
 
-In general, what's the approach for dealing with dangerous tests that
-are no longer dangerous? Leave them indefinitely or remove them after a
-period of time? I tend to skip dangerous tests on regression runs just
-because I'm not looking for a deadlock or crash to disrupt a long
-running test.
 
-Brian
 
-> > 
-> > Brian
-> 
-> Thanks a lot for the review!
-> 
-> Eryu
-> 
-> > 
-> > > +# success, all done
-> > > +status=0
-> > > +exit
-> > > diff --git a/tests/xfs/512.out b/tests/xfs/512.out
-> > > new file mode 100644
-> > > index 0000000..0aabdef
-> > > --- /dev/null
-> > > +++ b/tests/xfs/512.out
-> > > @@ -0,0 +1,2 @@
-> > > +QA output created by 512
-> > > +Silence is golden
-> > > diff --git a/tests/xfs/group b/tests/xfs/group
-> > > index a7ad300..ed250d6 100644
-> > > --- a/tests/xfs/group
-> > > +++ b/tests/xfs/group
-> > > @@ -509,3 +509,4 @@
-> > >  509 auto ioctl
-> > >  510 auto ioctl quick
-> > >  511 auto quick quota
-> > > +512 auto rename
-> > > -- 
-> > > 1.8.3.1
-> > > 
-> > > -- 
-> > > kaixuxia
+# grep -A1 -B1 9185209007 log
+entry ".." at block 0 offset 80 in directory inode 9185141346 references
+non-existent inode 6454491396
+entry ".." at block 0 offset 80 in directory inode 9185209007 references
+free inode 62881485764
+entry ".." at block 0 offset 80 in directory inode 9185220220 references
+free inode 6454492606
+--
+rebuilding directory inode 9185141346
+entry ".." in directory inode 9185209007 points to free inode
+62881485764, marking entry to be junked
+rebuilding directory inode 9185209007
+name create failed in ino 9185209007 (117), filesystem may be out of space
+entry ".." in directory inode 9185220220 points to free inode
+6454492606, marking entry to be junked
+--
+disconnected dir inode 9185205370, moving to lost+found
+disconnected dir inode 9185209007, moving to lost+found
+corrupt dinode 9185209007, (btree extents).
+Metadata corruption detected at 0x449621, inode 0x2237b2aaf
+libxfs_iread_extents
+
+-- 
+Arkadiusz Miśkiewicz, arekm / ( maven.pl | pld-linux.org )
