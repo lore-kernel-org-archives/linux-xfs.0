@@ -2,82 +2,152 @@ Return-Path: <SRS0=IYS1=XL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 05205C49ED7
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 12:20:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E65EC49ED7
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 12:27:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C39E8214DE
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 12:20:48 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cMq6S1Wg"
+	by mail.kernel.org (Postfix) with ESMTP id DF28D214D9
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 12:27:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732418AbfIPMUs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Sep 2019 08:20:48 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50598 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727810AbfIPMUs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 08:20:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=T3iHOo1oHQMvUs4U5zg6Lv1G/4yMuiwne7DOHWcHXv4=; b=cMq6S1WgTEI16I/IwkC+2S6EL
-        5fkTOhP5+G1BIy7tg4pzwUy83dcJ1+dgaAioEmJyiarsv0+TTLyO1llgtaIhemDnk3C/UNP2/CsPU
-        P3nCYWn9qwwxYJVQePX2oVrFyjSYtOPTD+8wUrfamzKJLn+/0fVZzoFQWZTJMcDHDwZ6dizWIaVe4
-        hwwnBtwp9O8b1kfJChGefi+IIOYSsx2c984wOQjyZdxUHQQBi99fdkIZyvA1F7+siacepm3LaXf3H
-        1qWPaH7kaHY89ToTXwLsLah5WiPj2MK6MVEExOmqGySDvgTVDnh072FCi3jYct0CmbojGVXH30aVl
-        TgmHr1qxA==;
-Received: from clnet-p19-102.ikbnet.co.at ([83.175.77.102] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1i9pzr-0001OI-QT
-        for linux-xfs@vger.kernel.org; Mon, 16 Sep 2019 12:20:48 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 2/2] xfs: shortcut xfs_file_release for read-only file descriptors
-Date:   Mon, 16 Sep 2019 14:20:41 +0200
-Message-Id: <20190916122041.24636-3-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20190916122041.24636-1-hch@lst.de>
-References: <20190916122041.24636-1-hch@lst.de>
+        id S1727827AbfIPM15 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Sep 2019 08:27:57 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:57312 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727743AbfIPM15 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Sep 2019 08:27:57 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id E4AF010F2E82;
+        Mon, 16 Sep 2019 12:27:56 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8D3475D6A3;
+        Mon, 16 Sep 2019 12:27:56 +0000 (UTC)
+Date:   Mon, 16 Sep 2019 08:27:54 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 00/19] Delayed Attributes
+Message-ID: <20190916122754.GA41978@bfoster>
+References: <20190905221837.17388-1-allison.henderson@oracle.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190905221837.17388-1-allison.henderson@oracle.com>
+User-Agent: Mutt/1.12.0 (2019-05-25)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.66]); Mon, 16 Sep 2019 12:27:56 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xfs_file_release currently performs flushing of truncated blocks and
-freeing of the post-EOF speculative preallocation for all file
-descriptors as long as they are not on a read-only mount.  Switch to
-check for FMODE_WRITE instead as we should only perform these actions
-on writable file descriptors, and no such file descriptors can be
-created on a read-only mount.
+On Thu, Sep 05, 2019 at 03:18:18PM -0700, Allison Collins wrote:
+> Hi all,
+> 
+> This set is a subset of a larger series for parent pointers. 
+> Delayed attributes allow attribute operations (set and remove) to be 
+> logged and committed in the same way that other delayed operations do.
+> This will help break up more complex operations when we later introduce
+> parent pointers which can be used in a number of optimizations.  Since
+> delayed attributes can be implemented as a stand alone feature, I've
+> decided to subdivide the set to help make it more manageable.  Delayed
+> attributes may also provide the infastructure to later break up large
+> attributes into smaller transactions instead of one large bwrite.
+> 
+> Changes since v2:
+> Mostly review updates collected since v2.  Patch 17 is new and adds a
+> new feature bit that is enabled through mkfs.xfs -n delattr.  Attr
+> renames have been simplified into separate remove and set opertaions
+> which removes the need for the INCOMPLETE state used in non delayed
+> operations
+> 
+> I've also made the corresponding updates to the user space side, and
+> xfstests as well.
+> 
+> Question, comment and feedback appreciated! 
+> 
+> Thanks all!
+> Allison
+> 
+> Allison Collins (15):
+>   xfs: Replace attribute parameters with struct xfs_name
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_file.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Hi Allison,
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 72680edf2ceb..06f0eb25c7cc 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -1066,7 +1066,7 @@ xfs_file_release(
- 	struct xfs_inode	*ip = XFS_I(inode);
- 	struct xfs_mount	*mp = ip->i_mount;
- 
--	if (mp->m_flags & XFS_MOUNT_RDONLY)
-+	if (!(file->f_mode & FMODE_WRITE))
- 		return 0;
- 	
- 	if (XFS_FORCED_SHUTDOWN(mp))
--- 
-2.20.1
+The first patch in the series doesn't apply to current for-next or
+master. What is the baseline for this series? Perhaps a rebase is in
+order..?
 
+Brian
+
+>   xfs: Embed struct xfs_name in xfs_da_args
+>   xfs: Add xfs_dabuf defines
+>   xfs: Factor out new helper functions xfs_attr_rmtval_set
+>   xfs: Factor up trans handling in xfs_attr3_leaf_flipflags
+>   xfs: Factor out xfs_attr_leaf_addname helper
+>   xfs: Factor up commit from xfs_attr_try_sf_addname
+>   xfs: Factor up trans roll from xfs_attr3_leaf_setflag
+>   xfs: Add xfs_attr3_leaf helper functions
+>   xfs: Factor out xfs_attr_rmtval_invalidate
+>   xfs: Factor up trans roll in xfs_attr3_leaf_clearflag
+>   xfs: Add delay context to xfs_da_args
+>   xfs: Add delayed attribute routines
+>   xfs: Add feature bit XFS_SB_FEAT_INCOMPAT_LOG_DELATTR
+>   xfs: Enable delayed attributes
+> 
+> Allison Henderson (4):
+>   xfs: Add xfs_has_attr and subroutines
+>   xfs: Set up infastructure for deferred attribute operations
+>   xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
+>   xfs_io: Add delayed attributes error tag
+> 
+>  fs/xfs/Makefile                 |    2 +-
+>  fs/xfs/libxfs/xfs_attr.c        | 1068 ++++++++++++++++++++++++++++++++++-----
+>  fs/xfs/libxfs/xfs_attr.h        |   53 +-
+>  fs/xfs/libxfs/xfs_attr_leaf.c   |  277 ++++++----
+>  fs/xfs/libxfs/xfs_attr_leaf.h   |    7 +
+>  fs/xfs/libxfs/xfs_attr_remote.c |  103 +++-
+>  fs/xfs/libxfs/xfs_attr_remote.h |    4 +-
+>  fs/xfs/libxfs/xfs_da_btree.c    |    8 +-
+>  fs/xfs/libxfs/xfs_da_btree.h    |   27 +-
+>  fs/xfs/libxfs/xfs_defer.c       |    1 +
+>  fs/xfs/libxfs/xfs_defer.h       |    3 +
+>  fs/xfs/libxfs/xfs_dir2.c        |   22 +-
+>  fs/xfs/libxfs/xfs_dir2_block.c  |    6 +-
+>  fs/xfs/libxfs/xfs_dir2_leaf.c   |    6 +-
+>  fs/xfs/libxfs/xfs_dir2_node.c   |    8 +-
+>  fs/xfs/libxfs/xfs_dir2_sf.c     |   30 +-
+>  fs/xfs/libxfs/xfs_errortag.h    |    4 +-
+>  fs/xfs/libxfs/xfs_format.h      |   11 +-
+>  fs/xfs/libxfs/xfs_fs.h          |    1 +
+>  fs/xfs/libxfs/xfs_log_format.h  |   44 +-
+>  fs/xfs/libxfs/xfs_sb.c          |    2 +
+>  fs/xfs/libxfs/xfs_types.h       |    1 +
+>  fs/xfs/scrub/attr.c             |   12 +-
+>  fs/xfs/scrub/common.c           |    2 +
+>  fs/xfs/xfs_acl.c                |   29 +-
+>  fs/xfs/xfs_attr_item.c          |  764 ++++++++++++++++++++++++++++
+>  fs/xfs/xfs_attr_item.h          |   88 ++++
+>  fs/xfs/xfs_attr_list.c          |    1 +
+>  fs/xfs/xfs_error.c              |    3 +
+>  fs/xfs/xfs_ioctl.c              |   30 +-
+>  fs/xfs/xfs_ioctl32.c            |    2 +
+>  fs/xfs/xfs_iops.c               |   14 +-
+>  fs/xfs/xfs_log.c                |    4 +
+>  fs/xfs/xfs_log_recover.c        |  173 +++++++
+>  fs/xfs/xfs_ondisk.h             |    2 +
+>  fs/xfs/xfs_super.c              |    4 +
+>  fs/xfs/xfs_trace.h              |   20 +-
+>  fs/xfs/xfs_trans.h              |    1 -
+>  fs/xfs/xfs_xattr.c              |   31 +-
+>  39 files changed, 2509 insertions(+), 359 deletions(-)
+>  create mode 100644 fs/xfs/xfs_attr_item.c
+>  create mode 100644 fs/xfs/xfs_attr_item.h
+> 
+> -- 
+> 2.7.4
+> 
