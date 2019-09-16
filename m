@@ -2,267 +2,187 @@ Return-Path: <SRS0=IYS1=XL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19EB3C49ED7
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 20:43:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C81E8C49ED7
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 21:24:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CC081214AF
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 20:43:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ODLKdlus"
+	by mail.kernel.org (Postfix) with ESMTP id A432721670
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 21:24:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387499AbfIPUnM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Sep 2019 16:43:12 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:56406 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730610AbfIPUnM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 16:43:12 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GKgqTR191246;
-        Mon, 16 Sep 2019 20:43:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=zYIfDSS3AV/MzmUCMN7sB5ruCjixewT3u96jOtpYk/Q=;
- b=ODLKdlus+UA0AK4IqfaoykxUx7o31HkOjZXES19PLsIA8SchFpO0jKw3O0VoI0/FwE/2
- e0Lwpmoz5rf/a+hYK6b81iQHxiMdqfkTEU00A2iZ5BaCcgS0dlHZxA3h+ZvJhSyQrS6d
- TWsAUBPxIDKm7Zm655l2OwaMr5aUK8DneQ13Ok4HCRiVkxv4Vnd5dIPOWitjdNDiFgUn
- umutLFTxkGDuZ3d5TfJlGDi5gHZxYwsm23UJqTFvUaj0Ao9POt4LCWwkienGa2mUG41H
- tCStjKnpcN6ZODkWEF50bjgvgq08dWlev7R07sjbhcK3YbOFn27uArmXXgNLVDnJprEm IA== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2v0ruqhy97-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 20:43:00 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GKde5d001917;
-        Mon, 16 Sep 2019 20:42:59 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2v0p8v4wvp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 20:42:59 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8GKgwbG014857;
-        Mon, 16 Sep 2019 20:42:58 GMT
-Received: from [192.168.1.9] (/67.1.21.243)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Sep 2019 13:42:56 -0700
-Subject: Re: [PATCH v3 00/19] Delayed Attributes
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20190905221837.17388-1-allison.henderson@oracle.com>
- <20190916122754.GA41978@bfoster>
- <178f8a56-9db2-ca26-aa9b-a5739f6ebd5a@oracle.com>
- <20190916192322.GD41978@bfoster>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <1700a17a-95bf-aeb9-ef58-c7e03ab377e6@oracle.com>
-Date:   Mon, 16 Sep 2019 13:42:53 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S2388001AbfIPVYn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Sep 2019 17:24:43 -0400
+Received: from sandeen.net ([63.231.237.45]:38846 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726821AbfIPVYm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 16 Sep 2019 17:24:42 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 5903532543A;
+        Mon, 16 Sep 2019 16:24:41 -0500 (CDT)
+Subject: Re: [PATCH] xfs: assure zeroed memory buffers for certain kmem
+ allocations
+To:     Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Cc:     darrick.wong@oracle.com
+References: <20190916153504.30809-1-billodo@redhat.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <5f1bcfbd-f16b-6d8a-416d-3a0639b9c7fe@sandeen.net>
+Date:   Mon, 16 Sep 2019 16:24:40 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20190916192322.GD41978@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
+In-Reply-To: <20190916153504.30809-1-billodo@redhat.com>
+Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909160202
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909160202
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/16/19 12:23 PM, Brian Foster wrote:
-> On Mon, Sep 16, 2019 at 11:41:13AM -0700, Allison Collins wrote:
->> On 9/16/19 5:27 AM, Brian Foster wrote:
->>> On Thu, Sep 05, 2019 at 03:18:18PM -0700, Allison Collins wrote:
->>>> Hi all,
->>>>
->>>> This set is a subset of a larger series for parent pointers.
->>>> Delayed attributes allow attribute operations (set and remove) to be
->>>> logged and committed in the same way that other delayed operations do.
->>>> This will help break up more complex operations when we later introduce
->>>> parent pointers which can be used in a number of optimizations.  Since
->>>> delayed attributes can be implemented as a stand alone feature, I've
->>>> decided to subdivide the set to help make it more manageable.  Delayed
->>>> attributes may also provide the infastructure to later break up large
->>>> attributes into smaller transactions instead of one large bwrite.
->>>>
->>>> Changes since v2:
->>>> Mostly review updates collected since v2.  Patch 17 is new and adds a
->>>> new feature bit that is enabled through mkfs.xfs -n delattr.  Attr
->>>> renames have been simplified into separate remove and set opertaions
->>>> which removes the need for the INCOMPLETE state used in non delayed
->>>> operations
->>>>
->>>> I've also made the corresponding updates to the user space side, and
->>>> xfstests as well.
->>>>
->>>> Question, comment and feedback appreciated!
->>>>
->>>> Thanks all!
->>>> Allison
->>>>
->>>> Allison Collins (15):
->>>>     xfs: Replace attribute parameters with struct xfs_name
->>>
->>> Hi Allison,
->>>
->>> The first patch in the series doesn't apply to current for-next or
->>> master. What is the baseline for this series? Perhaps a rebase is in
->>> order..?
->>>
->>> Brian
-
-Ah!  Super sorry, there should be 20 patches, not 19.  I should have 
-started the format patch tool one commit earlier.
-
-This should be the first patch:
-https://github.com/allisonhenderson/xfs_work/commit/3f923b577d4a2113434e9bc79e1745ce182849d4
-
-In fact if it helps to simply download the sets, I made some git hub links:
-https://github.com/allisonhenderson/xfs_work/tree/Delayed_attr_v3
-https://github.com/allisonhenderson/xfs_work/tree/Delayed_attr_xfsprog_v2
-https://github.com/allisonhenderson/xfs_work/tree/Delayed_Attr_xfstests_v2
-
-Would you prefer I resend the sets, or are the links easier?
-
-Sorry about the confusion!
-Allison
-
->>
->> The base line for the kernel space set is:
->> eb77b23 xfs: add a xfs_valid_startblock helper
->>
+On 9/16/19 10:35 AM, Bill O'Donnell wrote:
+> Guarantee zeroed memory buffers for cases where potential memory
+> leak to disk can occur. In these cases, kmem_alloc is used and
+> doesn't zero the buffer, opening the possibility of information
+> leakage to disk.
 > 
-> Hmm, I still cannot apply:
+> Introduce a xfs_buf_flag, _XBF_KMZ, to indicate a request for a zeroed
+> buffer, and use existing infrastucture (xfs_buf_allocate_memory) to
+> obtain the already zeroed buffer from kernel memory.
 > 
-> $ git log --oneline -1
-> eb77b23b565e (HEAD -> ac-delayed-attrs-v3, tag: xfs-5.4-merge-4) xfs: add a xfs_valid_startblock helper
-> $ git am <mbox>
-> Applying: xfs: Replace attribute parameters with struct xfs_name
-> error: patch failed: fs/xfs/libxfs/xfs_attr.c:61
-> error: fs/xfs/libxfs/xfs_attr.c: patch does not apply
-> error: patch failed: fs/xfs/libxfs/xfs_attr.h:144
-> error: fs/xfs/libxfs/xfs_attr.h: patch does not apply
-> error: patch failed: fs/xfs/xfs_acl.c:135
-> error: fs/xfs/xfs_acl.c: patch does not apply
-> error: patch failed: fs/xfs/xfs_ioctl.c:431
-> error: fs/xfs/xfs_ioctl.c: patch does not apply
-> error: patch failed: fs/xfs/xfs_iops.c:49
-> error: fs/xfs/xfs_iops.c: patch does not apply
-> error: patch failed: fs/xfs/xfs_xattr.c:20
-> error: fs/xfs/xfs_xattr.c: patch does not apply
-> Patch failed at 0001 xfs: Replace attribute parameters with struct xfs_name
-> hint: Use 'git am --show-current-patch' to see the failed patch
-> When you have resolved this problem, run "git am --continue".
-> If you prefer to skip this patch, run "git am --skip" instead.
-> To restore the original branch and stop patching, run "git am --abort".
+> This solution avoids the performance issue that would occur if a
+> wholesale change to replace kmem_alloc with kmem_zalloc was done.
 > 
-> Have you tried to pull the patches from the mailing list and apply to
-> your baseline locally? I haven't seen issues merging other patches, so I
-> don't _think_ my local tree is busted..
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+
+I think this can probably be further optimized by not obtaining zeroed
+memory when we're about to fill the buffer from disk as the very
+next step.
+
+(in this case, xfs_buf_read_map calls xfs_buf_get_map and then immediately
+reads the buffer from disk with _xfs_buf_read)  xfs_buf_read_map adds
+XBF_READ to the flags during this process.
+
+So I wonder if this can be simplified/optimized by just checking for XBF_READ
+in xfs_buf_allocate_memory's flags, and if it's not set, then request
+zeroed memory, because that indicates a buffer we'll be filling in from
+memory and subsequently writing to disk.
+
+-Eric
+
+> ---
+>  fs/xfs/xfs_buf.c | 8 ++++++--
+>  fs/xfs/xfs_buf.h | 4 +++-
+>  2 files changed, 9 insertions(+), 3 deletions(-)
 > 
-> Brian
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 120ef99d09e8..916a3f782950 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -345,16 +345,19 @@ xfs_buf_allocate_memory(
+>  	unsigned short		page_count, i;
+>  	xfs_off_t		start, end;
+>  	int			error;
+> +	uint			kmflag_mask = 0;
+>  
+>  	/*
+>  	 * for buffers that are contained within a single page, just allocate
+>  	 * the memory from the heap - there's no need for the complexity of
+>  	 * page arrays to keep allocation down to order 0.
+>  	 */
+> +	if (flags & _XBF_KMZ)
+> +		kmflag_mask |= KM_ZERO;
+>  	size = BBTOB(bp->b_length);
+>  	if (size < PAGE_SIZE) {
+>  		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+> -		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS);
+> +		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS | kmflag_mask);
+>  		if (!bp->b_addr) {
+>  			/* low memory - use alloc_page loop instead */
+>  			goto use_alloc_page;
+> @@ -391,7 +394,7 @@ xfs_buf_allocate_memory(
+>  		struct page	*page;
+>  		uint		retries = 0;
+>  retry:
+> -		page = alloc_page(gfp_mask);
+> +		page = alloc_page(gfp_mask | kmflag_mask);
+>  		if (unlikely(page == NULL)) {
+>  			if (flags & XBF_READ_AHEAD) {
+>  				bp->b_page_count = i;
+> @@ -683,6 +686,7 @@ xfs_buf_get_map(
+>  	struct xfs_buf		*new_bp;
+>  	int			error = 0;
+>  
+> +	flags |= _XBF_KMZ;
+>  	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
+>  
+>  	switch (error) {
+> diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
+> index f6ce17d8d848..416ff588240a 100644
+> --- a/fs/xfs/xfs_buf.h
+> +++ b/fs/xfs/xfs_buf.h
+> @@ -38,6 +38,7 @@
+>  #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
+>  #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
+>  #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
+> +#define _XBF_KMZ	 (1 << 23)/* zeroed buffer required */
+>  
+>  typedef unsigned int xfs_buf_flags_t;
+>  
+> @@ -54,7 +55,8 @@ typedef unsigned int xfs_buf_flags_t;
+>  	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
+>  	{ _XBF_PAGES,		"PAGES" }, \
+>  	{ _XBF_KMEM,		"KMEM" }, \
+> -	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
+> +	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
+> +	{ _XBF_KMZ,             "KMEM_Z" }
+>  
+>  
+>  /*
 > 
->> And the user space set is:
->> e74aec5 xfsprogs: Release v5.3.0-rc1
->>
->> And xfstests:
->> cda9817 common/quota: enable project quota correctly on f2fs
->>
->> Yes, the for-next's may have advanced a bit since, so I'll need to update
->> it.  Sometimes stuff moves so fast, by the time I've worked through all the
->> conflicts, there's a new for-next already! I kind of figured though that
->> people are still sort of settling on what they want the design to even look
->> like, especially WRT to the *_later routines which are sort of complicated.
->> So I haven't been too worried about it since rebasing is mostly just
->> mechanical adjustments, and it could be the next review may take the design
->> in a different direction anyway.
->>
->> For now though, please use those baselines if you want to apply the sets.  I
->> will work on getting the bases updated.
->>
->> Thanks!
->>
->> Allison
->>
->>>
->>>>     xfs: Embed struct xfs_name in xfs_da_args
->>>>     xfs: Add xfs_dabuf defines
->>>>     xfs: Factor out new helper functions xfs_attr_rmtval_set
->>>>     xfs: Factor up trans handling in xfs_attr3_leaf_flipflags
->>>>     xfs: Factor out xfs_attr_leaf_addname helper
->>>>     xfs: Factor up commit from xfs_attr_try_sf_addname
->>>>     xfs: Factor up trans roll from xfs_attr3_leaf_setflag
->>>>     xfs: Add xfs_attr3_leaf helper functions
->>>>     xfs: Factor out xfs_attr_rmtval_invalidate
->>>>     xfs: Factor up trans roll in xfs_attr3_leaf_clearflag
->>>>     xfs: Add delay context to xfs_da_args
->>>>     xfs: Add delayed attribute routines
->>>>     xfs: Add feature bit XFS_SB_FEAT_INCOMPAT_LOG_DELATTR
->>>>     xfs: Enable delayed attributes
->>>>
->>>> Allison Henderson (4):
->>>>     xfs: Add xfs_has_attr and subroutines
->>>>     xfs: Set up infastructure for deferred attribute operations
->>>>     xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
->>>>     xfs_io: Add delayed attributes error tag
->>>>
->>>>    fs/xfs/Makefile                 |    2 +-
->>>>    fs/xfs/libxfs/xfs_attr.c        | 1068 ++++++++++++++++++++++++++++++++++-----
->>>>    fs/xfs/libxfs/xfs_attr.h        |   53 +-
->>>>    fs/xfs/libxfs/xfs_attr_leaf.c   |  277 ++++++----
->>>>    fs/xfs/libxfs/xfs_attr_leaf.h   |    7 +
->>>>    fs/xfs/libxfs/xfs_attr_remote.c |  103 +++-
->>>>    fs/xfs/libxfs/xfs_attr_remote.h |    4 +-
->>>>    fs/xfs/libxfs/xfs_da_btree.c    |    8 +-
->>>>    fs/xfs/libxfs/xfs_da_btree.h    |   27 +-
->>>>    fs/xfs/libxfs/xfs_defer.c       |    1 +
->>>>    fs/xfs/libxfs/xfs_defer.h       |    3 +
->>>>    fs/xfs/libxfs/xfs_dir2.c        |   22 +-
->>>>    fs/xfs/libxfs/xfs_dir2_block.c  |    6 +-
->>>>    fs/xfs/libxfs/xfs_dir2_leaf.c   |    6 +-
->>>>    fs/xfs/libxfs/xfs_dir2_node.c   |    8 +-
->>>>    fs/xfs/libxfs/xfs_dir2_sf.c     |   30 +-
->>>>    fs/xfs/libxfs/xfs_errortag.h    |    4 +-
->>>>    fs/xfs/libxfs/xfs_format.h      |   11 +-
->>>>    fs/xfs/libxfs/xfs_fs.h          |    1 +
->>>>    fs/xfs/libxfs/xfs_log_format.h  |   44 +-
->>>>    fs/xfs/libxfs/xfs_sb.c          |    2 +
->>>>    fs/xfs/libxfs/xfs_types.h       |    1 +
->>>>    fs/xfs/scrub/attr.c             |   12 +-
->>>>    fs/xfs/scrub/common.c           |    2 +
->>>>    fs/xfs/xfs_acl.c                |   29 +-
->>>>    fs/xfs/xfs_attr_item.c          |  764 ++++++++++++++++++++++++++++
->>>>    fs/xfs/xfs_attr_item.h          |   88 ++++
->>>>    fs/xfs/xfs_attr_list.c          |    1 +
->>>>    fs/xfs/xfs_error.c              |    3 +
->>>>    fs/xfs/xfs_ioctl.c              |   30 +-
->>>>    fs/xfs/xfs_ioctl32.c            |    2 +
->>>>    fs/xfs/xfs_iops.c               |   14 +-
->>>>    fs/xfs/xfs_log.c                |    4 +
->>>>    fs/xfs/xfs_log_recover.c        |  173 +++++++
->>>>    fs/xfs/xfs_ondisk.h             |    2 +
->>>>    fs/xfs/xfs_super.c              |    4 +
->>>>    fs/xfs/xfs_trace.h              |   20 +-
->>>>    fs/xfs/xfs_trans.h              |    1 -
->>>>    fs/xfs/xfs_xattr.c              |   31 +-
->>>>    39 files changed, 2509 insertions(+), 359 deletions(-)
->>>>    create mode 100644 fs/xfs/xfs_attr_item.c
->>>>    create mode 100644 fs/xfs/xfs_attr_item.h
->>>>
->>>> -- 
->>>> 2.7.4
->>>>
