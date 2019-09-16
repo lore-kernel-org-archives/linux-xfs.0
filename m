@@ -2,132 +2,354 @@ Return-Path: <SRS0=IYS1=XL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE7CC4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 15:59:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36FD0C49ED7
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 16:20:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 352522184D
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 15:59:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DFE8D20678
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 16:20:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sCj2wf7D"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lISf1uCH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730442AbfIPP7Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Sep 2019 11:59:16 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:51580 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726333AbfIPP7Q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 11:59:16 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GFrZTM133541;
-        Mon, 16 Sep 2019 15:58:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : references : mime-version : content-type :
+        id S1728736AbfIPQUW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Sep 2019 12:20:22 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:33972 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725850AbfIPQUW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 12:20:22 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GGE1pU169491;
+        Mon, 16 Sep 2019 16:20:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=V1gPbP6UbJ4PMEyB24aM+fGZ+fgZF2bnAVOvShOZrpQ=;
- b=sCj2wf7DESace9qHuTtWkdVU4P2pJm8K8evCb4GvzKgHrCXegaVXsJ+EYBJbywTgGqvJ
- BpJJMXOmZ3uRowerlHR8TjwuuNEFxI7JzeMft4hJM8NZJZyZDKEUa6mpK/+zJgazGpC2
- PNGgHPsgcSdvH6hWZ5xcD+8HKyeQMHl4EklGWCMn72IkkPXQlbEIqeUkqenN1na2f8zh
- iN0A0lHlRtjlmapFyuPhHvTOXh2fJ4zl6IOqG1dvflByaY0n/UZ0xXdIsboC66N0XwUC
- nG+u/v6/kvftwZDQdntJKuKYjlZ3y5Jp+E6/Kc6QIm60DZ9TjgxfInqDrGPYexoO1SW4 XA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2v0ruqgfeu-1
+ bh=Nh/9l+YmSEU3LUJSFluHYqaD7iY4bn9+Er/8PRho8t8=;
+ b=lISf1uCHgkHWuESLruel1nauHxv/qlrbomGIWA5HYUXcb6izev0o0xrNjdnQoP9fDJdR
+ 8Zj8wpnGbzDfsczcrRzyX/7cLB3g3ItfUg9UOS/YvrcpnaCdhRt0RksU6t72RedQLRmj
+ mDAC5caNyVA/GDLSgFIsG9PFxPwRLvyq95VXovWB/74e/4TVn4yhAaL+Cz6FdD3wJY89
+ bD+iu5oXs4FXuvvw9JixAcgxNvL8QXT87FOzFZ6XeDaEw3SJyhgBGvrpzmbaNkQjYl9g
+ 4kERE7trw8oj0b7xD3KaAvMl0m8L1g/E2DuAicOort8iwCrshvtIK/N93GSmIH64wZAl Gw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2v2bx2runa-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 15:58:53 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GFwKFw101029;
-        Mon, 16 Sep 2019 15:58:53 GMT
+        Mon, 16 Sep 2019 16:20:08 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GGCq3b124593;
+        Mon, 16 Sep 2019 16:20:07 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2v0nb4x04q-1
+        by aserp3020.oracle.com with ESMTP id 2v0r1gqqd2-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 15:58:53 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8GFwnGP006266;
-        Mon, 16 Sep 2019 15:58:51 GMT
+        Mon, 16 Sep 2019 16:20:07 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8GGK6uA021513;
+        Mon, 16 Sep 2019 16:20:06 GMT
 Received: from localhost (/10.159.225.108)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Sep 2019 08:58:49 -0700
-Date:   Mon, 16 Sep 2019 08:58:48 -0700
+        with ESMTP ; Mon, 16 Sep 2019 09:20:06 -0700
+Date:   Mon, 16 Sep 2019 09:20:05 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
-        adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu,
-        rpeterso@redhat.com, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/9] Use FIEMAP for FIBMAP calls
-Message-ID: <20190916155848.GW2229799@magnolia>
-References: <20190808082744.31405-1-cmaiolino@redhat.com>
- <20190808082744.31405-9-cmaiolino@redhat.com>
- <20190814111837.GE1885@lst.de>
- <20190820130117.gcemlpfrkqlpaaiz@pegasus.maiolino.io>
- <20190829071555.GF11909@lst.de>
- <20190910122833.jsii3us7rhwc5l2p@pegasus.maiolino.io>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, zlang@redhat.com
+Subject: Re: [PATCH] [RFC] xfs: fix inode fork extent count overflow
+Message-ID: <20190916162005.GX2229799@magnolia>
+References: <20190911012107.26553-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190910122833.jsii3us7rhwc5l2p@pegasus.maiolino.io>
+In-Reply-To: <20190911012107.26553-1-david@fromorbit.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909160164
+ engine=8.0.1-1908290000 definitions=main-1909160167
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909160163
+ definitions=main-1909160167
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 10, 2019 at 02:28:35PM +0200, Carlos Maiolino wrote:
-> Hey, thanks for the info.
+On Wed, Sep 11, 2019 at 11:21:07AM +1000, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Although..
+> [commit message is verbose for discussion purposes - will trim it
+> down later. Some questions about implementation details at the end.]
 > 
-> On Thu, Aug 29, 2019 at 09:15:55AM +0200, Christoph Hellwig wrote:
-> > On Tue, Aug 20, 2019 at 03:01:18PM +0200, Carlos Maiolino wrote:
-> > > On Wed, Aug 14, 2019 at 01:18:37PM +0200, Christoph Hellwig wrote:
-> > > > The whole FIEMAP_KERNEL_FIBMAP thing looks very counter productive.
-> > > > bmap() should be able to make the right decision based on the passed
-> > > > in flags, no need to have a fake FIEMAP flag for that.
-> > > 
-> > > Using the FIEMAP_KERNEL_FIBMAP flag, is a way to tell filesystems from where the
-> > > request came from, so filesystems can handle it differently. For example, we
-> > > can't allow in XFS a FIBMAP request on a COW/RTIME inode, and we use the FIBMAP
-> > > flag in such situations.
-> > 
-> > But the whole point is that the file system should not have to know
-> > this.  It is not the file systems business in any way to now where the
-> > call came from.  The file system just needs to provide enough information
-> > so that the caller can make informed decisions.
-> > 
-> > And in this case that means if any of FIEMAP_EXTENT_DELALLOC,
-> > FIEMAP_EXTENT_ENCODED, FIEMAP_EXTENT_DATA_ENCRYPTED,
-> > FIEMAP_EXTENT_NOT_ALIGNED, FIEMAP_EXTENT_DATA_INLINE,
-> > FIEMAP_EXTENT_DATA_TAIL, FIEMAP_EXTENT_UNWRITTEN or
-> > FIEMAP_EXTENT_SHARED is present the caller should fail the
-> > bmap request.
+> Zorro Lang recently ran a new test to stress single inode extent
+> counts now that they are no longer limited by memory allocation.
+> The test was simply:
 > 
-> This seems doable, yes, but... Doing that essentially will make some
-> filesystems, like BTRFS, to suddenly start to support fibmap, this was another
-> reason why we opted in the first place to let filesystems know whom the caller
-> was.
+> # xfs_io -f -c "falloc 0 40t" /mnt/scratch/big-file
+> # ~/src/xfstests-dev/punch-alternating /mnt/scratch/big-file
 > 
-> We could maybe add a new FIEMAP_EXTENT_* flag in the future to, let's say,
-> specify a specific block may be split between more than one device, but, well.
-> It's an idea, but it won't change the fact BTRFS for example will suddenly start
-> to support FIBMAP.
+> This test uncovered a problem where the hole punching operation
+> appeared to finish with no error, but apparently only created 268M
+> extents instead of the 10 billion it was supposed to.
+> 
+> Further, trying to punch out extents that should have been present
+> resulted in success, but no change in the extent count. It looked
+> like a silent failure.
+> 
+> While running the test and observing the behaviour in real time,
+> I observed the extent coutn growing at ~2M extents/minute, and saw
+> this after about an hour:
+> 
+> # xfs_io -f -c "stat" /mnt/scratch/big-file |grep next ; \
+> > sleep 60 ; \
+> > xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+> fsxattr.nextents = 127657993
+> fsxattr.nextents = 129683339
+> #
+> 
+> And a few minutes later this:
+> 
+> # xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+> fsxattr.nextents = 4177861124
+> #
+> 
+> Ah, what? Where did that 4 billion extra extents suddenly come from?
+> 
+> Stop the workload, unmount, mount:
+> 
+> # xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+> fsxattr.nextents = 166044375
+> #
+> 
+> And it's back at the expected number. i.e. the extent count is
+> correct on disk, but it's screwed up in memory. I loaded up the
+> extent list, and immediately:
+> 
+> # xfs_io -f -c "stat" /mnt/scratch/big-file |grep next
+> fsxattr.nextents = 4192576215
+> #
+> 
+> It's bad again. So, where does that number come from?
+> xfs_fill_fsxattr():
+> 
+>                 if (ip->i_df.if_flags & XFS_IFEXTENTS)
+>                         fa->fsx_nextents = xfs_iext_count(&ip->i_df);
+>                 else
+>                         fa->fsx_nextents = ip->i_d.di_nextents;
+> 
+> And that's the behaviour I just saw in a nutshell. The on disk count
+> is correct, but once the tree is loaded into memory, it goes whacky.
+> Clearly there's something wrong with xfs_iext_count():
+> 
+> inline xfs_extnum_t xfs_iext_count(struct xfs_ifork *ifp)
+> {
+>         return ifp->if_bytes / sizeof(struct xfs_iext_rec);
+> }
+> 
+> Simple enough, but 134M extents is 2**27, and that's right about
 
-...or burn another superblock sb_flag on "this fs supports FIBMAP";
-have the in-kernel bmap() function bail out if it isn't set; and only
-set it for the filesystems that used to supply ->bmap?
+On the plus side, 2^27 is way better than the last time anyone tried to
+create an egregious number of extents.
+
+> where things went wrong. A struct xfs_iext_rec is 16 bytes in size,
+> which means 2**27 * 2**4 = 2**31 and we're right on target for an
+> integer overflow. And, sure enough:
+> 
+> struct xfs_ifork {
+>         int                     if_bytes;       /* bytes in if_u1 */
+> ....
+> 
+> Once we get 2**27 extents in a file, we overflow if_bytes and the
+> in-core extent count goes wrong. And when we reach 2**28 extents,
+> if_bytes wraps back to zero and things really start to go wrong
+> there. This is where the silent failure comes from - only the first
+> 2**28 extents can be looked up directly due to the overflow, all the
+> extents above this index wrap back to somewhere in the first 2**28
+> extents. Hence with a regular pattern, trying to punch a hole in the
+> range that didn't have holes mapped to a hole in the first 2**28
+> extents and so "succeeded" without changing anything. Hence "silent
+> failure"...
+> 
+> Fix this by converting if_bytes to a int64_t and converting all the
+> index variables and size calculations to use int64_t types to avoid
+> overflows in future. Signed integers are still used to enable easy
+> detection of extent count underflows. This enables scalability of
+> extent counts to the limits of the on-disk format - MAXEXTNUM
+> (2**31) extents.
+> 
+> Current testing is at over 500M extents and still going:
+> 
+> fsxattr.nextents = 517310478
+> 
+> Reported-by: Zorro Lang <zlang@redhat.com>
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+
+Looks reasonable to me; did Zorro retest w/ this patch?
+
+If so,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.c  | 18 ++++++++++--------
+>  fs/xfs/libxfs/xfs_dir2_sf.c    |  2 +-
+>  fs/xfs/libxfs/xfs_iext_tree.c  |  2 +-
+>  fs/xfs/libxfs/xfs_inode_fork.c |  8 ++++----
+>  fs/xfs/libxfs/xfs_inode_fork.h | 14 ++++++++------
+>  5 files changed, 24 insertions(+), 20 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+> index b9f019603d0b..0bfb1ba919e2 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.c
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+> @@ -453,13 +453,15 @@ xfs_attr_copy_value(
+>   * special case for dev/uuid inodes, they have fixed size data forks.
+>   */
+>  int
+> -xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
+> +xfs_attr_shortform_bytesfit(
+> +	struct xfs_inode	*dp,
+> +	int			bytes)
+>  {
+> -	int offset;
+> -	int minforkoff;	/* lower limit on valid forkoff locations */
+> -	int maxforkoff;	/* upper limit on valid forkoff locations */
+> -	int dsize;
+> -	xfs_mount_t *mp = dp->i_mount;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	int64_t			dsize;
+> +	int			minforkoff;
+> +	int			maxforkoff;
+> +	int			offset;
+>  
+>  	/* rounded down */
+>  	offset = (XFS_LITINO(mp, dp->i_d.di_version) - bytes) >> 3;
+> @@ -525,7 +527,7 @@ xfs_attr_shortform_bytesfit(xfs_inode_t *dp, int bytes)
+>  	 * A data fork btree root must have space for at least
+>  	 * MINDBTPTRS key/ptr pairs if the data fork is small or empty.
+>  	 */
+> -	minforkoff = max(dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+> +	minforkoff = max_t(int64_t, dsize, XFS_BMDR_SPACE_CALC(MINDBTPTRS));
+>  	minforkoff = roundup(minforkoff, 8) >> 3;
+>  
+>  	/* attr fork btree root can have at least this many key/ptr pairs */
+> @@ -939,7 +941,7 @@ xfs_attr_shortform_verify(
+>  	char				*endp;
+>  	struct xfs_ifork		*ifp;
+>  	int				i;
+> -	int				size;
+> +	int64_t				size;
+>  
+>  	ASSERT(ip->i_d.di_aformat == XFS_DINODE_FMT_LOCAL);
+>  	ifp = XFS_IFORK_PTR(ip, XFS_ATTR_FORK);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 85f14fc2a8da..ae16ca7c422a 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -628,7 +628,7 @@ xfs_dir2_sf_verify(
+>  	int				i;
+>  	int				i8count;
+>  	int				offset;
+> -	int				size;
+> +	int64_t				size;
+>  	int				error;
+>  	uint8_t				filetype;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_iext_tree.c b/fs/xfs/libxfs/xfs_iext_tree.c
+> index 7bc87408f1a0..52451809c478 100644
+> --- a/fs/xfs/libxfs/xfs_iext_tree.c
+> +++ b/fs/xfs/libxfs/xfs_iext_tree.c
+> @@ -596,7 +596,7 @@ xfs_iext_realloc_root(
+>  	struct xfs_ifork	*ifp,
+>  	struct xfs_iext_cursor	*cur)
+>  {
+> -	size_t new_size = ifp->if_bytes + sizeof(struct xfs_iext_rec);
+> +	int64_t new_size = ifp->if_bytes + sizeof(struct xfs_iext_rec);
+>  	void *new;
+>  
+>  	/* account for the prev/next pointers */
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.c b/fs/xfs/libxfs/xfs_inode_fork.c
+> index c643beeb5a24..8fdd0424070e 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.c
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.c
+> @@ -129,7 +129,7 @@ xfs_init_local_fork(
+>  	struct xfs_inode	*ip,
+>  	int			whichfork,
+>  	const void		*data,
+> -	int			size)
+> +	int64_t			size)
+>  {
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	int			mem_size = size, real_size = 0;
+> @@ -467,11 +467,11 @@ xfs_iroot_realloc(
+>  void
+>  xfs_idata_realloc(
+>  	struct xfs_inode	*ip,
+> -	int			byte_diff,
+> +	int64_t			byte_diff,
+>  	int			whichfork)
+>  {
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+> -	int			new_size = (int)ifp->if_bytes + byte_diff;
+> +	int64_t			new_size = ifp->if_bytes + byte_diff;
+>  
+>  	ASSERT(new_size >= 0);
+>  	ASSERT(new_size <= XFS_IFORK_SIZE(ip, whichfork));
+> @@ -552,7 +552,7 @@ xfs_iextents_copy(
+>  	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+>  	struct xfs_iext_cursor	icur;
+>  	struct xfs_bmbt_irec	rec;
+> -	int			copied = 0;
+> +	int64_t			copied = 0;
+>  
+>  	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL | XFS_ILOCK_SHARED));
+>  	ASSERT(ifp->if_bytes > 0);
+> diff --git a/fs/xfs/libxfs/xfs_inode_fork.h b/fs/xfs/libxfs/xfs_inode_fork.h
+> index 00c62ce170d0..7b845c052fb4 100644
+> --- a/fs/xfs/libxfs/xfs_inode_fork.h
+> +++ b/fs/xfs/libxfs/xfs_inode_fork.h
+> @@ -13,16 +13,16 @@ struct xfs_dinode;
+>   * File incore extent information, present for each of data & attr forks.
+>   */
+>  struct xfs_ifork {
+> -	int			if_bytes;	/* bytes in if_u1 */
+> -	unsigned int		if_seq;		/* fork mod counter */
+> +	int64_t			if_bytes;	/* bytes in if_u1 */
+>  	struct xfs_btree_block	*if_broot;	/* file's incore btree root */
+> -	short			if_broot_bytes;	/* bytes allocated for root */
+> -	unsigned char		if_flags;	/* per-fork flags */
+> +	unsigned int		if_seq;		/* fork mod counter */
+>  	int			if_height;	/* height of the extent tree */
+>  	union {
+>  		void		*if_root;	/* extent tree root */
+>  		char		*if_data;	/* inline file data */
+>  	} if_u1;
+> +	short			if_broot_bytes;	/* bytes allocated for root */
+> +	unsigned char		if_flags;	/* per-fork flags */
+>  };
+>  
+>  /*
+> @@ -93,12 +93,14 @@ int		xfs_iformat_fork(struct xfs_inode *, struct xfs_dinode *);
+>  void		xfs_iflush_fork(struct xfs_inode *, struct xfs_dinode *,
+>  				struct xfs_inode_log_item *, int);
+>  void		xfs_idestroy_fork(struct xfs_inode *, int);
+> -void		xfs_idata_realloc(struct xfs_inode *, int, int);
+> +void		xfs_idata_realloc(struct xfs_inode *ip, int64_t byte_diff,
+> +				int whichfork);
+>  void		xfs_iroot_realloc(struct xfs_inode *, int, int);
+>  int		xfs_iread_extents(struct xfs_trans *, struct xfs_inode *, int);
+>  int		xfs_iextents_copy(struct xfs_inode *, struct xfs_bmbt_rec *,
+>  				  int);
+> -void		xfs_init_local_fork(struct xfs_inode *, int, const void *, int);
+> +void		xfs_init_local_fork(struct xfs_inode *ip, int whichfork,
+> +				const void *data, int64_t size);
+>  
+>  xfs_extnum_t	xfs_iext_count(struct xfs_ifork *ifp);
+>  void		xfs_iext_insert(struct xfs_inode *, struct xfs_iext_cursor *cur,
 > -- 
-> Carlos
+> 2.23.0.rc1
+> 
