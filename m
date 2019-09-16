@@ -7,61 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 013F0C49ED7
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 16:33:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B3FD0C49ED7
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 16:43:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C54F92184D
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 16:33:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7CE1921852
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 16:43:03 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="INaRnygc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M5A/5P5b"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389987AbfIPQdb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Sep 2019 12:33:31 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:41994 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727950AbfIPQdb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 12:33:31 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GGE33K116551;
-        Mon, 16 Sep 2019 16:33:29 GMT
+        id S2390098AbfIPQnC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Sep 2019 12:43:02 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:46256 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727981AbfIPQnC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 12:43:02 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GGEPGu153094;
+        Mon, 16 Sep 2019 16:42:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=w256vaTjaS/SvlN0tlK/1UviB06Tg6aDpBcJSnjWwug=;
- b=INaRnygcloyiMy8qjfP6Tqu0Ro5+1ap8kTAej6wEscLbLWazskygnbzdG8faep4Oyyjc
- M7YBrJTDLdFUcY/B+BuD1SuSvJ+gPzIX50QYbHJ4WF/C9ADK+H7CS5ePUqmqNErX/i3F
- 5OrrWfh6jnG2NJQAFzeLfM6Sl7/Q5AB7xoPj8Nn/pxaZG3YHd5qDj5xjbbjA9zvGShzf
- 5RVs/ZlzoXq/lZR85CYOBbfj7psVX2x30vk4SZhoO/3mdSA0EVHPKFhwIvX1FbAUFpNK
- DXD10VONoUrhDQcpSYb7ca9K/6qJ7XnyS9+Ag1FQIsKenWr0OX0vZMm2Y+zbmF5TpuOv jg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2v0r5p8qxr-1
+ bh=WRy229U4EhbdkBD9mP4h0IKWqz95ElPrP/6sbAM1T6w=;
+ b=M5A/5P5bBKHJ89EDMd34xBOY2abQwrgEXsyXG5Ti/wxK61xnOgZBQQji2mOonyHqlSF+
+ k5iEEDeVrEB+GB8xx9No636SCWRc+D+0ylSI9uGVMkw4vp212ERrbb8GwZYZOcUmDaid
+ 7tF3eiRPMUCIQ14Lze6s/ywP5ihbcfktUABEiocLKkDxf7hgkyJ4l0ASkTtyNtaUqZfQ
+ 0xP6SPdS00KX7rWT9I1haHOWDSsIArtj6alvbmqEgUKpSGpT+onyLERGoJS/hWZUQNGe
+ KbhIroTiiaZA5XKyizKHFEyKEUl5YBpjflcJ6W/1aqAjmTBpxag2i/qHhjhm5buEo7ZS MA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2v0ruqgqxr-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 16:33:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GGCq8u124497;
-        Mon, 16 Sep 2019 16:33:28 GMT
+        Mon, 16 Sep 2019 16:42:59 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GGDYGj109696;
+        Mon, 16 Sep 2019 16:42:58 GMT
 Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2v0r1gr6dw-1
+        by aserp3030.oracle.com with ESMTP id 2v0p8uvbqm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 16:33:28 +0000
-Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8GGXQ43019109;
-        Mon, 16 Sep 2019 16:33:28 GMT
+        Mon, 16 Sep 2019 16:42:58 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8GGgvme026356;
+        Mon, 16 Sep 2019 16:42:57 GMT
 Received: from localhost (/10.159.225.108)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Sep 2019 09:33:26 -0700
-Date:   Mon, 16 Sep 2019 09:33:25 -0700
+        with ESMTP ; Mon, 16 Sep 2019 09:42:56 -0700
+Date:   Mon, 16 Sep 2019 09:42:55 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: Lower CIL flush limit for large logs
-Message-ID: <20190916163325.GZ2229799@magnolia>
+Subject: Re: [PATCH 2/2] xfs: hard limit the background CIL push
+Message-ID: <20190916164255.GA2229799@magnolia>
 References: <20190909015159.19662-1-david@fromorbit.com>
- <20190909015159.19662-2-david@fromorbit.com>
+ <20190909015159.19662-3-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190909015159.19662-2-david@fromorbit.com>
+In-Reply-To: <20190909015159.19662-3-david@fromorbit.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -79,77 +79,141 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 09, 2019 at 11:51:58AM +1000, Dave Chinner wrote:
+On Mon, Sep 09, 2019 at 11:51:59AM +1000, Dave Chinner wrote:
 > From: Dave Chinner <dchinner@redhat.com>
 > 
-> The current CIL size aggregation limit is 1/8th the log size. This
-> means for large logs we might be aggregating at least 250MB of dirty objects
-> in memory before the CIL is flushed to the journal. With CIL shadow
-> buffers sitting around, this means the CIL is often consuming >500MB
-> of temporary memory that is all allocated under GFP_NOFS conditions.
+> In certain situations the background CIL push can be indefinitely
+> delayed. While we have workarounds from the obvious cases now, it
+> doesn't solve the underlying issue. This issue is that there is no
+> upper limit on the CIL where we will either force or wait for
+> a background push to start, hence allowing the CIL to grow without
+> bound until it consumes all log space.
 > 
-> Flushing the CIL can take some time to do if there is other IO
-> ongoing, and can introduce substantial log force latency by itself.
-> It also pins the memory until the objects are in the AIL and can be
-> written back and reclaimed by shrinkers. Hence this threshold also
-> tends to determine the minimum amount of memory XFS can operate in
-> under heavy modification without triggering the OOM killer.
+> To fix this, add a new wait queue to the CIL which allows background
+> pushes to wait for the CIL context to be switched out. This happens
+> when the push starts, so it will allow us to block incoming
+> transaction commit completion until the push has started. This will
+> only affect processes that are running modifications, and only when
+> the CIL threshold has been significantly overrun.
 > 
-> Modify the CIL space limit to prevent such huge amounts of pinned
-> metadata from aggregating. We can have 2MB of log IO in flight at
-> once, so limit aggregation to 16x this size. This threshold was
-> chosen as it little impact on performance (on 16-way fsmark) or log
-> traffic but pins a lot less memory on large logs especially under
-> heavy memory pressure.  An aggregation limit of 8x had 5-10%
-> performance degradation and a 50% increase in log throughput for
-> the same workload, so clearly that was too small for highly
-> concurrent workloads on large logs.
-
-It would be nice to capture at least some of this reasoning in the
-already lengthy comment preceeding the #define....
-
-> This was found via trace analysis of AIL behaviour. e.g. insertion
-> from a single CIL flush:
-> 
-> xfs_ail_insert: old lsn 0/0 new lsn 1/3033090 type XFS_LI_INODE flags IN_AIL
-> 
-> $ grep xfs_ail_insert /mnt/scratch/s.t |grep "new lsn 1/3033090" |wc -l
-> 1721823
-> $
-> 
-> So there were 1.7 million objects inserted into the AIL from this
-> CIL checkpoint, the first at 2323.392108, the last at 2325.667566 which
-> was the end of the trace (i.e. it hadn't finished). Clearly a major
-> problem.
+> This has no apparent impact on performance, and doesn't even trigger
+> until over 45 million inodes had been created in a 16-way fsmark
+> test on a 2GB log. That was limiting at 64MB of log space used, so
+> the active CIL size is only about 3% of the total log in that case.
+> The concurrent removal of those files did not trigger the background
+> sleep at all.
 > 
 > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/xfs_log_priv.h | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
+>  fs/xfs/xfs_log_cil.c  | 30 +++++++++++++++++++++++++-----
+>  fs/xfs/xfs_log_priv.h |  1 +
+>  2 files changed, 26 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index b880c23cb6e4..187a43ffeaf7 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -329,7 +329,8 @@ struct xfs_cil {
->   * enforced to ensure we stay within our maximum checkpoint size bounds.
->   * threshold, yet give us plenty of space for aggregation on large logs.
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index ef652abd112c..eec9b32f5e08 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -670,6 +670,11 @@ xlog_cil_push(
+>  	push_seq = cil->xc_push_seq;
+>  	ASSERT(push_seq <= ctx->sequence);
+>  
+> +	/*
+> +	 * Wake up any background push waiters now this context is being pushed.
+> +	 */
+> +	wake_up_all(&ctx->push_wait);
+> +
+>  	/*
+>  	 * Check if we've anything to push. If there is nothing, then we don't
+>  	 * move on to a new sequence number and so we have to be able to push
+> @@ -746,6 +751,7 @@ xlog_cil_push(
+>  	 */
+>  	INIT_LIST_HEAD(&new_ctx->committing);
+>  	INIT_LIST_HEAD(&new_ctx->busy_extents);
+> +	init_waitqueue_head(&new_ctx->push_wait);
+>  	new_ctx->sequence = ctx->sequence + 1;
+>  	new_ctx->cil = cil;
+>  	cil->xc_ctx = new_ctx;
+> @@ -898,7 +904,7 @@ xlog_cil_push_work(
+>   * checkpoint), but commit latency and memory usage limit this to a smaller
+>   * size.
+>   */
+> -static void
+> +static bool
+>  xlog_cil_push_background(
+>  	struct xlog	*log)
+>  {
+> @@ -915,14 +921,28 @@ xlog_cil_push_background(
+>  	 * space available yet.
+>  	 */
+>  	if (cil->xc_ctx->space_used < XLOG_CIL_SPACE_LIMIT(log))
+> -		return;
+> +		return false;
+>  
+>  	spin_lock(&cil->xc_push_lock);
+>  	if (cil->xc_push_seq < cil->xc_current_sequence) {
+>  		cil->xc_push_seq = cil->xc_current_sequence;
+>  		queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+>  	}
+> +
+> +	/*
+> +	 * If we are well over the space limit, throttle the work that is being
+> +	 * done until the push work on this context has begun. This will prevent
+> +	 * the CIL from violating maximum transaction size limits if the CIL
+> +	 * push is delayed for some reason.
+> +	 */
+> +	if (cil->xc_ctx->space_used > XLOG_CIL_SPACE_LIMIT(log) * 2) {
+> +		up_read(&cil->xc_ctx_lock);
+> +		trace_printk("CIL space used %d", cil->xc_ctx->space_used);
 
-...also, does XLOG_CIL_SPACE_LIMIT correspond to "a lower threshold at
-which background pushing is attempted", or "a separate, higher bound"?
-I think it's the first (????) but ... I don't know.  The name made me
-think it was the second, but the single use of the symbol suggests the
-first. :)
+Needs a real tracepoint before this drops RFC status.
+
+> +		xlog_wait(&cil->xc_ctx->push_wait, &cil->xc_push_lock);
+> +		return true;
+> +	}
+>  	spin_unlock(&cil->xc_push_lock);
+> +	return false;
+>  
+>  }
+>  
+> @@ -1038,9 +1058,8 @@ xfs_log_commit_cil(
+>  		if (lip->li_ops->iop_committing)
+>  			lip->li_ops->iop_committing(lip, xc_commit_lsn);
+>  	}
+> -	xlog_cil_push_background(log);
+> -
+> -	up_read(&cil->xc_ctx_lock);
+> +	if (!xlog_cil_push_background(log))
+> +		up_read(&cil->xc_ctx_lock);
+
+Hmmmm... the return value here tell us if ctx_lock has been dropped.
+/me wonders if this would be cleaner if xlog_cil_push_background
+returned having called up_read...?
 
 --D
 
->   */
-> -#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
-> +#define XLOG_CIL_SPACE_LIMIT(log)	\
-> +	min_t(int, (log)->l_logsize >> 3, BBTOB(XLOG_TOTAL_REC_SHIFT(log)) << 4)
+>  }
 >  
 >  /*
->   * ticket grant locks, queues and accounting have their own cachlines
+> @@ -1199,6 +1218,7 @@ xlog_cil_init(
+>  
+>  	INIT_LIST_HEAD(&ctx->committing);
+>  	INIT_LIST_HEAD(&ctx->busy_extents);
+> +	init_waitqueue_head(&ctx->push_wait);
+>  	ctx->sequence = 1;
+>  	ctx->cil = cil;
+>  	cil->xc_ctx = ctx;
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index 187a43ffeaf7..466259fd1e4a 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -247,6 +247,7 @@ struct xfs_cil_ctx {
+>  	struct xfs_log_vec	*lv_chain;	/* logvecs being pushed */
+>  	struct list_head	iclog_entry;
+>  	struct list_head	committing;	/* ctx committing list */
+> +	wait_queue_head_t	push_wait;	/* background push throttle */
+>  	struct work_struct	discard_endio_work;
+>  };
+>  
 > -- 
 > 2.23.0.rc1
 > 
