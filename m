@@ -2,127 +2,132 @@ Return-Path: <SRS0=IYS1=XL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86558C49ED7
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 15:35:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5FE7CC4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 15:59:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6769B21848
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 15:35:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 352522184D
+	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 15:59:17 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sCj2wf7D"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389285AbfIPPfG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Sep 2019 11:35:06 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:59244 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389259AbfIPPfG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 16 Sep 2019 11:35:06 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3EC9E34CC;
-        Mon, 16 Sep 2019 15:35:06 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-122-216.rdu2.redhat.com [10.10.122.216])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C83DD600C1;
-        Mon, 16 Sep 2019 15:35:05 +0000 (UTC)
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     darrick.wong@oracle.com
-Subject: [PATCH] xfs: assure zeroed memory buffers for certain kmem allocations
-Date:   Mon, 16 Sep 2019 10:35:04 -0500
-Message-Id: <20190916153504.30809-1-billodo@redhat.com>
+        id S1730442AbfIPP7Q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Sep 2019 11:59:16 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:51580 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726333AbfIPP7Q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 11:59:16 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GFrZTM133541;
+        Mon, 16 Sep 2019 15:58:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=V1gPbP6UbJ4PMEyB24aM+fGZ+fgZF2bnAVOvShOZrpQ=;
+ b=sCj2wf7DESace9qHuTtWkdVU4P2pJm8K8evCb4GvzKgHrCXegaVXsJ+EYBJbywTgGqvJ
+ BpJJMXOmZ3uRowerlHR8TjwuuNEFxI7JzeMft4hJM8NZJZyZDKEUa6mpK/+zJgazGpC2
+ PNGgHPsgcSdvH6hWZ5xcD+8HKyeQMHl4EklGWCMn72IkkPXQlbEIqeUkqenN1na2f8zh
+ iN0A0lHlRtjlmapFyuPhHvTOXh2fJ4zl6IOqG1dvflByaY0n/UZ0xXdIsboC66N0XwUC
+ nG+u/v6/kvftwZDQdntJKuKYjlZ3y5Jp+E6/Kc6QIm60DZ9TjgxfInqDrGPYexoO1SW4 XA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2v0ruqgfeu-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Sep 2019 15:58:53 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GFwKFw101029;
+        Mon, 16 Sep 2019 15:58:53 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2v0nb4x04q-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 16 Sep 2019 15:58:53 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8GFwnGP006266;
+        Mon, 16 Sep 2019 15:58:51 GMT
+Received: from localhost (/10.159.225.108)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 16 Sep 2019 08:58:49 -0700
+Date:   Mon, 16 Sep 2019 08:58:48 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
+        adilger@dilger.ca, jaegeuk@kernel.org, miklos@szeredi.hu,
+        rpeterso@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/9] Use FIEMAP for FIBMAP calls
+Message-ID: <20190916155848.GW2229799@magnolia>
+References: <20190808082744.31405-1-cmaiolino@redhat.com>
+ <20190808082744.31405-9-cmaiolino@redhat.com>
+ <20190814111837.GE1885@lst.de>
+ <20190820130117.gcemlpfrkqlpaaiz@pegasus.maiolino.io>
+ <20190829071555.GF11909@lst.de>
+ <20190910122833.jsii3us7rhwc5l2p@pegasus.maiolino.io>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.29]); Mon, 16 Sep 2019 15:35:06 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190910122833.jsii3us7rhwc5l2p@pegasus.maiolino.io>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909160164
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909160163
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Guarantee zeroed memory buffers for cases where potential memory
-leak to disk can occur. In these cases, kmem_alloc is used and
-doesn't zero the buffer, opening the possibility of information
-leakage to disk.
+On Tue, Sep 10, 2019 at 02:28:35PM +0200, Carlos Maiolino wrote:
+> Hey, thanks for the info.
+> 
+> Although..
+> 
+> On Thu, Aug 29, 2019 at 09:15:55AM +0200, Christoph Hellwig wrote:
+> > On Tue, Aug 20, 2019 at 03:01:18PM +0200, Carlos Maiolino wrote:
+> > > On Wed, Aug 14, 2019 at 01:18:37PM +0200, Christoph Hellwig wrote:
+> > > > The whole FIEMAP_KERNEL_FIBMAP thing looks very counter productive.
+> > > > bmap() should be able to make the right decision based on the passed
+> > > > in flags, no need to have a fake FIEMAP flag for that.
+> > > 
+> > > Using the FIEMAP_KERNEL_FIBMAP flag, is a way to tell filesystems from where the
+> > > request came from, so filesystems can handle it differently. For example, we
+> > > can't allow in XFS a FIBMAP request on a COW/RTIME inode, and we use the FIBMAP
+> > > flag in such situations.
+> > 
+> > But the whole point is that the file system should not have to know
+> > this.  It is not the file systems business in any way to now where the
+> > call came from.  The file system just needs to provide enough information
+> > so that the caller can make informed decisions.
+> > 
+> > And in this case that means if any of FIEMAP_EXTENT_DELALLOC,
+> > FIEMAP_EXTENT_ENCODED, FIEMAP_EXTENT_DATA_ENCRYPTED,
+> > FIEMAP_EXTENT_NOT_ALIGNED, FIEMAP_EXTENT_DATA_INLINE,
+> > FIEMAP_EXTENT_DATA_TAIL, FIEMAP_EXTENT_UNWRITTEN or
+> > FIEMAP_EXTENT_SHARED is present the caller should fail the
+> > bmap request.
+> 
+> This seems doable, yes, but... Doing that essentially will make some
+> filesystems, like BTRFS, to suddenly start to support fibmap, this was another
+> reason why we opted in the first place to let filesystems know whom the caller
+> was.
+> 
+> We could maybe add a new FIEMAP_EXTENT_* flag in the future to, let's say,
+> specify a specific block may be split between more than one device, but, well.
+> It's an idea, but it won't change the fact BTRFS for example will suddenly start
+> to support FIBMAP.
 
-Introduce a xfs_buf_flag, _XBF_KMZ, to indicate a request for a zeroed
-buffer, and use existing infrastucture (xfs_buf_allocate_memory) to
-obtain the already zeroed buffer from kernel memory.
+...or burn another superblock sb_flag on "this fs supports FIBMAP";
+have the in-kernel bmap() function bail out if it isn't set; and only
+set it for the filesystems that used to supply ->bmap?
 
-This solution avoids the performance issue that would occur if a
-wholesale change to replace kmem_alloc with kmem_zalloc was done.
+--D
 
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
- fs/xfs/xfs_buf.c | 8 ++++++--
- fs/xfs/xfs_buf.h | 4 +++-
- 2 files changed, 9 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 120ef99d09e8..916a3f782950 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -345,16 +345,19 @@ xfs_buf_allocate_memory(
- 	unsigned short		page_count, i;
- 	xfs_off_t		start, end;
- 	int			error;
-+	uint			kmflag_mask = 0;
- 
- 	/*
- 	 * for buffers that are contained within a single page, just allocate
- 	 * the memory from the heap - there's no need for the complexity of
- 	 * page arrays to keep allocation down to order 0.
- 	 */
-+	if (flags & _XBF_KMZ)
-+		kmflag_mask |= KM_ZERO;
- 	size = BBTOB(bp->b_length);
- 	if (size < PAGE_SIZE) {
- 		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
--		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS);
-+		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS | kmflag_mask);
- 		if (!bp->b_addr) {
- 			/* low memory - use alloc_page loop instead */
- 			goto use_alloc_page;
-@@ -391,7 +394,7 @@ xfs_buf_allocate_memory(
- 		struct page	*page;
- 		uint		retries = 0;
- retry:
--		page = alloc_page(gfp_mask);
-+		page = alloc_page(gfp_mask | kmflag_mask);
- 		if (unlikely(page == NULL)) {
- 			if (flags & XBF_READ_AHEAD) {
- 				bp->b_page_count = i;
-@@ -683,6 +686,7 @@ xfs_buf_get_map(
- 	struct xfs_buf		*new_bp;
- 	int			error = 0;
- 
-+	flags |= _XBF_KMZ;
- 	error = xfs_buf_find(target, map, nmaps, flags, NULL, &bp);
- 
- 	switch (error) {
-diff --git a/fs/xfs/xfs_buf.h b/fs/xfs/xfs_buf.h
-index f6ce17d8d848..416ff588240a 100644
---- a/fs/xfs/xfs_buf.h
-+++ b/fs/xfs/xfs_buf.h
-@@ -38,6 +38,7 @@
- #define _XBF_PAGES	 (1 << 20)/* backed by refcounted pages */
- #define _XBF_KMEM	 (1 << 21)/* backed by heap memory */
- #define _XBF_DELWRI_Q	 (1 << 22)/* buffer on a delwri queue */
-+#define _XBF_KMZ	 (1 << 23)/* zeroed buffer required */
- 
- typedef unsigned int xfs_buf_flags_t;
- 
-@@ -54,7 +55,8 @@ typedef unsigned int xfs_buf_flags_t;
- 	{ XBF_UNMAPPED,		"UNMAPPED" },	/* ditto */\
- 	{ _XBF_PAGES,		"PAGES" }, \
- 	{ _XBF_KMEM,		"KMEM" }, \
--	{ _XBF_DELWRI_Q,	"DELWRI_Q" }
-+	{ _XBF_DELWRI_Q,	"DELWRI_Q" }, \
-+	{ _XBF_KMZ,             "KMEM_Z" }
- 
- 
- /*
--- 
-2.21.0
-
+> -- 
+> Carlos
