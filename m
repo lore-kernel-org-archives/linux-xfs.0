@@ -1,300 +1,249 @@
-Return-Path: <SRS0=IYS1=XL=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=2RH+=XM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D5BEC49ED7
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 22:05:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C55C49ED7
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 03:13:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D805D206C2
-	for <linux-xfs@archiver.kernel.org>; Mon, 16 Sep 2019 22:05:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8B12B206A1
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 03:13:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ugt6/fAx"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="h5m6sXeH";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="pYgBBiXQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732774AbfIPWFa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 16 Sep 2019 18:05:30 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55242 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732642AbfIPWFa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 18:05:30 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GM4QQ2058433;
-        Mon, 16 Sep 2019 22:05:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=FSjJz5RHqGN78rwX3/MzdDOvfjJE+SIvXahEid8+l4M=;
- b=Ugt6/fAxDEkWiINsWCZ2ali2MScC/SyNZK2GsQCdED1lNNimQmlHY0APB7z5JgclAa4k
- UUD5m4eCQNdz/SgnEYxZOPZuz+30/XN+R/B9JEhTHlzQGrhcyegD1BdI4ufs2ALXWKXd
- 44WEdqQI1Mg2r+VnOSL746mHjfRYnmDd6ia0SDhkWLEfVho1Bzx9GVMlHBOpF1r5EM6x
- CE+x5WEIUVd2To534xh8Nkjtmx+KkVXXTYjfuopdlMw5EfXxyD3I34/zQCku1t2NNaZ9
- lHvxyIDHF8DHT6jVDD+L7iGDsrYB+lFlgdtaYBbFMlR7P6U4QqAf6ECZGRnWD2UDefMJ 9Q== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2v0ruqj975-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 22:05:26 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8GM2pSt195038;
-        Mon, 16 Sep 2019 22:05:25 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2v2jjs8hqn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 16 Sep 2019 22:05:25 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8GM5OYV032604;
-        Mon, 16 Sep 2019 22:05:24 GMT
-Received: from localhost (/10.159.225.108)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Sep 2019 15:05:24 -0700
-Date:   Mon, 16 Sep 2019 15:05:23 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 5/6] misc: convert from XFS_IOC_FSINUMBERS to
- XFS_IOC_INUMBERS
-Message-ID: <20190916220523.GQ2229799@magnolia>
-References: <156774089024.2643497.2754524603021685770.stgit@magnolia>
- <156774092832.2643497.11735239040494298471.stgit@magnolia>
- <20190913011036.GX16973@dread.disaster.area>
+        id S1729117AbfIQDNa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 16 Sep 2019 23:13:30 -0400
+Received: from wout5-smtp.messagingengine.com ([64.147.123.21]:58927 "EHLO
+        wout5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728579AbfIQDN3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 16 Sep 2019 23:13:29 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.west.internal (Postfix) with ESMTP id 416BE719;
+        Mon, 16 Sep 2019 23:13:28 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Mon, 16 Sep 2019 23:13:28 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
+        iSBAoALdCGAmBxoiU33/Ufe+OZBf1lueEpjBlZzLEe0=; b=h5m6sXeHh5S01Mq6
+        yNnWG7ppcI7SyaMA2VeR0auPIasA0+XcH78mQeRVjFPqsFWhBxNh9A+Q3Q7EQ5D9
+        ReuiRemBoXZsumO/Zr2yj84PP9nNTj7kTXh89sHSQphuXrbQreBH6p6LwRtC7pBP
+        pUST6oA3geKdUqgLKVpZughJkvxnSYz+ZmPI7oqNaTE745oh7UZJ25sqEYzydyDA
+        6YasdOf9c/JJMdclPvRpWp3cNnH40eesJpHdxsG5LiywVUNNoYu4DvRLbqeq9phG
+        LYEPXhB+odoFDxzow4odj7a9mptfP8CK8avC9epN7VQlomUr0Bs2PCM0NBYsXJWe
+        +eo8hQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; bh=iSBAoALdCGAmBxoiU33/Ufe+OZBf1lueEpjBlZzLE
+        e0=; b=pYgBBiXQuxWjTSc1ieuwk/k3O0p71kID1yHSiUJuGNZkw9zo5evD2lZe+
+        +qrK03Oa/pV1UAH0J9G9tUDXFD4M0gZu6cGDnftFAuXyYdNoSt1kFn3mOyy95gmf
+        8YRycNQL+RfV0qffzxOMX7YaIQyfa34fhLFlAWhbQ1hcBIVzffbdJP4VgzgyxBvd
+        zRtKQpyi/A2UN99Bdl1ksjytvopph8VOPpEZuT0OkRXgzx+1buCnwmoOdCziGKWo
+        hZWdh0ZVaK36luIaRcC5eSZffZSogRbIbmYzsoxAd13AjlelhfEayi5Rs6iKf+gw
+        7qnolxhoX4dkuRC69CNI3VcBZNseA==
+X-ME-Sender: <xms:V0-AXbU9abR-YEvZDemS770NSaSX1fvWz8pRXJp__Q7u9hP80YcgmQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrudeggdejtdcutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecukfhppeduudekrddvtdekrd
+    dujedurdehjeenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghmrgif
+    rdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
+X-ME-Proxy: <xmx:V0-AXY3tGkavQmambpaGYYM61OT1Ryf4IwE25QSeNZXcaZd3OJS_Rw>
+    <xmx:V0-AXZFycyfJk5BLwJ2Z17sIHGXPmy1x5lKVOP7w8YXU5DdObB3TEA>
+    <xmx:V0-AXegDCxVUz0DHtoHMg2eJGWAD9DGPvOTikG9PBIB1i5GaDoAvPA>
+    <xmx:V0-AXXa2pf66g9soYzrf-RMMKn24yiyjml-lpjWA4KkP8eDyTyPSLQ>
+Received: from mickey.themaw.net (unknown [118.208.171.57])
+        by mail.messagingengine.com (Postfix) with ESMTPA id DE10A8005B;
+        Mon, 16 Sep 2019 23:13:24 -0400 (EDT)
+Message-ID: <86f52d0f5a4ec86fee70ff39d55b3b2a1813a555.camel@themaw.net>
+Subject: Re: [PATCH v2 02/15] xfs: mount-api - add fs parameter description
+From:   Ian Kent <raven@themaw.net>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        David Howells <dhowells@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Eric Sandeen <sandeen@sandeen.net>
+Date:   Tue, 17 Sep 2019 11:13:20 +0800
+In-Reply-To: <20190827123945.GA10636@bfoster>
+References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
+         <156652196787.2607.5728754014477374931.stgit@fedora-28>
+         <20190827123945.GA10636@bfoster>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190913011036.GX16973@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909160210
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909160210
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 13, 2019 at 11:10:36AM +1000, Dave Chinner wrote:
-> On Thu, Sep 05, 2019 at 08:35:28PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, 2019-08-27 at 08:39 -0400, Brian Foster wrote:
+> On Fri, Aug 23, 2019 at 08:59:27AM +0800, Ian Kent wrote:
+> > The new mount-api uses an array of struct fs_parameter_spec for
+> > parameter parsing, create this table populated with the xfs mount
+> > parameters.
 > > 
-> > Convert all programs to use the v5 inumbers ioctl.
+> > The new mount-api table definition is wider than the token based
+> > parameter table and interleaving the option description comments
+> > between each table line is much less readable than adding them to
+> > the end of each table entry. So add the option description comment
+> > to each entry line even though it causes quite a few of the entries
+> > to be longer than 80 characters.
 > > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Signed-off-by: Ian Kent <raven@themaw.net>
 > > ---
-> >  io/imap.c          |   26 +++++-----
-> >  io/open.c          |   27 +++++++----
-> >  libfrog/bulkstat.c |  132 ++++++++++++++++++++++++++++++++++++++++++++++------
-> >  libfrog/bulkstat.h |   10 +++-
-> >  scrub/fscounters.c |   21 +++++---
-> >  scrub/inodes.c     |   36 ++++++++------
-> >  6 files changed, 189 insertions(+), 63 deletions(-)
-> 
-> ....
-> > diff --git a/io/open.c b/io/open.c
-> > index e1979501..e198bcd8 100644
-> > --- a/io/open.c
-> > +++ b/io/open.c
-> > @@ -681,39 +681,46 @@ static __u64
-> >  get_last_inode(void)
-> >  {
-> >  	struct xfs_fd		xfd = XFS_FD_INIT(file->fd);
-> > -	uint64_t		lastip = 0;
-> > +	struct xfs_inumbers_req	*ireq;
-> >  	uint32_t		lastgrp = 0;
-> > -	uint32_t		ocount = 0;
-> >  	__u64			last_ino;
-> 
-> 	__u64			last_ino = 0;
-> 
-> > -	struct xfs_inogrp	igroup[IGROUP_NR];
-> > +
-> > +	ireq = xfrog_inumbers_alloc_req(IGROUP_NR, 0);
-> > +	if (!ireq) {
-> > +		perror("alloc req");
-> > +		return 0;
-> > +	}
+> >  fs/xfs/xfs_super.c |   48
+> > +++++++++++++++++++++++++++++++++++++++++++++---
+> >  1 file changed, 45 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index f9450235533c..74c88b92ce22 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -38,6 +38,8 @@
 > >  
-> >  	for (;;) {
-> >  		int		ret;
+> >  #include <linux/magic.h>
+> >  #include <linux/parser.h>
+> > +#include <linux/fs_context.h>
+> > +#include <linux/fs_parser.h>
 > >  
-> > -		ret = xfrog_inumbers(&xfd, &lastip, IGROUP_NR, igroup,
-> > -				&ocount);
-> > +		ret = xfrog_inumbers(&xfd, ireq);
-> >  		if (ret) {
-> >  			errno = ret;
-> >  			perror("XFS_IOC_FSINUMBERS");
-> > +			free(ireq);
-> >  			return 0;
-> 
-> 			goto out;
-> >  		}
+> >  static const struct super_operations xfs_super_operations;
+> >  struct bio_set xfs_ioend_bioset;
+> > @@ -47,9 +49,6 @@ static struct kset *xfs_kset;		/* top-
+> > level xfs sysfs dir */
+> >  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs
+> > attrs */
+> >  #endif
 > >  
-> >  		/* Did we reach the last inode? */
-> > -		if (ocount == 0)
-> > +		if (ireq->hdr.ocount == 0)
-> >  			break;
+> > -/*
+> > - * Table driven mount option parser.
+> > - */
+> 
+> Not sure why this is comment is removed here if the associated code
+> is
+> staying put in this patch..?
+> 
+> >  enum {
+> >  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
+> >  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth,
+> > Opt_nouuid,
+> > @@ -109,6 +108,49 @@ static const match_table_t tokens = {
+> >  	{Opt_err,	NULL},
+> >  };
 > >  
-> >  		/* last inode in igroup table */
-> > -		lastgrp = ocount;
-> > +		lastgrp = ireq->hdr.ocount;
-> >  	}
+> > +static const struct fs_parameter_spec xfs_param_specs[] = {
+> > + fsparam_u32	("logbufs",    Opt_logbufs),   /* number of XFS
+> > log buffers */
+> > + fsparam_string ("logbsize",   Opt_logbsize),  /* size of XFS log
+> > buffers */
+> > + fsparam_string ("logdev",     Opt_logdev),    /* log device */
+> > + fsparam_string ("rtdev",      Opt_rtdev),     /* realtime I/O
+> > device */
+> > + fsparam_u32	("biosize",    Opt_biosize),   /* log2 of
+> > preferred buffered io size */
+> 
+> Hmm.. it looks like the difference between numerical values as
+> strings
+> vs. numeric types is whether we support things like unit suffixes
+> (i.e.
+> "64k"). That said, Opt_biosize uses suffix_kstrtoint() similar to
+> Opt_logbsize yet is defined here as a u32 (and Opt_allocsize falls
+> into
+> the same parsing code but is a string). Is that wrong or am I just
+> missing something wrt to the type specifiers here?
+
+Right, the distinction appeared to be between those that use a human
+unit (like 64k etc.) and those that don't.
+
+Opt_biosize looked different in that it's described to be "log2 of
+preferred buffered io size" so I don't think it can be given as a
+human unit and that also appeared to be the case from the original
+options table.
+
+Do I need to change this somehow?
+
+> 
+> Brian
+> 
+> > + fsparam_flag	("wsync",      Opt_wsync),     /* safe-mode nfs
+> > compatible mount */
+> > + fsparam_flag	("noalign",    Opt_noalign),   /* turn off
+> > stripe alignment */
+> > + fsparam_flag	("swalloc",    Opt_swalloc),   /* turn on
+> > stripe width allocation */
+> > + fsparam_u32	("sunit",      Opt_sunit),     /* data volume
+> > stripe unit */
+> > + fsparam_u32	("swidth",     Opt_swidth),    /* data volume
+> > stripe width */
+> > + fsparam_flag	("nouuid",     Opt_nouuid),    /* ignore
+> > filesystem UUID */
+> > + fsparam_flag_no("grpid",      Opt_grpid),     /* group-ID from
+> > parent directory (or not) */
+> > + fsparam_flag	("bsdgroups",  Opt_bsdgroups), /* group-ID from
+> > parent directory */
+> > + fsparam_flag	("sysvgroups", Opt_sysvgroups),/* group-ID from
+> > current process */
+> > + fsparam_string ("allocsize",  Opt_allocsize), /* preferred
+> > allocation size */
+> > + fsparam_flag	("norecovery", Opt_norecovery),/* don't run XFS
+> > recovery */
+> > + fsparam_flag	("inode64",    Opt_inode64),   /* inodes can be
+> > allocated anywhere */
+> > + fsparam_flag	("inode32",    Opt_inode32),   /* inode
+> > allocation limited to XFS_MAXINUMBER_32 */
+> > + fsparam_flag_no("ikeep",      Opt_ikeep),     /* do not free (or
+> > keep) empty inode clusters */
+> > + fsparam_flag_no("largeio",    Opt_largeio),   /* report (or do
+> > not report) large I/O sizes in stat() */
+> > + fsparam_flag_no("attr2",      Opt_attr2),     /* do (or do not)
+> > use attr2 attribute format */
+> > + fsparam_flag	("filestreams",Opt_filestreams), /* use
+> > filestreams allocator */
+> > + fsparam_flag_no("quota",      Opt_quota),     /* disk quotas
+> > (user) */
+> > + fsparam_flag	("usrquota",   Opt_usrquota),  /* user quota
+> > enabled */
+> > + fsparam_flag	("grpquota",   Opt_grpquota),  /* group quota
+> > enabled */
+> > + fsparam_flag	("prjquota",   Opt_prjquota),  /* project quota
+> > enabled */
+> > + fsparam_flag	("uquota",     Opt_uquota),    /* user quota
+> > (IRIX variant) */
+> > + fsparam_flag	("gquota",     Opt_gquota),    /* group quota
+> > (IRIX variant) */
+> > + fsparam_flag	("pquota",     Opt_pquota),    /* project quota
+> > (IRIX variant) */
+> > + fsparam_flag	("uqnoenforce",Opt_uqnoenforce), /* user quota
+> > limit enforcement */
+> > + fsparam_flag	("gqnoenforce",Opt_gqnoenforce), /* group quota
+> > limit enforcement */
+> > + fsparam_flag	("pqnoenforce",Opt_pqnoenforce), /* project
+> > quota limit enforcement */
+> > + fsparam_flag	("qnoenforce", Opt_qnoenforce),  /* same as
+> > uqnoenforce */
+> > + fsparam_flag_no("discard",    Opt_discard),   /* Do (or do not)
+> > not discard unused blocks */
+> > + fsparam_flag	("dax",	       Opt_dax),       /* Enable
+> > direct access to bdev pages */
+> > + {}
+> > +};
+> > +
+> > +static const struct fs_parameter_description xfs_fs_parameters = {
+> > +	.name		= "XFS",
+> > +	.specs		= xfs_param_specs,
+> > +};
 > >  
-> > -	if (lastgrp == 0)
-> > +	if (lastgrp == 0) {
-> > +		free(ireq);
-> >  		return 0;
-> 
-> 		goto out;
-> > +	}
-> >  
-> >  	lastgrp--;
-> >  
-> >  	/* The last inode number in use */
-> > -	last_ino = igroup[lastgrp].xi_startino +
-> > -		  libxfs_highbit64(igroup[lastgrp].xi_allocmask);
-> > +	last_ino = ireq->inumbers[lastgrp].xi_startino +
-> > +		  libxfs_highbit64(ireq->inumbers[lastgrp].xi_allocmask);
-> 
-> out:
+> >  STATIC int
+> >  suffix_kstrtoint(const substring_t *s, unsigned int base, int
+> > *res)
+> > 
 
-Ok, fixed.
-
-> > +	free(ireq);
-> >  
-> >  	return last_ino;
-> >  }
-> > diff --git a/libfrog/bulkstat.c b/libfrog/bulkstat.c
-> > index 2a70824e..748d0f32 100644
-> > --- a/libfrog/bulkstat.c
-> > +++ b/libfrog/bulkstat.c
-> > @@ -387,6 +387,86 @@ xfrog_bulkstat_alloc_req(
-> >  	return breq;
-> >  }
-> >  
-> > +/* Convert an inumbers (v5) struct to a inogrp (v1) struct. */
-> > +void
-> > +xfrog_inumbers_to_inogrp(
-> > +	struct xfs_inogrp		*ig1,
-> > +	const struct xfs_inumbers	*ig)
-> > +{
-> > +	ig1->xi_startino = ig->xi_startino;
-> > +	ig1->xi_alloccount = ig->xi_alloccount;
-> > +	ig1->xi_allocmask = ig->xi_allocmask;
-> 
-> Same thing - inumbers_v5_to_v1(from, to);
-> 
-> > +}
-> > +
-> > +/* Convert an inogrp (v1) struct to a inumbers (v5) struct. */
-> > +void
-> > +xfrog_inogrp_to_inumbers(
-> > +	struct xfs_inumbers		*ig,
-> > +	const struct xfs_inogrp		*ig1)
-> 
-> ditto.
-
-Fixed too.
-
-> > +{
-> > +	memset(ig, 0, sizeof(*ig));
-> > +	ig->xi_version = XFS_INUMBERS_VERSION_V1;
-> > +
-> > +	ig->xi_startino = ig1->xi_startino;
-> > +	ig->xi_alloccount = ig1->xi_alloccount;
-> > +	ig->xi_allocmask = ig1->xi_allocmask;
-> > +}
-> > +
-> > +static uint64_t xfrog_inum_ino(void *v1_rec)
-> > +{
-> > +	return ((struct xfs_inogrp *)v1_rec)->xi_startino;
-> > +}
-> > +
-> > +static void xfrog_inum_cvt(struct xfs_fd *xfd, void *v5, void *v1)
-> > +{
-> > +	xfrog_inogrp_to_inumbers(v5, v1);
-> > +}
-> 
-> what's the point of this wrapper?
-
-Function adapter so we can use xfrog_bulk_req_teardown as part of using
-the V1 inumbers ioctl to emulate the V5 inumbers ioctl.
-
-> > +
-> > +/* Query inode allocation bitmask information using v5 ioctl. */
-> > +static int
-> > +xfrog_inumbers5(
-> > +	struct xfs_fd		*xfd,
-> > +	struct xfs_inumbers_req	*req)
-> > +{
-> > +	int			ret;
-> > +
-> > +	ret = ioctl(xfd->fd, XFS_IOC_INUMBERS, req);
-> > +	if (ret)
-> > +		return errno;
-> > +	return 0;
-> 
-> negative errors.
-> 
-> > +}
-> > +
-> > +/* Query inode allocation bitmask information using v1 ioctl. */
-> > +static int
-> > +xfrog_inumbers1(
-> > +	struct xfs_fd		*xfd,
-> > +	struct xfs_inumbers_req	*req)
-> > +{
-> > +	struct xfs_fsop_bulkreq	bulkreq = { 0 };
-> > +	int			error;
-> > +
-> > +	error = xfrog_bulkstat_prep_v1_emulation(xfd);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	error = xfrog_bulk_req_setup(xfd, &req->hdr, &bulkreq,
-> > +			sizeof(struct xfs_inogrp));
-> > +	if (error == ECANCELED)
-> > +		goto out_teardown;
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	error = ioctl(xfd->fd, XFS_IOC_FSINUMBERS, &bulkreq);
-> > +	if (error)
-> > +		error = errno;
-> 
-> negative errors.
-> 
-> > +
-> > +out_teardown:
-> > +	return xfrog_bulk_req_teardown(xfd, &req->hdr, &bulkreq,
-> > +			sizeof(struct xfs_inogrp), xfrog_inum_ino,
-> > +			&req->inumbers, sizeof(struct xfs_inumbers),
-> > +			xfrog_inum_cvt, 64, error);
-> > +}
-> ....
-> 
-> >  	struct xfs_bulkstat	*bs;
-> > -	uint64_t		igrp_ino;
-> > -	uint32_t		igrplen = 0;
-> > +	struct xfs_inumbers	*inogrp;
-> 
-> Isn't that mixing v1 structure names with v5 operations? Aren't we
-> pulling infomration out in inode records?
-
-Yeah, I'll fix the names too.
-
---D
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
