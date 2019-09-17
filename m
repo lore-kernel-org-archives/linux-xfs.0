@@ -2,107 +2,98 @@ Return-Path: <SRS0=2RH+=XM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-12.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PULL_REQUEST,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C43C1C4CEC9
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 13:17:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BFEEC4CEC9
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 15:06:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9259521852
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 13:17:40 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jDuZ+02T"
+	by mail.kernel.org (Postfix) with ESMTP id F32CC2067B
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 15:06:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1568732771;
+	bh=SDG5YpF85LDl7cxtILkzcLro5V+SIvuaeeWO/xetNPc=;
+	h=Date:From:To:Cc:Subject:List-ID:From;
+	b=DibwosthZABhJtgu44n4XTx3aNbgSFcW5bsRw+Nk9dWJKME4FVmtnRY/R04Nh2mE4
+	 EkCf3lDwaY7XgmhuyInKz7CaS04GZBFUdCWFfUL84csnKh4ciRYg5Me74ud4+dEzqJ
+	 H0DOwGWKCM16PrJFJIzawNtnv2ma3iF8+OJa4l7M=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726131AbfIQNRk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Sep 2019 09:17:40 -0400
-Received: from mail-io1-f68.google.com ([209.85.166.68]:44758 "EHLO
-        mail-io1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725917AbfIQNRk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Sep 2019 09:17:40 -0400
-Received: by mail-io1-f68.google.com with SMTP id j4so7381464iog.11;
-        Tue, 17 Sep 2019 06:17:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=Jl0HYi/wSybOikBVzFsvD7tD+oFHCUuqw+qUrn2WMwI=;
-        b=jDuZ+02TICPZFr93IFgRPFO9FRoS7D1srTuINYcAWSSa6AylQVCvRk4ofdIJwxgzcF
-         2dL5IxXJ934mfRi9TMcrLRIVY4Dc1eRnrEL3nzPEskTjskcFgUKc0AZZBY/v45zxswGd
-         FLQ3AKzR3meQqY+Qjby3AWUR8uClRwA8Ps4xciE2Qvh9FU0LRU1skyL8dy0V1T6dB03M
-         gMwSf9jORmQ/xWF9ThzH3mKzwcZSOw4CX37BHeP5O3OyfQ/8OOvKLb+U3iW1Sb4/5cq7
-         zfWCTG48rIC1fggtMYu4zsS33t7si18KEjKYTj85fyoQXSQBE1VMleNXRJawIZx0iObS
-         PrjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=Jl0HYi/wSybOikBVzFsvD7tD+oFHCUuqw+qUrn2WMwI=;
-        b=YI4gX3FiiNuMmmn5Q/Pvv67rlvNISIMvL1DKpwjvHEhF/EMuqgTEHa6P5fj96mI9bc
-         /cpHA64R0nEO4XhntzMpv3uIEh0hLUiWrGkvWsMmuLAdZvUEJlW3ukzC/GsG8/WJcdw/
-         VWqHsiXUdrn6YEVjJiX4EIdaP6eQ1bvkJ5gVzKxODDWYqjLww+yka+33qqjFJruj7Pm3
-         hZKpHvgnsf9OEpbV67ZxW6vdm4jkvGLHfy4WyXmNoTZLczcIN0BiiJrHmWMwUcZlHq3J
-         xawyeVFWm4M29MkTBlo1gjU4+AHvsbZbYn7feHBTqLAsEsEb38MQ23iky9i2VJlFIyrY
-         6crw==
-X-Gm-Message-State: APjAAAX6RQPaHmsR3C8qE93Xt6EI2dOAu97pXNsjx5w4fhhiev7lv0Rp
-        1g6gwHKqKHMqUwN+xG22wR1zhr7W4B67y/tSan4=
-X-Google-Smtp-Source: APXvYqyMH+XWckXQN9LtfWzHROcgWFxQ4magzkelq68Ejdb8+xSy6hCaDyMp5JKC2oJTPLab0VoLHvbUO+5y4CQSOKc=
-X-Received: by 2002:a5e:9314:: with SMTP id k20mr3389799iom.245.1568726256781;
- Tue, 17 Sep 2019 06:17:36 -0700 (PDT)
+        id S1728963AbfIQPGK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Sep 2019 11:06:10 -0400
+Received: from mail.kernel.org ([198.145.29.99]:44420 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727962AbfIQPGK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Sep 2019 11:06:10 -0400
+Received: from localhost (c-67-169-218-210.hsd1.or.comcast.net [67.169.218.210])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5BA7D20665;
+        Tue, 17 Sep 2019 15:06:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1568732769;
+        bh=SDG5YpF85LDl7cxtILkzcLro5V+SIvuaeeWO/xetNPc=;
+        h=Date:From:To:Cc:Subject:From;
+        b=L4MGQ8vdegQAMJWZvefCan9LNmZ58YKbkSOalMHxvO0HWyV0pmFh1Ux7JqwFOW68O
+         mCGBhYjjy1+ryMK52xSHfJQua12b18hMCxbKZNbPuOyslbAj0VL4Avpn+vFS73QMQF
+         zChusAZY9pyCaARcI1IJL6QMmjaAJ3A8JgTG6/KI=
+Date:   Tue, 17 Sep 2019 08:06:09 -0700
+From:   "Darrick J. Wong" <djwong@kernel.org>
+To:     Linus Torvalds <torvalds@linux-foundation.org>
+Cc:     "Darrick J. Wong" <djwong@kernel.org>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        hch@infradead.org, akpm@linux-foundation.org,
+        linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>
+Subject: [GIT PULL] vfs: prohibit writes to active swap devices
+Message-ID: <20190917150608.GT2229799@magnolia>
 MIME-Version: 1.0
-References: <20190829161155.GA5360@magnolia> <20190830210603.GB5340@magnolia> <20190905034244.GL5340@magnolia>
-In-Reply-To: <20190905034244.GL5340@magnolia>
-From:   =?UTF-8?Q?Andreas_Gr=C3=BCnbacher?= <andreas.gruenbacher@gmail.com>
-Date:   Tue, 17 Sep 2019 15:17:22 +0200
-Message-ID: <CAHpGcM+iYfqniKugC-enWnx+S3KT=8-YtY9RRcr4bVhG8GtkOA@mail.gmail.com>
-Subject: Re: [PATCH v2] splice: only read in as much information as there is
- pipe buffer space
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Dave Chinner <david@fromorbit.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Am Do., 5. Sept. 2019 um 05:42 Uhr schrieb Darrick J. Wong
-<darrick.wong@oracle.com>:
-> On Fri, Aug 30, 2019 at 02:06:03PM -0700, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> >
-> > Andreas Gr=C3=BCnbacher reports that on the two filesystems that suppor=
-t
-> > iomap directio, it's possible for splice() to return -EAGAIN (instead o=
-f
-> > a short splice) if the pipe being written to has less space available i=
-n
-> > its pipe buffers than the length supplied by the calling process.
-> >
-> > Months ago we fixed splice_direct_to_actor to clamp the length of the
-> > read request to the size of the splice pipe.  Do the same to do_splice.
-> >
-> > Fixes: 17614445576b6 ("splice: don't read more than available pipe spac=
-e")
-> > Reported-by: Andreas Gr=C3=BCnbacher <andreas.gruenbacher@gmail.com>
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v2: tidy up the other call site per Andreas' request
->
-> Ping?  Anyone want to add a RVB to this?
+Hi Linus,
 
-You can add the following:
+Please pull this short series that prevents writes to active swap files
+and swap devices.  There's no non-malicious use case for allowing
+userspace to scribble on storage that the kernel thinks it owns.
 
-Reviewed-by: Andreas Gr=C3=BCnbacher <agruenba@redhat.com>
-Tested-by: Andreas Gr=C3=BCnbacher <agruenba@redhat.com>
+The branch merges cleanly against this morning's HEAD and survived an
+overnight run of xfstests.  The merge was completely straightforward, so
+please let me know if you run into anything weird.
 
-And could you please update the email address in the reported-by tag as wel=
-l?
+--D
 
-Is this going to go in via the xfs tree?
+The following changes since commit 609488bc979f99f805f34e9a32c1e3b71179d10b:
 
-Thanks,
-Andreas
+  Linux 5.3-rc2 (2019-07-28 12:47:02 -0700)
+
+are available in the Git repository at:
+
+  git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.4-merge-1
+
+for you to fetch changes up to dc617f29dbe5ef0c8ced65ce62c464af1daaab3d:
+
+  vfs: don't allow writes to swap files (2019-08-20 07:55:16 -0700)
+
+----------------------------------------------------------------
+Changes for 5.4:
+- Prohibit writing to active swap files and swap partitions.
+
+----------------------------------------------------------------
+Darrick J. Wong (2):
+      mm: set S_SWAPFILE on blockdev swap devices
+      vfs: don't allow writes to swap files
+
+ fs/block_dev.c     |  3 +++
+ include/linux/fs.h | 11 +++++++++++
+ mm/filemap.c       |  3 +++
+ mm/memory.c        |  4 ++++
+ mm/mmap.c          |  8 ++++++--
+ mm/swapfile.c      | 41 +++++++++++++++++++++++++----------------
+ 6 files changed, 52 insertions(+), 18 deletions(-)
