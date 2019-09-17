@@ -2,272 +2,223 @@ Return-Path: <SRS0=2RH+=XM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 191D8C4CECD
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 04:43:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D0D10C4CEC9
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 12:10:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB1C22171F
-	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 04:43:18 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RHTSnjgw"
+	by mail.kernel.org (Postfix) with ESMTP id A4BFE21897
+	for <linux-xfs@archiver.kernel.org>; Tue, 17 Sep 2019 12:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392283AbfIQEnS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 17 Sep 2019 00:43:18 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:32924 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726248AbfIQEnS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 17 Sep 2019 00:43:18 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8H4clhs112187;
-        Tue, 17 Sep 2019 04:43:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=F07GbIH1gHhxBzlrLx4svX2KqAkLCVXl2T+2cUCaykM=;
- b=RHTSnjgw2gWaWwGwxRBJ3z5+SxmSmLRwXQ9E2j+EYRg8gc0pR0abUTZYD+u1AubFAYsV
- sJUQ/XGKL/C33EK3seMgjoCV6lc3UJIMn36iemfaYcelPTZdgP0+fWTNZ9WzO8/46ujC
- tiAeyNEe8VvzDLZoR3MHfg3zqcvqaJZ18VtD/OiqzIwxzD514vA/E1jtESDxVrm05+/o
- 6ty/F8WmhXbUQbrdjwfYv09oR5I7nffyCRbbHvkuhUmsgM+yw6PKeYGWY3cQlzov8mLK
- NEXOgf96T4NMS7Qfimp7oHfaxu2RwZxElw1HWJv2msVEhx8M0oru2dxnEsQCb8UR2qSH Vw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2v0r5pbgwq-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Sep 2019 04:43:04 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8H4giH2024017;
-        Tue, 17 Sep 2019 04:43:03 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2v2nmu89gn-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 17 Sep 2019 04:43:03 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8H4h25C027839;
-        Tue, 17 Sep 2019 04:43:03 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 16 Sep 2019 21:43:02 -0700
-Date:   Mon, 16 Sep 2019 21:43:01 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Allison Collins <allison.henderson@oracle.com>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 00/19] Delayed Attributes
-Message-ID: <20190917044301.GS2229799@magnolia>
-References: <20190905221837.17388-1-allison.henderson@oracle.com>
- <20190916122754.GA41978@bfoster>
- <178f8a56-9db2-ca26-aa9b-a5739f6ebd5a@oracle.com>
- <20190916192322.GD41978@bfoster>
- <1700a17a-95bf-aeb9-ef58-c7e03ab377e6@oracle.com>
+        id S1726744AbfIQMKL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 17 Sep 2019 08:10:11 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49758 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725270AbfIQMKL (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 17 Sep 2019 08:10:11 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 36AE7307CB3F;
+        Tue, 17 Sep 2019 12:10:10 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 43D3B612B1;
+        Tue, 17 Sep 2019 12:10:07 +0000 (UTC)
+Date:   Tue, 17 Sep 2019 08:10:05 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Ian Kent <raven@themaw.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        David Howells <dhowells@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [PATCH v2 02/15] xfs: mount-api - add fs parameter description
+Message-ID: <20190917121005.GA2868@bfoster>
+References: <156652158924.2607.14608448087216437699.stgit@fedora-28>
+ <156652196787.2607.5728754014477374931.stgit@fedora-28>
+ <20190827123945.GA10636@bfoster>
+ <86f52d0f5a4ec86fee70ff39d55b3b2a1813a555.camel@themaw.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1700a17a-95bf-aeb9-ef58-c7e03ab377e6@oracle.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909170053
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9382 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909170052
+In-Reply-To: <86f52d0f5a4ec86fee70ff39d55b3b2a1813a555.camel@themaw.net>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Tue, 17 Sep 2019 12:10:10 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 16, 2019 at 01:42:53PM -0700, Allison Collins wrote:
-> On 9/16/19 12:23 PM, Brian Foster wrote:
-> > On Mon, Sep 16, 2019 at 11:41:13AM -0700, Allison Collins wrote:
-> > > On 9/16/19 5:27 AM, Brian Foster wrote:
-> > > > On Thu, Sep 05, 2019 at 03:18:18PM -0700, Allison Collins wrote:
-> > > > > Hi all,
-> > > > > 
-> > > > > This set is a subset of a larger series for parent pointers.
-> > > > > Delayed attributes allow attribute operations (set and remove) to be
-> > > > > logged and committed in the same way that other delayed operations do.
-> > > > > This will help break up more complex operations when we later introduce
-> > > > > parent pointers which can be used in a number of optimizations.  Since
-> > > > > delayed attributes can be implemented as a stand alone feature, I've
-> > > > > decided to subdivide the set to help make it more manageable.  Delayed
-> > > > > attributes may also provide the infastructure to later break up large
-> > > > > attributes into smaller transactions instead of one large bwrite.
-> > > > > 
-> > > > > Changes since v2:
-> > > > > Mostly review updates collected since v2.  Patch 17 is new and adds a
-> > > > > new feature bit that is enabled through mkfs.xfs -n delattr.  Attr
-> > > > > renames have been simplified into separate remove and set opertaions
-> > > > > which removes the need for the INCOMPLETE state used in non delayed
-> > > > > operations
-> > > > > 
-> > > > > I've also made the corresponding updates to the user space side, and
-> > > > > xfstests as well.
-> > > > > 
-> > > > > Question, comment and feedback appreciated!
-> > > > > 
-> > > > > Thanks all!
-> > > > > Allison
-> > > > > 
-> > > > > Allison Collins (15):
-> > > > >     xfs: Replace attribute parameters with struct xfs_name
-> > > > 
-> > > > Hi Allison,
-> > > > 
-> > > > The first patch in the series doesn't apply to current for-next or
-> > > > master. What is the baseline for this series? Perhaps a rebase is in
-> > > > order..?
-> > > > 
-> > > > Brian
-> 
-> Ah!  Super sorry, there should be 20 patches, not 19.  I should have started
-> the format patch tool one commit earlier.
-> 
-> This should be the first patch:
-> https://github.com/allisonhenderson/xfs_work/commit/3f923b577d4a2113434e9bc79e1745ce182849d4
-> 
-> In fact if it helps to simply download the sets, I made some git hub links:
-> https://github.com/allisonhenderson/xfs_work/tree/Delayed_attr_v3
-> https://github.com/allisonhenderson/xfs_work/tree/Delayed_attr_xfsprog_v2
-> https://github.com/allisonhenderson/xfs_work/tree/Delayed_Attr_xfstests_v2
-> 
-> Would you prefer I resend the sets, or are the links easier?
-
-<shrug> You might as well send it labeled "[PATCH 0/19]" or something.
-I've been curious to see if lore sorts by subject or date. :P
-
---D
-
-> Sorry about the confusion!
-> Allison
-> 
+On Tue, Sep 17, 2019 at 11:13:20AM +0800, Ian Kent wrote:
+> On Tue, 2019-08-27 at 08:39 -0400, Brian Foster wrote:
+> > On Fri, Aug 23, 2019 at 08:59:27AM +0800, Ian Kent wrote:
+> > > The new mount-api uses an array of struct fs_parameter_spec for
+> > > parameter parsing, create this table populated with the xfs mount
+> > > parameters.
 > > > 
-> > > The base line for the kernel space set is:
-> > > eb77b23 xfs: add a xfs_valid_startblock helper
+> > > The new mount-api table definition is wider than the token based
+> > > parameter table and interleaving the option description comments
+> > > between each table line is much less readable than adding them to
+> > > the end of each table entry. So add the option description comment
+> > > to each entry line even though it causes quite a few of the entries
+> > > to be longer than 80 characters.
 > > > 
+> > > Signed-off-by: Ian Kent <raven@themaw.net>
+> > > ---
+> > >  fs/xfs/xfs_super.c |   48
+> > > +++++++++++++++++++++++++++++++++++++++++++++---
+> > >  1 file changed, 45 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index f9450235533c..74c88b92ce22 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -38,6 +38,8 @@
+> > >  
+> > >  #include <linux/magic.h>
+> > >  #include <linux/parser.h>
+> > > +#include <linux/fs_context.h>
+> > > +#include <linux/fs_parser.h>
+> > >  
+> > >  static const struct super_operations xfs_super_operations;
+> > >  struct bio_set xfs_ioend_bioset;
+> > > @@ -47,9 +49,6 @@ static struct kset *xfs_kset;		/* top-
+> > > level xfs sysfs dir */
+> > >  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs
+> > > attrs */
+> > >  #endif
+> > >  
+> > > -/*
+> > > - * Table driven mount option parser.
+> > > - */
 > > 
-> > Hmm, I still cannot apply:
+> > Not sure why this is comment is removed here if the associated code
+> > is
+> > staying put in this patch..?
 > > 
-> > $ git log --oneline -1
-> > eb77b23b565e (HEAD -> ac-delayed-attrs-v3, tag: xfs-5.4-merge-4) xfs: add a xfs_valid_startblock helper
-> > $ git am <mbox>
-> > Applying: xfs: Replace attribute parameters with struct xfs_name
-> > error: patch failed: fs/xfs/libxfs/xfs_attr.c:61
-> > error: fs/xfs/libxfs/xfs_attr.c: patch does not apply
-> > error: patch failed: fs/xfs/libxfs/xfs_attr.h:144
-> > error: fs/xfs/libxfs/xfs_attr.h: patch does not apply
-> > error: patch failed: fs/xfs/xfs_acl.c:135
-> > error: fs/xfs/xfs_acl.c: patch does not apply
-> > error: patch failed: fs/xfs/xfs_ioctl.c:431
-> > error: fs/xfs/xfs_ioctl.c: patch does not apply
-> > error: patch failed: fs/xfs/xfs_iops.c:49
-> > error: fs/xfs/xfs_iops.c: patch does not apply
-> > error: patch failed: fs/xfs/xfs_xattr.c:20
-> > error: fs/xfs/xfs_xattr.c: patch does not apply
-> > Patch failed at 0001 xfs: Replace attribute parameters with struct xfs_name
-> > hint: Use 'git am --show-current-patch' to see the failed patch
-> > When you have resolved this problem, run "git am --continue".
-> > If you prefer to skip this patch, run "git am --skip" instead.
-> > To restore the original branch and stop patching, run "git am --abort".
+> > >  enum {
+> > >  	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
+> > >  	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth,
+> > > Opt_nouuid,
+> > > @@ -109,6 +108,49 @@ static const match_table_t tokens = {
+> > >  	{Opt_err,	NULL},
+> > >  };
+> > >  
+> > > +static const struct fs_parameter_spec xfs_param_specs[] = {
+> > > + fsparam_u32	("logbufs",    Opt_logbufs),   /* number of XFS
+> > > log buffers */
+> > > + fsparam_string ("logbsize",   Opt_logbsize),  /* size of XFS log
+> > > buffers */
+> > > + fsparam_string ("logdev",     Opt_logdev),    /* log device */
+> > > + fsparam_string ("rtdev",      Opt_rtdev),     /* realtime I/O
+> > > device */
+> > > + fsparam_u32	("biosize",    Opt_biosize),   /* log2 of
+> > > preferred buffered io size */
 > > 
-> > Have you tried to pull the patches from the mailing list and apply to
-> > your baseline locally? I haven't seen issues merging other patches, so I
-> > don't _think_ my local tree is busted..
+> > Hmm.. it looks like the difference between numerical values as
+> > strings
+> > vs. numeric types is whether we support things like unit suffixes
+> > (i.e.
+> > "64k"). That said, Opt_biosize uses suffix_kstrtoint() similar to
+> > Opt_logbsize yet is defined here as a u32 (and Opt_allocsize falls
+> > into
+> > the same parsing code but is a string). Is that wrong or am I just
+> > missing something wrt to the type specifiers here?
+> 
+> Right, the distinction appeared to be between those that use a human
+> unit (like 64k etc.) and those that don't.
+> 
+> Opt_biosize looked different in that it's described to be "log2 of
+> preferred buffered io size" so I don't think it can be given as a
+> human unit and that also appeared to be the case from the original
+> options table.
+> 
+> Do I need to change this somehow?
+> 
+
+I'm not sure. Can you respond to the question in my most recent reply[1]
+to this patch please?
+
+Brian
+
+[1] https://lore.kernel.org/linux-xfs/20190830115611.GA25927@bfoster/
+
 > > 
 > > Brian
 > > 
-> > > And the user space set is:
-> > > e74aec5 xfsprogs: Release v5.3.0-rc1
+> > > + fsparam_flag	("wsync",      Opt_wsync),     /* safe-mode nfs
+> > > compatible mount */
+> > > + fsparam_flag	("noalign",    Opt_noalign),   /* turn off
+> > > stripe alignment */
+> > > + fsparam_flag	("swalloc",    Opt_swalloc),   /* turn on
+> > > stripe width allocation */
+> > > + fsparam_u32	("sunit",      Opt_sunit),     /* data volume
+> > > stripe unit */
+> > > + fsparam_u32	("swidth",     Opt_swidth),    /* data volume
+> > > stripe width */
+> > > + fsparam_flag	("nouuid",     Opt_nouuid),    /* ignore
+> > > filesystem UUID */
+> > > + fsparam_flag_no("grpid",      Opt_grpid),     /* group-ID from
+> > > parent directory (or not) */
+> > > + fsparam_flag	("bsdgroups",  Opt_bsdgroups), /* group-ID from
+> > > parent directory */
+> > > + fsparam_flag	("sysvgroups", Opt_sysvgroups),/* group-ID from
+> > > current process */
+> > > + fsparam_string ("allocsize",  Opt_allocsize), /* preferred
+> > > allocation size */
+> > > + fsparam_flag	("norecovery", Opt_norecovery),/* don't run XFS
+> > > recovery */
+> > > + fsparam_flag	("inode64",    Opt_inode64),   /* inodes can be
+> > > allocated anywhere */
+> > > + fsparam_flag	("inode32",    Opt_inode32),   /* inode
+> > > allocation limited to XFS_MAXINUMBER_32 */
+> > > + fsparam_flag_no("ikeep",      Opt_ikeep),     /* do not free (or
+> > > keep) empty inode clusters */
+> > > + fsparam_flag_no("largeio",    Opt_largeio),   /* report (or do
+> > > not report) large I/O sizes in stat() */
+> > > + fsparam_flag_no("attr2",      Opt_attr2),     /* do (or do not)
+> > > use attr2 attribute format */
+> > > + fsparam_flag	("filestreams",Opt_filestreams), /* use
+> > > filestreams allocator */
+> > > + fsparam_flag_no("quota",      Opt_quota),     /* disk quotas
+> > > (user) */
+> > > + fsparam_flag	("usrquota",   Opt_usrquota),  /* user quota
+> > > enabled */
+> > > + fsparam_flag	("grpquota",   Opt_grpquota),  /* group quota
+> > > enabled */
+> > > + fsparam_flag	("prjquota",   Opt_prjquota),  /* project quota
+> > > enabled */
+> > > + fsparam_flag	("uquota",     Opt_uquota),    /* user quota
+> > > (IRIX variant) */
+> > > + fsparam_flag	("gquota",     Opt_gquota),    /* group quota
+> > > (IRIX variant) */
+> > > + fsparam_flag	("pquota",     Opt_pquota),    /* project quota
+> > > (IRIX variant) */
+> > > + fsparam_flag	("uqnoenforce",Opt_uqnoenforce), /* user quota
+> > > limit enforcement */
+> > > + fsparam_flag	("gqnoenforce",Opt_gqnoenforce), /* group quota
+> > > limit enforcement */
+> > > + fsparam_flag	("pqnoenforce",Opt_pqnoenforce), /* project
+> > > quota limit enforcement */
+> > > + fsparam_flag	("qnoenforce", Opt_qnoenforce),  /* same as
+> > > uqnoenforce */
+> > > + fsparam_flag_no("discard",    Opt_discard),   /* Do (or do not)
+> > > not discard unused blocks */
+> > > + fsparam_flag	("dax",	       Opt_dax),       /* Enable
+> > > direct access to bdev pages */
+> > > + {}
+> > > +};
+> > > +
+> > > +static const struct fs_parameter_description xfs_fs_parameters = {
+> > > +	.name		= "XFS",
+> > > +	.specs		= xfs_param_specs,
+> > > +};
+> > >  
+> > >  STATIC int
+> > >  suffix_kstrtoint(const substring_t *s, unsigned int base, int
+> > > *res)
 > > > 
-> > > And xfstests:
-> > > cda9817 common/quota: enable project quota correctly on f2fs
-> > > 
-> > > Yes, the for-next's may have advanced a bit since, so I'll need to update
-> > > it.  Sometimes stuff moves so fast, by the time I've worked through all the
-> > > conflicts, there's a new for-next already! I kind of figured though that
-> > > people are still sort of settling on what they want the design to even look
-> > > like, especially WRT to the *_later routines which are sort of complicated.
-> > > So I haven't been too worried about it since rebasing is mostly just
-> > > mechanical adjustments, and it could be the next review may take the design
-> > > in a different direction anyway.
-> > > 
-> > > For now though, please use those baselines if you want to apply the sets.  I
-> > > will work on getting the bases updated.
-> > > 
-> > > Thanks!
-> > > 
-> > > Allison
-> > > 
-> > > > 
-> > > > >     xfs: Embed struct xfs_name in xfs_da_args
-> > > > >     xfs: Add xfs_dabuf defines
-> > > > >     xfs: Factor out new helper functions xfs_attr_rmtval_set
-> > > > >     xfs: Factor up trans handling in xfs_attr3_leaf_flipflags
-> > > > >     xfs: Factor out xfs_attr_leaf_addname helper
-> > > > >     xfs: Factor up commit from xfs_attr_try_sf_addname
-> > > > >     xfs: Factor up trans roll from xfs_attr3_leaf_setflag
-> > > > >     xfs: Add xfs_attr3_leaf helper functions
-> > > > >     xfs: Factor out xfs_attr_rmtval_invalidate
-> > > > >     xfs: Factor up trans roll in xfs_attr3_leaf_clearflag
-> > > > >     xfs: Add delay context to xfs_da_args
-> > > > >     xfs: Add delayed attribute routines
-> > > > >     xfs: Add feature bit XFS_SB_FEAT_INCOMPAT_LOG_DELATTR
-> > > > >     xfs: Enable delayed attributes
-> > > > > 
-> > > > > Allison Henderson (4):
-> > > > >     xfs: Add xfs_has_attr and subroutines
-> > > > >     xfs: Set up infastructure for deferred attribute operations
-> > > > >     xfs: Add xfs_attr_set_deferred and xfs_attr_remove_deferred
-> > > > >     xfs_io: Add delayed attributes error tag
-> > > > > 
-> > > > >    fs/xfs/Makefile                 |    2 +-
-> > > > >    fs/xfs/libxfs/xfs_attr.c        | 1068 ++++++++++++++++++++++++++++++++++-----
-> > > > >    fs/xfs/libxfs/xfs_attr.h        |   53 +-
-> > > > >    fs/xfs/libxfs/xfs_attr_leaf.c   |  277 ++++++----
-> > > > >    fs/xfs/libxfs/xfs_attr_leaf.h   |    7 +
-> > > > >    fs/xfs/libxfs/xfs_attr_remote.c |  103 +++-
-> > > > >    fs/xfs/libxfs/xfs_attr_remote.h |    4 +-
-> > > > >    fs/xfs/libxfs/xfs_da_btree.c    |    8 +-
-> > > > >    fs/xfs/libxfs/xfs_da_btree.h    |   27 +-
-> > > > >    fs/xfs/libxfs/xfs_defer.c       |    1 +
-> > > > >    fs/xfs/libxfs/xfs_defer.h       |    3 +
-> > > > >    fs/xfs/libxfs/xfs_dir2.c        |   22 +-
-> > > > >    fs/xfs/libxfs/xfs_dir2_block.c  |    6 +-
-> > > > >    fs/xfs/libxfs/xfs_dir2_leaf.c   |    6 +-
-> > > > >    fs/xfs/libxfs/xfs_dir2_node.c   |    8 +-
-> > > > >    fs/xfs/libxfs/xfs_dir2_sf.c     |   30 +-
-> > > > >    fs/xfs/libxfs/xfs_errortag.h    |    4 +-
-> > > > >    fs/xfs/libxfs/xfs_format.h      |   11 +-
-> > > > >    fs/xfs/libxfs/xfs_fs.h          |    1 +
-> > > > >    fs/xfs/libxfs/xfs_log_format.h  |   44 +-
-> > > > >    fs/xfs/libxfs/xfs_sb.c          |    2 +
-> > > > >    fs/xfs/libxfs/xfs_types.h       |    1 +
-> > > > >    fs/xfs/scrub/attr.c             |   12 +-
-> > > > >    fs/xfs/scrub/common.c           |    2 +
-> > > > >    fs/xfs/xfs_acl.c                |   29 +-
-> > > > >    fs/xfs/xfs_attr_item.c          |  764 ++++++++++++++++++++++++++++
-> > > > >    fs/xfs/xfs_attr_item.h          |   88 ++++
-> > > > >    fs/xfs/xfs_attr_list.c          |    1 +
-> > > > >    fs/xfs/xfs_error.c              |    3 +
-> > > > >    fs/xfs/xfs_ioctl.c              |   30 +-
-> > > > >    fs/xfs/xfs_ioctl32.c            |    2 +
-> > > > >    fs/xfs/xfs_iops.c               |   14 +-
-> > > > >    fs/xfs/xfs_log.c                |    4 +
-> > > > >    fs/xfs/xfs_log_recover.c        |  173 +++++++
-> > > > >    fs/xfs/xfs_ondisk.h             |    2 +
-> > > > >    fs/xfs/xfs_super.c              |    4 +
-> > > > >    fs/xfs/xfs_trace.h              |   20 +-
-> > > > >    fs/xfs/xfs_trans.h              |    1 -
-> > > > >    fs/xfs/xfs_xattr.c              |   31 +-
-> > > > >    39 files changed, 2509 insertions(+), 359 deletions(-)
-> > > > >    create mode 100644 fs/xfs/xfs_attr_item.c
-> > > > >    create mode 100644 fs/xfs/xfs_attr_item.h
-> > > > > 
-> > > > > -- 
-> > > > > 2.7.4
-> > > > > 
+> 
