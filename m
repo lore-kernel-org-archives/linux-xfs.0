@@ -7,190 +7,222 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86FF1C4CEC9
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 17:32:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D941EC4CECE
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 17:52:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 508C621929
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 17:32:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A9DB9207FC
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 17:52:39 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="W3GArmri"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DpaDlXQm"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387871AbfIRRcu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Sep 2019 13:32:50 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:57082 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387890AbfIRRcs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Sep 2019 13:32:48 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8IHO9oX074641;
-        Wed, 18 Sep 2019 17:32:41 GMT
+        id S1728793AbfIRRwj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Sep 2019 13:52:39 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41166 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728523AbfIRRwi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Sep 2019 13:52:38 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8IHd1j1100434;
+        Wed, 18 Sep 2019 17:52:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=y3yvB9o5peEfSJ3/KZpS6cvqexwlG9BX6KOgJIcOF7Y=;
- b=W3GArmrizpn46hE5QVozajFB6ANWeC6zo688Ol78SFPlEvTN4tJXbJy1JH/wUN7vGKyv
- E2pEpj++7wqSB5WSjj9nQRt/XhBcZYE5EIH0vXF/6KCTar3xOK6Xz9+0Bu9yZhaNY2q2
- Oui+a6/2tGJSxzE4Vp7FG/1Qsgjd8cUlUIiMAtHP4g4DbeIeKUqh0zbIBeeZ85Za5G4t
- lTEbcDgphUGWTkV4q7735rFjtZpoKUzM11m/LoYpHs2jxkfntAclgbg8mZ9sNFpmyMMW
- Hg+xjvU6+G2zaJ5tFGj1OyD4jVbSgdsM4/qXaS/HcvCqURIvzoDZ8bhPe2xLiwKNbKzc eQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2v385dwg7c-1
+ bh=cgxeaOMY0qSxoZT/LWRWDSDADbr7L2IP+dx0dwUZwkI=;
+ b=DpaDlXQmw6PXX2UVdmLc6VWvo2NNbX4hq696EMrT2bqsAgeh6NXiHUwTIYAV4lzYnsSs
+ CFV6hjc1wYl4wnTLD/7Q8bxxkIt8YRkM8Ucaxttd4NHTURPPcHDSNyqggFc8icNbZmeE
+ WdntIW81ey5CHiK76yQODFq4WjAjYm5U5JxQR+zlmfxMoc5rNeWlYWPcUNjXAAOw5dSE
+ d8LNDfapWeQ05svHQ+lpymkWz+SlZNMmJCWvDzjO7pkfkwfbXdkOOkCiwPltoRkPCZ1F
+ n84JHJq7T7EE24PLIup5R+g5eo4PLjI338wuQZALVvdC+hcRZXDLM5hOUp5W22E/BM7Q FA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2v385dwhx7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Sep 2019 17:32:41 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8IHMoMl078201;
-        Wed, 18 Sep 2019 17:30:41 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2v37mndm5e-1
+        Wed, 18 Sep 2019 17:52:32 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8IHd6SM054458;
+        Wed, 18 Sep 2019 17:52:32 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2v37maxs2y-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 18 Sep 2019 17:30:41 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8IHUdci009003;
-        Wed, 18 Sep 2019 17:30:39 GMT
+        Wed, 18 Sep 2019 17:52:32 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8IHqUdd031944;
+        Wed, 18 Sep 2019 17:52:31 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 18 Sep 2019 10:30:39 -0700
-Date:   Wed, 18 Sep 2019 10:30:38 -0700
+        with ESMTP ; Wed, 18 Sep 2019 10:52:29 -0700
+Date:   Wed, 18 Sep 2019 10:52:28 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 11/19] xfs: refactor xfs_file_iomap_begin_delay
-Message-ID: <20190918173038.GC2229799@magnolia>
+Subject: Re: [PATCH 12/19] xfs: fill out the srcmap in iomap_begin
+Message-ID: <20190918175228.GE2229799@magnolia>
 References: <20190909182722.16783-1-hch@lst.de>
- <20190909182722.16783-12-hch@lst.de>
+ <20190909182722.16783-13-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190909182722.16783-12-hch@lst.de>
+In-Reply-To: <20190909182722.16783-13-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9384 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=930
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909180159
+ engine=8.0.1-1908290000 definitions=main-1909180160
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9384 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909180159
+ definitions=main-1909180160
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 09, 2019 at 08:27:14PM +0200, Christoph Hellwig wrote:
-> Rejuggle the return path to prepare for filling out a source iomap.
+On Mon, Sep 09, 2019 at 08:27:15PM +0200, Christoph Hellwig wrote:
+> Replace our local hacks to report the source block in the main iomap
+> with the proper scrmap reporting.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_iomap.c | 49 +++++++++++++++++++++++-----------------------
+>  1 file changed, 24 insertions(+), 25 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index 18a0f8a5d8c9..d12eacdc9bba 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -527,7 +527,8 @@ xfs_file_iomap_begin_delay(
+>  	loff_t			offset,
+>  	loff_t			count,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -721,11 +722,13 @@ xfs_file_iomap_begin_delay(
+>  found_cow:
+>  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	if (imap.br_startoff <= offset_fsb) {
+> -		/* ensure we only report blocks we have a reservation for */
+> -		xfs_trim_extent(&imap, cmap.br_startoff, cmap.br_blockcount);
+> -		return xfs_bmbt_to_iomap(ip, iomap, &imap, IOMAP_F_SHARED);
+> +		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, 0);
+> +		if (error)
+> +			return error;
+> +	} else {
+> +		xfs_trim_extent(&cmap, offset_fsb,
+> +				imap.br_startoff - offset_fsb);
+>  	}
+> -	xfs_trim_extent(&cmap, offset_fsb, imap.br_startoff - offset_fsb);
+>  	return xfs_bmbt_to_iomap(ip, iomap, &cmap, IOMAP_F_SHARED);
+>  
+>  out_unlock:
+> @@ -933,7 +936,7 @@ xfs_file_iomap_begin(
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> -	struct xfs_bmbt_irec	imap;
+> +	struct xfs_bmbt_irec	imap, cmap;
+>  	xfs_fileoff_t		offset_fsb, end_fsb;
+>  	int			nimaps = 1, error = 0;
+>  	bool			shared = false;
+> @@ -947,7 +950,7 @@ xfs_file_iomap_begin(
+>  			!IS_DAX(inode) && !xfs_get_extsz_hint(ip)) {
+>  		/* Reserve delalloc blocks for regular writeback. */
+>  		return xfs_file_iomap_begin_delay(inode, offset, length, flags,
+> -				iomap);
+> +				iomap, srcmap);
+>  	}
+>  
+>  	/*
+> @@ -987,9 +990,6 @@ xfs_file_iomap_begin(
+>  	 * been done up front, so we don't need to do them here.
+>  	 */
+>  	if (xfs_is_cow_inode(ip)) {
+> -		struct xfs_bmbt_irec	cmap;
+> -		bool			directio = (flags & IOMAP_DIRECT);
+> -
+>  		/* if zeroing doesn't need COW allocation, then we are done. */
+>  		if ((flags & IOMAP_ZERO) &&
+>  		    !needs_cow_for_zeroing(&imap, nimaps))
+> @@ -997,23 +997,11 @@ xfs_file_iomap_begin(
+>  
+>  		/* may drop and re-acquire the ilock */
+>  		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
+> -				&lockmode, directio);
+> +				&lockmode, flags & IOMAP_DIRECT);
+>  		if (error)
+>  			goto out_unlock;
+> -
+> -		/*
+> -		 * For buffered writes we need to report the address of the
+> -		 * previous block (if there was any) so that the higher level
+> -		 * write code can perform read-modify-write operations; we
+> -		 * won't need the CoW fork mapping until writeback.  For direct
+> -		 * I/O, which must be block aligned, we need to report the
+> -		 * newly allocated address.  If the data fork has a hole, copy
+> -		 * the COW fork mapping to avoid allocating to the data fork.
+> -		 */
+> -		if (shared &&
+> -		    (directio || imap.br_startblock == HOLESTARTBLOCK))
+> -			imap = cmap;
+> -
+> +		if (shared)
+> +			goto out_found_cow;
+>  		end_fsb = imap.br_startoff + imap.br_blockcount;
+>  		length = XFS_FSB_TO_B(mp, end_fsb) - offset;
+>  	}
+> @@ -1067,6 +1055,17 @@ xfs_file_iomap_begin(
+>  	trace_xfs_iomap_found(ip, offset, length, XFS_DATA_FORK, &imap);
+>  	goto out_finish;
+>  
+> +out_found_cow:
+> +	xfs_iunlock(ip, lockmode);
+> +	length = XFS_FSB_TO_B(mp, cmap.br_startoff + cmap.br_blockcount);
+> +	trace_xfs_iomap_found(ip, offset, length - offset, XFS_COW_FORK, &cmap);
+> +	if (imap.br_startblock != HOLESTARTBLOCK) {
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+TBH I've been wondering for a while now if it would make more sense to
+do this in iomap_apply (and the open-coded versions in dax.c):
+
+	struct iomap srcmap = { .type = IOMAP_HOLE };
+
+in the iomap_apply function (and change the "if (!srcmap.type)" checks
+to "if (srcmap.type != IOMAP_HOLE)").  That would get rid of the weird
+situation where iomap.h doesn't define an iomap type name corresponding
+to 0 but clearly it has some special meaning because the iomap code
+changes behavior based on that.
+
+It also strikes me as weird that for the @imap parameter, type == 0
+would be considered a coding error but for @srcmap, we use type == 0 to
+mean "no mapping" but we don't do that for @srcmap.type == IOMAP_HOLE.
+
+I mention that because, if some ->iomap_begin function returns
+IOMAP_HOLE then iomap_apply will pass the (hole) srcmap as the second
+parameter to the ->actor function.  When that happens, iomap_write_begin
+call will try to fill in the rest of the page from @srcmap (which is
+hole), not the @iomap (which might not be a hole) which seems wrong.
+
+As for this function, if we made the above change, then the conditional
+becomes unneccessary -- we know this is a COW write, so we call
+xfs_bmbt_to_iomap on both mappings and exit.  No need for special
+casing.
 
 --D
 
-> ---
->  fs/xfs/xfs_iomap.c | 48 +++++++++++++++++++++++-----------------------
->  1 file changed, 24 insertions(+), 24 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index b228d1dbf59f..18a0f8a5d8c9 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -539,7 +539,6 @@ xfs_file_iomap_begin_delay(
->  	struct xfs_iext_cursor	icur, ccur;
->  	xfs_fsblock_t		prealloc_blocks = 0;
->  	bool			eof = false, cow_eof = false, shared = false;
-> -	u16			iomap_flags = 0;
->  	int			whichfork = XFS_DATA_FORK;
->  	int			error = 0;
->  
-> @@ -600,8 +599,7 @@ xfs_file_iomap_begin_delay(
->  				&ccur, &cmap);
->  		if (!cow_eof && cmap.br_startoff <= offset_fsb) {
->  			trace_xfs_reflink_cow_found(ip, &cmap);
-> -			whichfork = XFS_COW_FORK;
-> -			goto done;
-> +			goto found_cow;
->  		}
->  	}
->  
-> @@ -615,7 +613,7 @@ xfs_file_iomap_begin_delay(
->  		    ((flags & IOMAP_ZERO) && imap.br_state != XFS_EXT_NORM)) {
->  			trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
->  					&imap);
-> -			goto done;
-> +			goto found_imap;
->  		}
->  
->  		xfs_trim_extent(&imap, offset_fsb, end_fsb - offset_fsb);
-> @@ -629,7 +627,7 @@ xfs_file_iomap_begin_delay(
->  		if (!shared) {
->  			trace_xfs_iomap_found(ip, offset, count, XFS_DATA_FORK,
->  					&imap);
-> -			goto done;
-> +			goto found_imap;
->  		}
->  
->  		/*
-> @@ -703,35 +701,37 @@ xfs_file_iomap_begin_delay(
->  		goto out_unlock;
->  	}
->  
-> +	if (whichfork == XFS_COW_FORK) {
-> +		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &cmap);
-> +		goto found_cow;
+> +		error = xfs_bmbt_to_iomap(ip, srcmap, &imap, 0);
+> +		if (error)
+> +			return error;
 > +	}
-> +
->  	/*
->  	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
->  	 * them out if the write happens to fail.
->  	 */
-> -	if (whichfork == XFS_DATA_FORK) {
-> -		iomap_flags |= IOMAP_F_NEW;
-> -		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
-> -	} else {
-> -		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &cmap);
-> -	}
-> -done:
-> -	if (whichfork == XFS_COW_FORK) {
-> -		if (imap.br_startoff > offset_fsb) {
-> -			xfs_trim_extent(&cmap, offset_fsb,
-> -					imap.br_startoff - offset_fsb);
-> -			error = xfs_bmbt_to_iomap(ip, iomap, &cmap,
-> -					IOMAP_F_SHARED);
-> -			goto out_unlock;
-> -		}
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
-> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, IOMAP_F_NEW);
-> +
-> +found_imap:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	return xfs_bmbt_to_iomap(ip, iomap, &imap, 0);
-> +
-> +found_cow:
-> +	xfs_iunlock(ip, XFS_ILOCK_EXCL);
-> +	if (imap.br_startoff <= offset_fsb) {
->  		/* ensure we only report blocks we have a reservation for */
->  		xfs_trim_extent(&imap, cmap.br_startoff, cmap.br_blockcount);
-> -		shared = true;
-> +		return xfs_bmbt_to_iomap(ip, iomap, &imap, IOMAP_F_SHARED);
->  	}
-> -	if (shared)
-> -		iomap_flags |= IOMAP_F_SHARED;
-> -	error = xfs_bmbt_to_iomap(ip, iomap, &imap, iomap_flags);
-> +	xfs_trim_extent(&cmap, offset_fsb, imap.br_startoff - offset_fsb);
 > +	return xfs_bmbt_to_iomap(ip, iomap, &cmap, IOMAP_F_SHARED);
 > +
 >  out_unlock:
->  	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  	xfs_iunlock(ip, lockmode);
 >  	return error;
-> +
->  }
->  
->  int
 > -- 
 > 2.20.1
 > 
