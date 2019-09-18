@@ -2,84 +2,57 @@ Return-Path: <SRS0=SLm5=XN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ED1FAC4CECE
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 12:31:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C215C4CEC4
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 13:24:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C4C6A2196E
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 12:31:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 096DF218AF
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 13:24:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729339AbfIRMbQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Sep 2019 08:31:16 -0400
-Received: from mx2.suse.de ([195.135.220.15]:36768 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725902AbfIRMbP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Sep 2019 08:31:15 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id ED106AD2B;
-        Wed, 18 Sep 2019 12:31:13 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 07F751E4201; Wed, 18 Sep 2019 14:31:24 +0200 (CEST)
-Date:   Wed, 18 Sep 2019 14:31:24 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Jan Kara <jack@suse.cz>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, Amir Goldstein <amir73il@gmail.com>,
-        Boaz Harrosh <boaz@plexistor.com>,
-        linux-fsdevel@vger.kernel.org, stable@vger.kernel.org
-Subject: Re: [PATCH 3/3] xfs: Fix stale data exposure when readahead races
- with hole punch
-Message-ID: <20190918123123.GC31891@quack2.suse.cz>
-References: <20190829131034.10563-1-jack@suse.cz>
- <20190829131034.10563-4-jack@suse.cz>
- <20190829155204.GD5354@magnolia>
- <20190830152449.GA25069@quack2.suse.cz>
+        id S1726545AbfIRNYk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Sep 2019 09:24:40 -0400
+Received: from verein.lst.de ([213.95.11.211]:33291 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726369AbfIRNYk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Sep 2019 09:24:40 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 887EB68BFE; Wed, 18 Sep 2019 15:24:36 +0200 (CEST)
+Date:   Wed, 18 Sep 2019 15:24:36 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 9/9] xfs: Get rid of ->bmap
+Message-ID: <20190918132436.GA16210@lst.de>
+References: <20190911134315.27380-1-cmaiolino@redhat.com> <20190911134315.27380-10-cmaiolino@redhat.com> <20190916175049.GD2229799@magnolia> <20190918081303.zwnxr7pvtotr7cnt@pegasus.maiolino.io>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190830152449.GA25069@quack2.suse.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20190918081303.zwnxr7pvtotr7cnt@pegasus.maiolino.io>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri 30-08-19 17:24:49, Jan Kara wrote:
-> On Thu 29-08-19 08:52:04, Darrick J. Wong wrote:
-> > On Thu, Aug 29, 2019 at 03:10:34PM +0200, Jan Kara wrote:
-> > > Hole puching currently evicts pages from page cache and then goes on to
-> > > remove blocks from the inode. This happens under both XFS_IOLOCK_EXCL
-> > > and XFS_MMAPLOCK_EXCL which provides appropriate serialization with
-> > > racing reads or page faults. However there is currently nothing that
-> > > prevents readahead triggered by fadvise() or madvise() from racing with
-> > > the hole punch and instantiating page cache page after hole punching has
-> > > evicted page cache in xfs_flush_unmap_range() but before it has removed
-> > > blocks from the inode. This page cache page will be mapping soon to be
-> > > freed block and that can lead to returning stale data to userspace or
-> > > even filesystem corruption.
-> > > 
-> > > Fix the problem by protecting handling of readahead requests by
-> > > XFS_IOLOCK_SHARED similarly as we protect reads.
-> > > 
-> > > CC: stable@vger.kernel.org
-> > > Link: https://lore.kernel.org/linux-fsdevel/CAOQ4uxjQNmxqmtA_VbYW0Su9rKRk2zobJmahcyeaEVOFKVQ5dw@mail.gmail.com/
-> > > Reported-by: Amir Goldstein <amir73il@gmail.com>
-> > > Signed-off-by: Jan Kara <jack@suse.cz>
-> > 
-> > Is there a test on xfstests to demonstrate this race?
+On Wed, Sep 18, 2019 at 10:13:04AM +0200, Carlos Maiolino wrote:
+> All checks are now made in the caller, bmap_fiemap() based on the filesystem's
+> returned flags in the fiemap structure. So, it will decide to pass the result
+> back, or just return -EINVAL.
 > 
-> No, but I can try to create one.
+> Well, there is no way for iomap (or bmap_fiemap now) detect the block is in a
+> realtime device, since we have no flags for that.
+> 
+> Following Christoph's line of thought here, maybe we can add a new IOMAP_F_* so
+> the filesystem can notify iomap the extent is in a different device? I don't
+> know, just a thought.
+> 
+> This would still keep the consistency of leaving bmap_fiemap() with the decision
+> of passing or not.
 
-I was experimenting with this but I could not reproduce the issue in my
-test VM without inserting artificial delay at appropriate place... So I
-don't think there's much point in the fstest for this.
-
-								Honza
-
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+I think this actually is a problem with FIEMAP as well, as it
+doesn't report that things are on a different device.  So I guess for
+now we should fail FIEMAP on the RT device as well.
