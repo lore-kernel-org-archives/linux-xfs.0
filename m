@@ -2,198 +2,70 @@ Return-Path: <SRS0=SLm5=XN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 73158C4CEC9
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 08:13:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BCA5C4CEC9
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 08:24:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 47DB320882
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 08:13:13 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="M38hDOGF"
+	by mail.kernel.org (Postfix) with ESMTP id 06DBF21907
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 08:24:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727357AbfIRINM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Sep 2019 04:13:12 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:55622 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725904AbfIRINM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Sep 2019 04:13:12 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1568794390;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=tBYmZWNzZyK028kjLPP0OXuxVtKSoC6D+SKbaDamD4I=;
-        b=M38hDOGFJ3X/XRE0iWvisM7U6DqhJ/W6tk7Q26E90my1gmSnFfxcqPpuD0tANJ0yZqhiqG
-        xiw6Un88BL5jjtJXgUycB68gU6yo9DQTj150byxPzNZtgPZwZs+As9RE4+fmvQMOSrLwEW
-        6J7gDu8jXCfaC3RqPsZgslifGlh2H6s=
-Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
- [209.85.221.72]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-256-ZANyDtYSPrKO-JcPToT4Pg-1; Wed, 18 Sep 2019 04:13:09 -0400
-Received: by mail-wr1-f72.google.com with SMTP id a15so1374879wrq.4
-        for <linux-xfs@vger.kernel.org>; Wed, 18 Sep 2019 01:13:08 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=J4kepTS6NkmfbnktEqYL/8vMgSj5zo0CMdID2s24SxA=;
-        b=VU4sF8RLQ2An2u8wlk0X07yX78dub/11DRGGurlY0gGXojAUYKkbYkRw/ajVIMDH+b
-         EpRIMvSKa4xEPo5676rgY2j+khNT+N/I55tiDLyR7Rw+x4PS7n2cHuHsvyoXKnuvGBiz
-         umO6PKqrv0WxKTsyI17y04ggmYLu+D42T3QbPJCSXkdco3OzshKiUvZI1BTIpzQaHpLR
-         qARIjeL59LRxvqP0eIlz95EIpuOVisrp1Wvpv/sxSfS4qs4TItp+jw/Va/fnLnYbI+G7
-         mrY81OgQKf3ckD68eAAKqJFhZ+TcSPPeto8vLTYSXxinhI1E5eLuUgXOdWti6xG0ZMiG
-         kJdA==
-X-Gm-Message-State: APjAAAWA8C2UxzteTY+pQzVYmodgsfGmJVdrQmyRE3xCAfVjbimheBJc
-        8nnjYJd6967f5zWbk/kkoxS4Zqql+LFCinhxfCQMzxxBM4zbqkXDMMGwpMcC3CIWAB4fkQhDQCK
-        k0Ng+GelMryOxOF23QT5A
-X-Received: by 2002:adf:e546:: with SMTP id z6mr1900215wrm.113.1568794387954;
-        Wed, 18 Sep 2019 01:13:07 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwfEsW540R3Q99RCfI7F4kgHXGYxgQwl2/wjeHdPZ0+/IveBc9WLaQpP6PGn/2RmGsPRiesiQ==
-X-Received: by 2002:adf:e546:: with SMTP id z6mr1900186wrm.113.1568794387320;
-        Wed, 18 Sep 2019 01:13:07 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id j22sm9873011wre.45.2019.09.18.01.13.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Sep 2019 01:13:06 -0700 (PDT)
-Date:   Wed, 18 Sep 2019 10:13:04 +0200
+        id S1726975AbfIRIY6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Sep 2019 04:24:58 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49484 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726131AbfIRIY6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Sep 2019 04:24:58 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3E255A3D389;
+        Wed, 18 Sep 2019 08:24:58 +0000 (UTC)
+Received: from pegasus.maiolino.com (ovpn-204-62.brq.redhat.com [10.40.204.62])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 54C4A5D9D5;
+        Wed, 18 Sep 2019 08:24:57 +0000 (UTC)
 From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 9/9] xfs: Get rid of ->bmap
-Message-ID: <20190918081303.zwnxr7pvtotr7cnt@pegasus.maiolino.io>
-Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-fsdevel@vger.kernel.org, hch@lst.de, adilger@dilger.ca,
-        linux-xfs@vger.kernel.org
-References: <20190911134315.27380-1-cmaiolino@redhat.com>
- <20190911134315.27380-10-cmaiolino@redhat.com>
- <20190916175049.GD2229799@magnolia>
+To:     linux-xfs@vger.kernel.org
+Cc:     bfoster@redhat.com, david@fromorbit.com
+Subject: [PATCH RFC 0/2] A small improvement in the allocation algorithm
+Date:   Wed, 18 Sep 2019 10:24:51 +0200
+Message-Id: <20190918082453.25266-1-cmaiolino@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20190916175049.GD2229799@magnolia>
-User-Agent: NeoMutt/20180716
-X-MC-Unique: ZANyDtYSPrKO-JcPToT4Pg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Wed, 18 Sep 2019 08:24:58 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 16, 2019 at 10:50:49AM -0700, Darrick J. Wong wrote:
-> On Wed, Sep 11, 2019 at 03:43:15PM +0200, Carlos Maiolino wrote:
-> > We don't need ->bmap anymore, only usage for it was FIBMAP, which is no=
-w
-> > gone.
-> >=20
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
-> >=20
-> > Changelog:
-> > =09V5:
-> > =09=09- Properly rebase against 5.3
-> > =09=09- iomap_{bmap(),bmap_actor()} are now used also by GFS2, so
-> > =09=09  don't remove them anymore
-> > =09V2:
-> > =09=09- Kill iomap_bmap() and iomap_bmap_actor()
-> >=20
-> >  fs/xfs/xfs_aops.c  | 24 ------------------------
-> >  fs/xfs/xfs_trace.h |  1 -
-> >  2 files changed, 25 deletions(-)
-> >=20
-> > diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> > index 4e4a4d7df5ac..a2884537d2c2 100644
-> > --- a/fs/xfs/xfs_aops.c
-> > +++ b/fs/xfs/xfs_aops.c
-> > @@ -1138,29 +1138,6 @@ xfs_vm_releasepage(
-> >  =09return iomap_releasepage(page, gfp_mask);
-> >  }
-> > =20
-> > -STATIC sector_t
-> > -xfs_vm_bmap(
-> > -=09struct address_space=09*mapping,
-> > -=09sector_t=09=09block)
-> > -{
-> > -=09struct xfs_inode=09*ip =3D XFS_I(mapping->host);
-> > -
-> > -=09trace_xfs_vm_bmap(ip);
-> > -
-> > -=09/*
-> > -=09 * The swap code (ab-)uses ->bmap to get a block mapping and then
-> > -=09 * bypasses the file system for actual I/O.  We really can't allow
-> > -=09 * that on reflinks inodes, so we have to skip out here.  And yes,
-> > -=09 * 0 is the magic code for a bmap error.
-> > -=09 *
-> > -=09 * Since we don't pass back blockdev info, we can't return bmap
-> > -=09 * information for rt files either.
-> > -=09 */
-> > -=09if (xfs_is_cow_inode(ip) || XFS_IS_REALTIME_INODE(ip))
->=20
-> Uhhhh where does this check happen now?
+This is totally based on the discussion between Brian, Dave and me regarding the
+issues we have on the allocation mechanism, and this patchset is just used to
+put the ideas together.
 
-All checks are now made in the caller, bmap_fiemap() based on the filesyste=
-m's
-returned flags in the fiemap structure. So, it will decide to pass the resu=
-lt
-back, or just return -EINVAL.
+Dave, this is a small improvement based on your hack on your original patch, to
+'fix' the total number. And based on my last reply to the thread
 
-Well, there is no way for iomap (or bmap_fiemap now) detect the block is in=
- a
-realtime device, since we have no flags for that.
+It still does need improvement, and I need to check the math, but I think we
+should maybe start here.
 
-Following Christoph's line of thought here, maybe we can add a new IOMAP_F_=
-* so
-the filesystem can notify iomap the extent is in a different device? I don'=
-t
-know, just a thought.
+I just removed the hack from your patch, and moved the args.total fix to the 2nd
+patch.
 
-This would still keep the consistency of leaving bmap_fiemap() with the dec=
-ision
-of passing or not.
+What you guys think about it?
 
-Cheers.
+Carlos Maiolino (1):
+  xfs: Limit total allocation request to maximum possible
 
->=20
-> --D
->=20
-> > -=09=09return 0;
-> > -=09return iomap_bmap(mapping, block, &xfs_iomap_ops);
-> > -}
-> > -
-> >  STATIC int
-> >  xfs_vm_readpage(
-> >  =09struct file=09=09*unused,
-> > @@ -1199,7 +1176,6 @@ const struct address_space_operations xfs_address=
-_space_operations =3D {
-> >  =09.set_page_dirty=09=09=3D iomap_set_page_dirty,
-> >  =09.releasepage=09=09=3D xfs_vm_releasepage,
-> >  =09.invalidatepage=09=09=3D xfs_vm_invalidatepage,
-> > -=09.bmap=09=09=09=3D xfs_vm_bmap,
-> >  =09.direct_IO=09=09=3D noop_direct_IO,
-> >  =09.migratepage=09=09=3D iomap_migrate_page,
-> >  =09.is_partially_uptodate  =3D iomap_is_partially_uptodate,
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index eaae275ed430..c226b562f5da 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -626,7 +626,6 @@ DEFINE_INODE_EVENT(xfs_readdir);
-> >  #ifdef CONFIG_XFS_POSIX_ACL
-> >  DEFINE_INODE_EVENT(xfs_get_acl);
-> >  #endif
-> > -DEFINE_INODE_EVENT(xfs_vm_bmap);
-> >  DEFINE_INODE_EVENT(xfs_file_ioctl);
-> >  DEFINE_INODE_EVENT(xfs_file_compat_ioctl);
-> >  DEFINE_INODE_EVENT(xfs_ioctl_setattr);
-> > --=20
-> > 2.20.1
-> >=20
+Dave Chinner (1):
+  xfs: cap longest free extent to maximum allocatable
 
---=20
-Carlos
+ fs/xfs/libxfs/xfs_alloc.c | 3 ++-
+ fs/xfs/libxfs/xfs_bmap.c  | 5 +++++
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+-- 
+2.20.1
 
