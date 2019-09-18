@@ -5,65 +5,65 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8020BC4CEC4
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 11:47:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9BBCC4CEC4
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 11:49:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DE8121929
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 11:47:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7BECF21924
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 11:49:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kMPGTnBM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mdT+3fEX"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730368AbfIRLru (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Sep 2019 07:47:50 -0400
-Received: from mail-pg1-f180.google.com ([209.85.215.180]:44147 "EHLO
-        mail-pg1-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730363AbfIRLru (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Sep 2019 07:47:50 -0400
-Received: by mail-pg1-f180.google.com with SMTP id i18so3905169pgl.11;
-        Wed, 18 Sep 2019 04:47:50 -0700 (PDT)
+        id S1730533AbfIRLtZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Sep 2019 07:49:25 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:35278 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726545AbfIRLtZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Sep 2019 07:49:25 -0400
+Received: by mail-pl1-f193.google.com with SMTP id s17so3052980plp.2;
+        Wed, 18 Sep 2019 04:49:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=to:cc:from:subject:message-id:date:user-agent:mime-version
          :content-language:content-transfer-encoding;
-        bh=cDeeeIU+8nxtTOe/K/XrvhVEeZwl4u6JRjr2w2dDRW8=;
-        b=kMPGTnBM+JvEti92UddaXcYWzT7/wB0q7wiUxoS3JcP5hUG6f7HotsiVlSWVpDa6tG
-         rIiIsNiB0JkZ8UAgwcG8xj+eXhDvaikSUD2Yot2oskPuROLKRtsv9hHuWFb5Uz5H+jtJ
-         ILzUXgt5Evqb/HB5Y4ZKzxfK6JrGuMr3zmUqmDEVVgIodBZq6PUSlaeN678BDi6TDDzG
-         NKGVQg1xI2abSe1HDGxh2TUQqXETrqrntbMqaGKhMFvLVqB7RXGiNEubl0LLIrhe6ybM
-         yhXaYRdaf1iLV2MJaMk9rmOqgN/DsHbXeTgY/ki0+gvSF+2q2NTR93JhvdYWFknC9uQa
-         3g5w==
+        bh=bQ/MA/LGtZ5GVvu+LMj6BceyBfJYfZgDOycctOdkkrE=;
+        b=mdT+3fEXduwa+GGOP8QlYdJLLllSPk/S10OegxYqac4SvyauMBG+fhHHkC80xVYaP2
+         c79UUJSoy6pjXJ+ocAQYLcE859i/rY0ZV73apIfPAogt8DHYBLVcxljegXYoHccDOeVi
+         bYA4dPO5BuRcZXDmpL0dLpspzl49kDGLOOJWy4lnpaxybFhMLwokwwS7kcm7QChOsvFw
+         qOadLfZCwmRGC+XCXOZdbwXPTndug7Zx2YxVWGmqC+JBIkGdXwCOjAQP0aH6BFgOxsTc
+         JM/u7pbV53GjpP5JIhscftteJIagoL24ieMgLVGP3gfa22h1i98FcYvWTKhKAAaItLcm
+         plBw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
          :mime-version:content-language:content-transfer-encoding;
-        bh=cDeeeIU+8nxtTOe/K/XrvhVEeZwl4u6JRjr2w2dDRW8=;
-        b=shuv0GKfqZ76ZGroFzdrqftUnTKQwm1D89t5/8a2i50h9RuVNAeLb277acjAHAHi0a
-         EeA0Jwplj0iP1zxudrtlwcWjl4oqfrMrxlE7cH9DZ875qAUo7wz33S/UUuPSZckkn+pV
-         m2gB2fdMrc1axNHKO+FZTH/5azIbfXEeidoZcUN2T0PjSVKMzZsl7ZWSilzlylo3pgb8
-         eTEN8VBluNVHHAcTm2HuVCaSYmbqUdin+KR8ZW0EvOtaGtNhcfWOdwubu9DUyBFpKBW5
-         CFYZ12u4Y6KUBJeeNgWYGawv3FitJDqluVyV+l/4/mpDqwN9ft4YtrdLCt0hFghgNLFC
-         r27g==
-X-Gm-Message-State: APjAAAVc0InxzdsENL0+4WlKn5np76mXc1bmj/sDUcdG8WRkxAQxG7Kl
-        0ZvctQht1dtqdc+s/N7ZsQ==
-X-Google-Smtp-Source: APXvYqzfP34H92UIFKsUiDUaysP2vq/KGnFO99mpJJfhPNN8MKaImIfQvIHaNVZqkOrqBhMFAGXtUA==
-X-Received: by 2002:a62:d445:: with SMTP id u5mr3747711pfl.92.1568807269860;
-        Wed, 18 Sep 2019 04:47:49 -0700 (PDT)
+        bh=bQ/MA/LGtZ5GVvu+LMj6BceyBfJYfZgDOycctOdkkrE=;
+        b=lCSrR+ecTHk4aet3c/KgjBobZzz9HvwJ7PJtRoR9gaIa6LLfvefNiHqpoQ9+aWFFm4
+         r2Qr/lkR+/hXP35t4c1RMBwzknfxBLBNWEXxalEwJUymNm15g7XGcEFl+9EXI4NOoNap
+         FFD0YDBbFQ5+ZsMnPSgR5iPF4RZgZRH+lXt4ZKL0zX5AgCrlX1VJIcvIZvf4e77wlTHr
+         NnujYAZIcq7G1fZEt9tr7nB+aW60WJ405SBGuAE/8ywKKAgoMnthHGa9EufSTQhhmqgB
+         gMmQJAWcgu8S44sfVtKCy6s+ZFSNHT50+kBZl0cOVQTBqzsuIZGzQ5py/9H6w2sxWpHz
+         q+JA==
+X-Gm-Message-State: APjAAAUP5z2zZg1kkduZUOYg2S/esQHwRdt6pGt6WYWGp3UiuedTDP5k
+        pSCeC0PCrcza3nqoWHrB1g==
+X-Google-Smtp-Source: APXvYqygOO/WQ1/qjL90aVLesFQOszXD3DJJtiWyjTt0g0G6AuGpcxT+ck+q5KCqTO2RPvdUEWHw4A==
+X-Received: by 2002:a17:902:b7c3:: with SMTP id v3mr3616678plz.139.1568807364833;
+        Wed, 18 Sep 2019 04:49:24 -0700 (PDT)
 Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id r187sm7402111pfc.105.2019.09.18.04.47.47
+        by smtp.gmail.com with ESMTPSA id b20sm10625220pff.158.2019.09.18.04.49.22
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Sep 2019 04:47:49 -0700 (PDT)
+        Wed, 18 Sep 2019 04:49:24 -0700 (PDT)
 To:     fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>,
         "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
         jasperwang@tencent.com
 From:   kaixuxia <xiakaixu1987@gmail.com>
-Subject: [PATCH v3 1/2] common: check if a given rename flag is supported in
- _requires_renameat2
-Message-ID: <7d4b6a1d-98a1-1fcb-5ccf-991e537df77c@gmail.com>
-Date:   Wed, 18 Sep 2019 19:47:47 +0800
+Subject: [PATCH v3 2/2] xfs: test the deadlock between the AGI and AGF with
+ RENAME_WHITEOUT
+Message-ID: <db6c5d87-5a47-75bd-4d24-a135e6bcd783@gmail.com>
+Date:   Wed, 18 Sep 2019 19:49:22 +0800
 User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
  Thunderbird/60.9.0
 MIME-Version: 1.0
@@ -75,146 +75,138 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Some testcases may require a special rename flag, such as RENAME_WHITEOUT,
-so add support check for if a given rename flag is supported in
-_requires_renameat2.
+There is ABBA deadlock bug between the AGI and AGF when performing
+rename() with RENAME_WHITEOUT flag, and add this testcase to make
+sure the rename() call works well.
 
 Signed-off-by: kaixuxia <kaixuxia@tencent.com>
 ---
- common/renameat2  | 30 +++++++++++++++++++++++++++++-
- tests/generic/024 | 13 +++----------
- tests/generic/025 | 13 +++----------
- tests/generic/078 | 13 +++----------
- 4 files changed, 38 insertions(+), 31 deletions(-)
+ tests/xfs/512     | 96 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/xfs/512.out |  2 ++
+ tests/xfs/group   |  1 +
+ 3 files changed, 99 insertions(+)
+ create mode 100755 tests/xfs/512
+ create mode 100644 tests/xfs/512.out
 
-diff --git a/common/renameat2 b/common/renameat2
-index f8d6d4f..9625d8c 100644
---- a/common/renameat2
-+++ b/common/renameat2
-@@ -103,10 +103,38 @@ _rename_tests()
- #
- _requires_renameat2()
- {
-+	local flags=$1
-+	local rename_dir=$TEST_DIR/$$
-+	local cmd=""
+diff --git a/tests/xfs/512 b/tests/xfs/512
+new file mode 100755
+index 0000000..a2089f0
+--- /dev/null
++++ b/tests/xfs/512
+@@ -0,0 +1,96 @@
++#! /bin/bash
++# SPDX-License-Identifier: GPL-2.0
++# Copyright (c) 2019 Tencent.  All Rights Reserved.
++#
++# FS QA Test 512
++#
++# Test the ABBA deadlock case between the AGI and AGF When performing
++# rename operation with RENAME_WHITEOUT flag.
++#
++seq=`basename $0`
++seqres=$RESULT_DIR/$seq
++echo "QA output created by $seq"
 +
- 	if test ! -x src/renameat2; then
- 		_notrun "renameat2 binary not found"
- 	fi
--	if ! src/renameat2 -t; then
++here=`pwd`
++tmp=/tmp/$$
++status=1	# failure is the default!
++trap "_cleanup; exit \$status" 0 1 2 3 15
 +
-+	mkdir $rename_dir
-+	touch $rename_dir/foo
-+	case $flags in
-+	"noreplace")
-+		cmd="-n $rename_dir/foo $rename_dir/bar"
-+		;;
-+	"exchange")
-+		touch $rename_dir/bar
-+		cmd="-x $rename_dir/foo $rename_dir/bar"
-+		;;
-+	"whiteout")
-+		touch $rename_dir/bar
-+		cmd="-w $rename_dir/foo $rename_dir/bar"
-+		;;
-+	"")
-+		;;
-+	*)
-+		rm -rf $rename_dir
-+		_notrun "only support noreplace,exchange,whiteout rename flags, please check."
-+		;;
-+	esac
-+	if ! src/renameat2 -t $cmd; then
-+		rm -rf $rename_dir
- 		_notrun "kernel doesn't support renameat2 syscall"
- 	fi
-+	rm -rf $rename_dir
- }
-diff --git a/tests/generic/024 b/tests/generic/024
-index 2888c66..9c1161a 100755
---- a/tests/generic/024
-+++ b/tests/generic/024
-@@ -29,20 +29,13 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_test
--_requires_renameat2
-+_requires_renameat2 noreplace
- _require_test_symlinks
- 
--rename_dir=$TEST_DIR/$$
--mkdir $rename_dir
--touch $rename_dir/foo
--if ! src/renameat2 -t -n $rename_dir/foo $rename_dir/bar; then
--    rm -f $rename_dir/foo $rename_dir/bar; rmdir $rename_dir
--    _notrun "fs doesn't support RENAME_NOREPLACE"
--fi
--rm -f $rename_dir/foo $rename_dir/bar
--
- # real QA test starts here
- 
-+rename_dir=$TEST_DIR/$$
-+mkdir $rename_dir
- _rename_tests $rename_dir -n
- rmdir $rename_dir
- 
-diff --git a/tests/generic/025 b/tests/generic/025
-index 0310efa..1ee9ad6 100755
---- a/tests/generic/025
-+++ b/tests/generic/025
-@@ -29,20 +29,13 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_test
--_requires_renameat2
-+_requires_renameat2 exchange
- _require_test_symlinks
- 
--rename_dir=$TEST_DIR/$$
--mkdir $rename_dir
--touch $rename_dir/foo $rename_dir/bar
--if ! src/renameat2 -t -x $rename_dir/foo $rename_dir/bar; then
--    rm -f $rename_dir/foo $rename_dir/bar; rmdir $rename_dir
--    _notrun "fs doesn't support RENAME_EXCHANGE"
--fi
--rm -f $rename_dir/foo $rename_dir/bar
--
- # real QA test starts here
- 
-+rename_dir=$TEST_DIR/$$
-+mkdir $rename_dir
- _rename_tests $rename_dir -x
- rmdir $rename_dir
- 
-diff --git a/tests/generic/078 b/tests/generic/078
-index 9608574..37f3201 100755
---- a/tests/generic/078
-+++ b/tests/generic/078
-@@ -29,20 +29,13 @@ _supported_fs generic
- _supported_os Linux
- 
- _require_test
--_requires_renameat2
++_cleanup()
++{
++	cd /
++	rm -f $tmp.*
++}
++
++# get standard environment, filters and checks
++. ./common/rc
++. ./common/filter
++. ./common/renameat2
++
++rm -f $seqres.full
++
++# real QA test starts here
++_supported_fs xfs
++_supported_os Linux
++# single AG will cause default xfs_repair to fail. This test need a
++# single AG fs, so ignore the check.
++_require_scratch_nocheck
 +_requires_renameat2 whiteout
- _require_test_symlinks
- 
--rename_dir=$TEST_DIR/$$
--mkdir $rename_dir
--touch $rename_dir/foo $rename_dir/bar
--if ! src/renameat2 -t -w $rename_dir/foo $rename_dir/bar; then
--    rm -f $rename_dir/foo $rename_dir/bar; rmdir $rename_dir
--    _notrun "fs doesn't support RENAME_WHITEOUT"
--fi
--rm -f $rename_dir/foo $rename_dir/bar
--
- # real QA test starts here
- 
-+rename_dir=$TEST_DIR/$$
-+mkdir $rename_dir
- _rename_tests $rename_dir -w
- rmdir $rename_dir
- 
++
++filter_enospc() {
++	sed -e '/^.*No space left on device.*/d'
++}
++
++create_file()
++{
++	local target_dir=$1
++	local files_count=$2
++
++	for i in $(seq 1 $files_count); do
++		echo > $target_dir/f$i >/dev/null 2>&1 | filter_enospc
++	done
++}
++
++rename_whiteout()
++{
++	local target_dir=$1
++	local files_count=$2
++
++	# a long filename could increase the possibility that target_dp
++	# allocate new blocks(acquire the AGF lock) to store the filename
++	longnamepre=`$PERL_PROG -e 'print "a"x200;'`
++
++	# now try to do rename with RENAME_WHITEOUT flag
++	for i in $(seq 1 $files_count); do
++		src/renameat2 -w $SCRATCH_MNT/f$i $target_dir/$longnamepre$i >/dev/null 2>&1
++	done
++}
++
++_scratch_mkfs_xfs -d agcount=1 >> $seqres.full 2>&1 ||
++	_fail "mkfs failed"
++_scratch_mount
++
++# set the rename and create file counts
++file_count=50000
++
++# create the necessary directory for create and rename operations
++createdir=$SCRATCH_MNT/createdir
++mkdir $createdir
++renamedir=$SCRATCH_MNT/renamedir
++mkdir $renamedir
++
++# create many small files for the rename with RENAME_WHITEOUT
++create_file $SCRATCH_MNT $file_count
++
++# try to create files at the same time to hit the deadlock
++rename_whiteout $renamedir $file_count &
++create_file $createdir $file_count &
++
++wait
++echo Silence is golden
++
++# Failure comes in the form of a deadlock.
++
++# success, all done
++status=0
++exit
+diff --git a/tests/xfs/512.out b/tests/xfs/512.out
+new file mode 100644
+index 0000000..0aabdef
+--- /dev/null
++++ b/tests/xfs/512.out
+@@ -0,0 +1,2 @@
++QA output created by 512
++Silence is golden
+diff --git a/tests/xfs/group b/tests/xfs/group
+index a7ad300..ed250d6 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -509,3 +509,4 @@
+ 509 auto ioctl
+ 510 auto ioctl quick
+ 511 auto quick quota
++512 auto rename
 -- 
 1.8.3.1
 
