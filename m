@@ -2,213 +2,92 @@ Return-Path: <SRS0=SLm5=XN=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9BBCC4CEC4
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 11:49:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D29C7C4CEC9
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 12:27:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7BECF21924
-	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 11:49:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mdT+3fEX"
+	by mail.kernel.org (Postfix) with ESMTP id AFCAD205F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 18 Sep 2019 12:27:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730533AbfIRLtZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Sep 2019 07:49:25 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:35278 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726545AbfIRLtZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 18 Sep 2019 07:49:25 -0400
-Received: by mail-pl1-f193.google.com with SMTP id s17so3052980plp.2;
-        Wed, 18 Sep 2019 04:49:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=bQ/MA/LGtZ5GVvu+LMj6BceyBfJYfZgDOycctOdkkrE=;
-        b=mdT+3fEXduwa+GGOP8QlYdJLLllSPk/S10OegxYqac4SvyauMBG+fhHHkC80xVYaP2
-         c79UUJSoy6pjXJ+ocAQYLcE859i/rY0ZV73apIfPAogt8DHYBLVcxljegXYoHccDOeVi
-         bYA4dPO5BuRcZXDmpL0dLpspzl49kDGLOOJWy4lnpaxybFhMLwokwwS7kcm7QChOsvFw
-         qOadLfZCwmRGC+XCXOZdbwXPTndug7Zx2YxVWGmqC+JBIkGdXwCOjAQP0aH6BFgOxsTc
-         JM/u7pbV53GjpP5JIhscftteJIagoL24ieMgLVGP3gfa22h1i98FcYvWTKhKAAaItLcm
-         plBw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=bQ/MA/LGtZ5GVvu+LMj6BceyBfJYfZgDOycctOdkkrE=;
-        b=lCSrR+ecTHk4aet3c/KgjBobZzz9HvwJ7PJtRoR9gaIa6LLfvefNiHqpoQ9+aWFFm4
-         r2Qr/lkR+/hXP35t4c1RMBwzknfxBLBNWEXxalEwJUymNm15g7XGcEFl+9EXI4NOoNap
-         FFD0YDBbFQ5+ZsMnPSgR5iPF4RZgZRH+lXt4ZKL0zX5AgCrlX1VJIcvIZvf4e77wlTHr
-         NnujYAZIcq7G1fZEt9tr7nB+aW60WJ405SBGuAE/8ywKKAgoMnthHGa9EufSTQhhmqgB
-         gMmQJAWcgu8S44sfVtKCy6s+ZFSNHT50+kBZl0cOVQTBqzsuIZGzQ5py/9H6w2sxWpHz
-         q+JA==
-X-Gm-Message-State: APjAAAUP5z2zZg1kkduZUOYg2S/esQHwRdt6pGt6WYWGp3UiuedTDP5k
-        pSCeC0PCrcza3nqoWHrB1g==
-X-Google-Smtp-Source: APXvYqygOO/WQ1/qjL90aVLesFQOszXD3DJJtiWyjTt0g0G6AuGpcxT+ck+q5KCqTO2RPvdUEWHw4A==
-X-Received: by 2002:a17:902:b7c3:: with SMTP id v3mr3616678plz.139.1568807364833;
-        Wed, 18 Sep 2019 04:49:24 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id b20sm10625220pff.158.2019.09.18.04.49.22
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Sep 2019 04:49:24 -0700 (PDT)
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Subject: [PATCH v3 2/2] xfs: test the deadlock between the AGI and AGF with
- RENAME_WHITEOUT
-Message-ID: <db6c5d87-5a47-75bd-4d24-a135e6bcd783@gmail.com>
-Date:   Wed, 18 Sep 2019 19:49:22 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1726529AbfIRM1b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Sep 2019 08:27:31 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:40572 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726359AbfIRM1b (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Sep 2019 08:27:31 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id C04188980E1;
+        Wed, 18 Sep 2019 12:27:30 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 54C731048134;
+        Wed, 18 Sep 2019 12:27:27 +0000 (UTC)
+Date:   Wed, 18 Sep 2019 08:27:26 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Carlos Maiolino <cmaiolino@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 1/2] xfs: cap longest free extent to maximum allocatable
+Message-ID: <20190918122726.GA29377@bfoster>
+References: <20190918082453.25266-1-cmaiolino@redhat.com>
+ <20190918082453.25266-2-cmaiolino@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190918082453.25266-2-cmaiolino@redhat.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.67]); Wed, 18 Sep 2019 12:27:30 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is ABBA deadlock bug between the AGI and AGF when performing
-rename() with RENAME_WHITEOUT flag, and add this testcase to make
-sure the rename() call works well.
+On Wed, Sep 18, 2019 at 10:24:52AM +0200, Carlos Maiolino wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> Cap longest extent to the largest we can allocate based on limits
+> calculated at mount time. Dynamic state (such as finobt blocks)
+> can result in the longest free extent exceeding the size we can
+> allocate, and that results in failure to align full AG allocations
+> when the AG is empty.
+> 
+> Result:
+> 
+> xfs_io-4413  [003]   426.412459: xfs_alloc_vextent_loopfailed: dev 8:96 agno 0 agbno 32 minlen 243968 maxlen 244000 mod 0 prod 1 minleft 1 total 262148 alignment 32 minalignslop 0 len 0 type NEAR_BNO otype START_BNO wasdel 0 wasfromfl 0 resv 0 datatype 0x5 firstblock 0xffffffffffffffff
+> 
+> minlen and maxlen are now separated by the alignment size, and
+> allocation fails because args.total > free space in the AG.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> ---
 
-Signed-off-by: kaixuxia <kaixuxia@tencent.com>
----
- tests/xfs/512     | 96 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/512.out |  2 ++
- tests/xfs/group   |  1 +
- 3 files changed, 99 insertions(+)
- create mode 100755 tests/xfs/512
- create mode 100644 tests/xfs/512.out
+Seems fine, but what about the bma.minlen alignment fix (in
+xfs_bmap_btalloc()) Dave suggested in the previous thread?
 
-diff --git a/tests/xfs/512 b/tests/xfs/512
-new file mode 100755
-index 0000000..a2089f0
---- /dev/null
-+++ b/tests/xfs/512
-@@ -0,0 +1,96 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Tencent.  All Rights Reserved.
-+#
-+# FS QA Test 512
-+#
-+# Test the ABBA deadlock case between the AGI and AGF When performing
-+# rename operation with RENAME_WHITEOUT flag.
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1	# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/renameat2
-+
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+# single AG will cause default xfs_repair to fail. This test need a
-+# single AG fs, so ignore the check.
-+_require_scratch_nocheck
-+_requires_renameat2 whiteout
-+
-+filter_enospc() {
-+	sed -e '/^.*No space left on device.*/d'
-+}
-+
-+create_file()
-+{
-+	local target_dir=$1
-+	local files_count=$2
-+
-+	for i in $(seq 1 $files_count); do
-+		echo > $target_dir/f$i >/dev/null 2>&1 | filter_enospc
-+	done
-+}
-+
-+rename_whiteout()
-+{
-+	local target_dir=$1
-+	local files_count=$2
-+
-+	# a long filename could increase the possibility that target_dp
-+	# allocate new blocks(acquire the AGF lock) to store the filename
-+	longnamepre=`$PERL_PROG -e 'print "a"x200;'`
-+
-+	# now try to do rename with RENAME_WHITEOUT flag
-+	for i in $(seq 1 $files_count); do
-+		src/renameat2 -w $SCRATCH_MNT/f$i $target_dir/$longnamepre$i >/dev/null 2>&1
-+	done
-+}
-+
-+_scratch_mkfs_xfs -d agcount=1 >> $seqres.full 2>&1 ||
-+	_fail "mkfs failed"
-+_scratch_mount
-+
-+# set the rename and create file counts
-+file_count=50000
-+
-+# create the necessary directory for create and rename operations
-+createdir=$SCRATCH_MNT/createdir
-+mkdir $createdir
-+renamedir=$SCRATCH_MNT/renamedir
-+mkdir $renamedir
-+
-+# create many small files for the rename with RENAME_WHITEOUT
-+create_file $SCRATCH_MNT $file_count
-+
-+# try to create files at the same time to hit the deadlock
-+rename_whiteout $renamedir $file_count &
-+create_file $createdir $file_count &
-+
-+wait
-+echo Silence is golden
-+
-+# Failure comes in the form of a deadlock.
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/xfs/512.out b/tests/xfs/512.out
-new file mode 100644
-index 0000000..0aabdef
---- /dev/null
-+++ b/tests/xfs/512.out
-@@ -0,0 +1,2 @@
-+QA output created by 512
-+Silence is golden
-diff --git a/tests/xfs/group b/tests/xfs/group
-index a7ad300..ed250d6 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -509,3 +509,4 @@
- 509 auto ioctl
- 510 auto ioctl quick
- 511 auto quick quota
-+512 auto rename
--- 
-1.8.3.1
+Brian
 
--- 
-kaixuxia
+>  fs/xfs/libxfs/xfs_alloc.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 372ad55631fc..35b39fc863a0 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1989,7 +1989,8 @@ xfs_alloc_longest_free_extent(
+>  	 * reservations and AGFL rules in place, we can return this extent.
+>  	 */
+>  	if (pag->pagf_longest > delta)
+> -		return pag->pagf_longest - delta;
+> +		return min_t(xfs_extlen_t, pag->pag_mount->m_ag_max_usable,
+> +				pag->pagf_longest - delta);
+>  
+>  	/* Otherwise, let the caller try for 1 block if there's space. */
+>  	return pag->pagf_flcount > 0 || pag->pagf_longest > 0;
+> -- 
+> 2.20.1
+> 
