@@ -2,182 +2,152 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4263FC3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:05:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85239C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:37:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A4F721848
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:05:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 56CD2214AF
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:37:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NcRipYId"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389382AbfISPFU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 11:05:20 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:44086 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2389179AbfISPFU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Sep 2019 11:05:20 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 5F5AD308AA11;
-        Thu, 19 Sep 2019 15:05:19 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0A5E45C207;
-        Thu, 19 Sep 2019 15:05:18 +0000 (UTC)
-Date:   Thu, 19 Sep 2019 11:05:17 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 11/11] xfs: optimize near mode bnobt scans with
- concurrent cntbt lookups
-Message-ID: <20190919150517.GG35460@bfoster>
-References: <20190916121635.43148-1-bfoster@redhat.com>
- <20190916121635.43148-12-bfoster@redhat.com>
- <20190918211158.GA2229799@magnolia>
+        id S2389848AbfISPha (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 11:37:30 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:36876 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389840AbfISPh3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 11:37:29 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JFYNm7169221;
+        Thu, 19 Sep 2019 15:37:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=obEEcpkxDZO71S8QQtANUQvd5KQ7MwnRCTs6RGHNVmc=;
+ b=NcRipYIdMiKA8lxT6p+v77B/Noi+X5FraDPe44Pb9OoyVnXYca90Rxswm17heSCeezfP
+ c/cUL9zye8uaHNYaYHyAK3+YLzZfRQY635lUSQCXIMLJDpxglWIkzkemUUkkMmO0JQIn
+ DITtnjNS1wpmypisLta91k2GH3+i2ZOXUAVQ1+WbFGy4Sf0dNjoJHXZqKS5h2tLxDJFU
+ pgWvyaX+azU+ezLpi/pd52cpgxLd4xqpdnORwnoWU1ZauQjECBstI19guv+Lof07Xvhc
+ HOQHNoK3XR6J/mT4WsnD1konFm5niEgZkw5FPWi+W9iGEu1fL3cwnem2yFGAba70tq08 yQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2v3vb54vwt-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Sep 2019 15:37:09 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JFCgkT006634;
+        Thu, 19 Sep 2019 15:37:08 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2v3vbsar8a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Sep 2019 15:37:08 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8JFb612008663;
+        Thu, 19 Sep 2019 15:37:06 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 19 Sep 2019 15:37:06 +0000
+Date:   Thu, 19 Sep 2019 08:37:04 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>
+Subject: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
+Message-ID: <20190919153704.GK2229799@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190918211158.GA2229799@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.41]); Thu, 19 Sep 2019 15:05:19 +0000 (UTC)
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909190143
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909190144
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 18, 2019 at 02:11:58PM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 16, 2019 at 08:16:35AM -0400, Brian Foster wrote:
-> > The near mode fallback algorithm consists of a left/right scan of
-> > the bnobt. This algorithm has very poor breakdown characteristics
-> > under worst case free space fragmentation conditions. If a suitable
-> > extent is far enough from the locality hint, each allocation may
-> > scan most or all of the bnobt before it completes. This causes
-> > pathological behavior and extremely high allocation latencies.
-> > 
-> > While locality is important to near mode allocations, it is not so
-> > important as to incur pathological allocation latency to provide the
-> > asolute best available locality for every allocation. If the
-> > allocation is large enough or far enough away, there is a point of
-> > diminishing returns. As such, we can bound the overall operation by
-> > including an iterative cntbt lookup in the broader search. The cntbt
-> > lookup is optimized to immediately find the extent with best
-> > locality for the given size on each iteration. Since the cntbt is
-> > indexed by extent size, the lookup repeats with a variably
-> > aggressive increasing search key size until it runs off the edge of
-> > the tree.
-> > 
-> > This approach provides a natural balance between the two algorithms
-> > for various situations. For example, the bnobt scan is able to
-> > satisfy smaller allocations such as for inode chunks or btree blocks
-> > more quickly where the cntbt search may have to search through a
-> > large set of extent sizes when the search key starts off small
-> > relative to the largest extent in the tree. On the other hand, the
-> > cntbt search more deterministically covers the set of suitable
-> > extents for larger data extent allocation requests that the bnobt
-> > scan may have to search the entire tree to locate.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c | 153 +++++++++++++++++++++++++++++++++++---
-> >  fs/xfs/xfs_trace.h        |   2 +
-> >  2 files changed, 143 insertions(+), 12 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 381a08257aaf..4ec22040e516 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-...
-> > @@ -1309,9 +1407,39 @@ xfs_alloc_ag_vextent_bnobt(
-> >  			fbinc = false;
-> >  			break;
-> >  		}
-> > +
-> > +		/*
-> > +		 * Check the extent with best locality based on the current
-> > +		 * extent size search key and keep track of the best candidate.
-> > +		 * If we fail to find anything due to busy extents, return
-> > +		 * empty handed so the caller can flush and retry the search. If
-> > +		 * no busy extents were found, walk backwards from the end of
-> > +		 * the cntbt as a last resort.
-> > +		 */
-> > +		error = xfs_alloc_cntbt_iter(args, acur);
-> > +		if (error)
-> > +			return error;
-> > +		if (!xfs_alloc_cur_active(acur->cnt)) {
-> > +			trace_xfs_alloc_cur_lookup_done(args);
-> > +			if (!acur->len && !acur->busy) {
-> > +				error = xfs_btree_decrement(acur->cnt, 0, &i);
-> > +				if (error)
-> > +					return error;
-> > +				if (i) {
-> > +					acur->cnt->bc_private.a.priv.abt.active = true;
-> 
-> Line over 80 columns?
-> 
+Hi folks,
 
-Yeah..
+The iomap-5.4-merge branch of the xfs-linux repository at:
 
-> Or, put another way, could this be refactored not to have 5 levels of
-> indent?
-> 
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-Hmm.. I think this could just break out of the loop and then check
-whether the cntbt cursor is !active again just after the loop to reset
-the cursor and set up a cntbt reverse search. I'll look into it. Thanks
-for the feedback...
+has just been updated.  This is a rebase to remove the list_pop bits
+that killed the previous pull request.  I removed patches 1 and 9 from
+the branch and made the following modifications to patch #2:
 
-Brian
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 051b8ec326ba..558d09bc5024 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1156,10 +1156,11 @@ void
+ iomap_finish_ioends(struct iomap_ioend *ioend, int error)
+ {
+ 	struct list_head tmp;
++	struct iomap_ioend *next;
+ 
+ 	list_replace_init(&ioend->io_list, &tmp);
+ 	iomap_finish_ioend(ioend, error);
+-	while ((ioend = list_pop_entry(&tmp, struct iomap_ioend, io_list)))
++	list_for_each_entry_safe(ioend, next, &tmp, io_list)
+ 		iomap_finish_ioend(ioend, error);
+ }
+ EXPORT_SYMBOL_GPL(iomap_finish_ioends);
 
-> Otherwise looks good.
-> 
-> --D
-> 
-> > +					fbcur = acur->cnt;
-> > +					fbinc = false;
-> > +				}
-> > +			}
-> > +			break;
-> > +		}
-> > +
-> >  	}
-> >  
-> > -	/* search the opposite direction for a better entry */
-> > +	/*
-> > +	 * Search in the opposite direction for a better entry in the case of
-> > +	 * a bnobt hit or walk backwards from the end of the cntbt.
-> > +	 */
-> >  	if (fbcur) {
-> >  		error = xfs_alloc_walk_iter(args, acur, fbcur, fbinc, true, -1,
-> >  					    &i);
-> > @@ -1440,9 +1568,10 @@ xfs_alloc_ag_vextent_near(
-> >  	}
-> >  
-> >  	/*
-> > -	 * Second algorithm. Search the bnobt left and right.
-> > +	 * Second algorithm. Combined cntbt and bnobt search to find ideal
-> > +	 * locality.
-> >  	 */
-> > -	error = xfs_alloc_ag_vextent_bnobt(args, &acur, &i);
-> > +	error = xfs_alloc_ag_vextent_locality(args, &acur, &i);
-> >  	if (error)
-> >  		goto out;
-> >  
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index b8b93068efe7..0c9dfeac4e75 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1645,6 +1645,8 @@ DEFINE_ALLOC_EVENT(xfs_alloc_near_first);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_cur);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_cur_right);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_cur_left);
-> > +DEFINE_ALLOC_EVENT(xfs_alloc_cur_lookup);
-> > +DEFINE_ALLOC_EVENT(xfs_alloc_cur_lookup_done);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_near_error);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_near_noentry);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_near_busy);
-> > -- 
-> > 2.20.1
-> > 
+I'm not thrilled to be rebasing a work branch in the middle of the merge
+window, but I think the changes are simple enough that we might be able
+to try again next week.  Damien, if you have the time can you please
+rebase zonefs atop this and make sure buffered writing to a conventional
+zone still works?  It should, since the _finish_ioends loop is identical
+between iomap and xfs.
+
+The new head of the iomap-5.4-merge branch is commit:
+
+1b4fdf4f30db iomap: move the iomap_dio_rw ->end_io callback into a structure
+
+New Commits:
+
+Andreas Gruenbacher (1):
+      [be942954d7ad] iomap: Fix trivial typo
+
+Christoph Hellwig (7):
+      [9544e58e466f] iomap: copy the xfs writeback code to iomap.c
+      [668931192d9d] iomap: add tracing for the address space operations
+      [ca6de3a5b6f4] iomap: warn on inline maps in iomap_writepage_map
+      [4df389276768] xfs: set IOMAP_F_NEW more carefully
+      [5f1f62a3f64c] iomap: zero newly allocated mapped blocks
+      [0b98e70d9586] xfs: initialize iomap->flags in xfs_bmbt_to_iomap
+      [1b4fdf4f30db] iomap: move the iomap_dio_rw ->end_io callback into a structure
+
+Matthew Bobrowski (1):
+      [da078883a85d] iomap: split size and error for iomap_dio_rw ->end_io
+
+Randy Dunlap (1):
+      [239b92845737] tracing: fix iomap.h build warnings
+
+
+Code Diffstat:
+
+ fs/iomap/buffered-io.c       | 576 ++++++++++++++++++++++++++++++++++++++++++-
+ fs/iomap/direct-io.c         |  24 +-
+ fs/xfs/xfs_file.c            |  14 +-
+ fs/xfs/xfs_iomap.c           |  35 ++-
+ fs/xfs/xfs_iomap.h           |   2 +-
+ fs/xfs/xfs_pnfs.c            |   2 +-
+ include/linux/iomap.h        |  53 +++-
+ include/trace/events/iomap.h |  87 +++++++
+ 8 files changed, 754 insertions(+), 39 deletions(-)
+ create mode 100644 include/trace/events/iomap.h
