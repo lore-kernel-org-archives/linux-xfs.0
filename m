@@ -2,97 +2,73 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1D109C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 21:01:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 42B06C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 21:03:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E245B217D6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 21:01:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0569721920
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 21:03:34 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cPTd4V0K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732857AbfISVBk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 17:01:40 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52916 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730064AbfISVBk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Sep 2019 17:01:40 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id E87A4308213F
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2019 21:01:39 +0000 (UTC)
-Received: from localhost.localdomain.com (ovpn-123-212.rdu2.redhat.com [10.10.123.212])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 972095D9CD
-        for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2019 21:01:39 +0000 (UTC)
-From:   Bill O'Donnell <billodo@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH v4] xfs: assure zeroed memory buffers for certain kmem allocations
-Date:   Thu, 19 Sep 2019 16:01:38 -0500
-Message-Id: <20190919210138.13535-1-billodo@redhat.com>
-In-Reply-To: <20190916153504.30809-1-billodo@redhat.com>
-References: <20190916153504.30809-1-billodo@redhat.com>
+        id S1732070AbfISVDe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 17:03:34 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:49126 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730064AbfISVDe (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 17:03:34 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=vr+IkYd0U4HZmwFAcpIRMbJ8jy/FCkzgcVYdBFXXhcA=; b=cPTd4V0KHEXTJHZIfFEwYMO+6
+        8kCqHaF3ohVIeKOoqySoYiVvEGk2P5difLXB8utE222C1Au9hWTeFxcjdKZI35c8Q78/TIIIleeiq
+        PgSZqGcbqViFyu1cv1UGwycM+BAVu4r5tjJDn9GRyTUSQ9m1VWJiIVZA/BDI4ox3KT8RxYZrT3qFx
+        aUoWxrwn4CfG18yi4dbLXxqzRMPUsXX72DZue6iRV29k+QJQy5Gf0wX5bxrD3gGJsMv0Nc0Nono26
+        KVM0HlE8nyuefPbBWIsOI8HLqehRkGBhqASSvVF3Ac1DWSvQk1cSC+Nc65ZS1S/my5N6OGtjexlp5
+        9L3C9156w==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
+        id 1iB3aJ-00009b-RT; Thu, 19 Sep 2019 21:03:27 +0000
+Date:   Thu, 19 Sep 2019 14:03:27 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>
+Subject: Re: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
+Message-ID: <20190919210327.GA500@infradead.org>
+References: <20190919153704.GK2229799@magnolia>
+ <BYAPR04MB581608DF1FDE1FDC24BD94C6E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
+ <20190919170804.GB1646@infradead.org>
+ <20190919194011.GN2229799@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.42]); Thu, 19 Sep 2019 21:01:39 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190919194011.GN2229799@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Guarantee zeroed memory buffers for cases where potential memory
-leak to disk can occur. In these cases, kmem_alloc is used and
-doesn't zero the buffer, opening the possibility of information
-leakage to disk.
+On Thu, Sep 19, 2019 at 12:40:11PM -0700, Darrick J. Wong wrote:
+> iomap: Fix trivial typo
+> iomap: split size and error for iomap_dio_rw ->end_io
+> iomap: move the iomap_dio_rw ->end_io callback into a structure
+> 
+> But frankly, do we even need the two directio patches?  IIRC Matthew
+> Bobrowski wanted them for the ext4 directio port, but seeing as Ted
+> isn't submitting that for 5.4 and gfs2 doesn't supply a directio endio
+> handler, maybe I should just send the trivial typo fix and that's it?
 
-Use existing infrastucture (xfs_buf_allocate_memory) to obtain
-the already zeroed buffer from kernel memory.
-
-This solution avoids the performance issue that would occur if a
-wholesale change to replace kmem_alloc with kmem_zalloc was done.
-
-Signed-off-by: Bill O'Donnell <billodo@redhat.com>
----
-v4: use __GFP_ZERO as part of gfp_mask (instead of KM_ZERO)
-v3: remove XBF_ZERO flag, and instead use XBF_READ flag only.
-v2: zeroed buffer not required for XBF_READ case. Correct placement
-    and rename the XBF_ZERO flag.
-
- fs/xfs/xfs_buf.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-index 120ef99d09e8..5d0a68de5fa6 100644
---- a/fs/xfs/xfs_buf.c
-+++ b/fs/xfs/xfs_buf.c
-@@ -345,6 +345,15 @@ xfs_buf_allocate_memory(
- 	unsigned short		page_count, i;
- 	xfs_off_t		start, end;
- 	int			error;
-+	uint			kmflag_mask = 0;
-+
-+	/*
-+	 * assure zeroed buffer for non-read cases.
-+	 */
-+	if (!(flags & XBF_READ)) {
-+		kmflag_mask |= KM_ZERO;
-+		gfp_mask |= __GFP_ZERO;
-+	}
- 
- 	/*
- 	 * for buffers that are contained within a single page, just allocate
-@@ -354,7 +363,8 @@ xfs_buf_allocate_memory(
- 	size = BBTOB(bp->b_length);
- 	if (size < PAGE_SIZE) {
- 		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
--		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS);
-+		bp->b_addr = kmem_alloc_io(size, align_mask,
-+					   KM_NOFS | kmflag_mask);
- 		if (!bp->b_addr) {
- 			/* low memory - use alloc_page loop instead */
- 			goto use_alloc_page;
--- 
-2.21.0
-
+You can decide as the maintainer.  I'm always happy to get simple
+patchws with API changes like the end_io off to Linus as quick as
+possible, though.
