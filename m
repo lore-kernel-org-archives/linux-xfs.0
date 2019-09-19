@@ -2,149 +2,110 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2EC62C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 21:28:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A650C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 22:39:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC82B218AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 21:28:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id F1015208C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 22:39:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="Id5Ha/Ez";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="RASmN7fG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aH2dN4O6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392878AbfISV2S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 17:28:18 -0400
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:51372 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2392876AbfISV2S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 17:28:18 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1568928515; x=1600464515;
-  h=from:to:cc:subject:date:message-id:references:
-   content-transfer-encoding:mime-version;
-  bh=tdhrqiTHaEkVRO5Y+etqQL64dYnkqwZd+mAkBV2KyII=;
-  b=Id5Ha/EzJX7mdEZHHoawSNfKyoRIRb9V5USG7EpAMJS0aXzSfvOFfrkj
-   /sIoSZB+2pxt3wFc2BRLug13utgPP1zn40CdPtIhBCYG3zJVf2CsF9ifD
-   HrcKoXh4w4DWIKlfZnLOR8RjBRdibU/1Lv70Kz6TDrOPQ13rQ78uMUikr
-   NHEb0UiHzbdsNZTutSQcc13/iEfpQK5kcW0TCQB3fFHFldjC5gJqOKDb/
-   TVGXOoCFaoG0kP0w7vb01ksf1PRRJIBFrH39AwdYwd4uCBbzfUFUs5BHe
-   /fGMa93h+rqclYZy+CsVoj+1oqpRstRNxD8wnVId2m6EC0Lt/7Ia6uVxe
-   A==;
-IronPort-SDR: kkohOL0/R7xjQUfVyai6purYPao9dhrF5Xs5pW/L/5cMbHPLbGVJUweO0NlMjThmn6TkOya6lI
- 427O3qdqlVQw2bLYeozV2wVzTKSqvNlAaVxQMz840sNRTXFbn10uPTArUVxx4RQVG9i2QJfkQY
- wU+EDPzOPkW2oVuNTKUpcQ4Dj6oLz3zC491TxVNvjXm8cX7c7q+nxw2zwzPdmoPTG5kQT/Mlu3
- gHZJE0yGHhla5Oz/LynBXdc23kPuy/ZWkaSkEQWJrIMO+T4WdS25HK9YcUZIpj+8cAFCVQDI9G
- aOI=
-X-IronPort-AV: E=Sophos;i="5.64,526,1559491200"; 
-   d="scan'208";a="219485356"
-Received: from mail-sn1nam04lp2050.outbound.protection.outlook.com (HELO NAM04-SN1-obe.outbound.protection.outlook.com) ([104.47.44.50])
-  by ob1.hgst.iphmx.com with ESMTP; 20 Sep 2019 05:28:34 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=e1fYXHEmOLRPSl6lpIcIFjFi4kfs2LzsXHUE6B6BrzbZbl4qBVJNQdzv5+FZZszOeFdImEGghBs7e2S42qZYt1dRzXR7uAL1/vJalRZ6LBEu++fuxUODeYhtn9eIugQhsDmpuMKci405p3XwoFbvPR3aSnCUKdjfb8SYX/XZTERuWV9Pv5dgbKhJSg5szfkBK6IwsqrX5zmCzJKtCDqIpP7ZlMqPxjZ5geX/hpSkmMAb6dxl5b1Uo+Frqc5/GeYAi1ZMAMeyWqYB8pDdHNjTpI0WEcHeLdd1xiuu4tDNsREt6wCQ4cBa2VMRsUiM+LvnaWnTNiP5UvW4oUbOm7iZOA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/JNNDAOA09ApBbEWsBYaBGTglkNK7oOVsgoAkRhdut8=;
- b=nuaGBqQyPR/hJvTA08GzzakSKUVG+JCuxYefF3Uh3VApH8koUtkbUMlzlWcNnV83EfMCnqQ/reW7RNSpWeaAFvwdbhgVlDJb8+7Tgi4cZwbS1bGzVcUze+QC2wZC3k03sPZiY8WRpijZYG/+yLGLkObDNxXTVPx/MVOykRvJjAyVF3RbEoiOWGNLTOOfi1SGJf+969762I2N+yJboAmiyFX7cs/u54z0C3rZp4NgfITeQVI9fo1OUC22ldaOZnA2CyuoV08ux1TJqNz9QNAhy9Wj8yP2MLWfbMBpkc8hmWKQMJK1g8odHj3wdt61qJKgJWT+vwblqx9kcNT6exd/rw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/JNNDAOA09ApBbEWsBYaBGTglkNK7oOVsgoAkRhdut8=;
- b=RASmN7fG2KFAoMhM18WE9lcuv7k1AHYhrf6MWeBX5taBhdGeDLSZsNIcxMa6kPS255W4BFcjyj2PCl+s46xG8wQ88ViDXHven7MjihLOIGaz2M5z06A50rsNVwmiVMH2P68V3EmSRqzhfIm7oyz1YJPfnDUipHig/oaaaQ1z0tc=
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
- BYAPR04MB5975.namprd04.prod.outlook.com (20.178.232.215) with Microsoft SMTP
- Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.2263.17; Thu, 19 Sep 2019 21:28:16 +0000
-Received: from BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::9821:67e1:9799:b117]) by BYAPR04MB5816.namprd04.prod.outlook.com
- ([fe80::9821:67e1:9799:b117%3]) with mapi id 15.20.2284.009; Thu, 19 Sep 2019
- 21:28:16 +0000
-From:   Damien Le Moal <Damien.LeMoal@wdc.com>
-To:     Christoph Hellwig <hch@infradead.org>
-CC:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>,
+        id S2404088AbfISWjt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 18:39:49 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:57120 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2389100AbfISWjq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 18:39:46 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JMdHlA067687;
+        Thu, 19 Sep 2019 22:39:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=99zjAnXqySXwxr0uYe+uqDwcIA/v1Abq/AHqzl4pTOU=;
+ b=aH2dN4O6DZeftOBMhuBwyP6LW5GPLV4H0pnhOFLWZWHhj7/EZtZQ+T4eDGvm6nJ4yPc5
+ ZwT86U3I3336JpCx+jpQB/v4uwH0KVbjUGjNNhH4SLwKGUkBN8MlRik0GXaeQ7ZPFZK0
+ 3W3WlSv+YJgsfUBw8zAaQ1ZKR8zTCxRiXgLEFkDTg/W2X3+58tSf9jhEdw6NmPZAaAem
+ nOqu5Je191RDVWnPRkch1CZeBwyf6BO+w7igcKLjlFCMeH6dV0ZZdziD3O0R1YY/DmOa
+ hTscxlz8rA/87JiR28d0EZNdaZgRaF5S06pTAewWTBSajxL6G8wLpOhJDQuG4YNouDll bQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2v3vb4pvge-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Sep 2019 22:39:43 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JMdCKJ147967;
+        Thu, 19 Sep 2019 22:39:42 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2v4g2u8445-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 19 Sep 2019 22:39:42 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8JMdgK7013986;
+        Thu, 19 Sep 2019 22:39:42 GMT
+Received: from localhost (/10.145.179.91)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 19 Sep 2019 15:39:42 -0700
+Date:   Thu, 19 Sep 2019 15:39:41 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Andreas =?iso-8859-1?Q?Gr=FCnbacher?= 
+        <andreas.gruenbacher@gmail.com>
+Cc:     Al Viro <viro@zeniv.linux.org.uk>, xfs <linux-xfs@vger.kernel.org>,
         linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>
-Subject: Re: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
-Thread-Topic: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
-Thread-Index: AQHVbwApqraejWyP+EqCoHaEIePvTQ==
-Date:   Thu, 19 Sep 2019 21:28:16 +0000
-Message-ID: <BYAPR04MB58169EE2BC3346CF6CC3C61BE7890@BYAPR04MB5816.namprd04.prod.outlook.com>
-References: <20190919153704.GK2229799@magnolia>
- <BYAPR04MB581608DF1FDE1FDC24BD94C6E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
- <20190919170804.GB1646@infradead.org>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: spf=none (sender IP is )
- smtp.mailfrom=Damien.LeMoal@wdc.com; 
-x-originating-ip: [129.253.240.72]
-x-ms-publictraffictype: Email
-x-ms-office365-filtering-correlation-id: 78496aa3-a846-479f-cf41-08d73d48489f
-x-ms-office365-filtering-ht: Tenant
-x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:BYAPR04MB5975;
-x-ms-traffictypediagnostic: BYAPR04MB5975:
-x-microsoft-antispam-prvs: <BYAPR04MB5975E3DD737ED34D2C0D8E4CE7890@BYAPR04MB5975.namprd04.prod.outlook.com>
-wdcipoutbound: EOP-TRUE
-x-ms-oob-tlc-oobclassifiers: OLM:9508;
-x-forefront-prvs: 016572D96D
-x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(376002)(366004)(346002)(396003)(136003)(39860400002)(54094003)(199004)(189003)(86362001)(74316002)(7696005)(91956017)(2906002)(76176011)(76116006)(66946007)(6436002)(9686003)(316002)(55016002)(54906003)(229853002)(99286004)(6246003)(305945005)(14444005)(256004)(66476007)(4744005)(6916009)(7736002)(81156014)(66556008)(14454004)(5660300002)(476003)(478600001)(8936002)(4326008)(53546011)(64756008)(81166006)(66066001)(6116002)(3846002)(6506007)(186003)(8676002)(33656002)(25786009)(486006)(26005)(71200400001)(71190400001)(102836004)(66446008)(446003)(52536014);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB5975;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
-x-ms-exchange-senderadcheck: 1
-x-microsoft-antispam-message-info: LndqjsUbw2jd0rvVil6s0z1zG8Xp3TespK6npIMTNVKEVsPgADbwbXraU6FIFKXbtbnugPTWoD1GSt9gZbTYwAb7HBN9nbLxvVSIvYnxIT2MUJMTcZA3wJcHOKzucbcHegqTHImrZU751GU0X9nXKyYRcgS0ODpyf4r6tMlQJovjOiw8DYA5gROGM114cP2A3Sc8tPaY2KgIZ0w2fDDrQalst5+eiAKbiiDGWA2mX/h5rrqYsT27fsGMQ6x0SH5Fq50HwGVZzp9JXafyriezI2BgggucenSpjLyoPIH69JtCfLREw5Sp2n8czsHLPJmWkmB3ly/6exdeln0N7Ph4o4KYQE8CGyXHgQr3qfiHj6ohxnQ2st2uhdFdHbIXI6bOfVK5tuPYoDlNGaJ1KF+fe0SKNvNMTosv2xLTlZZYvUA=
-x-ms-exchange-transport-forked: True
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH v2] splice: only read in as much information as there is
+ pipe buffer space
+Message-ID: <20190919223941.GO5340@magnolia>
+References: <20190829161155.GA5360@magnolia>
+ <20190830210603.GB5340@magnolia>
+ <20190905034244.GL5340@magnolia>
+ <CAHpGcM+iYfqniKugC-enWnx+S3KT=8-YtY9RRcr4bVhG8GtkOA@mail.gmail.com>
+ <20190917164605.GM5340@magnolia>
+ <CAHpGcMKfiygNKD0s2MMyQnkKu+0GVANCejVpNESspTszeUy4Tw@mail.gmail.com>
 MIME-Version: 1.0
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 78496aa3-a846-479f-cf41-08d73d48489f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 21:28:16.1157
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: QQ0Ld7dNlDmyJMT0aE1me6H6B76MHT9GYc78eHfDRvn0jhoBcBuG2uLAD2Drs8yu68zNUTsaEwoHQQjuFJeT6A==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB5975
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAHpGcMKfiygNKD0s2MMyQnkKu+0GVANCejVpNESspTszeUy4Tw@mail.gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909190190
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909190190
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2019/09/19 19:08, Christoph Hellwig wrote:=0A=
-> On Thu, Sep 19, 2019 at 04:19:37PM +0000, Damien Le Moal wrote:=0A=
->> OK. Will do, but traveling this week so I will not be able to test until=
- next week.=0A=
-> =0A=
-> Which suggests zonefs won't make it for 5.4, right?  At that point=0A=
-=0A=
-Yes, Linus did not accept zonefs for 5.4. He requested that I first get mor=
-e=0A=
-comments about it, adding lkml in the loop to increase the reach over the m=
-ore=0A=
-limited attendance of linux-xfs and linux-fsdevel lists. The other request =
-is to=0A=
-repost early in the 5.4 cycle and get zonefs into linux-next to go through =
-more=0A=
-build tests too.=0A=
-=0A=
-> I wonder if we should defer the whole generic iomap writeback thing=0A=
-> to 5.5 entirely.  The whole idea of having two copies of the code always=
-=0A=
-> scared me, even more so given that 5.4 is slated to be a long term=0A=
-> stable release.=0A=
-> =0A=
-> So maybe just do the trivial typo + end_io cleanups for Linus this=0A=
-> merge window?=0A=
-> =0A=
-=0A=
-=0A=
--- =0A=
-Damien Le Moal=0A=
-Western Digital Research=0A=
+On Tue, Sep 17, 2019 at 07:00:15PM +0200, Andreas Grünbacher wrote:
+> Am Di., 17. Sept. 2019 um 18:46 Uhr schrieb Darrick J. Wong
+> <darrick.wong@oracle.com>:
+> > > Is this going to go in via the xfs tree?
+> >
+> > I'll let it soak in -next for a few days and send a single-patch pull
+> > request for it.
+> >
+> > (I'm sending out pull requests today for the things that have been
+> > ready to go for the last couple of weeks.)
+> 
+> Okay, works for me.
+
+Heh, syzbot found a bug[1] in this patch, so I'm withdrawing it for now.
+
+--D
+
+[1] https://lore.kernel.org/linux-fsdevel/20190919211013.GN5340@magnolia/T/
+
+> Thanks,
+> Andreas
