@@ -2,324 +2,278 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 99414C4CEC4
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 06:52:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BDAC3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 09:08:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F32121928
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 06:52:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B61A621927
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 09:08:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dsCu3Fdo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729640AbfISGwa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 02:52:30 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:42368 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725320AbfISGwa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Sep 2019 02:52:30 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id C035718C4274;
-        Thu, 19 Sep 2019 06:52:29 +0000 (UTC)
-Received: from localhost (dhcp-12-102.nay.redhat.com [10.66.12.102])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 3E0225C21E;
-        Thu, 19 Sep 2019 06:52:28 +0000 (UTC)
-Date:   Thu, 19 Sep 2019 14:59:54 +0800
-From:   Zorro Lang <zlang@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Yang Xu <xuyang2018.jy@cn.fujitsu.com>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: question of xfs/148 and xfs/149
-Message-ID: <20190919065954.GM7239@dhcp-12-102.nay.redhat.com>
-References: <4BF2FD5A942B1C4B828DDAF5635768C1041AB0E2@G08CNEXMBPEKD02.g08.fujitsu.local>
- <20190917163933.GC736475@magnolia>
- <20190918025915.GK7239@dhcp-12-102.nay.redhat.com>
- <7b5d5797-afff-90bc-0131-38fd13eced34@cn.fujitsu.com>
- <20190918163711.GX2229799@magnolia>
- <20190918231050.GH2229799@magnolia>
- <20190919052033.GL7239@dhcp-12-102.nay.redhat.com>
- <20190919063312.GD568270@magnolia>
+        id S1731062AbfISJIJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 05:08:09 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:34460 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730632AbfISJIJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 05:08:09 -0400
+Received: by mail-pl1-f194.google.com with SMTP id d3so1312940plr.1;
+        Thu, 19 Sep 2019 02:08:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=UaTVqpHgFEipW6sqFFVLBqtYTSqFXnoYit7eFT5q0+s=;
+        b=dsCu3FdoQi5TcFtK6JkASj9/9Q2AoEbTrbtImNLUWfPPHONoHkSyTqgSNGOxFOWjUq
+         OGoKVJLFIo2GXFCaCvUPIfGjt2FLOuaqhapmX+WBPav1+TzBueYuEU04P5qTwEbAIKII
+         +66OeL1vwDd4bnIWp2Qd1np+fG5fDQNSdE8GL6lBvpU6TEVfN4aKf+qxcFzG1VpKtSih
+         Xvmd7tetB5fHnB3zZCe2YWce7PVM0lxsJu6BOMTErfzrC8DGvCjyCZx4itcrFFCviokF
+         S1ViVgirFFDBFg5GqkIJtoYDxxgNU83I3FUWlr8bfEeyIAvbMtX2+OmAo3Jh/j6e7xnO
+         DNdA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=UaTVqpHgFEipW6sqFFVLBqtYTSqFXnoYit7eFT5q0+s=;
+        b=YbysVUU/WfilYfa1Skcsagjya4cm0PBKNg3V5wX47zSZQQacy/RDG+x4Qd84Pg3+K4
+         CNGW5LaqVV8kf2fZciPSxg8RFunXTuEJvEHdBhpz0KnfblUnKmBhCjYYNhGJTuzTfHsT
+         XyL24QcRa10F9v+L/vZzd9IcCatuPE5WaekEcttsoPehT6cF09ns7iFgioaqpL67hq2t
+         CeyS/w++MkeV7c6yLUCuSDvLsrZCBDiCkJqdbRhzb1fhIZlkip/NS4v786juNOK9DYso
+         CtLvL2hP1d+KM4rpBCfErGIVITXsaPSerg9KbW6Dc/UM5QlVajPO6SuPmYAE2579KmPV
+         RI0A==
+X-Gm-Message-State: APjAAAWu8g4uxWDavJgajd02+8hRHlZllLpe0DRrThFADt2X9eYhbrPl
+        HXuSYzGX3CScUOl5fBhS1HIMycQ=
+X-Google-Smtp-Source: APXvYqwDuVK3qY0Iq9IMoVpNILODh/zoeJI3nEH60cUZ0Wi5GUlWpXN6EcwPRi7fT0eZPSkCy2jJqA==
+X-Received: by 2002:a17:902:fe91:: with SMTP id x17mr8984714plm.106.1568884087869;
+        Thu, 19 Sep 2019 02:08:07 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id z13sm9897843pfq.121.2019.09.19.02.08.05
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Thu, 19 Sep 2019 02:08:07 -0700 (PDT)
+Subject: Re: [PATCH v3 2/2] xfs: test the deadlock between the AGI and AGF
+ with RENAME_WHITEOUT
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Eryu Guan <guaneryu@gmail.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+References: <db6c5d87-5a47-75bd-4d24-a135e6bcd783@gmail.com>
+ <20190918135947.GD29377@bfoster>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <8941c9b8-1589-4e1f-c20b-7d128225d7f6@gmail.com>
+Date:   Thu, 19 Sep 2019 17:08:04 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190919063312.GD568270@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.62]); Thu, 19 Sep 2019 06:52:29 +0000 (UTC)
+In-Reply-To: <20190918135947.GD29377@bfoster>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 18, 2019 at 11:33:12PM -0700, Darrick J. Wong wrote:
-> On Thu, Sep 19, 2019 at 01:20:33PM +0800, Zorro Lang wrote:
-> > On Wed, Sep 18, 2019 at 04:10:50PM -0700, Darrick J. Wong wrote:
-> > > On Wed, Sep 18, 2019 at 09:37:11AM -0700, Darrick J. Wong wrote:
-> > > > On Wed, Sep 18, 2019 at 11:24:47AM +0800, Yang Xu wrote:
-> > > > > 
-> > > > > 
-> > > > > on 2019/09/18 10:59, Zorro Lang wrote:
-> > > > > > xfs/030 is weird, I've found it long time ago.
-> > > > > > 
-> > > > > > If I do a 'whole disk mkfs' (_scratch_mkfs_xfs), before this sized mkfs:
-> > > > > > 
-> > > > > >    _scratch_mkfs_xfs $DSIZE >/dev/null 2>&1
-> > > > > > 
-> > > > > > Everything looks clear, and test pass. I can't send a patch to do this,
-> > > > > > because I don't know the reason.
-> > > > > Yes. I also found running _scratch_mkfs_xfs in xfs/030 can slove this
-> > > > > problem yesterday. Or, we can adjust _try_wipe_scratch_devs order in
-> > > > > check(But I dont't have enough reason to explain why adjust it). as below:
-> > > > 
-> > > > (Yeah, I don't see any obvious reason why that would change outcomes...)
-> > > > 
-> > > > > --- a/check
-> > > > > +++ b/check
-> > > > > @@ -753,7 +753,6 @@ for section in $HOST_OPTIONS_SECTIONS; do
-> > > > >                         # _check_dmesg depends on this log in dmesg
-> > > > >                         touch ${RESULT_DIR}/check_dmesg
-> > > > >                 fi
-> > > > > -               _try_wipe_scratch_devs > /dev/null 2>&1
-> > > > >                 if [ "$DUMP_OUTPUT" = true ]; then
-> > > > >                         _run_seq 2>&1 | tee $tmp.out
-> > > > >                         # Because $? would get tee's return code
-> > > > > @@ -799,7 +798,7 @@ for section in $HOST_OPTIONS_SECTIONS; do
-> > > > >                 # Scan for memory leaks after every test so that associating
-> > > > >                 # a leak to a particular test will be as accurate as
-> > > > > possible.
-> > > > >                 _check_kmemleak || err=true
-> > > > > -
-> > > > > +               _try_wipe_scratch_devs > /dev/null 2>&1
-> > > > >                 # test ends after all checks are done.
-> > > > >                 $timestamp && _timestamp
-> > > > >                 stop=`_wallclock`
-> > > > > 
-> > > > > > 
-> > > > > > I'm not familiar with xfs_repair so much, so I don't know what happens
-> > > > > > underlying. I suppose the the part after the $DSIZE affect the xfs_repair,
-> > > > > > but I don't know why the wipefs can cause that, wipefs only erase 4 bytes
-> > > > > > at the beginning.
-> > > > > > 
-> > > > >  I am finding the reasion. It seems wipefs wipes important information and
-> > > > > $DSIZE option(using single agcount or dsize, it also fails ) can not format
-> > > > > disk completely. If we use other options, it can pass.
-> > > > 
-> > > > How does mkfs fail, specifically?
-> > > > 
-> > > > Also, what's your storage configuration?  And lsblk -D output?
-> > > 
-> > > I'm still interested in the answer to these questions, but I've done a
-> > > little more research and noticed that yes, xfs/030 fails if the device
-> > > doesn't support zeroing discard.
-> > > 
-> > > First, if mkfs.xfs detects an old primary superblock, it will write
-> > > zeroes to all superblocks before formatting the new filesystem.
-> > > Obviously this won't be done if the device doesn't have a primary
-> > > superblock.
-> > > 
-> > > (1) So let's say that a previous test formatted a 4GB scratch disk with
-> > > all defaults, and let's say that we have 4 AGs.  The disk will look like
-> > > this:
-> > > 
-> > >   SB0 [1G space] SB1 [1G space] SB2 [1G space] SB3 [1G space]
-> > > 
-> > > (2) Now we _try_wipe_scratch_devs, which wipes out the primary label:
-> > > 
-> > >   000 [1G space] SB1 [1G space] SB2 [1G space] SB3 [1G space]
-> > > 
-> > > (3) Now xfs/030 runs its special mkfs command (6AGs, 100MB disk).  If the
-> > > disk supports zeroing discard, it will discard the whole device:
-> > > 
-> > >   <4GB of zeroes>
-> > > 
-> > > (4) Then it will lay down its own filesystem:
-> > > 
-> > >   SB0 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 4G>
-> > > 
-> > > (5) Next, xfs/030 zaps the primary superblock:
-> > > 
-> > >   000 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 4G>
-> > > 
-> > > (6) Next, xfs/030 runs xfs_repair.  It fails to find the primary sb, so it
-> > > tries to find secondary superblocks.  Its first strategy is to compute
-> > > the fs geometry assuming all default options.  In this case, that means
-> > > 4 AGs, spaced 1G apart.  They're all zero, so it falls back to a linear
-> > > scan of the disk.  It finds SB1, uses that to rewrite the primary super,
-> > > and continues with the repair (which is mostly uneventful).  The test
-> > > passes; this is why it works on my computer.
-> > > 
-> > > ---------
-> > > 
-> > > Now let's see what happened before _try_wipe_scratch_devs.  In step (3)
-> > > mkfs would find the old superblocks and wipe the superblocks, before
-> > > laying down the new superblocks:
-> > > 
-> > >   SB0 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 1G> \
-> > >       000 [1G space] 000 [1G space] 000 [1G space]
-> > > 
-> > > Step (5) zaps the primary, yielding:
-> > > 
-> > >   000 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 1G> \
-> > >       000 [1G space] 000 [1G space] 000 [1G space]
-> > > 
-> > > Step (6) fails to find a primary superblock so it tries to read backup
-> > > superblocks at 1G, 2G, and 3G, but they're all zero so it falls back to
-> > > the linear scan and picks up SB1 and proceeds with a mostly uneventful
-> > > repair.  The test passes.
-> > > 
-> > > ---------
-> > > 
-> > > However, with _try_wipe_scratch_devs and a device that doesn't support
-> > > discard (or MKFS_OPTIONS includes -K), we have a problem.  mkfs.xfs
-> > > doesn't discard the device nor does it find a primary superblock, so it
-> > > simply formats the new filesystem.  We end up with:
-> > > 
-> > >   SB0 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 1G> \
-> > >       SB'1 [1G space] SB'2 [1G space] SB'3 [1G space]
-> > > 
-> > > Where SB[0-5] are from the filesystem that xfs/030 formatted but
-> > > SB'[1-3] are from the filesystem that was on the scratch disk before
-> > > xfs/030 even started.  Uhoh.
-> > > 
-> > > Step (5) zaps the primary, yielding:
-> > > 
-> > >   000 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 1G> \
-> > >       SB'1 [1G space] SB'2 [1G space] SB'3 [1G space]
-> > > 
-> > > Step (6) fails to find a primary superblock so it tries to read backup
-> > > superblocks at 1G.  It finds SB'1 and uses that to reconstruct the /old/
-> > > filesystem, with what looks like massive filesystem damage.  This
-> > > results in test failure.  Oops.
-> > > 
-> > > ----------
-> > > 
-> > > The reason for adding _try_wipe_scratch_devs was to detect broken tests
-> > > that started using the filesystem on the scratch device (if any) before
-> > > (or without!) formatting the scratch device.  That broken behavior could
-> > > result in spurious test failures when xfstests was run in random order
-> > > mode either due to mounting an unformatted device or mounting a corrupt
-> > > fs that some other test left behind.
-> > > 
-> > > I guess a fix for XFS would be have _try_wipe_scratch_devs try to read
-> > > the primary superblock to compute the AG geometry and then erase all
-> > > superblocks that could be on the disk; and then compute the default
-> > > geometry and wipe out all those superblocks too.
-> > > 
-> > > Does any of that square with what you've been seeing?
-> > 
-> > Thanks Darrick, so what I supposed might be true?
-> > "
-> >   > > > > I'm not familiar with xfs_repair so much, so I don't know what happens
-> >   > > > > underlying. I suppose the the part after the $DSIZE affect the xfs_repair,
-> > "
-> > 
-> > The sized mkfs.xfs (without discard) leave old on-disk structure behind $DSIZE
-> > space, it cause xfs_repair try to use odd things to do the checking.
-> > 
-> > When I tried to erase the 1st block of each AGs[1], the test passed[2].
-> > Is that what you talked as above?
+
+
+On 2019/9/18 21:59, Brian Foster wrote:
+> On Wed, Sep 18, 2019 at 07:49:22PM +0800, kaixuxia wrote:
+>> There is ABBA deadlock bug between the AGI and AGF when performing
+>> rename() with RENAME_WHITEOUT flag, and add this testcase to make
+>> sure the rename() call works well.
+>>
+>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+>> ---
 > 
-> Yep.  The version I wrote also uses xfs_db to see if there's a primary
-> sb at block zero that can point us to other backup superblocks to zap,
-> though if you want to send your version go ahead because I'll be busy
-> for a while dealing with this iomap mess. :/
-
-Yeah, I saw Dave talked about that with you, so I never thought you
-was working on this small issue ;)
-
-As this test failure brings much trouble to us(than you), I'd like to fix
-it if you have more other works to do.
-
-Thanks,
-Zorro
-
+> FYI, for some reason your patch series isn't threaded on the mailing
+> list. I thought git send-email did this by default. Assuming you're not
+> explicitly using --no-thread, you might have to use the --thread option
+> so this gets posted as a proper series.
 > 
-> --D
+Yeah, thanks!
+>>  tests/xfs/512     | 96 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+>>  tests/xfs/512.out |  2 ++
+>>  tests/xfs/group   |  1 +
+>>  3 files changed, 99 insertions(+)
+>>  create mode 100755 tests/xfs/512
+>>  create mode 100644 tests/xfs/512.out
+>>
+>> diff --git a/tests/xfs/512 b/tests/xfs/512
+>> new file mode 100755
+>> index 0000000..a2089f0
+>> --- /dev/null
+>> +++ b/tests/xfs/512
+>> @@ -0,0 +1,96 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2019 Tencent.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 512
+>> +#
+>> +# Test the ABBA deadlock case between the AGI and AGF When performing
+>> +# rename operation with RENAME_WHITEOUT flag.
+>> +#
+>> +seq=`basename $0`
+>> +seqres=$RESULT_DIR/$seq
+>> +echo "QA output created by $seq"
+>> +
+>> +here=`pwd`
+>> +tmp=/tmp/$$
+>> +status=1	# failure is the default!
+>> +trap "_cleanup; exit \$status" 0 1 2 3 15
+>> +
+>> +_cleanup()
+>> +{
+>> +	cd /
+>> +	rm -f $tmp.*
+>> +}
+>> +
+>> +# get standard environment, filters and checks
+>> +. ./common/rc
+>> +. ./common/filter
+>> +. ./common/renameat2
+>> +
+>> +rm -f $seqres.full
+>> +
+>> +# real QA test starts here
+>> +_supported_fs xfs
+>> +_supported_os Linux
+>> +# single AG will cause default xfs_repair to fail. This test need a
+>> +# single AG fs, so ignore the check.
+>> +_require_scratch_nocheck
+>> +_requires_renameat2 whiteout
+>> +
+>> +filter_enospc() {
+>> +	sed -e '/^.*No space left on device.*/d'
+>> +}
+>> +
+>> +create_file()
+>> +{
+>> +	local target_dir=$1
+>> +	local files_count=$2
+>> +
+>> +	for i in $(seq 1 $files_count); do
+>> +		echo > $target_dir/f$i >/dev/null 2>&1 | filter_enospc
+>> +	done
+>> +}
+>> +
+>> +rename_whiteout()
+>> +{
+>> +	local target_dir=$1
+>> +	local files_count=$2
+>> +
+>> +	# a long filename could increase the possibility that target_dp
+>> +	# allocate new blocks(acquire the AGF lock) to store the filename
+>> +	longnamepre=`$PERL_PROG -e 'print "a"x200;'`
+>> +
+>> +	# now try to do rename with RENAME_WHITEOUT flag
+>> +	for i in $(seq 1 $files_count); do
+>> +		src/renameat2 -w $SCRATCH_MNT/f$i $target_dir/$longnamepre$i >/dev/null 2>&1
+>> +	done
+>> +}
+>> +
+>> +_scratch_mkfs_xfs -d agcount=1 >> $seqres.full 2>&1 ||
+>> +	_fail "mkfs failed"
 > 
-> > Thanks,
-> > Zorro
-> > 
-> > [1]
-> > diff --git a/common/rc b/common/rc
-> > index e0b087c1..19b7ab02 100644
-> > --- a/common/rc
-> > +++ b/common/rc
-> > @@ -4048,6 +4048,10 @@ _try_wipe_scratch_devs()
-> >         for dev in $SCRATCH_DEV_POOL $SCRATCH_DEV $SCRATCH_LOGDEV $SCRATCH_RTDEV; do
-> >                 test -b $dev && $WIPEFS_PROG -a $dev
-> >         done
-> > +
-> > +       if [ "$FSTYP" = "xfs" ];then
-> > +               _try_wipe_scratch_xfs
-> > +       fi
-> >  }
-> >  
-> >  # Only run this on xfs if xfs_scrub is available and has the unicode checker
-> > diff --git a/common/xfs b/common/xfs
-> > index 1bce3c18..53f33d12 100644
-> > --- a/common/xfs
-> > +++ b/common/xfs
-> > @@ -884,3 +884,24 @@ _xfs_mount_agcount()
-> >  {
-> >         $XFS_INFO_PROG "$1" | grep agcount= | sed -e 's/^.*agcount=\([0-9]*\),.*$/\1/g'
-> >  }
-> > +
-> > +_try_wipe_scratch_xfs()
-> > +{
-> > +       local tmp=`mktemp -u`
-> > +
-> > +       _scratch_mkfs_xfs -N 2>/dev/null | perl -ne '
-> > +               if (/^meta-data=.*\s+agcount=(\d+), agsize=(\d+) blks/) {
-> > +                       print STDOUT "agcount=$1\nagsize=$2\n";
-> > +               }
-> > +               if (/^data\s+=\s+bsize=(\d+)\s/) {
-> > +                       print STDOUT "dbsize=$1\n";
-> > +               }' > $tmp.mkfs
-> > +       . $tmp.mkfs
-> > +       if [ -n "$agcount" -a -n "$agsize" -a -n "$dbsize" ];then
-> > +               for((i=0; i<agcount; i++)); do
-> > +                       $XFS_IO_PROG -c "pwrite $((i * dbsize * agsize)) $dbsize" \
-> > +                               $SCRATCH_DEV >/dev/null;
-> > +               done
-> > +       fi
-> > +       rm -f $tmp.mkfs
-> > +}
-> > 
-> > [2]
-> > # ./check xfs/030
-> > FSTYP         -- xfs (non-debug)
-> > PLATFORM      -- Linux/x86_64 xxx-xxxx-xx xxx-xxxx-xx-xxx
-> > MKFS_OPTIONS  -- -f -bsize=4096 /dev/mapper/scratchdev
-> > MOUNT_OPTIONS -- -o context=system_u:object_r:root_t:s0 /dev/mapper/scratchdev /mnt/scratch
-> > 
-> > xfs/030 24s ...  25s
-> > Ran: xfs/030
-> > Passed all 1 tests
-> > 
-> > > 
-> > > --D
-> > > 
-> > > > --D
-> > > > 
-> > > > > > Darrick, do you know more about that?
-> > > > > > 
-> > > > > > Thanks,
-> > > > > > Zorro
-> > > > > > 
-> > > > > > > > xfs/148 is a clone of test 030 using xfs_prepair64 instead of xfs_repair.
-> > > > > > > > xfs/149 is a clone of test 031 using xfs_prepair instead of xfs_repair
-> > > > > > I'm not worried about it too much, due to it always 'not run' and never
-> > > > > > failsYes. But I perfer to remove them because IMO they are useless.
-> > > > > > 
-> > > > > 
-> > > > > > xfs/148 [not run] parallel repair binary xfs_prepair64 is not installed
-> > > > > > xfs/149 [not run] parallel repair binary xfs_prepair is not installed
-> > > > > > Ran: xfs/148 xfs/149
-> > > > > > Not run: xfs/148 xfs/149
-> > > > > > Passed all 2 tests
-> > > > > > 
-> > > > > 
-> > > > > 
+> This appears to be the only XFS specific bit. Could it be
+> conditionalized using FSTYP such that this test could go under
+> tests/generic?
+> 
+OK, I'll move this test to tests/generic by using FSTYP.
+
+>> +_scratch_mount
+>> +
+>> +# set the rename and create file counts
+>> +file_count=50000
+>> +
+>> +# create the necessary directory for create and rename operations
+>> +createdir=$SCRATCH_MNT/createdir
+>> +mkdir $createdir
+>> +renamedir=$SCRATCH_MNT/renamedir
+>> +mkdir $renamedir
+>> +
+>> +# create many small files for the rename with RENAME_WHITEOUT
+>> +create_file $SCRATCH_MNT $file_count
+>> +
+>> +# try to create files at the same time to hit the deadlock
+>> +rename_whiteout $renamedir $file_count &
+>> +create_file $createdir $file_count &
+>> +
+> 
+> When I ran this test I noticed that the rename_whiteout task completed
+> renaming the 50k files before the create_file task created even 30k of
+> the 50k files. There's no risk of deadlock once one of these tasks
+> completes, right? If so, that seems like something that could be fixed
+> up.
+> 
+> Beyond that though, the test itself ran for almost 19 minutes on a vm
+> with the deadlock fix. That seems like overkill to me for a test that's
+> so narrowly focused on a particular bug that it's unlikely to fail in
+> the future. If we can't find a way to get this down to a reasonable time
+> while still reproducing the deadlock, I'm kind of wondering if there's a
+> better approach to get more rename coverage from existing tests. For
+> example, could we add this support to fsstress and see if any of the
+> existing stress tests might trigger the original problem? Even if we
+> needed to add a new rename/create focused fsstress test, that might at
+> least be general enough to provide broader coverage.
+> 
+Yeah, rename_whiteout task run faster than create_file task, so maybe
+we can set two different files counts for them to reduce the test run
+time. This test ran for 380s on my vm with the fixed kernel, but we
+still need to find a way to reduce the run time, like the 19 minutes
+case. Actually, in most cases, the deadlock happened when the
+rename_whiteout task completed renaming hundreds of files. 50000
+is set just because this test take 380s on my vm which is acceptable
+and the reproduce possibility is near 100%. So maybe we can choose a
+proper files count to make the test runs faster. Of course, I'll
+also try to use fsstresss and the TIME_FACTOR if they can help to
+reduce the run time.
+ 
+> Alternatively, what if this test ran a create/rename workload (on a
+> smaller fileset) for a fixed time of a minute or two and then exited? I
+> think it would be a reasonable compromise if the test still reproduced
+> on some smaller frequency, it's just not clear to me how effective such
+> a test would be without actually trying it. Maybe Eryu has additional
+> thoughts..
+> 
+> Brian
+> 
+>> +wait
+>> +echo Silence is golden
+>> +
+>> +# Failure comes in the form of a deadlock.
+>> +
+>> +# success, all done
+>> +status=0
+>> +exit
+>> diff --git a/tests/xfs/512.out b/tests/xfs/512.out
+>> new file mode 100644
+>> index 0000000..0aabdef
+>> --- /dev/null
+>> +++ b/tests/xfs/512.out
+>> @@ -0,0 +1,2 @@
+>> +QA output created by 512
+>> +Silence is golden
+>> diff --git a/tests/xfs/group b/tests/xfs/group
+>> index a7ad300..ed250d6 100644
+>> --- a/tests/xfs/group
+>> +++ b/tests/xfs/group
+>> @@ -509,3 +509,4 @@
+>>  509 auto ioctl
+>>  510 auto ioctl quick
+>>  511 auto quick quota
+>> +512 auto rename
+>> -- 
+>> 1.8.3.1
+>>
+>> -- 
+>> kaixuxia
+
+-- 
+kaixuxia
