@@ -2,278 +2,734 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 01BDAC3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 09:08:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ABC98C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 10:11:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B61A621927
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 09:08:09 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dsCu3Fdo"
+	by mail.kernel.org (Postfix) with ESMTP id 6C6E921929
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 10:11:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731062AbfISJIJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 05:08:09 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:34460 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730632AbfISJIJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 05:08:09 -0400
-Received: by mail-pl1-f194.google.com with SMTP id d3so1312940plr.1;
-        Thu, 19 Sep 2019 02:08:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=UaTVqpHgFEipW6sqFFVLBqtYTSqFXnoYit7eFT5q0+s=;
-        b=dsCu3FdoQi5TcFtK6JkASj9/9Q2AoEbTrbtImNLUWfPPHONoHkSyTqgSNGOxFOWjUq
-         OGoKVJLFIo2GXFCaCvUPIfGjt2FLOuaqhapmX+WBPav1+TzBueYuEU04P5qTwEbAIKII
-         +66OeL1vwDd4bnIWp2Qd1np+fG5fDQNSdE8GL6lBvpU6TEVfN4aKf+qxcFzG1VpKtSih
-         Xvmd7tetB5fHnB3zZCe2YWce7PVM0lxsJu6BOMTErfzrC8DGvCjyCZx4itcrFFCviokF
-         S1ViVgirFFDBFg5GqkIJtoYDxxgNU83I3FUWlr8bfEeyIAvbMtX2+OmAo3Jh/j6e7xnO
-         DNdA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=UaTVqpHgFEipW6sqFFVLBqtYTSqFXnoYit7eFT5q0+s=;
-        b=YbysVUU/WfilYfa1Skcsagjya4cm0PBKNg3V5wX47zSZQQacy/RDG+x4Qd84Pg3+K4
-         CNGW5LaqVV8kf2fZciPSxg8RFunXTuEJvEHdBhpz0KnfblUnKmBhCjYYNhGJTuzTfHsT
-         XyL24QcRa10F9v+L/vZzd9IcCatuPE5WaekEcttsoPehT6cF09ns7iFgioaqpL67hq2t
-         CeyS/w++MkeV7c6yLUCuSDvLsrZCBDiCkJqdbRhzb1fhIZlkip/NS4v786juNOK9DYso
-         CtLvL2hP1d+KM4rpBCfErGIVITXsaPSerg9KbW6Dc/UM5QlVajPO6SuPmYAE2579KmPV
-         RI0A==
-X-Gm-Message-State: APjAAAWu8g4uxWDavJgajd02+8hRHlZllLpe0DRrThFADt2X9eYhbrPl
-        HXuSYzGX3CScUOl5fBhS1HIMycQ=
-X-Google-Smtp-Source: APXvYqwDuVK3qY0Iq9IMoVpNILODh/zoeJI3nEH60cUZ0Wi5GUlWpXN6EcwPRi7fT0eZPSkCy2jJqA==
-X-Received: by 2002:a17:902:fe91:: with SMTP id x17mr8984714plm.106.1568884087869;
-        Thu, 19 Sep 2019 02:08:07 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id z13sm9897843pfq.121.2019.09.19.02.08.05
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 19 Sep 2019 02:08:07 -0700 (PDT)
-Subject: Re: [PATCH v3 2/2] xfs: test the deadlock between the AGI and AGF
- with RENAME_WHITEOUT
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eryu Guan <guaneryu@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-References: <db6c5d87-5a47-75bd-4d24-a135e6bcd783@gmail.com>
- <20190918135947.GD29377@bfoster>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <8941c9b8-1589-4e1f-c20b-7d128225d7f6@gmail.com>
-Date:   Thu, 19 Sep 2019 17:08:04 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S2388871AbfISKLt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 06:11:49 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:48619 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1727980AbfISKLt (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 06:11:49 -0400
+X-IronPort-AV: E=Sophos;i="5.64,523,1559491200"; 
+   d="scan'208";a="75705416"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 19 Sep 2019 18:11:47 +0800
+Received: from G08CNEXCHPEKD02.g08.fujitsu.local (unknown [10.167.33.83])
+        by cn.fujitsu.com (Postfix) with ESMTP id E87C84CE14E8;
+        Thu, 19 Sep 2019 18:11:45 +0800 (CST)
+Received: from localhost.localdomain (10.167.220.84) by
+ G08CNEXCHPEKD02.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
+ (TLS) id 14.3.439.0; Thu, 19 Sep 2019 18:11:45 +0800
+From:   Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+To:     <darrick.wong@oracle.com>, <david@fromorbit.com>,
+        <guaneryu@gmail.com>
+CC:     <fstests@vger.kernel.org>, <linux-xfs@vger.kernel.org>,
+        Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+Subject: [PATCH] xfs/148-149: Remove xfs_prepair64 and xfs_prepair tests
+Date:   Thu, 19 Sep 2019 18:08:15 +0800
+Message-ID: <1568887695-3508-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
+X-Mailer: git-send-email 1.8.3.1
 MIME-Version: 1.0
-In-Reply-To: <20190918135947.GD29377@bfoster>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.167.220.84]
+X-yoursite-MailScanner-ID: E87C84CE14E8.A486F
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: xuyang2018.jy@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+The two commands have obsoleted long time ago, they don't run
+on most systems. So I think we can remove them.
 
+Signed-off-by: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+---
+ tests/xfs/148     |  93 --------------
+ tests/xfs/148.out | 299 ----------------------------------------------
+ tests/xfs/149     | 112 -----------------
+ tests/xfs/149.out | 123 -------------------
+ tests/xfs/group   |   2 -
+ 5 files changed, 629 deletions(-)
+ delete mode 100755 tests/xfs/148
+ delete mode 100644 tests/xfs/148.out
+ delete mode 100755 tests/xfs/149
+ delete mode 100644 tests/xfs/149.out
 
-On 2019/9/18 21:59, Brian Foster wrote:
-> On Wed, Sep 18, 2019 at 07:49:22PM +0800, kaixuxia wrote:
->> There is ABBA deadlock bug between the AGI and AGF when performing
->> rename() with RENAME_WHITEOUT flag, and add this testcase to make
->> sure the rename() call works well.
->>
->> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
->> ---
-> 
-> FYI, for some reason your patch series isn't threaded on the mailing
-> list. I thought git send-email did this by default. Assuming you're not
-> explicitly using --no-thread, you might have to use the --thread option
-> so this gets posted as a proper series.
-> 
-Yeah, thanks!
->>  tests/xfs/512     | 96 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
->>  tests/xfs/512.out |  2 ++
->>  tests/xfs/group   |  1 +
->>  3 files changed, 99 insertions(+)
->>  create mode 100755 tests/xfs/512
->>  create mode 100644 tests/xfs/512.out
->>
->> diff --git a/tests/xfs/512 b/tests/xfs/512
->> new file mode 100755
->> index 0000000..a2089f0
->> --- /dev/null
->> +++ b/tests/xfs/512
->> @@ -0,0 +1,96 @@
->> +#! /bin/bash
->> +# SPDX-License-Identifier: GPL-2.0
->> +# Copyright (c) 2019 Tencent.  All Rights Reserved.
->> +#
->> +# FS QA Test 512
->> +#
->> +# Test the ABBA deadlock case between the AGI and AGF When performing
->> +# rename operation with RENAME_WHITEOUT flag.
->> +#
->> +seq=`basename $0`
->> +seqres=$RESULT_DIR/$seq
->> +echo "QA output created by $seq"
->> +
->> +here=`pwd`
->> +tmp=/tmp/$$
->> +status=1	# failure is the default!
->> +trap "_cleanup; exit \$status" 0 1 2 3 15
->> +
->> +_cleanup()
->> +{
->> +	cd /
->> +	rm -f $tmp.*
->> +}
->> +
->> +# get standard environment, filters and checks
->> +. ./common/rc
->> +. ./common/filter
->> +. ./common/renameat2
->> +
->> +rm -f $seqres.full
->> +
->> +# real QA test starts here
->> +_supported_fs xfs
->> +_supported_os Linux
->> +# single AG will cause default xfs_repair to fail. This test need a
->> +# single AG fs, so ignore the check.
->> +_require_scratch_nocheck
->> +_requires_renameat2 whiteout
->> +
->> +filter_enospc() {
->> +	sed -e '/^.*No space left on device.*/d'
->> +}
->> +
->> +create_file()
->> +{
->> +	local target_dir=$1
->> +	local files_count=$2
->> +
->> +	for i in $(seq 1 $files_count); do
->> +		echo > $target_dir/f$i >/dev/null 2>&1 | filter_enospc
->> +	done
->> +}
->> +
->> +rename_whiteout()
->> +{
->> +	local target_dir=$1
->> +	local files_count=$2
->> +
->> +	# a long filename could increase the possibility that target_dp
->> +	# allocate new blocks(acquire the AGF lock) to store the filename
->> +	longnamepre=`$PERL_PROG -e 'print "a"x200;'`
->> +
->> +	# now try to do rename with RENAME_WHITEOUT flag
->> +	for i in $(seq 1 $files_count); do
->> +		src/renameat2 -w $SCRATCH_MNT/f$i $target_dir/$longnamepre$i >/dev/null 2>&1
->> +	done
->> +}
->> +
->> +_scratch_mkfs_xfs -d agcount=1 >> $seqres.full 2>&1 ||
->> +	_fail "mkfs failed"
-> 
-> This appears to be the only XFS specific bit. Could it be
-> conditionalized using FSTYP such that this test could go under
-> tests/generic?
-> 
-OK, I'll move this test to tests/generic by using FSTYP.
-
->> +_scratch_mount
->> +
->> +# set the rename and create file counts
->> +file_count=50000
->> +
->> +# create the necessary directory for create and rename operations
->> +createdir=$SCRATCH_MNT/createdir
->> +mkdir $createdir
->> +renamedir=$SCRATCH_MNT/renamedir
->> +mkdir $renamedir
->> +
->> +# create many small files for the rename with RENAME_WHITEOUT
->> +create_file $SCRATCH_MNT $file_count
->> +
->> +# try to create files at the same time to hit the deadlock
->> +rename_whiteout $renamedir $file_count &
->> +create_file $createdir $file_count &
->> +
-> 
-> When I ran this test I noticed that the rename_whiteout task completed
-> renaming the 50k files before the create_file task created even 30k of
-> the 50k files. There's no risk of deadlock once one of these tasks
-> completes, right? If so, that seems like something that could be fixed
-> up.
-> 
-> Beyond that though, the test itself ran for almost 19 minutes on a vm
-> with the deadlock fix. That seems like overkill to me for a test that's
-> so narrowly focused on a particular bug that it's unlikely to fail in
-> the future. If we can't find a way to get this down to a reasonable time
-> while still reproducing the deadlock, I'm kind of wondering if there's a
-> better approach to get more rename coverage from existing tests. For
-> example, could we add this support to fsstress and see if any of the
-> existing stress tests might trigger the original problem? Even if we
-> needed to add a new rename/create focused fsstress test, that might at
-> least be general enough to provide broader coverage.
-> 
-Yeah, rename_whiteout task run faster than create_file task, so maybe
-we can set two different files counts for them to reduce the test run
-time. This test ran for 380s on my vm with the fixed kernel, but we
-still need to find a way to reduce the run time, like the 19 minutes
-case. Actually, in most cases, the deadlock happened when the
-rename_whiteout task completed renaming hundreds of files. 50000
-is set just because this test take 380s on my vm which is acceptable
-and the reproduce possibility is near 100%. So maybe we can choose a
-proper files count to make the test runs faster. Of course, I'll
-also try to use fsstresss and the TIME_FACTOR if they can help to
-reduce the run time.
- 
-> Alternatively, what if this test ran a create/rename workload (on a
-> smaller fileset) for a fixed time of a minute or two and then exited? I
-> think it would be a reasonable compromise if the test still reproduced
-> on some smaller frequency, it's just not clear to me how effective such
-> a test would be without actually trying it. Maybe Eryu has additional
-> thoughts..
-> 
-> Brian
-> 
->> +wait
->> +echo Silence is golden
->> +
->> +# Failure comes in the form of a deadlock.
->> +
->> +# success, all done
->> +status=0
->> +exit
->> diff --git a/tests/xfs/512.out b/tests/xfs/512.out
->> new file mode 100644
->> index 0000000..0aabdef
->> --- /dev/null
->> +++ b/tests/xfs/512.out
->> @@ -0,0 +1,2 @@
->> +QA output created by 512
->> +Silence is golden
->> diff --git a/tests/xfs/group b/tests/xfs/group
->> index a7ad300..ed250d6 100644
->> --- a/tests/xfs/group
->> +++ b/tests/xfs/group
->> @@ -509,3 +509,4 @@
->>  509 auto ioctl
->>  510 auto ioctl quick
->>  511 auto quick quota
->> +512 auto rename
->> -- 
->> 1.8.3.1
->>
->> -- 
->> kaixuxia
-
+diff --git a/tests/xfs/148 b/tests/xfs/148
+deleted file mode 100755
+index d9d7d221..00000000
+--- a/tests/xfs/148
++++ /dev/null
+@@ -1,93 +0,0 @@
+-#! /bin/bash
+-# SPDX-License-Identifier: GPL-2.0
+-# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# FS QA Test No. 148
+-#
+-# Exercise xfs parallel repair on broken filesystems
+-# This is a clone of test 030 useing xfs_prepair64 instead of xfs_repair
+-#
+-seq=`basename $0`
+-seqres=$RESULT_DIR/$seq
+-echo "QA output created by $seq"
+-
+-here=`pwd`
+-tmp=/tmp/$$
+-status=1	# failure is the default!
+-
+-_cleanup()
+-{
+-	cd /
+-	_scratch_unmount 2>/dev/null
+-	rm -f $tmp.*
+-}
+-
+-trap "_cleanup; exit \$status" 0 1 2 3 15
+-
+-# get standard environment, filters and checks
+-. ./common/rc
+-. ./common/filter
+-. ./common/repair
+-
+-[ -z "$XFS_PARALLEL_REPAIR64_PROG" ] && _notrun "parallel repair binary xfs_prepair64 is not installed"
+-
+-# force use of parallel repair
+-export XFS_REPAIR_PROG=$XFS_PARALLEL_REPAIR64_PROG
+-
+-# nuke the superblock, AGI, AGF, AGFL; then try repair the damage
+-# 
+-_check_ag()
+-{
+-	for structure in 'sb 0' 'agf 0' 'agi 0' 'agfl 0'
+-	do
+-		echo "Corrupting $structure - setting bits to $1"
+-		_check_repair $1 "$structure"
+-	done
+-}
+-
+-# real QA test starts here
+-_supported_fs xfs
+-_supported_os Linux
+-
+-_require_scratch
+-_require_no_large_scratch_dev
+-
+-DSIZE="-dsize=100m"
+-
+-# first we need to ensure there are no bogus secondary
+-# superblocks between the primary and first secondary
+-# superblock (hanging around from earlier tests)...
+-#
+-
+-_scratch_mkfs_xfs $DSIZE >/dev/null 2>&1
+-if [ $? -ne 0 ]		# probably don't have a big enough scratch
+-then
+-	_notrun "SCRATCH_DEV too small, results would be non-deterministic"
+-else
+-	_scratch_mount
+-	src/feature -U $SCRATCH_DEV && \
+-		_notrun "UQuota are enabled, test needs controlled sb recovery"
+-	src/feature -G $SCRATCH_DEV && \
+-		_notrun "GQuota are enabled, test needs controlled sb recovery"
+-	src/feature -P $SCRATCH_DEV && \
+-		_notrun "PQuota are enabled, test needs controlled sb recovery"
+-	_scratch_unmount
+-fi
+-clear=""
+-eval `xfs_db -r -c "sb 1" -c stack $SCRATCH_DEV | $PERL_PROG -ne '
+-	if (/byte offset (\d+), length (\d+)/) {
+-		print "clear=", $1 / 512, "\n"; exit
+-	}'`
+-[ -z "$clear" ] && echo "Cannot calculate length to clear"
+-src/devzero -v -1 -n "$clear" $SCRATCH_DEV >/dev/null
+-
+-# now kick off the real prepair test...
+-#
+-_scratch_mkfs_xfs $DSIZE | _filter_mkfs 2>$tmp.mkfs
+-. $tmp.mkfs
+-_check_ag 0
+-_check_ag -1
+-
+-# success, all done
+-status=0
+-exit
+diff --git a/tests/xfs/148.out b/tests/xfs/148.out
+deleted file mode 100644
+index c8fb5511..00000000
+--- a/tests/xfs/148.out
++++ /dev/null
+@@ -1,299 +0,0 @@
+-QA output created by 148
+-meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
+-data     = bsize=XXX blocks=XXX, imaxpct=PCT
+-         = sunit=XXX swidth=XXX, unwritten=X
+-naming   =VERN bsize=XXX
+-log      =LDEV bsize=XXX blocks=XXX
+-realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
+-Corrupting sb 0 - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-bad primary superblock - bad magic number !!!
+-
+-attempting to find secondary superblock...
+-found candidate secondary superblock...
+-verified secondary superblock...
+-writing modified primary superblock
+-sb root inode value INO inconsistent with calculated value INO
+-resetting superblock root inode pointer to INO
+-sb realtime bitmap inode INO inconsistent with calculated value INO
+-resetting superblock realtime bitmap ino pointer to INO
+-sb realtime summary inode INO inconsistent with calculated value INO
+-resetting superblock realtime summary ino pointer to INO
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-Note - stripe unit (SU) and width (SW) fields have been reset.
+-Please set with mount -o sunit=<value>,swidth=<value>
+-done
+-Corrupting agf 0 - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-bad magic # 0x0 for agf 0
+-bad version # 0 for agf 0
+-bad length 0 for agf 0, should be LENGTH
+-reset bad agf for ag 0
+-bad agbno AGBNO for btbno root, agno 0
+-bad agbno AGBNO for btbcnt root, agno 0
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting agi 0 - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-bad magic # 0x0 for agi 0
+-bad version # 0 for agi 0
+-bad length # 0 for agi 0, should be LENGTH
+-reset bad agi for ag 0
+-bad agbno AGBNO for inobt root, agno 0
+-root inode chunk not found
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-error following ag 0 unlinked list
+-        - process known inodes and perform inode discovery...
+-imap claims in-use inode INO is free, correcting imap
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting agfl 0 - setting bits to 0
+-Wrote X.XXKb (value 0x0)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting sb 0 - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-bad primary superblock - bad magic number !!!
+-
+-attempting to find secondary superblock...
+-found candidate secondary superblock...
+-verified secondary superblock...
+-writing modified primary superblock
+-sb root inode value INO inconsistent with calculated value INO
+-resetting superblock root inode pointer to INO
+-sb realtime bitmap inode INO inconsistent with calculated value INO
+-resetting superblock realtime bitmap ino pointer to INO
+-sb realtime summary inode INO inconsistent with calculated value INO
+-resetting superblock realtime summary ino pointer to INO
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-Note - stripe unit (SU) and width (SW) fields have been reset.
+-Please set with mount -o sunit=<value>,swidth=<value>
+-done
+-Corrupting agf 0 - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-bad magic # 0xffffffff for agf 0
+-bad version # -1 for agf 0
+-bad sequence # -1 for agf 0
+-bad length -1 for agf 0, should be LENGTH
+-flfirst -1 in agf 0 too large (max = MAX)
+-fllast -1 in agf 0 too large (max = MAX)
+-reset bad agf for ag 0
+-freeblk count 1 != flcount -1 in ag 0
+-bad agbno AGBNO for btbno root, agno 0
+-bad agbno AGBNO for btbcnt root, agno 0
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting agi 0 - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-bad magic # 0xffffffff for agi 0
+-bad version # -1 for agi 0
+-bad sequence # -1 for agi 0
+-bad length # -1 for agi 0, should be LENGTH
+-reset bad agi for ag 0
+-bad agbno AGBNO for inobt root, agno 0
+-root inode chunk not found
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-imap claims in-use inode INO is free, correcting imap
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-done
+-Corrupting agfl 0 - setting bits to -1
+-Wrote X.XXKb (value 0xffffffff)
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-        - zero log...
+-        - scan filesystem freespace and inode maps...
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-bad agbno AGBNO in agfl, agno 0
+-        - found root inode chunk
+-Phase 3 - for each AG...
+-        - scan and clear agi unlinked lists...
+-        - process known inodes and perform inode discovery...
+-        - process newly discovered inodes...
+-Phase 4 - check for duplicate blocks...
+-        - setting up duplicate extent list...
+-        - clear lost+found (if it exists) ...
+-        - clearing existing "lost+found" inode
+-        - deleting existing "lost+found" entry
+-        - check for inodes claiming duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-        - reset superblock...
+-Phase 6 - check inode connectivity...
+-        - resetting contents of realtime bitmap and summary inodes
+-        - ensuring existence of lost+found directory
+-        - traversing filesystem starting at / ... 
+-        - traversal finished ... 
+-        - traversing all unattached subtrees ... 
+-        - traversals finished ... 
+-        - moving disconnected inodes to lost+found ... 
+-Phase 7 - verify and correct link counts...
+-done
+diff --git a/tests/xfs/149 b/tests/xfs/149
+deleted file mode 100755
+index fbf66872..00000000
+--- a/tests/xfs/149
++++ /dev/null
+@@ -1,112 +0,0 @@
+-#! /bin/bash
+-# SPDX-License-Identifier: GPL-2.0
+-# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
+-#
+-# FS QA Test No. 149
+-#
+-# Exercise xfs_prepair - ensure repeated use doesn't corrupt
+-# This is a clone of test 031 using xfs_prepair instead of xfs_repair
+-#
+-seq=`basename $0`
+-seqres=$RESULT_DIR/$seq
+-echo "QA output created by $seq"
+-
+-here=`pwd`
+-tmp=/tmp/$$
+-status=1	# failure is the default!
+-trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
+-rm -f $seqres.full
+-
+-# get standard environment, filters and checks
+-. ./common/rc
+-. ./common/repair
+-. ./common/filter
+-
+-[ -z "$XFS_PARALLEL_REPAIR_PROG" ] && _notrun "parallel repair binary xfs_prepair is not installed"
+-
+-# force use of parallel repair
+-export XFS_REPAIR_PROG=$XFS_PARALLEL_REPAIR_PROG
+-
+-_check_repair()
+-{
+-	echo "Repairing, round 0" >> $seqres.full
+-	_scratch_xfs_repair 2>&1 | _filter_repair | tee -a $seqres.full >$tmp.0
+-	for i in 1 2 3 4
+-	do
+-		echo "Repairing, iteration $i" | tee -a $seqres.full
+-		_scratch_xfs_repair 2>&1 | _filter_repair >$tmp.$i
+-		diff $tmp.0 $tmp.$i >> $seqres.full
+-		if [ $? -ne 0 ]; then
+-			echo "ERROR: repair round $i differs to round 0 (see $seqres.full)" | tee -a $seqres.full
+-			break
+-		fi
+-		# echo all interesting stuff...
+-		perl -ne '
+-			s/(rebuilding directory inode) (\d+)/\1 INO/g;
+-			s/internal log/<TYPEOF> log/g;
+-			s/external log on \S+/<TYPEOF> log/g;
+-			/^\S+/ && print;
+-		' $tmp.$i
+-	done
+-	echo
+-}
+-
+-# prototype file to create various directory forms
+-_create_proto()
+-{
+-	total=$1
+-	count=0
+-
+-	# take inode size into account for non-shortform directories...
+-	[ $total -gt 0 ] && total=`expr $total \* $isize / 512`
+-
+-	cat >$tmp.proto <<EOF
+-DUMMY1
+-0 0
+-: root directory
+-d--777 3 1
+-lost+found d--755 3 1
+-$
+-EOF
+-
+-	while [ $count -lt $total ]
+-	do
+-		let count=$count+1
+-		cat >>$tmp.proto <<EOF
+-${count}_of_${total}_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ---755 3 1 /bin/true
+-EOF
+-	done
+-	echo '$' >>$tmp.proto
+-}
+-
+-# real QA test starts here
+-_supported_fs xfs
+-_supported_os Linux
+-
+-_require_scratch
+-_require_no_large_scratch_dev
+-
+-# sanity test - default + one root directory entry
+-# Note: must do this proto/mkfs now for later inode size calcs
+-_create_proto 0
+-echo "=== one entry (shortform)"
+-_scratch_mkfs_xfs -p $tmp.proto >$tmp.mkfs0 2>&1
+-_filter_mkfs <$tmp.mkfs0 >/dev/null 2>$tmp.mkfs
+-. $tmp.mkfs
+-_check_repair
+-
+-# block-form root directory & repeat
+-_create_proto 20
+-echo "=== twenty entries (block form)"
+-_scratch_mkfs_xfs -p $tmp.proto | _filter_mkfs >/dev/null 2>&1
+-_check_repair
+-
+-# leaf-form root directory & repeat
+-_create_proto 1000
+-echo "=== thousand entries (leaf form)"
+-_scratch_mkfs_xfs -p $tmp.proto | _filter_mkfs >/dev/null 2>&1
+-_check_repair
+-
+-# success, all done
+-status=0
+-exit
+diff --git a/tests/xfs/149.out b/tests/xfs/149.out
+deleted file mode 100644
+index 0c65cd98..00000000
+--- a/tests/xfs/149.out
++++ /dev/null
+@@ -1,123 +0,0 @@
+-QA output created by 149
+-=== one entry (shortform)
+-Repairing, iteration 1
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 2
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 3
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 4
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-Phase 7 - verify and correct link counts...
+-done
+-
+-=== twenty entries (block form)
+-Repairing, iteration 1
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 2
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 3
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 4
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-
+-=== thousand entries (leaf form)
+-Repairing, iteration 1
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 2
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 3
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-Repairing, iteration 4
+-Phase 1 - find and verify superblock...
+-Phase 2 - using <TYPEOF> log
+-Phase 3 - for each AG...
+-Phase 4 - check for duplicate blocks...
+-Phase 5 - rebuild AG headers and trees...
+-Phase 6 - check inode connectivity...
+-rebuilding directory inode INO
+-Phase 7 - verify and correct link counts...
+-done
+-
+diff --git a/tests/xfs/group b/tests/xfs/group
+index a7ad300e..f4ebcd8c 100644
+--- a/tests/xfs/group
++++ b/tests/xfs/group
+@@ -145,8 +145,6 @@
+ 145 dmapi
+ 146 dmapi
+ 147 dmapi
+-148 repair auto
+-149 repair auto
+ 150 dmapi
+ 151 dmapi
+ 152 dmapi
 -- 
-kaixuxia
+2.18.1
+
+
+
