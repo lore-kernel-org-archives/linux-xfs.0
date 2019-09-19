@@ -2,778 +2,212 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58E30C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 16:19:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 059F1C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 16:19:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 08C4621927
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 16:19:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0D9121907
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 16:19:57 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TNWiWgoR"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mm+MZ+Jo";
+	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="lV+h4g8i"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2403805AbfISQTq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 12:19:46 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:60014 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2403802AbfISQTq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 12:19:46 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JGIuwx002060;
-        Thu, 19 Sep 2019 16:19:30 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=Pv4+3laP9yA1W1Ct8+JmYBJ6OF+g/igSTfCdhUIr2HA=;
- b=TNWiWgoRj7CrA/SWE16yfGYMrJxd5fm2UTRJTso7nopedrzV8YWkW4OJcVcWFdJv81aQ
- 8FeRueI5Q1Ir1/y7Pu0DpUilGV5un1N6X+IHJ8XNWPsxwxx3btSTQD9UfNycN6gseJEy
- KjL7S7LV+q4cebjdeETJmO96qpZSsSKb+B6Jik/havFHB5FHAJn3GV6+BotVGiYwxwli
- y5BnKaH9qlsvDrIgyc7OtyMtkdUa7096d2+XD4cvb5hytFd2d5ZLvT9kfLiuYsinQM6b
- O3Mv1TS+iPrAM77wYZIuxY4yZALf3KuxhP1SlMqsnuPqxbMdkMNgoLEiYMt9u76X/W9n mA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2v3vb4w642-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Sep 2019 16:19:29 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JGIeeB142558;
-        Thu, 19 Sep 2019 16:19:29 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2v3vb62kya-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Sep 2019 16:19:29 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8JGJS7I023781;
-        Thu, 19 Sep 2019 16:19:28 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 19 Sep 2019 09:19:27 -0700
-Date:   Thu, 19 Sep 2019 09:19:26 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-Cc:     david@fromorbit.com, guaneryu@gmail.com, fstests@vger.kernel.org,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs/148-149: Remove xfs_prepair64 and xfs_prepair tests
-Message-ID: <20190919161926.GM2229799@magnolia>
-References: <1568887695-3508-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
+        id S2404243AbfISQT5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 12:19:57 -0400
+Received: from esa5.hgst.iphmx.com ([216.71.153.144]:23161 "EHLO
+        esa5.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2403802AbfISQT5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 12:19:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
+  t=1568909995; x=1600445995;
+  h=from:to:cc:subject:date:message-id:references:
+   content-transfer-encoding:mime-version;
+  bh=ZQ8QXMOhtnhyXjL3N4i4ZbOk1Fl1JNzrAtsEx1V10OI=;
+  b=mm+MZ+JoPXukRyOn8t9cwDSwKtyyjICqy2/Cyx9aFiIHpkuRs/bjrXth
+   Cj9acsutWCvvIIBN8GdIwxIn3D9o0FtqC9sZOQWugVbljg5GeE8BMYbB2
+   z2mccs7XCsVC7j6hc4ilz5bNeCgtTS15AKKSLOt+lzoHX+D9zxsDMkoqg
+   WwFy1ASzwR5UxCTNmUa7OCltc9dV1de34WC8IlMPQxsfECkuIHOFrZeJ8
+   DyHh0QhVo5MJpYq4d7ci9hFeTzNi84iipIa0izokAgn+sWSY3nQYZsaCp
+   l1KJMQoAz/7dBzlo+XmJmLe3kvgUfZYi/hfZlt73YBQJSkvus3KxMtDzP
+   A==;
+IronPort-SDR: I58bHfMTQZolR0XHElSY4fgPxvef7FIeE6sg9XyCqNbvIeV1nL1rgDn2vF2DRYmwfvVL54455E
+ JSzSG9L03LGL1SBHqA3vTgDP0kSEZuOWT0sw8F7NJOthvkB+3ZHmAm//gKqI2p6kG8XM4041I1
+ cXpkO7xRJGyVNUYBaMbbssjjBRcYfX+8KrD5zHM+byNN0TiO+ePWRyczOOAToIwn/yzb+vyrzB
+ PrsgtTB6Tt5BYTUbztQygCFub1Nk7aQgasddne2UCmBgrAtJXst3OxfZ5WNPjdp70ok6mtNCFV
+ Zdw=
+X-IronPort-AV: E=Sophos;i="5.64,524,1559491200"; 
+   d="scan'208";a="119459390"
+Received: from mail-cys01nam02lp2052.outbound.protection.outlook.com (HELO NAM02-CY1-obe.outbound.protection.outlook.com) ([104.47.37.52])
+  by ob1.hgst.iphmx.com with ESMTP; 20 Sep 2019 00:19:39 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ls17TsnnWwkMgq0w0Jg7XU/TRPPkxkd+tV5ja3omdiY7OOpqwcivJkYgnPAJEDvFl4AdKPqYXuz6+FrJXYKKzedp5a8q4QGEXQGxwpsOUiV0fjDFshFem3pDPE+e0e4t2jW0MW1qUTtV+KPkb+fLt3dc/2gotgEifkVqa97vNw4LT7jFZPwS8mAPwxreycx5cD6XvSt2p1ir+8R4dGUgO6VB5OQ1RxP1jxGSNvL+jMV+do7c122G6zpW3rorPyqBiUUkQsdsiz5kmCjy6cCMUNVBCtbEkZrfbjH/jdE7IvKQB+3sg8BeaxMXqEvMqkbmMyJTlPFJ6MvGkxvws8UKbg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=clIyfzoBgod6+wqxna9hEAK8NTykLKbtebSP9ZBt53o=;
+ b=IoHeIc+fSaW+/PWmtnaOCCEbwtiYRrZc5TED55P9rcOJ0fjG7Avg3qVPZV2TtZ5zoCe3SIxOW1oq7NBuTeYGxY3QANO7FHtYYxbdh2JHC1Xtryk+2RBdrCX9O5ObIGWHNPU+oEU+VyZFDFkENr5/6Kx6yDeXnVP1wxW3RmXYSdMer9SxObU1/azpHNHsllvzgxiLC84IL5sI3y6MrxP7wv5J2yLMWgA6iXbi26UWBweZ7hwxWfJonn73ki/ztnAxRA6eUV5NZTHNfPpkAUwx5g1wNNIlMsBdNy+TM4e6qlIS04vETj6rk9EzpZ3Gt/aHB6c2FBRbeTJVvdkdxN+U+g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
+ header.d=wdc.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=clIyfzoBgod6+wqxna9hEAK8NTykLKbtebSP9ZBt53o=;
+ b=lV+h4g8iX42LgkWdQihu5Se8P5y8xv78WAeOZi+0PmdY28IKy4U5EGtAtUJ1dMP1rCw5Zu4/fn34dRVO4dgGHUcYF+3khhTBRA0fW783Kx9dV+y3UX6EwGWpWFKZNIrgb0LxptoKy1KHivxIC1D43wdThLNjHdp2kOLb8YTy3S0=
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com (20.179.59.16) by
+ BYAPR04MB3782.namprd04.prod.outlook.com (52.135.214.142) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.2263.13; Thu, 19 Sep 2019 16:19:37 +0000
+Received: from BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::9821:67e1:9799:b117]) by BYAPR04MB5816.namprd04.prod.outlook.com
+ ([fe80::9821:67e1:9799:b117%3]) with mapi id 15.20.2284.009; Thu, 19 Sep 2019
+ 16:19:37 +0000
+From:   Damien Le Moal <Damien.LeMoal@wdc.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@infradead.org>
+CC:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>
+Subject: Re: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
+Thread-Topic: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
+Thread-Index: AQHVbwApqraejWyP+EqCoHaEIePvTQ==
+Date:   Thu, 19 Sep 2019 16:19:37 +0000
+Message-ID: <BYAPR04MB581608DF1FDE1FDC24BD94C6E7890@BYAPR04MB5816.namprd04.prod.outlook.com>
+References: <20190919153704.GK2229799@magnolia>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+authentication-results: spf=none (sender IP is )
+ smtp.mailfrom=Damien.LeMoal@wdc.com; 
+x-originating-ip: [79.98.72.135]
+x-ms-publictraffictype: Email
+x-ms-office365-filtering-correlation-id: 7421c6e7-29da-48f2-5f6c-08d73d1d2a89
+x-ms-office365-filtering-ht: Tenant
+x-microsoft-antispam: BCL:0;PCL:0;RULEID:(2390118)(7020095)(4652040)(8989299)(4534185)(4627221)(201703031133081)(201702281549075)(8990200)(5600167)(711020)(4605104)(1401327)(4618075)(2017052603328)(7193020);SRVR:BYAPR04MB3782;
+x-ms-traffictypediagnostic: BYAPR04MB3782:
+x-microsoft-antispam-prvs: <BYAPR04MB37825ADA04F5006B9B265D7BE7890@BYAPR04MB3782.namprd04.prod.outlook.com>
+wdcipoutbound: EOP-TRUE
+x-ms-oob-tlc-oobclassifiers: OLM:10000;
+x-forefront-prvs: 016572D96D
+x-forefront-antispam-report: SFV:NSPM;SFS:(10019020)(4636009)(366004)(346002)(376002)(136003)(39860400002)(396003)(199004)(189003)(86362001)(3846002)(99286004)(110136005)(6506007)(54906003)(229853002)(316002)(7736002)(476003)(14454004)(102836004)(6436002)(6116002)(25786009)(76176011)(5660300002)(7696005)(52536014)(478600001)(305945005)(74316002)(53546011)(26005)(9686003)(91956017)(76116006)(4326008)(66066001)(6246003)(81156014)(81166006)(33656002)(256004)(14444005)(55016002)(486006)(71200400001)(8676002)(71190400001)(186003)(8936002)(446003)(2906002)(66476007)(66556008)(64756008)(66946007)(66446008);DIR:OUT;SFP:1102;SCL:1;SRVR:BYAPR04MB3782;H:BYAPR04MB5816.namprd04.prod.outlook.com;FPR:;SPF:None;LANG:en;PTR:InfoNoRecords;A:1;MX:1;
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam-message-info: KlpgfsV4395qIUrbR4L78tUWIkXohy9EzXSS3x7cdueQEfzvUXR6w9mOSotOllgsqHYpwRu+w8y9gIYo6XESLkYZGRDNBjKVeLBaPHv0rO7u5yzk98u3PYBkKj2GJO2gE7FeMIA2Hcjv/yBs+R1gUGjuNR+ChX1V3SmJB9MDPUP9+DzP0u5iJZWnluxgwm64j/sME1LQk+q/d88GqGh3NacB2Cunw5uN5M/ZUw7aKtfa+NUkV0PklzGKvtgARi1uks+49Vp8CrZyo6Kx+1rGQSmZtsX0xpLqCO4WjtCjBDWnbvhsE9N67xxQdMBZ105iREBaoaOMTZNkKVfa4//ncJt4AO6FOtzSaTy77mdLn2IF8KRWKW7EJhSaACqhWq7YAElvcAFHmNzWfUzJBG8nYjTciKxctwj8bgKwaI7FeRw=
+x-ms-exchange-transport-forked: True
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1568887695-3508-1-git-send-email-xuyang2018.jy@cn.fujitsu.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909190146
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909190146
+X-OriginatorOrg: wdc.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7421c6e7-29da-48f2-5f6c-08d73d1d2a89
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2019 16:19:37.1827
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 8sLP/DU4v9OCH0N/tNjHpLGz+yRTWpYoTM7+rbZk076/SWwPMBaGVFHHpushKJBo+LGioTf+a8WvZbQh4L4NCA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BYAPR04MB3782
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 19, 2019 at 06:08:15PM +0800, Yang Xu wrote:
-> The two commands have obsoleted long time ago, they don't run
-> on most systems. So I think we can remove them.
-> 
-> Signed-off-by: Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-
-/me has never encountered either of these programs and thinks it's
-totally fine to remove 148 and 149.  I /think/ they're dead?
-
-OTOH /me has never encountered either of these programs so someone who
-knows what they were (are?) should comment about the likelihood of
-"prepair" ever re-emerging zombie-like from the grave. :)
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  tests/xfs/148     |  93 --------------
->  tests/xfs/148.out | 299 ----------------------------------------------
->  tests/xfs/149     | 112 -----------------
->  tests/xfs/149.out | 123 -------------------
->  tests/xfs/group   |   2 -
->  5 files changed, 629 deletions(-)
->  delete mode 100755 tests/xfs/148
->  delete mode 100644 tests/xfs/148.out
->  delete mode 100755 tests/xfs/149
->  delete mode 100644 tests/xfs/149.out
-> 
-> diff --git a/tests/xfs/148 b/tests/xfs/148
-> deleted file mode 100755
-> index d9d7d221..00000000
-> --- a/tests/xfs/148
-> +++ /dev/null
-> @@ -1,93 +0,0 @@
-> -#! /bin/bash
-> -# SPDX-License-Identifier: GPL-2.0
-> -# Copyright (c) 2006 Silicon Graphics, Inc.  All Rights Reserved.
-> -#
-> -# FS QA Test No. 148
-> -#
-> -# Exercise xfs parallel repair on broken filesystems
-> -# This is a clone of test 030 useing xfs_prepair64 instead of xfs_repair
-> -#
-> -seq=`basename $0`
-> -seqres=$RESULT_DIR/$seq
-> -echo "QA output created by $seq"
-> -
-> -here=`pwd`
-> -tmp=/tmp/$$
-> -status=1	# failure is the default!
-> -
-> -_cleanup()
-> -{
-> -	cd /
-> -	_scratch_unmount 2>/dev/null
-> -	rm -f $tmp.*
-> -}
-> -
-> -trap "_cleanup; exit \$status" 0 1 2 3 15
-> -
-> -# get standard environment, filters and checks
-> -. ./common/rc
-> -. ./common/filter
-> -. ./common/repair
-> -
-> -[ -z "$XFS_PARALLEL_REPAIR64_PROG" ] && _notrun "parallel repair binary xfs_prepair64 is not installed"
-> -
-> -# force use of parallel repair
-> -export XFS_REPAIR_PROG=$XFS_PARALLEL_REPAIR64_PROG
-> -
-> -# nuke the superblock, AGI, AGF, AGFL; then try repair the damage
-> -# 
-> -_check_ag()
-> -{
-> -	for structure in 'sb 0' 'agf 0' 'agi 0' 'agfl 0'
-> -	do
-> -		echo "Corrupting $structure - setting bits to $1"
-> -		_check_repair $1 "$structure"
-> -	done
-> -}
-> -
-> -# real QA test starts here
-> -_supported_fs xfs
-> -_supported_os Linux
-> -
-> -_require_scratch
-> -_require_no_large_scratch_dev
-> -
-> -DSIZE="-dsize=100m"
-> -
-> -# first we need to ensure there are no bogus secondary
-> -# superblocks between the primary and first secondary
-> -# superblock (hanging around from earlier tests)...
-> -#
-> -
-> -_scratch_mkfs_xfs $DSIZE >/dev/null 2>&1
-> -if [ $? -ne 0 ]		# probably don't have a big enough scratch
-> -then
-> -	_notrun "SCRATCH_DEV too small, results would be non-deterministic"
-> -else
-> -	_scratch_mount
-> -	src/feature -U $SCRATCH_DEV && \
-> -		_notrun "UQuota are enabled, test needs controlled sb recovery"
-> -	src/feature -G $SCRATCH_DEV && \
-> -		_notrun "GQuota are enabled, test needs controlled sb recovery"
-> -	src/feature -P $SCRATCH_DEV && \
-> -		_notrun "PQuota are enabled, test needs controlled sb recovery"
-> -	_scratch_unmount
-> -fi
-> -clear=""
-> -eval `xfs_db -r -c "sb 1" -c stack $SCRATCH_DEV | $PERL_PROG -ne '
-> -	if (/byte offset (\d+), length (\d+)/) {
-> -		print "clear=", $1 / 512, "\n"; exit
-> -	}'`
-> -[ -z "$clear" ] && echo "Cannot calculate length to clear"
-> -src/devzero -v -1 -n "$clear" $SCRATCH_DEV >/dev/null
-> -
-> -# now kick off the real prepair test...
-> -#
-> -_scratch_mkfs_xfs $DSIZE | _filter_mkfs 2>$tmp.mkfs
-> -. $tmp.mkfs
-> -_check_ag 0
-> -_check_ag -1
-> -
-> -# success, all done
-> -status=0
-> -exit
-> diff --git a/tests/xfs/148.out b/tests/xfs/148.out
-> deleted file mode 100644
-> index c8fb5511..00000000
-> --- a/tests/xfs/148.out
-> +++ /dev/null
-> @@ -1,299 +0,0 @@
-> -QA output created by 148
-> -meta-data=DDEV isize=XXX agcount=N, agsize=XXX blks
-> -data     = bsize=XXX blocks=XXX, imaxpct=PCT
-> -         = sunit=XXX swidth=XXX, unwritten=X
-> -naming   =VERN bsize=XXX
-> -log      =LDEV bsize=XXX blocks=XXX
-> -realtime =RDEV extsz=XXX blocks=XXX, rtextents=XXX
-> -Corrupting sb 0 - setting bits to 0
-> -Wrote X.XXKb (value 0x0)
-> -Phase 1 - find and verify superblock...
-> -bad primary superblock - bad magic number !!!
-> -
-> -attempting to find secondary superblock...
-> -found candidate secondary superblock...
-> -verified secondary superblock...
-> -writing modified primary superblock
-> -sb root inode value INO inconsistent with calculated value INO
-> -resetting superblock root inode pointer to INO
-> -sb realtime bitmap inode INO inconsistent with calculated value INO
-> -resetting superblock realtime bitmap ino pointer to INO
-> -sb realtime summary inode INO inconsistent with calculated value INO
-> -resetting superblock realtime summary ino pointer to INO
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -        - found root inode chunk
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -Note - stripe unit (SU) and width (SW) fields have been reset.
-> -Please set with mount -o sunit=<value>,swidth=<value>
-> -done
-> -Corrupting agf 0 - setting bits to 0
-> -Wrote X.XXKb (value 0x0)
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -bad magic # 0x0 for agf 0
-> -bad version # 0 for agf 0
-> -bad length 0 for agf 0, should be LENGTH
-> -reset bad agf for ag 0
-> -bad agbno AGBNO for btbno root, agno 0
-> -bad agbno AGBNO for btbcnt root, agno 0
-> -        - found root inode chunk
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Corrupting agi 0 - setting bits to 0
-> -Wrote X.XXKb (value 0x0)
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -bad magic # 0x0 for agi 0
-> -bad version # 0 for agi 0
-> -bad length # 0 for agi 0, should be LENGTH
-> -reset bad agi for ag 0
-> -bad agbno AGBNO for inobt root, agno 0
-> -root inode chunk not found
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -error following ag 0 unlinked list
-> -        - process known inodes and perform inode discovery...
-> -imap claims in-use inode INO is free, correcting imap
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Corrupting agfl 0 - setting bits to 0
-> -Wrote X.XXKb (value 0x0)
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -        - found root inode chunk
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Corrupting sb 0 - setting bits to -1
-> -Wrote X.XXKb (value 0xffffffff)
-> -Phase 1 - find and verify superblock...
-> -bad primary superblock - bad magic number !!!
-> -
-> -attempting to find secondary superblock...
-> -found candidate secondary superblock...
-> -verified secondary superblock...
-> -writing modified primary superblock
-> -sb root inode value INO inconsistent with calculated value INO
-> -resetting superblock root inode pointer to INO
-> -sb realtime bitmap inode INO inconsistent with calculated value INO
-> -resetting superblock realtime bitmap ino pointer to INO
-> -sb realtime summary inode INO inconsistent with calculated value INO
-> -resetting superblock realtime summary ino pointer to INO
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -        - found root inode chunk
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -Note - stripe unit (SU) and width (SW) fields have been reset.
-> -Please set with mount -o sunit=<value>,swidth=<value>
-> -done
-> -Corrupting agf 0 - setting bits to -1
-> -Wrote X.XXKb (value 0xffffffff)
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -bad magic # 0xffffffff for agf 0
-> -bad version # -1 for agf 0
-> -bad sequence # -1 for agf 0
-> -bad length -1 for agf 0, should be LENGTH
-> -flfirst -1 in agf 0 too large (max = MAX)
-> -fllast -1 in agf 0 too large (max = MAX)
-> -reset bad agf for ag 0
-> -freeblk count 1 != flcount -1 in ag 0
-> -bad agbno AGBNO for btbno root, agno 0
-> -bad agbno AGBNO for btbcnt root, agno 0
-> -        - found root inode chunk
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Corrupting agi 0 - setting bits to -1
-> -Wrote X.XXKb (value 0xffffffff)
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -bad magic # 0xffffffff for agi 0
-> -bad version # -1 for agi 0
-> -bad sequence # -1 for agi 0
-> -bad length # -1 for agi 0, should be LENGTH
-> -reset bad agi for ag 0
-> -bad agbno AGBNO for inobt root, agno 0
-> -root inode chunk not found
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -imap claims in-use inode INO is free, correcting imap
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Corrupting agfl 0 - setting bits to -1
-> -Wrote X.XXKb (value 0xffffffff)
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -        - zero log...
-> -        - scan filesystem freespace and inode maps...
-> -bad agbno AGBNO in agfl, agno 0
-> -bad agbno AGBNO in agfl, agno 0
-> -bad agbno AGBNO in agfl, agno 0
-> -bad agbno AGBNO in agfl, agno 0
-> -        - found root inode chunk
-> -Phase 3 - for each AG...
-> -        - scan and clear agi unlinked lists...
-> -        - process known inodes and perform inode discovery...
-> -        - process newly discovered inodes...
-> -Phase 4 - check for duplicate blocks...
-> -        - setting up duplicate extent list...
-> -        - clear lost+found (if it exists) ...
-> -        - clearing existing "lost+found" inode
-> -        - deleting existing "lost+found" entry
-> -        - check for inodes claiming duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -        - reset superblock...
-> -Phase 6 - check inode connectivity...
-> -        - resetting contents of realtime bitmap and summary inodes
-> -        - ensuring existence of lost+found directory
-> -        - traversing filesystem starting at / ... 
-> -        - traversal finished ... 
-> -        - traversing all unattached subtrees ... 
-> -        - traversals finished ... 
-> -        - moving disconnected inodes to lost+found ... 
-> -Phase 7 - verify and correct link counts...
-> -done
-> diff --git a/tests/xfs/149 b/tests/xfs/149
-> deleted file mode 100755
-> index fbf66872..00000000
-> --- a/tests/xfs/149
-> +++ /dev/null
-> @@ -1,112 +0,0 @@
-> -#! /bin/bash
-> -# SPDX-License-Identifier: GPL-2.0
-> -# Copyright (c) 2000-2002 Silicon Graphics, Inc.  All Rights Reserved.
-> -#
-> -# FS QA Test No. 149
-> -#
-> -# Exercise xfs_prepair - ensure repeated use doesn't corrupt
-> -# This is a clone of test 031 using xfs_prepair instead of xfs_repair
-> -#
-> -seq=`basename $0`
-> -seqres=$RESULT_DIR/$seq
-> -echo "QA output created by $seq"
-> -
-> -here=`pwd`
-> -tmp=/tmp/$$
-> -status=1	# failure is the default!
-> -trap "rm -f $tmp.*; exit \$status" 0 1 2 3 15
-> -rm -f $seqres.full
-> -
-> -# get standard environment, filters and checks
-> -. ./common/rc
-> -. ./common/repair
-> -. ./common/filter
-> -
-> -[ -z "$XFS_PARALLEL_REPAIR_PROG" ] && _notrun "parallel repair binary xfs_prepair is not installed"
-> -
-> -# force use of parallel repair
-> -export XFS_REPAIR_PROG=$XFS_PARALLEL_REPAIR_PROG
-> -
-> -_check_repair()
-> -{
-> -	echo "Repairing, round 0" >> $seqres.full
-> -	_scratch_xfs_repair 2>&1 | _filter_repair | tee -a $seqres.full >$tmp.0
-> -	for i in 1 2 3 4
-> -	do
-> -		echo "Repairing, iteration $i" | tee -a $seqres.full
-> -		_scratch_xfs_repair 2>&1 | _filter_repair >$tmp.$i
-> -		diff $tmp.0 $tmp.$i >> $seqres.full
-> -		if [ $? -ne 0 ]; then
-> -			echo "ERROR: repair round $i differs to round 0 (see $seqres.full)" | tee -a $seqres.full
-> -			break
-> -		fi
-> -		# echo all interesting stuff...
-> -		perl -ne '
-> -			s/(rebuilding directory inode) (\d+)/\1 INO/g;
-> -			s/internal log/<TYPEOF> log/g;
-> -			s/external log on \S+/<TYPEOF> log/g;
-> -			/^\S+/ && print;
-> -		' $tmp.$i
-> -	done
-> -	echo
-> -}
-> -
-> -# prototype file to create various directory forms
-> -_create_proto()
-> -{
-> -	total=$1
-> -	count=0
-> -
-> -	# take inode size into account for non-shortform directories...
-> -	[ $total -gt 0 ] && total=`expr $total \* $isize / 512`
-> -
-> -	cat >$tmp.proto <<EOF
-> -DUMMY1
-> -0 0
-> -: root directory
-> -d--777 3 1
-> -lost+found d--755 3 1
-> -$
-> -EOF
-> -
-> -	while [ $count -lt $total ]
-> -	do
-> -		let count=$count+1
-> -		cat >>$tmp.proto <<EOF
-> -${count}_of_${total}_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ---755 3 1 /bin/true
-> -EOF
-> -	done
-> -	echo '$' >>$tmp.proto
-> -}
-> -
-> -# real QA test starts here
-> -_supported_fs xfs
-> -_supported_os Linux
-> -
-> -_require_scratch
-> -_require_no_large_scratch_dev
-> -
-> -# sanity test - default + one root directory entry
-> -# Note: must do this proto/mkfs now for later inode size calcs
-> -_create_proto 0
-> -echo "=== one entry (shortform)"
-> -_scratch_mkfs_xfs -p $tmp.proto >$tmp.mkfs0 2>&1
-> -_filter_mkfs <$tmp.mkfs0 >/dev/null 2>$tmp.mkfs
-> -. $tmp.mkfs
-> -_check_repair
-> -
-> -# block-form root directory & repeat
-> -_create_proto 20
-> -echo "=== twenty entries (block form)"
-> -_scratch_mkfs_xfs -p $tmp.proto | _filter_mkfs >/dev/null 2>&1
-> -_check_repair
-> -
-> -# leaf-form root directory & repeat
-> -_create_proto 1000
-> -echo "=== thousand entries (leaf form)"
-> -_scratch_mkfs_xfs -p $tmp.proto | _filter_mkfs >/dev/null 2>&1
-> -_check_repair
-> -
-> -# success, all done
-> -status=0
-> -exit
-> diff --git a/tests/xfs/149.out b/tests/xfs/149.out
-> deleted file mode 100644
-> index 0c65cd98..00000000
-> --- a/tests/xfs/149.out
-> +++ /dev/null
-> @@ -1,123 +0,0 @@
-> -QA output created by 149
-> -=== one entry (shortform)
-> -Repairing, iteration 1
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 2
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 3
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 4
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -Phase 7 - verify and correct link counts...
-> -done
-> -
-> -=== twenty entries (block form)
-> -Repairing, iteration 1
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 2
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 3
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 4
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -
-> -=== thousand entries (leaf form)
-> -Repairing, iteration 1
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 2
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 3
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -Repairing, iteration 4
-> -Phase 1 - find and verify superblock...
-> -Phase 2 - using <TYPEOF> log
-> -Phase 3 - for each AG...
-> -Phase 4 - check for duplicate blocks...
-> -Phase 5 - rebuild AG headers and trees...
-> -Phase 6 - check inode connectivity...
-> -rebuilding directory inode INO
-> -Phase 7 - verify and correct link counts...
-> -done
-> -
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index a7ad300e..f4ebcd8c 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -145,8 +145,6 @@
->  145 dmapi
->  146 dmapi
->  147 dmapi
-> -148 repair auto
-> -149 repair auto
->  150 dmapi
->  151 dmapi
->  152 dmapi
-> -- 
-> 2.18.1
-> 
-> 
-> 
+On 2019/09/19 17:37, Darrick J. Wong wrote:=0A=
+> Hi folks,=0A=
+> =0A=
+> The iomap-5.4-merge branch of the xfs-linux repository at:=0A=
+> =0A=
+> 	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git=0A=
+> =0A=
+> has just been updated.  This is a rebase to remove the list_pop bits=0A=
+> that killed the previous pull request.  I removed patches 1 and 9 from=0A=
+> the branch and made the following modifications to patch #2:=0A=
+> =0A=
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c=0A=
+> index 051b8ec326ba..558d09bc5024 100644=0A=
+> --- a/fs/iomap/buffered-io.c=0A=
+> +++ b/fs/iomap/buffered-io.c=0A=
+> @@ -1156,10 +1156,11 @@ void=0A=
+>  iomap_finish_ioends(struct iomap_ioend *ioend, int error)=0A=
+>  {=0A=
+>  	struct list_head tmp;=0A=
+> +	struct iomap_ioend *next;=0A=
+>  =0A=
+>  	list_replace_init(&ioend->io_list, &tmp);=0A=
+>  	iomap_finish_ioend(ioend, error);=0A=
+> -	while ((ioend =3D list_pop_entry(&tmp, struct iomap_ioend, io_list)))=
+=0A=
+> +	list_for_each_entry_safe(ioend, next, &tmp, io_list)=0A=
+>  		iomap_finish_ioend(ioend, error);=0A=
+>  }=0A=
+>  EXPORT_SYMBOL_GPL(iomap_finish_ioends);=0A=
+> =0A=
+> I'm not thrilled to be rebasing a work branch in the middle of the merge=
+=0A=
+> window, but I think the changes are simple enough that we might be able=
+=0A=
+> to try again next week.  Damien, if you have the time can you please=0A=
+> rebase zonefs atop this and make sure buffered writing to a conventional=
+=0A=
+> zone still works?  It should, since the _finish_ioends loop is identical=
+=0A=
+> between iomap and xfs.=0A=
+=0A=
+OK. Will do, but traveling this week so I will not be able to test until ne=
+xt week.=0A=
+=0A=
+Thanks !=0A=
+=0A=
+> =0A=
+> The new head of the iomap-5.4-merge branch is commit:=0A=
+> =0A=
+> 1b4fdf4f30db iomap: move the iomap_dio_rw ->end_io callback into a struct=
+ure=0A=
+> =0A=
+> New Commits:=0A=
+> =0A=
+> Andreas Gruenbacher (1):=0A=
+>       [be942954d7ad] iomap: Fix trivial typo=0A=
+> =0A=
+> Christoph Hellwig (7):=0A=
+>       [9544e58e466f] iomap: copy the xfs writeback code to iomap.c=0A=
+>       [668931192d9d] iomap: add tracing for the address space operations=
+=0A=
+>       [ca6de3a5b6f4] iomap: warn on inline maps in iomap_writepage_map=0A=
+>       [4df389276768] xfs: set IOMAP_F_NEW more carefully=0A=
+>       [5f1f62a3f64c] iomap: zero newly allocated mapped blocks=0A=
+>       [0b98e70d9586] xfs: initialize iomap->flags in xfs_bmbt_to_iomap=0A=
+>       [1b4fdf4f30db] iomap: move the iomap_dio_rw ->end_io callback into =
+a structure=0A=
+> =0A=
+> Matthew Bobrowski (1):=0A=
+>       [da078883a85d] iomap: split size and error for iomap_dio_rw ->end_i=
+o=0A=
+> =0A=
+> Randy Dunlap (1):=0A=
+>       [239b92845737] tracing: fix iomap.h build warnings=0A=
+> =0A=
+> =0A=
+> Code Diffstat:=0A=
+> =0A=
+>  fs/iomap/buffered-io.c       | 576 +++++++++++++++++++++++++++++++++++++=
++++++-=0A=
+>  fs/iomap/direct-io.c         |  24 +-=0A=
+>  fs/xfs/xfs_file.c            |  14 +-=0A=
+>  fs/xfs/xfs_iomap.c           |  35 ++-=0A=
+>  fs/xfs/xfs_iomap.h           |   2 +-=0A=
+>  fs/xfs/xfs_pnfs.c            |   2 +-=0A=
+>  include/linux/iomap.h        |  53 +++-=0A=
+>  include/trace/events/iomap.h |  87 +++++++=0A=
+>  8 files changed, 754 insertions(+), 39 deletions(-)=0A=
+>  create mode 100644 include/trace/events/iomap.h=0A=
+> =0A=
+=0A=
+=0A=
+-- =0A=
+Damien Le Moal=0A=
+Western Digital Research=0A=
