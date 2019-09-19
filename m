@@ -2,161 +2,101 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DDFAEC3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:01:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B76AC3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:01:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B963821924
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:01:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 75B7C21848
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:01:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389597AbfISPBf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 11:01:35 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:34252 "EHLO mx1.redhat.com"
+        id S2390877AbfISPBz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 11:01:55 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:42268 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388350AbfISPBe (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 19 Sep 2019 11:01:34 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        id S2389586AbfISPBz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Sep 2019 11:01:55 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id AF0603C919;
-        Thu, 19 Sep 2019 15:01:34 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 52C3B60BF1;
-        Thu, 19 Sep 2019 15:01:34 +0000 (UTC)
-Date:   Thu, 19 Sep 2019 11:01:32 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v4 05/11] xfs: refactor cntbt lastblock scan best extent
- logic into helper
-Message-ID: <20190919150132.GD35460@bfoster>
-References: <20190916121635.43148-1-bfoster@redhat.com>
- <20190916121635.43148-6-bfoster@redhat.com>
- <20190918190341.GT2229799@magnolia>
+        by mx1.redhat.com (Postfix) with ESMTPS id 6C1423083391
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2019 15:01:55 +0000 (UTC)
+Received: from localhost.localdomain.com (ovpn-123-212.rdu2.redhat.com [10.10.123.212])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 1EE5B6013A
+        for <linux-xfs@vger.kernel.org>; Thu, 19 Sep 2019 15:01:55 +0000 (UTC)
+From:   Bill O'Donnell <billodo@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH v3] xfs: assure zeroed memory buffers for certain kmem allocations
+Date:   Thu, 19 Sep 2019 10:01:54 -0500
+Message-Id: <20190919150154.30302-1-billodo@redhat.com>
+In-Reply-To: <20190916153504.30809-1-billodo@redhat.com>
+References: <20190916153504.30809-1-billodo@redhat.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190918190341.GT2229799@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.39]); Thu, 19 Sep 2019 15:01:34 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Thu, 19 Sep 2019 15:01:55 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 18, 2019 at 12:03:41PM -0700, Darrick J. Wong wrote:
-> On Mon, Sep 16, 2019 at 08:16:29AM -0400, Brian Foster wrote:
-> > The cntbt lastblock scan checks the size, alignment, locality, etc.
-> > of each free extent in the block and compares it with the current
-> > best candidate. This logic will be reused by the upcoming optimized
-> > cntbt algorithm, so refactor it into a separate helper.
-> > 
-> > Signed-off-by: Brian Foster <bfoster@redhat.com>
-> > ---
-> >  fs/xfs/libxfs/xfs_alloc.c | 113 +++++++++++++++++++++++++++++---------
-> >  fs/xfs/xfs_trace.h        |  25 +++++++++
-> >  2 files changed, 111 insertions(+), 27 deletions(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index ee46989ab723..2fa7bb6a00a8 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -791,6 +791,89 @@ xfs_alloc_cur_close(
-> >  	acur->cnt = acur->bnolt = acur->bnogt = NULL;
-> >  }
-> >  
-> > +/*
-> > + * Check an extent for allocation and track the best available candidate in the
-> > + * allocation structure. The cursor is deactivated if it has entered an out of
-> > + * range state based on allocation arguments. Optionally return the extent
-> > + * extent geometry and allocation status if requested by the caller.
-> > + */
-> > +static int
-> > +xfs_alloc_cur_check(
-> > +	struct xfs_alloc_arg		*args,
-> > +	struct xfs_alloc_cur		*acur,
-> > +	struct xfs_btree_cur		*cur,
-> > +	int				*new)
-> > +{
-> > +	int			error, i;
-> 
-> Inconsistent indentation here.
-> 
+Guarantee zeroed memory buffers for cases where potential memory
+leak to disk can occur. In these cases, kmem_alloc is used and
+doesn't zero the buffer, opening the possibility of information
+leakage to disk.
 
-Fixed.
+Use existing infrastucture (xfs_buf_allocate_memory) to obtain
+the already zeroed buffer from kernel memory.
 
-> > +	xfs_agblock_t		bno, bnoa, bnew;
-> > +	xfs_extlen_t		len, lena, diff = -1;
-> > +	bool			busy;
-> > +	unsigned		busy_gen = 0;
-> > +	bool			deactivate = false;
-> > +
-> > +	*new = 0;
-> > +
-...
-> > +}
-> > +
-> >  /*
-> >   * Deal with the case where only small freespaces remain. Either return the
-> >   * contents of the last freespace record, or allocate space from the freelist if
-...
-> > diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> > index eaae275ed430..b12fad3e45cb 100644
-> > --- a/fs/xfs/xfs_trace.h
-> > +++ b/fs/xfs/xfs_trace.h
-> > @@ -1663,6 +1663,31 @@ DEFINE_ALLOC_EVENT(xfs_alloc_vextent_noagbp);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_vextent_loopfailed);
-> >  DEFINE_ALLOC_EVENT(xfs_alloc_vextent_allfailed);
-> >  
-> > +TRACE_EVENT(xfs_alloc_cur_check,
-> > +	TP_PROTO(struct xfs_mount *mp, xfs_btnum_t btnum, xfs_agblock_t bno,
-> > +		 xfs_extlen_t len, xfs_extlen_t diff, bool new),
-> > +	TP_ARGS(mp, btnum, bno, len, diff, new),
-> > +	TP_STRUCT__entry(
-> > +		__field(dev_t, dev)
-> > +		__field(xfs_btnum_t, btnum)
-> > +		__field(xfs_agblock_t, bno)
-> > +		__field(xfs_extlen_t, len)
-> > +		__field(xfs_extlen_t, diff)
-> > +		__field(bool, new)
-> > +	),
-> > +	TP_fast_assign(
-> > +		__entry->dev = mp->m_super->s_dev;
-> > +		__entry->btnum = btnum;
-> > +		__entry->bno = bno;
-> > +		__entry->len = len;
-> > +		__entry->diff = diff;
-> > +		__entry->new = new;
-> > +	),
-> > +	TP_printk("dev %d:%d btnum %d bno 0x%x len 0x%x diff 0x%x new %d",
-> > +		  MAJOR(__entry->dev), MINOR(__entry->dev), __entry->btnum,
-> 
-> Perhaps:
-> 
-> 	__print_symbolic(__entry->btnum, XFS_BTNUM_STRINGS),
-> 
-> instead of dumping the raw btnum value?
-> 
+This solution avoids the performance issue that would occur if a
+wholesale change to replace kmem_alloc with kmem_zalloc was done.
 
-Good point, fixed.
+Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+---
+v3: remove XBF_ZERO flag, and instead use XBF_READ flag only.
+v2: zeroed buffer not required for XBF_READ case. Correct placement
+    and rename the XBF_ZERO flag.
 
-Brian
 
-> Other than those two things, this looks like a pretty straightforward
-> hoisting.
-> 
-> --D
-> 
-> > +		  __entry->bno, __entry->len, __entry->diff, __entry->new)
-> > +)
-> > +
-> >  DECLARE_EVENT_CLASS(xfs_da_class,
-> >  	TP_PROTO(struct xfs_da_args *args),
-> >  	TP_ARGS(args),
-> > -- 
-> > 2.20.1
-> > 
+fs/xfs/xfs_buf.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 120ef99d09e8..6fbe63f34a68 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -345,6 +345,10 @@ xfs_buf_allocate_memory(
+ 	unsigned short		page_count, i;
+ 	xfs_off_t		start, end;
+ 	int			error;
++	uint			kmflag_mask = 0;
++
++	if (!(flags & XBF_READ))
++		kmflag_mask |= KM_ZERO;
+ 
+ 	/*
+ 	 * for buffers that are contained within a single page, just allocate
+@@ -354,7 +358,8 @@ xfs_buf_allocate_memory(
+ 	size = BBTOB(bp->b_length);
+ 	if (size < PAGE_SIZE) {
+ 		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+-		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS);
++		bp->b_addr = kmem_alloc_io(size, align_mask,
++					   KM_NOFS | kmflag_mask);
+ 		if (!bp->b_addr) {
+ 			/* low memory - use alloc_page loop instead */
+ 			goto use_alloc_page;
+@@ -391,7 +396,7 @@ xfs_buf_allocate_memory(
+ 		struct page	*page;
+ 		uint		retries = 0;
+ retry:
+-		page = alloc_page(gfp_mask);
++		page = alloc_page(gfp_mask | kmflag_mask);
+ 		if (unlikely(page == NULL)) {
+ 			if (flags & XBF_READ_AHEAD) {
+ 				bp->b_page_count = i;
+-- 
+2.21.0
+
