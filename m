@@ -6,63 +6,64 @@ X-Spam-Status: No, score=-6.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
 	SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F7F5C4CEC9
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 01:55:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D480FC4CEC9
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 01:55:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7737321D56
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 01:55:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A564D2196F
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 01:55:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1568858110;
-	bh=LbMVLdUCXbbx37Bu36ETeHsP+708Gt4fU3nELNvNIp0=;
+	s=default; t=1568858112;
+	bh=+nQrQkXOkRxZhzdXX1FnDHOxD+aWBM3cUYJtYy5Em1c=;
 	h=Subject:From:In-Reply-To:References:Date:To:Cc:List-ID:From;
-	b=pWA7KrbFKKpGUOvW++ouorGLQ4ZXWYCEsb06ZDyqyYdpSJjug+GyHyA+RwPUDsc5f
-	 X238XKocPo8h5nurL/INHKCjQah+F2XqG+P9mF/gxplQk8VPzqYqa4txqfa1SpIMfo
-	 51vJ5JDa/Rifh6QNOFX4wR/b6MXXE83pcJkG4Ix0=
+	b=loA/Nicz9eOaQzGIUodFe6/Zo2Y/eZWNzGd8+LoxE3dGenFrsspPXnFIj4XbDP2Uc
+	 DrBFKRBYwfaMHrTY0ggyBGFz9II0lmbxNtLgQQ9UvMytjsBvOW3iT0AHKZF7L2LzlV
+	 MjGbvlC/0arHI+FrINf77+x34ZANGg8FIxSU3JRY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388322AbfISBzG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 18 Sep 2019 21:55:06 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56080 "EHLO mail.kernel.org"
+        id S2388308AbfISBzF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 18 Sep 2019 21:55:05 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56010 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388321AbfISBzG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 18 Sep 2019 21:55:06 -0400
-Subject: Re: [GIT PULL] xfs: new code for 5.4
+        id S2388303AbfISBzF (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 18 Sep 2019 21:55:05 -0400
+Subject: Re: [GIT PULL] vfs: prohibit writes to active swap devices
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1568858105;
-        bh=LbMVLdUCXbbx37Bu36ETeHsP+708Gt4fU3nELNvNIp0=;
+        s=default; t=1568858104;
+        bh=+nQrQkXOkRxZhzdXX1FnDHOxD+aWBM3cUYJtYy5Em1c=;
         h=From:In-Reply-To:References:Date:To:Cc:From;
-        b=IjrXlO8ylHdqtP5hgQISjkTTwq02rFDZYnsU2Ht6nfBzuezutoGyGilmpnfPbmLBZ
-         wgAyMch2VdXMMQUFm9ZQJlR7CQT/8nF6vZNB4ybcXNTrVBVoF2i0hlLU0jxOovRIKW
-         x8J+h97F70sGrUkCZl4i/8beDmkYiMvd+7VP89Cg=
+        b=TvI5YotcIH3dsA9T3qwczl/QP+D2gyt5w5VOLC8DwVKzb1ZQU5+c5ls58ifV1D/zu
+         NIR2fYiRicQXVfWQ+96gqZVWMsGmNBisSSI008St0CudFfEQPFs4uNMnssbOdKvbbZ
+         fT08Go3HaAwlEhrZmmrUc83rxewcHaWdkx0mU31k=
 From:   pr-tracker-bot@kernel.org
-In-Reply-To: <20190917171645.GZ568270@magnolia>
-References: <20190917171645.GZ568270@magnolia>
+In-Reply-To: <20190917150608.GT2229799@magnolia>
+References: <20190917150608.GT2229799@magnolia>
 X-PR-Tracked-List-Id: <linux-fsdevel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20190917171645.GZ568270@magnolia>
+X-PR-Tracked-Message-Id: <20190917150608.GT2229799@magnolia>
 X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
- tags/xfs-5.4-merge-7
-X-PR-Tracked-Commit-Id: 14e15f1bcd738dc13dd7c1e78e4800e8bc577980
+ tags/vfs-5.4-merge-1
+X-PR-Tracked-Commit-Id: dc617f29dbe5ef0c8ced65ce62c464af1daaab3d
 X-PR-Merge-Tree: torvalds/linux.git
 X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: b41dae061bbd722b9d7fa828f35d22035b218e18
-Message-Id: <156885810581.31089.14155971480176458867.pr-tracker-bot@kernel.org>
-Date:   Thu, 19 Sep 2019 01:55:05 +0000
+X-PR-Merge-Commit-Id: e6bc9de714972cac34daa1dc1567ee48a47a9342
+Message-Id: <156885810471.31089.18252628030141305511.pr-tracker-bot@kernel.org>
+Date:   Thu, 19 Sep 2019 01:55:04 +0000
 To:     "Darrick J. Wong" <djwong@kernel.org>
 Cc:     Linus Torvalds <torvalds@linux-foundation.org>,
         "Darrick J. Wong" <djwong@kernel.org>,
         linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, linux-kernel@vger.kernel.org,
-        sandeen@sandeen.net, hch@lst.de
+        hch@infradead.org, akpm@linux-foundation.org,
+        linux-kernel@vger.kernel.org, viro@zeniv.linux.org.uk,
+        linux-mm@kvack.org, Theodore Ts'o <tytso@mit.edu>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The pull request you sent on Tue, 17 Sep 2019 10:16:45 -0700:
+The pull request you sent on Tue, 17 Sep 2019 08:06:09 -0700:
 
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/xfs-5.4-merge-7
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git tags/vfs-5.4-merge-1
 
 has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/b41dae061bbd722b9d7fa828f35d22035b218e18
+https://git.kernel.org/torvalds/c/e6bc9de714972cac34daa1dc1567ee48a47a9342
 
 Thank you!
 
