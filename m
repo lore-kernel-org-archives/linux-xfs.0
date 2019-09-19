@@ -2,77 +2,180 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AF8FC3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 10:49:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 268D4C3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 11:49:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5BAEC21929
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 10:49:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07ECD21907
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 11:49:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388342AbfISKtJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 06:49:09 -0400
-Received: from mail.cn.fujitsu.com ([183.91.158.132]:13565 "EHLO
-        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S2387987AbfISKtI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 06:49:08 -0400
-X-IronPort-AV: E=Sophos;i="5.64,523,1559491200"; 
-   d="scan'208";a="75706467"
-Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
-  by heian.cn.fujitsu.com with ESMTP; 19 Sep 2019 18:49:06 +0800
-Received: from G08CNEXCHPEKD02.g08.fujitsu.local (unknown [10.167.33.83])
-        by cn.fujitsu.com (Postfix) with ESMTP id CAC394CE14E7;
-        Thu, 19 Sep 2019 18:49:03 +0800 (CST)
-Received: from [10.167.220.84] (10.167.220.84) by
- G08CNEXCHPEKD02.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
- id 14.3.439.0; Thu, 19 Sep 2019 18:49:03 +0800
-Subject: Re: question of xfs/148 and xfs/149
+        id S2388647AbfISLtk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 07:49:40 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:14135 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388614AbfISLtj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 19 Sep 2019 07:49:39 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 32E35C057EC6;
+        Thu, 19 Sep 2019 11:49:39 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4AA236012C;
+        Thu, 19 Sep 2019 11:49:36 +0000 (UTC)
+Date:   Thu, 19 Sep 2019 07:49:34 -0400
+From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-CC:     Zorro Lang <zlang@redhat.com>,
-        "fstests@vger.kernel.org" <fstests@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-References: <4BF2FD5A942B1C4B828DDAF5635768C1041AB0E2@G08CNEXMBPEKD02.g08.fujitsu.local>
- <20190917163933.GC736475@magnolia>
- <20190918025915.GK7239@dhcp-12-102.nay.redhat.com>
- <7b5d5797-afff-90bc-0131-38fd13eced34@cn.fujitsu.com>
- <20190918163711.GX2229799@magnolia>
-From:   Yang Xu <xuyang2018.jy@cn.fujitsu.com>
-Message-ID: <638537d9-ce38-7285-c598-8637adbebd8f@cn.fujitsu.com>
-Date:   Thu, 19 Sep 2019 18:49:03 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:68.0) Gecko/20100101
- Thunderbird/68.0
+Cc:     linux-xfs@vger.kernel.org, Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH REPOST 1/2] xfs: drop minlen before tossing alignment on
+ bmap allocs
+Message-ID: <20190919114934.GB33863@bfoster>
+References: <20190912143223.24194-1-bfoster@redhat.com>
+ <20190912143223.24194-2-bfoster@redhat.com>
+ <20190918214141.GG2229799@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <20190918163711.GX2229799@magnolia>
-Content-Type: text/plain; charset="gbk"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.167.220.84]
-X-yoursite-MailScanner-ID: CAC394CE14E7.AFE9C
-X-yoursite-MailScanner: Found to be clean
-X-yoursite-MailScanner-From: xuyang2018.jy@cn.fujitsu.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190918214141.GG2229799@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Thu, 19 Sep 2019 11:49:39 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-on 2019/09/19 0:37, Darrick J. Wong wrote:
->>   I am finding the reasion. It seems wipefs wipes important information and
->> $DSIZE option(using single agcount or dsize, it also fails ) can not format
->> disk completely. If we use other options, it can pass.
-> How does mkfs fail, specifically?
+On Wed, Sep 18, 2019 at 02:41:41PM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 12, 2019 at 10:32:22AM -0400, Brian Foster wrote:
+> > The bmap block allocation code issues a sequence of retries to
+> > perform an optimal allocation, gradually loosening constraints as
+> > allocations fail. For example, the first attempt might begin at a
+> > particular bno, with maxlen == minlen and alignment incorporated. As
+> > allocations fail, the parameters fall back to different modes, drop
+> > alignment requirements and reduce the minlen and total block
+> > requirements.
+> > 
+> > For large extent allocations with an args.total value that exceeds
+> > the allocation length (i.e., non-delalloc), the total value tends to
+> > dominate despite these fallbacks. For example, an aligned extent
+> > allocation request of tens to hundreds of MB that cannot be
+> > satisfied from a particular AG will not succeed after dropping
+> > alignment or minlen because xfs_alloc_space_available() never
+> > selects an AG that can't satisfy args.total. The retry sequence
 > 
-> Also, what's your storage configuration?  And lsblk -D output?
+> "..that can satisfy args.total"?
+> 
 
-I only guess it from result. Even though, mkfs.xfs $DSIZE 
-successfully($? is 0), but UUID mismatch in 030.full, so it may
-format the first superblock failed.  This is just my guess.
+Heh. "can't" was intended there, but after reading it back it is poorly
+worded as a double negative. :P Basically it's just saying that
+args.total is what restricts AG selection in this corner case.
 
- From your detailed explanation, I understand why it fails.
+> > eventually reduces total and ultimately succeeds if a minlen extent
+> > is available somewhere, but the first several retries are
+> > effectively pointless in this scenario.
+> > 
+> > Beyond simply being inefficient, another side effect of this
+> > behavior is that we drop alignment requirements too aggressively.
+> > Consider a 1GB fallocate on a 15GB fs with 16 AGs and 128k stripe
+> > unit:
+> > 
+> >  # xfs_io -c "falloc 0 1g" /mnt/file
+> >  # <xfstests>/src/t_stripealign /mnt/file 32
+> >  /mnt/file: Start block 347176 not multiple of sunit 32
+> > 
+> > Despite the filesystem being completely empty, the fact that the
+> > allocation request cannot be satisifed from a single AG means the
+> > allocation doesn't succeed until xfs_bmap_btalloc() drops total from
+> > the original value based on maxlen. This occurs after we've dropped
+> > minlen and alignment (unnecessarily).
+> > 
+> > As a step towards addressing this problem, insert a new retry in the
+> > bmap allocation sequence to drop minlen (from maxlen) before tossing
+> > alignment. This should still result in as large of an extent as
+> > possible as the block allocator prioritizes extent size in all but
+> > exact allocation modes. By itself, this does not change the behavior
+> > of the command above because the preallocation code still specifies
+> > total based on maxlen. Instead, this facilitates preservation of
+> > alignment once extra reservation is separated from the extent length
+> > portion of the total block requirement.
+> > 
+> > Signed-off-by: Brian Foster <bfoster@redhat.com>
+> > ---
+> >  fs/xfs/libxfs/xfs_bmap.c | 12 +++++++++---
+> >  1 file changed, 9 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 054b4ce30033..eaa965920a03 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -3573,6 +3573,14 @@ xfs_bmap_btalloc(
+> >  		if ((error = xfs_alloc_vextent(&args)))
+> >  			return error;
+> >  	}
+> > +	if (args.fsbno == NULLFSBLOCK && nullfb &&
+> > +	    args.minlen > ap->minlen) {
+> 
+> Maybe a comment here to point out that we're retrying the allocation
+> with the minimum acceptable minlen?  I say this mostly because (some of)
+> the other clauses have a quick description of the constraints that are
+> being fed to the allocation request, and it makes it easier to keep
+> track of what's going on.
+> 
 
-Thanks
-Yang Xu
+Yeah..
 
+> > +		args.minlen = ap->minlen;
+> > +		args.fsbno = ap->blkno;
+> > +		error = xfs_alloc_vextent(&args);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> >  	if (isaligned && args.fsbno == NULLFSBLOCK) {
+> >  		/*
+> >  		 * allocation failed, so turn off alignment and
+> > @@ -3584,9 +3592,7 @@ xfs_bmap_btalloc(
+> >  		if ((error = xfs_alloc_vextent(&args)))
+> >  			return error;
+> >  	}
+> > -	if (args.fsbno == NULLFSBLOCK && nullfb &&
+> > -	    args.minlen > ap->minlen) {
+> > -		args.minlen = ap->minlen;
+> > +	if (args.fsbno == NULLFSBLOCK && nullfb) {
+> >  		args.type = XFS_ALLOCTYPE_START_BNO;
+> 
+> Particularly when we get here and I have to look pretty closely to
+> figure out what this retry is now attempting to do.  This one is trying
+> the allocation again, but now with no alignment and the caller's minlen,
+> right?
+> 
 
+Yeah, but this branch also (potentially) changes the allocation type.
+IIRC, this wasn't relevant to the corner case I was trying to address
+with this patch. I basically just wanted to get minlen dropped before
+tossing alignment and at the same time didn't want to screw around with
+the existing logic that was unrelated (hence the separation of the
+minlen update into a new retry as opposed to just reordering code).
+
+That said, the other subthread suggests this patch can be replaced with
+more localized fixes to bma.minlen alignment handling code. My original
+reproducer of this problem was based on some of the extent allocation
+rework bits that have been deferred (rework of the size allocation
+mode). I wasn't aware of the bma.minlen alignment logic at the time, so
+I may have misanalyzed the problem and my current development tree
+doesn't reproduce. I'll make the tweaks to this patch locally in the
+event that I run into the problem again when I get back to that work and
+if there still happens to be corner cases not covered by the minlen
+fixup patch that Carlos has posted..
+
+Brian
+
+> --D
+> 
+> >  		args.fsbno = ap->blkno;
+> >  		if ((error = xfs_alloc_vextent(&args)))
+> > -- 
+> > 2.20.1
+> > 
