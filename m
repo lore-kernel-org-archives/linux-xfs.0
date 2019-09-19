@@ -2,152 +2,210 @@ Return-Path: <SRS0=IJtx=XO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 85239C3A5A6
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:37:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7691EC3A5A6
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 16:02:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 56CD2214AF
-	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 15:37:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A10621927
+	for <linux-xfs@archiver.kernel.org>; Thu, 19 Sep 2019 16:02:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NcRipYId"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Vy7HVRuy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389848AbfISPha (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 11:37:30 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:36876 "EHLO
+        id S2389250AbfISQCW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 12:02:22 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:38352 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2389840AbfISPh3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 11:37:29 -0400
+        with ESMTP id S2387576AbfISQCW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 12:02:22 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JFYNm7169221;
-        Thu, 19 Sep 2019 15:37:09 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JFsSSY186479;
+        Thu, 19 Sep 2019 16:02:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=obEEcpkxDZO71S8QQtANUQvd5KQ7MwnRCTs6RGHNVmc=;
- b=NcRipYIdMiKA8lxT6p+v77B/Noi+X5FraDPe44Pb9OoyVnXYca90Rxswm17heSCeezfP
- c/cUL9zye8uaHNYaYHyAK3+YLzZfRQY635lUSQCXIMLJDpxglWIkzkemUUkkMmO0JQIn
- DITtnjNS1wpmypisLta91k2GH3+i2ZOXUAVQ1+WbFGy4Sf0dNjoJHXZqKS5h2tLxDJFU
- pgWvyaX+azU+ezLpi/pd52cpgxLd4xqpdnORwnoWU1ZauQjECBstI19guv+Lof07Xvhc
- HOQHNoK3XR6J/mT4WsnD1konFm5niEgZkw5FPWi+W9iGEu1fL3cwnem2yFGAba70tq08 yQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2v3vb54vwt-1
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=YtLpLLWvEuYUOgGOHsVSPZ2fL07n9dHJPdSVRmeUPm8=;
+ b=Vy7HVRuyQEKlEYYVSEDm6GIouQH6wgwj/E5a4uw8GU3/s2TXxRm9vxZiTjFetOrF30vp
+ g/hc8VYLSj2jMT8+APSikV5WNbeukDo+IQUMxv6Ue0dWcw5Slv5fH53pv5V/GasZrFKS
+ qA190RAZIZsEIvC7Bn9LVBHiJi6iFC6hN0TeJY3ct3sNypItYHJX70nbQp0uKUYneHj7
+ sLfChktAnwforHpBRHy4KmqD8lCI+01P2tOyqN+2YMl3CI5KJtFfQmXom3yx7T77CY1H
+ nfGklVPBhRq/arHg9lFSOkmknvoBymqj6CcPT2Yu2+rpcEBVsTCrnblrc4XsopbkRDZz zA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2v3vb551qs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Sep 2019 15:37:09 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JFCgkT006634;
-        Thu, 19 Sep 2019 15:37:08 GMT
+        Thu, 19 Sep 2019 16:02:10 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8JFrwFI065800;
+        Thu, 19 Sep 2019 16:02:10 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2v3vbsar8a-1
+        by userp3020.oracle.com with ESMTP id 2v3vb61a92-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 19 Sep 2019 15:37:08 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8JFb612008663;
-        Thu, 19 Sep 2019 15:37:06 GMT
+        Thu, 19 Sep 2019 16:02:10 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8JG29V9026317;
+        Thu, 19 Sep 2019 16:02:09 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 19 Sep 2019 15:37:06 +0000
-Date:   Thu, 19 Sep 2019 08:37:04 -0700
+        with ESMTP ; Thu, 19 Sep 2019 09:02:09 -0700
+Date:   Thu, 19 Sep 2019 09:02:06 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>
-Subject: [ANNOUNCE] xfs-linux: iomap-5.4-merge rebased to 1b4fdf4f30db
-Message-ID: <20190919153704.GK2229799@magnolia>
+To:     Zorro Lang <zlang@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] common/xfs: wipe the XFS superblock of each AGs
+Message-ID: <20190919160206.GL2229799@magnolia>
+References: <20190919150024.8346-1-zlang@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20190919150024.8346-1-zlang@redhat.com>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909190143
+ engine=8.0.1-1908290000 definitions=main-1909190145
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909190144
+ definitions=main-1909190145
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Sep 19, 2019 at 11:00:24PM +0800, Zorro Lang wrote:
+> xfs/030 always fails after d0e484ac699f ("check: wipe scratch devices
+> between tests") get merged.
+> 
+> Due to xfs/030 does a sized(100m) mkfs. Before we merge above commit,
+> mkfs.xfs detects an old primary superblock, it will write zeroes to
+> all superblocks before formatting the new filesystem. But this won't
+> be done if we wipe the first superblock(by merging above commit).
+> 
+> That means if we make a (smaller) sized xfs after wipefs, those *old*
+> superblocks which created by last time mkfs.xfs will be left on disk.
 
-The iomap-5.4-merge branch of the xfs-linux repository at:
+One thing missing from this patch -- if the test formatted the scratch
+device with non-default geometry, the backup superblocks from that
+filesystem will not be erased.  Going back to my example from the email
+thread, if the scratch disk has:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+  SB0 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 1G> \
+      SB'1 [1G space] SB'2 [1G space] SB'3 [1G space]
 
-has just been updated.  This is a rebase to remove the list_pop bits
-that killed the previous pull request.  I removed patches 1 and 9 from
-the branch and made the following modifications to patch #2:
+Where SB[0-5] are the ones written by xfs/030 and SB'[1-3] were written
+by a previous test that did the default scratch device mkfs, then this
+patch will wipe out SB'[1-3] and SB0:
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 051b8ec326ba..558d09bc5024 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -1156,10 +1156,11 @@ void
- iomap_finish_ioends(struct iomap_ioend *ioend, int error)
- {
- 	struct list_head tmp;
-+	struct iomap_ioend *next;
- 
- 	list_replace_init(&ioend->io_list, &tmp);
- 	iomap_finish_ioend(ioend, error);
--	while ((ioend = list_pop_entry(&tmp, struct iomap_ioend, io_list)))
-+	list_for_each_entry_safe(ioend, next, &tmp, io_list)
- 		iomap_finish_ioend(ioend, error);
- }
- EXPORT_SYMBOL_GPL(iomap_finish_ioends);
+  000 [16M zeroes] SB1 [16M zeroes] <4 more AGs> <zeroes from 100M to 1G> \
+      0000 [1G space] 0000 [1G space] 0000 [1G space]
 
-I'm not thrilled to be rebasing a work branch in the middle of the merge
-window, but I think the changes are simple enough that we might be able
-to try again next week.  Damien, if you have the time can you please
-rebase zonefs atop this and make sure buffered writing to a conventional
-zone still works?  It should, since the _finish_ioends loop is identical
-between iomap and xfs.
+But that still leaves SB[1-5] which xfs_repair could stumble over later.
+For example, if the next test to be run formats a filesystem with 24MB
+AGs (instead of 16) and zaps the superblock, then repair will eventually
+try a linear scan looking for superblocks and find the ones from the
+16MB filesystem first.
 
-The new head of the iomap-5.4-merge branch is commit:
+There isn't a sequence of tests that do this, but so long as we're
+fixing this we might as well zap as much as we can.  So I propose adding
+to try_wipe_scratch_xfs() the following:
 
-1b4fdf4f30db iomap: move the iomap_dio_rw ->end_io callback into a structure
+	dbsize=
+	_scratch_xfs_db -c 'sb 0' -c 'p blocksize agblocks agcount' 2>&1 | \
+		sed -e 's/ = /=/g' -e 's/blocksize/dbsize/g' \
+		    -e 's/agblocks/agsize/g' > $tmp.mkfs
+	. $tmp.mkfs
 
-New Commits:
+and then repeat the for loop.  If there isn't a filesystem then
+$tmp.mkfs will be an empty file and the loop won't run.
 
-Andreas Gruenbacher (1):
-      [be942954d7ad] iomap: Fix trivial typo
+> Then when we do xfs_repair, if xfs_repair can't find the first SB, it
+> will go to find those *old* SB at first. When it finds them,
+> everyting goes wrong.
+> 
+> So I try to get XFS AG geometry(by default) and then try to erase all
+> superblocks. Thanks Darrick J. Wong helped to analyze this issue.
+> 
+> Signed-off-by: Zorro Lang <zlang@redhat.com>
+> ---
+>  common/rc  |  4 ++++
+>  common/xfs | 23 +++++++++++++++++++++++
+>  2 files changed, 27 insertions(+)
+> 
+> diff --git a/common/rc b/common/rc
+> index 66c7fd4d..fe13f659 100644
+> --- a/common/rc
+> +++ b/common/rc
+> @@ -4048,6 +4048,10 @@ _try_wipe_scratch_devs()
+>  	for dev in $SCRATCH_DEV_POOL $SCRATCH_DEV $SCRATCH_LOGDEV $SCRATCH_RTDEV; do
+>  		test -b $dev && $WIPEFS_PROG -a $dev
+>  	done
+> +
+> +	if [ "$FSTYP" = "xfs" ];then
+> +		try_wipe_scratch_xfs
+> +	fi
 
-Christoph Hellwig (7):
-      [9544e58e466f] iomap: copy the xfs writeback code to iomap.c
-      [668931192d9d] iomap: add tracing for the address space operations
-      [ca6de3a5b6f4] iomap: warn on inline maps in iomap_writepage_map
-      [4df389276768] xfs: set IOMAP_F_NEW more carefully
-      [5f1f62a3f64c] iomap: zero newly allocated mapped blocks
-      [0b98e70d9586] xfs: initialize iomap->flags in xfs_bmbt_to_iomap
-      [1b4fdf4f30db] iomap: move the iomap_dio_rw ->end_io callback into a structure
+We probably ought to delegate all wiping to try_wipe_scratch_xfs, i.e.:
 
-Matthew Bobrowski (1):
-      [da078883a85d] iomap: split size and error for iomap_dio_rw ->end_io
+	test -b $dev || continue
+	case "$FSTYP" in
+	"xfs")
+		_try_wipe_scratch_xfs
+		;;
+	*)
+		$WIPEFS_PROG -a $dev
+		;;
+	esac
 
-Randy Dunlap (1):
-      [239b92845737] tracing: fix iomap.h build warnings
+and add the WIPEFS_PROG call to _try_wipe_scratch_xfs.
 
+>  }
+>  
+>  # Only run this on xfs if xfs_scrub is available and has the unicode checker
+> diff --git a/common/xfs b/common/xfs
+> index 1bce3c18..34516f82 100644
+> --- a/common/xfs
+> +++ b/common/xfs
+> @@ -884,3 +884,26 @@ _xfs_mount_agcount()
+>  {
+>  	$XFS_INFO_PROG "$1" | grep agcount= | sed -e 's/^.*agcount=\([0-9]*\),.*$/\1/g'
+>  }
+> +
+> +# wipe the superblock of each XFS AGs
+> +try_wipe_scratch_xfs()
 
-Code Diffstat:
+Common helper functions should start with a '_'
 
- fs/iomap/buffered-io.c       | 576 ++++++++++++++++++++++++++++++++++++++++++-
- fs/iomap/direct-io.c         |  24 +-
- fs/xfs/xfs_file.c            |  14 +-
- fs/xfs/xfs_iomap.c           |  35 ++-
- fs/xfs/xfs_iomap.h           |   2 +-
- fs/xfs/xfs_pnfs.c            |   2 +-
- include/linux/iomap.h        |  53 +++-
- include/trace/events/iomap.h |  87 +++++++
- 8 files changed, 754 insertions(+), 39 deletions(-)
- create mode 100644 include/trace/events/iomap.h
+> +{
+> +	local tmp=`mktemp -u`
+> +
+> +	_scratch_mkfs_xfs -N 2>/dev/null | perl -ne '
+> +		if (/^meta-data=.*\s+agcount=(\d+), agsize=(\d+) blks/) {
+> +			print STDOUT "agcount=$1\nagsize=$2\n";
+> +		}
+> +		if (/^data\s+=\s+bsize=(\d+)\s/) {
+> +			print STDOUT "dbsize=$1\n";
+> +		}' > $tmp.mkfs
+> +
+> +	. $tmp.mkfs
+> +	if [ -n "$agcount" -a -n "$agsize" -a -n "$dbsize" ];then
+> +		for ((i = 0; i < agcount; i++)); do
+> +			$XFS_IO_PROG -c "pwrite $((i * dbsize * agsize)) $dbsize" \
+> +				$SCRATCH_DEV >/dev/null;
+> +		done
+> +       fi
+> +       rm -f $tmp.mkfs
+
+Add code as discussed above.
+
+--D
+
+> +}
+> -- 
+> 2.20.1
+> 
