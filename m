@@ -7,43 +7,43 @@ X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90023C4CEC4
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4C41C49ED7
 	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 00:20:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E1DB21924
+	by mail.kernel.org (Postfix) with ESMTP id 9340421929
 	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 00:20:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=default; t=1568938814;
-	bh=07GkLK5+IzP0sCKfynkWiJ1o48r/r4rDz3uaqTzV+vs=;
+	bh=/iBbWJUHXXeizMoV7RFiy8dyUlcRnueuVF6qOxMeDNg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=nvJi3isvQeCrJY2x3ehWBn6aGBP4WGosxcF3nQZEU6U/WVp/DZ0lhJujVoL+L0+64
-	 k8xtBaRqWrd+R66FGCnyhPLV2GRJQfr684YLHMUjfPZ6xE53YKNxaD4jkUEZthMv06
-	 3hb6qeKpMdWum1C7KdHm1MK06yorZ52naBdQphgM=
+	b=L8crmIQbe3iHHe/oaDx0NFWpWxf9tdcilCzWsmXgJ3bXKskV2yBXw+OxHkYIZgR7/
+	 jpw2jWSmz9ne+m3p4P65xZsLDNR/qiX6ieMe1arSzgALGvlrk4wy6fUVeq71v2cL1I
+	 u/km1YfXli5TAcxali/nuhTtbCacwMTwIhPL06tY=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392543AbfITAUH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 20:20:07 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35302 "EHLO mail.kernel.org"
+        id S2392719AbfITAUI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 20:20:08 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35306 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2390558AbfITAUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S2391401AbfITAUH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 19 Sep 2019 20:20:07 -0400
 Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 9800921907;
-        Fri, 20 Sep 2019 00:20:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 217CE21924;
+        Fri, 20 Sep 2019 00:20:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1568938802;
-        bh=07GkLK5+IzP0sCKfynkWiJ1o48r/r4rDz3uaqTzV+vs=;
+        s=default; t=1568938803;
+        bh=/iBbWJUHXXeizMoV7RFiy8dyUlcRnueuVF6qOxMeDNg=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WubDGV1GjF8/5WBKw2vHcHq/VK5+VME5QLiIA9yOuXgVCk1bHaAFI3Hz/dIOkMMsY
-         WX0suGJwMWYtSU1zOg/yDLjYcv+axFaft/q1yWY0MEsJZdub43gk2weipPuKU72gUW
-         vGK16aU6UK+8lmU/F8B8rop3cxQRL7OT82GmRz1I=
+        b=QkThbXT2O3BgCUSff5nGiS8tOEyB2rkMb/PREifE3naegUKA2pybrCBZ5cZXV9VfI
+         iny1r9JKnrlhUOPsVkHLJx4fOngPpGtEuFcC/hkW5yhI7kvKxN2BP6BnchaLR2NyKp
+         qWtWUXtmdFhMwP7j4uoDnI2G9xpOaRR90qEHj89E=
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-xfs@vger.kernel.org
 Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
-Subject: [PATCH v2 1/8] xfs_io/encrypt: remove unimplemented encryption modes
-Date:   Thu, 19 Sep 2019 17:18:15 -0700
-Message-Id: <20190920001822.257411-2-ebiggers@kernel.org>
+Subject: [PATCH v2 3/8] xfs_io/encrypt: add new encryption modes
+Date:   Thu, 19 Sep 2019 17:18:17 -0700
+Message-Id: <20190920001822.257411-4-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.23.0.351.gc4317032e6-goog
 In-Reply-To: <20190920001822.257411-1-ebiggers@kernel.org>
 References: <20190920001822.257411-1-ebiggers@kernel.org>
@@ -56,50 +56,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Although mode numbers were originally reserved for AES-256-GCM and
-AES-256-CBC, these were never implemented in the kernel, and there are
-no plans to do so anymore.  These mode numbers may be used for something
-else in the future.  Also, xfstests (the only known user of the xfs_io
-encryption commands) doesn't try to use them.  Finally, most of the
-fscrypt constants have been given new names in the UAPI header, but the
-unused constants have not been given new names since userspace should
-just stop referencing them instead.
-
-So remove them from xfs_io.
+Add new encryption modes: AES-128-CBC and AES-128-CTS (supported since
+Linux v4.11), and Adiantum (supported since Linux v5.0).
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- io/encrypt.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ io/encrypt.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
 diff --git a/io/encrypt.c b/io/encrypt.c
-index 7a0b2465..70c9e5eb 100644
+index 011a6410..f5046e5b 100644
 --- a/io/encrypt.c
 +++ b/io/encrypt.c
-@@ -49,8 +49,6 @@ struct fscrypt_policy {
- 
- #define FS_ENCRYPTION_MODE_INVALID	0
- #define FS_ENCRYPTION_MODE_AES_256_XTS	1
--#define FS_ENCRYPTION_MODE_AES_256_GCM	2
--#define FS_ENCRYPTION_MODE_AES_256_CBC	3
- #define FS_ENCRYPTION_MODE_AES_256_CTS	4
- #endif /* FS_ENCRYPTION_MODE_AES_256_XTS */
- 
-@@ -74,7 +72,7 @@ set_encpolicy_help(void)
+@@ -156,7 +156,7 @@ set_encpolicy_help(void)
  " -v VERSION -- version of policy structure\n"
  "\n"
  " MODE can be numeric or one of the following predefined values:\n"
--"    AES-256-XTS, AES-256-CTS, AES-256-GCM, AES-256-CBC\n"
-+"    AES-256-XTS, AES-256-CTS\n"
+-"    AES-256-XTS, AES-256-CTS\n"
++"    AES-256-XTS, AES-256-CTS, AES-128-CBC, AES-128-CTS, Adiantum\n"
  " FLAGS and VERSION must be numeric.\n"
  "\n"
  " Note that it's only possible to set an encryption policy on an empty\n"
-@@ -88,8 +86,6 @@ static const struct {
+@@ -170,6 +170,9 @@ static const struct {
  } available_modes[] = {
- 	{FS_ENCRYPTION_MODE_AES_256_XTS, "AES-256-XTS"},
- 	{FS_ENCRYPTION_MODE_AES_256_CTS, "AES-256-CTS"},
--	{FS_ENCRYPTION_MODE_AES_256_GCM, "AES-256-GCM"},
--	{FS_ENCRYPTION_MODE_AES_256_CBC, "AES-256-CBC"},
+ 	{FSCRYPT_MODE_AES_256_XTS, "AES-256-XTS"},
+ 	{FSCRYPT_MODE_AES_256_CTS, "AES-256-CTS"},
++	{FSCRYPT_MODE_AES_128_CBC, "AES-128-CBC"},
++	{FSCRYPT_MODE_AES_128_CTS, "AES-128-CTS"},
++	{FSCRYPT_MODE_ADIANTUM, "Adiantum"},
  };
  
  static bool
