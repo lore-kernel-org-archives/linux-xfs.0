@@ -2,109 +2,172 @@ Return-Path: <SRS0=+mcJ=XP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C64CC3A5A6
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 02:19:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9472BC3A5A6
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 02:50:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 51254207FC
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 02:19:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5FA702196E
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 02:50:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="iOM6ee9K"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YHE3OHsq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393796AbfITCTq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 22:19:46 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:44312 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390999AbfITCTq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 22:19:46 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=gPvDXZn47+Xh5Ucl7BKhIp8In3MLDCt7iLEkaKnrDGs=; b=iOM6ee9KPt3WpOrl8sIbGjjNb
-        bG/GqhVpq1FBq3FKHqK2kl+ae6+rMM6VAk2R8INWcADKTF3nahzAdd3BZ1HBW38qXnVfDLHdQcSRB
-        j8DVgDJA2LwETkx6yzXsoI0zhdGohJF5zJNOFmmZ7MAu2uLcZjyEkrhq9+FbgRaTHUTj8JNLP0Wii
-        6ahUC4w4NIB4WqOwwLExCUB/A8gPoWIoJQjZoD2r0Mmp/tKIs/kLPG1BY+GP0FkQZZQINKr6iKLcG
-        DJUbb6k2EXyoHpXvQY917x0RxrX3mYNDlgqXFfAsUQqAcr4zQeDehlNrgkzuWqfqzbcIhHbSCKjQ/
-        41vCtZnpQ==;
-Received: from [216.9.110.10] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iB8WP-00015A-5j; Fri, 20 Sep 2019 02:19:45 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     kernel test robot <rong.a.chen@intel.com>
-Subject: [PATCH] xfs: fix userdata allocation detection regression
-Date:   Thu, 19 Sep 2019 19:19:43 -0700
-Message-Id: <20190920021943.26930-1-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
+        id S2392115AbfITCuZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 22:50:25 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51230 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2388700AbfITCuZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 19 Sep 2019 22:50:25 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8K2na8C042229;
+        Fri, 20 Sep 2019 02:50:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=zTP7HntL0cLYxneaO6w7bSX+tUOsryV53661/88JidQ=;
+ b=YHE3OHsqN52bUms4G6yYt6f/gDtzRwxajUvaXANVHrxpH1Z3km1TxBHFwLC3eahfnXri
+ CayOfuWQXbQ+0JpN2TKP8I6DLUIoismlkAIMsfSrE3yO4gM6mzbWMtrIeBzQrt/1Wznb
+ hXrJiLJdw+xPMp9+8hDYEcSzr8DWOWGSKohO8+vmaJ3lif4rWv+9uC4wtgimGYBy+fOz
+ lZSdqHbfQqFCdzOSmERPUbie3Fr0RIX+AzWnes0njdIOr7KoWxWDIlMpJB0cfIm6tZ98
+ hFAOZjzcuUJPVasgJQyRVVG0mpIX24M6fJqjOrKp+6jbE+Jg+H0AVkbvTO1tjNaBf7V2 Iw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2v3vb4qk3d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 20 Sep 2019 02:50:08 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8K2o6jO107432;
+        Fri, 20 Sep 2019 02:50:07 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2v3vb77fns-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 20 Sep 2019 02:50:06 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8K2ma1r028097;
+        Fri, 20 Sep 2019 02:48:37 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 19 Sep 2019 19:48:36 -0700
+Date:   Thu, 19 Sep 2019 19:48:36 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Yang Xu <xuyang2018.jy@cn.fujitsu.com>
+Cc:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org,
+        linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] common/xfs: wipe the XFS superblock of each AGs
+Message-ID: <20190920024836.GO2229799@magnolia>
+References: <20190919150024.8346-1-zlang@redhat.com>
+ <66503981-2ff3-f28b-fd06-9d6360c930fe@cn.fujitsu.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <66503981-2ff3-f28b-fd06-9d6360c930fe@cn.fujitsu.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909200030
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9385 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909200031
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The XFS_ALLOC_USERDATA was not directly used, but indirectly in the
-xfs_alloc_is_userdata function that check for any bit that is not
-XFS_ALLOC_NOBUSY being set.  But XFS_ALLOC_NOBUSY is equivalent to
-a user data allocation, so rename that flag and check for that instead
-to reduce the confusion.
+On Fri, Sep 20, 2019 at 09:52:11AM +0800, Yang Xu wrote:
+> 
+> 
+> on 2019/09/19 23:00, Zorro Lang wrote:
+> > xfs/030 always fails after d0e484ac699f ("check: wipe scratch devices
+> > between tests") get merged.
+> > 
+> > Due to xfs/030 does a sized(100m) mkfs. Before we merge above commit,
+> > mkfs.xfs detects an old primary superblock, it will write zeroes to
+> > all superblocks before formatting the new filesystem. But this won't
+> > be done if we wipe the first superblock(by merging above commit).
+> > 
+> > That means if we make a (smaller) sized xfs after wipefs, those *old*
+> > superblocks which created by last time mkfs.xfs will be left on disk.
+> > Then when we do xfs_repair, if xfs_repair can't find the first SB, it
+> > will go to find those *old* SB at first. When it finds them,
+> > everyting goes wrong.
+> > 
+> > So I try to get XFS AG geometry(by default) and then try to erase all
+> > superblocks. Thanks Darrick J. Wong helped to analyze this issue.
+> Feel free to add Reported-by.
+> > 
+> > Signed-off-by: Zorro Lang <zlang@redhat.com>
+> > ---
+> >   common/rc  |  4 ++++
+> >   common/xfs | 23 +++++++++++++++++++++++
+> >   2 files changed, 27 insertions(+)
+> > 
+> > diff --git a/common/rc b/common/rc
+> > index 66c7fd4d..fe13f659 100644
+> > --- a/common/rc
+> > +++ b/common/rc
+> > @@ -4048,6 +4048,10 @@ _try_wipe_scratch_devs()
+> >   	for dev in $SCRATCH_DEV_POOL $SCRATCH_DEV $SCRATCH_LOGDEV $SCRATCH_RTDEV; do
+> >   		test -b $dev && $WIPEFS_PROG -a $dev
+> >   	done
+> > +
+> > +	if [ "$FSTYP" = "xfs" ];then
+> > +		try_wipe_scratch_xfs
+> I think we should add a simple comment for why we add it.
+> 
+> ps:_scratch_mkfs_xfs also can make case pass. We can use it and add comment.
+> the  try_wipe_scratch_xfs method and the _scratch_mkfs_xfs method are all
+> acceptable for me.
 
-Fixes: 1baa2800e62d ("xfs: remove the unused XFS_ALLOC_USERDATA flag")
-Reported-by: kernel test robot <rong.a.chen@intel.com>
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/libxfs/xfs_alloc.h | 7 ++++---
- fs/xfs/libxfs/xfs_bmap.c  | 2 +-
- 2 files changed, 5 insertions(+), 4 deletions(-)
+Yes, I suppose formatting and then wiping per below would also achieve
+our means, but it would come at the extra cost of zeroing the log.  I'm
+not too eager to increase xfstest runtime even more.
 
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 58fa85cec325..24710746cecb 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -83,18 +83,19 @@ typedef struct xfs_alloc_arg {
-  */
- #define XFS_ALLOC_INITIAL_USER_DATA	(1 << 0)/* special case start of file */
- #define XFS_ALLOC_USERDATA_ZERO		(1 << 1)/* zero extent on allocation */
--#define XFS_ALLOC_NOBUSY		(1 << 2)/* Busy extents not allowed */
-+#define XFS_ALLOC_USERDATA		(1 << 2)/* allocation is for user data*/
- 
- static inline bool
- xfs_alloc_is_userdata(int datatype)
- {
--	return (datatype & ~XFS_ALLOC_NOBUSY) != 0;
-+	return (datatype & XFS_ALLOC_USERDATA);
- }
- 
- static inline bool
- xfs_alloc_allow_busy_reuse(int datatype)
- {
--	return (datatype & XFS_ALLOC_NOBUSY) == 0;
-+	/* Busy extents not allowed for user data */
-+	return (datatype & XFS_ALLOC_USERDATA) == 0;
- }
- 
- /* freespace limit calculations */
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index 054b4ce30033..a2d8c4e4cad5 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4041,7 +4041,7 @@ xfs_bmapi_allocate(
- 	 * the busy list.
- 	 */
- 	if (!(bma->flags & XFS_BMAPI_METADATA)) {
--		bma->datatype = XFS_ALLOC_NOBUSY;
-+		bma->datatype = XFS_ALLOC_USERDATA;
- 		if (whichfork == XFS_DATA_FORK && bma->offset == 0)
- 			bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
- 		if (bma->flags & XFS_BMAPI_ZERO)
--- 
-2.20.1
+Hmmm, I wonder if xfs_db could just grow a 'wipe all superblocks'
+command....
 
+--D
+
+> > +	fi
+> >   }
+> >   # Only run this on xfs if xfs_scrub is available and has the unicode checker
+> > diff --git a/common/xfs b/common/xfs
+> > index 1bce3c18..34516f82 100644
+> > --- a/common/xfs
+> > +++ b/common/xfs
+> > @@ -884,3 +884,26 @@ _xfs_mount_agcount()
+> >   {
+> >   	$XFS_INFO_PROG "$1" | grep agcount= | sed -e 's/^.*agcount=\([0-9]*\),.*$/\1/g'
+> >   }
+> > +
+> > +# wipe the superblock of each XFS AGs
+> > +try_wipe_scratch_xfs()
+> > +{
+> > +	local tmp=`mktemp -u`
+> > +
+> > +	_scratch_mkfs_xfs -N 2>/dev/null | perl -ne '
+> > +		if (/^meta-data=.*\s+agcount=(\d+), agsize=(\d+) blks/) {
+> > +			print STDOUT "agcount=$1\nagsize=$2\n";
+> > +		}
+> > +		if (/^data\s+=\s+bsize=(\d+)\s/) {
+> > +			print STDOUT "dbsize=$1\n";
+> > +		}' > $tmp.mkfs
+> > +
+> > +	. $tmp.mkfs
+> > +	if [ -n "$agcount" -a -n "$agsize" -a -n "$dbsize" ];then
+> > +		for ((i = 0; i < agcount; i++)); do
+> > +			$XFS_IO_PROG -c "pwrite $((i * dbsize * agsize)) $dbsize" \
+> > +				$SCRATCH_DEV >/dev/null;
+> > +		done
+> > +       fi
+> > +       rm -f $tmp.mkfs
+> > +}
+> > 
+> 
+> 
