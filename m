@@ -2,101 +2,152 @@ Return-Path: <SRS0=+mcJ=XP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB910C49ED7
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 13:18:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B63EDC49ED7
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 13:49:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B03D2205F4
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 13:18:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BC3CVJuv"
+	by mail.kernel.org (Postfix) with ESMTP id 92B1E206C2
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 13:49:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727399AbfITNSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Sep 2019 09:18:07 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:44842 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726924AbfITNSH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Sep 2019 09:18:07 -0400
-Received: by mail-pl1-f193.google.com with SMTP id q15so3163100pll.11
-        for <linux-xfs@vger.kernel.org>; Fri, 20 Sep 2019 06:18:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id;
-        bh=xwzIhYyLqjWx+r3Mktlsz0Rh2IWnEF+3TAS3n5Q4e5U=;
-        b=BC3CVJuv2NBJJ36AGfuIur6hGgo2ubT+ydy0+KeOSRiWLLWU38Gqx7AaxTtQX/Mz8k
-         mrN5MM90VjINwR9tEuEkankceqQgK0xo7uOY8pcv3FXpMonfa1e2ifRNGZmXKUPsewYL
-         E7IY8E1xD3SpWhtUyA0R3g6BJOB7XNJ+wyRoLJa1N4ftbSLzB7qKOIjNUBmP/syUboSm
-         YLOhe1DhtFJiHIDiUBddE6KfPg23TYYGzQT7gUjoGkVrey6VBqeW4rdra9Rs7eAMA3f2
-         i3pYOuGD+aYk/zDpPhF6nV9KqDVDTAVb1+BfNUUn4xhEADJLFwD4I3KBAy699gUDbI/Z
-         I8Vg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id;
-        bh=xwzIhYyLqjWx+r3Mktlsz0Rh2IWnEF+3TAS3n5Q4e5U=;
-        b=EWdvAAsQS5YRtb44HSiGIXp0yMtPczua7X+4hP1QxJamfwZW6liAHiNSDzDLHxf3k0
-         dnr9IaTnaOP3iXo0T/kG1k4p32RdOC/T6qdvSOdfS5yWaDqKk1HM96vHWss7nQXPKY4o
-         pM3Kldu4N2VMiU67+eaY8bVYlWytb5RNLohH+qGXm7Ng7OruDz7uobEmNiUU8QxYsci/
-         UhKrtyhPHweiMlY96jvvD2PubIArTEmCQBQdBKzm6Jzl+fkq7meOi8UvFQlpUGPpsO03
-         EgbbQg286qR8KhHdt0blG9m7x8Usu5xf0ehjH3keqPfFslhFMUD4EIaiGgvqCU6qKhqq
-         4mjA==
-X-Gm-Message-State: APjAAAWS0XGIvXU85nzM55zDmmvujuHbtQYPnE3UCM2UJ915FYySKo++
-        cXvwRVxhMAuabOaxpRx9WJ8=
-X-Google-Smtp-Source: APXvYqxG8KSj/6BHATmgQtoGva86Zc7Wxxtmtm/B860okA74zBb9XFVpfghbfiWauPzuumimeZBVfA==
-X-Received: by 2002:a17:902:222:: with SMTP id 31mr17110924plc.167.1568985486364;
-        Fri, 20 Sep 2019 06:18:06 -0700 (PDT)
-Received: from localhost.localdomain ([2401:4900:3613:c415:d9cf:5340:7db3:50bd])
-        by smtp.gmail.com with ESMTPSA id r185sm2501799pfr.68.2019.09.20.06.18.02
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
-        Fri, 20 Sep 2019 06:18:05 -0700 (PDT)
-From:   Aliasgar Surti <aliasgar.surti500@gmail.com>
-X-Google-Original-From: Aliasgar Surti
-To:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
-        david@fromorbit.com, bfoster@redhat.com
-Cc:     Aliasgar Surti <aliasgar.surti500@gmail.com>
-Subject: [PATCH] fs:xfs:scrub: Removed unneeded variable.
-Date:   Fri, 20 Sep 2019 18:47:44 +0530
-Message-Id: <1568985464-31258-1-git-send-email-aliasgar.surti500@gmail.com>
-X-Mailer: git-send-email 2.7.4
+        id S2387420AbfITNtg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Sep 2019 09:49:36 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:49428 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387404AbfITNtg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Sep 2019 09:49:36 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id BE093308212D;
+        Fri, 20 Sep 2019 13:49:35 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6267F1001281;
+        Fri, 20 Sep 2019 13:49:35 +0000 (UTC)
+Date:   Fri, 20 Sep 2019 09:49:33 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Allison Collins <allison.henderson@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3 05/19] xfs: Factor out new helper functions
+ xfs_attr_rmtval_set
+Message-ID: <20190920134933.GC40150@bfoster>
+References: <20190905221837.17388-1-allison.henderson@oracle.com>
+ <20190905221837.17388-6-allison.henderson@oracle.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190905221837.17388-6-allison.henderson@oracle.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.47]); Fri, 20 Sep 2019 13:49:35 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Aliasgar Surti <aliasgar.surti500@gmail.com>
+On Thu, Sep 05, 2019 at 03:18:23PM -0700, Allison Collins wrote:
+> Break xfs_attr_rmtval_set into two helper functions
+> xfs_attr_rmt_find_hole and xfs_attr_rmtval_set_value.
+> xfs_attr_rmtval_set rolls the transaction between the
+> helpers, but delayed operations cannot.  We will use
+> the helpers later when constructing new delayed
+> attribute routines.
+> 
+> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+> ---
+>  fs/xfs/libxfs/xfs_attr_remote.c | 72 +++++++++++++++++++++++++++++++----------
+>  fs/xfs/libxfs/xfs_attr_remote.h |  3 +-
+>  2 files changed, 57 insertions(+), 18 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.c b/fs/xfs/libxfs/xfs_attr_remote.c
+> index db9247a..080a284 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.c
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.c
+...
+> @@ -500,6 +487,57 @@ xfs_attr_rmtval_set(
+>  			return error;
+>  	}
+>  
+> +	error = xfs_attr_rmtval_set_value(args);
+> +	return error;
 
-Returned value directly instead of using variable as it wasn't updated.
+	return xfs_attr_rmtval_set_value(args);
 
-Signed-off-by: Aliasgar Surti <aliasgar.surti500@gmail.com>
----
- fs/xfs/scrub/alloc.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+> +}
+> +
+> +
+> +/*
+> + * Find a "hole" in the attribute address space large enough for us to drop the
+> + * new attribute's value into
+> + */
+> +int
+> +xfs_attr_rmt_find_hole(
+> +	struct xfs_da_args	*args)
+> +{
+> +	struct xfs_inode        *dp = args->dp;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	int			error;
+> +	int			blkcnt;
+> +	xfs_fileoff_t		lfileoff = args->rmtblkno;
 
-diff --git a/fs/xfs/scrub/alloc.c b/fs/xfs/scrub/alloc.c
-index a43d181..5533e48 100644
---- a/fs/xfs/scrub/alloc.c
-+++ b/fs/xfs/scrub/alloc.c
-@@ -97,7 +97,6 @@ xchk_allocbt_rec(
- 	xfs_agnumber_t		agno = bs->cur->bc_private.a.agno;
- 	xfs_agblock_t		bno;
- 	xfs_extlen_t		len;
--	int			error = 0;
- 
- 	bno = be32_to_cpu(rec->alloc.ar_startblock);
- 	len = be32_to_cpu(rec->alloc.ar_blockcount);
-@@ -109,7 +108,7 @@ xchk_allocbt_rec(
- 
- 	xchk_allocbt_xref(bs->sc, bno, len);
- 
--	return error;
-+	return 0;
- }
- 
- /* Scrub the freespace btrees for some AG. */
--- 
-2.7.4
+The init of lfileoff looks a little strange here. It was originally
+initialized to zero, passed into the call below and then assigned to
+->rmtblkno. Is this change intentional?
 
+With those nits fixed:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+> +
+> +	/*
+> +	 * Because CRC enable attributes have headers, we can't just do a
+> +	 * straight byte to FSB conversion and have to take the header space
+> +	 * into account.
+> +	 */
+> +	blkcnt = xfs_attr3_rmt_blocks(mp, args->rmtvaluelen);
+> +	error = xfs_bmap_first_unused(args->trans, args->dp, blkcnt, &lfileoff,
+> +						   XFS_ATTR_FORK);
+> +	if (error)
+> +		return error;
+> +
+> +	args->rmtblkno = (xfs_dablk_t)lfileoff;
+> +	args->rmtblkcnt = blkcnt;
+> +
+> +	return 0;
+> +}
+> +
+> +int
+> +xfs_attr_rmtval_set_value(
+> +	struct xfs_da_args	*args)
+> +{
+> +	struct xfs_inode	*dp = args->dp;
+> +	struct xfs_mount	*mp = dp->i_mount;
+> +	struct xfs_bmbt_irec	map;
+> +	xfs_dablk_t		lblkno;
+> +	uint8_t			*src = args->value;
+> +	int			blkcnt;
+> +	int			valuelen;
+> +	int			nmap;
+> +	int			error;
+> +	int			offset = 0;
+> +
+>  	/*
+>  	 * Roll through the "value", copying the attribute value to the
+>  	 * already-allocated blocks.  Blocks are written synchronously
+> diff --git a/fs/xfs/libxfs/xfs_attr_remote.h b/fs/xfs/libxfs/xfs_attr_remote.h
+> index 9d20b66..cd7670d 100644
+> --- a/fs/xfs/libxfs/xfs_attr_remote.h
+> +++ b/fs/xfs/libxfs/xfs_attr_remote.h
+> @@ -11,5 +11,6 @@ int xfs_attr3_rmt_blocks(struct xfs_mount *mp, int attrlen);
+>  int xfs_attr_rmtval_get(struct xfs_da_args *args);
+>  int xfs_attr_rmtval_set(struct xfs_da_args *args);
+>  int xfs_attr_rmtval_remove(struct xfs_da_args *args);
+> -
+> +int xfs_attr_rmtval_set_value(struct xfs_da_args *args);
+> +int xfs_attr_rmt_find_hole(struct xfs_da_args *args);
+>  #endif /* __XFS_ATTR_REMOTE_H__ */
+> -- 
+> 2.7.4
+> 
