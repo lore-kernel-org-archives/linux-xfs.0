@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0810CC4CECE
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38470C4CED2
 	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 00:20:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C901521907
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 00:20:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D85821BE5
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 00:20:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1568938814;
-	bh=R68sT6tk1TVFXsGkPVy06H8fXd6AE99jtDW31Nx5pLg=;
+	s=default; t=1568938815;
+	bh=CK7mg5Js52t3O0qxmlvDRO/FTd4SxmqfrYdmh70yRyU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=CCtubwtgHX0HaZblVWLmDaQPdFmUxCy4d4Rw/BnT2LSzdp7TmNw4ALI76B/ZGFT79
-	 bG9FsaY3NEIidiYs0J3MxvFPRkFDPos9j0V+Vvytufe5DqGk12nezx64GpCAqwhrf4
-	 ST4CtX6CYpXRNSmLl1LWQxiz//oaGRJb9ffqaBRM=
+	b=lvulM5vyGh1iv1WypyymcZtICsJ9hcaIUi/Vc2UcRhekoibgPa7GylefSmEuzuDQ/
+	 0qW5kCsf1pKmaFkAdgke6pk5b3Z/YHvddi3Guzon6pSPsYF8NiKuHjXZk6SMO/+kBH
+	 cCq74hujTWY2vMVRICTEiCmrMApMHU964DajaNCc=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391401AbfITAUI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 19 Sep 2019 20:20:08 -0400
-Received: from mail.kernel.org ([198.145.29.99]:35304 "EHLO mail.kernel.org"
+        id S2391390AbfITAUJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 19 Sep 2019 20:20:09 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35308 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2391390AbfITAUI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S2391427AbfITAUI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Thu, 19 Sep 2019 20:20:08 -0400
 Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id D4F7121920;
-        Fri, 20 Sep 2019 00:20:02 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5EEFA21928;
+        Fri, 20 Sep 2019 00:20:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=default; t=1568938803;
-        bh=R68sT6tk1TVFXsGkPVy06H8fXd6AE99jtDW31Nx5pLg=;
+        bh=CK7mg5Js52t3O0qxmlvDRO/FTd4SxmqfrYdmh70yRyU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=M0A/DXPLfXdqYEcW4/ctvwfVxhkDgTTtlHGR1v5Sv8hOoIkB2xD++KoqaGuXa0g4r
-         BRCfZ+olrda+UgUruoa1h/wLsvnEPVfHcBnj5jp6Svvqn/AafgmY+/rGcPtV6Ppm3/
-         h1f6gbGsTUO/Y71EanM+JCCCyhN0rMFdf7ULmQzI=
+        b=MzNTsy+A4tKdbFSyvfSgxQEUj5PGiTmLPxMhw1l/Ks1kXwNtjtwIv9oxIMYd4LNZV
+         Seo4N/fQFLU2+YkSaUutIBU0dtbQxGDA+FSuzvoEw7Ax35PYqPSbz21xJWPDMRDnO/
+         FeE6X6cIvuvCFCEi28tBKzg1dzBhkUFHjzyCHgZE=
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-xfs@vger.kernel.org
 Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
-Subject: [PATCH v2 2/8] xfs_io/encrypt: update to UAPI definitions from Linux v5.4
-Date:   Thu, 19 Sep 2019 17:18:16 -0700
-Message-Id: <20190920001822.257411-3-ebiggers@kernel.org>
+Subject: [PATCH v2 4/8] xfs_io/encrypt: extend 'get_encpolicy' to support v2 policies
+Date:   Thu, 19 Sep 2019 17:18:18 -0700
+Message-Id: <20190920001822.257411-5-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.23.0.351.gc4317032e6-goog
 In-Reply-To: <20190920001822.257411-1-ebiggers@kernel.org>
 References: <20190920001822.257411-1-ebiggers@kernel.org>
@@ -56,236 +56,260 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Update to the latest fscrypt UAPI definitions, including:
+get_encpolicy uses the FS_IOC_GET_ENCRYPTION_POLICY ioctl to retrieve
+the file's encryption policy, then displays it.  But that only works for
+v1 encryption policies.  A new ioctl, FS_IOC_GET_ENCRYPTION_POLICY_EX,
+has been introduced which is more flexible and can retrieve both v1 and
+v2 encryption policies.
 
-- New names for some existing definitions (FSCRYPT_ instead of FS_).
-- New ioctls.
-- New encryption mode numbers and flags.
+Make get_encpolicy use the new ioctl if the kernel supports it and
+display the resulting the v1 or v2 encryption policy.  Otherwise, fall
+back to the old ioctl and display the v1 policy.
 
-This patch doesn't make any change to the program logic itself.
+Also add new options:
+
+  -1: Use the old ioctl only.  This will be used to test the old ioctl
+      even when the kernel supports the new one.
+
+  -t: Test whether the new ioctl is supported.  This will be useful to
+      determine whether v2 policies should be tested or not.
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- io/encrypt.c | 160 +++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 122 insertions(+), 38 deletions(-)
+ io/encrypt.c      | 150 +++++++++++++++++++++++++++++++++++++++++-----
+ man/man8/xfs_io.8 |  15 ++++-
+ 2 files changed, 147 insertions(+), 18 deletions(-)
 
 diff --git a/io/encrypt.c b/io/encrypt.c
-index 70c9e5eb..011a6410 100644
+index f5046e5b..b8141d96 100644
 --- a/io/encrypt.c
 +++ b/io/encrypt.c
-@@ -15,42 +15,126 @@
- #endif
- 
+@@ -1,6 +1,6 @@
+ // SPDX-License-Identifier: GPL-2.0
  /*
-- * We may have to declare the fscrypt ioctls ourselves because someone may be
-- * compiling xfsprogs with old kernel headers.  And since some old versions of
-- * <linux/fs.h> declared the policy struct and ioctl numbers but not the flags
-- * and modes, our declarations must be split into two conditional blocks.
-+ * Declare the fscrypt ioctls if needed, since someone may be compiling xfsprogs
-+ * with old kernel headers.  But <linux/fs.h> has already been included, so be
-+ * careful not to declare things twice.
+- * Copyright (c) 2016 Google, Inc.  All Rights Reserved.
++ * Copyright 2016, 2019 Google LLC
+  * Author: Eric Biggers <ebiggers@google.com>
   */
  
--/* Policy struct and ioctl numbers */
-+/* first batch of ioctls (Linux headers v4.6+) */
- #ifndef FS_IOC_SET_ENCRYPTION_POLICY
--#define FS_KEY_DESCRIPTOR_SIZE  8
-+#define fscrypt_policy fscrypt_policy_v1
-+#define FS_IOC_SET_ENCRYPTION_POLICY		_IOR('f', 19, struct fscrypt_policy)
-+#define FS_IOC_GET_ENCRYPTION_PWSALT		_IOW('f', 20, __u8[16])
-+#define FS_IOC_GET_ENCRYPTION_POLICY		_IOW('f', 21, struct fscrypt_policy)
-+#endif
-+
-+/*
-+ * Second batch of ioctls (Linux headers v5.4+), plus some renamings from FS_ to
-+ * FSCRYPT_.  We don't bother defining the old names here.
-+ */
-+#ifndef FS_IOC_GET_ENCRYPTION_POLICY_EX
-+
-+#define FSCRYPT_POLICY_FLAGS_PAD_4		0x00
-+#define FSCRYPT_POLICY_FLAGS_PAD_8		0x01
-+#define FSCRYPT_POLICY_FLAGS_PAD_16		0x02
-+#define FSCRYPT_POLICY_FLAGS_PAD_32		0x03
-+#define FSCRYPT_POLICY_FLAGS_PAD_MASK		0x03
-+#define FSCRYPT_POLICY_FLAG_DIRECT_KEY		0x04
-+
-+#define FSCRYPT_MODE_AES_256_XTS		1
-+#define FSCRYPT_MODE_AES_256_CTS		4
-+#define FSCRYPT_MODE_AES_128_CBC		5
-+#define FSCRYPT_MODE_AES_128_CTS		6
-+#define FSCRYPT_MODE_ADIANTUM			9
-+
-+/*
-+ * In the headers for Linux v4.6 through v5.3, 'struct fscrypt_policy_v1' is
-+ * already defined under its old name, 'struct fscrypt_policy'.  But it's fine
-+ * to define it under its new name too.
-+ *
-+ * Note: "v1" policies really are version "0" in the API.
-+ */
-+#define FSCRYPT_POLICY_V1		0
-+#define FSCRYPT_KEY_DESCRIPTOR_SIZE	8
-+struct fscrypt_policy_v1 {
-+	__u8 version;
-+	__u8 contents_encryption_mode;
-+	__u8 filenames_encryption_mode;
-+	__u8 flags;
-+	__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-+};
- 
--struct fscrypt_policy {
-+#define FSCRYPT_POLICY_V2		2
-+#define FSCRYPT_KEY_IDENTIFIER_SIZE	16
-+struct fscrypt_policy_v2 {
- 	__u8 version;
- 	__u8 contents_encryption_mode;
- 	__u8 filenames_encryption_mode;
- 	__u8 flags;
--	__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE];
--} __attribute__((packed));
--
--#define FS_IOC_SET_ENCRYPTION_POLICY	_IOR('f', 19, struct fscrypt_policy)
--#define FS_IOC_GET_ENCRYPTION_PWSALT	_IOW('f', 20, __u8[16])
--#define FS_IOC_GET_ENCRYPTION_POLICY	_IOW('f', 21, struct fscrypt_policy)
--#endif /* FS_IOC_SET_ENCRYPTION_POLICY */
--
--/* Policy flags and encryption modes */
--#ifndef FS_ENCRYPTION_MODE_AES_256_XTS
--#define FS_POLICY_FLAGS_PAD_4		0x00
--#define FS_POLICY_FLAGS_PAD_8		0x01
--#define FS_POLICY_FLAGS_PAD_16		0x02
--#define FS_POLICY_FLAGS_PAD_32		0x03
--#define FS_POLICY_FLAGS_PAD_MASK	0x03
--#define FS_POLICY_FLAGS_VALID		0x03
--
--#define FS_ENCRYPTION_MODE_INVALID	0
--#define FS_ENCRYPTION_MODE_AES_256_XTS	1
--#define FS_ENCRYPTION_MODE_AES_256_CTS	4
--#endif /* FS_ENCRYPTION_MODE_AES_256_XTS */
-+	__u8 __reserved[4];
-+	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-+};
-+
-+#define FSCRYPT_MAX_KEY_SIZE		64
-+
-+#define FS_IOC_GET_ENCRYPTION_POLICY_EX		_IOWR('f', 22, __u8[9]) /* size + version */
-+struct fscrypt_get_policy_ex_arg {
-+	__u64 policy_size; /* input/output */
-+	union {
-+		__u8 version;
-+		struct fscrypt_policy_v1 v1;
-+		struct fscrypt_policy_v2 v2;
-+	} policy; /* output */
-+};
-+
-+#define FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR	1
-+#define FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER	2
-+struct fscrypt_key_specifier {
-+	__u32 type;	/* one of FSCRYPT_KEY_SPEC_TYPE_* */
-+	__u32 __reserved;
-+	union {
-+		__u8 __reserved[32]; /* reserve some extra space */
-+		__u8 descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-+		__u8 identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-+	} u;
-+};
-+
-+#define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
-+struct fscrypt_add_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 raw_size;
-+	__u32 __reserved[9];
-+	__u8 raw[];
-+};
-+
-+#define FS_IOC_REMOVE_ENCRYPTION_KEY		_IOWR('f', 24, struct fscrypt_remove_key_arg)
-+#define FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS	_IOWR('f', 25, struct fscrypt_remove_key_arg)
-+struct fscrypt_remove_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+#define FSCRYPT_KEY_REMOVAL_STATUS_FLAG_FILES_BUSY	0x00000001
-+#define FSCRYPT_KEY_REMOVAL_STATUS_FLAG_OTHER_USERS	0x00000002
-+	__u32 removal_status_flags;	/* output */
-+	__u32 __reserved[5];
-+};
-+
-+#define FS_IOC_GET_ENCRYPTION_KEY_STATUS	_IOWR('f', 26, struct fscrypt_get_key_status_arg)
-+struct fscrypt_get_key_status_arg {
-+	/* input */
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 __reserved[6];
-+
-+	/* output */
-+#define FSCRYPT_KEY_STATUS_ABSENT		1
-+#define FSCRYPT_KEY_STATUS_PRESENT		2
-+#define FSCRYPT_KEY_STATUS_INCOMPLETELY_REMOVED	3
-+	__u32 status;
-+#define FSCRYPT_KEY_STATUS_FLAG_ADDED_BY_SELF   0x00000001
-+	__u32 status_flags;
-+	__u32 user_count;
-+	__u32 __out_reserved[13];
-+};
-+
-+#endif /* !FS_IOC_GET_ENCRYPTION_POLICY_EX */
- 
+@@ -139,6 +139,20 @@ struct fscrypt_get_key_status_arg {
  static cmdinfo_t get_encpolicy_cmd;
  static cmdinfo_t set_encpolicy_cmd;
-@@ -84,8 +168,8 @@ static const struct {
- 	__u8 mode;
- 	const char *name;
- } available_modes[] = {
--	{FS_ENCRYPTION_MODE_AES_256_XTS, "AES-256-XTS"},
--	{FS_ENCRYPTION_MODE_AES_256_CTS, "AES-256-CTS"},
-+	{FSCRYPT_MODE_AES_256_XTS, "AES-256-XTS"},
-+	{FSCRYPT_MODE_AES_256_CTS, "AES-256-CTS"},
- };
  
- static bool
-@@ -131,12 +215,12 @@ mode2str(__u8 mode)
++static void
++get_encpolicy_help(void)
++{
++	printf(_(
++"\n"
++" display the encryption policy of the current file\n"
++"\n"
++" -1 -- Use only the old ioctl to get the encryption policy.\n"
++"       This only works if the file has a v1 encryption policy.\n"
++" -t -- Test whether v2 encryption policies are supported.\n"
++"       Prints \"supported\", \"unsupported\", or an error message.\n"
++"\n"));
++}
++
+ static void
+ set_encpolicy_help(void)
+ {
+@@ -218,7 +232,7 @@ mode2str(__u8 mode)
  }
  
  static const char *
--keydesc2str(__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE])
-+keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
+-keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
++keydesc2str(const __u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
  {
--	static char buf[2 * FS_KEY_DESCRIPTOR_SIZE + 1];
-+	static char buf[2 * FSCRYPT_KEY_DESCRIPTOR_SIZE + 1];
+ 	static char buf[2 * FSCRYPT_KEY_DESCRIPTOR_SIZE + 1];
  	int i;
- 
--	for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++)
-+	for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++)
- 		sprintf(&buf[2 * i], "%02x", master_key_descriptor[i]);
- 
+@@ -229,29 +243,131 @@ keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
  	return buf;
-@@ -176,9 +260,9 @@ set_encpolicy_f(int argc, char **argv)
+ }
  
- 	/* Initialize the policy structure with default values */
- 	memset(&policy, 0, sizeof(policy));
--	policy.contents_encryption_mode = FS_ENCRYPTION_MODE_AES_256_XTS;
--	policy.filenames_encryption_mode = FS_ENCRYPTION_MODE_AES_256_CTS;
--	policy.flags = FS_POLICY_FLAGS_PAD_16;
-+	policy.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
-+	policy.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
-+	policy.flags = FSCRYPT_POLICY_FLAGS_PAD_16;
++static const char *
++keyid2str(const __u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE])
++{
++	static char buf[2 * FSCRYPT_KEY_IDENTIFIER_SIZE + 1];
++	int i;
++
++	for (i = 0; i < FSCRYPT_KEY_IDENTIFIER_SIZE; i++)
++		sprintf(&buf[2 * i], "%02x", master_key_identifier[i]);
++
++	return buf;
++}
++
++static void
++test_for_v2_policy_support(void)
++{
++	struct fscrypt_get_policy_ex_arg arg;
++
++	arg.policy_size = sizeof(arg.policy);
++
++	if (ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY_EX, &arg) == 0 ||
++	    errno == ENODATA /* file unencrypted */) {
++		printf("supported\n");
++		return;
++	}
++	if (errno == ENOTTY) {
++		printf("unsupported\n");
++		return;
++	}
++	fprintf(stderr,
++		"%s: unexpected error checking for FS_IOC_GET_ENCRYPTION_POLICY_EX support: %s\n",
++		file->name, strerror(errno));
++	exitcode = 1;
++}
++
++static void
++show_v1_encryption_policy(const struct fscrypt_policy_v1 *policy)
++{
++	printf("Encryption policy for %s:\n", file->name);
++	printf("\tPolicy version: %u\n", policy->version);
++	printf("\tMaster key descriptor: %s\n",
++	       keydesc2str(policy->master_key_descriptor));
++	printf("\tContents encryption mode: %u (%s)\n",
++	       policy->contents_encryption_mode,
++	       mode2str(policy->contents_encryption_mode));
++	printf("\tFilenames encryption mode: %u (%s)\n",
++	       policy->filenames_encryption_mode,
++	       mode2str(policy->filenames_encryption_mode));
++	printf("\tFlags: 0x%02x\n", policy->flags);
++}
++
++static void
++show_v2_encryption_policy(const struct fscrypt_policy_v2 *policy)
++{
++	printf("Encryption policy for %s:\n", file->name);
++	printf("\tPolicy version: %u\n", policy->version);
++	printf("\tMaster key identifier: %s\n",
++	       keyid2str(policy->master_key_identifier));
++	printf("\tContents encryption mode: %u (%s)\n",
++	       policy->contents_encryption_mode,
++	       mode2str(policy->contents_encryption_mode));
++	printf("\tFilenames encryption mode: %u (%s)\n",
++	       policy->filenames_encryption_mode,
++	       mode2str(policy->filenames_encryption_mode));
++	printf("\tFlags: 0x%02x\n", policy->flags);
++}
++
+ static int
+ get_encpolicy_f(int argc, char **argv)
+ {
+-	struct fscrypt_policy policy;
++	int c;
++	struct fscrypt_get_policy_ex_arg arg;
++	bool only_use_v1_ioctl = false;
++	int res;
  
- 	/* Parse options */
- 	while ((c = getopt(argc, argv, "c:n:f:v:")) != EOF) {
-@@ -229,7 +313,7 @@ set_encpolicy_f(int argc, char **argv)
- 		unsigned long long x;
- 		int i;
+-	if (ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY, &policy) < 0) {
++	while ((c = getopt(argc, argv, "1t")) != EOF) {
++		switch (c) {
++		case '1':
++			only_use_v1_ioctl = true;
++			break;
++		case 't':
++			test_for_v2_policy_support();
++			return 0;
++		default:
++			return command_usage(&get_encpolicy_cmd);
++		}
++	}
++	argc -= optind;
++	argv += optind;
++
++	if (argc != 0)
++		return command_usage(&get_encpolicy_cmd);
++
++	/* first try the new ioctl */
++	if (only_use_v1_ioctl) {
++		res = -1;
++		errno = ENOTTY;
++	} else {
++		arg.policy_size = sizeof(arg.policy);
++		res = ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY_EX, &arg);
++	}
++
++	/* fall back to the old ioctl */
++	if (res != 0 && errno == ENOTTY)
++		res = ioctl(file->fd, FS_IOC_GET_ENCRYPTION_POLICY,
++			    &arg.policy.v1);
++
++	if (res != 0) {
+ 		fprintf(stderr, "%s: failed to get encryption policy: %s\n",
+ 			file->name, strerror(errno));
+ 		exitcode = 1;
+ 		return 0;
+ 	}
  
--		if (strlen(keydesc) != FS_KEY_DESCRIPTOR_SIZE * 2) {
-+		if (strlen(keydesc) != FSCRYPT_KEY_DESCRIPTOR_SIZE * 2) {
- 			fprintf(stderr, "invalid key descriptor: %s\n",
- 				keydesc);
- 			return 0;
-@@ -242,7 +326,7 @@ set_encpolicy_f(int argc, char **argv)
- 			return 0;
- 		}
+-	printf("Encryption policy for %s:\n", file->name);
+-	printf("\tPolicy version: %u\n", policy.version);
+-	printf("\tMaster key descriptor: %s\n",
+-	       keydesc2str(policy.master_key_descriptor));
+-	printf("\tContents encryption mode: %u (%s)\n",
+-	       policy.contents_encryption_mode,
+-	       mode2str(policy.contents_encryption_mode));
+-	printf("\tFilenames encryption mode: %u (%s)\n",
+-	       policy.filenames_encryption_mode,
+-	       mode2str(policy.filenames_encryption_mode));
+-	printf("\tFlags: 0x%02x\n", policy.flags);
++	switch (arg.policy.version) {
++	case FSCRYPT_POLICY_V1:
++		show_v1_encryption_policy(&arg.policy.v1);
++		break;
++	case FSCRYPT_POLICY_V2:
++		show_v2_encryption_policy(&arg.policy.v2);
++		break;
++	default:
++		printf("Encryption policy for %s:\n", file->name);
++		printf("\tPolicy version: %u (unknown)\n", arg.policy.version);
++		break;
++	}
+ 	return 0;
+ }
  
--		for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++) {
-+		for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++) {
- 			policy.master_key_descriptor[i] = x >> 56;
- 			x <<= 8;
- 		}
+@@ -351,11 +467,13 @@ encrypt_init(void)
+ {
+ 	get_encpolicy_cmd.name = "get_encpolicy";
+ 	get_encpolicy_cmd.cfunc = get_encpolicy_f;
++	get_encpolicy_cmd.args = _("[-1] [-t]");
+ 	get_encpolicy_cmd.argmin = 0;
+-	get_encpolicy_cmd.argmax = 0;
++	get_encpolicy_cmd.argmax = -1;
+ 	get_encpolicy_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+ 	get_encpolicy_cmd.oneline =
+ 		_("display the encryption policy of the current file");
++	get_encpolicy_cmd.help = get_encpolicy_help;
+ 
+ 	set_encpolicy_cmd.name = "set_encpolicy";
+ 	set_encpolicy_cmd.cfunc = set_encpolicy_f;
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 6e064bdd..3dd34a0c 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -724,10 +724,21 @@ version of policy structure (numeric)
+ .RE
+ .PD
+ .TP
+-.BR get_encpolicy
++.BI "get_encpolicy [ \-1 ] [ \-t ]"
+ On filesystems that support encryption, display the encryption policy of the
+ current file.
+-
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.BI \-1
++Use only the old ioctl to get the encryption policy.  This only works if the
++file has a v1 encryption policy.
++.TP
++.BI \-t
++Test whether v2 encryption policies are supported.  Prints "supported",
++"unsupported", or an error message.
++.RE
++.PD
+ .TP
+ .BR lsattr " [ " \-R " | " \-D " | " \-a " | " \-v " ]"
+ List extended inode flags on the currently open file. If the
 -- 
 2.23.0.351.gc4317032e6-goog
 
