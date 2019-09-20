@@ -2,215 +2,112 @@ Return-Path: <SRS0=+mcJ=XP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2CFDC4CEC9
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 13:51:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B183BC3A5A2
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 14:59:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83B25206C2
-	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 13:51:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8F4A720882
+	for <linux-xfs@archiver.kernel.org>; Fri, 20 Sep 2019 14:59:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727392AbfITNvp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Sep 2019 09:51:45 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52658 "EHLO mx1.redhat.com"
+        id S2388907AbfITO7o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Sep 2019 10:59:44 -0400
+Received: from sandeen.net ([63.231.237.45]:39630 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728683AbfITNvo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 20 Sep 2019 09:51:44 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2388416AbfITO7n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 20 Sep 2019 10:59:43 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 7122A85536;
-        Fri, 20 Sep 2019 13:51:44 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 1B53119C68;
-        Fri, 20 Sep 2019 13:51:44 +0000 (UTC)
-Date:   Fri, 20 Sep 2019 09:51:42 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Allison Collins <allison.henderson@oracle.com>
+        by sandeen.net (Postfix) with ESMTPSA id E18104CDD35;
+        Fri, 20 Sep 2019 09:59:42 -0500 (CDT)
+Subject: Re: [PATCH v3] xfs: assure zeroed memory buffers for certain kmem
+ allocations
+To:     Christoph Hellwig <hch@infradead.org>,
+        Bill O'Donnell <billodo@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v3 13/19] xfs: Add delay context to xfs_da_args
-Message-ID: <20190920135142.GK40150@bfoster>
-References: <20190905221837.17388-1-allison.henderson@oracle.com>
- <20190905221837.17388-14-allison.henderson@oracle.com>
+References: <20190916153504.30809-1-billodo@redhat.com>
+ <20190919150154.30302-1-billodo@redhat.com>
+ <20190919170353.GA1646@infradead.org> <20190919172047.GA3806@redhat.com>
+ <20190919173801.GA16294@infradead.org>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <dbf196da-bede-6bbe-db3e-35d7040170d0@sandeen.net>
+Date:   Fri, 20 Sep 2019 09:59:41 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190905221837.17388-14-allison.henderson@oracle.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.28]); Fri, 20 Sep 2019 13:51:44 +0000 (UTC)
+In-Reply-To: <20190919173801.GA16294@infradead.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 05, 2019 at 03:18:31PM -0700, Allison Collins wrote:
-> This patch adds a new struct xfs_delay_context, which we
-> will use to keep track of the current state of a delayed
-> attribute operation.
+On 9/19/19 12:38 PM, Christoph Hellwig wrote:
+> On Thu, Sep 19, 2019 at 12:20:47PM -0500, Bill O'Donnell wrote:
+>>>> @@ -391,7 +396,7 @@ xfs_buf_allocate_memory(
+>>>>  		struct page	*page;
+>>>>  		uint		retries = 0;
+>>>>  retry:
+>>>> -		page = alloc_page(gfp_mask);
+>>>> +		page = alloc_page(gfp_mask | kmflag_mask);
+>>>
+>>> alloc_page takes GFP_ flags, not KM_.  In fact sparse should have warned
+>>> about this.
+>>
+>> I wondered if the KM flag needed conversion to GFP, but saw no warning.
 > 
-> The flags member is used to track various operations that
-> are in progress so that we know not to repeat them, and
-> resume where we left off before EAGAIN was returned to
-> cycle out the transaction.  Other members take the place
-> of local variables that need to retain their values
-> across multiple function recalls.
-> 
-> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
-> ---
+> I'd be tempted to just do a manual memset after either kind of
+> allocation.
 
-Ok, I'll have to get further along in the usage of these bits to fully
-grok this one. One quick note in the meantime...
+At some point I think Dave had suggested that at least when allocating pages,
+using the flag would be more efficient?
 
->  fs/xfs/libxfs/xfs_da_btree.h | 23 +++++++++++++++++++++++
->  fs/xfs/scrub/common.c        |  2 ++
->  fs/xfs/xfs_acl.c             |  2 ++
->  fs/xfs/xfs_attr_list.c       |  1 +
->  fs/xfs/xfs_ioctl.c           |  2 ++
->  fs/xfs/xfs_ioctl32.c         |  2 ++
->  fs/xfs/xfs_iops.c            |  2 ++
->  fs/xfs/xfs_xattr.c           |  1 +
->  8 files changed, 35 insertions(+)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-> index bed4f40..ebe1295 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.h
-> +++ b/fs/xfs/libxfs/xfs_da_btree.h
-> @@ -42,6 +42,28 @@ enum xfs_dacmp {
->  	XFS_CMP_CASE		/* names are same but differ in case */
->  };
->  
-> +#define		XFS_DC_INIT		0x01 /* Init delay info */
-> +#define		XFS_DC_FOUND_LBLK	0x02 /* We found leaf blk for attr */
-> +#define		XFS_DC_FOUND_NBLK	0x04 /* We found node blk for attr */
-> +#define		XFS_DC_ALLOC_LEAF	0x08 /* We are allocating leaf blocks */
-> +#define		XFS_DC_ALLOC_NODE	0x10 /* We are allocating node blocks */
-> +#define		XFS_DC_RM_LEAF_BLKS	0x20 /* We are removing leaf blocks */
-> +#define		XFS_DC_RM_NODE_BLKS	0x40 /* We are removing node blocks */
-> +
-> +/*
-> + * Context used for keeping track of delayed attribute operations
-> + */
-> +struct xfs_delay_context {
-> +	unsigned int		flags;
-> +	struct xfs_buf		*leaf_bp;
-> +	struct xfs_bmbt_irec	map;
-> +	xfs_dablk_t		lblkno;
-> +	xfs_fileoff_t		lfileoff;
-> +	int			blkcnt;
-> +	struct xfs_da_state	*state;
-> +	struct xfs_da_state_blk *blk;
-> +};
-> +
-
-The mixed size of the various fields leaves some holes in the structure.
-See 'pahole xfs.ko' output for how this struct could be reordered to
-reduce the overall size a bit..
-
-Brian
-
->  /*
->   * Structure to ease passing around component names.
->   */
-> @@ -69,6 +91,7 @@ typedef struct xfs_da_args {
->  	int		rmtvaluelen2;	/* remote attr value length in bytes */
->  	int		op_flags;	/* operation flags */
->  	enum xfs_dacmp	cmpresult;	/* name compare result for lookups */
-> +	struct xfs_delay_context  dc;	/* context used for delay attr ops */
->  } xfs_da_args_t;
->  
->  /*
-> diff --git a/fs/xfs/scrub/common.c b/fs/xfs/scrub/common.c
-> index 1887605..9a649d1 100644
-> --- a/fs/xfs/scrub/common.c
-> +++ b/fs/xfs/scrub/common.c
-> @@ -24,6 +24,8 @@
->  #include "xfs_rmap_btree.h"
->  #include "xfs_log.h"
->  #include "xfs_trans_priv.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_reflink.h"
->  #include "scrub/scrub.h"
-> diff --git a/fs/xfs/xfs_acl.c b/fs/xfs/xfs_acl.c
-> index f8fb6e10..4e85b38 100644
-> --- a/fs/xfs/xfs_acl.c
-> +++ b/fs/xfs/xfs_acl.c
-> @@ -10,6 +10,8 @@
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
->  #include "xfs_inode.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_trace.h"
->  #include <linux/posix_acl_xattr.h>
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 00758fd..467c53c 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -12,6 +12,7 @@
->  #include "xfs_trans_resv.h"
->  #include "xfs_mount.h"
->  #include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_inode.h"
->  #include "xfs_trans.h"
->  #include "xfs_bmap.h"
-> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index 626420d..2cabdc2 100644
-> --- a/fs/xfs/xfs_ioctl.c
-> +++ b/fs/xfs/xfs_ioctl.c
-> @@ -15,6 +15,8 @@
->  #include "xfs_iwalk.h"
->  #include "xfs_itable.h"
->  #include "xfs_error.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_bmap.h"
->  #include "xfs_bmap_util.h"
-> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
-> index 1e08bf7..7153780 100644
-> --- a/fs/xfs/xfs_ioctl32.c
-> +++ b/fs/xfs/xfs_ioctl32.c
-> @@ -17,6 +17,8 @@
->  #include "xfs_itable.h"
->  #include "xfs_fsops.h"
->  #include "xfs_rtalloc.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_ioctl.h"
->  #include "xfs_ioctl32.h"
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 469e8e2..57de5f1 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -13,6 +13,8 @@
->  #include "xfs_inode.h"
->  #include "xfs_acl.h"
->  #include "xfs_quota.h"
-> +#include "xfs_da_format.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  #include "xfs_trans.h"
->  #include "xfs_trace.h"
-> diff --git a/fs/xfs/xfs_xattr.c b/fs/xfs/xfs_xattr.c
-> index 6309da4..470e605 100644
-> --- a/fs/xfs/xfs_xattr.c
-> +++ b/fs/xfs/xfs_xattr.c
-> @@ -10,6 +10,7 @@
->  #include "xfs_log_format.h"
->  #include "xfs_da_format.h"
->  #include "xfs_inode.h"
-> +#include "xfs_da_btree.h"
->  #include "xfs_attr.h"
->  
->  #include <linux/posix_acl_xattr.h>
-> -- 
-> 2.7.4
-> 
+-Eric
