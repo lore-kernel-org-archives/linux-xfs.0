@@ -2,169 +2,131 @@ Return-Path: <SRS0=b7mv=XQ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A2558C3A5A2
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 Sep 2019 01:26:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BE25C3A5A2
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 Sep 2019 02:25:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 67CEE20640
-	for <linux-xfs@archiver.kernel.org>; Sat, 21 Sep 2019 01:26:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 25E5820C01
+	for <linux-xfs@archiver.kernel.org>; Sat, 21 Sep 2019 02:25:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CCvJOnO3"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dxf0/Am5"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730654AbfIUB0W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 20 Sep 2019 21:26:22 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:48328 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730608AbfIUB0W (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Sep 2019 21:26:22 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8L1Pq7n163901;
-        Sat, 21 Sep 2019 01:26:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
- references : from : message-id : date : mime-version : in-reply-to :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=QnmbdVojwGrDpDUG6yIJxhnSzDRYbP4ppC/7DlILv9A=;
- b=CCvJOnO3RSklu1Dwjo3Z3YsAZDWlidolt7HLkTTlBokYszcTNPXgg5gcjxs3zTh9QRF5
- tFANOaQa7TSdqllMzafn+lTzf0lUquFG7EgK2/UA7jDvFcOX7mCt79Co49XtSyBPmcXC
- BlVmpLOQBiYx4Ml2diPhoPaK+6+kEaQThgtcb1LXBMJohN1+df5DHJLky1x0yxLtgi29
- hfR+0WB+6GFZwX/lrp7+z9JL8R2RnL/2CcAActH+vToWFdZOPo9QqMtzqJFhJaQyoA+d
- xM+m3ufPQ4sbt69318GgjZKPmio9r1pIwnhcXLLTPc+5nfkRUmzCpF9PAs3cf1+v505E Zg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2v3vb5d6mv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 21 Sep 2019 01:26:11 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8L1Od05157485;
-        Sat, 21 Sep 2019 01:26:10 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2v4xea7b7f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 21 Sep 2019 01:26:10 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8L1Q9O7026186;
-        Sat, 21 Sep 2019 01:26:09 GMT
-Received: from [192.168.1.9] (/67.1.21.243)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 20 Sep 2019 18:25:04 -0700
-Subject: Re: [PATCH v3 08/19] xfs: Factor up commit from
- xfs_attr_try_sf_addname
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <20190905221837.17388-1-allison.henderson@oracle.com>
- <20190905221837.17388-9-allison.henderson@oracle.com>
- <20190920135037.GF40150@bfoster>
-From:   Allison Collins <allison.henderson@oracle.com>
-Message-ID: <1336049c-33fb-ee2d-53e6-28f27a576e82@oracle.com>
-Date:   Fri, 20 Sep 2019 18:25:04 -0700
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
- Thunderbird/60.8.0
+        id S1730809AbfIUCZp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 20 Sep 2019 22:25:45 -0400
+Received: from mail-ua1-f52.google.com ([209.85.222.52]:40106 "EHLO
+        mail-ua1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730808AbfIUCZp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 20 Sep 2019 22:25:45 -0400
+Received: by mail-ua1-f52.google.com with SMTP id i13so2259146uaq.7
+        for <linux-xfs@vger.kernel.org>; Fri, 20 Sep 2019 19:25:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=Jf9e+kT9DycGShQqbPO07mb3xQDkBIb8/gciuGqBQ1I=;
+        b=dxf0/Am560L7bmbhhlAyPilSBgdnIqw6iwB5MiHNu5H32+Q3+42IjuJBYb9lVXPb0F
+         sEes5DQOXViMDHFoSGPOGPfri8mKOdOS2kWiR9GRwyCxTZSQ3RrZyTyKZw/V7738emOG
+         iSFhwoA/MouAQHVAsAjlVA+VzswPlEtS8j+5zh0g59aBf79qSO8cd/Ilo+mYs++R+768
+         dmba1dnBlF5XQKWE2B1nYS7DwA1/uFdu2n/4Ig8Kd3YQHRJ6B3evVIGca9zjDkQ5wGK/
+         qN5Vn1xhxNUUS/JAVfmfmx9AWEQ7ghtiLvZXugRhZPCElSkBjs4zHY6eAgwVGY+Aa9pC
+         L60w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=Jf9e+kT9DycGShQqbPO07mb3xQDkBIb8/gciuGqBQ1I=;
+        b=IixFCXjwK+9vwEY9BHqBg+dHfxe0/yETa7vDIXltect7f7NID6QhPAFUy6/+dZiJOB
+         JvSqwxrXV9hoG335YHLJb9qGm9Pe6pOOT906WcKNLGc5BNR0k69EXVAdhUpxkEVvkY8n
+         Yegn2fc6AlE4/tR+mCQuTyrv+dfFUX3R+2KyrxcU8cmy7MZqrc85qz2ov+NYF19XuQyq
+         eesogmWBB4kh7BrRZy4rsxlMGX/eaH04xR1L5YefMXZPdyVXSqw2ZoxL47au/1wVKRGR
+         1lQIcW8yfCaxFqdbTxLylunws93NNsiiAbJaXp23HpEgJoEouTaRiCcjZouStCM4WFm9
+         mrDQ==
+X-Gm-Message-State: APjAAAUu8Ykl/dwHZyrem4Qo0PVgJKIiYDcRRe6pl/wVBUhE1ImBcLUN
+        CY/kXW318Vvvo7+qeqIbUsjkBkG74DS723fOfwvrzb01
+X-Google-Smtp-Source: APXvYqwg3l3c7GBp8UGcUmeChlfJ+b0O9lcIfXohQmD3oQDR02MjL3O3NG4cnSQ/HaL4/p0MZ1fYmRf6dvsGY4Ke5gA=
+X-Received: by 2002:ab0:230:: with SMTP id 45mr11178907uas.115.1569032744178;
+ Fri, 20 Sep 2019 19:25:44 -0700 (PDT)
 MIME-Version: 1.0
-In-Reply-To: <20190920135037.GF40150@bfoster>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9386 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909210014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9386 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909210014
+From:   James Harvey <jamespharvey20@gmail.com>
+Date:   Fri, 20 Sep 2019 22:25:33 -0400
+Message-ID: <CA+X5Wn4YzR8fHys7aROYjCgz-KfW3pXij5pak9E__SvENpf6nQ@mail.gmail.com>
+Subject: Write-hanging on XFS 5.1.15-5.16 - xfsaild/dm blocked -
+ xlog_cli_push_work - xfs_log_worker
+To:     linux-xfs@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This is for XFS, bear with me...  In QEMU, I was having trouble with a
+Btrfs filesystem with heavy I/O for a few hours going into a state
+where until rebooted, anything writing to it would go into
+uninterruptible sleep, but still usually allowed reads.
+
+I tried XFS ad an alternative to Btrfs, to determine if this was the
+fault of Btrfs or something lower-level like QEMU.  XFS had the same
+exact symptoms, of going into this bad state within a few hours of
+heavy I/O.  This led me to conclude it was probably a QEMU bug.
+
+Turns out it wasn't.  XFS and Btrfs seem to have had similar looking
+bugs.  Others had the same Btrfs problem, and it wound up being
+discussed and a patch linked to here:
+https://lore.kernel.org/linux-btrfs/CAL3q7H4peDv_bQa5vGJeOM=V--yq1a1=aHat5qcsXjbnDoSkDQ@mail.gmail.com/
+
+I've been running the Btrfs patch for several days without a lockup,
+which is way longer than I could go before.
+
+I'm therefore concluding there wasn't a QEMU bug, which also leads me
+to conclude the XFS crashes I experienced must have been an XFS bug.
 
 
-On 9/20/19 6:50 AM, Brian Foster wrote:
-> On Thu, Sep 05, 2019 at 03:18:26PM -0700, Allison Collins wrote:
->> New delayed attribute routines cannot handle transactions,
->> so factor this up to the calling function.
->>
->> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
->> ---
->>   fs/xfs/libxfs/xfs_attr.c | 15 ++++++++-------
->>   1 file changed, 8 insertions(+), 7 deletions(-)
->>
->> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
->> index f27e2c6..318c543 100644
->> --- a/fs/xfs/libxfs/xfs_attr.c
->> +++ b/fs/xfs/libxfs/xfs_attr.c
->> @@ -227,7 +227,7 @@ xfs_attr_try_sf_addname(
->>   {
->>   
->>   	struct xfs_mount	*mp = dp->i_mount;
->> -	int			error, error2;
->> +	int			error;
->>   
->>   	error = xfs_attr_shortform_addname(args);
->>   	if (error == -ENOSPC)
->> @@ -243,9 +243,7 @@ xfs_attr_try_sf_addname(
->>   	if (mp->m_flags & XFS_MOUNT_WSYNC)
->>   		xfs_trans_set_sync(args->trans);
->>   
-> 
-> Perhaps the above check should stay along with the tx commit code..?
-That makes sense, I will move it upwards
-> 
->> -	error2 = xfs_trans_commit(args->trans);
->> -	args->trans = NULL;
->> -	return error ? error : error2;
->> +	return error;
->>   }
->>   
->>   /*
->> @@ -257,7 +255,7 @@ xfs_attr_set_args(
->>   {
->>   	struct xfs_inode	*dp = args->dp;
->>   	struct xfs_buf          *leaf_bp = NULL;
->> -	int			error;
->> +	int			error, error2 = 0;;
->>   
->>   	/*
->>   	 * If the attribute list is non-existent or a shortform list,
->> @@ -277,8 +275,11 @@ xfs_attr_set_args(
->>   		 * Try to add the attr to the attribute list in the inode.
->>   		 */
->>   		error = xfs_attr_try_sf_addname(dp, args);
->> -		if (error != -ENOSPC)
->> -			return error;
->> +		if (!error) {
->> +			error2 = xfs_trans_commit(args->trans);
->> +			args->trans = NULL;
->> +			return error ? error : error2;
-> 
-> We've already checked that error == 0 here, so this can be simplified.
-> Hmm.. that said, the original code looks like it commits the transaction
-> on error != -ENOSPC, which means this slightly changes behavior when
-> (error && error != -ENOSPC) is true. So perhaps it is the error check
-> that should be fixed up and not the error2 logic..
+I want to be upfront that although I will be happy to respond to
+questions as well as I can, I won't be able to spend time trying
+proposed patches or perform further diagnostics.  If that means this
+bugreport never gets looked into, that's fine.  I'm not sending this
+for it to be fixed for me, but just for everyone else.
 
-Yes, I believe this got some attention in the last review.  While it is 
-different logic now, I think we reasoned that committing on say -EIO or 
-some other such unexpected error didn't make much sense either, so we 
-cleaned it up a bit.  Though you're probably right about the 
-simplification now with the change.  Is there a reason we would want to 
-commit in the case of unexpected errors?
 
-Allison
+I did find someone else with the same problem here:
+https://superuser.com/questions/1458253/hanging-xfs-filesystem-on-encrypted-usb-device
 
-> 
-> Brian
-> 
->> +		}
->>   
->>   		/*
->>   		 * It won't fit in the shortform, transform to a leaf block.
->> -- 
->> 2.7.4
->>
+You'll see I was able to replicate this within a couple of hours of
+booting.  Gaps (i.e. Jul 4 - Jul 23) were when I was working on
+something else or using Btrfs again, and do not indicate periods of it
+working.  It never worked for more than a few hours with heavy I/O
+
+When I mean heavy I/O, I mean saturating a Samsung 970 EVO 1TB with
+random access.
+
+You'll see at the end, the filesystem eventually got I/O errors.
+There's definitely no hardware issue.  I was able to replicate this on
+an identical system with completely different actual pieces of
+hardware.
+
+Like the superuser.com poster that I linked to above, I was using
+LUKS.  I, of course, wasn't using a USB drive.
+
+
+You can see all the relevant portions of journalctl with the
+backtraces here: http://ix.io/1W7s
+
+But, for searchability, I've included a portion of it here:
+
+INFO: task xfsaild/dm-8:3642 blocked for more than 122 seconds.
+      Not tainted 5.1.15.a-1-hardened #1
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+xfsaild/dm-8    D    0  3642      2 0x80000080
+Call Trace:
+ ? __schedule+0x27c/0x8d0
+ schedule+0x3c/0x80
+ xfs_log_force+0x18d/0x310 [xfs]
+ ? wake_up_q+0x70/0x70
+ xfsaild+0x1c6/0x810 [xfs]
+ ? sched_clock_cpu+0x10/0xd0
+ kthread+0xfd/0x130
+ ? xfs_trans_ail_cursor_first+0x80/0x80 [xfs]
+ ? kthread_park+0x90/0x90
+ ret_from_fork+0x35/0x40
