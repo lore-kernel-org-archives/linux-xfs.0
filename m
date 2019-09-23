@@ -2,116 +2,147 @@ Return-Path: <SRS0=UWJz=XS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D925AC3A5A6
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:33:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27390C32755
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B181420867
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:33:12 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="drJzkdvG"
+	by mail.kernel.org (Postfix) with ESMTP id 0753420835
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:39:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394223AbfIWMdL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Sep 2019 08:33:11 -0400
-Received: from mail-ed1-f66.google.com ([209.85.208.66]:34257 "EHLO
-        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2394195AbfIWMdL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Sep 2019 08:33:11 -0400
-Received: by mail-ed1-f66.google.com with SMTP id p10so12692952edq.1;
-        Mon, 23 Sep 2019 05:33:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=CZY+m6XziiuUFC3vgwK1PNVySRnzhKJCHOLL5oruBzU=;
-        b=drJzkdvGslYwupMEMUo7tkam6+wlcF8mmd7vvon3Bny/m9zpNEu9AwCg2ThZ/0PQDD
-         wn0mVVTWX6jHgXAG6GSuNpvngnRRIfgapW1LnvM6/nuHh1H+mtSVFGNSuxVafUqGEJYV
-         jizPG6pn7VDPnax8qqT4gMaG85yh7a963/wRKcpIA34w4es9XVOjYgpixbPLAwOeOOiT
-         NxLjNcfpWhnAmFYxQoQBxnDjmm8irYQj+I4pKgKJ0D5iT/f2+bIJh1mgGU95KKX6V1c7
-         nYbzhB3cJAG2//GDry04vIk6rq4ZZfk2hMNv5T9qWnq6TxyGkt6vbNm2pg5mI/UXe+8T
-         ENWg==
+        id S2438610AbfIWMjj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Sep 2019 08:39:39 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:37092 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2437280AbfIWMjj (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Sep 2019 08:39:39 -0400
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com [209.85.128.72])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5512E83F3D
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Sep 2019 12:39:38 +0000 (UTC)
+Received: by mail-wm1-f72.google.com with SMTP id 4so4976064wmj.6
+        for <linux-xfs@vger.kernel.org>; Mon, 23 Sep 2019 05:39:38 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=CZY+m6XziiuUFC3vgwK1PNVySRnzhKJCHOLL5oruBzU=;
-        b=ONIa+G36avbmBRwzY7RLFZRBgUXot80JIi+xsakEs5F6X9Ktqur/+Zb5nNEgahw0DX
-         SWdYg0y3c5EIQevZWLeppXTKG+zxRRSvN0rZoud7PlX7cde+q5heVhlISjCw9pkZOarZ
-         krTytNOwXEKIxTCVmFJELf5i1fJs1m2++WBUxrEgPkdSOSgy7p5Cy0Q5ZD1LXLQ+WoWs
-         SswA98VODfXU9WNLYaSz2q9mU1kbW5/+L/vkbFkyT+cvDFiLoCBo+Kb05oL4gu2+UNy4
-         J5vDvugf0cIQbmFqKcP6/bB1rvg7EVIqQCLMGLInLIhYQiOSAi5f5Gn9WqE4U91tiVIy
-         BRCg==
-X-Gm-Message-State: APjAAAWaO1suMSsg/zOS4OZB2O6cIPw+RdlqMbJNLvIkZ2hPjHJnmExS
-        FagtV1jOO0ZpOG9mQWz0HCjQ5img
-X-Google-Smtp-Source: APXvYqwkqIo5m2ZEhcs4rT8Tce+0N6S8DY4mikk/PVvy7GSbondpoDFlTnDqM79/KVGPP8VGS1T5RQ==
-X-Received: by 2002:a50:a41c:: with SMTP id u28mr36593853edb.185.1569241988538;
-        Mon, 23 Sep 2019 05:33:08 -0700 (PDT)
-Received: from [10.68.217.182] ([217.70.210.43])
-        by smtp.gmail.com with ESMTPSA id d4sm1101810ejm.24.2019.09.23.05.33.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 23 Sep 2019 05:33:07 -0700 (PDT)
-Subject: Re: [PATCH 3/3] xfs: Fix stale data exposure when readahead races
- with hole punch
-To:     Jan Kara <jack@suse.cz>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        Amir Goldstein <amir73il@gmail.com>,
-        Boaz Harrosh <boaz@plexistor.com>,
-        linux-fsdevel@vger.kernel.org, stable@vger.kernel.org
-References: <20190829131034.10563-1-jack@suse.cz>
- <20190829131034.10563-4-jack@suse.cz> <20190829155204.GD5354@magnolia>
- <20190830152449.GA25069@quack2.suse.cz>
- <20190918123123.GC31891@quack2.suse.cz>
-From:   Boaz Harrosh <openosd@gmail.com>
-Message-ID: <53b7b7b9-7ada-650c-0a32-291a242601f3@gmail.com>
-Date:   Mon, 23 Sep 2019 15:33:05 +0300
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.0
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=2hKa8ASoo3Uvh0W9XmOxxiV5F8mRf+fGtqvjsuDPoL8=;
+        b=IKiYqaFv5wRJ795nQuQAHl87OthXncyWnIVXK47+qmPlyFcg1LAwM4iHIUj64lZljb
+         xuUTwjTFRPcEIYHZn9Bl4vOU6rWD7LscvbYW4EqNHEuy/IkrpLsTNaZn3dVS1ADRPZL5
+         agKla+i1itasJGoA5GzzKSdBCdVl47xmN1pN+F/oHc3WXtoVGDGyAHhs5Dws/0un4MUf
+         jRlGxgqt5fOpMSyb4nuniPDK8/arqkAL0iKyY+I6HsYTbfOQqjy5x18jjMzDH3W9QbYE
+         AIsG34filogOYLPcu1Fk8+RcrlyROuopKBDvhRJpGFOSd5jpQCnGCB1790SZ4LL6FCZT
+         Fm0w==
+X-Gm-Message-State: APjAAAVmDozmnKA3psttxQNWCPb/nvfVm7FRRALREZC9AUEzRt17UB8Z
+        UAdu7tKzFUIj5Q+afMKmFAY7Mdr/pBxDfi6Q79A8A4ZcsMYjWujxHdhpO5Oqxu4QWnwaYzsXfZD
+        nHwhN6GfBZhq2vAOkzLfg
+X-Received: by 2002:a5d:408c:: with SMTP id o12mr22188339wrp.312.1569242377090;
+        Mon, 23 Sep 2019 05:39:37 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqw/TW3ojVeMViRF6bd6fvTQ+aaa/2ztEN8C/GYyACqGxJpYYMZnAF4mOnOEfcYJZGQrBpIIpA==
+X-Received: by 2002:a5d:408c:: with SMTP id o12mr22188322wrp.312.1569242376882;
+        Mon, 23 Sep 2019 05:39:36 -0700 (PDT)
+Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id a3sm11914684wmc.3.2019.09.23.05.39.36
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Sep 2019 05:39:36 -0700 (PDT)
+Date:   Mon, 23 Sep 2019 14:39:34 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
+Subject: Re: [PATCH 2/2] xfs: Limit total allocation request to maximum
+ possible
+Message-ID: <20190923123934.6zigycei3nmwi54x@pegasus.maiolino.io>
+Mail-Followup-To: Brian Foster <bfoster@redhat.com>,
+        linux-xfs@vger.kernel.org, david@fromorbit.com
+References: <20190918082453.25266-1-cmaiolino@redhat.com>
+ <20190918082453.25266-3-cmaiolino@redhat.com>
+ <20190918122859.GB29377@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <20190918123123.GC31891@quack2.suse.cz>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190918122859.GB29377@bfoster>
+User-Agent: NeoMutt/20180716
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 18/09/2019 15:31, Jan Kara wrote:
-<>
->>> Is there a test on xfstests to demonstrate this race?
->>
->> No, but I can try to create one.
+On Wed, Sep 18, 2019 at 08:28:59AM -0400, Brian Foster wrote:
+> On Wed, Sep 18, 2019 at 10:24:53AM +0200, Carlos Maiolino wrote:
+> > The original allocation request may have a total value way beyond
+> > possible limits.
+> > 
+> > Trim it down to the maximum possible if needed
+> > 
+> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
+> > ---
 > 
-> I was experimenting with this but I could not reproduce the issue in my
-> test VM without inserting artificial delay at appropriate place... So I
-> don't think there's much point in the fstest for this.
+> Confused.. what was wrong with the original bma.total patch that it
+> needs to be replaced?
+
+At this point in time, what you mean by the 'original' patch? :) Yours? Or
+Dave's?
+
+If you meant yours, I was just trying to find out a way to fix it without
+modifying the callers, nothing else than that.
+
+If you meant regarding Dave's proposal, as he tagged his proposal as a /* Hack
+*/, I was just looking for ways to change total, instead of cropping it to 0.
+
+And giving the fact args.total > blen seems unreasonable, giving it will
+certainly tail here, I just thought it might be a reasonable way to change
+args.total value.
+
+By no means this patchset was meant to supersede yours or Dave's idea though, I
+was just looking for a different approach, if feasible.
+
+
+> I was assuming we'd replace the allocation retry
+> patch with the minlen alignment fixups and combine those with the
+> bma.total patch to fix the problem. Hm?
 > 
-> 								Honza
+> >  fs/xfs/libxfs/xfs_bmap.c | 5 +++++
+> >  1 file changed, 5 insertions(+)
+> > 
+> > diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+> > index 07aad70f3931..3aa0bf5cc7e3 100644
+> > --- a/fs/xfs/libxfs/xfs_bmap.c
+> > +++ b/fs/xfs/libxfs/xfs_bmap.c
+> > @@ -3477,6 +3477,11 @@ xfs_bmap_btalloc(
+> >  			error = xfs_bmap_btalloc_filestreams(ap, &args, &blen);
+> >  		else
+> >  			error = xfs_bmap_btalloc_nullfb(ap, &args, &blen);
+> > +
+> > +		/* We can never have total larger than blen, so trim it now */
+> > +		if (args.total > blen)
+> > +			args.total = blen;
+> > +
 > 
+> I don't think this is safe. The reason the original patch only updated
+> certain callers is because those callers only used it for extra blocks
+> that are already incorported into bma.minleft by the bmap layer itself.
+> There are still other callers for which bma.total is specifically
+> intended to be larger than the map size.
 
-If I understand correctly you will need threads that direct-write
-files, then fadvise(WILL_NEED) - in parallel to truncate (punch_hole) these
-files - In parallel to trash caches.
-(Direct-write is so data is not present in cache when you come to WILL_NEED
- it into the cache, otherwise the xfs b-trees are not exercised. Or are you
- more worried about the page_cache races?
-)
+Afaik, yes, but still, total is basically used to attempt an allocation of data
++ metadata on the same AG if possible, reducing args.total to match blen, the
+'worst' case would be to have an allocation of data + metadata on different ags,
+which, if total is larger than blen, it will fall into that behavior anyway.
 
-Also the d-writes might want to exercise multiple size extents + holes as
-well.
 
-I have a very different system but its kind of the test we did for this
-problem.
+> 
+> Brian
+> 
+> >  		if (error)
+> >  			return error;
+> >  	} else if (ap->tp->t_flags & XFS_TRANS_LOWMODE) {
+> > -- 
+> > 2.20.1
+> > 
 
-The reason it is never hit is because fadvise(WILL_NEED) is never really
-used that much, and there are no applications that actually blindly truncate
-during IO, this is only us in testing that do this meaningless thing.
-
-Thanks Jan again for working on this
-Boaz
+-- 
+Carlos
