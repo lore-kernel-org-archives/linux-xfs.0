@@ -2,123 +2,115 @@ Return-Path: <SRS0=UWJz=XS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C600C432C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 22:34:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B31C432C1
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 23:49:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 131E821D7A
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 22:34:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D28B21D56
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 23:49:36 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BkYIa1Ru"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387989AbfIWWe6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Sep 2019 18:34:58 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:60467 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2503353AbfIWWe6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Sep 2019 18:34:58 -0400
-Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 31B3843E5F2;
-        Tue, 24 Sep 2019 08:34:54 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iCWuz-0005Mh-2w; Tue, 24 Sep 2019 08:34:53 +1000
-Date:   Tue, 24 Sep 2019 08:34:53 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Eric Sandeen <sandeen@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
+        id S2391394AbfIWXtg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Sep 2019 19:49:36 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:36356 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729276AbfIWXtg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Sep 2019 19:49:36 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8NNn72G189454;
+        Mon, 23 Sep 2019 23:49:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=tXe/PBmavDBwavwGQejf5kjTq/a5EBa4fxPCqkp6jgA=;
+ b=BkYIa1RuSVGb8zyoJsKvTD3awdJIut8uvImGQ0aBr1OjA5lKJxCqL3Ywp0BjFfNnCWYj
+ zwg/tN79iD525pXyePekMn9HvTiRcqY34SwJx/zOpHMY0YmcbQqO1053tsi0vVuVR670
+ CYnxhIMBhZ+bae0EpipcnA7aMgQGKkIRj3QWKzRWKvkwNU87IWRCwY6Q+yZCaEIZws8B
+ pgrOZcAAarNRMpWgHBnPlpOxzVgrD+Mdy608VVf6+qyJprN8UmtaiRjvR0SfSqNG0qeH
+ H0TNvm0J46Alj/LEdGn7Yg5QDzqpdrZ/dznhr22cU21jUATUn2n72XyO/zL0OC36v21Y Mg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2v5b9tj69t-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 23 Sep 2019 23:49:20 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8NNnGRT071675;
+        Mon, 23 Sep 2019 23:49:19 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2v6yvnw297-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 23 Sep 2019 23:49:18 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8NNmaPZ004595;
+        Mon, 23 Sep 2019 23:48:37 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 23 Sep 2019 16:48:36 -0700
+Date:   Mon, 23 Sep 2019 16:48:35 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>
 Subject: Re: [PATCH] xfs: log proper length of superblock
-Message-ID: <20190923223453.GD16973@dread.disaster.area>
+Message-ID: <20190923234835.GU2229799@magnolia>
 References: <93a080c7-5eb8-8ffe-ae5b-5152a7713828@redhat.com>
- <16c64c69-adbb-d9ec-7630-05cd44286744@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <16c64c69-adbb-d9ec-7630-05cd44286744@sandeen.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=zrTyLRBc9icR_MRU328A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <93a080c7-5eb8-8ffe-ae5b-5152a7713828@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9389 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909230204
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9389 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909230204
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 23, 2019 at 04:44:14PM -0500, Eric Sandeen wrote:
-> On 9/23/19 4:18 PM, Eric Sandeen wrote:
-> > xfs_trans_log_buf takes first byte, last byte as args.  In this
-> > case, it should be from 0 to sizeof() - 1.
-> > 
-> > Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-
-Well spotted!
-
-> if you want, you could put a 
+On Mon, Sep 23, 2019 at 04:18:44PM -0500, Eric Sandeen wrote:
+> xfs_trans_log_buf takes first byte, last byte as args.  In this
+> case, it should be from 0 to sizeof() - 1.
 > 
-> Fixes: 4d11a40239405 ("xfs: remove bitfield based superblock updates")
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
+> ---
 > 
-> on this, I guess it was technically a regression in v4.0, even
-> if it has no net effect like last time...
-
-Yeah, it doesn't expose any issue at all. The buffer logging rounds
-out to CHUNK_SIZE - 128 bytes - and when we look at the size of the
-superblock w/ pahole:
-
-struct xfs_dsb {
-        __be32                     sb_magicnum;          /*     0     4 */
-	__be32                     sb_blocksize;         /*     4     4 */
-....
-        uuid_t                     sb_meta_uuid;         /*   248    16 */
-
-        /* size: 264, cachelines: 5, members: 55 */
-        /* last cacheline: 8 bytes */
-};
-
-Well be logging the first three chunks in the sb regardless of
-whether we pass 263 or 264 as the size of the modified area to
-xfs_trans_log_buf() (i.e. first 384 bytes of the buffer get logged
-either way).
-
-So, yeah, the code is wrong, but it does not result in any
-observable incorrect behaviour. That said, it still needs fixing.
-
-> -Eric
+> I should have audited everything when I sent the last patch for
+> this type of error.  hch suggested changing the interface but it's
+> all pretty grotty and I'm hesitant for now.
 > 
-> > ---
-> > 
-> > I should have audited everything when I sent the last patch for
-> > this type of error.  hch suggested changing the interface but it's
-> > all pretty grotty and I'm hesitant for now.
-> > 
-> > I think maybe a new/separate function to take start, len might
-> > make sense so that not every caller needs to be munged into a new
-> > format, because some of the existing callers would then become more
-> > complex...
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
-> > index a08dd8f40346..ac6cdca63e15 100644
-> > --- a/fs/xfs/libxfs/xfs_sb.c
-> > +++ b/fs/xfs/libxfs/xfs_sb.c
-> > @@ -928,7 +928,7 @@ xfs_log_sb(
-> >  
-> >  	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
-> >  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
-> > -	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb));
-> > +	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
-> >  }
-> >  
-> >  /*
-
-Looks good.
-
-Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
--Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> I think maybe a new/separate function to take start, len might
+> make sense so that not every caller needs to be munged into a new
+> format, because some of the existing callers would then become more
+> complex...
+> 
+> diff --git a/fs/xfs/libxfs/xfs_sb.c b/fs/xfs/libxfs/xfs_sb.c
+> index a08dd8f40346..ac6cdca63e15 100644
+> --- a/fs/xfs/libxfs/xfs_sb.c
+> +++ b/fs/xfs/libxfs/xfs_sb.c
+> @@ -928,7 +928,7 @@ xfs_log_sb(
+>  
+>  	xfs_sb_to_disk(XFS_BUF_TO_SBP(bp), &mp->m_sb);
+>  	xfs_trans_buf_set_type(tp, bp, XFS_BLFT_SB_BUF);
+> -	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb));
+> +	xfs_trans_log_buf(tp, bp, 0, sizeof(struct xfs_dsb) - 1);
+>  }
+>  
+>  /*
+> 
