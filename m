@@ -2,139 +2,192 @@ Return-Path: <SRS0=UWJz=XS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A241EC4CECF
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 19:37:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D5D5DC4CECF
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 20:18:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6F0EC20673
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 19:37:46 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="uhn0xoHa"
+	by mail.kernel.org (Postfix) with ESMTP id A1135205F4
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 20:18:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569269887;
+	bh=1cS+V/2T6hNQDP2dZSXrP1Xl7F2JPVXoQBrGnhIIPto=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
+	b=q1hw6AcFwhW1F0fZyvJ38xkLP+QMsW/Kbi0TplUZEc3OYMgCdmxtZ7UwFwPIlGTVb
+	 WtEgj6fvvHg0a+eZk9NTndjAMO9PT+EjUyfAaOlVd5gljetziKGkkSefrDrViDb3Sw
+	 bDPRIU9qJoAix9NAlRoKgVszLjFA6ERD9rIoDSNQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728269AbfIWThp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Sep 2019 15:37:45 -0400
-Received: from mail-io1-f67.google.com ([209.85.166.67]:45825 "EHLO
-        mail-io1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726777AbfIWThp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Sep 2019 15:37:45 -0400
-Received: by mail-io1-f67.google.com with SMTP id c25so4221037iot.12
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Sep 2019 12:37:45 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc:content-transfer-encoding;
-        bh=7jfcE/kmcpFH+pAaVnF4vnUEckyQJ8mw+mJcuv5+6ss=;
-        b=uhn0xoHaxrx/4ubmlWh2J21YINRXN9V+2tEdReTtNgvSwHC35ogaMDec/bMyes3g2a
-         /0fFBysMFByIo0cciUrc/5wDmKuzObHP2Vkw1CsKvSqgllk6sPoe3vzcJbeluU6FtsqL
-         +sy7Giwar5iuUi8ZHnRPoULS27ht8KIw3YkcKrhy2CLJ477+ufhSEo0dPdZCSxQR/yt2
-         bN64uA4nLsJG4EAHo9hsPQaOsIzCAJBKq/CYou8GSq0qIu6idBmWm5GnsGCv9YhdzfBp
-         GoSW4l91Zg4cvVYnC7Zznwy6GsILQSL+zFHFV30trVBjiCsZOXm6HKwQlryEWLqHKydg
-         F/Zg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc:content-transfer-encoding;
-        bh=7jfcE/kmcpFH+pAaVnF4vnUEckyQJ8mw+mJcuv5+6ss=;
-        b=jKTSXS6f2H0V+8Ayn+V3lWLQHpcGwBCt/UYYzlM02mAbLr89hhP1Pqnn7n0CQCSLjr
-         jxiq4dV6jVcI+VcSq/DqoIEYxHyppA5z9PS39TRPb5H29PxCJl8qmbaom7OPI44YCFQ8
-         LyHlUmGCM3KFvTjmM5Idu02MlgSIxEke/P9meS5nyuX5vGiibI67q9GPsLFTxgLH13O0
-         4PZmicYvPqJTPDH6jumrjnjeddHgA5kozmUzWeFx6Idhy2Z+V2rG1btxXtJIZDrEpRIK
-         eANdEkTCGPj73XtPxE3tYG1eN5w/A+xK5fuET0wIAiBj/pcZcnSxXhjkJ5Ypd++h9raQ
-         rdng==
-X-Gm-Message-State: APjAAAUyxCdYYHluOD/38MU5+/104v6/dXlxWr95hQf3wpCd+O+Q7DRg
-        4UXn6nhHGGPdRtIvEce3xtu1YL5VQSiJxN0J0Ho=
-X-Google-Smtp-Source: APXvYqxY5Weo5ngbs1lpmIeynDoXz/8zSMrTq/G4rKWADpaPB8sNu07Htpn+urswJAoRy7jyLHXGijpe/6ZnW1N0MJs=
-X-Received: by 2002:a02:c65a:: with SMTP id k26mr1264319jan.56.1569267464326;
- Mon, 23 Sep 2019 12:37:44 -0700 (PDT)
-MIME-Version: 1.0
-References: <7097d965-1676-a70e-56c7-b6cf048057f5@gmail.com>
- <03eac8a7-a442-d6cf-45ab-67500052cc69@sandeen.net> <4cd713f1-7f09-5556-8da4-b21cbb053983@gmail.com>
-In-Reply-To: <4cd713f1-7f09-5556-8da4-b21cbb053983@gmail.com>
-From:   Stefan Ring <stefanrin@gmail.com>
-Date:   Mon, 23 Sep 2019 21:37:33 +0200
-Message-ID: <CAAxjCEyYve+yEbuvCuGQjs0bUP3-50oFL0iy8DDGWmiaP6ds2A@mail.gmail.com>
-Subject: Re: xfs_repair: phase6.c:1129: mv_orphanage: Assertion `err == 2' failed.
-To:     =?UTF-8?Q?Arkadiusz_Mi=C5=9Bkiewicz?= <a.miskiewicz@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
+        id S1728871AbfIWUSD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Sep 2019 16:18:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:51068 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728647AbfIWUSC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 23 Sep 2019 16:18:02 -0400
+Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 5C996205F4;
+        Mon, 23 Sep 2019 20:18:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569269881;
+        bh=1cS+V/2T6hNQDP2dZSXrP1Xl7F2JPVXoQBrGnhIIPto=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=uCQg0YOuP/QFqnR+R+RbQxNx8ri4unVWRFrjFAw3XVDUoGJOVcYLXFDm98fFifPCF
+         xhFWllvd7JOhbF6YB82C7hWZ46zQEZp5t2CYtIJhjbBN8gDSWVAEEIPvT/Lf/NO7RV
+         NfF133HbqciMhpf6r0BUlHGlbDyOHVIgaZ1FmiJA=
+Message-ID: <5d5a93637934867e1b3352763da8e3d9f9e6d683.camel@kernel.org>
+Subject: Re: Lease semantic proposal
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Ira Weiny <ira.weiny@intel.com>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org
+Cc:     Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Date:   Mon, 23 Sep 2019 16:17:59 -0400
+In-Reply-To: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
+References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Sep 22, 2019 at 9:25 PM Arkadiusz Mi=C5=9Bkiewicz
-<a.miskiewicz@gmail.com> wrote:
->
-> On 16/09/2019 23:35, Eric Sandeen wrote:
-> > On 9/15/19 7:44 AM, Arkadiusz Mi=C5=9Bkiewicz wrote:
-> >>
-> >> Hello.
-> >>
-> >> xfsprogs 5.2.1 and:
-> >>
-> >> disconnected dir inode 9185193405, moving to lost+found
-> >> disconnected dir inode 9185193417, moving to lost+found
-> >> disconnected dir inode 9185194001, moving to lost+found
-> >> disconnected dir inode 9185194004, moving to lost+found
-> >> disconnected dir inode 9185194010, moving to lost+found
-> >> disconnected dir inode 9185194012, moving to lost+found
-> >> disconnected dir inode 9185194018, moving to lost+found
-> >> disconnected dir inode 9185194027, moving to lost+found
-> >> disconnected dir inode 9185205370, moving to lost+found
-> >> disconnected dir inode 9185209007, moving to lost+found
-> >> corrupt dinode 9185209007, (btree extents).
-> >> Metadata corruption detected at 0x449621, inode 0x2237b2aaf
-> >> libxfs_iread_extents
-> >> xfs_repair: phase6.c:1129: mv_orphanage: Assertion `err =3D=3D 2' fail=
-ed.
-> >> Aborted
-> >
-> >>
-> >>
-> >> # grep -A1 -B1 9185209007 log
-> >> entry ".." at block 0 offset 80 in directory inode 9185141346 referenc=
-es
-> >> non-existent inode 6454491396
-> >> entry ".." at block 0 offset 80 in directory inode 9185209007 referenc=
-es
-> >> free inode 62881485764
-> >> entry ".." at block 0 offset 80 in directory inode 9185220220 referenc=
-es
-> >> free inode 6454492606
-> >> --
-> >> rebuilding directory inode 9185141346
-> >> entry ".." in directory inode 9185209007 points to free inode
-> >> 62881485764, marking entry to be junked
-> >> rebuilding directory inode 9185209007
-> >> name create failed in ino 9185209007 (117), filesystem may be out of s=
-pace
-> >
-> > 117 is EUCLEAN/EFSCORRUPTED even though we were in the process of rebui=
-lding it. :(
-> >
-> > so this is probably why a subsequent attempt to move it to lost+found f=
-ailed as well?
-> >
-> > Is this a metadumpable filesystem...?
->
->
-> It's one of my big fses but metadump can't deal with it:
->
-> > [...]
-> > Copied 103433024 of 165039360 inodes (24 of 39 AGs)        Unknown dire=
-ctory buffer type!
-> > Copied 104001280 of 165039360 inodes (24 of 39 AGs)        Unknown dire=
-ctory buffer type!
-> > Copied 105465088 of 165039360 inodes (24 of 39 AGs)        Unknown dire=
-ctory buffer type!
-> > Copied 107092608 of 165039360 inodes (25 of 39 AGs)        Metadata cor=
-ruption detected at 0x473455, xfs_dir3_leaf1 block 0xc8471ce78/0x1000
-> > Segmentation fault (core dumped)
+On Mon, 2019-09-23 at 12:08 -0700, Ira Weiny wrote:
+> Since the last RFC patch set[1] much of the discussion of supporting RDMA with
+> FS DAX has been around the semantics of the lease mechanism.[2]  Within that
+> thread it was suggested I try and write some documentation and/or tests for the
+> new mechanism being proposed.  I have created a foundation to test lease
+> functionality within xfstests.[3] This should be close to being accepted.
+> Before writing additional lease tests, or changing lots of kernel code, this
+> email presents documentation for the new proposed "layout lease" semantic.
+> 
+> At Linux Plumbers[4] just over a week ago, I presented the current state of the
+> patch set and the outstanding issues.  Based on the discussion there, well as
+> follow up emails, I propose the following addition to the fcntl() man page.
+> 
+> Thank you,
+> Ira
+> 
+> [1] https://lkml.org/lkml/2019/8/9/1043
+> [2] https://lkml.org/lkml/2019/8/9/1062
+> [3] https://www.spinics.net/lists/fstests/msg12620.html
+> [4] https://linuxplumbersconf.org/event/4/contributions/368/
+> 
+> 
 
-You could still try to dump without data zeroing (metadump -a), if
-this is acceptable to you.
+Thank you so much for doing this, Ira. This allows us to debate the
+user-visible behavior semantics without getting bogged down in the
+implementation details. More comments below:
+
+> <fcntl man page addition>
+> Layout Leases
+> -------------
+> 
+> Layout (F_LAYOUT) leases are special leases which can be used to control and/or
+> be informed about the manipulation of the underlying layout of a file.
+> 
+> A layout is defined as the logical file block -> physical file block mapping
+> including the file size and sharing of physical blocks among files.  Note that
+> the unwritten state of a block is not considered part of file layout.
+> 
+> **Read layout lease F_RDLCK | F_LAYOUT**
+> 
+> Read layout leases can be used to be informed of layout changes by the
+> system or other users.  This lease is similar to the standard read (F_RDLCK)
+> lease in that any attempt to change the _layout_ of the file will be reported to
+> the process through the lease break process.  But this lease is different
+> because the file can be opened for write and data can be read and/or written to
+> the file as long as the underlying layout of the file does not change.
+> Therefore, the lease is not broken if the file is simply open for write, but
+> _may_ be broken if an operation such as, truncate(), fallocate() or write()
+> results in changing the underlying layout.
+> 
+> **Write layout lease (F_WRLCK | F_LAYOUT)**
+> 
+> Write Layout leases can be used to break read layout leases to indicate that
+> the process intends to change the underlying layout lease of the file.
+> 
+> A process which has taken a write layout lease has exclusive ownership of the
+> file layout and can modify that layout as long as the lease is held.
+> Operations which change the layout are allowed by that process.  But operations
+> from other file descriptors which attempt to change the layout will break the
+> lease through the standard lease break process.  The F_LAYOUT flag is used to
+> indicate a difference between a regular F_WRLCK and F_WRLCK with F_LAYOUT.  In
+> the F_LAYOUT case opens for write do not break the lease.  But some operations,
+> if they change the underlying layout, may.
+> 
+> The distinction between read layout leases and write layout leases is that
+> write layout leases can change the layout without breaking the lease within the
+> owning process.  This is useful to guarantee a layout prior to specifying the
+> unbreakable flag described below.
+> 
+> 
+
+The above sounds totally reasonable. You're essentially exposing the
+behavior of nfsd's layout leases to userland. To be clear, will F_LAYOUT
+leases work the same way as "normal" leases, wrt signals and timeouts?
+
+I do wonder if we're better off not trying to "or" in flags for this,
+and instead have a separate set of commands (maybe F_RDLAYOUT,
+F_WRLAYOUT, F_UNLAYOUT). Maybe I'm just bikeshedding though -- I don't
+feel terribly strongly about it.
+
+Also, at least in NFSv4, layouts are handed out for a particular byte
+range in a file. Should we consider doing this with an API that allows
+for that in the future? Is this something that would be desirable for
+your RDMA+DAX use-cases?
+
+We could add a new F_SETLEASE variant that takes a struct with a byte
+range (something like struct flock).
+
+> **Unbreakable Layout Leases (F_UNBREAK)**
+> 
+> In order to support pinning of file pages by direct user space users an
+> unbreakable flag (F_UNBREAK) can be used to modify the read and write layout
+> lease.  When specified, F_UNBREAK indicates that any user attempting to break
+> the lease will fail with ETXTBUSY rather than follow the normal breaking
+> procedure.
+> 
+> Both read and write layout leases can have the unbreakable flag (F_UNBREAK)
+> specified.  The difference between an unbreakable read layout lease and an
+> unbreakable write layout lease are that an unbreakable read layout lease is
+> _not_ exclusive.  This means that once a layout is established on a file,
+> multiple unbreakable read layout leases can be taken by multiple processes and
+> used to pin the underlying pages of that file.
+> 
+> Care must therefore be taken to ensure that the layout of the file is as the
+> user wants prior to using the unbreakable read layout lease.  A safe mechanism
+> to do this would be to take a write layout lease and use fallocate() to set the
+> layout of the file.  The layout lease can then be "downgraded" to unbreakable
+> read layout as long as no other user broke the write layout lease.
+> 
+
+Will userland require any special privileges in order to set an
+F_UNBREAK lease? This seems like something that could be used for DoS. I
+assume that these will never time out.
+
+How will we deal with the case where something is is squatting on an
+F_UNBREAK lease and isn't letting it go?
+
+Leases are technically "owned" by the file description -- we can't
+necessarily trace it back to a single task in a threaded program. The
+kernel task that set the lease may have exited by the time we go
+looking.
+
+Will we be content trying to determine this using /proc/locks+lsof, etc,
+or will we need something better?
+
+> </fcntl man page addition>
+
+-- 
+Jeff Layton <jlayton@kernel.org>
+
