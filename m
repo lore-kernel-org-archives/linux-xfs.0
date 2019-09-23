@@ -2,123 +2,116 @@ Return-Path: <SRS0=UWJz=XS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8D43C04EBF
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D925AC3A5A6
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:33:12 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B301920867
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:25:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B181420867
+	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 12:33:12 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="drJzkdvG"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730643AbfIWMZd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Sep 2019 08:25:33 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:44252 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730431AbfIWMZd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 23 Sep 2019 08:25:33 -0400
-Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com [209.85.221.69])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 9E5723DFD7
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Sep 2019 12:25:32 +0000 (UTC)
-Received: by mail-wr1-f69.google.com with SMTP id a15so4815685wrq.4
-        for <linux-xfs@vger.kernel.org>; Mon, 23 Sep 2019 05:25:32 -0700 (PDT)
+        id S2394223AbfIWMdL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 23 Sep 2019 08:33:11 -0400
+Received: from mail-ed1-f66.google.com ([209.85.208.66]:34257 "EHLO
+        mail-ed1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2394195AbfIWMdL (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Sep 2019 08:33:11 -0400
+Received: by mail-ed1-f66.google.com with SMTP id p10so12692952edq.1;
+        Mon, 23 Sep 2019 05:33:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=CZY+m6XziiuUFC3vgwK1PNVySRnzhKJCHOLL5oruBzU=;
+        b=drJzkdvGslYwupMEMUo7tkam6+wlcF8mmd7vvon3Bny/m9zpNEu9AwCg2ThZ/0PQDD
+         wn0mVVTWX6jHgXAG6GSuNpvngnRRIfgapW1LnvM6/nuHh1H+mtSVFGNSuxVafUqGEJYV
+         jizPG6pn7VDPnax8qqT4gMaG85yh7a963/wRKcpIA34w4es9XVOjYgpixbPLAwOeOOiT
+         NxLjNcfpWhnAmFYxQoQBxnDjmm8irYQj+I4pKgKJ0D5iT/f2+bIJh1mgGU95KKX6V1c7
+         nYbzhB3cJAG2//GDry04vIk6rq4ZZfk2hMNv5T9qWnq6TxyGkt6vbNm2pg5mI/UXe+8T
+         ENWg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=+i/dMpcvB/XfHD7vTTr0uZmEBJcUa0xapswEEtc85DU=;
-        b=CzTHpnF9KEibAtSbEj4t9kjMGBltMaQ5X/CKt3gDDrObBbZaq2M19wHKWrMZit6XAG
-         VUa34nVuB9GgjbGXJdScz9m9H4ARpi5b2xx/gGvHIaOJ2yZdD165CJKBwM1SMZJjOPvx
-         DnJICbMUUm4lcYbgt8FNQwQfBV2UvnsVWvWdePH7J4tdVUU/jF0/PCf/IUsP7/dYJaeQ
-         a2nzP/4aeo+uwjOpBXv67vSlhsb0i5ifiUk29/X7GHGBWgpaHtIQk2MPcBf91fQkGhbu
-         3lyzJEYagnCDcorVunMngWsl8qs5++KsmB8uI660xmrwkHhDlSMt+dBeHR4/Fzz744dU
-         g1mg==
-X-Gm-Message-State: APjAAAVKW3pKgQNu5nTxdDWgdbf+UDyhTNSq/vfDXdt2ANdlKov4IDyX
-        1Rm87iscBBD0jmccfY95R1lyw+iCh+xcrwWcl9ZK8cB+SYYpJoyjnl99A551hmCInxAtjGWjmvu
-        2LzJoCBJwSA/ImTZvJdde
-X-Received: by 2002:a5d:4985:: with SMTP id r5mr11975377wrq.139.1569241531065;
-        Mon, 23 Sep 2019 05:25:31 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqxjfNpRuhbH4A325dDVanu1EiKYtf+b2vFsayiaxNETdcpHBjelg8uv12MHlUYH2QL8dmUJfQ==
-X-Received: by 2002:a5d:4985:: with SMTP id r5mr11975364wrq.139.1569241530830;
-        Mon, 23 Sep 2019 05:25:30 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id z6sm9534961wro.16.2019.09.23.05.25.30
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 23 Sep 2019 05:25:30 -0700 (PDT)
-Date:   Mon, 23 Sep 2019 14:25:28 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, david@fromorbit.com
-Subject: Re: [PATCH 1/2] xfs: cap longest free extent to maximum allocatable
-Message-ID: <20190923122527.2a2epdm5dmg5ucdf@pegasus.maiolino.io>
-Mail-Followup-To: Brian Foster <bfoster@redhat.com>,
-        linux-xfs@vger.kernel.org, david@fromorbit.com
-References: <20190918082453.25266-1-cmaiolino@redhat.com>
- <20190918082453.25266-2-cmaiolino@redhat.com>
- <20190918122726.GA29377@bfoster>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=CZY+m6XziiuUFC3vgwK1PNVySRnzhKJCHOLL5oruBzU=;
+        b=ONIa+G36avbmBRwzY7RLFZRBgUXot80JIi+xsakEs5F6X9Ktqur/+Zb5nNEgahw0DX
+         SWdYg0y3c5EIQevZWLeppXTKG+zxRRSvN0rZoud7PlX7cde+q5heVhlISjCw9pkZOarZ
+         krTytNOwXEKIxTCVmFJELf5i1fJs1m2++WBUxrEgPkdSOSgy7p5Cy0Q5ZD1LXLQ+WoWs
+         SswA98VODfXU9WNLYaSz2q9mU1kbW5/+L/vkbFkyT+cvDFiLoCBo+Kb05oL4gu2+UNy4
+         J5vDvugf0cIQbmFqKcP6/bB1rvg7EVIqQCLMGLInLIhYQiOSAi5f5Gn9WqE4U91tiVIy
+         BRCg==
+X-Gm-Message-State: APjAAAWaO1suMSsg/zOS4OZB2O6cIPw+RdlqMbJNLvIkZ2hPjHJnmExS
+        FagtV1jOO0ZpOG9mQWz0HCjQ5img
+X-Google-Smtp-Source: APXvYqwkqIo5m2ZEhcs4rT8Tce+0N6S8DY4mikk/PVvy7GSbondpoDFlTnDqM79/KVGPP8VGS1T5RQ==
+X-Received: by 2002:a50:a41c:: with SMTP id u28mr36593853edb.185.1569241988538;
+        Mon, 23 Sep 2019 05:33:08 -0700 (PDT)
+Received: from [10.68.217.182] ([217.70.210.43])
+        by smtp.gmail.com with ESMTPSA id d4sm1101810ejm.24.2019.09.23.05.33.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 23 Sep 2019 05:33:07 -0700 (PDT)
+Subject: Re: [PATCH 3/3] xfs: Fix stale data exposure when readahead races
+ with hole punch
+To:     Jan Kara <jack@suse.cz>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        Amir Goldstein <amir73il@gmail.com>,
+        Boaz Harrosh <boaz@plexistor.com>,
+        linux-fsdevel@vger.kernel.org, stable@vger.kernel.org
+References: <20190829131034.10563-1-jack@suse.cz>
+ <20190829131034.10563-4-jack@suse.cz> <20190829155204.GD5354@magnolia>
+ <20190830152449.GA25069@quack2.suse.cz>
+ <20190918123123.GC31891@quack2.suse.cz>
+From:   Boaz Harrosh <openosd@gmail.com>
+Message-ID: <53b7b7b9-7ada-650c-0a32-291a242601f3@gmail.com>
+Date:   Mon, 23 Sep 2019 15:33:05 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190918122726.GA29377@bfoster>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20190918123123.GC31891@quack2.suse.cz>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 18, 2019 at 08:27:26AM -0400, Brian Foster wrote:
-> On Wed, Sep 18, 2019 at 10:24:52AM +0200, Carlos Maiolino wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Cap longest extent to the largest we can allocate based on limits
-> > calculated at mount time. Dynamic state (such as finobt blocks)
-> > can result in the longest free extent exceeding the size we can
-> > allocate, and that results in failure to align full AG allocations
-> > when the AG is empty.
-> > 
-> > Result:
-> > 
-> > xfs_io-4413  [003]   426.412459: xfs_alloc_vextent_loopfailed: dev 8:96 agno 0 agbno 32 minlen 243968 maxlen 244000 mod 0 prod 1 minleft 1 total 262148 alignment 32 minalignslop 0 len 0 type NEAR_BNO otype START_BNO wasdel 0 wasfromfl 0 resv 0 datatype 0x5 firstblock 0xffffffffffffffff
-> > 
-> > minlen and maxlen are now separated by the alignment size, and
-> > allocation fails because args.total > free space in the AG.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Signed-off-by: Carlos Maiolino <cmaiolino@redhat.com>
-> > ---
+On 18/09/2019 15:31, Jan Kara wrote:
+<>
+>>> Is there a test on xfstests to demonstrate this race?
+>>
+>> No, but I can try to create one.
 > 
-> Seems fine, but what about the bma.minlen alignment fix (in
-> xfs_bmap_btalloc()) Dave suggested in the previous thread?
-
-I forgot to git add that while playing with this set :P
-
+> I was experimenting with this but I could not reproduce the issue in my
+> test VM without inserting artificial delay at appropriate place... So I
+> don't think there's much point in the fstest for this.
 > 
-> Brian
+> 								Honza
 > 
-> >  fs/xfs/libxfs/xfs_alloc.c | 3 ++-
-> >  1 file changed, 2 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> > index 372ad55631fc..35b39fc863a0 100644
-> > --- a/fs/xfs/libxfs/xfs_alloc.c
-> > +++ b/fs/xfs/libxfs/xfs_alloc.c
-> > @@ -1989,7 +1989,8 @@ xfs_alloc_longest_free_extent(
-> >  	 * reservations and AGFL rules in place, we can return this extent.
-> >  	 */
-> >  	if (pag->pagf_longest > delta)
-> > -		return pag->pagf_longest - delta;
-> > +		return min_t(xfs_extlen_t, pag->pag_mount->m_ag_max_usable,
-> > +				pag->pagf_longest - delta);
-> >  
-> >  	/* Otherwise, let the caller try for 1 block if there's space. */
-> >  	return pag->pagf_flcount > 0 || pag->pagf_longest > 0;
-> > -- 
-> > 2.20.1
-> > 
 
--- 
-Carlos
+If I understand correctly you will need threads that direct-write
+files, then fadvise(WILL_NEED) - in parallel to truncate (punch_hole) these
+files - In parallel to trash caches.
+(Direct-write is so data is not present in cache when you come to WILL_NEED
+ it into the cache, otherwise the xfs b-trees are not exercised. Or are you
+ more worried about the page_cache races?
+)
+
+Also the d-writes might want to exercise multiple size extents + holes as
+well.
+
+I have a very different system but its kind of the test we did for this
+problem.
+
+The reason it is never hit is because fadvise(WILL_NEED) is never really
+used that much, and there are no applications that actually blindly truncate
+during IO, this is only us in testing that do this meaningless thing.
+
+Thanks Jan again for working on this
+Boaz
