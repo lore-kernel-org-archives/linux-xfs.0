@@ -2,172 +2,143 @@ Return-Path: <SRS0=ckLY=XT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D504DC432C2
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 14:38:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CF0A8C432C2
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 15:17:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B22132053B
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 14:38:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95CE021655
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 15:17:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sELhc/3Q"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730958AbfIXOir (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Sep 2019 10:38:47 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57764 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725855AbfIXOir (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Sep 2019 10:38:47 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id A848B30607E5;
-        Tue, 24 Sep 2019 14:38:46 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id F05D160461;
-        Tue, 24 Sep 2019 14:38:45 +0000 (UTC)
-Date:   Tue, 24 Sep 2019 10:38:44 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [REPOST PATCH v3 12/16] xfs: mount api - add xfs_reconfigure()
-Message-ID: <20190924143844.GF17688@bfoster>
-References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
- <156933138468.20933.1616184640263037904.stgit@fedora-28>
+        id S1731440AbfIXPRm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Sep 2019 11:17:42 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38066 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728247AbfIXPRm (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 11:17:42 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8OF5E7b149460;
+        Tue, 24 Sep 2019 15:17:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=dEn9+2r4JgthuhPvXbiOs0+OYObIDTD6d6AZgJ1THpE=;
+ b=sELhc/3Q0JYbkv2iYKUEg07G3c12GaYDwI/w5iv3+I+YR7olRO0WeqP+rhGZn6Y6bJIt
+ cnkeII82RSlRIrLGF6tM8IvxN2ZmqEq8fUe9cPtpqAIf3x3SEzPBYOJZzb7muzmdPjn5
+ +duWHbZ29igHZf+GD6nxQuEQG8kYuQozMzdk/U+y4VlYearnu6Wq/4V8I0Mym/7JXQGE
+ flvMejmZELncZi5Ac9Grjg3OxxLsHjB2KgAYw/vmf2CDsGLl8s8GjHOEzDYrFOr9xhQG
+ kqRyFOfrbVWjm8Sp6CBs48ae4yFv6xJbwDIKeIvVba523LQTxArcLAPTRdz30CY0OW1M zA== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2v5cgqxsfj-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Sep 2019 15:17:36 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8OF60QM188572;
+        Tue, 24 Sep 2019 15:17:36 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2v6yvqd6dm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Sep 2019 15:17:35 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8OFHYiS011304;
+        Tue, 24 Sep 2019 15:17:34 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 24 Sep 2019 08:17:34 -0700
+Date:   Tue, 24 Sep 2019 08:17:29 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     "Bill O'Donnell" <billodo@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v4] xfs: assure zeroed memory buffers for certain kmem
+ allocations
+Message-ID: <20190924151729.GY2229799@magnolia>
+References: <20190916153504.30809-1-billodo@redhat.com>
+ <20190919210138.13535-1-billodo@redhat.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156933138468.20933.1616184640263037904.stgit@fedora-28>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.40]); Tue, 24 Sep 2019 14:38:46 +0000 (UTC)
+In-Reply-To: <20190919210138.13535-1-billodo@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9390 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909240145
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9390 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909240145
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 24, 2019 at 09:23:04PM +0800, Ian Kent wrote:
-> Add the fs_context_operations method .reconfigure that performs
-> remount validation as previously done by the super_operations
-> .remount_fs method.
+On Thu, Sep 19, 2019 at 04:01:38PM -0500, Bill O'Donnell wrote:
+> Guarantee zeroed memory buffers for cases where potential memory
+> leak to disk can occur. In these cases, kmem_alloc is used and
+> doesn't zero the buffer, opening the possibility of information
+> leakage to disk.
 > 
-> An attempt has also been made to update the comment about options
-> handling problems with mount(8) to reflect the current situation.
+> Use existing infrastucture (xfs_buf_allocate_memory) to obtain
+> the already zeroed buffer from kernel memory.
 > 
-> Signed-off-by: Ian Kent <raven@themaw.net>
+> This solution avoids the performance issue that would occur if a
+> wholesale change to replace kmem_alloc with kmem_zalloc was done.
+> 
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
 > ---
-
-It doesn't look like this incorporated feedback from v2..
-
-Brian
-
->  fs/xfs/xfs_super.c |   84 ++++++++++++++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 84 insertions(+)
+> v4: use __GFP_ZERO as part of gfp_mask (instead of KM_ZERO)
+> v3: remove XBF_ZERO flag, and instead use XBF_READ flag only.
+> v2: zeroed buffer not required for XBF_READ case. Correct placement
+>     and rename the XBF_ZERO flag.
 > 
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index de75891c5551..e7627f7ca7f2 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -1552,6 +1552,89 @@ xfs_fs_remount(
->  	return 0;
->  }
+>  fs/xfs/xfs_buf.c | 12 +++++++++++-
+
+/me wakes up and wonders, what about the other kmem_alloc_io callers in
+xfs?  I think we need to slip a KM_ZERO into the allocation call when we
+allocate the log buffers, right?  What about log recovery?
+
+--D
+
+>  1 file changed, 11 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 120ef99d09e8..5d0a68de5fa6 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -345,6 +345,15 @@ xfs_buf_allocate_memory(
+>  	unsigned short		page_count, i;
+>  	xfs_off_t		start, end;
+>  	int			error;
+> +	uint			kmflag_mask = 0;
+> +
+> +	/*
+> +	 * assure zeroed buffer for non-read cases.
+> +	 */
+> +	if (!(flags & XBF_READ)) {
+> +		kmflag_mask |= KM_ZERO;
+> +		gfp_mask |= __GFP_ZERO;
+> +	}
 >  
-> +/*
-> + * There have been problems in the past with options passed from mount(8).
-> + *
-> + * The problem being that options passed by mount(8) in the case where only
-> + * the the mount point path is given would consist of the existing fstab
-> + * options with the options from mtab for the current mount merged in and
-> + * the options given on the command line last. But the result couldn't be
-> + * relied upon to accurately reflect the current mount options so that
-> + * rejecting options that can't be changed on reconfigure could erronously
-> + * cause mount failure.
-> + *
-> + * The mount-api uses a legacy mount options handler in the VFS to handle
-> + * mount(8) so these options will continue to be passed. Even if mount(8)
-> + * is updated to use fsopen()/fsconfig()/fsmount() it's likely to continue
-> + * to set the existing options so options problems with reconfigure could
-> + * continue.
-> + *
-> + * For the longest time mtab locking was a problem and this could have been
-> + * one possible cause. It's also possible there could have been options
-> + * order problems.
-> + *
-> + * That has changed now as mtab is a link to the proc file system mount
-> + * table so mtab options should be always accurate.
-> + *
-> + * Consulting the util-linux maintainer (Karel Zak) he is confident that,
-> + * in this case, the options passed by mount(8) will be those of the current
-> + * mount and the options order should be a correct merge of fstab and mtab
-> + * options, and new options given on the command line.
-> + *
-> + * So, in theory, it should be possible to compare incoming options and
-> + * return an error for options that differ from the current mount and can't
-> + * be changed on reconfigure to prevent users from believing they might have
-> + * changed mount options using remount which can't be changed.
-> + *
-> + * But for now continue to return success for every reconfigure request, and
-> + * silently ignore all options that can't actually be changed.
-> + */
-> +STATIC int
-> +xfs_reconfigure(
-> +	struct fs_context *fc)
-> +{
-> +	struct xfs_fs_context	*ctx = fc->fs_private;
-> +	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
-> +	struct xfs_mount        *new_mp = fc->s_fs_info;
-> +	xfs_sb_t		*sbp = &mp->m_sb;
-> +	int			flags = fc->sb_flags;
-> +	int			error;
-> +
-> +	error = xfs_validate_params(new_mp, ctx, false);
-> +	if (error)
-> +		return error;
-> +
-> +	/* inode32 -> inode64 */
-> +	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> +	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-> +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
-> +	}
-> +
-> +	/* inode64 -> inode32 */
-> +	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> +	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
-> +	}
-> +
-> +	/* ro -> rw */
-> +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
-> +		error = xfs_remount_rw(mp);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	/* rw -> ro */
-> +	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
-> +		error = xfs_remount_ro(mp);
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  /*
->   * Second stage of a freeze. The data is already frozen so we only
->   * need to take care of the metadata. Once that's done sync the superblock
-> @@ -2077,6 +2160,7 @@ static const struct super_operations xfs_super_operations = {
->  static const struct fs_context_operations xfs_context_ops = {
->  	.parse_param = xfs_parse_param,
->  	.get_tree    = xfs_get_tree,
-> +	.reconfigure = xfs_reconfigure,
->  };
->  
->  static struct file_system_type xfs_fs_type = {
+>  	/*
+>  	 * for buffers that are contained within a single page, just allocate
+> @@ -354,7 +363,8 @@ xfs_buf_allocate_memory(
+>  	size = BBTOB(bp->b_length);
+>  	if (size < PAGE_SIZE) {
+>  		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+> -		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS);
+> +		bp->b_addr = kmem_alloc_io(size, align_mask,
+> +					   KM_NOFS | kmflag_mask);
+>  		if (!bp->b_addr) {
+>  			/* low memory - use alloc_page loop instead */
+>  			goto use_alloc_page;
+> -- 
+> 2.21.0
 > 
