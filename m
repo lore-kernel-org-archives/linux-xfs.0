@@ -2,241 +2,155 @@ Return-Path: <SRS0=ckLY=XT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7B0C432C1
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:04:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D54AC4360C
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:24:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D2F182146E
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:04:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 666C7214DA
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:24:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TH0vkSga"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388546AbfIXWES (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Sep 2019 18:04:18 -0400
-Received: from sandeen.net ([63.231.237.45]:54092 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387542AbfIXWES (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Sep 2019 18:04:18 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id CA54BD6E;
-        Tue, 24 Sep 2019 17:04:10 -0500 (CDT)
-Subject: Re: [PATCH v3] xfs_io: copy_range don't truncate dst_file, and add
- smart length
-To:     "Jianhong.Yin" <yin-jianhong@163.com>, linux-xfs@vger.kernel.org
-Cc:     jiyin@redhat.com, darrick.wong@oracle.com, sandeen@redhat.com
-References: <20190909072903.2749-1-yin-jianhong@163.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Openpgp: preference=signencrypt
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <805e278f-c04c-c351-a629-2c5b0c5df7ce@sandeen.net>
-Date:   Tue, 24 Sep 2019 17:04:16 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.9.0
+        id S2404815AbfIXWYC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Sep 2019 18:24:02 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:35260 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387532AbfIXWYC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 18:24:02 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8OLxmTP104494;
+        Tue, 24 Sep 2019 22:23:13 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=WCg8CK8lWdtRYaIcgzqcnsusbOJTcVFGgkO6t2EG+yM=;
+ b=TH0vkSgaVbdxJ4htA7j/eU4CoH5fDJ6p+VtmqQ4waz0NODS3hQDMUA4w1mRJSmm1uzMw
+ /Ugg2Z6l5c87eWnHiNiA0ZLk+VUyvRh8IzdHKJ5Be+wk/sYp3KZ9INQKYknE7lpoymDj
+ jEFg8CzdInss05LIgC81XalDPsg3dD432VNBULeKRHnYqiQi0/t6CfFSgm9bwT3q8iZl
+ PUYFAbDoDmo/6RthhD2XWmJzFhEEzwPcTDqqc+wKOYPflaS2wNvmX8kkgy0u+EOovCdC
+ lIvZJB7nHlngQJ7Q9/MRCYWpPwM/r5oLsN1+FRR3gj9tK/VsU5AteBT8SKlSwRhM2cfm Ow== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2v5cgr111h-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Sep 2019 22:23:13 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8OLxWpG053203;
+        Tue, 24 Sep 2019 22:21:13 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2v6yvptu7p-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 24 Sep 2019 22:21:12 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8OML5SN017569;
+        Tue, 24 Sep 2019 22:21:06 GMT
+Received: from localhost (/10.159.232.132)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 24 Sep 2019 15:21:05 -0700
+Date:   Tue, 24 Sep 2019 15:21:03 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Vlastimil Babka <vbabka@suse.cz>, dsterba@suse.cz,
+        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Christoph Lameter <cl@linux.com>,
+        Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
+        Johannes Weiner <hannes@cmpxchg.org>
+Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
+ kmalloc(power-of-two)
+Message-ID: <20190924222103.GB2229799@magnolia>
+References: <20190826111627.7505-1-vbabka@suse.cz>
+ <20190826111627.7505-3-vbabka@suse.cz>
+ <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
+ <20190923171710.GN2751@twin.jikos.cz>
+ <20190923175146.GT2229799@magnolia>
+ <172b2ed8-f260-6041-5e10-502d1c91f88c@suse.cz>
+ <20190924215353.GG16973@dread.disaster.area>
 MIME-Version: 1.0
-In-Reply-To: <20190909072903.2749-1-yin-jianhong@163.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190924215353.GG16973@dread.disaster.area>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9390 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909240178
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9390 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909240178
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On Wed, Sep 25, 2019 at 07:53:53AM +1000, Dave Chinner wrote:
+> On Tue, Sep 24, 2019 at 11:19:29PM +0200, Vlastimil Babka wrote:
+> > On 9/23/19 7:51 PM, Darrick J. Wong wrote:
+> > > On Mon, Sep 23, 2019 at 07:17:10PM +0200, David Sterba wrote:
+> > >> On Mon, Sep 23, 2019 at 06:36:32PM +0200, Vlastimil Babka wrote:
+> > >>> So if anyone thinks this is a good idea, please express it (preferably
+> > >>> in a formal way such as Acked-by), otherwise it seems the patch will be
+> > >>> dropped (due to a private NACK, apparently).
+> > > 
+> > > Oh, I didn't realize  ^^^^^^^^^^^^ that *some* of us are allowed the
+> > > privilege of gutting a patch via private NAK without any of that open
+> > > development discussion incovenience. <grumble>
+> > > 
+> > > As far as XFS is concerned I merged Dave's series that checks the
+> > > alignment of io memory allocations and falls back to vmalloc if the
+> > > alignment won't work, because I got tired of scrolling past the endless
+> > > discussion and bug reports and inaction spanning months.
+> > 
+> > I think it's a big fail of kmalloc API that you have to do that, and
+> > especially with vmalloc, which has the overhead of setting up page
+> > tables, and it's a waste for allocation requests smaller than page size.
+> > I wish we could have nice things.
+> 
+> I don't think the problem here is the code. The problem here is that
+> we have a dysfunctional development community and there are no
+> processes we can follow to ensure architectural problems in core
+> subsystems are addressed in a timely manner...
+> 
+> And this criticism isn't just of the mm/ here - this alignment
+> problem is exacerbated by exactly the same issue on the block layer
+> side. i.e. the block layer and drivers have -zero- bounds checking
+> to catch these sorts of things and the block layer maintainer will
+> not accept patches for runtime checks that would catch these issues
+> and make them instantly visible to us.
+> 
+> These are not code problems: we can fix the problems with code (and
+> I have done so to demonstrate "this is how we do what you say is
+> impossible").  The problem here is people in positions of
+> control/power are repeatedly demonstrating an inability to
+> compromise to reach a solution that works for everyone.
+> 
+> It's far better for us just to work around bullshit like this in XFS
+> now, then when the core subsystems get they act together years down
+> the track we can remove the workaround from XFS. Users don't care
+> how we fix the problem, they just want it fixed. If that means we
+> have to route around dysfunctional developer groups, then we'll just
+> have to do that....
 
+Seconded.
 
-On 9/9/19 2:29 AM, Jianhong.Yin wrote:
-> 1. copy_range should be a simple wrapper for copy_file_range(2)
-> and nothing else. and there's already -t option for truncate.
-> so here we remove the truncate action in copy_range.
-> see: https://patchwork.kernel.org/comment/22863587/#1
-> 
-> 2. improve the default length value generation:
-> if -l option is omitted use the length that from src_offset to end
-> (src_file's size - src_offset) instead.
-> if src_offset is greater than file size, length is 0.
-> 
-> 3. update manpage
-> 
-> 4. rename var name from 'src, dst' to 'src_off, dst_off'
-> 
-> and have confirmed that this change will not affect xfstests.
-> 
-> Signed-off-by: Jianhong Yin <yin-jianhong@163.com>
+--D
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-> ---
->  io/copy_file_range.c | 40 ++++++++++++++--------------------------
->  man/man8/xfs_io.8    | 12 ++++++------
->  2 files changed, 20 insertions(+), 32 deletions(-)
+> Cheers,
 > 
-> diff --git a/io/copy_file_range.c b/io/copy_file_range.c
-> index b7b9fd88..c2105115 100644
-> --- a/io/copy_file_range.c
-> +++ b/io/copy_file_range.c
-> @@ -36,12 +36,12 @@ copy_range_help(void)
->   * glibc buffered copy fallback.
->   */
->  static loff_t
-> -copy_file_range_cmd(int fd, long long *src, long long *dst, size_t len)
-> +copy_file_range_cmd(int fd, long long *src_off, long long *dst_off, size_t len)
->  {
->  	loff_t ret;
->  
->  	do {
-> -		ret = syscall(__NR_copy_file_range, fd, src, file->fd, dst,
-> +		ret = syscall(__NR_copy_file_range, fd, src_off, file->fd, dst_off,
->  				len, 0);
->  		if (ret == -1) {
->  			perror("copy_range");
-> @@ -66,21 +66,13 @@ copy_src_filesize(int fd)
->  	return st.st_size;
->  }
->  
-> -static int
-> -copy_dst_truncate(void)
-> -{
-> -	int ret = ftruncate(file->fd, 0);
-> -	if (ret < 0)
-> -		perror("ftruncate");
-> -	return ret;
-> -}
-> -
->  static int
->  copy_range_f(int argc, char **argv)
->  {
-> -	long long src = 0;
-> -	long long dst = 0;
-> +	long long src_off = 0;
-> +	long long dst_off = 0;
->  	size_t len = 0;
-> +	bool len_specified = false;
->  	int opt;
->  	int ret;
->  	int fd;
-> @@ -93,15 +85,15 @@ copy_range_f(int argc, char **argv)
->  	while ((opt = getopt(argc, argv, "s:d:l:f:")) != -1) {
->  		switch (opt) {
->  		case 's':
-> -			src = cvtnum(fsblocksize, fssectsize, optarg);
-> -			if (src < 0) {
-> +			src_off = cvtnum(fsblocksize, fssectsize, optarg);
-> +			if (src_off < 0) {
->  				printf(_("invalid source offset -- %s\n"), optarg);
->  				return 0;
->  			}
->  			break;
->  		case 'd':
-> -			dst = cvtnum(fsblocksize, fssectsize, optarg);
-> -			if (dst < 0) {
-> +			dst_off = cvtnum(fsblocksize, fssectsize, optarg);
-> +			if (dst_off < 0) {
->  				printf(_("invalid destination offset -- %s\n"), optarg);
->  				return 0;
->  			}
-> @@ -112,6 +104,7 @@ copy_range_f(int argc, char **argv)
->  				printf(_("invalid length -- %s\n"), optarg);
->  				return 0;
->  			}
-> +			len_specified = true;
->  			break;
->  		case 'f':
->  			src_file_nr = atoi(argv[1]);
-> @@ -137,7 +130,7 @@ copy_range_f(int argc, char **argv)
->  		fd = filetable[src_file_nr].fd;
->  	}
->  
-> -	if (src == 0 && dst == 0 && len == 0) {
-> +	if (!len_specified) {
->  		off64_t	sz;
->  
->  		sz = copy_src_filesize(fd);
-> @@ -145,16 +138,11 @@ copy_range_f(int argc, char **argv)
->  			ret = 1;
->  			goto out;
->  		}
-> -		len = sz;
-> -
-> -		ret = copy_dst_truncate();
-> -		if (ret < 0) {
-> -			ret = 1;
-> -			goto out;
-> -		}
-> +		if (sz > src_off)
-> +			len = sz - src_off;
->  	}
->  
-> -	ret = copy_file_range_cmd(fd, &src, &dst, len);
-> +	ret = copy_file_range_cmd(fd, &src_off, &dst_off, len);
->  out:
->  	close(fd);
->  	return ret;
-> diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-> index 6e064bdd..61c35c8e 100644
-> --- a/man/man8/xfs_io.8
-> +++ b/man/man8/xfs_io.8
-> @@ -669,13 +669,13 @@ The source must be specified either by path
->  or as another open file
->  .RB ( \-f ).
->  If
-> -.I src_file
-> -.IR src_offset ,
-> -.IR dst_offset ,
-> -and
->  .I length
-> -are omitted the contents of src_file will be copied to the beginning of the
-> -open file, overwriting any data already there.
-> +is not specified, this command copies data from
-> +.I src_offset
-> +to the end of
-> +.BI src_file
-> +into the dst_file at
-> +.IR dst_offset .
->  .RS 1.0i
->  .PD 0
->  .TP 0.4i
-> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
