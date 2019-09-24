@@ -6,43 +6,42 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 647CCC432C1
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 13:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C58DC432C1
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 13:23:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 39CAC2064A
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 13:22:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4A0A2064A
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 13:22:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730085AbfIXNW5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Sep 2019 09:22:57 -0400
-Received: from icp-osb-irony-out7.external.iinet.net.au ([203.59.1.107]:6001
+        id S2505047AbfIXNW7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Sep 2019 09:22:59 -0400
+Received: from icp-osb-irony-out7.external.iinet.net.au ([203.59.1.107]:6015
         "EHLO icp-osb-irony-out7.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730005AbfIXNW5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 09:22:57 -0400
+        by vger.kernel.org with ESMTP id S1730078AbfIXNW7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 09:22:59 -0400
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BmAAA1GIpd/9+j0HYNWBwBAQEEAQE?=
- =?us-ascii?q?MBAEBgVYEAQELAYQ5hCKPWQEBAQEBAQaBEYEjiHeFH4wJCQEBAQEBAQEBATc?=
- =?us-ascii?q?BAYQ6AwICg0Q3Bg4CDAEBAQQBAQEBAQUDAYVYhhkCAQMjBFIQGA0CJgICRxA?=
- =?us-ascii?q?GE4UZrRNzfzMaijSBDCgBgWKKPniBB4ERM4Iqc4dPglgEjG0EgmWFTV9Clki?=
- =?us-ascii?q?CLIwZiQwMgiqLXQMQin8thAalDIF6TS4KgydQgiqOGmaKUSqCKgEB?=
-X-IPAS-Result: =?us-ascii?q?A2BmAAA1GIpd/9+j0HYNWBwBAQEEAQEMBAEBgVYEAQELA?=
- =?us-ascii?q?YQ5hCKPWQEBAQEBAQaBEYEjiHeFH4wJCQEBAQEBAQEBATcBAYQ6AwICg0Q3B?=
- =?us-ascii?q?g4CDAEBAQQBAQEBAQUDAYVYhhkCAQMjBFIQGA0CJgICRxAGE4UZrRNzfzMai?=
- =?us-ascii?q?jSBDCgBgWKKPniBB4ERM4Iqc4dPglgEjG0EgmWFTV9ClkiCLIwZiQwMgiqLX?=
- =?us-ascii?q?QMQin8thAalDIF6TS4KgydQgiqOGmaKUSqCKgEB?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AxAAA1GIpd/9+j0HYNWBwBAQEEAQE?=
+ =?us-ascii?q?MBAEBgVUFAQELAYQ5hCKPWQEBAQEBAQaBEYoahR+KDoF7CQEBAQEBAQEBATc?=
+ =?us-ascii?q?BAYQ6AwICg0Q2Bw4CDAEBAQQBAQEBAQUDAYVYhhkCAQMjBFIQGA0CJgICRxA?=
+ =?us-ascii?q?GE4UZrRNzfzMaijSBDCgBgWKKPniBB4ERM4Mdh0+CWASMcYJlhixClkiCLJU?=
+ =?us-ascii?q?lDIIqi10DEIp/LYQGpH0BgghNLgqDJ1CQRGaNJQEB?=
+X-IPAS-Result: =?us-ascii?q?A2AxAAA1GIpd/9+j0HYNWBwBAQEEAQEMBAEBgVUFAQELA?=
+ =?us-ascii?q?YQ5hCKPWQEBAQEBAQaBEYoahR+KDoF7CQEBAQEBAQEBATcBAYQ6AwICg0Q2B?=
+ =?us-ascii?q?w4CDAEBAQQBAQEBAQUDAYVYhhkCAQMjBFIQGA0CJgICRxAGE4UZrRNzfzMai?=
+ =?us-ascii?q?jSBDCgBgWKKPniBB4ERM4Mdh0+CWASMcYJlhixClkiCLJUlDIIqi10DEIp/L?=
+ =?us-ascii?q?YQGpH0BgghNLgqDJ1CQRGaNJQEB?=
 X-IronPort-AV: E=Sophos;i="5.64,544,1559491200"; 
-   d="scan'208";a="205615160"
+   d="scan'208";a="205615159"
 Received: from unknown (HELO [192.168.1.222]) ([118.208.163.223])
-  by icp-osb-irony-out7.iinet.net.au with ESMTP; 24 Sep 2019 21:22:33 +0800
-Subject: [REPOST PATCH v3 06/16] xfs: mount-api - make xfs_parse_param()
- take context .parse_param() args
+  by icp-osb-irony-out7.iinet.net.au with ESMTP; 24 Sep 2019 21:22:28 +0800
+Subject: [REPOST PATCH v3 05/16] xfs: mount-api - refactor xfs_parseags()
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Date:   Tue, 24 Sep 2019 21:22:33 +0800
-Message-ID: <156933135322.20933.2166438700224340142.stgit@fedora-28>
+Date:   Tue, 24 Sep 2019 21:22:28 +0800
+Message-ID: <156933134801.20933.12482233632646976347.stgit@fedora-28>
 In-Reply-To: <156933112949.20933.12761540130806431294.stgit@fedora-28>
 References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -54,269 +53,336 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Make xfs_parse_param() take arguments of the fs context operation
-.parse_param() in preparation for switching to use the file system
-mount context for mount.
+Refactor xfs_parseags(), move the entire token case block to a
+separate function in an attempt to highlight the code that
+actually changes in converting to use the new mount api.
 
-The function fc_parse() only uses the file system context (fc here)
-when calling log macros warnf() and invalf() which in turn check
-only the fc->log field to determine if the message should be saved
-to a context buffer (for later retrival by userspace) or logged
-using printk().
-
-Also the temporary function match_kstrtoint() is now unused, remove it.
+The only changes are what's needed to communicate the variables
+dsunit, dswidth and iosizelog back to xfs_parseags().
 
 Signed-off-by: Ian Kent <raven@themaw.net>
 ---
- fs/xfs/xfs_super.c |  137 +++++++++++++++++++++++++++++++---------------------
- 1 file changed, 81 insertions(+), 56 deletions(-)
+ fs/xfs/xfs_super.c |  290 ++++++++++++++++++++++++++++------------------------
+ 1 file changed, 155 insertions(+), 135 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index b04aebab69ab..6792d46fa0be 100644
+index 6a16750b1314..b04aebab69ab 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -191,57 +191,60 @@ suffix_kstrtoint(const char *s, unsigned int base, int *res)
+@@ -205,6 +205,156 @@ match_kstrtoint(const substring_t *s, unsigned int base, int *res)
  	return ret;
  }
  
--STATIC int
--match_kstrtoint(const substring_t *s, unsigned int base, int *res)
--{
--	const char	*value;
--	int ret;
--
--	value = match_strdup(s);
--	if (!value)
--		return -ENOMEM;
--	ret = suffix_kstrtoint(value, base, res);
--	kfree(value);
--	return ret;
--}
-+struct xfs_fs_context {
-+	int	dsunit;
-+	int	dswidth;
-+	uint8_t	iosizelog;
-+};
- 
- STATIC int
- xfs_parse_param(
--	int			token,
--	char			*p,
--	substring_t		*args,
--	struct xfs_mount	*mp,
--	int			*dsunit,
--	int			*dswidth,
--	uint8_t			*iosizelog)
-+	struct fs_context	*fc,
-+	struct fs_parameter	*param)
- {
-+	struct xfs_fs_context	*ctx = fc->fs_private;
-+	struct xfs_mount	*mp = fc->s_fs_info;
-+	struct fs_parse_result	result;
- 	int			iosize = 0;
-+	int			opt;
- 
--	switch (token) {
-+	opt = fs_parse(fc, &xfs_fs_parameters, param, &result);
-+	if (opt < 0) {
-+		/*
-+		 * If fs_parse() returns -ENOPARAM and the parameter
-+		 * is "source" the VFS needs to handle this option
-+		 * in order to boot otherwise use the default case
-+		 * below to handle invalid options.
-+		 */
-+		if (opt != -ENOPARAM ||
-+		    strcmp(param->key, "source") == 0)
-+			return opt;
++STATIC int
++xfs_parse_param(
++	int			token,
++	char			*p,
++	substring_t		*args,
++	struct xfs_mount	*mp,
++	int			*dsunit,
++	int			*dswidth,
++	uint8_t			*iosizelog)
++{
++	int			iosize = 0;
++
++	switch (token) {
++	case Opt_logbufs:
++		if (match_int(args, &mp->m_logbufs))
++			return -EINVAL;
++		break;
++	case Opt_logbsize:
++		if (match_kstrtoint(args, 10, &mp->m_logbsize))
++			return -EINVAL;
++		break;
++	case Opt_logdev:
++		kfree(mp->m_logname);
++		mp->m_logname = match_strdup(args);
++		if (!mp->m_logname)
++			return -ENOMEM;
++		break;
++	case Opt_rtdev:
++		kfree(mp->m_rtname);
++		mp->m_rtname = match_strdup(args);
++		if (!mp->m_rtname)
++			return -ENOMEM;
++		break;
++	case Opt_allocsize:
++		if (match_kstrtoint(args, 10, &iosize))
++			return -EINVAL;
++		*iosizelog = ffs(iosize) - 1;
++		break;
++	case Opt_grpid:
++	case Opt_bsdgroups:
++		mp->m_flags |= XFS_MOUNT_GRPID;
++		break;
++	case Opt_nogrpid:
++	case Opt_sysvgroups:
++		mp->m_flags &= ~XFS_MOUNT_GRPID;
++		break;
++	case Opt_wsync:
++		mp->m_flags |= XFS_MOUNT_WSYNC;
++		break;
++	case Opt_norecovery:
++		mp->m_flags |= XFS_MOUNT_NORECOVERY;
++		break;
++	case Opt_noalign:
++		mp->m_flags |= XFS_MOUNT_NOALIGN;
++		break;
++	case Opt_swalloc:
++		mp->m_flags |= XFS_MOUNT_SWALLOC;
++		break;
++	case Opt_sunit:
++		if (match_int(args, dsunit))
++			return -EINVAL;
++		break;
++	case Opt_swidth:
++		if (match_int(args, dswidth))
++			return -EINVAL;
++		break;
++	case Opt_inode32:
++		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
++		break;
++	case Opt_inode64:
++		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
++		break;
++	case Opt_nouuid:
++		mp->m_flags |= XFS_MOUNT_NOUUID;
++		break;
++	case Opt_ikeep:
++		mp->m_flags |= XFS_MOUNT_IKEEP;
++		break;
++	case Opt_noikeep:
++		mp->m_flags &= ~XFS_MOUNT_IKEEP;
++		break;
++	case Opt_largeio:
++		mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
++		break;
++	case Opt_nolargeio:
++		mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
++		break;
++	case Opt_attr2:
++		mp->m_flags |= XFS_MOUNT_ATTR2;
++		break;
++	case Opt_noattr2:
++		mp->m_flags &= ~XFS_MOUNT_ATTR2;
++		mp->m_flags |= XFS_MOUNT_NOATTR2;
++		break;
++	case Opt_filestreams:
++		mp->m_flags |= XFS_MOUNT_FILESTREAMS;
++		break;
++	case Opt_noquota:
++		mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
++		mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
++		mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
++		break;
++	case Opt_quota:
++	case Opt_uquota:
++	case Opt_usrquota:
++		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
++				 XFS_UQUOTA_ENFD);
++		break;
++	case Opt_qnoenforce:
++	case Opt_uqnoenforce:
++		mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
++		mp->m_qflags &= ~XFS_UQUOTA_ENFD;
++		break;
++	case Opt_pquota:
++	case Opt_prjquota:
++		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
++				 XFS_PQUOTA_ENFD);
++		break;
++	case Opt_pqnoenforce:
++		mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
++		mp->m_qflags &= ~XFS_PQUOTA_ENFD;
++		break;
++	case Opt_gquota:
++	case Opt_grpquota:
++		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
++				 XFS_GQUOTA_ENFD);
++		break;
++	case Opt_gqnoenforce:
++		mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
++		mp->m_qflags &= ~XFS_GQUOTA_ENFD;
++		break;
++	case Opt_discard:
++		mp->m_flags |= XFS_MOUNT_DISCARD;
++		break;
++	case Opt_nodiscard:
++		mp->m_flags &= ~XFS_MOUNT_DISCARD;
++		break;
++#ifdef CONFIG_FS_DAX
++	case Opt_dax:
++		mp->m_flags |= XFS_MOUNT_DAX;
++		break;
++#endif
++	default:
++		xfs_warn(mp, "unknown mount option [%s].", p);
++		return -EINVAL;
 +	}
 +
-+	switch (opt) {
- 	case Opt_logbufs:
--		if (match_int(args, &mp->m_logbufs))
--			return -EINVAL;
-+		mp->m_logbufs = result.uint_32;
- 		break;
- 	case Opt_logbsize:
--		if (match_kstrtoint(args, 10, &mp->m_logbsize))
-+		if (suffix_kstrtoint(param->string, 10, &mp->m_logbsize))
- 			return -EINVAL;
- 		break;
- 	case Opt_logdev:
- 		kfree(mp->m_logname);
--		mp->m_logname = match_strdup(args);
-+		mp->m_logname = kstrdup(param->string, GFP_KERNEL);
- 		if (!mp->m_logname)
- 			return -ENOMEM;
- 		break;
- 	case Opt_rtdev:
- 		kfree(mp->m_rtname);
--		mp->m_rtname = match_strdup(args);
-+		mp->m_rtname = kstrdup(param->string, GFP_KERNEL);
- 		if (!mp->m_rtname)
- 			return -ENOMEM;
- 		break;
- 	case Opt_allocsize:
--		if (match_kstrtoint(args, 10, &iosize))
-+		if (suffix_kstrtoint(param->string, 10, &iosize))
- 			return -EINVAL;
--		*iosizelog = ffs(iosize) - 1;
-+		ctx->iosizelog = ffs(iosize) - 1;
- 		break;
- 	case Opt_grpid:
- 	case Opt_bsdgroups:
-@@ -264,12 +267,10 @@ xfs_parse_param(
- 		mp->m_flags |= XFS_MOUNT_SWALLOC;
- 		break;
- 	case Opt_sunit:
--		if (match_int(args, dsunit))
--			return -EINVAL;
-+		ctx->dsunit = result.uint_32;
- 		break;
- 	case Opt_swidth:
--		if (match_int(args, dswidth))
--			return -EINVAL;
-+		ctx->dswidth = result.uint_32;
- 		break;
- 	case Opt_inode32:
- 		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-@@ -348,7 +349,7 @@ xfs_parse_param(
- 		break;
- #endif
- 	default:
--		xfs_warn(mp, "unknown mount option [%s].", p);
-+		xfs_warn(mp, "unknown mount option [%s].", param->key);
- 		return -EINVAL;
- 	}
- 
-@@ -373,10 +374,16 @@ xfs_parseargs(
- {
- 	const struct super_block *sb = mp->m_super;
- 	char			*p;
--	substring_t		args[MAX_OPT_ARGS];
--	int			dsunit = 0;
--	int			dswidth = 0;
--	uint8_t			iosizelog = 0;
-+	struct fs_context	fc;
-+	struct xfs_fs_context	context;
-+	struct xfs_fs_context	*ctx;
-+	int			ret;
++	return 0;
++}
 +
-+	memset(&fc, 0, sizeof(fc));
-+	memset(&context, 0, sizeof(context));
-+	fc.fs_private = &context;
-+	ctx = &context;
-+	fc.s_fs_info = mp;
+ /*
+  * This function fills in xfs_mount_t fields based on mount args.
+  * Note: the superblock has _not_ yet been read in.
+@@ -226,7 +376,6 @@ xfs_parseargs(
+ 	substring_t		args[MAX_OPT_ARGS];
+ 	int			dsunit = 0;
+ 	int			dswidth = 0;
+-	int			iosize = 0;
+ 	uint8_t			iosizelog = 0;
  
  	/*
- 	 * set up the mount name first so all the errors will refer to the
-@@ -413,16 +420,33 @@ xfs_parseargs(
- 		goto done;
+@@ -265,145 +414,16 @@ xfs_parseargs(
  
  	while ((p = strsep(&options, ",")) != NULL) {
--		int		token;
--		int		ret;
-+		struct fs_parameter	param;
-+		char			*value;
+ 		int		token;
++		int		ret;
  
  		if (!*p)
  			continue;
  
--		token = match_token(p, tokens, args);
--		ret = xfs_parse_param(token, p, args, mp,
--				      &dsunit, &dswidth, &iosizelog);
--		if (ret)
-+		param.key = p;
-+		param.type = fs_value_is_string;
-+		param.string = NULL;
-+		param.size = 0;
-+
-+		value = strchr(p, '=');
-+		if (value) {
-+			*value++ = 0;
-+			param.size = strlen(value);
-+			if (param.size > 0) {
-+				param.string = kmemdup_nul(value,
-+							   param.size,
-+							   GFP_KERNEL);
-+				if (!param.string)
-+					return -ENOMEM;
-+			}
-+		}
-+
-+		ret = xfs_parse_param(&fc, &param);
-+		kfree(param.string);
-+		if (ret < 0)
- 			return ret;
+ 		token = match_token(p, tokens, args);
+-		switch (token) {
+-		case Opt_logbufs:
+-			if (match_int(args, &mp->m_logbufs))
+-				return -EINVAL;
+-			break;
+-		case Opt_logbsize:
+-			if (match_kstrtoint(args, 10, &mp->m_logbsize))
+-				return -EINVAL;
+-			break;
+-		case Opt_logdev:
+-			kfree(mp->m_logname);
+-			mp->m_logname = match_strdup(args);
+-			if (!mp->m_logname)
+-				return -ENOMEM;
+-			break;
+-		case Opt_rtdev:
+-			kfree(mp->m_rtname);
+-			mp->m_rtname = match_strdup(args);
+-			if (!mp->m_rtname)
+-				return -ENOMEM;
+-			break;
+-		case Opt_allocsize:
+-			if (match_kstrtoint(args, 10, &iosize))
+-				return -EINVAL;
+-			iosizelog = ffs(iosize) - 1;
+-			break;
+-		case Opt_grpid:
+-		case Opt_bsdgroups:
+-			mp->m_flags |= XFS_MOUNT_GRPID;
+-			break;
+-		case Opt_nogrpid:
+-		case Opt_sysvgroups:
+-			mp->m_flags &= ~XFS_MOUNT_GRPID;
+-			break;
+-		case Opt_wsync:
+-			mp->m_flags |= XFS_MOUNT_WSYNC;
+-			break;
+-		case Opt_norecovery:
+-			mp->m_flags |= XFS_MOUNT_NORECOVERY;
+-			break;
+-		case Opt_noalign:
+-			mp->m_flags |= XFS_MOUNT_NOALIGN;
+-			break;
+-		case Opt_swalloc:
+-			mp->m_flags |= XFS_MOUNT_SWALLOC;
+-			break;
+-		case Opt_sunit:
+-			if (match_int(args, &dsunit))
+-				return -EINVAL;
+-			break;
+-		case Opt_swidth:
+-			if (match_int(args, &dswidth))
+-				return -EINVAL;
+-			break;
+-		case Opt_inode32:
+-			mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+-			break;
+-		case Opt_inode64:
+-			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+-			break;
+-		case Opt_nouuid:
+-			mp->m_flags |= XFS_MOUNT_NOUUID;
+-			break;
+-		case Opt_ikeep:
+-			mp->m_flags |= XFS_MOUNT_IKEEP;
+-			break;
+-		case Opt_noikeep:
+-			mp->m_flags &= ~XFS_MOUNT_IKEEP;
+-			break;
+-		case Opt_largeio:
+-			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
+-			break;
+-		case Opt_nolargeio:
+-			mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+-			break;
+-		case Opt_attr2:
+-			mp->m_flags |= XFS_MOUNT_ATTR2;
+-			break;
+-		case Opt_noattr2:
+-			mp->m_flags &= ~XFS_MOUNT_ATTR2;
+-			mp->m_flags |= XFS_MOUNT_NOATTR2;
+-			break;
+-		case Opt_filestreams:
+-			mp->m_flags |= XFS_MOUNT_FILESTREAMS;
+-			break;
+-		case Opt_noquota:
+-			mp->m_qflags &= ~XFS_ALL_QUOTA_ACCT;
+-			mp->m_qflags &= ~XFS_ALL_QUOTA_ENFD;
+-			mp->m_qflags &= ~XFS_ALL_QUOTA_ACTIVE;
+-			break;
+-		case Opt_quota:
+-		case Opt_uquota:
+-		case Opt_usrquota:
+-			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE |
+-					 XFS_UQUOTA_ENFD);
+-			break;
+-		case Opt_qnoenforce:
+-		case Opt_uqnoenforce:
+-			mp->m_qflags |= (XFS_UQUOTA_ACCT | XFS_UQUOTA_ACTIVE);
+-			mp->m_qflags &= ~XFS_UQUOTA_ENFD;
+-			break;
+-		case Opt_pquota:
+-		case Opt_prjquota:
+-			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE |
+-					 XFS_PQUOTA_ENFD);
+-			break;
+-		case Opt_pqnoenforce:
+-			mp->m_qflags |= (XFS_PQUOTA_ACCT | XFS_PQUOTA_ACTIVE);
+-			mp->m_qflags &= ~XFS_PQUOTA_ENFD;
+-			break;
+-		case Opt_gquota:
+-		case Opt_grpquota:
+-			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE |
+-					 XFS_GQUOTA_ENFD);
+-			break;
+-		case Opt_gqnoenforce:
+-			mp->m_qflags |= (XFS_GQUOTA_ACCT | XFS_GQUOTA_ACTIVE);
+-			mp->m_qflags &= ~XFS_GQUOTA_ENFD;
+-			break;
+-		case Opt_discard:
+-			mp->m_flags |= XFS_MOUNT_DISCARD;
+-			break;
+-		case Opt_nodiscard:
+-			mp->m_flags &= ~XFS_MOUNT_DISCARD;
+-			break;
+-#ifdef CONFIG_FS_DAX
+-		case Opt_dax:
+-			mp->m_flags |= XFS_MOUNT_DAX;
+-			break;
+-#endif
+-		default:
+-			xfs_warn(mp, "unknown mount option [%s].", p);
+-			return -EINVAL;
+-		}
++		ret = xfs_parse_param(token, p, args, mp,
++				      &dsunit, &dswidth, &iosizelog);
++		if (ret)
++			return ret;
  	}
  
-@@ -435,7 +459,8 @@ xfs_parseargs(
- 		return -EINVAL;
- 	}
- 
--	if ((mp->m_flags & XFS_MOUNT_NOALIGN) && (dsunit || dswidth)) {
-+	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
-+	    (ctx->dsunit || ctx->dswidth)) {
- 		xfs_warn(mp,
- 	"sunit and swidth options incompatible with the noalign option");
- 		return -EINVAL;
-@@ -448,28 +473,28 @@ xfs_parseargs(
- 	}
- #endif
- 
--	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
-+	if ((ctx->dsunit && !ctx->dswidth) || (!ctx->dsunit && ctx->dswidth)) {
- 		xfs_warn(mp, "sunit and swidth must be specified together");
- 		return -EINVAL;
- 	}
- 
--	if (dsunit && (dswidth % dsunit != 0)) {
-+	if (ctx->dsunit && (ctx->dswidth % ctx->dsunit != 0)) {
- 		xfs_warn(mp,
- 	"stripe width (%d) must be a multiple of the stripe unit (%d)",
--			dswidth, dsunit);
-+			ctx->dswidth, ctx->dsunit);
- 		return -EINVAL;
- 	}
- 
- done:
--	if (dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
-+	if (ctx->dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
- 		/*
- 		 * At this point the superblock has not been read
- 		 * in, therefore we do not know the block size.
- 		 * Before the mount call ends we will convert
- 		 * these to FSBs.
- 		 */
--		mp->m_dalign = dsunit;
--		mp->m_swidth = dswidth;
-+		mp->m_dalign = ctx->dsunit;
-+		mp->m_swidth = ctx->dswidth;
- 	}
- 
- 	if (mp->m_logbufs != -1 &&
-@@ -491,18 +516,18 @@ xfs_parseargs(
- 		return -EINVAL;
- 	}
- 
--	if (iosizelog) {
--		if (iosizelog > XFS_MAX_IO_LOG ||
--		    iosizelog < XFS_MIN_IO_LOG) {
-+	if (ctx->iosizelog) {
-+		if (ctx->iosizelog > XFS_MAX_IO_LOG ||
-+		    ctx->iosizelog < XFS_MIN_IO_LOG) {
- 			xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
--				iosizelog, XFS_MIN_IO_LOG,
-+				ctx->iosizelog, XFS_MIN_IO_LOG,
- 				XFS_MAX_IO_LOG);
- 			return -EINVAL;
- 		}
- 
- 		mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
--		mp->m_readio_log = iosizelog;
--		mp->m_writeio_log = iosizelog;
-+		mp->m_readio_log = ctx->iosizelog;
-+		mp->m_writeio_log = ctx->iosizelog;
- 	}
- 
- 	return 0;
+ 	/*
 
