@@ -2,155 +2,151 @@ Return-Path: <SRS0=ckLY=XT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D54AC4360C
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:24:06 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E4C6C432C1
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:29:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 666C7214DA
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:24:06 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TH0vkSga"
+	by mail.kernel.org (Postfix) with ESMTP id 6D75C207FD
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 22:29:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404815AbfIXWYC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Sep 2019 18:24:02 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:35260 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387532AbfIXWYC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 18:24:02 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8OLxmTP104494;
-        Tue, 24 Sep 2019 22:23:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=WCg8CK8lWdtRYaIcgzqcnsusbOJTcVFGgkO6t2EG+yM=;
- b=TH0vkSgaVbdxJ4htA7j/eU4CoH5fDJ6p+VtmqQ4waz0NODS3hQDMUA4w1mRJSmm1uzMw
- /Ugg2Z6l5c87eWnHiNiA0ZLk+VUyvRh8IzdHKJ5Be+wk/sYp3KZ9INQKYknE7lpoymDj
- jEFg8CzdInss05LIgC81XalDPsg3dD432VNBULeKRHnYqiQi0/t6CfFSgm9bwT3q8iZl
- PUYFAbDoDmo/6RthhD2XWmJzFhEEzwPcTDqqc+wKOYPflaS2wNvmX8kkgy0u+EOovCdC
- lIvZJB7nHlngQJ7Q9/MRCYWpPwM/r5oLsN1+FRR3gj9tK/VsU5AteBT8SKlSwRhM2cfm Ow== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2v5cgr111h-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Sep 2019 22:23:13 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8OLxWpG053203;
-        Tue, 24 Sep 2019 22:21:13 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2v6yvptu7p-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 24 Sep 2019 22:21:12 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8OML5SN017569;
-        Tue, 24 Sep 2019 22:21:06 GMT
-Received: from localhost (/10.159.232.132)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 24 Sep 2019 15:21:05 -0700
-Date:   Tue, 24 Sep 2019 15:21:03 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Vlastimil Babka <vbabka@suse.cz>, dsterba@suse.cz,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Christoph Lameter <cl@linux.com>,
-        Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190924222103.GB2229799@magnolia>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
- <20190923171710.GN2751@twin.jikos.cz>
- <20190923175146.GT2229799@magnolia>
- <172b2ed8-f260-6041-5e10-502d1c91f88c@suse.cz>
- <20190924215353.GG16973@dread.disaster.area>
+        id S2441769AbfIXW3H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Sep 2019 18:29:07 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:59979 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2438025AbfIXW3H (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 18:29:07 -0400
+Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 58F4D43E671;
+        Wed, 25 Sep 2019 08:29:02 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iCtIr-0005vf-Mf; Wed, 25 Sep 2019 08:29:01 +1000
+Date:   Wed, 25 Sep 2019 08:29:01 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: Lower CIL flush limit for large logs
+Message-ID: <20190924222901.GI16973@dread.disaster.area>
+References: <20190909015159.19662-1-david@fromorbit.com>
+ <20190909015159.19662-2-david@fromorbit.com>
+ <20190916163325.GZ2229799@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190924215353.GG16973@dread.disaster.area>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9390 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909240178
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9390 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909240178
+In-Reply-To: <20190916163325.GZ2229799@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
+        a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=7-415B0cAAAA:8 a=wqFDAPPxoy882HgVTp8A:9
+        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 25, 2019 at 07:53:53AM +1000, Dave Chinner wrote:
-> On Tue, Sep 24, 2019 at 11:19:29PM +0200, Vlastimil Babka wrote:
-> > On 9/23/19 7:51 PM, Darrick J. Wong wrote:
-> > > On Mon, Sep 23, 2019 at 07:17:10PM +0200, David Sterba wrote:
-> > >> On Mon, Sep 23, 2019 at 06:36:32PM +0200, Vlastimil Babka wrote:
-> > >>> So if anyone thinks this is a good idea, please express it (preferably
-> > >>> in a formal way such as Acked-by), otherwise it seems the patch will be
-> > >>> dropped (due to a private NACK, apparently).
-> > > 
-> > > Oh, I didn't realize  ^^^^^^^^^^^^ that *some* of us are allowed the
-> > > privilege of gutting a patch via private NAK without any of that open
-> > > development discussion incovenience. <grumble>
-> > > 
-> > > As far as XFS is concerned I merged Dave's series that checks the
-> > > alignment of io memory allocations and falls back to vmalloc if the
-> > > alignment won't work, because I got tired of scrolling past the endless
-> > > discussion and bug reports and inaction spanning months.
+On Mon, Sep 16, 2019 at 09:33:25AM -0700, Darrick J. Wong wrote:
+> On Mon, Sep 09, 2019 at 11:51:58AM +1000, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > I think it's a big fail of kmalloc API that you have to do that, and
-> > especially with vmalloc, which has the overhead of setting up page
-> > tables, and it's a waste for allocation requests smaller than page size.
-> > I wish we could have nice things.
+> > The current CIL size aggregation limit is 1/8th the log size. This
+> > means for large logs we might be aggregating at least 250MB of dirty objects
+> > in memory before the CIL is flushed to the journal. With CIL shadow
+> > buffers sitting around, this means the CIL is often consuming >500MB
+> > of temporary memory that is all allocated under GFP_NOFS conditions.
+> > 
+> > Flushing the CIL can take some time to do if there is other IO
+> > ongoing, and can introduce substantial log force latency by itself.
+> > It also pins the memory until the objects are in the AIL and can be
+> > written back and reclaimed by shrinkers. Hence this threshold also
+> > tends to determine the minimum amount of memory XFS can operate in
+> > under heavy modification without triggering the OOM killer.
+> > 
+> > Modify the CIL space limit to prevent such huge amounts of pinned
+> > metadata from aggregating. We can have 2MB of log IO in flight at
+> > once, so limit aggregation to 16x this size. This threshold was
+> > chosen as it little impact on performance (on 16-way fsmark) or log
+> > traffic but pins a lot less memory on large logs especially under
+> > heavy memory pressure.  An aggregation limit of 8x had 5-10%
+> > performance degradation and a 50% increase in log throughput for
+> > the same workload, so clearly that was too small for highly
+> > concurrent workloads on large logs.
 > 
-> I don't think the problem here is the code. The problem here is that
-> we have a dysfunctional development community and there are no
-> processes we can follow to ensure architectural problems in core
-> subsystems are addressed in a timely manner...
-> 
-> And this criticism isn't just of the mm/ here - this alignment
-> problem is exacerbated by exactly the same issue on the block layer
-> side. i.e. the block layer and drivers have -zero- bounds checking
-> to catch these sorts of things and the block layer maintainer will
-> not accept patches for runtime checks that would catch these issues
-> and make them instantly visible to us.
-> 
-> These are not code problems: we can fix the problems with code (and
-> I have done so to demonstrate "this is how we do what you say is
-> impossible").  The problem here is people in positions of
-> control/power are repeatedly demonstrating an inability to
-> compromise to reach a solution that works for everyone.
-> 
-> It's far better for us just to work around bullshit like this in XFS
-> now, then when the core subsystems get they act together years down
-> the track we can remove the workaround from XFS. Users don't care
-> how we fix the problem, they just want it fixed. If that means we
-> have to route around dysfunctional developer groups, then we'll just
-> have to do that....
+> It would be nice to capture at least some of this reasoning in the
+> already lengthy comment preceeding the #define....
 
-Seconded.
+A lot of it is already there, but I will revise it.
 
---D
-
-> Cheers,
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > This was found via trace analysis of AIL behaviour. e.g. insertion
+> > from a single CIL flush:
+> > 
+> > xfs_ail_insert: old lsn 0/0 new lsn 1/3033090 type XFS_LI_INODE flags IN_AIL
+> > 
+> > $ grep xfs_ail_insert /mnt/scratch/s.t |grep "new lsn 1/3033090" |wc -l
+> > 1721823
+> > $
+> > 
+> > So there were 1.7 million objects inserted into the AIL from this
+> > CIL checkpoint, the first at 2323.392108, the last at 2325.667566 which
+> > was the end of the trace (i.e. it hadn't finished). Clearly a major
+> > problem.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
+> >  fs/xfs/xfs_log_priv.h | 3 ++-
+> >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> > index b880c23cb6e4..187a43ffeaf7 100644
+> > --- a/fs/xfs/xfs_log_priv.h
+> > +++ b/fs/xfs/xfs_log_priv.h
+> > @@ -329,7 +329,8 @@ struct xfs_cil {
+> >   * enforced to ensure we stay within our maximum checkpoint size bounds.
+> >   * threshold, yet give us plenty of space for aggregation on large logs.
+> 
+> ...also, does XLOG_CIL_SPACE_LIMIT correspond to "a lower threshold at
+> which background pushing is attempted", or "a separate, higher bound"?
+> I think it's the first (????) but ... I don't know.  The name made me
+> think it was the second, but the single use of the symbol suggests the
+> first. :)
+
+See, the comment here talks about two limits, because that was how
+the initial implementation worked - the background CIL push was not
+async, so there was some juggling done to prevent new commits from
+blocking on background pushes in progress unless the size was
+actually growing to large.  This patch pretty much describes the
+whole issue here:
+
+https://lore.kernel.org/linux-xfs/1285552073-14663-2-git-send-email-david@fromorbit.com/
+
+That's in commit 80168676ebfe ("xfs: force background CIL push under
+sustained load") which went into 2.6.38 or so. The cause of the
+problem in that case was concurrent transaction commit load causing
+lock contention and preventing a background push from getting the
+context lock to do the actual push.
+
+The hard limit in the CIL code was dropped when the background push
+was converted to run asynchronously to use a work queue in 2012 as
+it allowed the locking to be changed (down_write_trylock ->
+down_write) to turn it into a transaction commit barrier while the
+contexts are switched over.  That was done in 2012 via commit
+4c2d542f2e78 ("xfs: Do background CIL flushes via a workqueue") and
+so we haven't actually capped CIL checkpoint sizes since 2012.
+
+Essentially, the comment you point out documents the two limits from
+the original code, and this commit is restoring that behaviour for
+background CIL pushes....
+
+I'll do some work to update it all.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
