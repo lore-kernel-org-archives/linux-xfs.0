@@ -1,128 +1,91 @@
-Return-Path: <SRS0=UWJz=XS=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=ckLY=XT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45194C432C1
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 23:52:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 71149C432C1
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 04:13:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1652D20578
-	for <linux-xfs@archiver.kernel.org>; Mon, 23 Sep 2019 23:52:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="W3BZeWBH"
+	by mail.kernel.org (Postfix) with ESMTP id 4C31B206C2
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 04:13:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391342AbfIWXwm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 23 Sep 2019 19:52:42 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:45830 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729276AbfIWXwm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 23 Sep 2019 19:52:42 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8NNn2ZU182889;
-        Mon, 23 Sep 2019 23:52:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=z8v6pRKfgeAMh8a2cn4fAW4RJmRihCQkoJSet/YC1QA=;
- b=W3BZeWBHMvwuN+n8GHtK4GOPcRorgZZ+W0DUOhcR/WY4DrXwSPfrquNnD8LrgMku8SpD
- 2fBKVIZsc0kuhfp7yHou5l2K0nyXdmwml6EScsurCJ6N7wQDDtS4TKJqy1LktO7lsy9u
- ZA9EbFsX2G2UEIF9NezIhM7wqqpXtZh5yyRMLfxo3XJf6asUNntzqXn7pZhajGDuChpu
- XaztGYLCHYPfPxZWhAMGzw8vvMyWL8jPeKG5BqtnS3dgH37WUau1CBcqO0GoApVbKiCK
- Xnk1dS69+MycvMmoHqb8Cz74pUKK0LJ6bsT6iSau5fJSO1BoNFpl2qONIxtAU1Rycq7F cQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2v5cgqt313-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 Sep 2019 23:52:27 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8NNm8S7030146;
-        Mon, 23 Sep 2019 23:52:26 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2v6yvm4v6k-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 23 Sep 2019 23:52:26 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8NNqPW1006429;
-        Mon, 23 Sep 2019 23:52:25 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 23 Sep 2019 16:52:25 -0700
-Date:   Mon, 23 Sep 2019 16:52:24 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: revert 1baa2800e62d ("xfs: remove the unused
- XFS_ALLOC_USERDATA flag")
-Message-ID: <20190923235224.GW2229799@magnolia>
+        id S1726490AbfIXENi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Sep 2019 00:13:38 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50011 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725308AbfIXENi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 24 Sep 2019 00:13:38 -0400
+Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id DDE7D43E2B3;
+        Tue, 24 Sep 2019 14:13:34 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iCcCi-0007NP-8j; Tue, 24 Sep 2019 14:13:32 +1000
+Date:   Tue, 24 Sep 2019 14:13:32 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        Bill O'Donnell <billodo@redhat.com>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v3] xfs: assure zeroed memory buffers for certain kmem
+ allocations
+Message-ID: <20190924041332.GE16973@dread.disaster.area>
+References: <20190916153504.30809-1-billodo@redhat.com>
+ <20190919150154.30302-1-billodo@redhat.com>
+ <20190919170353.GA1646@infradead.org>
+ <20190919172047.GA3806@redhat.com>
+ <20190919173801.GA16294@infradead.org>
+ <dbf196da-bede-6bbe-db3e-35d7040170d0@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9389 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1909230204
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9389 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909230204
+In-Reply-To: <dbf196da-bede-6bbe-db3e-35d7040170d0@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
+        a=7-415B0cAAAA:8 a=iqSqlA3UX--CzvYtrHQA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Sep 20, 2019 at 09:59:41AM -0500, Eric Sandeen wrote:
+> On 9/19/19 12:38 PM, Christoph Hellwig wrote:
+> > On Thu, Sep 19, 2019 at 12:20:47PM -0500, Bill O'Donnell wrote:
+> >>>> @@ -391,7 +396,7 @@ xfs_buf_allocate_memory(
+> >>>>  		struct page	*page;
+> >>>>  		uint		retries = 0;
+> >>>>  retry:
+> >>>> -		page = alloc_page(gfp_mask);
+> >>>> +		page = alloc_page(gfp_mask | kmflag_mask);
+> >>>
+> >>> alloc_page takes GFP_ flags, not KM_.  In fact sparse should have warned
+> >>> about this.
+> >>
+> >> I wondered if the KM flag needed conversion to GFP, but saw no warning.
+> > 
+> > I'd be tempted to just do a manual memset after either kind of
+> > allocation.
+> 
+> At some point I think Dave had suggested that at least when allocating pages,
+> using the flag would be more efficient?
 
-Revert this commit, as it caused periodic regressions in xfs/173 w/
-1k blocks[1].
+With some configurations pages come from the free lists pre-zeroed,
+and so don't need zeroing to initialise them (e.g. when memory
+poisoning is turned on, or pages are being zeroed on free). Hence if
+you use __GFP_ZERO the it will only zero if the page obtained from
+the freelist isn't already zero. The __GFP_ZERO call will also use
+the most efficient method of zeroing the page for the platform via
+clear_page() rather than memset()....
 
-[1] https://lore.kernel.org/lkml/20190919014602.GN15734@shao2-debian/
+/me shrugs and doesn't really care either way....
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_alloc.h |    7 ++++---
- fs/xfs/libxfs/xfs_bmap.c  |    8 ++++++--
- 2 files changed, 10 insertions(+), 5 deletions(-)
-
-diff --git a/fs/xfs/libxfs/xfs_alloc.h b/fs/xfs/libxfs/xfs_alloc.h
-index 58fa85cec325..d6ed5d2c07c2 100644
---- a/fs/xfs/libxfs/xfs_alloc.h
-+++ b/fs/xfs/libxfs/xfs_alloc.h
-@@ -81,9 +81,10 @@ typedef struct xfs_alloc_arg {
- /*
-  * Defines for datatype
-  */
--#define XFS_ALLOC_INITIAL_USER_DATA	(1 << 0)/* special case start of file */
--#define XFS_ALLOC_USERDATA_ZERO		(1 << 1)/* zero extent on allocation */
--#define XFS_ALLOC_NOBUSY		(1 << 2)/* Busy extents not allowed */
-+#define XFS_ALLOC_USERDATA		(1 << 0)/* allocation is for user data*/
-+#define XFS_ALLOC_INITIAL_USER_DATA	(1 << 1)/* special case start of file */
-+#define XFS_ALLOC_USERDATA_ZERO		(1 << 2)/* zero extent on allocation */
-+#define XFS_ALLOC_NOBUSY		(1 << 3)/* Busy extents not allowed */
- 
- static inline bool
- xfs_alloc_is_userdata(int datatype)
-diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
-index eaf2d4250a26..4edc25a2ba80 100644
---- a/fs/xfs/libxfs/xfs_bmap.c
-+++ b/fs/xfs/libxfs/xfs_bmap.c
-@@ -4042,8 +4042,12 @@ xfs_bmapi_allocate(
- 	 */
- 	if (!(bma->flags & XFS_BMAPI_METADATA)) {
- 		bma->datatype = XFS_ALLOC_NOBUSY;
--		if (whichfork == XFS_DATA_FORK && bma->offset == 0)
--			bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
-+		if (whichfork == XFS_DATA_FORK) {
-+			if (bma->offset == 0)
-+				bma->datatype |= XFS_ALLOC_INITIAL_USER_DATA;
-+			else
-+				bma->datatype |= XFS_ALLOC_USERDATA;
-+		}
- 		if (bma->flags & XFS_BMAPI_ZERO)
- 			bma->datatype |= XFS_ALLOC_USERDATA_ZERO;
- 	}
+-Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
