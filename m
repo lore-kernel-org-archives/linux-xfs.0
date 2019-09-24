@@ -6,46 +6,44 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82A04C432C2
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 20:55:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4069CC432C1
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 20:57:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 50BF0207FD
-	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 20:55:07 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13EAD207FD
+	for <linux-xfs@archiver.kernel.org>; Tue, 24 Sep 2019 20:57:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2633440AbfIXUzD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 24 Sep 2019 16:55:03 -0400
-Received: from gentwo.org ([3.19.106.255]:49438 "EHLO gentwo.org"
+        id S2633454AbfIXU5X (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 24 Sep 2019 16:57:23 -0400
+Received: from gentwo.org ([3.19.106.255]:49446 "EHLO gentwo.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727890AbfIXUzD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 24 Sep 2019 16:55:03 -0400
-X-Greylist: delayed 429 seconds by postgrey-1.27 at vger.kernel.org; Tue, 24 Sep 2019 16:55:02 EDT
+        id S1727890AbfIXU5X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 24 Sep 2019 16:57:23 -0400
 Received: by gentwo.org (Postfix, from userid 1002)
-        id 1EDD83E9FF; Tue, 24 Sep 2019 20:55:02 +0000 (UTC)
+        id 513AF3E9FB; Tue, 24 Sep 2019 20:47:52 +0000 (UTC)
 Received: from localhost (localhost [127.0.0.1])
-        by gentwo.org (Postfix) with ESMTP id 1BF793E9E5;
-        Tue, 24 Sep 2019 20:55:02 +0000 (UTC)
-Date:   Tue, 24 Sep 2019 20:55:02 +0000 (UTC)
+        by gentwo.org (Postfix) with ESMTP id 4FE343E9E5;
+        Tue, 24 Sep 2019 20:47:52 +0000 (UTC)
+Date:   Tue, 24 Sep 2019 20:47:52 +0000 (UTC)
 From:   cl@linux.com
 X-X-Sender: cl@www.lameter.com
-To:     Matthew Wilcox <willy@infradead.org>
-cc:     "Darrick J. Wong" <darrick.wong@oracle.com>, dsterba@suse.cz,
-        Vlastimil Babka <vbabka@suse.cz>,
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+cc:     dsterba@suse.cz, Vlastimil Babka <vbabka@suse.cz>,
         Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
         David Rientjes <rientjes@google.com>,
         Ming Lei <ming.lei@redhat.com>,
         Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
         Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
         linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
         Johannes Weiner <hannes@cmpxchg.org>
 Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
  kmalloc(power-of-two)
-In-Reply-To: <20190924205133.GK1855@bombadil.infradead.org>
-Message-ID: <alpine.DEB.2.21.1909242053010.17661@www.lameter.com>
-References: <20190826111627.7505-1-vbabka@suse.cz> <20190826111627.7505-3-vbabka@suse.cz> <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz> <20190923171710.GN2751@twin.jikos.cz> <20190923175146.GT2229799@magnolia> <alpine.DEB.2.21.1909242045250.17661@www.lameter.com>
- <20190924205133.GK1855@bombadil.infradead.org>
+In-Reply-To: <20190923175146.GT2229799@magnolia>
+Message-ID: <alpine.DEB.2.21.1909242045250.17661@www.lameter.com>
+References: <20190826111627.7505-1-vbabka@suse.cz> <20190826111627.7505-3-vbabka@suse.cz> <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz> <20190923171710.GN2751@twin.jikos.cz> <20190923175146.GT2229799@magnolia>
 User-Agent: Alpine 2.21 (DEB 202 2017-01-01)
 MIME-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
@@ -54,20 +52,21 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-n Tue, 24 Sep 2019, Matthew Wilcox wrote:
+On Mon, 23 Sep 2019, Darrick J. Wong wrote:
 
-> > There was a public discussion about this issue and from what I can tell
-> > the outcome was that the allocator already provides what you want. Which
-> > was a mechanism to misalign objects and detect these issues. This
-> > mechanism has been in use for over a decade.
+> On Mon, Sep 23, 2019 at 07:17:10PM +0200, David Sterba wrote:
+> > On Mon, Sep 23, 2019 at 06:36:32PM +0200, Vlastimil Babka wrote:
+> > > So if anyone thinks this is a good idea, please express it (preferably
+> > > in a formal way such as Acked-by), otherwise it seems the patch will be
+> > > dropped (due to a private NACK, apparently).
 >
-> You missed the important part, which was *ENABLED BY DEFAULT*.  People
-> who are enabling a debugging option to debug their issues, should not
-> have to first debug all the other issues that enabling that debugging
-> option uncovers!
+> Oh, I didn't realize  ^^^^^^^^^^^^ that *some* of us are allowed the
+> privilege of gutting a patch via private NAK without any of that open
+> development discussion incovenience. <grumble>
 
-Why would you have to debug all other issues? You could put your patch on
-top of the latest stable or distro kernel for testing.
+There was a public discussion about this issue and from what I can tell
+the outcome was that the allocator already provides what you want. Which
+was a mechanism to misalign objects and detect these issues. This
+mechanism has been in use for over a decade.
 
-And I thought the rc phase was there for everyone to work on the bugs of
-each other?
+
