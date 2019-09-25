@@ -2,243 +2,163 @@ Return-Path: <SRS0=XLdA=XU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1ABC432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 05:21:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5BF4DC432C1
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 07:17:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 03F11217F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 05:21:45 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="CHtzDiyU";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="d+2Gbrz2"
+	by mail.kernel.org (Postfix) with ESMTP id 31A6D21D7E
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 07:17:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2411743AbfIYFVo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 01:21:44 -0400
-Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:53859 "EHLO
-        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2411742AbfIYFVo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 01:21:44 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 08A36479;
-        Wed, 25 Sep 2019 01:21:42 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Wed, 25 Sep 2019 01:21:43 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:cc:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        cqQLvhxxTO0Qk9ma+IbiJ4RHyWgrrbpdPOOuSaCgTuQ=; b=CHtzDiyUPByjMiXM
-        7k/Xyp9ZLHF6hfn8jXSV3Ly+c5SoJZVZmJz9uEObs2cBDbjN4fynOdPFLgHHB7hd
-        uKLpMFuE2JgnkUvD7EqUL8V1xEhtozXLEMk7Eie2wRxLDp7ogNWdHjsYemeANJJX
-        qM74w190HuavIK74/St2Mg7Hv2eTHmdWrVXkOH/g6k0J4F0c6uA+/swrCuFln1IL
-        55Udj/ni1wUnveI6iv62pHTVQ7d8HRvBncFdbK2W5KeC22sjFdc4YICIHqOpcM9u
-        ZOF2S6DTOFQCHeFA4d11ASQeVGMrNgHONR2hBnTsBv/LYGkBF3OXloZIlTc3NH2H
-        vYHkWg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=cqQLvhxxTO0Qk9ma+IbiJ4RHyWgrrbpdPOOuSaCgT
-        uQ=; b=d+2Gbrz2QquZvYZ59DGYHLzONkWmPDZWtj/SuhlwwnDFR8NjlVlG2EJ1+
-        XZpc447x9dBe0pNdJVyE0t2aW5bOrgtodgYOwtKL2TeYk6P/yrZzgPPWgob/rFK4
-        lmqLXx1PXIYCNSWSTp50FWdITt4kyDe+/R4DG6KHvuAvoQSvpRksENZq1tzU7USz
-        upGyAUKLdbGDun443wCEx9tF2L7r5MMXhwloqmtaEdRArZmjbsnvVSZRxYfeI3+C
-        wUpJeN/y5w4qxvEigVhenOQfM7/CihJX4VGkaNTnMInGwsAMLqMFU452yQUSzVJL
-        hA462DYtpkaDPW862heh88JQAbP/g==
-X-ME-Sender: <xms:ZfmKXVVyQ0ihUYxu0VjVvLi93z4M9CAvcZj5ZThPBMwLSEv0JqEMqg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrfedugdeliecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
-    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecukfhppeduudekrddvtdekrd
-    duieefrddvvdefnecurfgrrhgrmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgr
-    fidrnhgvthenucevlhhushhtvghrufhiiigvpedt
-X-ME-Proxy: <xmx:ZfmKXT2SRNzjWHAFuJIinGLHjDGBWTne_-aTjxal-duodjqRPssJKw>
-    <xmx:ZfmKXatVHxKMAymQmSiQ6EzLMTATRPdxR5-d2hDXsQQyiR2_HkaPbQ>
-    <xmx:ZfmKXbXu1xjFkwRYLJaAOmoC5sAa4f6s2I7ZdC3eK3upwCkM7dUlaA>
-    <xmx:ZvmKXQsRGCKTfzy_5nRCC7PPSO2LxCAUO1rfbUWB2FUO9-N83AYycA>
-Received: from mickey.themaw.net (unknown [118.208.163.223])
-        by mail.messagingengine.com (Postfix) with ESMTPA id EDAC78005B;
-        Wed, 25 Sep 2019 01:21:38 -0400 (EDT)
-Message-ID: <38c7427c7961481877059a9fbf578439279e71a7.camel@themaw.net>
-Subject: Re: [REPOST PATCH v3 12/16] xfs: mount api - add xfs_reconfigure()
-From:   Ian Kent <raven@themaw.net>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Eric Sandeen <sandeen@sandeen.net>
-Date:   Wed, 25 Sep 2019 13:21:35 +0800
-In-Reply-To: <20190924143844.GF17688@bfoster>
-References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
-         <156933138468.20933.1616184640263037904.stgit@fedora-28>
-         <20190924143844.GF17688@bfoster>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S2442329AbfIYHRx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 03:17:53 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58042 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S2437028AbfIYHRw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Sep 2019 03:17:52 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 3D10CB641;
+        Wed, 25 Sep 2019 07:17:49 +0000 (UTC)
+Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
+ kmalloc(power-of-two)
+To:     Andrew Morton <akpm@linux-foundation.org>, cl@linux.com
+Cc:     David Sterba <dsterba@suse.cz>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
+        Johannes Weiner <hannes@cmpxchg.org>
+References: <20190826111627.7505-1-vbabka@suse.cz>
+ <20190826111627.7505-3-vbabka@suse.cz>
+ <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
+ <20190923171710.GN2751@twin.jikos.cz>
+ <alpine.DEB.2.21.1909242048020.17661@www.lameter.com>
+ <20190924165425.a79a2dafbaf37828a931df2b@linux-foundation.org>
+From:   Vlastimil Babka <vbabka@suse.cz>
+Autocrypt: addr=vbabka@suse.cz; prefer-encrypt=mutual; keydata=
+ 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
+Message-ID: <34a45e87-5bad-5f01-7dcb-8a3f6cf37281@suse.cz>
+Date:   Wed, 25 Sep 2019 09:17:47 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
+In-Reply-To: <20190924165425.a79a2dafbaf37828a931df2b@linux-foundation.org>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2019-09-24 at 10:38 -0400, Brian Foster wrote:
-> On Tue, Sep 24, 2019 at 09:23:04PM +0800, Ian Kent wrote:
-> > Add the fs_context_operations method .reconfigure that performs
-> > remount validation as previously done by the super_operations
-> > .remount_fs method.
-> > 
-> > An attempt has also been made to update the comment about options
-> > handling problems with mount(8) to reflect the current situation.
-> > 
-> > Signed-off-by: Ian Kent <raven@themaw.net>
-> > ---
+On 9/25/19 1:54 AM, Andrew Morton wrote:
+> On Tue, 24 Sep 2019 20:52:52 +0000 (UTC) cl@linux.com wrote:
 > 
-> It doesn't look like this incorporated feedback from v2..
-
-That's right.
-
-I spoke about that in the series cover letter, I'm not sure
-where to put this and I think there's useful information that
-probably should be kept, somewhere.
-
+>> On Mon, 23 Sep 2019, David Sterba wrote:
+>>
+>>> As a user of the allocator interface in filesystem, I'd like to see a
+>>> more generic way to address the alignment guarantees so we don't have to
+>>> apply workarounds like 3acd48507dc43eeeb each time we find that we
+>>> missed something. (Where 'missed' might be another sort of weird memory
+>>> corruption hard to trigger.)
+>>
+>> The alignment guarantees are clearly documented and objects are misaligned
+>> in debugging kernels.
+>>
+>> Looking at 3acd48507dc43eeeb:Looks like no one tested that patch with a
+>> debug kernel or full debugging on until it hit mainline. Not good.
+>>
+>> The consequence for the lack of proper testing is to make the production
+>> kernel contain the debug measures?
 > 
-> Brian
-> 
-> >  fs/xfs/xfs_super.c |   84
-> > ++++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 84 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index de75891c5551..e7627f7ca7f2 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1552,6 +1552,89 @@ xfs_fs_remount(
-> >  	return 0;
-> >  }
-> >  
-> > +/*
-> > + * There have been problems in the past with options passed from
-> > mount(8).
-> > + *
-> > + * The problem being that options passed by mount(8) in the case
-> > where only
-> > + * the the mount point path is given would consist of the existing
-> > fstab
-> > + * options with the options from mtab for the current mount merged
-> > in and
-> > + * the options given on the command line last. But the result
-> > couldn't be
-> > + * relied upon to accurately reflect the current mount options so
-> > that
-> > + * rejecting options that can't be changed on reconfigure could
-> > erronously
-> > + * cause mount failure.
-> > + *
-> > + * The mount-api uses a legacy mount options handler in the VFS to
-> > handle
-> > + * mount(8) so these options will continue to be passed. Even if
-> > mount(8)
-> > + * is updated to use fsopen()/fsconfig()/fsmount() it's likely to
-> > continue
-> > + * to set the existing options so options problems with
-> > reconfigure could
-> > + * continue.
-> > + *
-> > + * For the longest time mtab locking was a problem and this could
-> > have been
-> > + * one possible cause. It's also possible there could have been
-> > options
-> > + * order problems.
-> > + *
-> > + * That has changed now as mtab is a link to the proc file system
-> > mount
-> > + * table so mtab options should be always accurate.
-> > + *
-> > + * Consulting the util-linux maintainer (Karel Zak) he is
-> > confident that,
-> > + * in this case, the options passed by mount(8) will be those of
-> > the current
-> > + * mount and the options order should be a correct merge of fstab
-> > and mtab
-> > + * options, and new options given on the command line.
-> > + *
-> > + * So, in theory, it should be possible to compare incoming
-> > options and
-> > + * return an error for options that differ from the current mount
-> > and can't
-> > + * be changed on reconfigure to prevent users from believing they
-> > might have
-> > + * changed mount options using remount which can't be changed.
-> > + *
-> > + * But for now continue to return success for every reconfigure
-> > request, and
-> > + * silently ignore all options that can't actually be changed.
-> > + */
-> > +STATIC int
-> > +xfs_reconfigure(
-> > +	struct fs_context *fc)
-> > +{
-> > +	struct xfs_fs_context	*ctx = fc->fs_private;
-> > +	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
-> > +	struct xfs_mount        *new_mp = fc->s_fs_info;
-> > +	xfs_sb_t		*sbp = &mp->m_sb;
-> > +	int			flags = fc->sb_flags;
-> > +	int			error;
-> > +
-> > +	error = xfs_validate_params(new_mp, ctx, false);
-> > +	if (error)
-> > +		return error;
-> > +
-> > +	/* inode32 -> inode64 */
-> > +	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> > +	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> > +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
-> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
-> > >sb_agcount);
-> > +	}
-> > +
-> > +	/* inode64 -> inode32 */
-> > +	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
-> > +	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
-> > +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
-> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
-> > >sb_agcount);
-> > +	}
-> > +
-> > +	/* ro -> rw */
-> > +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
-> > +		error = xfs_remount_rw(mp);
-> > +		if (error)
-> > +			return error;
-> > +	}
-> > +
-> > +	/* rw -> ro */
-> > +	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
-> > +		error = xfs_remount_ro(mp);
-> > +		if (error)
-> > +			return error;
-> > +	}
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  /*
-> >   * Second stage of a freeze. The data is already frozen so we only
-> >   * need to take care of the metadata. Once that's done sync the
-> > superblock
-> > @@ -2077,6 +2160,7 @@ static const struct super_operations
-> > xfs_super_operations = {
-> >  static const struct fs_context_operations xfs_context_ops = {
-> >  	.parse_param = xfs_parse_param,
-> >  	.get_tree    = xfs_get_tree,
-> > +	.reconfigure = xfs_reconfigure,
-> >  };
-> >  
-> >  static struct file_system_type xfs_fs_type = {
-> > 
+> This isn't a debug measure - it's making the interface do that which
+> people evidently expect it to do.  Minor point.
 
+Yes, detecting issues due to misalignment is one thing, but then there
+are the workarounds necessary to achieve it (for multiple sizes, so no
+single kmem_cache_create(..., alignment)), as XFS folks demonstrated.
+
+> I agree it's a bit regrettable to do this but it does appear that the
+> change will make the kernel overall a better place given the reality of
+> kernel development.
+
+Thanks.
+
+> Given this, have you reviewed the patch for overall implementation
+> correctness?
+> 
+> I'm wondering if we can avoid at least some of the patch's overhead if
+> slab debugging is disabled - the allocators are already returning
+> suitably aligned memory, so why add the new code in that case?
+
+Most of the new code is for SLOB, which has no debugging and yet
+misaligns. For SLUB and SLAB, it's just passing alignment argument to
+kmem_cache_create() for kmalloc caches, which means just extra few
+instructions during boot, and no extra code during kmalloc/kfree itself.
