@@ -4,157 +4,315 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8219FC432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 12:09:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 21ED1C432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 14:33:14 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5758D222BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 12:09:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E09432146E
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 14:33:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404790AbfIYMJC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 08:09:02 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:52962 "EHLO mx1.redhat.com"
+        id S1730577AbfIYOdN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 10:33:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:43439 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2404622AbfIYMJC (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Sep 2019 08:09:02 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        id S1726124AbfIYOdN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Sep 2019 10:33:13 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 01006877A64;
-        Wed, 25 Sep 2019 12:09:02 +0000 (UTC)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2F0A62107;
+        Wed, 25 Sep 2019 14:33:12 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8A8D961559;
-        Wed, 25 Sep 2019 12:09:01 +0000 (UTC)
-Date:   Wed, 25 Sep 2019 08:08:59 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 3C1FD600C8;
+        Wed, 25 Sep 2019 14:33:11 +0000 (UTC)
+Date:   Wed, 25 Sep 2019 10:33:09 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: Lower CIL flush limit for large logs
-Message-ID: <20190925120859.GC21991@bfoster>
-References: <20190909015159.19662-1-david@fromorbit.com>
- <20190909015159.19662-2-david@fromorbit.com>
- <20190916163325.GZ2229799@magnolia>
- <20190924222901.GI16973@dread.disaster.area>
+To:     Ian Kent <raven@themaw.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [REPOST PATCH v3 06/16] xfs: mount-api - make xfs_parse_param()
+ take context .parse_param() args
+Message-ID: <20190925143309.GD21991@bfoster>
+References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
+ <156933135322.20933.2166438700224340142.stgit@fedora-28>
+ <20190924143725.GA17688@bfoster>
+ <b9906ced64736b043b6537c61ce60182d92d63e8.camel@themaw.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190924222901.GI16973@dread.disaster.area>
+In-Reply-To: <b9906ced64736b043b6537c61ce60182d92d63e8.camel@themaw.net>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.69]); Wed, 25 Sep 2019 12:09:02 +0000 (UTC)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.71]); Wed, 25 Sep 2019 14:33:12 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 25, 2019 at 08:29:01AM +1000, Dave Chinner wrote:
-> On Mon, Sep 16, 2019 at 09:33:25AM -0700, Darrick J. Wong wrote:
-> > On Mon, Sep 09, 2019 at 11:51:58AM +1000, Dave Chinner wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Sep 25, 2019 at 08:20:25AM +0800, Ian Kent wrote:
+> On Tue, 2019-09-24 at 10:37 -0400, Brian Foster wrote:
+> > On Tue, Sep 24, 2019 at 09:22:33PM +0800, Ian Kent wrote:
+> > > Make xfs_parse_param() take arguments of the fs context operation
+> > > .parse_param() in preparation for switching to use the file system
+> > > mount context for mount.
 > > > 
-> > > The current CIL size aggregation limit is 1/8th the log size. This
-> > > means for large logs we might be aggregating at least 250MB of dirty objects
-> > > in memory before the CIL is flushed to the journal. With CIL shadow
-> > > buffers sitting around, this means the CIL is often consuming >500MB
-> > > of temporary memory that is all allocated under GFP_NOFS conditions.
+> > > The function fc_parse() only uses the file system context (fc here)
+> > > when calling log macros warnf() and invalf() which in turn check
+> > > only the fc->log field to determine if the message should be saved
+> > > to a context buffer (for later retrival by userspace) or logged
+> > > using printk().
 > > > 
-> > > Flushing the CIL can take some time to do if there is other IO
-> > > ongoing, and can introduce substantial log force latency by itself.
-> > > It also pins the memory until the objects are in the AIL and can be
-> > > written back and reclaimed by shrinkers. Hence this threshold also
-> > > tends to determine the minimum amount of memory XFS can operate in
-> > > under heavy modification without triggering the OOM killer.
+> > > Also the temporary function match_kstrtoint() is now unused, remove
+> > > it.
 > > > 
-> > > Modify the CIL space limit to prevent such huge amounts of pinned
-> > > metadata from aggregating. We can have 2MB of log IO in flight at
-> > > once, so limit aggregation to 16x this size. This threshold was
-> > > chosen as it little impact on performance (on 16-way fsmark) or log
-> > > traffic but pins a lot less memory on large logs especially under
-> > > heavy memory pressure.  An aggregation limit of 8x had 5-10%
-> > > performance degradation and a 50% increase in log throughput for
-> > > the same workload, so clearly that was too small for highly
-> > > concurrent workloads on large logs.
-> > 
-> > It would be nice to capture at least some of this reasoning in the
-> > already lengthy comment preceeding the #define....
-> 
-> A lot of it is already there, but I will revise it.
-> 
-> > 
-> > > This was found via trace analysis of AIL behaviour. e.g. insertion
-> > > from a single CIL flush:
-> > > 
-> > > xfs_ail_insert: old lsn 0/0 new lsn 1/3033090 type XFS_LI_INODE flags IN_AIL
-> > > 
-> > > $ grep xfs_ail_insert /mnt/scratch/s.t |grep "new lsn 1/3033090" |wc -l
-> > > 1721823
-> > > $
-> > > 
-> > > So there were 1.7 million objects inserted into the AIL from this
-> > > CIL checkpoint, the first at 2323.392108, the last at 2325.667566 which
-> > > was the end of the trace (i.e. it hadn't finished). Clearly a major
-> > > problem.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > Signed-off-by: Ian Kent <raven@themaw.net>
 > > > ---
-> > >  fs/xfs/xfs_log_priv.h | 3 ++-
-> > >  1 file changed, 2 insertions(+), 1 deletion(-)
+> > >  fs/xfs/xfs_super.c |  137 +++++++++++++++++++++++++++++++---------
+> > > ------------
+> > >  1 file changed, 81 insertions(+), 56 deletions(-)
 > > > 
-> > > diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> > > index b880c23cb6e4..187a43ffeaf7 100644
-> > > --- a/fs/xfs/xfs_log_priv.h
-> > > +++ b/fs/xfs/xfs_log_priv.h
-> > > @@ -329,7 +329,8 @@ struct xfs_cil {
-> > >   * enforced to ensure we stay within our maximum checkpoint size bounds.
-> > >   * threshold, yet give us plenty of space for aggregation on large logs.
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index b04aebab69ab..6792d46fa0be 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -191,57 +191,60 @@ suffix_kstrtoint(const char *s, unsigned int
+> > > base, int *res)
+> > >  	return ret;
+> > >  }
+> > >  
+> > ...
+> > >  
+> > >  STATIC int
+> > >  xfs_parse_param(
+> > ...
+> > > -	switch (token) {
+> > > +	opt = fs_parse(fc, &xfs_fs_parameters, param, &result);
+> > > +	if (opt < 0) {
+> > > +		/*
+> > > +		 * If fs_parse() returns -ENOPARAM and the parameter
+> > > +		 * is "source" the VFS needs to handle this option
+> > > +		 * in order to boot otherwise use the default case
+> > > +		 * below to handle invalid options.
+> > > +		 */
+> > > +		if (opt != -ENOPARAM ||
+> > > +		    strcmp(param->key, "source") == 0)
+> > > +			return opt;
 > > 
-> > ...also, does XLOG_CIL_SPACE_LIMIT correspond to "a lower threshold at
-> > which background pushing is attempted", or "a separate, higher bound"?
-> > I think it's the first (????) but ... I don't know.  The name made me
-> > think it was the second, but the single use of the symbol suggests the
-> > first. :)
+> > Same question as before on this bit..
 > 
-> See, the comment here talks about two limits, because that was how
-> the initial implementation worked - the background CIL push was not
-> async, so there was some juggling done to prevent new commits from
-> blocking on background pushes in progress unless the size was
-> actually growing to large.  This patch pretty much describes the
-> whole issue here:
+> Your comment was:
+> Why is this not something that is handled in core mount-api code? Every
+> filesystem needs this logic in order to be a rootfs..?
 > 
-> https://lore.kernel.org/linux-xfs/1285552073-14663-2-git-send-email-david@fromorbit.com/
-> 
-> That's in commit 80168676ebfe ("xfs: force background CIL push under
-> sustained load") which went into 2.6.38 or so. The cause of the
-> problem in that case was concurrent transaction commit load causing
-> lock contention and preventing a background push from getting the
-> context lock to do the actual push.
+> I looked at the VFS code and was tempted to change it but it's all too
+> easy to prevent the system from booting.
 > 
 
-More related to the next patch, but what prevents a similar but
-generally unbound concurrent workload from exceeding the new hard limit
-once transactions start to block post commit?
+Ok, so I'm not terribly familiar with the core mount code in the first
+place. Can you elaborate a bit on the where the whole "source" thing
+comes from and why/how it's necessary to boot?
+
+> The way the VFS looks to me it needs to give the file system a chance
+> to handle the "source" option, if the file system ->parse_param()
+> doesn't handle the option it "must" return -ENOPARAM so the VFS will
+> test for and handle the "source" option.
+> 
+
+Do any existing filesystems handle this option? By handle, I mean
+actually have to make some change, set some option, etc.
+
+> Having returned -ENOPARAM either the option is "source" or it's a
+> real unknown option.
+> 
+> The choices are:
+> 1) If it is the "source" option we will get a false positive unknown
+> parameter message logged by our ->parse_param().
+> 2) if it isn't the "source" option we will get an unknown parameter
+> message from our ->parse_param() and an additional inconsistent
+> format unknown parameter message from the VFS.
+> 3) Check for the "source" parameter in our ->parse_param() and
+> return without issuing a message so the VFS can handle the option,
+> no duplicate message and no inconsistent logging.
+> 
+
+Hmm.. so we definitely don't want spurious unknown parameter messages,
+but I don't see how that leaves #3 as the only other option.
+
+Is param-key already filled in at that point? If so, couldn't we set a
+flag or something on the context structure to signal that we don't care
+about the source option, so let the vfs handle it however it needs to?
+If not, another option could be to define a helper function or something
+that the fs can call to determine whether an -ENOPARAM key is some
+global option to be handled by a higher layer and so to not throw a
+warning or whatever. That has the same logic as this patch, but is still
+better than open-coding "source" key checks all over the place IMO. 
+
+BTW, this all implies there is some reason for an fs to handle the
+"source" option, so what happens if one actually does? ISTM the
+->parse_param() callout would return 0 and vfs_parse_fs_param() would
+skip its own update of fc->source. Hm?
 
 Brian
 
-> The hard limit in the CIL code was dropped when the background push
-> was converted to run asynchronously to use a work queue in 2012 as
-> it allowed the locking to be changed (down_write_trylock ->
-> down_write) to turn it into a transaction commit barrier while the
-> contexts are switched over.  That was done in 2012 via commit
-> 4c2d542f2e78 ("xfs: Do background CIL flushes via a workqueue") and
-> so we haven't actually capped CIL checkpoint sizes since 2012.
+> Suggestions on how to handle this better, a VFS patch perhaps?
+> Suggestions David, Al?
 > 
-> Essentially, the comment you point out documents the two limits from
-> the original code, and this commit is restoring that behaviour for
-> background CIL pushes....
+> > ...
+> > > @@ -373,10 +374,16 @@ xfs_parseargs(
+> > >  {
+> > >  	const struct super_block *sb = mp->m_super;
+> > >  	char			*p;
+> > > -	substring_t		args[MAX_OPT_ARGS];
+> > > -	int			dsunit = 0;
+> > > -	int			dswidth = 0;
+> > > -	uint8_t			iosizelog = 0;
+> > > +	struct fs_context	fc;
+> > > +	struct xfs_fs_context	context;
+> > > +	struct xfs_fs_context	*ctx;
+> > > +	int			ret;
+> > > +
+> > > +	memset(&fc, 0, sizeof(fc));
+> > > +	memset(&context, 0, sizeof(context));
+> > > +	fc.fs_private = &context;
+> > > +	ctx = &context;
+> > 
+> > I think you mentioned this ctx/context pattern would be removed from
+> > v2..?
 > 
-> I'll do some work to update it all.
+> Except that, to minimise code churn the ctx variable is needed
+> because it will be used in the end result.
 > 
-> Cheers,
+> I don't much like prefixing those references with &context even
+> if some happen to go away later on, the additional local variable
+> is clearer to read and provides usage consistency for the reader
+> over the changes.
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> Ian
+> > 
+> > Brian
+> > 
+> > > +	fc.s_fs_info = mp;
+> > >  
+> > >  	/*
+> > >  	 * set up the mount name first so all the errors will refer to
+> > > the
+> > > @@ -413,16 +420,33 @@ xfs_parseargs(
+> > >  		goto done;
+> > >  
+> > >  	while ((p = strsep(&options, ",")) != NULL) {
+> > > -		int		token;
+> > > -		int		ret;
+> > > +		struct fs_parameter	param;
+> > > +		char			*value;
+> > >  
+> > >  		if (!*p)
+> > >  			continue;
+> > >  
+> > > -		token = match_token(p, tokens, args);
+> > > -		ret = xfs_parse_param(token, p, args, mp,
+> > > -				      &dsunit, &dswidth, &iosizelog);
+> > > -		if (ret)
+> > > +		param.key = p;
+> > > +		param.type = fs_value_is_string;
+> > > +		param.string = NULL;
+> > > +		param.size = 0;
+> > > +
+> > > +		value = strchr(p, '=');
+> > > +		if (value) {
+> > > +			*value++ = 0;
+> > > +			param.size = strlen(value);
+> > > +			if (param.size > 0) {
+> > > +				param.string = kmemdup_nul(value,
+> > > +							   param.size,
+> > > +							   GFP_KERNEL);
+> > > +				if (!param.string)
+> > > +					return -ENOMEM;
+> > > +			}
+> > > +		}
+> > > +
+> > > +		ret = xfs_parse_param(&fc, &param);
+> > > +		kfree(param.string);
+> > > +		if (ret < 0)
+> > >  			return ret;
+> > >  	}
+> > >  
+> > > @@ -435,7 +459,8 @@ xfs_parseargs(
+> > >  		return -EINVAL;
+> > >  	}
+> > >  
+> > > -	if ((mp->m_flags & XFS_MOUNT_NOALIGN) && (dsunit || dswidth)) {
+> > > +	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
+> > > +	    (ctx->dsunit || ctx->dswidth)) {
+> > >  		xfs_warn(mp,
+> > >  	"sunit and swidth options incompatible with the noalign
+> > > option");
+> > >  		return -EINVAL;
+> > > @@ -448,28 +473,28 @@ xfs_parseargs(
+> > >  	}
+> > >  #endif
+> > >  
+> > > -	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
+> > > +	if ((ctx->dsunit && !ctx->dswidth) || (!ctx->dsunit && ctx-
+> > > >dswidth)) {
+> > >  		xfs_warn(mp, "sunit and swidth must be specified
+> > > together");
+> > >  		return -EINVAL;
+> > >  	}
+> > >  
+> > > -	if (dsunit && (dswidth % dsunit != 0)) {
+> > > +	if (ctx->dsunit && (ctx->dswidth % ctx->dsunit != 0)) {
+> > >  		xfs_warn(mp,
+> > >  	"stripe width (%d) must be a multiple of the stripe unit (%d)",
+> > > -			dswidth, dsunit);
+> > > +			ctx->dswidth, ctx->dsunit);
+> > >  		return -EINVAL;
+> > >  	}
+> > >  
+> > >  done:
+> > > -	if (dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
+> > > +	if (ctx->dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
+> > >  		/*
+> > >  		 * At this point the superblock has not been read
+> > >  		 * in, therefore we do not know the block size.
+> > >  		 * Before the mount call ends we will convert
+> > >  		 * these to FSBs.
+> > >  		 */
+> > > -		mp->m_dalign = dsunit;
+> > > -		mp->m_swidth = dswidth;
+> > > +		mp->m_dalign = ctx->dsunit;
+> > > +		mp->m_swidth = ctx->dswidth;
+> > >  	}
+> > >  
+> > >  	if (mp->m_logbufs != -1 &&
+> > > @@ -491,18 +516,18 @@ xfs_parseargs(
+> > >  		return -EINVAL;
+> > >  	}
+> > >  
+> > > -	if (iosizelog) {
+> > > -		if (iosizelog > XFS_MAX_IO_LOG ||
+> > > -		    iosizelog < XFS_MIN_IO_LOG) {
+> > > +	if (ctx->iosizelog) {
+> > > +		if (ctx->iosizelog > XFS_MAX_IO_LOG ||
+> > > +		    ctx->iosizelog < XFS_MIN_IO_LOG) {
+> > >  			xfs_warn(mp, "invalid log iosize: %d [not %d-
+> > > %d]",
+> > > -				iosizelog, XFS_MIN_IO_LOG,
+> > > +				ctx->iosizelog, XFS_MIN_IO_LOG,
+> > >  				XFS_MAX_IO_LOG);
+> > >  			return -EINVAL;
+> > >  		}
+> > >  
+> > >  		mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
+> > > -		mp->m_readio_log = iosizelog;
+> > > -		mp->m_writeio_log = iosizelog;
+> > > +		mp->m_readio_log = ctx->iosizelog;
+> > > +		mp->m_writeio_log = ctx->iosizelog;
+> > >  	}
+> > >  
+> > >  	return 0;
+> > > 
+> 
