@@ -2,89 +2,232 @@ Return-Path: <SRS0=XLdA=XU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AC9FC432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 22:52:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4CD5FC432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 23:11:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5649C20673
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 22:52:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hVyZutPx"
+	by mail.kernel.org (Postfix) with ESMTP id 22CCE21D80
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 23:11:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569453064;
+	bh=jMkmEqZg+OQEStsIVSEy9WP59v5NEoDyQ7+CMSZVABc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:List-ID:From;
+	b=vZvjTRwESKm7XbRNKvq749rucv1gy8a83z1zxY0ezwymisMklZQTVtGJEgRDtQ3+M
+	 B6KwjlQNSMfxOpJFUFjW0uAHT2lfOBO+vGGDJ07ezppQUe3gWIRkh4PGUzlvhDGtHH
+	 7H194JQQnerbp2P62zUoj1Wr4OHYqtu5p6UUW14A=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729863AbfIYWwG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 18:52:06 -0400
-Received: from mail-qk1-f195.google.com ([209.85.222.195]:45929 "EHLO
-        mail-qk1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729604AbfIYWwG (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 18:52:06 -0400
-Received: by mail-qk1-f195.google.com with SMTP id z67so167131qkb.12;
-        Wed, 25 Sep 2019 15:52:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:from:date:message-id:subject:to;
-        bh=hG7SOKz8MptTnrQvudDejoJqBWoC1kIuXyUc2ynrKEk=;
-        b=hVyZutPx4fToHseEJGWiYk6Zw0UTkw2TRa7mx4CbiE5Glb04+9EPpvMZj8sShIuHY2
-         CggxBBqjNVGEdeX45OeY9zst6MSlQsPA5wJmNRMkD4W+Fa6CVgBXVU+bSHeT85S8/MWG
-         rkCUuLoHb94sZB58qIk6uoZAdMth0g/6D++RPPzBmnlLlcbjnaNkTYir2wZEKPRkNaIm
-         LFkjo1PeU+7dpoGUVacv1Wpz48W7toIosHQmTvOsOsuzT23FAPUp8J4u2SB4WNlQdy/K
-         EZCHotEuENbyfbd1jpvISTKpbmTRSWcj8BAZEQmXUnDbym6vHucjpqD/NBwMImlhZBAI
-         nrBg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
-        bh=hG7SOKz8MptTnrQvudDejoJqBWoC1kIuXyUc2ynrKEk=;
-        b=TNCReg1v8W422/Fe5l6ZU1CqI+RzQonbn9PeQaHlqnOE+44ejIFpQ4Zf2Svg0Edzsr
-         q1RCzMyRCAYHUEjfs1526lYrovTr6TvHAtZMee9ql6wCej5C8P6kYbuPYgH36iXt1vkl
-         Yn6OLxkJiJblXp4gwGsFq3iBjrT7ulDLwW1nbtxa3wVcvWwiNCwtmexD+84SwWcZSq3J
-         1k0x7h7YIkhiFo0v1A/QYeUxkOJpQxc9T+1t8WWC95Fcw/7PHeg5v0GhGFU/gWCAJngc
-         RGwE2MMNs6NVr3wfJAaW8y3bt85nVib7IulPGwXOxo6k8YJ2OgJ3SzIEMBLLu9gZTbvy
-         YVwg==
-X-Gm-Message-State: APjAAAX1HxzozpvyQsnep09vH4EugETPHr7OO0/3qQbsshvuPABH5TJP
-        suqD8YRZd03LizR/BWY5xQsQII6iNBg3NK4TO6mw3vTB
-X-Google-Smtp-Source: APXvYqxVXs1ZfbJU+FoZjOcEMrSTttWKrOEV9XXx5bCQ3hemdKq2MTCX4OFrCSCY2jLSFuo62HJHEtCqp/bUayED1XY=
-X-Received: by 2002:a37:a205:: with SMTP id l5mr361422qke.488.1569451925129;
- Wed, 25 Sep 2019 15:52:05 -0700 (PDT)
+        id S1727325AbfIYXLD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 19:11:03 -0400
+Received: from mail.kernel.org ([198.145.29.99]:56624 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726203AbfIYXLD (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 25 Sep 2019 19:11:03 -0400
+Received: from gmail.com (unknown [104.132.1.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 7D9E620640;
+        Wed, 25 Sep 2019 23:11:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569453061;
+        bh=jMkmEqZg+OQEStsIVSEy9WP59v5NEoDyQ7+CMSZVABc=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=diEfSkw444fhPSRnwBu+vZw6OEEBg9eEEfmShJrYw2/PfiisRde08OvMNLQl+7GF5
+         p7LxhoumCT1usZtYiMtXp1NyYdnOU08ocuLcCO3fyh7y/TXXN+cD3tiS2VDJyWe67d
+         2+6AwwkbR2YJz1Tj/6+m7M9uHF3Sxl5HcHGPYCrM=
+Date:   Wed, 25 Sep 2019 16:11:00 -0700
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org
+Subject: Re: [PATCH v2 7/8] xfs_io/encrypt: add 'rm_enckey' command
+Message-ID: <20190925231058.GA3163@gmail.com>
+Mail-Followup-To: Eric Sandeen <sandeen@sandeen.net>,
+        linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org
+References: <20190920001822.257411-1-ebiggers@kernel.org>
+ <20190920001822.257411-8-ebiggers@kernel.org>
+ <bdfb64e2-fb21-7e42-63ec-e9caddd13287@sandeen.net>
 MIME-Version: 1.0
-From:   Jianshen Liu <ljishen@gmail.com>
-Date:   Wed, 25 Sep 2019 15:51:27 -0700
-Message-ID: <CAMgD0BoT82ApOQ=Fk6o5KYMsC=z7M88zkNCw9XuMtB0y-xaAmw@mail.gmail.com>
-Subject: Question: Modifying kernel to handle all I/O requests without page cache
-To:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bdfb64e2-fb21-7e42-63ec-e9caddd13287@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Tue, Sep 24, 2019 at 05:39:02PM -0500, Eric Sandeen wrote:
+> On 9/19/19 7:18 PM, Eric Biggers wrote:
+> > From: Eric Biggers <ebiggers@google.com>
+> > 
+> > Add a 'rm_enckey' command to xfs_io, to provide a command-line interface
+> > to the FS_IOC_REMOVE_ENCRYPTION_KEY and
+> > FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS ioctls.
+> > 
+> > Signed-off-by: Eric Biggers <ebiggers@google.com>
+> > ---
+> >  io/encrypt.c      | 75 +++++++++++++++++++++++++++++++++++++++++++++++
+> >  man/man8/xfs_io.8 | 15 ++++++++++
+> >  2 files changed, 90 insertions(+)
+> > 
+> > diff --git a/io/encrypt.c b/io/encrypt.c
+> > index d38ac595..7531c4ad 100644
+> > --- a/io/encrypt.c
+> > +++ b/io/encrypt.c
+> > @@ -139,6 +139,7 @@ struct fscrypt_get_key_status_arg {
+> >  static cmdinfo_t get_encpolicy_cmd;
+> >  static cmdinfo_t set_encpolicy_cmd;
+> >  static cmdinfo_t add_enckey_cmd;
+> > +static cmdinfo_t rm_enckey_cmd;
+> >  
+> >  static void
+> >  get_encpolicy_help(void)
+> > @@ -200,6 +201,21 @@ add_enckey_help(void)
+> >  "\n"));
+> >  }
+> >  
+> > +static void
+> > +rm_enckey_help(void)
+> > +{
+> > +	printf(_(
+> > +"\n"
+> > +" remove an encryption key from the filesystem\n"
+> > +"\n"
+> > +" Examples:\n"
+> > +" 'rm_enckey 0000111122223333' - remove key for v1 policies w/ given descriptor\n"
+> > +" 'rm_enckey 00001111222233334444555566667777' - remove key for v2 policies w/ given identifier\n"
+> > +"\n"
+> > +" -a -- remove key for all users who have added it (privileged operation)\n"
+> > +"\n"));
+> > +}
+> > +
+> >  static const struct {
+> >  	__u8 mode;
+> >  	const char *name;
+> > @@ -693,6 +709,54 @@ out:
+> >  	return 0;
+> >  }
+> >  
+> > +static int
+> > +rm_enckey_f(int argc, char **argv)
+> > +{
+> > +	int c;
+> > +	struct fscrypt_remove_key_arg arg;
+> > +	int ioc = FS_IOC_REMOVE_ENCRYPTION_KEY;
+> > +
+> > +	memset(&arg, 0, sizeof(arg));
+> > +
+> > +	while ((c = getopt(argc, argv, "a")) != EOF) {
+> > +		switch (c) {
+> > +		case 'a':
+> > +			ioc = FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS;
+> > +			break;
+> > +		default:
+> > +			return command_usage(&rm_enckey_cmd);
+> > +		}
+> > +	}
+> > +	argc -= optind;
+> > +	argv += optind;
+> > +
+> > +	if (argc != 1)
+> > +		return command_usage(&rm_enckey_cmd);
+> > +
+> > +	if (str2keyspec(argv[0], -1, &arg.key_spec) < 0)
+> > +		return 0;
+> > +
+> > +	if (ioctl(file->fd, ioc, &arg) != 0) {
+> > +		fprintf(stderr, "Error removing encryption key: %s\n",
+> > +			strerror(errno));
+> > +		exitcode = 1;
+> > +		return 0;
+> > +	}
+> > +	if (arg.removal_status_flags &
+> > +	    FSCRYPT_KEY_REMOVAL_STATUS_FLAG_OTHER_USERS) {
+> > +		printf("Removed user's claim to encryption key with %s %s\n",
+> > +		       keyspectype(&arg.key_spec), keyspec2str(&arg.key_spec));
+> > +	} else if (arg.removal_status_flags &
+> > +		   FSCRYPT_KEY_REMOVAL_STATUS_FLAG_FILES_BUSY) {
+> > +		printf("Removed encryption key with %s %s, but files still busy\n",
+> > +		       keyspectype(&arg.key_spec), keyspec2str(&arg.key_spec));
+> > +	} else {
+> > +		printf("Removed encryption key with %s %s\n",
+> > +		       keyspectype(&arg.key_spec), keyspec2str(&arg.key_spec));
+> > +	}
+> > +	return 0;
+> > +}
+> > +
+> >  void
+> >  encrypt_init(void)
+> >  {
+> > @@ -726,7 +790,18 @@ encrypt_init(void)
+> >  	add_enckey_cmd.oneline = _("add an encryption key to the filesystem");
+> >  	add_enckey_cmd.help = add_enckey_help;
+> >  
+> > +	rm_enckey_cmd.name = "rm_enckey";
+> > +	rm_enckey_cmd.cfunc = rm_enckey_f;
+> > +	rm_enckey_cmd.args = _("keyspec");
+> 
+> can you add "-a" to the args for the shorthelp/args here please?
 
-I am working on a project trying to evaluate the performance of a
-workload running on a storage device. I don't want the benchmark
-result depends on a specific platform (e.g., a platform with X GiB of
-physical memory). Because it prevents people from reproducing the same
-result on a different platform configuration. Think about you are
-benchmarking a read-heavy workload, with data caching enabled you may
-end up with just testing the performance of the system memory.
+Will do.
 
-Currently, I'm thinking how to eliminate the cache effects created by
-the page cache. Direct I/O is a good option for testing with a single
-application but is not good for testing with unknown
-applications/workloads. Therefore, it is not feasible to ask people to
-modify the application source code before running the benchmark.
+> 
+> I don't know anything about this stuff.  :(  Is it to be used as:
+> 
+> rm_enckey -a <keyspec> ?
 
-Making changes within the kernel may only be the option because it is
-transparent to all user-space applications. The problem is I don't
-know how to modify the kernel so that it does not use the page cache
-for any IOs to a specific storage device. I have tried to append a
-fadvise64() call with POSIX_FADV_DONTNEED to the end of each
-read/write system calls. The performance of this approach is far from
-using Direct I/O. It is also unable to eliminate the caching effects
-under concurrent I/Os. I'm looking for any advice here to point me an
-efficient way to remove the cache effects from the page cache.
+Yes, -a is just an optional argument.  Nothing special.
 
-Thanks,
-Jianshen
+> 
+> > +	rm_enckey_cmd.argmin = 0;
+> > +	rm_enckey_cmd.argmax = -1;
+> 
+> I wonder if min/max should be 1/2 but eh, I think you catch wrong counts
+> in the function itself, just without the explicit message the built-in
+> checkers would give.
+
+Well since there's only one option, we *could* pretend that it's an optional
+positional argument, and do argmin=1, argmax=2, and
+
+	if (argc == 2) {
+		if (strcmp(argv[1], "-a") != 0)
+			return command_usage(&rm_enckey_cmd);
+		ioc = FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS;
+		argv++;
+	}
+
+But all that would need to be changed if/when a second option is added.
+IMO it's better to handle it in the standard way.
+
+> 
+> > +	rm_enckey_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
+> > +	rm_enckey_cmd.oneline =
+> > +		_("remove an encryption key from the filesystem");
+> > +	rm_enckey_cmd.help = rm_enckey_help;
+> > +
+> >  	add_command(&get_encpolicy_cmd);
+> >  	add_command(&set_encpolicy_cmd);
+> >  	add_command(&add_enckey_cmd);
+> > +	add_command(&rm_enckey_cmd);
+> >  }
+> > diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+> > index 7d6a23fe..a6894778 100644
+> > --- a/man/man8/xfs_io.8
+> > +++ b/man/man8/xfs_io.8
+> > @@ -764,6 +764,21 @@ Otherwise, the key is added as a v2 policy key, and on success the resulting
+> >  .RE
+> >  .PD
+> >  .TP
+> > +.BI "rm_enckey " keyspec
+> 
+> show [-a] here as well?
+> 
+
+Will do.
+
+- Eric
