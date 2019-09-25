@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E34DEC432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:38:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A2E2C432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:38:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B018520872
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:38:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D051720872
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:38:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j9lYwo8n"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YX5ohGbu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727926AbfIYVib (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:38:31 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:41104 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727857AbfIYVib (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:38:31 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYc7t058172;
-        Wed, 25 Sep 2019 21:38:28 GMT
+        id S1727857AbfIYViz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:38:55 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47250 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726355AbfIYViz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:38:55 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYQcD009886;
+        Wed, 25 Sep 2019 21:38:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=QYa0J/56ik0cVNr/8sYuAIpx/THjsj3tnlpDeE/UnGA=;
- b=j9lYwo8n8Ld5YUt/jwkTqUUR8ZUlQom635SIRSYYbnjwGsATfzC/Qc6Ie3cAu/HCms3V
- Tb3d8OrQWBg72mDHS4dK2Yr7LpGh/y5Y+pVJPHlMJvo7pnU2Ey0RP0YSl2E8TzsrIpDJ
- 4hL8rgF6VGdXBZmVSivyLNTl/mx8B3CWVSn+iAZ8CO7i2q4NIgSaAd9Q6lK0k3u/CM5E
- QxY3DKDopkIh6hrZZFGwRj/wtpPZ5TN7ESXhyqMIbju/KycWdmp1pYzMSQC69KDw0SjQ
- fSZtFFKeCGhx04a8UbU6Nx02tmQJCtxxXZ/5P/U7rN3njK6W7sMBp309c4MCIFzwxjpj KA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2v5b9tyhe3-1
+ bh=4h3OQuBn8pRUP0g/Wi+oBN7oH8p3EQKoSQamm3fBr9w=;
+ b=YX5ohGbu1bmUqBmZXTW8YSiCdWw7C4yP1uhmvzVgJnJM2LkoEEfSaz2HM/laDNZHKkTq
+ 2DQM0aP5JetLOrG1XNeZla83nXVe9mzKUfyKH8Rv9FgZ/dahrRtbsdZQaK9V0EUi/yAw
+ Jbkz4hM4CE5GEfRQDOcoQZa958RKRp9Xznt0vzOhKWHJSV0vOD/3tcviTJG2M0QWklxd
+ /ecqz+HnXaZeSoIaplh5RZmJ+XHPJXgfz/WhyDcwHVgUSMHZszHHskEmUmqIE6I0X97Z
+ KUa7dqYEwkPEaIB0sszQXf3EhwWmcfBGFFnc8hvKBverKPZLz3kj8mF+DTxI3MKUVyQ2 gQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2v5btq7j3t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:38:28 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYQJu023792;
-        Wed, 25 Sep 2019 21:36:28 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2v7vnyus8u-1
+        Wed, 25 Sep 2019 21:38:53 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYPgE078623;
+        Wed, 25 Sep 2019 21:36:53 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2v82tkrk65-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:36:27 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLaRUK020995;
-        Wed, 25 Sep 2019 21:36:27 GMT
+        Wed, 25 Sep 2019 21:36:52 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLapir015693;
+        Wed, 25 Sep 2019 21:36:51 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:36:27 -0700
-Subject: [PATCH 03/11] xfs_scrub: better reporting of metadata media errors
+        with ESMTP ; Wed, 25 Sep 2019 14:36:51 -0700
+Subject: [PATCH 07/11] xfs_scrub: request fewer bmaps when we can
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:36:26 -0700
-Message-ID: <156944738604.300131.8278382614496808681.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:36:50 -0700
+Message-ID: <156944741018.300131.13838435268141846825.stgit@magnolia>
 In-Reply-To: <156944736739.300131.5717633994765951730.stgit@magnolia>
 References: <156944736739.300131.5717633994765951730.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,47 +80,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-When we report bad metadata, we inexplicably report the physical address
-in units of sectors, whereas for file data we report file offsets in
-units of bytes.  Fix the metadata reporting units to match the file data
-units (i.e. bytes) and skip the printf for all other cases.
+In xfs_iterate_filemaps, we query the number of bmaps for a given file
+that we're going to iterate, so feed that information to bmap so that
+the kernel won't waste time allocating in-kernel memory unnecessarily.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase6.c |   12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ scrub/filemap.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index a16ad114..310ab36c 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -368,7 +368,7 @@ xfs_check_rmap_error_report(
- 	void			*arg)
- {
- 	const char		*type;
--	char			buf[32];
-+	char			buf[DESCR_BUFSZ];
- 	uint64_t		err_physical = *(uint64_t *)arg;
- 	uint64_t		err_off;
- 
-@@ -377,14 +377,12 @@ xfs_check_rmap_error_report(
+diff --git a/scrub/filemap.c b/scrub/filemap.c
+index bdc6d8f9..aaaa0521 100644
+--- a/scrub/filemap.c
++++ b/scrub/filemap.c
+@@ -71,7 +71,6 @@ xfs_iterate_filemaps(
+ 		map->bmv_length = ULLONG_MAX;
  	else
- 		err_off = 0;
- 
--	snprintf(buf, 32, _("disk offset %"PRIu64),
--			(uint64_t)BTOBB(map->fmr_physical + err_off));
--
-+	/* Report special owners */
- 	if (map->fmr_flags & FMR_OF_SPECIAL_OWNER) {
-+		snprintf(buf, DESCR_BUFSZ, _("disk offset %"PRIu64),
-+				(uint64_t)map->fmr_physical + err_off);
- 		type = xfs_decode_special_owner(map->fmr_owner);
--		str_error(ctx, buf,
--_("%s failed read verification."),
--				type);
-+		str_error(ctx, buf, _("media error in %s."), type);
+ 		map->bmv_length = BTOBB(key->bm_length);
+-	map->bmv_count = BMAP_NR;
+ 	map->bmv_iflags = BMV_IF_NO_DMAPI_READ | BMV_IF_PREALLOC |
+ 			  BMV_IF_NO_HOLES;
+ 	switch (whichfork) {
+@@ -96,6 +95,7 @@ xfs_iterate_filemaps(
+ 		moveon = false;
+ 		goto out;
  	}
++	map->bmv_count = min(fsx.fsx_nextents + 2, BMAP_NR);
  
- 	/*
+ 	while ((error = ioctl(fd, XFS_IOC_GETBMAPX, map)) == 0) {
+ 		for (i = 0, p = &map[i + 1]; i < map->bmv_entries; i++, p++) {
 
