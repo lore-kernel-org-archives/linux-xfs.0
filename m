@@ -7,57 +7,58 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FA85C4360D
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:34:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7BD3C432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:35:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5403E21D80
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:34:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 991BB21D80
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:35:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UY/LDeG/"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HXgwmTMT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727537AbfIYVey (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:34:54 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43560 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727654AbfIYVey (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:34:54 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYSgC009989;
-        Wed, 25 Sep 2019 21:34:53 GMT
+        id S1727680AbfIYVfB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:35:01 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37806 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727656AbfIYVfB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:35:01 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYNGZ057955;
+        Wed, 25 Sep 2019 21:34:58 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=j3PUoWYx1JvXN9iihHFnkN0vC285z5COzqo7Ij20d2c=;
- b=UY/LDeG/OFZKv+RidFCjPpLpOFywovNEQztHJwxGXUw7e/ldUVBhcp1yOgfSl4OMTQsB
- xQmgO62fxPeJO7ac4U7VBtRumVAxnvtyX07CyLwLD4Qf7N2yxhgMHoaUOkOLYQqyzONN
- IzWHrKOQMt6BCnuN6h1STFW696j7k1V+ga5iInvFQw3MS3s1OuFODTtLxv8Av7XtUySn
- MemCT8gl5NUm694NC+BH74X4XmEbkMEOJGgZJ1HC2Uqy2G9EwUChOAM1b83zAbzGjTf8
- MgW/Y2r5Kq/18P4onoYijk/+M1CEoglsEvQmlf5ZVmV7XMMgfiLytSMgYa+61atfT016 Bw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2v5btq7hr9-1
+ bh=/CQvP8cCXPALyR4gyixySjSg2/xGE8gDzfxcSCmlA28=;
+ b=HXgwmTMT1B8UTHzI6mtY7bdNqmCjPey4Aw6Io3qjYmO4HyT/BM+sNPDF9EX58OAS2VRh
+ Nrb+kPr853tj6IIElywM1UmNywkmVWoR3tBurQkm/5dWCg8M48TFl0Qq/3LOax0ptiws
+ ykQ5Li7F2f1SqAkCGJGQCJjstzeSSYJGxJWcCY+ZIEbnyHc5GeklTf/d+wIKnh81b5tp
+ NboVBEC9jvSvfdniDmHqBR1KuHzjiyzyZA3RpeURA3XUs0jxCxV0ndg9dTT29LFWRbpE
+ uK5sYg7n+ql1IMgwVhYa7hPVwgADyQauTCAPmSQ6Qcvx6JCYTW9JxMPrLe9luhQk7MYd 3A== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2v5b9tyh2p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:34:52 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYTAu097832;
-        Wed, 25 Sep 2019 21:34:52 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2v82qakr5m-1
+        Wed, 25 Sep 2019 21:34:58 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYOtR023704;
+        Wed, 25 Sep 2019 21:34:57 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3020.oracle.com with ESMTP id 2v7vnyup90-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:34:42 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLXhIc014668;
-        Wed, 25 Sep 2019 21:33:43 GMT
+        Wed, 25 Sep 2019 21:34:57 +0000
+Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLYu5T014585;
+        Wed, 25 Sep 2019 21:34:56 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:33:42 -0700
-Subject: [PATCH 03/13] libfrog: split workqueue destroy functions
+        with ESMTP ; Wed, 25 Sep 2019 14:34:56 -0700
+Subject: [PATCH 01/11] xfs_scrub: fix handling of read-verify pool runtime
+ errors
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:33:41 -0700
-Message-ID: <156944722163.297677.13367863143814852108.stgit@magnolia>
-In-Reply-To: <156944720314.297677.12837037497727069563.stgit@magnolia>
-References: <156944720314.297677.12837037497727069563.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:34:54 -0700
+Message-ID: <156944729476.298887.15638727982082805193.stgit@magnolia>
+In-Reply-To: <156944728875.298887.8311229116097714980.stgit@magnolia>
+References: <156944728875.298887.8311229116097714980.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,254 +81,87 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Split the workqueue destroy function into two parts -- one to signal all
-the threads to exit and wait for them, and a second one that actually
-destroys all the memory associated with the workqueue.  This mean we can
-report latent workqueue errors independent of the freeing function.
+Fix some bogosity with how we handle runtime errors in the read verify
+pool functions.  First of all, memory allocation failures shouldn't be
+recorded as disk IO errors, they should just complain and abort the
+phase.  Second, we need to collect any other runtime errors in the IO
+thread and abort the phase instead of silently ignoring them.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libfrog/workqueue.c |   37 ++++++++++++++++++++++++++++++-------
- libfrog/workqueue.h |    2 ++
- repair/threads.c    |    6 ++++++
- scrub/fscounters.c  |   11 ++++++++++-
- scrub/inodes.c      |    5 +++++
- scrub/phase2.c      |    5 +++++
- scrub/phase4.c      |    6 ++++++
- scrub/read_verify.c |    1 +
- scrub/spacemap.c    |    5 +++++
- scrub/vfs.c         |    5 +++++
- 10 files changed, 75 insertions(+), 8 deletions(-)
+ scrub/read_verify.c |   23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
 
-diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-index 48038363..07f11a7b 100644
---- a/libfrog/workqueue.c
-+++ b/libfrog/workqueue.c
-@@ -82,6 +82,7 @@ workqueue_create(
- 		goto out_mutex;
- 	}
- 	wq->terminate = false;
-+	wq->terminated = false;
- 
- 	for (i = 0; i < nr_workers; i++) {
- 		err = pthread_create(&wq->threads[i], NULL, workqueue_thread,
-@@ -119,6 +120,8 @@ workqueue_add(
- 	struct workqueue_item	*wi;
- 	int			ret;
- 
-+	assert(!wq->terminated);
-+
- 	if (wq->thread_count == 0) {
- 		func(wq, index, arg);
- 		return 0;
-@@ -157,22 +160,42 @@ workqueue_add(
- 
- /*
-  * Wait for all pending work items to be processed and tear down the
-- * workqueue.
-+ * workqueue thread pool.
-  */
--void
--workqueue_destroy(
-+int
-+workqueue_terminate(
- 	struct workqueue	*wq)
- {
- 	unsigned int		i;
-+	int			ret;
-+
-+	pthread_mutex_lock(&wq->lock);
-+	wq->terminate = true;
-+	pthread_mutex_unlock(&wq->lock);
-+
-+	ret = pthread_cond_broadcast(&wq->wakeup);
-+	if (ret)
-+		return ret;
-+
-+	for (i = 0; i < wq->thread_count; i++) {
-+		ret = pthread_join(wq->threads[i], NULL);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	pthread_mutex_lock(&wq->lock);
--	wq->terminate = 1;
-+	wq->terminated = true;
- 	pthread_mutex_unlock(&wq->lock);
- 
--	pthread_cond_broadcast(&wq->wakeup);
-+	return 0;
-+}
- 
--	for (i = 0; i < wq->thread_count; i++)
--		pthread_join(wq->threads[i], NULL);
-+/* Tear down the workqueue. */
-+void
-+workqueue_destroy(
-+	struct workqueue	*wq)
-+{
-+	assert(wq->terminated);
- 
- 	free(wq->threads);
- 	pthread_mutex_destroy(&wq->lock);
-diff --git a/libfrog/workqueue.h b/libfrog/workqueue.h
-index a1f3a57c..a56d1cf1 100644
---- a/libfrog/workqueue.h
-+++ b/libfrog/workqueue.h
-@@ -30,12 +30,14 @@ struct workqueue {
- 	unsigned int		item_count;
- 	unsigned int		thread_count;
- 	bool			terminate;
-+	bool			terminated;
- };
- 
- int workqueue_create(struct workqueue *wq, void *wq_ctx,
- 		unsigned int nr_workers);
- int workqueue_add(struct workqueue *wq, workqueue_func_t fn,
- 		uint32_t index, void *arg);
-+int workqueue_terminate(struct workqueue *wq);
- void workqueue_destroy(struct workqueue *wq);
- 
- #endif	/* __LIBFROG_WORKQUEUE_H__ */
-diff --git a/repair/threads.c b/repair/threads.c
-index d2190920..9b7241e3 100644
---- a/repair/threads.c
-+++ b/repair/threads.c
-@@ -56,5 +56,11 @@ void
- destroy_work_queue(
- 	struct workqueue	*wq)
- {
-+	int			err;
-+
-+	err = workqueue_terminate(wq);
-+	if (err)
-+		do_error(_("cannot terminate worker item, error = [%d] %s\n"),
-+				err, strerror(err));
- 	workqueue_destroy(wq);
- }
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index 669c5ab0..98aa3826 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -102,7 +102,7 @@ xfs_count_all_inodes(
- 	struct xfs_count_inodes	*ci;
- 	xfs_agnumber_t		agno;
- 	struct workqueue	wq;
--	bool			moveon;
-+	bool			moveon = true;
- 	int			ret;
- 
- 	ci = calloc(1, sizeof(struct xfs_count_inodes) +
-@@ -126,8 +126,17 @@ xfs_count_all_inodes(
- 			break;
- 		}
- 	}
-+
-+	ret = workqueue_terminate(&wq);
-+	if (ret) {
-+		moveon = false;
-+		str_liberror(ctx, ret, _("finishing icount work"));
-+	}
- 	workqueue_destroy(&wq);
- 
-+	if (!moveon)
-+		goto out_free;
-+
- 	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++)
- 		*count += ci->counters[agno];
- 	moveon = ci->moveon;
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 644a6372..c459a3b4 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -256,6 +256,11 @@ xfs_scan_all_inodes(
- 		}
- 	}
- 
-+	ret = workqueue_terminate(&wq);
-+	if (ret) {
-+		si.moveon = false;
-+		str_liberror(ctx, ret, _("finishing bulkstat work"));
-+	}
- 	workqueue_destroy(&wq);
- 
- 	return si.moveon;
-diff --git a/scrub/phase2.c b/scrub/phase2.c
-index 1d2244a4..d92b7e29 100644
---- a/scrub/phase2.c
-+++ b/scrub/phase2.c
-@@ -161,6 +161,11 @@ xfs_scan_metadata(
- 	}
- 
- out:
-+	ret = workqueue_terminate(&wq);
-+	if (ret) {
-+		moveon = false;
-+		str_liberror(ctx, ret, _("finishing scrub work"));
-+	}
- 	workqueue_destroy(&wq);
- 	return moveon;
- }
-diff --git a/scrub/phase4.c b/scrub/phase4.c
-index 903da6d2..eb30c189 100644
---- a/scrub/phase4.c
-+++ b/scrub/phase4.c
-@@ -90,6 +90,12 @@ xfs_process_action_items(
- 		if (!moveon)
- 			break;
- 	}
-+
-+	ret = workqueue_terminate(&wq);
-+	if (ret) {
-+		moveon = false;
-+		str_liberror(ctx, ret, _("finishing repair work"));
-+	}
- 	workqueue_destroy(&wq);
- 
- 	pthread_mutex_lock(&ctx->lock);
 diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index ff4d3572..bb8f09a8 100644
+index b890c92f..00627307 100644
 --- a/scrub/read_verify.c
 +++ b/scrub/read_verify.c
-@@ -120,6 +120,7 @@ void
- read_verify_pool_flush(
- 	struct read_verify_pool		*rvp)
- {
-+	workqueue_terminate(&rvp->wq);
- 	workqueue_destroy(&rvp->wq);
+@@ -53,6 +53,7 @@ struct read_verify_pool {
+ 	struct disk		*disk;		/* which disk? */
+ 	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
+ 	size_t			miniosz;	/* minimum io size, bytes */
++	int			errors_seen;
+ };
+ 
+ /*
+@@ -91,6 +92,7 @@ read_verify_pool_init(
+ 	rvp->ctx = ctx;
+ 	rvp->disk = disk;
+ 	rvp->ioerr_fn = ioerr_fn;
++	rvp->errors_seen = false;
+ 	error = ptvar_alloc(submitter_threads, sizeof(struct read_verify),
+ 			&rvp->rvstate);
+ 	if (error)
+@@ -149,6 +151,7 @@ read_verify(
+ 	unsigned long long		verified = 0;
+ 	ssize_t				sz;
+ 	ssize_t				len;
++	int				ret;
+ 
+ 	rvp = (struct read_verify_pool *)wq->wq_ctx;
+ 	while (rv->io_length > 0) {
+@@ -173,7 +176,12 @@ read_verify(
+ 	}
+ 
+ 	free(rv);
+-	ptcounter_add(rvp->verified_bytes, verified);
++	ret = ptcounter_add(rvp->verified_bytes, verified);
++	if (ret) {
++		str_liberror(rvp->ctx, ret,
++				_("updating bytes verified counter"));
++		rvp->errors_seen = true;
++	}
  }
  
-diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-index 4258e318..91e8badb 100644
---- a/scrub/spacemap.c
-+++ b/scrub/spacemap.c
-@@ -230,6 +230,11 @@ xfs_scan_all_spacemaps(
- 		}
+ /* Queue a read verify request. */
+@@ -188,18 +196,25 @@ read_verify_queue(
+ 	dbg_printf("verify fd %d start %"PRIu64" len %"PRIu64"\n",
+ 			rvp->disk->d_fd, rv->io_start, rv->io_length);
+ 
++	/* Worker thread saw a runtime error, don't queue more. */
++	if (rvp->errors_seen)
++		return false;
++
++	/* Otherwise clone the request and queue the copy. */
+ 	tmp = malloc(sizeof(struct read_verify));
+ 	if (!tmp) {
+-		rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start,
+-				rv->io_length, errno, rv->io_end_arg);
+-		return true;
++		str_errno(rvp->ctx, _("allocating read-verify request"));
++		rvp->errors_seen = true;
++		return false;
  	}
- out:
-+	ret = workqueue_terminate(&wq);
-+	if (ret) {
-+		sbx.moveon = false;
-+		str_liberror(ctx, ret, _("finishing fsmap work"));
-+	}
- 	workqueue_destroy(&wq);
++
+ 	memcpy(tmp, rv, sizeof(*tmp));
  
- 	return sbx.moveon;
-diff --git a/scrub/vfs.c b/scrub/vfs.c
-index 0cff2e3f..49d689af 100644
---- a/scrub/vfs.c
-+++ b/scrub/vfs.c
-@@ -250,6 +250,11 @@ scan_fs_tree(
- 	assert(sft.nr_dirs == 0);
- 	pthread_mutex_unlock(&sft.lock);
- 
-+	ret = workqueue_terminate(&wq);
-+	if (ret) {
-+		sft.moveon = false;
-+		str_liberror(ctx, ret, _("finishing directory scan work"));
-+	}
- out_wq:
- 	workqueue_destroy(&wq);
- 	return sft.moveon;
+ 	ret = workqueue_add(&rvp->wq, read_verify, 0, tmp);
+ 	if (ret) {
+ 		str_liberror(rvp->ctx, ret, _("queueing read-verify work"));
+ 		free(tmp);
++		rvp->errors_seen = true;
+ 		return false;
+ 	}
+ 	rv->io_length = 0;
 
