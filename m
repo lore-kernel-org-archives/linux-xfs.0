@@ -2,105 +2,1086 @@ Return-Path: <SRS0=XLdA=XU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.0 required=3.0 tests=MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E98FC432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 17:51:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD4BEC432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 20:29:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ED7B420872
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 17:51:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7410921D7A
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 20:29:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gZQL6f6Y"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728695AbfIYRvg convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 13:51:36 -0400
-Received: from mail.kernel.org ([198.145.29.99]:58984 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727420AbfIYRvg (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 25 Sep 2019 13:51:36 -0400
-From:   bugzilla-daemon@bugzilla.kernel.org
-To:     linux-xfs@vger.kernel.org
-Subject: [Bug 204997] New: fsck.xfs prints a vague message "XFS file system"
- when skipping a boot time check
-Date:   Wed, 25 Sep 2019 17:51:35 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Product: File System
-X-Bugzilla-Component: XFS
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: low
-X-Bugzilla-Who: nf8kh699qb@liamekaens.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P1
-X-Bugzilla-Assigned-To: filesystem_xfs@kernel-bugs.kernel.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version
- cf_kernel_version rep_platform op_sys cf_tree bug_status bug_severity
- priority component assigned_to reporter cf_regression attachments.created
-Message-ID: <bug-204997-201763@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+        id S2389111AbfIYU3I (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 16:29:08 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:56726 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387869AbfIYU3I (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 16:29:08 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PKMvOi149949;
+        Wed, 25 Sep 2019 20:28:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : to : cc :
+ references : from : message-id : date : mime-version : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=uocQzpIyELwNld+nXuSQuNJKV6UWve2THZ6JOBcrOcc=;
+ b=gZQL6f6Y7l5FCuZvVgQmtl7bdTlcCb4M7lCIGRwpmFELINkmb3FGSciTHWv1vFCRKr3Z
+ 4sMHWHGdFgrw4kst+Wu2R64oI/3oKG18xQ/kYVk6ofpAc5NoDNL+i1w8aUIm9QOv5bAj
+ g829uXKhueq1Y113FQoskqWt7JQwXCCbLwtx6M25RTdPmHHCIooMasGB6CDYw7PQt64J
+ /yqYbCX5EXzcdSVnkkQsMo5MuZB2vSChb2FYMtNhO0y96STiXJ+OmAmLblHNPVAB/RjP
+ +btBbu0eAzUROSQPRzmJJ8gVV9HwJBCKbnIhlfy90WbMtLgXerxoJ4eWX0XWs8jn9qku hQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2v5btq78d3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Sep 2019 20:28:44 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PKSVJK120433;
+        Wed, 25 Sep 2019 20:28:44 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2v82tkn9q9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Sep 2019 20:28:43 +0000
+Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PKSgGj019390;
+        Wed, 25 Sep 2019 20:28:42 GMT
+Received: from [192.168.1.9] (/67.1.21.243)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 25 Sep 2019 13:28:42 -0700
+Subject: Re: [PATCH v3 14/19] xfs: Add delayed attribute routines
+To:     Brian Foster <bfoster@redhat.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <20190905221837.17388-1-allison.henderson@oracle.com>
+ <20190905221837.17388-15-allison.henderson@oracle.com>
+ <20190920152813.GL40150@bfoster>
+ <4e51f7d2-71f5-9a1b-c413-55296c776dcc@oracle.com>
+ <20190923120430.GB6924@bfoster>
+ <dcda39b4-fe6d-872b-2296-8cc409f4d540@oracle.com>
+ <20190924100516.GC13820@bfoster> <20190925043645.GA9910@magnolia>
+ <20190925115331.GB21991@bfoster>
+From:   Allison Collins <allison.henderson@oracle.com>
+Message-ID: <6e6eb6e2-b04c-49b4-f954-86c5928ccd62@oracle.com>
+Date:   Wed, 25 Sep 2019 13:28:41 -0700
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
+In-Reply-To: <20190925115331.GB21991@bfoster>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9391 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909250164
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9391 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909250163
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=204997
 
-            Bug ID: 204997
-           Summary: fsck.xfs prints a vague message "XFS file system" when
-                    skipping a boot time check
-           Product: File System
-           Version: 2.5
-    Kernel Version: 5.4
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: low
-          Priority: P1
-         Component: XFS
-          Assignee: filesystem_xfs@kernel-bugs.kernel.org
-          Reporter: nf8kh699qb@liamekaens.com
-        Regression: No
 
-Created attachment 285173
-  --> https://bugzilla.kernel.org/attachment.cgi?id=285173&action=edit
-Suggested patch to improve the error message seen on boot.
+On 9/25/19 4:53 AM, Brian Foster wrote:
+> On Tue, Sep 24, 2019 at 09:36:45PM -0700, Darrick J. Wong wrote:
+>> On Tue, Sep 24, 2019 at 06:05:16AM -0400, Brian Foster wrote:
+>>> On Mon, Sep 23, 2019 at 10:53:42PM -0700, Allison Collins wrote:
+>>>> On 9/23/19 5:04 AM, Brian Foster wrote:
+>>>>> On Fri, Sep 20, 2019 at 12:12:51PM -0700, Allison Collins wrote:
+>>>>>> On 9/20/19 8:28 AM, Brian Foster wrote:
+>>>>>>> On Thu, Sep 05, 2019 at 03:18:32PM -0700, Allison Collins wrote:
+>>>>>>>> This patch adds new delayed attribute routines:
+>>>>>>>>
+>>>>>>>> xfs_attr_set_later
+>>>>>>>> xfs_attr_remove_later
+>>>>>>>> xfs_leaf_addname_later
+>>>>>>>> xfs_node_addname_later
+>>>>>>>> xfs_node_removename_later
+>>>>>>>>
+>>>>>>>> These routines are similar to their existing counter parts,
+>>>>>>>> but they do not roll or commit transactions.  They instead
+>>>>>>>> return -EAGAIN to allow the calling function to roll the
+>>>>>>>> transaction and recall the function.  This allows the
+>>>>>>>> attribute operations to be logged in multiple smaller
+>>>>>>>> transactions.
+>>>>>>>>
+>>>>>>>> Signed-off-by: Allison Collins <allison.henderson@oracle.com>
+>>>>>>>> ---
+>>>>>>>>     fs/xfs/libxfs/xfs_attr.c | 591 ++++++++++++++++++++++++++++++++++++++++++++++-
+>>>>>>>>     fs/xfs/libxfs/xfs_attr.h |   2 +
+>>>>>>>>     2 files changed, 592 insertions(+), 1 deletion(-)
+>>>>>>>>
+>>>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr.c b/fs/xfs/libxfs/xfs_attr.c
+>>>>>>>> index 781dd8a..310f5b2 100644
+>>>>>>>> --- a/fs/xfs/libxfs/xfs_attr.c
+>>>>>>>> +++ b/fs/xfs/libxfs/xfs_attr.c
+>>>>>>> ...
+>>>>>>>> @@ -313,6 +316,112 @@ xfs_attr_set_args(
+>>>>>>>>     }
+>>>>>>>>     /*
+>>>>>>>> + * Set the attribute specified in @args.
+>>>>>>>> + * This routine is meant to function as a delayed operation, and may return
+>>>>>>>> + * -EGAIN when the transaction needs to be rolled.  Calling functions will need
+>>>>>>>> + * to handle this, and recall the function until a successful error code is
+>>>>>>>> + * returned.
+>>>>>>>> + */
+>>>>>>>> +int
+>>>>>>>> +xfs_attr_set_later(
+>>>>>>>> +	struct xfs_da_args	*args,
+>>>>>>>> +	struct xfs_buf          **leaf_bp)
+>>>>>>>> +{
+>>>>>>>> +	struct xfs_inode	*dp = args->dp;
+>>>>>>>> +	int			error = 0;
+>>>>>>>> +	int			sf_size;
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * New inodes may not have an attribute fork yet. So set the attribute
+>>>>>>>> +	 * fork appropriately
+>>>>>>>> +	 */
+>>>>>>>> +	if (XFS_IFORK_Q((args->dp)) == 0) {
+>>>>>>>> +		sf_size = sizeof(struct xfs_attr_sf_hdr) +
+>>>>>>>> +		     XFS_ATTR_SF_ENTSIZE_BYNAME(args->name.len, args->valuelen);
+>>>>>>>> +		xfs_bmap_set_attrforkoff(args->dp, sf_size, NULL);
+>>>>>>>> +		args->dp->i_afp = kmem_zone_zalloc(xfs_ifork_zone, 0);
+>>>>>>>> +		args->dp->i_afp->if_flags = XFS_IFEXTENTS;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * If the attribute list is non-existent or a shortform list,
+>>>>>>>> +	 * upgrade it to a single-leaf-block attribute list.
+>>>>>>>> +	 */
+>>>>>>>> +	if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL ||
+>>>>>>>> +	    (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS &&
+>>>>>>>> +	     dp->i_d.di_anextents == 0)) {
+>>>>>>>> +		/*
+>>>>>>>> +		 * Build initial attribute list (if required).
+>>>>>>>> +		 */
+>>>>>>>> +		if (dp->i_d.di_aformat == XFS_DINODE_FMT_EXTENTS)
+>>>>>>>> +			xfs_attr_shortform_create(args);
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * Try to add the attr to the attribute list in the inode.
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_attr_try_sf_addname(dp, args);
+>>>>>>>> +		if (error != -ENOSPC)
+>>>>>>>> +			return error;
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * It won't fit in the shortform, transform to a leaf block.
+>>>>>>>> +		 * GROT: another possible req'mt for a double-split btree op.
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_attr_shortform_to_leaf(args, leaf_bp);
+>>>>>>>> +		if (error)
+>>>>>>>> +			return error;
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * Prevent the leaf buffer from being unlocked so that a
+>>>>>>>> +		 * concurrent AIL push cannot grab the half-baked leaf
+>>>>>>>> +		 * buffer and run into problems with the write verifier.
+>>>>>>>> +		 */
+>>>>>>>> +
+>>>>>>>> +		xfs_trans_bhold(args->trans, *leaf_bp);
+>>>>>>>> +		return -EAGAIN;
+>>>>>>>> +	}
+>>>>>>>
+>>>>>>> I haven't actually reviewed the code in this patch yet, but rather I
+>>>>>>> skipped ahead to try and get an understanding of the design approach and
+>>>>>>> flow of a deferred xattr operation. IIUC, we basically duplicate a bunch
+>>>>>>> of xattr code into these dfops oriented functions but instead of rolling
+>>>>>>> transactions, return -EAGAIN and use the XFS_DC_ state flags to manage
+>>>>>>> reentrancy into the xfs_trans_attr() function.
+>>>>>>
+>>>>>> Yes. If it helps to know a little more background about how it came into
+>>>>>> being...
+>>>>>> Initially I had started out with the code paths merged, and had a boolean
+>>>>>> switch to control the alternate behavior (much like the "roll_trans" boolean
+>>>>>> from the prior sets, if you recall them).  In a way, the boolean acted like
+>>>>>> a sort of marker of where things needed to get factored up.  The goal being
+>>>>>> to pull the boolean into the higher level routines as much as possible and
+>>>>>> leaving behind all the little helpers which is what you see now in now
+>>>>>> patches 5 - 12.
+>>>>>>
+>>>>>> After I got done with all the refactoring, the parts that still had the
+>>>>>> boolean were a sort of hybrid of the two paths you see now.  At one point I
+>>>>>> made a judgment that continuing to factor up the boolean would be more
+>>>>>> complicated than not.  I know people disliked the boolean toggle from the
+>>>>>> prior sets.  So the *_later routines we have now are a result of the hybrid
+>>>>>> having been gutted of the boolean and split then off into its separate path.
+>>>>>>
+>>>>>>
+>>>>>>>
+>>>>>>> If I'm following that correctly, I'm concerned about a couple things
+>>>>>>> with the general approach. First, I think the complexity is high and
+>>>>>>> maintainability is low/difficult for this kind of reentrant approach.
+>>>>>>
+>>>>>> Yes.  And I did very much anticipate a similar response.  Thats certainly
+>>>>>> not to imply that I did all this for giggles, but because I think sometimes
+>>>>>> it's easy for designs to sound like good ideas in theory, until people see
+>>>>>> them in practice.  And then the design takes a different direction.  In a
+>>>>>> way I think the prototypes are a sort of necessary step for the design to
+>>>>>> evolve, even if the prototypes are sort of ugly.  :-)
+>>>>>>
+>>>>>
+>>>>> Yeah, tbh I suspect that anything we come up with at first is going to
+>>>>> have an ugliness factor due to the simple fact of how the code is
+>>>>> currently implemented. IMO, the right approach is to take the current
+>>>>> code apart as much as possible (without too much regard for aesthetic),
+>>>>> identify/isolate the smallest functional components required to support
+>>>>> both direct rolling and deferred operation rolling, and then from there
+>>>>> think about cleaning up the design for how to fit those pieces back
+>>>>> together.  We might be able to do that in one patch series, but I
+>>>>> wouldn't be surprised (or object to) doing it in several.
+>>>>>
+>>>>> IOW, I think it would be reasonable to split off the effort of
+>>>>> refactoring the existing xattr code to be "deferred capable" as an
+>>>>> independent series if you didn't want to have to continue rebasing the
+>>>>> follow on deferred xattr bits and wanted to try and get more rapid
+>>>>> development+review cycles of the refactoring, but that's up to you. The
+>>>>> whole idea for the refactoring is to not change existing behavior, so I
+>>>>> don't see why that couldn't be a mergeable component on its own.
+>>>>
+>>>> Ok, maybe I could break up the set after patch 14, and add a wrapper loop
+>>>> like the one we have in the recover routine.  That might be a good way to
+>>>> introduce some of the set in smaller pieces.
+>>>>
+>>>>>
+>>>>>>> The state is managed/changed all throughout the call tree and so the
+>>>>>>> risk and complexity of changing one particular bit in the sequence
+>>>>>>> requires subtle consideration to make sure it doesn't cause problems if
+>>>>>>> the function is reentered.
+>>>>>> Yes, it's still very much a state machine in practice.  But I think we may
+>>>>>> be stuck with at least some variant of state machine if we still want to
+>>>>>> adhere to the EAGAIN interface which requires the stack to back out.  I have
+>>>>>> pondered the idea of introducing a call back to cycle out the transactions
+>>>>>> mid flight so that we dont need to stop and return. This would escape the
+>>>>>> state machine concept, but may require alternate surgery to the calling log
+>>>>>> routines too.  So that may just turn into a different type of monster
+>>>>>>
+>>>>>
+>>>>> To be clear, I'm pretty much expecting it to continue to be a state
+>>>>> machine. That seems to be the most simple way to break things down, I
+>>>>> think. I'd rather not get into things like callbacks or whatever until
+>>>>> we've broken down the functional components and have a more clear
+>>>>> picture of things.
+>>>>>
+>>>>> BTW, I thought one of your previous series' had a start on this in terms
+>>>>> of just defining some quick and dirty states based on an enum or
+>>>>> something and sticking them in a switch statement..? The point I'm
+>>>>> trying to make is that while those kind of simple enumerated low level
+>>>>> states are probably not where we want to leave things at the end, it
+>>>>> might be a reasonable approach to break the existing code into those
+>>>>> states and then try and polish things from there. I definitely think it
+>>>>> would be easier to review from a design perspective...
+>>>>
+>>>> Sure, I can bring back the state switch if people prefer.  I got the
+>>>> impression that people thought it was odd, so I replaced it with the
+>>>> XFS_DC_* flags in this one.  I figured that might be a little more like what
+>>>> people are used to seeing.  IMHO I think the state switch might have been
+>>>> little cleaner in that it doesn't have to re-run over the same block of code
+>>>> multiple times to achieve the same end goal of getting back to where it was.
+>>>> If people have other opinions though please feel free to chime in.
+>>>>
+>>>
+>>> To me, it's not so much preference as it is just thinking that's the
+>>> best approach to get the code refactored and reviewed. I agree that the
+>>> state machine approach is a bit more straightforward, even if crude, due
+>>> to the elimination of the repeated function calls and flags controlling
+>>
+>> Hmm.  The downside of reviewing a lot of patches is that I have a hard
+>> time remembering what I've said before.  Specifically, I don't remember
+>> if I was the one who complained about that... :/
+>>
+> 
+> Heh. I don't recall complaining about it, but I've agreed that it looks
+> funny so who knows. In any event, it's probably best that we agree on an
+> approach from here so we all know what to expect and don't waste
+> development and review time...
+> 
+>> So right now, xfs_attr_set_args encodes the sequence of "ensure attr
+>> fork" -> "try to add sf attr" -> "convert to leaf" -> "try to add leaf".
+>> Maybe each of those pieces should be separate functions, and each
+>> separate function is in charge of updating the @args with whichever
+>> function comes next in the sequence.  With that, xfs_attr_set_args
+>> becomes:
+>>
+>> 	while (args->nextfunc) {
+>> 		error = args->nextfunc(args);
+>> 		if (error && error != -EAGAIN)
+>> 			return error;
+>> 		xfs_trans_roll_inode(...);
+>> 	}
+>>
+>> and then xfs_trans_attr (i.e. the deferred version) becomes:
+>>
+>> 	while (args->nextfunc) {
+>> 		args->nextfunc(args);
+>> 		/*
+>> 		 * If error == -EAGAIN, we'll end up back here with a
+>> 		 * fresh transaction.
+>> 		 */
+>> 		if (error)
+>> 			return error;
+>> 	}
+>>
+> 
+> This seems like a potential final option to me, but I still think
+> breaking things down into the most basic states (as one of the previous
+> versions sort of did with a switch statement) is the most
+> straightforward approach because it facilitates pure refactoring. Note
+> that I'm definitely not trying to make the argument that we refactor
+> everything as such and then be done with it, but rather that we evaluate
+> next direction from that point.
+> 
+> Next direction includes consideration of things like whether the
+> intermediate state is aesthetically reasonable enough to be mergeable
+> (so we can make some development progress and stop holding up some of
+> these earlier patches), whether we can combine/reorder code to reduce
+> states, and if/how to actually redesign the broader mechanism to
+> facilitate deferred operations and potentially deal with some of the
+> things you call out below (transaction reservation/rolling and locking,
+> etc). I find the current approach of trying to solve all of this at once
+> unwieldy simply due to the big clump of code that the xattr mechanism
+> happens to be. We know we have to factor out the transaction processing
+> for deferred operations and take this thing apart, so why not just get
+> that part done?
+> 
+>> Though I guess a nice property of this current version is that it does
+>> all the checks every time, which means that at least in theory you could
+>> drop the ILOCK between rolls.  The only reason I mention /that/ is due
+>> to our recent discovery that while most code blocks for transaction
+>> reservation before blocking on an ILOCK, xfs_trans_roll_inode holds the
+>> ILOCK and can block waiting for more transaction reservation, which can
+>> lead to trouble.
+>>
+> 
+> Indeed, though this is a problem with the current code too, right?
+> 
+>> One other thing I noticed while walking through the attr code is that
+>> xfs_da_shrink_inode calls bunmapi to remove empty blocks.  I don't know
+>> if the deferred code does this, but it seems like it could be promising
+>> to use the deferred bmap unmap operation instead.  Dunno.
+>>
+> 
+> Another potential cleanup to consider. ;)
+> 
+>>> random blocks of code. As noted previously, my hope is that once we
+>>> break things down mechanically into the crude states that exist in the
+>>> current code, we'll come up with some nice ways to continue refactoring
+>>> things, reduce the number of states required and/or maybe even think of
+>>> a way to eliminate the state machine entirely.
+>>
+>> (Hopefully the above was what Brian was getting at?)
+>>
+> 
+> It's definitely along the lines of what I was hoping for as a final
+> result. I'm just arguing for a more deliberate approach to get to that
+> point:
+> 
+> 1.) Refactor existing code to lift out transaction processing using as
+> simple and unclever programming constructs as possible (i.e., switch
+> statements) and no functional changes.
+> 2.) Simplify/refine what falls out from that as appropriate.
+> 3.) Rework into a legitimate design (perhaps like what you propose above
+> with function pointers).
+> 4.) Plumb in deferred/intent item infrastructure such that the same
+> xattr mechanism is used for direct and deferred xattrs.
+> 5.) Profit.
+> 
+> Thoughts?
+> 
+> Brian
+That seems like a reasonable plan to me.  I think the set has gone 
+around enough times that if there was something more obvious missed, 
+there would have been more opinions voiced.  So I think this would be a 
+good way to proceed with caution and in small steps.  :-)
 
-When an XFS filesystems is configured to be checked on boot via the /etc/fstab,
-the /usr/sbin/fsck.xfs is called. It does nothing but print "XFS file system"
-which can mislead admins into thinking the filesytem was checked when it has
-not been.
+Allison
 
-This was previously reported via RedHat bug
-https://bugzilla.redhat.com/show_bug.cgi?id=1546294 and is a minor issue.
-
-Steps to Reproduce:
-1. Change the "0 0" in /etc/fstab for /home to "0 1"
-2. Reboot and watch console messages
-
-Actual results:
-
-Observe "Started file system check on /dev/mapper/<name of home LV>"
-
-Observe "systemd-fsck[<PID>]: /sbin/fsck.xfs: XFS file system"
-
-Expected results:
-
-Observe "systemd-fsck[<PID>]: /sbin/fsck.xfs: XFS file system checks always
-skipped on boot"
-
-Or some other message to make it clear that the check was 1) skipped and 2)
-this was intentional
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+> 
+>> --D
+>>
+>>> It's definitely worth soliciting other opinions, though, before
+>>> significantly refactoring things one way or the other..
+>>>
+>>>>>
+>>>>>> For example, I'd prefer to see something like
+>>>>>>> xfs_trans_attr() broken down into smaller granularity functions with
+>>>>>>> higher level state that is managed and readable in one place, if
+>>>>>>> possible. Perhaps we could do that based on attr fork format, but I need
+>>>>>>> to stare at the code and think about this some more (it might be that
+>>>>>>> some degree of reentrancy is inevitable, or we just need to break things
+>>>>>>> down to even smaller states...).
+>>>>>> Yes, and I did go through a phase of trying to simplify the statemachine by
+>>>>>> trying to grab onto anything about the state of the fork that could be used
+>>>>>> instead.  But its not always enough particularly in the case of routines
+>>>>>> that are in the middle of allocating or removing blocks.  If you see any
+>>>>>> other mechanics that could help out, please call them out.
+>>>>>>
+>>>>>
+>>>>> One of the things I'm wondering is if we'll be able to reduce the number
+>>>>> of unique (sub-)states required by reordering some of the existing logic
+>>>>> between the higher level states. For a quick example, the current series
+>>>>> uses the XFS_DC_ALLOC_LEAF state for a one-time operation that's part of
+>>>>> a state that can be reentered over and over. This raises the question to
+>>>>> me of whether that _ALLOC_LEAF thing could eventually just be folded
+>>>>> into the tail of the previous state.
+>>>>>
+>>>>> To reiterate, for now I think it would be perfectly reasonable to make
+>>>>> _ALLOC_LEAF its own independent state so the flag management isn't
+>>>>> buried so deep in the xattr code...
+>>>>
+>>>> Yes, it is one of the examples where trying to use the fork to control the
+>>>> state does not work out so well because we're in the middle of altering
+>>>> things.  So in those cases, using the state machine to give it its own state
+>>>> starts to make more sense.
+>>>>
+>>>>>
+>>>>>>
+>>>>>>>
+>>>>>>> Second, it seems like a lot of this code duplication between deferred
+>>>>>>> and non-deferred operations should be unnecessary, particularly since
+>>>>>>> the only difference between the contexts is how transactions are
+>>>>>>> managed. For example, if you follow the xattr set code path in both
+>>>>>>> contexts, we can see that functions like xfs_attr_set_args() are
+>>>>>>> basically duplicated in the xfs_attr_set_later() deferred variant just
+>>>>>>> so we can change the xfs_defer_finish() call in the former to a return
+>>>>>>> -EAGAIN in the latter.
+>>>>>> Yes, they still carry some similarities.  I guess I reasoned that continuing
+>>>>>> to carve things up into smaller and smaller helpers with out a generalized
+>>>>>> purpose (other than de-dup reduction) was starting to look a little weird,
+>>>>>> and maybe leaving things in their appropriate context might have been
+>>>>>> preferred?  Folks are welcome to chime in with opinions though.
+>>>>>>
+>>>>>
+>>>>> As mentioned above, I think weird is to be expected, at least if we
+>>>>> break things down into an intermediary state. That's just my .02 though.
+>>>>> Maybe others have different ideas..
+>>>>>
+>>>>>>>
+>>>>>>> Instead, what I think we should strive for is a common xattr mechanism
+>>>>>>> that consists of the lowest common denominator between the two contexts
+>>>>>>> (or IOW, core infrastructure that can be invoked from either context).
+>>>>>>> For example, on a kernel without deferred xattr support, could we find a
+>>>>>>> way to call the deferred variants directly and just let the
+>>>>>>> context-specific caller do the transaction rolls on -EAGAIN instead of
+>>>>>>> relying on the dfops infrastructure?
+>>>>>> I think I did that somewhere in the older parent pointer sets.  At the time,
+>>>>>> we sort of forgot that we cant completely scrap non delayed attrs (because
+>>>>>> we need them for older versions).  But then protofiles needed to create
+>>>>>> pptrs with out the delay mechanic, so I opened coded a sort of loop to deal
+>>>>>> with the EAGAIN.  In fact, I ended up doing the same sort of loop in patch
+>>>>>> 15 for xfs_attri_recover, which has the same challenge. Maybe we could make
+>>>>>> a sort of general purpose wrapper?
+>>>>>>
+>>>>>> ISTM that should be possible, it
+>>>>>>> just requires further breaking down the existing/non-deferred mechanism
+>>>>>>> into smaller bits that uses the new state management logic and
+>>>>>>> implements -EAGAIN handling for when the lower level code requires a
+>>>>>>> transaction roll. At that point, deferred support should basically just
+>>>>>>> consist of the dfops and log (i.e. intents) code to plug into the associated
+>>>>>>> infrastructure. I think another side effect of that approach is that we
+>>>>>>> shouldn't need these patches that add a bunch of new xattr
+>>>>>>> infrastructure code, but rather we'd just continue refactoring the
+>>>>>>> existing code and eventually implement a new high level function that
+>>>>>>> returns -EAGAIN directly to the dfops code instead of rolling
+>>>>>>> transactions explicitly. Thoughts?
+>>>>>> Ok, I think I understand what you're trying to describe here.  Maybe take a
+>>>>>> look at xfs_attri_recover in patch 15, and let me know if that was similar
+>>>>>> to what you were thinking?
+>>>>>>
+>>>>>
+>>>>> Yep, pretty much. Outside of the whole xfs_trans_attr() thing, I'd
+>>>>> expect the direct xattr path to have to do something very similar in
+>>>>> terms of invoking the xattr state machine and handling transaction rolls
+>>>>> where the dfops mechanism isn't there to do it for us.
+>>>>>
+>>>>> Brian
+>>>> Sure, that shouldn't be to hard to make a high level wrapper like that. Then
+>>>> we can let go of the old code path.
+>>>>
+>>>
+>>> I view it as more like reorganizing and reusing the old code path. ;)
+>>>
+>>> Brian
+>>>
+>>>> Thanks again for the all the reviewing!  :-)
+>>>>
+>>>> Allison
+>>>>
+>>>>>
+>>>>>> Thank you for all the thorough reviewing here, I know it's a lot!
+>>>>>> Allison
+>>>>>>
+>>>>>>>
+>>>>>>> Brian
+>>>>>>>
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * After a shortform to leaf conversion, we need to hold the leaf and
+>>>>>>>> +	 * cylce out the transaction.  When we get back, we need to release
+>>>>>>>> +	 * the leaf.
+>>>>>>>> +	 */
+>>>>>>>> +	if (*leaf_bp != NULL) {
+>>>>>>>> +		xfs_trans_brelse(args->trans, *leaf_bp);
+>>>>>>>> +		*leaf_bp = NULL;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * If we fit in a block, or we are in the middle of adding a leaf name.
+>>>>>>>> +	 * xfs_attr_da_leaf_addname will set the XFS_DC_ALLOC_LEAF to indicate
+>>>>>>>> +	 * that it is not done yet, and need to be recalled to finish up from
+>>>>>>>> +	 * the last EAGAIN it returned
+>>>>>>>> +	 */
+>>>>>>>> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK) ||
+>>>>>>>> +	    args->dc.flags & XFS_DC_ALLOC_LEAF) {
+>>>>>>>> +		if (!(args->dc.flags & XFS_DC_FOUND_LBLK)) {
+>>>>>>>> +			error = xfs_attr_leaf_try_add(args, *leaf_bp);
+>>>>>>>> +			args->dc.flags |= XFS_DC_FOUND_LBLK;
+>>>>>>>> +
+>>>>>>>> +			if (error && error != -ENOSPC)
+>>>>>>>> +				return error;
+>>>>>>>> +
+>>>>>>>> +			return -EAGAIN;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		error = xfs_leaf_addname_later(args);
+>>>>>>>> +		if (error && error != -ENOSPC)
+>>>>>>>> +			return error;
+>>>>>>>> +	} else {
+>>>>>>>> +		error = xfs_node_addname_later(args);
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	return error;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +
+>>>>>>>> +
+>>>>>>>> +/*
+>>>>>>>>      * Return EEXIST if attr is found, or ENOATTR if not
+>>>>>>>>      */
+>>>>>>>>     int
+>>>>>>>> @@ -362,6 +471,57 @@ xfs_attr_remove_args(
+>>>>>>>>     	return error;
+>>>>>>>>     }
+>>>>>>>> +/*
+>>>>>>>> + * Remove the attribute specified in @args.
+>>>>>>>> + * This routine is meant to function as a delayed operation, and may return
+>>>>>>>> + * -EGAIN when the transaction needs to be rolled.  Calling functions will need
+>>>>>>>> + * to handle this, and recall the function until a successful error code is
+>>>>>>>> + * returned.
+>>>>>>>> + */
+>>>>>>>> +int
+>>>>>>>> +xfs_attr_remove_later(
+>>>>>>>> +	struct xfs_da_args      *args)
+>>>>>>>> +{
+>>>>>>>> +	struct xfs_inode	*dp = args->dp;
+>>>>>>>> +	struct xfs_buf		*bp;
+>>>>>>>> +	int			forkoff, error = 0;
+>>>>>>>> +
+>>>>>>>> +	if (!xfs_inode_hasattr(dp)) {
+>>>>>>>> +		error = -ENOATTR;
+>>>>>>>> +	} else if (dp->i_d.di_aformat == XFS_DINODE_FMT_LOCAL) {
+>>>>>>>> +		ASSERT(dp->i_afp->if_flags & XFS_IFINLINE);
+>>>>>>>> +		error = xfs_attr_shortform_remove(args);
+>>>>>>>> +	} else if (xfs_bmap_one_block(dp, XFS_ATTR_FORK) &&
+>>>>>>>> +		   !(args->dc.flags & XFS_DC_RM_NODE_BLKS)) {
+>>>>>>>> +		/*
+>>>>>>>> +		 * If we fit in a block AND we are not in the middle of
+>>>>>>>> +		 * removing node blocks, remove the leaf attribute.
+>>>>>>>> +		 * xfs_attr_da_node_removename will set XFS_DC_RM_NODE_BLKS to
+>>>>>>>> +		 * signal that it is not done yet, and needs to be recalled to
+>>>>>>>> +		 * to finish up from the last -EAGAIN
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_leaf_has_attr(args, &bp);
+>>>>>>>> +		if (error == -ENOATTR) {
+>>>>>>>> +			xfs_trans_brelse(args->trans, bp);
+>>>>>>>> +			return error;
+>>>>>>>> +		}
+>>>>>>>> +		error = 0;
+>>>>>>>> +
+>>>>>>>> +		xfs_attr3_leaf_remove(bp, args);
+>>>>>>>> +
+>>>>>>>> +		/* If the result is small enough, shrink it into the inode.*/
+>>>>>>>> +		forkoff = xfs_attr_shortform_allfit(bp, dp);
+>>>>>>>> +		if (forkoff)
+>>>>>>>> +			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+>>>>>>>> +	} else {
+>>>>>>>> +		error = xfs_node_removename_later(args);
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	return error;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +
+>>>>>>>> +
+>>>>>>>>     int
+>>>>>>>>     xfs_attr_set(
+>>>>>>>>     	struct xfs_inode	*dp,
+>>>>>>>> @@ -794,6 +954,87 @@ xfs_attr_leaf_addname(struct xfs_da_args	*args)
+>>>>>>>>     }
+>>>>>>>>     /*
+>>>>>>>> + * Add a name to the leaf attribute list structure
+>>>>>>>> + *
+>>>>>>>> + * This leaf block cannot have a "remote" value, we only call this routine
+>>>>>>>> + * if bmap_one_block() says there is only one block (ie: no remote blks).
+>>>>>>>> + *
+>>>>>>>> + * This routine is meant to function as a delayed operation, and may return
+>>>>>>>> + * -EGAIN when the transaction needs to be rolled.  Calling functions will need
+>>>>>>>> + * to handle this, and recall the function until a successful error code is
+>>>>>>>> + * returned.
+>>>>>>>> + */
+>>>>>>>> +STATIC int
+>>>>>>>> +xfs_leaf_addname_later(
+>>>>>>>> +	struct xfs_da_args	*args)
+>>>>>>>> +{
+>>>>>>>> +	int			error, nmap;
+>>>>>>>> +	struct xfs_inode	*dp = args->dp;
+>>>>>>>> +	struct xfs_bmbt_irec	*map = &args->dc.map;
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * If there was an out-of-line value, allocate the blocks we
+>>>>>>>> +	 * identified for its storage and copy the value.  This is done
+>>>>>>>> +	 * after we create the attribute so that we don't overflow the
+>>>>>>>> +	 * maximum size of a transaction and/or hit a deadlock.
+>>>>>>>> +	 */
+>>>>>>>> +	if (args->rmtblkno > 0) {
+>>>>>>>> +		if (!(args->dc.flags & XFS_DC_ALLOC_LEAF)) {
+>>>>>>>> +			args->dc.lfileoff = 0;
+>>>>>>>> +			args->dc.lblkno = 0;
+>>>>>>>> +			args->dc.blkcnt = 0;
+>>>>>>>> +			args->rmtblkcnt = 0;
+>>>>>>>> +			args->rmtblkno = 0;
+>>>>>>>> +			memset(map, 0, sizeof(struct xfs_bmbt_irec));
+>>>>>>>> +
+>>>>>>>> +			error = xfs_attr_rmt_find_hole(args);
+>>>>>>>> +			if (error)
+>>>>>>>> +				return error;
+>>>>>>>> +
+>>>>>>>> +			args->dc.blkcnt = args->rmtblkcnt;
+>>>>>>>> +			args->dc.lblkno = args->rmtblkno;
+>>>>>>>> +			args->dc.flags |= XFS_DC_ALLOC_LEAF;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * Roll through the "value", allocating blocks on disk as
+>>>>>>>> +		 * required.
+>>>>>>>> +		 */
+>>>>>>>> +		while (args->dc.blkcnt > 0) {
+>>>>>>>> +			nmap = 1;
+>>>>>>>> +			error = xfs_bmapi_write(args->trans, dp,
+>>>>>>>> +				  (xfs_fileoff_t)args->dc.lblkno,
+>>>>>>>> +				  args->dc.blkcnt, XFS_BMAPI_ATTRFORK,
+>>>>>>>> +				  args->total, map, &nmap);
+>>>>>>>> +			if (error)
+>>>>>>>> +				return error;
+>>>>>>>> +			ASSERT(nmap == 1);
+>>>>>>>> +			ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
+>>>>>>>> +			       (map->br_startblock != HOLESTARTBLOCK));
+>>>>>>>> +
+>>>>>>>> +			/* roll attribute extent map forwards */
+>>>>>>>> +			args->dc.lblkno += map->br_blockcount;
+>>>>>>>> +			args->dc.blkcnt -= map->br_blockcount;
+>>>>>>>> +
+>>>>>>>> +			return -EAGAIN;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		error = xfs_attr_rmtval_set_value(args);
+>>>>>>>> +		if (error)
+>>>>>>>> +			return error;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	if (args->rmtblkno > 0) {
+>>>>>>>> +		/*
+>>>>>>>> +		 * Added a "remote" value, just clear the incomplete flag.
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_attr3_leaf_clearflag(args);
+>>>>>>>> +	}
+>>>>>>>> +	args->dc.flags &= ~XFS_DC_ALLOC_LEAF;
+>>>>>>>> +	return error;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +/*
+>>>>>>>>      * Return EEXIST if attr is found, or ENOATTR if not
+>>>>>>>>      */
+>>>>>>>>     STATIC int
+>>>>>>>> @@ -1291,6 +1532,354 @@ xfs_attr_node_removename(
+>>>>>>>>     }
+>>>>>>>>     /*
+>>>>>>>> + * Remove a name from a B-tree attribute list.
+>>>>>>>> + *
+>>>>>>>> + * This will involve walking down the Btree, and may involve joining
+>>>>>>>> + * leaf nodes and even joining intermediate nodes up to and including
+>>>>>>>> + * the root node (a special case of an intermediate node).
+>>>>>>>> + *
+>>>>>>>> + * This routine is meant to function as a delayed operation, and may return
+>>>>>>>> + * -EGAIN when the transaction needs to be rolled.  Calling functions
+>>>>>>>> + * will need to handle this, and recall the function until a successful error
+>>>>>>>> + * code is returned.
+>>>>>>>> + */
+>>>>>>>> +STATIC int
+>>>>>>>> +xfs_node_removename_later(
+>>>>>>>> +	struct xfs_da_args	*args)
+>>>>>>>> +{
+>>>>>>>> +	struct xfs_da_state	*state = NULL;
+>>>>>>>> +	struct xfs_da_state_blk	*blk;
+>>>>>>>> +	struct xfs_buf		*bp;
+>>>>>>>> +	int			error, forkoff, retval = 0;
+>>>>>>>> +	struct xfs_inode	*dp = args->dp;
+>>>>>>>> +	int			done = 0;
+>>>>>>>> +
+>>>>>>>> +	trace_xfs_attr_node_removename(args);
+>>>>>>>> +
+>>>>>>>> +	if (args->dc.state == NULL) {
+>>>>>>>> +		error = xfs_attr_node_hasname(args, &args->dc.state);
+>>>>>>>> +		if (error != -EEXIST)
+>>>>>>>> +			goto out;
+>>>>>>>> +		else
+>>>>>>>> +			error = 0;
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * If there is an out-of-line value, de-allocate the blocks.
+>>>>>>>> +		 * This is done before we remove the attribute so that we don't
+>>>>>>>> +		 * overflow the maximum size of a transaction and/or hit a
+>>>>>>>> +		 * deadlock.
+>>>>>>>> +		 */
+>>>>>>>> +		state = args->dc.state;
+>>>>>>>> +		args->dc.blk = &state->path.blk[state->path.active - 1];
+>>>>>>>> +		ASSERT(args->dc.blk->bp != NULL);
+>>>>>>>> +		ASSERT(args->dc.blk->magic == XFS_ATTR_LEAF_MAGIC);
+>>>>>>>> +	}
+>>>>>>>> +	state = args->dc.state;
+>>>>>>>> +	blk = args->dc.blk;
+>>>>>>>> +
+>>>>>>>> +	if (args->rmtblkno > 0 && !(args->dc.flags & XFS_DC_RM_LEAF_BLKS)) {
+>>>>>>>> +		bool isset;
+>>>>>>>> +
+>>>>>>>> +		error = xfs_attr3_leaf_flag_is_set(args, &isset);
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +		if (!isset) {
+>>>>>>>> +			/*
+>>>>>>>> +			 * Fill in disk block numbers in the state structure
+>>>>>>>> +			 * so that we can get the buffers back after we commit
+>>>>>>>> +			 * several transactions in the following calls.
+>>>>>>>> +			 */
+>>>>>>>> +			error = xfs_attr_fillstate(state);
+>>>>>>>> +			if (error)
+>>>>>>>> +				goto out;
+>>>>>>>> +
+>>>>>>>> +			/*
+>>>>>>>> +			 * Mark the attribute as INCOMPLETE, then bunmapi() the
+>>>>>>>> +			 * remote value.
+>>>>>>>> +			 */
+>>>>>>>> +			error = xfs_attr3_leaf_setflag(args);
+>>>>>>>> +			if (error)
+>>>>>>>> +				goto out;
+>>>>>>>> +
+>>>>>>>> +			return -EAGAIN;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		if (!(args->dc.flags & XFS_DC_RM_NODE_BLKS)) {
+>>>>>>>> +			args->dc.flags |= XFS_DC_RM_NODE_BLKS;
+>>>>>>>> +			error = xfs_attr_rmtval_invalidate(args);
+>>>>>>>> +			if (error)
+>>>>>>>> +				goto out;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * Unmap value blocks for this attr.  This is similar to
+>>>>>>>> +		 * xfs_attr_rmtval_remove, but open coded here to return EAGAIN
+>>>>>>>> +		 * for new transactions
+>>>>>>>> +		 */
+>>>>>>>> +		while (!done && !error) {
+>>>>>>>> +			error = xfs_bunmapi(args->trans, args->dp,
+>>>>>>>> +				    args->rmtblkno, args->rmtblkcnt,
+>>>>>>>> +				    XFS_BMAPI_ATTRFORK, 1, &done);
+>>>>>>>> +			if (error)
+>>>>>>>> +				return error;
+>>>>>>>> +
+>>>>>>>> +			if (!done)
+>>>>>>>> +				return -EAGAIN;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * Refill the state structure with buffers, the prior calls
+>>>>>>>> +		 * released our buffers.
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_attr_refillstate(state);
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * Remove the name and update the hashvals in the tree.
+>>>>>>>> +	 */
+>>>>>>>> +	if (!(args->dc.flags & XFS_DC_RM_LEAF_BLKS)) {
+>>>>>>>> +		blk = &state->path.blk[state->path.active - 1];
+>>>>>>>> +		ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>>>>>>>> +		retval = xfs_attr3_leaf_remove(blk->bp, args);
+>>>>>>>> +		xfs_da3_fixhashpath(state, &state->path);
+>>>>>>>> +
+>>>>>>>> +		args->dc.flags |= XFS_DC_RM_LEAF_BLKS;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * Check to see if the tree needs to be collapsed.
+>>>>>>>> +	 */
+>>>>>>>> +	if (retval && (state->path.active > 1)) {
+>>>>>>>> +		args->dc.flags |= XFS_DC_RM_NODE_BLKS;
+>>>>>>>> +		error = xfs_da3_join(state);
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +
+>>>>>>>> +		return -EAGAIN;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * If the result is small enough, push it all into the inode.
+>>>>>>>> +	 */
+>>>>>>>> +	if (xfs_bmap_one_block(dp, XFS_ATTR_FORK)) {
+>>>>>>>> +		/*
+>>>>>>>> +		 * Have to get rid of the copy of this dabuf in the state.
+>>>>>>>> +		 */
+>>>>>>>> +		ASSERT(state->path.active == 1);
+>>>>>>>> +		ASSERT(state->path.blk[0].bp);
+>>>>>>>> +		state->path.blk[0].bp = NULL;
+>>>>>>>> +
+>>>>>>>> +		error = xfs_attr3_leaf_read(args->trans, args->dp, 0, -1, &bp);
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +
+>>>>>>>> +		forkoff = xfs_attr_shortform_allfit(bp, dp);
+>>>>>>>> +		if (forkoff) {
+>>>>>>>> +			error = xfs_attr3_leaf_to_shortform(bp, args, forkoff);
+>>>>>>>> +			/* bp is gone due to xfs_da_shrink_inode */
+>>>>>>>> +			if (error)
+>>>>>>>> +				goto out;
+>>>>>>>> +		} else
+>>>>>>>> +			xfs_trans_brelse(args->trans, bp);
+>>>>>>>> +	}
+>>>>>>>> +out:
+>>>>>>>> +	if (state != NULL)
+>>>>>>>> +		xfs_da_state_free(state);
+>>>>>>>> +
+>>>>>>>> +	return error;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +/*
+>>>>>>>> + * Add a name to a Btree-format attribute list.
+>>>>>>>> + *
+>>>>>>>> + * This will involve walking down the Btree, and may involve splitting
+>>>>>>>> + * leaf nodes and even splitting intermediate nodes up to and including
+>>>>>>>> + * the root node (a special case of an intermediate node).
+>>>>>>>> + *
+>>>>>>>> + * "Remote" attribute values confuse the issue and atomic rename operations
+>>>>>>>> + * add a whole extra layer of confusion on top of that.
+>>>>>>>> + *
+>>>>>>>> + * This routine is meant to function as a delayed operation, and may return
+>>>>>>>> + * -EGAIN when the transaction needs to be rolled.  Calling functions will need
+>>>>>>>> + * to handle this, and recall the function until a successful error code is
+>>>>>>>> + *returned.
+>>>>>>>> + */
+>>>>>>>> +STATIC int
+>>>>>>>> +xfs_node_addname_later(
+>>>>>>>> +	struct xfs_da_args	*args)
+>>>>>>>> +{
+>>>>>>>> +	struct xfs_da_state	*state = NULL;
+>>>>>>>> +	struct xfs_da_state_blk	*blk;
+>>>>>>>> +	struct xfs_inode	*dp;
+>>>>>>>> +	int			retval, error = 0;
+>>>>>>>> +	int			nmap;
+>>>>>>>> +	struct xfs_bmbt_irec    *map = &args->dc.map;
+>>>>>>>> +
+>>>>>>>> +	trace_xfs_attr_node_addname(args);
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * Fill in bucket of arguments/results/context to carry around.
+>>>>>>>> +	 */
+>>>>>>>> +	dp = args->dp;
+>>>>>>>> +
+>>>>>>>> +	if (args->dc.flags & XFS_DC_FOUND_NBLK)
+>>>>>>>> +		goto found_blk;
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * Search to see if name already exists, and get back a pointer
+>>>>>>>> +	 * to where it should go.
+>>>>>>>> +	 */
+>>>>>>>> +	retval = xfs_attr_node_hasname(args, &state);
+>>>>>>>> +	blk = &state->path.blk[state->path.active-1];
+>>>>>>>> +	ASSERT(blk->magic == XFS_ATTR_LEAF_MAGIC);
+>>>>>>>> +	if ((args->name.type & ATTR_REPLACE) && (retval == -ENOATTR)) {
+>>>>>>>> +		goto out;
+>>>>>>>> +	} else if (retval == -EEXIST) {
+>>>>>>>> +		if (args->name.type & ATTR_CREATE)
+>>>>>>>> +			goto out;
+>>>>>>>> +
+>>>>>>>> +		trace_xfs_attr_node_replace(args);
+>>>>>>>> +
+>>>>>>>> +		/* save the attribute state for later removal*/
+>>>>>>>> +		args->op_flags |= XFS_DA_OP_RENAME;	/* atomic rename op */
+>>>>>>>> +		args->blkno2 = args->blkno;		/* set 2nd entry info*/
+>>>>>>>> +		args->index2 = args->index;
+>>>>>>>> +		args->rmtblkno2 = args->rmtblkno;
+>>>>>>>> +		args->rmtblkcnt2 = args->rmtblkcnt;
+>>>>>>>> +		args->rmtvaluelen2 = args->rmtvaluelen;
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * clear the remote attr state now that it is saved so that the
+>>>>>>>> +		 * values reflect the state of the attribute we are about to
+>>>>>>>> +		 * add, not the attribute we just found and will remove later.
+>>>>>>>> +		 */
+>>>>>>>> +		args->rmtblkno = 0;
+>>>>>>>> +		args->rmtblkcnt = 0;
+>>>>>>>> +		args->rmtvaluelen = 0;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	retval = xfs_attr3_leaf_add(blk->bp, state->args);
+>>>>>>>> +	if (retval == -ENOSPC) {
+>>>>>>>> +		if (state->path.active == 1) {
+>>>>>>>> +			/*
+>>>>>>>> +			 * Its really a single leaf node, but it had
+>>>>>>>> +			 * out-of-line values so it looked like it *might*
+>>>>>>>> +			 * have been a b-tree.
+>>>>>>>> +			 */
+>>>>>>>> +			xfs_da_state_free(state);
+>>>>>>>> +			state = NULL;
+>>>>>>>> +			error = xfs_attr3_leaf_to_node(args);
+>>>>>>>> +			if (error)
+>>>>>>>> +				goto out;
+>>>>>>>> +
+>>>>>>>> +			return -EAGAIN;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		/*
+>>>>>>>> +		 * Split as many Btree elements as required.
+>>>>>>>> +		 * This code tracks the new and old attr's location
+>>>>>>>> +		 * in the index/blkno/rmtblkno/rmtblkcnt fields and
+>>>>>>>> +		 * in the index2/blkno2/rmtblkno2/rmtblkcnt2 fields.
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_da3_split(state);
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +	} else {
+>>>>>>>> +		/*
+>>>>>>>> +		 * Addition succeeded, update Btree hashvals.
+>>>>>>>> +		 */
+>>>>>>>> +		xfs_da3_fixhashpath(state, &state->path);
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * Kill the state structure, we're done with it and need to
+>>>>>>>> +	 * allow the buffers to come back later.
+>>>>>>>> +	 */
+>>>>>>>> +	xfs_da_state_free(state);
+>>>>>>>> +	state = NULL;
+>>>>>>>> +
+>>>>>>>> +	args->dc.flags |= XFS_DC_FOUND_NBLK;
+>>>>>>>> +	return -EAGAIN;
+>>>>>>>> +found_blk:
+>>>>>>>> +
+>>>>>>>> +	/*
+>>>>>>>> +	 * If there was an out-of-line value, allocate the blocks we
+>>>>>>>> +	 * identified for its storage and copy the value.  This is done
+>>>>>>>> +	 * after we create the attribute so that we don't overflow the
+>>>>>>>> +	 * maximum size of a transaction and/or hit a deadlock.
+>>>>>>>> +	 */
+>>>>>>>> +	if (args->rmtblkno > 0) {
+>>>>>>>> +		if (!(args->dc.flags & XFS_DC_ALLOC_NODE)) {
+>>>>>>>> +			args->dc.flags |= XFS_DC_ALLOC_NODE;
+>>>>>>>> +			args->dc.lblkno = 0;
+>>>>>>>> +			args->dc.lfileoff = 0;
+>>>>>>>> +			args->dc.blkcnt = 0;
+>>>>>>>> +			args->rmtblkcnt = 0;
+>>>>>>>> +			args->rmtblkno = 0;
+>>>>>>>> +			memset(map, 0, sizeof(struct xfs_bmbt_irec));
+>>>>>>>> +
+>>>>>>>> +			error = xfs_attr_rmt_find_hole(args);
+>>>>>>>> +			if (error)
+>>>>>>>> +				return error;
+>>>>>>>> +
+>>>>>>>> +			args->dc.blkcnt = args->rmtblkcnt;
+>>>>>>>> +			args->dc.lblkno = args->rmtblkno;
+>>>>>>>> +		}
+>>>>>>>> +		/*
+>>>>>>>> +		 * Roll through the "value", allocating blocks on disk as
+>>>>>>>> +		 * required.
+>>>>>>>> +		 */
+>>>>>>>> +		while (args->dc.blkcnt > 0) {
+>>>>>>>> +			nmap = 1;
+>>>>>>>> +			error = xfs_bmapi_write(args->trans, dp,
+>>>>>>>> +				(xfs_fileoff_t)args->dc.lblkno, args->dc.blkcnt,
+>>>>>>>> +				XFS_BMAPI_ATTRFORK, args->total, map, &nmap);
+>>>>>>>> +			if (error)
+>>>>>>>> +				return error;
+>>>>>>>> +
+>>>>>>>> +			ASSERT(nmap == 1);
+>>>>>>>> +			ASSERT((map->br_startblock != DELAYSTARTBLOCK) &&
+>>>>>>>> +			       (map->br_startblock != HOLESTARTBLOCK));
+>>>>>>>> +
+>>>>>>>> +			/* roll attribute extent map forwards */
+>>>>>>>> +			args->dc.lblkno += map->br_blockcount;
+>>>>>>>> +			args->dc.blkcnt -= map->br_blockcount;
+>>>>>>>> +
+>>>>>>>> +			return -EAGAIN;
+>>>>>>>> +		}
+>>>>>>>> +
+>>>>>>>> +		error = xfs_attr_rmtval_set_value(args);
+>>>>>>>> +		if (error)
+>>>>>>>> +			return error;
+>>>>>>>> +	}
+>>>>>>>> +
+>>>>>>>> +	if (args->rmtblkno > 0) {
+>>>>>>>> +		/*
+>>>>>>>> +		 * Added a "remote" value, just clear the incomplete flag.
+>>>>>>>> +		 */
+>>>>>>>> +		error = xfs_attr3_leaf_clearflag(args);
+>>>>>>>> +		if (error)
+>>>>>>>> +			goto out;
+>>>>>>>> +	}
+>>>>>>>> +	retval = error = 0;
+>>>>>>>> +
+>>>>>>>> +out:
+>>>>>>>> +	if (state)
+>>>>>>>> +		xfs_da_state_free(state);
+>>>>>>>> +	if (error)
+>>>>>>>> +		return error;
+>>>>>>>> +
+>>>>>>>> +	return retval;
+>>>>>>>> +}
+>>>>>>>> +
+>>>>>>>> +
+>>>>>>>> +
+>>>>>>>> +/*
+>>>>>>>>      * Fill in the disk block numbers in the state structure for the buffers
+>>>>>>>>      * that are attached to the state structure.
+>>>>>>>>      * This is done so that we can quickly reattach ourselves to those buffers
+>>>>>>>> diff --git a/fs/xfs/libxfs/xfs_attr.h b/fs/xfs/libxfs/xfs_attr.h
+>>>>>>>> index fb56d81..6203766 100644
+>>>>>>>> --- a/fs/xfs/libxfs/xfs_attr.h
+>>>>>>>> +++ b/fs/xfs/libxfs/xfs_attr.h
+>>>>>>>> @@ -149,9 +149,11 @@ int xfs_attr_get(struct xfs_inode *ip, struct xfs_name *name,
+>>>>>>>>     int xfs_attr_set(struct xfs_inode *dp, struct xfs_name *name,
+>>>>>>>>     		 unsigned char *value, int valuelen);
+>>>>>>>>     int xfs_attr_set_args(struct xfs_da_args *args);
+>>>>>>>> +int xfs_attr_set_later(struct xfs_da_args *args, struct xfs_buf **leaf_bp);
+>>>>>>>>     int xfs_attr_remove(struct xfs_inode *dp, struct xfs_name *name);
+>>>>>>>>     int xfs_has_attr(struct xfs_da_args *args);
+>>>>>>>>     int xfs_attr_remove_args(struct xfs_da_args *args);
+>>>>>>>> +int xfs_attr_remove_later(struct xfs_da_args *args);
+>>>>>>>>     int xfs_attr_list(struct xfs_inode *dp, char *buffer, int bufsize,
+>>>>>>>>     		  int flags, struct attrlist_cursor_kern *cursor);
+>>>>>>>>     bool xfs_attr_namecheck(const void *name, size_t length);
+>>>>>>>> -- 
+>>>>>>>> 2.7.4
+>>>>>>>>
