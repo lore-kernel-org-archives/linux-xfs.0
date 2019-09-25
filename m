@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A7E02C4360D
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:34:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CBF6C432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:34:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7D30E21D80
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:34:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7289421D81
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:34:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GfwY4oYx"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hSapVm0u"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727478AbfIYVeh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:34:37 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43194 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727384AbfIYVeh (ORCPT
+        id S1727485AbfIYVei (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:34:38 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:37294 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727453AbfIYVeh (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:34:37 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYOCE009864;
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYNU4057952;
         Wed, 25 Sep 2019 21:34:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=knduo7mmOzYKtQwIAwV8dAkAygKXoqcWiFpsWzsh43I=;
- b=GfwY4oYxVBrDPg7YN7MJN2RAqLkvTOsUO107TxTAvXwzgHk3IVDcx2/hdnYf87ChQBGs
- UZvDUj9UxfwzU1s5YqbELX8yCWfCHDbmUA+3poXnbzFpn7D7Cg/nUgWwgEyR5Y8nOd0K
- CN1s1NTSSNT6mLssVSn3fGvhnu96eYiL2w4vc+xJ/WQmEjmWSEGvX7fyII9zKX878+x2
- q6J7iFVBp1rUS/eQoTRMtab776pdhK+enAgmPRLwj3FhQj9VJyvCwkfuliYYRFqdefSe
- 0DHqzTDVXElXv00o8KmMtClrH4wbjmjfEod4NPG/yxqCrrvfd+rVdxROqUdkN9ehEkOQ Pg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2v5btq7hnk-1
+ bh=57v6OlE4fKldtseXRurmX6ES/7SqMpzP00s49qCPjm8=;
+ b=hSapVm0ujcXkOWRbP6dqSJPF9AxjTtEEZbiZXbznhoLoVXBxxRvy3EdZ/2OEAp0JZra8
+ AOQCAgQ4LYwk2uJZ/End5lqz9E7IZOaTVYSTIJIz0rU4lE4YVfziYJTf4mUoATRuiThb
+ wFuUljZ5KDtxmH2bT3+2buEWTFpyTJR3XRJOVYR7AO0pGvJqXCcy+aT5sTbBI+K5pMNF
+ R+Hu1Y7LJ1EkVDCG3P6Oc9UcLmdTOdevYIPsWWd+Etihivci/wKd31+W8ktHGaBXNbvA
+ ICSAvrOtf4Wj8e3bzqvTXuVieC10nkYu4APGlU0FaamXVKEq2/R0DjFcdXLtAg5ltNwR Ng== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2v5b9tygyf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 25 Sep 2019 21:34:35 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYVX2079129;
-        Wed, 25 Sep 2019 21:34:34 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3030.oracle.com with ESMTP id 2v82tkrenn-1
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYRj1011395;
+        Wed, 25 Sep 2019 21:34:35 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2v829w4xcn-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:34:29 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLXnf0014554;
-        Wed, 25 Sep 2019 21:33:49 GMT
+        Wed, 25 Sep 2019 21:34:34 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLYDln019833;
+        Wed, 25 Sep 2019 21:34:13 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:33:48 -0700
-Subject: [PATCH 04/13] xfs_scrub: redistribute read verify pool flush and
- destroy responsibilities
+        with ESMTP ; Wed, 25 Sep 2019 14:34:13 -0700
+Subject: [PATCH 08/13] libfrog: fix missing error checking in bitmap code
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:33:47 -0700
-Message-ID: <156944722772.297677.6850171275317013793.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:34:11 -0700
+Message-ID: <156944725182.297677.5778254084930145538.stgit@magnolia>
 In-Reply-To: <156944720314.297677.12837037497727069563.stgit@magnolia>
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,60 +80,50 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Since workqueues now have separate primitives for "wait for all queued
-work" and "destroy workqueue", it makes more sense for the read verify
-pool code to call the workqueue destructor from its own destructor
-function.
+Check library calls for error codes being returned.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase6.c      |    9 +++++++--
- scrub/read_verify.c |    2 +-
- 2 files changed, 8 insertions(+), 3 deletions(-)
+ libfrog/bitmap.c |   15 ++++++++++++---
+ 1 file changed, 12 insertions(+), 3 deletions(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index b41f90e0..aff04e76 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -511,12 +511,17 @@ _("Could not create data device media verifier."));
- 	return moveon;
- 
- out_rtpool:
--	if (vs.rvp_realtime)
-+	if (vs.rvp_realtime) {
-+		read_verify_pool_flush(vs.rvp_realtime);
- 		read_verify_pool_destroy(vs.rvp_realtime);
-+	}
- out_logpool:
--	if (vs.rvp_log)
-+	if (vs.rvp_log) {
-+		read_verify_pool_flush(vs.rvp_log);
- 		read_verify_pool_destroy(vs.rvp_log);
-+	}
- out_datapool:
-+	read_verify_pool_flush(vs.rvp_data);
- 	read_verify_pool_destroy(vs.rvp_data);
- out_rbad:
- 	bitmap_free(&vs.r_bad);
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index bb8f09a8..e59d3e67 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -121,7 +121,6 @@ read_verify_pool_flush(
- 	struct read_verify_pool		*rvp)
+diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
+index be95965f..a75d085a 100644
+--- a/libfrog/bitmap.c
++++ b/libfrog/bitmap.c
+@@ -72,21 +72,30 @@ bitmap_alloc(
+ 	struct bitmap		**bmapp)
  {
- 	workqueue_terminate(&rvp->wq);
--	workqueue_destroy(&rvp->wq);
+ 	struct bitmap		*bmap;
++	int			ret;
+ 
+ 	bmap = calloc(1, sizeof(struct bitmap));
+ 	if (!bmap)
+ 		return errno;
+ 	bmap->bt_tree = malloc(sizeof(struct avl64tree_desc));
+ 	if (!bmap->bt_tree) {
+-		free(bmap);
+-		return errno;
++		ret = errno;
++		goto out;
+ 	}
+ 
+-	pthread_mutex_init(&bmap->bt_lock, NULL);
++	ret = pthread_mutex_init(&bmap->bt_lock, NULL);
++	if (ret)
++		goto out_tree;
++
+ 	avl64_init_tree(bmap->bt_tree, &bitmap_ops);
+ 	*bmapp = bmap;
+ 
+ 	return 0;
++out_tree:
++	free(bmap->bt_tree);
++out:
++	free(bmap);
++	return ret;
  }
  
- /* Finish up any read verification work and tear it down. */
-@@ -129,6 +128,7 @@ void
- read_verify_pool_destroy(
- 	struct read_verify_pool		*rvp)
- {
-+	workqueue_destroy(&rvp->wq);
- 	ptvar_free(rvp->rvstate);
- 	ptcounter_free(rvp->verified_bytes);
- 	free(rvp->readbuf);
+ /* Free a bitmap. */
 
