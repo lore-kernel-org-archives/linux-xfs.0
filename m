@@ -7,58 +7,57 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B671AC432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:40:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 042C3C4360C
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:40:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 87E8220872
+	by mail.kernel.org (Postfix) with ESMTP id CDA0C205F4
 	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:40:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="dV3Skacc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GtVW1yEA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728741AbfIYVki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1725837AbfIYVki (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 25 Sep 2019 17:40:38 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:36718 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725837AbfIYVkh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:40:37 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdPSU058312;
+Received: from userp2130.oracle.com ([156.151.31.86]:43426 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728732AbfIYVki (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:40:38 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdQIP061490;
         Wed, 25 Sep 2019 21:40:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=xyJDSw5zAlOsSRLyrdjYUWxboEhXs5/6wBX8N8OrWLU=;
- b=dV3SkaccTVwz7f2Xd4pUHKFSdIv5Z0FetXUZVczs4UpmmE9N75/IXbOo4tWQ0tmymb8f
- 6ruKtATleclX4z5N+KxYIdpKbzAXzFBcRIhRgbBS2+3sWPivKpntt06YQR+b7GOm3h36
- 9JBMoYi1zs3QnLpFwG61apZ61weL2sMddLsVcBhlRIJK1Ie8F7q1Nm3/c8WUBfw2yILy
- qWFI7Px2Q3xUMdDV30Wr8HjIXgC9eLGt9sAM4nZZ35QNgmsLYkGRpVQz+VbK5ghB1Brj
- gDb1qKSHMfVTO5NypC0kEnhsppufGoofxFQtmn7mj85QZ+GPWBr2Bfi1a64WqU68IJiq xw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2v5cgr7fm4-1
+ bh=Cc5znIrxvF9nLIQ7RE9n5lplDgbplDA/XOkxBfCU+rc=;
+ b=GtVW1yEA+H4tIqN6/HH+JHhOhEC2vR8uh9toOwjNs5gltsi2puW4ETTZw4hvZHE33B/4
+ Qn5M1j44eOM5vZKiJribHkBzsVGmrp7s1CcQJq8Rcy0s50dPykANtW0kGRxGKM6/6QeA
+ wq+ggYwGjUkj32A60JS6dndQywiCzWa8YT3whnxiRpdza6F+RB3Gq7/XStmIpROa40it
+ KBkvZqoy6LgWTKPt8i9JfhEa7303v1mcTHpcZlcY3vr8gnX/S1P6PNno/MQtjcMiiiPC
+ ixmE9IeZF8amC41WnruvLH5bgI3eTt4D5/brfW+zyS8IqxbHjvPYypiL68Ko1PaV+23F SQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2v5b9tyhqp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 25 Sep 2019 21:40:35 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdGmf021125;
-        Wed, 25 Sep 2019 21:40:35 GMT
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdNlR033582;
+        Wed, 25 Sep 2019 21:40:34 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2v829w57ky-1
+        by aserp3020.oracle.com with ESMTP id 2v7vnyuvgv-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 25 Sep 2019 21:40:34 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLeXB4018588;
-        Wed, 25 Sep 2019 21:40:33 GMT
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLd7SA017586;
+        Wed, 25 Sep 2019 21:39:07 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:40:33 -0700
-Subject: [PATCH 5/7] libfrog: convert ptvar.c functions to negative error
- codes
+        with ESMTP ; Wed, 25 Sep 2019 14:39:07 -0700
+Subject: [PATCH 10/18] xfs_scrub: remove moveon from phase 7 functions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:40:32 -0700
-Message-ID: <156944763225.302827.11883869939231821231.stgit@magnolia>
-In-Reply-To: <156944760161.302827.4342305147521200999.stgit@magnolia>
-References: <156944760161.302827.4342305147521200999.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:39:06 -0700
+Message-ID: <156944754618.301514.16246827692063674825.stgit@magnolia>
+In-Reply-To: <156944748487.301514.14685083474028866113.stgit@magnolia>
+References: <156944748487.301514.14685083474028866113.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -81,164 +80,124 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Convert libfrog functions to return negative error codes like libxfs
-does.
+Replace the moveon returns in the phase 7 code with a direct integer
+error return.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- libfrog/ptvar.c     |    8 ++++----
- scrub/counter.c     |    6 +++---
- scrub/descr.c       |    2 +-
- scrub/phase7.c      |    8 ++++----
- scrub/read_verify.c |    8 ++++----
- 5 files changed, 16 insertions(+), 16 deletions(-)
+ scrub/phase7.c |   40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
 
-diff --git a/libfrog/ptvar.c b/libfrog/ptvar.c
-index 55324b71..9c4b1736 100644
---- a/libfrog/ptvar.c
-+++ b/libfrog/ptvar.c
-@@ -54,15 +54,15 @@ ptvar_alloc(
- 
- 	ptv = malloc(PTVAR_SIZE(nr, size));
- 	if (!ptv)
--		return errno;
-+		return -errno;
- 	ptv->data_size = size;
- 	ptv->nr_counters = nr;
- 	ptv->nr_used = 0;
- 	memset(ptv->data, 0, nr * size);
--	ret = pthread_mutex_init(&ptv->lock, NULL);
-+	ret = -pthread_mutex_init(&ptv->lock, NULL);
- 	if (ret)
- 		goto out;
--	ret = pthread_key_create(&ptv->key, NULL);
-+	ret = -pthread_key_create(&ptv->key, NULL);
- 	if (ret)
- 		goto out_mutex;
- 
-@@ -99,7 +99,7 @@ ptvar_get(
- 		pthread_mutex_lock(&ptv->lock);
- 		assert(ptv->nr_used < ptv->nr_counters);
- 		p = &ptv->data[(ptv->nr_used++) * ptv->data_size];
--		ret = pthread_setspecific(ptv->key, p);
-+		ret = -pthread_setspecific(ptv->key, p);
- 		if (ret)
- 			goto out_unlock;
- 		pthread_mutex_unlock(&ptv->lock);
-diff --git a/scrub/counter.c b/scrub/counter.c
-index 1bb726dc..6d91eb6e 100644
---- a/scrub/counter.c
-+++ b/scrub/counter.c
-@@ -38,7 +38,7 @@ ptcounter_alloc(
- 	p = malloc(sizeof(struct ptcounter));
- 	if (!p)
- 		return errno;
--	ret = ptvar_alloc(nr, sizeof(uint64_t), &p->var);
-+	ret = -ptvar_alloc(nr, sizeof(uint64_t), &p->var);
- 	if (ret) {
- 		free(p);
- 		return ret;
-@@ -67,7 +67,7 @@ ptcounter_add(
- 
- 	p = ptvar_get(ptc->var, &ret);
- 	if (ret)
--		return ret;
-+		return -ret;
- 	*p += nr;
- 	return 0;
- }
-@@ -92,5 +92,5 @@ ptcounter_value(
- 	uint64_t		*sum)
- {
- 	*sum = 0;
--	return ptvar_foreach(ptc->var, ptcounter_val_helper, sum);
-+	return -ptvar_foreach(ptc->var, ptcounter_val_helper, sum);
- }
-diff --git a/scrub/descr.c b/scrub/descr.c
-index 7f65a4e0..a863c065 100644
---- a/scrub/descr.c
-+++ b/scrub/descr.c
-@@ -89,7 +89,7 @@ descr_init_phase(
- 	int			ret;
- 
- 	assert(descr_ptvar == NULL);
--	ret = ptvar_alloc(nr_threads, DESCR_BUFSZ, &descr_ptvar);
-+	ret = -ptvar_alloc(nr_threads, DESCR_BUFSZ, &descr_ptvar);
- 	if (ret)
- 		str_liberror(ctx, ret, _("creating description buffer"));
- 
 diff --git a/scrub/phase7.c b/scrub/phase7.c
-index f25a8765..f8410439 100644
+index 452d56ad..ff51c634 100644
 --- a/scrub/phase7.c
 +++ b/scrub/phase7.c
-@@ -39,8 +39,8 @@ count_block_summary(
+@@ -73,7 +73,7 @@ count_block_summary(
  
- 	counts = ptvar_get((struct ptvar *)arg, &ret);
- 	if (ret) {
--		str_liberror(ctx, ret, _("retrieving summary counts"));
--		return ret;
-+		str_liberror(ctx, -ret, _("retrieving summary counts"));
-+		return -ret;
- 	}
- 	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
- 		return 0;
-@@ -135,7 +135,7 @@ phase7_func(
- 		return error;
+ /* Add all the summaries in the per-thread counter */
+ static int
+-xfs_add_summaries(
++add_summaries(
+ 	struct ptvar		*ptv,
+ 	void			*data,
+ 	void			*arg)
+@@ -93,8 +93,8 @@ xfs_add_summaries(
+  * filesystem we'll be content if the summary counts are within 10% of
+  * what we observed.
+  */
+-bool
+-xfs_scan_summary(
++int
++phase7_func(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	struct summary_counts	totalcount = {0};
+@@ -113,7 +113,6 @@ xfs_scan_summary(
+ 	unsigned long long	r_bfree;
+ 	unsigned long long	f_files;
+ 	unsigned long long	f_free;
+-	bool			moveon;
+ 	bool			complain;
+ 	bool			scrub_all = scrub_data > 1;
+ 	int			ip;
+@@ -123,33 +122,31 @@ xfs_scan_summary(
+ 	action_list_init(&alist);
+ 	error = xfs_scrub_fs_summary(ctx, &alist);
+ 	if (error)
+-		return false;
++		return error;
+ 	error = action_list_process(ctx, ctx->mnt.fd, &alist,
+ 			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
+ 	if (error)
+-		return false;
++		return error;
+ 
+ 	/* Flush everything out to disk before we start counting. */
+ 	error = syncfs(ctx->mnt.fd);
+ 	if (error) {
+ 		str_errno(ctx, ctx->mntpoint);
+-		return false;
++		return error;
  	}
  
--	error = ptvar_alloc(scrub_nproc(ctx), sizeof(struct summary_counts),
-+	error = -ptvar_alloc(scrub_nproc(ctx), sizeof(struct summary_counts),
+ 	error = ptvar_alloc(scrub_nproc(ctx), sizeof(struct summary_counts),
  			&ptvar);
  	if (error) {
  		str_liberror(ctx, error, _("setting up block counter"));
-@@ -146,7 +146,7 @@ phase7_func(
+-		return false;
++		return error;
+ 	}
+ 
+ 	/* Use fsmap to count blocks. */
  	error = scrub_scan_all_spacemaps(ctx, count_block_summary, ptvar);
- 	if (error)
+-	if (error) {
+-		moveon = false;
++	if (error)
  		goto out_free;
--	error = ptvar_foreach(ptvar, add_summaries, &totalcount);
-+	error = -ptvar_foreach(ptvar, add_summaries, &totalcount);
+-	}
+-	error = ptvar_foreach(ptvar, xfs_add_summaries, &totalcount);
++	error = ptvar_foreach(ptvar, add_summaries, &totalcount);
  	if (error) {
  		str_liberror(ctx, error, _("counting blocks"));
  		goto out_free;
-diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 414d25a6..b7e9eb91 100644
---- a/scrub/read_verify.c
-+++ b/scrub/read_verify.c
-@@ -115,7 +115,7 @@ read_verify_pool_alloc(
- 	rvp->disk = disk;
- 	rvp->ioerr_fn = ioerr_fn;
- 	rvp->errors_seen = 0;
--	ret = ptvar_alloc(submitter_threads, sizeof(struct read_verify),
-+	ret = -ptvar_alloc(submitter_threads, sizeof(struct read_verify),
- 			&rvp->rvstate);
- 	if (ret)
- 		goto out_counter;
-@@ -334,7 +334,7 @@ read_verify_schedule_io(
+@@ -160,15 +157,14 @@ xfs_scan_summary(
+ 	error = scrub_count_all_inodes(ctx, &counted_inodes);
+ 	if (error) {
+ 		str_liberror(ctx, error, _("counting inodes"));
+-		moveon = false;
+-		goto out;
++		return error;
+ 	}
  
- 	rv = ptvar_get(rvp->rvstate, &ret);
- 	if (ret)
--		return ret;
-+		return -ret;
- 	req_end = start + length;
- 	rv_end = rv->io_start + rv->io_length;
+ 	error = scrub_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
+ 			&r_bfree, &f_files, &f_free);
+ 	if (error) {
+ 		str_liberror(ctx, error, _("estimating verify work"));
+-		return false;
++		return error;
+ 	}
  
-@@ -382,7 +382,7 @@ force_one_io(
- 	if (rv->io_length == 0)
- 		return 0;
+ 	/*
+@@ -277,11 +273,15 @@ _("%.1f%s data counted; %.1f%s file data media verified.\n"),
+ 		fflush(stdout);
+ 	}
  
--	return read_verify_queue(rvp, rv);
-+	return -read_verify_queue(rvp, rv);
+-	moveon = true;
+-
+-out:
+-	return moveon;
++	return 0;
+ out_free:
+ 	ptvar_free(ptvar);
+-	return moveon;
++	return error;
++}
++
++bool
++xfs_scan_summary(
++	struct scrub_ctx	*ctx)
++{
++	return phase7_func(ctx) == 0;
  }
- 
- /* Force any stashed IOs into the verifier. */
-@@ -392,7 +392,7 @@ read_verify_force_io(
- {
- 	assert(rvp->readbuf);
- 
--	return ptvar_foreach(rvp->rvstate, force_one_io, rvp);
-+	return -ptvar_foreach(rvp->rvstate, force_one_io, rvp);
- }
- 
- /* How many bytes has this process verified? */
 
