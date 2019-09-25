@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66F51C4360C
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DEBAAC432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2417D205F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9F27B205F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Fvcg/Z9c"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bwwZdart"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728652AbfIYVjT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:39:19 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:41812 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728253AbfIYVjT (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:39:19 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLYWA9058025;
-        Wed, 25 Sep 2019 21:39:18 GMT
+        id S1728654AbfIYVj0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:39:26 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:47848 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725806AbfIYVj0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:39:26 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdOrl013212;
+        Wed, 25 Sep 2019 21:39:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=/SbA14fj1BNWf2eu6wlANDb94IiAMpTt067UXWmn8wA=;
- b=Fvcg/Z9cwyK/XeuWNOUuplAUb4ZrBSDaX5HE9+x7on9y00RVZ2dtOf+hk+UbfbbChW6n
- 3ysT4JS+I660hnq76CakBU9Q3UYjuzDqxWemM99khM9LYBwvuUje90D8C6qRvCrpYChR
- 2g9uS8A8K00x4DGIvGMQyaNJwQQrd4CJrCdqv0x/nImanvnTC4mRUuZLVwEKrKmPB9H9
- yft2XeO+o1BqQHssXuVlA3E4eOWX26nVoxuboQ2dUPfz+aNKX3epMAvoaMTyDGXTQd3i
- 19waeZ/QeYrezgXnKjtN2BRUoPS4wCHyuv5vqyJEw6q/zpb/tZ/TeDBzBVLzKQirLaGL lw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2v5b9tyhf2-1
+ bh=q+nPv+dV5qGTt76Z2otr0GAk8mibrOuEpdqsK1sY9eY=;
+ b=bwwZdartHwdkpQrIpAPMBJKc5d60ZYMHxJzl6A+9YofkOd6500MNfzw+9wUFVj48SMEL
+ m9qwqaUAfUsrb6HeeRCmcTi4CD479JtrV6R4mMjeJhdD7fRHSb3VXWjoktowG6ge1fxO
+ C5/aX3nY90Pzmu+rl4f1VO68AJuj3PtwWjgC4fXF1Y3CaAblOpM+ZMAzRTa4vUQyrGth
+ C8L3yUJzjrX9mTjX4MytSww8L5a0a8u4D0b16WGuX1pd5H1jrzGz5psShbvUki498U2m
+ MiZdRH92H4wbYFq0JvvxYn/MG9xcTH00QzI+xlNXS22+Pgkwn/pHbxV5898/t/X0hXi1 gw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2v5btq7j68-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:39:17 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdGUS021086;
-        Wed, 25 Sep 2019 21:39:17 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2v829w54tw-1
+        Wed, 25 Sep 2019 21:39:24 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdL7Z088251;
+        Wed, 25 Sep 2019 21:39:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2v82tkrnqw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:39:16 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLcb6L017394;
-        Wed, 25 Sep 2019 21:38:37 GMT
+        Wed, 25 Sep 2019 21:39:22 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLctM2022470;
+        Wed, 25 Sep 2019 21:38:55 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:38:36 -0700
-Subject: [PATCH 05/18] xfs_scrub: remove moveon from spacemap
+        with ESMTP ; Wed, 25 Sep 2019 14:38:55 -0700
+Subject: [PATCH 08/18] xfs_scrub: remove moveon from scrub ioctl wrappers
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:38:35 -0700
-Message-ID: <156944751553.301514.1909374067983376994.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:38:53 -0700
+Message-ID: <156944753385.301514.11191607939839219329.stgit@magnolia>
 In-Reply-To: <156944748487.301514.14685083474028866113.stgit@magnolia>
 References: <156944748487.301514.14685083474028866113.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -63,16 +63,16 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9391 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1909250175
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9391 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909250174
+ definitions=main-1909250175
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -80,499 +80,559 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the moveon returns in the space map iteration code with a direct
-integer return.
+Replace the moveon returns in the scrub ioctl wrapper functions
+with a direct integer error return.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/phase6.c   |   35 ++++++-------
- scrub/phase7.c   |   21 ++++----
- scrub/spacemap.c |  145 +++++++++++++++++++++++++++++-------------------------
- scrub/spacemap.h |    8 +--
- 4 files changed, 107 insertions(+), 102 deletions(-)
+ scrub/phase2.c    |   23 ++++++++-------
+ scrub/phase3.c    |   38 +++++++++++++-----------
+ scrub/phase4.c    |    8 +++--
+ scrub/phase5.c    |    4 +--
+ scrub/phase7.c    |    4 +--
+ scrub/scrub.c     |   84 ++++++++++++++++++++++++++++++-----------------------
+ scrub/scrub.h     |   26 ++++++++--------
+ scrub/xfs_scrub.h |    2 +
+ 8 files changed, 102 insertions(+), 87 deletions(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index dd6e29af..49650a21 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -359,10 +359,9 @@ xfs_report_verify_dirent(
- }
+diff --git a/scrub/phase2.c b/scrub/phase2.c
+index d92b7e29..016d8ec5 100644
+--- a/scrub/phase2.c
++++ b/scrub/phase2.c
+@@ -32,6 +32,7 @@ xfs_scan_ag_metadata(
+ 	unsigned long long		broken_secondaries;
+ 	bool				moveon;
+ 	char				descr[DESCR_BUFSZ];
++	int				ret;
  
- /* Report an IO error resulting from read-verify based off getfsmap. */
+ 	xfs_action_list_init(&alist);
+ 	xfs_action_list_init(&immediate_alist);
+@@ -41,8 +42,8 @@ xfs_scan_ag_metadata(
+ 	 * First we scrub and fix the AG headers, because we need
+ 	 * them to work well enough to check the AG btrees.
+ 	 */
+-	moveon = xfs_scrub_ag_headers(ctx, agno, &alist);
+-	if (!moveon)
++	ret = xfs_scrub_ag_headers(ctx, agno, &alist);
++	if (ret)
+ 		goto err;
+ 
+ 	/* Repair header damage. */
+@@ -51,8 +52,8 @@ xfs_scan_ag_metadata(
+ 		goto err;
+ 
+ 	/* Now scrub the AG btrees. */
+-	moveon = xfs_scrub_ag_metadata(ctx, agno, &alist);
+-	if (!moveon)
++	ret = xfs_scrub_ag_metadata(ctx, agno, &alist);
++	if (ret)
+ 		goto err;
+ 
+ 	/*
+@@ -100,11 +101,11 @@ xfs_scan_fs_metadata(
+ 	struct scrub_ctx		*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	bool				*pmoveon = arg;
+ 	struct xfs_action_list		alist;
+-	bool				moveon;
++	int				ret;
+ 
+ 	xfs_action_list_init(&alist);
+-	moveon = xfs_scrub_fs_metadata(ctx, &alist);
+-	if (!moveon)
++	ret = xfs_scrub_fs_metadata(ctx, &alist);
++	if (ret)
+ 		*pmoveon = false;
+ 
+ 	xfs_action_list_defer(ctx, agno, &alist);
+@@ -134,9 +135,11 @@ xfs_scan_metadata(
+ 	 * anything else.
+ 	 */
+ 	xfs_action_list_init(&alist);
+-	moveon = xfs_scrub_primary_super(ctx, &alist);
+-	if (!moveon)
++	ret = xfs_scrub_primary_super(ctx, &alist);
++	if (ret) {
++		moveon = false;
+ 		goto out;
++	}
+ 	moveon = xfs_action_list_process_or_defer(ctx, 0, &alist);
+ 	if (!moveon)
+ 		goto out;
+@@ -178,7 +181,7 @@ xfs_estimate_metadata_work(
+ 	unsigned int		*nr_threads,
+ 	int			*rshift)
+ {
+-	*items = xfs_scrub_estimate_ag_work(ctx);
++	*items = scrub_estimate_ag_work(ctx);
+ 	*nr_threads = scrub_nproc(ctx);
+ 	*rshift = 0;
+ 	return true;
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 13601ed7..02a9a098 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -25,10 +25,10 @@
+  * ensure that the inode we're checking matches what the inode scan
+  * told us to look at.
+  */
 -static bool
+-xfs_scrub_fd(
 +static int
- ioerr_fsmap_report(
++scrub_fd(
  	struct scrub_ctx	*ctx,
--	const char		*descr,
- 	struct fsmap		*map,
- 	void			*arg)
- {
-@@ -373,7 +372,7 @@ ioerr_fsmap_report(
- 
- 	/* Don't care about unwritten extents. */
- 	if (scrub_data < 3 && (map->fmr_flags & FMR_OF_PREALLOC))
--		return true;
-+		return 0;
- 
- 	if (err_physical > map->fmr_physical)
- 		err_off = err_physical - map->fmr_physical;
-@@ -405,7 +404,7 @@ ioerr_fsmap_report(
- 	 * to find the bad file's pathname.
- 	 */
- 
--	return true;
-+	return 0;
- }
- 
- static struct bitmap *
-@@ -466,15 +465,10 @@ walk_ioerr(
- {
- 	struct walk_ioerr	*wioerr = arg;
- 	struct fsmap		keys[2];
--	char			descr[DESCR_BUFSZ];
- 	dev_t			dev;
- 
- 	dev = xfs_disk_to_dev(wioerr->ctx, wioerr->disk);
- 
--	snprintf(descr, DESCR_BUFSZ,
--_("dev %d:%d ioerr @ %"PRIu64":%"PRIu64" "),
--			major(dev), minor(dev), start, length);
--
- 	/* Go figure out which blocks are bad from the fsmap. */
- 	memset(keys, 0, sizeof(struct fsmap) * 2);
- 	keys->fmr_device = dev;
-@@ -484,9 +478,8 @@ _("dev %d:%d ioerr @ %"PRIu64":%"PRIu64" "),
- 	(keys + 1)->fmr_owner = ULLONG_MAX;
- 	(keys + 1)->fmr_offset = ULLONG_MAX;
- 	(keys + 1)->fmr_flags = UINT_MAX;
--	xfs_iterate_fsmap(wioerr->ctx, descr, keys, ioerr_fsmap_report,
-+	return scrub_iterate_fsmap(wioerr->ctx, keys, ioerr_fsmap_report,
- 			&start);
--	return 0;
- }
- 
- static int
-@@ -541,10 +534,9 @@ xfs_report_verify_errors(
- }
- 
- /* Schedule a read-verify of a (data block) extent. */
--static bool
--xfs_check_rmap(
-+static int
-+check_rmap(
- 	struct scrub_ctx		*ctx,
--	const char			*descr,
- 	struct fsmap			*map,
- 	void				*arg)
- {
-@@ -574,7 +566,7 @@ xfs_check_rmap(
- 	 */
- 	if (map->fmr_flags & (FMR_OF_PREALLOC | FMR_OF_ATTR_FORK |
- 			      FMR_OF_EXTENT_MAP | FMR_OF_SPECIAL_OWNER))
--		return true;
-+		return 0;
- 
- 	/* XXX: Filter out directory data blocks. */
- 
-@@ -582,11 +574,11 @@ xfs_check_rmap(
- 	ret = read_verify_schedule_io(rvp, map->fmr_physical, map->fmr_length,
- 			vs);
- 	if (ret) {
--		str_liberror(ctx, ret, descr);
--		return false;
-+		str_liberror(ctx, ret, _("scheduling media verify command"));
-+		return ret;
+-	bool			(*fn)(struct scrub_ctx *ctx, uint64_t ino,
++	int			(*fn)(struct scrub_ctx *ctx, uint64_t ino,
+ 				      uint32_t gen, struct xfs_action_list *a),
+ 	struct xfs_bulkstat	*bs,
+ 	struct xfs_action_list	*alist)
+@@ -85,8 +85,8 @@ xfs_scrub_inode(
  	}
  
--	return true;
-+	return 0;
- }
+ 	/* Scrub the inode. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_inode_fields, bstat, &alist);
+-	if (!moveon)
++	error = scrub_fd(ctx, xfs_scrub_inode_fields, bstat, &alist);
++	if (error)
+ 		goto out;
  
- /* Wait for read/verify actions to finish, then return # bytes checked. */
-@@ -720,8 +712,11 @@ xfs_scan_blocks(
+ 	moveon = xfs_action_list_process_or_defer(ctx, agno, &alist);
+@@ -94,14 +94,14 @@ xfs_scrub_inode(
+ 		goto out;
  
- 	if (scrub_data > 1)
- 		moveon = verify_all_disks(ctx, &vs);
--	else
--		moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &vs);
-+	else {
-+		ret = scrub_scan_all_spacemaps(ctx, check_rmap, &vs);
-+		if (ret)
-+			moveon = false;
-+	}
- 	if (!moveon)
- 		goto out_rtpool;
+ 	/* Scrub all block mappings. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_data_fork, bstat, &alist);
+-	if (!moveon)
++	error = scrub_fd(ctx, xfs_scrub_data_fork, bstat, &alist);
++	if (error)
+ 		goto out;
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr_fork, bstat, &alist);
+-	if (!moveon)
++	error = scrub_fd(ctx, xfs_scrub_attr_fork, bstat, &alist);
++	if (error)
+ 		goto out;
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_cow_fork, bstat, &alist);
+-	if (!moveon)
++	error = scrub_fd(ctx, xfs_scrub_cow_fork, bstat, &alist);
++	if (error)
+ 		goto out;
  
+ 	moveon = xfs_action_list_process_or_defer(ctx, agno, &alist);
+@@ -110,23 +110,23 @@ xfs_scrub_inode(
+ 
+ 	if (S_ISLNK(bstat->bs_mode)) {
+ 		/* Check symlink contents. */
+-		moveon = xfs_scrub_symlink(ctx, bstat->bs_ino, bstat->bs_gen,
++		error = xfs_scrub_symlink(ctx, bstat->bs_ino, bstat->bs_gen,
+ 				&alist);
+ 	} else if (S_ISDIR(bstat->bs_mode)) {
+ 		/* Check the directory entries. */
+-		moveon = xfs_scrub_fd(ctx, xfs_scrub_dir, bstat, &alist);
++		error = scrub_fd(ctx, xfs_scrub_dir, bstat, &alist);
+ 	}
+-	if (!moveon)
++	if (error)
+ 		goto out;
+ 
+ 	/* Check all the extended attributes. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_attr, bstat, &alist);
+-	if (!moveon)
++	error = scrub_fd(ctx, xfs_scrub_attr, bstat, &alist);
++	if (error)
+ 		goto out;
+ 
+ 	/* Check parent pointers. */
+-	moveon = xfs_scrub_fd(ctx, xfs_scrub_parent, bstat, &alist);
+-	if (!moveon)
++	error = scrub_fd(ctx, xfs_scrub_parent, bstat, &alist);
++	if (error)
+ 		goto out;
+ 
+ 	/* Try to repair the file while it's open. */
+@@ -135,6 +135,8 @@ xfs_scrub_inode(
+ 		goto out;
+ 
+ out:
++	if (error)
++		moveon = false;
+ 	error = ptcounter_add(icount, 1);
+ 	if (error) {
+ 		str_liberror(ctx, error,
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 07927036..c60012b7 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -112,9 +112,9 @@ xfs_process_action_items(
+ /* Fix everything that needs fixing. */
+ bool
+ xfs_repair_fs(
+-	struct scrub_ctx		*ctx)
++	struct scrub_ctx	*ctx)
+ {
+-	bool				moveon;
++	int			ret;
+ 
+ 	/*
+ 	 * Check the summary counters early.  Normally we do this during phase
+@@ -122,8 +122,8 @@ xfs_repair_fs(
+ 	 * counters, so counter repairs have to be put on the list now so that
+ 	 * they get fixed before we stop retrying unfixed metadata repairs.
+ 	 */
+-	moveon = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
+-	if (!moveon)
++	ret = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
++	if (ret)
+ 		return false;
+ 
+ 	return xfs_process_action_items(ctx);
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 763685fd..cb79752f 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -390,8 +390,8 @@ _("Filesystem has errors, skipping connectivity checks."));
+ 		return true;
+ 	}
+ 
+-	moveon = xfs_scrub_fs_label(ctx);
+-	if (!moveon)
++	ret = xfs_scrub_fs_label(ctx);
++	if (ret)
+ 		return false;
+ 
+ 	ret = scrub_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
 diff --git a/scrub/phase7.c b/scrub/phase7.c
-index 64e52359..4314904f 100644
+index 4314904f..b5f77b36 100644
 --- a/scrub/phase7.c
 +++ b/scrub/phase7.c
-@@ -27,10 +27,9 @@ struct summary_counts {
- };
+@@ -121,8 +121,8 @@ xfs_scan_summary(
  
- /* Record block usage. */
+ 	/* Check and fix the fs summary counters. */
+ 	xfs_action_list_init(&alist);
+-	moveon = xfs_scrub_fs_summary(ctx, &alist);
+-	if (!moveon)
++	error = xfs_scrub_fs_summary(ctx, &alist);
++	if (error)
+ 		return false;
+ 	moveon = xfs_action_list_process(ctx, ctx->mnt.fd, &alist,
+ 			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 8171082d..80a8cfdc 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -250,7 +250,7 @@ _("Optimizations of %s are possible."), _(xfrog_scrubbers[i].descr));
+ }
+ 
+ /* Save a scrub context for later repairs. */
 -static bool
--xfs_record_block_summary(
 +static int
-+count_block_summary(
- 	struct scrub_ctx	*ctx,
--	const char		*descr,
- 	struct fsmap		*fsmap,
- 	void			*arg)
- {
-@@ -41,13 +40,13 @@ xfs_record_block_summary(
- 	counts = ptvar_get((struct ptvar *)arg, &ret);
- 	if (ret) {
- 		str_liberror(ctx, ret, _("retrieving summary counts"));
+ xfs_scrub_save_repair(
+ 	struct scrub_ctx		*ctx,
+ 	struct xfs_action_list		*alist,
+@@ -261,9 +261,10 @@ xfs_scrub_save_repair(
+ 	/* Schedule this item for later repairs. */
+ 	aitem = malloc(sizeof(struct action_item));
+ 	if (!aitem) {
+-		str_errno(ctx, _("repair list"));
 -		return false;
-+		return ret;
++		str_errno(ctx, _("adding item to repair list"));
++		return errno;
  	}
- 	if (fsmap->fmr_device == ctx->fsinfo.fs_logdev)
--		return true;
-+		return 0;
- 	if ((fsmap->fmr_flags & FMR_OF_SPECIAL_OWNER) &&
- 	    fsmap->fmr_owner == XFS_FMR_OWN_FREE)
--		return true;
-+		return 0;
++
+ 	memset(aitem, 0, sizeof(*aitem));
+ 	aitem->type = meta->sm_type;
+ 	aitem->flags = meta->sm_flags;
+@@ -281,10 +282,15 @@ xfs_scrub_save_repair(
+ 	}
  
- 	len = fsmap->fmr_length;
+ 	xfs_action_list_add(alist, aitem);
+-	return true;
++	return 0;
+ }
  
-@@ -62,14 +61,14 @@ xfs_record_block_summary(
- 	} else {
- 		/* Count datadev extents. */
- 		if (counts->next_phys >= fsmap->fmr_physical + len)
--			return true;
-+			return 0;
- 		else if (counts->next_phys > fsmap->fmr_physical)
- 			len = counts->next_phys - fsmap->fmr_physical;
- 		counts->dbytes += len;
- 		counts->next_phys = fsmap->fmr_physical + fsmap->fmr_length;
+-/* Scrub a single XFS_SCRUB_TYPE_*, saving corruption reports for later. */
++/*
++ * Scrub a single XFS_SCRUB_TYPE_*, saving corruption reports for later.
++ *
++ * Returns 0 for success.  If errors occur, this function will log them and
++ * return a positive error code.
++ */
+ static int
+ xfs_scrub_meta_type(
+ 	struct scrub_ctx		*ctx,
+@@ -297,6 +303,7 @@ xfs_scrub_meta_type(
+ 		.sm_agno		= agno,
+ 	};
+ 	enum check_outcome		fix;
++	int				ret;
+ 
+ 	background_sleep();
+ 
+@@ -308,8 +315,9 @@ xfs_scrub_meta_type(
+ 	case CHECK_ABORT:
+ 		return ECANCELED;
+ 	case CHECK_REPAIR:
+-		if (!xfs_scrub_save_repair(ctx, alist, &meta))
+-			return ENOMEM;
++		ret = xfs_scrub_save_repair(ctx, alist, &meta);
++		if (ret)
++			return ret;
+ 		/* fall through */
+ 	case CHECK_DONE:
+ 		return 0;
+@@ -345,30 +353,28 @@ xfs_scrub_all_types(
+ 
+ 		ret = xfs_scrub_meta_type(ctx, type, agno, alist);
+ 		if (ret)
+-			return false;
++			return ret;
  	}
  
 -	return true;
 +	return 0;
  }
  
- /* Add all the summaries in the per-thread counter */
-@@ -145,9 +144,11 @@ xfs_scan_summary(
- 	}
- 
- 	/* Use fsmap to count blocks. */
--	moveon = xfs_scan_all_spacemaps(ctx, xfs_record_block_summary, ptvar);
--	if (!moveon)
-+	error = scrub_scan_all_spacemaps(ctx, count_block_summary, ptvar);
-+	if (error) {
-+		moveon = false;
- 		goto out_free;
-+	}
- 	error = ptvar_foreach(ptvar, xfs_add_summaries, &totalcount);
- 	if (error) {
- 		str_liberror(ctx, error, _("counting blocks"));
-diff --git a/scrub/spacemap.c b/scrub/spacemap.c
-index 91e8badb..e56f090d 100644
---- a/scrub/spacemap.c
-+++ b/scrub/spacemap.c
-@@ -31,26 +31,25 @@
- 
- #define FSMAP_NR	65536
- 
--/* Iterate all the fs block mappings between the two keys. */
+ /*
+  * Scrub primary superblock.  This will be useful if we ever need to hook
+  * a filesystem-wide pre-scrub activity off of the sb 0 scrubber (which
+- * currently does nothing).
++ * currently does nothing).  If errors occur, this function will log them and
++ * return nonzero.
+  */
 -bool
--xfs_iterate_fsmap(
-+/*
-+ * Iterate all the fs block mappings between the two keys.  Returns 0 or a
-+ * positive error number.
-+ */
 +int
-+scrub_iterate_fsmap(
- 	struct scrub_ctx	*ctx,
--	const char		*descr,
- 	struct fsmap		*keys,
--	xfs_fsmap_iter_fn	fn,
-+	scrub_fsmap_iter_fn	fn,
- 	void			*arg)
+ xfs_scrub_primary_super(
+ 	struct scrub_ctx		*ctx,
+ 	struct xfs_action_list		*alist)
  {
- 	struct fsmap_head	*head;
- 	struct fsmap		*p;
--	bool			moveon = true;
- 	int			i;
- 	int			error;
- 
- 	head = malloc(fsmap_sizeof(FSMAP_NR));
--	if (!head) {
--		str_errno(ctx, descr);
--		return false;
--	}
-+	if (!head)
-+		return errno;
- 
- 	memset(head, 0, sizeof(*head));
- 	memcpy(head->fmh_keys, keys, sizeof(struct fsmap) * 2);
-@@ -60,13 +59,11 @@ xfs_iterate_fsmap(
- 		for (i = 0, p = head->fmh_recs;
- 		     i < head->fmh_entries;
- 		     i++, p++) {
--			moveon = fn(ctx, descr, p, arg);
--			if (!moveon)
-+			error = fn(ctx, p, arg);
-+			if (error)
- 				goto out;
--			if (xfs_scrub_excessive_errors(ctx)) {
--				moveon = false;
-+			if (xfs_scrub_excessive_errors(ctx))
- 				goto out;
--			}
- 		}
- 
- 		if (head->fmh_entries == 0)
-@@ -76,45 +73,36 @@ xfs_iterate_fsmap(
- 			break;
- 		fsmap_advance(head);
- 	}
+-	int				ret;
 -
--	if (error) {
--		str_errno(ctx, descr);
--		moveon = false;
--	}
-+	if (error)
-+		error = errno;
- out:
- 	free(head);
--	return moveon;
-+	return error;
+-	ret = xfs_scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, alist);
+-	return ret == 0;
++	return xfs_scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, alist);
  }
  
- /* GETFSMAP wrappers routines. */
--struct xfs_scan_blocks {
--	xfs_fsmap_iter_fn	fn;
-+struct scan_blocks {
-+	scrub_fsmap_iter_fn	fn;
- 	void			*arg;
--	bool			moveon;
-+	bool			aborted;
- };
- 
- /* Iterate all the reverse mappings of an AG. */
- static void
--xfs_scan_ag_blocks(
-+scan_ag_rmaps(
- 	struct workqueue	*wq,
- 	xfs_agnumber_t		agno,
- 	void			*arg)
- {
- 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
--	struct xfs_scan_blocks	*sbx = arg;
--	char			descr[DESCR_BUFSZ];
-+	struct scan_blocks	*sbx = arg;
- 	struct fsmap		keys[2];
- 	off64_t			bperag;
--	bool			moveon;
-+	int			ret;
- 
- 	bperag = (off64_t)ctx->mnt.fsgeom.agblocks *
- 		 (off64_t)ctx->mnt.fsgeom.blocksize;
- 
--	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u fsmap"),
--				major(ctx->fsinfo.fs_datadev),
--				minor(ctx->fsinfo.fs_datadev),
--				agno);
--
- 	memset(keys, 0, sizeof(struct fsmap) * 2);
- 	keys->fmr_device = ctx->fsinfo.fs_datadev;
- 	keys->fmr_physical = agno * bperag;
-@@ -124,25 +112,32 @@ xfs_scan_ag_blocks(
- 	(keys + 1)->fmr_offset = ULLONG_MAX;
- 	(keys + 1)->fmr_flags = UINT_MAX;
- 
--	moveon = xfs_iterate_fsmap(ctx, descr, keys, sbx->fn, sbx->arg);
--	if (!moveon)
--		sbx->moveon = false;
-+	if (sbx->aborted)
-+		return;
-+
-+	ret = scrub_iterate_fsmap(ctx, keys, sbx->fn, sbx->arg);
-+	if (ret) {
-+		char		descr[DESCR_BUFSZ];
-+
-+		snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u fsmap"),
-+					major(ctx->fsinfo.fs_datadev),
-+					minor(ctx->fsinfo.fs_datadev),
-+					agno);
-+		str_liberror(ctx, ret, descr);
-+		sbx->aborted = true;
-+	}
- }
- 
- /* Iterate all the reverse mappings of a standalone device. */
- static void
--xfs_scan_dev_blocks(
-+scan_dev_rmaps(
- 	struct scrub_ctx	*ctx,
- 	int			idx,
- 	dev_t			dev,
--	struct xfs_scan_blocks	*sbx)
-+	struct scan_blocks	*sbx)
- {
- 	struct fsmap		keys[2];
--	char			descr[DESCR_BUFSZ];
--	bool			moveon;
--
--	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d fsmap"),
--			major(dev), minor(dev));
-+	int			ret;
- 
- 	memset(keys, 0, sizeof(struct fsmap) * 2);
- 	keys->fmr_device = dev;
-@@ -152,79 +147,90 @@ xfs_scan_dev_blocks(
- 	(keys + 1)->fmr_offset = ULLONG_MAX;
- 	(keys + 1)->fmr_flags = UINT_MAX;
- 
--	moveon = xfs_iterate_fsmap(ctx, descr, keys, sbx->fn, sbx->arg);
--	if (!moveon)
--		sbx->moveon = false;
-+	if (sbx->aborted)
-+		return;
-+
-+	ret = scrub_iterate_fsmap(ctx, keys, sbx->fn, sbx->arg);
-+	if (ret) {
-+		char		descr[DESCR_BUFSZ];
-+
-+		snprintf(descr, DESCR_BUFSZ, _("dev %d:%d fsmap"),
-+				major(dev), minor(dev));
-+		str_liberror(ctx, ret, descr);
-+		sbx->aborted = true;
-+	}
- }
- 
- /* Iterate all the reverse mappings of the realtime device. */
- static void
--xfs_scan_rt_blocks(
-+scan_rt_rmaps(
- 	struct workqueue	*wq,
- 	xfs_agnumber_t		agno,
- 	void			*arg)
- {
- 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
- 
--	xfs_scan_dev_blocks(ctx, agno, ctx->fsinfo.fs_rtdev, arg);
-+	scan_dev_rmaps(ctx, agno, ctx->fsinfo.fs_rtdev, arg);
- }
- 
- /* Iterate all the reverse mappings of the log device. */
- static void
--xfs_scan_log_blocks(
-+scan_log_rmaps(
- 	struct workqueue	*wq,
- 	xfs_agnumber_t		agno,
- 	void			*arg)
- {
- 	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
- 
--	xfs_scan_dev_blocks(ctx, agno, ctx->fsinfo.fs_logdev, arg);
-+	scan_dev_rmaps(ctx, agno, ctx->fsinfo.fs_logdev, arg);
- }
- 
--/* Scan all the blocks in a filesystem. */
+ /* Scrub each AG's header blocks. */
 -bool
--xfs_scan_all_spacemaps(
-+/*
-+ * Scan all the blocks in a filesystem.  If errors occur, this function will
-+ * log them and return nonzero.
-+ */
 +int
-+scrub_scan_all_spacemaps(
- 	struct scrub_ctx	*ctx,
--	xfs_fsmap_iter_fn	fn,
-+	scrub_fsmap_iter_fn	fn,
- 	void			*arg)
- {
- 	struct workqueue	wq;
--	struct xfs_scan_blocks	sbx;
-+	struct scan_blocks	sbx = {
-+		.fn		= fn,
-+		.arg		= arg,
-+	};
- 	xfs_agnumber_t		agno;
- 	int			ret;
- 
--	sbx.moveon = true;
--	sbx.fn = fn;
--	sbx.arg = arg;
--
- 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
- 			scrub_nproc_workqueue(ctx));
- 	if (ret) {
- 		str_liberror(ctx, ret, _("creating fsmap workqueue"));
--		return false;
-+		return ret;
- 	}
- 	if (ctx->fsinfo.fs_rt) {
--		ret = workqueue_add(&wq, xfs_scan_rt_blocks,
-+		ret = workqueue_add(&wq, scan_rt_rmaps,
- 				ctx->mnt.fsgeom.agcount + 1, &sbx);
- 		if (ret) {
--			sbx.moveon = false;
-+			sbx.aborted = true;
- 			str_liberror(ctx, ret, _("queueing rtdev fsmap work"));
- 			goto out;
- 		}
- 	}
- 	if (ctx->fsinfo.fs_log) {
--		ret = workqueue_add(&wq, xfs_scan_log_blocks,
-+		ret = workqueue_add(&wq, scan_log_rmaps,
- 				ctx->mnt.fsgeom.agcount + 2, &sbx);
- 		if (ret) {
--			sbx.moveon = false;
-+			sbx.aborted = true;
- 			str_liberror(ctx, ret, _("queueing logdev fsmap work"));
- 			goto out;
- 		}
- 	}
- 	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
--		ret = workqueue_add(&wq, xfs_scan_ag_blocks, agno, &sbx);
-+		ret = workqueue_add(&wq, scan_ag_rmaps, agno, &sbx);
- 		if (ret) {
--			sbx.moveon = false;
-+			sbx.aborted = true;
- 			str_liberror(ctx, ret, _("queueing per-AG fsmap work"));
- 			break;
- 		}
-@@ -232,10 +238,13 @@ xfs_scan_all_spacemaps(
- out:
- 	ret = workqueue_terminate(&wq);
- 	if (ret) {
--		sbx.moveon = false;
-+		sbx.aborted = true;
- 		str_liberror(ctx, ret, _("finishing fsmap work"));
- 	}
- 	workqueue_destroy(&wq);
- 
--	return sbx.moveon;
-+	if (!ret && sbx.aborted)
-+		ret = -1;
-+
-+	return ret;
+ xfs_scrub_ag_headers(
+ 	struct scrub_ctx		*ctx,
+ 	xfs_agnumber_t			agno,
+@@ -378,7 +384,7 @@ xfs_scrub_ag_headers(
  }
-diff --git a/scrub/spacemap.h b/scrub/spacemap.h
-index 8f2f0a01..1291cf3c 100644
---- a/scrub/spacemap.h
-+++ b/scrub/spacemap.h
-@@ -6,12 +6,12 @@
- #ifndef XFS_SCRUB_SPACEMAP_H_
- #define XFS_SCRUB_SPACEMAP_H_
  
--typedef bool (*xfs_fsmap_iter_fn)(struct scrub_ctx *ctx, const char *descr,
-+typedef int (*scrub_fsmap_iter_fn)(struct scrub_ctx *ctx,
- 		struct fsmap *fsr, void *arg);
+ /* Scrub each AG's metadata btrees. */
+-bool
++int
+ xfs_scrub_ag_metadata(
+ 	struct scrub_ctx		*ctx,
+ 	xfs_agnumber_t			agno,
+@@ -388,7 +394,7 @@ xfs_scrub_ag_metadata(
+ }
  
--bool xfs_iterate_fsmap(struct scrub_ctx *ctx, const char *descr,
--		struct fsmap *keys, xfs_fsmap_iter_fn fn, void *arg);
--bool xfs_scan_all_spacemaps(struct scrub_ctx *ctx, xfs_fsmap_iter_fn fn,
-+int scrub_iterate_fsmap(struct scrub_ctx *ctx, struct fsmap *keys,
-+		scrub_fsmap_iter_fn fn, void *arg);
-+int scrub_scan_all_spacemaps(struct scrub_ctx *ctx, scrub_fsmap_iter_fn fn,
- 		void *arg);
+ /* Scrub whole-FS metadata btrees. */
+-bool
++int
+ xfs_scrub_fs_metadata(
+ 	struct scrub_ctx		*ctx,
+ 	struct xfs_action_list		*alist)
+@@ -397,20 +403,17 @@ xfs_scrub_fs_metadata(
+ }
  
- #endif /* XFS_SCRUB_SPACEMAP_H_ */
+ /* Scrub FS summary metadata. */
+-bool
++int
+ xfs_scrub_fs_summary(
+ 	struct scrub_ctx		*ctx,
+ 	struct xfs_action_list		*alist)
+ {
+-	int				ret;
+-
+-	ret = xfs_scrub_meta_type(ctx, XFS_SCRUB_TYPE_FSCOUNTERS, 0, alist);
+-	return ret == 0;
++	return xfs_scrub_meta_type(ctx, XFS_SCRUB_TYPE_FSCOUNTERS, 0, alist);
+ }
+ 
+ /* How many items do we have to check? */
+ unsigned int
+-xfs_scrub_estimate_ag_work(
++scrub_estimate_ag_work(
+ 	struct scrub_ctx		*ctx)
+ {
+ 	const struct xfrog_scrub_descr	*sc;
+@@ -434,8 +437,11 @@ xfs_scrub_estimate_ag_work(
+ 	return estimate;
+ }
+ 
+-/* Scrub inode metadata. */
+-static bool
++/*
++ * Scrub inode metadata.  If errors occur, this function will log them and
++ * return nonzero.
++ */
++static int
+ __xfs_scrub_file(
+ 	struct scrub_ctx		*ctx,
+ 	uint64_t			ino,
+@@ -456,14 +462,14 @@ __xfs_scrub_file(
+ 	/* Scrub the piece of metadata. */
+ 	fix = xfs_check_metadata(ctx, &meta, true);
+ 	if (fix == CHECK_ABORT)
+-		return false;
++		return ECANCELED;
+ 	if (fix == CHECK_DONE)
+-		return true;
++		return 0;
+ 
+ 	return xfs_scrub_save_repair(ctx, alist, &meta);
+ }
+ 
+-bool
++int
+ xfs_scrub_inode_fields(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -473,7 +479,7 @@ xfs_scrub_inode_fields(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_INODE, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_data_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -483,7 +489,7 @@ xfs_scrub_data_fork(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTD, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_attr_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -493,7 +499,7 @@ xfs_scrub_attr_fork(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTA, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_cow_fork(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -503,7 +509,7 @@ xfs_scrub_cow_fork(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_BMBTC, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_dir(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -513,7 +519,7 @@ xfs_scrub_dir(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_DIR, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_attr(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -523,7 +529,7 @@ xfs_scrub_attr(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_XATTR, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_symlink(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -533,7 +539,7 @@ xfs_scrub_symlink(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_SYMLINK, alist);
+ }
+ 
+-bool
++int
+ xfs_scrub_parent(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		ino,
+@@ -543,7 +549,11 @@ xfs_scrub_parent(
+ 	return __xfs_scrub_file(ctx, ino, gen, XFS_SCRUB_TYPE_PARENT, alist);
+ }
+ 
+-/* Test the availability of a kernel scrub command. */
++/*
++ * Test the availability of a kernel scrub command.  If errors occur (or the
++ * scrub ioctl is rejected) the errors will be logged and this function will
++ * return false.
++ */
+ static bool
+ __xfs_scrub_test(
+ 	struct scrub_ctx		*ctx,
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index d407abb0..bfb3f8e3 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -17,15 +17,15 @@ enum check_outcome {
+ struct action_item;
+ 
+ void xfs_scrub_report_preen_triggers(struct scrub_ctx *ctx);
+-bool xfs_scrub_primary_super(struct scrub_ctx *ctx,
++int xfs_scrub_primary_super(struct scrub_ctx *ctx,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
++int xfs_scrub_ag_headers(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
++int xfs_scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_fs_metadata(struct scrub_ctx *ctx,
++int xfs_scrub_fs_metadata(struct scrub_ctx *ctx,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_fs_summary(struct scrub_ctx *ctx,
++int xfs_scrub_fs_summary(struct scrub_ctx *ctx,
+ 		struct xfs_action_list *alist);
+ 
+ bool xfs_can_scrub_fs_metadata(struct scrub_ctx *ctx);
+@@ -37,21 +37,21 @@ bool xfs_can_scrub_symlink(struct scrub_ctx *ctx);
+ bool xfs_can_scrub_parent(struct scrub_ctx *ctx);
+ bool xfs_can_repair(struct scrub_ctx *ctx);
+ 
+-bool xfs_scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_inode_fields(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_data_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_data_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_attr_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_attr_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_cow_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_cow_fork(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_dir(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_dir(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_attr(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_attr(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_symlink(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+-bool xfs_scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
++int xfs_scrub_parent(struct scrub_ctx *ctx, uint64_t ino, uint32_t gen,
+ 		struct xfs_action_list *alist);
+ 
+ /* Repair parameters are the scrub inputs and retry count. */
+diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
+index 6558bad7..4353756c 100644
+--- a/scrub/xfs_scrub.h
++++ b/scrub/xfs_scrub.h
+@@ -99,7 +99,7 @@ bool xfs_repair_fs(struct scrub_ctx *ctx);
+ 
+ /* Progress estimator functions */
+ uint64_t xfs_estimate_inodes(struct scrub_ctx *ctx);
+-unsigned int xfs_scrub_estimate_ag_work(struct scrub_ctx *ctx);
++unsigned int scrub_estimate_ag_work(struct scrub_ctx *ctx);
+ bool xfs_estimate_metadata_work(struct scrub_ctx *ctx, uint64_t *items,
+ 				unsigned int *nr_threads, int *rshift);
+ bool xfs_estimate_inodes_work(struct scrub_ctx *ctx, uint64_t *items,
 
