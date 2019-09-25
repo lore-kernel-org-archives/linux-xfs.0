@@ -7,69 +7,70 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 812F4C432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:41:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC3DDC432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:42:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4940820872
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:41:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8CEF4205F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:42:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ojMS8AKd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="siHvLvFi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728732AbfIYVlJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:41:09 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:37262 "EHLO
+        id S1726632AbfIYVmo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:42:44 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38628 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbfIYVlI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:41:08 -0400
+        with ESMTP id S1726173AbfIYVmn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:42:43 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdQbV058345;
-        Wed, 25 Sep 2019 21:41:07 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdPXj058292;
+        Wed, 25 Sep 2019 21:42:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=g3AOgnmL9gXtWcW12jEdMYOzVe2gSO3Ft9sUJld/FaU=;
- b=ojMS8AKd6U8UrWwM3FF2hC6CgniJDoOZLOoCZ/rKYaBAsI6ljERJzB9LJ6BWET5k0k6G
- pBAyXfMYNAqDHv9O1kyQiQCJJHCVTVUmq7g6hfNb7Csk6xC7sjWSke9245tm+FgZ/92p
- AW/8mcYGJS4O9CELgkN9CcpcCYqO1LLaBP1DPy6NmDvKERv2u6l6SBezopwupDNUALBx
- aEiehmXGmQFMMsRqn4WO6J2oQYy6Q9jlbMDnMf4OSYPa1SyuMKBcZhVtw2LLPldD6RNG
- qJ39fC/5O5Ec6gicJ28YY1hrqAUlaL8sR3VEtS9VYtmw+jdIzNnB4/+7v50sUWkIrw+I 9w== 
+ bh=aygmQI2QxbzCTIUf0yVTM+gZIWgtYCLiFNNoOlMCywY=;
+ b=siHvLvFiBSfClxYv0GfdHspajmoJ/Q/ijpGus/tnNJpiCrEWoul2kz2Oh0X7P9nrlnjT
+ CK7goAIM0k3j0d4R+qrKEkrdfy8DCZo28nk28Zy2Hvqy3UurPe87sszY4S41YWKCI7Hj
+ bmYZEWhdSKQBYozKyf0M7lz6onQiRq3y49izf2owEaZoDfWVwb40wA3OhzAZuQCqf/YM
+ SeiXzEkkyAvj9m7r5PYUnIauvVMgpF3IplFmaBdD3sUQFl9nNwylL3uZMUzbZ96XHv+W
+ eOkr4eec1SuA5CxaitwB3Ho+p9mHPQt1zeEEhZ4EUZZXrESQPHQLKKD0bZRnfwLYlsN4 Qw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2v5cgr7fnq-1
+        by userp2120.oracle.com with ESMTP id 2v5cgr7fsx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:41:06 +0000
+        Wed, 25 Sep 2019 21:42:41 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdLT6107817;
-        Wed, 25 Sep 2019 21:41:06 GMT
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdKx6107711;
+        Wed, 25 Sep 2019 21:40:40 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2v82qam4e0-1
+        by userp3020.oracle.com with ESMTP id 2v82qam3bb-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:41:06 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLf5Od018128;
-        Wed, 25 Sep 2019 21:41:05 GMT
+        Wed, 25 Sep 2019 21:40:40 +0000
+Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLedWw017851;
+        Wed, 25 Sep 2019 21:40:40 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:41:05 -0700
-Subject: [PATCH 2/2] xfs_db: calculate iext tree geometry in btheight command
+        with ESMTP ; Wed, 25 Sep 2019 14:40:39 -0700
+Subject: [PATCH 6/7] libfrog: convert scrub.c functions to negative error
+ codes
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:40:59 -0700
-Message-ID: <156944765991.303060.7541074919992777157.stgit@magnolia>
-In-Reply-To: <156944764785.303060.15428657522073378525.stgit@magnolia>
-References: <156944764785.303060.15428657522073378525.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:40:38 -0700
+Message-ID: <156944763836.302827.14950651793743078704.stgit@magnolia>
+In-Reply-To: <156944760161.302827.4342305147521200999.stgit@magnolia>
+References: <156944760161.302827.4342305147521200999.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9391 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1909250175
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9391 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
  definitions=main-1909250175
@@ -80,190 +81,277 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-(Ab)use the btheight command to calculate the geometry of the incore
-extent tree.
+Convert libfrog functions to return negative error codes like libxfs
+does.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- db/btheight.c |   87 +++++++++++++++++++++++++++++++++++++++------------------
- 1 file changed, 60 insertions(+), 27 deletions(-)
+ libfrog/scrub.c |    9 ++-
+ scrub/scrub.c   |  198 ++++++++++++++++++++++++++++---------------------------
+ 2 files changed, 108 insertions(+), 99 deletions(-)
 
 
-diff --git a/db/btheight.c b/db/btheight.c
-index e2c9759f..be604ebc 100644
---- a/db/btheight.c
-+++ b/db/btheight.c
-@@ -22,18 +22,37 @@ static int rmap_maxrecs(struct xfs_mount *mp, int blocklen, int leaf)
- 	return libxfs_rmapbt_maxrecs(blocklen, leaf);
- }
- 
-+static int iext_maxrecs(struct xfs_mount *mp, int blocklen, int leaf)
-+{
-+	blocklen -= 2 * sizeof(void *);
-+
-+	return blocklen / sizeof(struct xfs_bmbt_rec);
-+}
-+
-+static int disk_blocksize(struct xfs_mount *mp)
-+{
-+	return mp->m_sb.sb_blocksize;
-+}
-+
-+static int iext_blocksize(struct xfs_mount *mp)
-+{
-+	return 256;
-+}
-+
- struct btmap {
- 	const char	*tag;
- 	int		(*maxrecs)(struct xfs_mount *mp, int blocklen,
- 				   int leaf);
-+	int		(*default_blocksize)(struct xfs_mount *mp);
- } maps[] = {
--	{"bnobt", libxfs_allocbt_maxrecs},
--	{"cntbt", libxfs_allocbt_maxrecs},
--	{"inobt", libxfs_inobt_maxrecs},
--	{"finobt", libxfs_inobt_maxrecs},
--	{"bmapbt", libxfs_bmbt_maxrecs},
--	{"refcountbt", refc_maxrecs},
--	{"rmapbt", rmap_maxrecs},
-+	{"bnobt", libxfs_allocbt_maxrecs, disk_blocksize},
-+	{"cntbt", libxfs_allocbt_maxrecs, disk_blocksize},
-+	{"inobt", libxfs_inobt_maxrecs, disk_blocksize},
-+	{"finobt", libxfs_inobt_maxrecs, disk_blocksize},
-+	{"bmapbt", libxfs_bmbt_maxrecs, disk_blocksize},
-+	{"refcountbt", refc_maxrecs, disk_blocksize},
-+	{"rmapbt", rmap_maxrecs, disk_blocksize},
-+	{"iext", iext_maxrecs, iext_blocksize},
+diff --git a/libfrog/scrub.c b/libfrog/scrub.c
+index e9671da2..d900bf2a 100644
+--- a/libfrog/scrub.c
++++ b/libfrog/scrub.c
+@@ -137,10 +137,17 @@ const struct xfrog_scrub_descr xfrog_scrubbers[XFS_SCRUB_TYPE_NR] = {
+ 	},
  };
  
- static void
-@@ -108,7 +127,7 @@ calc_height(
- static int
- construct_records_per_block(
- 	char		*tag,
--	int		blocksize,
-+	int		*blocksize,
- 	unsigned int	*records_per_block)
++/* Invoke the scrub ioctl.  Returns zero or negative error code. */
+ int
+ xfrog_scrub_metadata(
+ 	struct xfs_fd			*xfd,
+ 	struct xfs_scrub_metadata	*meta)
  {
- 	char		*toktag;
-@@ -119,8 +138,10 @@ construct_records_per_block(
- 
- 	for (i = 0, m = maps; i < ARRAY_SIZE(maps); i++, m++) {
- 		if (!strcmp(m->tag, tag)) {
--			records_per_block[0] = m->maxrecs(mp, blocksize, 1);
--			records_per_block[1] = m->maxrecs(mp, blocksize, 0);
-+			if (*blocksize < 0)
-+				*blocksize = m->default_blocksize(mp);
-+			records_per_block[0] = m->maxrecs(mp, *blocksize, 1);
-+			records_per_block[1] = m->maxrecs(mp, *blocksize, 0);
- 			return 0;
- 		}
- 	}
-@@ -178,38 +199,50 @@ construct_records_per_block(
- 		fprintf(stderr, _("%s: header type not found.\n"), tag);
- 		goto out;
- 	}
--	if (!strcmp(p, "short"))
-+	if (!strcmp(p, "short")) {
-+		if (*blocksize < 0)
-+			*blocksize = mp->m_sb.sb_blocksize;
- 		blocksize -= XFS_BTREE_SBLOCK_LEN;
--	else if (!strcmp(p, "shortcrc"))
-+	} else if (!strcmp(p, "shortcrc")) {
-+		if (*blocksize < 0)
-+			*blocksize = mp->m_sb.sb_blocksize;
- 		blocksize -= XFS_BTREE_SBLOCK_CRC_LEN;
--	else if (!strcmp(p, "long"))
-+	} else if (!strcmp(p, "long")) {
-+		if (*blocksize < 0)
-+			*blocksize = mp->m_sb.sb_blocksize;
- 		blocksize -= XFS_BTREE_LBLOCK_LEN;
--	else if (!strcmp(p, "longcrc"))
-+	} else if (!strcmp(p, "longcrc")) {
-+		if (*blocksize < 0)
-+			*blocksize = mp->m_sb.sb_blocksize;
- 		blocksize -= XFS_BTREE_LBLOCK_CRC_LEN;
--	else {
-+	} else if (!strcmp(p, "iext")) {
-+		if (*blocksize < 0)
-+			*blocksize = 256;
-+		blocksize -= 2 * sizeof(void *);
-+	} else {
- 		fprintf(stderr, _("%s: unrecognized btree header type."),
- 				p);
- 		goto out;
- 	}
- 
--	if (record_size > blocksize) {
-+	if (record_size > *blocksize) {
- 		fprintf(stderr,
- 			_("%s: record size must be less than %u bytes.\n"),
--			tag, blocksize);
-+			tag, *blocksize);
- 		goto out;
- 	}
- 
--	if (key_size > blocksize) {
-+	if (key_size > *blocksize) {
- 		fprintf(stderr,
- 			_("%s: key size must be less than %u bytes.\n"),
--			tag, blocksize);
-+			tag, *blocksize);
- 		goto out;
- 	}
- 
--	if (ptr_size > blocksize) {
-+	if (ptr_size > *blocksize) {
- 		fprintf(stderr,
- 			_("%s: pointer size must be less than %u bytes.\n"),
--			tag, blocksize);
-+			tag, *blocksize);
- 		goto out;
- 	}
- 
-@@ -221,8 +254,8 @@ construct_records_per_block(
- 		goto out;
- 	}
- 
--	records_per_block[0] = blocksize / record_size;
--	records_per_block[1] = blocksize / (key_size + ptr_size);
-+	records_per_block[0] = *blocksize / record_size;
-+	records_per_block[1] = *blocksize / (key_size + ptr_size);
- 	ret = 0;
- out:
- 	free(toktag);
-@@ -238,12 +271,12 @@ report(
- 	char			*tag,
- 	unsigned int		report_what,
- 	unsigned long long	nr_records,
--	unsigned int		blocksize)
-+	int			blocksize)
+-	return ioctl(xfd->fd, XFS_IOC_SCRUB_METADATA, meta);
++	int				ret;
++
++	ret = ioctl(xfd->fd, XFS_IOC_SCRUB_METADATA, meta);
++	if (ret)
++		return -errno;
++
++	return 0;
+ }
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index 5eb1b276..f7677499 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -127,7 +127,6 @@ xfs_check_metadata(
  {
- 	unsigned int		records_per_block[2];
- 	int			ret;
+ 	DEFINE_DESCR(dsc, ctx, format_scrub_descr);
+ 	unsigned int			tries = 0;
+-	int				code;
+ 	int				error;
  
--	ret = construct_records_per_block(tag, blocksize, records_per_block);
-+	ret = construct_records_per_block(tag, &blocksize, records_per_block);
- 	if (ret)
- 		return;
+ 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
+@@ -136,41 +135,41 @@ xfs_check_metadata(
  
-@@ -302,7 +335,7 @@ btheight_f(
- 	int		argc,
- 	char		**argv)
- {
--	long long	blocksize = mp->m_sb.sb_blocksize;
-+	long long	blocksize = -1;
- 	uint64_t	nr_records = 0;
- 	int		report_what = REPORT_DEFAULT;
- 	int		i, c;
-@@ -355,7 +388,7 @@ _("The largest block size this command will consider is %u bytes.\n"),
- 		return 0;
+ 	dbg_printf("check %s flags %xh\n", descr_render(&dsc), meta->sm_flags);
+ retry:
+-	error = xfrog_scrub_metadata(&ctx->mnt, meta);
++	error = -xfrog_scrub_metadata(&ctx->mnt, meta);
+ 	if (debug_tweak_on("XFS_SCRUB_FORCE_REPAIR") && !error)
+ 		meta->sm_flags |= XFS_SCRUB_OFLAG_CORRUPT;
+-	if (error) {
+-		code = errno;
+-		switch (code) {
+-		case ENOENT:
+-			/* Metadata not present, just skip it. */
+-			return CHECK_DONE;
+-		case ESHUTDOWN:
+-			/* FS already crashed, give up. */
+-			str_info(ctx, descr_render(&dsc),
++	switch (error) {
++	case 0:
++		/* No operational errors encountered. */
++		break;
++	case ENOENT:
++		/* Metadata not present, just skip it. */
++		return CHECK_DONE;
++	case ESHUTDOWN:
++		/* FS already crashed, give up. */
++		str_info(ctx, descr_render(&dsc),
+ _("Filesystem is shut down, aborting."));
+-			return CHECK_ABORT;
+-		case EIO:
+-		case ENOMEM:
+-			/* Abort on I/O errors or insufficient memory. */
+-			str_errno(ctx, descr_render(&dsc));
+-			return CHECK_ABORT;
+-		case EDEADLOCK:
+-		case EBUSY:
+-		case EFSBADCRC:
+-		case EFSCORRUPTED:
+-			/*
+-			 * The first two should never escape the kernel,
+-			 * and the other two should be reported via sm_flags.
+-			 */
+-			str_info(ctx, descr_render(&dsc),
+-_("Kernel bug!  errno=%d"), code);
+-			/* fall through */
+-		default:
+-			/* Operational error. */
+-			str_errno(ctx, descr_render(&dsc));
+-			return CHECK_DONE;
+-		}
++		return CHECK_ABORT;
++	case EIO:
++	case ENOMEM:
++		/* Abort on I/O errors or insufficient memory. */
++		str_errno(ctx, descr_render(&dsc));
++		return CHECK_ABORT;
++	case EDEADLOCK:
++	case EBUSY:
++	case EFSBADCRC:
++	case EFSCORRUPTED:
++		/*
++		 * The first two should never escape the kernel,
++		 * and the other two should be reported via sm_flags.
++		 */
++		str_info(ctx, descr_render(&dsc), _("Kernel bug!  errno=%d"),
++				error);
++		/* fall through */
++	default:
++		/* Operational error. */
++		str_errno(ctx, descr_render(&dsc));
++		return CHECK_DONE;
  	}
  
--	if (blocksize < 128) {
-+	if (blocksize >= 0 && blocksize < 128) {
- 		fprintf(stderr,
- _("The smallest block size this command will consider is 128 bytes.\n"));
- 		return 0;
+ 	/*
+@@ -578,10 +577,10 @@ __xfs_scrub_test(
+ 	meta.sm_type = type;
+ 	if (repair)
+ 		meta.sm_flags |= XFS_SCRUB_IFLAG_REPAIR;
+-	error = xfrog_scrub_metadata(&ctx->mnt, &meta);
+-	if (!error)
++	error = -xfrog_scrub_metadata(&ctx->mnt, &meta);
++	switch (error) {
++	case 0:
+ 		return true;
+-	switch (errno) {
+ 	case EROFS:
+ 		str_info(ctx, ctx->mntpoint,
+ _("Filesystem is mounted read-only; cannot proceed."));
+@@ -707,74 +706,77 @@ xfs_repair_metadata(
+ 		str_info(ctx, descr_render(&dsc),
+ 				_("Attempting optimization."));
+ 
+-	error = xfrog_scrub_metadata(&ctx->mnt, &meta);
+-	if (error) {
+-		switch (errno) {
+-		case EDEADLOCK:
+-		case EBUSY:
+-			/* Filesystem is busy, try again later. */
+-			if (debug || verbose)
+-				str_info(ctx, descr_render(&dsc),
+-_("Filesystem is busy, deferring repair."));
+-			return CHECK_RETRY;
+-		case ESHUTDOWN:
+-			/* Filesystem is already shut down, abort. */
++	error = -xfrog_scrub_metadata(&ctx->mnt, &meta);
++	switch (error) {
++	case 0:
++		/* No operational errors encountered. */
++		break;
++	case EDEADLOCK:
++	case EBUSY:
++		/* Filesystem is busy, try again later. */
++		if (debug || verbose)
+ 			str_info(ctx, descr_render(&dsc),
++_("Filesystem is busy, deferring repair."));
++		return CHECK_RETRY;
++	case ESHUTDOWN:
++		/* Filesystem is already shut down, abort. */
++		str_info(ctx, descr_render(&dsc),
+ _("Filesystem is shut down, aborting."));
+-			return CHECK_ABORT;
+-		case ENOTTY:
+-		case EOPNOTSUPP:
+-			/*
+-			 * If we're in no-complain mode, requeue the check for
+-			 * later.  It's possible that an error in another
+-			 * component caused us to flag an error in this
+-			 * component.  Even if the kernel didn't think it
+-			 * could fix this, it's at least worth trying the scan
+-			 * again to see if another repair fixed it.
+-			 */
+-			if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
+-				return CHECK_RETRY;
+-			/*
+-			 * If we forced repairs or this is a preen, don't
+-			 * error out if the kernel doesn't know how to fix.
+-			 */
+-			if (is_unoptimized(&oldm) ||
+-			    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
+-				return CHECK_DONE;
+-			/* fall through */
+-		case EINVAL:
+-			/* Kernel doesn't know how to repair this? */
+-			str_error(ctx, descr_render(&dsc),
+-_("Don't know how to fix; offline repair required."));
++		return CHECK_ABORT;
++	case ENOTTY:
++	case EOPNOTSUPP:
++		/*
++		 * If we're in no-complain mode, requeue the check for
++		 * later.  It's possible that an error in another
++		 * component caused us to flag an error in this
++		 * component.  Even if the kernel didn't think it
++		 * could fix this, it's at least worth trying the scan
++		 * again to see if another repair fixed it.
++		 */
++		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
++			return CHECK_RETRY;
++		/*
++		 * If we forced repairs or this is a preen, don't
++		 * error out if the kernel doesn't know how to fix.
++		 */
++		if (is_unoptimized(&oldm) ||
++		    debug_tweak_on("XFS_SCRUB_FORCE_REPAIR"))
+ 			return CHECK_DONE;
+-		case EROFS:
+-			/* Read-only filesystem, can't fix. */
+-			if (verbose || debug || needs_repair(&oldm))
+-				str_info(ctx, descr_render(&dsc),
++		/* fall through */
++	case EINVAL:
++		/* Kernel doesn't know how to repair this? */
++		str_error(ctx,
++_("%s: Don't know how to fix; offline repair required."),
++				descr_render(&dsc));
++		return CHECK_DONE;
++	case EROFS:
++		/* Read-only filesystem, can't fix. */
++		if (verbose || debug || needs_repair(&oldm))
++			str_info(ctx, descr_render(&dsc),
+ _("Read-only filesystem; cannot make changes."));
++		return CHECK_DONE;
++	case ENOENT:
++		/* Metadata not present, just skip it. */
++		return CHECK_DONE;
++	case ENOMEM:
++	case ENOSPC:
++		/* Don't care if preen fails due to low resources. */
++		if (is_unoptimized(&oldm) && !needs_repair(&oldm))
+ 			return CHECK_DONE;
+-		case ENOENT:
+-			/* Metadata not present, just skip it. */
+-			return CHECK_DONE;
+-		case ENOMEM:
+-		case ENOSPC:
+-			/* Don't care if preen fails due to low resources. */
+-			if (is_unoptimized(&oldm) && !needs_repair(&oldm))
+-				return CHECK_DONE;
+-			/* fall through */
+-		default:
+-			/*
+-			 * Operational error.  If the caller doesn't want us
+-			 * to complain about repair failures, tell the caller
+-			 * to requeue the repair for later and don't say a
+-			 * thing.  Otherwise, print error and bail out.
+-			 */
+-			if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
+-				return CHECK_RETRY;
+-			str_errno(ctx, descr_render(&dsc));
+-			return CHECK_DONE;
+-		}
++		/* fall through */
++	default:
++		/*
++		 * Operational error.  If the caller doesn't want us
++		 * to complain about repair failures, tell the caller
++		 * to requeue the repair for later and don't say a
++		 * thing.  Otherwise, print error and bail out.
++		 */
++		if (!(repair_flags & XRM_COMPLAIN_IF_UNFIXED))
++			return CHECK_RETRY;
++		str_liberror(ctx, error, descr_render(&dsc));
++		return CHECK_DONE;
+ 	}
++
+ 	if (repair_flags & XRM_COMPLAIN_IF_UNFIXED)
+ 		xfs_scrub_warn_incomplete_scrub(ctx, &dsc, &meta);
+ 	if (needs_repair(&meta)) {
 
