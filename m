@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 125D1C432C2
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:33:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8826BC432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:33:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CCC3821D80
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:33:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 59B4E21D81
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:33:52 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="BzukGVdd"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="irgLeL3V"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727075AbfIYVdh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:33:37 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:57696 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727042AbfIYVdh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:33:37 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLTOHM050827;
-        Wed, 25 Sep 2019 21:33:34 GMT
+        id S1727238AbfIYVdw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:33:52 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:42400 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727058AbfIYVdv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:33:51 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLTRJU006312;
+        Wed, 25 Sep 2019 21:33:40 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=C7Yn5LhFV50oLNuGhuHbeZasL838OVzWKm4729WiPKk=;
- b=BzukGVddC3oLEPpjZn5bBxlF+ccjfNGXV12Ms75o9luxJrOOxVbSWZeOtqj5mVOMMRv7
- 2K+25+IgmA/QK7TMJx8vBSNm9oAuxfFc4aTwxlcuZb9ANuNiSNL/qCF5hXYh2bwRVZfi
- sRNzvI3esI9uUDLHUxVyid/KJJvYnTTFEksGjAGGffdwzkru04Z/0RIX5bTi8IrGcIQo
- VLJC6iEbQFldy8vam9mU0DrLx9Tfz5RN+JMPinYjkIchzABrO7Ck6bWZL8QJsx576c0b
- EAVOumKMV1YP8A3D9sv1hEZKffjeMIVXgh8FLJaRKgw8vKKt5C+/XtBXVpVvqIvQtBkT UQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2v5cgr7erb-1
+ bh=2TD3g0lhcBTYpe7iUi/2qFcRXq2wMoM/JBYnFPhVDyQ=;
+ b=irgLeL3VLFMnJD9sjl/DS/6l9dGWTdUMoAQfa98lfgU1ogsFbdEDthcDFrel59/iVu97
+ oDzrJqlo+tiOn13ssfccVh/w5rYyMWRYCmLI85f/nlv0hn48egbJf3jh0xSNcuETxzS1
+ YN+3DBhPWt2BI8y/zecplCPHWrQiByAuTqllYEw91m84i1XX9iac8yx2QvZBqSILmIqU
+ fpYVg5My0Zc9CJQMTstZjqhRaWeDSN+sH8zbRxowutCrQ5N+ru/RYvuXuRRE5wwf9+6+
+ 5ylozh8tv4+c+5rpqIBHwg/B/Naf1zoBvH7TlticdWCRstQVwCe+5Jk1qOTJqenyd03K /w== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2v5btq7hk6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:33:34 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLTEa8011682;
-        Wed, 25 Sep 2019 21:31:34 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2v7vnyuhp0-1
+        Wed, 25 Sep 2019 21:33:40 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLTOaB194399;
+        Wed, 25 Sep 2019 21:31:39 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2v829w4tt4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:31:33 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLVWQL013490;
-        Wed, 25 Sep 2019 21:31:32 GMT
+        Wed, 25 Sep 2019 21:31:39 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8PLVcQ6018407;
+        Wed, 25 Sep 2019 21:31:38 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:31:32 -0700
-Subject: [PATCH 4/5] xfs_scrub: separate internal metadata scrub functions
+        with ESMTP ; Wed, 25 Sep 2019 14:31:38 -0700
+Subject: [PATCH 5/5] xfs_scrub: check summary counters
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:31:29 -0700
-Message-ID: <156944708984.296129.4265304780428958376.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
+Date:   Wed, 25 Sep 2019 14:31:37 -0700
+Message-ID: <156944709719.296129.9144102828813666346.stgit@magnolia>
 In-Reply-To: <156944706528.296129.7604742756772046951.stgit@magnolia>
 References: <156944706528.296129.7604742756772046951.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,173 +80,134 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Refactor xfs_scrub_metadata into two functions -- one to make a single
-call xfs_check_metadata, and the second retains the loop logic.  The
-name is a little easy to confuse with other functions, so rename it to
-reflect what it actually does: scrub all internal metadata of a given
-class (AG header, AG metadata, FS metadata).  No functional changes.
+Teach scrub to ask the kernel to check and repair summary counters
+during phase 7.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Dave Chinner <dchinner@redhat.com>
 ---
- scrub/scrub.c |  101 +++++++++++++++++++++++++++++----------------------------
- 1 file changed, 52 insertions(+), 49 deletions(-)
+ scrub/phase4.c |   12 ++++++++++++
+ scrub/phase7.c |   14 ++++++++++++++
+ scrub/repair.c |    3 +++
+ scrub/scrub.c  |   12 ++++++++++++
+ scrub/scrub.h  |    2 ++
+ 5 files changed, 43 insertions(+)
 
 
+diff --git a/scrub/phase4.c b/scrub/phase4.c
+index 589777f6..25fedc83 100644
+--- a/scrub/phase4.c
++++ b/scrub/phase4.c
+@@ -107,6 +107,18 @@ bool
+ xfs_repair_fs(
+ 	struct scrub_ctx		*ctx)
+ {
++	bool				moveon;
++
++	/*
++	 * Check the summary counters early.  Normally we do this during phase
++	 * seven, but some of the cross-referencing requires fairly-accurate
++	 * counters, so counter repairs have to be put on the list now so that
++	 * they get fixed before we stop retrying unfixed metadata repairs.
++	 */
++	moveon = xfs_scrub_fs_summary(ctx, &ctx->action_lists[0]);
++	if (!moveon)
++		return false;
++
+ 	return xfs_process_action_items(ctx);
+ }
+ 
+diff --git a/scrub/phase7.c b/scrub/phase7.c
+index f82b60d6..308b8bb3 100644
+--- a/scrub/phase7.c
++++ b/scrub/phase7.c
+@@ -9,10 +9,13 @@
+ #include <sys/statvfs.h>
+ #include "libfrog/paths.h"
+ #include "libfrog/ptvar.h"
++#include "list.h"
+ #include "xfs_scrub.h"
+ #include "common.h"
++#include "scrub.h"
+ #include "fscounters.h"
+ #include "spacemap.h"
++#include "repair.h"
+ 
+ /* Phase 7: Check summary counters. */
+ 
+@@ -91,6 +94,7 @@ xfs_scan_summary(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	struct summary_counts	totalcount = {0};
++	struct xfs_action_list	alist;
+ 	struct ptvar		*ptvar;
+ 	unsigned long long	used_data;
+ 	unsigned long long	used_rt;
+@@ -110,6 +114,16 @@ xfs_scan_summary(
+ 	int			ip;
+ 	int			error;
+ 
++	/* Check and fix the fs summary counters. */
++	xfs_action_list_init(&alist);
++	moveon = xfs_scrub_fs_summary(ctx, &alist);
++	if (!moveon)
++		return false;
++	moveon = xfs_action_list_process(ctx, ctx->mnt.fd, &alist,
++			ALP_COMPLAIN_IF_UNFIXED | ALP_NOPROGRESS);
++	if (!moveon)
++		return moveon;
++
+ 	/* Flush everything out to disk before we start counting. */
+ 	error = syncfs(ctx->mnt.fd);
+ 	if (error) {
+diff --git a/scrub/repair.c b/scrub/repair.c
+index 0e5afb20..04a9dccf 100644
+--- a/scrub/repair.c
++++ b/scrub/repair.c
+@@ -84,6 +84,9 @@ xfs_action_item_priority(
+ 	case XFS_SCRUB_TYPE_GQUOTA:
+ 	case XFS_SCRUB_TYPE_PQUOTA:
+ 		return PRIO(aitem, XFS_SCRUB_TYPE_UQUOTA);
++	case XFS_SCRUB_TYPE_FSCOUNTERS:
++		/* This should always go after AG headers no matter what. */
++		return PRIO(aitem, INT_MAX);
+ 	}
+ 	abort();
+ }
 diff --git a/scrub/scrub.c b/scrub/scrub.c
-index 083ed9a1..2557da2a 100644
+index 2557da2a..d7a6b49b 100644
 --- a/scrub/scrub.c
 +++ b/scrub/scrub.c
-@@ -276,47 +276,68 @@ xfs_scrub_save_repair(
- 	return true;
+@@ -388,6 +388,18 @@ xfs_scrub_fs_metadata(
+ 	return xfs_scrub_all_types(ctx, XFROG_SCRUB_TYPE_FS, 0, alist);
  }
  
--/* Scrub metadata, saving corruption reports for later. */
-+/* Scrub a single XFS_SCRUB_TYPE_*, saving corruption reports for later. */
-+static int
-+xfs_scrub_meta_type(
++/* Scrub FS summary metadata. */
++bool
++xfs_scrub_fs_summary(
 +	struct scrub_ctx		*ctx,
-+	unsigned int			type,
-+	xfs_agnumber_t			agno,
 +	struct xfs_action_list		*alist)
 +{
-+	struct xfs_scrub_metadata	meta = {
-+		.sm_type		= type,
-+		.sm_agno		= agno,
-+	};
-+	enum check_outcome		fix;
++	int				ret;
 +
-+	background_sleep();
-+
-+	/* Check the item. */
-+	fix = xfs_check_metadata(ctx, &meta, false);
-+	progress_add(1);
-+
-+	switch (fix) {
-+	case CHECK_ABORT:
-+		return ECANCELED;
-+	case CHECK_REPAIR:
-+		if (!xfs_scrub_save_repair(ctx, alist, &meta))
-+			return ENOMEM;
-+		/* fall through */
-+	case CHECK_DONE:
-+		return 0;
-+	default:
-+		/* CHECK_RETRY should never happen. */
-+		abort();
-+	}
++	ret = xfs_scrub_meta_type(ctx, XFS_SCRUB_TYPE_FSCOUNTERS, 0, alist);
++	return ret == 0;
 +}
 +
-+/*
-+ * Scrub all metadata types that are assigned to the given XFROG_SCRUB_TYPE_*,
-+ * saving corruption reports for later.  This should not be used for
-+ * XFROG_SCRUB_TYPE_INODE or for checking summary metadata.
-+ */
- static bool
--xfs_scrub_metadata(
-+xfs_scrub_all_types(
- 	struct scrub_ctx		*ctx,
- 	enum xfrog_scrub_type		scrub_type,
- 	xfs_agnumber_t			agno,
- 	struct xfs_action_list		*alist)
- {
--	struct xfs_scrub_metadata	meta = {0};
- 	const struct xfrog_scrub_descr	*sc;
--	enum check_outcome		fix;
--	int				type;
-+	unsigned int			type;
- 
- 	sc = xfrog_scrubbers;
- 	for (type = 0; type < XFS_SCRUB_TYPE_NR; type++, sc++) {
-+		int			ret;
-+
- 		if (sc->type != scrub_type)
- 			continue;
- 		if (sc->flags & XFROG_SCRUB_DESCR_SUMMARY)
- 			continue;
- 
--		meta.sm_type = type;
--		meta.sm_flags = 0;
--		meta.sm_agno = agno;
--		background_sleep();
--
--		/* Check the item. */
--		fix = xfs_check_metadata(ctx, &meta, false);
--		progress_add(1);
--		switch (fix) {
--		case CHECK_ABORT:
-+		ret = xfs_scrub_meta_type(ctx, type, agno, alist);
-+		if (ret)
- 			return false;
--		case CHECK_REPAIR:
--			if (!xfs_scrub_save_repair(ctx, alist, &meta))
--				return false;
--			/* fall through */
--		case CHECK_DONE:
--			continue;
--		case CHECK_RETRY:
--			abort();
--			break;
--		}
- 	}
- 
- 	return true;
-@@ -332,28 +353,10 @@ xfs_scrub_primary_super(
- 	struct scrub_ctx		*ctx,
- 	struct xfs_action_list		*alist)
- {
--	struct xfs_scrub_metadata	meta = {
--		.sm_type = XFS_SCRUB_TYPE_SB,
--	};
--	enum check_outcome		fix;
-+	int				ret;
- 
--	/* Check the item. */
--	fix = xfs_check_metadata(ctx, &meta, false);
--	switch (fix) {
--	case CHECK_ABORT:
--		return false;
--	case CHECK_REPAIR:
--		if (!xfs_scrub_save_repair(ctx, alist, &meta))
--			return false;
--		/* fall through */
--	case CHECK_DONE:
--		return true;
--	case CHECK_RETRY:
--		abort();
--		break;
--	}
--
--	return true;
-+	ret = xfs_scrub_meta_type(ctx, XFS_SCRUB_TYPE_SB, 0, alist);
-+	return ret == 0;
- }
- 
- /* Scrub each AG's header blocks. */
-@@ -363,7 +366,7 @@ xfs_scrub_ag_headers(
- 	xfs_agnumber_t			agno,
- 	struct xfs_action_list		*alist)
- {
--	return xfs_scrub_metadata(ctx, XFROG_SCRUB_TYPE_AGHEADER, agno, alist);
-+	return xfs_scrub_all_types(ctx, XFROG_SCRUB_TYPE_AGHEADER, agno, alist);
- }
- 
- /* Scrub each AG's metadata btrees. */
-@@ -373,7 +376,7 @@ xfs_scrub_ag_metadata(
- 	xfs_agnumber_t			agno,
- 	struct xfs_action_list		*alist)
- {
--	return xfs_scrub_metadata(ctx, XFROG_SCRUB_TYPE_PERAG, agno, alist);
-+	return xfs_scrub_all_types(ctx, XFROG_SCRUB_TYPE_PERAG, agno, alist);
- }
- 
- /* Scrub whole-FS metadata btrees. */
-@@ -382,7 +385,7 @@ xfs_scrub_fs_metadata(
- 	struct scrub_ctx		*ctx,
- 	struct xfs_action_list		*alist)
- {
--	return xfs_scrub_metadata(ctx, XFROG_SCRUB_TYPE_FS, 0, alist);
-+	return xfs_scrub_all_types(ctx, XFROG_SCRUB_TYPE_FS, 0, alist);
- }
- 
  /* How many items do we have to check? */
+ unsigned int
+ xfs_scrub_estimate_ag_work(
+diff --git a/scrub/scrub.h b/scrub/scrub.h
+index 7e28b522..d407abb0 100644
+--- a/scrub/scrub.h
++++ b/scrub/scrub.h
+@@ -25,6 +25,8 @@ bool xfs_scrub_ag_metadata(struct scrub_ctx *ctx, xfs_agnumber_t agno,
+ 		struct xfs_action_list *alist);
+ bool xfs_scrub_fs_metadata(struct scrub_ctx *ctx,
+ 		struct xfs_action_list *alist);
++bool xfs_scrub_fs_summary(struct scrub_ctx *ctx,
++		struct xfs_action_list *alist);
+ 
+ bool xfs_can_scrub_fs_metadata(struct scrub_ctx *ctx);
+ bool xfs_can_scrub_inode(struct scrub_ctx *ctx);
 
