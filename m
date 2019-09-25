@@ -7,65 +7,64 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C25F7C432C1
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 05:19:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A1ABC432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 05:21:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8C3CD217F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 05:19:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 03F11217F4
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 05:21:45 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="LPFbL2ag";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="dzQYIh+P"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="CHtzDiyU";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="d+2Gbrz2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2411739AbfIYFT2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 01:19:28 -0400
-Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:38065 "EHLO
+        id S2411743AbfIYFVo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 01:21:44 -0400
+Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:53859 "EHLO
         wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2411738AbfIYFT1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 01:19:27 -0400
+        by vger.kernel.org with ESMTP id S2411742AbfIYFVo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 01:21:44 -0400
 Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id A2E9847C;
-        Wed, 25 Sep 2019 01:19:26 -0400 (EDT)
+        by mailout.west.internal (Postfix) with ESMTP id 08A36479;
+        Wed, 25 Sep 2019 01:21:42 -0400 (EDT)
 Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Wed, 25 Sep 2019 01:19:27 -0400
+  by compute1.internal (MEProxy); Wed, 25 Sep 2019 01:21:43 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
         message-id:subject:from:to:cc:date:in-reply-to:references
         :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        sCCIKKAoaVzCiSvtMWQJfw7DpZxzPNULX+XaXZSDHcc=; b=LPFbL2agV+jtI2R0
-        HNOMUYXQijYh587mtwWHgtalNhEDEHk38IP7JkSUOpONqC1uFOZ1+Sd5IiBYwEIb
-        GchVnSRiRp0fbLhlaVP2JgdVPaJL4JgMrAKpVjRGtMr24+8Yse+lxUUvYETQsuyH
-        q1VKBBRkOqdEcePlHZLEyPS8RZwKsrw38511hAvJ0Cfi6iO/LEmFkW7Ld9HY60ES
-        hwFv70OuWRJpKHbZDX4ANIF+UvQ7UdvoMJ6fOhQQNk3vqmsJC2WSAPDlp4wJYy60
-        fT5wcCFVPTAMV7X5gF4AZW27O51SQZ8K6umQnYbF/b+okY2roLoFIDa5ilwH8TQ+
-        EFn8+A==
+        cqQLvhxxTO0Qk9ma+IbiJ4RHyWgrrbpdPOOuSaCgTuQ=; b=CHtzDiyUPByjMiXM
+        7k/Xyp9ZLHF6hfn8jXSV3Ly+c5SoJZVZmJz9uEObs2cBDbjN4fynOdPFLgHHB7hd
+        uKLpMFuE2JgnkUvD7EqUL8V1xEhtozXLEMk7Eie2wRxLDp7ogNWdHjsYemeANJJX
+        qM74w190HuavIK74/St2Mg7Hv2eTHmdWrVXkOH/g6k0J4F0c6uA+/swrCuFln1IL
+        55Udj/ni1wUnveI6iv62pHTVQ7d8HRvBncFdbK2W5KeC22sjFdc4YICIHqOpcM9u
+        ZOF2S6DTOFQCHeFA4d11ASQeVGMrNgHONR2hBnTsBv/LYGkBF3OXloZIlTc3NH2H
+        vYHkWg==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
         messagingengine.com; h=cc:content-transfer-encoding:content-type
         :date:from:in-reply-to:message-id:mime-version:references
         :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=sCCIKKAoaVzCiSvtMWQJfw7DpZxzPNULX+XaXZSDH
-        cc=; b=dzQYIh+PZtlQ60wfp/LlN+vY7BR6UV5Utm7n0KC6nsmI3tbYgYFiNSSBi
-        RLGXMh46HExRd+thdIPmf18P23uhSzhH4aS7yaqxrDBH+i5qCZlPL26fhgNzLZ1R
-        qAkb445GCSCZedobKr8UN2/9jy3+Ln44UkWjY0b4d7a2u6I5B2vLeJE2vsYzn4qy
-        YzUv3AowUyxIjfFisfxKFr0lKkVM9b6SNAcws2OuL8nSbtZ/DkuoNo+2RyHMlW6e
-        c836bzct0psEAip7pcLfdTKoeyWiEJQugmY6pQYGYNWEnxTXPvnKGnj2saX44Sul
-        FzL8b+AIcccySIzHkHd5j90Zk4zWg==
-X-ME-Sender: <xms:3fiKXXAx4qIn-307c104ZAi3IZxmlQbIhyccZU99KhKPVo4Id4YhVg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrfedugdelhecutefuodetggdotefrodftvf
+        :x-sasl-enc; s=fm3; bh=cqQLvhxxTO0Qk9ma+IbiJ4RHyWgrrbpdPOOuSaCgT
+        uQ=; b=d+2Gbrz2QquZvYZ59DGYHLzONkWmPDZWtj/SuhlwwnDFR8NjlVlG2EJ1+
+        XZpc447x9dBe0pNdJVyE0t2aW5bOrgtodgYOwtKL2TeYk6P/yrZzgPPWgob/rFK4
+        lmqLXx1PXIYCNSWSTp50FWdITt4kyDe+/R4DG6KHvuAvoQSvpRksENZq1tzU7USz
+        upGyAUKLdbGDun443wCEx9tF2L7r5MMXhwloqmtaEdRArZmjbsnvVSZRxYfeI3+C
+        wUpJeN/y5w4qxvEigVhenOQfM7/CihJX4VGkaNTnMInGwsAMLqMFU452yQUSzVJL
+        hA462DYtpkaDPW862heh88JQAbP/g==
+X-ME-Sender: <xms:ZfmKXVVyQ0ihUYxu0VjVvLi93z4M9CAvcZj5ZThPBMwLSEv0JqEMqg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrfedugdeliecutefuodetggdotefrodftvf
     curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
     uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
     fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
     vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecukfhppeduudekrddvtdekrd
     duieefrddvvdefnecurfgrrhgrmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgr
     fidrnhgvthenucevlhhushhtvghrufhiiigvpedt
-X-ME-Proxy: <xmx:3fiKXYZhNPhwfz7UAXflavGnOotJ2BOUCIZ4Y2HpT7l6k_rtUEKiYg>
-    <xmx:3fiKXVcGWPstAF93yXESAHbXf7RbNubeZZj006ojv7myPUppKT_bcw>
-    <xmx:3fiKXTeSAi_HgHarBzHzFG8PlMm07QXU5-ZUngDyuE6mWhR6I4y7Uw>
-    <xmx:3viKXbk7ET5-Sv1ff-aawTdgKYMMiO7gLYpoyw2HowP3-W4tj93VoQ>
+X-ME-Proxy: <xmx:ZfmKXT2SRNzjWHAFuJIinGLHjDGBWTne_-aTjxal-duodjqRPssJKw>
+    <xmx:ZfmKXatVHxKMAymQmSiQ6EzLMTATRPdxR5-d2hDXsQQyiR2_HkaPbQ>
+    <xmx:ZfmKXbXu1xjFkwRYLJaAOmoC5sAa4f6s2I7ZdC3eK3upwCkM7dUlaA>
+    <xmx:ZvmKXQsRGCKTfzy_5nRCC7PPSO2LxCAUO1rfbUWB2FUO9-N83AYycA>
 Received: from mickey.themaw.net (unknown [118.208.163.223])
-        by mail.messagingengine.com (Postfix) with ESMTPA id DE69F8005C;
-        Wed, 25 Sep 2019 01:19:22 -0400 (EDT)
-Message-ID: <359eb242396b8ed10591477267fef34e9cbdd21d.camel@themaw.net>
-Subject: Re: [REPOST PATCH v3 11/16] xfs: mount-api - add xfs_remount_ro()
- helper
+        by mail.messagingengine.com (Postfix) with ESMTPA id EDAC78005B;
+        Wed, 25 Sep 2019 01:21:38 -0400 (EDT)
+Message-ID: <38c7427c7961481877059a9fbf578439279e71a7.camel@themaw.net>
+Subject: Re: [REPOST PATCH v3 12/16] xfs: mount api - add xfs_reconfigure()
 From:   Ian Kent <raven@themaw.net>
 To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
@@ -73,11 +72,11 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>,
         Eric Sandeen <sandeen@sandeen.net>
-Date:   Wed, 25 Sep 2019 13:19:19 +0800
-In-Reply-To: <20190924143835.GE17688@bfoster>
+Date:   Wed, 25 Sep 2019 13:21:35 +0800
+In-Reply-To: <20190924143844.GF17688@bfoster>
 References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
-         <156933137949.20933.11551905065222062958.stgit@fedora-28>
-         <20190924143835.GE17688@bfoster>
+         <156933138468.20933.1616184640263037904.stgit@fedora-28>
+         <20190924143844.GF17688@bfoster>
 Content-Type: text/plain; charset="UTF-8"
 User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
@@ -88,126 +87,158 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On Tue, 2019-09-24 at 10:38 -0400, Brian Foster wrote:
-> On Tue, Sep 24, 2019 at 09:22:59PM +0800, Ian Kent wrote:
-> > Factor the remount read only code into a helper to simplify the
-> > subsequent change from the super block method .remount_fs to the
-> > mount-api fs_context_operations method .reconfigure.
+> On Tue, Sep 24, 2019 at 09:23:04PM +0800, Ian Kent wrote:
+> > Add the fs_context_operations method .reconfigure that performs
+> > remount validation as previously done by the super_operations
+> > .remount_fs method.
+> > 
+> > An attempt has also been made to update the comment about options
+> > handling problems with mount(8) to reflect the current situation.
 > > 
 > > Signed-off-by: Ian Kent <raven@themaw.net>
 > > ---
 > 
-> This (and the next patch) looks exactly like the previous version
-> (please retain review tags).
+> It doesn't look like this incorporated feedback from v2..
 
-Right, will do.
+That's right.
+
+I spoke about that in the series cover letter, I'm not sure
+where to put this and I think there's useful information that
+probably should be kept, somewhere.
 
 > 
 > Brian
 > 
-> >  fs/xfs/xfs_super.c |   73 +++++++++++++++++++++++++++++++---------
-> > ------------
-> >  1 file changed, 43 insertions(+), 30 deletions(-)
+> >  fs/xfs/xfs_super.c |   84
+> > ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 84 insertions(+)
 > > 
 > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index aaee32162950..de75891c5551 100644
+> > index de75891c5551..e7627f7ca7f2 100644
 > > --- a/fs/xfs/xfs_super.c
 > > +++ b/fs/xfs/xfs_super.c
-> > @@ -1433,6 +1433,47 @@ xfs_remount_rw(
+> > @@ -1552,6 +1552,89 @@ xfs_fs_remount(
 > >  	return 0;
 > >  }
 > >  
+> > +/*
+> > + * There have been problems in the past with options passed from
+> > mount(8).
+> > + *
+> > + * The problem being that options passed by mount(8) in the case
+> > where only
+> > + * the the mount point path is given would consist of the existing
+> > fstab
+> > + * options with the options from mtab for the current mount merged
+> > in and
+> > + * the options given on the command line last. But the result
+> > couldn't be
+> > + * relied upon to accurately reflect the current mount options so
+> > that
+> > + * rejecting options that can't be changed on reconfigure could
+> > erronously
+> > + * cause mount failure.
+> > + *
+> > + * The mount-api uses a legacy mount options handler in the VFS to
+> > handle
+> > + * mount(8) so these options will continue to be passed. Even if
+> > mount(8)
+> > + * is updated to use fsopen()/fsconfig()/fsmount() it's likely to
+> > continue
+> > + * to set the existing options so options problems with
+> > reconfigure could
+> > + * continue.
+> > + *
+> > + * For the longest time mtab locking was a problem and this could
+> > have been
+> > + * one possible cause. It's also possible there could have been
+> > options
+> > + * order problems.
+> > + *
+> > + * That has changed now as mtab is a link to the proc file system
+> > mount
+> > + * table so mtab options should be always accurate.
+> > + *
+> > + * Consulting the util-linux maintainer (Karel Zak) he is
+> > confident that,
+> > + * in this case, the options passed by mount(8) will be those of
+> > the current
+> > + * mount and the options order should be a correct merge of fstab
+> > and mtab
+> > + * options, and new options given on the command line.
+> > + *
+> > + * So, in theory, it should be possible to compare incoming
+> > options and
+> > + * return an error for options that differ from the current mount
+> > and can't
+> > + * be changed on reconfigure to prevent users from believing they
+> > might have
+> > + * changed mount options using remount which can't be changed.
+> > + *
+> > + * But for now continue to return success for every reconfigure
+> > request, and
+> > + * silently ignore all options that can't actually be changed.
+> > + */
 > > +STATIC int
-> > +xfs_remount_ro(
-> > +	struct xfs_mount	*mp)
+> > +xfs_reconfigure(
+> > +	struct fs_context *fc)
 > > +{
-> > +	int error;
+> > +	struct xfs_fs_context	*ctx = fc->fs_private;
+> > +	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
+> > +	struct xfs_mount        *new_mp = fc->s_fs_info;
+> > +	xfs_sb_t		*sbp = &mp->m_sb;
+> > +	int			flags = fc->sb_flags;
+> > +	int			error;
 > > +
-> > +	/*
-> > +	 * Cancel background eofb scanning so it cannot race with the
-> > +	 * final log force+buftarg wait and deadlock the remount.
-> > +	 */
-> > +	xfs_stop_block_reaping(mp);
-> > +
-> > +	/* Get rid of any leftover CoW reservations... */
-> > +	error = xfs_icache_free_cowblocks(mp, NULL);
-> > +	if (error) {
-> > +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+> > +	error = xfs_validate_params(new_mp, ctx, false);
+> > +	if (error)
 > > +		return error;
+> > +
+> > +	/* inode32 -> inode64 */
+> > +	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+> > +	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
+> > +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
+> > >sb_agcount);
 > > +	}
 > > +
-> > +	/* Free the per-AG metadata reservation pool. */
-> > +	error = xfs_fs_unreserve_ag_blocks(mp);
-> > +	if (error) {
-> > +		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-> > +		return error;
+> > +	/* inode64 -> inode32 */
+> > +	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+> > +	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
+> > +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
+> > >sb_agcount);
 > > +	}
 > > +
-> > +	/*
-> > +	 * Before we sync the metadata, we need to free up the reserve
-> > +	 * block pool so that the used block count in the superblock on
-> > +	 * disk is correct at the end of the remount. Stash the current
-> > +	 * reserve pool size so that if we get remounted rw, we can
-> > +	 * return it to the same size.
-> > +	 */
-> > +	xfs_save_resvblks(mp);
+> > +	/* ro -> rw */
+> > +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
+> > +		error = xfs_remount_rw(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
 > > +
-> > +	xfs_quiesce_attr(mp);
-> > +	mp->m_flags |= XFS_MOUNT_RDONLY;
+> > +	/* rw -> ro */
+> > +	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
+> > +		error = xfs_remount_ro(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
 > > +
 > > +	return 0;
 > > +}
 > > +
-> >  STATIC int
-> >  xfs_fs_remount(
-> >  	struct super_block	*sb,
-> > @@ -1503,37 +1544,9 @@ xfs_fs_remount(
+> >  /*
+> >   * Second stage of a freeze. The data is already frozen so we only
+> >   * need to take care of the metadata. Once that's done sync the
+> > superblock
+> > @@ -2077,6 +2160,7 @@ static const struct super_operations
+> > xfs_super_operations = {
+> >  static const struct fs_context_operations xfs_context_ops = {
+> >  	.parse_param = xfs_parse_param,
+> >  	.get_tree    = xfs_get_tree,
+> > +	.reconfigure = xfs_reconfigure,
+> >  };
 > >  
-> >  	/* rw -> ro */
-> >  	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY))
-> > {
-> > -		/*
-> > -		 * Cancel background eofb scanning so it cannot race
-> > with the
-> > -		 * final log force+buftarg wait and deadlock the
-> > remount.
-> > -		 */
-> > -		xfs_stop_block_reaping(mp);
-> > -
-> > -		/* Get rid of any leftover CoW reservations... */
-> > -		error = xfs_icache_free_cowblocks(mp, NULL);
-> > -		if (error) {
-> > -			xfs_force_shutdown(mp,
-> > SHUTDOWN_CORRUPT_INCORE);
-> > -			return error;
-> > -		}
-> > -
-> > -		/* Free the per-AG metadata reservation pool. */
-> > -		error = xfs_fs_unreserve_ag_blocks(mp);
-> > -		if (error) {
-> > -			xfs_force_shutdown(mp,
-> > SHUTDOWN_CORRUPT_INCORE);
-> > +		error = xfs_remount_ro(mp);
-> > +		if (error)
-> >  			return error;
-> > -		}
-> > -
-> > -		/*
-> > -		 * Before we sync the metadata, we need to free up the
-> > reserve
-> > -		 * block pool so that the used block count in the
-> > superblock on
-> > -		 * disk is correct at the end of the remount. Stash the
-> > current
-> > -		 * reserve pool size so that if we get remounted rw, we
-> > can
-> > -		 * return it to the same size.
-> > -		 */
-> > -		xfs_save_resvblks(mp);
-> > -
-> > -		xfs_quiesce_attr(mp);
-> > -		mp->m_flags |= XFS_MOUNT_RDONLY;
-> >  	}
-> >  
-> >  	return 0;
+> >  static struct file_system_type xfs_fs_type = {
 > > 
 
