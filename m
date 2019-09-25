@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EDAA6C4360C
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 20270C432C2
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2C90205F4
-	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E695D21D80
+	for <linux-xfs@archiver.kernel.org>; Wed, 25 Sep 2019 21:39:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ifhqdrM6"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sd8XOfy3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728705AbfIYVjf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 25 Sep 2019 17:39:35 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:42434 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728696AbfIYVjf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:39:35 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdPAe061366;
-        Wed, 25 Sep 2019 21:39:33 GMT
+        id S1728712AbfIYVjg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 25 Sep 2019 17:39:36 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:48288 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728684AbfIYVjg (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 25 Sep 2019 17:39:36 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdOb7013228;
+        Wed, 25 Sep 2019 21:39:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=bMOgTxMhxRdI5J33gp8lJ6r10yE4SBz3daFQpUI9vcw=;
- b=ifhqdrM63G89NRVUjUvvf0GXNJjQBczMlnxQ9BYBVKx4r/WIU0wxjMof41vK0bCw7mjw
- 6Ytb+zkOhFc552XQAoxXDGsbT8m/t+A4ULiPbx0tStxvQRGn7Yx0SJQkEOmQJLVcX08u
- /3lyN9j9kSN30nNUh3pNd1JX4gt3fNoOd5ja1epmCQVLFrfXj6VWULNuzvTab0gIWXsK
- O6yAaA+0dapsMlKbZFl0ZH0cA1I39ebJe0jaHm6YUFpIslllNo+K6mhQtWrp4V4cTWhQ
- MVq5WhFTUh4qLnE9hQ0QJcb/jIrG105yAZ3+AwmQu0pQjc5D0HOWtHqmufeSRIk/RJdu mA== 
+ bh=j2oUoY5uLEJX/VoDUMwKe7TBSvQ+xgA2X5ARKoXdRio=;
+ b=sd8XOfy37SX9KeHug+2uQjhXpK6CoF41DT17chqwb+J2n8P+WwpX8uTsWLgcopeihbfg
+ ib0qwALATptvEFEpi5EAhgH+b/VvG5rpei/nSMi8l3J1Nplc0g4f64TTn9Pz4kYgbMEp
+ WusS9iQP2IkE9wRUotiAsFUaPUpjdy8BLkxPAuzBK2YA7aawuBrJDoCsm4G+Y7VRFy+L
+ jyIDEb+F9OqV77AeTFocM++vhniz8O02jqVeftoZeKAsDYIBUh4FZfAyfrOIi3ipCHIl
+ XFWonD3WmfhUPpJrypX/Q+a5bfIhsbysoPC7CZco3JgvSCKvjFbu+hkcYgQY5AY+xblN bw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2v5b9tyhkw-1
+        by aserp2120.oracle.com with ESMTP id 2v5btq7j9y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 25 Sep 2019 21:39:34 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdKwe107711;
+        Wed, 25 Sep 2019 21:39:33 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2v82qam0c7-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
         Wed, 25 Sep 2019 21:39:33 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8PLdIsk107660;
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLdWiV019182;
         Wed, 25 Sep 2019 21:39:32 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2v82qakyhc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 25 Sep 2019 21:39:30 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8PLcngm017478;
-        Wed, 25 Sep 2019 21:38:49 GMT
 Received: from localhost (/10.145.178.55)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 25 Sep 2019 14:38:49 -0700
-Subject: [PATCH 07/18] xfs_scrub: remove moveon from progress report helpers
+        with ESMTP ; Wed, 25 Sep 2019 14:39:31 -0700
+Subject: [PATCH 14/18] xfs_scrub: remove moveon from phase 3 functions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 25 Sep 2019 14:38:47 -0700
-Message-ID: <156944752781.301514.15801329044555863434.stgit@magnolia>
+Date:   Wed, 25 Sep 2019 14:39:30 -0700
+Message-ID: <156944757066.301514.3069397859771889014.stgit@magnolia>
 In-Reply-To: <156944748487.301514.14685083474028866113.stgit@magnolia>
 References: <156944748487.301514.14685083474028866113.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,107 +80,162 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the moveon returns in the scrub process reporting helpers
-with a direct integer error return.
+Replace the moveon returns in the phase 3 code with a direct integer
+error return.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/progress.c  |   13 ++++++++-----
- scrub/progress.h  |    2 +-
- scrub/xfs_scrub.c |   13 +++++++++----
- 3 files changed, 18 insertions(+), 10 deletions(-)
+ scrub/phase3.c |   73 +++++++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 48 insertions(+), 25 deletions(-)
 
 
-diff --git a/scrub/progress.c b/scrub/progress.c
-index e93b607f..d8130ca5 100644
---- a/scrub/progress.c
-+++ b/scrub/progress.c
-@@ -167,8 +167,11 @@ progress_end_phase(void)
- 	pt.fp = NULL;
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index a5f95004..354cc8ed 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -38,12 +38,12 @@ scrub_fd(
+ 
+ struct scrub_inode_ctx {
+ 	struct ptcounter	*icount;
+-	bool			moveon;
++	bool			aborted;
+ };
+ 
+ /* Report a filesystem error that the vfs fed us on close. */
+ static void
+-xfs_scrub_inode_vfs_error(
++report_close_error(
+ 	struct scrub_ctx	*ctx,
+ 	struct xfs_bulkstat	*bstat)
+ {
+@@ -58,7 +58,7 @@ xfs_scrub_inode_vfs_error(
+ 
+ /* Verify the contents, xattrs, and extent maps of an inode. */
+ static int
+-xfs_scrub_inode(
++scrub_inode(
+ 	struct scrub_ctx	*ctx,
+ 	struct xfs_handle	*handle,
+ 	struct xfs_bulkstat	*bstat,
+@@ -68,7 +68,6 @@ xfs_scrub_inode(
+ 	struct scrub_inode_ctx	*ictx = arg;
+ 	struct ptcounter	*icount = ictx->icount;
+ 	xfs_agnumber_t		agno;
+-	bool			moveon = true;
+ 	int			fd = -1;
+ 	int			error;
+ 
+@@ -136,61 +135,75 @@ xfs_scrub_inode(
+ 
+ out:
+ 	if (error)
+-		moveon = false;
++		ictx->aborted = true;
++
+ 	error = ptcounter_add(icount, 1);
+ 	if (error) {
+ 		str_liberror(ctx, error,
+ 				_("incrementing scanned inode counter"));
+-		return false;
++		ictx->aborted = true;
+ 	}
+ 	progress_add(1);
+ 	action_list_defer(ctx, agno, &alist);
+ 	if (fd >= 0) {
+-		error = close(fd);
+-		if (error)
+-			xfs_scrub_inode_vfs_error(ctx, bstat);
++		int	err2;
++
++		err2 = close(fd);
++		if (err2) {
++			report_close_error(ctx, bstat);
++			ictx->aborted = true;
++		}
+ 	}
+-	if (!moveon)
+-		ictx->moveon = false;
+-	return ictx->moveon ? 0 : XFS_ITERATE_INODES_ABORT;
++
++	if (!error && ictx->aborted)
++		error = ECANCELED;
++	return error;
  }
  
--/* Set ourselves up to report progress. */
+ /* Verify all the inodes in a filesystem. */
 -bool
-+/*
-+ * Set ourselves up to report progress.  If errors are encountered, this
-+ * function will log them and return nonzero.
-+ */
+-xfs_scan_inodes(
 +int
- progress_init_phase(
- 	struct scrub_ctx	*ctx,
- 	FILE			*fp,
-@@ -182,7 +185,7 @@ progress_init_phase(
- 	assert(pt.fp == NULL);
- 	if (fp == NULL || max == 0) {
- 		pt.fp = NULL;
--		return true;
-+		return 0;
- 	}
- 	pt.fp = fp;
- 	pt.isatty = isatty(fileno(fp));
-@@ -205,7 +208,7 @@ progress_init_phase(
- 		goto out_ptcounter;
++phase3_func(
+ 	struct scrub_ctx	*ctx)
+ {
+-	struct scrub_inode_ctx	ictx;
++	struct scrub_inode_ctx	ictx = { NULL };
+ 	uint64_t		val;
+ 	int			err;
+ 
+-	ictx.moveon = true;
+ 	err = ptcounter_alloc(scrub_nproc(ctx), &ictx.icount);
+ 	if (err) {
+ 		str_liberror(ctx, err, _("creating scanned inode counter"));
+-		return false;
++		return err;
  	}
  
+-	err = scrub_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
++	err = scrub_scan_all_inodes(ctx, scrub_inode, &ictx);
++	if (!err && ictx.aborted)
++		err = ECANCELED;
+ 	if (err)
+-		ictx.moveon = false;
+-	if (!ictx.moveon)
+ 		goto free;
++
+ 	xfs_scrub_report_preen_triggers(ctx);
+ 	err = ptcounter_value(ictx.icount, &val);
+ 	if (err) {
+ 		str_liberror(ctx, err, _("summing scanned inode counter"));
+-		return false;
++		return err;
+ 	}
++
+ 	ctx->inodes_checked = val;
+ free:
+ 	ptcounter_free(ictx.icount);
+-	return ictx.moveon;
++	return err;
+ }
+ 
+-/* Estimate how much work we're going to do. */
+ bool
+-xfs_estimate_inodes_work(
++xfs_scan_inodes(
++	struct scrub_ctx	*ctx)
++{
++	return phase3_func(ctx) == 0;
++}
++
++/* Estimate how much work we're going to do. */
++int
++phase3_estimate(
+ 	struct scrub_ctx	*ctx,
+ 	uint64_t		*items,
+ 	unsigned int		*nr_threads,
+@@ -199,5 +212,15 @@ xfs_estimate_inodes_work(
+ 	*items = ctx->mnt_sv.f_files - ctx->mnt_sv.f_ffree;
+ 	*nr_threads = scrub_nproc(ctx);
+ 	*rshift = 0;
 -	return true;
 +	return 0;
- 
- out_ptcounter:
- 	ptcounter_free(pt.ptc);
-@@ -213,5 +216,5 @@ progress_init_phase(
- out_max:
- 	pt.max = 0;
- 	pt.fp = NULL;
--	return false;
-+	return ret;
++}
++
++bool
++xfs_estimate_inodes_work(
++	struct scrub_ctx	*ctx,
++	uint64_t		*items,
++	unsigned int		*nr_threads,
++	int			*rshift)
++{
++	return phase3_estimate(ctx, items, nr_threads, rshift) == 0;
  }
-diff --git a/scrub/progress.h b/scrub/progress.h
-index 9144770e..c1a115cb 100644
---- a/scrub/progress.h
-+++ b/scrub/progress.h
-@@ -10,7 +10,7 @@
- #define START_IGNORE	'\001'
- #define END_IGNORE	'\002'
- 
--bool progress_init_phase(struct scrub_ctx *ctx, FILE *progress_fp,
-+int progress_init_phase(struct scrub_ctx *ctx, FILE *progress_fp,
- 			 unsigned int phase, uint64_t max, int rshift,
- 			 unsigned int nr_threads);
- void progress_end_phase(void);
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 89f6c96a..97482c8c 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -423,6 +423,7 @@ run_scrub_phases(
- 	unsigned int		debug_phase = 0;
- 	unsigned int		phase;
- 	int			rshift;
-+	int			ret;
- 
- 	if (debug_tweak_on("XFS_SCRUB_PHASE"))
- 		debug_phase = atoi(getenv("XFS_SCRUB_PHASE"));
-@@ -468,15 +469,19 @@ run_scrub_phases(
- 			 * whatever other per-thread data we need to allocate.
- 			 */
- 			work_threads++;
--			moveon = progress_init_phase(ctx, progress_fp, phase,
-+			ret = progress_init_phase(ctx, progress_fp, phase,
- 					max_work, rshift, work_threads);
--			if (!moveon)
-+			if (ret) {
-+				moveon = false;
- 				break;
-+			}
- 			moveon = descr_init_phase(ctx, work_threads) == 0;
- 		} else {
--			moveon = progress_init_phase(ctx, NULL, phase, 0, 0, 0);
--			if (!moveon)
-+			ret = progress_init_phase(ctx, NULL, phase, 0, 0, 0);
-+			if (ret) {
-+				moveon = false;
- 				break;
-+			}
- 			moveon = descr_init_phase(ctx, 1) == 0;
- 		}
- 		if (!moveon)
 
