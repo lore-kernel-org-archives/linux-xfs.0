@@ -2,292 +2,199 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFE08C432C2
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 09:20:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C5E1C432C2
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 10:57:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A8119222C4
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 09:20:50 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BpHnWKIf"
+	by mail.kernel.org (Postfix) with ESMTP id 24356207E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 10:57:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727392AbfIZJUu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 05:20:50 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:55145 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1730298AbfIZJUt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 05:20:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569489647;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=veqIRvDn+REqjgwxZhvwH0CcWy/OKoPrL51kEWt4uPE=;
-        b=BpHnWKIftlFFK/EGMYOsD/QKQS7v64LWbL4MJoVAZE8SHwPEwZ90g7KGXmlpF6kdUULSwi
-        i0MJw60EAjjt2kUbbG1xMINtR0RohtW83IZNFfkPI/E7b3X5xko36PgppkMRiSop8CpWrT
-        3H77Ts2AshNRal1EYWXBaKMu/jRf6DY=
-Received: from mail-wm1-f69.google.com (mail-wm1-f69.google.com
- [209.85.128.69]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-355-WjRMk2jLNd-jcaHl1QQ8aw-1; Thu, 26 Sep 2019 05:20:46 -0400
-Received: by mail-wm1-f69.google.com with SMTP id m6so770058wmf.2
-        for <linux-xfs@vger.kernel.org>; Thu, 26 Sep 2019 02:20:45 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=qwed6MSWaMn3IrM2yrloFTZLZJPTmqDrqSnZ1iwoYyU=;
-        b=EZWpwe8ky4UGK8Z572Wxf/+ivR6W01bw+dgjEGrl+FcFbK4h0yMJrrfrCT0ri0vFnf
-         aKUbFXzZ2ADq5V8eyLMJM4b/xmu4zfpHeVKUVW/4YdU2z1m/aYDzEvwwjN+vJ2lw2gho
-         S+w2N3/1DuL/2Zf4ENBBcGhOuaQVwUMlWsKfG9jDxu5e/stc001lrdZvNNUvPY6Xacfn
-         23k5AZHGdNyArEEO23/5VYFjFN4vf6wtsO+VxIpV/+cgshhHOzUyHde/vPwDpESCZh0d
-         PfLcBWW+Ewg21W9D8Q+nEvhZ7yRTTZeV6iKEkKaw8N653gIDu1dk7DuuvoNyzRDt+vP2
-         7PVA==
-X-Gm-Message-State: APjAAAVlBcE1svj11U2ltnhbDF41sGmn9hcGI9x/y76XHxUVhfMoaeD0
-        2QnGFi5WhmmdsKN26FYOR+/0p4xygEdB9u3XUxeq8kSxFgOtIvQc3P4Kq+FgrIxWG+FIyPcGs1F
-        5u8jO1ROl2Lj8t3rIMZLE
-X-Received: by 2002:a7b:c5c2:: with SMTP id n2mr2069688wmk.20.1569489645008;
-        Thu, 26 Sep 2019 02:20:45 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqwpA6vf5alnKcPUp/E8tfEpeApNYkFZh0ws+76yZu7xj0E5DbPgYdJxCI7pctCKCiPJuHkFUQ==
-X-Received: by 2002:a7b:c5c2:: with SMTP id n2mr2069671wmk.20.1569489644788;
-        Thu, 26 Sep 2019 02:20:44 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id b7sm1601781wrj.28.2019.09.26.02.20.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 26 Sep 2019 02:20:44 -0700 (PDT)
-Date:   Thu, 26 Sep 2019 11:20:42 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_db: calculate iext tree geometry in btheight
- command
-Message-ID: <20190926092041.4br7562bwqsqwznr@pegasus.maiolino.io>
-Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
-        sandeen@sandeen.net, linux-xfs@vger.kernel.org
-References: <156944764785.303060.15428657522073378525.stgit@magnolia>
- <156944765991.303060.7541074919992777157.stgit@magnolia>
+        id S1725787AbfIZK5x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 06:57:53 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:57608 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725280AbfIZK5x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Sep 2019 06:57:53 -0400
+Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 38EA218C4269;
+        Thu, 26 Sep 2019 10:57:52 +0000 (UTC)
+Received: from dresden.str.redhat.com (unknown [10.40.205.151])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6FF3F60126;
+        Thu, 26 Sep 2019 10:57:51 +0000 (UTC)
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+From:   Max Reitz <mreitz@redhat.com>
+Subject: xfs_alloc_file_space() rounds len independently of offset
+Autocrypt: addr=mreitz@redhat.com; prefer-encrypt=mutual; keydata=
+ mQENBFXOJlcBCADEyyhOTsoa/2ujoTRAJj4MKA21dkxxELVj3cuILpLTmtachWj7QW+TVG8U
+ /PsMCFbpwsQR7oEy8eHHZwuGQsNpEtNC2G/L8Yka0BIBzv7dEgrPzIu+W3anZXQW4702+uES
+ U29G8TP/NGfXRRHGlbBIH9KNUnOSUD2vRtpOLXkWsV5CN6vQFYgQfFvmp5ZpPeUe6xNplu8V
+ mcTw8OSEDW/ZnxJc8TekCKZSpdzYoxfzjm7xGmZqB18VFwgJZlIibt1HE0EB4w5GsD7x5ekh
+ awIe3RwoZgZDLQMdOitJ1tUc8aqaxvgA4tz6J6st8D8pS//m1gAoYJWGwwIVj1DjTYLtABEB
+ AAG0HU1heCBSZWl0eiA8bXJlaXR6QHJlZGhhdC5jb20+iQFTBBMBCAA9AhsDBQkSzAMABQsJ
+ CAcCBhUICQoLAgQWAgMBAh4BAheABQJVzie5FRhoa3A6Ly9rZXlzLmdudXBnLm5ldAAKCRD0
+ B9sAYdXPQDcIB/9uNkbYEex1rHKz3mr12uxYMwLOOFY9fstP5aoVJQ1nWQVB6m2cfKGdcRe1
+ 2/nFaHSNAzT0NnKz2MjhZVmcrpyd2Gp2QyISCfb1FbT82GMtXFj1wiHmPb3CixYmWGQUUh+I
+ AvUqsevLA+WihgBUyaJq/vuDVM1/K9Un+w+Tz5vpeMidlIsTYhcsMhn0L9wlCjoucljvbDy/
+ 8C9L2DUdgi3XTa0ORKeflUhdL4gucWoAMrKX2nmPjBMKLgU7WLBc8AtV+84b9OWFML6NEyo4
+ 4cP7cM/07VlJK53pqNg5cHtnWwjHcbpGkQvx6RUx6F1My3y52vM24rNUA3+ligVEgPYBuQEN
+ BFXOJlcBCADAmcVUNTWT6yLWQHvxZ0o47KCP8OcLqD+67T0RCe6d0LP8GsWtrJdeDIQk+T+F
+ xO7DolQPS6iQ6Ak2/lJaPX8L0BkEAiMuLCKFU6Bn3lFOkrQeKp3u05wCSV1iKnhg0UPji9V2
+ W5eNfy8F4ZQHpeGUGy+liGXlxqkeRVhLyevUqfU0WgNqAJpfhHSGpBgihUupmyUg7lfUPeRM
+ DzAN1pIqoFuxnN+BRHdAecpsLcbR8sQddXmDg9BpSKozO/JyBmaS1RlquI8HERQoe6EynJhd
+ 64aICHDfj61rp+/0jTIcevxIIAzW70IadoS/y3DVIkuhncgDBvGbF3aBtjrJVP+5ABEBAAGJ
+ ASUEGAEIAA8FAlXOJlcCGwwFCRLMAwAACgkQ9AfbAGHVz0CbFwf9F/PXxQR9i4N0iipISYjU
+ sxVdjJOM2TMut+ZZcQ6NSMvhZ0ogQxJ+iEQ5OjnIputKvPVd5U7WRh+4lF1lB/NQGrGZQ1ic
+ alkj6ocscQyFwfib+xIe9w8TG1CVGkII7+TbS5pXHRxZH1niaRpoi/hYtgzkuOPp35jJyqT/
+ /ELbqQTDAWcqtJhzxKLE/ugcOMK520dJDeb6x2xVES+S5LXby0D4juZlvUj+1fwZu+7Io5+B
+ bkhSVPb/QdOVTpnz7zWNyNw+OONo1aBUKkhq2UIByYXgORPFnbfMY7QWHcjpBVw9MgC4tGeF
+ R4bv+1nAMMxKmb5VvQCExr0eFhJUAHAhVg==
+Message-ID: <6d62fb2a-a4e6-3094-c1bf-0ca5569b244c@redhat.com>
+Date:   Thu, 26 Sep 2019 12:57:49 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-In-Reply-To: <156944765991.303060.7541074919992777157.stgit@magnolia>
-User-Agent: NeoMutt/20180716
-X-MC-Unique: WjRMk2jLNd-jcaHl1QQ8aw-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.62]); Thu, 26 Sep 2019 10:57:52 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 25, 2019 at 02:40:59PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->=20
-> (Ab)use the btheight command to calculate the geometry of the incore
-> extent tree.
->=20
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  db/btheight.c |   87 +++++++++++++++++++++++++++++++++++++++------------=
-------
->  1 file changed, 60 insertions(+), 27 deletions(-)
->=20
->=20
-> diff --git a/db/btheight.c b/db/btheight.c
-> index e2c9759f..be604ebc 100644
-> --- a/db/btheight.c
-> +++ b/db/btheight.c
-> @@ -22,18 +22,37 @@ static int rmap_maxrecs(struct xfs_mount *mp, int blo=
-cklen, int leaf)
->  =09return libxfs_rmapbt_maxrecs(blocklen, leaf);
->  }
-> =20
-> +static int iext_maxrecs(struct xfs_mount *mp, int blocklen, int leaf)
-> +{
-> +=09blocklen -=3D 2 * sizeof(void *);
-> +
-> +=09return blocklen / sizeof(struct xfs_bmbt_rec);
-> +}
-> +
-> +static int disk_blocksize(struct xfs_mount *mp)
+Hi,
 
-This naming looks confusing to me, disk_blocksize sounds to me like
-'sector size', maybe fs_blocksize() or get_fs_blocksize()?
-> +{
-> +=09return mp->m_sb.sb_blocksize;
-> +}
-> +
+I’ve noticed that fallocating some range on XFS sometimes does not
+include the last block covered by the range, when the start offset is
+unaligned.
 
-Otherwise looks good.
+(Tested on 5.3.0-gf41def397.)
+
+This happens whenever ceil((offset + len) / block_size) - floor(offset /
+block_size) > ceil(len / block_size), for example:
+
+Let block_size be 4096.  Then (on XFS):
+
+$ fallocate -o 2048 -l 4096 foo   # Range [2048, 6144)
+$ xfs_bmap foo
+foo:
+        0: [0..7]: 80..87
+        1: [8..15]: hole
+
+There should not be a hole there.  Both of the first two blocks should
+be allocated.  XFS will do that if I just let the range start one byte
+sooner and increase the length by one byte:
+
+$ rm -f foo
+$ fallocate -o 2047 -l 4097 foo   # Range [2047, 6144)
+$ xfs_bmap foo
+foo:
+        0: [0..15]: 88..103
 
 
-> +static int iext_blocksize(struct xfs_mount *mp)
-> +{
-> +=09return 256;
-> +}
-> +
->  struct btmap {
->  =09const char=09*tag;
->  =09int=09=09(*maxrecs)(struct xfs_mount *mp, int blocklen,
->  =09=09=09=09   int leaf);
-> +=09int=09=09(*default_blocksize)(struct xfs_mount *mp);
->  } maps[] =3D {
-> -=09{"bnobt", libxfs_allocbt_maxrecs},
-> -=09{"cntbt", libxfs_allocbt_maxrecs},
-> -=09{"inobt", libxfs_inobt_maxrecs},
-> -=09{"finobt", libxfs_inobt_maxrecs},
-> -=09{"bmapbt", libxfs_bmbt_maxrecs},
-> -=09{"refcountbt", refc_maxrecs},
-> -=09{"rmapbt", rmap_maxrecs},
-> +=09{"bnobt", libxfs_allocbt_maxrecs, disk_blocksize},
-> +=09{"cntbt", libxfs_allocbt_maxrecs, disk_blocksize},
-> +=09{"inobt", libxfs_inobt_maxrecs, disk_blocksize},
-> +=09{"finobt", libxfs_inobt_maxrecs, disk_blocksize},
-> +=09{"bmapbt", libxfs_bmbt_maxrecs, disk_blocksize},
-> +=09{"refcountbt", refc_maxrecs, disk_blocksize},
-> +=09{"rmapbt", rmap_maxrecs, disk_blocksize},
-> +=09{"iext", iext_maxrecs, iext_blocksize},
->  };
-> =20
->  static void
-> @@ -108,7 +127,7 @@ calc_height(
->  static int
->  construct_records_per_block(
->  =09char=09=09*tag,
-> -=09int=09=09blocksize,
-> +=09int=09=09*blocksize,
->  =09unsigned int=09*records_per_block)
->  {
->  =09char=09=09*toktag;
-> @@ -119,8 +138,10 @@ construct_records_per_block(
-> =20
->  =09for (i =3D 0, m =3D maps; i < ARRAY_SIZE(maps); i++, m++) {
->  =09=09if (!strcmp(m->tag, tag)) {
-> -=09=09=09records_per_block[0] =3D m->maxrecs(mp, blocksize, 1);
-> -=09=09=09records_per_block[1] =3D m->maxrecs(mp, blocksize, 0);
-> +=09=09=09if (*blocksize < 0)
-> +=09=09=09=09*blocksize =3D m->default_blocksize(mp);
-> +=09=09=09records_per_block[0] =3D m->maxrecs(mp, *blocksize, 1);
-> +=09=09=09records_per_block[1] =3D m->maxrecs(mp, *blocksize, 0);
->  =09=09=09return 0;
->  =09=09}
->  =09}
-> @@ -178,38 +199,50 @@ construct_records_per_block(
->  =09=09fprintf(stderr, _("%s: header type not found.\n"), tag);
->  =09=09goto out;
->  =09}
-> -=09if (!strcmp(p, "short"))
-> +=09if (!strcmp(p, "short")) {
-> +=09=09if (*blocksize < 0)
-> +=09=09=09*blocksize =3D mp->m_sb.sb_blocksize;
->  =09=09blocksize -=3D XFS_BTREE_SBLOCK_LEN;
-> -=09else if (!strcmp(p, "shortcrc"))
-> +=09} else if (!strcmp(p, "shortcrc")) {
-> +=09=09if (*blocksize < 0)
-> +=09=09=09*blocksize =3D mp->m_sb.sb_blocksize;
->  =09=09blocksize -=3D XFS_BTREE_SBLOCK_CRC_LEN;
-> -=09else if (!strcmp(p, "long"))
-> +=09} else if (!strcmp(p, "long")) {
-> +=09=09if (*blocksize < 0)
-> +=09=09=09*blocksize =3D mp->m_sb.sb_blocksize;
->  =09=09blocksize -=3D XFS_BTREE_LBLOCK_LEN;
-> -=09else if (!strcmp(p, "longcrc"))
-> +=09} else if (!strcmp(p, "longcrc")) {
-> +=09=09if (*blocksize < 0)
-> +=09=09=09*blocksize =3D mp->m_sb.sb_blocksize;
->  =09=09blocksize -=3D XFS_BTREE_LBLOCK_CRC_LEN;
-> -=09else {
-> +=09} else if (!strcmp(p, "iext")) {
-> +=09=09if (*blocksize < 0)
-> +=09=09=09*blocksize =3D 256;
-> +=09=09blocksize -=3D 2 * sizeof(void *);
-> +=09} else {
->  =09=09fprintf(stderr, _("%s: unrecognized btree header type."),
->  =09=09=09=09p);
->  =09=09goto out;
->  =09}
-> =20
-> -=09if (record_size > blocksize) {
-> +=09if (record_size > *blocksize) {
->  =09=09fprintf(stderr,
->  =09=09=09_("%s: record size must be less than %u bytes.\n"),
-> -=09=09=09tag, blocksize);
-> +=09=09=09tag, *blocksize);
->  =09=09goto out;
->  =09}
-> =20
-> -=09if (key_size > blocksize) {
-> +=09if (key_size > *blocksize) {
->  =09=09fprintf(stderr,
->  =09=09=09_("%s: key size must be less than %u bytes.\n"),
-> -=09=09=09tag, blocksize);
-> +=09=09=09tag, *blocksize);
->  =09=09goto out;
->  =09}
-> =20
-> -=09if (ptr_size > blocksize) {
-> +=09if (ptr_size > *blocksize) {
->  =09=09fprintf(stderr,
->  =09=09=09_("%s: pointer size must be less than %u bytes.\n"),
-> -=09=09=09tag, blocksize);
-> +=09=09=09tag, *blocksize);
->  =09=09goto out;
->  =09}
-> =20
-> @@ -221,8 +254,8 @@ construct_records_per_block(
->  =09=09goto out;
->  =09}
-> =20
-> -=09records_per_block[0] =3D blocksize / record_size;
-> -=09records_per_block[1] =3D blocksize / (key_size + ptr_size);
-> +=09records_per_block[0] =3D *blocksize / record_size;
-> +=09records_per_block[1] =3D *blocksize / (key_size + ptr_size);
->  =09ret =3D 0;
->  out:
->  =09free(toktag);
-> @@ -238,12 +271,12 @@ report(
->  =09char=09=09=09*tag,
->  =09unsigned int=09=09report_what,
->  =09unsigned long long=09nr_records,
-> -=09unsigned int=09=09blocksize)
-> +=09int=09=09=09blocksize)
->  {
->  =09unsigned int=09=09records_per_block[2];
->  =09int=09=09=09ret;
-> =20
-> -=09ret =3D construct_records_per_block(tag, blocksize, records_per_block=
-);
-> +=09ret =3D construct_records_per_block(tag, &blocksize, records_per_bloc=
-k);
->  =09if (ret)
->  =09=09return;
-> =20
-> @@ -302,7 +335,7 @@ btheight_f(
->  =09int=09=09argc,
->  =09char=09=09**argv)
->  {
-> -=09long long=09blocksize =3D mp->m_sb.sb_blocksize;
-> +=09long long=09blocksize =3D -1;
->  =09uint64_t=09nr_records =3D 0;
->  =09int=09=09report_what =3D REPORT_DEFAULT;
->  =09int=09=09i, c;
-> @@ -355,7 +388,7 @@ _("The largest block size this command will consider =
-is %u bytes.\n"),
->  =09=09return 0;
->  =09}
-> =20
-> -=09if (blocksize < 128) {
-> +=09if (blocksize >=3D 0 && blocksize < 128) {
->  =09=09fprintf(stderr,
->  _("The smallest block size this command will consider is 128 bytes.\n"))=
-;
->  =09=09return 0;
->=20
+(See [1] for a more extensive reasoning why this is a bug.)
 
---=20
-Carlos
 
+The problem is (as far as I can see) that xfs_alloc_file_space() rounds
+count (which equals len) independently of the offset.  So in the
+examples above, 4096 is rounded to one block and 4097 is rounded to two;
+even though the first example actually touches two blocks because of the
+misaligned offset.
+
+Therefore, this should fix the problem (and does fix it for me):
+
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index 0910cb75b..4f4437030 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -864,6 +864,7 @@ xfs_alloc_file_space(
+ 	xfs_filblks_t		allocatesize_fsb;
+ 	xfs_extlen_t		extsz, temp;
+ 	xfs_fileoff_t		startoffset_fsb;
++	xfs_fileoff_t		endoffset_fsb;
+ 	int			nimaps;
+ 	int			quota_flag;
+ 	int			rt;
+@@ -891,7 +892,8 @@ xfs_alloc_file_space(
+ 	imapp = &imaps[0];
+ 	nimaps = 1;
+ 	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
+-	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
++	endoffset_fsb = XFS_B_TO_FSB(mp, offset + count);
++	allocatesize_fsb = endoffset_fsb - startoffset_fsb;
+
+ 	/*
+ 	 * Allocate file space until done or until there is an error
+
+
+Thanks and kind regards,
+
+Max
+
+
+[1] That this is a bug can be proven as follows:
+
+1. The fallocate(2) man page states "subsequent writes into the range
+specified by offset and len are guaranteed not to fail because of lack
+of disk space."
+
+2. Run this test (anywhere, e.g. tmpfs):
+
+$ truncate -s $((4096 * 4096)) test_fs
+$ mkfs.xfs -b size=4096 test_fs
+[Success-indicating output, I hope]
+
+$ mkdir mount_point
+$ sudo mount -o loop test_fs mount_point
+$ sudo chmod go+rwx mount_point
+$ cd mount_point
+
+$ free_blocks=$(df -B4k . | tail -n 1 \
+      | awk '{ split($0, f); print f[4] }')
+
+$ falloc_length=$((free_blocks * 4096))
+
+$ while true; do \
+     fallocate -o 2048 -l $falloc_length test_file && break; \
+     falloc_length=$((falloc_length - 4096)); \
+done
+fallocate: fallocate failed: No space left on device
+fallocate: fallocate failed: No space left on device
+fallocate: fallocate failed: No space left on device
+fallocate: fallocate failed: No space left on device
+
+  # Now we have a test_file with an fallocated range of
+  # [2048, 2048 + $falloc_length)
+  # So we should be able to write anywhere in that area without
+  # encountering ENOSPC; but that is what happens when we write
+  # to the last block covered by the range:
+
+$ dd if=/dev/zero of=test_file bs=1 conv=notrunc \
+    seek=$falloc_length count=2048
+dd: error writing 'test_file': No space left on device
+1+0 records in
+0+0 records out
+0 bytes copied, 0.000164691 s, 0.0 kB/s
+
+
+When I apply the diff shown above, I get one more “No space left on
+device” line (indicating that fallocate consistently takes one
+additional block), and then:
+
+$ uname -sr
+Linux 5.3.0-gf41def397-dirty
+
+$ dd if=/dev/zero of=test_file bs=1 conv=notrunc \
+    seek=$falloc_length count=2048
+2048+0 records in
+2048+0 records out
+2048 bytes (2.0 kB, 2.0 KiB) copied, 0.0121903 s, 168 kB/s
+
+(i.e., what I’d expect)
