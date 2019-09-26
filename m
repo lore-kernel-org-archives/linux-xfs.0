@@ -2,33 +2,34 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AC5A0C4360C
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 18:36:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 678D6C4360C
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 18:49:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7A421207E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 18:36:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4D3BC21A4A
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 18:49:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728191AbfIZSg5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 14:36:57 -0400
-Received: from sandeen.net ([63.231.237.45]:57738 "EHLO sandeen.net"
+        id S1728376AbfIZStq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 14:49:46 -0400
+Received: from sandeen.net ([63.231.237.45]:58492 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728020AbfIZSg4 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Sep 2019 14:36:56 -0400
+        id S1728374AbfIZStq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Sep 2019 14:49:46 -0400
 Received: from Liberator-6.hsd1.mn.comcast.net (c-174-53-190-166.hsd1.mn.comcast.net [174.53.190.166])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id BCCAD544;
-        Thu, 26 Sep 2019 13:36:46 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id 1AA15544;
+        Thu, 26 Sep 2019 13:49:35 -0500 (CDT)
 Subject: Re: [PATCH 2/4] man: add documentation for v5 inumbers ioctl
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944714720.297379.5532805895370082740.stgit@magnolia>
  <156944715928.297379.7728068992247988597.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <7062faf1-ab4a-9590-61c9-8ad7c020334d@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,167 +73,34 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <7062faf1-ab4a-9590-61c9-8ad7c020334d@sandeen.net>
-Date:   Thu, 26 Sep 2019 13:36:53 -0500
+Message-ID: <90396a7e-83d9-69c5-df74-0f5f5af81e36@sandeen.net>
+Date:   Thu, 26 Sep 2019 13:49:43 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156944715928.297379.7728068992247988597.stgit@magnolia>
+In-Reply-To: <7062faf1-ab4a-9590-61c9-8ad7c020334d@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/25/19 4:32 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+
+
+On 9/26/19 1:36 PM, Eric Sandeen wrote:
+>> +.I xi_version
+>> +is the version of this data structure.
+>> +Currently, only 1 or 5 are supported.
+> I find myself wondering what the differences between these versions
+> are...?
 > 
-> Add a manpage describing the new v5 XFS_IOC_INUMBERS ioctl.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  man/man2/ioctl_xfs_inumbers.2 |  118 +++++++++++++++++++++++++++++++++++++++++
->  1 file changed, 118 insertions(+)
->  create mode 100644 man/man2/ioctl_xfs_inumbers.2
-> 
-> 
-> diff --git a/man/man2/ioctl_xfs_inumbers.2 b/man/man2/ioctl_xfs_inumbers.2
-> new file mode 100644
-> index 00000000..b1e854d3
-> --- /dev/null
-> +++ b/man/man2/ioctl_xfs_inumbers.2
-> @@ -0,0 +1,118 @@
-> +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> +.\"
-> +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> +.\" SPDX-License-Identifier: GPL-2.0+
-> +.\" %%%LICENSE_END
-> +.TH IOCTL-XFS-INUMBERS 2 2019-05-23 "XFS"
-> +.SH NAME
-> +ioctl_xfs_inumbers \- query allocation information for groups of XFS inodes
-> +.SH SYNOPSIS
-> +.br
-> +.B #include <xfs/xfs_fs.h>
-> +.PP
-> +.BI "int ioctl(int " fd ", XFS_IOC_INUMBERS, struct xfs_inumbers_req *" arg );
-> +.SH DESCRIPTION
-> +Query inode allocation information for groups of XFS inodes.
-> +This ioctl uses
-> +.B struct xfs_inumbers_req
-> +to set up a bulk transfer with the kernel:
-> +.PP
-> +.in +4n
-> +.nf
-> +struct xfs_inumbers_req {
-> +	struct xfs_bulk_ireq    hdr;
-> +	struct xfs_inumbers     inumbers[];
-> +};
-> +
-> +struct xfs_bulk_ireq {
-> +	uint64_t                ino;
-> +	uint32_t                flags;
-> +	uint32_t                icount;
-> +	uint32_t                ocount;
-> +	uint32_t                agno;
-> +	uint64_t                reserved[5];
-> +};
-> +.fi
-> +.in
-> +.PP
-> +.I hdr
-> +describes the information to query.
-> +The layout and behavior are documented in the
-> +.BR ioctl_xfs_bulkstat (2)
-> +manpage and will not be discussed further here.
 
-it needs to be, though, because icount has a different meaning here; it's
-not number of inodes, it's number-of-batches-of-64-inodes, right?
+ok, the structure defined in this manpage is v5; the kernel will never return
+xi_version = 1.  So I think maybe:
 
-and the bulkstat manpage says "hdr.icount is the number of inodes to examine."
+"... is the version of this data structure.  The structure defined here is
+version 5."
 
-Ok, you suggested on IRC< changing the bulkstat manpage to say "records" not
-"inodes" which would work too.
-
-> +
-> +.PP
-> +.I inumbers
-> +is an array of
-> +.B struct xfs_inumbers
-> +which is described below.
-> +The array must have at least
-> +.I icount
-> +elements.
-> +.PP
-> +.in +4n
-> +.nf
-> +struct xfs_inumbers {
-> +	uint64_t                xi_startino;
-> +	uint64_t                xi_allocmask;
-> +	uint8_t                 xi_alloccount;
-> +	uint8_t                 xi_version;
-> +	uint8_t                 xi_padding[6];
-> +};
-> +.fi
-> +.in
-> +.PP
-> +This structure describes inode usage information for a group of 64 consecutive
-> +inode numbers.
-> +.PP
-> +.I xi_startino
-> +is the first inode number of this group.
-> +.PP
-> +.I xi_allocmask
-> +is a bitmask telling which inodes in this group are allocated.
-> +To clarify, bit
-> +.B N
-> +is set if inode
-> +.BR xi_startino + N
-> +is allocated.
-> +.PP
-> +.I xi_alloccount
-> +is the number of inodes in this group that are allocated.
-> +This should be equal to popcnt(xi_allocmask).
-> +.PP
-> +.I xi_version
-> +is the version of this data structure.
-> +Currently, only 1 or 5 are supported.
-
-I find myself wondering what the differences between these versions
-are...?
-
-> +.PP
-> +.I xi_padding[6]
-> +is zeroed.
-> +.SH RETURN VALUE
-> +On error, \-1 is returned, and
-> +.I errno
-> +is set to indicate the error.
-> +.PP
-> +.SH ERRORS
-> +Error codes can be one of, but are not limited to, the following:
-> +.TP
-> +.B EFAULT
-> +The kernel was not able to copy into the userspace buffer.
-> +.TP
-> +.B EFSBADCRC
-> +Metadata checksum validation failed while performing the query.
-> +.TP
-> +.B EFSCORRUPTED
-> +Metadata corruption was encountered while performing the query.
-> +.TP
-> +.B EINVAL
-> +One of the arguments was not valid.
-> +.TP
-> +.B EIO
-> +An I/O error was encountered while performing the query.
-> +.TP
-> +.B ENOMEM
-> +There was insufficient memory to perform the query.
-> +.SH CONFORMING TO
-> +This API is specific to XFS filesystem on the Linux kernel.
-> +.SH SEE ALSO
-> +.BR ioctl (2),
-> +.BR ioctl_xfs_bulkstat (2).
-> 
+-Eric
