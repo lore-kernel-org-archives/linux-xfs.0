@@ -2,65 +2,104 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,
+	SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1BC27C4360C
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 16:19:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B9729ECE589
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 16:33:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E98F9222C9
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 16:19:10 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8933421655
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 16:33:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FWGPuI+7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727357AbfIZQTK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 12:19:10 -0400
-Received: from mx2.suse.de ([195.135.220.15]:44740 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1727239AbfIZQTK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Sep 2019 12:19:10 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 63CB4B173;
-        Thu, 26 Sep 2019 16:19:08 +0000 (UTC)
-Date:   Thu, 26 Sep 2019 18:19:06 +0200
-From:   Petr Vorel <pvorel@suse.cz>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Cyril Hrubis <chrubis@suse.cz>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, ltp@lists.linux.it
-Subject: Re: copy_file_range() errno changes introduced in v5.3-rc1
-Message-ID: <20190926161906.GD23296@dell5510>
-Reply-To: Petr Vorel <pvorel@suse.cz>
-References: <20190926155608.GC23296@dell5510>
- <20190926160432.GC9916@magnolia>
+        id S1727388AbfIZQds (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 12:33:48 -0400
+Received: from mail-yw1-f68.google.com ([209.85.161.68]:44971 "EHLO
+        mail-yw1-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727358AbfIZQds (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 12:33:48 -0400
+Received: by mail-yw1-f68.google.com with SMTP id u187so928513ywa.11;
+        Thu, 26 Sep 2019 09:33:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=n2AZgX0guaiP5YgFLeTKAEfoSQ+3fPgtSsiI7KoX+/Q=;
+        b=FWGPuI+7/ZX7ZYmJGgrTUtcL+w0oEWOJxyCatcLDxyC29RJOUcAfONG5JseEwxdoq1
+         NvAW4Zo5Vh5pqBwYLPRF9rcx8Rhju0CaXcdNdOqNXa3HVRsLrQTY7KzMqXwt+vOPafBF
+         H7m4M4KmOjSoKa7bUH8S5tmwN6H3yxU3awq9rPCgxfC7b5U2AApDenKMFTfZReu4nuVj
+         jWhqxpZ+BKBO13H2N7V12z0h8yG58zZBD9JsUABOY55A4lGsIy2f2gUh0AoqEa0enb1E
+         2A5ci87gTk05UErxPUrkQiVBl6AnEJUvtT1W1A6fQ96xZwk4Mou30Hbo1ElQmQ7Fs3Q6
+         ok+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=n2AZgX0guaiP5YgFLeTKAEfoSQ+3fPgtSsiI7KoX+/Q=;
+        b=ptGXqBOJovbWmPrCKdhlwlUVnlNWdN8HWSRx5m9Q9yaYMz4i7kDeLGDZWPB98Z5VSy
+         oktdSrr5zYYvJlle8P57Znav6GD5fRg1l0J5vOOC/7TpYoFJlPGJ/wNRkmAkI2bN6lei
+         qkAU9DGSo4Z4V7XMiwvu69P/Pzly6ovX+59ks0pn6GZOmOFQHZpBZvPVY+DH9Cd5+gqG
+         y2q+obfWqATdxAMlHYcXQJ8mkEpK00V8M64pGKQIKRD79GPu/4E9DnbBoEFuZnDOtX4X
+         Dw4XNgNBOBLiBPc7hTp/CQ53Tt1Rp+SO2qwmtSiUS608jWlbL6TRDdidhBueSGQ8ffbi
+         euHg==
+X-Gm-Message-State: APjAAAUjVqDsjEZuq0PbB8w6Cf4MREzAe5NL4tNtDQgd3gyw7CCCl574
+        ajkD8SbNJRLu02S/aRT9yMvqywG2TjKl8f86Rac=
+X-Google-Smtp-Source: APXvYqyO2JaguAhBThAB0WOaDDohuSGt0Uia1/0TAyF4+Rs7q55h/9Aw18lfKWK+oGw0GJ6WqRqfrIdNxWHSvpPTDrs=
+X-Received: by 2002:a81:6c8:: with SMTP id 191mr3269887ywg.181.1569515626516;
+ Thu, 26 Sep 2019 09:33:46 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190926160432.GC9916@magnolia>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+References: <20190926155608.GC23296@dell5510> <20190926160432.GC9916@magnolia> <20190926161906.GD23296@dell5510>
+In-Reply-To: <20190926161906.GD23296@dell5510>
+From:   Amir Goldstein <amir73il@gmail.com>
+Date:   Thu, 26 Sep 2019 19:33:35 +0300
+Message-ID: <CAOQ4uxixSy7Wp7yWYOMpp8R5tFXD2SWR9t3koYO4jBE-Wnt8sQ@mail.gmail.com>
+Subject: Re: copy_file_range() errno changes introduced in v5.3-rc1
+To:     Petr Vorel <pvorel@suse.cz>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Cyril Hrubis <chrubis@suse.cz>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        LTP List <ltp@lists.linux.it>,
+        "Michael Kerrisk (man-pages)" <mtk.manpages@gmail.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Darrick,
+On Thu, Sep 26, 2019 at 7:19 PM Petr Vorel <pvorel@suse.cz> wrote:
+>
+> Hi Darrick,
+>
+> > On Thu, Sep 26, 2019 at 05:56:08PM +0200, Petr Vorel wrote:
+> > > Hi Amir,
+>
+> > > I'm going to fix LTP test copy_file_range02 before upcoming LTP release.
+> > > There are some returning errno changes introduced in v5.3-rc1, part of commit 40f06c799539
+> > > ("Merge tag 'copy-file-range-fixes-1' of git://git.kernel.org/pub/scm/fs/xfs/xfs-linux").
+> > > These changes looks pretty obvious as wanted, but can you please confirm it they were intentional?
+>
+> > > * 5dae222a5ff0 ("vfs: allow copy_file_range to copy across devices") started to return -EXDEV.
 
-> On Thu, Sep 26, 2019 at 05:56:08PM +0200, Petr Vorel wrote:
-> > Hi Amir,
+Started to return EXDEV?? quite the opposite.
+But LTP tests where already adapted to that behavior AFAICT:
+15cac7b46 syscalls/copy_file_range01: add cross-device test
 
-> > I'm going to fix LTP test copy_file_range02 before upcoming LTP release.
-> > There are some returning errno changes introduced in v5.3-rc1, part of commit 40f06c799539
-> > ("Merge tag 'copy-file-range-fixes-1' of git://git.kernel.org/pub/scm/fs/xfs/xfs-linux").
-> > These changes looks pretty obvious as wanted, but can you please confirm it they were intentional?
 
-> > * 5dae222a5ff0 ("vfs: allow copy_file_range to copy across devices") started to return -EXDEV.
-> > * 96e6e8f4a68d ("vfs: add missing checks to copy_file_range") started to return -EPERM, -ETXTBSY, -EOVERFLOW.
+> > > * 96e6e8f4a68d ("vfs: add missing checks to copy_file_range") started to return -EPERM, -ETXTBSY, -EOVERFLOW.
+>
+> > I'm not Amir, but by my recollection, yes, those are intentional. :)
+> Thanks for a quick confirmation.
+>
 
-> I'm not Amir, but by my recollection, yes, those are intentional. :)
-Thanks for a quick confirmation.
+Which reminds me - I forgot to send the man pages patch out to maintainer:
+https://lore.kernel.org/linux-fsdevel/20190529174318.22424-15-amir73il@gmail.com/
 
-> --D
+At least according to man page -EACCES is also possible.
 
-Kind regards,
-Petr
+Thanks,
+Amir.
