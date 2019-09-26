@@ -7,502 +7,230 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9C37AC4360C
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 19:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 69F1BC4360C
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 19:09:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 65D13217F4
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 19:03:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 41414217F4
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 19:09:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rFzMmg0s"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PsXw7W7v"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728551AbfIZTDq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 15:03:46 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55644 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728449AbfIZTDp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 15:03:45 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QIs4U1123588;
-        Thu, 26 Sep 2019 19:03:42 GMT
+        id S1727910AbfIZTJR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 15:09:17 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48438 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727707AbfIZTJR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 15:09:17 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QJ8YO4141341;
+        Thu, 26 Sep 2019 19:09:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=yQmeC+CUd6cer+bPm7KduHtPz0Kl0qXYYB6zgLWvqkQ=;
- b=rFzMmg0sJm9YmeaP+Ouabd2gLIR4Ni4SU6+FUjsWACOa5Gz6USRlX8q/S9lHlpZ0tpiL
- 6Vl/lF6eBjMsvTKhv/tyA/d729wzIJtFQhhjPGx5V3zQG0ROc9aSp3pq4+2Yqsi2/g6y
- k5CDFNRWpFKmAC3JnUuDNMQ3mMVzAsd0ULLdqzhQNj0ZlcvN+wPOBz2Aj9CxUmCeO/1Q
- OfxQBzU5BvPLOBSKzluos4gApS9i5pMbEYQeGBRksXV+yprE8jtraS3aiOXqMBoFRpQV
- 91+G3admarsjpx/xp99YwUKfmjsS7GLX5zcAG8Mh3QKkm2C6SkFjZaXRj49HQLW8+h6R 8w== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2v5cgrdqx4-1
+ bh=4FBy1J7d+Fk7+9NvVHPh/gweneUv8ij0XUAC/XxkX5U=;
+ b=PsXw7W7vunAplPyiVOtIH6VFn8/H7wlIjtzTvH8Ghg01Sj0Nc5W1j6iGd5jBtUqMk/+X
+ 0HXOIkxh8haytMtvVL5PpHk/StTESBy3KVbRA4aYlUv83hxoIXr4axKMyjF8He9QYiDM
+ Bf7V8xccdJolNjXxpqmjHJM/fzOQVCSVlEel+C+EARGxVfS1NbmN8mqABAeY1BsGh41Z
+ FmSA7ySGFMqZUcWbnRkl8tct43R1RbivpugcLAfJ7x8B2c3bFxAmSMe3yytYWnNV5OEp
+ SJl/Jhp4b1tEKpPfjyD0vAjVNhbmK4N5YAwMVcXDM6flfcRElQdBRvqXG9scNxOPP0ao pQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2v5b9u5ux3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Sep 2019 19:03:42 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QIsxlR065216;
-        Thu, 26 Sep 2019 19:01:41 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2v8yjww8rf-1
+        Thu, 26 Sep 2019 19:09:14 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8QIsV6B038048;
+        Thu, 26 Sep 2019 19:09:14 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2v8yjwyj91-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 26 Sep 2019 19:01:41 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8QJ1dEf008764;
-        Thu, 26 Sep 2019 19:01:40 GMT
+        Thu, 26 Sep 2019 19:09:14 +0000
+Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8QJ9Cxe025634;
+        Thu, 26 Sep 2019 19:09:12 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 26 Sep 2019 12:01:38 -0700
-Date:   Thu, 26 Sep 2019 12:01:38 -0700
+        with ESMTP ; Thu, 26 Sep 2019 12:09:12 -0700
+Date:   Thu, 26 Sep 2019 12:09:11 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
+To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/4] man: add documentation for v5 bulkstat ioctl
-Message-ID: <20190926190138.GF9916@magnolia>
-References: <156944714720.297379.5532805895370082740.stgit@magnolia>
- <156944715322.297379.11660312603647624273.stgit@magnolia>
- <d54d3d82-145d-ab92-e923-40224152d747@sandeen.net>
+Subject: [PATCH v2 1/2] xfs_db: btheight should check geometry more carefully
+Message-ID: <20190926190911.GG9916@magnolia>
+References: <156944764785.303060.15428657522073378525.stgit@magnolia>
+ <156944765385.303060.16945955453073433913.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <d54d3d82-145d-ab92-e923-40224152d747@sandeen.net>
+In-Reply-To: <156944765385.303060.16945955453073433913.stgit@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1909260151
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1909260151
+ definitions=main-1909260152
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 26, 2019 at 01:18:52PM -0500, Eric Sandeen wrote:
-> On 9/25/19 4:32 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Add a new manpage describing the V5 XFS_IOC_BULKSTAT ioctl.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> >  man/man2/ioctl_xfs_bulkstat.2   |  330 +++++++++++++++++++++++++++++++++++++++
-> >  man/man2/ioctl_xfs_fsbulkstat.2 |    6 +
-> >  2 files changed, 336 insertions(+)
-> >  create mode 100644 man/man2/ioctl_xfs_bulkstat.2
-> > 
-> 
-> couple errors/typos and a nitpick below
-> 
-> > diff --git a/man/man2/ioctl_xfs_bulkstat.2 b/man/man2/ioctl_xfs_bulkstat.2
-> > new file mode 100644
-> > index 00000000..f687cfe8
-> > --- /dev/null
-> > +++ b/man/man2/ioctl_xfs_bulkstat.2
-> > @@ -0,0 +1,330 @@
-> > +.\" Copyright (c) 2019, Oracle.  All rights reserved.
-> > +.\"
-> > +.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-> > +.\" SPDX-License-Identifier: GPL-2.0+
-> > +.\" %%%LICENSE_END
-> > +.TH IOCTL-XFS-BULKSTAT 2 2019-05-23 "XFS"
-> > +.SH NAME
-> > +ioctl_xfs_bulkstat \- query information for a batch of XFS inodes
-> > +.SH SYNOPSIS
-> > +.br
-> > +.B #include <xfs/xfs_fs.h>
-> > +.PP
-> > +.BI "int ioctl(int " fd ", XFS_IOC_BULKSTAT, struct xfs_bulkstat_req *" arg );
-> > +.SH DESCRIPTION
-> > +Query stat information for a group of XFS inodes.
-> > +This ioctl uses
-> > +.B struct xfs_bulkstat_req
-> > +to set up a bulk transfer with the kernel:
-> > +.PP
-> > +.in +4n
-> > +.nf
-> > +struct xfs_bulkstat_req {
-> > +	struct xfs_bulk_ireq    hdr;
-> > +	struct xfs_bulkstat     bulkstat[];
-> > +};
-> > +
-> > +struct xfs_bulk_ireq {
-> > +	uint64_t                ino;
-> > +	uint32_t                flags;
-> > +	uint32_t                icount;
-> > +	uint32_t                ocount;
-> > +	uint32_t                agno;
-> > +	uint64_t                reserved[5];
-> > +};
-> 
-> maybe a "see below for the xfs_bulkstat structure definition?"
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Dunno?  Seems fairly obvious to me?  <shrug> I'll put it in.
+The btheight command needs to check user-supplied geometry more
+carefully so that we don't hit floating point exceptions.
 
-> > +.fi
-> > +.in
-> > +.PP
-> > +.I hdr.ino
-> > +should be set to the number of the first inode for which the caller wants
-> > +information, or zero to start with the first inode in the filesystem
-> 
-> , or to a special value if XFS_BULK_IREQ_SPECIAL is set in the flags field.
+Coverity-id: 1453661, 1453659
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ db/btheight.c |   88 +++++++++++++++++++++++++++++++++++++++++++++++++++++----
+ 1 file changed, 82 insertions(+), 6 deletions(-)
 
-Ok.
-
-> > +Note that this is a different semantic than the
-> > +.B lastip
-> > +in the old
-> > +.B FSBULKSTAT
-> > +ioctl.
-> > +After the call, this value will be set to the number of the next inode for
-> > +which information could supplied.
-> > +This sets up the next call for an iteration loop.
-> > +.PP
-> > +If the
-> > +.B XFS_BULK_REQ_SPECIAL
-> 
-> XFS_BULK_IREQ_SPECIAL
-> 
-> > +flag is set, this field is interpreted as follows:
-> > +.RS 0.4i
-> > +.TP
-> > +.B XFS_BULK_IREQ_SPECIAL_ROOT
-> > +Return stat information for the root directory inode.
-> 
-> How about something like:
-> 
-> ---
-> 
-> If the XFS_BULK_IREQ_SPECIAL flag is set in the flags field, then this ino field
-> is interpreted according to the following special values:
-> 
-> XFS_BULK_IREQ_SPECIAL_ROOT
->     Return stat information for the root directory inode.
-> 
-> ---
-> 
-> or
-> 
-> If the XFS_BULK_REQ_SPECIAL flag is set, this field is interpreted according
-> to the following special values:
-> 
-> XFS_BULK_IREQ_SPECIAL_ROOT
->     Return stat information for the root directory inode.
-
-I'll go do that.
-
-> ----
-> 
-> > +.RE
-> > +.PP
-> > +.PP
-> > +.I hdr.flags
-> > +is a bit set of operational flags:
-> > +.RS 0.4i
-> > +.TP
-> > +.B XFS_BULK_REQ_AGNO
-> 
-> XFS_BULK_IREQ_AGNO
-> 
-> > +If this is set, the call will only return results for the allocation group (AG)
-> > +set in
-> > +.BR hdr.agno .
-> > +If
-> > +.B hdr.ino
-> > +is set to zero, results will be returned starting with the first inode in the
-> > +AG.
-> > +This flag may not be set at the same time as the
-> > +.B XFS_BULK_REQ_SPECIAL
-> 
-> XFS_BULK_IREQ_SPECIAL
-> 
-> > +flag.
-> > +.TP
-> > +.B XFS_BULK_REQ_SPECIAL
-> 
-> XFS_BULK_IREQ_SPECIAL ...
-
-Fixed all this stuff up.
-
---D
-
-> 
-> > +If this is set, results will be returned for only the special inode
-> > +specified in the
-> > +.B hdr.ino
-> > +field.
-> > +This flag may not be set at the same time as the
-> > +.B XFS_BULK_REQ_AGNO
-> > +flag.
-> > +.RE
-> > +.PP
-> > +.I hdr.icount
-> > +is the number of inodes to examine.
-
-"hdr.icount  is the maximum number of records to return.  This should be
-the size of the array that comes after the header."
-
-> > +.PP
-> > +.I hdr.ocount
-> > +will be set to the number of records returned.
-> > +.PP
-> > +.I hdr.agno
-> > +is the number of the allocation group (AG) for which we want results.
-> > +If the
-> > +.B XFS_BULK_REQ_AGNO
-> > +flag is not set, this field is ignored.
-> > +.PP
-> > +.I hdr.reserved
-> > +must be set to zero.
-> > +
-> > +.PP
-> > +.I bulkstat
-> > +is an array of
-> > +.B struct xfs_bulkstat
-> > +which is described below.
-> > +The array must have at least
-> > +.I icount
-> > +elements.
-> > +.PP
-> > +.in +4n
-> > +.nf
-> > +struct xfs_bulkstat {
-> > +	uint64_t                bs_ino;
-> > +	uint64_t                bs_size;
-> > +
-> > +	uint64_t                bs_blocks;
-> > +	uint64_t                bs_xflags;
-> > +
-> > +	uint64_t                bs_atime;
-> > +	uint64_t                bs_mtime;
-> > +
-> > +	uint64_t                bs_ctime;
-> > +	uint64_t                bs_btime;
-> > +
-> > +	uint32_t                bs_gen;
-> > +	uint32_t                bs_uid;
-> > +	uint32_t                bs_gid;
-> > +	uint32_t                bs_projectid;
-> > +
-> > +	uint32_t                bs_atime_nsec;
-> > +	uint32_t                bs_mtime_nsec;
-> > +	uint32_t                bs_ctime_nsec;
-> > +	uint32_t                bs_btime_nsec;
-> > +
-> > +	uint32_t                bs_blksize;
-> > +	uint32_t                bs_rdev;
-> > +	uint32_t                bs_cowextsize_blks;
-> > +	uint32_t                bs_extsize_blks;
-> > +
-> > +	uint32_t                bs_nlink;
-> > +	uint32_t                bs_extents;
-> > +	uint32_t                bs_aextents;
-> > +	uint16_t                bs_version;
-> > +	uint16_t                bs_forkoff;
-> > +
-> > +	uint16_t                bs_sick;
-> > +	uint16_t                bs_checked;
-> > +	uint16_t                bs_mode;
-> > +	uint16_t                bs_pad2;
-> > +
-> > +	uint64_t                bs_pad[7];
-> > +};
-> > +.fi
-> > +.in
-> > +.PP
-> > +.I bs_ino
-> > +is the inode number of this record.
-> > +.PP
-> > +.I bs_size
-> > +is the size of the file, in bytes.
-> > +.PP
-> > +.I bs_blocks
-> > +is the number of filesystem blocks allocated to this file, including metadata.
-> > +.PP
-> > +.I bs_xflags
-> > +tell us what extended flags are set this inode.
-> > +These flags are the same values as those defined in the
-> > +.B XFS INODE FLAGS
-> > +section of the
-> > +.BR ioctl_xfs_fsgetxattr (2)
-> > +manpage.
-> > +.PP
-> > +.I bs_atime
-> > +is the last time this file was accessed, in seconds
-> > +.PP
-> > +.I bs_mtime
-> > +is the last time the contents of this file were modified, in seconds.
-> > +.PP
-> > +.I bs_ctime
-> > +is the last time this inode record was modified, in seconds.
-> > +.PP
-> > +.I bs_btime
-> > +is the time this inode record was created, in seconds.
-> > +.PP
-> > +.I bs_gen
-> > +is the generation number of the inode record.
-> > +.PP
-> > +.I bs_uid
-> > +is the user id.
-> > +.PP
-> > +.I bs_gid
-> > +is the group id.
-> > +.PP
-> > +.I bs_projectid
-> > +is the the project id.
-> > +.PP
-> > +.I bs_atime_nsec
-> > +is the nanoseconds component of the last time this file was accessed.
-> > +.PP
-> > +.I bs_mtime_nsec
-> > +is the nanoseconds component of the last time the contents of this file were
-> > +modified.
-> > +.PP
-> > +.I bs_ctime_nsec
-> > +is the nanoseconds component of the last time this inode record was modified.
-> > +.PP
-> > +.I bs_btime_nsec
-> > +is the nanoseconds component of the time this inode record was created.
-> > +.PP
-> > +.I bs_blksize
-> > +is the size of a data block for this file, in units of bytes.
-> > +.PP
-> > +.I bs_rdev
-> > +is the encoded device id if this is a special file.
-> > +.PP
-> > +.I bs_cowextsize_blks
-> > +is the Copy on Write extent size hint for this file, in units of data blocks.
-> > +.PP
-> > +.I bs_extsize_blks
-> > +is the extent size hint for this file, in units of data blocks.
-> > +.PP
-> > +.I bs_nlink
-> > +is the number of hard links to this inode.
-> > +.PP
-> > +.I bs_extents
-> > +is the number of storage mappings associated with this file's data.
-> > +.PP
-> > +.I bs_aextents
-> > +is the number of storage mappings associated with this file's extended
-> > +attributes.
-> > +.PP
-> > +.I bs_version
-> > +is the version of this data structure.
-> > +Currently, only 1 or 5 are supported.
-> > +.PP
-> > +.I bs_forkoff
-> > +is the offset of the attribute fork in the inode record, in bytes.
-> > +.PP
-> > +The fields
-> > +.IR bs_sick " and " bs_checked
-> > +indicate the relative health of various allocation group metadata.
-> > +Please see the section
-> > +.B XFS INODE METADATA HEALTH REPORTING
-> > +for more information.
-> > +.PP
-> > +.I bs_mode
-> > +is the file type and mode.
-> > +.PP
-> > +.I bs_pad[7]
-> > +is zeroed.
-> > +.SH RETURN VALUE
-> > +On error, \-1 is returned, and
-> > +.I errno
-> > +is set to indicate the error.
-> > +.PP
-> > +.SH XFS INODE METADATA HEALTH REPORTING
-> > +.PP
-> > +The online filesystem checking utility scans inode metadata and records what it
-> > +finds in the kernel incore state.
-> > +The following scheme is used for userspace to read the incore health status of
-> > +an inode:
-> > +.IP \[bu] 2
-> > +If a given sick flag is set in
-> > +.IR bs_sick ,
-> > +then that piece of metadata has been observed to be damaged.
-> > +The same bit should be set in
-> > +.IR bs_checked .
-> > +.IP \[bu]
-> > +If a given sick flag is set in
-> > +.I bs_checked
-> > +but is not set in
-> > +.IR bs_sick ,
-> > +then that piece of metadata has been checked and is not faulty.
-> > +.IP \[bu]
-> > +If a given sick flag is not set in
-> > +.IR bs_checked ,
-> > +then no conclusion can be made.
-> > +.PP
-> > +The following flags apply to these fields:
-> > +.RS 0.4i
-> > +.TP
-> > +.B XFS_BS_SICK_INODE
-> > +The inode's record itself.
-> > +.TP
-> > +.B XFS_BS_SICK_BMBTD
-> > +File data extent mappings.
-> > +.TP
-> > +.B XFS_BS_SICK_BMBTA
-> > +Extended attribute extent mappings.
-> > +.TP
-> > +.B XFS_BS_SICK_BMBTC
-> > +Copy on Write staging extent mappings.
-> > +.TP
-> > +.B XFS_BS_SICK_DIR
-> > +Directory information.
-> > +.TP
-> > +.B XFS_BS_SICK_XATTR
-> > +Extended attribute data.
-> > +.TP
-> > +.B XFS_BS_SICK_SYMLINK
-> > +Symbolic link target.
-> > +.TP
-> > +.B XFS_BS_SICK_PARENT
-> > +Parent pointers.
-> > +.RE
-> > +.SH ERRORS
-> > +Error codes can be one of, but are not limited to, the following:
-> > +.TP
-> > +.B EFAULT
-> > +The kernel was not able to copy into the userspace buffer.
-> > +.TP
-> > +.B EFSBADCRC
-> > +Metadata checksum validation failed while performing the query.
-> > +.TP
-> > +.B EFSCORRUPTED
-> > +Metadata corruption was encountered while performing the query.
-> > +.TP
-> > +.B EINVAL
-> > +One of the arguments was not valid.
-> > +.TP
-> > +.B EIO
-> > +An I/O error was encountered while performing the query.
-> > +.TP
-> > +.B ENOMEM
-> > +There was insufficient memory to perform the query.
-> > +.SH CONFORMING TO
-> > +This API is specific to XFS filesystem on the Linux kernel.
-> > +.SH SEE ALSO
-> > +.BR ioctl (2),
-> > +.BR ioctl_xfs_fsgetxattr (2)
-> > diff --git a/man/man2/ioctl_xfs_fsbulkstat.2 b/man/man2/ioctl_xfs_fsbulkstat.2
-> > index 8f880c5a..3f059942 100644
-> > --- a/man/man2/ioctl_xfs_fsbulkstat.2
-> > +++ b/man/man2/ioctl_xfs_fsbulkstat.2
-> > @@ -15,6 +15,12 @@ ioctl_xfs_fsbulkstat \- query information for a batch of XFS inodes
-> >  .BI "int ioctl(int " fd ", XFS_IOC_FSBULKSTAT_SINGLE, struct xfs_fsop_bulkreq *" arg );
-> >  .SH DESCRIPTION
-> >  Query stat information for a group of XFS inodes.
-> > +.PP
-> > +NOTE: This ioctl has been superseded.
-> > +Please see the
-> > +.BR ioctl_xfs_bulkstat (2)
-> > +manpage for information about its replacement.
-> > +.PP
-> >  These ioctls use
-> >  .B struct xfs_fsop_bulkreq
-> >  to set up a bulk transfer with the kernel:
-> > 
+diff --git a/db/btheight.c b/db/btheight.c
+index 289e5d84..8aa17c89 100644
+--- a/db/btheight.c
++++ b/db/btheight.c
+@@ -138,6 +138,10 @@ construct_records_per_block(
+ 		perror(p);
+ 		goto out;
+ 	}
++	if (record_size == 0) {
++		fprintf(stderr, _("%s: record size cannot be zero.\n"), tag);
++		goto out;
++	}
+ 
+ 	p = strtok(NULL, ":");
+ 	if (!p) {
+@@ -149,6 +153,10 @@ construct_records_per_block(
+ 		perror(p);
+ 		goto out;
+ 	}
++	if (key_size == 0) {
++		fprintf(stderr, _("%s: key size cannot be zero.\n"), tag);
++		goto out;
++	}
+ 
+ 	p = strtok(NULL, ":");
+ 	if (!p) {
+@@ -160,6 +168,10 @@ construct_records_per_block(
+ 		perror(p);
+ 		goto out;
+ 	}
++	if (ptr_size == 0) {
++		fprintf(stderr, _("%s: pointer size cannot be zero.\n"), tag);
++		goto out;
++	}
+ 
+ 	p = strtok(NULL, ":");
+ 	if (!p) {
+@@ -180,6 +192,27 @@ construct_records_per_block(
+ 		goto out;
+ 	}
+ 
++	if (record_size > blocksize) {
++		fprintf(stderr,
++_("%s: record size must be less than selected block size (%u bytes).\n"),
++			tag, blocksize);
++		goto out;
++	}
++
++	if (key_size > blocksize) {
++		fprintf(stderr,
++_("%s: key size must be less than selected block size (%u bytes).\n"),
++			tag, blocksize);
++		goto out;
++	}
++
++	if (ptr_size > blocksize) {
++		fprintf(stderr,
++_("%s: pointer size must be less than selected block size (%u bytes).\n"),
++			tag, blocksize);
++		goto out;
++	}
++
+ 	p = strtok(NULL, ":");
+ 	if (p) {
+ 		fprintf(stderr,
+@@ -211,13 +244,24 @@ report(
+ 	int			ret;
+ 
+ 	ret = construct_records_per_block(tag, blocksize, records_per_block);
+-	if (ret) {
+-		printf(_("%s: Unable to determine records per block.\n"),
+-				tag);
++	if (ret)
+ 		return;
+-	}
+ 
+ 	if (report_what & REPORT_MAX) {
++		if (records_per_block[0] < 2) {
++			fprintf(stderr,
++_("%s: cannot calculate best case scenario due to leaf geometry underflow.\n"),
++				tag);
++			return;
++		}
++
++		if (records_per_block[1] < 4) {
++			fprintf(stderr,
++_("%s: cannot calculate best case scenario due to node geometry underflow.\n"),
++				tag);
++			return;
++		}
++
+ 		printf(
+ _("%s: best case per %u-byte block: %u records (leaf) / %u keyptrs (node)\n"),
+ 				tag, blocksize, records_per_block[0],
+@@ -230,6 +274,20 @@ _("%s: best case per %u-byte block: %u records (leaf) / %u keyptrs (node)\n"),
+ 		records_per_block[0] /= 2;
+ 		records_per_block[1] /= 2;
+ 
++		if (records_per_block[0] < 1) {
++			fprintf(stderr,
++_("%s: cannot calculate worst case scenario due to leaf geometry underflow.\n"),
++				tag);
++			return;
++		}
++
++		if (records_per_block[1] < 2) {
++			fprintf(stderr,
++_("%s: cannot calculate worst case scenario due to node geometry underflow.\n"),
++				tag);
++			return;
++		}
++
+ 		printf(
+ _("%s: worst case per %u-byte block: %u records (leaf) / %u keyptrs (node)\n"),
+ 				tag, blocksize, records_per_block[0],
+@@ -284,8 +342,26 @@ btheight_f(
+ 		}
+ 	}
+ 
+-	if (argc == optind || blocksize <= 0 || blocksize > INT_MAX ||
+-	    nr_records == 0) {
++	if (nr_records == 0) {
++		fprintf(stderr,
++_("Number of records must be greater than zero.\n"));
++		return 0;
++	}
++
++	if (blocksize > INT_MAX) {
++		fprintf(stderr,
++_("The largest block size this command will consider is %u bytes.\n"),
++			INT_MAX);
++		return 0;
++	}
++
++	if (blocksize < 128) {
++		fprintf(stderr,
++_("The smallest block size this command will consider is 128 bytes.\n"));
++		return 0;
++	}
++
++	if (argc == optind) {
+ 		btheight_help();
+ 		return 0;
+ 	}
