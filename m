@@ -2,185 +2,228 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E658CC4360C
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 07:41:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E834C432C2
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 09:11:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BB673222C6
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 07:41:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26E06222C3
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 09:11:58 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L2wYshFa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730906AbfIZHlZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 03:41:25 -0400
-Received: from mx2.suse.de ([195.135.220.15]:37704 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730721AbfIZHlZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Sep 2019 03:41:25 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 40E17B028;
-        Thu, 26 Sep 2019 07:41:21 +0000 (UTC)
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-To:     Christopher Lameter <cl@linux.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-Cc:     David Sterba <dsterba@suse.cz>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Matthew Wilcox <willy@infradead.org>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@HansenPartnership.com>,
-        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
- <20190923171710.GN2751@twin.jikos.cz>
- <alpine.DEB.2.21.1909242048020.17661@www.lameter.com>
- <20190924165425.a79a2dafbaf37828a931df2b@linux-foundation.org>
- <alpine.DEB.2.21.1909260005060.1508@www.lameter.com>
-From:   Vlastimil Babka <vbabka@suse.cz>
-Autocrypt: addr=vbabka@suse.cz; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <6a28a096-0e65-c7ea-9ca9-f72d68948e10@suse.cz>
-Date:   Thu, 26 Sep 2019 09:41:20 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.0
+        id S1725890AbfIZJL5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 05:11:57 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:26284 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725871AbfIZJL5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 05:11:57 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1569489115;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=BbmjTDrW5mWb+hQVL4QfxP0Eug4Kl5iuBYv7KhJyzrY=;
+        b=L2wYshFaYsezaLubof/9/IF7mxWoyyE/xMEZ9UpgceZY/QoAou15XnZjXXfyiZCJM+V2Nw
+        iPlJNn8tzjWpabu+UBAcY18VP9VDSe5CK2l2fHXjhT8kLToYowEfRhaceSBLkGKRYd3YEF
+        aF1zAQk0MjMfjgyYJi+1NxI54R6d+xg=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-14-oo-aX2BJMiuufxJxI5qiZw-1; Thu, 26 Sep 2019 05:11:52 -0400
+Received: by mail-wr1-f71.google.com with SMTP id v18so660746wro.16
+        for <linux-xfs@vger.kernel.org>; Thu, 26 Sep 2019 02:11:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id
+         :mail-followup-to:references:mime-version:content-disposition
+         :in-reply-to:user-agent;
+        bh=V9NCsEUe1zBS5QYruQMUnf8str7i8WADLPgIyPeiC3s=;
+        b=ZffNuElSJ7sOZewhdWGKFXK57cnUbYS9BDsk9hwEpdEDYaIQ+aW5S7H5wUfuYvTv3W
+         tNRW3gf6cU76NXkPyPPk3Qt3jgmUJRjgRucXcDPpsuEkEIqoK7n8/CPQzlpc0MHYfh3s
+         M1HFedaYguxbgBEJXVzYCEwWpQg9AG4FijMNnyn+x9K5VwjJQ+X1+0EnM2oYwdgQzkMX
+         iH82jfPg3TXC6QMrmWMryOGY+3oY5/cLNl7cAn2c/jSHVLM+Dr8Li4sG/8O855koZ+1E
+         t+9nJWVCTB0WcEDGsSksvysC50TU3/t3V2/lHvZQ8fn9jIGSsvDxPrau8jZ7M2saBjb8
+         /5iQ==
+X-Gm-Message-State: APjAAAXlMKy2szsHd/n806kBZt5UgavqXnN73I5o5dikSHi/K+mQD1YK
+        lqEl+7/5zQE21w/09mFp7Bjuldq0BgYvFpmJ1MLhQQrLIpWaLDG1JQVUGLHILt1x+6+yehLzFx6
+        QxEyELvEqv2IBnmKxI4xP
+X-Received: by 2002:a1c:1f47:: with SMTP id f68mr2262907wmf.78.1569489111501;
+        Thu, 26 Sep 2019 02:11:51 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqxsUoQpf9o1zQtXxnc2q/e5goeFBUTOPhb1DxwC57zQrBLEXJ8XSP8LQiONtI5qsOXi/FSBNg==
+X-Received: by 2002:a1c:1f47:: with SMTP id f68mr2262887wmf.78.1569489111239;
+        Thu, 26 Sep 2019 02:11:51 -0700 (PDT)
+Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
+        by smtp.gmail.com with ESMTPSA id q10sm5663021wrd.39.2019.09.26.02.11.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 26 Sep 2019 02:11:50 -0700 (PDT)
+Date:   Thu, 26 Sep 2019 11:11:48 +0200
+From:   Carlos Maiolino <cmaiolino@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs_db: btheight should check geometry more carefully
+Message-ID: <20190926091147.dbjrf5i7rfgmzehb@pegasus.maiolino.io>
+Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
+        sandeen@sandeen.net, linux-xfs@vger.kernel.org
+References: <156944764785.303060.15428657522073378525.stgit@magnolia>
+ <156944765385.303060.16945955453073433913.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <alpine.DEB.2.21.1909260005060.1508@www.lameter.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <156944765385.303060.16945955453073433913.stgit@magnolia>
+User-Agent: NeoMutt/20180716
+X-MC-Unique: oo-aX2BJMiuufxJxI5qiZw-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/26/19 2:14 AM, Christopher Lameter wrote:
-> On Tue, 24 Sep 2019, Andrew Morton wrote:
-> 
->> I agree it's a bit regrettable to do this but it does appear that the
->> change will make the kernel overall a better place given the reality of
->> kernel development.
-> 
-> No it wont.
-> 
-> - It will only work for special cases like the kmalloc array
-> without extras like metadata at the end of objects.
+On Wed, Sep 25, 2019 at 02:40:53PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>=20
+> The btheight command needs to check user-supplied geometry more
+> carefully so that we don't hit floating point exceptions.
+>=20
+> Coverity-id: 1453661, 1453659
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> =20
 
-I don't understand what you mean here? The kmalloc caches are special
-because they don't have metadata at the end of objects? Others do?
+Patch looks good, but.
 
-> - It will be an inconsistency in the alignments provided by the allocator.
 
-I don't see a scenario where this will cause a kmalloc user problems.
-Can you describe a scenario where a kmalloc users would have some
-assumptions about alignment, but due to this change, those assumptions
-will be incorrect, and how exactly would it break their code?
+> +=09if (record_size > blocksize) {
+> +=09=09fprintf(stderr,
+> +=09=09=09_("%s: record size must be less than %u bytes.\n"),
 
-> - It will cause us in the future to constantly consider these exceptional
-> alignments in the maintenance of the allocators.
+=09Couldn't this message maybe be better saying "less than current blocksiz=
+e"?
+=09Saying it is less than X bytes sounds kind of meaningless, requiring a
+=09trip to the code to understand what exactly 'bytes' mean here.
 
-Caches can be already created with explicit alignment. This patch just
-means there are more of them.
+=09Maybe something like:
 
-> - These alignments are only needed in exceptional cases but with the patch
-> we will provide the alignment by default even if the allocating subsystem
-> does not need it.
+=09_("%s: record size must be less than current block size (%u).\n"),
 
-True. This is where we have to make the decision whether to make things
-simpler for those that don't realize they need the alignment, and
-whether that's worth the cost. We have evidence of those cases, and the
-cost is currently zero in the common cases (SLAB, SLUB without debug
-runtime-enabled).
 
-> - We have mechanisms to detect alignment problems using debug kernels and
-> debug options that have been available for years. These were not used for
-> testing in these cases it seems before the patches hit mainline. Once in
-> mainly someone ran a debug kernel and found the issue.
+Same for the next two.
 
-Debugging options are useful if you know there's a bug and you want to
-find it. AFAIK the various bots/CIs that do e.g. randconfig, or enable
-debug options explicitly, run those kernels in a VM, so I guess that's
-why potential breakage due to alignment can lurk in a hw-specific driver.
+> +=09=09=09tag, blocksize);
+> +=09=09goto out;
+> +=09}
+> +
+> +=09if (key_size > blocksize) {
+> +=09=09fprintf(stderr,
+> +=09=09=09_("%s: key size must be less than %u bytes.\n"),
+> +=09=09=09tag, blocksize);
+> +=09=09goto out;
+> +=09}
+> +
+> +=09if (ptr_size > blocksize) {
+> +=09=09fprintf(stderr,
+> +=09=09=09_("%s: pointer size must be less than %u bytes.\n"),
+> +=09=09=09tag, blocksize);
+> +=09=09goto out;
+> +=09}
+> +
+>  =09p =3D strtok(NULL, ":");
+>  =09if (p) {
+>  =09=09fprintf(stderr,
+> @@ -211,13 +244,24 @@ report(
+>  =09int=09=09=09ret;
+> =20
+>  =09ret =3D construct_records_per_block(tag, blocksize, records_per_block=
+);
+> -=09if (ret) {
+> -=09=09printf(_("%s: Unable to determine records per block.\n"),
+> -=09=09=09=09tag);
+> +=09if (ret)
+>  =09=09return;
+> -=09}
+> =20
+>  =09if (report_what & REPORT_MAX) {
+> +=09=09if (records_per_block[0] < 2) {
+> +=09=09=09fprintf(stderr,
+> +_("%s: cannot calculate best case scenario due to leaf geometry underflo=
+w.\n"),
+> +=09=09=09=09tag);
+> +=09=09=09return;
+> +=09=09}
+> +
+> +=09=09if (records_per_block[1] < 4) {
+> +=09=09=09fprintf(stderr,
+> +_("%s: cannot calculate best case scenario due to node geometry underflo=
+w.\n"),
+> +=09=09=09=09tag);
+> +=09=09=09return;
+> +=09=09}
+> +
+>  =09=09printf(
+>  _("%s: best case per %u-byte block: %u records (leaf) / %u keyptrs (node=
+)\n"),
+>  =09=09=09=09tag, blocksize, records_per_block[0],
+> @@ -230,6 +274,20 @@ _("%s: best case per %u-byte block: %u records (leaf=
+) / %u keyptrs (node)\n"),
+>  =09=09records_per_block[0] /=3D 2;
+>  =09=09records_per_block[1] /=3D 2;
+> =20
+> +=09=09if (records_per_block[0] < 1) {
+> +=09=09=09fprintf(stderr,
+> +_("%s: cannot calculate worst case scenario due to leaf geometry underfl=
+ow.\n"),
+> +=09=09=09=09tag);
+> +=09=09=09return;
+> +=09=09}
+> +
+> +=09=09if (records_per_block[1] < 2) {
+> +=09=09=09fprintf(stderr,
+> +_("%s: cannot calculate worst case scenario due to node geometry underfl=
+ow.\n"),
+> +=09=09=09=09tag);
+> +=09=09=09return;
+> +=09=09}
+> +
+>  =09=09printf(
+>  _("%s: worst case per %u-byte block: %u records (leaf) / %u keyptrs (nod=
+e)\n"),
+>  =09=09=09=09tag, blocksize, records_per_block[0],
+> @@ -284,8 +342,26 @@ btheight_f(
+>  =09=09}
+>  =09}
+> =20
+> -=09if (argc =3D=3D optind || blocksize <=3D 0 || blocksize > INT_MAX ||
+> -=09    nr_records =3D=3D 0) {
+> +=09if (nr_records =3D=3D 0) {
+> +=09=09fprintf(stderr,
+> +_("Number of records must be greater than zero.\n"));
+> +=09=09return 0;
+> +=09}
+> +
+> +=09if (blocksize > INT_MAX) {
+> +=09=09fprintf(stderr,
+> +_("The largest block size this command will consider is %u bytes.\n"),
+> +=09=09=09INT_MAX);
+> +=09=09return 0;
+> +=09}
+> +
+> +=09if (blocksize < 128) {
+> +=09=09fprintf(stderr,
+> +_("The smallest block size this command will consider is 128 bytes.\n"))=
+;
+> +=09=09return 0;
+> +=09}
+> +
+> +=09if (argc =3D=3D optind) {
+>  =09=09btheight_help();
+>  =09=09return 0;
+>  =09}
+>=20
 
->> Given this, have you reviewed the patch for overall implementation
->> correctness?
-> 
-> Yes, the patch is fine.
-> 
->> I'm wondering if we can avoid at least some of the patch's overhead if
->> slab debugging is disabled - the allocators are already returning
->> suitably aligned memory, so why add the new code in that case?
-> 
-> As far as I know this patch is not needed given that we have had the
-> standards for alignments for a long time now.
-> 
-> Why would the allocators provide specially aligned memory just based on
-> the size of an object? This is weird and unexpected behavior.
+--=20
+Carlos
 
-For some, it's expected.
