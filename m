@@ -2,158 +2,185 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EBC9C432C2
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 07:34:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E658CC4360C
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 07:41:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4D342146E
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 07:34:35 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="LYc4j16U";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="yhNDnnuX"
+	by mail.kernel.org (Postfix) with ESMTP id BB673222C6
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 07:41:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729859AbfIZHef (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 03:34:35 -0400
-Received: from wout2-smtp.messagingengine.com ([64.147.123.25]:49147 "EHLO
-        wout2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729404AbfIZHef (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 03:34:35 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 0559142C;
-        Thu, 26 Sep 2019 03:34:33 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Thu, 26 Sep 2019 03:34:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:cc:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        vvEtVuEqTzqJgB/2W8jOAX+4FvnXPmOrAZd2/n4cHDY=; b=LYc4j16UE8GyDfVT
-        d/rCJkOr4LX4PZwdpaRwmVifjR6Ei4b/z3K6kZ6klFMQo2WgIBcJWSOSs2xdr+Rt
-        buY0T0MYN5xWwGxrZqr0nzqc6X9j0yd9Qb70hqqSW+7CKap4IlmuCaUeK1UdwL7P
-        1wQrmvSasRJUe/Px8mw8cno09OXNL9cUfRlSQvGLyqrvukhogbM+AqvDW8I4RIR7
-        kYmevgUHRoZE/KaLcAgbgZ4AhG+wHtYdJI4YGSo55i0T6WJ/h6L+7yK9d8R9150V
-        inFBF2bKJMZR4/Fqk0F6uE5i4iYNy5uLgEhgGRIs0Eei+FVF8sMiya2CR6CTiPQu
-        Tq3Xgg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=vvEtVuEqTzqJgB/2W8jOAX+4FvnXPmOrAZd2/n4cH
-        DY=; b=yhNDnnuXxo6novUzJh1cnu2vILZaa01PttYVIBKn0dptoJuft3f7nNoIg
-        0nNDc/2QfALJtHdO9g00nzXjbNGee6VAtXfjTkugZG6lc02y+BhN1Ng6U8xDkUhy
-        wo1qnlk8aP+FwSvU/Dnp322mcTeo1K58MGV+Bn1HiaOvdCs3Krivs/cysarbb5CG
-        4DLm8xjSachgRKXB7WvaV8BkdmirAWIP9+YCkyH+f/HkgRFpX8+4+BjzaT9LtGx+
-        6sMo7sqUJHYvpQK/AIolg+TsNflwTOPNdjgfPKC0cQHeoJ9P9YdTBJ+o33/8QAFv
-        4iX7CdDu192MAuhWlg9zrLu78WQQQ==
-X-ME-Sender: <xms:CWqMXSXWD1J4ogkRdAWL3lszjWwe5dV71YnIeATHBPijGVW5hlqEEA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrfeefgdduvdduucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepkffuhffvffgjfhgtfggggfesthejredttderjeenucfhrhhomhepkfgrnhcu
-    mfgvnhhtuceorhgrvhgvnhesthhhvghmrgifrdhnvghtqeenucfkphepuddukedrvddtle
-    drudeikedrvdeinecurfgrrhgrmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgr
-    fidrnhgvthenucevlhhushhtvghrufhiiigvpedt
-X-ME-Proxy: <xmx:CWqMXeaId0-40Iz7VtkIrdUZTVUbBDKkxIH1UlrYQIaJgR1UeADmdw>
-    <xmx:CWqMXY91HnCB-uF5WgYthuW2o-Rh9U1c4-UgOESe4g0K3cyAGzyXGA>
-    <xmx:CWqMXV7gcuOKZ33K_S1zln0-qY_PS6utiI7bhewVzDKClgYjQCwVXA>
-    <xmx:CWqMXd3HaSLUpKBnmMqV47TYlLv-gFf_wTGUeNtCf47ovhQFzS5MSQ>
-Received: from mickey.themaw.net (unknown [118.209.168.26])
-        by mail.messagingengine.com (Postfix) with ESMTPA id C49CB8005A;
-        Thu, 26 Sep 2019 03:34:30 -0400 (EDT)
-Message-ID: <29dfc21d55af91c82cdc34cb61187389739da372.camel@themaw.net>
-Subject: Re: [REPOST PATCH v3 06/16] xfs: mount-api - make xfs_parse_param()
- take context .parse_param() args
-From:   Ian Kent <raven@themaw.net>
-To:     Al Viro <viro@zeniv.linux.org.uk>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>
-Date:   Thu, 26 Sep 2019 15:34:25 +0800
-In-Reply-To: <e31c4e16d1e056767f8997145df6f4b800398469.camel@themaw.net>
-References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
-         <156933135322.20933.2166438700224340142.stgit@fedora-28>
-         <20190926041427.GT26530@ZenIV.linux.org.uk>
-         <e31c4e16d1e056767f8997145df6f4b800398469.camel@themaw.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1730906AbfIZHlZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 03:41:25 -0400
+Received: from mx2.suse.de ([195.135.220.15]:37704 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730721AbfIZHlZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Sep 2019 03:41:25 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 40E17B028;
+        Thu, 26 Sep 2019 07:41:21 +0000 (UTC)
+Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
+ kmalloc(power-of-two)
+To:     Christopher Lameter <cl@linux.com>,
+        Andrew Morton <akpm@linux-foundation.org>
+Cc:     David Sterba <dsterba@suse.cz>, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
+        David Rientjes <rientjes@google.com>,
+        Ming Lei <ming.lei@redhat.com>,
+        Dave Chinner <david@fromorbit.com>,
+        Matthew Wilcox <willy@infradead.org>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+        James Bottomley <James.Bottomley@HansenPartnership.com>,
+        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
+        Johannes Weiner <hannes@cmpxchg.org>
+References: <20190826111627.7505-1-vbabka@suse.cz>
+ <20190826111627.7505-3-vbabka@suse.cz>
+ <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
+ <20190923171710.GN2751@twin.jikos.cz>
+ <alpine.DEB.2.21.1909242048020.17661@www.lameter.com>
+ <20190924165425.a79a2dafbaf37828a931df2b@linux-foundation.org>
+ <alpine.DEB.2.21.1909260005060.1508@www.lameter.com>
+From:   Vlastimil Babka <vbabka@suse.cz>
+Autocrypt: addr=vbabka@suse.cz; prefer-encrypt=mutual; keydata=
+ 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
+Message-ID: <6a28a096-0e65-c7ea-9ca9-f72d68948e10@suse.cz>
+Date:   Thu, 26 Sep 2019 09:41:20 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
+In-Reply-To: <alpine.DEB.2.21.1909260005060.1508@www.lameter.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, 2019-09-26 at 15:06 +0800, Ian Kent wrote:
-> On Thu, 2019-09-26 at 05:14 +0100, Al Viro wrote:
-> > On Tue, Sep 24, 2019 at 09:22:33PM +0800, Ian Kent wrote:
-> > 
-> > > +	opt = fs_parse(fc, &xfs_fs_parameters, param, &result);
-> > > +	if (opt < 0) {
-> > > +		/*
-> > > +		 * If fs_parse() returns -ENOPARAM and the parameter
-> > > +		 * is "source" the VFS needs to handle this option
-> > > +		 * in order to boot otherwise use the default case
-> > > +		 * below to handle invalid options.
-> > > +		 */
-> > > +		if (opt != -ENOPARAM ||
-> > > +		    strcmp(param->key, "source") == 0)
-> > > +			return opt;
-> > 
-> > Just return opt; here and be done with that.  The comment is bloody
-> > misleading - for one thing, "in order to boot" is really "in order
-> > to
-> > mount anything", and the only reason for the kludge is that the
-> > default for "source" (in vfs_parse_fs_param(), triggered in case
-> > when -ENOPARAM had been returned by ->parse_param()) won't get
-> > triggered
-> > if you insist on reporting _all_ unknown options on your own.
-> > 
-> > > +	}
-> > >  	default:
-> > > -		xfs_warn(mp, "unknown mount option [%s].", p);
-> > > +		xfs_warn(mp, "unknown mount option [%s].", param->key);
-> > >  		return -EINVAL;
-> > 
-> > ... here, instead of letting the same vfs_parse_fs_param() handle
-> > the warning.
-> > 
-> > Or you could add Opt_source for handling that, with equivalent of
-> > that
-> > fallback (namely,
-> >                 if (param->type != fs_value_is_string)
-> >                         return invalf(fc, "VFS: Non-string
-> > source");
-> >                 if (fc->source)
-> >                         return invalf(fc, "VFS: Multiple sources");
-> >                 fc->source = param->string;
-> >                 param->string = NULL;
-> >                 return 0;
-> > ) done in your ->parse_param().
+On 9/26/19 2:14 AM, Christopher Lameter wrote:
+> On Tue, 24 Sep 2019, Andrew Morton wrote:
 > 
-> Either of those makes sense to me.
+>> I agree it's a bit regrettable to do this but it does appear that the
+>> change will make the kernel overall a better place given the reality of
+>> kernel development.
 > 
-> The only other thing relevant to either case is messages not going
-> to the kernel log if fsconfig() is being used which could make
-> problem
-> resolution more difficult.
+> No it wont.
 > 
-> Any objection to changing logfc() to always log to the kernel log
-> and save messages to the context if fc->log is non-null rather than
-> the either or behaviour we have now?
+> - It will only work for special cases like the kmalloc array
+> without extras like metadata at the end of objects.
 
-Actually, forget about this.
+I don't understand what you mean here? The kmalloc caches are special
+because they don't have metadata at the end of objects? Others do?
 
-That "e", "w" and "i" will attract inconsistent log formatting
-comments.
+> - It will be an inconsistency in the alignments provided by the allocator.
 
-Probably simplest to just add an xfs log macro to log to the
-kernel log and also use the mount-api log macro if context ->log
-is non-null.
+I don't see a scenario where this will cause a kmalloc user problems.
+Can you describe a scenario where a kmalloc users would have some
+assumptions about alignment, but due to this change, those assumptions
+will be incorrect, and how exactly would it break their code?
 
+> - It will cause us in the future to constantly consider these exceptional
+> alignments in the maintenance of the allocators.
+
+Caches can be already created with explicit alignment. This patch just
+means there are more of them.
+
+> - These alignments are only needed in exceptional cases but with the patch
+> we will provide the alignment by default even if the allocating subsystem
+> does not need it.
+
+True. This is where we have to make the decision whether to make things
+simpler for those that don't realize they need the alignment, and
+whether that's worth the cost. We have evidence of those cases, and the
+cost is currently zero in the common cases (SLAB, SLUB without debug
+runtime-enabled).
+
+> - We have mechanisms to detect alignment problems using debug kernels and
+> debug options that have been available for years. These were not used for
+> testing in these cases it seems before the patches hit mainline. Once in
+> mainly someone ran a debug kernel and found the issue.
+
+Debugging options are useful if you know there's a bug and you want to
+find it. AFAIK the various bots/CIs that do e.g. randconfig, or enable
+debug options explicitly, run those kernels in a VM, so I guess that's
+why potential breakage due to alignment can lurk in a hw-specific driver.
+
+>> Given this, have you reviewed the patch for overall implementation
+>> correctness?
 > 
-> Ian
+> Yes, the patch is fine.
 > 
+>> I'm wondering if we can avoid at least some of the patch's overhead if
+>> slab debugging is disabled - the allocators are already returning
+>> suitably aligned memory, so why add the new code in that case?
+> 
+> As far as I know this patch is not needed given that we have had the
+> standards for alignments for a long time now.
+> 
+> Why would the allocators provide specially aligned memory just based on
+> the size of an object? This is weird and unexpected behavior.
 
+For some, it's expected.
