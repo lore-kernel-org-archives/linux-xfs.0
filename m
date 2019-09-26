@@ -2,100 +2,63 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9445C4360C
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 13:02:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D64A9C4360C
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 13:05:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8613A222C3
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 13:02:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD00C222BE
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 13:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726429AbfIZNCg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 09:02:36 -0400
-Received: from mx2.suse.de ([195.135.220.15]:45980 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1725768AbfIZNCf (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Sep 2019 09:02:35 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 1BE7CAEAE;
-        Thu, 26 Sep 2019 13:02:33 +0000 (UTC)
-Received: by ds.suse.cz (Postfix, from userid 10065)
-        id 55364DA8E5; Thu, 26 Sep 2019 15:02:52 +0200 (CEST)
-Date:   Thu, 26 Sep 2019 15:02:52 +0200
-From:   David Sterba <dsterba@suse.cz>
-To:     cl@linux.com
-Cc:     Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, dsterba@suse.cz,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190926130252.GP2751@twin.jikos.cz>
-Reply-To: dsterba@suse.cz
-Mail-Followup-To: dsterba@suse.cz, cl@linux.com,
-        Matthew Wilcox <willy@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>, Dave Chinner <david@fromorbit.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
- <20190923171710.GN2751@twin.jikos.cz>
- <20190923175146.GT2229799@magnolia>
- <alpine.DEB.2.21.1909242045250.17661@www.lameter.com>
- <20190924205133.GK1855@bombadil.infradead.org>
- <alpine.DEB.2.21.1909242053010.17661@www.lameter.com>
+        id S1726025AbfIZNFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 09:05:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:48042 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725946AbfIZNFM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Sep 2019 09:05:12 -0400
+Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id A9C1830A8181;
+        Thu, 26 Sep 2019 13:05:12 +0000 (UTC)
+Received: from warthog.procyon.org.uk (ovpn-125-72.rdu2.redhat.com [10.10.125.72])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 739085C21A;
+        Thu, 26 Sep 2019 13:05:11 +0000 (UTC)
+Organization: Red Hat UK Ltd. Registered Address: Red Hat UK Ltd, Amberley
+        Place, 107-111 Peascod Street, Windsor, Berkshire, SI4 1TE, United
+        Kingdom.
+        Registered in England and Wales under Company Registration No. 3798903
+From:   David Howells <dhowells@redhat.com>
+In-Reply-To: <e31c4e16d1e056767f8997145df6f4b800398469.camel@themaw.net>
+References: <e31c4e16d1e056767f8997145df6f4b800398469.camel@themaw.net> <156933112949.20933.12761540130806431294.stgit@fedora-28> <156933135322.20933.2166438700224340142.stgit@fedora-28> <20190926041427.GT26530@ZenIV.linux.org.uk>
+To:     Ian Kent <raven@themaw.net>
+Cc:     dhowells@redhat.com, Al Viro <viro@zeniv.linux.org.uk>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [REPOST PATCH v3 06/16] xfs: mount-api - make xfs_parse_param() take context .parse_param() args
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1909242053010.17661@www.lameter.com>
-User-Agent: Mutt/1.5.23.1-rc1 (2014-03-12)
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <22938.1569503110.1@warthog.procyon.org.uk>
+Date:   Thu, 26 Sep 2019 14:05:10 +0100
+Message-ID: <22939.1569503110@warthog.procyon.org.uk>
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.44]); Thu, 26 Sep 2019 13:05:12 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Sep 24, 2019 at 08:55:02PM +0000, cl@linux.com wrote:
-> n Tue, 24 Sep 2019, Matthew Wilcox wrote:
-> 
-> > > There was a public discussion about this issue and from what I can tell
-> > > the outcome was that the allocator already provides what you want. Which
-> > > was a mechanism to misalign objects and detect these issues. This
-> > > mechanism has been in use for over a decade.
-> >
-> > You missed the important part, which was *ENABLED BY DEFAULT*.  People
-> > who are enabling a debugging option to debug their issues, should not
-> > have to first debug all the other issues that enabling that debugging
-> > option uncovers!
-> 
-> Why would you have to debug all other issues? You could put your patch on
-> top of the latest stable or distro kernel for testing.
+Ian Kent <raven@themaw.net> wrote:
 
-This does not work in development branches. They're based on some stable
-point but otherwise there's a lot of new code that usually has bugs and
-it's quite important be able to understand where the bug comes from.
+> The only other thing relevant to either case is messages not going
+> to the kernel log if fsconfig() is being used which could make problem
+> resolution more difficult.
 
-And the debugging instrumentation is there to add more sanity checks and
-canaries to catch overflows, assertions etc. If it's unreliable, then
-there's no point using it during development, IOW fix all bugs first and
-then see if there are more left after turning the debugging.
+Maybe we should just remove this entirely.  It's only partially capable since
+I wasn't allowed to add a per-task message buffer, so it can't help you with
+interior mounts - as done by NFS - or automounts.
+
+David
