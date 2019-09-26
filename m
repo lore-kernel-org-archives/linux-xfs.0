@@ -2,199 +2,352 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C5E1C432C2
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 10:57:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 301B9C432C2
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 11:14:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 24356207E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 10:57:54 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E3D4221A4A
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 11:14:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725787AbfIZK5x (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 06:57:53 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57608 "EHLO mx1.redhat.com"
+        id S1725536AbfIZLOU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 07:14:20 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:51230 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725280AbfIZK5x (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Sep 2019 06:57:53 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
+        id S1725280AbfIZLOU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Sep 2019 07:14:20 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 38EA218C4269;
-        Thu, 26 Sep 2019 10:57:52 +0000 (UTC)
-Received: from dresden.str.redhat.com (unknown [10.40.205.151])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 6FF3F60126;
-        Thu, 26 Sep 2019 10:57:51 +0000 (UTC)
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-From:   Max Reitz <mreitz@redhat.com>
-Subject: xfs_alloc_file_space() rounds len independently of offset
-Autocrypt: addr=mreitz@redhat.com; prefer-encrypt=mutual; keydata=
- mQENBFXOJlcBCADEyyhOTsoa/2ujoTRAJj4MKA21dkxxELVj3cuILpLTmtachWj7QW+TVG8U
- /PsMCFbpwsQR7oEy8eHHZwuGQsNpEtNC2G/L8Yka0BIBzv7dEgrPzIu+W3anZXQW4702+uES
- U29G8TP/NGfXRRHGlbBIH9KNUnOSUD2vRtpOLXkWsV5CN6vQFYgQfFvmp5ZpPeUe6xNplu8V
- mcTw8OSEDW/ZnxJc8TekCKZSpdzYoxfzjm7xGmZqB18VFwgJZlIibt1HE0EB4w5GsD7x5ekh
- awIe3RwoZgZDLQMdOitJ1tUc8aqaxvgA4tz6J6st8D8pS//m1gAoYJWGwwIVj1DjTYLtABEB
- AAG0HU1heCBSZWl0eiA8bXJlaXR6QHJlZGhhdC5jb20+iQFTBBMBCAA9AhsDBQkSzAMABQsJ
- CAcCBhUICQoLAgQWAgMBAh4BAheABQJVzie5FRhoa3A6Ly9rZXlzLmdudXBnLm5ldAAKCRD0
- B9sAYdXPQDcIB/9uNkbYEex1rHKz3mr12uxYMwLOOFY9fstP5aoVJQ1nWQVB6m2cfKGdcRe1
- 2/nFaHSNAzT0NnKz2MjhZVmcrpyd2Gp2QyISCfb1FbT82GMtXFj1wiHmPb3CixYmWGQUUh+I
- AvUqsevLA+WihgBUyaJq/vuDVM1/K9Un+w+Tz5vpeMidlIsTYhcsMhn0L9wlCjoucljvbDy/
- 8C9L2DUdgi3XTa0ORKeflUhdL4gucWoAMrKX2nmPjBMKLgU7WLBc8AtV+84b9OWFML6NEyo4
- 4cP7cM/07VlJK53pqNg5cHtnWwjHcbpGkQvx6RUx6F1My3y52vM24rNUA3+ligVEgPYBuQEN
- BFXOJlcBCADAmcVUNTWT6yLWQHvxZ0o47KCP8OcLqD+67T0RCe6d0LP8GsWtrJdeDIQk+T+F
- xO7DolQPS6iQ6Ak2/lJaPX8L0BkEAiMuLCKFU6Bn3lFOkrQeKp3u05wCSV1iKnhg0UPji9V2
- W5eNfy8F4ZQHpeGUGy+liGXlxqkeRVhLyevUqfU0WgNqAJpfhHSGpBgihUupmyUg7lfUPeRM
- DzAN1pIqoFuxnN+BRHdAecpsLcbR8sQddXmDg9BpSKozO/JyBmaS1RlquI8HERQoe6EynJhd
- 64aICHDfj61rp+/0jTIcevxIIAzW70IadoS/y3DVIkuhncgDBvGbF3aBtjrJVP+5ABEBAAGJ
- ASUEGAEIAA8FAlXOJlcCGwwFCRLMAwAACgkQ9AfbAGHVz0CbFwf9F/PXxQR9i4N0iipISYjU
- sxVdjJOM2TMut+ZZcQ6NSMvhZ0ogQxJ+iEQ5OjnIputKvPVd5U7WRh+4lF1lB/NQGrGZQ1ic
- alkj6ocscQyFwfib+xIe9w8TG1CVGkII7+TbS5pXHRxZH1niaRpoi/hYtgzkuOPp35jJyqT/
- /ELbqQTDAWcqtJhzxKLE/ugcOMK520dJDeb6x2xVES+S5LXby0D4juZlvUj+1fwZu+7Io5+B
- bkhSVPb/QdOVTpnz7zWNyNw+OONo1aBUKkhq2UIByYXgORPFnbfMY7QWHcjpBVw9MgC4tGeF
- R4bv+1nAMMxKmb5VvQCExr0eFhJUAHAhVg==
-Message-ID: <6d62fb2a-a4e6-3094-c1bf-0ca5569b244c@redhat.com>
-Date:   Thu, 26 Sep 2019 12:57:49 +0200
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.1.0
+        by mx1.redhat.com (Postfix) with ESMTPS id 2905D309BF06;
+        Thu, 26 Sep 2019 11:14:19 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 313F7608C2;
+        Thu, 26 Sep 2019 11:14:18 +0000 (UTC)
+Date:   Thu, 26 Sep 2019 07:14:16 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Ian Kent <raven@themaw.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [REPOST PATCH v3 09/16] xfs: mount-api - add xfs_get_tree()
+Message-ID: <20190926111416.GA26363@bfoster>
+References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
+ <156933136908.20933.15050470634891698659.stgit@fedora-28>
+ <20190924143823.GD17688@bfoster>
+ <3eb80542b3a247173dcef4ddf5494daa3c90e72c.camel@themaw.net>
+ <a55278f2167025451aa6092f3ad5fab8bbef967f.camel@themaw.net>
+ <20190925143414.GE21991@bfoster>
+ <4f6baf799c38f83dbef45b555f9bebcdc5f4311b.camel@themaw.net>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.62]); Thu, 26 Sep 2019 10:57:52 +0000 (UTC)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <4f6baf799c38f83dbef45b555f9bebcdc5f4311b.camel@themaw.net>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Thu, 26 Sep 2019 11:14:19 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi,
+On Thu, Sep 26, 2019 at 11:27:40AM +0800, Ian Kent wrote:
+> On Wed, 2019-09-25 at 10:34 -0400, Brian Foster wrote:
+> > On Wed, Sep 25, 2019 at 04:07:08PM +0800, Ian Kent wrote:
+> > > On Wed, 2019-09-25 at 15:42 +0800, Ian Kent wrote:
+> > > > On Tue, 2019-09-24 at 10:38 -0400, Brian Foster wrote:
+> > > > > On Tue, Sep 24, 2019 at 09:22:49PM +0800, Ian Kent wrote:
+> > > > > > Add the fs_context_operations method .get_tree that validates
+> > > > > > mount options and fills the super block as previously done
+> > > > > > by the file_system_type .mount method.
+> > > > > > 
+> > > > > > Signed-off-by: Ian Kent <raven@themaw.net>
+> > > > > > ---
+> > > > > >  fs/xfs/xfs_super.c |   50
+> > > > > > ++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > > > >  1 file changed, 50 insertions(+)
+> > > > > > 
+> > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > > > > index ea3640ffd8f5..6f9fe92b4e21 100644
+> > > > > > --- a/fs/xfs/xfs_super.c
+> > > > > > +++ b/fs/xfs/xfs_super.c
+> > > > > > @@ -1933,6 +1933,51 @@ xfs_fs_fill_super(
+> > > > > >  	return error;
+> > > > > >  }
+> > > > > >  
+> > > > > > +STATIC int
+> > > > > > +xfs_fill_super(
+> > > > > > +	struct super_block	*sb,
+> > > > > > +	struct fs_context	*fc)
+> > > > > > +{
+> > > > > > +	struct xfs_fs_context	*ctx = fc->fs_private;
+> > > > > > +	struct xfs_mount	*mp = sb->s_fs_info;
+> > > > > > +	int			silent = fc->sb_flags &
+> > > > > > SB_SILENT;
+> > > > > > +	int			error = -ENOMEM;
+> > > > > > +
+> > > > > > +	mp->m_super = sb;
+> > > > > > +
+> > > > > > +	/*
+> > > > > > +	 * set up the mount name first so all the errors will
+> > > > > > refer to
+> > > > > > the
+> > > > > > +	 * correct device.
+> > > > > > +	 */
+> > > > > > +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN,
+> > > > > > GFP_KERNEL);
+> > > > > > +	if (!mp->m_fsname)
+> > > > > > +		return -ENOMEM;
+> > > > > > +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
+> > > > > > +
+> > > > > > +	error = xfs_validate_params(mp, ctx, false);
+> > > > > > +	if (error)
+> > > > > > +		goto out_free_fsname;
+> > > > > > +
+> > > > > > +	error = __xfs_fs_fill_super(mp, silent);
+> > > > > > +	if (error)
+> > > > > > +		goto out_free_fsname;
+> > > > > > +
+> > > > > > +	return 0;
+> > > > > > +
+> > > > > > + out_free_fsname:
+> > > > > > +	sb->s_fs_info = NULL;
+> > > > > > +	xfs_free_fsname(mp);
+> > > > > > +
+> > > > > 
+> > > > > I'm still not following the (intended) lifecycle of mp here.
+> > > > > Looking
+> > > > > ahead in the series, we allocate mp in xfs_init_fs_context()
+> > > > > and
+> > > > > set
+> > > > > some state. It looks like at some point we grow an
+> > > > > xfs_fc_free()
+> > > > > callback that frees mp, but that doesn't exist as of yet. So is
+> > > > > that
+> > > > > a
+> > > > > memory leak as of this patch?
+> > > > > 
+> > > > > We also call xfs_free_fsname() here (which doesn't reset
+> > > > > pointers
+> > > > > to
+> > > > > NULL) and open-code kfree()'s of a couple of the same fields in
+> > > > > xfs_fc_free(). Those look like double frees to me.
+> > > > > 
+> > > > > Hmm.. I guess I'm kind of wondering why we lift the mp alloc
+> > > > > out of
+> > > > > the
+> > > > > fill super call in the first place. At a glance, it doesn't
+> > > > > look
+> > > > > like
+> > > > > we
+> > > > > do anything in that xfs_init_fs_context() call that we couldn't
+> > > > > do
+> > > > > a
+> > > > > bit
+> > > > > later..
+> > > > 
+> > > > Umm ... yes ...
+> > > > 
+> > > > I think I've got the active code path right ...
+> > > > 
+> > > > At this point .mount == xfs_fs_mount() which will calls
+> > > > xfs_fs_fill_super() to fill the super block.
+> > > > 
+> > > > xfs_fs_fill_super() allocates the super block info struct and
+> > > > sets
+> > > > it in the super block private info field, then calls
+> > > > xfs_parseargs()
+> > > > which still allocates mp->m_fsname at this point, to accomodate a
+> > > > similar free pattern in xfs_test_remount_options().
+> > > > 
+> > > > It then calls __xfs_fs_fill_super() which doesn't touch those
+> > > > fsname
+> > > > fields or mp to fit in with what will be done later.
+> > > > 
+> > > > If an error occurs both the fsname fields (xfs_free_fsname()) and
+> > > > mp
+> > > > are freed by the main caller, xfs_fs_fill_super().
+> > > > 
+> > > > I think that process is ok.
+> > > > 
+> > > > The mount api process that isn't active yet is a bit different.
+> > > > 
+> > > > The context (ctx), a temporary working space, is allocated then
+> > > > saved
+> > > > in the mount context (fc) and the super block info is also
+> > > > allocated
+> > > > and saved in the mount context in it's field of the same name as
+> > > > the
+> > > > private super block info field, s_fs_info.
+> > > > 
+> > > > The function xfs_fill_super() is called as a result of the
+> > > > .get_tree()
+> > > > mount context operation to fill the super block.
+> > > > 
+> > > > During this process, when the VFS successfully allocates the
+> > > > super
+> > > > block s_fs_info is set in the super block and the mount context
+> > > > field set to NULL. From this point freeing the private super
+> > > > block
+> > > > info becomes part of usual freeing of the super block with the
+> > > > super
+> > > > operation .kill_sb().
+> > > > 
+> > > > But if the super block allocation fails then the mount context
+> > > > s_fs_info field remains set and is the responsibility of the
+> > > > mount context operations .fc_free() method to clean up.
+> > > > 
+> > > > Now the VFS calls to xfs_fill_super() after this.
+> > > > 
+> > > > I should have been able to leave xfs_fill_super() it as it
+> > > > was with:
+> > > >         sb->s_fs_info = NULL;
+> > > >         xfs_free_fsname(mp);
+> > > >         kfree(mp);
+> > > > and that should have been ok but it wasn't, there was some sort
+> > > > of
+> > > > allocation problem, possibly a double free, causing a crash.
+> > > > 
+> > > > Strictly speaking this cleanup process should be carried out by
+> > > > either the mount context .fc_free() or super operation .kill_sb()
+> > > > and that's what I want to do.
+> > > 
+> > > Umm ... but I can't actually do that ...
+> > > 
+> > > Looking back at xfs I realize that the filling of the super
+> > > block is meant to leave nothing allocated and set
+> > > sb->s_fs_info = NULL on error so that ->put_super() won't try
+> > > and cleanup a whole bunch of stuff that hasn't been done.
+> > > 
+> > > Which brings me back to what I originally had above ... which
+> > > we believe doesn't work ?
+> > > 
+> > 
+> > It looks like perhaps the assignment of sb->s_fs_info was lost as
+> > well?
+> > Skipping to the end, I see xfs_init_fs_context() alloc mp and assign
+> > fc->s_fs_info. xfs_get_tree() leads to xfs_fill_super(), which
+> > somehow
+> > gets mp from sb->s_fs_info (not fc->...), but then resets sb-
+> > >s_fs_info
+> > on error and frees the names, leaving fs->s_fs_info so presumably
+> > xfs_fc_free() can free mp along with a couple of the names (again). I
+> > can't really make heads or tails of what this is even attempting to
+> > do.
+> 
+> Ha, it seems a bit mysterious, but it's actually much simpler
+> than it appears.
+> 
 
-I’ve noticed that fallocating some range on XFS sometimes does not
-include the last block covered by the range, when the start offset is
-unaligned.
+Feel free to explain any of the above..? Where do you currently assign
+sb->s_fs_info, for example?
 
-(Tested on 5.3.0-gf41def397.)
+> > 
+> > That aside, it's not clear to me why the new code can't follow a
+> > similar
+> > pattern as the old code with regard to allocation. Allocate mp in
+> > xfs_fill_super() and set up sb/fc pointers, reset pointers and free
+> > mp
+> > on error return. Otherwise, xfs_fc_free() checks for fc->s_fs_info !=
+> > NULL and frees mp from there. Is there some reason we can't continue
+> > to
+> > do that?
+> 
+> I think not without a fairly significant re-design.
+> 
+> The main difference is the mount-api will allocate the super
+> block later than the old mount code.
+> 
+> Basically, if file system parameter parsing fails the super
+> block won't get allocated.
+> 
+> So the super block isn't available during parameter parsing
+> but the file system private data structure may be needed for
+> it, so it comes from the file system context at that point.
+> 
+> When the super block is successfully allocated the file system
+> private data structure is set in the super block (and the field
+> NULLed in the context) and things progress much the same as
+> before from that point.
+> 
+> That's the essential difference in the process AFAICS.
+> 
 
-This happens whenever ceil((offset + len) / block_size) - floor(offset /
-block_size) > ceil(len / block_size), for example:
+I see. This is probably something that should be noted in the commit
+log (that the ordering changes from before such that we need to allocate
+mp a bit earlier). This is reasonable because even though the current
+code allocs mp in the fill_super callback, we parse arguments
+immediately after the mp allocation and don't otherwise rely on the sb
+in that code.
 
-Let block_size be 4096.  Then (on XFS):
+If I follow correctly, it sounds like perhaps we need to separate the
+management of sb->s_fs_info from the "ownership" of mp. For example,
+allocate mp, assign fc->s_fs_info and free via xfs_fc_free() as you do
+now. In the xfs_fill_super() callback, pull mp from fc->s_fs_info and
+assign it to sb->s_fs_info. If we fail at this point, reset
+sb->s_fs_info to NULL and let the fc infrastructure deal with freeing mp
+in its own callback.
 
-$ fallocate -o 2048 -l 4096 foo   # Range [2048, 6144)
-$ xfs_bmap foo
-foo:
-        0: [0..7]: 80..87
-        1: [8..15]: hole
+What I'm not clear on is whether something like xfs_fs_put_super()
+should still free mp as well. Once the filesystem successfully mounts,
+are we still going to see an xfs_fc_free() callback, or is this all just
+transient mount path stuff? If the former, perhaps put_super() should
+also not free mp and just reset its own ->s_fs_info reference. If the
+latter, then I guess we just need to understand at what point during a
+successful mount responsibility to free transfers from one place to the
+other. Thoughts?
 
-There should not be a hole there.  Both of the first two blocks should
-be allocated.  XFS will do that if I just let the range start one byte
-sooner and increase the length by one byte:
+Brian
 
-$ rm -f foo
-$ fallocate -o 2047 -l 4097 foo   # Range [2047, 6144)
-$ xfs_bmap foo
-foo:
-        0: [0..15]: 88..103
-
-
-(See [1] for a more extensive reasoning why this is a bug.)
-
-
-The problem is (as far as I can see) that xfs_alloc_file_space() rounds
-count (which equals len) independently of the offset.  So in the
-examples above, 4096 is rounded to one block and 4097 is rounded to two;
-even though the first example actually touches two blocks because of the
-misaligned offset.
-
-Therefore, this should fix the problem (and does fix it for me):
-
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 0910cb75b..4f4437030 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -864,6 +864,7 @@ xfs_alloc_file_space(
- 	xfs_filblks_t		allocatesize_fsb;
- 	xfs_extlen_t		extsz, temp;
- 	xfs_fileoff_t		startoffset_fsb;
-+	xfs_fileoff_t		endoffset_fsb;
- 	int			nimaps;
- 	int			quota_flag;
- 	int			rt;
-@@ -891,7 +892,8 @@ xfs_alloc_file_space(
- 	imapp = &imaps[0];
- 	nimaps = 1;
- 	startoffset_fsb	= XFS_B_TO_FSBT(mp, offset);
--	allocatesize_fsb = XFS_B_TO_FSB(mp, count);
-+	endoffset_fsb = XFS_B_TO_FSB(mp, offset + count);
-+	allocatesize_fsb = endoffset_fsb - startoffset_fsb;
-
- 	/*
- 	 * Allocate file space until done or until there is an error
-
-
-Thanks and kind regards,
-
-Max
-
-
-[1] That this is a bug can be proven as follows:
-
-1. The fallocate(2) man page states "subsequent writes into the range
-specified by offset and len are guaranteed not to fail because of lack
-of disk space."
-
-2. Run this test (anywhere, e.g. tmpfs):
-
-$ truncate -s $((4096 * 4096)) test_fs
-$ mkfs.xfs -b size=4096 test_fs
-[Success-indicating output, I hope]
-
-$ mkdir mount_point
-$ sudo mount -o loop test_fs mount_point
-$ sudo chmod go+rwx mount_point
-$ cd mount_point
-
-$ free_blocks=$(df -B4k . | tail -n 1 \
-      | awk '{ split($0, f); print f[4] }')
-
-$ falloc_length=$((free_blocks * 4096))
-
-$ while true; do \
-     fallocate -o 2048 -l $falloc_length test_file && break; \
-     falloc_length=$((falloc_length - 4096)); \
-done
-fallocate: fallocate failed: No space left on device
-fallocate: fallocate failed: No space left on device
-fallocate: fallocate failed: No space left on device
-fallocate: fallocate failed: No space left on device
-
-  # Now we have a test_file with an fallocated range of
-  # [2048, 2048 + $falloc_length)
-  # So we should be able to write anywhere in that area without
-  # encountering ENOSPC; but that is what happens when we write
-  # to the last block covered by the range:
-
-$ dd if=/dev/zero of=test_file bs=1 conv=notrunc \
-    seek=$falloc_length count=2048
-dd: error writing 'test_file': No space left on device
-1+0 records in
-0+0 records out
-0 bytes copied, 0.000164691 s, 0.0 kB/s
-
-
-When I apply the diff shown above, I get one more “No space left on
-device” line (indicating that fallocate consistently takes one
-additional block), and then:
-
-$ uname -sr
-Linux 5.3.0-gf41def397-dirty
-
-$ dd if=/dev/zero of=test_file bs=1 conv=notrunc \
-    seek=$falloc_length count=2048
-2048+0 records in
-2048+0 records out
-2048 bytes (2.0 kB, 2.0 KiB) copied, 0.0121903 s, 168 kB/s
-
-(i.e., what I’d expect)
+> By the time fill_super() is called everything is set and you
+> should be able to proceed almost the same as before.
+> 
+> Ian
+> 
+> > Brian
+> > 
+> > > > So I'm not sure the allocation time and the place this is done
+> > > > can (or should) be done differently.
+> > > > 
+> > > > And that freeing on error exit from xfs_fill_super() is
+> > > > definitely
+> > > > wrong now! Ha, and I didn't see any crashes myself when I tested
+> > > > it ... maybe I need a reproducer ...
+> > > > 
+> > > > Ian
+> > > > 
+> > > > > Brian
+> > > > > 
+> > > > > > +	return error;
+> > > > > > +}
+> > > > > > +
+> > > > > > +STATIC int
+> > > > > > +xfs_get_tree(
+> > > > > > +	struct fs_context	*fc)
+> > > > > > +{
+> > > > > > +	return vfs_get_block_super(fc, xfs_fill_super);
+> > > > > > +}
+> > > > > > +
+> > > > > >  STATIC void
+> > > > > >  xfs_fs_put_super(
+> > > > > >  	struct super_block	*sb)
+> > > > > > @@ -2003,6 +2048,11 @@ static const struct super_operations
+> > > > > > xfs_super_operations = {
+> > > > > >  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> > > > > >  };
+> > > > > >  
+> > > > > > +static const struct fs_context_operations xfs_context_ops =
+> > > > > > {
+> > > > > > +	.parse_param = xfs_parse_param,
+> > > > > > +	.get_tree    = xfs_get_tree,
+> > > > > > +};
+> > > > > > +
+> > > > > >  static struct file_system_type xfs_fs_type = {
+> > > > > >  	.owner			= THIS_MODULE,
+> > > > > >  	.name			= "xfs",
+> > > > > > 
+> 
