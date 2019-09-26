@@ -2,352 +2,402 @@ Return-Path: <SRS0=9/io=XV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 301B9C432C2
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 11:14:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11DCCC47E48
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 11:29:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E3D4221A4A
-	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 11:14:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C2B8E222BE
+	for <linux-xfs@archiver.kernel.org>; Thu, 26 Sep 2019 11:29:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569497365;
+	bh=9/Rqb68Hd5zokVs62d+8Q8CmAfS8pQMwz3knVtN56fo=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
+	b=epoH+IfbhPERI9EabHD9z3pHgtzDuZAKCg1reUC/7i7swS3jIBDnBs/Mo11KFWUoL
+	 JuHk+RiueM13oSi3dbc3Th5DR3a+sCmAGlx4Diz0il+Ln6M05Fwthf85Oprc9yYRvG
+	 zkWkxe+QilpXxrbGMi7ONlruM5zyrTc1X5sAlZxQ=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725536AbfIZLOU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 07:14:20 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:51230 "EHLO mx1.redhat.com"
+        id S1725787AbfIZL3V (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 07:29:21 -0400
+Received: from mail.kernel.org ([198.145.29.99]:35444 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725280AbfIZLOU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 26 Sep 2019 07:14:20 -0400
-Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S1725784AbfIZL3V (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 26 Sep 2019 07:29:21 -0400
+Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 2905D309BF06;
-        Thu, 26 Sep 2019 11:14:19 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 313F7608C2;
-        Thu, 26 Sep 2019 11:14:18 +0000 (UTC)
-Date:   Thu, 26 Sep 2019 07:14:16 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>,
-        Eric Sandeen <sandeen@sandeen.net>
-Subject: Re: [REPOST PATCH v3 09/16] xfs: mount-api - add xfs_get_tree()
-Message-ID: <20190926111416.GA26363@bfoster>
-References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
- <156933136908.20933.15050470634891698659.stgit@fedora-28>
- <20190924143823.GD17688@bfoster>
- <3eb80542b3a247173dcef4ddf5494daa3c90e72c.camel@themaw.net>
- <a55278f2167025451aa6092f3ad5fab8bbef967f.camel@themaw.net>
- <20190925143414.GE21991@bfoster>
- <4f6baf799c38f83dbef45b555f9bebcdc5f4311b.camel@themaw.net>
+        by mail.kernel.org (Postfix) with ESMTPSA id 5FB2A222BE;
+        Thu, 26 Sep 2019 11:29:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569497359;
+        bh=9/Rqb68Hd5zokVs62d+8Q8CmAfS8pQMwz3knVtN56fo=;
+        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+        b=omM//YC5oUdyi9kAcm0qaiytjebiyZl37YKEzcR4YPYTBuy82kW1IkvB94GjDmPSY
+         V96+Zq2YtdLUWwO0+d8kob5UDH+RWLk1PlcKJ9TfMGaZDvCFeBeYTYp4Qv43tVYA7K
+         t4URTuhp06aJYd4fmgoeCitJCLjMB/VuLmUtP3z8=
+Message-ID: <aaee1675b737469187d14286d604b7990f2d5cbc.camel@kernel.org>
+Subject: Re: Lease semantic proposal
+From:   Jeff Layton <jlayton@kernel.org>
+To:     Ira Weiny <ira.weiny@intel.com>, Dave Chinner <david@fromorbit.com>
+Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-ext4@vger.kernel.org, linux-rdma@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
+        linux-mm@kvack.org, Jan Kara <jack@suse.cz>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Date:   Thu, 26 Sep 2019 07:29:16 -0400
+In-Reply-To: <20190925234602.GB12748@iweiny-DESK2.sc.intel.com>
+References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
+         <20190923222620.GC16973@dread.disaster.area>
+         <20190925234602.GB12748@iweiny-DESK2.sc.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <4f6baf799c38f83dbef45b555f9bebcdc5f4311b.camel@themaw.net>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.45]); Thu, 26 Sep 2019 11:14:19 +0000 (UTC)
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Sep 26, 2019 at 11:27:40AM +0800, Ian Kent wrote:
-> On Wed, 2019-09-25 at 10:34 -0400, Brian Foster wrote:
-> > On Wed, Sep 25, 2019 at 04:07:08PM +0800, Ian Kent wrote:
-> > > On Wed, 2019-09-25 at 15:42 +0800, Ian Kent wrote:
-> > > > On Tue, 2019-09-24 at 10:38 -0400, Brian Foster wrote:
-> > > > > On Tue, Sep 24, 2019 at 09:22:49PM +0800, Ian Kent wrote:
-> > > > > > Add the fs_context_operations method .get_tree that validates
-> > > > > > mount options and fills the super block as previously done
-> > > > > > by the file_system_type .mount method.
-> > > > > > 
-> > > > > > Signed-off-by: Ian Kent <raven@themaw.net>
-> > > > > > ---
-> > > > > >  fs/xfs/xfs_super.c |   50
-> > > > > > ++++++++++++++++++++++++++++++++++++++++++++++++++
-> > > > > >  1 file changed, 50 insertions(+)
-> > > > > > 
-> > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > > > > index ea3640ffd8f5..6f9fe92b4e21 100644
-> > > > > > --- a/fs/xfs/xfs_super.c
-> > > > > > +++ b/fs/xfs/xfs_super.c
-> > > > > > @@ -1933,6 +1933,51 @@ xfs_fs_fill_super(
-> > > > > >  	return error;
-> > > > > >  }
-> > > > > >  
-> > > > > > +STATIC int
-> > > > > > +xfs_fill_super(
-> > > > > > +	struct super_block	*sb,
-> > > > > > +	struct fs_context	*fc)
-> > > > > > +{
-> > > > > > +	struct xfs_fs_context	*ctx = fc->fs_private;
-> > > > > > +	struct xfs_mount	*mp = sb->s_fs_info;
-> > > > > > +	int			silent = fc->sb_flags &
-> > > > > > SB_SILENT;
-> > > > > > +	int			error = -ENOMEM;
-> > > > > > +
-> > > > > > +	mp->m_super = sb;
-> > > > > > +
-> > > > > > +	/*
-> > > > > > +	 * set up the mount name first so all the errors will
-> > > > > > refer to
-> > > > > > the
-> > > > > > +	 * correct device.
-> > > > > > +	 */
-> > > > > > +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN,
-> > > > > > GFP_KERNEL);
-> > > > > > +	if (!mp->m_fsname)
-> > > > > > +		return -ENOMEM;
-> > > > > > +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
-> > > > > > +
-> > > > > > +	error = xfs_validate_params(mp, ctx, false);
-> > > > > > +	if (error)
-> > > > > > +		goto out_free_fsname;
-> > > > > > +
-> > > > > > +	error = __xfs_fs_fill_super(mp, silent);
-> > > > > > +	if (error)
-> > > > > > +		goto out_free_fsname;
-> > > > > > +
-> > > > > > +	return 0;
-> > > > > > +
-> > > > > > + out_free_fsname:
-> > > > > > +	sb->s_fs_info = NULL;
-> > > > > > +	xfs_free_fsname(mp);
-> > > > > > +
-> > > > > 
-> > > > > I'm still not following the (intended) lifecycle of mp here.
-> > > > > Looking
-> > > > > ahead in the series, we allocate mp in xfs_init_fs_context()
-> > > > > and
-> > > > > set
-> > > > > some state. It looks like at some point we grow an
-> > > > > xfs_fc_free()
-> > > > > callback that frees mp, but that doesn't exist as of yet. So is
-> > > > > that
-> > > > > a
-> > > > > memory leak as of this patch?
-> > > > > 
-> > > > > We also call xfs_free_fsname() here (which doesn't reset
-> > > > > pointers
-> > > > > to
-> > > > > NULL) and open-code kfree()'s of a couple of the same fields in
-> > > > > xfs_fc_free(). Those look like double frees to me.
-> > > > > 
-> > > > > Hmm.. I guess I'm kind of wondering why we lift the mp alloc
-> > > > > out of
-> > > > > the
-> > > > > fill super call in the first place. At a glance, it doesn't
-> > > > > look
-> > > > > like
-> > > > > we
-> > > > > do anything in that xfs_init_fs_context() call that we couldn't
-> > > > > do
-> > > > > a
-> > > > > bit
-> > > > > later..
-> > > > 
-> > > > Umm ... yes ...
-> > > > 
-> > > > I think I've got the active code path right ...
-> > > > 
-> > > > At this point .mount == xfs_fs_mount() which will calls
-> > > > xfs_fs_fill_super() to fill the super block.
-> > > > 
-> > > > xfs_fs_fill_super() allocates the super block info struct and
-> > > > sets
-> > > > it in the super block private info field, then calls
-> > > > xfs_parseargs()
-> > > > which still allocates mp->m_fsname at this point, to accomodate a
-> > > > similar free pattern in xfs_test_remount_options().
-> > > > 
-> > > > It then calls __xfs_fs_fill_super() which doesn't touch those
-> > > > fsname
-> > > > fields or mp to fit in with what will be done later.
-> > > > 
-> > > > If an error occurs both the fsname fields (xfs_free_fsname()) and
-> > > > mp
-> > > > are freed by the main caller, xfs_fs_fill_super().
-> > > > 
-> > > > I think that process is ok.
-> > > > 
-> > > > The mount api process that isn't active yet is a bit different.
-> > > > 
-> > > > The context (ctx), a temporary working space, is allocated then
-> > > > saved
-> > > > in the mount context (fc) and the super block info is also
-> > > > allocated
-> > > > and saved in the mount context in it's field of the same name as
-> > > > the
-> > > > private super block info field, s_fs_info.
-> > > > 
-> > > > The function xfs_fill_super() is called as a result of the
-> > > > .get_tree()
-> > > > mount context operation to fill the super block.
-> > > > 
-> > > > During this process, when the VFS successfully allocates the
-> > > > super
-> > > > block s_fs_info is set in the super block and the mount context
-> > > > field set to NULL. From this point freeing the private super
-> > > > block
-> > > > info becomes part of usual freeing of the super block with the
-> > > > super
-> > > > operation .kill_sb().
-> > > > 
-> > > > But if the super block allocation fails then the mount context
-> > > > s_fs_info field remains set and is the responsibility of the
-> > > > mount context operations .fc_free() method to clean up.
-> > > > 
-> > > > Now the VFS calls to xfs_fill_super() after this.
-> > > > 
-> > > > I should have been able to leave xfs_fill_super() it as it
-> > > > was with:
-> > > >         sb->s_fs_info = NULL;
-> > > >         xfs_free_fsname(mp);
-> > > >         kfree(mp);
-> > > > and that should have been ok but it wasn't, there was some sort
-> > > > of
-> > > > allocation problem, possibly a double free, causing a crash.
-> > > > 
-> > > > Strictly speaking this cleanup process should be carried out by
-> > > > either the mount context .fc_free() or super operation .kill_sb()
-> > > > and that's what I want to do.
+On Wed, 2019-09-25 at 16:46 -0700, Ira Weiny wrote:
+> On Tue, Sep 24, 2019 at 08:26:20AM +1000, Dave Chinner wrote:
+> > On Mon, Sep 23, 2019 at 12:08:53PM -0700, Ira Weiny wrote:
+> > > Since the last RFC patch set[1] much of the discussion of supporting RDMA with
+> > > FS DAX has been around the semantics of the lease mechanism.[2]  Within that
+> > > thread it was suggested I try and write some documentation and/or tests for the
+> > > new mechanism being proposed.  I have created a foundation to test lease
+> > > functionality within xfstests.[3] This should be close to being accepted.
+> > > Before writing additional lease tests, or changing lots of kernel code, this
+> > > email presents documentation for the new proposed "layout lease" semantic.
 > > > 
-> > > Umm ... but I can't actually do that ...
+> > > At Linux Plumbers[4] just over a week ago, I presented the current state of the
+> > > patch set and the outstanding issues.  Based on the discussion there, well as
+> > > follow up emails, I propose the following addition to the fcntl() man page.
 > > > 
-> > > Looking back at xfs I realize that the filling of the super
-> > > block is meant to leave nothing allocated and set
-> > > sb->s_fs_info = NULL on error so that ->put_super() won't try
-> > > and cleanup a whole bunch of stuff that hasn't been done.
+> > > Thank you,
+> > > Ira
 > > > 
-> > > Which brings me back to what I originally had above ... which
-> > > we believe doesn't work ?
+> > > [1] https://lkml.org/lkml/2019/8/9/1043
+> > > [2] https://lkml.org/lkml/2019/8/9/1062
+> > > [3] https://www.spinics.net/lists/fstests/msg12620.html
+> > > [4] https://linuxplumbersconf.org/event/4/contributions/368/
 > > > 
+> > > 
+> > > <fcntl man page addition>
+> > > Layout Leases
+> > > -------------
+> > > 
+> > > Layout (F_LAYOUT) leases are special leases which can be used to control and/or
+> > > be informed about the manipulation of the underlying layout of a file.
+> > > 
+> > > A layout is defined as the logical file block -> physical file block mapping
+> > > including the file size and sharing of physical blocks among files.  Note that
+> > > the unwritten state of a block is not considered part of file layout.
 > > 
-> > It looks like perhaps the assignment of sb->s_fs_info was lost as
-> > well?
-> > Skipping to the end, I see xfs_init_fs_context() alloc mp and assign
-> > fc->s_fs_info. xfs_get_tree() leads to xfs_fill_super(), which
-> > somehow
-> > gets mp from sb->s_fs_info (not fc->...), but then resets sb-
-> > >s_fs_info
-> > on error and frees the names, leaving fs->s_fs_info so presumably
-> > xfs_fc_free() can free mp along with a couple of the names (again). I
-> > can't really make heads or tails of what this is even attempting to
-> > do.
-> 
-> Ha, it seems a bit mysterious, but it's actually much simpler
-> than it appears.
-> 
-
-Feel free to explain any of the above..? Where do you currently assign
-sb->s_fs_info, for example?
-
+> > Why even mention "unwritten" state if it's not considered something
+> > that the layout lease treats differently?
 > > 
-> > That aside, it's not clear to me why the new code can't follow a
-> > similar
-> > pattern as the old code with regard to allocation. Allocate mp in
-> > xfs_fill_super() and set up sb/fc pointers, reset pointers and free
-> > mp
-> > on error return. Otherwise, xfs_fc_free() checks for fc->s_fs_info !=
-> > NULL and frees mp from there. Is there some reason we can't continue
-> > to
-> > do that?
+> > i.e. Unwritten extents are a filesystem implementation detail that
+> > is not exposed to userspace by anything other than FIEMAP. If they
+> > have no impact on layout lease behaviour, then why raise it as
+> > something the user needs to know about?
 > 
-> I think not without a fairly significant re-design.
+> This paragraph was intended to define a layout.  So I guess one could say our
+> internal discussion on what defines a "layout" has leaked into the external
+> documentation.  Do you think we should just remove the second sentence or the
+> whole paragraph?
 > 
-> The main difference is the mount-api will allocate the super
-> block later than the old mount code.
-> 
-> Basically, if file system parameter parsing fails the super
-> block won't get allocated.
-> 
-> So the super block isn't available during parameter parsing
-> but the file system private data structure may be needed for
-> it, so it comes from the file system context at that point.
-> 
-> When the super block is successfully allocated the file system
-> private data structure is set in the super block (and the field
-> NULLed in the context) and things progress much the same as
-> before from that point.
-> 
-> That's the essential difference in the process AFAICS.
-> 
-
-I see. This is probably something that should be noted in the commit
-log (that the ordering changes from before such that we need to allocate
-mp a bit earlier). This is reasonable because even though the current
-code allocs mp in the fill_super callback, we parse arguments
-immediately after the mp allocation and don't otherwise rely on the sb
-in that code.
-
-If I follow correctly, it sounds like perhaps we need to separate the
-management of sb->s_fs_info from the "ownership" of mp. For example,
-allocate mp, assign fc->s_fs_info and free via xfs_fc_free() as you do
-now. In the xfs_fill_super() callback, pull mp from fc->s_fs_info and
-assign it to sb->s_fs_info. If we fail at this point, reset
-sb->s_fs_info to NULL and let the fc infrastructure deal with freeing mp
-in its own callback.
-
-What I'm not clear on is whether something like xfs_fs_put_super()
-should still free mp as well. Once the filesystem successfully mounts,
-are we still going to see an xfs_fc_free() callback, or is this all just
-transient mount path stuff? If the former, perhaps put_super() should
-also not free mp and just reset its own ->s_fs_info reference. If the
-latter, then I guess we just need to understand at what point during a
-successful mount responsibility to free transfers from one place to the
-other. Thoughts?
-
-Brian
-
-> By the time fill_super() is called everything is set and you
-> should be able to proceed almost the same as before.
-> 
-> Ian
-> 
-> > Brian
+> > > **Read layout lease F_RDLCK | F_LAYOUT**
+> > > 
+> > > Read layout leases can be used to be informed of layout changes by the
+> > > system or other users.  This lease is similar to the standard read (F_RDLCK)
+> > > lease in that any attempt to change the _layout_ of the file will be reported to
+> > > the process through the lease break process. 
 > > 
-> > > > So I'm not sure the allocation time and the place this is done
-> > > > can (or should) be done differently.
-> > > > 
-> > > > And that freeing on error exit from xfs_fill_super() is
-> > > > definitely
-> > > > wrong now! Ha, and I didn't see any crashes myself when I tested
-> > > > it ... maybe I need a reproducer ...
-> > > > 
-> > > > Ian
-> > > > 
-> > > > > Brian
-> > > > > 
-> > > > > > +	return error;
-> > > > > > +}
-> > > > > > +
-> > > > > > +STATIC int
-> > > > > > +xfs_get_tree(
-> > > > > > +	struct fs_context	*fc)
-> > > > > > +{
-> > > > > > +	return vfs_get_block_super(fc, xfs_fill_super);
-> > > > > > +}
-> > > > > > +
-> > > > > >  STATIC void
-> > > > > >  xfs_fs_put_super(
-> > > > > >  	struct super_block	*sb)
-> > > > > > @@ -2003,6 +2048,11 @@ static const struct super_operations
-> > > > > > xfs_super_operations = {
-> > > > > >  	.free_cached_objects	= xfs_fs_free_cached_objects,
-> > > > > >  };
-> > > > > >  
-> > > > > > +static const struct fs_context_operations xfs_context_ops =
-> > > > > > {
-> > > > > > +	.parse_param = xfs_parse_param,
-> > > > > > +	.get_tree    = xfs_get_tree,
-> > > > > > +};
-> > > > > > +
-> > > > > >  static struct file_system_type xfs_fs_type = {
-> > > > > >  	.owner			= THIS_MODULE,
-> > > > > >  	.name			= "xfs",
-> > > > > > 
+> > Similar in what way? The standard F_RDLCK lease triggers on open or
+> > truncate - a layout lease does nothing of the sort.
 > 
+> Similar in that attempts to "write" the layout will result in breaking the
+> lease just like attempts to write the file would break the standard F_RDLCK
+> lease.  I'm not stuck on the verbiage though; similar may be the wrong word.
+> 
+> > > But this lease is different
+> > > because the file can be opened for write and data can be read and/or written to
+> > > the file as long as the underlying layout of the file does not change.
+> > 
+> > So a F_RDLCK|F_LAYOUT can be taken on a O_WRONLY fd, unlike a
+> > F_RDLCK which can only be taken on O_RDONLY fd.
+> 
+> That was the idea, yes.
+> 
+> > I think these semantics are sufficiently different to F_RDLCK they
+> > need to be explicitly documented, because I see problems here.
+> 
+> I agree, and I intended this document to indicate how they are different.
+> 
+> Anther option may be to define F_RDLAYOUT and not have F_LAYOUT such that it is
+> clear that this lease is not associated with F_RDLCK at all.  It is different.
+> 
+> > > Therefore, the lease is not broken if the file is simply open for write, but
+> > > _may_ be broken if an operation such as, truncate(), fallocate() or write()
+> > > results in changing the underlying layout.
+> > 
+> > As will mmap(), any number of XFS and ext4 ioctls, etc. 
+> > 
+> > So this really needs to say "_will_ be broken if *any* modification to
+> > the file _might_ need to change the underlying physical layout".
+> 
+> Agreed.  I used the word "may" because a simple write() does not necessarily
+> change the layout of the file.  But I like your verbiage better.  I did wonder
+> if listing operations was a bad idea.  So I'm ok simply leaving that detail
+> out.
+> 
+> > Now, the big question: what happens to a process with a
+> > F_RDLCK|F_LAYOUT lease held does a write that triggers a layout
+> > change? What happens then?
+> 
+> Because F_UNBREAK is not specified, the write() operation is held for lease
+> break time and then the lease is broken if not voluntarily released.  This
+> would be the same pattern as a process holding a F_RDLCK and opening the file
+> O_RDWR.
+> 
+> > Also, have you noticed that XFS will unconditionally break layouts on
+> > write() because it /might/ need to change the layout? i.e. the
+> > BREAK_WRITE case in xfs_file_aio_write_checks()? This is needed for
+> > correctly supporting pNFS layout coherency against local IO. i.e.
+> > local write() breaks layouts held by NFS server to get the
+> > delegation recalled.
+> > 
+> > So by the above definition of F_RDLCK|F_LAYOUT behaviour, a holder
+> > of such a lease doing a write() to that file would trigger a lease
+> > break of their own lease as the filesystem has notified the lease
+> > layer that there is a layout change about to happen. What's expected
+> > to happen here?
+> 
+> That is not ideal but the proposed semantics say a write() may fail in this
+> situation.  So depending on the implementation requirements of the underlying
+> FS the semantics still hold for our current use case.  It would be nice to be
+> able to enhance the implementation in the future such that a write() could work
+> but maybe they can't.  For RDMA the application is probably going to have the
+> region mmap'ed anyway and will not need, nor in fact want to use a write()
+> call.
+> 
+> Also, I think I missed a need to specify that a F_RDLCK|F_LAYOUT needs to have
+> write permission on (or be the owner of) the file for the user to be able to
+> specify F_UNBREAK on it.
+> 
+> > Hence, AFIACT, the above definition of a F_RDLCK|F_LAYOUT lease
+> > doesn't appear to be compatible with the semantics required by
+> > existing users of layout leases.
+> 
+> I disagree.  Other than the addition of F_UNBREAK, I think this is consistent
+> with what is currently implemented.  Also, by exporting all this to user space
+> we can now write tests for it independent of the RDMA pinning.
+> 
+> > > **Write layout lease (F_WRLCK | F_LAYOUT)**
+> > > 
+> > > Write Layout leases can be used to break read layout leases to indicate that
+> > > the process intends to change the underlying layout lease of the file.
+> > 
+> > Any write() can change the layout of the file, and userspace cannot
+> > tell in advance whether that will occur (neither can the
+> > filesystem), so it seems to me that any application that needs to
+> > write data is going to have to use F_WRLCK|F_LAYOUT.
+> 
+> Sure, but the use case of F_WRLCK|F_LAYOUT is that the user is creating the
+> layout.  So using write() to create the file would be ok.
+> 
+> On the surface it seems like using a standard F_WRLCK lease could be used
+> instead of F_WRLCK|F_LAYOUT.  But it actually can't because that does not
+> protect against the internals of the file system changing the lease.  This is
+> where the semantics are exactly exported to user space.
+> 
+> > > A process which has taken a write layout lease has exclusive ownership of the
+> > > file layout and can modify that layout as long as the lease is held.
+> > 
+> > Which further implies single writer semantics and leases are
+> > associated with a single open fd. Single writers are something we
+> > are always trying to avoid in XFS.
+> 
+> The discussion at LPC revealed that we need a way for the user to ensure the
+> file layout is realized prior to any unbreakable lease being taken.  So yes, for
+> some period we will need a single writer.
+> 
+> > > Operations which change the layout are allowed by that process.  But operations
+> > > from other file descriptors which attempt to change the layout will break the
+> > > lease through the standard lease break process.
+> > 
+> > If the F_WRLCK|F_LAYOUT lease is exclusive, who is actually able to
+> > modify the layout?  Are you talking about processes that don't
+> > actually hold leases modifying the layout?
+> 
+> That was the idea, yes.
+> 
+> > i.e. what are the
+> > constraints on "exclusive access" here - is F_WRLCK|F_LAYOUT is
+> > only exclusive when every modification is co-operating and taking
+> > the appropriate layout lease for every access to the file that is
+> > made?
+> 
+> I'm not following but IIUC...  no...  The idea is that if you hold the
+> F_WRLCK|F_LAYOUT lease then any attempt by _other_ processes to change the
+> layout (intentional or otherwise) would result in you getting a SIGIO signal
+> which indicates someone _else_ changed the file.
+> 
+> Then you can atomically downgrade the lock to F_RDLCK|F_LAYOUT|F_UNBREAK or
+> atomically upgrade to F_WRLCK|F_LAYOUT|F_UNBREAK.  Either way you know you have
+> the layout you want and can rely on the pin working.
+> 
+> > If that's the case, what happens when someone fails to get a read
+> > lock and decides "I can break write locks just by using ftruncate()
+> > to the same size without a layout lease". Or fallocate() to
+> > preallocate space that is already allocated. Or many other things I
+> > can think of.
+> 
+> The intended use case for F_WRLCK|F_LAYOUT is that a single process is
+> attempting to set the layout prior to setting F_UNBREAK.  While
+> F_WRLCK|F_LAYOUT can be broken, breaking the lease will not happen without that
+> process knowing about it.
+> 
+> I don't see this being different from the current lease semantics which
+> requires some external coordination amongst process/file users to resolve any
+> races or coordination.
+> 
+> > IOWs, this seems to me like a very fragile sort of construct that is
+> > open to abuse and that will lead to everyone using F_UNBREAK, which
+> > is highly unfriendly to everyone else...
+> 
+> FWIW, my use case does require F_UNBREAK.  All of the semantics presented have
+> a real use case except for F_RDLCK|F_LAYOUT.  However, I think F_RDLCK|F_LAYOUT
+> does have a use case in testing.
+> 
+> Also, I do think that we need to have some check on file ownership for
+> F_UNBREAK.  That needs to be added.
+> 
+> > > The F_LAYOUT flag is used to
+> > > indicate a difference between a regular F_WRLCK and F_WRLCK with F_LAYOUT.  In
+> > > the F_LAYOUT case opens for write do not break the lease.  But some operations,
+> > > if they change the underlying layout, may.
+> > > 
+> > > The distinction between read layout leases and write layout leases is that
+> > > write layout leases can change the layout without breaking the lease within the
+> > > owning process.  This is useful to guarantee a layout prior to specifying the
+> > > unbreakable flag described below.
+> > 
+> > Ok, so now you really are saying that F_RDLCK leases can only be
+> > used on O_RDONLY file descriptors because any modification under a
+> > F_RDLCK|LAYOUT will trigger a layout break.
+> 
+> I don't necessarily agree.  We also have the mmap() case.  What I was really
+> trying to do is define a relaxed lease semantic which allows some shared
+> reading/writing of the file as long as the underlying layout does not change.
+> I am _not_ a file system expert but it seems like that should be possible.
+> 
+> Perhaps we need something more fine grained between BREAK_UNMAP and
+> BREAK_WRITE?
+> 
+> > > **Unbreakable Layout Leases (F_UNBREAK)**
+> > > 
+> > > In order to support pinning of file pages by direct user space users an
+> > > unbreakable flag (F_UNBREAK) can be used to modify the read and write layout
+> > > lease.  When specified, F_UNBREAK indicates that any user attempting to break
+> > > the lease will fail with ETXTBUSY rather than follow the normal breaking
+> > > procedure.
+> > > 
+> > > Both read and write layout leases can have the unbreakable flag (F_UNBREAK)
+> > > specified.  The difference between an unbreakable read layout lease and an
+> > > unbreakable write layout lease are that an unbreakable read layout lease is
+> > > _not_ exclusive. 
+> > 
+> > Oh, this doesn't work at all. Now we get write()s to F_RDLCK leases
+> > that can't break the leases and so all writes, even to processes
+> > that own RDLCK|UNBREAK, will fail with ETXTBSY.
+> 
+> Yes I agree writes()'s to F_RDLCK|F_LAYOUT|F_UNBREAK _may_ fail.  I don't see
+> how this is broken if the file owner is opting into it.  RDMA's can still occur
+> to that file.  mmap'ed areas of the file can still be used (especially in the
+> no-page cache case of FS DAX).
+> 
+> > > This means that once a layout is established on a file,
+> > > multiple unbreakable read layout leases can be taken by multiple processes and
+> > > used to pin the underlying pages of that file.
+> > 
+> > Ok, so what happens when someone now takes a
+> > F_WRLOCK|F_LAYOUT|F_UNBREAK? Is that supposed to break
+> > F_RDLCK|F_LAYOUT|F_UNBREAK, as the wording about F_WRLCK behaviour
+> > implies it should?
+> 
+> Ah no.  F_RDLCK|F_LAYOUT|F_UNBREAK could not be broken.  I'll have to update
+> the text for this.  The idea here is that no one can be changing the layout but
+> multiple readers could be using that layout.  So I'll update the text that a
+> F_WRLCK|F_LAYOUT|F_UNBREAK would fail in this case.
+> 
+> > > Care must therefore be taken to ensure that the layout of the file is as the
+> > > user wants prior to using the unbreakable read layout lease.  A safe mechanism
+> > > to do this would be to take a write layout lease and use fallocate() to set the
+> > > layout of the file.  The layout lease can then be "downgraded" to unbreakable
+> > > read layout as long as no other user broke the write layout lease.
+> > 
+> > What are the semantics of this "downgrade" behaviour you speak of? :)
+> 
+> As I said above it may be a downgrade or an upgrade but the idea is to
+> atomically convert the lease to F_UNBREAK.
+> 
+> > My thoughts are:
+> > 	- RDLCK can only be used for O_RDONLY because write()
+> > 	  requires breaking of leases
+> 
+> Does the file system require write() break the layout lease?  Or is that just
+> the way the file system is currently implemented?  What about mmap()?  I need
+> to have the file open WR to mmap() the file for RDMA.
+> 
+> To be clear I'm intending F_RDLCK|F_LAYOUT to be something new.  As I said
+> above we could use something like F_RDLAYOUT instead?
+> 
+> > 	- WRLCK is open to abuse simply by not using a layout lease
+> > 	  to do a "no change" layout modification
+> 
+> I'm sorry, I don't understand this comment.
+> 
+> > 	- RDLCK|F_UNBREAK is entirely unusable
+> 
+> Well even if write() fails with ETXTBSY this should give us the ability to do
+> RDMA and XDP to these areas from multiple processes.  Furthermore, for FS DAX
+> which bypasses the page cache mmap'ed areas can be written without write() with
+> CPU stores.  Which is how many RDMA applications are likely to write this data.
+> 
+> > 	- WRLCK|F_UNBREAK will be what every application uses
+> > 	  because everything else either doesn't work or is too easy
+> > 	  to abuse.
+> 
+> Maybe.  IMO that is still a step in the right direction as at least 1 process
+> can use this now.  And these semantics allow for a shared unbreakable lease
+> (F_RDLCK|F_LAYOUT|F_UNBREAK) which can be used with some configurations (FS DAX
+> in particular).
+> 
+> Also, I do think we will need something to ensure file ownership for F_UNBREAK.
+> 
+> It sounds like the difficulty here is in potential implementation of allowing
+> write() to not break layouts.  And dealing with writes to mmap'ed page cache
+> pages.  The file system is free to do better later.
+> 
+
+Whatever the semantics, from an API standpoint, I think we should not
+try to multiplex layout behavior on top of F_SETLEASE. Layouts should
+get new fcntl cmd values (maybe F_SETLAYOUT/F_GETLAYOUT) and then you
+wouldn't need to expose the F_LAYOUT flag to userland.
+
+The behavior of layouts is different enough from "traditional" leases
+that trying to mash them together like this is only going to cause
+confusion.
+
+Note that I'm mainly concerned with the user-facing API with this. The
+kernel internals can still use F_LAYOUT flag, and you can do the
+F_SETLAYOUT -> F_LAYOUT translation at a high level.
+-- 
+Jeff Layton <jlayton@kernel.org>
+
