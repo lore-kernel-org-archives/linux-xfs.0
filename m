@@ -7,70 +7,72 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72A5AC4360C
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 03:44:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EA10DC4360C
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 03:50:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4249320872
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 03:44:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2548207FF
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 03:50:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UIqL15RG"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AjzCRWf8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728899AbfI0Do5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 26 Sep 2019 23:44:57 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:53492 "EHLO
+        id S1728617AbfI0DuV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 26 Sep 2019 23:50:21 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:58516 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726145AbfI0Do5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 23:44:57 -0400
+        with ESMTP id S1728464AbfI0DuV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 26 Sep 2019 23:50:21 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8R3dNBJ108586;
-        Fri, 27 Sep 2019 03:44:54 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8R3dcht108663;
+        Fri, 27 Sep 2019 03:50:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=uLESoYMMVyvaTKeeuB/L/v4tYNxyG8nQZZB2ZFWzQSM=;
- b=UIqL15RGgrncWuWQw11d/vTPay55kQe3VpibpNLYxan/gcGYo/Pi/ES3SWC3Mx1510Xk
- 3lw6zU9Rf6ckfCASb0QwlTeECLzCXOwuuhEX/7w30/E14gDHR/oyRO4QpwfGoRgg2Owd
- cSpMY3vln1f1OnTiGIeIjXKouEhoI+W0JN5Ug0z3bCrS6WF1VVYP2sFbN2HL5kTtJwXN
- cyseldOAEWcSM1FGCt0hfaCPmRLB7yLl6NlkEf+bE5W7XA84oDWHb40pTms98n6x+Fku
- tI9DUlUqSxCYT0m3Js2tOOnmoNhIPo1SaLxkBunTU59CwpG6IB1cDLgSfuI7gldMYsPT YQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2v5cgrff04-1
+ bh=adBOMPNrOq/z8hEVb4xZ+kG9EuZ7kXaG9oqzu4OfOuU=;
+ b=AjzCRWf8qF9GBIMOI4Zyf5HxmWpxi+WAJQJmyc5Q5b3Xx4bLSs0LVyDRypyMOyQLAcKS
+ t+kfLGBkxHzZdzEPezrZVIR/C1wDLtYKzr76q3c5Rm5rojkJv2cfbx3mgw5imN+CHYa+
+ dwfU/BRTC0X4PXRLHEZGEbvtXbBbVwJ5TPqCj5SJVdfJsNFXkTQSnloMfjw0gorvZJ73
+ kZQweaY7YRn8TtBoH1CPMeXwJcyjLxXtkptmi9fKLuE5OrXUrpDbBaX5EbHBogB/LPUG
+ syBxuE/Jq6GkqbQBs70OSLrTcbW7Uof1m/LV3OzziRPjU6p5eBgWi24TaZ4asMvpPPsO eQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2v5cgrffd8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Sep 2019 03:44:54 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8R3hwf9067283;
-        Fri, 27 Sep 2019 03:44:54 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2v8yjxp94v-1
+        Fri, 27 Sep 2019 03:50:18 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8R3hxoA083923;
+        Fri, 27 Sep 2019 03:50:18 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2v8yjxwk0b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 27 Sep 2019 03:44:53 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8R3iq34001384;
-        Fri, 27 Sep 2019 03:44:52 GMT
+        Fri, 27 Sep 2019 03:50:17 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x8R3oGpq024465;
+        Fri, 27 Sep 2019 03:50:16 GMT
 Received: from localhost (/67.161.8.12)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 26 Sep 2019 20:44:52 -0700
-Date:   Thu, 26 Sep 2019 20:44:51 -0700
+        with ESMTP ; Thu, 26 Sep 2019 20:50:15 -0700
+Date:   Thu, 26 Sep 2019 20:50:13 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net
+To:     Eric Sandeen <sandeen@sandeen.net>
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v3 2/4] man: add documentation for v5 inumbers ioctl
-Message-ID: <20190927034451.GM9916@magnolia>
+Subject: Re: [PATCH 3/4] misc: convert xfrog_bulkstat functions to have v5
+ semantics
+Message-ID: <20190927035013.GN9916@magnolia>
 References: <156944714720.297379.5532805895370082740.stgit@magnolia>
- <156944715928.297379.7728068992247988597.stgit@magnolia>
+ <156944716532.297379.18153066949287059883.stgit@magnolia>
+ <6574b7e6-c960-0918-4dbf-447f8eb140bc@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156944715928.297379.7728068992247988597.stgit@magnolia>
+In-Reply-To: <6574b7e6-c960-0918-4dbf-447f8eb140bc@sandeen.net>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1909270034
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9392 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
  definitions=main-1909270034
@@ -79,147 +81,342 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Sep 26, 2019 at 04:01:43PM -0500, Eric Sandeen wrote:
+> On 9/25/19 4:32 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Convert xfrog_bulkstat() and xfrog_bulkstat_single() to take arguments
+> > using v5 bulkstat semantics and return bulkstat information in v5
+> > structures.  If the v5 ioctl is not available, the xfrog wrapper should
+> > use the v1 ioctl to emulate v5 behaviors.  Add flags to the xfs_fd
+> > structure to constrain emulation for debugging purposes.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> gawd this is a lot of frobnication of ioctl results but I ... guess there's
+> no way around it.
+> 
+> Presumably we want all callers to use v5 for the bigger fields, right,
+> so it's not like we can just leave some old v1 callers as-is if they don't
+> need new fields ....
 
-Add a manpage describing the new v5 XFS_IOC_INUMBERS ioctl.
+Well... in theory we could leave them, but eventually we'll either want
+new functionality or we'll want to deprecate the old ones.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- man/man2/ioctl_xfs_inumbers.2 |  128 +++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 128 insertions(+)
- create mode 100644 man/man2/ioctl_xfs_inumbers.2
+> > ---
+> >  fsr/xfs_fsr.c      |   64 ++++++--
+> >  io/open.c          |   27 ++-
+> >  io/swapext.c       |    9 +
+> >  libfrog/bulkstat.c |  431 +++++++++++++++++++++++++++++++++++++++++++++++++---
+> >  libfrog/bulkstat.h |   14 +-
+> >  libfrog/fsgeom.h   |    9 +
+> >  quota/quot.c       |   29 ++-
+> >  scrub/inodes.c     |   39 +++--
+> >  scrub/inodes.h     |    2 
+> >  scrub/phase3.c     |    6 -
+> >  scrub/phase5.c     |    8 -
+> >  scrub/phase6.c     |    2 
+> >  scrub/unicrash.c   |    6 -
+> >  scrub/unicrash.h   |    4 
+> >  spaceman/health.c  |   33 ++--
+> >  15 files changed, 572 insertions(+), 111 deletions(-)
+> > 
+> > 
+> > diff --git a/fsr/xfs_fsr.c b/fsr/xfs_fsr.c
+> > index a53eb924..af5d6169 100644
+> > --- a/fsr/xfs_fsr.c
+> > +++ b/fsr/xfs_fsr.c
+<snip>
+> > @@ -623,7 +643,14 @@ fsrfs(char *mntdir, xfs_ino_t startino, int targetrange)
+> >  			     (p->bs_extents < 2))
+> >  				continue;
+> >  
+> > -			fd = jdm_open(fshandlep, p, O_RDWR|O_DIRECT);
+> > +			ret = xfrog_bulkstat_v5_to_v1(&fsxfd, &bs1, p);
+> 
+> ew.  In the long run, I guess I'd rather convert these to take v5 when needed
+> but alas.  I guess that has xfsdump implications too.  :(
 
-diff --git a/man/man2/ioctl_xfs_inumbers.2 b/man/man2/ioctl_xfs_inumbers.2
-new file mode 100644
-index 00000000..f495e73c
---- /dev/null
-+++ b/man/man2/ioctl_xfs_inumbers.2
-@@ -0,0 +1,128 @@
-+.\" Copyright (c) 2019, Oracle.  All rights reserved.
-+.\"
-+.\" %%%LICENSE_START(GPLv2+_DOC_FULL)
-+.\" SPDX-License-Identifier: GPL-2.0+
-+.\" %%%LICENSE_END
-+.TH IOCTL-XFS-INUMBERS 2 2019-05-23 "XFS"
-+.SH NAME
-+ioctl_xfs_inumbers \- query allocation information for groups of XFS inodes
-+.SH SYNOPSIS
-+.br
-+.B #include <xfs/xfs_fs.h>
-+.PP
-+.BI "int ioctl(int " fd ", XFS_IOC_INUMBERS, struct xfs_inumbers_req *" arg );
-+.SH DESCRIPTION
-+Query inode allocation information for groups of XFS inodes.
-+This ioctl uses
-+.B struct xfs_inumbers_req
-+to set up a bulk transfer from the kernel:
-+.PP
-+.in +4n
-+.nf
-+struct xfs_inumbers_req {
-+	struct xfs_bulk_ireq    hdr;
-+	struct xfs_inumbers     inumbers[];
-+};
-+.fi
-+.in
-+.PP
-+See below for the
-+.B xfs_inumbers
-+structure definition.
-+.PP
-+.in +4n
-+.nf
-+struct xfs_bulk_ireq {
-+	uint64_t                ino;
-+	uint32_t                flags;
-+	uint32_t                icount;
-+	uint32_t                ocount;
-+	uint32_t                agno;
-+	uint64_t                reserved[5];
-+};
-+.fi
-+.in
-+.PP
-+.I hdr
-+describes the information to query.
-+The layout and behavior are documented in the
-+.BR ioctl_xfs_bulkstat (2)
-+manpage and will not be discussed further here.
-+
-+.PP
-+.I inumbers
-+is an array of
-+.B struct xfs_inumbers
-+which is described below.
-+The array must have at least
-+.I icount
-+elements.
-+.PP
-+.in +4n
-+.nf
-+struct xfs_inumbers {
-+	uint64_t                xi_startino;
-+	uint64_t                xi_allocmask;
-+	uint8_t                 xi_alloccount;
-+	uint8_t                 xi_version;
-+	uint8_t                 xi_padding[6];
-+};
-+.fi
-+.in
-+.PP
-+This structure describes inode usage information for a group of 64 consecutive
-+inode numbers.
-+.PP
-+.I xi_startino
-+is the first inode number of this group.
-+.PP
-+.I xi_allocmask
-+is a bitmask telling which inodes in this group are allocated.
-+To clarify, bit
-+.B N
-+is set if inode
-+.BR xi_startino + N
-+is allocated.
-+.PP
-+.I xi_alloccount
-+is the number of inodes in this group that are allocated.
-+This should be equal to popcnt(xi_allocmask).
-+.PP
-+.I xi_version
-+is the version of this data structure.
-+This will be set to
-+.I XFS_INUMBERS_VERSION_V5
-+by the kernel.
-+.PP
-+.I xi_padding[6]
-+is zeroed.
-+.SH RETURN VALUE
-+On error, \-1 is returned, and
-+.I errno
-+is set to indicate the error.
-+.PP
-+.SH ERRORS
-+Error codes can be one of, but are not limited to, the following:
-+.TP
-+.B EFAULT
-+The kernel was not able to copy into the userspace buffer.
-+.TP
-+.B EFSBADCRC
-+Metadata checksum validation failed while performing the query.
-+.TP
-+.B EFSCORRUPTED
-+Metadata corruption was encountered while performing the query.
-+.TP
-+.B EINVAL
-+One of the arguments was not valid.
-+.TP
-+.B EIO
-+An I/O error was encountered while performing the query.
-+.TP
-+.B ENOMEM
-+There was insufficient memory to perform the query.
-+.SH CONFORMING TO
-+This API is specific to XFS filesystem on the Linux kernel.
-+.SH SEE ALSO
-+.BR ioctl (2),
-+.BR ioctl_xfs_bulkstat (2).
+Worse -- these are public libhandle functions, so we'll have to upgrade
+its interfaces very carefully.
+
+> > +			if (ret) {
+> > +				fsrprintf(_("bstat conversion error: %s\n"),
+> > +						strerror(ret));
+> > +				continue;
+> > +			}
+> 
+> ... but then we wouldn't potential fail on bstats w/ big numbers :(
+> 
+> Oh well, another day.
+> 
+> > +
+> > +			fd = jdm_open(fshandlep, &bs1, O_RDWR | O_DIRECT);
+> >  			if (fd < 0) {
+> >  				/* This probably means the file was
+> >  				 * removed while in progress of handling
+
+<snip>
+
+> > diff --git a/scrub/inodes.c b/scrub/inodes.c
+> > index 580a845e..2112c9d1 100644
+> > --- a/scrub/inodes.c
+> > +++ b/scrub/inodes.c
+
+<snip>
+
+> > @@ -135,10 +135,12 @@ xfs_iterate_inodes_range(
+> >  						errbuf, DESCR_BUFSZ));
+> >  		}
+> >  
+> > -		xfs_iterate_inodes_range_check(ctx, &inogrp, bstat);
+> > +		xfs_iterate_inodes_range_check(ctx, &inogrp, breq->bulkstat);
+> >  
+> >  		/* Iterate all the inodes. */
+> > -		for (i = 0, bs = bstat; i < inogrp.xi_alloccount; i++, bs++) {
+> > +		for (i = 0, bs = breq->bulkstat;
+> > +		     i < inogrp.xi_alloccount;
+> > +		     i++, bs++) {
+> >  			if (bs->bs_ino > last_ino)
+> >  				goto out;
+> 
+> leaks the breq here, no?
+> 
+> >  
+> > @@ -184,6 +186,7 @@ _("Changed too many times during scan; giving up."));
+> >  		str_liberror(ctx, error, descr);
+> >  		moveon = false;
+> >  	}
+> > +	free(breq);
+> >  out:
+> 
+> maybe free should be here?
+
+Ugh, I think I mismerged that.  Fixed. :(
+
+--D
+
+> > diff --git a/scrub/inodes.h b/scrub/inodes.h
+> > index 631848c3..3341c6d9 100644
+> > --- a/scrub/inodes.h
+> > +++ b/scrub/inodes.h
+> > @@ -7,7 +7,7 @@
+> >  #define XFS_SCRUB_INODES_H_
+> >  
+> >  typedef int (*xfs_inode_iter_fn)(struct scrub_ctx *ctx,
+> > -		struct xfs_handle *handle, struct xfs_bstat *bs, void *arg);
+> > +		struct xfs_handle *handle, struct xfs_bulkstat *bs, void *arg);
+> >  
+> >  #define XFS_ITERATE_INODES_ABORT	(-1)
+> >  bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
+> > diff --git a/scrub/phase3.c b/scrub/phase3.c
+> > index 81c64cd1..a32d1ced 100644
+> > --- a/scrub/phase3.c
+> > +++ b/scrub/phase3.c
+> > @@ -30,7 +30,7 @@ xfs_scrub_fd(
+> >  	struct scrub_ctx	*ctx,
+> >  	bool			(*fn)(struct scrub_ctx *ctx, uint64_t ino,
+> >  				      uint32_t gen, struct xfs_action_list *a),
+> > -	struct xfs_bstat	*bs,
+> > +	struct xfs_bulkstat	*bs,
+> >  	struct xfs_action_list	*alist)
+> >  {
+> >  	return fn(ctx, bs->bs_ino, bs->bs_gen, alist);
+> > @@ -45,7 +45,7 @@ struct scrub_inode_ctx {
+> >  static void
+> >  xfs_scrub_inode_vfs_error(
+> >  	struct scrub_ctx	*ctx,
+> > -	struct xfs_bstat	*bstat)
+> > +	struct xfs_bulkstat	*bstat)
+> >  {
+> >  	char			descr[DESCR_BUFSZ];
+> >  	xfs_agnumber_t		agno;
+> > @@ -65,7 +65,7 @@ static int
+> >  xfs_scrub_inode(
+> >  	struct scrub_ctx	*ctx,
+> >  	struct xfs_handle	*handle,
+> > -	struct xfs_bstat	*bstat,
+> > +	struct xfs_bulkstat	*bstat,
+> >  	void			*arg)
+> >  {
+> >  	struct xfs_action_list	alist;
+> > diff --git a/scrub/phase5.c b/scrub/phase5.c
+> > index 3ff34251..99cd51b2 100644
+> > --- a/scrub/phase5.c
+> > +++ b/scrub/phase5.c
+> > @@ -80,7 +80,7 @@ xfs_scrub_scan_dirents(
+> >  	struct scrub_ctx	*ctx,
+> >  	const char		*descr,
+> >  	int			*fd,
+> > -	struct xfs_bstat	*bstat)
+> > +	struct xfs_bulkstat	*bstat)
+> >  {
+> >  	struct unicrash		*uc = NULL;
+> >  	DIR			*dir;
+> > @@ -140,7 +140,7 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+> >  	struct scrub_ctx		*ctx,
+> >  	const char			*descr,
+> >  	struct xfs_handle		*handle,
+> > -	struct xfs_bstat		*bstat,
+> > +	struct xfs_bulkstat		*bstat,
+> >  	const struct attrns_decode	*attr_ns)
+> >  {
+> >  	struct attrlist_cursor		cur;
+> > @@ -200,7 +200,7 @@ xfs_scrub_scan_fhandle_xattrs(
+> >  	struct scrub_ctx		*ctx,
+> >  	const char			*descr,
+> >  	struct xfs_handle		*handle,
+> > -	struct xfs_bstat		*bstat)
+> > +	struct xfs_bulkstat		*bstat)
+> >  {
+> >  	const struct attrns_decode	*ns;
+> >  	bool				moveon = true;
+> > @@ -228,7 +228,7 @@ static int
+> >  xfs_scrub_connections(
+> >  	struct scrub_ctx	*ctx,
+> >  	struct xfs_handle	*handle,
+> > -	struct xfs_bstat	*bstat,
+> > +	struct xfs_bulkstat	*bstat,
+> >  	void			*arg)
+> >  {
+> >  	bool			*pmoveon = arg;
+> > diff --git a/scrub/phase6.c b/scrub/phase6.c
+> > index 506e75d2..b41f90e0 100644
+> > --- a/scrub/phase6.c
+> > +++ b/scrub/phase6.c
+> > @@ -172,7 +172,7 @@ static int
+> >  xfs_report_verify_inode(
+> >  	struct scrub_ctx		*ctx,
+> >  	struct xfs_handle		*handle,
+> > -	struct xfs_bstat		*bstat,
+> > +	struct xfs_bulkstat		*bstat,
+> >  	void				*arg)
+> >  {
+> >  	char				descr[DESCR_BUFSZ];
+> > diff --git a/scrub/unicrash.c b/scrub/unicrash.c
+> > index 17e8f34f..b02c5658 100644
+> > --- a/scrub/unicrash.c
+> > +++ b/scrub/unicrash.c
+> > @@ -432,7 +432,7 @@ unicrash_init(
+> >   */
+> >  static bool
+> >  is_only_root_writable(
+> > -	struct xfs_bstat	*bstat)
+> > +	struct xfs_bulkstat	*bstat)
+> >  {
+> >  	if (bstat->bs_uid != 0 || bstat->bs_gid != 0)
+> >  		return false;
+> > @@ -444,7 +444,7 @@ bool
+> >  unicrash_dir_init(
+> >  	struct unicrash		**ucp,
+> >  	struct scrub_ctx	*ctx,
+> > -	struct xfs_bstat	*bstat)
+> > +	struct xfs_bulkstat	*bstat)
+> >  {
+> >  	/*
+> >  	 * Assume 64 bytes per dentry, clamp buckets between 16 and 64k.
+> > @@ -459,7 +459,7 @@ bool
+> >  unicrash_xattr_init(
+> >  	struct unicrash		**ucp,
+> >  	struct scrub_ctx	*ctx,
+> > -	struct xfs_bstat	*bstat)
+> > +	struct xfs_bulkstat	*bstat)
+> >  {
+> >  	/* Assume 16 attributes per extent for lack of a better idea. */
+> >  	return unicrash_init(ucp, ctx, false, 16 * (1 + bstat->bs_aextents),
+> > diff --git a/scrub/unicrash.h b/scrub/unicrash.h
+> > index fb8f5f72..feb9cc86 100644
+> > --- a/scrub/unicrash.h
+> > +++ b/scrub/unicrash.h
+> > @@ -14,9 +14,9 @@ struct unicrash;
+> >  struct dirent;
+> >  
+> >  bool unicrash_dir_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+> > -		struct xfs_bstat *bstat);
+> > +		struct xfs_bulkstat *bstat);
+> >  bool unicrash_xattr_init(struct unicrash **ucp, struct scrub_ctx *ctx,
+> > -		struct xfs_bstat *bstat);
+> > +		struct xfs_bulkstat *bstat);
+> >  bool unicrash_fs_label_init(struct unicrash **ucp, struct scrub_ctx *ctx);
+> >  void unicrash_free(struct unicrash *uc);
+> >  bool unicrash_check_dir_name(struct unicrash *uc, const char *descr,
+> > diff --git a/spaceman/health.c b/spaceman/health.c
+> > index a8bd3f3e..b195a229 100644
+> > --- a/spaceman/health.c
+> > +++ b/spaceman/health.c
+> > @@ -208,7 +208,7 @@ report_inode_health(
+> >  	unsigned long long	ino,
+> >  	const char		*descr)
+> >  {
+> > -	struct xfs_bstat	bs;
+> > +	struct xfs_bulkstat	bs;
+> >  	char			d[256];
+> >  	int			ret;
+> >  
+> > @@ -217,7 +217,7 @@ report_inode_health(
+> >  		descr = d;
+> >  	}
+> >  
+> > -	ret = xfrog_bulkstat_single(&file->xfd, ino, &bs);
+> > +	ret = xfrog_bulkstat_single(&file->xfd, ino, 0, &bs);
+> >  	if (ret) {
+> >  		errno = ret;
+> >  		perror(descr);
+> > @@ -266,11 +266,10 @@ static int
+> >  report_bulkstat_health(
+> >  	xfs_agnumber_t		agno)
+> >  {
+> > -	struct xfs_bstat	bstat[BULKSTAT_NR];
+> > +	struct xfs_bulkstat_req	*breq;
+> >  	char			descr[256];
+> >  	uint64_t		startino = 0;
+> >  	uint64_t		lastino = -1ULL;
+> > -	uint32_t		ocount;
+> >  	uint32_t		i;
+> >  	int			error;
+> >  
+> > @@ -279,26 +278,34 @@ report_bulkstat_health(
+> >  		lastino = cvt_agino_to_ino(&file->xfd, agno + 1, 0) - 1;
+> >  	}
+> >  
+> > +	breq = xfrog_bulkstat_alloc_req(BULKSTAT_NR, startino);
+> > +	if (!breq) {
+> > +		perror("bulk alloc req");
+> > +		exitcode = 1;
+> > +		return 1;
+> > +	}
+> > +
+> >  	do {
+> > -		error = xfrog_bulkstat(&file->xfd, &startino, BULKSTAT_NR,
+> > -				bstat, &ocount);
+> > +		error = xfrog_bulkstat(&file->xfd, breq);
+> >  		if (error)
+> >  			break;
+> > -		for (i = 0; i < ocount; i++) {
+> > -			if (bstat[i].bs_ino > lastino)
+> > +		for (i = 0; i < breq->hdr.ocount; i++) {
+> > +			if (breq->bulkstat[i].bs_ino > lastino)
+> >  				goto out;
+> > -			snprintf(descr, sizeof(descr) - 1, _("inode %llu"),
+> > -					bstat[i].bs_ino);
+> > -			report_sick(descr, inode_flags, bstat[i].bs_sick,
+> > -					bstat[i].bs_checked);
+> > +			snprintf(descr, sizeof(descr) - 1, _("inode %"PRIu64),
+> > +					breq->bulkstat[i].bs_ino);
+> > +			report_sick(descr, inode_flags,
+> > +					breq->bulkstat[i].bs_sick,
+> > +					breq->bulkstat[i].bs_checked);
+> >  		}
+> > -	} while (ocount > 0);
+> > +	} while (breq->hdr.ocount > 0);
+> >  
+> >  	if (error) {
+> >  		errno = error;
+> >  		perror("bulkstat");
+> >  	}
+> >  out:
+> > +	free(breq);
+> >  	return error;
+> >  }
+> >  
+> > 
