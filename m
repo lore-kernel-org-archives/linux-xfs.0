@@ -2,357 +2,539 @@ Return-Path: <SRS0=ETTY=XW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A58EC4360C
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 10:40:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E414C4360C
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 11:02:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2869120673
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 10:40:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cdN9v1C7"
+	by mail.kernel.org (Postfix) with ESMTP id 67A96206B7
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 11:02:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725946AbfI0Kj7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Sep 2019 06:39:59 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:58566 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1725890AbfI0Kj7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Sep 2019 06:39:59 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1569580797;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=q7LnqmfKc2kh1AtEA4sE9Fgs9CRUUq8LZpKrc3pfrfg=;
-        b=cdN9v1C7OTCYpGxzX5J6wqXd0WRJSOlRl1Txe/fOirDNrIm1Ek/xcRW0rVR2v9a5luVlSw
-        s38P8NIPr/k8ndbPG/5UxkEJFhGNdYKSE8BPNWa5xqQGHnJxGqv86n706yMpmCPeghjuVc
-        cpzI16TyXTuS6SBQTwO4cMdDKP0DKf4=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-258-KEWq3FAVPxCJYfNxyseG_g-1; Fri, 27 Sep 2019 06:39:54 -0400
-Received: by mail-wm1-f71.google.com with SMTP id r21so2051726wme.5
-        for <linux-xfs@vger.kernel.org>; Fri, 27 Sep 2019 03:39:54 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=W6nJOPLzmgwnJA6k+pNMZ84niLeweFc5kz/zDL7rFfE=;
-        b=kiQGzChDKZnaff/m7ZVJVE6Mn7maQu4l4KDKGL52j340bXqHdWQupV4jtQ3nlhqtBu
-         VBHPq3tv9dJz5XIhv/LFg3a2dW8kW6ePGIuRrM3cPRNAtrI4sZygVKWfzgQoAE57w/1g
-         SN2pLijwkFwWlrskw/GeiWcDWaV14lB6IciE5qCwzDZPy4vUpzgZK7P4jK7LrXNM3g+R
-         Y2xVDFur2uvArWXkz7nKeBQh7fl6izltBUD5PDfEKkjSPr/Tvh34t7W+H7gRu07r39EW
-         YA1CXfAmY+lfCMzSoz5jHFfQoVbKITaSomAr1hn4244ekd6/VALWTfTYlBE85kAGBTPu
-         gj1Q==
-X-Gm-Message-State: APjAAAV/wCmIJ1EkHt4QHUti5BGGPuf4px/YC0wOGAHwzO27vOD+b5q6
-        /T/5L84Rinwu1Gdz32+vGEWSPymVCldw5Up0Tlf7DtB8ZRDioaae7dv1BnjR+VDbaNVAl5mhgoR
-        +2bULmZyau4kW72gRmH2R
-X-Received: by 2002:a1c:3b06:: with SMTP id i6mr6587070wma.6.1569580793087;
-        Fri, 27 Sep 2019 03:39:53 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqzhPAa1sunpiyAXE/evWrFBThmMHa6NRuaAF8yKF/dnvRG0/kkzUpUHl2+YtlV+gi3Ti9iFzQ==
-X-Received: by 2002:a1c:3b06:: with SMTP id i6mr6587047wma.6.1569580792758;
-        Fri, 27 Sep 2019 03:39:52 -0700 (PDT)
-Received: from pegasus.maiolino.io (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id 3sm6896267wmo.22.2019.09.27.03.39.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Sep 2019 03:39:52 -0700 (PDT)
-Date:   Fri, 27 Sep 2019 12:39:50 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     Jianshen Liu <ljishen@gmail.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Question: Modifying kernel to handle all I/O requests without
- page cache
-Message-ID: <20190927103949.57c44crqjx3p2h3w@pegasus.maiolino.io>
-Mail-Followup-To: Jianshen Liu <ljishen@gmail.com>,
-        linux-xfs@vger.kernel.org
-References: <CAMgD0BoT82ApOQ=Fk6o5KYMsC=z7M88zkNCw9XuMtB0y-xaAmw@mail.gmail.com>
- <20190926123943.vzohbewlaz7dbfnb@pegasus.maiolino.io>
- <CAMgD0BqXq+zz46MEzZ8=pAAXZo_7s1vcpGQKJyby9EZhYOcVNw@mail.gmail.com>
+        id S1725992AbfI0LCS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Sep 2019 07:02:18 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53198 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725882AbfI0LCS (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Sep 2019 07:02:18 -0400
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 7F56DCA377;
+        Fri, 27 Sep 2019 11:02:17 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 0284260C5D;
+        Fri, 27 Sep 2019 11:02:11 +0000 (UTC)
+Date:   Fri, 27 Sep 2019 07:02:10 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Ian Kent <raven@themaw.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>,
+        Eric Sandeen <sandeen@sandeen.net>
+Subject: Re: [REPOST PATCH v3 09/16] xfs: mount-api - add xfs_get_tree()
+Message-ID: <20190927110210.GA41992@bfoster>
+References: <156933112949.20933.12761540130806431294.stgit@fedora-28>
+ <156933136908.20933.15050470634891698659.stgit@fedora-28>
+ <20190924143823.GD17688@bfoster>
+ <3eb80542b3a247173dcef4ddf5494daa3c90e72c.camel@themaw.net>
+ <a55278f2167025451aa6092f3ad5fab8bbef967f.camel@themaw.net>
+ <20190925143414.GE21991@bfoster>
+ <4f6baf799c38f83dbef45b555f9bebcdc5f4311b.camel@themaw.net>
+ <20190926111416.GA26363@bfoster>
+ <00a6e88abe1b3d60b104f592df75270febae493a.camel@themaw.net>
 MIME-Version: 1.0
-In-Reply-To: <CAMgD0BqXq+zz46MEzZ8=pAAXZo_7s1vcpGQKJyby9EZhYOcVNw@mail.gmail.com>
-User-Agent: NeoMutt/20180716
-X-MC-Unique: KEWq3FAVPxCJYfNxyseG_g-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <00a6e88abe1b3d60b104f592df75270febae493a.camel@themaw.net>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Fri, 27 Sep 2019 11:02:17 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi.
+On Fri, Sep 27, 2019 at 09:16:28AM +0800, Ian Kent wrote:
+> On Thu, 2019-09-26 at 07:14 -0400, Brian Foster wrote:
+> > On Thu, Sep 26, 2019 at 11:27:40AM +0800, Ian Kent wrote:
+> > > On Wed, 2019-09-25 at 10:34 -0400, Brian Foster wrote:
+> > > > On Wed, Sep 25, 2019 at 04:07:08PM +0800, Ian Kent wrote:
+> > > > > On Wed, 2019-09-25 at 15:42 +0800, Ian Kent wrote:
+> > > > > > On Tue, 2019-09-24 at 10:38 -0400, Brian Foster wrote:
+> > > > > > > On Tue, Sep 24, 2019 at 09:22:49PM +0800, Ian Kent wrote:
+> > > > > > > > Add the fs_context_operations method .get_tree that
+> > > > > > > > validates
+> > > > > > > > mount options and fills the super block as previously
+> > > > > > > > done
+> > > > > > > > by the file_system_type .mount method.
+> > > > > > > > 
+> > > > > > > > Signed-off-by: Ian Kent <raven@themaw.net>
+> > > > > > > > ---
+> > > > > > > >  fs/xfs/xfs_super.c |   50
+> > > > > > > > ++++++++++++++++++++++++++++++++++++++++++++++++++
+> > > > > > > >  1 file changed, 50 insertions(+)
+> > > > > > > > 
+> > > > > > > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > > > > > > index ea3640ffd8f5..6f9fe92b4e21 100644
+> > > > > > > > --- a/fs/xfs/xfs_super.c
+> > > > > > > > +++ b/fs/xfs/xfs_super.c
+> > > > > > > > @@ -1933,6 +1933,51 @@ xfs_fs_fill_super(
+> > > > > > > >  	return error;
+> > > > > > > >  }
+> > > > > > > >  
+> > > > > > > > +STATIC int
+> > > > > > > > +xfs_fill_super(
+> > > > > > > > +	struct super_block	*sb,
+> > > > > > > > +	struct fs_context	*fc)
+> > > > > > > > +{
+> > > > > > > > +	struct xfs_fs_context	*ctx = fc->fs_private;
+> > > > > > > > +	struct xfs_mount	*mp = sb->s_fs_info;
+> > > > > > > > +	int			silent = fc->sb_flags &
+> > > > > > > > SB_SILENT;
+> > > > > > > > +	int			error = -ENOMEM;
+> > > > > > > > +
+> > > > > > > > +	mp->m_super = sb;
+> > > > > > > > +
+> > > > > > > > +	/*
+> > > > > > > > +	 * set up the mount name first so all the errors will
+> > > > > > > > refer to
+> > > > > > > > the
+> > > > > > > > +	 * correct device.
+> > > > > > > > +	 */
+> > > > > > > > +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN,
+> > > > > > > > GFP_KERNEL);
+> > > > > > > > +	if (!mp->m_fsname)
+> > > > > > > > +		return -ENOMEM;
+> > > > > > > > +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
+> > > > > > > > +
+> > > > > > > > +	error = xfs_validate_params(mp, ctx, false);
+> > > > > > > > +	if (error)
+> > > > > > > > +		goto out_free_fsname;
+> > > > > > > > +
+> > > > > > > > +	error = __xfs_fs_fill_super(mp, silent);
+> > > > > > > > +	if (error)
+> > > > > > > > +		goto out_free_fsname;
+> > > > > > > > +
+> > > > > > > > +	return 0;
+> > > > > > > > +
+> > > > > > > > + out_free_fsname:
+> > > > > > > > +	sb->s_fs_info = NULL;
+> > > > > > > > +	xfs_free_fsname(mp);
+> > > > > > > > +
+> > > > > > > 
+> > > > > > > I'm still not following the (intended) lifecycle of mp
+> > > > > > > here.
+> > > > > > > Looking
+> > > > > > > ahead in the series, we allocate mp in
+> > > > > > > xfs_init_fs_context()
+> > > > > > > and
+> > > > > > > set
+> > > > > > > some state. It looks like at some point we grow an
+> > > > > > > xfs_fc_free()
+> > > > > > > callback that frees mp, but that doesn't exist as of yet.
+> > > > > > > So is
+> > > > > > > that
+> > > > > > > a
+> > > > > > > memory leak as of this patch?
+> > > > > > > 
+> > > > > > > We also call xfs_free_fsname() here (which doesn't reset
+> > > > > > > pointers
+> > > > > > > to
+> > > > > > > NULL) and open-code kfree()'s of a couple of the same
+> > > > > > > fields in
+> > > > > > > xfs_fc_free(). Those look like double frees to me.
+> > > > > > > 
+> > > > > > > Hmm.. I guess I'm kind of wondering why we lift the mp
+> > > > > > > alloc
+> > > > > > > out of
+> > > > > > > the
+> > > > > > > fill super call in the first place. At a glance, it doesn't
+> > > > > > > look
+> > > > > > > like
+> > > > > > > we
+> > > > > > > do anything in that xfs_init_fs_context() call that we
+> > > > > > > couldn't
+> > > > > > > do
+> > > > > > > a
+> > > > > > > bit
+> > > > > > > later..
+> > > > > > 
+> > > > > > Umm ... yes ...
+> > > > > > 
+> > > > > > I think I've got the active code path right ...
+> > > > > > 
+> > > > > > At this point .mount == xfs_fs_mount() which will calls
+> > > > > > xfs_fs_fill_super() to fill the super block.
+> > > > > > 
+> > > > > > xfs_fs_fill_super() allocates the super block info struct and
+> > > > > > sets
+> > > > > > it in the super block private info field, then calls
+> > > > > > xfs_parseargs()
+> > > > > > which still allocates mp->m_fsname at this point, to
+> > > > > > accomodate a
+> > > > > > similar free pattern in xfs_test_remount_options().
+> > > > > > 
+> > > > > > It then calls __xfs_fs_fill_super() which doesn't touch those
+> > > > > > fsname
+> > > > > > fields or mp to fit in with what will be done later.
+> > > > > > 
+> > > > > > If an error occurs both the fsname fields (xfs_free_fsname())
+> > > > > > and
+> > > > > > mp
+> > > > > > are freed by the main caller, xfs_fs_fill_super().
+> > > > > > 
+> > > > > > I think that process is ok.
+> > > > > > 
+> > > > > > The mount api process that isn't active yet is a bit
+> > > > > > different.
+> > > > > > 
+> > > > > > The context (ctx), a temporary working space, is allocated
+> > > > > > then
+> > > > > > saved
+> > > > > > in the mount context (fc) and the super block info is also
+> > > > > > allocated
+> > > > > > and saved in the mount context in it's field of the same name
+> > > > > > as
+> > > > > > the
+> > > > > > private super block info field, s_fs_info.
+> > > > > > 
+> > > > > > The function xfs_fill_super() is called as a result of the
+> > > > > > .get_tree()
+> > > > > > mount context operation to fill the super block.
+> > > > > > 
+> > > > > > During this process, when the VFS successfully allocates the
+> > > > > > super
+> > > > > > block s_fs_info is set in the super block and the mount
+> > > > > > context
+> > > > > > field set to NULL. From this point freeing the private super
+> > > > > > block
+> > > > > > info becomes part of usual freeing of the super block with
+> > > > > > the
+> > > > > > super
+> > > > > > operation .kill_sb().
+> > > > > > 
+> > > > > > But if the super block allocation fails then the mount
+> > > > > > context
+> > > > > > s_fs_info field remains set and is the responsibility of the
+> > > > > > mount context operations .fc_free() method to clean up.
+> > > > > > 
+> > > > > > Now the VFS calls to xfs_fill_super() after this.
+> > > > > > 
+> > > > > > I should have been able to leave xfs_fill_super() it as it
+> > > > > > was with:
+> > > > > >         sb->s_fs_info = NULL;
+> > > > > >         xfs_free_fsname(mp);
+> > > > > >         kfree(mp);
+> > > > > > and that should have been ok but it wasn't, there was some
+> > > > > > sort
+> > > > > > of
+> > > > > > allocation problem, possibly a double free, causing a crash.
+> > > > > > 
+> > > > > > Strictly speaking this cleanup process should be carried out
+> > > > > > by
+> > > > > > either the mount context .fc_free() or super operation
+> > > > > > .kill_sb()
+> > > > > > and that's what I want to do.
+> > > > > 
+> > > > > Umm ... but I can't actually do that ...
+> > > > > 
+> > > > > Looking back at xfs I realize that the filling of the super
+> > > > > block is meant to leave nothing allocated and set
+> > > > > sb->s_fs_info = NULL on error so that ->put_super() won't try
+> > > > > and cleanup a whole bunch of stuff that hasn't been done.
+> > > > > 
+> > > > > Which brings me back to what I originally had above ... which
+> > > > > we believe doesn't work ?
+> > > > > 
+> > > > 
+> > > > It looks like perhaps the assignment of sb->s_fs_info was lost as
+> > > > well?
+> > > > Skipping to the end, I see xfs_init_fs_context() alloc mp and
+> > > > assign
+> > > > fc->s_fs_info. xfs_get_tree() leads to xfs_fill_super(), which
+> > > > somehow
+> > > > gets mp from sb->s_fs_info (not fc->...), but then resets sb-
+> > > > > s_fs_info
+> > > > on error and frees the names, leaving fs->s_fs_info so presumably
+> > > > xfs_fc_free() can free mp along with a couple of the names
+> > > > (again). I
+> > > > can't really make heads or tails of what this is even attempting
+> > > > to
+> > > > do.
+> > > 
+> > > Ha, it seems a bit mysterious, but it's actually much simpler
+> > > than it appears.
+> > > 
+> > 
+> > Feel free to explain any of the above..? Where do you currently
+> > assign
+> > sb->s_fs_info, for example?
+> 
+> The VFS does the assignment, see below.
+> 
+> > 
+> > > > That aside, it's not clear to me why the new code can't follow a
+> > > > similar
+> > > > pattern as the old code with regard to allocation. Allocate mp in
+> > > > xfs_fill_super() and set up sb/fc pointers, reset pointers and
+> > > > free
+> > > > mp
+> > > > on error return. Otherwise, xfs_fc_free() checks for fc-
+> > > > >s_fs_info !=
+> > > > NULL and frees mp from there. Is there some reason we can't
+> > > > continue
+> > > > to
+> > > > do that?
+> > > 
+> > > I think not without a fairly significant re-design.
+> > > 
+> > > The main difference is the mount-api will allocate the super
+> > > block later than the old mount code.
+> > > 
+> > > Basically, if file system parameter parsing fails the super
+> > > block won't get allocated.
+> > > 
+> > > So the super block isn't available during parameter parsing
+> > > but the file system private data structure may be needed for
+> > > it, so it comes from the file system context at that point.
+> > > 
+> > > When the super block is successfully allocated the file system
+> > > private data structure is set in the super block (and the field
+> > > NULLed in the context) and things progress much the same as
+> > > before from that point.
+> > > 
+> > > That's the essential difference in the process AFAICS.
+> > > 
+> > 
+> > I see. This is probably something that should be noted in the commit
+> > log (that the ordering changes from before such that we need to
+> > allocate
+> > mp a bit earlier). This is reasonable because even though the current
+> > code allocs mp in the fill_super callback, we parse arguments
+> > immediately after the mp allocation and don't otherwise rely on the
+> > sb
+> > in that code.
+> > 
+> > If I follow correctly, it sounds like perhaps we need to separate the
+> > management of sb->s_fs_info from the "ownership" of mp. For example,
+> > allocate mp, assign fc->s_fs_info and free via xfs_fc_free() as you
+> > do
+> > now. In the xfs_fill_super() callback, pull mp from fc->s_fs_info and
+> > assign it to sb->s_fs_info. If we fail at this point, reset
+> > sb->s_fs_info to NULL and let the fc infrastructure deal with freeing
+> > mp
+> > in its own callback.
+> 
+> The mount api callbacks are for use during setup and don't really
+> apply once that's done by the mount api.
+> 
+> Lets describe the life cycle of s_fs_info by going through the call
+> path from the xfs_get_tree() fs context operation.
+> 
+> At this point the context has been setup by .init_fs_context ( aka.
+> xfs_init_fs_context()), and fc->s_fs_info == mp and parameter parsing
+> has been done.
+> 
+> Then the .get_tree() method gets called (aka. fs_get_tree) and all
+> this does (now) is call get_tree_bdev() as Al requested.
+> 
+> Even though that's changed it still ends up calling similar VFS
+> functions to what it did before.
+> 
+> Now:
+> int get_tree_bdev(struct fs_context *fc,
+>                 int (*fill_super)(struct super_block *,
+>                                   struct fs_context *))
+> {
+> 
+> skip ... (the usual stuff until we get to)
+> 
+>         fc->sb_flags |= SB_NOSEC;
+>         fc->sget_key = bdev;
+>         s = sget_fc(fc, test_bdev_super_fc, set_bdev_super_fc);
+>         mutex_unlock(&bdev->bd_fsfreeze_mutex);
+>         if (IS_ERR(s))
+>                 return PTR_ERR(s);
+> 
+>         if (s->s_root) {
+> 		snip ... (mount root already exists)
+> 	} else {
+>                 s->s_mode = mode;
+>                 snprintf(s->s_id, sizeof(s->s_id), "%pg", bdev);
+>                 sb_set_blocksize(s, block_size(bdev));
+>                 error = fill_super(s, fc);
+>                 if (error) {
+>                         deactivate_locked_super(s);
+>                         return error;
+>                 }
+> 
+>                 s->s_flags |= SB_ACTIVE;
+>                 bdev->bd_super = s;
+>         }
+> 
+>         BUG_ON(fc->root);
+>         fc->root = dget(s->s_root);
+> 	return 0;
+> }
+> 
+> This is to establish the order of what's done.
+> 
+> The thing we want to look at is the sget_fc() function.
+> 
+> struct super_block *sget_fc(struct fs_context *fc,
+>            int (*test)(struct super_block *, struct fs_context *),
+>            int (*set)(struct super_block *, struct fs_context *))
+> {
+> 	snip ... (usual stuff that finds or allocates a super block)
+> 
+>         s->s_fs_info = fc->s_fs_info;
+>         err = set(s, fc);
+>         if (err) {
+>                 s->s_fs_info = NULL;
+>                 spin_unlock(&sb_lock);
+>                 destroy_unused_super(s);
+>                 return ERR_PTR(err);
+>         }
+>         fc->s_fs_info = NULL;
+> 
+> 	snip ... (remaining setup stuff)
+> 
+> 	return s;
+> }
+> 
+> This is where the s_fs_info changes from being the responsibility
+> of the fs context to being the responsibility of the super block.
+> 
 
-I'm gonna move this question to the top, for a short answer:
+Ok, so basically we allocate the mp earlier so the mount api stuff can
+do mount option parsing and such, the vfs allocs the sb and transfers
+->s_fs_info from the context to the sb and thus at this point the
+responsibility to free mp transfers from xfs_fc_free() to either
+xfs_fill_super() (on error) or xfs_fs_put_super(). Makes sense I think,
+thanks for the explanation (though again I think this is the kind of
+thing that should be documented in the commit log).
 
-> > But if you are trying to create benchmarks for a specific application, =
-if your
-> > benchmarks uses DIO or not, will depend on if the application uses DIO =
-or not.
->=20
-> This is my main question. I want running an application without
-> involving page caching effects even when the application does not
-> support DIO.
+> And you can see that this is done before fill_super() is called.
+> 
 
+So what is the expected behavior if a failure occurs after sget_fc()
+does the ->s_fs_info transfer and before fill_super() is called?
 
-You simply can't. Aligned IOs is a primitive of block devices (if I can use
-these words). If you don't submit aligned IOs, you can't access block devic=
-es
-directly.
+> Finally, fill_super() in xfs will do all the fs specific setup
+> and either return success or it will undo anything it has done
+> when returning an error, just as it did previously.
+> 
+> Specifically, it must set sb->s_fs_info == NULL on failure so
+> that when the VFS puts the super block xfs doesn't try and
+> release a whole bunch of stuff that wasn't setup. Consequently
+> mp must also be freed on error return from fill_super().
+> 
 
-You can't modify the kernel to do that either, because that's exactly one o=
-f the
-goals of the buffer cache, other than improving performance of course. If y=
-ou
-submit an unaligned IO, kernel will first read in the whole sectors from th=
-e
-block device, modify them accordingly to your unaligned IO and write the wh=
-ole
-sectors back.
+Ok.
 
-For reads, the process is the same, kernel will read at least the whole sec=
-tor,
-never just a part of it.
+> What I'm saying is that by the time fill_super() is called
+> everything is is a state where things need to be done pretty
+> much as though the mount api context isn't present, the only
+> thing that muddies the order of things is the calling of
+> .fc_free() that happens a bit later but isn't relevant to
+> this ordering of operations.
+> 
 
+So the intent is that in the event of a fill_super() failure as
+described above, the ->s_fs_info transfer would have already happened
+and fc->s_fs_info would be NULL, right?
 
-Now, let me try a longer reply :P
+> So I'm not sure there needs to be (or can be) changes to
+> the way s_fs_info is handled in the implementation.
+> 
+> We can go into more detail if it's needed, I am trying to
+> explain my motivations for doing what I've done, ;)
+> 
+> > 
+> > What I'm not clear on is whether something like xfs_fs_put_super()
+> > should still free mp as well. Once the filesystem successfully
+> > mounts,
+> > are we still going to see an xfs_fc_free() callback, or is this all
+> > just
+> > transient mount path stuff? If the former, perhaps put_super() should
+> > also not free mp and just reset its own ->s_fs_info reference. If the
+> > latter, then I guess we just need to understand at what point during
+> > a
+> > successful mount responsibility to free transfers from one place to
+> > the
+> > other. Thoughts?
+> 
+> put_super() should continue to function the same way it does
+> now provided fill_super() does the right thing, which I'm
+> pretty sure it (the mount api version) does now .
+> 
+> xfs_fs_put_super() won't need to free mp if an error occurs,
+> s_fs_info needs to be NULL in that case as has always been the
+> case.
+> 
+> And realize xfs_fc_free() (aka. .fc_free()) is largely irrelevant
+> from the POV of xfs once we get to fill_super().
+> 
 
+Ok.
 
->=20
-On Thu, Sep 26, 2019 at 06:42:43PM -0700, Jianshen Liu wrote:
-> Hi Carlos,
->=20
-> Thanks for your reply.
->=20
-> On Thu, Sep 26, 2019 at 5:39 AM Carlos Maiolino <cmaiolino@redhat.com> wr=
-ote:
-> >
-> > On Wed, Sep 25, 2019 at 03:51:27PM -0700, Jianshen Liu wrote:
-> > > Hi,
-> > >
-> > > I am working on a project trying to evaluate the performance of a
-> > > workload running on a storage device. I don't want the benchmark
-> > > result depends on a specific platform (e.g., a platform with X GiB of
-> > > physical memory).
-> >
-> > Well, this does not sound realistic to me. Memory is just only one of t=
-he
-> > variables in how IO throughput will perform. You bypass memory, then, w=
-hat about
-> > IO Controller, Disks, Storage cache, etc etc etc? All of these are 'pla=
-tform
-> > specific'.
->=20
-> I apologize for any confusion because of my oversimplified project
-> description. My final goal is to compare the efficiency of different
-> platforms utilizing a specific storage device to run a given workload.
-> Since the platforms can be heterogeneous (e.g., x86 vs arm), the
-> comparison should be based on a reference unit that is relevant to the
-> capability of the storage device but is irrelevant to a specific
-> platform.
+Brian
 
-The storage vendors usually already provide you with the hardware limitatio=
-ns
-which you can use as the reference units you are looking for. Like maximum =
-IOPS
-and Throughput such storage solution can support. These are all platform an=
-d
-application independent reference units you can use.
-
-> With this reference unit, you can understand how much
-> performance a platform can give over the capability of the specific
-> storage device.
-
-Again, you can use the numbers provided by the vendor. For example, XFS is
-designed to be a high-throughput filesystem, and the goal is to be as close=
- as
-possible to the hardware limits, but of course, it all depends on everythin=
-g
-else.
-
-
-> Once you have this knowledge, you can consider whether
-> you add/remove some CPUs, memory, the same model of storage devices,
-> etc can improve the platform efficiency (e.g., cost/reference unit)
-> with respect to the capability of the storage device under this
-> workload.
-
-Storage hardware limitations, vendor provided numbers also applies here. An=
-d you
-can't simply discard application's behavior here. Everything you mentioned =
-here
-will be directly affected by the application you're using, so, modifying th=
-e
-application will give you nothing useful to work on.
-
-> Moreover, you can answer questions like can you get the full
-> unit of performance when you add one more device onto the platform.
-
-For "Full unit of performance", you can again, use vendor-provided numbers =
-:)
-
-> My question here is how to evaluate the platform-independent reference
-> unit for the combination of a given workload and a specific storage
-> device.
-
-Use the application you are trying to evaluate, in different platforms, and
-measure it.
-
-
-> Specifically, the reference unit should be a performance value
-> of the workload under the capability of the storage device. In other
-> words, this value should not be either enhanced or throttled by the
-> testing platform. Yes, memory is one of the variables affecting the
-> I/O performance, the CPU horse, network bandwidth, type of host
-> interface, version of the software would be the other. But these are
-> the variables I can easily control. For example, I can check whether
-> the CPU and/or the network are the performance bottlenecks. The I/O
-> controller, storage media, and the disk cache are encapsulated in the
-> storage device, so these are not platform-specific variables as long
-> as I keep using the same model of the storage device. The use of page
-> cache, however, may enhance the performance value making the value
-> become platform-dependent.
-
-Again, everything you measure, will have no meaning if you don't use realis=
-tic
-data. You can't simply bypass the buffer cache if the application does not
-support it, and so, it is pointless to measure how an application will 'per=
-form'
-in such scenario.
-
-> I don't want to emulate a workload. An emulated workload will most of
-> the time be different from the source real-world workload. For
-> example, replaying block I/O recording results generated by fio or
-> blktrace will probably get different performance numbers from running
-> the original workload.
-
-And I think this is the crux for your issue.
-
-You don't want an emulated workload, because it may not reproduce the real-=
-world
-workload.
-
-Why then are you trying to find a way to bypass the page/buffer cache, on a=
-n
-application that will not support direct IO and won't be able to use it lik=
-e
-that?
-
-You don't want to collect data using emulated workloads, but at the same ti=
-me
-you want to use something that is simply totally out of the reality? Does n=
-ot
-make any sense to me.
-
-fio can get different performance numbers? Sure, I agree, no performance
-measurement tool can beat the real workload of a specific application, but,=
- what
-you are trying to do doesn't either, so, what's the difference?
-
-
-> > Benchmarking systems is an 'art', and I am certainly not an expert on i=
-t, but at
-> > first, it looks like you are trying to create a 'generic benchmark' to =
-some
-> > generic random system. And I will tell you, this is not going to work w=
-ell. We
-> > have tons of cases and stories about people running benchmark X on syst=
-em Z, and
-> > it performing 'well', but when running their real workload, everything =
-starts to
-> > perform poorly, exactly because they did not use the correct benchmark =
-at first.
->=20
-> I'm not trying to create a generic benchmark. I just want to create a
-> benchmark methodology focusing on evaluating the efficiency of a
-> platform for running a given workload on a specific storage device.
-
-Ok, so, you want to evaluate how platform X will behave with your applicati=
-on +
-storage.
-
-Why then you want to modify that original platform behavior? In this case, =
-let's
-say, by bypassing Linux page/buffer cache.
-
-By platform you mean hardware? Well, then, use the same software stack.
-
->=20
-> > You have several layers in a storage stack, which starts from how the
-> > application handles its own IO requests. And each layer which will beha=
-ve
-> > differently on each type of workload.
->=20
-> My assumption is that we should run the same workload when comparing
-> different platforms.
-
-Yes, and if you don't want to use emulated workloads, you should don't try =
-to
-hack your software stack to behave in weird ways.
-
-If you want to compare platforms, ensure to use the same software stack.
-Including the same configuration. That's all.
-
-> > If you are trying to measure an application performance on solution X, =
-well,
-> > it is pointless to measure direct IO if the application does not use it=
- or
-> > vice-versa, so, modifying an application, again, is not what you will w=
-ant to do
-> > for benchmarking, for sure.
->=20
-> The point is that I'm not trying to measure the performance of an
-> application on solution X. I'm trying to generate a
-> platform-independent reference unit for the combination of a storage
-> device and the application.
-
-You simply can't. Get any enterprise application out there, you will see th=
-e
-application vendors usually certify certain combinations of hardware + soft=
-ware
-stack.
-
-There is a reason for that. There are many variables in the way, not only t=
-he
-page/buffer cache. You can't simply bypass the page/buffer cache, and think
-you'll get some realistic base reference unit you can work with. Specially =
-if
-you are not sure how the application behaves.
-
-If you want to have base reference unit numbers for a storage solution, use=
- the
-vendor's reference numbers. They are platform agnostic. Everything else abo=
-ve
-that will be totally interdependent.
-
-> I have researched different knobs provided by the kernel including
-> drop_caches, cgroup, and vm subsystem, but none of them can help me to
-> measure what I want.
-
-Because I honestly think what you are trying to measure is unrealistic :)
-
-> I would like to know whether there is a variable
-> in the filesystem that defines the size of the page cache pool.
-
-There is no such silver bullet :)
-
-> Also,
-> would it be possible to convert some of the application IOs to DIO
-> when they are properly aligned?
-
-Not that I know about, but well, I'm not really an expert in the DIO code, =
-maybe
-there's a way to fall back to buffered io, although, I don't think so.
-
-> Are there any places in the kernel I
-> can easily change to bypass the page cache?
-
-No.
-
-
---=20
-Carlos
-
+> > 
+> > Brian
+> > 
+> > > By the time fill_super() is called everything is set and you
+> > > should be able to proceed almost the same as before.
+> > > 
+> > > Ian
+> > > 
+> > > > Brian
+> > > > 
+> > > > > > So I'm not sure the allocation time and the place this is
+> > > > > > done
+> > > > > > can (or should) be done differently.
+> > > > > > 
+> > > > > > And that freeing on error exit from xfs_fill_super() is
+> > > > > > definitely
+> > > > > > wrong now! Ha, and I didn't see any crashes myself when I
+> > > > > > tested
+> > > > > > it ... maybe I need a reproducer ...
+> > > > > > 
+> > > > > > Ian
+> > > > > > 
+> > > > > > > Brian
+> > > > > > > 
+> > > > > > > > +	return error;
+> > > > > > > > +}
+> > > > > > > > +
+> > > > > > > > +STATIC int
+> > > > > > > > +xfs_get_tree(
+> > > > > > > > +	struct fs_context	*fc)
+> > > > > > > > +{
+> > > > > > > > +	return vfs_get_block_super(fc, xfs_fill_super);
+> > > > > > > > +}
+> > > > > > > > +
+> > > > > > > >  STATIC void
+> > > > > > > >  xfs_fs_put_super(
+> > > > > > > >  	struct super_block	*sb)
+> > > > > > > > @@ -2003,6 +2048,11 @@ static const struct
+> > > > > > > > super_operations
+> > > > > > > > xfs_super_operations = {
+> > > > > > > >  	.free_cached_objects	= xfs_fs_free_cached_objects,
+> > > > > > > >  };
+> > > > > > > >  
+> > > > > > > > +static const struct fs_context_operations
+> > > > > > > > xfs_context_ops =
+> > > > > > > > {
+> > > > > > > > +	.parse_param = xfs_parse_param,
+> > > > > > > > +	.get_tree    = xfs_get_tree,
+> > > > > > > > +};
+> > > > > > > > +
+> > > > > > > >  static struct file_system_type xfs_fs_type = {
+> > > > > > > >  	.owner			= THIS_MODULE,
+> > > > > > > >  	.name			= "xfs",
+> > > > > > > > 
+> 
