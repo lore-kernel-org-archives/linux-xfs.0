@@ -6,30 +6,30 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 787C5C4360C
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 20:29:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AC2A5C4360C
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 20:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4814D20863
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 20:29:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7D14E20863
+	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 20:30:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725815AbfI0U35 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Sep 2019 16:29:57 -0400
-Received: from sandeen.net ([63.231.237.45]:39666 "EHLO sandeen.net"
+        id S1726033AbfI0UaI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Sep 2019 16:30:08 -0400
+Received: from sandeen.net ([63.231.237.45]:39674 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725789AbfI0U35 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Sep 2019 16:29:57 -0400
+        id S1725789AbfI0UaI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Sep 2019 16:30:08 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id A2E2CD6D;
-        Fri, 27 Sep 2019 15:29:45 -0500 (CDT)
-Subject: Re: [PATCH v2 3/4] misc: convert xfrog_bulkstat functions to have v5
- semantics
+        by sandeen.net (Postfix) with ESMTPSA id 9346AD6D;
+        Fri, 27 Sep 2019 15:29:56 -0500 (CDT)
+Subject: Re: [PATCH v2 4/4] misc: convert from XFS_IOC_FSINUMBERS to
+ XFS_IOC_INUMBERS
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944714720.297379.5532805895370082740.stgit@magnolia>
- <156944716532.297379.18153066949287059883.stgit@magnolia>
- <20190927201427.GQ9916@magnolia>
+ <156944717162.297379.1042436133617221738.stgit@magnolia>
+ <20190927201515.GR9916@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -74,12 +74,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <336a19f8-c4cf-7231-7d1d-6786bcf360bb@sandeen.net>
-Date:   Fri, 27 Sep 2019 15:29:55 -0500
+Message-ID: <03d9e7ec-a1fa-f145-54c1-84cbe0dc7e7d@sandeen.net>
+Date:   Fri, 27 Sep 2019 15:30:06 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20190927201427.GQ9916@magnolia>
+In-Reply-To: <20190927201515.GR9916@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -88,17 +88,12 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 9/27/19 3:14 PM, Darrick J. Wong wrote:
+On 9/27/19 3:15 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Convert xfrog_bulkstat() and xfrog_bulkstat_single() to take arguments
-> using v5 bulkstat semantics and return bulkstat information in v5
-> structures.  If the v5 ioctl is not available, the xfrog wrapper should
-> use the v1 ioctl to emulate v5 behaviors.  Add flags to the xfs_fd
-> structure to constrain emulation for debugging purposes.
+> Convert all programs to use the v5 inumbers ioctl.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
