@@ -1,91 +1,108 @@
-Return-Path: <SRS0=ETTY=XW=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=lajH=XX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B4183C4360C
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 22:48:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D781C4360C
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8FEE1217D9
-	for <linux-xfs@archiver.kernel.org>; Fri, 27 Sep 2019 22:48:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF3532190F
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=default; t=1569629025;
+	bh=FVW8c7dxtnnfeeRELqBdj69UriRU9Me3FZsaq5q0jjg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
+	b=jZgXDzDGRmmXro6en8TCKdSDhvNvXjzl1Hmtfc4coOnR3EGlphX+mjgbSmto2cMF5
+	 ox9BZw4bTyJ3q2ItG0iwkr7RQjtYbHdkktDZr1CUC4reoL5t3A8jPb24ndzcEpuIx3
+	 y1sLgKLh/bzqlbkB1TN+jH8IW9SIZG4DIOFQk+xs=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726116AbfI0WsB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Sep 2019 18:48:01 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57644 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725306AbfI0WsB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 27 Sep 2019 18:48:01 -0400
-Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D46223634FB;
-        Sat, 28 Sep 2019 08:47:58 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iDz1q-0007kY-69; Sat, 28 Sep 2019 08:47:58 +1000
-Date:   Sat, 28 Sep 2019 08:47:58 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/2] xfs: Lower CIL flush limit for large logs
-Message-ID: <20190927224758.GN16973@dread.disaster.area>
-References: <20190909015159.19662-1-david@fromorbit.com>
- <20190909015159.19662-2-david@fromorbit.com>
- <20190916163325.GZ2229799@magnolia>
- <20190924222901.GI16973@dread.disaster.area>
- <20190925120859.GC21991@bfoster>
+        id S1728240AbfI1ADp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Sep 2019 20:03:45 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49212 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726408AbfI1ADo (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Sep 2019 20:03:44 -0400
+Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by mail.kernel.org (Postfix) with ESMTPSA id 2690720869;
+        Sat, 28 Sep 2019 00:03:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=default; t=1569629024;
+        bh=FVW8c7dxtnnfeeRELqBdj69UriRU9Me3FZsaq5q0jjg=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=TgqF54/gBEz6y4Ojtwz9uIR2dAvDyQ3BhOQtPx6WrRCETl2yd4Iu3Kzneyw9mSWAc
+         8tfQWfL1VuPV5GsxmhyPDTWEzs8VATi9YR8XydV3hG4FtJeamwxSB8L1BVc3dBphrG
+         dHR0rApxxa3pFgmKUBQyCcd/18DhkxqmY7W8IHBI=
+From:   Eric Biggers <ebiggers@kernel.org>
+To:     linux-xfs@vger.kernel.org
+Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
+Subject: [PATCH v3 1/9] xfs_io/encrypt: remove unimplemented encryption modes
+Date:   Fri, 27 Sep 2019 17:02:35 -0700
+Message-Id: <20190928000243.77634-2-ebiggers@kernel.org>
+X-Mailer: git-send-email 2.23.0.444.g18eeb5a265-goog
+In-Reply-To: <20190928000243.77634-1-ebiggers@kernel.org>
+References: <20190928000243.77634-1-ebiggers@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190925120859.GC21991@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=J70Eh1EUuV4A:10
-        a=7-415B0cAAAA:8 a=Lf9q5KbF3B9v1kTeIqMA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Sep 25, 2019 at 08:08:59AM -0400, Brian Foster wrote:
-> On Wed, Sep 25, 2019 at 08:29:01AM +1000, Dave Chinner wrote:
-> > That's in commit 80168676ebfe ("xfs: force background CIL push under
-> > sustained load") which went into 2.6.38 or so. The cause of the
-> > problem in that case was concurrent transaction commit load causing
-> > lock contention and preventing a background push from getting the
-> > context lock to do the actual push.
-> > 
-> 
-> More related to the next patch, but what prevents a similar but
-> generally unbound concurrent workload from exceeding the new hard limit
-> once transactions start to block post commit?
+From: Eric Biggers <ebiggers@google.com>
 
-The new code, like the original code, is not actually a "hard" limit.
-It's essentially just throttles ongoing work until the CIL push
-starts. In this case, it forces the current process to give up the
-CPU immediately once over the CIL high limit, which allows the
-workqueue to run the push work straight away.
+Although mode numbers were originally reserved for AES-256-GCM and
+AES-256-CBC, these were never implemented in the kernel, and there are
+no plans to do so anymore.  These mode numbers may be used for something
+else in the future.  Also, xfstests (the only known user of the xfs_io
+encryption commands) doesn't try to use them.  Finally, most of the
+fscrypt constants have been given new names in the UAPI header, but the
+unused constants have not been given new names since userspace should
+just stop referencing them instead.
 
-I thought about making it a "hard limit" by blocking before the CIL
-insert, but that's no guarantee that by the time we get woken and
-add the new commit to the CIL that this new context has not already
-gone over the hard limit. i.e. we block the unbound concurrency
-before commit, then let it all go in a thundering herd on the new
-context and immeidately punch that way over the hard threshold
-again. To avoid this, we'd probably need a CIL ticket and grant
-mechanism to make CIL insertion FIFO and wakeups limited by
-remaining space in the CIL. I'm not sure we actually need such a
-complex solution, especially considering the potential serialisation
-problems it introduces in what is a highly concurrent fast path...
+So remove them from xfs_io.
 
-Cheers,
+Signed-off-by: Eric Biggers <ebiggers@google.com>
+---
+ io/encrypt.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Dave.
+diff --git a/io/encrypt.c b/io/encrypt.c
+index 7a0b2465..70c9e5eb 100644
+--- a/io/encrypt.c
++++ b/io/encrypt.c
+@@ -49,8 +49,6 @@ struct fscrypt_policy {
+ 
+ #define FS_ENCRYPTION_MODE_INVALID	0
+ #define FS_ENCRYPTION_MODE_AES_256_XTS	1
+-#define FS_ENCRYPTION_MODE_AES_256_GCM	2
+-#define FS_ENCRYPTION_MODE_AES_256_CBC	3
+ #define FS_ENCRYPTION_MODE_AES_256_CTS	4
+ #endif /* FS_ENCRYPTION_MODE_AES_256_XTS */
+ 
+@@ -74,7 +72,7 @@ set_encpolicy_help(void)
+ " -v VERSION -- version of policy structure\n"
+ "\n"
+ " MODE can be numeric or one of the following predefined values:\n"
+-"    AES-256-XTS, AES-256-CTS, AES-256-GCM, AES-256-CBC\n"
++"    AES-256-XTS, AES-256-CTS\n"
+ " FLAGS and VERSION must be numeric.\n"
+ "\n"
+ " Note that it's only possible to set an encryption policy on an empty\n"
+@@ -88,8 +86,6 @@ static const struct {
+ } available_modes[] = {
+ 	{FS_ENCRYPTION_MODE_AES_256_XTS, "AES-256-XTS"},
+ 	{FS_ENCRYPTION_MODE_AES_256_CTS, "AES-256-CTS"},
+-	{FS_ENCRYPTION_MODE_AES_256_GCM, "AES-256-GCM"},
+-	{FS_ENCRYPTION_MODE_AES_256_CBC, "AES-256-CBC"},
+ };
+ 
+ static bool
 -- 
-Dave Chinner
-david@fromorbit.com
+2.23.0.444.g18eeb5a265-goog
+
