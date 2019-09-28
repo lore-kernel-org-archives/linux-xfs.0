@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CC0EC4CED1
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 193D0C388F3
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7307121655
+	by mail.kernel.org (Postfix) with ESMTP id E3B7320863
 	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569629027;
-	bh=hDl16fGWjW2sqfA04onzI6BqmQSNE2vrVY7tjMM6qoo=;
+	s=default; t=1569629028;
+	bh=31Ae/oI0gSi0gW1iJlsrC6JwW8faLTmhoVq1OHp8LY8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=sx1YXPMMenvgtVp+VubauopOVf7+ZZNmq0PnO2MO0pnecVHLrBQSST6iBW65THNO2
-	 RFd7fykaY+hgJ5quhk2NNHljF0n9PVgICabt+z/av0HwMt8wnQScJa7IUZe1Jq7tTU
-	 8yPtC9C73uK/XaHXZr2uK2BCRlbq+TvXeY0PTXOQ=
+	b=j8eiregp02mHmzWpeVn4siEeX38WTHZQ7SFWlg+la/m34vJciasyO9i756O/VpwxT
+	 JQ/5zR7bnOfjBzNw73E1jtuXLzdDdp0P+0vtVeYS8ElRTUWRtGGapLMykEorkcQp9c
+	 EX3oLC3VZMgJNw9qXudOSwOSY8QCsUCuOlLmd0dU=
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728350AbfI1ADq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Sep 2019 20:03:46 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49218 "EHLO mail.kernel.org"
+        id S1728380AbfI1ADr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Sep 2019 20:03:47 -0400
+Received: from mail.kernel.org ([198.145.29.99]:49276 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726762AbfI1ADp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Sep 2019 20:03:45 -0400
+        id S1728336AbfI1ADq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Sep 2019 20:03:46 -0400
 Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 643D721655;
-        Sat, 28 Sep 2019 00:03:44 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTPSA id AC90721841;
+        Sat, 28 Sep 2019 00:03:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569629024;
-        bh=hDl16fGWjW2sqfA04onzI6BqmQSNE2vrVY7tjMM6qoo=;
+        s=default; t=1569629025;
+        bh=31Ae/oI0gSi0gW1iJlsrC6JwW8faLTmhoVq1OHp8LY8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=g2cxMDv7RgqMybCp6OsO156Wt20ICi5bNgxjQ8zID9Cfm5BcFeTb0Z3Bs+Usr1l2m
-         lvYL40u5DAsUMyiccTIR15jSOSXXmbp/0BwF8fKLJaCGyMKBvqCtu7np9C1z1qpfgb
-         ETvfn5/LETrBOm6UP5V5GL5x25brORd6FeUd0ORg=
+        b=zO1MImGov5CVpck/+6nOn13TxERNPSyNbV6deQQ7JcxJJ+y8gmCVkN8Oai75BS9AB
+         qA68SZ7m+sEl2dGTTrwnYlMyUocKpGnOjvo4iYEdL4NoQPcHeTmrWSZjuE2VM+ofL6
+         sT7iDIIiHTlLRXK1fdn23EMwqBwfogk5PpfHhb/4=
 From:   Eric Biggers <ebiggers@kernel.org>
 To:     linux-xfs@vger.kernel.org
 Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
-Subject: [PATCH v3 2/9] xfs_io/encrypt: update to UAPI definitions from Linux v5.4
-Date:   Fri, 27 Sep 2019 17:02:36 -0700
-Message-Id: <20190928000243.77634-3-ebiggers@kernel.org>
+Subject: [PATCH v3 7/9] xfs_io/encrypt: add 'add_enckey' command
+Date:   Fri, 27 Sep 2019 17:02:41 -0700
+Message-Id: <20190928000243.77634-8-ebiggers@kernel.org>
 X-Mailer: git-send-email 2.23.0.444.g18eeb5a265-goog
 In-Reply-To: <20190928000243.77634-1-ebiggers@kernel.org>
 References: <20190928000243.77634-1-ebiggers@kernel.org>
@@ -56,236 +56,182 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Eric Biggers <ebiggers@google.com>
 
-Update to the latest fscrypt UAPI definitions, including:
-
-- New names for some existing definitions (FSCRYPT_ instead of FS_).
-- New ioctls.
-- New encryption mode numbers and flags.
-
-This patch doesn't make any change to the program logic itself.
+Add an 'add_enckey' command to xfs_io, to provide a command-line
+interface to the FS_IOC_ADD_ENCRYPTION_KEY ioctl.
 
 Signed-off-by: Eric Biggers <ebiggers@google.com>
 ---
- io/encrypt.c | 160 +++++++++++++++++++++++++++++++++++++++------------
- 1 file changed, 122 insertions(+), 38 deletions(-)
+ io/encrypt.c      | 109 ++++++++++++++++++++++++++++++++++++++++++++++
+ man/man8/xfs_io.8 |  15 +++++++
+ 2 files changed, 124 insertions(+)
 
 diff --git a/io/encrypt.c b/io/encrypt.c
-index 70c9e5eb..011a6410 100644
+index 603d569b..056f15bc 100644
 --- a/io/encrypt.c
 +++ b/io/encrypt.c
-@@ -15,42 +15,126 @@
- #endif
- 
- /*
-- * We may have to declare the fscrypt ioctls ourselves because someone may be
-- * compiling xfsprogs with old kernel headers.  And since some old versions of
-- * <linux/fs.h> declared the policy struct and ioctl numbers but not the flags
-- * and modes, our declarations must be split into two conditional blocks.
-+ * Declare the fscrypt ioctls if needed, since someone may be compiling xfsprogs
-+ * with old kernel headers.  But <linux/fs.h> has already been included, so be
-+ * careful not to declare things twice.
-  */
- 
--/* Policy struct and ioctl numbers */
-+/* first batch of ioctls (Linux headers v4.6+) */
- #ifndef FS_IOC_SET_ENCRYPTION_POLICY
--#define FS_KEY_DESCRIPTOR_SIZE  8
-+#define fscrypt_policy fscrypt_policy_v1
-+#define FS_IOC_SET_ENCRYPTION_POLICY		_IOR('f', 19, struct fscrypt_policy)
-+#define FS_IOC_GET_ENCRYPTION_PWSALT		_IOW('f', 20, __u8[16])
-+#define FS_IOC_GET_ENCRYPTION_POLICY		_IOW('f', 21, struct fscrypt_policy)
-+#endif
-+
-+/*
-+ * Second batch of ioctls (Linux headers v5.4+), plus some renamings from FS_ to
-+ * FSCRYPT_.  We don't bother defining the old names here.
-+ */
-+#ifndef FS_IOC_GET_ENCRYPTION_POLICY_EX
-+
-+#define FSCRYPT_POLICY_FLAGS_PAD_4		0x00
-+#define FSCRYPT_POLICY_FLAGS_PAD_8		0x01
-+#define FSCRYPT_POLICY_FLAGS_PAD_16		0x02
-+#define FSCRYPT_POLICY_FLAGS_PAD_32		0x03
-+#define FSCRYPT_POLICY_FLAGS_PAD_MASK		0x03
-+#define FSCRYPT_POLICY_FLAG_DIRECT_KEY		0x04
-+
-+#define FSCRYPT_MODE_AES_256_XTS		1
-+#define FSCRYPT_MODE_AES_256_CTS		4
-+#define FSCRYPT_MODE_AES_128_CBC		5
-+#define FSCRYPT_MODE_AES_128_CTS		6
-+#define FSCRYPT_MODE_ADIANTUM			9
-+
-+/*
-+ * In the headers for Linux v4.6 through v5.3, 'struct fscrypt_policy_v1' is
-+ * already defined under its old name, 'struct fscrypt_policy'.  But it's fine
-+ * to define it under its new name too.
-+ *
-+ * Note: "v1" policies really are version "0" in the API.
-+ */
-+#define FSCRYPT_POLICY_V1		0
-+#define FSCRYPT_KEY_DESCRIPTOR_SIZE	8
-+struct fscrypt_policy_v1 {
-+	__u8 version;
-+	__u8 contents_encryption_mode;
-+	__u8 filenames_encryption_mode;
-+	__u8 flags;
-+	__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-+};
- 
--struct fscrypt_policy {
-+#define FSCRYPT_POLICY_V2		2
-+#define FSCRYPT_KEY_IDENTIFIER_SIZE	16
-+struct fscrypt_policy_v2 {
- 	__u8 version;
- 	__u8 contents_encryption_mode;
- 	__u8 filenames_encryption_mode;
- 	__u8 flags;
--	__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE];
--} __attribute__((packed));
--
--#define FS_IOC_SET_ENCRYPTION_POLICY	_IOR('f', 19, struct fscrypt_policy)
--#define FS_IOC_GET_ENCRYPTION_PWSALT	_IOW('f', 20, __u8[16])
--#define FS_IOC_GET_ENCRYPTION_POLICY	_IOW('f', 21, struct fscrypt_policy)
--#endif /* FS_IOC_SET_ENCRYPTION_POLICY */
--
--/* Policy flags and encryption modes */
--#ifndef FS_ENCRYPTION_MODE_AES_256_XTS
--#define FS_POLICY_FLAGS_PAD_4		0x00
--#define FS_POLICY_FLAGS_PAD_8		0x01
--#define FS_POLICY_FLAGS_PAD_16		0x02
--#define FS_POLICY_FLAGS_PAD_32		0x03
--#define FS_POLICY_FLAGS_PAD_MASK	0x03
--#define FS_POLICY_FLAGS_VALID		0x03
--
--#define FS_ENCRYPTION_MODE_INVALID	0
--#define FS_ENCRYPTION_MODE_AES_256_XTS	1
--#define FS_ENCRYPTION_MODE_AES_256_CTS	4
--#endif /* FS_ENCRYPTION_MODE_AES_256_XTS */
-+	__u8 __reserved[4];
-+	__u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-+};
-+
-+#define FSCRYPT_MAX_KEY_SIZE		64
-+
-+#define FS_IOC_GET_ENCRYPTION_POLICY_EX		_IOWR('f', 22, __u8[9]) /* size + version */
-+struct fscrypt_get_policy_ex_arg {
-+	__u64 policy_size; /* input/output */
-+	union {
-+		__u8 version;
-+		struct fscrypt_policy_v1 v1;
-+		struct fscrypt_policy_v2 v2;
-+	} policy; /* output */
-+};
-+
-+#define FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR	1
-+#define FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER	2
-+struct fscrypt_key_specifier {
-+	__u32 type;	/* one of FSCRYPT_KEY_SPEC_TYPE_* */
-+	__u32 __reserved;
-+	union {
-+		__u8 __reserved[32]; /* reserve some extra space */
-+		__u8 descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-+		__u8 identifier[FSCRYPT_KEY_IDENTIFIER_SIZE];
-+	} u;
-+};
-+
-+#define FS_IOC_ADD_ENCRYPTION_KEY		_IOWR('f', 23, struct fscrypt_add_key_arg)
-+struct fscrypt_add_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 raw_size;
-+	__u32 __reserved[9];
-+	__u8 raw[];
-+};
-+
-+#define FS_IOC_REMOVE_ENCRYPTION_KEY		_IOWR('f', 24, struct fscrypt_remove_key_arg)
-+#define FS_IOC_REMOVE_ENCRYPTION_KEY_ALL_USERS	_IOWR('f', 25, struct fscrypt_remove_key_arg)
-+struct fscrypt_remove_key_arg {
-+	struct fscrypt_key_specifier key_spec;
-+#define FSCRYPT_KEY_REMOVAL_STATUS_FLAG_FILES_BUSY	0x00000001
-+#define FSCRYPT_KEY_REMOVAL_STATUS_FLAG_OTHER_USERS	0x00000002
-+	__u32 removal_status_flags;	/* output */
-+	__u32 __reserved[5];
-+};
-+
-+#define FS_IOC_GET_ENCRYPTION_KEY_STATUS	_IOWR('f', 26, struct fscrypt_get_key_status_arg)
-+struct fscrypt_get_key_status_arg {
-+	/* input */
-+	struct fscrypt_key_specifier key_spec;
-+	__u32 __reserved[6];
-+
-+	/* output */
-+#define FSCRYPT_KEY_STATUS_ABSENT		1
-+#define FSCRYPT_KEY_STATUS_PRESENT		2
-+#define FSCRYPT_KEY_STATUS_INCOMPLETELY_REMOVED	3
-+	__u32 status;
-+#define FSCRYPT_KEY_STATUS_FLAG_ADDED_BY_SELF   0x00000001
-+	__u32 status_flags;
-+	__u32 user_count;
-+	__u32 __out_reserved[13];
-+};
-+
-+#endif /* !FS_IOC_GET_ENCRYPTION_POLICY_EX */
+@@ -149,6 +149,7 @@ static const struct {
  
  static cmdinfo_t get_encpolicy_cmd;
  static cmdinfo_t set_encpolicy_cmd;
-@@ -84,8 +168,8 @@ static const struct {
- 	__u8 mode;
- 	const char *name;
- } available_modes[] = {
--	{FS_ENCRYPTION_MODE_AES_256_XTS, "AES-256-XTS"},
--	{FS_ENCRYPTION_MODE_AES_256_CTS, "AES-256-CTS"},
-+	{FSCRYPT_MODE_AES_256_XTS, "AES-256-XTS"},
-+	{FSCRYPT_MODE_AES_256_CTS, "AES-256-CTS"},
- };
++static cmdinfo_t add_enckey_cmd;
  
- static bool
-@@ -131,12 +215,12 @@ mode2str(__u8 mode)
+ static void
+ get_encpolicy_help(void)
+@@ -203,6 +204,22 @@ set_encpolicy_help(void)
+ "\n"));
  }
  
- static const char *
--keydesc2str(__u8 master_key_descriptor[FS_KEY_DESCRIPTOR_SIZE])
-+keydesc2str(__u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
++static void
++add_enckey_help(void)
++{
++	printf(_(
++"\n"
++" add an encryption key to the filesystem\n"
++"\n"
++" Examples:\n"
++" 'add_enckey' - add key for v2 policies\n"
++" 'add_enckey -d 0000111122223333' - add key for v1 policies w/ given descriptor\n"
++"\n"
++"The key in binary is read from standard input.\n"
++" -d DESCRIPTOR -- master_key_descriptor\n"
++"\n"));
++}
++
+ static bool
+ parse_byte_value(const char *arg, __u8 *value_ret)
  {
--	static char buf[2 * FS_KEY_DESCRIPTOR_SIZE + 1];
-+	static char buf[2 * FSCRYPT_KEY_DESCRIPTOR_SIZE + 1];
- 	int i;
+@@ -606,6 +623,88 @@ set_encpolicy_f(int argc, char **argv)
+ 	return 0;
+ }
  
--	for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++)
-+	for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++)
- 		sprintf(&buf[2 * i], "%02x", master_key_descriptor[i]);
++static ssize_t
++read_until_limit_or_eof(int fd, void *buf, size_t limit)
++{
++	size_t bytes_read = 0;
++	ssize_t res;
++
++	while (limit) {
++		res = read(fd, buf, limit);
++		if (res < 0)
++			return res;
++		if (res == 0)
++			break;
++		buf += res;
++		bytes_read += res;
++		limit -= res;
++	}
++	return bytes_read;
++}
++
++static int
++add_enckey_f(int argc, char **argv)
++{
++	int c;
++	struct fscrypt_add_key_arg *arg;
++	ssize_t raw_size;
++
++	arg = calloc(1, sizeof(*arg) + FSCRYPT_MAX_KEY_SIZE + 1);
++	if (!arg) {
++		perror("calloc");
++		exitcode = 1;
++		return 0;
++	}
++
++	arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
++
++	while ((c = getopt(argc, argv, "d:")) != EOF) {
++		switch (c) {
++		case 'd':
++			arg->key_spec.type = FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR;
++			if (!str2keydesc(optarg, arg->key_spec.u.descriptor))
++				goto out;
++			break;
++		default:
++			return command_usage(&add_enckey_cmd);
++		}
++	}
++	argc -= optind;
++	argv += optind;
++
++	if (argc != 0)
++		return command_usage(&add_enckey_cmd);
++
++	raw_size = read_until_limit_or_eof(STDIN_FILENO, arg->raw,
++					   FSCRYPT_MAX_KEY_SIZE + 1);
++	if (raw_size < 0) {
++		fprintf(stderr, _("Error reading key from stdin: %s\n"),
++			strerror(errno));
++		exitcode = 1;
++		goto out;
++	}
++	if (raw_size > FSCRYPT_MAX_KEY_SIZE) {
++		fprintf(stderr,
++			_("Invalid key; got > FSCRYPT_MAX_KEY_SIZE (%d) bytes on stdin!\n"),
++			FSCRYPT_MAX_KEY_SIZE);
++		goto out;
++	}
++	arg->raw_size = raw_size;
++
++	if (ioctl(file->fd, FS_IOC_ADD_ENCRYPTION_KEY, arg) != 0) {
++		fprintf(stderr, _("Error adding encryption key: %s\n"),
++			strerror(errno));
++		exitcode = 1;
++		goto out;
++	}
++	printf(_("Added encryption key with %s %s\n"),
++	       keyspectype(&arg->key_spec), keyspec2str(&arg->key_spec));
++out:
++	memset(arg->raw, 0, FSCRYPT_MAX_KEY_SIZE + 1);
++	free(arg);
++	return 0;
++}
++
+ void
+ encrypt_init(void)
+ {
+@@ -630,6 +729,16 @@ encrypt_init(void)
+ 		_("assign an encryption policy to the current file");
+ 	set_encpolicy_cmd.help = set_encpolicy_help;
  
- 	return buf;
-@@ -176,9 +260,9 @@ set_encpolicy_f(int argc, char **argv)
- 
- 	/* Initialize the policy structure with default values */
- 	memset(&policy, 0, sizeof(policy));
--	policy.contents_encryption_mode = FS_ENCRYPTION_MODE_AES_256_XTS;
--	policy.filenames_encryption_mode = FS_ENCRYPTION_MODE_AES_256_CTS;
--	policy.flags = FS_POLICY_FLAGS_PAD_16;
-+	policy.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
-+	policy.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
-+	policy.flags = FSCRYPT_POLICY_FLAGS_PAD_16;
- 
- 	/* Parse options */
- 	while ((c = getopt(argc, argv, "c:n:f:v:")) != EOF) {
-@@ -229,7 +313,7 @@ set_encpolicy_f(int argc, char **argv)
- 		unsigned long long x;
- 		int i;
- 
--		if (strlen(keydesc) != FS_KEY_DESCRIPTOR_SIZE * 2) {
-+		if (strlen(keydesc) != FSCRYPT_KEY_DESCRIPTOR_SIZE * 2) {
- 			fprintf(stderr, "invalid key descriptor: %s\n",
- 				keydesc);
- 			return 0;
-@@ -242,7 +326,7 @@ set_encpolicy_f(int argc, char **argv)
- 			return 0;
- 		}
- 
--		for (i = 0; i < FS_KEY_DESCRIPTOR_SIZE; i++) {
-+		for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++) {
- 			policy.master_key_descriptor[i] = x >> 56;
- 			x <<= 8;
- 		}
++	add_enckey_cmd.name = "add_enckey";
++	add_enckey_cmd.cfunc = add_enckey_f;
++	add_enckey_cmd.args = _("[-d descriptor]");
++	add_enckey_cmd.argmin = 0;
++	add_enckey_cmd.argmax = -1;
++	add_enckey_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
++	add_enckey_cmd.oneline = _("add an encryption key to the filesystem");
++	add_enckey_cmd.help = add_enckey_help;
++
+ 	add_command(&get_encpolicy_cmd);
+ 	add_command(&set_encpolicy_cmd);
++	add_command(&add_enckey_cmd);
+ }
+diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
+index 18fcde0f..7d6a23fe 100644
+--- a/man/man8/xfs_io.8
++++ b/man/man8/xfs_io.8
+@@ -749,6 +749,21 @@ Test whether v2 encryption policies are supported.  Prints "supported",
+ .RE
+ .PD
+ .TP
++.BI "add_enckey [ \-d " descriptor " ]"
++On filesystems that support encryption, add an encryption key to the filesystem
++containing the currently open file.  The key in binary (typically 64 bytes long)
++is read from standard input.
++.RS 1.0i
++.PD 0
++.TP 0.4i
++.BI \-d " descriptor"
++key descriptor, as a 16-character hex string (8 bytes).  If given, the key will
++be available for use by v1 encryption policies that use this descriptor.
++Otherwise, the key is added as a v2 policy key, and on success the resulting
++"key identifier" will be printed.
++.RE
++.PD
++.TP
+ .BR lsattr " [ " \-R " | " \-D " | " \-a " | " \-v " ]"
+ List extended inode flags on the currently open file. If the
+ .B \-R
 -- 
 2.23.0.444.g18eeb5a265-goog
 
