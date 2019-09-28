@@ -2,428 +2,122 @@ Return-Path: <SRS0=lajH=XX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8A1A5C388F4
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C547CC388F3
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:13:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5661520869
-	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:03:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1569629030;
-	bh=G8XX6ARY5KwlfHMwmZ4GkP30VKzaYTEBqzwW5+qLfQs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:List-ID:From;
-	b=QP55MIPSYnERKS+RZuehYdrRXI5bZ/ZaQuVwt5fXSlb60l92CSTTBv2skSpjNOHsx
-	 6i61IQS6tPvn/f722vQ+d29XiLK+Y8blE1LpnDobAX/ihf0LR0TPFD8RcVGHDLvcU+
-	 +W8Ic1X9Ei6kyxjm3EulFTtm8Z40ShTeUie4+c5c=
+	by mail.kernel.org (Postfix) with ESMTP id A10A021850
+	for <linux-xfs@archiver.kernel.org>; Sat, 28 Sep 2019 00:13:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728375AbfI1ADr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 27 Sep 2019 20:03:47 -0400
-Received: from mail.kernel.org ([198.145.29.99]:49222 "EHLO mail.kernel.org"
+        id S1726711AbfI1ANq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 27 Sep 2019 20:13:46 -0400
+Received: from sandeen.net ([63.231.237.45]:51264 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728312AbfI1ADq (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 27 Sep 2019 20:03:46 -0400
-Received: from ebiggers-linuxstation.mtv.corp.google.com (unknown [104.132.1.77])
+        id S1726673AbfI1ANp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 27 Sep 2019 20:13:45 -0400
+Received: from Liberator-6.hsd1.mn.comcast.net (c-174-53-190-166.hsd1.mn.comcast.net [174.53.190.166])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6CE8521850;
-        Sat, 28 Sep 2019 00:03:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1569629025;
-        bh=G8XX6ARY5KwlfHMwmZ4GkP30VKzaYTEBqzwW5+qLfQs=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ltHabBdWP/slBaeOxkMWGjB5dFoIfKMr2gIiVMcWL+QZbZTqNpe+gzreyS/YpTVP8
-         /dAMhxBkbNc4hYc6mmC6V8yroDCXVe99jPcWc0+VbF3mqr7YrKZr4x3uZzT63F+UaY
-         fAvmvD5vE6D11Fn0mCwUu9KbB/tQTUp1Cy69hF1A=
-From:   Eric Biggers <ebiggers@kernel.org>
-To:     linux-xfs@vger.kernel.org
-Cc:     fstests@vger.kernel.org, linux-fscrypt@vger.kernel.org
-Subject: [PATCH v3 6/9] xfs_io/encrypt: extend 'set_encpolicy' to support v2 policies
-Date:   Fri, 27 Sep 2019 17:02:40 -0700
-Message-Id: <20190928000243.77634-7-ebiggers@kernel.org>
-X-Mailer: git-send-email 2.23.0.444.g18eeb5a265-goog
-In-Reply-To: <20190928000243.77634-1-ebiggers@kernel.org>
-References: <20190928000243.77634-1-ebiggers@kernel.org>
+        by sandeen.net (Postfix) with ESMTPSA id 7864ED6D;
+        Fri, 27 Sep 2019 19:13:33 -0500 (CDT)
+Subject: Re: [RFC PATCH 4/8] xfs_io/encrypt: extend 'get_encpolicy' to support
+ v2 policies
+To:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        linux-fscrypt@vger.kernel.org
+References: <20190812175635.34186-1-ebiggers@kernel.org>
+ <20190812175635.34186-5-ebiggers@kernel.org>
+ <93a8536c-191d-340e-2d18-2ef87d0dcd5d@sandeen.net>
+ <20190925232809.GC3163@gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <6ef4798a-b506-c136-bdc8-93a12451ac60@sandeen.net>
+Date:   Fri, 27 Sep 2019 19:13:42 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
+In-Reply-To: <20190925232809.GC3163@gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
 Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Eric Biggers <ebiggers@google.com>
+On 9/25/19 6:28 PM, Eric Biggers wrote:
+> On Wed, Sep 25, 2019 at 12:23:25PM -0500, Eric Sandeen wrote:
+>> On 8/12/19 12:56 PM, Eric Biggers wrote:
+>>> From: Eric Biggers <ebiggers@google.com>
+>>>
+>>> get_encpolicy uses the FS_IOC_GET_ENCRYPTION_POLICY ioctl to retrieve
+>>> the file's encryption policy, then displays it.  But that only works for
+>>> v1 encryption policies.  A new ioctl, FS_IOC_GET_ENCRYPTION_POLICY_EX,
+>>> has been introduced which is more flexible and can retrieve both v1 and
+>>> v2 encryption policies.
+>>
+>> ...
+>>
+...
 
-Extend the 'set_encpolicy' xfs_io command to support setting v2
-encryption policies, in addition to v1 encryption policies which it
-currently supports.  This uses the same ioctl, where the 'version' field
-at the beginning of the struct is used to determine whether the struct
-is fscrypt_policy_v1 or fscrypt_policy_v2.
+>>> +	fprintf(stderr,
+>>> +		"%s: unexpected error checking for FS_IOC_GET_ENCRYPTION_POLICY_EX support: %s\n",
+>>
+>> Darrick also mentioned to me off-list that the io/encrypt.c code is chock full of
+>> strings that really need to be _("translatable")
+>>
+> 
+> Sure, I can do that, though is this really something that people want?  These
+> commands are only intended for testing, and the xfsprogs translations don't seem
+> actively maintained (only 1 language was updated in the last 10 years?).
 
-The command sets a v2 policy when the user either gave the longer key
-specification used in such policies (a 16-byte master_key_identifier
-rather than an 8-byte master_key_descriptor), or passed '-v 2'.
+True that there's not a ton of translation going on now, but it's easy enough
+to toss in _("foo") and keep the possibility open, and be consistent.
 
-Signed-off-by: Eric Biggers <ebiggers@google.com>
----
- io/encrypt.c      | 236 ++++++++++++++++++++++++++++++++++++----------
- man/man8/xfs_io.8 |  19 +++-
- 2 files changed, 199 insertions(+), 56 deletions(-)
+So thanks  :)
 
-diff --git a/io/encrypt.c b/io/encrypt.c
-index 0b45e93f..603d569b 100644
---- a/io/encrypt.c
-+++ b/io/encrypt.c
-@@ -174,13 +174,18 @@ set_encpolicy_help(void)
- " assign an encryption policy to the currently open file\n"
- "\n"
- " Examples:\n"
--" 'set_encpolicy' - assign policy with default key [0000000000000000]\n"
--" 'set_encpolicy 0000111122223333' - assign policy with specified key\n"
-+" 'set_encpolicy' - assign v1 policy with default key descriptor\n"
-+"                   (0000000000000000)\n"
-+" 'set_encpolicy -v 2' - assign v2 policy with default key identifier\n"
-+"                        (00000000000000000000000000000000)\n"
-+" 'set_encpolicy 0000111122223333' - assign v1 policy with given key descriptor\n"
-+" 'set_encpolicy 00001111222233334444555566667777' - assign v2 policy with given\n"
-+"                                                    key identifier\n"
- "\n"
- " -c MODE -- contents encryption mode\n"
- " -n MODE -- filenames encryption mode\n"
- " -f FLAGS -- policy flags\n"
--" -v VERSION -- version of policy structure\n"
-+" -v VERSION -- policy version\n"
- "\n"
- " MODE can be numeric or one of the following predefined values:\n"));
- 	printf("    ");
-@@ -240,6 +245,35 @@ mode2str(__u8 mode)
- 	return buf;
- }
- 
-+static int
-+hexchar2bin(char c)
-+{
-+	if (c >= '0' && c <= '9')
-+		return c - '0';
-+	if (c >= 'a' && c <= 'f')
-+		return 10 + (c - 'a');
-+	if (c >= 'A' && c <= 'F')
-+		return 10 + (c - 'A');
-+	return -1;
-+}
-+
-+static bool
-+hex2bin(const char *hex, __u8 *bin, size_t bin_len)
-+{
-+	if (strlen(hex) != 2 * bin_len)
-+		return false;
-+
-+	while (bin_len--) {
-+		int hi = hexchar2bin(*hex++);
-+		int lo = hexchar2bin(*hex++);
-+
-+		if (hi < 0 || lo < 0)
-+			return false;
-+		*bin++ = (hi << 4) | lo;
-+	}
-+	return true;
-+}
-+
- static const char *
- keydesc2str(const __u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
- {
-@@ -264,6 +298,92 @@ keyid2str(const __u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE])
- 	return buf;
- }
- 
-+static const char *
-+keyspectype(const struct fscrypt_key_specifier *key_spec)
-+{
-+	switch (key_spec->type) {
-+	case FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR:
-+		return _("descriptor");
-+	case FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER:
-+		return _("identifier");
-+	}
-+	return _("[unknown]");
-+}
-+
-+static const char *
-+keyspec2str(const struct fscrypt_key_specifier *key_spec)
-+{
-+	switch (key_spec->type) {
-+	case FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR:
-+		return keydesc2str(key_spec->u.descriptor);
-+	case FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER:
-+		return keyid2str(key_spec->u.identifier);
-+	}
-+	return _("[unknown]");
-+}
-+
-+static bool
-+str2keydesc(const char *str,
-+	    __u8 master_key_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE])
-+{
-+	if (!hex2bin(str, master_key_descriptor, FSCRYPT_KEY_DESCRIPTOR_SIZE)) {
-+		fprintf(stderr, _("invalid key descriptor: %s\n"), str);
-+		return false;
-+	}
-+	return true;
-+}
-+
-+static bool
-+str2keyid(const char *str,
-+	  __u8 master_key_identifier[FSCRYPT_KEY_IDENTIFIER_SIZE])
-+{
-+	if (!hex2bin(str, master_key_identifier, FSCRYPT_KEY_IDENTIFIER_SIZE)) {
-+		fprintf(stderr, _("invalid key identifier: %s\n"), str);
-+		return false;
-+	}
-+	return true;
-+}
-+
-+/*
-+ * Parse a key specifier (descriptor or identifier) given as a hex string.
-+ *
-+ *  8 bytes (16 hex chars) == key descriptor == v1 encryption policy.
-+ * 16 bytes (32 hex chars) == key identifier == v2 encryption policy.
-+ *
-+ * If a policy_version is given (>= 0), then the corresponding type of key
-+ * specifier is required.  Otherwise the specifier type and policy_version are
-+ * determined based on the length of the given hex string.
-+ *
-+ * Returns the policy version, or -1 on error.
-+ */
-+static int
-+str2keyspec(const char *str, int policy_version,
-+	    struct fscrypt_key_specifier *key_spec)
-+{
-+	if (policy_version < 0) { /* version unspecified? */
-+		size_t len = strlen(str);
-+
-+		if (len == 2 * FSCRYPT_KEY_DESCRIPTOR_SIZE) {
-+			policy_version = FSCRYPT_POLICY_V1;
-+		} else if (len == 2 * FSCRYPT_KEY_IDENTIFIER_SIZE) {
-+			policy_version = FSCRYPT_POLICY_V2;
-+		} else {
-+			fprintf(stderr, _("invalid key specifier: %s\n"), str);
-+			return -1;
-+		}
-+	}
-+	if (policy_version == FSCRYPT_POLICY_V2) {
-+		if (!str2keyid(str, key_spec->u.identifier))
-+			return -1;
-+		key_spec->type = FSCRYPT_KEY_SPEC_TYPE_IDENTIFIER;
-+	} else {
-+		if (!str2keydesc(str, key_spec->u.descriptor))
-+			return -1;
-+		key_spec->type = FSCRYPT_KEY_SPEC_TYPE_DESCRIPTOR;
-+	}
-+	return policy_version;
-+}
-+
- static void
- test_for_v2_policy_support(void)
- {
-@@ -385,46 +505,56 @@ static int
- set_encpolicy_f(int argc, char **argv)
- {
- 	int c;
--	struct fscrypt_policy policy;
--
--	/* Initialize the policy structure with default values */
--	memset(&policy, 0, sizeof(policy));
--	policy.contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
--	policy.filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
--	policy.flags = FSCRYPT_POLICY_FLAGS_PAD_16;
-+	__u8 contents_encryption_mode = FSCRYPT_MODE_AES_256_XTS;
-+	__u8 filenames_encryption_mode = FSCRYPT_MODE_AES_256_CTS;
-+	__u8 flags = FSCRYPT_POLICY_FLAGS_PAD_16;
-+	int version = -1; /* unspecified */
-+	struct fscrypt_key_specifier key_spec;
-+	union {
-+		__u8 version;
-+		struct fscrypt_policy_v1 v1;
-+		struct fscrypt_policy_v2 v2;
-+	} policy;
- 
--	/* Parse options */
- 	while ((c = getopt(argc, argv, "c:n:f:v:")) != EOF) {
- 		switch (c) {
- 		case 'c':
--			if (!parse_mode(optarg,
--					&policy.contents_encryption_mode)) {
--				fprintf(stderr, "invalid contents encryption "
--					"mode: %s\n", optarg);
-+			if (!parse_mode(optarg, &contents_encryption_mode)) {
-+				fprintf(stderr,
-+					_("invalid contents encryption mode: %s\n"),
-+					optarg);
- 				return 0;
- 			}
- 			break;
- 		case 'n':
--			if (!parse_mode(optarg,
--					&policy.filenames_encryption_mode)) {
--				fprintf(stderr, "invalid filenames encryption "
--					"mode: %s\n", optarg);
-+			if (!parse_mode(optarg, &filenames_encryption_mode)) {
-+				fprintf(stderr,
-+					_("invalid filenames encryption mode: %s\n"),
-+					optarg);
- 				return 0;
- 			}
- 			break;
- 		case 'f':
--			if (!parse_byte_value(optarg, &policy.flags)) {
--				fprintf(stderr, "invalid flags: %s\n", optarg);
-+			if (!parse_byte_value(optarg, &flags)) {
-+				fprintf(stderr, _("invalid flags: %s\n"),
-+					optarg);
- 				return 0;
- 			}
- 			break;
--		case 'v':
--			if (!parse_byte_value(optarg, &policy.version)) {
--				fprintf(stderr, "invalid policy version: %s\n",
-+		case 'v': {
-+			__u8 val;
-+
-+			if (!parse_byte_value(optarg, &val)) {
-+				fprintf(stderr,
-+					_("invalid policy version: %s\n"),
- 					optarg);
- 				return 0;
- 			}
-+			if (val == 1) /* Just to avoid annoying people... */
-+				val = FSCRYPT_POLICY_V1;
-+			version = val;
- 			break;
-+		}
- 		default:
- 			return command_usage(&set_encpolicy_cmd);
- 		}
-@@ -435,40 +565,44 @@ set_encpolicy_f(int argc, char **argv)
- 	if (argc > 1)
- 		return command_usage(&set_encpolicy_cmd);
- 
--	/* Parse key descriptor if specified */
-+	/*
-+	 * If unspecified, the key descriptor or identifier defaults to all 0's.
-+	 * If the policy version is additionally unspecified, it defaults to v1.
-+	 */
-+	memset(&key_spec, 0, sizeof(key_spec));
- 	if (argc > 0) {
--		const char *keydesc = argv[0];
--		char *tmp;
--		unsigned long long x;
--		int i;
--
--		if (strlen(keydesc) != FSCRYPT_KEY_DESCRIPTOR_SIZE * 2) {
--			fprintf(stderr, "invalid key descriptor: %s\n",
--				keydesc);
--			return 0;
--		}
--
--		x = strtoull(keydesc, &tmp, 16);
--		if (tmp == keydesc || *tmp != '\0') {
--			fprintf(stderr, "invalid key descriptor: %s\n",
--				keydesc);
-+		version = str2keyspec(argv[0], version, &key_spec);
-+		if (version < 0)
- 			return 0;
--		}
-+	}
-+	if (version < 0) /* version unspecified? */
-+		version = FSCRYPT_POLICY_V1;
- 
--		for (i = 0; i < FSCRYPT_KEY_DESCRIPTOR_SIZE; i++) {
--			policy.master_key_descriptor[i] = x >> 56;
--			x <<= 8;
--		}
-+	memset(&policy, 0, sizeof(policy));
-+	policy.version = version;
-+	if (version == FSCRYPT_POLICY_V2) {
-+		policy.v2.contents_encryption_mode = contents_encryption_mode;
-+		policy.v2.filenames_encryption_mode = filenames_encryption_mode;
-+		policy.v2.flags = flags;
-+		memcpy(policy.v2.master_key_identifier, key_spec.u.identifier,
-+		       FSCRYPT_KEY_IDENTIFIER_SIZE);
-+	} else {
-+		/*
-+		 * xfstests passes .version = 255 for testing.  Just use
-+		 * 'struct fscrypt_policy_v1' for both v1 and unknown versions.
-+		 */
-+		policy.v1.contents_encryption_mode = contents_encryption_mode;
-+		policy.v1.filenames_encryption_mode = filenames_encryption_mode;
-+		policy.v1.flags = flags;
-+		memcpy(policy.v1.master_key_descriptor, key_spec.u.descriptor,
-+		       FSCRYPT_KEY_DESCRIPTOR_SIZE);
- 	}
- 
--	/* Set the encryption policy */
--	if (ioctl(file->fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy) < 0) {
--		fprintf(stderr, "%s: failed to set encryption policy: %s\n",
-+	if (ioctl(file->fd, FS_IOC_SET_ENCRYPTION_POLICY, &policy) != 0) {
-+		fprintf(stderr, _("%s: failed to set encryption policy: %s\n"),
- 			file->name, strerror(errno));
- 		exitcode = 1;
--		return 0;
- 	}
--
- 	return 0;
- }
- 
-@@ -488,7 +622,7 @@ encrypt_init(void)
- 	set_encpolicy_cmd.name = "set_encpolicy";
- 	set_encpolicy_cmd.cfunc = set_encpolicy_f;
- 	set_encpolicy_cmd.args =
--		_("[-c mode] [-n mode] [-f flags] [-v version] [keydesc]");
-+		_("[-c mode] [-n mode] [-f flags] [-v version] [keyspec]");
- 	set_encpolicy_cmd.argmin = 0;
- 	set_encpolicy_cmd.argmax = -1;
- 	set_encpolicy_cmd.flags = CMD_NOMAP_OK | CMD_FOREIGN_OK;
-diff --git a/man/man8/xfs_io.8 b/man/man8/xfs_io.8
-index 3dd34a0c..18fcde0f 100644
---- a/man/man8/xfs_io.8
-+++ b/man/man8/xfs_io.8
-@@ -701,12 +701,17 @@ Swaps extent forks between files. The current open file is the target. The donor
- file is specified by path. Note that file data is not copied (file content moves
- with the fork(s)).
- .TP
--.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keydesc " ]"
-+.BI "set_encpolicy [ \-c " mode " ] [ \-n " mode " ] [ \-f " flags " ] [ \-v " version " ] [ " keyspec " ]"
- On filesystems that support encryption, assign an encryption policy to the
- current file.
--.I keydesc
--is a 16-byte hex string which identifies the encryption key to use.
--If not specified, a "default" key descriptor of all 0's will be used.
-+.I keyspec
-+is a hex string which specifies the encryption key to use.  For v1 encryption
-+policies,
-+.I keyspec
-+must be a 16-character hex string (8 bytes).  For v2 policies,
-+.I keyspec
-+must be a 32-character hex string (16 bytes).  If unspecified, an all-zeroes
-+value is used.
- .RS 1.0i
- .PD 0
- .TP 0.4i
-@@ -720,7 +725,11 @@ filenames encryption mode (e.g. AES-256-CTS)
- policy flags (numeric)
- .TP
- .BI \-v " version"
--version of policy structure (numeric)
-+policy version.  Defaults to 1 or 2 depending on the length of
-+.IR keyspec ;
-+or to 1 if
-+.I keyspec
-+is unspecified.
- .RE
- .PD
- .TP
--- 
-2.23.0.444.g18eeb5a265-goog
-
+-Eric
