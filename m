@@ -2,33 +2,34 @@ Return-Path: <SRS0=9CIi=XZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 76B6AC32792
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:37:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98871C32792
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:41:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 512CF224FE
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:37:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7722920842
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:41:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727004AbfI3Uho (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Sep 2019 16:37:44 -0400
-Received: from sandeen.net ([63.231.237.45]:59526 "EHLO sandeen.net"
+        id S1731449AbfI3UlU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Sep 2019 16:41:20 -0400
+Received: from sandeen.net ([63.231.237.45]:59744 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726576AbfI3Uho (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Sep 2019 16:37:44 -0400
+        id S1730178AbfI3UlU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Sep 2019 16:41:20 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 4162911664;
-        Mon, 30 Sep 2019 15:37:27 -0500 (CDT)
-Subject: Re: [PATCH 02/13] libfrog: fix missing error checking in workqueue
- code
+        by sandeen.net (Postfix) with ESMTPSA id 7FF1611661;
+        Mon, 30 Sep 2019 15:02:12 -0500 (CDT)
+Subject: Re: [PATCH 1/4] xfs_io: add a bulkstat command
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <156944720314.297677.12837037497727069563.stgit@magnolia>
- <156944721562.297677.3693574396132835714.stgit@magnolia>
+References: <156944717403.297551.9871784842549394192.stgit@magnolia>
+ <156944718001.297551.8841062987630720604.stgit@magnolia>
+ <fd86aa65-2473-d316-80d9-944100519f77@sandeen.net>
+ <20190927041852.GP9916@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,12 +74,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <71fe3d1a-fd26-e953-7216-bb17c879425d@sandeen.net>
-Date:   Mon, 30 Sep 2019 15:37:42 -0500
+Message-ID: <3cdfef3d-724b-e786-131b-98454b600881@sandeen.net>
+Date:   Mon, 30 Sep 2019 15:02:27 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156944721562.297677.3693574396132835714.stgit@magnolia>
+In-Reply-To: <20190927041852.GP9916@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,17 +88,33 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/25/19 4:33 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On 9/26/19 11:18 PM, Darrick J. Wong wrote:
+>>> +
+>>> +	inumbers_cmd.args =
+>>> +		_("[-a agno] [-d] [-e endino] [-n batchsize] [-s startino]");
+>> <missing the -v option>
+>>
+>>> +	inumbers_cmd.oneline = _("Query inode groups in a filesystem");
+>> I'm confused, why aren't all these ^^^ just in the structure definitions?
+> All of these ... what?  I'm confused, sorry.
 > 
-> Fix all the places in the workqueue code where we fail to check return
-> values and blindly keep going when we shouldn't.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+I'm wondering why these 2 fields get set up in bulkstat_init(), vs at
+cmdinfo_t structure definition time, i.e.
 
-> ---
->  libfrog/workqueue.c |   32 ++++++++++++++++++++++++++++----
->  1 file changed, 28 insertions(+), 4 deletions(-)
-> 
+static cmdinfo_t        inumbers_cmd = {
+        .name = "inumbers",
+        .cfunc = inumbers_f,
+        .argmin = 0,
+        .argmax = -1,
+        .flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT,
+        .args =
+_("[-a agno] [-d] [-e endino] [-n batchsize] [-s startino] [-v version]");
+        .oneline = _("Query inode groups in a filesystem");
+        .help = inumbers_help,
+};
+
+like ~every other command does?
+
+
+-Eric
