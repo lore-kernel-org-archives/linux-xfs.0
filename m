@@ -2,112 +2,172 @@ Return-Path: <SRS0=9CIi=XZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.6 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D77C32792
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 22:33:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 457E8C32792
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 22:37:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA3242168B
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 22:33:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 150B820842
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 22:37:31 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="EpugJORa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726986AbfI3WdR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Sep 2019 18:33:17 -0400
-Received: from sandeen.net ([63.231.237.45]:37280 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727817AbfI3WdR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Sep 2019 18:33:17 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 765F811644;
-        Mon, 30 Sep 2019 17:32:59 -0500 (CDT)
-Subject: Re: [PATCH 03/13] libfrog: split workqueue destroy functions
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1726350AbfI3Whb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Sep 2019 18:37:31 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42686 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726789AbfI3Whb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Sep 2019 18:37:31 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8UJP1Fc192722;
+        Mon, 30 Sep 2019 19:29:32 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=BHJgBKgVpZWCZGX9bkFoXCvZVZeS7ev0gkIEMqPjB0A=;
+ b=EpugJORadXplnLZ4vEEvf9ND2eUzUTgRzdJYEnAWUZ7nQQ2bxMZ3l2TaVc+v+FUZiPz5
+ AC+Y2jvGVLwt8UsFqj+7mcIGPbMcwcJVJawZlybX05LVvM9FEiieET22UP5YSGR/t0oT
+ q1lcWYuTmoJ7wdP1DQsvrhGEYGamK2UkQYMOxvUHMhGMaGriTg6c6KPKlV7Wa/BvNYtE
+ xPRu5uZg/ArODQcivVFgF3Y7kML6sSEZnlzFHdVvzXPOKChJi9oWjgsGXHdygvEyzcXx
+ tnP00W7yeaBbH2tp3RNqWYWUtHwexBA4/izEeZEHzSDt6rR2sAl45tyWi7M3oKzoW+TM eA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2va05rhc0a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 Sep 2019 19:29:32 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x8UJTQeQ065701;
+        Mon, 30 Sep 2019 19:29:31 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2vbmpwve1w-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 30 Sep 2019 19:29:29 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x8UJT14a001518;
+        Mon, 30 Sep 2019 19:29:01 GMT
+Received: from localhost (/67.161.8.12)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 30 Sep 2019 12:29:01 -0700
+Date:   Mon, 30 Sep 2019 12:29:00 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
 Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 01/13] libfrog: fix workqueue error communication problems
+Message-ID: <20190930192900.GB66746@magnolia>
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
- <156944722163.297677.13367863143814852108.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Openpgp: preference=signencrypt
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <bdb6f14e-2bbe-f60e-fa2e-2b2d392547d9@sandeen.net>
-Date:   Mon, 30 Sep 2019 17:33:14 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.9.0
+ <156944720949.297677.6259044122864374968.stgit@magnolia>
+ <ffc61c3e-af9e-6203-c062-e00fbee0b141@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <156944722163.297677.13367863143814852108.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ffc61c3e-af9e-6203-c062-e00fbee0b141@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1909300172
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9396 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1909300172
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 9/25/19 4:33 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Sep 30, 2019 at 02:23:40PM -0500, Eric Sandeen wrote:
+> On 9/25/19 4:33 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Convert all the workqueue functions to return positive error codes so
+> > that we can move away from the libc-style indirect errno handling and
+> > towards passing error codes directly back to callers.
 > 
-> Split the workqueue destroy function into two parts -- one to signal all
-> the threads to exit and wait for them, and a second one that actually
-> destroys all the memory associated with the workqueue.  This mean we can
-> report latent workqueue errors independent of the freeing function.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  libfrog/workqueue.c |   37 ++++++++++++++++++++++++++++++-------
->  libfrog/workqueue.h |    2 ++
->  repair/threads.c    |    6 ++++++
->  scrub/fscounters.c  |   11 ++++++++++-
->  scrub/inodes.c      |    5 +++++
->  scrub/phase2.c      |    5 +++++
->  scrub/phase4.c      |    6 ++++++
->  scrub/read_verify.c |    1 +
->  scrub/spacemap.c    |    5 +++++
->  scrub/vfs.c         |    5 +++++
->  10 files changed, 75 insertions(+), 8 deletions(-)
+> This all looks fine, but it doesn't really do what the commit log says,
+> right?
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Urrrk... yes.  Clearly I stamped out the changelogs with a machine. :/
+
+I /think/ most of the patches in that series actually have a return
+conversion and a callsite conversion, but this one clearly is just...
+
+"Convert workqueue functions to return errno errors from the C library,
+then convert the callers to use str_liberror to report the runtime
+error."
+
+> The one spot where error return is changed, it was already
+> positive; the rest is swapping str_liberror for str_info which is
+> just cosmetic, right?
+
+<shrug> Mostly cosmetic.  Before you'd get:
+
+INFO: Could not create workqueue
+
+Now you get:
+
+ERROR: creating icount workqueue: Not enough frobs.
+
+(and it actually records it as a runtime error :P)
+
+--D
+
+> -Eric
+> 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  libfrog/workqueue.c |    4 ++--
+> >  scrub/fscounters.c  |    5 ++---
+> >  scrub/inodes.c      |    5 ++---
+> >  scrub/phase2.c      |    8 +++-----
+> >  scrub/phase4.c      |    6 +++---
+> >  scrub/read_verify.c |    3 +--
+> >  scrub/spacemap.c    |   11 ++++-------
+> >  scrub/vfs.c         |    3 +--
+> >  8 files changed, 18 insertions(+), 27 deletions(-)
+> > 
+> > 
+> > diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
+> > index 73114773..a806da3e 100644
+> > --- a/libfrog/workqueue.c
+> > +++ b/libfrog/workqueue.c
+> > @@ -106,8 +106,8 @@ workqueue_add(
+> >  	}
+> >  
+> >  	wi = malloc(sizeof(struct workqueue_item));
+> > -	if (wi == NULL)
+> > -		return ENOMEM;
+> > +	if (!wi)
+> > +		return errno;
+> >  
+> >  	wi->function = func;
+> >  	wi->index = index;
+> > diff --git a/scrub/fscounters.c b/scrub/fscounters.c
+> > index ad467e0c..669c5ab0 100644
+> > --- a/scrub/fscounters.c
+> > +++ b/scrub/fscounters.c
+> > @@ -115,15 +115,14 @@ xfs_count_all_inodes(
+> >  			scrub_nproc_workqueue(ctx));
+> >  	if (ret) {
+> >  		moveon = false;
+> > -		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
+> > +		str_liberror(ctx, ret, _("creating icount workqueue"));
+> >  		goto out_free;
+> >  	}
+> >  	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
+> >  		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
+> >  		if (ret) {
+> >  			moveon = false;
+> > -			str_info(ctx, ctx->mntpoint,
+> > -_("Could not queue AG %u icount work."), agno);
+> > +			str_liberror(ctx, ret, _("queueing icount work"));
+> >  			break;
+> >  		}
+> >  	}
+> ...
+> 
+> 
