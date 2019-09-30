@@ -6,46 +6,46 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F3134C4360C
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 07:50:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B95B3C4360C
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 07:51:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C599520842
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 07:50:20 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 884D3218DE
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 07:51:43 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UwrwER/N"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ODk5a7AO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729690AbfI3HuU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Sep 2019 03:50:20 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:40742 "EHLO
+        id S1729217AbfI3Hvn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Sep 2019 03:51:43 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:40762 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729589AbfI3HuU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Sep 2019 03:50:20 -0400
+        with ESMTP id S1726425AbfI3Hvn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Sep 2019 03:51:43 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=J8ZpJ7IEUIssWYiGn4JUZV8YSFiAwMHHgkpgEGYWdV8=; b=UwrwER/NtRXhHwWf6WsfVKJjs
-        g1YGwE2b0Z/H5qRf3xBEVfzHJdQ2l9asPcUOBrBLs0fvl0C49EjyPEz8ttg7IKIl9X24KVwhHOKWZ
-        1JDRWPetc99gguSSkg6HfSp5XKAj+WHUVpHcNg3RbIbhC9016ll0RGsvlMxt2A0AZhpynxwivoai1
-        otvi8gcnaaD8QUjCVl//jrRTJUrpn70ME853eu7MGgNzH5F2+Bq6K6Ewlctws2uy4HfATWUHssg2y
-        XHgeUxWndQbEbmAft2QsaE+4efF4MecXUh0I5moC+qsQWX4EEa+T/NXwrQtwBtiUVvyp09IfNMhz9
-        3mvt+prmg==;
+         bh=l2WBiCb5duYJRA9nKpihqrJOH1Qjg6utSrFiu8qAdtc=; b=ODk5a7AOz9zIL0IkOQUQkepMh
+        Q7H3zCkcR29WFL+GYvufJxE4uIEyiaJIUHuFvASaPc20sjjrmfnmHe7vgfCL9RUoC1KCBcNnPO+II
+        fAREe/Jwgri0+cjh2jOOMkQkXaYRYr+jJu2rYcqXaRftb6g/BSmgUzYGqHytUcRpljmZg8ImGbgoi
+        v0ZhDOgDvKBveB/ylkDhOUPyvdaV8ixBPfdh0iwwJB64nDx4796jR+p8+rjAOOaZqaBSFaiJ9HBq3
+        XW+lTXQAOHcaE+RmujQiexmrPgEKMrsLREdqsgjVC1Ke5NsM9+Qdxpmsg4wOondA85VWlguskfl8t
+        RsFd0QTPw==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iEqRm-0002AJ-2J; Mon, 30 Sep 2019 07:50:18 +0000
-Date:   Mon, 30 Sep 2019 00:50:18 -0700
+        id 1iEqT6-0002Fw-Rn; Mon, 30 Sep 2019 07:51:40 +0000
+Date:   Mon, 30 Sep 2019 00:51:40 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     sandeen@sandeen.net, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/7] libfrog: print library errors
-Message-ID: <20190930075018.GC27886@infradead.org>
+Subject: Re: [PATCH 2/7] libfrog: convert bitmap.c to negative error codes
+Message-ID: <20190930075140.GD27886@infradead.org>
 References: <156944760161.302827.4342305147521200999.stgit@magnolia>
- <156944760784.302827.3061460651592524999.stgit@magnolia>
+ <156944761397.302827.17622064656927525540.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <156944760784.302827.3061460651592524999.stgit@magnolia>
+In-Reply-To: <156944761397.302827.17622064656927525540.stgit@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -53,6 +53,6 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Looks fine:
+Looks good,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
