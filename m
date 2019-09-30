@@ -2,238 +2,228 @@ Return-Path: <SRS0=9CIi=XZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E881C388F3
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 21:17:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFB42C32792
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 21:21:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBADD20815
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 21:17:36 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7EFCB207FA
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 21:21:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730096AbfI3VRg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Sep 2019 17:17:36 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58881 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729190AbfI3VRg (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Sep 2019 17:17:36 -0400
-Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 5D1CC361CF6;
-        Tue,  1 Oct 2019 07:17:30 +1000 (AEST)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iF32t-0004s2-Rr; Tue, 01 Oct 2019 07:17:27 +1000
-Date:   Tue, 1 Oct 2019 07:17:27 +1000
-From:   Dave Chinner <david@fromorbit.com>
-To:     Florian Weimer <fw@deneb.enyo.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org
-Subject: [bug, 5.2.16] kswapd/compaction null pointer crash [was Re:
- xfs_inode not reclaimed/memory leak on 5.2.16]
-Message-ID: <20190930211727.GQ16973@dread.disaster.area>
-References: <87pnji8cpw.fsf@mid.deneb.enyo.de>
- <20190930085406.GP16973@dread.disaster.area>
- <87o8z1fvqu.fsf@mid.deneb.enyo.de>
+        id S1732366AbfI3VVV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Sep 2019 17:21:21 -0400
+Received: from sandeen.net ([63.231.237.45]:33658 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1731840AbfI3VVU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Sep 2019 17:21:20 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 7F01411644
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2019 12:45:34 -0500 (CDT)
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to b94a69ac
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <cdfabb3d-55eb-399b-e3fe-020f9985adcf@sandeen.net>
+Date:   Mon, 30 Sep 2019 12:45:47 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <87o8z1fvqu.fsf@mid.deneb.enyo.de>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=XobE76Q3jBoA:10
-        a=37rDS-QxAAAA:8 a=7-415B0cAAAA:8 a=gbvlmdVWtaEL4Fw_IjsA:9
-        a=hRg_oenuRPtpyWNn:21 a=iiCvWyHVo5X8kcjc:21 a=QEXdDO2ut3YA:10
-        a=k1Nq6YrhK2t884LQW06G:22 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="SCFSyjsrmsI0ewdY75WG1iwW2YsNzGVvf"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 30, 2019 at 09:07:53PM +0200, Florian Weimer wrote:
-> * Dave Chinner:
-> 
-> > On Mon, Sep 30, 2019 at 09:28:27AM +0200, Florian Weimer wrote:
-> >> Simply running “du -hc” on a large directory tree causes du to be
-> >> killed because of kernel paging request failure in the XFS code.
-> >
-> > dmesg output? if the system was still running, then you might be
-> > able to pull the trace from syslog. But we can't do much without
-> > knowing what the actual failure was....
-> 
-> Huh.  I actually have something in syslog:
-> 
-> [ 4001.238411] BUG: kernel NULL pointer dereference, address: 0000000000000000
-> [ 4001.238415] #PF: supervisor read access in kernel mode
-> [ 4001.238417] #PF: error_code(0x0000) - not-present page
-> [ 4001.238418] PGD 0 P4D 0 
-> [ 4001.238420] Oops: 0000 [#1] SMP PTI
-> [ 4001.238423] CPU: 3 PID: 143 Comm: kswapd0 Tainted: G          I       5.2.16fw+ #1
-> [ 4001.238424] Hardware name: System manufacturer System Product Name/P6X58D-E, BIOS 0701    05/10/2011
-> [ 4001.238430] RIP: 0010:__reset_isolation_pfn+0x27f/0x3c0
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--SCFSyjsrmsI0ewdY75WG1iwW2YsNzGVvf
+Content-Type: multipart/mixed; boundary="zmZ1MHDX7i1EsAefQPyfdCmVjYw7zVouz";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <cdfabb3d-55eb-399b-e3fe-020f9985adcf@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to b94a69ac
 
-That's memory compaction code it's crashed in.
+--zmZ1MHDX7i1EsAefQPyfdCmVjYw7zVouz
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
-> [ 4001.238432] Code: 44 c6 48 8b 00 a8 10 74 bc 49 8b 16 48 89 d0 48 c1 ea 35 48 8b 14 d7 48 c1 e8 2d 48 85 d2 74 0a 0f b6 c0 48 c1 e0 04 48 01 c2 <48> 8b 02 4c 89 f2 41 b8 01 00 00 00 31 f6 b9 03 00 00 00 4c 89 f7
-> [ 4001.238433] RSP: 0018:ffffc900003e7de0 EFLAGS: 00010246
-> [ 4001.238435] RAX: 0000000000057285 RBX: 0000000000108000 RCX: 0000000000000000
-> [ 4001.238437] RDX: 0000000000000000 RSI: 0000000000000210 RDI: ffff88833fffa000
-> [ 4001.238438] RBP: ffffc900003e7e18 R08: 0000000000000004 R09: ffff888335000000
-> [ 4001.238439] R10: ffff88833fff9000 R11: 0000000000000000 R12: 0000000000000000
-> [ 4001.238440] R13: 0000000000000000 R14: ffff8883389c01c0 R15: 0000000000000001
-> [ 4001.238442] FS:  0000000000000000(0000) GS:ffff888333cc0000(0000) knlGS:0000000000000000
-> [ 4001.238444] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 4001.238445] CR2: 0000000000000000 CR3: 000000000200a003 CR4: 00000000000206e0
-> [ 4001.238446] Call Trace:
-> [ 4001.238450]  __reset_isolation_suitable+0x9b/0x120
-> [ 4001.238453]  reset_isolation_suitable+0x3b/0x40
-> [ 4001.238456]  kswapd+0x98/0x300
-> [ 4001.238460]  ? wait_woken+0x80/0x80
-> [ 4001.238463]  kthread+0x114/0x130
-> [ 4001.238465]  ? balance_pgdat+0x450/0x450
-> [ 4001.238467]  ? kthread_park+0x80/0x80
-> [ 4001.238470]  ret_from_fork+0x1f/0x30
+Hi folks,
 
-Ok, so the memory compaction code has had a null pointer dereference
-which has killed kswapd. memory reclaim is going to have serious
-problems from this point on as kswapd does most of the reclaim.
+The for-next branch of the xfsprogs repository at:
 
-I have no idea why this might have happened - are they any other
-unexpected events or clues in the syslog that might point to a
-memory corruption or some sign of badness before this crash?
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
 
-> [ 4001.238472] Modules linked in: nfnetlink 8021q garp stp llc fuse ipt_REJECT nf_reject_ipv4 xt_tcpudp ip6table_filter xt_state xt_conntrack iptable_mangle iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_filter tun ip6_tables binfmt_misc mxm_wmi evdev snd_hda_codec_hdmi coretemp snd_hda_intel kvm_intel snd_hda_codec serio_raw kvm snd_hwdep irqbypass snd_hda_core pcspkr snd_pcm snd_timer snd soundcore sg i7core_edac asus_atk0110 wmi button loop ip_tables x_tables raid10 raid456 async_raid6_recov async_memcpy async_pq raid6_pq async_xor xor async_tx raid1 raid0 multipath linear md_mod hid_generic usbhid hid crc32c_intel psmouse sr_mod cdrom radeon e1000e ptp xhci_pci pps_core uhci_hcd ehci_pci xhci_hcd ehci_hcd sky2 usbcore ttm usb_common sd_mod
-> [ 4001.238509] CR2: 0000000000000000
-> [ 4001.238511] ---[ end trace 3cdcc14b40255fe6 ]---
-> [ 4001.238514] RIP: 0010:__reset_isolation_pfn+0x27f/0x3c0
-> [ 4001.238516] Code: 44 c6 48 8b 00 a8 10 74 bc 49 8b 16 48 89 d0 48 c1 ea 35 48 8b 14 d7 48 c1 e8 2d 48 85 d2 74 0a 0f b6 c0 48 c1 e0 04 48 01 c2 <48> 8b 02 4c 89 f2 41 b8 01 00 00 00 31 f6 b9 03 00 00 00 4c 89 f7
-> [ 4001.238518] RSP: 0018:ffffc900003e7de0 EFLAGS: 00010246
-> [ 4001.238519] RAX: 0000000000057285 RBX: 0000000000108000 RCX: 0000000000000000
-> [ 4001.238521] RDX: 0000000000000000 RSI: 0000000000000210 RDI: ffff88833fffa000
-> [ 4001.238522] RBP: ffffc900003e7e18 R08: 0000000000000004 R09: ffff888335000000
-> [ 4001.238523] R10: ffff88833fff9000 R11: 0000000000000000 R12: 0000000000000000
-> [ 4001.238524] R13: 0000000000000000 R14: ffff8883389c01c0 R15: 0000000000000001
-> [ 4001.238526] FS:  0000000000000000(0000) GS:ffff888333cc0000(0000) knlGS:0000000000000000
-> [ 4001.238528] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 4001.238529] CR2: 0000000000000000 CR3: 000000000200a003 CR4: 00000000000206e0
-> [ 4001.709169] BUG: unable to handle page fault for address: ffffc900003e7ec8
-> [ 4001.709172] #PF: supervisor read access in kernel mode
-> [ 4001.709173] #PF: error_code(0x0000) - not-present page
-> [ 4001.709174] PGD 33201a067 P4D 33201a067 PUD 33201b067 PMD 3322af067 PTE 0
-> [ 4001.709177] Oops: 0000 [#2] SMP PTI
-> [ 4001.709179] CPU: 1 PID: 10507 Comm: du Tainted: G      D   I       5.2.16fw+ #1
-> [ 4001.709180] Hardware name: System manufacturer System Product Name/P6X58D-E, BIOS 0701    05/10/2011
-> [ 4001.709184] RIP: 0010:__wake_up_common+0x3c/0x130
+has just been updated.
 
-Then half a second later, the du process has crashed in
-__wake_up_common (core scheduler code)....
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
 
-> [ 4001.709186] Code: 85 c9 74 0a 41 f6 01 04 0f 85 9f 00 00 00 48 8b 47 08 48 8d 5f 08 48 83 e8 18 48 8d 78 18 48 39 fb 0f 84 ca 00 00 00 89 75 d4 <48> 8b 70 18 4d 89 cd 45 31 e4 4c 89 45 c8 89 4d d0 89 55 c4 4c 8d
-> [ 4001.709187] RSP: 0018:ffffc900043db5e0 EFLAGS: 00010012
-> [ 4001.709188] RAX: ffffc900003e7eb0 RBX: ffffffff82066f00 RCX: 0000000000000000
-> [ 4001.709189] RDX: 0000000000000001 RSI: 0000000000000001 RDI: ffffc900003e7ec8
-> [ 4001.709190] RBP: ffffc900043db620 R08: 0000000000000000 R09: ffffc900043db638
-> [ 4001.709191] R10: 0000000000000002 R11: 0000000000000000 R12: 0000000000000001
-> [ 4001.709192] R13: 0000000000000286 R14: 0000000000000000 R15: 0000000000000000
-> [ 4001.709193] FS:  00007f0090d20540(0000) GS:ffff888333c40000(0000) knlGS:0000000000000000
-> [ 4001.709194] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 4001.709195] CR2: ffffc900003e7ec8 CR3: 00000002b85dc004 CR4: 00000000000206e0
-> [ 4001.709195] Call Trace:
-> [ 4001.709198]  __wake_up_common_lock+0x6c/0x90
-> [ 4001.709200]  __wake_up+0xe/0x10
-> [ 4001.709203]  wakeup_kswapd+0xf4/0x120
+The new head of the for-next branch is commit:
 
-...trying to wake up kswapd. This may have crashed because the
-kswapd task has been killed and it hasn't been removed from
-the wait list and so there's a dead/freed task being woken.
-Regardless, this looks like a follow-on issue, not a root cause.
+b94a69ac (HEAD -> for-next) misc: convert from XFS_IOC_FSINUMBERS to XFS_=
+IOC_INUMBERS
 
-> [ 4001.709206]  get_page_from_freelist+0x52e/0xc80
-> [ 4001.709208]  __alloc_pages_nodemask+0xf0/0xcc0
-> [ 4001.709209]  ? get_page_from_freelist+0xa8d/0xc80
-> [ 4001.709212]  ? radix_tree_lookup+0xd/0x10
-> [ 4001.709215]  ? kmem_cache_alloc+0x80/0xa0
-> [ 4001.709217]  xfs_buf_allocate_memory+0x20e/0x320
-> [ 4001.709219]  xfs_buf_get_map+0xe8/0x190
-> [ 4001.709220]  xfs_buf_read_map+0x25/0x100
-> [ 4001.709223]  xfs_trans_read_buf_map+0xb2/0x1f0
-> [ 4001.709225]  xfs_imap_to_bp+0x53/0xa0
-> [ 4001.709226]  xfs_iread+0x76/0x1b0
-> [ 4001.709229]  xfs_iget+0x1e5/0x700
-> [ 4001.709231]  xfs_lookup+0x63/0x90
-> [ 4001.709232]  xfs_vn_lookup+0x47/0x80
+New Commits:
 
-The XFS part of this is that it triggers the memory allocation that
-trips over the bad kswapd state, nothing else.
+Darrick J. Wong (17):
+      [bb85ae74] xfs_spaceman: report health problems
+      [991e5a84] xfs_scrub: remove unnecessary fd parameter from file scr=
+ubbers
+      [5ef3b66a] libfrog: share scrub headers
+      [8dd3922c] libfrog: add online scrub/repair for superblock counters=
 
-IOWs, this doesn't look like an XFS problem at all, but more likely
-something going wrong with memory compaction or memory reclaim, so
-I'd suggest linux-mm@kvack.org [cc'd] is the first port of call for
-further triage.
+      [469f76cb] xfs_scrub: separate internal metadata scrub functions
+      [cbaf1c9d] xfs_scrub: check summary counters
+      [83630b7f] xfs_scrub: refactor queueing of subdir scan work item
+      [4953e709] xfs_scrub: fix nr_dirs accounting problems
+      [44012ab0] xfs_scrub: remove unnecessary wakeup wait in scan_fs_tre=
+e
+      [cad15696] libxfs: fix uncached buffer refcounting
+      [3d943e22] libxfs: fix buffer refcounting in delwri_queue
+      [7db2e3c1] libxfs: make xfs_buf_delwri_submit actually do something=
 
-> [ 4001.709235]  __lookup_slow+0x7f/0x120
-> [ 4001.709236]  lookup_slow+0x35/0x50
-> [ 4001.709238]  walk_component+0x193/0x2a0
-> [ 4001.709239]  ? path_init+0x112/0x2f0
-> [ 4001.709240]  path_lookupat.isra.16+0x5c/0x200
-> [ 4001.709242]  filename_lookup.part.27+0x88/0x100
-> [ 4001.709243]  ? xfs_ilock+0x39/0x90
-> [ 4001.709245]  ? __check_object_size+0xf6/0x187
-> [ 4001.709248]  ? strncpy_from_user+0x56/0x1c0
-> [ 4001.709249]  user_path_at_empty+0x39/0x40
-> [ 4001.709250]  vfs_statx+0x62/0xb0
-> [ 4001.709252]  __se_sys_newfstatat+0x26/0x50
-> [ 4001.709254]  __x64_sys_newfstatat+0x19/0x20
-> [ 4001.709255]  do_syscall_64+0x4b/0x260
-> [ 4001.709257]  ? page_fault+0x8/0x30
-> [ 4001.709259]  entry_SYSCALL_64_after_hwframe+0x44/0xa9
-> [ 4001.709261] RIP: 0033:0x7f0090c47e49
-> [ 4001.709262] Code: 64 c7 00 16 00 00 00 b8 ff ff ff ff c3 0f 1f 40 00 89 f0 48 89 d6 83 ff 01 77 36 89 c7 45 89 c2 48 89 ca b8 06 01 00 00 0f 05 <48> 3d 00 f0 ff ff 77 07 c3 66 0f 1f 44 00 00 48 8b 15 11 10 0d 00
-> [ 4001.709263] RSP: 002b:00007fffee0929e8 EFLAGS: 00000246 ORIG_RAX: 0000000000000106
-> [ 4001.709264] RAX: ffffffffffffffda RBX: 00005635d95cfe00 RCX: 00007f0090c47e49
-> [ 4001.709265] RDX: 00005635d95cfe78 RSI: 00005635d95cff08 RDI: 0000000000000004
-> [ 4001.709266] RBP: 00005635d95cfe78 R08: 0000000000000100 R09: 0000000000000001
-> [ 4001.709267] R10: 0000000000000100 R11: 0000000000000246 R12: 00005635d8c1e5c0
-> [ 4001.709268] R13: 00005635d95cfe00 R14: 00005635d8c1e650 R15: 000000000000000b
-> [ 4001.709269] Modules linked in: nfnetlink 8021q garp stp llc fuse ipt_REJECT nf_reject_ipv4 xt_tcpudp ip6table_filter xt_state xt_conntrack iptable_mangle iptable_nat nf_nat nf_conntrack nf_defrag_ipv6 nf_defrag_ipv4 iptable_filter tun ip6_tables binfmt_misc mxm_wmi evdev snd_hda_codec_hdmi coretemp snd_hda_intel kvm_intel snd_hda_codec serio_raw kvm snd_hwdep irqbypass snd_hda_core pcspkr snd_pcm snd_timer snd soundcore sg i7core_edac asus_atk0110 wmi button loop ip_tables x_tables raid10 raid456 async_raid6_recov async_memcpy async_pq raid6_pq async_xor xor async_tx raid1 raid0 multipath linear md_mod hid_generic usbhid hid crc32c_intel psmouse sr_mod cdrom radeon e1000e ptp xhci_pci pps_core uhci_hcd ehci_pci xhci_hcd ehci_hcd sky2 usbcore ttm usb_common sd_mod
-> [ 4001.709293] CR2: ffffc900003e7ec8
-> [ 4001.709295] ---[ end trace 3cdcc14b40255fe7 ]---
-> [ 4001.709297] RIP: 0010:__reset_isolation_pfn+0x27f/0x3c0
-> [ 4001.709299] Code: 44 c6 48 8b 00 a8 10 74 bc 49 8b 16 48 89 d0 48 c1 ea 35 48 8b 14 d7 48 c1 e8 2d 48 85 d2 74 0a 0f b6 c0 48 c1 e0 04 48 01 c2 <48> 8b 02 4c 89 f2 41 b8 01 00 00 00 31 f6 b9 03 00 00 00 4c 89 f7
-> [ 4001.709299] RSP: 0018:ffffc900003e7de0 EFLAGS: 00010246
-> [ 4001.709300] RAX: 0000000000057285 RBX: 0000000000108000 RCX: 0000000000000000
-> [ 4001.709301] RDX: 0000000000000000 RSI: 0000000000000210 RDI: ffff88833fffa000
-> [ 4001.709302] RBP: ffffc900003e7e18 R08: 0000000000000004 R09: ffff888335000000
-> [ 4001.709303] R10: ffff88833fff9000 R11: 0000000000000000 R12: 0000000000000000
-> [ 4001.709304] R13: 0000000000000000 R14: ffff8883389c01c0 R15: 0000000000000001
-> [ 4001.709305] FS:  00007f0090d20540(0000) GS:ffff888333c40000(0000) knlGS:0000000000000000
-> [ 4001.709306] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 4001.709307] CR2: ffffc900003e7ec8 CR3: 00000002b85dc004 CR4: 00000000000206e0
-> 
-> So XFS wasn't *that* unhappy if it could still write to the file
-> system.
+      [7b754805] mkfs: use libxfs to write out new AGs
+      [04fa6912] man: add documentation for v5 bulkstat ioctl
+      [085b39cc] man: add documentation for v5 inumbers ioctl
+      [4cca629d] misc: convert xfrog_bulkstat functions to have v5 semant=
+ics
+      [b94a69ac] misc: convert from XFS_IOC_FSINUMBERS to XFS_IOC_INUMBER=
+S
 
-RIght, as long as it doesn't trip over any of the leaked state (e.g.
-locks) from the du process that was killed, it'll keep going as long
-as direct memory reclaim can keep reclaiming memory.
+Jianhong Yin (1):
+      [64e366d9] xfs_io: copy_range don't truncate dst_file, and add smar=
+t length
 
-> 
-> > FWIW, one of my regular test workloads is iterating a directory tree
-> > with 50 million inodes in several different ways to stress reclaim
-> > algorithms in ways that users do. I haven't seen issues with that
-> > test for a while, so it's not an obvious problem whatever you came
-> > across.
-> 
-> Right, I should have tried to reproduce it first.  I actually can't.
 
-Not surprising, it has the smell of "random crash" to it.
+Code Diffstat:
 
-Cheers,
+ fsr/xfs_fsr.c                   |  64 ++++-
+ include/libxfs.h                |   1 +
+ io/copy_file_range.c            |  42 ++-
+ io/imap.c                       |  26 +-
+ io/open.c                       |  56 ++--
+ io/scrub.c                      |  89 ++-----
+ io/swapext.c                    |   9 +-
+ libfrog/Makefile                |   2 +
+ libfrog/bulkstat.c              | 563 ++++++++++++++++++++++++++++++++++=
++++---
+ libfrog/bulkstat.h              |  24 +-
+ libfrog/fsgeom.c                |  16 ++
+ libfrog/fsgeom.h                |  10 +
+ libfrog/scrub.c                 | 146 +++++++++++
+ libfrog/scrub.h                 |  36 +++
+ libxfs/libxfs_api_defs.h        |   3 +
+ libxfs/libxfs_io.h              |  29 +++
+ libxfs/libxfs_priv.h            |   4 -
+ libxfs/rdwr.c                   |  30 ++-
+ libxfs/util.c                   |   1 +
+ man/man2/ioctl_xfs_bulkstat.2   | 346 ++++++++++++++++++++++++
+ man/man2/ioctl_xfs_fsbulkstat.2 |   6 +
+ man/man2/ioctl_xfs_inumbers.2   | 128 +++++++++
+ man/man8/xfs_io.8               |  12 +-
+ man/man8/xfs_spaceman.8         |  28 ++
+ mkfs/xfs_mkfs.c                 | 371 +++-----------------------
+ quota/quot.c                    |  29 +--
+ scrub/fscounters.c              |  21 +-
+ scrub/inodes.c                  |  75 +++---
+ scrub/inodes.h                  |   2 +-
+ scrub/phase3.c                  |  16 +-
+ scrub/phase4.c                  |  12 +
+ scrub/phase5.c                  |   8 +-
+ scrub/phase6.c                  |   2 +-
+ scrub/phase7.c                  |  14 +
+ scrub/repair.c                  |   3 +
+ scrub/scrub.c                   | 278 ++++++++------------
+ scrub/scrub.h                   |  18 +-
+ scrub/unicrash.c                |   6 +-
+ scrub/unicrash.h                |   4 +-
+ scrub/vfs.c                     | 140 ++++++----
+ spaceman/Makefile               |   2 +-
+ spaceman/health.c               | 470 +++++++++++++++++++++++++++++++++
+ spaceman/init.c                 |   1 +
+ spaceman/space.h                |   1 +
+ 44 files changed, 2317 insertions(+), 827 deletions(-)
+ create mode 100644 libfrog/scrub.c
+ create mode 100644 libfrog/scrub.h
+ create mode 100644 man/man2/ioctl_xfs_bulkstat.2
+ create mode 100644 man/man2/ioctl_xfs_inumbers.2
+ create mode 100644 spaceman/health.c
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+
+--zmZ1MHDX7i1EsAefQPyfdCmVjYw7zVouz--
+
+--SCFSyjsrmsI0ewdY75WG1iwW2YsNzGVvf
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl2SP0wACgkQIK4WkuE9
+3uBTmQ//S5QNamOnVj8uZX/az+UjVCExlvps1h6NK736ZDMsEVLjA6QAVybolav6
+FpXeB+mWwoSJHpGNZwidYb4Ss2Igs6qhHSgnEqzLd1icLFMZkoa0RD/sGfLcI8n9
+8VBS7WfJC/nnIKv7dwVoPoroGRn7gcnxwEdlV0EPwOzyvMrr+iRH+KD5G7tcb1yA
+ivgnDvU3AaqhM/uCshBpM3hlV6y9UaxKUdGXMjKCXyKneeAGBbh4ebqSUVx988wK
+VZ8D2np3vWQwDHgjetpoZI0on+nrtUPrImfqw4d63EaXUpLIAixkyz++1+lO72KT
+6qGP3tdNkxZd+IwRDh8GISq9y8ndgZ0BkIlF5DKvtRRP+rDLi21OO2Te5k8crRSm
+EXz+xzLDZIJL0ACwXVBmyyzwYJN5GYpgg+87T3FJb3jvpfjsxIDXptdwl5PyMhc3
+kxyDir+oRkOq1xfxNylKsz4DTTe4ApK74EuzfQvMPqZWGDaQ2/gSfwlo6V9vG/J+
+SbxfsMG23Kij9ShzpnFBGM968R4P8C9/COiN31Eu8zP6D01d9tnh58iheKIhbfRE
+NDxHFED+UeuO+sH2wlvvCN3EPYFJOQ41YkxpU0hoN0bGN7/Ilxpxxfygr6YE8L98
+hx+OrRIz0GEr4MYz9rSBznFjSyheFly0f5KZIWQ2hHfrDoSveOk=
+=MA/5
+-----END PGP SIGNATURE-----
+
+--SCFSyjsrmsI0ewdY75WG1iwW2YsNzGVvf--
