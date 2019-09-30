@@ -2,33 +2,33 @@ Return-Path: <SRS0=9CIi=XZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02859C35280
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5927BC388F4
 	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:41:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D49A520842
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:41:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 37C0E20842
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 20:41:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726314AbfI3UlV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1730178AbfI3UlV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Mon, 30 Sep 2019 16:41:21 -0400
-Received: from sandeen.net ([63.231.237.45]:59750 "EHLO sandeen.net"
+Received: from sandeen.net ([63.231.237.45]:59746 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731178AbfI3UlU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 30 Sep 2019 16:41:20 -0400
+        id S1731063AbfI3UlV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 30 Sep 2019 16:41:21 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 6CD631164F;
-        Mon, 30 Sep 2019 14:23:26 -0500 (CDT)
-From:   Eric Sandeen <sandeen@sandeen.net>
+        by sandeen.net (Postfix) with ESMTPSA id EC49E11662;
+        Mon, 30 Sep 2019 15:32:15 -0500 (CDT)
 Subject: Re: [PATCH 01/13] libfrog: fix workqueue error communication problems
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
  <156944720949.297677.6259044122864374968.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,8 +72,8 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <ffc61c3e-af9e-6203-c062-e00fbee0b141@sandeen.net>
-Date:   Mon, 30 Sep 2019 14:23:40 -0500
+Message-ID: <db6a79f9-0ea8-ae0a-b582-9829aa4ded32@sandeen.net>
+Date:   Mon, 30 Sep 2019 15:32:30 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
@@ -92,64 +92,9 @@ On 9/25/19 4:33 PM, Darrick J. Wong wrote:
 > Convert all the workqueue functions to return positive error codes so
 > that we can move away from the libc-style indirect errno handling and
 > towards passing error codes directly back to callers.
-
-This all looks fine, but it doesn't really do what the commit log says,
-right?  The one spot where error return is changed, it was already
-positive; the rest is swapping str_liberror for str_info which is
-just cosmetic, right?
-
--Eric
-
+> 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  libfrog/workqueue.c |    4 ++--
->  scrub/fscounters.c  |    5 ++---
->  scrub/inodes.c      |    5 ++---
->  scrub/phase2.c      |    8 +++-----
->  scrub/phase4.c      |    6 +++---
->  scrub/read_verify.c |    3 +--
->  scrub/spacemap.c    |   11 ++++-------
->  scrub/vfs.c         |    3 +--
->  8 files changed, 18 insertions(+), 27 deletions(-)
-> 
-> 
-> diff --git a/libfrog/workqueue.c b/libfrog/workqueue.c
-> index 73114773..a806da3e 100644
-> --- a/libfrog/workqueue.c
-> +++ b/libfrog/workqueue.c
-> @@ -106,8 +106,8 @@ workqueue_add(
->  	}
->  
->  	wi = malloc(sizeof(struct workqueue_item));
-> -	if (wi == NULL)
-> -		return ENOMEM;
-> +	if (!wi)
-> +		return errno;
->  
->  	wi->function = func;
->  	wi->index = index;
-> diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-> index ad467e0c..669c5ab0 100644
-> --- a/scrub/fscounters.c
-> +++ b/scrub/fscounters.c
-> @@ -115,15 +115,14 @@ xfs_count_all_inodes(
->  			scrub_nproc_workqueue(ctx));
->  	if (ret) {
->  		moveon = false;
-> -		str_info(ctx, ctx->mntpoint, _("Could not create workqueue."));
-> +		str_liberror(ctx, ret, _("creating icount workqueue"));
->  		goto out_free;
->  	}
->  	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
->  		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
->  		if (ret) {
->  			moveon = false;
-> -			str_info(ctx, ctx->mntpoint,
-> -_("Could not queue AG %u icount work."), agno);
-> +			str_liberror(ctx, ret, _("queueing icount work"));
->  			break;
->  		}
->  	}
-...
 
+With a fixed changelog,
 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
