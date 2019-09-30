@@ -2,98 +2,102 @@ Return-Path: <SRS0=9CIi=XZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-10.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFC8AC35280
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 13:32:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B77C32792
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 13:59:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2F10215EA
-	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 13:32:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 49D3F216F4
+	for <linux-xfs@archiver.kernel.org>; Mon, 30 Sep 2019 13:59:21 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GTsAp7UQ"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UCoK2I+7"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730693AbfI3NcI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 30 Sep 2019 09:32:08 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:52226 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728214AbfI3NcI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Sep 2019 09:32:08 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=jwTg4fslkkXzfCclLjZOgIaOdnKQRQ6WQVeTB5C7GPs=; b=GTsAp7UQvIcIvL7TkWfOBSdUl
-        M6EGMhlYfNT8cjQLHe/X55q53qvVOm4qHmblR+q079BsjQ5IJL6GR7NCHXZopzNuDhg6Olt9GWJZf
-        TuWtjBJdrVKCPCz5dV157Ng6PX7X3d2OWKAE5dWwmbqm+fPiwDYPLZRIsGT9W7P5WF0RA/+YKwg1V
-        ZOHTI5PeaKSpRxD64+n/Vso0SEIefZGFuhgMefh1Jc8e4GkOyMi2owWOVqPMkF1L4tFxZx/S6CMm1
-        CGRE7n3xBfoaoO/5xJs2pNSfHxGZzfESSdFdPlS3AMKKj3NdKP8XJoGmGlhxMVZVMbWyoc+BXXz04
-        KjNnO/TQQ==;
-Received: from willy by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iEvmW-0007wp-1A; Mon, 30 Sep 2019 13:32:04 +0000
-Date:   Mon, 30 Sep 2019 06:32:03 -0700
-From:   Matthew Wilcox <willy@infradead.org>
-To:     Christopher Lameter <cl@linux.com>
-Cc:     Vlastimil Babka <vbabka@suse.cz>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        David Sterba <dsterba@suse.cz>, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org, Pekka Enberg <penberg@kernel.org>,
-        David Rientjes <rientjes@google.com>,
-        Ming Lei <ming.lei@redhat.com>,
-        Dave Chinner <david@fromorbit.com>,
-        "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
-        James Bottomley <James.Bottomley@hansenpartnership.com>,
-        linux-btrfs@vger.kernel.org, Roman Gushchin <guro@fb.com>,
-        Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [PATCH v2 2/2] mm, sl[aou]b: guarantee natural alignment for
- kmalloc(power-of-two)
-Message-ID: <20190930133203.GA26804@bombadil.infradead.org>
-References: <20190826111627.7505-1-vbabka@suse.cz>
- <20190826111627.7505-3-vbabka@suse.cz>
- <df8d1cf4-ff8f-1ee1-12fb-cfec39131b32@suse.cz>
- <20190923171710.GN2751@twin.jikos.cz>
- <alpine.DEB.2.21.1909242048020.17661@www.lameter.com>
- <20190924165425.a79a2dafbaf37828a931df2b@linux-foundation.org>
- <alpine.DEB.2.21.1909260005060.1508@www.lameter.com>
- <6a28a096-0e65-c7ea-9ca9-f72d68948e10@suse.cz>
- <alpine.DEB.2.21.1909272251190.21341@www.lameter.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <alpine.DEB.2.21.1909272251190.21341@www.lameter.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+        id S1730266AbfI3N7U (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 30 Sep 2019 09:59:20 -0400
+Received: from mail-pf1-f193.google.com ([209.85.210.193]:38671 "EHLO
+        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729738AbfI3N7U (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 30 Sep 2019 09:59:20 -0400
+Received: by mail-pf1-f193.google.com with SMTP id h195so5671554pfe.5
+        for <linux-xfs@vger.kernel.org>; Mon, 30 Sep 2019 06:59:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=jZP8HjBK20oJxsyY3hFzVSXhJhggLiaT6Eyx2aXU7oE=;
+        b=UCoK2I+7rJg7EtLmYFcJ+W0QlNIEF0dHCEVhCHz4ZDa2vWERmStawpDiV+6UG++77K
+         eqEptkhQxNvTqv4LP0keTfzn0nbOBwp7Id476C/b+tZ6q6Ox/2cY26DDzIfE11CryZ9L
+         TL+KZEYzfpRqUwzXNTQTdoiiRO5b6agbXvgcohOYMiBFLeCsZhN5SRkrXZYn1hOhLO6+
+         lBZRxrkJVU/M4ecuUMAdEZuhdYXpO2pOpqDtjC8+guhnjDBhZBAQJ8mu+CINzXWwcvZp
+         b0OTj5Zw6wrKIPLBI+Upoit1vbRyDHfG22mGlRzvLq7uxbk8HGdZaeKWc3PuZhaJ9nUw
+         mk0g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=jZP8HjBK20oJxsyY3hFzVSXhJhggLiaT6Eyx2aXU7oE=;
+        b=OG3AIcHMf5qns+qC7R6NAAPB/dfeo9s3ADiEoX46BKu0CualIazZqMYESsyVP3CeB7
+         Um/odZvWHKdlbM67wgEfQ6TWbc9yfHgVln/R+ViIte+IrbpQY+/kezjeV4MCpwD1QmZ6
+         h+Z4IvnujaM/j8KgGinmYsHJ/df1Ec01jgcpgn/lgKXq27TOiNImPm9Qf2GOaFNezWb1
+         jSzSgdB2Ru2vEDyqr3xQzDKtq2c/Rz7PkBJYhXI6MQZ3ntHdaQX593SjE+8RU/zsCjR4
+         McTFMB7PglMjst+q33+vV5Zds30B6ToQlWQFHDNehNQNAE9hc79hfOQlw3WC4m9CB0vs
+         JEPw==
+X-Gm-Message-State: APjAAAWXsfjfcsb3z1YlMp1ZOJTiK9s3WCosjM+PabYqx4w084eVgtL9
+        2uKE7IbA/uTnym3pI059yWxZZMExEJs=
+X-Google-Smtp-Source: APXvYqxvtWrSvaEmQJxcQ2ATWACv/1zFIxhcJHljQIgfgXD00JLwKW1+hONUFEW2UBggDFu60cQI8A==
+X-Received: by 2002:a63:5652:: with SMTP id g18mr5445933pgm.283.1569851959781;
+        Mon, 30 Sep 2019 06:59:19 -0700 (PDT)
+Received: from localhost.localdomain ([2401:4900:1951:51d2:a1e1:b995:3e46:902d])
+        by smtp.gmail.com with ESMTPSA id p68sm23424815pfp.9.2019.09.30.06.59.16
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-SHA bits=128/128);
+        Mon, 30 Sep 2019 06:59:18 -0700 (PDT)
+From:   Aliasgar Surti <aliasgar.surti500@gmail.com>
+X-Google-Original-From: Aliasgar Surti
+To:     darrick.wong@oracle.com, linux-xfs@vger.kernel.org,
+        bfoster@redhat.com
+Cc:     Aliasgar Surti <aliasgar.surti500@gmail.com>
+Subject: [PATCH] xfs: removed unused error variable from xchk_refcountbt_rec
+Date:   Mon, 30 Sep 2019 19:28:54 +0530
+Message-Id: <1569851934-10718-1-git-send-email-aliasgar.surti500@gmail.com>
+X-Mailer: git-send-email 2.7.4
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Sep 28, 2019 at 01:12:49AM +0000, Christopher Lameter wrote:
-> However, the layout may be different due to another allocator that prefers
-> to arrange things differently (SLOB puts multiple objects of different
-> types in the same page to save memory), if we need to add data to these
-> objects (debugging info, new metadata about the object, maybe the memcg
-> pointer, maybe other things that may come up), or other innovative
-> approaches (such as putting data of different kmem caches that are
-> commonly used together in the same page to improve locality).
+From: Aliasgar Surti <aliasgar.surti500@gmail.com>
 
-If we ever do start putting objects of different sizes that are commonly
-allocated together in the same page (eg inodes & dentries), then those
-aren't going to be random kmalloc() allocation; they're going to be
-special kmem caches that can specify "I don't care about alignment".
+Removed unused error variable. Instead of using error variable,
+returned the value directly as it wasn't updated.
 
-Also, we haven't done that.  We've had a slab allocator for twenty years,
-and nobody's tried to do that.  Maybe the co-allocation would be a net
-loss (I suspect).  Or the gain is too small for the added complexity.
-Whatever way, this is a strawman.
+Signed-off-by: Aliasgar Surti <aliasgar.surti500@gmail.com>
+---
+ fs/xfs/scrub/refcount.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-> The cost is an unnecessary petrification of the data layout of the memory
-> allocators.
-
-Yes, it is.  And it's a cost I'm willing to pay in order to get the
-guarantee of alignment.
+diff --git a/fs/xfs/scrub/refcount.c b/fs/xfs/scrub/refcount.c
+index 93b3793b..0cab11a 100644
+--- a/fs/xfs/scrub/refcount.c
++++ b/fs/xfs/scrub/refcount.c
+@@ -341,7 +341,6 @@ xchk_refcountbt_rec(
+ 	xfs_extlen_t		len;
+ 	xfs_nlink_t		refcount;
+ 	bool			has_cowflag;
+-	int			error = 0;
+ 
+ 	bno = be32_to_cpu(rec->refc.rc_startblock);
+ 	len = be32_to_cpu(rec->refc.rc_blockcount);
+@@ -366,7 +365,7 @@ xchk_refcountbt_rec(
+ 
+ 	xchk_refcountbt_xref(bs->sc, bno, len, refcount);
+ 
+-	return error;
++	return 0;
+ }
+ 
+ /* Make sure we have as many refc blocks as the rmap says. */
+-- 
+2.7.4
 
