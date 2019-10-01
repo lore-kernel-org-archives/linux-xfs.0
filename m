@@ -7,44 +7,45 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C458CECE589
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 07:16:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B373ECE589
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 07:16:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 993B82133F
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 07:16:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 62D6F21D81
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 07:16:48 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ojotwhc+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="JuaLtyJT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732971AbfJAHQc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Oct 2019 03:16:32 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:45534 "EHLO
+        id S1733040AbfJAHQo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Oct 2019 03:16:44 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:45618 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732829AbfJAHQb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Oct 2019 03:16:31 -0400
+        with ESMTP id S1733005AbfJAHQo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Oct 2019 03:16:44 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=z4pMGaq/FkeqVLQ6dS6r9dj5gM7omeo3/3d/waJqFtY=; b=ojotwhc+9JLkZY8mnShAQxblAU
-        EDhZhRFaCL776325OGqHk307gNkc2DQOMnwqUfnPdNkKvsd5Iqt3GxD2Ue/30bzigcbpmYM7U/UbX
-        QctC9rkNrk1c39rak1D9wFPvJskxlaez9pOQMDb0IryDgXw7DNg6tLtcEt1dBGcAKKmo7jv3olImT
-        TFSh9qeVMQ7vQ9r7Oa20MqIeot6LYHxUC23jldZHTcwNIymKaD29x5RTCnAD6DjZSiUZTJd3y3XoX
-        nL1V4sb5xQyo26ddWKG0v5I5/C1fzipXC6WYqd0R66S97fH22cNHhGvQXcyFojmn5MBJxk931bHj+
-        PvgQFowQ==;
+        bh=1irl0AgCvFo2qfN/O5DEHH2lBXUVCJy0lnRalJzwcEY=; b=JuaLtyJTWnlE+5SsMKEwf/ZW/k
+        gNnm47jobHglkzd+OIkflDzqCbBEuSd0GrQD1Oq3Gj5FWOxtUrmu0OY2mcIFMzep+f71bjR1Nw+pM
+        4ltrjT051Poxrs7oEOjQrxdjCGot0UUzipO5spFLn0eaIZ5e5cYNtOwpMtLJzSs5yBZ4FKUB6Al3K
+        tNd0OHfsftJpPspQgUXl+KU9WxyawJHL8QdhpG9ePNO12uta2Kr1I1UKETVfVs8/eM1hM0kdaMIbv
+        2Wr/4nOw6PPMaS+ql7cZ5fqNO2WbsFLZTi5LjW5yAa1MZgVjImF4t2Oc4SsEaO8MQ3Wlz/PtsLHrv
+        D17u8Vkw==;
 Received: from [2001:4bb8:18c:4d4a:b9e5:f9f0:a515:3f0a] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iFCOb-0001Rp-Ir; Tue, 01 Oct 2019 07:16:29 +0000
+        id 1iFCOo-0001VS-7i; Tue, 01 Oct 2019 07:16:42 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 06/11] xfs: remove the readpage / readpages tracing code
-Date:   Tue,  1 Oct 2019 09:11:47 +0200
-Message-Id: <20191001071152.24403-7-hch@lst.de>
+        linux-kernel@vger.kernel.org,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: [PATCH 11/11] iomap: move struct iomap_page out of iomap.h
+Date:   Tue,  1 Oct 2019 09:11:52 +0200
+Message-Id: <20191001071152.24403-12-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191001071152.24403-1-hch@lst.de>
 References: <20191001071152.24403-1-hch@lst.de>
@@ -56,71 +57,73 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The actual iomap implementations now have equivalent trace points.
+Now that all the writepage code is in the iomap code there is no
+need to keep this structure public.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c  |  2 --
- fs/xfs/xfs_trace.h | 26 --------------------------
- 2 files changed, 28 deletions(-)
+ fs/iomap/buffered-io.c | 17 +++++++++++++++++
+ include/linux/iomap.h  | 17 -----------------
+ 2 files changed, 17 insertions(+), 17 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f16d5f196c6b..b6101673c8fb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1160,7 +1160,6 @@ xfs_vm_readpage(
- 	struct file		*unused,
- 	struct page		*page)
- {
--	trace_xfs_vm_readpage(page->mapping->host, 1);
- 	return iomap_readpage(page, &xfs_iomap_ops);
- }
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index dcf95e8b31fe..da1dea16ebe8 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -23,6 +23,23 @@
+ #define CREATE_TRACE_POINTS
+ #include <trace/events/iomap.h>
  
-@@ -1171,7 +1170,6 @@ xfs_vm_readpages(
- 	struct list_head	*pages,
- 	unsigned		nr_pages)
- {
--	trace_xfs_vm_readpages(mapping->host, nr_pages);
- 	return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- }
++/*
++ * Structure allocated for each page when block size < PAGE_SIZE to track
++ * sub-page uptodate status and I/O completions.
++ */
++struct iomap_page {
++	atomic_t		read_count;
++	atomic_t		write_count;
++	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
++};
++
++static inline struct iomap_page *to_iomap_page(struct page *page)
++{
++	if (page_has_private(page))
++		return (struct iomap_page *)page_private(page);
++	return NULL;
++}
++
+ static struct bio_set iomap_ioend_bioset;
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index eaae275ed430..eae4b29c174e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1197,32 +1197,6 @@ DEFINE_PAGE_EVENT(xfs_writepage);
- DEFINE_PAGE_EVENT(xfs_releasepage);
- DEFINE_PAGE_EVENT(xfs_invalidatepage);
+ static struct iomap_page *
+diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+index e79af6b28410..5d736d3caf08 100644
+--- a/include/linux/iomap.h
++++ b/include/linux/iomap.h
+@@ -134,23 +134,6 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+ 		unsigned flags, const struct iomap_ops *ops, void *data,
+ 		iomap_actor_t actor);
  
--DECLARE_EVENT_CLASS(xfs_readpage_class,
--	TP_PROTO(struct inode *inode, int nr_pages),
--	TP_ARGS(inode, nr_pages),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(int, nr_pages)
--	),
--	TP_fast_assign(
--		__entry->dev = inode->i_sb->s_dev;
--		__entry->ino = inode->i_ino;
--		__entry->nr_pages = nr_pages;
--	),
--	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->nr_pages)
--)
+-/*
+- * Structure allocate for each page when block size < PAGE_SIZE to track
+- * sub-page uptodate status and I/O completions.
+- */
+-struct iomap_page {
+-	atomic_t		read_count;
+-	atomic_t		write_count;
+-	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
+-};
 -
--#define DEFINE_READPAGE_EVENT(name)		\
--DEFINE_EVENT(xfs_readpage_class, name,	\
--	TP_PROTO(struct inode *inode, int nr_pages), \
--	TP_ARGS(inode, nr_pages))
--DEFINE_READPAGE_EVENT(xfs_vm_readpage);
--DEFINE_READPAGE_EVENT(xfs_vm_readpages);
+-static inline struct iomap_page *to_iomap_page(struct page *page)
+-{
+-	if (page_has_private(page))
+-		return (struct iomap_page *)page_private(page);
+-	return NULL;
+-}
 -
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
- 		 int whichfork, struct xfs_bmbt_irec *irec),
+ ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
+ 		const struct iomap_ops *ops);
+ int iomap_readpage(struct page *page, const struct iomap_ops *ops);
 -- 
 2.20.1
 
