@@ -2,75 +2,74 @@ Return-Path: <SRS0=aFxQ=X2=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C7E88ECDFB6
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 06:24:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 49E58C388F3
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 06:26:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8AA8F21835
-	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 06:24:30 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="o2dsE1uh"
+	by mail.kernel.org (Postfix) with ESMTP id 1C82B215EA
+	for <linux-xfs@archiver.kernel.org>; Tue,  1 Oct 2019 06:26:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726784AbfJAGYa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 1 Oct 2019 02:24:30 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:36728 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726388AbfJAGYa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 1 Oct 2019 02:24:30 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=1I7ps7S2ZXOCoEWGAuZjQKdvaNmM5UyXNDy6LvSHe3o=; b=o2dsE1uhGwWrEhR29Ld7cLmEH
-        GUsOHVMkWH9I0mB6/dlitjGNbLrl8/luvFBsO9bXSOlHdh9C24YTDXDiLpcNUNDWS3I9oEt6djQM7
-        ZVkLARDWZNapq9ZyilJbjX9HW3lHZF32yzWUdfSOyTgod2iEE5czJSIwXzWqX7bmdDMaBQy8ouJX/
-        V6LT9z8dKRZNKE71W++Jmz2RRzPX4jbyWDIGnCT7dSRl7qBt+3MvaFXXg0M8KyG3KdY2ltIgadmD+
-        0ch+A11xE8fdo877emzpTuTJo7HQUhHOcc8WgVJ6Pxi/20kUzAAQ+zp1+pvMNxOKUleNy27wVd2gY
-        STWgaeXMg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iFBaC-0006UQ-9w; Tue, 01 Oct 2019 06:24:24 +0000
-Date:   Mon, 30 Sep 2019 23:24:24 -0700
-From:   Christoph Hellwig <hch@infradead.org>
+        id S1727669AbfJAG0K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 1 Oct 2019 02:26:10 -0400
+Received: from verein.lst.de ([213.95.11.211]:42661 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726388AbfJAG0K (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 1 Oct 2019 02:26:10 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 2EC1168B20; Tue,  1 Oct 2019 08:26:07 +0200 (CEST)
+Date:   Tue, 1 Oct 2019 08:26:06 +0200
+From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Dave Chinner <david@fromorbit.com>, sandeen@sandeen.net,
-        linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs_db: calculate iext tree geometry in btheight
- command
-Message-ID: <20191001062424.GA24722@infradead.org>
-References: <156944764785.303060.15428657522073378525.stgit@magnolia>
- <156944765991.303060.7541074919992777157.stgit@magnolia>
- <20190926214102.GK16973@dread.disaster.area>
- <20190930075854.GK27886@infradead.org>
- <20190930161151.GA13108@magnolia>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 12/19] xfs: fill out the srcmap in iomap_begin
+Message-ID: <20191001062605.GA3596@lst.de>
+References: <20190909182722.16783-1-hch@lst.de> <20190909182722.16783-13-hch@lst.de> <20190918175228.GE2229799@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190930161151.GA13108@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20190918175228.GE2229799@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Sep 30, 2019 at 09:11:52AM -0700, Darrick J. Wong wrote:
-> > Is the command supposed to deal with the on-disk or in-memory nodes?
-> > The ones your quote are the in-memory btrees, but the file seems
-> > (the way I read it, the documentation seems to be lacking) with the
-> > on-disk btrees.
+On Wed, Sep 18, 2019 at 10:52:28AM -0700, Darrick J. Wong wrote:
+> TBH I've been wondering for a while now if it would make more sense to
+> do this in iomap_apply (and the open-coded versions in dax.c):
 > 
-> It started as a command for calculating ondisk btree geometry but then
-> we were discussing the iext tree geometry on irc so I extended it to
-> handle that too.
+> 	struct iomap srcmap = { .type = IOMAP_HOLE };
+> 
+> in the iomap_apply function (and change the "if (!srcmap.type)" checks
+> to "if (srcmap.type != IOMAP_HOLE)").  That would get rid of the weird
+> situation where iomap.h doesn't define an iomap type name corresponding
+> to 0 but clearly it has some special meaning because the iomap code
+> changes behavior based on that.
+> 
+> It also strikes me as weird that for the @imap parameter, type == 0
+> would be considered a coding error but for @srcmap, we use type == 0 to
+> mean "no mapping" but we don't do that for @srcmap.type == IOMAP_HOLE.
+> 
+> I mention that because, if some ->iomap_begin function returns
+> IOMAP_HOLE then iomap_apply will pass the (hole) srcmap as the second
+> parameter to the ->actor function.  When that happens, iomap_write_begin
+> call will try to fill in the rest of the page from @srcmap (which is
+> hole), not the @iomap (which might not be a hole) which seems wrong.
 
-I think mixing the on-disk trees an an in-memory structure in the same
-command is a really bad idea.  In fact I'm not sure what use the
-calculation for the iext tree is.  It is an implementation detail that
-can (and did) change from release to release, unlike the other trees
-that not going to change without an on-disk format change.
+I've renumber IOMAP_HOLE and initialized all the maps to it, that seems
+like a nice improvement.
+
+> As for this function, if we made the above change, then the conditional
+> becomes unneccessary -- we know this is a COW write, so we call
+> xfs_bmbt_to_iomap on both mappings and exit.  No need for special
+> casing.
+
+OTOH I can't really agree to this.  We now do pointless extra work
+for a common case, which also seems a little confusing.  It also goes
+again the future direction where at least for some cases I want to
+avoid the imap lookup entirely if we don't need it.
