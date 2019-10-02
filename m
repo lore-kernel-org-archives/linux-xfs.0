@@ -2,108 +2,158 @@ Return-Path: <SRS0=zZKn=X3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C1EB7C35280
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 13:07:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 397F7C35280
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 15:39:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97D3421D80
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 13:07:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0D28821920
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 15:39:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="OcATdm0f"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="XLgkpgrp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726901AbfJBNHp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Oct 2019 09:07:45 -0400
-Received: from mail-oi1-f181.google.com ([209.85.167.181]:38274 "EHLO
-        mail-oi1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727194AbfJBNHk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Oct 2019 09:07:40 -0400
-Received: by mail-oi1-f181.google.com with SMTP id m16so17560877oic.5
-        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2019 06:07:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=50mE1GFOx2IDL8fOUBOO94SxADHosM9SfQ7pyxbnHTg=;
-        b=OcATdm0fU0HGv1IIhubCuFeqR/P2N37o7xtR/ZD4irFYeHZyY/QMlcxb9A3jVo1gr4
-         chbxvSvR7VV0Qigg5Ap4In4xkHjYBGjW81DG45OK+R+st0eaUOvKFdRsNtBGfdXXso+G
-         CRT9yAg3GyQINBZ5KBDazaDUYmqZ9vColyWrmK7zf2b7qw3LLSuXB22GA91dRzkb/DN3
-         hVBuovDyfmx09Yu6vWFC0lVHAXaZdX+8e6xTLeBTs8iVaP9DmUzHXZJ5SuCoYXwZ14L3
-         3WdQyTtyBcH2b1o1IoJ8dDqWwniK/IYku412BJ6lj3HdaGvf3lcdbJk/pu8WTervpUsH
-         BKcg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=50mE1GFOx2IDL8fOUBOO94SxADHosM9SfQ7pyxbnHTg=;
-        b=OJ8AMN7JkndoZbx3zRXoLfmrRBOtcKvb2TDSQaw9ajCmxZzBY61Zo6LmaJbsLekSiT
-         oKKuySDoyMR10taGmKs0oF4/+ZuMCyNfftBXUZQdWCwTod+hdcfMCtHuUcr6BmzM6PL2
-         KJmt1uWt9fW+Nrivivzc9BQZLIR7feCHP1hOeVh9OwWI6Syp21BzUZyKG198luNR9eUm
-         Q93vmiLc8xDXlBFSa6lZypJ1nTP6r1blEx1xA6KVsiThMO/POhkezghVGciFdBsEkEEx
-         Tlm7PlgqChhOhnO4ei1uCBAK2ysD/280SLRjQQjYavhOy1oE5Iv1zoicrl6luR/9vbQF
-         tOag==
-X-Gm-Message-State: APjAAAUBPYINHAt5T5MkuHUD3kjyHFJDLPc1HFWLXc6bUAakySRUf4LO
-        T1KHiZUablNil2a8rlvtz0gnvcc26I6TVNuDI+Wbxg==
-X-Google-Smtp-Source: APXvYqxGQ01cpMCqhyT0OZic4du6ntHizaukJRygkeedHLWkQjdo8fNGeQWk8deAiGsRuCSgwYPjlJGf+Xhg9J875/c=
-X-Received: by 2002:aca:eb09:: with SMTP id j9mr2925590oih.105.1570021659582;
- Wed, 02 Oct 2019 06:07:39 -0700 (PDT)
+        id S1727793AbfJBPjS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Oct 2019 11:39:18 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:50252 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726233AbfJBPjS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Oct 2019 11:39:18 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x92FNpcl152678;
+        Wed, 2 Oct 2019 15:38:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=VfRxfeWs1nJoNP3kT5ZXTpLac0Gq+oyCCllmNnro7IA=;
+ b=XLgkpgrp66zXs8MNybhkD0sanL46h2WsbqHpz64XXAmEaCi3pvJi04j7EV5ZWNl2qapC
+ AhoP6UKmR3OcC/8YIpuObL9XQZH1ig3acJjidJ0DTPEnjzC1qqsg8yrhMTKrPhzWLhkx
+ MiPNkhQORVMkhi/rBnlH5uceWbZAcpgZSQ9y58N2jP61Zx2DzAfx8X4tcQfDWSoHc3BZ
+ 2zt+JHlaZlw5dBBEtNTn2qUpIxTh2HmPy9uRoXppWiXi8/+p+1+ATsmWDS/EO+L2/AUE
+ vrf8n/OhyG7THPcwdsOol9FuYpbIoojUBqiyqQNpRAAhEm8GhUgZzLGHQ/WE9lecqLyB 7g== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2v9xxuwuxy-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Oct 2019 15:38:53 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x92FNjnN073831;
+        Wed, 2 Oct 2019 15:38:53 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2vc9dkref5-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 02 Oct 2019 15:38:52 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x92Fcpw4000547;
+        Wed, 2 Oct 2019 15:38:51 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 02 Oct 2019 08:38:51 -0700
+Date:   Wed, 2 Oct 2019 08:38:50 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 06/11] xfs: remove the readpage / readpages tracing code
+Message-ID: <20191002153850.GH13108@magnolia>
+References: <20191001071152.24403-1-hch@lst.de>
+ <20191001071152.24403-7-hch@lst.de>
 MIME-Version: 1.0
-References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
- <20190923222620.GC16973@dread.disaster.area> <20190925234602.GB12748@iweiny-DESK2.sc.intel.com>
- <20190930084233.GO16973@dread.disaster.area> <20191001210156.GB5500@iweiny-DESK2.sc.intel.com>
-In-Reply-To: <20191001210156.GB5500@iweiny-DESK2.sc.intel.com>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Wed, 2 Oct 2019 06:07:27 -0700
-Message-ID: <CAPcyv4jpLYUcqA6D_qfGF4FQCu-SuH67FHLcH0fCQTQ-D+hWzQ@mail.gmail.com>
-Subject: Re: Lease semantic proposal
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     Dave Chinner <david@fromorbit.com>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        linux-ext4 <linux-ext4@vger.kernel.org>,
-        linux-rdma <linux-rdma@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        linux-nvdimm <linux-nvdimm@lists.01.org>,
-        Linux MM <linux-mm@kvack.org>,
-        Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.cz>,
-        "Theodore Ts'o" <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>, Christoph Hellwig <hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191001071152.24403-7-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9398 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910020140
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9398 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910020140
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 1, 2019 at 2:02 PM Ira Weiny <ira.weiny@intel.com> wrote:
->
-> On Mon, Sep 30, 2019 at 06:42:33PM +1000, Dave Chinner wrote:
-> > On Wed, Sep 25, 2019 at 04:46:03PM -0700, Ira Weiny wrote:
-> > > On Tue, Sep 24, 2019 at 08:26:20AM +1000, Dave Chinner wrote:
-> > > > Hence, AFIACT, the above definition of a F_RDLCK|F_LAYOUT lease
-> > > > doesn't appear to be compatible with the semantics required by
-> > > > existing users of layout leases.
-> > >
-> > > I disagree.  Other than the addition of F_UNBREAK, I think this is consistent
-> > > with what is currently implemented.  Also, by exporting all this to user space
-> > > we can now write tests for it independent of the RDMA pinning.
-> >
-> > The current usage of F_RDLCK | F_LAYOUT by the pNFS code allows
-> > layout changes to occur to the file while the layout lease is held.
->
-> This was not my understanding.
+On Tue, Oct 01, 2019 at 09:11:47AM +0200, Christoph Hellwig wrote:
+> The actual iomap implementations now have equivalent trace points.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-I think you guys are talking past each other. F_RDLCK | F_LAYOUT can
-be broken to allow writes to the file / layout. The new unbreakable
-case would require explicit SIGKILL as "revocation method of last
-resort", but that's the new incremental extension being proposed. No
-changes to the current behavior of F_RDLCK | F_LAYOUT.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Dave, the question at hand is whether this new layout lease mode being
-proposed is going to respond to BREAK_WRITE, or just BREAK_UNMAP. It
-seems longterm page pinning conflicts really only care about
-BREAK_UNMAP where pages that were part of the file are being removed
-from the file. The unbreakable case can tolerate layout changes that
-keep pinned pages mapped / allocated to the file.
+--D
+
+> ---
+>  fs/xfs/xfs_aops.c  |  2 --
+>  fs/xfs/xfs_trace.h | 26 --------------------------
+>  2 files changed, 28 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+> index f16d5f196c6b..b6101673c8fb 100644
+> --- a/fs/xfs/xfs_aops.c
+> +++ b/fs/xfs/xfs_aops.c
+> @@ -1160,7 +1160,6 @@ xfs_vm_readpage(
+>  	struct file		*unused,
+>  	struct page		*page)
+>  {
+> -	trace_xfs_vm_readpage(page->mapping->host, 1);
+>  	return iomap_readpage(page, &xfs_iomap_ops);
+>  }
+>  
+> @@ -1171,7 +1170,6 @@ xfs_vm_readpages(
+>  	struct list_head	*pages,
+>  	unsigned		nr_pages)
+>  {
+> -	trace_xfs_vm_readpages(mapping->host, nr_pages);
+>  	return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
+>  }
+>  
+> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
+> index eaae275ed430..eae4b29c174e 100644
+> --- a/fs/xfs/xfs_trace.h
+> +++ b/fs/xfs/xfs_trace.h
+> @@ -1197,32 +1197,6 @@ DEFINE_PAGE_EVENT(xfs_writepage);
+>  DEFINE_PAGE_EVENT(xfs_releasepage);
+>  DEFINE_PAGE_EVENT(xfs_invalidatepage);
+>  
+> -DECLARE_EVENT_CLASS(xfs_readpage_class,
+> -	TP_PROTO(struct inode *inode, int nr_pages),
+> -	TP_ARGS(inode, nr_pages),
+> -	TP_STRUCT__entry(
+> -		__field(dev_t, dev)
+> -		__field(xfs_ino_t, ino)
+> -		__field(int, nr_pages)
+> -	),
+> -	TP_fast_assign(
+> -		__entry->dev = inode->i_sb->s_dev;
+> -		__entry->ino = inode->i_ino;
+> -		__entry->nr_pages = nr_pages;
+> -	),
+> -	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
+> -		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> -		  __entry->ino,
+> -		  __entry->nr_pages)
+> -)
+> -
+> -#define DEFINE_READPAGE_EVENT(name)		\
+> -DEFINE_EVENT(xfs_readpage_class, name,	\
+> -	TP_PROTO(struct inode *inode, int nr_pages), \
+> -	TP_ARGS(inode, nr_pages))
+> -DEFINE_READPAGE_EVENT(xfs_vm_readpage);
+> -DEFINE_READPAGE_EVENT(xfs_vm_readpages);
+> -
+>  DECLARE_EVENT_CLASS(xfs_imap_class,
+>  	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
+>  		 int whichfork, struct xfs_bmbt_irec *irec),
+> -- 
+> 2.20.1
+> 
