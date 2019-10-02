@@ -2,278 +2,406 @@ Return-Path: <SRS0=zZKn=X3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EE2C35280
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 12:28:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B042C352AA
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 12:41:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBC4D21A4C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 12:28:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570019325;
-	bh=XWI9CDInb0DrbsNRwwRNmgAgEHaiFrcluQckq9mzXB4=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
-	b=FqV+ZD+BpyfAk9Cms9BIKVOqwsP4/u0shtGjFmLLnJJiv1ZqzokiQRI/v31m0xxav
-	 NLN7awwBBPtejURJi9xP62qj4gIjPd+6MyZxVOs+uDDPu9hOi0SGJZKZKCo+r9n0ur
-	 kxvbeqke/AXcwemc6acf2mQ5wd4R3TFhWF1MvbxI=
+	by mail.kernel.org (Postfix) with ESMTP id 68BF02133F
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 12:41:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726682AbfJBM2o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Oct 2019 08:28:44 -0400
-Received: from mail.kernel.org ([198.145.29.99]:32914 "EHLO mail.kernel.org"
+        id S1726645AbfJBMk7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Oct 2019 08:40:59 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:48772 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726338AbfJBM2o (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Oct 2019 08:28:44 -0400
-Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        id S1726043AbfJBMk7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 2 Oct 2019 08:40:59 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 6294421920;
-        Wed,  2 Oct 2019 12:28:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570019322;
-        bh=XWI9CDInb0DrbsNRwwRNmgAgEHaiFrcluQckq9mzXB4=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=2nEVe8XSLbB5MQDasTDnsngKj+RM4dhnG3Bwru3vSINAJ5gsaBNU5KEgKu2F3ZNpg
-         530yTQXdKg+XURUlLYHilsg/petq4wNG4lELGs/J4gCZM8Cx/5D5FjpEiJ7rVIXlA1
-         ER+MMDtiV+D7o3B9OtcILbFBQAHOYvgS45ZYoMWo=
-Message-ID: <2b42cf4ae669cedd061c937103674babad758712.camel@kernel.org>
-Subject: Re: Lease semantic proposal
-From:   Jeff Layton <jlayton@kernel.org>
-To:     Ira Weiny <ira.weiny@intel.com>
-Cc:     linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-ext4@vger.kernel.org, linux-rdma@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-nvdimm@lists.01.org,
-        linux-mm@kvack.org, Dave Chinner <david@fromorbit.com>,
-        Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Date:   Wed, 02 Oct 2019 08:28:40 -0400
-In-Reply-To: <20191001181659.GA5500@iweiny-DESK2.sc.intel.com>
-References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
-         <5d5a93637934867e1b3352763da8e3d9f9e6d683.camel@kernel.org>
-         <20191001181659.GA5500@iweiny-DESK2.sc.intel.com>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        by mx1.redhat.com (Postfix) with ESMTPS id D136018CB8FE;
+        Wed,  2 Oct 2019 12:40:58 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 66348194B6;
+        Wed,  2 Oct 2019 12:40:58 +0000 (UTC)
+Date:   Wed, 2 Oct 2019 08:40:56 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
+Message-ID: <20191002124056.GA2403@bfoster>
+References: <20190930060344.14561-1-david@fromorbit.com>
+ <20190930060344.14561-3-david@fromorbit.com>
+ <20190930170358.GD57295@bfoster>
+ <20190930215336.GR16973@dread.disaster.area>
+ <20191001131304.GA62428@bfoster>
+ <20191001223107.GT16973@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191001223107.GT16973@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.63]); Wed, 02 Oct 2019 12:40:58 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2019-10-01 at 11:17 -0700, Ira Weiny wrote:
-> On Mon, Sep 23, 2019 at 04:17:59PM -0400, Jeff Layton wrote:
-> > On Mon, 2019-09-23 at 12:08 -0700, Ira Weiny wrote:
-> > > Since the last RFC patch set[1] much of the discussion of supporting RDMA with
-> > > FS DAX has been around the semantics of the lease mechanism.[2]  Within that
-> > > thread it was suggested I try and write some documentation and/or tests for the
-> > > new mechanism being proposed.  I have created a foundation to test lease
-> > > functionality within xfstests.[3] This should be close to being accepted.
-> > > Before writing additional lease tests, or changing lots of kernel code, this
-> > > email presents documentation for the new proposed "layout lease" semantic.
+On Wed, Oct 02, 2019 at 08:31:07AM +1000, Dave Chinner wrote:
+> On Tue, Oct 01, 2019 at 09:13:04AM -0400, Brian Foster wrote:
+> > On Tue, Oct 01, 2019 at 07:53:36AM +1000, Dave Chinner wrote:
+> > > On Mon, Sep 30, 2019 at 01:03:58PM -0400, Brian Foster wrote:
+> > > > Have you done similar testing for small/minimum sized logs?
 > > > 
-> > > At Linux Plumbers[4] just over a week ago, I presented the current state of the
-> > > patch set and the outstanding issues.  Based on the discussion there, well as
-> > > follow up emails, I propose the following addition to the fcntl() man page.
-> > > 
-> > > Thank you,
-> > > Ira
-> > > 
-> > > [1] https://lkml.org/lkml/2019/8/9/1043
-> > > [2] https://lkml.org/lkml/2019/8/9/1062
-> > > [3] https://www.spinics.net/lists/fstests/msg12620.html
-> > > [4] https://linuxplumbersconf.org/event/4/contributions/368/
-> > > 
+> > > Yes. I've had the tracepoint active during xfstests runs on test
+> > > filesystems using default log sizes on 5-15GB filesystems. The only
+> > > test in all of xfstests that has triggered it is generic/017, and it
+> > > only triggered once.
 > > > 
 > > 
-> > Thank you so much for doing this, Ira. This allows us to debate the
-> > user-visible behavior semantics without getting bogged down in the
-> > implementation details. More comments below:
+> > Ok, interesting. I guess it would be nice if we had a test that somehow
+> > or another more effectively exercised this codepath.
 > 
-> Thanks.  Sorry for the delay in response.  Turns out this email was in my
-> spam...  :-/  I'll need to work out why.
+> *nod*
 > 
-> > > <fcntl man page addition>
-> > > Layout Leases
-> > > -------------
+> But it's essentially difficult to predict in any way because
+> behaviour is not just a function of log size. :/
+> 
+> > > > Also, if this is so limited in occurrence, had you given any thought to
+> > > > something even more simple like flushing the CIL push workqueue when
+> > > > over the throttle threshold?
 > > > 
-> > > Layout (F_LAYOUT) leases are special leases which can be used to control and/or
-> > > be informed about the manipulation of the underlying layout of a file.
+> > > Yes, I've tried that - flush_workqueue() blocks /everything/ until
+> > > all the queued work is complete. That means it waits for the CIL to
+> > > flush to disk and write a commit record, and every modification in
+> > > the filesystem is stopped dead in it's tracks until the CIL push is
+> > > complete.
 > > > 
-> > > A layout is defined as the logical file block -> physical file block mapping
-> > > including the file size and sharing of physical blocks among files.  Note that
-> > > the unwritten state of a block is not considered part of file layout.
-> > > 
-> > > **Read layout lease F_RDLCK | F_LAYOUT**
-> > > 
-> > > Read layout leases can be used to be informed of layout changes by the
-> > > system or other users.  This lease is similar to the standard read (F_RDLCK)
-> > > lease in that any attempt to change the _layout_ of the file will be reported to
-> > > the process through the lease break process.  But this lease is different
-> > > because the file can be opened for write and data can be read and/or written to
-> > > the file as long as the underlying layout of the file does not change.
-> > > Therefore, the lease is not broken if the file is simply open for write, but
-> > > _may_ be broken if an operation such as, truncate(), fallocate() or write()
-> > > results in changing the underlying layout.
-> > > 
-> > > **Write layout lease (F_WRLCK | F_LAYOUT)**
-> > > 
-> > > Write Layout leases can be used to break read layout leases to indicate that
-> > > the process intends to change the underlying layout lease of the file.
-> > > 
-> > > A process which has taken a write layout lease has exclusive ownership of the
-> > > file layout and can modify that layout as long as the lease is held.
-> > > Operations which change the layout are allowed by that process.  But operations
-> > > from other file descriptors which attempt to change the layout will break the
-> > > lease through the standard lease break process.  The F_LAYOUT flag is used to
-> > > indicate a difference between a regular F_WRLCK and F_WRLCK with F_LAYOUT.  In
-> > > the F_LAYOUT case opens for write do not break the lease.  But some operations,
-> > > if they change the underlying layout, may.
-> > > 
-> > > The distinction between read layout leases and write layout leases is that
-> > > write layout leases can change the layout without breaking the lease within the
-> > > owning process.  This is useful to guarantee a layout prior to specifying the
-> > > unbreakable flag described below.
-> > > 
+> > > The problem is that flushing workqueues is a synchronous operation,
+> > > and it can't wait for partial work completion. We only need to wait
+> > > for the CIL context to be swapped out - this is done by the push
+> > > code before it starts all the expensive iclog formating and waiting
+> > > for iclog space...
 > > > 
 > > 
-> > The above sounds totally reasonable. You're essentially exposing the
-> > behavior of nfsd's layout leases to userland. To be clear, will F_LAYOUT
-> > leases work the same way as "normal" leases, wrt signals and timeouts?
+> > I know it waits on the work to complete. I poked around a bit for an
+> > interface to "kick" a workqueue, so to speak (as opposed to flush), but
+> > I didn't see anything (not surprisingly, since it probably wouldn't be a
+> > broadly useful mechanism).
 > 
-> That was my intention, yes.
->
-> > I do wonder if we're better off not trying to "or" in flags for this,
-> > and instead have a separate set of commands (maybe F_RDLAYOUT,
-> > F_WRLAYOUT, F_UNLAYOUT). Maybe I'm just bikeshedding though -- I don't
-> > feel terribly strongly about it.
+> *nod*
 > 
-> I'm leaning that was as well.  To make these even more distinct from
-> F_SETLEASE.
+> > That aside, where would this wait on the CIL to flush to disk? AFAICT
+> > the only thing that might happen here is log buffer submission. That
+> > only happens when the log buffer is full (regardless of the current CIL
+> > push writing its commit record). In fact if we did wait on I/O anywhere
+> > in here, then that suggests potential problems with async log force.
 > 
-> > Also, at least in NFSv4, layouts are handed out for a particular byte
-> > range in a file. Should we consider doing this with an API that allows
-> > for that in the future? Is this something that would be desirable for
-> > your RDMA+DAX use-cases?
-> 
-> I don't see this.  I've thought it would be a nice thing to have but I don't
-> know of any hard use case.  But first I'd like to understand how this works for
-> NFS.
+> There is no such thing as a "async log force". The log force always
+> waits on the CIL flush - XFS_LOG_SYNC only defines whether it waits
+> on all iclogbufs post CIL flush to hit the disk.
 > 
 
-The NFSv4.1 spec allows the client to request the layouts for a
-particular range in the file:
+I'm just referring to the semantics/naming of the existing interface. I
+suppose I could have used "a log force that doesn't wait on all
+iclogbufs to hit the disk," but that doesn't quite roll off the tongue.
+;)
 
-https://tools.ietf.org/html/rfc5661#page-538
-
-The knfsd only hands out whole-file layouts at present. Eventually we
-may want to make better use of segmented layouts, at which point we'd
-need something like a byte-range lease.
-
-> > We could add a new F_SETLEASE variant that takes a struct with a byte
-> > range (something like struct flock).
+> Further, when the CIL flushes, it's normally flushing more metadata that we
+> can hold in 8x iclogbufs. The default is 32kB iclogbufs, so if we've
+> got more than 256kB of checkpoint data to be written, then we end up
+> waiting on iclogbuf completion to write more then 256kB.
 > 
-> I think this would be another reason to introduce F_[RD|WR|UN]LAYOUT as a
-> command.  Perhaps supporting smaller byte ranges could be added later?
+> Typically I see a sustainted ratio of roughly 4 iclog writes to 1
+> noiclogbufs in the metric graphs on small logs - just measured 700
+> log writes/s, 250 noiclogs/s for a 64MB log and 256kB logbuf size.
+> IOWs, CIL flushes are regularly waiting in xlog_get_iclog_space() on
+> iclog IO completion to occur...
 > 
 
-I'd definitely not multiplex this over F_SETLEASE. An F_SETLAYOUT cmd
-would probably be sufficient, and maybe just reuse
-F_RDLCK/F_WRLCK/F_UNLCK for the iomode?
+Ok, that's not quite what I was concerned about when you mentioned
+waiting on the CIL to flush to disk. No matter, the important bit here
+is the performance cost of including the extra blocking on log I/O (to
+cycle iclogs back to active for reuse) in the throttle.
 
-For the byte ranges, the catch there is that extending the userland
-interface for that later will be difficult. What I'd probably suggest
-(and what would jive with the way pNFS works) would be to go ahead and
-add an offset and length to the arguments and result (maybe also
-whence?).
+I'm curious about how noticeable this extra blocking would be because
+it's one likely cause of the CIL pressure buildup in the first place. My
+original tests reproduced huge CIL checkpoints purely based on one CIL
+push being blocked behind the processing of another, the latter taking
+relatively more time due to log I/O.
 
-The current kernel implementation could be free to deliver a larger
-range than requested and only hand out full-file layouts for now.
-Eventually we could rework the internals to allow for byte-range layout
-leases.
+This is not to say there aren't other causes of excessively sized
+checkpoints. Rather, if we're at a point where we've blocked
+transactions on this new threshold, that means we've doubled the
+background threshold in the time we've first triggered a background CIL
+push and the push actually started. From that, it seems fairly likely
+that we could replenish the CIL to the background threshold once
+threads are unblocked but before the previous push completes.
 
-I think this means that you'll probably require an argument struct for
-layouts, analogous to struct flock for F_SETLK.
+The question is: can we get all the way to the blocking threshold before
+that happens? That doesn't seem unrealistic to me, but it's hard to
+reason about without having tested it. If so, I think it means we end up
+blocking on completion of the first push to some degree anyways.
 
-> > > **Unbreakable Layout Leases (F_UNBREAK)**
+> > > > That would wait longer to fill the iclogs,
+> > > > but would eliminate the need for another waitqueue that's apparently
+> > > > only used for throttling. It may also facilitate reuse of
+> > > > xlog_cil_push_now() in the >= XLOG_CIL_SPACE_BLOCKING_LIMIT() case
+> > > > (actually, I think this could facilitate the elimination of
+> > > > xlog_cil_push_background() entirely).
 > > > 
-> > > In order to support pinning of file pages by direct user space users an
-> > > unbreakable flag (F_UNBREAK) can be used to modify the read and write layout
-> > > lease.  When specified, F_UNBREAK indicates that any user attempting to break
-> > > the lease will fail with ETXTBUSY rather than follow the normal breaking
-> > > procedure.
-> > > 
-> > > Both read and write layout leases can have the unbreakable flag (F_UNBREAK)
-> > > specified.  The difference between an unbreakable read layout lease and an
-> > > unbreakable write layout lease are that an unbreakable read layout lease is
-> > > _not_ exclusive.  This means that once a layout is established on a file,
-> > > multiple unbreakable read layout leases can be taken by multiple processes and
-> > > used to pin the underlying pages of that file.
-> > > 
-> > > Care must therefore be taken to ensure that the layout of the file is as the
-> > > user wants prior to using the unbreakable read layout lease.  A safe mechanism
-> > > to do this would be to take a write layout lease and use fallocate() to set the
-> > > layout of the file.  The layout lease can then be "downgraded" to unbreakable
-> > > read layout as long as no other user broke the write layout lease.
+> > > xlog_cil_push_now() uses flush_work() to push any pending work
+> > > before it queues up the CIL flush that the caller is about to wait
+> > > for.  i.e. the callers of xlog_cil_push_now() must ensure that all
+> > > CIL contexts are flushed for the purposes of a log force as they are
+> > > going to wait for all pending CIL flushes to complete. If we've
+> > > already pushed the CIL to the sequence that we are asking to push
+> > > to, we still have to wait for that previous push to be
+> > > done. This is what the flush_work() call in xlog_cil_push_now()
+> > > acheives.
 > > > 
 > > 
-> > Will userland require any special privileges in order to set an
-> > F_UNBREAK lease? This seems like something that could be used for DoS. I
-> > assume that these will never time out.
+> > Yes, I'm just exploring potential to reuse this code..
 > 
-> Dan and I discussed this some more and yes I think the uid of the process needs
-> to be the owner of the file.  I think that is a reasonable mechanism.
-> 
-
-If that's the model we want to use, then I think the owner of the file
-will need some mechanism to forcibly seize the layout in this event.
-
-What happens when the file is chowned in that case. Is that also denied?
-If I set an F_UNBREAK layout (maybe as root) and then setuid(), do I get
-to keep the layout?
-
-> > How will we deal with the case where something is is squatting on an
-> > F_UNBREAK lease and isn't letting it go?
-> 
-> That is a good question.  I had not considered someone taking the UNBREAK
-> without pinning the file.
+> Yeah, I have a few prototype patches for revamping this, including
+> an actual async CIL flush. I do some work here, but it didn't solve
+> any of the problems I needed to fix so it put it aside. See below.
 > 
 
-Even if the file is "pinned", I think this is still something that could
-be abused. We need to try to consider how we will address those
-situations up front.
+That sounds more involved than what I was thinking. My thought is that
+this throttle is already not predictable or deterministic (i.e. we're
+essentially waiting on a scheduler event) and so might not require the
+extra complexity of a new waitqueue. It certainly could be the case that
+blocking on the entire push is just too long in practice, but since this
+is already based on empirical evidence and subject to unpredictability,
+ISTM that testing is the only way to know for sure. For reference, I
+hacked up something to reuse xlog_cil_push_now() for background pushing
+and throttling that ends up removing 20 or so lines of code by the time
+it's in place, but I haven't given it any testing.
 
-In that same vein, I know you mentioned that conflicting activity will
-just be denied when there is an outstanding F_UNBREAK lease. Will the
-process holding one be notified in some fashion when another task
-attempts to do some conflicting activity?
+That said, this is just an observation and an idea. I'm fine with the
+proposed implementation with the other nits and whatnot fixed up.
 
-> > Leases are technically "owned" by the file description -- we can't
-> > necessarily trace it back to a single task in a threaded program. The
-> > kernel task that set the lease may have exited by the time we go
-> > looking.
+Brian
+
+> > > > > +	/*
+> > > > > +	 * If we are well over the space limit, throttle the work that is being
+> > > > > +	 * done until the push work on this context has begun.
+> > > > > +	 */
+> > > > > +	if (cil->xc_ctx->space_used >= XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
+> > > > 
+> > > > Can we use consistent logic with the rest of the function? I.e.
+> > > > 
+> > > > 	up_read(..);
+> > > > 	if (space_used < XLOG_CIL_BLOCKING_SPACE_LIMIT(log)) {
+> > > > 		spin_unlock(..);
+> > > > 		return;
+> > > > 	}
+> > > 
+> > > I did it this way because code inside the if() statement is
+> > > typically pushed out of line by the compiler if it finished with a
+> > > return statement (i.e. the compiler makes an "unlikely" static
+> > > prediction). Hence it's best to put the slow path code inside thei
+> > > if(), not the fast path code.
+> > > 
 > > 
-> > Will we be content trying to determine this using /proc/locks+lsof, etc,
-> > or will we need something better?
+> > It looks to me that occurs regardless of whether there's a return
+> > statement or not. AFAICT, this branching aready happens in the fast exit
+> > path of this function as well as for the queue_work() branch. So if it
+> > matters that much, perhaps the rest of the function should change
+> > appropriately..
+> > 
+> > > I can change it, but then we're into ugly likely()/unlikely() macro
+> > > territory and I much prefer to structure the code so things like
+> > > that are completely unnecessary.
+> > > 
+> > 
+> > Hasn't the [un]likely() stuff been considered bogus for a while now?
 > 
-> I think using /proc/locks is our best bet.  Similar to my intention to report
-> files being pinned.[1]
+> Yes, mainly because they are often wrongi and often the compiler and
+> hardware do a much better job with static and/or dynamic prediction.
+> Nobody ever profiles the branch predictions to check the manual
+> annotations are correct and valid, and code can change over time
+> meaning the static prediction is wrong...
 > 
-> In fact should we consider files with F_UNBREAK leases "pinned" and just report
-> them there?
+> > Either way, we're already under spinlock at this point so this isn't a
+> > fast exit path. We're talking about branching to an exit path that
+> > still requires a function call (i.e. branch) to unlock the spinlock
+> > before we return. Combine that with the rest of the function and I'm
+> > having a hard time seeing how the factoring affects performance in
+> > practice. Maybe it does, but I guess I'd want to see some data to grok
+> > that the very least.
 > 
-> [1] https://lkml.org/lkml/2019/8/9/1043
-
-Sure, but eventually you'll want to track that back to a process that is
-holding the thing. /proc/locks just shows you dev+ino for a particular
-lock. You'll need to use something like lsof to figure out who is
-holding the file open.
-
-Since layouts aren't necessarily broken on open, there may be a bunch of
-tasks that have the file open. How will you identify which one holds the
-F_UNBREAK layout?
--- 
-Jeff Layton <jlayton@kernel.org>
-
+> I'm not wedded to a specific layout, just explaining the reasoning.
+> I'll change it for the next revision...
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
+> 
+> xfs: Don't block tail pushing on CIL forces
+> 
+> From: Dave Chinner <dchinner@redhat.com>
+> 
+> When AIL tail pushing encounters a pinned item, it forces the log
+> and waits for it to complete before it starts walking items again.
+> However, in forcing the log it waits for all the dirty objects in
+> memory to be written to the log, hence waiting for (potentially) a
+> lot of log IO to complete when the CIL contains thousands of dirty
+> objects. This can block processing of the AIL for seconds and
+> prevent the tail of the log from being moved forward while the AIL
+> is blocked.
+> 
+> To prevent the log tail pushing from waiting on log flushes, just
+> trigger a CIL push from the xfsaild instead of a full log force.
+> This will get the majority of the items pinned moving via teh CIL
+> workqueue and so won't cause the xfsaild to wait for it to complete
+> before it can do it's own work.
+> 
+> Further, the AIL has it's own backoff waits, so move the CIL push
+> to before the AIL backoff wait rather than afterwards, so the CIL
+> has time to do some work before the AIL will start scanning again.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
+>  fs/xfs/xfs_log_cil.c   | 13 ++++++++-----
+>  fs/xfs/xfs_log_priv.h  | 22 ++++++++++++++++++----
+>  fs/xfs/xfs_trans_ail.c | 29 +++++++++++++++--------------
+>  3 files changed, 41 insertions(+), 23 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> index 2f4cfd5b707e..a713f58e9e86 100644
+> --- a/fs/xfs/xfs_log_cil.c
+> +++ b/fs/xfs/xfs_log_cil.c
+> @@ -931,7 +931,7 @@ xlog_cil_push_background(
+>   * @push_seq, but it won't be completed. The caller is expected to do any
+>   * waiting for push_seq to complete if it is required.
+>   */
+> -static void
+> +void
+>  xlog_cil_push_now(
+>  	struct xlog	*log,
+>  	xfs_lsn_t	push_seq)
+> @@ -941,21 +941,24 @@ xlog_cil_push_now(
+>  	if (!cil)
+>  		return;
+>  
+> -	ASSERT(push_seq && push_seq <= cil->xc_current_sequence);
+> -
+>  	/*
+>  	 * If the CIL is empty or we've already pushed the sequence then
+> -	 * there's no work we need to do.
+> +	 * there's no work we need to do. If push_seq is not set, someone is
+> +	 * just giving us the hurry up (e.g. to unpin objects without otherwise
+> +	 * waiting on completion) so just push the current context.
+>  	 */
+>  	spin_lock(&cil->xc_push_lock);
+> +	if (!push_seq)
+> +		push_seq = cil->xc_current_sequence;
+> +
+>  	if (list_empty(&cil->xc_cil) || push_seq <= cil->xc_push_seq) {
+>  		spin_unlock(&cil->xc_push_lock);
+>  		return;
+>  	}
+>  
+>  	cil->xc_push_seq = push_seq;
+> -	spin_unlock(&cil->xc_push_lock);
+>  	queue_work(log->l_mp->m_cil_workqueue, &cil->xc_push_work);
+> +	spin_unlock(&cil->xc_push_lock);
+>  }
+>  
+>  bool
+> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+> index f66043853310..7842f923b3a1 100644
+> --- a/fs/xfs/xfs_log_priv.h
+> +++ b/fs/xfs/xfs_log_priv.h
+> @@ -520,11 +520,25 @@ bool	xlog_cil_empty(struct xlog *log);
+>  
+>  /*
+>   * CIL force routines
+> + *
+> + * If you just want to schedule a CIL context flush to get things moving but
+> + * not wait for anything (not an integrity operation!), use
+> + *
+> + *		xlog_cil_push_now(log, 0);
+> + *
+> + * Blocking or integrity based CIL forces should not be called directly, but
+> + * instead be marshalled through xfs_log_force(). i.e. if you want to:
+> + *
+> + *	- flush and wait for the entire CIL to be submitted to the log, use
+> + *		xfs_log_force(mp, 0);
+> + *
+> + *	- flush and wait for the CIL to be stable on disk and all items to be
+> + *	  inserted into the AIL, use
+> + *		xfs_log_force(mp, XFS_LOG_SYNC);
+>   */
+> -xfs_lsn_t
+> -xlog_cil_force_lsn(
+> -	struct xlog *log,
+> -	xfs_lsn_t sequence);
+> +void xlog_cil_push_now(struct xlog *log, xfs_lsn_t sequence);
+> +
+> +xfs_lsn_t xlog_cil_force_lsn(struct xlog *log, xfs_lsn_t sequence);
+>  
+>  static inline void
+>  xlog_cil_force(struct xlog *log)
+> diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+> index 5802139f786b..c9d8d05c3594 100644
+> --- a/fs/xfs/xfs_trans_ail.c
+> +++ b/fs/xfs/xfs_trans_ail.c
+> @@ -13,6 +13,7 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_trans.h"
+>  #include "xfs_trans_priv.h"
+> +#include "xfs_log_priv.h"
+>  #include "xfs_trace.h"
+>  #include "xfs_errortag.h"
+>  #include "xfs_error.h"
+> @@ -381,20 +382,6 @@ xfsaild_push(
+>  	int			flushing = 0;
+>  	int			count = 0;
+>  
+> -	/*
+> -	 * If we encountered pinned items or did not finish writing out all
+> -	 * buffers the last time we ran, force the log first and wait for it
+> -	 * before pushing again.
+> -	 */
+> -	if (ailp->ail_log_flush && ailp->ail_last_pushed_lsn == 0 &&
+> -	    (!list_empty_careful(&ailp->ail_buf_list) ||
+> -	     xfs_ail_min_lsn(ailp))) {
+> -		ailp->ail_log_flush = 0;
+> -
+> -		XFS_STATS_INC(mp, xs_push_ail_flush);
+> -		xfs_log_force(mp, XFS_LOG_SYNC);
+> -	}
+> -
+>  	spin_lock(&ailp->ail_lock);
+>  
+>  	/* barrier matches the ail_target update in xfs_ail_push() */
+> @@ -528,6 +515,20 @@ xfsaild_push(
+>  		tout = 10;
+>  	}
+>  
+> +	/*
+> +	 * If we encountered pinned items or did not finish writing out all
+> +	 * buffers the last time we ran, give the CIL a nudge to start
+> +	 * unpinning the blocked items while we wait for a while...
+> +	 */
+> +	if (ailp->ail_log_flush && ailp->ail_last_pushed_lsn == 0 &&
+> +	    (!list_empty_careful(&ailp->ail_buf_list) ||
+> +	     xfs_ail_min_lsn(ailp))) {
+> +		ailp->ail_log_flush = 0;
+> +
+> +		XFS_STATS_INC(mp, xs_push_ail_flush);
+> +		xlog_cil_push_now(mp->m_log, 0);
+> +	}
+> +
+>  	return tout;
+>  }
+>  
