@@ -2,156 +2,108 @@ Return-Path: <SRS0=zZKn=X3=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E26FCC352AA
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 12:41:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1EB7C35280
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 13:07:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C2DC121A4C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 12:41:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97D3421D80
+	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 13:07:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="OcATdm0f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726373AbfJBMlm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Oct 2019 08:41:42 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:54618 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725766AbfJBMlm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Oct 2019 08:41:42 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id BBF278A1C96;
-        Wed,  2 Oct 2019 12:41:41 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 646996013A;
-        Wed,  2 Oct 2019 12:41:41 +0000 (UTC)
-Date:   Wed, 2 Oct 2019 08:41:39 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
-Message-ID: <20191002124139.GB2403@bfoster>
-References: <20190930060344.14561-1-david@fromorbit.com>
- <20190930060344.14561-3-david@fromorbit.com>
- <20190930170358.GD57295@bfoster>
- <20190930215336.GR16973@dread.disaster.area>
- <20191001034207.GS16973@dread.disaster.area>
- <20191001131336.GB62428@bfoster>
- <20191001231433.GU16973@dread.disaster.area>
+        id S1726901AbfJBNHp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Oct 2019 09:07:45 -0400
+Received: from mail-oi1-f181.google.com ([209.85.167.181]:38274 "EHLO
+        mail-oi1-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727194AbfJBNHk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Oct 2019 09:07:40 -0400
+Received: by mail-oi1-f181.google.com with SMTP id m16so17560877oic.5
+        for <linux-xfs@vger.kernel.org>; Wed, 02 Oct 2019 06:07:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=intel-com.20150623.gappssmtp.com; s=20150623;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=50mE1GFOx2IDL8fOUBOO94SxADHosM9SfQ7pyxbnHTg=;
+        b=OcATdm0fU0HGv1IIhubCuFeqR/P2N37o7xtR/ZD4irFYeHZyY/QMlcxb9A3jVo1gr4
+         chbxvSvR7VV0Qigg5Ap4In4xkHjYBGjW81DG45OK+R+st0eaUOvKFdRsNtBGfdXXso+G
+         CRT9yAg3GyQINBZ5KBDazaDUYmqZ9vColyWrmK7zf2b7qw3LLSuXB22GA91dRzkb/DN3
+         hVBuovDyfmx09Yu6vWFC0lVHAXaZdX+8e6xTLeBTs8iVaP9DmUzHXZJ5SuCoYXwZ14L3
+         3WdQyTtyBcH2b1o1IoJ8dDqWwniK/IYku412BJ6lj3HdaGvf3lcdbJk/pu8WTervpUsH
+         BKcg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=50mE1GFOx2IDL8fOUBOO94SxADHosM9SfQ7pyxbnHTg=;
+        b=OJ8AMN7JkndoZbx3zRXoLfmrRBOtcKvb2TDSQaw9ajCmxZzBY61Zo6LmaJbsLekSiT
+         oKKuySDoyMR10taGmKs0oF4/+ZuMCyNfftBXUZQdWCwTod+hdcfMCtHuUcr6BmzM6PL2
+         KJmt1uWt9fW+Nrivivzc9BQZLIR7feCHP1hOeVh9OwWI6Syp21BzUZyKG198luNR9eUm
+         Q93vmiLc8xDXlBFSa6lZypJ1nTP6r1blEx1xA6KVsiThMO/POhkezghVGciFdBsEkEEx
+         Tlm7PlgqChhOhnO4ei1uCBAK2ysD/280SLRjQQjYavhOy1oE5Iv1zoicrl6luR/9vbQF
+         tOag==
+X-Gm-Message-State: APjAAAUBPYINHAt5T5MkuHUD3kjyHFJDLPc1HFWLXc6bUAakySRUf4LO
+        T1KHiZUablNil2a8rlvtz0gnvcc26I6TVNuDI+Wbxg==
+X-Google-Smtp-Source: APXvYqxGQ01cpMCqhyT0OZic4du6ntHizaukJRygkeedHLWkQjdo8fNGeQWk8deAiGsRuCSgwYPjlJGf+Xhg9J875/c=
+X-Received: by 2002:aca:eb09:: with SMTP id j9mr2925590oih.105.1570021659582;
+ Wed, 02 Oct 2019 06:07:39 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191001231433.GU16973@dread.disaster.area>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.69]); Wed, 02 Oct 2019 12:41:41 +0000 (UTC)
+References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
+ <20190923222620.GC16973@dread.disaster.area> <20190925234602.GB12748@iweiny-DESK2.sc.intel.com>
+ <20190930084233.GO16973@dread.disaster.area> <20191001210156.GB5500@iweiny-DESK2.sc.intel.com>
+In-Reply-To: <20191001210156.GB5500@iweiny-DESK2.sc.intel.com>
+From:   Dan Williams <dan.j.williams@intel.com>
+Date:   Wed, 2 Oct 2019 06:07:27 -0700
+Message-ID: <CAPcyv4jpLYUcqA6D_qfGF4FQCu-SuH67FHLcH0fCQTQ-D+hWzQ@mail.gmail.com>
+Subject: Re: Lease semantic proposal
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        linux-ext4 <linux-ext4@vger.kernel.org>,
+        linux-rdma <linux-rdma@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-nvdimm <linux-nvdimm@lists.01.org>,
+        Linux MM <linux-mm@kvack.org>,
+        Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.cz>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 02, 2019 at 09:14:33AM +1000, Dave Chinner wrote:
-> On Tue, Oct 01, 2019 at 09:13:36AM -0400, Brian Foster wrote:
-> > On Tue, Oct 01, 2019 at 01:42:07PM +1000, Dave Chinner wrote:
-> > > On Tue, Oct 01, 2019 at 07:53:36AM +1000, Dave Chinner wrote:
-> > > > On Mon, Sep 30, 2019 at 01:03:58PM -0400, Brian Foster wrote:
-> > > > > Have you done similar testing for small/minimum sized logs?
-> > > > 
-> > > > Yes. I've had the tracepoint active during xfstests runs on test
-> > > > filesystems using default log sizes on 5-15GB filesystems. The only
-> > > > test in all of xfstests that has triggered it is generic/017, and it
-> > > > only triggered once.
-> > > > 
-> > > > e.g.
-> > > > 
-> > > > # trace-cmd start -e xfs_log_cil_wait
-> > > > <run xfstests>
-> > > > # trace-cmd show
-> > > > # tracer: nop
-> > > > #
-> > > > # entries-in-buffer/entries-written: 1/1   #P:4
-> > > > #
-> > > > #                              _-----=> irqs-off
-> > > > #                             / _----=> need-resched
-> > > > #                            | / _---=> hardirq/softirq
-> > > > #                            || / _--=> preempt-depth
-> > > > #                            ||| /     delay
-> > > > #           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-> > > > #              | |       |   ||||       |         |
-> > > >           xfs_io-2158  [001] ...1   309.285959: xfs_log_cil_wait: dev 8:96 t_ocnt 1 t_cnt 1 t_curr_res 67956 t_unit_res 67956 t_flags XLOG_TIC_INITED reserveq empty writeq empty grant_reserve_cycle 75 grant_reserve_bytes 12878480 grant_write_cycle 75 grant_write_bytes 12878480 curr_cycle 75 curr_block 10448 tail_cycle 75 tail_block 3560
-> > > > #
-> > > > 
-> > > > And the timestamp matched the time that generic/017 was running.
-> > > 
-> > > SO I've run this on my typical 16-way fsmark workload with different
-> > > size logs. It barely triggers on log sizes larger than 64MB, on 32MB
-> > > logs I can see it capturing all 16 fsmark processes while waiting
-> > > for the CIL context to switch. This will give you an idea of the
-> > > log cycles the capture is occuring on, and the count of processes
-> > > being captured:
-> > > 
-> > > $ sudo trace-cmd show | awk -e '/^ / {print $23}' | sort -n |uniq -c
-> > >      16 251
-> [snip]
-> > >      16 2892
-> > > $
-> > 
-> > Thanks. I assume I'm looking at cycle numbers and event counts here?
-> 
-> Yes.
-> 
-> > > So typically groups of captures are hundreds of log cycles apart
-> > > (100 cycles x 32MB = ~3GB of log writes), then there will be a
-> > > stutter where the CIL dispatch is delayed, and then everything
-> > > continues on. These all show the log is always around the 75% full
-> > > (AIL tail pushing theshold) but the reservation grant wait lists are
-> > > always empty so we're not running out of reservation space here.
-> > > 
-> > 
-> > It's somewhat interesting that we manage to block every thread most of
-> > the time before the CIL push task starts. I wonder a bit if that pattern
-> > would hold for a system/workload with more CPUs (and if so, if there are
-> > any odd side effects of stalling and waking hundreds of tasks at the
-> > same time vs. our traditional queuing behavior).
-> 
-> If I increase the concurrency (e.g. 16->32 threads for fsmark on a
-> 64MB log), we hammer the spinlock on the grant head -hard-. i.e. CPU
-> usage goes up by 40%, performance goes down by 50%, and all that CPU
-> time is spent spinning on the reserve grant head lock. Basically,
-> the log reservation space runs out, and we end up queuing on the
-> reservation grant head and then we get reminded of just how bad
-> having a serialisation point in the reservation fast path actually
-> is for scalability...
-> 
+On Tue, Oct 1, 2019 at 2:02 PM Ira Weiny <ira.weiny@intel.com> wrote:
+>
+> On Mon, Sep 30, 2019 at 06:42:33PM +1000, Dave Chinner wrote:
+> > On Wed, Sep 25, 2019 at 04:46:03PM -0700, Ira Weiny wrote:
+> > > On Tue, Sep 24, 2019 at 08:26:20AM +1000, Dave Chinner wrote:
+> > > > Hence, AFIACT, the above definition of a F_RDLCK|F_LAYOUT lease
+> > > > doesn't appear to be compatible with the semantics required by
+> > > > existing users of layout leases.
+> > >
+> > > I disagree.  Other than the addition of F_UNBREAK, I think this is consistent
+> > > with what is currently implemented.  Also, by exporting all this to user space
+> > > we can now write tests for it independent of the RDMA pinning.
+> >
+> > The current usage of F_RDLCK | F_LAYOUT by the pNFS code allows
+> > layout changes to occur to the file while the layout lease is held.
+>
+> This was not my understanding.
 
-The small log case is not really what I'm wondering about. Does this
-behavior translate to a similar test with a maximum sized log?
+I think you guys are talking past each other. F_RDLCK | F_LAYOUT can
+be broken to allow writes to the file / layout. The new unbreakable
+case would require explicit SIGKILL as "revocation method of last
+resort", but that's the new incremental extension being proposed. No
+changes to the current behavior of F_RDLCK | F_LAYOUT.
 
-...
-> 
-> Larger logs block more threads on the CIL throttle, but the 32MB CIL
-> window can soak up hundreds of max sized transaction reservations
-> before overflowing so even running several hundred concurrent
-> modification threads I haven't been able to drive enough concurrency
-> through the CIL to see any sort of adverse behaviour.  And the
-> workloads are running pretty consistently at less than 5,000 context
-> switches/sec so there's no evidence of repeated thundering heard
-> wakeup problems, either.
-> 
-
-That speaks to the rarity of the throttle, which is good. But I'm
-wondering, for example, what might happen on systems where we could have
-hundreds of physical CPUs committing to the CIL, we block them all on
-the throttle and then wake them all at once. IOW, can we potentially
-create the contention conditions you reproduce above in scenarios where
-they might not have existed before?
-
-Brian
-
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+Dave, the question at hand is whether this new layout lease mode being
+proposed is going to respond to BREAK_WRITE, or just BREAK_UNMAP. It
+seems longterm page pinning conflicts really only care about
+BREAK_UNMAP where pages that were part of the file are being removed
+from the file. The unbreakable case can tolerate layout changes that
+keep pinned pages mapped / allocated to the file.
