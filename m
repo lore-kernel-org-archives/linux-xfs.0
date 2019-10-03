@@ -2,254 +2,145 @@ Return-Path: <SRS0=y7rh=X4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0A12FC32792
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 14:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A9291C10F14
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 14:40:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BCEB5215EA
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 14:39:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7A2E921A4C
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 14:40:57 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=aol.com header.i=@aol.com header.b="tug04+yN"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729153AbfJCOjh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Oct 2019 10:39:37 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57412 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726199AbfJCOjh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Oct 2019 10:39:37 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 57D12A44AFC;
-        Thu,  3 Oct 2019 14:39:36 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E0909601A2;
-        Thu,  3 Oct 2019 14:39:35 +0000 (UTC)
-Date:   Thu, 3 Oct 2019 10:39:34 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
-Message-ID: <20191003143934.GA2105@bfoster>
-References: <20190930060344.14561-1-david@fromorbit.com>
- <20190930060344.14561-3-david@fromorbit.com>
- <20190930170358.GD57295@bfoster>
- <20190930215336.GR16973@dread.disaster.area>
- <20191001131304.GA62428@bfoster>
- <20191001223107.GT16973@dread.disaster.area>
- <20191002124056.GA2403@bfoster>
- <20191003005310.GV16973@dread.disaster.area>
+        id S1730239AbfJCOk4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Oct 2019 10:40:56 -0400
+Received: from sonic312-23.consmr.mail.gq1.yahoo.com ([98.137.69.204]:35989
+        "EHLO sonic312-23.consmr.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730164AbfJCOk4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 10:40:56 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=aol.com; s=a2048; t=1570113655; bh=XH+kkcZacDLyMt//7aPVeZ/RoAwlnvE5gDCu5nQvVyU=; h=Date:From:To:Cc:Subject:References:In-Reply-To:From:Subject; b=tug04+yNVYvcTNcf6/BMloUpe5zpy+A168yqZIoZ9e+oVRRaoaVKQqLU1Erwiqb5APIscD+ZRiXBE+AVapeem2Imp4W4xEqfKHEtz/iZC1jUbGIWqJqy6VHt1Yvmr80CfyjHtDwcb2t7o3eHOqYN3w6H9eHQjLfTKC2K+aUB6AL/SU5gbGrd56rnn6JRzjKVnSHMCrl4DtmkkXCbgQAGAUryrhZW2AJ3OaFf1jSiGdjPC3meauPCBW1efZh/6s77cuCxDIT6ZJEevFmJ4dL65bbixc7P4KLwjpnlUGDFTxEvjq819TQBWx12fzigXigvUHIk6ZGDKk0+v+MVuGbbPg==
+X-YMail-OSG: DWxdwR4VM1laI_T7nnMyT6T4RY4Mj0UrmF1wpwElB0BN2SSzSpB1sYZGRZnJN2c
+ YM_ax138Y_IIgz915r9.RzQ1y2dvGaDZ.I_gGZCb08C9XKiewFI_iPFh1WtgmdnjIcMoUi02Idk2
+ DRMOglBwrZhxZsC8jxIlY5O2IDZgtmKMQQyoL7sXpChjW8PwZH_yThj7XDFQN2.0efFr5Vr7W5gl
+ KgBNZ56OY7e2ayKGtWHLSJuffpqALOJ0SibjfoF6Cj86so3yfJ1xffGDKtA9gCyDJrNCmpvpXaJT
+ 3s6H8H.FDeSt8f.dajG8U9w8mkvK_uwGA700_MfepZ.eRn4BZkXCD2MIm2XVpyZffxBkCYj_bfaq
+ AJr0FmFEBc5KBH8vDe1bTn.iW7lGJty6N9zM4WrjdfmXq9WbpQH1Y_HpU_rvon.9o37q0DB4EfO7
+ X8YwkzQeRDxniL2y4KEOPLINvgoAywA1aMy6IGrBe_L_S7STFB3hOggFtvrHXYd4VmdmSyYt4y8n
+ T_hOAHdttrpjYLJu8CSUUHWTHmm1HeP.HhJYmLTx2DUup7QDWrN427wKOF6Q3z1ilsb3GXgkZ7kH
+ f_th6gwH7_c9E3jZLKiqKTwOwti61rjRlPFeyBO.YnN2kJVqP6354o_bce2WT345VgL6QLW56SkO
+ pWv6QQMCFdVkpkVlK63ePK.ets2cjnnsImmt.kSFcJQJ7YTXKRQ.2RIRy0LZVXs2scO1lf4Nd4E4
+ 4qlqvwpe5mUYv2Tut1QvrvjE92WN753LY7U22zNgaEadHp9DZ0fuRk.usP2lDsJtP._QNGKbp2dZ
+ HajiktEa6nR_OISchFSdnckPDz1mRlhWtRMtkCmm2lW7cGuiPgRq0v6qxKdPNeH5jWuaJ6crS0pk
+ ChYVnj25iYKo5FQe.ye8MH.j475fQ86jhb.8BqGQbEZmbcdQXLfqc2ZWR2sWwUvmDGRFb_rV8qDV
+ zclZ16mBOzwtYO7_UStIpowX6HH23HgkiF1I110gCdM05zUbteogqlanAbeUq6rfmUh0lRKYJlD_
+ AfgPv1P2O4hrxin1qNgpT2I0r646hqrsvQikXGLE6YcR2Bv8b5D.OmQrJ1yW11MziClDCXtFOs5t
+ umMP2j7d2zqJDXHGmW.Xi1aXACBI3oVtiel0h0koL1sJ64E4fVlP.u74aAc9FPqNLfl88OFnzQEM
+ fyq6bbPG_AuNL624eUw16gXbfzx3jTHSPF665UHHlC7kGmTN.L.hEhwCnJz0phGlrU5R6zqzkbKU
+ Ar4bDAGOdnTySFwz9SHHXj7pwoRc1mMsG8r8pBfLMuzY7X5qohfa5yxFUhqtrlh69RAVEE4xQ8tE
+ 0iNbzBLd9_pk-
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic312.consmr.mail.gq1.yahoo.com with HTTP; Thu, 3 Oct 2019 14:40:55 +0000
+Received: by smtp412.mail.gq1.yahoo.com (Oath Hermes SMTP Server) with ESMTPA ID d6c8f9c467bddad41b91e82a5a197155;
+          Thu, 03 Oct 2019 14:40:53 +0000 (UTC)
+Date:   Thu, 3 Oct 2019 22:40:46 +0800
+From:   Gao Xiang <hsiangkao@aol.com>
+To:     Chris Mason <clm@fb.com>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        xfs <linux-xfs@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Subject: Re: [5.4-rc1, regression] wb_workfn wakeup oops (was Re: frequent
+ 5.4-rc1 crash?)
+Message-ID: <20191003144041.GA2012@hsiangkao-HP-ZHAN-66-Pro-G1>
+References: <20191003015247.GI13108@magnolia>
+ <20191003064022.GX16973@dread.disaster.area>
+ <20191003084149.GA16347@hsiangkao-HP-ZHAN-66-Pro-G1>
+ <41B90CA7-E093-48FA-BDFD-73BE7EB81FB6@fb.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191003005310.GV16973@dread.disaster.area>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.68]); Thu, 03 Oct 2019 14:39:36 +0000 (UTC)
+In-Reply-To: <41B90CA7-E093-48FA-BDFD-73BE7EB81FB6@fb.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 03, 2019 at 10:53:10AM +1000, Dave Chinner wrote:
-> On Wed, Oct 02, 2019 at 08:40:56AM -0400, Brian Foster wrote:
-> > On Wed, Oct 02, 2019 at 08:31:07AM +1000, Dave Chinner wrote:
-> > > On Tue, Oct 01, 2019 at 09:13:04AM -0400, Brian Foster wrote:
-> > > > On Tue, Oct 01, 2019 at 07:53:36AM +1000, Dave Chinner wrote:
-> > > > > On Mon, Sep 30, 2019 at 01:03:58PM -0400, Brian Foster wrote:
-> > > > > > Have you done similar testing for small/minimum sized logs?
-> > > > > 
-> > > > > Yes. I've had the tracepoint active during xfstests runs on test
-> > > > > filesystems using default log sizes on 5-15GB filesystems. The only
-> > > > > test in all of xfstests that has triggered it is generic/017, and it
-> > > > > only triggered once.
-> > > > > 
-> > > > 
-> > > > Ok, interesting. I guess it would be nice if we had a test that somehow
-> > > > or another more effectively exercised this codepath.
-> > > 
-> > > *nod*
-> > > 
-> > > But it's essentially difficult to predict in any way because
-> > > behaviour is not just a function of log size. :/
-> > > 
-> > > > > > Also, if this is so limited in occurrence, had you given any thought to
-> > > > > > something even more simple like flushing the CIL push workqueue when
-> > > > > > over the throttle threshold?
-> > > > > 
-> > > > > Yes, I've tried that - flush_workqueue() blocks /everything/ until
-> > > > > all the queued work is complete. That means it waits for the CIL to
-> > > > > flush to disk and write a commit record, and every modification in
-> > > > > the filesystem is stopped dead in it's tracks until the CIL push is
-> > > > > complete.
-> > > > > 
-> > > > > The problem is that flushing workqueues is a synchronous operation,
-> > > > > and it can't wait for partial work completion. We only need to wait
-> > > > > for the CIL context to be swapped out - this is done by the push
-> > > > > code before it starts all the expensive iclog formating and waiting
-> > > > > for iclog space...
-> > > > > 
-> > > > 
-> > > > I know it waits on the work to complete. I poked around a bit for an
-> > > > interface to "kick" a workqueue, so to speak (as opposed to flush), but
-> > > > I didn't see anything (not surprisingly, since it probably wouldn't be a
-> > > > broadly useful mechanism).
-> > > 
-> > > *nod*
-> > > 
-> > > > That aside, where would this wait on the CIL to flush to disk? AFAICT
-> > > > the only thing that might happen here is log buffer submission. That
-> > > > only happens when the log buffer is full (regardless of the current CIL
-> > > > push writing its commit record). In fact if we did wait on I/O anywhere
-> > > > in here, then that suggests potential problems with async log force.
-> > > 
-> > > There is no such thing as a "async log force". The log force always
-> > > waits on the CIL flush - XFS_LOG_SYNC only defines whether it waits
-> > > on all iclogbufs post CIL flush to hit the disk.
-> > > 
-> > 
-> > I'm just referring to the semantics/naming of the existing interface. I
-> > suppose I could have used "a log force that doesn't wait on all
-> > iclogbufs to hit the disk," but that doesn't quite roll off the tongue.
-> > ;)
-> 
-> *nod*
-> 
-> Just wanted to make sure we were both talking about the same thing
-> :)
-> 
-> > 
-> > > Further, when the CIL flushes, it's normally flushing more metadata that we
-> > > can hold in 8x iclogbufs. The default is 32kB iclogbufs, so if we've
-> > > got more than 256kB of checkpoint data to be written, then we end up
-> > > waiting on iclogbuf completion to write more then 256kB.
-> > > 
-> > > Typically I see a sustainted ratio of roughly 4 iclog writes to 1
-> > > noiclogbufs in the metric graphs on small logs - just measured 700
-> > > log writes/s, 250 noiclogs/s for a 64MB log and 256kB logbuf size.
-> > > IOWs, CIL flushes are regularly waiting in xlog_get_iclog_space() on
-> > > iclog IO completion to occur...
-> > > 
-> > 
-> > Ok, that's not quite what I was concerned about when you mentioned
-> > waiting on the CIL to flush to disk. No matter, the important bit here
-> > is the performance cost of including the extra blocking on log I/O (to
-> > cycle iclogs back to active for reuse) in the throttle.
-> > 
-> > I'm curious about how noticeable this extra blocking would be because
-> > it's one likely cause of the CIL pressure buildup in the first place. My
-> > original tests reproduced huge CIL checkpoints purely based on one CIL
-> > push being blocked behind the processing of another, the latter taking
-> > relatively more time due to log I/O.
-> 
-> It's very noticable. I dropped that as a throttle mechanism because
-> even on a SSD at 200us per write, a 32MB CIL flush takes for
-> 20-30ms. And it stops everything dead for that time because it
-> stalls all async transaction commits while the log flushes.
-> 
-> When several CIL flushes a second occur (pushing 100-150MB/s to the
-> log), I start seeing a substantial amount of additional time
-> (15-20% of total CPU time) being spent idle just waiting for CIL
-> flush completion. And it only gets worse as the storage gets
-> slower...
-> 
-> The throttle that these patches implement are typically only
-> stalling incoming transactions for a couple of hundred microseconds.
-> The timestamps from the groups of log events show the blocking of
-> all threads are very close together in time, and the push work to
-> switch over to the new context to allow them to unblock and continue
-> happens within another 200-300 microseconds. And the worst case I've
-> seen, this is happening once or twice a second. IOWs, the blocking
-> time of the throttle is very short and largely unnoticable, and the
-> difference to performance it causes is far, far less than the noise
-> threshold of the benchmarks.
-> 
+Hi Chris,
 
-Ok, thanks for the info. Is that 200-300us delay reliable on a sustained
-workload (where the throttle triggers multiple times)? If so, I suppose
-that longer delay I was wondering about is not as likely in practice.
-
-> > This is not to say there aren't other causes of excessively sized
-> > checkpoints. Rather, if we're at a point where we've blocked
-> > transactions on this new threshold, that means we've doubled the
-> > background threshold in the time we've first triggered a background CIL
-> > push and the push actually started. From that, it seems fairly likely
-> > that we could replenish the CIL to the background threshold once
-> > threads are unblocked but before the previous push completes.
+On Thu, Oct 03, 2019 at 02:01:13PM +0000, Chris Mason wrote:
 > 
-> That's just fine. The CIL is actually designed to allow that sort of
-> overlap between multiple committing background contexts and the
-> current aggregating context. As long as each individual CIL commit
-> size doesn't go over half the log and there's always a complete
-> commit in the log (which there should be via head/tail limits),
-> the only limit on the number of concurrent committing CIL contexts
-> on the fly at once is the amount of log space we have available....
 > 
-
-Right, but if we're blocking transactions on the start of a CIL push and
-the start of a CIL push blocks on completion of the previous push, it's
-possible to indirectly block transactions on completion of a CIL push.
-There is some staggering there compared to blocking a transaction
-directly on a CIL push start to finish, however, so perhaps that keeps
-the delay down in practice.
-
-> > The question is: can we get all the way to the blocking threshold before
-> > that happens? That doesn't seem unrealistic to me, but it's hard to
-> > reason about without having tested it. If so, I think it means we end up
-> > blocking on completion of the first push to some degree anyways.
+> On 3 Oct 2019, at 4:41, Gao Xiang wrote:
 > 
-> Yes, we can fill and push the current sequence before the previous
-> sequence has finished committing.
-> 
-> > > > > xlog_cil_push_now() uses flush_work() to push any pending work
-> > > > > before it queues up the CIL flush that the caller is about to wait
-> > > > > for.  i.e. the callers of xlog_cil_push_now() must ensure that all
-> > > > > CIL contexts are flushed for the purposes of a log force as they are
-> > > > > going to wait for all pending CIL flushes to complete. If we've
-> > > > > already pushed the CIL to the sequence that we are asking to push
-> > > > > to, we still have to wait for that previous push to be
-> > > > > done. This is what the flush_work() call in xlog_cil_push_now()
-> > > > > acheives.
-> > > > > 
-> > > > 
-> > > > Yes, I'm just exploring potential to reuse this code..
-> > > 
-> > > Yeah, I have a few prototype patches for revamping this, including
-> > > an actual async CIL flush. I do some work here, but it didn't solve
-> > > any of the problems I needed to fix so it put it aside. See below.
-> > > 
-> > 
-> > That sounds more involved than what I was thinking. My thought is that
-> > this throttle is already not predictable or deterministic (i.e. we're
-> > essentially waiting on a scheduler event) and so might not require the
-> > extra complexity of a new waitqueue. It certainly could be the case that
-> > blocking on the entire push is just too long in practice, but since this
-> 
-> I've made that sort of change here and measured the regression.
-> Then I discarded it as an unworkable option and looked for other
-> solutions.
-> 
-
-Ok. What was the regression that resulted from the longer throttle
-delay, out of curiosity?
-
-Brian
-
-> > is already based on empirical evidence and subject to unpredictability,
-> > ISTM that testing is the only way to know for sure. For reference, I
-> > hacked up something to reuse xlog_cil_push_now() for background pushing
-> > and throttling that ends up removing 20 or so lines of code by the time
-> > it's in place, but I haven't given it any testing.
+> > Hi,
 > >
-> > That said, this is just an observation and an idea. I'm fine with the
-> > proposed implementation with the other nits and whatnot fixed up.
+> > On Thu, Oct 03, 2019 at 04:40:22PM +1000, Dave Chinner wrote:
+> >> [cc linux-fsdevel, linux-block, tejun ]
+> >>
+> >> On Wed, Oct 02, 2019 at 06:52:47PM -0700, Darrick J. Wong wrote:
+> >>> Hi everyone,
+> >>>
+> >>> Does anyone /else/ see this crash in generic/299 on a V4 filesystem 
+> >>> (tho
+> >>> afaict V5 configs crash too) and a 5.4-rc1 kernel?  It seems to pop 
+> >>> up
+> >>> on generic/299 though only 80% of the time.
+> >>>
+> >
+> > Just a quick glance, I guess there could is a race between (complete 
+> > guess):
+> >
+> >
+> >  160 static void finish_writeback_work(struct bdi_writeback *wb,
+> >  161                                   struct wb_writeback_work *work)
+> >  162 {
+> >  163         struct wb_completion *done = work->done;
+> >  164
+> >  165         if (work->auto_free)
+> >  166                 kfree(work);
+> >  167         if (done && atomic_dec_and_test(&done->cnt))
+> >
+> >  ^^^ here
+> >
+> >  168                 wake_up_all(done->waitq);
+> >  169 }
+> >
+> > since new wake_up_all(done->waitq); is completely on-stack,
+> >  	if (done && atomic_dec_and_test(&done->cnt))
+> > -		wake_up_all(&wb->bdi->wb_waitq);
+> > +		wake_up_all(done->waitq);
+> >  }
+> >
+> > which could cause use after free if on-stack wb_completion is gone...
+> > (however previous wb->bdi is solid since it is not on-stack)
+> >
+> > see generic on-stack completion which takes a wait_queue spin_lock 
+> > between
+> > test and wake_up...
+> >
+> > If I am wrong, ignore me, hmm...
 > 
-> No worries. It's still worth exploring all the alternatives. :)
+> It's a good guess ;)  Jens should have this queued up already:
 > 
-> Cheers,
+> https://lkml.org/lkml/2019/9/23/972
+
+Oh, I didn't notice that, it's great to be already resolved. :)
+
+It was not fully guess though, we once had a some similar
+pattern at the very early stage last year (a given IO balance
+counter, wait_queue. but completion is too heavy), which resolved
+in commit 848bd9acdcd0 last year. Therefore I'm experienced
+with such cases.
+
+Just saw mailing list regularly and be of some help here...
+Sorry about the noise...
+
+Thanks,
+Gao Xiang
+
 > 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> -chris
