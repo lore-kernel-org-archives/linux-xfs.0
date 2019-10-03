@@ -2,158 +2,113 @@ Return-Path: <SRS0=y7rh=X4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AFDEC32792
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 18:38:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8436DC10F14
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 23:30:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 61ED320865
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 18:38:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nWB9znK1"
+	by mail.kernel.org (Postfix) with ESMTP id 5EF9120862
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 23:30:51 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732040AbfJCSiB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Oct 2019 14:38:01 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:54610 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729225AbfJCSiB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 14:38:01 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x93IF1kf098731;
-        Thu, 3 Oct 2019 18:37:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=12iqZz4Iis9svz7CFKPbY1KkfRjc2LS2izYN7PduSpQ=;
- b=nWB9znK14Zy4ElhLgIMM/J3LYdDCRCnC74RWh4oj39DnwRu3wNBOZE+w2TQ/GNpcviAB
- S3C+zLMFPmlAP3oAIvpMnpA1IT/c/QhCoUPTWgZX9JWG61GrWpxbnPZvoEKMzLIthqKC
- eMdoCedVWv4QrJBX58ioLy5Phyvvb2nJyQBg/htShLT6R7nlEyiUpZpWHZN5R7H1cz3U
- oVabBJrmOl6cLGKKCUnHiHa3cIrh9mkgroA2WcILW/C7LFqVn+bXaXSVXxUy1LmfbOC+
- 7nG/pF7PEI0RzwTzDDhjRhn82oFJQG215S6B+Y7cuAjHK6FsNG0FIflJZmweaM3K3RAV CA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2va05s651r-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Oct 2019 18:37:53 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x93IJHbF185728;
-        Thu, 3 Oct 2019 18:37:52 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2vdn17w57b-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 03 Oct 2019 18:37:52 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x93Iboia029775;
-        Thu, 3 Oct 2019 18:37:50 GMT
-Received: from localhost (/10.145.178.55)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 03 Oct 2019 11:37:50 -0700
-Date:   Thu, 3 Oct 2019 11:37:46 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jens Axboe <axboe@kernel.dk>
-Cc:     Chris Mason <clm@fb.com>, Gao Xiang <hsiangkao@aol.com>,
-        Dave Chinner <david@fromorbit.com>,
-        xfs <linux-xfs@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>,
-        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
-        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
-Subject: Re: [5.4-rc1, regression] wb_workfn wakeup oops (was Re: frequent
- 5.4-rc1 crash?)
-Message-ID: <20191003183746.GK13108@magnolia>
-References: <20191003015247.GI13108@magnolia>
- <20191003064022.GX16973@dread.disaster.area>
- <20191003084149.GA16347@hsiangkao-HP-ZHAN-66-Pro-G1>
- <41B90CA7-E093-48FA-BDFD-73BE7EB81FB6@fb.com>
- <32f7c7d8-59d8-7657-4dcc-3741355bf63a@kernel.dk>
+        id S1730215AbfJCXav (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Oct 2019 19:30:51 -0400
+Received: from sandeen.net ([63.231.237.45]:59792 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727452AbfJCXau (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 3 Oct 2019 19:30:50 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id D81FC326E;
+        Thu,  3 Oct 2019 18:30:29 -0500 (CDT)
+Subject: Re: [PATCH v4 00/17] xfs: mount API patch series
+To:     Ian Kent <raven@themaw.net>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@ZenIV.linux.org.uk>
+References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <37be0aa4-c8b5-4b40-dabd-13961bfb77a7@sandeen.net>
+Date:   Thu, 3 Oct 2019 18:30:48 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <32f7c7d8-59d8-7657-4dcc-3741355bf63a@kernel.dk>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9399 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910030152
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9399 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910030152
+In-Reply-To: <157009817203.13858.7783767645177567968.stgit@fedora-28>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 03, 2019 at 08:05:42AM -0600, Jens Axboe wrote:
-> On 10/3/19 8:01 AM, Chris Mason wrote:
-> > 
-> > 
-> > On 3 Oct 2019, at 4:41, Gao Xiang wrote:
-> > 
-> >> Hi,
-> >>
-> >> On Thu, Oct 03, 2019 at 04:40:22PM +1000, Dave Chinner wrote:
-> >>> [cc linux-fsdevel, linux-block, tejun ]
-> >>>
-> >>> On Wed, Oct 02, 2019 at 06:52:47PM -0700, Darrick J. Wong wrote:
-> >>>> Hi everyone,
-> >>>>
-> >>>> Does anyone /else/ see this crash in generic/299 on a V4 filesystem
-> >>>> (tho
-> >>>> afaict V5 configs crash too) and a 5.4-rc1 kernel?  It seems to pop
-> >>>> up
-> >>>> on generic/299 though only 80% of the time.
-> >>>>
-> >>
-> >> Just a quick glance, I guess there could is a race between (complete
-> >> guess):
-> >>
-> >>
-> >>   160 static void finish_writeback_work(struct bdi_writeback *wb,
-> >>   161                                   struct wb_writeback_work *work)
-> >>   162 {
-> >>   163         struct wb_completion *done = work->done;
-> >>   164
-> >>   165         if (work->auto_free)
-> >>   166                 kfree(work);
-> >>   167         if (done && atomic_dec_and_test(&done->cnt))
-> >>
-> >>   ^^^ here
-> >>
-> >>   168                 wake_up_all(done->waitq);
-> >>   169 }
-> >>
-> >> since new wake_up_all(done->waitq); is completely on-stack,
-> >>   	if (done && atomic_dec_and_test(&done->cnt))
-> >> -		wake_up_all(&wb->bdi->wb_waitq);
-> >> +		wake_up_all(done->waitq);
-> >>   }
-> >>
-> >> which could cause use after free if on-stack wb_completion is gone...
-> >> (however previous wb->bdi is solid since it is not on-stack)
-> >>
-> >> see generic on-stack completion which takes a wait_queue spin_lock
-> >> between
-> >> test and wake_up...
-> >>
-> >> If I am wrong, ignore me, hmm...
-> > 
-> > It's a good guess ;)  Jens should have this queued up already:
-> > 
-> > https://lkml.org/lkml/2019/9/23/972
+On 10/3/19 5:25 AM, Ian Kent wrote:
+> This patch series add support to xfs for the new kernel mount API
+> as described in the LWN article at https://lwn.net/Articles/780267/.
 > 
-> Yes indeed, it'll go out today or tomorrow for -rc2.
-
-The patch fixes the problems I've been seeing, so:
-Tested-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Thank you for taking care of this. :)
-
---D
-
-> -- 
-> Jens Axboe
+> In the article there's a lengthy description of the reasons for
+> adopting the API and problems expected to be resolved by using it.
 > 
+> The series has been applied to the repository located at
+> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git, and built and
+> some simple tests run on it along with the generic xfstests.
+> 
+> Other things that continue to cause me concern:
+> 
+> - Message logging.
+
+...
+
+Haven't actually reviewed yet, but just playing with it, I noticed an oddity;
+
+# mount -o loop,allocsize=abc fsfile mnt
+
+fails as expected, but with no dmesg to be found.  Is that a known behavior?
+
+-Eric
