@@ -6,35 +6,34 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A01E5C10F14
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 038AAC10F14
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 83F2221D71
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D5E16218DE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:09 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728114AbfJCK0F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Oct 2019 06:26:05 -0400
+        id S1729159AbfJCK0J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Oct 2019 06:26:09 -0400
 Received: from icp-osb-irony-out7.external.iinet.net.au ([203.59.1.107]:43057
         "EHLO icp-osb-irony-out7.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729159AbfJCK0E (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 06:26:04 -0400
+        by vger.kernel.org with ESMTP id S1729094AbfJCK0J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 06:26:09 -0400
 X-IronPort-Anti-Spam-Filtered: true
 X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AVAADHy5Vd/7q70HYNWRwBAQEEAQE?=
- =?us-ascii?q?MBAEBgVMHAQELAYQ5hCKIIocIAwaBEYoajzGBewkBAQEBAQEBAQE3AQGEOwM?=
- =?us-ascii?q?CAoJoNAkOAgwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiYCAkcQBhOFGa4?=
- =?us-ascii?q?MdX8zGoongQwoAYFkikF4gQeBRIMdhCmDKIJYBI0Bgi83hjlDllSCLZUzDII?=
- =?us-ascii?q?ti2YDEIsMLYQKpR2CEU0uCoMnUJBGZ45IASuCJwEB?=
+ =?us-ascii?q?MBAEBgVMHAQELAYQ5hCKIIocIAwaBEYoaigmFKIF7CQEBAQEBAQEBATcBAYQ?=
+ =?us-ascii?q?7AwICgmg0CQ4CDAEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4U?=
+ =?us-ascii?q?Zrgx1fzMaiieBDCgBgWSKQXiBB4ERM4Mdh1GCWASNAYIvN4Y5Q5ZUgi2VMwy?=
+ =?us-ascii?q?OEwOLHC2ECqUdghFNLgqDJ1CBfxeOMGeRGwEB?=
 X-IPAS-Result: =?us-ascii?q?A2AVAADHy5Vd/7q70HYNWRwBAQEEAQEMBAEBgVMHAQELA?=
- =?us-ascii?q?YQ5hCKIIocIAwaBEYoajzGBewkBAQEBAQEBAQE3AQGEOwMCAoJoNAkOAgwBA?=
- =?us-ascii?q?QEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiYCAkcQBhOFGa4MdX8zGoongQwoA?=
- =?us-ascii?q?YFkikF4gQeBRIMdhCmDKIJYBI0Bgi83hjlDllSCLZUzDIIti2YDEIsMLYQKp?=
- =?us-ascii?q?R2CEU0uCoMnUJBGZ45IASuCJwEB?=
+ =?us-ascii?q?YQ5hCKIIocIAwaBEYoaigmFKIF7CQEBAQEBAQEBATcBAYQ7AwICgmg0CQ4CD?=
+ =?us-ascii?q?AEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4UZrgx1fzMaiieBD?=
+ =?us-ascii?q?CgBgWSKQXiBB4ERM4Mdh1GCWASNAYIvN4Y5Q5ZUgi2VMwyOEwOLHC2ECqUdg?=
+ =?us-ascii?q?hFNLgqDJ1CBfxeOMGeRGwEB?=
 X-IronPort-AV: E=Sophos;i="5.67,251,1566835200"; 
-   d="scan'208";a="207652796"
+   d="scan'208";a="207652827"
 Received: from unknown (HELO [192.168.1.222]) ([118.208.187.186])
-  by icp-osb-irony-out7.iinet.net.au with ESMTP; 03 Oct 2019 18:26:01 +0800
-Subject: [PATCH v4 08/17] xfs: mount-api - move xfs_parseargs() validation
- to a helper
+  by icp-osb-irony-out7.iinet.net.au with ESMTP; 03 Oct 2019 18:26:07 +0800
+Subject: [PATCH v4 09/17] xfs: mount-api - refactor xfs_fs_fill_super()
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>,
@@ -42,8 +41,8 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Thu, 03 Oct 2019 18:26:01 +0800
-Message-ID: <157009836177.13858.17631367285427216767.stgit@fedora-28>
+Date:   Thu, 03 Oct 2019 18:26:06 +0800
+Message-ID: <157009836693.13858.2543927672631996230.stgit@fedora-28>
 In-Reply-To: <157009817203.13858.7783767645177567968.stgit@fedora-28>
 References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -55,185 +54,115 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Move the validation code of xfs_parseargs() into a helper for later
-use within the mount context methods.
+Much of the code in xfs_fs_fill_super() will be used by the fill super
+function of the new mount-api.
+
+So refactor the common code into a helper in an attempt to show what's
+actually changed.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_super.c |  147 +++++++++++++++++++++++++++++++++-------------------
- 1 file changed, 94 insertions(+), 53 deletions(-)
+ fs/xfs/xfs_super.c |   64 +++++++++++++++++++++++++++++++++-------------------
+ 1 file changed, 41 insertions(+), 23 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 7fd3975d5523..7008355df065 100644
+index 7008355df065..cc2da9093e34 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -347,6 +347,98 @@ xfs_parse_param(
- 	return 0;
+@@ -1712,27 +1712,14 @@ xfs_mount_alloc(
+ 
+ 
+ STATIC int
+-xfs_fs_fill_super(
+-	struct super_block	*sb,
+-	void			*data,
++__xfs_fs_fill_super(
++	struct xfs_mount	*mp,
+ 	int			silent)
+ {
++	struct super_block	*sb = mp->m_super;
+ 	struct inode		*root;
+-	struct xfs_mount	*mp = NULL;
+-	int			flags = 0, error = -ENOMEM;
+-
+-	/*
+-	 * allocate mp and do all low-level struct initializations before we
+-	 * attach it to the super
+-	 */
+-	mp = xfs_mount_alloc(sb);
+-	if (!mp)
+-		goto out;
+-	sb->s_fs_info = mp;
+-
+-	error = xfs_parseargs(mp, (char *)data);
+-	if (error)
+-		goto out_free_fsname;
++	int			flags = 0;
++	int			error;
+ 
+ 	sb_min_blocksize(sb, BBSIZE);
+ 	sb->s_xattr = xfs_xattr_handlers;
+@@ -1759,7 +1746,7 @@ xfs_fs_fill_super(
+ 
+ 	error = xfs_open_devices(mp);
+ 	if (error)
+-		goto out_free_fsname;
++		goto out;
+ 
+ 	error = xfs_init_mount_workqueues(mp);
+ 	if (error)
+@@ -1894,10 +1881,6 @@ xfs_fs_fill_super(
+ 	xfs_destroy_mount_workqueues(mp);
+  out_close_devices:
+ 	xfs_close_devices(mp);
+- out_free_fsname:
+-	sb->s_fs_info = NULL;
+-	xfs_free_fsname(mp);
+-	kfree(mp);
+  out:
+ 	return error;
+ 
+@@ -1907,6 +1890,41 @@ xfs_fs_fill_super(
+ 	goto out_free_sb;
  }
  
 +STATIC int
-+xfs_validate_params(
-+	struct xfs_mount        *mp,
-+	struct xfs_fs_context   *ctx,
-+	bool			nooptions)
++xfs_fs_fill_super(
++	struct super_block	*sb,
++	void			*data,
++	int			silent)
 +{
-+	if (nooptions)
-+		goto noopts;
++	struct xfs_mount	*mp;
++	int			error;
 +
 +	/*
-+	 * no recovery flag requires a read-only mount
++	 * allocate mp and do all low-level struct initializations before we
++	 * attach it to the super
 +	 */
-+	if ((mp->m_flags & XFS_MOUNT_NORECOVERY) &&
-+	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
-+		xfs_warn(mp, "no-recovery mounts must be read-only.");
-+		return -EINVAL;
-+	}
++	mp = xfs_mount_alloc(sb);
++	if (!mp)
++		return -ENOMEM;
++	sb->s_fs_info = mp;
 +
-+	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
-+	    (ctx->dsunit || ctx->dswidth)) {
-+		xfs_warn(mp,
-+	"sunit and swidth options incompatible with the noalign option");
-+		return -EINVAL;
-+	}
++	error = xfs_parseargs(mp, (char *)data);
++	if (error)
++		goto out_free_fsname;
 +
-+#ifndef CONFIG_XFS_QUOTA
-+	if (XFS_IS_QUOTA_RUNNING(mp)) {
-+		xfs_warn(mp, "quota support not available in this kernel.");
-+		return -EINVAL;
-+	}
-+#endif
-+
-+	if ((ctx->dsunit && !ctx->dswidth) || (!ctx->dsunit && ctx->dswidth)) {
-+		xfs_warn(mp, "sunit and swidth must be specified together");
-+		return -EINVAL;
-+	}
-+
-+	if (ctx->dsunit && (ctx->dswidth % ctx->dsunit != 0)) {
-+		xfs_warn(mp,
-+	"stripe width (%d) must be a multiple of the stripe unit (%d)",
-+			ctx->dswidth, ctx->dsunit);
-+		return -EINVAL;
-+	}
-+
-+noopts:
-+	if (ctx->dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
-+		/*
-+		 * At this point the superblock has not been read
-+		 * in, therefore we do not know the block size.
-+		 * Before the mount call ends we will convert
-+		 * these to FSBs.
-+		 */
-+		mp->m_dalign = ctx->dsunit;
-+		mp->m_swidth = ctx->dswidth;
-+	}
-+
-+	if (mp->m_logbufs != -1 &&
-+	    mp->m_logbufs != 0 &&
-+	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
-+	     mp->m_logbufs > XLOG_MAX_ICLOGS)) {
-+		xfs_warn(mp, "invalid logbufs value: %d [not %d-%d]",
-+			mp->m_logbufs, XLOG_MIN_ICLOGS, XLOG_MAX_ICLOGS);
-+		return -EINVAL;
-+	}
-+	if (mp->m_logbsize != -1 &&
-+	    mp->m_logbsize !=  0 &&
-+	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
-+	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
-+	     !is_power_of_2(mp->m_logbsize))) {
-+		xfs_warn(mp,
-+			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
-+			mp->m_logbsize);
-+		return -EINVAL;
-+	}
-+
-+	if (ctx->iosizelog) {
-+		if (ctx->iosizelog > XFS_MAX_IO_LOG ||
-+		    ctx->iosizelog < XFS_MIN_IO_LOG) {
-+			xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
-+				ctx->iosizelog, XFS_MIN_IO_LOG,
-+				XFS_MAX_IO_LOG);
-+			return -EINVAL;
-+		}
-+
-+		mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
-+		mp->m_readio_log = ctx->iosizelog;
-+		mp->m_writeio_log = ctx->iosizelog;
-+	}
++	error = __xfs_fs_fill_super(mp, silent);
++	if (error)
++		goto out_free_fsname;
 +
 +	return 0;
++
++ out_free_fsname:
++	sb->s_fs_info = NULL;
++	xfs_free_fsname(mp);
++	kfree(mp);
++	return error;
 +}
 +
- /*
-  * This function fills in xfs_mount_t fields based on mount args.
-  * Note: the superblock has _not_ yet been read in.
-@@ -441,15 +533,6 @@ xfs_parseargs(
- 			return ret;
- 	}
- 
--	/*
--	 * no recovery flag requires a read-only mount
--	 */
--	if ((mp->m_flags & XFS_MOUNT_NORECOVERY) &&
--	    !(mp->m_flags & XFS_MOUNT_RDONLY)) {
--		xfs_warn(mp, "no-recovery mounts must be read-only.");
--		return -EINVAL;
--	}
--
- 	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
- 	    (ctx->dsunit || ctx->dswidth)) {
- 		xfs_warn(mp,
-@@ -477,51 +560,9 @@ xfs_parseargs(
- 	}
- 
- done:
--	if (ctx->dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
--		/*
--		 * At this point the superblock has not been read
--		 * in, therefore we do not know the block size.
--		 * Before the mount call ends we will convert
--		 * these to FSBs.
--		 */
--		mp->m_dalign = ctx->dsunit;
--		mp->m_swidth = ctx->dswidth;
--	}
-+	ret = xfs_validate_params(mp, &context, false);
- 
--	if (mp->m_logbufs != -1 &&
--	    mp->m_logbufs != 0 &&
--	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
--	     mp->m_logbufs > XLOG_MAX_ICLOGS)) {
--		xfs_warn(mp, "invalid logbufs value: %d [not %d-%d]",
--			mp->m_logbufs, XLOG_MIN_ICLOGS, XLOG_MAX_ICLOGS);
--		return -EINVAL;
--	}
--	if (mp->m_logbsize != -1 &&
--	    mp->m_logbsize !=  0 &&
--	    (mp->m_logbsize < XLOG_MIN_RECORD_BSIZE ||
--	     mp->m_logbsize > XLOG_MAX_RECORD_BSIZE ||
--	     !is_power_of_2(mp->m_logbsize))) {
--		xfs_warn(mp,
--			"invalid logbufsize: %d [not 16k,32k,64k,128k or 256k]",
--			mp->m_logbsize);
--		return -EINVAL;
--	}
--
--	if (ctx->iosizelog) {
--		if (ctx->iosizelog > XFS_MAX_IO_LOG ||
--		    ctx->iosizelog < XFS_MIN_IO_LOG) {
--			xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
--				ctx->iosizelog, XFS_MIN_IO_LOG,
--				XFS_MAX_IO_LOG);
--			return -EINVAL;
--		}
--
--		mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
--		mp->m_readio_log = ctx->iosizelog;
--		mp->m_writeio_log = ctx->iosizelog;
--	}
--
--	return 0;
-+	return ret;
- }
- 
- struct proc_xfs_info {
+ STATIC void
+ xfs_fs_put_super(
+ 	struct super_block	*sb)
 
