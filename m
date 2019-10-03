@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 02472C10F14
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10361C10F14
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D64CE21D71
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA03E218DE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 10:26:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728475AbfJCK0k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Oct 2019 06:26:40 -0400
+        id S1729153AbfJCK0p (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Oct 2019 06:26:45 -0400
 Received: from icp-osb-irony-out7.external.iinet.net.au ([203.59.1.107]:43057
         "EHLO icp-osb-irony-out7.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727657AbfJCK0k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 06:26:40 -0400
+        by vger.kernel.org with ESMTP id S1727657AbfJCK0p (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 06:26:45 -0400
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AVAADHy5Vd/7q70HYNWRwBAQEEAQE?=
- =?us-ascii?q?MBAEBgVMHAQELAYFugkuEIogihwgDBoERihqPMYF7CQEBAQEBAQEBATcBAYQ?=
- =?us-ascii?q?7AwICgmg0CQ4CDAEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4U?=
- =?us-ascii?q?Zrgx1fzMaiieBDCgBgWSKQXiBB4ERM4Mdh1GCWASPMDeGOUOWVIItlTMMjhM?=
- =?us-ascii?q?DixwthAqlHYIRTS4KgydQgX8XjjBnkRsBAQ?=
-X-IPAS-Result: =?us-ascii?q?A2AVAADHy5Vd/7q70HYNWRwBAQEEAQEMBAEBgVMHAQELA?=
- =?us-ascii?q?YFugkuEIogihwgDBoERihqPMYF7CQEBAQEBAQEBATcBAYQ7AwICgmg0CQ4CD?=
- =?us-ascii?q?AEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4UZrgx1fzMaiieBD?=
- =?us-ascii?q?CgBgWSKQXiBB4ERM4Mdh1GCWASPMDeGOUOWVIItlTMMjhMDixwthAqlHYIRT?=
- =?us-ascii?q?S4KgydQgX8XjjBnkRsBAQ?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BlAADHy5Vd/7q70HYNWRwBAQEEAQE?=
+ =?us-ascii?q?MBAEBgVYEAQELAYQ5hCKPKgMGgRGKGpEsCQEBAQEBAQEBATcBAYQ7AwICgmg?=
+ =?us-ascii?q?3Bg4CDAEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4UZrgx1fzM?=
+ =?us-ascii?q?aiieBDCgBgWSKQXiBB4EQATODHYQpgyiCWASNAS+CADeFWGFDllSCLZUzDII?=
+ =?us-ascii?q?ti2YDEIsMhDelM4F7TS4KgydQgX8XjjBnjkiCUwEB?=
+X-IPAS-Result: =?us-ascii?q?A2BlAADHy5Vd/7q70HYNWRwBAQEEAQEMBAEBgVYEAQELA?=
+ =?us-ascii?q?YQ5hCKPKgMGgRGKGpEsCQEBAQEBAQEBATcBAYQ7AwICgmg3Bg4CDAEBAQQBA?=
+ =?us-ascii?q?QEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4UZrgx1fzMaiieBDCgBgWSKQ?=
+ =?us-ascii?q?XiBB4EQATODHYQpgyiCWASNAS+CADeFWGFDllSCLZUzDIIti2YDEIsMhDelM?=
+ =?us-ascii?q?4F7TS4KgydQgX8XjjBnjkiCUwEB?=
 X-IronPort-AV: E=Sophos;i="5.67,251,1566835200"; 
-   d="scan'208";a="207652958"
+   d="scan'208";a="207652973"
 Received: from unknown (HELO [192.168.1.222]) ([118.208.187.186])
-  by icp-osb-irony-out7.iinet.net.au with ESMTP; 03 Oct 2019 18:26:38 +0800
-Subject: [PATCH v4 15/17] xfs: mount-api - dont set sb in xfs_mount_alloc()
+  by icp-osb-irony-out7.iinet.net.au with ESMTP; 03 Oct 2019 18:26:43 +0800
+Subject: [PATCH v4 16/17] xfs: mount-api - switch to new mount-api
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>,
@@ -41,8 +41,8 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Thu, 03 Oct 2019 18:26:38 +0800
-Message-ID: <157009839813.13858.13423160432971704368.stgit@fedora-28>
+Date:   Thu, 03 Oct 2019 18:26:43 +0800
+Message-ID: <157009840329.13858.8492534094783012202.stgit@fedora-28>
 In-Reply-To: <157009817203.13858.7783767645177567968.stgit@fedora-28>
 References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -54,51 +54,389 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When changing to use the new mount api the super block won't be
-available when the xfs_mount info struct is allocated so move
-setting the super block in xfs_mount to xfs_fs_fill_super().
-
-Also change xfs_mount_alloc() decalaration static -> STATIC.
+The infrastructure needed to use the new mount api is now
+in place, switch over to use it.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
 ---
- fs/xfs/xfs_super.c |    9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ fs/xfs/xfs_super.c |  321 ++++++++--------------------------------------------
+ 1 file changed, 49 insertions(+), 272 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 4f2963ff9e06..919afd7082b7 100644
+index 919afd7082b7..93f42160aa6f 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1772,9 +1772,8 @@ xfs_destroy_percpu_counters(
- 	percpu_counter_destroy(&mp->m_delalloc_blks);
+@@ -439,132 +439,6 @@ xfs_validate_params(
+ 	return 0;
  }
  
--static struct xfs_mount *
--xfs_mount_alloc(
--	struct super_block	*sb)
-+STATIC struct xfs_mount *
-+xfs_mount_alloc(void)
- {
- 	struct xfs_mount	*mp;
+-/*
+- * This function fills in xfs_mount_t fields based on mount args.
+- * Note: the superblock has _not_ yet been read in.
+- *
+- * Note that this function leaks the various device name allocations on
+- * failure.  The caller takes care of them.
+- *
+- * *sb is const because this is also used to test options on the remount
+- * path, and we don't want this to have any side effects at remount time.
+- * Today this function does not change *sb, but just to future-proof...
+- */
+-STATIC int
+-xfs_parseargs(
+-	struct xfs_mount	*mp,
+-	char			*options)
+-{
+-	const struct super_block *sb = mp->m_super;
+-	char			*p;
+-	struct fs_context	fc;
+-	struct xfs_fs_context	context;
+-	struct xfs_fs_context	*ctx;
+-	int			ret;
+-
+-	memset(&fc, 0, sizeof(fc));
+-	memset(&context, 0, sizeof(context));
+-	fc.fs_private = &context;
+-	ctx = &context;
+-	fc.s_fs_info = mp;
+-
+-	/*
+-	 * set up the mount name first so all the errors will refer to the
+-	 * correct device.
+-	 */
+-	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
+-	if (!mp->m_fsname)
+-		return -ENOMEM;
+-	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
+-
+-	/*
+-	 * Copy binary VFS mount flags we are interested in.
+-	 */
+-	if (sb_rdonly(sb))
+-		mp->m_flags |= XFS_MOUNT_RDONLY;
+-	if (sb->s_flags & SB_DIRSYNC)
+-		mp->m_flags |= XFS_MOUNT_DIRSYNC;
+-	if (sb->s_flags & SB_SYNCHRONOUS)
+-		mp->m_flags |= XFS_MOUNT_WSYNC;
+-
+-	/*
+-	 * Set some default flags that could be cleared by the mount option
+-	 * parsing.
+-	 */
+-	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
+-
+-	/*
+-	 * These can be overridden by the mount option parsing.
+-	 */
+-	mp->m_logbufs = -1;
+-	mp->m_logbsize = -1;
+-
+-	if (!options)
+-		goto done;
+-
+-	while ((p = strsep(&options, ",")) != NULL) {
+-		struct fs_parameter	param;
+-		char			*value;
+-
+-		if (!*p)
+-			continue;
+-
+-		param.key = p;
+-		param.type = fs_value_is_string;
+-		param.string = NULL;
+-		param.size = 0;
+-
+-		value = strchr(p, '=');
+-		if (value) {
+-			*value++ = 0;
+-			param.size = strlen(value);
+-			if (param.size > 0) {
+-				param.string = kmemdup_nul(value,
+-							   param.size,
+-							   GFP_KERNEL);
+-				if (!param.string)
+-					return -ENOMEM;
+-			}
+-		}
+-
+-		ret = xfs_parse_param(&fc, &param);
+-		kfree(param.string);
+-		if (ret < 0)
+-			return ret;
+-	}
+-
+-	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
+-	    (ctx->dsunit || ctx->dswidth)) {
+-		xfs_warn(mp,
+-	"sunit and swidth options incompatible with the noalign option");
+-		return -EINVAL;
+-	}
+-
+-#ifndef CONFIG_XFS_QUOTA
+-	if (XFS_IS_QUOTA_RUNNING(mp)) {
+-		xfs_warn(mp, "quota support not available in this kernel.");
+-		return -EINVAL;
+-	}
+-#endif
+-
+-	if ((ctx->dsunit && !ctx->dswidth) || (!ctx->dsunit && ctx->dswidth)) {
+-		xfs_warn(mp, "sunit and swidth must be specified together");
+-		return -EINVAL;
+-	}
+-
+-	if (ctx->dsunit && (ctx->dswidth % ctx->dsunit != 0)) {
+-		xfs_warn(mp,
+-	"stripe width (%d) must be a multiple of the stripe unit (%d)",
+-			ctx->dswidth, ctx->dsunit);
+-		return -EINVAL;
+-	}
+-
+-done:
+-	ret = xfs_validate_params(mp, &context, false);
+-
+-	return ret;
+-}
+-
+ struct proc_xfs_info {
+ 	uint64_t	flag;
+ 	char		*str;
+@@ -1343,26 +1217,6 @@ xfs_quiesce_attr(
+ 	xfs_log_quiesce(mp);
+ }
  
-@@ -1782,7 +1781,6 @@ xfs_mount_alloc(
- 	if (!mp)
- 		return NULL;
+-STATIC int
+-xfs_test_remount_options(
+-	struct super_block	*sb,
+-	char			*options)
+-{
+-	int			error = 0;
+-	struct xfs_mount	*tmp_mp;
+-
+-	tmp_mp = kmem_zalloc(sizeof(*tmp_mp), KM_MAYFAIL);
+-	if (!tmp_mp)
+-		return -ENOMEM;
+-
+-	tmp_mp->m_super = sb;
+-	error = xfs_parseargs(tmp_mp, options);
+-	xfs_free_fsname(tmp_mp);
+-	kmem_free(tmp_mp);
+-
+-	return error;
+-}
+-
+ STATIC int
+ xfs_remount_rw(
+ 	struct xfs_mount	*mp)
+@@ -1466,84 +1320,6 @@ xfs_remount_ro(
+ 	return 0;
+ }
  
+-STATIC int
+-xfs_fs_remount(
+-	struct super_block	*sb,
+-	int			*flags,
+-	char			*options)
+-{
+-	struct xfs_mount	*mp = XFS_M(sb);
+-	xfs_sb_t		*sbp = &mp->m_sb;
+-	substring_t		args[MAX_OPT_ARGS];
+-	char			*p;
+-	int			error;
+-
+-	/* First, check for complete junk; i.e. invalid options */
+-	error = xfs_test_remount_options(sb, options);
+-	if (error)
+-		return error;
+-
+-	sync_filesystem(sb);
+-	while ((p = strsep(&options, ",")) != NULL) {
+-		int token;
+-
+-		if (!*p)
+-			continue;
+-
+-		token = match_token(p, tokens, args);
+-		switch (token) {
+-		case Opt_inode64:
+-			mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+-			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
+-			break;
+-		case Opt_inode32:
+-			mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+-			mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
+-			break;
+-		default:
+-			/*
+-			 * Logically we would return an error here to prevent
+-			 * users from believing they might have changed
+-			 * mount options using remount which can't be changed.
+-			 *
+-			 * But unfortunately mount(8) adds all options from
+-			 * mtab and fstab to the mount arguments in some cases
+-			 * so we can't blindly reject options, but have to
+-			 * check for each specified option if it actually
+-			 * differs from the currently set option and only
+-			 * reject it if that's the case.
+-			 *
+-			 * Until that is implemented we return success for
+-			 * every remount request, and silently ignore all
+-			 * options that we can't actually change.
+-			 */
+-#if 0
+-			xfs_info(mp,
+-		"mount option \"%s\" not supported for remount", p);
+-			return -EINVAL;
+-#else
+-			break;
+-#endif
+-		}
+-	}
+-
+-	/* ro -> rw */
+-	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & SB_RDONLY)) {
+-		error = xfs_remount_rw(mp);
+-		if (error)
+-			return error;
+-	}
+-
+-	/* rw -> ro */
+-	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
+-		error = xfs_remount_ro(mp);
+-		if (error)
+-			return error;
+-	}
+-
+-	return 0;
+-}
+-
+ /*
+  * There can be problems with options passed from mount(8) when
+  * only the mount point path is given. The options are a merge
+@@ -1981,42 +1757,6 @@ __xfs_fs_fill_super(
+ 	goto out_free_sb;
+ }
+ 
+-STATIC int
+-xfs_fs_fill_super(
+-	struct super_block	*sb,
+-	void			*data,
+-	int			silent)
+-{
+-	struct xfs_mount	*mp;
+-	int			error;
+-
+-	/*
+-	 * allocate mp and do all low-level struct initializations before we
+-	 * attach it to the super
+-	 */
+-	mp = xfs_mount_alloc();
+-	if (!mp)
+-		return -ENOMEM;
 -	mp->m_super = sb;
- 	spin_lock_init(&mp->m_sb_lock);
- 	spin_lock_init(&mp->m_agirotor_lock);
- 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
-@@ -1996,9 +1994,10 @@ xfs_fs_fill_super(
- 	 * allocate mp and do all low-level struct initializations before we
- 	 * attach it to the super
- 	 */
--	mp = xfs_mount_alloc(sb);
-+	mp = xfs_mount_alloc();
- 	if (!mp)
- 		return -ENOMEM;
-+	mp->m_super = sb;
- 	sb->s_fs_info = mp;
+-	sb->s_fs_info = mp;
+-
+-	error = xfs_parseargs(mp, (char *)data);
+-	if (error)
+-		goto out_free_fsname;
+-
+-	error = __xfs_fs_fill_super(mp, silent);
+-	if (error)
+-		goto out_free_fsname;
+-
+-	return 0;
+-
+- out_free_fsname:
+-	sb->s_fs_info = NULL;
+-	xfs_free_fsname(mp);
+-	kfree(mp);
+-	return error;
+-}
+-
+ STATIC int
+ xfs_fill_super(
+ 	struct super_block	*sb,
+@@ -2087,16 +1827,6 @@ xfs_fs_put_super(
+ 	kfree(mp);
+ }
  
- 	error = xfs_parseargs(mp, (char *)data);
+-STATIC struct dentry *
+-xfs_fs_mount(
+-	struct file_system_type	*fs_type,
+-	int			flags,
+-	const char		*dev_name,
+-	void			*data)
+-{
+-	return mount_bdev(fs_type, flags, dev_name, data, xfs_fs_fill_super);
+-}
+-
+ static long
+ xfs_fs_nr_cached_objects(
+ 	struct super_block	*sb,
+@@ -2126,7 +1856,6 @@ static const struct super_operations xfs_super_operations = {
+ 	.freeze_fs		= xfs_fs_freeze,
+ 	.unfreeze_fs		= xfs_fs_unfreeze,
+ 	.statfs			= xfs_fs_statfs,
+-	.remount_fs		= xfs_fs_remount,
+ 	.show_options		= xfs_fs_show_options,
+ 	.nr_cached_objects	= xfs_fs_nr_cached_objects,
+ 	.free_cached_objects	= xfs_fs_free_cached_objects,
+@@ -2164,10 +1893,58 @@ static const struct fs_context_operations xfs_context_ops = {
+ 	.free        = xfs_fc_free,
+ };
+ 
++/*
++ * Set up the filesystem mount context.
++ */
++int xfs_init_fs_context(struct fs_context *fc)
++{
++	struct xfs_fs_context	*ctx;
++	struct xfs_mount	*mp;
++
++	ctx = kzalloc(sizeof(struct xfs_fs_context), GFP_KERNEL);
++	if (!ctx)
++		return -ENOMEM;
++
++	mp = xfs_mount_alloc();
++	if (!mp) {
++		kfree(ctx);
++		return -ENOMEM;
++	}
++
++	/*
++	 * Set some default flags that could be cleared by the mount option
++	 * parsing.
++	 */
++	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
++
++	/*
++	 * These can be overridden by the mount option parsing.
++	 */
++	mp->m_logbufs = -1;
++	mp->m_logbsize = -1;
++
++	/*
++	 * Copy binary VFS mount flags we are interested in.
++	 */
++	if (fc->sb_flags & SB_RDONLY)
++		mp->m_flags |= XFS_MOUNT_RDONLY;
++	if (fc->sb_flags & SB_DIRSYNC)
++		mp->m_flags |= XFS_MOUNT_DIRSYNC;
++	if (fc->sb_flags & SB_SYNCHRONOUS)
++		mp->m_flags |= XFS_MOUNT_WSYNC;
++
++	fc->fs_private = ctx;
++	fc->s_fs_info = mp;
++	fc->ops = &xfs_context_ops;
++
++	return 0;
++}
++
+ static struct file_system_type xfs_fs_type = {
+ 	.owner			= THIS_MODULE,
+ 	.name			= "xfs",
+-	.mount			= xfs_fs_mount,
++	.init_fs_context	= xfs_init_fs_context,
++	.parameters		= &xfs_fs_parameters,
+ 	.kill_sb		= kill_block_super,
+ 	.fs_flags		= FS_REQUIRES_DEV,
+ };
 
