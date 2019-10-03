@@ -1,229 +1,236 @@
-Return-Path: <SRS0=zZKn=X3=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=y7rh=X4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-1.1 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27988C4360C
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 20:36:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B2785C4360C
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 00:53:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DB4ED21848
-	for <linux-xfs@archiver.kernel.org>; Wed,  2 Oct 2019 20:36:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=default; t=1570048561;
-	bh=0B5UAKaVr2PEXiovBRwTBFLAKLLaWrdReoAFlNZRmqU=;
-	h=Subject:From:To:Cc:Date:In-Reply-To:References:List-ID:From;
-	b=Ei3CPqBKdDbxJQYfU/25cglIpHIdZGV4JHlTHsRk/tx/F7oPbSJ0fqjIYAkWO1+Wx
-	 oGtIpfYLu3YnDnXkCgVDepQLsO6HQixi3OhvH0dsoLGhfMjUI0NLVTmIrqoP6yYa1o
-	 P4hf6N6Ut2clHnJZ3/Fb1iqE4KarpbDas+5CgOOc=
+	by mail.kernel.org (Postfix) with ESMTP id 58223222BE
+	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 00:53:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727416AbfJBUgA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 2 Oct 2019 16:36:00 -0400
-Received: from mail.kernel.org ([198.145.29.99]:56360 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726302AbfJBUgA (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 2 Oct 2019 16:36:00 -0400
-Received: from tleilax.poochiereds.net (68-20-15-154.lightspeed.rlghnc.sbcglobal.net [68.20.15.154])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mail.kernel.org (Postfix) with ESMTPSA id 680BA21783;
-        Wed,  2 Oct 2019 20:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=default; t=1570048558;
-        bh=0B5UAKaVr2PEXiovBRwTBFLAKLLaWrdReoAFlNZRmqU=;
-        h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
-        b=eNVHxVwnLxNx2pl325Hkvbe+FmHZSPE+6zPbsbWy70tnpIV9Olf+rcC20YYo6btFr
-         hADFUNxkVLXW8lv1e3NtoH+hz6Bt+nFy99LCK9QyIav1rtyXg3tytFeYLtPbYNtuzC
-         4nobSrgKHTULcnRgNjWxQHS1ANbcb0+xTNwfh/4w=
-Message-ID: <df9022f0f5d18d71f37ed494a05eaa4509cf0a68.camel@kernel.org>
-Subject: Re: Lease semantic proposal
-From:   Jeff Layton <jlayton@kernel.org>
-To:     "J. Bruce Fields" <bfields@fieldses.org>
-Cc:     Ira Weiny <ira.weiny@intel.com>, linux-fsdevel@vger.kernel.org,
-        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
-        Dave Chinner <david@fromorbit.com>, Jan Kara <jack@suse.cz>,
-        Theodore Ts'o <tytso@mit.edu>,
-        John Hubbard <jhubbard@nvidia.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>
-Date:   Wed, 02 Oct 2019 16:35:55 -0400
-In-Reply-To: <20191002192711.GA21386@fieldses.org>
-References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
-         <5d5a93637934867e1b3352763da8e3d9f9e6d683.camel@kernel.org>
-         <20191001181659.GA5500@iweiny-DESK2.sc.intel.com>
-         <2b42cf4ae669cedd061c937103674babad758712.camel@kernel.org>
-         <20191002192711.GA21386@fieldses.org>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1726289AbfJCAxR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 2 Oct 2019 20:53:17 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33922 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726002AbfJCAxR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 2 Oct 2019 20:53:17 -0400
+Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 51E9643EC66;
+        Thu,  3 Oct 2019 10:53:12 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iFpMk-0000X3-Sd; Thu, 03 Oct 2019 10:53:10 +1000
+Date:   Thu, 3 Oct 2019 10:53:10 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
+Message-ID: <20191003005310.GV16973@dread.disaster.area>
+References: <20190930060344.14561-1-david@fromorbit.com>
+ <20190930060344.14561-3-david@fromorbit.com>
+ <20190930170358.GD57295@bfoster>
+ <20190930215336.GR16973@dread.disaster.area>
+ <20191001131304.GA62428@bfoster>
+ <20191001223107.GT16973@dread.disaster.area>
+ <20191002124056.GA2403@bfoster>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191002124056.GA2403@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=eQDlhc7iGAFAyPrJEpcA:9 a=ezPR87Dl6ztoz3QW:21
+        a=Kx1f2_VkTWtwFTPy:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2019-10-02 at 15:27 -0400, J. Bruce Fields wrote:
-> On Wed, Oct 02, 2019 at 08:28:40AM -0400, Jeff Layton wrote:
-> > On Tue, 2019-10-01 at 11:17 -0700, Ira Weiny wrote:
-> > > On Mon, Sep 23, 2019 at 04:17:59PM -0400, Jeff Layton wrote:
-> > > > On Mon, 2019-09-23 at 12:08 -0700, Ira Weiny wrote:
-> > > > > Since the last RFC patch set[1] much of the discussion of supporting RDMA with
-> > > > > FS DAX has been around the semantics of the lease mechanism.[2]  Within that
-> > > > > thread it was suggested I try and write some documentation and/or tests for the
-> > > > > new mechanism being proposed.  I have created a foundation to test lease
-> > > > > functionality within xfstests.[3] This should be close to being accepted.
-> > > > > Before writing additional lease tests, or changing lots of kernel code, this
-> > > > > email presents documentation for the new proposed "layout lease" semantic.
-> > > > > 
-> > > > > At Linux Plumbers[4] just over a week ago, I presented the current state of the
-> > > > > patch set and the outstanding issues.  Based on the discussion there, well as
-> > > > > follow up emails, I propose the following addition to the fcntl() man page.
-> > > > > 
-> > > > > Thank you,
-> > > > > Ira
-> > > > > 
-> > > > > [1] https://lkml.org/lkml/2019/8/9/1043
-> > > > > [2] https://lkml.org/lkml/2019/8/9/1062
-> > > > > [3] https://www.spinics.net/lists/fstests/msg12620.html
-> > > > > [4] https://linuxplumbersconf.org/event/4/contributions/368/
-> > > > > 
-> > > > > 
+On Wed, Oct 02, 2019 at 08:40:56AM -0400, Brian Foster wrote:
+> On Wed, Oct 02, 2019 at 08:31:07AM +1000, Dave Chinner wrote:
+> > On Tue, Oct 01, 2019 at 09:13:04AM -0400, Brian Foster wrote:
+> > > On Tue, Oct 01, 2019 at 07:53:36AM +1000, Dave Chinner wrote:
+> > > > On Mon, Sep 30, 2019 at 01:03:58PM -0400, Brian Foster wrote:
+> > > > > Have you done similar testing for small/minimum sized logs?
 > > > > 
-> > > > Thank you so much for doing this, Ira. This allows us to debate the
-> > > > user-visible behavior semantics without getting bogged down in the
-> > > > implementation details. More comments below:
-> > > 
-> > > Thanks.  Sorry for the delay in response.  Turns out this email was in my
-> > > spam...  :-/  I'll need to work out why.
-> > > 
-> > > > > <fcntl man page addition>
-> > > > > Layout Leases
-> > > > > -------------
-> > > > > 
-> > > > > Layout (F_LAYOUT) leases are special leases which can be used to control and/or
-> > > > > be informed about the manipulation of the underlying layout of a file.
-> > > > > 
-> > > > > A layout is defined as the logical file block -> physical file block mapping
-> > > > > including the file size and sharing of physical blocks among files.  Note that
-> > > > > the unwritten state of a block is not considered part of file layout.
-> > > > > 
-> > > > > **Read layout lease F_RDLCK | F_LAYOUT**
-> > > > > 
-> > > > > Read layout leases can be used to be informed of layout changes by the
-> > > > > system or other users.  This lease is similar to the standard read (F_RDLCK)
-> > > > > lease in that any attempt to change the _layout_ of the file will be reported to
-> > > > > the process through the lease break process.  But this lease is different
-> > > > > because the file can be opened for write and data can be read and/or written to
-> > > > > the file as long as the underlying layout of the file does not change.
-> > > > > Therefore, the lease is not broken if the file is simply open for write, but
-> > > > > _may_ be broken if an operation such as, truncate(), fallocate() or write()
-> > > > > results in changing the underlying layout.
-> > > > > 
-> > > > > **Write layout lease (F_WRLCK | F_LAYOUT)**
-> > > > > 
-> > > > > Write Layout leases can be used to break read layout leases to indicate that
-> > > > > the process intends to change the underlying layout lease of the file.
-> > > > > 
-> > > > > A process which has taken a write layout lease has exclusive ownership of the
-> > > > > file layout and can modify that layout as long as the lease is held.
-> > > > > Operations which change the layout are allowed by that process.  But operations
-> > > > > from other file descriptors which attempt to change the layout will break the
-> > > > > lease through the standard lease break process.  The F_LAYOUT flag is used to
-> > > > > indicate a difference between a regular F_WRLCK and F_WRLCK with F_LAYOUT.  In
-> > > > > the F_LAYOUT case opens for write do not break the lease.  But some operations,
-> > > > > if they change the underlying layout, may.
-> > > > > 
-> > > > > The distinction between read layout leases and write layout leases is that
-> > > > > write layout leases can change the layout without breaking the lease within the
-> > > > > owning process.  This is useful to guarantee a layout prior to specifying the
-> > > > > unbreakable flag described below.
-> > > > > 
-> > > > > 
+> > > > Yes. I've had the tracepoint active during xfstests runs on test
+> > > > filesystems using default log sizes on 5-15GB filesystems. The only
+> > > > test in all of xfstests that has triggered it is generic/017, and it
+> > > > only triggered once.
 > > > > 
-> > > > The above sounds totally reasonable. You're essentially exposing the
-> > > > behavior of nfsd's layout leases to userland. To be clear, will F_LAYOUT
-> > > > leases work the same way as "normal" leases, wrt signals and timeouts?
 > > > 
-> > > That was my intention, yes.
-> > > 
-> > > > I do wonder if we're better off not trying to "or" in flags for this,
-> > > > and instead have a separate set of commands (maybe F_RDLAYOUT,
-> > > > F_WRLAYOUT, F_UNLAYOUT). Maybe I'm just bikeshedding though -- I don't
-> > > > feel terribly strongly about it.
-> > > 
-> > > I'm leaning that was as well.  To make these even more distinct from
-> > > F_SETLEASE.
-> > > 
-> > > > Also, at least in NFSv4, layouts are handed out for a particular byte
-> > > > range in a file. Should we consider doing this with an API that allows
-> > > > for that in the future? Is this something that would be desirable for
-> > > > your RDMA+DAX use-cases?
-> > > 
-> > > I don't see this.  I've thought it would be a nice thing to have but I don't
-> > > know of any hard use case.  But first I'd like to understand how this works for
-> > > NFS.
-> > > 
+> > > Ok, interesting. I guess it would be nice if we had a test that somehow
+> > > or another more effectively exercised this codepath.
 > > 
-> > The NFSv4.1 spec allows the client to request the layouts for a
-> > particular range in the file:
+> > *nod*
 > > 
-> > https://tools.ietf.org/html/rfc5661#page-538
+> > But it's essentially difficult to predict in any way because
+> > behaviour is not just a function of log size. :/
 > > 
-> > The knfsd only hands out whole-file layouts at present. Eventually we
-> > may want to make better use of segmented layouts, at which point we'd
-> > need something like a byte-range lease.
-> > 
-> > > > We could add a new F_SETLEASE variant that takes a struct with a byte
-> > > > range (something like struct flock).
+> > > > > Also, if this is so limited in occurrence, had you given any thought to
+> > > > > something even more simple like flushing the CIL push workqueue when
+> > > > > over the throttle threshold?
+> > > > 
+> > > > Yes, I've tried that - flush_workqueue() blocks /everything/ until
+> > > > all the queued work is complete. That means it waits for the CIL to
+> > > > flush to disk and write a commit record, and every modification in
+> > > > the filesystem is stopped dead in it's tracks until the CIL push is
+> > > > complete.
+> > > > 
+> > > > The problem is that flushing workqueues is a synchronous operation,
+> > > > and it can't wait for partial work completion. We only need to wait
+> > > > for the CIL context to be swapped out - this is done by the push
+> > > > code before it starts all the expensive iclog formating and waiting
+> > > > for iclog space...
+> > > > 
 > > > 
-> > > I think this would be another reason to introduce F_[RD|WR|UN]LAYOUT as a
-> > > command.  Perhaps supporting smaller byte ranges could be added later?
-> > > 
+> > > I know it waits on the work to complete. I poked around a bit for an
+> > > interface to "kick" a workqueue, so to speak (as opposed to flush), but
+> > > I didn't see anything (not surprisingly, since it probably wouldn't be a
+> > > broadly useful mechanism).
 > > 
-> > I'd definitely not multiplex this over F_SETLEASE. An F_SETLAYOUT cmd
-> > would probably be sufficient, and maybe just reuse
-> > F_RDLCK/F_WRLCK/F_UNLCK for the iomode?
+> > *nod*
 > > 
-> > For the byte ranges, the catch there is that extending the userland
-> > interface for that later will be difficult.
+> > > That aside, where would this wait on the CIL to flush to disk? AFAICT
+> > > the only thing that might happen here is log buffer submission. That
+> > > only happens when the log buffer is full (regardless of the current CIL
+> > > push writing its commit record). In fact if we did wait on I/O anywhere
+> > > in here, then that suggests potential problems with async log force.
+> > 
+> > There is no such thing as a "async log force". The log force always
+> > waits on the CIL flush - XFS_LOG_SYNC only defines whether it waits
+> > on all iclogbufs post CIL flush to hit the disk.
+> > 
 > 
-> Why would it be difficult?
+> I'm just referring to the semantics/naming of the existing interface. I
+> suppose I could have used "a log force that doesn't wait on all
+> iclogbufs to hit the disk," but that doesn't quite roll off the tongue.
+> ;)
+
+*nod*
+
+Just wanted to make sure we were both talking about the same thing
+:)
+
 > 
-
-Legacy userland code that wanted to use byte range enabled layouts would
-have to be rebuilt to take advantage of them. If we require a range from
-the get-go, then they will get the benefit of them once they're
-available.
- 
-> > What I'd probably suggest
-> > (and what would jive with the way pNFS works) would be to go ahead and
-> > add an offset and length to the arguments and result (maybe also
-> > whence?).
+> > Further, when the CIL flushes, it's normally flushing more metadata that we
+> > can hold in 8x iclogbufs. The default is 32kB iclogbufs, so if we've
+> > got more than 256kB of checkpoint data to be written, then we end up
+> > waiting on iclogbuf completion to write more then 256kB.
+> > 
+> > Typically I see a sustainted ratio of roughly 4 iclog writes to 1
+> > noiclogbufs in the metric graphs on small logs - just measured 700
+> > log writes/s, 250 noiclogs/s for a 64MB log and 256kB logbuf size.
+> > IOWs, CIL flushes are regularly waiting in xlog_get_iclog_space() on
+> > iclog IO completion to occur...
+> > 
 > 
-> Why not add new commands with range arguments later if it turns out to
-> be necessary?
+> Ok, that's not quite what I was concerned about when you mentioned
+> waiting on the CIL to flush to disk. No matter, the important bit here
+> is the performance cost of including the extra blocking on log I/O (to
+> cycle iclogs back to active for reuse) in the throttle.
+> 
+> I'm curious about how noticeable this extra blocking would be because
+> it's one likely cause of the CIL pressure buildup in the first place. My
+> original tests reproduced huge CIL checkpoints purely based on one CIL
+> push being blocked behind the processing of another, the latter taking
+> relatively more time due to log I/O.
 
-We could do that. It'd be a little ugly, IMO, simply because then we'd
-end up with two interfaces that do almost the exact same thing.
+It's very noticable. I dropped that as a throttle mechanism because
+even on a SSD at 200us per write, a 32MB CIL flush takes for
+20-30ms. And it stops everything dead for that time because it
+stalls all async transaction commits while the log flushes.
 
-Should byte-range layouts at that point conflict with non-byte range
-layouts, or should they be in different "spaces" (a'la POSIX and flock
-locks)? When it's all one interface, those sorts of questions sort of
-answer themselves. When they aren't we'll have to document them clearly
-and I think the result will be more confusing for userland programmers.
+When several CIL flushes a second occur (pushing 100-150MB/s to the
+log), I start seeing a substantial amount of additional time
+(15-20% of total CPU time) being spent idle just waiting for CIL
+flush completion. And it only gets worse as the storage gets
+slower...
 
-If you felt strongly about leaving those out for now, you could just do
-something similar to what Aleksa is planning for openat2 -- have a
-struct pointer and length as arguments for this cmd, and only have a
-single iomode member in there for now.
+The throttle that these patches implement are typically only
+stalling incoming transactions for a couple of hundred microseconds.
+The timestamps from the groups of log events show the blocking of
+all threads are very close together in time, and the push work to
+switch over to the new context to allow them to unblock and continue
+happens within another 200-300 microseconds. And the worst case I've
+seen, this is happening once or twice a second. IOWs, the blocking
+time of the throttle is very short and largely unnoticable, and the
+difference to performance it causes is far, far less than the noise
+threshold of the benchmarks.
 
-The kernel would have to know how to deal with "legacy" and byte-range-
-enabled variants if we ever extend it, but that's not too hard to
-handle.
+> This is not to say there aren't other causes of excessively sized
+> checkpoints. Rather, if we're at a point where we've blocked
+> transactions on this new threshold, that means we've doubled the
+> background threshold in the time we've first triggered a background CIL
+> push and the push actually started. From that, it seems fairly likely
+> that we could replenish the CIL to the background threshold once
+> threads are unblocked but before the previous push completes.
+
+That's just fine. The CIL is actually designed to allow that sort of
+overlap between multiple committing background contexts and the
+current aggregating context. As long as each individual CIL commit
+size doesn't go over half the log and there's always a complete
+commit in the log (which there should be via head/tail limits),
+the only limit on the number of concurrent committing CIL contexts
+on the fly at once is the amount of log space we have available....
+
+> The question is: can we get all the way to the blocking threshold before
+> that happens? That doesn't seem unrealistic to me, but it's hard to
+> reason about without having tested it. If so, I think it means we end up
+> blocking on completion of the first push to some degree anyways.
+
+Yes, we can fill and push the current sequence before the previous
+sequence has finished committing.
+
+> > > > xlog_cil_push_now() uses flush_work() to push any pending work
+> > > > before it queues up the CIL flush that the caller is about to wait
+> > > > for.  i.e. the callers of xlog_cil_push_now() must ensure that all
+> > > > CIL contexts are flushed for the purposes of a log force as they are
+> > > > going to wait for all pending CIL flushes to complete. If we've
+> > > > already pushed the CIL to the sequence that we are asking to push
+> > > > to, we still have to wait for that previous push to be
+> > > > done. This is what the flush_work() call in xlog_cil_push_now()
+> > > > acheives.
+> > > > 
+> > > 
+> > > Yes, I'm just exploring potential to reuse this code..
+> > 
+> > Yeah, I have a few prototype patches for revamping this, including
+> > an actual async CIL flush. I do some work here, but it didn't solve
+> > any of the problems I needed to fix so it put it aside. See below.
+> > 
+> 
+> That sounds more involved than what I was thinking. My thought is that
+> this throttle is already not predictable or deterministic (i.e. we're
+> essentially waiting on a scheduler event) and so might not require the
+> extra complexity of a new waitqueue. It certainly could be the case that
+> blocking on the entire push is just too long in practice, but since this
+
+I've made that sort of change here and measured the regression.
+Then I discarded it as an unworkable option and looked for other
+solutions.
+
+> is already based on empirical evidence and subject to unpredictability,
+> ISTM that testing is the only way to know for sure. For reference, I
+> hacked up something to reuse xlog_cil_push_now() for background pushing
+> and throttling that ends up removing 20 or so lines of code by the time
+> it's in place, but I haven't given it any testing.
+>
+> That said, this is just an observation and an idea. I'm fine with the
+> proposed implementation with the other nits and whatnot fixed up.
+
+No worries. It's still worth exploring all the alternatives. :)
+
+Cheers,
+
+Dave.
 -- 
-Jeff Layton <jlayton@kernel.org>
-
+Dave Chinner
+david@fromorbit.com
