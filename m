@@ -2,288 +2,224 @@ Return-Path: <SRS0=FqvN=X5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 022BFC4360C
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 22:59:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 11173C4360C
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 23:16:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BC69C20873
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 22:59:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CCA87222BE
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 23:16:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DPs8ntYq"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="afgYepB4";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="enZqRZCi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730575AbfJDW7S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Oct 2019 18:59:18 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:52042 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725730AbfJDW7S (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Oct 2019 18:59:18 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94Mo5rD008731;
-        Fri, 4 Oct 2019 22:59:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=rSGwZ4o0WdLarUJ0SpMQTqzMycPIAh3Wgv67Up6eWxs=;
- b=DPs8ntYqBwzypzq7uB/kizxo3/CUl0a/ld20mVCfdne0stSmDZJTS5VO0xg3dfoiqydI
- Ef3XhkSSEH40XRUsSisaVSr1zmFlu8ORfnXSkI2uNo6eWXH20zfcur+KTHEB65x/K1KP
- 4q227EbU/svkyeuiO7ZDGFz/yL7fKmIr/GTJuMq1xy90RKFgn/GzqOitO5hDHZjzVy6B
- pQ4QTlv9xvZAW7ZlV66uaC0xhYCJXcRKF1uX1oiK+3M+/qh8HwbHqtmoXGUIJkIYIYHY
- JNkBh2xKgtWf4xQIbeNKOZvNxpIq4FHRnOvlrhNAkbi61JBdEXLG5bWI340bkVFxsMcC PA== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2v9yfqx9ys-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Oct 2019 22:59:11 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94MwCNF039593;
-        Fri, 4 Oct 2019 22:59:10 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2vdk0vnyc9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Oct 2019 22:59:10 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x94Mx8Qr016670;
-        Fri, 4 Oct 2019 22:59:08 GMT
-Received: from localhost (/10.159.134.51)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 04 Oct 2019 15:59:08 -0700
-Date:   Fri, 4 Oct 2019 15:59:07 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1731072AbfJDXQ1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Oct 2019 19:16:27 -0400
+Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:39967 "EHLO
+        wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728913AbfJDXQ1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Oct 2019 19:16:27 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.west.internal (Postfix) with ESMTP id D7DE3431;
+        Fri,  4 Oct 2019 19:16:25 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Fri, 04 Oct 2019 19:16:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
+        +03vUfZ26+PM7BBCCIoygp/r1MBbtrV3NmRyXDhPJnM=; b=afgYepB4RwsfOBSK
+        ectPJRg9IqIY1XtngfUKc7J1mwVCQTmbd8AMVJve8MNwBjOa5x1dxcgwo4/7Xh6q
+        i7NYsOREM21y3G06xASBLiX2fz4s32VxkuTcy9uRgBphREYZ3/dGY+hdzl+Rhmch
+        9viQgG9IVrwd13MKFO1l0C4HWYRrBduFOui569srQpiYNKobrKSVvpHzLJ7j8w2o
+        GKwwJlmxdQmrEqlJp9sQ/xnAGhGwYfGR4BY7NY8eHOQnDLyz7ARLnMnjTmS2adD2
+        ym7h1GLYEltGXjcxPu1cDdAxZwDEnnelLNilGV2WrAZDMwX80iqXQBPubc0wdGco
+        w93a8g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm3; bh=+03vUfZ26+PM7BBCCIoygp/r1MBbtrV3NmRyXDhPJ
+        nM=; b=enZqRZCitQ8+MvVOYkVRyOO9uPstjKy+o96hbe3sM95wr5BvoCGvqJGRR
+        anOXIOTEgnRP4GzJ4lfiEWK+YsrtQFQ8nQMQL1H3el5puiLsyf+NNklWe6TWCbkP
+        Xp0gQOlBX+dtHaSMyGhknjBNqeecEzmJ+AdUfZbr/nKfMNzb/ZqLCPwTjxdFx68G
+        rvXBmZyT57nRIRRxDL+1ThdMAt2vVLQyu6y27wHH+7WepoUuGXLSOull+Pg1gY++
+        D6pbFRJ57n7ih7XJd41923jmCDZq1cP4K4tz5pgTpTFHBEfRZuztikOVsDpRvhI+
+        xJAh2+D9h/b2IPCL7kq1atr5sw52w==
+X-ME-Sender: <xms:ydKXXaMFRlHhNRv3maXjAQ4NCYqesoWeBuYXGRDlruOyMs0urbq7nw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrhedvgddulecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecuffhomhgrihhnpeguvghstg
+    hrihhpthhiohhnrdhhmhenucfkphepuddukedrvddtkedrudekjedrudekieenucfrrghr
+    rghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghmrgifrdhnvghtnecuvehluhhsth
+    gvrhfuihiivgeptd
+X-ME-Proxy: <xmx:ydKXXaNM-rtmRAnLc2-9vl_NXjyYmjUMkvM5gwqpbEIl5aooqzW70g>
+    <xmx:ydKXXeVww4Xcs5CYR2AAoQFVrR8ZMVUUXcBp1mBa81gwneqxh2e-xw>
+    <xmx:ydKXXdvR5AdH_cNgMCeFhDRv3Dk0guQSCrUWBu0-SYx3UomBUjFNZA>
+    <xmx:ydKXXbeVOFdLWteDEQrOFaFvY1cK1fm_wDDLQk1WubOqBAS7vgULFw>
+Received: from mickey.themaw.net (unknown [118.208.187.186])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 606CD80059;
+        Fri,  4 Oct 2019 19:16:22 -0400 (EDT)
+Message-ID: <65ceea4be3da919a0194e66e27eaf49692d26e38.camel@themaw.net>
+Subject: Re: [PATCH v4 13/17] xfs: mount api - add xfs_reconfigure()
+From:   Ian Kent <raven@themaw.net>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v5 08/11] xfs: refactor and reuse best extent scanning
- logic
-Message-ID: <20191004225907.GF1473994@magnolia>
-References: <20190927171802.45582-1-bfoster@redhat.com>
- <20190927171802.45582-9-bfoster@redhat.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>
+Date:   Sat, 05 Oct 2019 07:16:17 +0800
+In-Reply-To: <20191004155321.GE7208@bfoster>
+References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
+         <157009838772.13858.3951542955676751036.stgit@fedora-28>
+         <20191004155321.GE7208@bfoster>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190927171802.45582-9-bfoster@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9400 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910040194
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9400 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910040193
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 27, 2019 at 01:17:59PM -0400, Brian Foster wrote:
-> The bnobt "find best" helper implements a simple btree walker
-> function. This general pattern, or a subset thereof, is reused in
-> various parts of a near mode allocation operation. For example, the
-> bnobt left/right scans are each iterative btree walks along with the
-> cntbt lastblock scan.
+On Fri, 2019-10-04 at 11:53 -0400, Brian Foster wrote:
+> On Thu, Oct 03, 2019 at 06:26:27PM +0800, Ian Kent wrote:
+> > Add the fs_context_operations method .reconfigure that performs
+> > remount validation as previously done by the super_operations
+> > .remount_fs method.
+> > 
+> > An attempt has also been made to update the comment about options
+> > handling problems with mount(8) to reflect the current situation.
+> > 
+> > Signed-off-by: Ian Kent <raven@themaw.net>
+> > ---
+> >  fs/xfs/xfs_super.c |   68
+> > ++++++++++++++++++++++++++++++++++++++++++++++++++++
+> >  1 file changed, 68 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > index ddcf030cca7c..06f650fb3a8c 100644
+> > --- a/fs/xfs/xfs_super.c
+> > +++ b/fs/xfs/xfs_super.c
+> > @@ -1544,6 +1544,73 @@ xfs_fs_remount(
+> >  	return 0;
+> >  }
+> >  
+> > +/*
+> > + * There can be problems with options passed from mount(8) when
+> > + * only the mount point path is given. The options are a merge
+> > + * of options from the fstab, mtab of the current mount and
+> > options
+> > + * given on the command line.
+> > + *
+> > + * But this can't be relied upon to accurately reflect the current
+> > + * mount options. Consequently rejecting options that can't be
+> > + * changed on reconfigure could erronously cause a mount failure.
+> > + *
+> > + * Nowadays it should be possible to compare incoming options
+> > + * and return an error for options that differ from the current
+> > + * mount and can't be changed on reconfigure.
+> > + *
+> > + * But this still might not always be the case so for now continue
+> > + * to return success for every reconfigure request, and silently
+> > + * ignore all options that can't actually be changed.
+> > + *
+> > + * See the commit log entry of this change for a more detailed
+> > + * desription of the problem.
+> > + */
 > 
-> Rework this function into a generic btree walker, add a couple
-> parameters to control termination behavior from various contexts and
-> reuse it where applicable.
-> 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> But the commit log entry doesn't include any new info..?
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+I thought I did, honest, ;)
 
---D
+> 
+> How about this.. we already have a similar comment in
+> xfs_fs_remount()
+> that I happen to find a bit more clear. It also obviously has
+> precedent.
+> How about we copy that one to the top of this function verbatim, and
+> whatever extra you want to get across can be added to the commit log
+> description. Hm?
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 110 +++++++++++++++++++-------------------
->  1 file changed, 55 insertions(+), 55 deletions(-)
+Trying to understand that comment and whether it was still needed
+is what lead to this.
+
+It is still relevant and IIRC the only extra info. needed is that
+the mount-api implementation can't help with the problem because
+it's what's given to the kernel via. mount(8) and that must continue
+to be supported.
+
+I'll re-read the original message, maybe retaining it is sufficient
+to imply the above.
+
 > 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index 32b378c8e16c..85e82e184ec9 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -875,6 +875,13 @@ xfs_alloc_cur_check(
->  	acur->diff = diff;
->  	*new = 1;
->  
-> +	/*
-> +	 * We're done if we found a perfect allocation. This only deactivates
-> +	 * the current cursor, but this is just an optimization to terminate a
-> +	 * cntbt search that otherwise runs to the edge of the tree.
-> +	 */
-> +	if (acur->diff == 0 && acur->len == args->maxlen)
-> +		deactivate = true;
->  out:
->  	if (deactivate)
->  		cur->bc_private.a.priv.abt.active = false;
-> @@ -1172,30 +1179,38 @@ xfs_alloc_ag_vextent_exact(
->  }
->  
->  /*
-> - * Search the btree in a given direction and check the records against the good
-> - * extent we've already found.
-> + * Search a given number of btree records in a given direction. Check each
-> + * record against the good extent we've already found.
->   */
->  STATIC int
-> -xfs_alloc_find_best_extent(
-> +xfs_alloc_walk_iter(
->  	struct xfs_alloc_arg	*args,
->  	struct xfs_alloc_cur	*acur,
->  	struct xfs_btree_cur	*cur,
-> -	bool			increment)
-> +	bool			increment,
-> +	bool			find_one, /* quit on first candidate */
-> +	int			count,    /* rec count (-1 for infinite) */
-> +	int			*stat)
->  {
->  	int			error;
->  	int			i;
->  
-> +	*stat = 0;
-> +
->  	/*
->  	 * Search so long as the cursor is active or we find a better extent.
->  	 * The cursor is deactivated if it extends beyond the range of the
->  	 * current allocation candidate.
->  	 */
-> -	while (xfs_alloc_cur_active(cur)) {
-> +	while (xfs_alloc_cur_active(cur) && count) {
->  		error = xfs_alloc_cur_check(args, acur, cur, &i);
->  		if (error)
->  			return error;
-> -		if (i == 1)
-> -			break;
-> +		if (i == 1) {
-> +			*stat = 1;
-> +			if (find_one)
-> +				break;
-> +		}
->  		if (!xfs_alloc_cur_active(cur))
->  			break;
->  
-> @@ -1207,6 +1222,9 @@ xfs_alloc_find_best_extent(
->  			return error;
->  		if (i == 0)
->  			cur->bc_private.a.priv.abt.active = false;
-> +
-> +		if (count > 0)
-> +			count--;
->  	}
->  
->  	return 0;
-> @@ -1226,7 +1244,6 @@ xfs_alloc_ag_vextent_near(
->  	struct xfs_btree_cur	*fbcur = NULL;
->  	int			error;		/* error code */
->  	int			i;		/* result code, temporary */
-> -	int			j;		/* result code, temporary */
->  	xfs_agblock_t		bno;
->  	xfs_extlen_t		len;
->  	bool			fbinc = false;
-> @@ -1313,19 +1330,12 @@ xfs_alloc_ag_vextent_near(
->  			if (!i)
->  				break;
->  		}
-> -		i = acur.cnt->bc_ptrs[0];
-> -		for (j = 1;
-> -		     !error && j && xfs_alloc_cur_active(acur.cnt) &&
-> -		     (acur.len < args->maxlen || acur.diff > 0);
-> -		     error = xfs_btree_increment(acur.cnt, 0, &j)) {
-> -			/*
-> -			 * For each entry, decide if it's better than
-> -			 * the previous best entry.
-> -			 */
-> -			error = xfs_alloc_cur_check(args, &acur, acur.cnt, &i);
-> -			if (error)
-> -				goto out;
-> -		}
-> +
-> +		error = xfs_alloc_walk_iter(args, &acur, acur.cnt, true, false,
-> +					    -1, &i);
-> +		if (error)
-> +			goto out;
-> +
->  		/*
->  		 * It didn't work.  We COULD be in a case where
->  		 * there's a good record somewhere, so try again.
-> @@ -1357,49 +1367,39 @@ xfs_alloc_ag_vextent_near(
->  		goto out;
->  
->  	/*
-> -	 * Loop going left with the leftward cursor, right with the
-> -	 * rightward cursor, until either both directions give up or
-> -	 * we find an entry at least as big as minlen.
-> +	 * Loop going left with the leftward cursor, right with the rightward
-> +	 * cursor, until either both directions give up or we find an entry at
-> +	 * least as big as minlen.
->  	 */
->  	do {
-> -		if (xfs_alloc_cur_active(acur.bnolt)) {
-> -			error = xfs_alloc_cur_check(args, &acur, acur.bnolt, &i);
-> -			if (error)
-> -				goto out;
-> -			if (i == 1) {
-> -				trace_xfs_alloc_cur_left(args);
-> -				fbcur = acur.bnogt;
-> -				fbinc = true;
-> -				break;
-> -			}
-> -			error = xfs_btree_decrement(acur.bnolt, 0, &i);
-> -			if (error)
-> -				goto out;
-> -			if (!i)
-> -				acur.bnolt->bc_private.a.priv.abt.active = false;
-> +		error = xfs_alloc_walk_iter(args, &acur, acur.bnolt, false,
-> +					    true, 1, &i);
-> +		if (error)
-> +			goto out;
-> +		if (i == 1) {
-> +			trace_xfs_alloc_cur_left(args);
-> +			fbcur = acur.bnogt;
-> +			fbinc = true;
-> +			break;
->  		}
-> -		if (xfs_alloc_cur_active(acur.bnogt)) {
-> -			error = xfs_alloc_cur_check(args, &acur, acur.bnogt, &i);
-> -			if (error)
-> -				goto out;
-> -			if (i == 1) {
-> -				trace_xfs_alloc_cur_right(args);
-> -				fbcur = acur.bnolt;
-> -				fbinc = false;
-> -				break;
-> -			}
-> -			error = xfs_btree_increment(acur.bnogt, 0, &i);
-> -			if (error)
-> -				goto out;
-> -			if (!i)
-> -				acur.bnogt->bc_private.a.priv.abt.active = false;
-> +
-> +		error = xfs_alloc_walk_iter(args, &acur, acur.bnogt, true, true,
-> +					    1, &i);
-> +		if (error)
-> +			goto out;
-> +		if (i == 1) {
-> +			trace_xfs_alloc_cur_right(args);
-> +			fbcur = acur.bnolt;
-> +			fbinc = false;
-> +			break;
->  		}
->  	} while (xfs_alloc_cur_active(acur.bnolt) ||
->  		 xfs_alloc_cur_active(acur.bnogt));
->  
->  	/* search the opposite direction for a better entry */
->  	if (fbcur) {
-> -		error = xfs_alloc_find_best_extent(args, &acur, fbcur, fbinc);
-> +		error = xfs_alloc_walk_iter(args, &acur, fbcur, fbinc, true, -1,
-> +					    &i);
->  		if (error)
->  			goto out;
->  	}
-> -- 
-> 2.20.1
+> Brian
 > 
+> > +STATIC int
+> > +xfs_reconfigure(
+> > +	struct fs_context *fc)
+> > +{
+> > +	struct xfs_fs_context	*ctx = fc->fs_private;
+> > +	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
+> > +	struct xfs_mount        *new_mp = fc->s_fs_info;
+> > +	xfs_sb_t		*sbp = &mp->m_sb;
+> > +	int			flags = fc->sb_flags;
+> > +	int			error;
+> > +
+> > +	error = xfs_validate_params(new_mp, ctx, false);
+> > +	if (error)
+> > +		return error;
+> > +
+> > +	/* inode32 -> inode64 */
+> > +	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+> > +	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
+> > +		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
+> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
+> > >sb_agcount);
+> > +	}
+> > +
+> > +	/* inode64 -> inode32 */
+> > +	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
+> > +	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
+> > +		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
+> > +		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp-
+> > >sb_agcount);
+> > +	}
+> > +
+> > +	/* ro -> rw */
+> > +	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
+> > +		error = xfs_remount_rw(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> > +	/* rw -> ro */
+> > +	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
+> > +		error = xfs_remount_ro(mp);
+> > +		if (error)
+> > +			return error;
+> > +	}
+> > +
+> > +	return 0;
+> > +}
+> > +
+> >  /*
+> >   * Second stage of a freeze. The data is already frozen so we only
+> >   * need to take care of the metadata. Once that's done sync the
+> > superblock
+> > @@ -2069,6 +2136,7 @@ static const struct super_operations
+> > xfs_super_operations = {
+> >  static const struct fs_context_operations xfs_context_ops = {
+> >  	.parse_param = xfs_parse_param,
+> >  	.get_tree    = xfs_get_tree,
+> > +	.reconfigure = xfs_reconfigure,
+> >  };
+> >  
+> >  static struct file_system_type xfs_fs_type = {
+> > 
+
