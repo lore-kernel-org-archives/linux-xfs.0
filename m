@@ -7,363 +7,171 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 07344C4360C
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 23:22:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8F36FC4360C
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 23:40:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8F72215EA
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 23:22:35 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6039A20673
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 23:40:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="i78t+CNk"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S9ElxZq0"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729441AbfJDXWf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Oct 2019 19:22:35 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:52842 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728913AbfJDXWf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Oct 2019 19:22:35 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94NJFLa026798;
-        Fri, 4 Oct 2019 23:22:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=4/wcJ7HkSeo1NNigdtLieTGrlWCwKh2ALjQGj08a2DA=;
- b=i78t+CNky/T2ww92vXZWGAVxFME6lZIxOGQe+kktMTN+2sfruzeqpJbtVzDUUZq+FPm/
- FCeEumL59LFSF5pFn5aUd1bHLBasfiFF92Zu5gmT2uo8Kjz1iQ3q1YqJ8oTdA8IECk2O
- L96OfolP1oODCIPod/P20bU5QC6xmAh5NtsX7Yu0MCg76kda5v2C7266hykwys5h547Q
- Tpa0YN2TIJ8Xn2gASfaGzmyeQasucX5fPuauXSHHJUmSkTQRSHEklj7EUZLb7jm6KYg/
- d2te4Vv1ATNgqsmU9CqU1xn27iJNZndzM7dq+FeZlTfLUTqUAvuoGMrg3Z93X7xmDXln Dw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2v9yfqxbj2-1
+        id S1730400AbfJDXkB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Oct 2019 19:40:01 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42768 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbfJDXkA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Oct 2019 19:40:00 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94Ncx3e076238;
+        Fri, 4 Oct 2019 23:39:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=mime-version :
+ message-id : date : from : to : cc : subject : references : in-reply-to :
+ content-type : content-transfer-encoding; s=corp-2019-08-05;
+ bh=raJbb/hjWh7KE/pZm9gyNzp3QKmmv05HNCwHVXgqtKM=;
+ b=S9ElxZq0XvioKhieaOAf8+fJLyANDqyAxlY7zjb0npg7QYBwdwZmP6XfzE6+LuaCGFU7
+ K8maFu7k75ckBQiYmw9O471pPU+H1VVemAu5euGh9SkjsGFAYBirQMC+8eCQTeQ4Q8SI
+ +ugxV/3soBIv+gDOCY3I13bj6T7UZV8RlMupGlo+FIRoPBUs7uEywX2Wu6BEoHVXhsEx
+ pZLv4UM9K9NtOpeXrOudWYMgTVzdD851F31aK7fFvK7eXGv/BQffPZEFTMW6N/1Ky1+M
+ z3rjBC0y+Pj4COYIas3lBZarGUWHrgFaNU0JHLHeF4Y3Nl/Ry8BQ0AQAVIdtH8Hq5nx4 nw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2va05seawk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Oct 2019 23:22:29 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94NIVID002996;
-        Fri, 4 Oct 2019 23:20:29 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2vebbx550h-1
+        Fri, 04 Oct 2019 23:39:49 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94Nd6xJ033013;
+        Fri, 4 Oct 2019 23:39:49 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2vdxu9nvk8-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 04 Oct 2019 23:20:29 +0000
-Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x94NKRD9005630;
-        Fri, 4 Oct 2019 23:20:28 GMT
-Received: from localhost (/10.159.134.51)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 04 Oct 2019 16:20:24 -0700
-Date:   Fri, 4 Oct 2019 16:20:22 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v5 11/11] xfs: optimize near mode bnobt scans with
- concurrent cntbt lookups
-Message-ID: <20191004232022.GN13108@magnolia>
-References: <20190927171802.45582-1-bfoster@redhat.com>
- <20190927171802.45582-12-bfoster@redhat.com>
+        Fri, 04 Oct 2019 23:39:48 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x94NdlMP018744;
+        Fri, 4 Oct 2019 23:39:48 GMT
+Received: from localhost (/10.159.134.51) by default (Oracle Beehive Gateway
+ v4.0) with ESMTP ; Fri, 04 Oct 2019 16:38:25 -0700
+USER-AGENT: Mutt/1.9.4 (2018-02-28)
 MIME-Version: 1.0
+Message-ID: <20191004233824.GO13108@magnolia>
+Date:   Fri, 4 Oct 2019 16:38:24 -0700 (PDT)
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     "Bill O'Donnell" <billodo@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5] xfs: assure zeroed memory buffers for certain kmem
+ allocations
+References: <20191004194640.17511-1-billodo@redhat.com>
+In-Reply-To: <20191004194640.17511-1-billodo@redhat.com>
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20190927171802.45582-12-bfoster@redhat.com>
-User-Agent: Mutt/1.9.4 (2018-02-28)
+Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9400 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910040196
+ engine=8.0.1-1908290000 definitions=main-1910040199
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9400 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910040196
+ definitions=main-1910040199
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Sep 27, 2019 at 01:18:02PM -0400, Brian Foster wrote:
-> The near mode fallback algorithm consists of a left/right scan of
-> the bnobt. This algorithm has very poor breakdown characteristics
-> under worst case free space fragmentation conditions. If a suitable
-> extent is far enough from the locality hint, each allocation may
-> scan most or all of the bnobt before it completes. This causes
-> pathological behavior and extremely high allocation latencies.
+On Fri, Oct 04, 2019 at 02:46:40PM -0500, Bill O'Donnell wrote:
+> Guarantee zeroed memory buffers for cases where potential memory
+> leak to disk can occur. In these cases, kmem_alloc is used and
+> doesn't zero the buffer, opening the possibility of information
+> leakage to disk.
 > 
-> While locality is important to near mode allocations, it is not so
-> important as to incur pathological allocation latency to provide the
-> asolute best available locality for every allocation. If the
-> allocation is large enough or far enough away, there is a point of
-> diminishing returns. As such, we can bound the overall operation by
-> including an iterative cntbt lookup in the broader search. The cntbt
-> lookup is optimized to immediately find the extent with best
-> locality for the given size on each iteration. Since the cntbt is
-> indexed by extent size, the lookup repeats with a variably
-> aggressive increasing search key size until it runs off the edge of
-> the tree.
+> Use existing infrastucture (xfs_buf_allocate_memory) to obtain
+> the already zeroed buffer from kernel memory.
 > 
-> This approach provides a natural balance between the two algorithms
-> for various situations. For example, the bnobt scan is able to
-> satisfy smaller allocations such as for inode chunks or btree blocks
-> more quickly where the cntbt search may have to search through a
-> large set of extent sizes when the search key starts off small
-> relative to the largest extent in the tree. On the other hand, the
-> cntbt search more deterministically covers the set of suitable
-> extents for larger data extent allocation requests that the bnobt
-> scan may have to search the entire tree to locate.
+> This solution avoids the performance issue that would occur if a
+> wholesale change to replace kmem_alloc with kmem_zalloc was done.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Bill O'Donnell <billodo@redhat.com>
+> ---
+> 
+> v5: apply KM_ZERO for kmem_alloc_io calls in xfs_log.c and xfs_log_recover.c
+> v4: use __GFP_ZERO as part of gfp_mask (instead of KM_ZERO)
+> v3: remove XBF_ZERO flag, and instead use XBF_READ flag only.
+> v2: zeroed buffer not required for XBF_READ case. Correct placement
+>     and rename the XBF_ZERO flag.
+> 
+>  fs/xfs/xfs_buf.c         | 12 +++++++++++-
+>  fs/xfs/xfs_log.c         |  2 +-
+>  fs/xfs/xfs_log_recover.c |  2 +-
+>  3 files changed, 13 insertions(+), 3 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index 120ef99d09e8..5d0a68de5fa6 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -345,6 +345,15 @@ xfs_buf_allocate_memory(
+>  	unsigned short		page_count, i;
+>  	xfs_off_t		start, end;
+>  	int			error;
+> +	uint			kmflag_mask = 0;
+> +
+> +	/*
+> +	 * assure zeroed buffer for non-read cases.
+> +	 */
+> +	if (!(flags & XBF_READ)) {
+> +		kmflag_mask |= KM_ZERO;
+> +		gfp_mask |= __GFP_ZERO;
+> +	}
+>  
+>  	/*
+>  	 * for buffers that are contained within a single page, just allocate
+> @@ -354,7 +363,8 @@ xfs_buf_allocate_memory(
+>  	size = BBTOB(bp->b_length);
+>  	if (size < PAGE_SIZE) {
+>  		int align_mask = xfs_buftarg_dma_alignment(bp->b_target);
+> -		bp->b_addr = kmem_alloc_io(size, align_mask, KM_NOFS);
+> +		bp->b_addr = kmem_alloc_io(size, align_mask,
+> +					   KM_NOFS | kmflag_mask);
+>  		if (!bp->b_addr) {
+>  			/* low memory - use alloc_page loop instead */
+>  			goto use_alloc_page;
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index a2beee9f74da..641d07f30a27 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1443,7 +1443,7 @@ xlog_alloc_log(
+>  		prev_iclog = iclog;
+>  
+>  		iclog->ic_data = kmem_alloc_io(log->l_iclog_size, align_mask,
+> -						KM_MAYFAIL);
+> +						KM_MAYFAIL | KM_ZERO);
+>  		if (!iclog->ic_data)
+>  			goto out_free_iclog;
+>  #ifdef DEBUG
+> diff --git a/fs/xfs/xfs_log_recover.c b/fs/xfs/xfs_log_recover.c
+> index 508319039dce..c1a514ffff55 100644
+> --- a/fs/xfs/xfs_log_recover.c
+> +++ b/fs/xfs/xfs_log_recover.c
+> @@ -127,7 +127,7 @@ xlog_alloc_buffer(
+>  	if (nbblks > 1 && log->l_sectBBsize > 1)
+>  		nbblks += log->l_sectBBsize;
+>  	nbblks = round_up(nbblks, log->l_sectBBsize);
+> -	return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL);
+> +	return kmem_alloc_io(BBTOB(nbblks), align_mask, KM_MAYFAIL | KM_ZERO);
 
-Looks ok, I'll give it a spin along with all the other 5.5 stuff...
+Most of the xlog_alloc_buffer callers are reading things from disk
+looking for log items to replay.  The only caller that actually writes
+anything to disk is xlog_clear_stale_blocks?
+
+I suspect we only need KM_ZERO for that one case, but OTOH I suppose log
+recovery should be infrequent, so better safe than sorry...
 
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
-> ---
->  fs/xfs/libxfs/xfs_alloc.c | 154 +++++++++++++++++++++++++++++++++++---
->  fs/xfs/xfs_trace.h        |   2 +
->  2 files changed, 144 insertions(+), 12 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
-> index b16aa41507e8..e9f74eb92073 100644
-> --- a/fs/xfs/libxfs/xfs_alloc.c
-> +++ b/fs/xfs/libxfs/xfs_alloc.c
-> @@ -716,6 +716,7 @@ struct xfs_alloc_cur {
->  	struct xfs_btree_cur		*cnt;	/* btree cursors */
->  	struct xfs_btree_cur		*bnolt;
->  	struct xfs_btree_cur		*bnogt;
-> +	xfs_extlen_t			cur_len;/* current search length */
->  	xfs_agblock_t			rec_bno;/* extent startblock */
->  	xfs_extlen_t			rec_len;/* extent length */
->  	xfs_agblock_t			bno;	/* alloc bno */
-> @@ -740,6 +741,7 @@ xfs_alloc_cur_setup(
->  
->  	ASSERT(args->alignment == 1 || args->type != XFS_ALLOCTYPE_THIS_BNO);
->  
-> +	acur->cur_len = args->maxlen;
->  	acur->rec_bno = 0;
->  	acur->rec_len = 0;
->  	acur->bno = 0;
-> @@ -920,6 +922,76 @@ xfs_alloc_cur_finish(
->  	return 0;
->  }
->  
-> +/*
-> + * Locality allocation lookup algorithm. This expects a cntbt cursor and uses
-> + * bno optimized lookup to search for extents with ideal size and locality.
-> + */
-> +STATIC int
-> +xfs_alloc_cntbt_iter(
-> +	struct xfs_alloc_arg		*args,
-> +	struct xfs_alloc_cur		*acur)
-> +{
-> +	struct xfs_btree_cur	*cur = acur->cnt;
-> +	xfs_agblock_t		bno;
-> +	xfs_extlen_t		len, cur_len;
-> +	int			error;
-> +	int			i;
-> +
-> +	if (!xfs_alloc_cur_active(cur))
-> +		return 0;
-> +
-> +	/* locality optimized lookup */
-> +	cur_len = acur->cur_len;
-> +	error = xfs_alloc_lookup_ge(cur, args->agbno, cur_len, &i);
-> +	if (error)
-> +		return error;
-> +	if (i == 0)
-> +		return 0;
-> +	error = xfs_alloc_get_rec(cur, &bno, &len, &i);
-> +	if (error)
-> +		return error;
-> +
-> +	/* check the current record and update search length from it */
-> +	error = xfs_alloc_cur_check(args, acur, cur, &i);
-> +	if (error)
-> +		return error;
-> +	ASSERT(len >= acur->cur_len);
-> +	acur->cur_len = len;
-> +
-> +	/*
-> +	 * We looked up the first record >= [agbno, len] above. The agbno is a
-> +	 * secondary key and so the current record may lie just before or after
-> +	 * agbno. If it is past agbno, check the previous record too so long as
-> +	 * the length matches as it may be closer. Don't check a smaller record
-> +	 * because that could deactivate our cursor.
-> +	 */
-> +	if (bno > args->agbno) {
-> +		error = xfs_btree_decrement(cur, 0, &i);
-> +		if (!error && i) {
-> +			error = xfs_alloc_get_rec(cur, &bno, &len, &i);
-> +			if (!error && i && len == acur->cur_len)
-> +				error = xfs_alloc_cur_check(args, acur, cur,
-> +							    &i);
-> +		}
-> +		if (error)
-> +			return error;
-> +	}
-> +
-> +	/*
-> +	 * Increment the search key until we find at least one allocation
-> +	 * candidate or if the extent we found was larger. Otherwise, double the
-> +	 * search key to optimize the search. Efficiency is more important here
-> +	 * than absolute best locality.
-> +	 */
-> +	cur_len <<= 1;
-> +	if (!acur->len || acur->cur_len >= cur_len)
-> +		acur->cur_len++;
-> +	else
-> +		acur->cur_len = cur_len;
-> +
-> +	return error;
-> +}
-> +
->  /*
->   * Deal with the case where only small freespaces remain. Either return the
->   * contents of the last freespace record, or allocate space from the freelist if
-> @@ -1261,12 +1333,11 @@ xfs_alloc_walk_iter(
 >  }
 >  
 >  /*
-> - * Search in the by-bno btree to the left and to the right simultaneously until
-> - * in each case we find a large enough free extent or run into the edge of the
-> - * tree. When we run into the edge of the tree, we deactivate that cursor.
-> + * Search the by-bno and by-size btrees in parallel in search of an extent with
-> + * ideal locality based on the NEAR mode ->agbno locality hint.
->   */
->  STATIC int
-> -xfs_alloc_ag_vextent_bnobt(
-> +xfs_alloc_ag_vextent_locality(
->  	struct xfs_alloc_arg	*args,
->  	struct xfs_alloc_cur	*acur,
->  	int			*stat)
-> @@ -1281,6 +1352,9 @@ xfs_alloc_ag_vextent_bnobt(
->  
->  	*stat = 0;
->  
-> +	error = xfs_alloc_lookup_ge(acur->cnt, args->agbno, acur->cur_len, &i);
-> +	if (error)
-> +		return error;
->  	error = xfs_alloc_lookup_le(acur->bnolt, args->agbno, 0, &i);
->  	if (error)
->  		return error;
-> @@ -1289,12 +1363,37 @@ xfs_alloc_ag_vextent_bnobt(
->  		return error;
->  
->  	/*
-> -	 * Loop going left with the leftward cursor, right with the rightward
-> -	 * cursor, until either both directions give up or we find an entry at
-> -	 * least as big as minlen.
-> +	 * Search the bnobt and cntbt in parallel. Search the bnobt left and
-> +	 * right and lookup the closest extent to the locality hint for each
-> +	 * extent size key in the cntbt. The entire search terminates
-> +	 * immediately on a bnobt hit because that means we've found best case
-> +	 * locality. Otherwise the search continues until the cntbt cursor runs
-> +	 * off the end of the tree. If no allocation candidate is found at this
-> +	 * point, give up on locality, walk backwards from the end of the cntbt
-> +	 * and take the first available extent.
-> +	 *
-> +	 * The parallel tree searches balance each other out to provide fairly
-> +	 * consistent performance for various situations. The bnobt search can
-> +	 * have pathological behavior in the worst case scenario of larger
-> +	 * allocation requests and fragmented free space. On the other hand, the
-> +	 * bnobt is able to satisfy most smaller allocation requests much more
-> +	 * quickly than the cntbt. The cntbt search can sift through fragmented
-> +	 * free space and sets of free extents for larger allocation requests
-> +	 * more quickly than the bnobt. Since the locality hint is just a hint
-> +	 * and we don't want to scan the entire bnobt for perfect locality, the
-> +	 * cntbt search essentially bounds the bnobt search such that we can
-> +	 * find good enough locality at reasonable performance in most cases.
->  	 */
->  	while (xfs_alloc_cur_active(acur->bnolt) ||
-> -	       xfs_alloc_cur_active(acur->bnogt)) {
-> +	       xfs_alloc_cur_active(acur->bnogt) ||
-> +	       xfs_alloc_cur_active(acur->cnt)) {
-> +
-> +		trace_xfs_alloc_cur_lookup(args);
-> +
-> +		/*
-> +		 * Search the bnobt left and right. In the case of a hit, finish
-> +		 * the search in the opposite direction and we're done.
-> +		 */
->  		error = xfs_alloc_walk_iter(args, acur, acur->bnolt, false,
->  					    true, 1, &i);
->  		if (error)
-> @@ -1305,7 +1404,6 @@ xfs_alloc_ag_vextent_bnobt(
->  			fbinc = true;
->  			break;
->  		}
-> -
->  		error = xfs_alloc_walk_iter(args, acur, acur->bnogt, true, true,
->  					    1, &i);
->  		if (error)
-> @@ -1316,9 +1414,40 @@ xfs_alloc_ag_vextent_bnobt(
->  			fbinc = false;
->  			break;
->  		}
-> +
-> +		/*
-> +		 * Check the extent with best locality based on the current
-> +		 * extent size search key and keep track of the best candidate.
-> +		 */
-> +		error = xfs_alloc_cntbt_iter(args, acur);
-> +		if (error)
-> +			return error;
-> +		if (!xfs_alloc_cur_active(acur->cnt)) {
-> +			trace_xfs_alloc_cur_lookup_done(args);
-> +			break;
-> +		}
-> +	}
-> +
-> +	/*
-> +	 * If we failed to find anything due to busy extents, return empty
-> +	 * handed so the caller can flush and retry. If no busy extents were
-> +	 * found, walk backwards from the end of the cntbt as a last resort.
-> +	 */
-> +	if (!xfs_alloc_cur_active(acur->cnt) && !acur->len && !acur->busy) {
-> +		error = xfs_btree_decrement(acur->cnt, 0, &i);
-> +		if (error)
-> +			return error;
-> +		if (i) {
-> +			acur->cnt->bc_private.a.priv.abt.active = true;
-> +			fbcur = acur->cnt;
-> +			fbinc = false;
-> +		}
->  	}
->  
-> -	/* search the opposite direction for a better entry */
-> +	/*
-> +	 * Search in the opposite direction for a better entry in the case of
-> +	 * a bnobt hit or walk backwards from the end of the cntbt.
-> +	 */
->  	if (fbcur) {
->  		error = xfs_alloc_walk_iter(args, acur, fbcur, fbinc, true, -1,
->  					    &i);
-> @@ -1447,9 +1576,10 @@ xfs_alloc_ag_vextent_near(
->  	}
->  
->  	/*
-> -	 * Second algorithm. Search the bnobt left and right.
-> +	 * Second algorithm. Combined cntbt and bnobt search to find ideal
-> +	 * locality.
->  	 */
-> -	error = xfs_alloc_ag_vextent_bnobt(args, &acur, &i);
-> +	error = xfs_alloc_ag_vextent_locality(args, &acur, &i);
->  	if (error)
->  		goto out;
->  
-> diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-> index 21fa0e8822e3..a07a5fe22218 100644
-> --- a/fs/xfs/xfs_trace.h
-> +++ b/fs/xfs/xfs_trace.h
-> @@ -1645,6 +1645,8 @@ DEFINE_ALLOC_EVENT(xfs_alloc_near_first);
->  DEFINE_ALLOC_EVENT(xfs_alloc_cur);
->  DEFINE_ALLOC_EVENT(xfs_alloc_cur_right);
->  DEFINE_ALLOC_EVENT(xfs_alloc_cur_left);
-> +DEFINE_ALLOC_EVENT(xfs_alloc_cur_lookup);
-> +DEFINE_ALLOC_EVENT(xfs_alloc_cur_lookup_done);
->  DEFINE_ALLOC_EVENT(xfs_alloc_near_error);
->  DEFINE_ALLOC_EVENT(xfs_alloc_near_noentry);
->  DEFINE_ALLOC_EVENT(xfs_alloc_near_busy);
 > -- 
-> 2.20.1
+> 2.21.0
 > 
