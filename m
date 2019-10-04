@@ -2,59 +2,93 @@ Return-Path: <SRS0=GEoz=YA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D3268C4740A
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 06:17:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3576FECE58C
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 10:16:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A21FE21655
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 06:17:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 11606206BB
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 10:16:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726960AbfJGGRL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Oct 2019 02:17:11 -0400
-Received: from verein.lst.de ([213.95.11.211]:34920 "EHLO verein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726202AbfJGGRK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Oct 2019 02:17:10 -0400
-Received: by verein.lst.de (Postfix, from userid 2407)
-        id 487C668AFE; Mon,  7 Oct 2019 08:17:06 +0200 (CEST)
-Date:   Mon, 7 Oct 2019 08:17:05 +0200
-From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 01/11] iomap: add tracing for the readpage / readpages
-Message-ID: <20191007061705.GA20377@lst.de>
-References: <20191006154608.24738-1-hch@lst.de> <20191006154608.24738-2-hch@lst.de> <20191006224324.GR13108@magnolia> <20191007054838.GA15655@lst.de>
+        id S1727784AbfJGKQV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 06:16:21 -0400
+Received: from mx2.suse.de ([195.135.220.15]:58894 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727755AbfJGKQV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Oct 2019 06:16:21 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 688B2B206;
+        Mon,  7 Oct 2019 10:16:18 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id E6A461E4813; Fri,  4 Oct 2019 09:51:00 +0200 (CEST)
+Date:   Fri, 4 Oct 2019 09:51:00 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Ira Weiny <ira.weiny@intel.com>, linux-fsdevel@vger.kernel.org,
+        linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
+        linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-nvdimm@lists.01.org, linux-mm@kvack.org,
+        Jeff Layton <jlayton@kernel.org>, Jan Kara <jack@suse.cz>,
+        Theodore Ts'o <tytso@mit.edu>,
+        John Hubbard <jhubbard@nvidia.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Jason Gunthorpe <jgg@ziepe.ca>
+Subject: Re: Lease semantic proposal
+Message-ID: <20191004075100.GA12412@quack2.suse.cz>
+References: <20190923190853.GA3781@iweiny-DESK2.sc.intel.com>
+ <20190923222620.GC16973@dread.disaster.area>
+ <20190925234602.GB12748@iweiny-DESK2.sc.intel.com>
+ <20190930084233.GO16973@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191007054838.GA15655@lst.de>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20190930084233.GO16973@dread.disaster.area>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 07, 2019 at 07:48:38AM +0200, Christoph Hellwig wrote:
-> On Sun, Oct 06, 2019 at 03:43:24PM -0700, Darrick J. Wong wrote:
-> > > +iomap-y				+= trace.o \
+On Mon 30-09-19 18:42:33, Dave Chinner wrote:
+> On Wed, Sep 25, 2019 at 04:46:03PM -0700, Ira Weiny wrote:
+> > On Tue, Sep 24, 2019 at 08:26:20AM +1000, Dave Chinner wrote:
+> > > Hence, AFIACT, the above definition of a F_RDLCK|F_LAYOUT lease
+> > > doesn't appear to be compatible with the semantics required by
+> > > existing users of layout leases.
 > > 
-> > I think this patch is missing fs/iomap/trace.c ?
+> > I disagree.  Other than the addition of F_UNBREAK, I think this is consistent
+> > with what is currently implemented.  Also, by exporting all this to user space
+> > we can now write tests for it independent of the RDMA pinning.
 > 
-> It does.  The file is in my tree, but I never did a git-add for it..
+> The current usage of F_RDLCK | F_LAYOUT by the pNFS code allows
+> layout changes to occur to the file while the layout lease is held.
 
-A branch with the file is here:
+I remember you saying that in the past conversations. But I agree with Ira
+that I don't see where in the code this would be implemented. AFAICS
+break_layout() called from xfs_break_leased_layouts() simply breaks all the
+leases with F_LAYOUT set attached to the inode... Now I'm not any expert on
+file leases but what am I missing?
 
-   git://git.infradead.org/users/hch/xfs.git iomap-writepage.7
+> IOWs, your definition of F_RDLCK | F_LAYOUT not being allowed
+> to change the is in direct contradition to existing users.
+> 
+> I've said this several times over the past few months now: shared
+> layout leases must allow layout modifications to be made. Only
+> allowing an exclusive layout lease to modify the layout rules out
+> many potential use cases for direct data placement and p2p DMA
+> applications, not to mention conflicts with the existing pNFS usage.
+> Layout leases need to support more than just RDMA, and tailoring the
+> API to exactly the immediate needs of RDMA is just going to make it
+> useless for anything else.
 
-Gitweb:
+I agree we should not tailor the layout lease definition to just RDMA
+usecase. But let's talk about the semantics once our confusion about how
+pNFS currently uses layout leases is clear out.
 
-    http://git.infradead.org/users/hch/xfs.git/shortlog/refs/heads/iomap-writepage.7
-
-I'll wait a bit until I resend to see if people find other issues.
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
