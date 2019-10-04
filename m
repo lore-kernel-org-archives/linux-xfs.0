@@ -2,82 +2,144 @@ Return-Path: <SRS0=FqvN=X5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17A68C4CED1
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 12:55:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50BBBC4360C
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 13:19:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EDF222070B
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 12:55:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2FA87215EA
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 13:19:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387690AbfJDMzV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Oct 2019 08:55:21 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:42394 "EHLO mx1.redhat.com"
+        id S2388149AbfJDNTi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Oct 2019 09:19:38 -0400
+Received: from sandeen.net ([63.231.237.45]:43910 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2387719AbfJDMzV (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 4 Oct 2019 08:55:21 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        id S2387917AbfJDNTi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 4 Oct 2019 09:19:38 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 130E6898114
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2019 12:55:21 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id C66295C21A
-        for <linux-xfs@vger.kernel.org>; Fri,  4 Oct 2019 12:55:20 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH] xfs: log the inode on directory sf to block format change
-Date:   Fri,  4 Oct 2019 08:55:20 -0400
-Message-Id: <20191004125520.7857-1-bfoster@redhat.com>
+        by sandeen.net (Postfix) with ESMTPSA id DA13422C1;
+        Fri,  4 Oct 2019 08:19:16 -0500 (CDT)
+Subject: Re: [PATCH v4 00/17] xfs: mount API patch series
+To:     Ian Kent <raven@themaw.net>, linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     Brian Foster <bfoster@redhat.com>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@ZenIV.linux.org.uk>
+References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
+ <37be0aa4-c8b5-4b40-dabd-13961bfb77a7@sandeen.net>
+ <dc18b6f374221fbc1fd2168a40854f78aaaaf373.camel@themaw.net>
+ <f1b016cd013699cab3aaa449958fefeba3ddc5ed.camel@themaw.net>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <c87cce25-06fc-5ef5-c863-fd4b4ada2499@sandeen.net>
+Date:   Fri, 4 Oct 2019 08:19:36 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.67]); Fri, 04 Oct 2019 12:55:21 +0000 (UTC)
+In-Reply-To: <f1b016cd013699cab3aaa449958fefeba3ddc5ed.camel@themaw.net>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When a directory changes from shortform (sf) to block format, the sf
-format is copied to a temporary buffer, the inode format is modified
-and the updated format filled with the dentries from the temporary
-buffer. If the inode format is modified and attempt to grow the
-inode fails (due to I/O error, for example), it is possible to
-return an error while leaving the directory in an inconsistent state
-and with an otherwise clean transaction. This results in corruption
-of the associated directory and leads to xfs_dabuf_map() errors as
-subsequent lookups cannot accurately determine the format of the
-directory. This problem is reproduced occasionally by generic/475.
+On 10/4/19 3:25 AM, Ian Kent wrote:
+> On Fri, 2019-10-04 at 14:57 +0800, Ian Kent wrote:
+>> On Thu, 2019-10-03 at 18:30 -0500, Eric Sandeen wrote:
+>>> On 10/3/19 5:25 AM, Ian Kent wrote:
+>>>> This patch series add support to xfs for the new kernel mount API
+>>>> as described in the LWN article at 
+>>>> https://lwn.net/Articles/780267/
+>>>> .
+>>>>
+>>>> In the article there's a lengthy description of the reasons for
+>>>> adopting the API and problems expected to be resolved by using
+>>>> it.
+>>>>
+>>>> The series has been applied to the repository located at
+>>>> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git, and built and
+>>>> some simple tests run on it along with the generic xfstests.
+>>>>
+>>>> Other things that continue to cause me concern:
+>>>>
+>>>> - Message logging.
+>>>
+>>> ...
+>>>
+>>> Haven't actually reviewed yet, but just playing with it, I noticed
+>>> an
+>>> oddity;
+>>>
+>>> # mount -o loop,allocsize=abc fsfile mnt
+>>>
+>>> fails as expected, but with no dmesg to be found.  Is that a known
+>>> behavior?
+>>
+>> That's interesting.
+> 
+> But it's not actually.
+> 
+>>
+>> I'll see if I can work out what path that is taking though the
+>> kernel, don't think it's getting to the xfs options handling.
+> 
+> In the original xfs code, if there's a failure in xfs_parseargs()
+> such as in this case when suffix_kstrtoint() fails, probably at
+> kstrtoint(), the -EINVAL is returned to xfs_fs_fill_super() which
+> subsequently returns that to the VFS.
+> 
+> The VFS itself doesn't log a failure message, it just returns the
+> error to user space.
+> 
 
-The fundamental problem is that xfs_dir2_sf_to_block() changes the
-on-disk inode format without logging the inode. The inode is
-eventually logged by the bmapi layer in the common case, but error
-checking introduces the possibility of failing the high level
-request before this happens.
+Oh, crud, I see now that it's the same upstream.  :(  Sorry for the noise.
 
-Update xfs_dir2_sf_to_block() to log the inode when the on-disk
-format is changed. This ensures that any subsequent errors after the
-format has changed cause the transaction to abort.
-
-Signed-off-by: Brian Foster <bfoster@redhat.com>
----
- fs/xfs/libxfs/xfs_dir2_block.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-index 9595ced393dc..3d1e5f6d64fd 100644
---- a/fs/xfs/libxfs/xfs_dir2_block.c
-+++ b/fs/xfs/libxfs/xfs_dir2_block.c
-@@ -1098,6 +1098,7 @@ xfs_dir2_sf_to_block(
- 	xfs_idata_realloc(dp, -ifp->if_bytes, XFS_DATA_FORK);
- 	xfs_bmap_local_to_extents_empty(dp, XFS_DATA_FORK);
- 	dp->i_d.di_size = 0;
-+	xfs_trans_log_inode(tp, dp, XFS_ILOG_CORE);
- 
- 	/*
- 	 * Add block 0 to the inode.
--- 
-2.20.1
-
+-Eric
