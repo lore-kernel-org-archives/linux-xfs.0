@@ -2,189 +2,288 @@ Return-Path: <SRS0=FqvN=X5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB52AC4360C
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 22:56:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 022BFC4360C
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 22:59:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9580521D81
-	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 22:56:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC69C20873
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 22:59:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="UOe5Jsdw";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="GKxq3Stz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DPs8ntYq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730720AbfJDW4k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 4 Oct 2019 18:56:40 -0400
-Received: from wout1-smtp.messagingengine.com ([64.147.123.24]:56447 "EHLO
-        wout1-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725730AbfJDW4k (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Oct 2019 18:56:40 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id CA0D543E;
-        Fri,  4 Oct 2019 18:56:38 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Fri, 04 Oct 2019 18:56:39 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:cc:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        Vo4MN3cd3s/RXQ7XiqfqvqMdE3LkED1ATMAm6pQsoxM=; b=UOe5Jsdw/ri0H0XV
-        chRd4acNlFz73s4IKZgUy5BPLd3jTX4W9PunHSFw6GaALA/eQ8wKpD8a3aLSQJ8f
-        8LITvlud3+5bR14bqYabkuq/RmpBFja8WJz4hm+XkLdTI7vrW8zOxeCfXnrZBClg
-        ilCdhocb/iiShfRQFtIN7D7WxX8GWy2I5K2e8V+WO+YsdalvyywoREbIETWaIoA3
-        DgkiRFrQ1b/g47MDUPwT2NaTSv041/9c0Cj/yR7Rql1gH1lTisj6Ncuz8rI9+KLo
-        EOhnigVp1HwzWDN5ymlv3mvzoD3uTcVd2hIJt1UDBW8ejkxCFJU5uB/z+MI5UkFF
-        ppekJw==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm3; bh=Vo4MN3cd3s/RXQ7XiqfqvqMdE3LkED1ATMAm6pQso
-        xM=; b=GKxq3StzrSNB0QG7TS+TgURBI9V3gHHR6QjpAzEJfY+NezqXzKekO0yHT
-        pz1pL9atlHqny+zN75t1XLoj7pZwfhs9uiGXTl9Fq9rOq1uOink45OBOuM2frpxh
-        T5Uwgmv+ASkfUgROkuoHCINAdod7TbwKYVLTTIPqDszjw6FHS+r0nyl0FaXJ8Q5C
-        /cb4gLRCB+NqL/kDGXr9LXbytX3CPOiUoaA7RETv+RB7xtQTHaLcPxOVp6DU+wiV
-        0dwXdT3Wa1Mj36+00sR2RDMd71U0oMgNhbu49OFRcYe7Zg3ftkusPXh9GnA5hTBQ
-        Dn1xx+mHcFN3LB0+yQpRDIJIKbP8w==
-X-ME-Sender: <xms:Jc6XXUmYNYFOdj1Fy3a37y3wjSkIDKrArU7uZljeCj_JYuyeHVV-hA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrhedvgdduhecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
-    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
-    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
-    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecukfhppeduudekrddvtdekrd
-    dukeejrddukeeinecurfgrrhgrmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgr
-    fidrnhgvthenucevlhhushhtvghrufhiiigvpedt
-X-ME-Proxy: <xmx:Jc6XXYv8YY9ZD2UmQBJuV6vd7oVzXeyRKH4yllT7kMU4u06UGx0CIQ>
-    <xmx:Jc6XXYj_au-6nOUtMn9Ts_fVTSis3eoe1OndUJkYow6cI5b6f7_N4g>
-    <xmx:Jc6XXTDDH1cQmKyKCygrqfcnSrdlmmEuSaa9zfXnJK_ZPm5Ef3ZWsg>
-    <xmx:Js6XXXYufVcIaRq0-d1qMNLvRUQQATNWcJhM0qabRMTh59hkypn7EQ>
-Received: from mickey.themaw.net (unknown [118.208.187.186])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 10B9F8005A;
-        Fri,  4 Oct 2019 18:56:34 -0400 (EDT)
-Message-ID: <962b6ae811edec0dc50e3e98c0a7aa44251ea67f.camel@themaw.net>
-Subject: Re: [PATCH v4 10/17] xfs: mount-api - add xfs_get_tree()
-From:   Ian Kent <raven@themaw.net>
+        id S1730575AbfJDW7S (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 4 Oct 2019 18:59:18 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:52042 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725730AbfJDW7S (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 4 Oct 2019 18:59:18 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94Mo5rD008731;
+        Fri, 4 Oct 2019 22:59:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=rSGwZ4o0WdLarUJ0SpMQTqzMycPIAh3Wgv67Up6eWxs=;
+ b=DPs8ntYqBwzypzq7uB/kizxo3/CUl0a/ld20mVCfdne0stSmDZJTS5VO0xg3dfoiqydI
+ Ef3XhkSSEH40XRUsSisaVSr1zmFlu8ORfnXSkI2uNo6eWXH20zfcur+KTHEB65x/K1KP
+ 4q227EbU/svkyeuiO7ZDGFz/yL7fKmIr/GTJuMq1xy90RKFgn/GzqOitO5hDHZjzVy6B
+ pQ4QTlv9xvZAW7ZlV66uaC0xhYCJXcRKF1uX1oiK+3M+/qh8HwbHqtmoXGUIJkIYIYHY
+ JNkBh2xKgtWf4xQIbeNKOZvNxpIq4FHRnOvlrhNAkbi61JBdEXLG5bWI340bkVFxsMcC PA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2v9yfqx9ys-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Oct 2019 22:59:11 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x94MwCNF039593;
+        Fri, 4 Oct 2019 22:59:10 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vdk0vnyc9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 04 Oct 2019 22:59:10 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x94Mx8Qr016670;
+        Fri, 4 Oct 2019 22:59:08 GMT
+Received: from localhost (/10.159.134.51)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 04 Oct 2019 15:59:08 -0700
+Date:   Fri, 4 Oct 2019 15:59:07 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>
-Date:   Sat, 05 Oct 2019 06:56:30 +0800
-In-Reply-To: <20191004155242.GD7208@bfoster>
-References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
-         <157009837210.13858.11725663486459207040.stgit@fedora-28>
-         <20191004155242.GD7208@bfoster>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH v5 08/11] xfs: refactor and reuse best extent scanning
+ logic
+Message-ID: <20191004225907.GF1473994@magnolia>
+References: <20190927171802.45582-1-bfoster@redhat.com>
+ <20190927171802.45582-9-bfoster@redhat.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20190927171802.45582-9-bfoster@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9400 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910040194
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9400 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910040193
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, 2019-10-04 at 11:52 -0400, Brian Foster wrote:
-> On Thu, Oct 03, 2019 at 06:26:12PM +0800, Ian Kent wrote:
-> > Add the fs_context_operations method .get_tree that validates
-> > mount options and fills the super block as previously done
-> > by the file_system_type .mount method.
-> > 
-> > Signed-off-by: Ian Kent <raven@themaw.net>
-> > ---
-> >  fs/xfs/xfs_super.c |   50
-> > ++++++++++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 50 insertions(+)
-> > 
-> > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > index cc2da9093e34..b984120667da 100644
-> > --- a/fs/xfs/xfs_super.c
-> > +++ b/fs/xfs/xfs_super.c
-> > @@ -1925,6 +1925,51 @@ xfs_fs_fill_super(
-> >  	return error;
-> >  }
-> >  
-> > +STATIC int
-> > +xfs_fill_super(
-> > +	struct super_block	*sb,
-> > +	struct fs_context	*fc)
-> > +{
-> > +	struct xfs_fs_context	*ctx = fc->fs_private;
-> > +	struct xfs_mount	*mp = sb->s_fs_info;
-> > +	int			silent = fc->sb_flags & SB_SILENT;
-> > +	int			error = -ENOMEM;
-> > +
-> > +	mp->m_super = sb;
-> > +
-> > +	/*
-> > +	 * set up the mount name first so all the errors will refer to
-> > the
-> > +	 * correct device.
-> > +	 */
-> > +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
-> > +	if (!mp->m_fsname)
-> > +		goto out_free_fsname;
-> > +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
-> > +
-> > +	error = xfs_validate_params(mp, ctx, false);
-> > +	if (error)
-> > +		goto out_free_fsname;
-> > +
-> > +	error = __xfs_fs_fill_super(mp, silent);
-> > +	if (error)
-> > +		goto out_free_fsname;
-> > +
-> > +	return 0;
-> > +
-> > + out_free_fsname:
-> > +	sb->s_fs_info = NULL;
-> > +	xfs_free_fsname(mp);
-> > +	kfree(mp);
-> > +	return error;
+On Fri, Sep 27, 2019 at 01:17:59PM -0400, Brian Foster wrote:
+> The bnobt "find best" helper implements a simple btree walker
+> function. This general pattern, or a subset thereof, is reused in
+> various parts of a near mode allocation operation. For example, the
+> bnobt left/right scans are each iterative btree walks along with the
+> cntbt lastblock scan.
 > 
-> Ok, I think I have a better understanding of how this is supposed to
-> work with the background context. mp starts off in fc->s_fs_info,
-> ends
-> up transferred to sb->s_fs_info and passed into here. We allocate
-> ->m_fsname and carry on from here with ownership of mp.
+> Rework this function into a generic btree walker, add a couple
+> parameters to control termination behavior from various contexts and
+> reuse it where applicable.
 > 
-> The only thing I'll note is that the out_free_fsname label is
-> misnamed
-> and probably could be out_free or out_free_mp or something. With that
-> nit addressed:
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
 
-Or out_error perhaps, IIRC I remember thinking I needed to do that but
-it slipped my mind?
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-> 
-> Reviewed-by: Brian Foster <bfoster@redhat.com>
-> 
-> > +}
-> > +
-> > +STATIC int
-> > +xfs_get_tree(
-> > +	struct fs_context	*fc)
-> > +{
-> > +	return get_tree_bdev(fc, xfs_fill_super);
-> > +}
-> > +
-> >  STATIC void
-> >  xfs_fs_put_super(
-> >  	struct super_block	*sb)
-> > @@ -1995,6 +2040,11 @@ static const struct super_operations
-> > xfs_super_operations = {
-> >  	.free_cached_objects	= xfs_fs_free_cached_objects,
-> >  };
-> >  
-> > +static const struct fs_context_operations xfs_context_ops = {
-> > +	.parse_param = xfs_parse_param,
-> > +	.get_tree    = xfs_get_tree,
-> > +};
-> > +
-> >  static struct file_system_type xfs_fs_type = {
-> >  	.owner			= THIS_MODULE,
-> >  	.name			= "xfs",
-> > 
+--D
 
+> ---
+>  fs/xfs/libxfs/xfs_alloc.c | 110 +++++++++++++++++++-------------------
+>  1 file changed, 55 insertions(+), 55 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index 32b378c8e16c..85e82e184ec9 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -875,6 +875,13 @@ xfs_alloc_cur_check(
+>  	acur->diff = diff;
+>  	*new = 1;
+>  
+> +	/*
+> +	 * We're done if we found a perfect allocation. This only deactivates
+> +	 * the current cursor, but this is just an optimization to terminate a
+> +	 * cntbt search that otherwise runs to the edge of the tree.
+> +	 */
+> +	if (acur->diff == 0 && acur->len == args->maxlen)
+> +		deactivate = true;
+>  out:
+>  	if (deactivate)
+>  		cur->bc_private.a.priv.abt.active = false;
+> @@ -1172,30 +1179,38 @@ xfs_alloc_ag_vextent_exact(
+>  }
+>  
+>  /*
+> - * Search the btree in a given direction and check the records against the good
+> - * extent we've already found.
+> + * Search a given number of btree records in a given direction. Check each
+> + * record against the good extent we've already found.
+>   */
+>  STATIC int
+> -xfs_alloc_find_best_extent(
+> +xfs_alloc_walk_iter(
+>  	struct xfs_alloc_arg	*args,
+>  	struct xfs_alloc_cur	*acur,
+>  	struct xfs_btree_cur	*cur,
+> -	bool			increment)
+> +	bool			increment,
+> +	bool			find_one, /* quit on first candidate */
+> +	int			count,    /* rec count (-1 for infinite) */
+> +	int			*stat)
+>  {
+>  	int			error;
+>  	int			i;
+>  
+> +	*stat = 0;
+> +
+>  	/*
+>  	 * Search so long as the cursor is active or we find a better extent.
+>  	 * The cursor is deactivated if it extends beyond the range of the
+>  	 * current allocation candidate.
+>  	 */
+> -	while (xfs_alloc_cur_active(cur)) {
+> +	while (xfs_alloc_cur_active(cur) && count) {
+>  		error = xfs_alloc_cur_check(args, acur, cur, &i);
+>  		if (error)
+>  			return error;
+> -		if (i == 1)
+> -			break;
+> +		if (i == 1) {
+> +			*stat = 1;
+> +			if (find_one)
+> +				break;
+> +		}
+>  		if (!xfs_alloc_cur_active(cur))
+>  			break;
+>  
+> @@ -1207,6 +1222,9 @@ xfs_alloc_find_best_extent(
+>  			return error;
+>  		if (i == 0)
+>  			cur->bc_private.a.priv.abt.active = false;
+> +
+> +		if (count > 0)
+> +			count--;
+>  	}
+>  
+>  	return 0;
+> @@ -1226,7 +1244,6 @@ xfs_alloc_ag_vextent_near(
+>  	struct xfs_btree_cur	*fbcur = NULL;
+>  	int			error;		/* error code */
+>  	int			i;		/* result code, temporary */
+> -	int			j;		/* result code, temporary */
+>  	xfs_agblock_t		bno;
+>  	xfs_extlen_t		len;
+>  	bool			fbinc = false;
+> @@ -1313,19 +1330,12 @@ xfs_alloc_ag_vextent_near(
+>  			if (!i)
+>  				break;
+>  		}
+> -		i = acur.cnt->bc_ptrs[0];
+> -		for (j = 1;
+> -		     !error && j && xfs_alloc_cur_active(acur.cnt) &&
+> -		     (acur.len < args->maxlen || acur.diff > 0);
+> -		     error = xfs_btree_increment(acur.cnt, 0, &j)) {
+> -			/*
+> -			 * For each entry, decide if it's better than
+> -			 * the previous best entry.
+> -			 */
+> -			error = xfs_alloc_cur_check(args, &acur, acur.cnt, &i);
+> -			if (error)
+> -				goto out;
+> -		}
+> +
+> +		error = xfs_alloc_walk_iter(args, &acur, acur.cnt, true, false,
+> +					    -1, &i);
+> +		if (error)
+> +			goto out;
+> +
+>  		/*
+>  		 * It didn't work.  We COULD be in a case where
+>  		 * there's a good record somewhere, so try again.
+> @@ -1357,49 +1367,39 @@ xfs_alloc_ag_vextent_near(
+>  		goto out;
+>  
+>  	/*
+> -	 * Loop going left with the leftward cursor, right with the
+> -	 * rightward cursor, until either both directions give up or
+> -	 * we find an entry at least as big as minlen.
+> +	 * Loop going left with the leftward cursor, right with the rightward
+> +	 * cursor, until either both directions give up or we find an entry at
+> +	 * least as big as minlen.
+>  	 */
+>  	do {
+> -		if (xfs_alloc_cur_active(acur.bnolt)) {
+> -			error = xfs_alloc_cur_check(args, &acur, acur.bnolt, &i);
+> -			if (error)
+> -				goto out;
+> -			if (i == 1) {
+> -				trace_xfs_alloc_cur_left(args);
+> -				fbcur = acur.bnogt;
+> -				fbinc = true;
+> -				break;
+> -			}
+> -			error = xfs_btree_decrement(acur.bnolt, 0, &i);
+> -			if (error)
+> -				goto out;
+> -			if (!i)
+> -				acur.bnolt->bc_private.a.priv.abt.active = false;
+> +		error = xfs_alloc_walk_iter(args, &acur, acur.bnolt, false,
+> +					    true, 1, &i);
+> +		if (error)
+> +			goto out;
+> +		if (i == 1) {
+> +			trace_xfs_alloc_cur_left(args);
+> +			fbcur = acur.bnogt;
+> +			fbinc = true;
+> +			break;
+>  		}
+> -		if (xfs_alloc_cur_active(acur.bnogt)) {
+> -			error = xfs_alloc_cur_check(args, &acur, acur.bnogt, &i);
+> -			if (error)
+> -				goto out;
+> -			if (i == 1) {
+> -				trace_xfs_alloc_cur_right(args);
+> -				fbcur = acur.bnolt;
+> -				fbinc = false;
+> -				break;
+> -			}
+> -			error = xfs_btree_increment(acur.bnogt, 0, &i);
+> -			if (error)
+> -				goto out;
+> -			if (!i)
+> -				acur.bnogt->bc_private.a.priv.abt.active = false;
+> +
+> +		error = xfs_alloc_walk_iter(args, &acur, acur.bnogt, true, true,
+> +					    1, &i);
+> +		if (error)
+> +			goto out;
+> +		if (i == 1) {
+> +			trace_xfs_alloc_cur_right(args);
+> +			fbcur = acur.bnolt;
+> +			fbinc = false;
+> +			break;
+>  		}
+>  	} while (xfs_alloc_cur_active(acur.bnolt) ||
+>  		 xfs_alloc_cur_active(acur.bnogt));
+>  
+>  	/* search the opposite direction for a better entry */
+>  	if (fbcur) {
+> -		error = xfs_alloc_find_best_extent(args, &acur, fbcur, fbinc);
+> +		error = xfs_alloc_walk_iter(args, &acur, fbcur, fbinc, true, -1,
+> +					    &i);
+>  		if (error)
+>  			goto out;
+>  	}
+> -- 
+> 2.20.1
+> 
