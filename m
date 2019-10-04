@@ -1,114 +1,238 @@
-Return-Path: <SRS0=y7rh=X4=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=FqvN=X5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8436DC10F14
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 23:30:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EA50C10F14
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 02:28:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5EF9120862
-	for <linux-xfs@archiver.kernel.org>; Thu,  3 Oct 2019 23:30:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AD492086A
+	for <linux-xfs@archiver.kernel.org>; Fri,  4 Oct 2019 02:28:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730215AbfJCXav (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 3 Oct 2019 19:30:51 -0400
-Received: from sandeen.net ([63.231.237.45]:59792 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727452AbfJCXau (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 3 Oct 2019 19:30:50 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D81FC326E;
-        Thu,  3 Oct 2019 18:30:29 -0500 (CDT)
-Subject: Re: [PATCH v4 00/17] xfs: mount API patch series
-To:     Ian Kent <raven@themaw.net>, linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@ZenIV.linux.org.uk>
-References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Openpgp: preference=signencrypt
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <37be0aa4-c8b5-4b40-dabd-13961bfb77a7@sandeen.net>
-Date:   Thu, 3 Oct 2019 18:30:48 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
- Gecko/20100101 Thunderbird/60.9.0
+        id S1729612AbfJDC2B (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 3 Oct 2019 22:28:01 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:33879 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731522AbfJDC2B (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 3 Oct 2019 22:28:01 -0400
+Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 8EE1243E1F1;
+        Fri,  4 Oct 2019 12:27:56 +1000 (AEST)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iGDJz-0001gr-Ag; Fri, 04 Oct 2019 12:27:55 +1000
+Date:   Fri, 4 Oct 2019 12:27:55 +1000
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
+Message-ID: <20191004022755.GY16973@dread.disaster.area>
+References: <20190930060344.14561-1-david@fromorbit.com>
+ <20190930060344.14561-3-david@fromorbit.com>
+ <20190930170358.GD57295@bfoster>
+ <20190930215336.GR16973@dread.disaster.area>
+ <20191001034207.GS16973@dread.disaster.area>
+ <20191001131336.GB62428@bfoster>
+ <20191001231433.GU16973@dread.disaster.area>
+ <20191002124139.GB2403@bfoster>
+ <20191003012556.GW16973@dread.disaster.area>
+ <20191003144114.GB2105@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <157009817203.13858.7783767645177567968.stgit@fedora-28>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191003144114.GB2105@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=f0_rMKWd_Tumdud9jP4A:9 a=g8HaRn-OtdQ6JnFh:21
+        a=7FFscznymeYou2k6:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/3/19 5:25 AM, Ian Kent wrote:
-> This patch series add support to xfs for the new kernel mount API
-> as described in the LWN article at https://lwn.net/Articles/780267/.
+On Thu, Oct 03, 2019 at 10:41:14AM -0400, Brian Foster wrote:
+> On Thu, Oct 03, 2019 at 11:25:56AM +1000, Dave Chinner wrote:
+> > On Wed, Oct 02, 2019 at 08:41:39AM -0400, Brian Foster wrote:
+> > > On Wed, Oct 02, 2019 at 09:14:33AM +1000, Dave Chinner wrote:
+> > > > On Tue, Oct 01, 2019 at 09:13:36AM -0400, Brian Foster wrote:
+> > > > > On Tue, Oct 01, 2019 at 01:42:07PM +1000, Dave Chinner wrote:
+> > > > > > So typically groups of captures are hundreds of log cycles apart
+> > > > > > (100 cycles x 32MB = ~3GB of log writes), then there will be a
+> > > > > > stutter where the CIL dispatch is delayed, and then everything
+> > > > > > continues on. These all show the log is always around the 75% full
+> > > > > > (AIL tail pushing theshold) but the reservation grant wait lists are
+> > > > > > always empty so we're not running out of reservation space here.
+> > > > > > 
+> > > > > 
+> > > > > It's somewhat interesting that we manage to block every thread most of
+> > > > > the time before the CIL push task starts. I wonder a bit if that pattern
+> > > > > would hold for a system/workload with more CPUs (and if so, if there are
+> > > > > any odd side effects of stalling and waking hundreds of tasks at the
+> > > > > same time vs. our traditional queuing behavior).
+> > > > 
+> > > > If I increase the concurrency (e.g. 16->32 threads for fsmark on a
+> > > > 64MB log), we hammer the spinlock on the grant head -hard-. i.e. CPU
+> > > > usage goes up by 40%, performance goes down by 50%, and all that CPU
+> > > > time is spent spinning on the reserve grant head lock. Basically,
+> > > > the log reservation space runs out, and we end up queuing on the
+> > > > reservation grant head and then we get reminded of just how bad
+> > > > having a serialisation point in the reservation fast path actually
+> > > > is for scalability...
+> > > > 
+> > > 
+> > > The small log case is not really what I'm wondering about. Does this
+> > > behavior translate to a similar test with a maximum sized log?
+> > 
+> > Nope, the transactions all hit the CIL throttle within a couple of
+> > hundred microseconds of each other, then the CIL push schedules, and
+> > then a couple of hundred microseconds later they are unblocked
+> > because the CIL push has started.
+> > 
+> > > ...
+> > > > 
+> > > > Larger logs block more threads on the CIL throttle, but the 32MB CIL
+> > > > window can soak up hundreds of max sized transaction reservations
+> > > > before overflowing so even running several hundred concurrent
+> > > > modification threads I haven't been able to drive enough concurrency
+> > > > through the CIL to see any sort of adverse behaviour.  And the
+> > > > workloads are running pretty consistently at less than 5,000 context
+> > > > switches/sec so there's no evidence of repeated thundering heard
+> > > > wakeup problems, either.
+> > > > 
+> > > 
+> > > That speaks to the rarity of the throttle, which is good. But I'm
+> > > wondering, for example, what might happen on systems where we could have
+> > > hundreds of physical CPUs committing to the CIL, we block them all on
+> > > the throttle and then wake them all at once. IOW, can we potentially
+> > > create the contention conditions you reproduce above in scenarios where
+> > > they might not have existed before?
+> > 
+> > I don't think it will create any new contention points - the
+> > contention I described above can be triggered without the CIL
+> > throttle in place, too. It just requires enough concurrent
+> > transactions to exhaust the entire log reservation, and then we go
+> > from a lockless grant head reservation algorithm to a spinlock
+> > serialised waiting algorithm.  i.e. the contention starts when we
+> > have enough concurrency to fall off the lockless fast path.
+> > 
+> > So with a 2GB log and fast storage, we likely need a sustained
+> > workload of tens of thousands of concurrent transaction reservations
+> > to exhaust log space and drive us into this situation. We generally
+> > don't have applications that have this sort of concurrency
+> > capability...
+> > 
 > 
-> In the article there's a lengthy description of the reasons for
-> adopting the API and problems expected to be resolved by using it.
-> 
-> The series has been applied to the repository located at
-> git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git, and built and
-> some simple tests run on it along with the generic xfstests.
-> 
-> Other things that continue to cause me concern:
-> 
-> - Message logging.
+> That there are some systems/configurations out there that are fast
+> enough to avoid this condition doesn't really answer the question. If
+> you assume something like a 1TB fs and 500MB log, with 1/4 the log
+> consumed in the AIL and 64MB in the CIL (such that transaction commits
+> start to block), the remaining log reservation can easily be consumed by
+> something on the order of 100 open transactions.
 
-...
+If individual reservations in in the order of 3MB on a 4kB
+filesystem, then we've screwed reservations up really badly.
 
-Haven't actually reviewed yet, but just playing with it, I noticed an oddity;
+/me goes looking
 
-# mount -o loop,allocsize=abc fsfile mnt
+Reservation sizes for 1TB AGs and reflink enabled show:
 
-fails as expected, but with no dmesg to be found.  Is that a known behavior?
+ xfs_trans_resv_calc:  dev 253:32 type 0 logres 201976 logcount 8 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 1 logres 361344 logcount 8 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 2 logres 307936 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 3 logres 187760 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 4 logres 197760 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 5 logres 303616 logcount 3 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 6 logres 302464 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 7 logres 319488 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 8 logres 302464 logcount 3 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 9 logres 337784 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 10 logres 2168 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 11 logres 90624 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 12 logres 116856 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 13 logres 760 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 14 logres 360576 logcount 1 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 15 logres 23288 logcount 3 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 16 logres 13312 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 17 logres 181376 logcount 3 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 18 logres 640 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 19 logres 111864 logcount 2 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 20 logres 4224 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 21 logres 6512 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 22 logres 232 logcount 1 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 23 logres 206199 logcount 8 flags 0x4
+ xfs_trans_resv_calc:  dev 253:32 type 24 logres 976 logcount 1 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 25 logres 336 logcount 1 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 26 logres 640 logcount 1 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type 27 logres 760 logcount 0 flags 0x0
+ xfs_trans_resv_calc:  dev 253:32 type -1 logres 361344 logcount 8 flags 0x4
 
--Eric
+Oh, wow, those are actually massive. A write reservation should
+not need a 200kB reservation - it used to be in the order of 100kB
+and with a log count of 3. And that truncate reservation @ 360kB is
+way more than it needs to be.
+
+I'm going to have a deeper look into this, because I strongly
+suspect we've screwed things up here with respect to rmap/reflink
+and deferred ops.
+
+> Hmm, I'm also not sure the lockless reservation algorithm is totally
+> immune to increased concurrency in this regard. What prevents multiple
+> tasks from racing through xlog_grant_head_check() and blowing past the
+> log head, for example?
+
+Nothing. Debug kernels even emit a "xlog_verify_grant_tail: space >
+BBTOB(tail_blocks)" messages when that happens. It's pretty
+difficult to do this in real world conditions, even when there is
+lots of concurrency being used.
+
+But here's the rub: it's not actually the end of the world because
+the reservation doesn't actually determine how much of the log is
+currently being used by running transactions - the reservation is
+for a maximal rolling iteration of a permanent transaction, not the
+initial transaction will be running. Hence if we overrun
+occassionally we don't immediately run out of log space and corrupt
+the log.
+
+Yes, if none of the rolling transactions complete and they all need
+to use their entire reservation, and the tail of the log cannot be
+moved forward because it is pinned by one of the transactions that
+is running, then we'll likely get a log hang on a regrant on the
+write head. But if any of the transactions don't use all of their
+reservation, then the overrun gets soaked up by the unused parts of
+the transactions that are completed and returned to reservation
+head, and nobody even notices taht there was a temporary overrun of
+the grant head space.
+
+Hence occasional overruns on the reservation head before they start
+blocking isn't really a problem in practice because the probability
+of all the transaction reservation of all transactions running being
+required to make forwards progress is extremely small.
+
+Basically, we gave up "perfect reservation space grant accounting"
+because performance was extremely important and risk of log hangs as
+a result of overruns was considered to be extremely low and worth
+taking for the benefits the algorithm provided. This was just a
+simple, pragmatic risk based engineering decision.
+
+> I gave this a quick test out of curiosity and with a 15GB fs with a 10MB
+> log, I should only be able to send 5 or so truncate transactions through
+> xfs_log_reserve() before blocking. With a couple injected delays, I'm
+> easily able to send 32 into the grant space modification code and that
+> eventually results in something like this:
+
+Yup, we can break lots of things by injecting artificial delays, but
+that doesn't mean there is a practical real world problem with the
+algorithm we need to fix....
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
