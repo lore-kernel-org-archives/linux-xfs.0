@@ -7,44 +7,44 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0965EC4360C
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7D102C4360C
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D4EA02084B
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 491112084B
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="FKH2eklb"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sh0xOcNa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726696AbfJFPsk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Oct 2019 11:48:40 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53530 "EHLO
+        id S1727046AbfJFPtS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Oct 2019 11:49:18 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:53522 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726806AbfJFPsj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Oct 2019 11:48:39 -0400
+        with ESMTP id S1726780AbfJFPsh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Oct 2019 11:48:37 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=LMjZtHXzVjeoe/ICRwzC57h0yo0UaAthgg1OY+Q7b4s=; b=FKH2eklbD6wxLp4SHkFoNmdmyM
-        oqXVC2jUyZr83aXhK2kgf8Em1mBoQCVahFve6kU0Id75/ybfeP9RLbnammP5BLE94VKI0vYEw8jvx
-        lISGJcz0SFxKzkpZdp8OWBQB092Phr+4z0SQY+FsbPORx+tP1nntyyi1Ns3da/FZn4FBHCbplVJQ+
-        F1KitkDsNuzdYfWLEKcndOdv1TG7DJsg17K3g7MzXjlV3E6k2rlcfqq9RQBS/pHkfxt0q1xxQk18H
-        DL2l4ViD/g96urp/zjpTsSuOgXn6OvAVrXX1QwRc4JKLTmnIUS891qyF2DU+HBg9mvmTuwaMyJ/dg
-        DNQmiHNA==;
+        bh=kskppOSJpC2+f0PmdqX+/uMUoW32qU3S5s1t8sYooIg=; b=sh0xOcNalQDTSNtUETgvlgbZDw
+        C3SlA4ApX7FUjGPPqX5AHNLuuxcCLQwWbCl5RJi0VwpKeyqdXTatRtAfnVKNF2XMwKg3q3cJzE1/D
+        Gwl63mIoQcbLzze9FxPDio0Y+jZ2VM76zadCCNdQsQtbVvMORQZmff+4cDDnbHW2hmECgI9G1BnXY
+        NDKz7iizDUZeqXrBHwcynlm9udXvrBA3hJSG8R0rXyXMfr6sSxs48TRpjdY6F0UD/fTOVN1Fd/ovV
+        wmAG7+gd8XGcqcu5Ek39umaOpK2VfOJJwhNAhkPNC1oZVdCY6jQ2bYRJa7xaYcnRIfzpZirl6nzCk
+        7/RVeYMQ==;
 Received: from [2001:4bb8:18c:4d4a:c70:4a89:bc61:3] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iH8lx-0008T6-Mx; Sun, 06 Oct 2019 15:48:38 +0000
+        id 1iH8lv-0008Sy-8y; Sun, 06 Oct 2019 15:48:35 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Brian Foster <bfoster@redhat.com>
-Subject: [PATCH 06/11] xfs: remove the readpage / readpages tracing code
-Date:   Sun,  6 Oct 2019 17:46:03 +0200
-Message-Id: <20191006154608.24738-7-hch@lst.de>
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 05/11] iomap: zero newly allocated mapped blocks
+Date:   Sun,  6 Oct 2019 17:46:02 +0200
+Message-Id: <20191006154608.24738-6-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191006154608.24738-1-hch@lst.de>
 References: <20191006154608.24738-1-hch@lst.de>
@@ -56,73 +56,55 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-The actual iomap implementations now have equivalent trace points.
+File systems like gfs2 don't support delayed allocations or unwritten
+extents and thus allocate normal mapped blocks to fill holes.  To
+cover the case of such file systems allocating new blocks to fill holes
+also zero out mapped blocks with the new flag.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_aops.c  |  2 --
- fs/xfs/xfs_trace.h | 26 --------------------------
- 2 files changed, 28 deletions(-)
+ fs/iomap/buffered-io.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-index f16d5f196c6b..b6101673c8fb 100644
---- a/fs/xfs/xfs_aops.c
-+++ b/fs/xfs/xfs_aops.c
-@@ -1160,7 +1160,6 @@ xfs_vm_readpage(
- 	struct file		*unused,
- 	struct page		*page)
- {
--	trace_xfs_vm_readpage(page->mapping->host, 1);
- 	return iomap_readpage(page, &xfs_iomap_ops);
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index 23cc308f971d..4132c0cccb0a 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -207,6 +207,14 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+ 	SetPageUptodate(page);
  }
  
-@@ -1171,7 +1170,6 @@ xfs_vm_readpages(
- 	struct list_head	*pages,
- 	unsigned		nr_pages)
- {
--	trace_xfs_vm_readpages(mapping->host, nr_pages);
- 	return iomap_readpages(mapping, pages, nr_pages, &xfs_iomap_ops);
- }
++static inline bool iomap_block_needs_zeroing(struct inode *inode,
++		struct iomap *iomap, loff_t pos)
++{
++	return iomap->type != IOMAP_MAPPED ||
++		(iomap->flags & IOMAP_F_NEW) ||
++		pos >= i_size_read(inode);
++}
++
+ static loff_t
+ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 		struct iomap *iomap)
+@@ -230,7 +238,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+ 	if (plen == 0)
+ 		goto done;
  
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index eaae275ed430..eae4b29c174e 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1197,32 +1197,6 @@ DEFINE_PAGE_EVENT(xfs_writepage);
- DEFINE_PAGE_EVENT(xfs_releasepage);
- DEFINE_PAGE_EVENT(xfs_invalidatepage);
+-	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
++	if (iomap_block_needs_zeroing(inode, iomap, pos)) {
+ 		zero_user(page, poff, plen);
+ 		iomap_set_range_uptodate(page, poff, plen);
+ 		goto done;
+@@ -544,7 +552,7 @@ iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
+ 	struct bio_vec bvec;
+ 	struct bio bio;
  
--DECLARE_EVENT_CLASS(xfs_readpage_class,
--	TP_PROTO(struct inode *inode, int nr_pages),
--	TP_ARGS(inode, nr_pages),
--	TP_STRUCT__entry(
--		__field(dev_t, dev)
--		__field(xfs_ino_t, ino)
--		__field(int, nr_pages)
--	),
--	TP_fast_assign(
--		__entry->dev = inode->i_sb->s_dev;
--		__entry->ino = inode->i_ino;
--		__entry->nr_pages = nr_pages;
--	),
--	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
--		  MAJOR(__entry->dev), MINOR(__entry->dev),
--		  __entry->ino,
--		  __entry->nr_pages)
--)
--
--#define DEFINE_READPAGE_EVENT(name)		\
--DEFINE_EVENT(xfs_readpage_class, name,	\
--	TP_PROTO(struct inode *inode, int nr_pages), \
--	TP_ARGS(inode, nr_pages))
--DEFINE_READPAGE_EVENT(xfs_vm_readpage);
--DEFINE_READPAGE_EVENT(xfs_vm_readpages);
--
- DECLARE_EVENT_CLASS(xfs_imap_class,
- 	TP_PROTO(struct xfs_inode *ip, xfs_off_t offset, ssize_t count,
- 		 int whichfork, struct xfs_bmbt_irec *irec),
+-	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
++	if (iomap_block_needs_zeroing(inode, iomap, block_start)) {
+ 		zero_user_segments(page, poff, from, to, poff + plen);
+ 		iomap_set_range_uptodate(page, poff, plen);
+ 		return 0;
 -- 
 2.20.1
 
