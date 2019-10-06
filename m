@@ -7,35 +7,35 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90484ECE58F
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3B3CCECE595
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57A9A2084B
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0438D2084B
+	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 15:49:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="GDO12pXq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UmOAZE/l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726939AbfJFPsy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Oct 2019 11:48:54 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53642 "EHLO
+        id S1726883AbfJFPsr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 6 Oct 2019 11:48:47 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:53576 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726920AbfJFPsw (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Oct 2019 11:48:52 -0400
+        with ESMTP id S1726827AbfJFPsq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Oct 2019 11:48:46 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=YrSIkJAZEX2PC4bhPUc4ArtWFXnLR/JwWtyPm3VgUHk=; b=GDO12pXqHo4n8DYufaCeViyJVS
-        1K4UxstgVHj049tTnlzYpTHkkiLfS6YqeYeZ0UWMzmcvvusxRWtPM2tBunXdlTizIIOWNkR8vf5RZ
-        WgzYxTCS6T3Gnaz7EU43yzG8JI+tySgeuaCPPkSxSL0/EM9WO1Uov+snS7zOu+DfsD5YPGAgyNdZM
-        FURxWnLtM0+O2CHFNNAbMrD8MjC5zJgSTyvh5dvc9gOOj4RW3gXdv+NnA4Sdbs52tCvrkJUMGkEDb
-        +gbM737pVLmDEXuH0fcRow2JdPl4dwlW7XefcYgaU+JBlzjVyRI0UF6hok+1+/ldn00T1ivRJhR34
-        DzFns0Tg==;
+        bh=JQ4r7KlYi/+FLk0aj3XJ1j6+8q4Aeaj7PtwSmtmwLeQ=; b=UmOAZE/luC0RY7iA9luLMcr8uE
+        iOvgLuEVt0ghJUXbh29uUuDHVGrKAXmc3hIcPFK6oUYro2zA/Bz82ar+s1rTo5fvOiVwmVTpdpFF2
+        6Bk5o+dT0FUrrMJ6iTKmwpDgztTo37UmCHyOpuNVcGelckzUHCzznYJT4yIsl+udGxXtVedlDxBjV
+        0c9ltBLDPrp9XF2Z5hqvpv3ACW/bXAIcWT8vS9mdfYs5sfNzvIjh1zjZfSNBCSI1JUoQcyY/VfrNh
+        j932NdxELR8cR0fsW8FYDr6hW/RnLiD/0CjPnBJRlGEXDjtbhDnjHHPb9rQWennoZ0EEc83fgNEia
+        nNas+gyQ==;
 Received: from [2001:4bb8:18c:4d4a:c70:4a89:bc61:3] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iH8mA-0008UV-1X; Sun, 06 Oct 2019 15:48:50 +0000
+        id 1iH8m4-0008To-UW; Sun, 06 Oct 2019 15:48:45 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
@@ -43,9 +43,9 @@ Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Carlos Maiolino <cmaiolino@redhat.com>
-Subject: [PATCH 11/11] iomap: move struct iomap_page out of iomap.h
-Date:   Sun,  6 Oct 2019 17:46:08 +0200
-Message-Id: <20191006154608.24738-12-hch@lst.de>
+Subject: [PATCH 09/11] xfs: remove the fork fields in the writepage_ctx and ioend
+Date:   Sun,  6 Oct 2019 17:46:06 +0200
+Message-Id: <20191006154608.24738-10-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191006154608.24738-1-hch@lst.de>
 References: <20191006154608.24738-1-hch@lst.de>
@@ -57,73 +57,212 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Now that all the writepage code is in the iomap code there is no
-need to keep this structure public.
+In preparation for moving the writeback code to iomap.c, replace the
+XFS-specific COW fork concept with the iomap IOMAP_F_SHARED flag.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap/buffered-io.c | 17 +++++++++++++++++
- include/linux/iomap.h  | 17 -----------------
- 2 files changed, 17 insertions(+), 17 deletions(-)
+ fs/xfs/xfs_aops.c | 42 ++++++++++++++++++++++--------------------
+ fs/xfs/xfs_aops.h |  2 +-
+ 2 files changed, 23 insertions(+), 21 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index 4132c0cccb0a..35c93f72c172 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -21,6 +21,23 @@
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 9f22885902ef..8c101081e3b1 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -23,7 +23,6 @@
+  */
+ struct xfs_writepage_ctx {
+ 	struct iomap		iomap;
+-	int			fork;
+ 	unsigned int		data_seq;
+ 	unsigned int		cow_seq;
+ 	struct xfs_ioend	*ioend;
+@@ -257,7 +256,7 @@ xfs_end_ioend(
+ 	 */
+ 	error = blk_status_to_errno(ioend->io_bio->bi_status);
+ 	if (unlikely(error)) {
+-		if (ioend->io_fork == XFS_COW_FORK)
++		if (ioend->io_flags & IOMAP_F_SHARED)
+ 			xfs_reflink_cancel_cow_range(ip, offset, size, true);
+ 		goto done;
+ 	}
+@@ -265,7 +264,7 @@ xfs_end_ioend(
+ 	/*
+ 	 * Success: commit the COW or unwritten blocks if needed.
+ 	 */
+-	if (ioend->io_fork == XFS_COW_FORK)
++	if (ioend->io_flags & IOMAP_F_SHARED)
+ 		error = xfs_reflink_end_cow(ip, offset, size);
+ 	else if (ioend->io_type == IOMAP_UNWRITTEN)
+ 		error = xfs_iomap_write_unwritten(ip, offset, size, false);
+@@ -298,7 +297,8 @@ xfs_ioend_can_merge(
+ {
+ 	if (ioend->io_bio->bi_status != next->io_bio->bi_status)
+ 		return false;
+-	if ((ioend->io_fork == XFS_COW_FORK) ^ (next->io_fork == XFS_COW_FORK))
++	if ((ioend->io_flags & IOMAP_F_SHARED) ^
++	    (next->io_flags & IOMAP_F_SHARED))
+ 		return false;
+ 	if ((ioend->io_type == IOMAP_UNWRITTEN) ^
+ 	    (next->io_type == IOMAP_UNWRITTEN))
+@@ -402,7 +402,7 @@ xfs_end_bio(
+ 	struct xfs_mount	*mp = ip->i_mount;
+ 	unsigned long		flags;
  
- #include "../internal.h"
+-	if (ioend->io_fork == XFS_COW_FORK ||
++	if ((ioend->io_flags & IOMAP_F_SHARED) ||
+ 	    ioend->io_type == IOMAP_UNWRITTEN ||
+ 	    ioend->io_append_trans != NULL) {
+ 		spin_lock_irqsave(&ip->i_ioend_lock, flags);
+@@ -433,7 +433,7 @@ xfs_imap_valid(
+ 	 * covers the offset. Be careful to check this first because the caller
+ 	 * can revalidate a COW mapping without updating the data seqno.
+ 	 */
+-	if (wpc->fork == XFS_COW_FORK)
++	if (wpc->iomap.flags & IOMAP_F_SHARED)
+ 		return true;
  
-+/*
-+ * Structure allocated for each page when block size < PAGE_SIZE to track
-+ * sub-page uptodate status and I/O completions.
-+ */
-+struct iomap_page {
-+	atomic_t		read_count;
-+	atomic_t		write_count;
-+	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-+};
-+
-+static inline struct iomap_page *to_iomap_page(struct page *page)
-+{
-+	if (page_has_private(page))
-+		return (struct iomap_page *)page_private(page);
-+	return NULL;
-+}
-+
- static struct bio_set iomap_ioend_bioset;
+ 	/*
+@@ -463,6 +463,7 @@ static int
+ xfs_convert_blocks(
+ 	struct xfs_writepage_ctx *wpc,
+ 	struct xfs_inode	*ip,
++	int			whichfork,
+ 	loff_t			offset)
+ {
+ 	int			error;
+@@ -474,8 +475,8 @@ xfs_convert_blocks(
+ 	 * delalloc extent if free space is sufficiently fragmented.
+ 	 */
+ 	do {
+-		error = xfs_bmapi_convert_delalloc(ip, wpc->fork, offset,
+-				&wpc->iomap, wpc->fork == XFS_COW_FORK ?
++		error = xfs_bmapi_convert_delalloc(ip, whichfork, offset,
++				&wpc->iomap, whichfork == XFS_COW_FORK ?
+ 					&wpc->cow_seq : &wpc->data_seq);
+ 		if (error)
+ 			return error;
+@@ -496,6 +497,7 @@ xfs_map_blocks(
+ 	xfs_fileoff_t		offset_fsb = XFS_B_TO_FSBT(mp, offset);
+ 	xfs_fileoff_t		end_fsb = XFS_B_TO_FSB(mp, offset + count);
+ 	xfs_fileoff_t		cow_fsb = NULLFILEOFF;
++	int			whichfork = XFS_DATA_FORK;
+ 	struct xfs_bmbt_irec	imap;
+ 	struct xfs_iext_cursor	icur;
+ 	int			retries = 0;
+@@ -544,7 +546,7 @@ xfs_map_blocks(
+ 		wpc->cow_seq = READ_ONCE(ip->i_cowfp->if_seq);
+ 		xfs_iunlock(ip, XFS_ILOCK_SHARED);
  
- static struct iomap_page *
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 0b399718c387..46ce730b1590 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -134,23 +134,6 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
- 		unsigned flags, const struct iomap_ops *ops, void *data,
- 		iomap_actor_t actor);
+-		wpc->fork = XFS_COW_FORK;
++		whichfork = XFS_COW_FORK;
+ 		goto allocate_blocks;
+ 	}
  
--/*
-- * Structure allocate for each page when block size < PAGE_SIZE to track
-- * sub-page uptodate status and I/O completions.
-- */
--struct iomap_page {
--	atomic_t		read_count;
--	atomic_t		write_count;
--	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
--};
+@@ -567,8 +569,6 @@ xfs_map_blocks(
+ 	wpc->data_seq = READ_ONCE(ip->i_df.if_seq);
+ 	xfs_iunlock(ip, XFS_ILOCK_SHARED);
+ 
+-	wpc->fork = XFS_DATA_FORK;
 -
--static inline struct iomap_page *to_iomap_page(struct page *page)
--{
--	if (page_has_private(page))
--		return (struct iomap_page *)page_private(page);
--	return NULL;
--}
--
- ssize_t iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *from,
- 		const struct iomap_ops *ops);
- int iomap_readpage(struct page *page, const struct iomap_ops *ops);
+ 	/* landed in a hole or beyond EOF? */
+ 	if (imap.br_startoff > offset_fsb) {
+ 		imap.br_blockcount = imap.br_startoff - offset_fsb;
+@@ -593,10 +593,10 @@ xfs_map_blocks(
+ 		goto allocate_blocks;
+ 
+ 	xfs_bmbt_to_iomap(ip, &wpc->iomap, &imap, 0);
+-	trace_xfs_map_blocks_found(ip, offset, count, wpc->fork, &imap);
++	trace_xfs_map_blocks_found(ip, offset, count, whichfork, &imap);
+ 	return 0;
+ allocate_blocks:
+-	error = xfs_convert_blocks(wpc, ip, offset);
++	error = xfs_convert_blocks(wpc, ip, whichfork, offset);
+ 	if (error) {
+ 		/*
+ 		 * If we failed to find the extent in the COW fork we might have
+@@ -605,7 +605,8 @@ xfs_map_blocks(
+ 		 * the former case, but prevent additional retries to avoid
+ 		 * looping forever for the latter case.
+ 		 */
+-		if (error == -EAGAIN && wpc->fork == XFS_COW_FORK && !retries++)
++		if (error == -EAGAIN && (wpc->iomap.flags & IOMAP_F_SHARED) &&
++		    !retries++)
+ 			goto retry;
+ 		ASSERT(error != -EAGAIN);
+ 		return error;
+@@ -616,7 +617,7 @@ xfs_map_blocks(
+ 	 * original delalloc one.  Trim the return extent to the next COW
+ 	 * boundary again to force a re-lookup.
+ 	 */
+-	if (wpc->fork != XFS_COW_FORK && cow_fsb != NULLFILEOFF) {
++	if (!(wpc->iomap.flags & IOMAP_F_SHARED) && cow_fsb != NULLFILEOFF) {
+ 		loff_t		cow_offset = XFS_FSB_TO_B(mp, cow_fsb);
+ 
+ 		if (cow_offset < wpc->iomap.offset + wpc->iomap.length)
+@@ -625,7 +626,7 @@ xfs_map_blocks(
+ 
+ 	ASSERT(wpc->iomap.offset <= offset);
+ 	ASSERT(wpc->iomap.offset + wpc->iomap.length > offset);
+-	trace_xfs_map_blocks_alloc(ip, offset, count, wpc->fork, &imap);
++	trace_xfs_map_blocks_alloc(ip, offset, count, whichfork, &imap);
+ 	return 0;
+ }
+ 
+@@ -659,14 +660,14 @@ xfs_submit_ioend(
+ 	nofs_flag = memalloc_nofs_save();
+ 
+ 	/* Convert CoW extents to regular */
+-	if (!status && ioend->io_fork == XFS_COW_FORK) {
++	if (!status && (ioend->io_flags & IOMAP_F_SHARED)) {
+ 		status = xfs_reflink_convert_cow(XFS_I(ioend->io_inode),
+ 				ioend->io_offset, ioend->io_size);
+ 	}
+ 
+ 	/* Reserve log space if we might write beyond the on-disk inode size. */
+ 	if (!status &&
+-	    (ioend->io_fork == XFS_COW_FORK ||
++	    ((ioend->io_flags & IOMAP_F_SHARED) ||
+ 	     ioend->io_type != IOMAP_UNWRITTEN) &&
+ 	    xfs_ioend_is_append(ioend) &&
+ 	    !ioend->io_append_trans)
+@@ -713,8 +714,8 @@ xfs_alloc_ioend(
+ 
+ 	ioend = container_of(bio, struct xfs_ioend, io_inline_bio);
+ 	INIT_LIST_HEAD(&ioend->io_list);
+-	ioend->io_fork = wpc->fork;
+ 	ioend->io_type = wpc->iomap.type;
++	ioend->io_flags = wpc->iomap.flags;
+ 	ioend->io_inode = inode;
+ 	ioend->io_size = 0;
+ 	ioend->io_offset = offset;
+@@ -768,7 +769,8 @@ xfs_add_to_ioend(
+ 	bool			merged, same_page = false;
+ 
+ 	if (!wpc->ioend ||
+-	    wpc->fork != wpc->ioend->io_fork ||
++	    (wpc->iomap.flags & IOMAP_F_SHARED) !=
++	    (wpc->ioend->io_flags & IOMAP_F_SHARED) ||
+ 	    wpc->iomap.type != wpc->ioend->io_type ||
+ 	    sector != bio_end_sector(wpc->ioend->io_bio) ||
+ 	    offset != wpc->ioend->io_offset + wpc->ioend->io_size) {
+diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
+index 4af8ec0115cd..c2756ed50b0d 100644
+--- a/fs/xfs/xfs_aops.h
++++ b/fs/xfs/xfs_aops.h
+@@ -13,8 +13,8 @@ extern struct bio_set xfs_ioend_bioset;
+  */
+ struct xfs_ioend {
+ 	struct list_head	io_list;	/* next ioend in chain */
+-	int			io_fork;	/* inode fork written back */
+ 	u16			io_type;
++	u16			io_flags;	/* IOMAP_F_* */
+ 	struct inode		*io_inode;	/* file being written to */
+ 	size_t			io_size;	/* size of the extent */
+ 	xfs_off_t		io_offset;	/* offset in the file */
 -- 
 2.20.1
 
