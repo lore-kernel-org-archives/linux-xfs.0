@@ -2,130 +2,92 @@ Return-Path: <SRS0=GEoz=YA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0614CC47404
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 21:59:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57906C47404
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 22:08:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CE358206C0
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 21:59:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2CC8E20867
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 22:08:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729051AbfJGV7t (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Oct 2019 17:59:49 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:50395 "EHLO
+        id S1728983AbfJGWIl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 18:08:41 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:44903 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728422AbfJGV7t (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 17:59:49 -0400
+        by vger.kernel.org with ESMTP id S1728422AbfJGWIk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 18:08:40 -0400
 Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 6720E3639CD;
-        Tue,  8 Oct 2019 08:59:45 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 968DC363D6F;
+        Tue,  8 Oct 2019 09:08:38 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1iHb2e-0001sm-E9; Tue, 08 Oct 2019 08:59:44 +1100
-Date:   Tue, 8 Oct 2019 08:59:44 +1100
+        id 1iHbBF-0001tZ-HL; Tue, 08 Oct 2019 09:08:37 +1100
+Date:   Tue, 8 Oct 2019 09:08:37 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
         Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 09/11] xfs: remove the fork fields in the writepage_ctx
- and ioend
-Message-ID: <20191007215944.GC16973@dread.disaster.area>
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 05/11] iomap: zero newly allocated mapped blocks
+Message-ID: <20191007220837.GD16973@dread.disaster.area>
 References: <20191006154608.24738-1-hch@lst.de>
- <20191006154608.24738-10-hch@lst.de>
+ <20191006154608.24738-6-hch@lst.de>
+ <20191007214632.GA16973@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191006154608.24738-10-hch@lst.de>
+In-Reply-To: <20191007214632.GA16973@dread.disaster.area>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=pWr0rBs94VfbQ7lI_PoA:9
+        a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=pGzP--_MTh1zkI28PPEA:9
         a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Oct 06, 2019 at 05:46:06PM +0200, Christoph Hellwig wrote:
-> In preparation for moving the writeback code to iomap.c, replace the
-> XFS-specific COW fork concept with the iomap IOMAP_F_SHARED flag.
-
-"In preparation for switching XFS to use the fs/iomap writeback
-code..."?
-
-I suspect the IOMAP_F_SHARED hunk I pointed out in the previous
-patch should be in this one...
-
+On Tue, Oct 08, 2019 at 08:46:32AM +1100, Dave Chinner wrote:
+> On Sun, Oct 06, 2019 at 05:46:02PM +0200, Christoph Hellwig wrote:
+> > File systems like gfs2 don't support delayed allocations or unwritten
+> > extents and thus allocate normal mapped blocks to fill holes.  To
+> > cover the case of such file systems allocating new blocks to fill holes
+> > also zero out mapped blocks with the new flag.
+> > 
+> > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/iomap/buffered-io.c | 12 ++++++++++--
+> >  1 file changed, 10 insertions(+), 2 deletions(-)
+> > 
+> > diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> > index 23cc308f971d..4132c0cccb0a 100644
+> > --- a/fs/iomap/buffered-io.c
+> > +++ b/fs/iomap/buffered-io.c
+> > @@ -207,6 +207,14 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
+> >  	SetPageUptodate(page);
+> >  }
+> >  
+> > +static inline bool iomap_block_needs_zeroing(struct inode *inode,
+> > +		struct iomap *iomap, loff_t pos)
+> > +{
+> > +	return iomap->type != IOMAP_MAPPED ||
+> > +		(iomap->flags & IOMAP_F_NEW) ||
+> > +		pos >= i_size_read(inode);
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
-> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  fs/xfs/xfs_aops.c | 42 ++++++++++++++++++++++--------------------
->  fs/xfs/xfs_aops.h |  2 +-
->  2 files changed, 23 insertions(+), 21 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 9f22885902ef..8c101081e3b1 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -23,7 +23,6 @@
->   */
->  struct xfs_writepage_ctx {
->  	struct iomap		iomap;
-> -	int			fork;
->  	unsigned int		data_seq;
->  	unsigned int		cow_seq;
->  	struct xfs_ioend	*ioend;
-> @@ -257,7 +256,7 @@ xfs_end_ioend(
->  	 */
->  	error = blk_status_to_errno(ioend->io_bio->bi_status);
->  	if (unlikely(error)) {
-> -		if (ioend->io_fork == XFS_COW_FORK)
-> +		if (ioend->io_flags & IOMAP_F_SHARED)
->  			xfs_reflink_cancel_cow_range(ip, offset, size, true);
->  		goto done;
->  	}
-> @@ -265,7 +264,7 @@ xfs_end_ioend(
->  	/*
->  	 * Success: commit the COW or unwritten blocks if needed.
->  	 */
-> -	if (ioend->io_fork == XFS_COW_FORK)
-> +	if (ioend->io_flags & IOMAP_F_SHARED)
->  		error = xfs_reflink_end_cow(ip, offset, size);
->  	else if (ioend->io_type == IOMAP_UNWRITTEN)
->  		error = xfs_iomap_write_unwritten(ip, offset, size, false);
-> @@ -298,7 +297,8 @@ xfs_ioend_can_merge(
->  {
->  	if (ioend->io_bio->bi_status != next->io_bio->bi_status)
->  		return false;
-> -	if ((ioend->io_fork == XFS_COW_FORK) ^ (next->io_fork == XFS_COW_FORK))
-> +	if ((ioend->io_flags & IOMAP_F_SHARED) ^
-> +	    (next->io_flags & IOMAP_F_SHARED))
->  		return false;
->  	if ((ioend->io_type == IOMAP_UNWRITTEN) ^
->  	    (next->io_type == IOMAP_UNWRITTEN))
+> This is a change of logic - why is the IOMAP_F_NEW check added here
+> and what bug does it fix?
 
-These probably should be indented too, as they are continuations,
-not separate logic statements.
-
-> @@ -768,7 +769,8 @@ xfs_add_to_ioend(
->  	bool			merged, same_page = false;
->  
->  	if (!wpc->ioend ||
-> -	    wpc->fork != wpc->ioend->io_fork ||
-> +	    (wpc->iomap.flags & IOMAP_F_SHARED) !=
-> +	    (wpc->ioend->io_flags & IOMAP_F_SHARED) ||
-
-Same here.
+Sorry, brain-fart here - that's what this patch is adding, it's not
+a pure factoring patch.... :/
 
 Cheers,
 
