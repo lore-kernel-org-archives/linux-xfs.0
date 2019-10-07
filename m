@@ -2,37 +2,30 @@ Return-Path: <SRS0=GEoz=YA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DBE7C47404
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 19:13:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C679AECE58C
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 19:16:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1A792206C2
-	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 19:13:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9B8322133F
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 19:16:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728592AbfJGTNR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Oct 2019 15:13:17 -0400
-Received: from sandeen.net ([63.231.237.45]:51886 "EHLO sandeen.net"
+        id S1728212AbfJGTQU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 15:16:20 -0400
+Received: from sandeen.net ([63.231.237.45]:52048 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728116AbfJGTNR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 7 Oct 2019 15:13:17 -0400
+        id S1728187AbfJGTQT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Oct 2019 15:16:19 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 9DE0578D7;
-        Mon,  7 Oct 2019 14:12:50 -0500 (CDT)
-Subject: Re: [PATCH 1/4] xfs_io: add a bulkstat command
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <156944717403.297551.9871784842549394192.stgit@magnolia>
- <156944718001.297551.8841062987630720604.stgit@magnolia>
- <fd86aa65-2473-d316-80d9-944100519f77@sandeen.net>
- <20190927041852.GP9916@magnolia>
- <3cdfef3d-724b-e786-131b-98454b600881@sandeen.net>
- <20190930201510.GC66746@magnolia>
+        by sandeen.net (Postfix) with ESMTPSA id 095EA78D7
+        for <linux-xfs@vger.kernel.org>; Mon,  7 Oct 2019 14:15:53 -0500 (CDT)
+To:     linux-xfs <linux-xfs@vger.kernel.org>
 From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 6040b5d5
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -76,57 +69,120 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <167bc3ea-2a68-fbb8-0040-e2d30aedad96@sandeen.net>
-Date:   Mon, 7 Oct 2019 14:13:15 -0500
+Message-ID: <a4d1721d-4f60-1dfb-e09c-b7c42e35baa3@sandeen.net>
+Date:   Mon, 7 Oct 2019 14:16:16 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <20190930201510.GC66746@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="UBuCIoQ5Ldzue6QXLNE3iaMhGsQMusn4s"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--UBuCIoQ5Ldzue6QXLNE3iaMhGsQMusn4s
+Content-Type: multipart/mixed; boundary="CA094xVYsrRmUlwhSXlZMizUXQcbGlcCh";
+ protected-headers="v1"
+From: Eric Sandeen <sandeen@sandeen.net>
+To: linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <a4d1721d-4f60-1dfb-e09c-b7c42e35baa3@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 6040b5d5
+
+--CA094xVYsrRmUlwhSXlZMizUXQcbGlcCh
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
+
+Hi folks,
+
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Still working through Darrick's patchbomb.  Other than that:
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+The new head of the for-next branch is commit:
+
+6040b5d5 (HEAD -> for-next, korg/for-next, refs/patches/for-next/xfs_scru=
+b__batch_inumbers_calls_during_fscounters_calculation-1.patch) xfs_scrub:=
+ batch inumbers calls during fscounters calculation
+
+New Commits:
+
+Darrick J. Wong (4):
+      [3c8276c4] xfs_io: add a bulkstat command
+      [1ff6be86] xfs_spaceman: remove open-coded per-ag bulkstat
+      [23ea9841] xfs_scrub: convert to per-ag inode bulkstat operations
+      [6040b5d5] xfs_scrub: batch inumbers calls during fscounters calcul=
+ation
+
+Eric Biggers (9):
+      [f007179d] xfs_io/encrypt: remove unimplemented encryption modes
+      [336e7c19] xfs_io/encrypt: update to UAPI definitions from Linux v5=
+=2E4
+      [eb6c66e6] xfs_io/encrypt: generate encryption modes for 'help set_=
+encpolicy'
+      [7cde2c28] xfs_io/encrypt: add new encryption modes
+      [c304c84f] xfs_io/encrypt: extend 'get_encpolicy' to support v2 pol=
+icies
+      [a7a5e44c] xfs_io/encrypt: extend 'set_encpolicy' to support v2 pol=
+icies
+      [ba71de04] xfs_io/encrypt: add 'add_enckey' command
+      [c808a097] xfs_io/encrypt: add 'rm_enckey' command
+      [dafb55f9] xfs_io/encrypt: add 'enckey_status' command
 
 
-On 9/30/19 3:15 PM, Darrick J. Wong wrote:
-> On Mon, Sep 30, 2019 at 03:02:27PM -0500, Eric Sandeen wrote:
->> On 9/26/19 11:18 PM, Darrick J. Wong wrote:
->>>>> +
->>>>> +	inumbers_cmd.args =
->>>>> +		_("[-a agno] [-d] [-e endino] [-n batchsize] [-s startino]");
->>>> <missing the -v option>
->>>>
->>>>> +	inumbers_cmd.oneline = _("Query inode groups in a filesystem");
->>>> I'm confused, why aren't all these ^^^ just in the structure definitions?
->>> All of these ... what?  I'm confused, sorry.
->>>
->>
->> I'm wondering why these 2 fields get set up in bulkstat_init(), vs at
->> cmdinfo_t structure definition time, i.e.
->>
->> static cmdinfo_t        inumbers_cmd = {
->>         .name = "inumbers",
->>         .cfunc = inumbers_f,
->>         .argmin = 0,
->>         .argmax = -1,
->>         .flags = CMD_NOMAP_OK | CMD_FLAG_ONESHOT,
->>         .args =
->> _("[-a agno] [-d] [-e endino] [-n batchsize] [-s startino] [-v version]");
->>         .oneline = _("Query inode groups in a filesystem");
->>         .help = inumbers_help,
->> };
->>
->> like ~every other command does?
-> 
-> [repeating irc conversation]
-> 
-> _() is a function, but static initializers require constant rvalues.
+Code Diffstat:
 
-Sorry, my bad for missing that.
+ io/Makefile        |   9 +-
+ io/bulkstat.c      | 518 ++++++++++++++++++++++++++++++++++
+ io/encrypt.c       | 816 ++++++++++++++++++++++++++++++++++++++++++++++-=
+------
+ io/init.c          |   1 +
+ io/io.h            |   1 +
+ libfrog/bulkstat.c |  20 ++
+ libfrog/bulkstat.h |   3 +
+ man/man8/xfs_io.8  | 155 +++++++++-
+ scrub/fscounters.c |  26 +-
+ scrub/inodes.c     |  20 +-
+ spaceman/health.c  |  16 +-
+ 11 files changed, 1424 insertions(+), 161 deletions(-)
+ create mode 100644 io/bulkstat.c
 
-Thanks,
--Eric
+
+--CA094xVYsrRmUlwhSXlZMizUXQcbGlcCh--
+
+--UBuCIoQ5Ldzue6QXLNE3iaMhGsQMusn4s
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl2bjwEACgkQIK4WkuE9
+3uDBEhAAs907usLge6gIDGadg1K5jAG8hgrGHdKfIZaFNlQTQW53HJacTv/wyYr3
+ZKK2o1+vixHVpHkn9X17bCZXWyGKLgS8nKs/zLzyveXMxC4PB1sRAnVF1ghSojNs
+iDJMHDLrbAR2piNABnm94B1UoV0Fu1n+t5rCgPydXNnRJiq6TRa9R5qtz305uE8A
+Q8rjQc1h7h9N1Wb8rilYoUqGletUERZs2glC1+HOV1PtoAvlwlrt6UZ6zgwn9DvT
+nJAm4uBIQx6mD9HmrYoQoTOiJe/k4JT3pkThrbjJ3znvjjVUgHx0vN7xSDN4GESi
++oz5HrSasr7XlLTOG8Qo1TWFmZ3kqfdYRLApgL3mHoK+0WIaq5guuIauzyoGPVgn
+CP5eTEPrp7y0s7JkKvknYdTQoqMoR9I89OjAEfz4gU2z9PMlTL2p7bNHArSTX+3t
++Bf+jB63sCacFWuJEoCMBVgpsoPnjaI0ua7a6jfeIwrpKh0lgI2Lv9AhNYoIkMFV
+tgT3DGTmzVRGUJgSeeyWx/k2eLOFkrH+T4KtsOjJstcTl+3vMuRs09w0TYcXSzHp
+gEBr0GSov6KWgAn2QRe4UinB10SIxjhmPZdODbbQPmsjX+h6vvmD4SsCtjcl3Ib1
+WKfloBmaNt5yF4Z8lkc1hZmA+aAPGtgEu5uWKREq7cJG644Sy/0=
+=gGRi
+-----END PGP SIGNATURE-----
+
+--UBuCIoQ5Ldzue6QXLNE3iaMhGsQMusn4s--
