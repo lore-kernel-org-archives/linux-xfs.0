@@ -1,216 +1,49 @@
-Return-Path: <SRS0=PUhE=X7=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=GEoz=YA=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 17851C4360C
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 22:43:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D32C47404
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 05:48:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD3552087E
-	for <linux-xfs@archiver.kernel.org>; Sun,  6 Oct 2019 22:43:52 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oRgtsZvu"
+	by mail.kernel.org (Postfix) with ESMTP id 34C0E2067B
+	for <linux-xfs@archiver.kernel.org>; Mon,  7 Oct 2019 05:48:47 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726000AbfJFWnw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 6 Oct 2019 18:43:52 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:50526 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725958AbfJFWnv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 6 Oct 2019 18:43:51 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x96Merul167330;
-        Sun, 6 Oct 2019 22:43:42 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=bGddxjEib4KbJcsUY126kbXQ6TkNosjdGAqOwH5tyhQ=;
- b=oRgtsZvuPebpPpdDNGQMJTZfX741ICk0s8Ab0kHmamkCd6YPcrtqXqqHdSZoHsbEJbn9
- 4Uij0v4u288cMhsQxNPcE0HmIEPEdbUuzSKkDV4XJDe0s/65f8QtDNzeVMP/dhLxDvmp
- 5tboPWC2JKxHsCkaUPoFT36e0oj2o8HoOhBfLK1JC0Faglb3WNkWUjrn9zIgLJa7cYqc
- VX3NRFd3mkajL+h0qG/kXNFwo3hL9DohxlneDqDke0p7JPSOf2LDEYqqWokieMn+6ClP
- JFHfpaYQNlCTKMV1810tOjmni3W3ZhgYG0hn03WcH7FQpBX1t/H/SNX3Mydll+shzWHz DQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2vek4q3wft-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 06 Oct 2019 22:43:42 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x96MhdHq114933;
-        Sun, 6 Oct 2019 22:43:41 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2vf5b04vj3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sun, 06 Oct 2019 22:43:41 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x96MhNPH010160;
-        Sun, 6 Oct 2019 22:43:23 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 06 Oct 2019 15:43:22 -0700
-Date:   Sun, 6 Oct 2019 15:43:24 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        id S1727233AbfJGFsn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 01:48:43 -0400
+Received: from verein.lst.de ([213.95.11.211]:34712 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1727225AbfJGFsn (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 7 Oct 2019 01:48:43 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id 5649C68AFE; Mon,  7 Oct 2019 07:48:39 +0200 (CEST)
+Date:   Mon, 7 Oct 2019 07:48:38 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org
 Subject: Re: [PATCH 01/11] iomap: add tracing for the readpage / readpages
-Message-ID: <20191006224324.GR13108@magnolia>
-References: <20191006154608.24738-1-hch@lst.de>
- <20191006154608.24738-2-hch@lst.de>
+Message-ID: <20191007054838.GA15655@lst.de>
+References: <20191006154608.24738-1-hch@lst.de> <20191006154608.24738-2-hch@lst.de> <20191006224324.GR13108@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191006154608.24738-2-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9402 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910060234
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9402 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910060233
+In-Reply-To: <20191006224324.GR13108@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Oct 06, 2019 at 05:45:58PM +0200, Christoph Hellwig wrote:
-> Lift the xfs code for tracing address space operations to the iomap
-> layer.
+On Sun, Oct 06, 2019 at 03:43:24PM -0700, Darrick J. Wong wrote:
+> > +iomap-y				+= trace.o \
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/iomap/Makefile      | 16 ++++++++------
->  fs/iomap/buffered-io.c |  5 +++++
->  fs/iomap/trace.h       | 49 ++++++++++++++++++++++++++++++++++++++++++
->  3 files changed, 63 insertions(+), 7 deletions(-)
->  create mode 100644 fs/iomap/trace.h
-> 
-> diff --git a/fs/iomap/Makefile b/fs/iomap/Makefile
-> index 93cd11938bf5..eef2722d93a1 100644
-> --- a/fs/iomap/Makefile
-> +++ b/fs/iomap/Makefile
-> @@ -3,13 +3,15 @@
->  # Copyright (c) 2019 Oracle.
->  # All Rights Reserved.
->  #
-> -obj-$(CONFIG_FS_IOMAP)		+= iomap.o
->  
-> -iomap-y				+= \
-> -					apply.o \
-> -					buffered-io.o \
-> -					direct-io.o \
-> -					fiemap.o \
-> -					seek.o
-> +ccflags-y += -I $(srctree)/$(src)		# needed for trace events
-> +
-> +obj-$(CONFIG_FS_IOMAP)		+= iomap.o
->  
-> +iomap-y				+= trace.o \
+> I think this patch is missing fs/iomap/trace.c ?
 
-I think this patch is missing fs/iomap/trace.c ?
-
---D
-
-> +				   apply.o \
-> +				   buffered-io.o \
-> +				   direct-io.o \
-> +				   fiemap.o \
-> +				   seek.o
->  iomap-$(CONFIG_SWAP)		+= swapfile.o
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index e25901ae3ff4..fb209272765c 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -16,6 +16,7 @@
->  #include <linux/bio.h>
->  #include <linux/sched/signal.h>
->  #include <linux/migrate.h>
-> +#include "trace.h"
->  
->  #include "../internal.h"
->  
-> @@ -293,6 +294,8 @@ iomap_readpage(struct page *page, const struct iomap_ops *ops)
->  	unsigned poff;
->  	loff_t ret;
->  
-> +	trace_iomap_readpage(page->mapping->host, 1);
-> +
->  	for (poff = 0; poff < PAGE_SIZE; poff += ret) {
->  		ret = iomap_apply(inode, page_offset(page) + poff,
->  				PAGE_SIZE - poff, 0, ops, &ctx,
-> @@ -389,6 +392,8 @@ iomap_readpages(struct address_space *mapping, struct list_head *pages,
->  	loff_t last = page_offset(list_entry(pages->next, struct page, lru));
->  	loff_t length = last - pos + PAGE_SIZE, ret = 0;
->  
-> +	trace_iomap_readpages(mapping->host, nr_pages);
-> +
->  	while (length > 0) {
->  		ret = iomap_apply(mapping->host, pos, length, 0, ops,
->  				&ctx, iomap_readpages_actor);
-> diff --git a/fs/iomap/trace.h b/fs/iomap/trace.h
-> new file mode 100644
-> index 000000000000..7798aeda7fb9
-> --- /dev/null
-> +++ b/fs/iomap/trace.h
-> @@ -0,0 +1,49 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * Copyright (c) 2009-2019, Christoph Hellwig
-> + *
-> + * NOTE: none of these tracepoints shall be consider a stable kernel ABI
-> + * as they can change at any time.
-> + */
-> +#undef TRACE_SYSTEM
-> +#define TRACE_SYSTEM iomap
-> +
-> +#if !defined(_IOMAP_TRACE_H) || defined(TRACE_HEADER_MULTI_READ)
-> +#define _IOMAP_TRACE_H
-> +
-> +#include <linux/tracepoint.h>
-> +
-> +struct inode;
-> +
-> +DECLARE_EVENT_CLASS(iomap_readpage_class,
-> +	TP_PROTO(struct inode *inode, int nr_pages),
-> +	TP_ARGS(inode, nr_pages),
-> +	TP_STRUCT__entry(
-> +		__field(dev_t, dev)
-> +		__field(u64, ino)
-> +		__field(int, nr_pages)
-> +	),
-> +	TP_fast_assign(
-> +		__entry->dev = inode->i_sb->s_dev;
-> +		__entry->ino = inode->i_ino;
-> +		__entry->nr_pages = nr_pages;
-> +	),
-> +	TP_printk("dev %d:%d ino 0x%llx nr_pages %d",
-> +		  MAJOR(__entry->dev), MINOR(__entry->dev),
-> +		  __entry->ino,
-> +		  __entry->nr_pages)
-> +)
-> +
-> +#define DEFINE_READPAGE_EVENT(name)		\
-> +DEFINE_EVENT(iomap_readpage_class, name,	\
-> +	TP_PROTO(struct inode *inode, int nr_pages), \
-> +	TP_ARGS(inode, nr_pages))
-> +DEFINE_READPAGE_EVENT(iomap_readpage);
-> +DEFINE_READPAGE_EVENT(iomap_readpages);
-> +
-> +#endif /* _IOMAP_TRACE_H */
-> +
-> +#undef TRACE_INCLUDE_PATH
-> +#define TRACE_INCLUDE_PATH .
-> +#define TRACE_INCLUDE_FILE trace
-> +#include <trace/define_trace.h>
-> -- 
-> 2.20.1
-> 
+It does.  The file is in my tree, but I never did a git-add for it..
