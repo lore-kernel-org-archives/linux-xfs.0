@@ -7,69 +7,69 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9476C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 15:13:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C7380C4360C
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 15:20:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BAC5320815
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 15:13:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9283421721
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 15:20:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lSVOqcf+"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="H+DkxC7P"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727051AbfJHPNF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 11:13:05 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:49996 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725989AbfJHPNF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 11:13:05 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x98FBnSG083648;
-        Tue, 8 Oct 2019 15:12:59 GMT
+        id S1726239AbfJHPUi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 11:20:38 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:41496 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725989AbfJHPUh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 11:20:37 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x98FGDmx129867;
+        Tue, 8 Oct 2019 15:20:31 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=JHSKLueuLw5nP+2cy9UOEdiSW2gr1kxXzTcsbIXDiHc=;
- b=lSVOqcf+I3ODgPphhKhJE6/JWOMbbsTg7bkg53uHfjTgYttqOcPWESQ1ws0zxwUfNNxT
- aa/x1lHR5PBU2vqxKdNgMcOn64pHQ+8ZyIXLYMqLowYlxDOqrXe1URp+U3dU4dsN8rgo
- hXgWmgRgi+006XOTQuF03gCVJaMkJm+/xTSyPuRSweR2PK67D3ChXpxeQpMBFrFmcH6c
- eZgrPcWYOjXcaPPRig5IQmMxUhEdb+Um3nFroFu3zUkkBBXXdgiW9XhkJ3gH2BaL1Gpl
- nR79LVMlQ4Sh7WWVaoHcy90qWlM8PR+0eJCneB/RnkzGf2qz6TuYP+GEHlN04TxpRRIx rg== 
+ bh=642yCtgnZgHdh5fNCOen9zl/Y+SF8LYrhX2xizySqZg=;
+ b=H+DkxC7PeXABOoFEEPLU7f00uD/WFCaNFf1rtdVUbkxnOt0t0/qHZwVwSM9WBDvp9y24
+ SYj8uG26pHtKecak9Tunoh5gHIRZlUk24TFgiP6RdoQonr+oUXia8088uohdlEofNd7+
+ t6a3XpQ4/zY9yafFDnkEvU/WyM7GI4RFrl/GwtqJaXwu2hBpv8WSxjru4D/Aq9RlEiFw
+ GzdS6910W3549E6hSP+WtScWUys3jn0tbqKMd8l6013g+WCY2EBhc5UdqSM9X9DvhRDg
+ p5/54N/2RU53sQj9RMrX5AXTJOEf4iwbN5iRKc7gNsxFKnJ8kU3GLLlE4K5F3TeVsn2t DA== 
 Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2vek4qdxp0-1
+        by userp2130.oracle.com with ESMTP id 2vejkue2r3-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Oct 2019 15:12:59 +0000
+        Tue, 08 Oct 2019 15:20:31 +0000
 Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x98F7tsI175927;
-        Tue, 8 Oct 2019 15:12:59 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2vg1yw48xf-1
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x98FF0SP196160;
+        Tue, 8 Oct 2019 15:20:30 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2vg1yw4mhd-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Oct 2019 15:12:59 +0000
+        Tue, 08 Oct 2019 15:20:30 +0000
 Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x98FCv1W011145;
-        Tue, 8 Oct 2019 15:12:58 GMT
-Received: from localhost (/67.169.218.210)
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x98FKTua012106;
+        Tue, 8 Oct 2019 15:20:30 GMT
+Received: from localhost (/10.159.136.81)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 08 Oct 2019 08:12:56 -0700
-Date:   Tue, 8 Oct 2019 08:12:55 -0700
+        with ESMTP ; Tue, 08 Oct 2019 08:20:29 -0700
+Date:   Tue, 8 Oct 2019 08:20:28 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
         linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 06/20] iomap: use write_begin to read pages to unshare
-Message-ID: <20191008151255.GX13108@magnolia>
+Subject: Re: [PATCH 10/20] xfs: remove xfs_reflink_dirty_extents
+Message-ID: <20191008152028.GY13108@magnolia>
 References: <20191008071527.29304-1-hch@lst.de>
- <20191008071527.29304-7-hch@lst.de>
+ <20191008071527.29304-11-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191008071527.29304-7-hch@lst.de>
+In-Reply-To: <20191008071527.29304-11-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9403 signatures=668684
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9404 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1910080135
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9403 signatures=668684
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9404 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
@@ -80,10 +80,9 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 08, 2019 at 09:15:13AM +0200, Christoph Hellwig wrote:
-> Use the existing iomap write_begin code to read the pages unshared
-> by iomap_file_unshare.  That avoids the extra ->readpage call and
-> extent tree lookup currently done by read_mapping_page.
+On Tue, Oct 08, 2019 at 09:15:17AM +0200, Christoph Hellwig wrote:
+> Now that xfs_file_unshare is not completely dumb we can just call it
+> directly without iterating the extent and reflink btrees ourselves.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
@@ -93,112 +92,148 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/iomap/buffered-io.c | 49 ++++++++++++++----------------------------
->  1 file changed, 16 insertions(+), 33 deletions(-)
+>  fs/xfs/xfs_reflink.c | 103 +++----------------------------------------
+>  1 file changed, 5 insertions(+), 98 deletions(-)
 > 
-> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-> index d5abd8e5dca7..ac1bbed71a9b 100644
-> --- a/fs/iomap/buffered-io.c
-> +++ b/fs/iomap/buffered-io.c
-> @@ -548,6 +548,10 @@ iomap_migrate_page(struct address_space *mapping, struct page *newpage,
->  EXPORT_SYMBOL_GPL(iomap_migrate_page);
->  #endif /* CONFIG_MIGRATION */
->  
-> +enum {
-> +	IOMAP_WRITE_F_UNSHARE		= (1 << 0),
-> +};
-> +
->  static void
->  iomap_write_failed(struct inode *inode, loff_t pos, unsigned len)
->  {
-> @@ -577,7 +581,7 @@ iomap_read_page_sync(loff_t block_start, struct page *page, unsigned poff,
+> diff --git a/fs/xfs/xfs_reflink.c b/fs/xfs/xfs_reflink.c
+> index a9634110c783..7fc728a8852b 100644
+> --- a/fs/xfs/xfs_reflink.c
+> +++ b/fs/xfs/xfs_reflink.c
+> @@ -1381,85 +1381,6 @@ xfs_reflink_remap_prep(
+>  	return ret;
 >  }
 >  
->  static int
-> -__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
-> +__iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
->  		struct page *page, struct iomap *iomap)
->  {
->  	struct iomap_page *iop = iomap_page_create(inode, page);
-> @@ -596,11 +600,14 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len,
->  		if (plen == 0)
->  			break;
->  
-> -		if ((from <= poff || from >= poff + plen) &&
-> +		if (!(flags & IOMAP_WRITE_F_UNSHARE) &&
-> +		    (from <= poff || from >= poff + plen) &&
->  		    (to <= poff || to >= poff + plen))
->  			continue;
->  
->  		if (iomap_block_needs_zeroing(inode, iomap, block_start)) {
-> +			if (WARN_ON_ONCE(flags & IOMAP_WRITE_F_UNSHARE))
-> +				return -EIO;
->  			zero_user_segments(page, poff, from, to, poff + plen);
->  			iomap_set_range_uptodate(page, poff, plen);
->  			continue;
-> @@ -646,7 +653,8 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
->  	else if (iomap->flags & IOMAP_F_BUFFER_HEAD)
->  		status = __block_write_begin_int(page, pos, len, NULL, iomap);
->  	else
-> -		status = __iomap_write_begin(inode, pos, len, page, iomap);
-> +		status = __iomap_write_begin(inode, pos, len, flags, page,
-> +				iomap);
->  
->  	if (unlikely(status))
->  		goto out_unlock;
-> @@ -869,22 +877,6 @@ iomap_file_buffered_write(struct kiocb *iocb, struct iov_iter *iter,
->  }
->  EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
->  
-> -static struct page *
-> -__iomap_read_page(struct inode *inode, loff_t offset)
+> -/*
+> - * The user wants to preemptively CoW all shared blocks in this file,
+> - * which enables us to turn off the reflink flag.  Iterate all
+> - * extents which are not prealloc/delalloc to see which ranges are
+> - * mentioned in the refcount tree, then read those blocks into the
+> - * pagecache, dirty them, fsync them back out, and then we can update
+> - * the inode flag.  What happens if we run out of memory? :)
+> - */
+> -STATIC int
+> -xfs_reflink_dirty_extents(
+> -	struct xfs_inode	*ip,
+> -	xfs_fileoff_t		fbno,
+> -	xfs_filblks_t		end,
+> -	xfs_off_t		isize)
 > -{
-> -	struct address_space *mapping = inode->i_mapping;
-> -	struct page *page;
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	xfs_agnumber_t		agno;
+> -	xfs_agblock_t		agbno;
+> -	xfs_extlen_t		aglen;
+> -	xfs_agblock_t		rbno;
+> -	xfs_extlen_t		rlen;
+> -	xfs_off_t		fpos;
+> -	xfs_off_t		flen;
+> -	struct xfs_bmbt_irec	map[2];
+> -	int			nmaps;
+> -	int			error = 0;
 > -
-> -	page = read_mapping_page(mapping, offset >> PAGE_SHIFT, NULL);
-> -	if (IS_ERR(page))
-> -		return page;
-> -	if (!PageUptodate(page)) {
-> -		put_page(page);
-> -		return ERR_PTR(-EIO);
+> -	while (end - fbno > 0) {
+> -		nmaps = 1;
+> -		/*
+> -		 * Look for extents in the file.  Skip holes, delalloc, or
+> -		 * unwritten extents; they can't be reflinked.
+> -		 */
+> -		error = xfs_bmapi_read(ip, fbno, end - fbno, map, &nmaps, 0);
+> -		if (error)
+> -			goto out;
+> -		if (nmaps == 0)
+> -			break;
+> -		if (!xfs_bmap_is_real_extent(&map[0]))
+> -			goto next;
+> -
+> -		map[1] = map[0];
+> -		while (map[1].br_blockcount) {
+> -			agno = XFS_FSB_TO_AGNO(mp, map[1].br_startblock);
+> -			agbno = XFS_FSB_TO_AGBNO(mp, map[1].br_startblock);
+> -			aglen = map[1].br_blockcount;
+> -
+> -			error = xfs_reflink_find_shared(mp, NULL, agno, agbno,
+> -					aglen, &rbno, &rlen, true);
+> -			if (error)
+> -				goto out;
+> -			if (rbno == NULLAGBLOCK)
+> -				break;
+> -
+> -			/* Dirty the pages */
+> -			xfs_iunlock(ip, XFS_ILOCK_EXCL);
+> -			fpos = XFS_FSB_TO_B(mp, map[1].br_startoff +
+> -					(rbno - agbno));
+> -			flen = XFS_FSB_TO_B(mp, rlen);
+> -			if (fpos + flen > isize)
+> -				flen = isize - fpos;
+> -			error = iomap_file_unshare(VFS_I(ip), fpos, flen,
+> -					&xfs_iomap_ops);
+> -			xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -			if (error)
+> -				goto out;
+> -
+> -			map[1].br_blockcount -= (rbno - agbno + rlen);
+> -			map[1].br_startoff += (rbno - agbno + rlen);
+> -			map[1].br_startblock += (rbno - agbno + rlen);
+> -		}
+> -
+> -next:
+> -		fbno = map[0].br_startoff + map[0].br_blockcount;
 > -	}
-> -	return page;
+> -out:
+> -	return error;
 > -}
 > -
->  static loff_t
->  iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  		struct iomap *iomap)
-> @@ -900,24 +892,15 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
->  		return length;
+>  /* Does this inode need the reflink flag? */
+>  int
+>  xfs_reflink_inode_has_shared_extents(
+> @@ -1596,10 +1517,7 @@ xfs_reflink_unshare(
+>  	xfs_off_t		offset,
+>  	xfs_off_t		len)
+>  {
+> -	struct xfs_mount	*mp = ip->i_mount;
+> -	xfs_fileoff_t		fbno;
+> -	xfs_filblks_t		end;
+> -	xfs_off_t		isize;
+> +	struct inode		*inode = VFS_I(ip);
+>  	int			error;
 >  
->  	do {
-> -		struct page *page, *rpage;
-> -		unsigned long offset;	/* Offset into pagecache page */
-> -		unsigned long bytes;	/* Bytes to write to page */
-> -
-> -		offset = offset_in_page(pos);
-> -		bytes = min_t(loff_t, PAGE_SIZE - offset, length);
-> -
-> -		rpage = __iomap_read_page(inode, pos);
-> -		if (IS_ERR(rpage))
-> -			return PTR_ERR(rpage);
-> +		unsigned long offset = offset_in_page(pos);
-> +		unsigned long bytes = min_t(loff_t, PAGE_SIZE - offset, length);
-> +		struct page *page;
+>  	if (!xfs_is_reflink_inode(ip))
+> @@ -1607,20 +1525,12 @@ xfs_reflink_unshare(
 >  
-> -		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
-> -		put_page(rpage);
-> +		status = iomap_write_begin(inode, pos, bytes,
-> +				IOMAP_WRITE_F_UNSHARE, &page, iomap);
->  		if (unlikely(status))
->  			return status;
+>  	trace_xfs_reflink_unshare(ip, offset, len);
 >  
-> -		WARN_ON_ONCE(!PageUptodate(page));
+> -	inode_dio_wait(VFS_I(ip));
+> +	inode_dio_wait(inode);
+>  
+> -	/* Try to CoW the selected ranges */
+> -	xfs_ilock(ip, XFS_ILOCK_EXCL);
+> -	fbno = XFS_B_TO_FSBT(mp, offset);
+> -	isize = i_size_read(VFS_I(ip));
+> -	end = XFS_B_TO_FSB(mp, offset + len);
+> -	error = xfs_reflink_dirty_extents(ip, fbno, end, isize);
+> +	error = iomap_file_unshare(inode, offset, len, &xfs_iomap_ops);
+>  	if (error)
+> -		goto out_unlock;
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
 > -
->  		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
->  		if (unlikely(status <= 0)) {
->  			if (WARN_ON_ONCE(status == 0))
+> -	/* Wait for the IO to finish */
+> -	error = filemap_write_and_wait(VFS_I(ip)->i_mapping);
+> +		goto out;
+> +	error = filemap_write_and_wait(inode->i_mapping);
+>  	if (error)
+>  		goto out;
+>  
+> @@ -1628,11 +1538,8 @@ xfs_reflink_unshare(
+>  	error = xfs_reflink_try_clear_inode_flag(ip);
+>  	if (error)
+>  		goto out;
+> -
+>  	return 0;
+>  
+> -out_unlock:
+> -	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+>  out:
+>  	trace_xfs_reflink_unshare_error(ip, error, _RET_IP_);
+>  	return error;
 > -- 
 > 2.20.1
 > 
