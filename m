@@ -2,367 +2,177 @@ Return-Path: <SRS0=tkkj=YB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFFB6C47404
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 01:36:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 878B5C47404
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 02:52:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9662F20867
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 01:36:26 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Fwxn/F8R"
+	by mail.kernel.org (Postfix) with ESMTP id 5FC9A206C0
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 02:52:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729212AbfJHBg0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Oct 2019 21:36:26 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:56242 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726917AbfJHBgZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 21:36:25 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x981YAOn059896;
-        Tue, 8 Oct 2019 01:35:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=EyP/7e52s5zLNBnDC7V1woNb6GiT06qjlS1Njl4l9OA=;
- b=Fwxn/F8RHdanzZxDhKjtkMhE/36DA89nVYAmY2/rnNRjKuAbujf/IP0qj7qQs7gRiSgc
- eEc2AqyWweAJ96/HlTllhwf6mslwopirc0oHWA7aZaHbj9Adwn7A68OxoRSAIzBmehEj
- ts9Pmbd3J3rnclWDi3jfBqQGhCHw3euBrs4PDnim+GVj9nQpWIUtDcUl8RCkE0eo6mX/
- y4BviyJg6qMoyUk8pCybYrqe4iC+NHSUbq2hQfH8/kiGBb4XNjhKCsRNzQ2qwv/DXoYP
- GvDT1oH6E7mlIQK8MEbIBgmMsPuReNHRimQlk3kBj37rDSeetsuWkdxttACYeYnLvvCq oQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2vejkua8x8-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Oct 2019 01:35:58 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x981XCpU161446;
-        Tue, 8 Oct 2019 01:35:58 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2vg2053vrg-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Oct 2019 01:35:58 +0000
-Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x981ZuDq028259;
-        Tue, 8 Oct 2019 01:35:57 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 07 Oct 2019 18:35:56 -0700
-Date:   Mon, 7 Oct 2019 18:35:55 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     Brian Foster <bfoster@redhat.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v4 00/17] xfs: mount API patch series
-Message-ID: <20191008013555.GM1473994@magnolia>
-References: <157009817203.13858.7783767645177567968.stgit@fedora-28>
- <20191007115246.GF22140@bfoster>
- <5693dea57f1f467c74676a0250eac15181b4af34.camel@themaw.net>
- <20191008003548.GU13108@magnolia>
- <0dfd4950d86f72497b00900cccfb512015bf00cb.camel@themaw.net>
+        id S1729682AbfJHCwD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 22:52:03 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48466 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729536AbfJHCwC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 22:52:02 -0400
+Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 0914743E9C5;
+        Tue,  8 Oct 2019 13:51:59 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iHfbR-0003XR-O6; Tue, 08 Oct 2019 13:51:57 +1100
+Date:   Tue, 8 Oct 2019 13:51:57 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
+Message-ID: <20191008025157.GE16973@dread.disaster.area>
+References: <20190930170358.GD57295@bfoster>
+ <20190930215336.GR16973@dread.disaster.area>
+ <20191001034207.GS16973@dread.disaster.area>
+ <20191001131336.GB62428@bfoster>
+ <20191001231433.GU16973@dread.disaster.area>
+ <20191002124139.GB2403@bfoster>
+ <20191003012556.GW16973@dread.disaster.area>
+ <20191003144114.GB2105@bfoster>
+ <20191004022755.GY16973@dread.disaster.area>
+ <20191004115001.GA6706@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <0dfd4950d86f72497b00900cccfb512015bf00cb.camel@themaw.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9403 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910080015
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9403 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910080015
+In-Reply-To: <20191004115001.GA6706@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=AIS7f8n3jaqniZSltz8A:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 08, 2019 at 09:20:19AM +0800, Ian Kent wrote:
-> On Mon, 2019-10-07 at 17:35 -0700, Darrick J. Wong wrote:
-> > On Tue, Oct 08, 2019 at 08:13:57AM +0800, Ian Kent wrote:
-> > > On Mon, 2019-10-07 at 07:52 -0400, Brian Foster wrote:
-> > > > On Thu, Oct 03, 2019 at 06:25:18PM +0800, Ian Kent wrote:
-> > > > > This patch series add support to xfs for the new kernel mount
-> > > > > API
-> > > > > as described in the LWN article at 
-> > > > > https://lwn.net/Articles/780267/
-> > > > > .
-> > > > > 
-> > > > > In the article there's a lengthy description of the reasons for
-> > > > > adopting the API and problems expected to be resolved by using
-> > > > > it.
-> > > > > 
-> > > > > The series has been applied to the repository located at
-> > > > > git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git, and built
-> > > > > and
-> > > > > some simple tests run on it along with the generic xfstests.
-> > > > > 
-> > > > 
-> > > > I'm not sure that we have any focused mount option testing in
-> > > > fstests.
-> > > > It looks like we have various remount tests and such to cover
-> > > > corner
-> > > > cases and/or specific bugs, but nothing to make sure various
-> > > > options
-> > > > continue to work or otherwise fail gracefully. Do you have any
-> > > > plans
-> > > > to
-> > > > add such a test to help verify this work?
-> > > 
-> > > Darrick was concerned about that.
-> > > 
-> > > Some sort of xfstest is needed in order to be able to merge this
-> > > so he has some confidence that it won't break things.
-> > > 
-> > > I volunteered to do have a go at writing a test.
-> > > 
-> > > I've given that some thought and done an initial survey of xfstests
-> > > but it's still new to me so I'm not sure how this will end up.
-> > > 
-> > > Darrick thought it would need a generic test to test VFS options
-> > > and one in xfs for the xfs specific options.
-> > > 
-> > > At this point I'm thinking I'll have a go at adding an xfs specific
-> > > options test but, while I can find out what the optionsare and what
-> > > validation they use, there's a lot about some of the xfs options
-> > > I don't fully understand so I don't know what a sensible test might
-> > > be.
+On Fri, Oct 04, 2019 at 07:50:01AM -0400, Brian Foster wrote:
+> On Fri, Oct 04, 2019 at 12:27:55PM +1000, Dave Chinner wrote:
+> > On Thu, Oct 03, 2019 at 10:41:14AM -0400, Brian Foster wrote:
+> > > Hmm, I'm also not sure the lockless reservation algorithm is totally
+> > > immune to increased concurrency in this regard. What prevents multiple
+> > > tasks from racing through xlog_grant_head_check() and blowing past the
+> > > log head, for example?
 > > 
-> > Hm, that's evidence of inadequate documentation.  If you can't figure
-> > out what would be sensible tests for a particular mount option from
-> > xfs(5) then we have work to do. :)
-> 
-> Maybe, I have looked at xfs(5) but haven't yet started trying to
-> work out what I need to do so we will see how that goes.
-> 
+> > Nothing. Debug kernels even emit a "xlog_verify_grant_tail: space >
+> > BBTOB(tail_blocks)" messages when that happens. It's pretty
+> > difficult to do this in real world conditions, even when there is
+> > lots of concurrency being used.
 > > 
-> > So if you can't come up with something that seems 'reasonable' to
-> > test,
-> > I suggest random gibberish(!) and send the outcome of those
-> > iterations
-> > to the list to see what kinds of arguments you can stir up.  Since
-> > we're
-> > only interested in testing the mounting code here, you can declare
-> > victory if the fs mounts, never mind if the option actually has any
-> > effect on fs operations.  That kind of functional testing should be
-> > in
-> > separate tests anyway.
 > 
-> I thought your suggestion of minimum, maximum and out of range for
-> options that have a range is good. There's also the individual
-> options which should be straight forward.
-> 
-> But there's a range of other options that sound like they aren't
-> straight forward.
+> Hm, Ok. Though I've seen that alert enough times that I
+> (unintentionally) ignore it at this point, so it can't be that hard to
+> reproduce. ;) That is usually during fstests however, and not a typical
+> workload that I recall.
 
-<nod> If you use the fstests scratch device for the crash-dummy
-filesystem, the worst that happens is we screw up and (so long as the
-kernel doesn't crash) the device gets wiped between tests.
+I can't say I've seen it for a long time now - I want to say "years"
+but I may well have simply missed it on the rare occasion it has
+occurred and fstests hasn't captured it. i.e. fstests is supposed to
+capture unusual things like this appearing in dmesg during a
+test....
 
-> For example, IIRC, I can give inode64 or inode32 on mount regardless
-> of (presumably) the on-disk inode size which seemed odd to me.
-> 
-> But of course the file system isn't mounted yet so the options
-> parsing won't know this at the time. I supposed that would be
-> handled later, probably with some sort of warning to the log.
+> Of course, there's a difference between
+> reproducing the basic condition and taking it to the point where it
+> manifests into a problem.
 
-inode32 has nothing to do with inode size, just (new) inode location.
+*nod*
 
-Specifically, it prevents allocation of an inode that would have a
-64-bit inode number.
-
+> > But here's the rub: it's not actually the end of the world because
+> > the reservation doesn't actually determine how much of the log is
+> > currently being used by running transactions - the reservation is
+> > for a maximal rolling iteration of a permanent transaction, not the
+> > initial transaction will be running. Hence if we overrun
+> > occassionally we don't immediately run out of log space and corrupt
+> > the log.
 > > 
-> > One advantage that you probably have over us is that our
-> > understanding
-> > of the mount options and associated behavior is based on a lot of
-> > experience working in the code base, whereas most everyone else's is
-> > based entirely on whatever's in the manpage.  It's helpful to have
-> > someone hold us to our words every now and then.
 > 
-> Indeed, I think this will be a useful exercise for xfs and myself.
+> Ok, that much is evident from the amount of time this mechanism has been
+> in place without any notable issues.
 > 
+> > Yes, if none of the rolling transactions complete and they all need
+> > to use their entire reservation, and the tail of the log cannot be
+> > moved forward because it is pinned by one of the transactions that
+> > is running, then we'll likely get a log hang on a regrant on the
+> > write head. But if any of the transactions don't use all of their
+> > reservation, then the overrun gets soaked up by the unused parts of
+> > the transactions that are completed and returned to reservation
+> > head, and nobody even notices taht there was a temporary overrun of
+> > the grant head space.
 > > 
-> > (This is going to get interesting when we get to mount options whose
-> > validity changes depending on mkfs parameters, etc.)
 > 
-> Second pass of writing the test will need input on that.
-> 
-> Perhaps (but probably not yet so I don't make implicit assumptions)
-> someone could come up with a list of common mkfs vs needed mount
-> options for the more sophisticated tests once I get to them.
+> Ok, I didn't expect this to be some catastrophic problem or really a
+> problem with your patch simply based on the lifetime of the code and how
+> the grant heads are actually used. I was going to suggest an assert or
+> something to detect whether batching behavior as a side effect of the
+> commit throttle would ever increase likelihood of this situation, but it
+> looks like the grant verify function somewhat serves that purpose
+> already.
 
-Looking forward to it. :)
+Yeah - xlog_verify_grant_tail() will the report reservation
+overruns, but the serious log space problems (i.e. head overwritting
+the tail) are detected by xlog_verify_tail_lsn() when we stamp the
+tail_lsn into the current iclog header. That's still done under the
+icloglock and the AIL lock, so the comparison of the tail with the
+current log head is still completely serialised.
 
---D
+> I'd _prefer_ to see something, at least in DEBUG mode, that indicates
+> the frequency of the fundamental incorrect accounting condition as
+> opposed to just the side effect of blowing the tail (because the latter
+> depends on other difficult to reproduce factors), but I'd have to think
+> about that some more as it would need to balance against normal/expected
+> execution flow. Thanks for the background.
 
-> Ian
+You can test that just by removing the XLOG_TAIL_WARN flag setting,
+then it will warn on every reservation overrun rather than just the
+first.
+
+> > Hence occasional overruns on the reservation head before they start
+> > blocking isn't really a problem in practice because the probability
+> > of all the transaction reservation of all transactions running being
+> > required to make forwards progress is extremely small.
 > > 
-> > --D
+> > Basically, we gave up "perfect reservation space grant accounting"
+> > because performance was extremely important and risk of log hangs as
+> > a result of overruns was considered to be extremely low and worth
+> > taking for the benefits the algorithm provided. This was just a
+> > simple, pragmatic risk based engineering decision.
 > > 
-> > > > Brian
-> > > > 
-> > > > > Other things that continue to cause me concern:
-> > > > > 
-> > > > > - Message logging.
-> > > > >   There is error logging done in the VFS by the mount-api code,
-> > > > > some
-> > > > >   is VFS specific while some is file system specific. This can
-> > > > > lead
-> > > > >   to duplicated and sometimes inconsistent logging.
-> > > > > 
-> > > > >   The mount-api feature of saving error message text to the
-> > > > > mount
-> > > > >   context for later retrieval by fsopen()/fsconfig()/fsmount()
-> > > > > users
-> > > > >   is the reason the mount-api log macros are present. But, at
-> > > > > the
-> > > > >   moment (last time I looked), these macros will either log the
-> > > > >   error message or save it to the mount context. There's not
-> > > > > yet
-> > > > >   a way to modify this behaviour so it which can lead to
-> > > > > messages,
-> > > > >   possibly needed for debug purposes, not being sent to the
-> > > > > kernel
-> > > > >   log. There's also the pr_xxx() log functions (not a problem
-> > > > > for
-> > > > >   xfs AFAICS) that aren't aware of the mount context at all.
-> > > > > 
-> > > > >   In the xfs patches I've used the same method that is used in
-> > > > >   gfs2 and was suggested by Al Viro (essentially return the
-> > > > > error
-> > > > >   if fs_parse() returns one) except that I've also not used the
-> > > > >   mount api log macros to minimise the possibility of lost log
-> > > > >   messages.
-> > > > > 
-> > > > >   This isn't the best so follow up patches for RFC (with a
-> > > > >   slightly wider audience) will be needed to try and improve
-> > > > >   this aspect of the mount api.
-> > > > > 
-> > > > > Changes for v4:
-> > > > > - changed xfs_fill_super() cleanup back to what it was in v2,
-> > > > > until
-> > > > >   I can work out what's causing the problem had previously seen
-> > > > > (I
-> > > > > can't
-> > > > >   reproduce it myself), since it looks like it was right from
-> > > > > the
-> > > > > start.
-> > > > > - use get_tree_bdev() instead of vfs_get_block_super() in
-> > > > > xfs_get_tree()
-> > > > >   as requested by Al Viro.
-> > > > > - removed redundant initialisation in xfs_fs_fill_super().
-> > > > > - fix long line in xfs_validate_params().
-> > > > > - no need to validate if parameter parsing fails, just return
-> > > > > the
-> > > > > error.
-> > > > > - summarise reconfigure comment about option handling, transfer
-> > > > > bulk
-> > > > >   of comment to commit log message.
-> > > > > - use minimal change in xfs_parse_param(), deffer discussion of
-> > > > > mount
-> > > > >   api logging improvements until later and with a wider
-> > > > > audience.
-> > > > > 
-> > > > > Changes for v3:
-> > > > > - fix struct xfs_fs_context initialisation in xfs_parseargs().
-> > > > > - move call to xfs_validate_params() below label "done".
-> > > > > - if allocation of xfs_mount fails return ENOMEM immediately.
-> > > > > - remove erroneous kfree(mp) in xfs_fill_super().
-> > > > > - move the removal of xfs_fs_remount() and
-> > > > > xfs_test_remount_options()
-> > > > >   to the switch to mount api patch.
-> > > > > - retain original usage of distinct <option>, no<option> usage.
-> > > > > - fix line length and a white space problem in xfs_parseargs().
-> > > > > - defer introduction of struct fs_context_operations until
-> > > > > mount
-> > > > >   api implementation.
-> > > > > - don't use a new line for the void parameter of
-> > > > > xfs_mount_alloc().
-> > > > > - check for -ENOPARAM in xfs_parse_param() to report invalid
-> > > > > options
-> > > > >   using the options switch (to avoid double entry log
-> > > > > messages).
-> > > > > - remove obsolete mount option biosize.
-> > > > > - try and make comment in xfs_fc_free() more understandable.
-> > > > > 
-> > > > > Changes for v2:
-> > > > > - changed .name to uppercase in fs_parameter_description to
-> > > > > ensure
-> > > > >   consistent error log messages between the vfs parser and the
-> > > > > xfs
-> > > > >   parameter parser.
-> > > > > - clarify comment above xfs_parse_param() about when possibly
-> > > > >   allocated mp->m_logname or mp->m_rtname are freed.
-> > > > > - factor out xfs_remount_rw() and xfs_remount_ro()
-> > > > > from  xfs_remount().
-> > > > > - changed xfs_mount_alloc() to not set super block in xfs_mount
-> > > > > so
-> > > > > it
-> > > > >   can be re-used when switching to the mount-api.
-> > > > > - fixed don't check for NULL when calling kfree() in
-> > > > > xfs_fc_free().
-> > > > > - refactored xfs_parseargs() in an attempt to highlight the
-> > > > > code
-> > > > >   that actually changes in converting to use the new mount api.
-> > > > > - dropped xfs-mount-api-rename-xfs_fill_super.patch, it didn't
-> > > > > seem
-> > > > >   necessary.
-> > > > > - move comment about remount difficulties above
-> > > > > xfs_reconfigure()
-> > > > >   and increase line length to try and make the comment
-> > > > > manageable.
-> > > > > 
-> > > > > Al Viro has sent a pull request to Linus for the patch
-> > > > > containing
-> > > > > get_tree_bdev() recently and I think there's a small problem
-> > > > > with
-> > > > > that patch too so there will be conflicts with merging this
-> > > > > series
-> > > > > without dropping the first two patches of the series.
-> > > > > 
-> > > > > ---
-> > > > > 
-> > > > > David Howells (1):
-> > > > >       vfs: Create fs_context-aware mount_bdev() replacement
-> > > > > 
-> > > > > Ian Kent (16):
-> > > > >       vfs: add missing blkdev_put() in get_tree_bdev()
-> > > > >       xfs: remove very old mount option
-> > > > >       xfs: mount-api - add fs parameter description
-> > > > >       xfs: mount-api - refactor suffix_kstrtoint()
-> > > > >       xfs: mount-api - refactor xfs_parseags()
-> > > > >       xfs: mount-api - make xfs_parse_param() take context
-> > > > > .parse_param() args
-> > > > >       xfs: mount-api - move xfs_parseargs() validation to a
-> > > > > helper
-> > > > >       xfs: mount-api - refactor xfs_fs_fill_super()
-> > > > >       xfs: mount-api - add xfs_get_tree()
-> > > > >       xfs: mount-api - add xfs_remount_rw() helper
-> > > > >       xfs: mount-api - add xfs_remount_ro() helper
-> > > > >       xfs: mount api - add xfs_reconfigure()
-> > > > >       xfs: mount-api - add xfs_fc_free()
-> > > > >       xfs: mount-api - dont set sb in xfs_mount_alloc()
-> > > > >       xfs: mount-api - switch to new mount-api
-> > > > >       xfs: mount-api - remove remaining legacy mount code
-> > > > > 
-> > > > > 
-> > > > >  fs/super.c                 |   97 +++++
-> > > > >  fs/xfs/xfs_super.c         |  939 +++++++++++++++++++++++-----
-> > > > > ----
-> > > > > ------------
-> > > > >  include/linux/fs_context.h |    5 
-> > > > >  3 files changed, 600 insertions(+), 441 deletions(-)
-> > > > > 
-> > > > > --
-> > > > > Ian
 > 
+> FWIW, the comment for xlog_verify_tail() also suggests the potential for
+> false positives and references a panic tag, which all seems kind of
+> erratic and misleading compared to what you explain here.
+
+Well, it's fundamentally an unserialised check, so it can race with
+other reservation grants, commits that release grant space and tail
+lsn updates. Hence it's not a 100% reliable debug check.
+
+It also used to be run at all times, not just under
+XFS_CONFIG_DEBUG=y, which is why it has a panic tag associated with
+it. When we first deployed it, we weren't 100% sure there weren't
+customer workloads that would trip over this and hang the log, so
+we gave ourselves a way of triggering kernel dumps the instant an
+overrun was detected. Hence a site that had log hangs with this
+message in the logs could turn on the panic tag and we'd get a
+kernel dump to analyse...
+
+Since then, this code has been relegated to debug code but the panic
+tag still exists. It could be turned back into a ASSERT now, but
+it's still useful the way it is as it means debug kernels don't fall
+over the moment a spurious overrun occurs...
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
