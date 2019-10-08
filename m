@@ -6,21 +6,21 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8C1AC4360C
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 06:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18447C4360C
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 06:34:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B45F920867
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 06:12:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E919321871
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 06:34:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729876AbfJHGMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 02:12:31 -0400
-Received: from verein.lst.de ([213.95.11.211]:43917 "EHLO verein.lst.de"
+        id S1730073AbfJHGek (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 02:34:40 -0400
+Received: from verein.lst.de ([213.95.11.211]:44049 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728297AbfJHGMb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Oct 2019 02:12:31 -0400
+        id S1729740AbfJHGek (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 8 Oct 2019 02:34:40 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id 6910568B20; Tue,  8 Oct 2019 08:12:26 +0200 (CEST)
-Date:   Tue, 8 Oct 2019 08:12:25 +0200
+        id B73F668B20; Tue,  8 Oct 2019 08:34:36 +0200 (CEST)
+Date:   Tue, 8 Oct 2019 08:34:36 +0200
 From:   Christoph Hellwig <hch@lst.de>
 To:     Dave Chinner <david@fromorbit.com>
 Cc:     Christoph Hellwig <hch@lst.de>,
@@ -28,35 +28,82 @@ Cc:     Christoph Hellwig <hch@lst.de>,
         Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        Carlos Maiolino <cmaiolino@redhat.com>
-Subject: Re: [PATCH 09/11] xfs: remove the fork fields in the writepage_ctx
- and ioend
-Message-ID: <20191008061225.GA27652@lst.de>
-References: <20191006154608.24738-1-hch@lst.de> <20191006154608.24738-10-hch@lst.de> <20191007215944.GC16973@dread.disaster.area>
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] iomap: copy the xfs writeback code to iomap.c
+Message-ID: <20191008063436.GA30465@lst.de>
+References: <20191006154608.24738-1-hch@lst.de> <20191006154608.24738-3-hch@lst.de> <20191007214353.GZ16973@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191007215944.GC16973@dread.disaster.area>
+In-Reply-To: <20191007214353.GZ16973@dread.disaster.area>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 08, 2019 at 08:59:44AM +1100, Dave Chinner wrote:
-> On Sun, Oct 06, 2019 at 05:46:06PM +0200, Christoph Hellwig wrote:
-> > In preparation for moving the writeback code to iomap.c, replace the
-> > XFS-specific COW fork concept with the iomap IOMAP_F_SHARED flag.
+On Tue, Oct 08, 2019 at 08:43:53AM +1100, Dave Chinner wrote:
+> > +static int
+> > +iomap_ioend_compare(void *priv, struct list_head *a, struct list_head *b)
+> > +{
+> > +	struct iomap_ioend *ia, *ib;
+> > +
+> > +	ia = container_of(a, struct iomap_ioend, io_list);
+> > +	ib = container_of(b, struct iomap_ioend, io_list);
+> > +	if (ia->io_offset < ib->io_offset)
+> > +		return -1;
+> > +	else if (ia->io_offset > ib->io_offset)
+> > +		return 1;
+> > +	return 0;
 > 
-> "In preparation for switching XFS to use the fs/iomap writeback
-> code..."?
-> 
-> I suspect the IOMAP_F_SHARED hunk I pointed out in the previous
-> patch should be in this one...
+> No need for the else here.
 
-All these made a whole lot more sense before Darrick reshuffled the
-code.  In my original version I started massaging the XFS code so that
-it can be moved to iomap without functional changes, but Darrick wanted
-the iomap code added in one series and then XFS switched over, which
-made a lot of things more confusing than they were intended to be.
+That is usually my comment :)  But in this case it is just copied over
+code, so I didn't want to do cosmetic changes.
+
+> > +	/*
+> > +	 * Given that we do not allow direct reclaim to call us, we should
+> > +	 * never be called while in a filesystem transaction.
+> > +	 */
+> > +	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+> > +		goto redirty;
+> 
+> Is this true for all expected callers of these functions rather than
+> just XFS? i.e. PF_MEMALLOC_NOFS is used by transactions in XFS to
+> prevent transaction context recursion, but other filesystems do not
+> do this..
+> 
+> FWIW, I can also see that this is going to cause us problems if high
+> level code starts using memalloc_nofs_save() and then calling
+> filemap_datawrite() and friends...
+
+We have the check for direct reclaim just above, so any file system
+using this iomap code will not allow direct reclaim.  Which I think is
+a very good idea given that direct reclaim through the file system is
+a very bad idea.
+
+That leaves with only the filemap_datawrite case, which so far is
+theoretical.  If that ever becomes a think it is very obvious and we
+can just remove the debug check.
+
+> > +iomap_writepage(struct page *page, struct writeback_control *wbc,
+> > +		struct iomap_writepage_ctx *wpc,
+> > +		const struct iomap_writeback_ops *ops)
+> > +{
+> > +	int ret;
+> > +
+> > +	wpc->ops = ops;
+> > +	ret = iomap_do_writepage(page, wbc, wpc);
+> > +	if (!wpc->ioend)
+> > +		return ret;
+> > +	return iomap_submit_ioend(wpc, wpc->ioend, ret);
+> > +}
+> > +EXPORT_SYMBOL_GPL(iomap_writepage);
+> 
+> Can we kill ->writepage for iomap users, please? After all, we don't
+> mostly don't allow memory reclaim to do writeback of dirty pages,
+> and that's the only caller of ->writepage.
+
+I'd rather not do this as part of this move.  But if you could expedite
+your patch to kill ->writepage from the large block size support patch
+and submit it ASAP on top of this series I would be very much in favor.
