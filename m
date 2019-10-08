@@ -2,138 +2,83 @@ Return-Path: <SRS0=tkkj=YB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45EC5C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:37:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 957ECC10F14
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 09:02:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 287FB206C2
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:37:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E4C2206B6
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 09:02:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730377AbfJHHhP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 03:37:15 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56771 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730367AbfJHHhO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 03:37:14 -0400
-Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E108143E00B;
-        Tue,  8 Oct 2019 18:37:10 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iHk3Q-0005PG-T7; Tue, 08 Oct 2019 18:37:08 +1100
-Date:   Tue, 8 Oct 2019 18:37:08 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/11] iomap: copy the xfs writeback code to iomap.c
-Message-ID: <20191008073708.GG16973@dread.disaster.area>
-References: <20191006154608.24738-1-hch@lst.de>
- <20191006154608.24738-3-hch@lst.de>
- <20191007214353.GZ16973@dread.disaster.area>
- <20191008063436.GA30465@lst.de>
+        id S1730211AbfJHJCG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 05:02:06 -0400
+Received: from outbound-smtp18.blacknight.com ([46.22.139.245]:45926 "EHLO
+        outbound-smtp18.blacknight.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730218AbfJHJCF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 05:02:05 -0400
+X-Greylist: delayed 582 seconds by postgrey-1.27 at vger.kernel.org; Tue, 08 Oct 2019 05:02:04 EDT
+Received: from mail.blacknight.com (pemlinmail01.blacknight.ie [81.17.254.10])
+        by outbound-smtp18.blacknight.com (Postfix) with ESMTPS id 646041C1D10
+        for <linux-xfs@vger.kernel.org>; Tue,  8 Oct 2019 09:52:21 +0100 (IST)
+Received: (qmail 4145 invoked from network); 8 Oct 2019 08:52:21 -0000
+Received: from unknown (HELO techsingularity.net) (mgorman@techsingularity.net@[84.203.19.210])
+  by 81.17.254.9 with ESMTPSA (AES256-SHA encrypted, authenticated); 8 Oct 2019 08:52:21 -0000
+Date:   Tue, 8 Oct 2019 09:52:19 +0100
+From:   Mel Gorman <mgorman@techsingularity.net>
+To:     Vlastimil Babka <vbabka@suse.cz>
+Cc:     Florian Weimer <fw@deneb.enyo.de>,
+        Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [bug, 5.2.16] kswapd/compaction null pointer crash [was Re:
+ xfs_inode not reclaimed/memory leak on 5.2.16]
+Message-ID: <20191008085219.GC3321@techsingularity.net>
+References: <87pnji8cpw.fsf@mid.deneb.enyo.de>
+ <20190930085406.GP16973@dread.disaster.area>
+ <87o8z1fvqu.fsf@mid.deneb.enyo.de>
+ <20190930211727.GQ16973@dread.disaster.area>
+ <96023250-6168-3806-320a-a3468f1cd8c9@suse.cz>
+ <87lfu4i79z.fsf@mid.deneb.enyo.de>
+ <2af04718-d5cb-1bb1-a789-be017f2e2df0@suse.cz>
+ <1f0f2849-d90e-6563-0034-07ba80f8ba2f@suse.cz>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
 Content-Disposition: inline
-In-Reply-To: <20191008063436.GA30465@lst.de>
+In-Reply-To: <1f0f2849-d90e-6563-0034-07ba80f8ba2f@suse.cz>
 User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=7-415B0cAAAA:8 a=C152E18BS4FYMT0GleMA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 08, 2019 at 08:34:36AM +0200, Christoph Hellwig wrote:
-> On Tue, Oct 08, 2019 at 08:43:53AM +1100, Dave Chinner wrote:
-> > > +static int
-> > > +iomap_ioend_compare(void *priv, struct list_head *a, struct list_head *b)
-> > > +{
-> > > +	struct iomap_ioend *ia, *ib;
-> > > +
-> > > +	ia = container_of(a, struct iomap_ioend, io_list);
-> > > +	ib = container_of(b, struct iomap_ioend, io_list);
-> > > +	if (ia->io_offset < ib->io_offset)
-> > > +		return -1;
-> > > +	else if (ia->io_offset > ib->io_offset)
-> > > +		return 1;
-> > > +	return 0;
+On Mon, Oct 07, 2019 at 03:56:41PM +0200, Vlastimil Babka wrote:
+> On 10/7/19 3:28 PM, Vlastimil Babka wrote:
+> > On 10/1/19 9:40 PM, Florian Weimer wrote:
+> >> * Vlastimil Babka:
+> >>
+> >>
+> >> See below.  I don't have debuginfo for this build, and the binary does
+> >> not reproduce for some reason.  Due to the heavy inlining, it might be
+> >> quite hard to figure out what's going on.
 > > 
-> > No need for the else here.
+> > Thanks, but I'm still not able to "decompile" that in my head.
 > 
-> That is usually my comment :)  But in this case it is just copied over
-> code, so I didn't want to do cosmetic changes.
-
-*nod*
-
-> > > +	/*
-> > > +	 * Given that we do not allow direct reclaim to call us, we should
-> > > +	 * never be called while in a filesystem transaction.
-> > > +	 */
-> > > +	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
-> > > +		goto redirty;
-> > 
-> > Is this true for all expected callers of these functions rather than
-> > just XFS? i.e. PF_MEMALLOC_NOFS is used by transactions in XFS to
-> > prevent transaction context recursion, but other filesystems do not
-> > do this..
-> > 
-> > FWIW, I can also see that this is going to cause us problems if high
-> > level code starts using memalloc_nofs_save() and then calling
-> > filemap_datawrite() and friends...
+> While staring at the code, I think I found two probably unrelated bugs.
+> One is that pfn and page might be desynced when zone starts in the middle
+> of pageblock, as the max() is only applied to page and not pfn. But that
+> only effectively affects the later pfn_valid_within() checks, which should
+> be always true on x86.
 > 
-> We have the check for direct reclaim just above, so any file system
-> using this iomap code will not allow direct reclaim.  Which I think is
-> a very good idea given that direct reclaim through the file system is
-> a very bad idea.
-
-*nod*
-
-> That leaves with only the filemap_datawrite case, which so far is
-> theoretical.  If that ever becomes a think it is very obvious and we
-> can just remove the debug check.
-
-I expect it will be a thing sooner rather than later...
-
-> > > +iomap_writepage(struct page *page, struct writeback_control *wbc,
-> > > +		struct iomap_writepage_ctx *wpc,
-> > > +		const struct iomap_writeback_ops *ops)
-> > > +{
-> > > +	int ret;
-> > > +
-> > > +	wpc->ops = ops;
-> > > +	ret = iomap_do_writepage(page, wbc, wpc);
-> > > +	if (!wpc->ioend)
-> > > +		return ret;
-> > > +	return iomap_submit_ioend(wpc, wpc->ioend, ret);
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(iomap_writepage);
-> > 
-> > Can we kill ->writepage for iomap users, please? After all, we don't
-> > mostly don't allow memory reclaim to do writeback of dirty pages,
-> > and that's the only caller of ->writepage.
+> The second is that "end of pageblock online and valid" should refer to
+> the last pfn of pageblock, not first pfn of next pageblocks. Otherwise we
+> might return false needlessly. Mel, what do you think?
 > 
-> I'd rather not do this as part of this move.  But if you could expedite
-> your patch to kill ->writepage from the large block size support patch
-> and submit it ASAP on top of this series I would be very much in favor.
 
-Ok, looks like the usual of more follow up patches on top of these.
-I'm kinda waiting for these to land before porting the large block
-size stuff on top of it...
+I think you are correct in both cases. It's perfectly possible I would
+not have observed a problem in testing if zones were aligned which I
+think is generally the case on my test machines.
 
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Mel Gorman
+SUSE Labs
