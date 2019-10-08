@@ -2,177 +2,159 @@ Return-Path: <SRS0=tkkj=YB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 878B5C47404
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 02:52:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B269DC47404
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 03:20:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5FC9A206C0
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 02:52:03 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8548921479
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 03:20:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel-dk.20150623.gappssmtp.com header.i=@kernel-dk.20150623.gappssmtp.com header.b="wFuqmJYq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729682AbfJHCwD (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Oct 2019 22:52:03 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:48466 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729536AbfJHCwC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 22:52:02 -0400
-Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 0914743E9C5;
-        Tue,  8 Oct 2019 13:51:59 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iHfbR-0003XR-O6; Tue, 08 Oct 2019 13:51:57 +1100
-Date:   Tue, 8 Oct 2019 13:51:57 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
-Message-ID: <20191008025157.GE16973@dread.disaster.area>
-References: <20190930170358.GD57295@bfoster>
- <20190930215336.GR16973@dread.disaster.area>
- <20191001034207.GS16973@dread.disaster.area>
- <20191001131336.GB62428@bfoster>
- <20191001231433.GU16973@dread.disaster.area>
- <20191002124139.GB2403@bfoster>
- <20191003012556.GW16973@dread.disaster.area>
- <20191003144114.GB2105@bfoster>
- <20191004022755.GY16973@dread.disaster.area>
- <20191004115001.GA6706@bfoster>
+        id S1729888AbfJHDUj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 23:20:39 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:42310 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729885AbfJHDUj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 23:20:39 -0400
+Received: by mail-pg1-f195.google.com with SMTP id z12so9438103pgp.9
+        for <linux-xfs@vger.kernel.org>; Mon, 07 Oct 2019 20:20:38 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=hOpTDwgTjucyOYseuwafLS5BCj+XUPc6M7qUnXfBnxQ=;
+        b=wFuqmJYqLrRlrQHQ5K8l3Lk+dvl7JIhYgniYtJiHAXxg7N+TW71fgTajBO62mzEBLC
+         Yk67K1NNivk4mBd4JjT9gdORmTFXgxyHueQW4MA4RJh4u3IHd1LzTNpzr5xOAS/l062J
+         vS6xfo8FckBOdZ5EPU/6Ccv+ren2q/qfxw5bDeT4qLQE+EtyLrB7tp/8zW1elBj59UB2
+         JUZR5Jv/UrNhsfqmkQ78Af50M4OOiXTNey5ePD5scA7DRXzLRYh4zMvrnQATNW4SJ9Ql
+         s2Vst2rRIP1VYpovs7hyyF4LM28cvxdGd8r38xRa9S0jesZrNQJMfbr2eGul/JV60erm
+         Rb5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=hOpTDwgTjucyOYseuwafLS5BCj+XUPc6M7qUnXfBnxQ=;
+        b=Vm50VgCJ/PNKIHBB8fOd2PMzL8SLU7iqBP7j35I39ju2f2aJ1+5gJlzJljWAGWbp5l
+         rxo8jXraMIqtZFe7IQl1f75z6YpD+Gc8igBVPmf2ud+CtHLDkjCYA8gJCgqxxjtT4UF4
+         mgWu32L4ZDy9v2A26txtKL462lNEHXbmsoqMIt3Nhe8T5fOzujDcOivkI8vBCijMUG+3
+         RO9jELXlTdk+j44iW5R3ZVfq/HedGffQULX8D/OXtZ9bUWy2b6SxP6Xadf4dsiAIykvM
+         Mg8Dou7HoG4olC/c0qr4V0vQJsX/DwJG96qD4mTvdyFeBlkpdaikP2d/42ggxVDbyf+d
+         Fk6Q==
+X-Gm-Message-State: APjAAAVuhqh3NDfgHgHH+Yf+R8unv8ohrzQwq2t3SIJ87FPJQtoNUJ5k
+        +F9KLKhZbUp1By2QPwhVZ0tB/Q==
+X-Google-Smtp-Source: APXvYqynScptury9jvAlSh/yIarWdlWWKHj5JE6ZAXlsr61jrwzksigutFCrPle/es17/CbWxJB6GQ==
+X-Received: by 2002:a63:5552:: with SMTP id f18mr23984019pgm.437.1570504838136;
+        Mon, 07 Oct 2019 20:20:38 -0700 (PDT)
+Received: from [192.168.1.188] ([66.219.217.79])
+        by smtp.gmail.com with ESMTPSA id d22sm18909893pfq.168.2019.10.07.20.20.35
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 07 Oct 2019 20:20:36 -0700 (PDT)
+Subject: Re: [5.4-rc1, regression] wb_workfn wakeup oops (was Re: frequent
+ 5.4-rc1 crash?)
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Chris Mason <clm@fb.com>, Gao Xiang <hsiangkao@aol.com>,
+        Dave Chinner <david@fromorbit.com>,
+        xfs <linux-xfs@vger.kernel.org>, "tj@kernel.org" <tj@kernel.org>,
+        "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
+        "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+References: <20191003015247.GI13108@magnolia>
+ <20191003064022.GX16973@dread.disaster.area>
+ <20191003084149.GA16347@hsiangkao-HP-ZHAN-66-Pro-G1>
+ <41B90CA7-E093-48FA-BDFD-73BE7EB81FB6@fb.com>
+ <32f7c7d8-59d8-7657-4dcc-3741355bf63a@kernel.dk>
+ <20191003183746.GK13108@magnolia> <20191006223041.GQ13108@magnolia>
+From:   Jens Axboe <axboe@kernel.dk>
+Message-ID: <bf8db64b-0b9b-172e-9aca-a06151dad252@kernel.dk>
+Date:   Mon, 7 Oct 2019 21:20:33 -0600
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191004115001.GA6706@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=7-415B0cAAAA:8 a=AIS7f8n3jaqniZSltz8A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191006223041.GQ13108@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 04, 2019 at 07:50:01AM -0400, Brian Foster wrote:
-> On Fri, Oct 04, 2019 at 12:27:55PM +1000, Dave Chinner wrote:
-> > On Thu, Oct 03, 2019 at 10:41:14AM -0400, Brian Foster wrote:
-> > > Hmm, I'm also not sure the lockless reservation algorithm is totally
-> > > immune to increased concurrency in this regard. What prevents multiple
-> > > tasks from racing through xlog_grant_head_check() and blowing past the
-> > > log head, for example?
-> > 
-> > Nothing. Debug kernels even emit a "xlog_verify_grant_tail: space >
-> > BBTOB(tail_blocks)" messages when that happens. It's pretty
-> > difficult to do this in real world conditions, even when there is
-> > lots of concurrency being used.
-> > 
+On 10/6/19 4:30 PM, Darrick J. Wong wrote:
+> On Thu, Oct 03, 2019 at 11:37:46AM -0700, Darrick J. Wong wrote:
+>> On Thu, Oct 03, 2019 at 08:05:42AM -0600, Jens Axboe wrote:
+>>> On 10/3/19 8:01 AM, Chris Mason wrote:
+>>>>
+>>>>
+>>>> On 3 Oct 2019, at 4:41, Gao Xiang wrote:
+>>>>
+>>>>> Hi,
+>>>>>
+>>>>> On Thu, Oct 03, 2019 at 04:40:22PM +1000, Dave Chinner wrote:
+>>>>>> [cc linux-fsdevel, linux-block, tejun ]
+>>>>>>
+>>>>>> On Wed, Oct 02, 2019 at 06:52:47PM -0700, Darrick J. Wong wrote:
+>>>>>>> Hi everyone,
+>>>>>>>
+>>>>>>> Does anyone /else/ see this crash in generic/299 on a V4 filesystem
+>>>>>>> (tho
+>>>>>>> afaict V5 configs crash too) and a 5.4-rc1 kernel?  It seems to pop
+>>>>>>> up
+>>>>>>> on generic/299 though only 80% of the time.
+>>>>>>>
+>>>>>
+>>>>> Just a quick glance, I guess there could is a race between (complete
+>>>>> guess):
+>>>>>
+>>>>>
+>>>>>    160 static void finish_writeback_work(struct bdi_writeback *wb,
+>>>>>    161                                   struct wb_writeback_work *work)
+>>>>>    162 {
+>>>>>    163         struct wb_completion *done = work->done;
+>>>>>    164
+>>>>>    165         if (work->auto_free)
+>>>>>    166                 kfree(work);
+>>>>>    167         if (done && atomic_dec_and_test(&done->cnt))
+>>>>>
+>>>>>    ^^^ here
+>>>>>
+>>>>>    168                 wake_up_all(done->waitq);
+>>>>>    169 }
+>>>>>
+>>>>> since new wake_up_all(done->waitq); is completely on-stack,
+>>>>>    	if (done && atomic_dec_and_test(&done->cnt))
+>>>>> -		wake_up_all(&wb->bdi->wb_waitq);
+>>>>> +		wake_up_all(done->waitq);
+>>>>>    }
+>>>>>
+>>>>> which could cause use after free if on-stack wb_completion is gone...
+>>>>> (however previous wb->bdi is solid since it is not on-stack)
+>>>>>
+>>>>> see generic on-stack completion which takes a wait_queue spin_lock
+>>>>> between
+>>>>> test and wake_up...
+>>>>>
+>>>>> If I am wrong, ignore me, hmm...
+>>>>
+>>>> It's a good guess ;)  Jens should have this queued up already:
+>>>>
+>>>> https://lkml.org/lkml/2019/9/23/972
+>>>
+>>> Yes indeed, it'll go out today or tomorrow for -rc2.
+>>
+>> The patch fixes the problems I've been seeing, so:
+>> Tested-by: Darrick J. Wong <darrick.wong@oracle.com>
+>>
+>> Thank you for taking care of this. :)
 > 
-> Hm, Ok. Though I've seen that alert enough times that I
-> (unintentionally) ignore it at this point, so it can't be that hard to
-> reproduce. ;) That is usually during fstests however, and not a typical
-> workload that I recall.
+> Hmm, I don't see this patch in -rc2; did it not go out in time, or were
+> there further complications?
 
-I can't say I've seen it for a long time now - I want to say "years"
-but I may well have simply missed it on the rare occasion it has
-occurred and fstests hasn't captured it. i.e. fstests is supposed to
-capture unusual things like this appearing in dmesg during a
-test....
+Andrew had it queued up, apparently my memory was bad. It's in now.
 
-> Of course, there's a difference between
-> reproducing the basic condition and taking it to the point where it
-> manifests into a problem.
-
-*nod*
-
-> > But here's the rub: it's not actually the end of the world because
-> > the reservation doesn't actually determine how much of the log is
-> > currently being used by running transactions - the reservation is
-> > for a maximal rolling iteration of a permanent transaction, not the
-> > initial transaction will be running. Hence if we overrun
-> > occassionally we don't immediately run out of log space and corrupt
-> > the log.
-> > 
-> 
-> Ok, that much is evident from the amount of time this mechanism has been
-> in place without any notable issues.
-> 
-> > Yes, if none of the rolling transactions complete and they all need
-> > to use their entire reservation, and the tail of the log cannot be
-> > moved forward because it is pinned by one of the transactions that
-> > is running, then we'll likely get a log hang on a regrant on the
-> > write head. But if any of the transactions don't use all of their
-> > reservation, then the overrun gets soaked up by the unused parts of
-> > the transactions that are completed and returned to reservation
-> > head, and nobody even notices taht there was a temporary overrun of
-> > the grant head space.
-> > 
-> 
-> Ok, I didn't expect this to be some catastrophic problem or really a
-> problem with your patch simply based on the lifetime of the code and how
-> the grant heads are actually used. I was going to suggest an assert or
-> something to detect whether batching behavior as a side effect of the
-> commit throttle would ever increase likelihood of this situation, but it
-> looks like the grant verify function somewhat serves that purpose
-> already.
-
-Yeah - xlog_verify_grant_tail() will the report reservation
-overruns, but the serious log space problems (i.e. head overwritting
-the tail) are detected by xlog_verify_tail_lsn() when we stamp the
-tail_lsn into the current iclog header. That's still done under the
-icloglock and the AIL lock, so the comparison of the tail with the
-current log head is still completely serialised.
-
-> I'd _prefer_ to see something, at least in DEBUG mode, that indicates
-> the frequency of the fundamental incorrect accounting condition as
-> opposed to just the side effect of blowing the tail (because the latter
-> depends on other difficult to reproduce factors), but I'd have to think
-> about that some more as it would need to balance against normal/expected
-> execution flow. Thanks for the background.
-
-You can test that just by removing the XLOG_TAIL_WARN flag setting,
-then it will warn on every reservation overrun rather than just the
-first.
-
-> > Hence occasional overruns on the reservation head before they start
-> > blocking isn't really a problem in practice because the probability
-> > of all the transaction reservation of all transactions running being
-> > required to make forwards progress is extremely small.
-> > 
-> > Basically, we gave up "perfect reservation space grant accounting"
-> > because performance was extremely important and risk of log hangs as
-> > a result of overruns was considered to be extremely low and worth
-> > taking for the benefits the algorithm provided. This was just a
-> > simple, pragmatic risk based engineering decision.
-> > 
-> 
-> FWIW, the comment for xlog_verify_tail() also suggests the potential for
-> false positives and references a panic tag, which all seems kind of
-> erratic and misleading compared to what you explain here.
-
-Well, it's fundamentally an unserialised check, so it can race with
-other reservation grants, commits that release grant space and tail
-lsn updates. Hence it's not a 100% reliable debug check.
-
-It also used to be run at all times, not just under
-XFS_CONFIG_DEBUG=y, which is why it has a panic tag associated with
-it. When we first deployed it, we weren't 100% sure there weren't
-customer workloads that would trip over this and hang the log, so
-we gave ourselves a way of triggering kernel dumps the instant an
-overrun was detected. Hence a site that had log hangs with this
-message in the logs could turn on the panic tag and we'd get a
-kernel dump to analyse...
-
-Since then, this code has been relegated to debug code but the panic
-tag still exists. It could be turned back into a ASSERT now, but
-it's still useful the way it is as it means debug kernels don't fall
-over the moment a spurious overrun occurs...
-
-Cheers,
-
-Dave.
 -- 
-Dave Chinner
-david@fromorbit.com
+Jens Axboe
+
