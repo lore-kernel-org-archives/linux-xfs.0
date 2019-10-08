@@ -2,280 +2,654 @@ Return-Path: <SRS0=tkkj=YB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 464B1C4360C
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 13:22:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91F6AC4360C
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 15:01:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D52620815
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 13:22:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4CE7B20815
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 15:01:22 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NuX/8JVg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730759AbfJHNWm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 09:22:42 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:60522 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730332AbfJHNWm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 8 Oct 2019 09:22:42 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 3C71D51EFB;
-        Tue,  8 Oct 2019 13:22:42 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id C37501001B05;
-        Tue,  8 Oct 2019 13:22:41 +0000 (UTC)
-Date:   Tue, 8 Oct 2019 09:22:40 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/2] xfs: Throttle commits on delayed background CIL push
-Message-ID: <20191008132240.GA3520@bfoster>
-References: <20190930215336.GR16973@dread.disaster.area>
- <20191001034207.GS16973@dread.disaster.area>
- <20191001131336.GB62428@bfoster>
- <20191001231433.GU16973@dread.disaster.area>
- <20191002124139.GB2403@bfoster>
- <20191003012556.GW16973@dread.disaster.area>
- <20191003144114.GB2105@bfoster>
- <20191004022755.GY16973@dread.disaster.area>
- <20191004115001.GA6706@bfoster>
- <20191008025157.GE16973@dread.disaster.area>
+        id S1727262AbfJHPBV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 11:01:21 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:46420 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725908AbfJHPBV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 11:01:21 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x98En7vG102530;
+        Tue, 8 Oct 2019 15:00:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=EillS1KkNQYEJYP3yYIE3ZJatxctHs8oAehtKSWsRLo=;
+ b=NuX/8JVgJ3HfVYrYdspo4pC8d0irew5XtMiuteBDO6rmr/8GBdIWyJR1v+3bwdFzHmJ3
+ tA6LP/Dzrdx4Xe0fPYoMBFZOz/GMLBpL09n0cxUtAtUV+89O/2+qCgrmDGfXFCBSmRWj
+ QYw/qNpXlBOlZHlYTGaZLQ2rR0dVsJshnmF0+ZMFZfwmr27gAyyw7TMPYusNv4RrTb9v
+ CqnpxrVlkp8dF2Dmep3BQLK4Y2OooS7bSg8wJ39faFmBCP23RLbXPB/4onyNeOADu5Lc
+ 5tarfwNfUOzwpsGcjDy3423uyazWRjQgjf5f70aAOtmW3QZdRje1iNnYMzVrFjcq5Hyd 3g== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2vejkudx3b-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Oct 2019 15:00:48 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x98En4fJ103460;
+        Tue, 8 Oct 2019 15:00:47 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2vgeuy39p3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 08 Oct 2019 15:00:47 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x98F0jMT002761;
+        Tue, 8 Oct 2019 15:00:45 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Tue, 08 Oct 2019 08:00:44 -0700
+Date:   Tue, 8 Oct 2019 08:00:44 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 08/20] iomap: use a srcmap for a read-modify-write I/O
+Message-ID: <20191008150044.GV13108@magnolia>
+References: <20191008071527.29304-1-hch@lst.de>
+ <20191008071527.29304-9-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191008025157.GE16973@dread.disaster.area>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.30]); Tue, 08 Oct 2019 13:22:42 +0000 (UTC)
+In-Reply-To: <20191008071527.29304-9-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9403 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910080134
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9403 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910080134
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 08, 2019 at 01:51:57PM +1100, Dave Chinner wrote:
-> On Fri, Oct 04, 2019 at 07:50:01AM -0400, Brian Foster wrote:
-> > On Fri, Oct 04, 2019 at 12:27:55PM +1000, Dave Chinner wrote:
-> > > On Thu, Oct 03, 2019 at 10:41:14AM -0400, Brian Foster wrote:
-> > > > Hmm, I'm also not sure the lockless reservation algorithm is totally
-> > > > immune to increased concurrency in this regard. What prevents multiple
-> > > > tasks from racing through xlog_grant_head_check() and blowing past the
-> > > > log head, for example?
-> > > 
-> > > Nothing. Debug kernels even emit a "xlog_verify_grant_tail: space >
-> > > BBTOB(tail_blocks)" messages when that happens. It's pretty
-> > > difficult to do this in real world conditions, even when there is
-> > > lots of concurrency being used.
-> > > 
-> > 
-> > Hm, Ok. Though I've seen that alert enough times that I
-> > (unintentionally) ignore it at this point, so it can't be that hard to
-> > reproduce. ;) That is usually during fstests however, and not a typical
-> > workload that I recall.
+On Tue, Oct 08, 2019 at 09:15:15AM +0200, Christoph Hellwig wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> I can't say I've seen it for a long time now - I want to say "years"
-> but I may well have simply missed it on the rare occasion it has
-> occurred and fstests hasn't captured it. i.e. fstests is supposed to
-> capture unusual things like this appearing in dmesg during a
-> test....
+> The srcmap is used to identify where the read is to be performed from.
+> It is passed to ->iomap_begin, which can fill it in if we need to read
+> data for partially written blocks from a different location than the
+> write target.  The srcmap is only supported for buffered writes so far.
 > 
-> > Of course, there's a difference between
-> > reproducing the basic condition and taking it to the point where it
-> > manifests into a problem.
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+> [hch: merged two patches, removed the IOMAP_F_COW flag, use iomap as
+>       srcmap if not set, adjust length down to srcmap end as well]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/dax.c               |  9 ++++--
+>  fs/ext2/inode.c        |  2 +-
+>  fs/ext4/inode.c        |  2 +-
+>  fs/gfs2/bmap.c         |  3 +-
+>  fs/iomap/apply.c       | 25 ++++++++++++----
+>  fs/iomap/buffered-io.c | 65 +++++++++++++++++++++++-------------------
+>  fs/iomap/direct-io.c   |  2 +-
+>  fs/iomap/fiemap.c      |  4 +--
+>  fs/iomap/seek.c        |  4 +--
+>  fs/iomap/swapfile.c    |  3 +-
+>  fs/xfs/xfs_iomap.c     |  9 ++++--
+>  include/linux/iomap.h  |  5 ++--
+>  12 files changed, 80 insertions(+), 53 deletions(-)
 > 
-> *nod*
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 6bf81f931de3..920105457c2c 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1090,7 +1090,7 @@ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
+>  
+>  static loff_t
+>  dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct block_device *bdev = iomap->bdev;
+>  	struct dax_device *dax_dev = iomap->dax_dev;
+> @@ -1248,6 +1248,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	unsigned long vaddr = vmf->address;
+>  	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+>  	struct iomap iomap = { 0 };
+
+Does this definition ^^^^^ need to be converted too?  You convert the
+one in iomap_apply()...
+
+> +	struct iomap srcmap = { .type = IOMAP_HOLE };
+
+...and at the same time I wonder if we ought to have:
+
+	/*
+	 * The @iomap and @srcmap parameters should be set to a hole
+	 * prior to calling ->iomap_begin.
+	 */
+	#define IOMAP_EMPTY_RECORD	{ .type = IOMAP_HOLE }
+
+...and later...
+
+	struct iomap srcmap = IOMAP_EMPTY_RECORD;
+
+..but meh, I'm not sure that adds much.
+
+>  	unsigned flags = IOMAP_FAULT;
+>  	int error, major = 0;
+>  	bool write = vmf->flags & FAULT_FLAG_WRITE;
+> @@ -1292,7 +1293,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	 * the file system block size to be equal the page size, which means
+>  	 * that we never have to deal with more than a single extent here.
+>  	 */
+> -	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
+> +	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap, &srcmap);
+
+->iomap_begin callers are never supposed to touch srcmap, right?
+Maybe we ought to check that srcmap.io_type == HOLE, at least until
+someone fixes this code to dax-copy the data from srcmap to iomap?
+
+(I don't like this open-coded iomap_apply here, but fixing that is for
+another day because I once tried to extract the iteration pieces and
+yeurghck...)
+
+The rest of the patch looks ok.
+
+--D
+
+>  	if (iomap_errp)
+>  		*iomap_errp = error;
+>  	if (error) {
+> @@ -1472,6 +1473,7 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	struct inode *inode = mapping->host;
+>  	vm_fault_t result = VM_FAULT_FALLBACK;
+>  	struct iomap iomap = { 0 };
+> +	struct iomap srcmap = { .type = IOMAP_HOLE };
+>  	pgoff_t max_pgoff;
+>  	void *entry;
+>  	loff_t pos;
+> @@ -1546,7 +1548,8 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	 * to look up our filesystem block.
+>  	 */
+>  	pos = (loff_t)xas.xa_index << PAGE_SHIFT;
+> -	error = ops->iomap_begin(inode, pos, PMD_SIZE, iomap_flags, &iomap);
+> +	error = ops->iomap_begin(inode, pos, PMD_SIZE, iomap_flags, &iomap,
+> +			&srcmap);
+>  	if (error)
+>  		goto unlock_entry;
+>  
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 7004ce581a32..467c13ff6b40 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -801,7 +801,7 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
+>  
+>  #ifdef CONFIG_FS_DAX
+>  static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+> -		unsigned flags, struct iomap *iomap)
+> +		unsigned flags, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	unsigned int blkbits = inode->i_blkbits;
+>  	unsigned long first_block = offset >> blkbits;
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 516faa280ced..abaaf7d96ca4 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3407,7 +3407,7 @@ static bool ext4_inode_datasync_dirty(struct inode *inode)
+>  }
+>  
+>  static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+> -			    unsigned flags, struct iomap *iomap)
+> +		unsigned flags, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
+>  	unsigned int blkbits = inode->i_blkbits;
+> diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+> index f63df54a08c6..516103248272 100644
+> --- a/fs/gfs2/bmap.c
+> +++ b/fs/gfs2/bmap.c
+> @@ -1149,7 +1149,8 @@ static inline bool gfs2_iomap_need_write_lock(unsigned flags)
+>  }
+>  
+>  static int gfs2_iomap_begin(struct inode *inode, loff_t pos, loff_t length,
+> -			    unsigned flags, struct iomap *iomap)
+> +			    unsigned flags, struct iomap *iomap,
+> +			    struct iomap *srcmap)
+>  {
+>  	struct gfs2_inode *ip = GFS2_I(inode);
+>  	struct metapath mp = { .mp_aheight = 1, };
+> diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+> index 54c02aecf3cd..484dd8eda861 100644
+> --- a/fs/iomap/apply.c
+> +++ b/fs/iomap/apply.c
+> @@ -23,8 +23,10 @@ loff_t
+>  iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  		const struct iomap_ops *ops, void *data, iomap_actor_t actor)
+>  {
+> -	struct iomap iomap = { 0 };
+> +	struct iomap iomap = { .type = IOMAP_HOLE };
+> +	struct iomap srcmap = { .type = IOMAP_HOLE };
+>  	loff_t written = 0, ret;
+> +	u64 end;
+>  
+>  	/*
+>  	 * Need to map a range from start position for length bytes. This can
+> @@ -38,7 +40,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	 * expose transient stale data. If the reserve fails, we can safely
+>  	 * back out at this point as there is nothing to undo.
+>  	 */
+> -	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
+> +	ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+>  	if (ret)
+>  		return ret;
+>  	if (WARN_ON(iomap.offset > pos))
+> @@ -50,15 +52,26 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	 * Cut down the length to the one actually provided by the filesystem,
+>  	 * as it might not be able to give us the whole size that we requested.
+>  	 */
+> -	if (iomap.offset + iomap.length < pos + length)
+> -		length = iomap.offset + iomap.length - pos;
+> +	end = iomap.offset + iomap.length;
+> +	if (srcmap.type != IOMAP_HOLE)
+> +		end = min(end, srcmap.offset + srcmap.length);
+> +	if (pos + length > end)
+> +		length = end - pos;
+>  
+>  	/*
+> -	 * Now that we have guaranteed that the space allocation will succeed.
+> +	 * Now that we have guaranteed that the space allocation will succeed,
+>  	 * we can do the copy-in page by page without having to worry about
+>  	 * failures exposing transient data.
+> +	 *
+> +	 * To support COW operations, we read in data for partially blocks from
+> +	 * the srcmap if the file system filled it in.  In that case we the
+> +	 * length needs to be limited to the earlier of the ends of the iomaps.
+> +	 * If the file system did not provide a srcmap we pass in the normal
+> +	 * iomap into the actors so that they don't need to have special
+> +	 * handling for the two cases.
+>  	 */
+> -	written = actor(inode, pos, length, data, &iomap);
+> +	written = actor(inode, pos, length, data, &iomap,
+> +			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
+>  
+>  	/*
+>  	 * Now the data has been copied, commit the range we've copied.  This
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ac1bbed71a9b..eb2c6d73a837 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -234,7 +234,7 @@ static inline bool iomap_block_needs_zeroing(struct inode *inode,
+>  
+>  static loff_t
+>  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iomap_readpage_ctx *ctx = data;
+>  	struct page *page = ctx->cur_page;
+> @@ -382,7 +382,7 @@ iomap_next_page(struct inode *inode, struct list_head *pages, loff_t pos,
+>  
+>  static loff_t
+>  iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iomap_readpage_ctx *ctx = data;
+>  	loff_t done, ret;
+> @@ -402,7 +402,7 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+>  			ctx->cur_page_in_bio = false;
+>  		}
+>  		ret = iomap_readpage_actor(inode, pos + done, length - done,
+> -				ctx, iomap);
+> +				ctx, iomap, srcmap);
+>  	}
+>  
+>  	return done;
+> @@ -582,7 +582,7 @@ iomap_read_page_sync(loff_t block_start, struct page *page, unsigned poff,
+>  
+>  static int
+>  __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+> -		struct page *page, struct iomap *iomap)
+> +		struct page *page, struct iomap *srcmap)
+>  {
+>  	struct iomap_page *iop = iomap_page_create(inode, page);
+>  	loff_t block_size = i_blocksize(inode);
+> @@ -605,7 +605,7 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  		    (to <= poff || to >= poff + plen))
+>  			continue;
+>  
+> -		if (iomap_block_needs_zeroing(inode, iomap, block_start)) {
+> +		if (iomap_block_needs_zeroing(inode, srcmap, block_start)) {
+>  			if (WARN_ON_ONCE(flags & IOMAP_WRITE_F_UNSHARE))
+>  				return -EIO;
+>  			zero_user_segments(page, poff, from, to, poff + plen);
+> @@ -614,7 +614,7 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  		}
+>  
+>  		status = iomap_read_page_sync(block_start, page, poff, plen,
+> -				iomap);
+> +				srcmap);
+>  		if (status)
+>  			return status;
+>  	} while ((block_start += plen) < block_end);
+> @@ -624,13 +624,15 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  
+>  static int
+>  iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+> -		struct page **pagep, struct iomap *iomap)
+> +		struct page **pagep, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	const struct iomap_page_ops *page_ops = iomap->page_ops;
+>  	struct page *page;
+>  	int status = 0;
+>  
+>  	BUG_ON(pos + len > iomap->offset + iomap->length);
+> +	if (srcmap != iomap)
+> +		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+
+This should be a WARN_ON(...) followed by return -EIO, right?
+
+>  
+>  	if (fatal_signal_pending(current))
+>  		return -EINTR;
+> @@ -648,13 +650,13 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>  		goto out_no_page;
+>  	}
+>  
+> -	if (iomap->type == IOMAP_INLINE)
+> -		iomap_read_inline_data(inode, page, iomap);
+> +	if (srcmap->type == IOMAP_INLINE)
+> +		iomap_read_inline_data(inode, page, srcmap);
+>  	else if (iomap->flags & IOMAP_F_BUFFER_HEAD)
+> -		status = __block_write_begin_int(page, pos, len, NULL, iomap);
+> +		status = __block_write_begin_int(page, pos, len, NULL, srcmap);
+>  	else
+>  		status = __iomap_write_begin(inode, pos, len, flags, page,
+> -				iomap);
+> +				srcmap);
+>  
+>  	if (unlikely(status))
+>  		goto out_unlock;
+> @@ -740,16 +742,16 @@ iomap_write_end_inline(struct inode *inode, struct page *page,
+>  }
+>  
+>  static int
+> -iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> -		unsigned copied, struct page *page, struct iomap *iomap)
+> +iomap_write_end(struct inode *inode, loff_t pos, unsigned len, unsigned copied,
+> +		struct page *page, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	const struct iomap_page_ops *page_ops = iomap->page_ops;
+>  	loff_t old_size = inode->i_size;
+>  	int ret;
+>  
+> -	if (iomap->type == IOMAP_INLINE) {
+> +	if (srcmap->type == IOMAP_INLINE) {
+>  		ret = iomap_write_end_inline(inode, page, iomap, pos, copied);
+> -	} else if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
+> +	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+>  		ret = block_write_end(NULL, inode->i_mapping, pos, len, copied,
+>  				page, NULL);
+>  	} else {
+> @@ -780,7 +782,7 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>  
+>  static loff_t
+>  iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iov_iter *i = data;
+>  	long status = 0;
+> @@ -814,7 +816,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  			break;
+>  		}
+>  
+> -		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
+> +		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap,
+> +				srcmap);
+>  		if (unlikely(status))
+>  			break;
+>  
+> @@ -825,8 +828,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  
+>  		flush_dcache_page(page);
+>  
+> -		status = iomap_write_end(inode, pos, bytes, copied, page,
+> -				iomap);
+> +		status = iomap_write_end(inode, pos, bytes, copied, page, iomap,
+> +				srcmap);
+>  		if (unlikely(status < 0))
+>  			break;
+>  		copied = status;
+> @@ -879,7 +882,7 @@ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+>  
+>  static loff_t
+>  iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	long status = 0;
+>  	ssize_t written = 0;
+> @@ -888,7 +891,7 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  	if (!(iomap->flags & IOMAP_F_SHARED))
+>  		return length;
+>  	/* don't bother with holes or unwritten extents */
+> -	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
+> +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+>  		return length;
+>  
+>  	do {
+> @@ -897,11 +900,12 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  		struct page *page;
+>  
+>  		status = iomap_write_begin(inode, pos, bytes,
+> -				IOMAP_WRITE_F_UNSHARE, &page, iomap);
+> +				IOMAP_WRITE_F_UNSHARE, &page, iomap, srcmap);
+>  		if (unlikely(status))
+>  			return status;
+>  
+> -		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+> +		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap,
+> +				srcmap);
+>  		if (unlikely(status <= 0)) {
+>  			if (WARN_ON_ONCE(status == 0))
+>  				return -EIO;
+> @@ -940,19 +944,19 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+>  EXPORT_SYMBOL_GPL(iomap_file_unshare);
+>  
+>  static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+> -		unsigned bytes, struct iomap *iomap)
+> +		unsigned bytes, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct page *page;
+>  	int status;
+>  
+> -	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
+> +	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap, srcmap);
+>  	if (status)
+>  		return status;
+>  
+>  	zero_user(page, offset, bytes);
+>  	mark_page_accessed(page);
+>  
+> -	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+> +	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
+>  }
+>  
+>  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+> @@ -964,14 +968,14 @@ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+>  
+>  static loff_t
+>  iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	bool *did_zero = data;
+>  	loff_t written = 0;
+>  	int status;
+>  
+>  	/* already zeroed?  we're done. */
+> -	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
+> +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+>  		return count;
+>  
+>  	do {
+> @@ -983,7 +987,8 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+>  		if (IS_DAX(inode))
+>  			status = iomap_dax_zero(pos, offset, bytes, iomap);
+>  		else
+> -			status = iomap_zero(inode, pos, offset, bytes, iomap);
+> +			status = iomap_zero(inode, pos, offset, bytes, iomap,
+> +					srcmap);
+>  		if (status < 0)
+>  			return status;
+>  
+> @@ -1033,7 +1038,7 @@ EXPORT_SYMBOL_GPL(iomap_truncate_page);
+>  
+>  static loff_t
+>  iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct page *page = data;
+>  	int ret;
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 1fc28c2da279..e3ccbf7daaae 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -358,7 +358,7 @@ iomap_dio_inline_actor(struct inode *inode, loff_t pos, loff_t length,
+>  
+>  static loff_t
+>  iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iomap_dio *dio = data;
+>  
+> diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+> index f26fdd36e383..690ef2d7c6c8 100644
+> --- a/fs/iomap/fiemap.c
+> +++ b/fs/iomap/fiemap.c
+> @@ -44,7 +44,7 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+>  
+>  static loff_t
+>  iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct fiemap_ctx *ctx = data;
+>  	loff_t ret = length;
+> @@ -111,7 +111,7 @@ EXPORT_SYMBOL_GPL(iomap_fiemap);
+>  
+>  static loff_t
+>  iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	sector_t *bno = data, addr;
+>  
+> diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+> index c04bad4b2b43..89f61d93c0bc 100644
+> --- a/fs/iomap/seek.c
+> +++ b/fs/iomap/seek.c
+> @@ -119,7 +119,7 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
+>  
+>  static loff_t
+>  iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
+> -		      void *data, struct iomap *iomap)
+> +		      void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	switch (iomap->type) {
+>  	case IOMAP_UNWRITTEN:
+> @@ -165,7 +165,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_hole);
+>  
+>  static loff_t
+>  iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
+> -		      void *data, struct iomap *iomap)
+> +		      void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	switch (iomap->type) {
+>  	case IOMAP_HOLE:
+> diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+> index 152a230f668d..a648dbf6991e 100644
+> --- a/fs/iomap/swapfile.c
+> +++ b/fs/iomap/swapfile.c
+> @@ -76,7 +76,8 @@ static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+>   * distinction between written and unwritten extents.
+>   */
+>  static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+> -		loff_t count, void *data, struct iomap *iomap)
+> +		loff_t count, void *data, struct iomap *iomap,
+> +		struct iomap *srcmap)
+>  {
+>  	struct iomap_swapfile_info *isi = data;
+>  	int error;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index c0a492353826..016adcd7dd66 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -928,7 +928,8 @@ xfs_file_iomap_begin(
+>  	loff_t			offset,
+>  	loff_t			length,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -1154,7 +1155,8 @@ xfs_seek_iomap_begin(
+>  	loff_t			offset,
+>  	loff_t			length,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -1240,7 +1242,8 @@ xfs_xattr_iomap_begin(
+>  	loff_t			offset,
+>  	loff_t			length,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 24c784e44274..37af5f9dc722 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -127,7 +127,8 @@ struct iomap_ops {
+>  	 * The actual length is returned in iomap->length.
+>  	 */
+>  	int (*iomap_begin)(struct inode *inode, loff_t pos, loff_t length,
+> -			unsigned flags, struct iomap *iomap);
+> +			unsigned flags, struct iomap *iomap,
+> +			struct iomap *srcmap);
+>  
+>  	/*
+>  	 * Commit and/or unreserve space previous allocated using iomap_begin.
+> @@ -143,7 +144,7 @@ struct iomap_ops {
+>   * Main iomap iterator function.
+>   */
+>  typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+> -		void *data, struct iomap *iomap);
+> +		void *data, struct iomap *iomap, struct iomap *srcmap);
+>  
+>  loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+>  		unsigned flags, const struct iomap_ops *ops, void *data,
+> -- 
+> 2.20.1
 > 
-> > > But here's the rub: it's not actually the end of the world because
-> > > the reservation doesn't actually determine how much of the log is
-> > > currently being used by running transactions - the reservation is
-> > > for a maximal rolling iteration of a permanent transaction, not the
-> > > initial transaction will be running. Hence if we overrun
-> > > occassionally we don't immediately run out of log space and corrupt
-> > > the log.
-> > > 
-> > 
-> > Ok, that much is evident from the amount of time this mechanism has been
-> > in place without any notable issues.
-> > 
-> > > Yes, if none of the rolling transactions complete and they all need
-> > > to use their entire reservation, and the tail of the log cannot be
-> > > moved forward because it is pinned by one of the transactions that
-> > > is running, then we'll likely get a log hang on a regrant on the
-> > > write head. But if any of the transactions don't use all of their
-> > > reservation, then the overrun gets soaked up by the unused parts of
-> > > the transactions that are completed and returned to reservation
-> > > head, and nobody even notices taht there was a temporary overrun of
-> > > the grant head space.
-> > > 
-> > 
-> > Ok, I didn't expect this to be some catastrophic problem or really a
-> > problem with your patch simply based on the lifetime of the code and how
-> > the grant heads are actually used. I was going to suggest an assert or
-> > something to detect whether batching behavior as a side effect of the
-> > commit throttle would ever increase likelihood of this situation, but it
-> > looks like the grant verify function somewhat serves that purpose
-> > already.
-> 
-> Yeah - xlog_verify_grant_tail() will the report reservation
-> overruns, but the serious log space problems (i.e. head overwritting
-> the tail) are detected by xlog_verify_tail_lsn() when we stamp the
-> tail_lsn into the current iclog header. That's still done under the
-> icloglock and the AIL lock, so the comparison of the tail with the
-> current log head is still completely serialised.
-> 
-> > I'd _prefer_ to see something, at least in DEBUG mode, that indicates
-> > the frequency of the fundamental incorrect accounting condition as
-> > opposed to just the side effect of blowing the tail (because the latter
-> > depends on other difficult to reproduce factors), but I'd have to think
-> > about that some more as it would need to balance against normal/expected
-> > execution flow. Thanks for the background.
-> 
-> You can test that just by removing the XLOG_TAIL_WARN flag setting,
-> then it will warn on every reservation overrun rather than just the
-> first.
-> 
-
-That's not quite what I'm after. That just removes the oneshot nature of
-the existing check. The current debug check looks for a side effect of
-the current algorithm in the form of overrunning the tail. What I would
-like to see, somehow or another, is something that provides earlier and
-more useful information on the frequency/scale of occurrence where
-multiple reservations have been made based on the same grant baseline.
-
-This is not so much an error check so not something that should be an
-assert or warning, but rather more of a metric that provides a base for
-comparison whenever we might have code changes or workloads that
-potentially change this behavior. For example, consider a debug mode
-stat or sysfs file that could be used to dump out a counter of "same
-value" grant head samples after a benchmark workload or fstests run. The
-fact that this value might go up or down is not necessarily a problem.
-But that would provide some debug mode data to identify and analyze
-potentially unintended side effects like transient spikes in concurrent
-grant head checks due to blocking/scheduling changes in log reservation
-tasks.
-
-See the appended RFC for a quick idea of what I mean. This is slightly
-racy, but I think conservative enough to provide valid values with
-respect to already racy reservation implementation. On my slow 4xcpu vm,
-I see occasional sample counts of 2 running a -p8 fsstress. If I stick a
-smallish delay in xfs_log_reserve(), the frequency of the output
-increases and I see occasional bumps to 3, a spike of 8 in one case,
-etc. Of course I'd probably factor the atomic calls into DEBUG only
-inline functions that can be compiled out on production kernels and
-replace the tracepoint with a global counter (exported via stats or
-sysfs knob), but this just illustrates the idea. The global counter
-could also be replaced with (or kept in addition to) something that
-tracks a max concurrency value if that is more useful. Any thoughts on
-something like this?
-
-> > > Hence occasional overruns on the reservation head before they start
-> > > blocking isn't really a problem in practice because the probability
-> > > of all the transaction reservation of all transactions running being
-> > > required to make forwards progress is extremely small.
-> > > 
-> > > Basically, we gave up "perfect reservation space grant accounting"
-> > > because performance was extremely important and risk of log hangs as
-> > > a result of overruns was considered to be extremely low and worth
-> > > taking for the benefits the algorithm provided. This was just a
-> > > simple, pragmatic risk based engineering decision.
-> > > 
-> > 
-> > FWIW, the comment for xlog_verify_tail() also suggests the potential for
-> > false positives and references a panic tag, which all seems kind of
-> > erratic and misleading compared to what you explain here.
-> 
-> Well, it's fundamentally an unserialised check, so it can race with
-> other reservation grants, commits that release grant space and tail
-> lsn updates. Hence it's not a 100% reliable debug check.
-> 
-
-Right. Yet there is a panic knob...
-
-> It also used to be run at all times, not just under
-> XFS_CONFIG_DEBUG=y, which is why it has a panic tag associated with
-> it. When we first deployed it, we weren't 100% sure there weren't
-> customer workloads that would trip over this and hang the log, so
-> we gave ourselves a way of triggering kernel dumps the instant an
-> overrun was detected. Hence a site that had log hangs with this
-> message in the logs could turn on the panic tag and we'd get a
-> kernel dump to analyse...
-> 
-
-Ok, makes sense. This kind of speaks to the earlier point around having
-more useful data. While this isn't necessarily a problem right now, we
-have no real data to tell us whether some particular code change alters
-this behavior. If this was enough of a concern when the change was first
-put in place to insert a panic hook, then it stands to reason it's
-something we should at least be cognizant of when making changes that
-could impact its behavior.
-
-> Since then, this code has been relegated to debug code but the panic
-> tag still exists. It could be turned back into a ASSERT now, but
-> it's still useful the way it is as it means debug kernels don't fall
-> over the moment a spurious overrun occurs...
-> 
-
-Yeah, ISTM the panic bit could be removed at this point. The warning (as
-opposed to an assert) is probably reasonable so long as the check itself
-is racy so as to not cause false positive panics with fatal asserts
-enabled.
-
-Brian
-
---- 8< ---
-
-RFC: crude concurrency stat on reserve grant head
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index a2beee9f74da..1d3056176e6e 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -175,6 +175,7 @@ xlog_grant_head_init(
- 	xlog_assign_grant_head(&head->grant, 1, 0);
- 	INIT_LIST_HEAD(&head->waiters);
- 	spin_lock_init(&head->lock);
-+	atomic64_set(&head->sample_cnt, 0);
- }
- 
- STATIC void
-@@ -446,6 +447,7 @@ xfs_log_reserve(
- 	struct xlog_ticket	*tic;
- 	int			need_bytes;
- 	int			error = 0;
-+	int64_t			sample_cnt;
- 
- 	ASSERT(client == XFS_TRANSACTION || client == XFS_LOG);
- 
-@@ -465,13 +467,19 @@ xfs_log_reserve(
- 
- 	error = xlog_grant_head_check(log, &log->l_reserve_head, tic,
- 				      &need_bytes);
-+	atomic64_inc(&log->l_reserve_head.sample_cnt);
- 	if (error)
- 		goto out_error;
- 
-+	sample_cnt = atomic64_xchg(&log->l_reserve_head.sample_cnt, 0);
- 	xlog_grant_add_space(log, &log->l_reserve_head.grant, need_bytes);
- 	xlog_grant_add_space(log, &log->l_write_head.grant, need_bytes);
- 	trace_xfs_log_reserve_exit(log, tic);
- 	xlog_verify_grant_tail(log);
-+
-+	if (sample_cnt > 1)
-+		trace_printk("%d: %lld\n", __LINE__, sample_cnt);
-+
- 	return 0;
- 
- out_error:
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index b880c23cb6e4..62e4949f91c4 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -339,6 +339,7 @@ struct xlog_grant_head {
- 	spinlock_t		lock ____cacheline_aligned_in_smp;
- 	struct list_head	waiters;
- 	atomic64_t		grant;
-+	atomic64_t		sample_cnt;
- };
- 
- /*
