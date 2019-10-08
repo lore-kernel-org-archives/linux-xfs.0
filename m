@@ -2,117 +2,138 @@ Return-Path: <SRS0=tkkj=YB=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF148C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:16:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 45EC5C10F14
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:37:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A7824217D7
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:16:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IkQl5Ad4"
+	by mail.kernel.org (Postfix) with ESMTP id 287FB206C2
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:37:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730307AbfJHHQY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 03:16:24 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:53668 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730057AbfJHHQY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 03:16:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=0nh3bL96qzPReW4fX5N7GDAdMCerePYLFTH+BhkLkIQ=; b=IkQl5Ad4R+1aiHjo9fXLGbyiz7
-        ZbYsRFgqjL/WvdzMZAcmA6zi2/FtyYBUiIHYuRfkZkgMQrdlvNB/jiqnyhEJr3kbObPu11bGlI7VP
-        55nWIWIga1Hfn0FZixojggLBEIANirw7aziKsATEdqsNyH/22PpDwX142wmuxb4Hg1t2cK4ggU/X8
-        dnlZBBhxxsRVomYd/ojyC6xFj6GaN0SIZQQcHq1e0CghDTybsTpFq2GMxZXSsZlSlFD9e6J2fxcTn
-        R9736myodb8mOnhvNOEbGEmIIRIQ8mYPvg5su3i7u9XhUpQ8JMboMc2QwQagr2+jzJHE8s6seJFcl
-        qHB1uoug==;
-Received: from [2001:4bb8:188:141c:c70:4a89:bc61:2] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iHjjL-0006Mj-FX; Tue, 08 Oct 2019 07:16:23 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>
-Subject: [PATCH 20/20] xfs: improve the IOMAP_NOWAIT check for COW inodes
-Date:   Tue,  8 Oct 2019 09:15:27 +0200
-Message-Id: <20191008071527.29304-21-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191008071527.29304-1-hch@lst.de>
-References: <20191008071527.29304-1-hch@lst.de>
+        id S1730377AbfJHHhP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 03:37:15 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56771 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730367AbfJHHhO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 03:37:14 -0400
+Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id E108143E00B;
+        Tue,  8 Oct 2019 18:37:10 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iHk3Q-0005PG-T7; Tue, 08 Oct 2019 18:37:08 +1100
+Date:   Tue, 8 Oct 2019 18:37:08 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/11] iomap: copy the xfs writeback code to iomap.c
+Message-ID: <20191008073708.GG16973@dread.disaster.area>
+References: <20191006154608.24738-1-hch@lst.de>
+ <20191006154608.24738-3-hch@lst.de>
+ <20191007214353.GZ16973@dread.disaster.area>
+ <20191008063436.GA30465@lst.de>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191008063436.GA30465@lst.de>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=C152E18BS4FYMT0GleMA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Only bail out once we know that a COW allocation is actually required,
-similar to how we handle normal data fork allocations.
+On Tue, Oct 08, 2019 at 08:34:36AM +0200, Christoph Hellwig wrote:
+> On Tue, Oct 08, 2019 at 08:43:53AM +1100, Dave Chinner wrote:
+> > > +static int
+> > > +iomap_ioend_compare(void *priv, struct list_head *a, struct list_head *b)
+> > > +{
+> > > +	struct iomap_ioend *ia, *ib;
+> > > +
+> > > +	ia = container_of(a, struct iomap_ioend, io_list);
+> > > +	ib = container_of(b, struct iomap_ioend, io_list);
+> > > +	if (ia->io_offset < ib->io_offset)
+> > > +		return -1;
+> > > +	else if (ia->io_offset > ib->io_offset)
+> > > +		return 1;
+> > > +	return 0;
+> > 
+> > No need for the else here.
+> 
+> That is usually my comment :)  But in this case it is just copied over
+> code, so I didn't want to do cosmetic changes.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_iomap.c | 23 +++++------------------
- 1 file changed, 5 insertions(+), 18 deletions(-)
+*nod*
 
-diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-index cc3d8fa011fc..46dee9c9e6ef 100644
---- a/fs/xfs/xfs_iomap.c
-+++ b/fs/xfs/xfs_iomap.c
-@@ -693,15 +693,8 @@ xfs_ilock_for_iomap(
- 	 * COW writes may allocate delalloc space or convert unwritten COW
- 	 * extents, so we need to make sure to take the lock exclusively here.
- 	 */
--	if (xfs_is_cow_inode(ip) && is_write) {
--		/*
--		 * FIXME: It could still overwrite on unshared extents and not
--		 * need allocation.
--		 */
--		if (flags & IOMAP_NOWAIT)
--			return -EAGAIN;
-+	if (xfs_is_cow_inode(ip) && is_write)
- 		mode = XFS_ILOCK_EXCL;
--	}
- 
- 	/*
- 	 * Extents not yet cached requires exclusive access, don't block.  This
-@@ -760,12 +753,6 @@ xfs_direct_write_iomap_begin(
- 	if (XFS_FORCED_SHUTDOWN(mp))
- 		return -EIO;
- 
--	/*
--	 * Lock the inode in the manner required for the specified operation and
--	 * check for as many conditions that would result in blocking as
--	 * possible. This removes most of the non-blocking checks from the
--	 * mapping code below.
--	 */
- 	error = xfs_ilock_for_iomap(ip, flags, &lockmode);
- 	if (error)
- 		return error;
-@@ -775,11 +762,11 @@ xfs_direct_write_iomap_begin(
- 	if (error)
- 		goto out_unlock;
- 
--	/*
--	 * Break shared extents if necessary. Checks for non-blocking IO have
--	 * been done up front, so we don't need to do them here.
--	 */
- 	if (imap_needs_cow(ip, flags, &imap, nimaps)) {
-+		error = -EAGAIN;
-+		if (flags & IOMAP_NOWAIT)
-+			goto out_unlock;
-+
- 		/* may drop and re-acquire the ilock */
- 		error = xfs_reflink_allocate_cow(ip, &imap, &cmap, &shared,
- 				&lockmode, flags & IOMAP_DIRECT);
+> > > +	/*
+> > > +	 * Given that we do not allow direct reclaim to call us, we should
+> > > +	 * never be called while in a filesystem transaction.
+> > > +	 */
+> > > +	if (WARN_ON_ONCE(current->flags & PF_MEMALLOC_NOFS))
+> > > +		goto redirty;
+> > 
+> > Is this true for all expected callers of these functions rather than
+> > just XFS? i.e. PF_MEMALLOC_NOFS is used by transactions in XFS to
+> > prevent transaction context recursion, but other filesystems do not
+> > do this..
+> > 
+> > FWIW, I can also see that this is going to cause us problems if high
+> > level code starts using memalloc_nofs_save() and then calling
+> > filemap_datawrite() and friends...
+> 
+> We have the check for direct reclaim just above, so any file system
+> using this iomap code will not allow direct reclaim.  Which I think is
+> a very good idea given that direct reclaim through the file system is
+> a very bad idea.
+
+*nod*
+
+> That leaves with only the filemap_datawrite case, which so far is
+> theoretical.  If that ever becomes a think it is very obvious and we
+> can just remove the debug check.
+
+I expect it will be a thing sooner rather than later...
+
+> > > +iomap_writepage(struct page *page, struct writeback_control *wbc,
+> > > +		struct iomap_writepage_ctx *wpc,
+> > > +		const struct iomap_writeback_ops *ops)
+> > > +{
+> > > +	int ret;
+> > > +
+> > > +	wpc->ops = ops;
+> > > +	ret = iomap_do_writepage(page, wbc, wpc);
+> > > +	if (!wpc->ioend)
+> > > +		return ret;
+> > > +	return iomap_submit_ioend(wpc, wpc->ioend, ret);
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(iomap_writepage);
+> > 
+> > Can we kill ->writepage for iomap users, please? After all, we don't
+> > mostly don't allow memory reclaim to do writeback of dirty pages,
+> > and that's the only caller of ->writepage.
+> 
+> I'd rather not do this as part of this move.  But if you could expedite
+> your patch to kill ->writepage from the large block size support patch
+> and submit it ASAP on top of this series I would be very much in favor.
+
+Ok, looks like the usual of more follow up patches on top of these.
+I'm kinda waiting for these to land before porting the large block
+size stuff on top of it...
+
+Cheers,
+
+Dave.
 -- 
-2.20.1
-
+Dave Chinner
+david@fromorbit.com
