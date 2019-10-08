@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 57447ECE58C
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 01:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3ABF3C47404
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 01:03:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2E1C821479
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 01:03:16 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0F34421479
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 01:03:23 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="e7WRy+jq"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PFRduCy4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729327AbfJHBDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 7 Oct 2019 21:03:15 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:57750 "EHLO
+        id S1729375AbfJHBDW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 7 Oct 2019 21:03:22 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:57848 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728983AbfJHBDP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 21:03:15 -0400
+        with ESMTP id S1728983AbfJHBDW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 7 Oct 2019 21:03:22 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x980xNV5190794;
-        Tue, 8 Oct 2019 01:03:13 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x980xNir190797;
+        Tue, 8 Oct 2019 01:03:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=bF4y32Oh22uUHynBlfNeyYOAi2KI9yl111Hjs4N6mRE=;
- b=e7WRy+jqHuj9dYTnzI/SbajaxaqfHDaeKNDpOX1o4aBBdysn0o50RngQNI67ibR3CK8b
- YnZqjKGHqNKsfnCQ9jw0M+6+w2WToCLoK1q5llJk7jTkWnzci6c4FMgY+92KVxBvUpo+
- y3RzAThJZBM635FLonB2ptUuNzXvJW/3d6og/ebEzNIrCuyqUwO6L4i3nkcMedu+MJbw
- WCNDbhnQc8e1LOMXNkwC7ZUxizNe86HoNZ5eq01Ni5deapeUIdmixkkX3PNUwbrEu51X
- 1cPKr/XO2hUWOWeEWQYEDOtIpCMSLqZSGzAnSPsBrWkupRbuLBmO4VuR5MEFOnKsdOZy +g== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2vek4qa4fp-1
+ bh=/P4HlNzecQYTk7oidI45U4323OgpjZLmg406TAvtVBU=;
+ b=PFRduCy4HK6MwCBv+arM7B7xRAMxidDHycKxW2qJ6sVsZjSBgmsj1l8R1wlvifTzorzk
+ eR4Uabkkwdt5j1wSaU5u8ZZYjQ5ynsjr4XX4bGJIP7SUnpgzG2dZ7fk85/K3Q80yPgF1
+ fHkvnfj6zCQBc/pQ077Y4hS92wjOj4NWaoJi+86H+Ns27Is7Jhn6FwgAI1QrWCRInP+L
+ nrurs7XyB1fo0zT6MrdZ4ieOlFF4Xp7t4H/Pg+ncngSBEUpBIOq/ktO4Ojs9006XT1/n
+ ArEKn6LtlpuGnShY8S/GnZHaCWvFf8ZPx+jBzGIj2TYOD2t5IaCpyWRrhIzIX5K+xEGS Yw== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2vek4qa4fw-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Oct 2019 01:03:13 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x980wZ0A025750;
-        Tue, 8 Oct 2019 01:03:13 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2vgef9mw9h-1
+        Tue, 08 Oct 2019 01:03:20 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x980wKDw112805;
+        Tue, 8 Oct 2019 01:03:19 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2vgeuwnbpq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 08 Oct 2019 01:03:13 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9813C9R010277;
-        Tue, 8 Oct 2019 01:03:12 GMT
+        Tue, 08 Oct 2019 01:03:19 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9813IMi003854;
+        Tue, 8 Oct 2019 01:03:18 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 07 Oct 2019 18:03:12 -0700
-Subject: [PATCH 1/4] xfs/196: check for delalloc blocks after pwrite
+        with ESMTP ; Mon, 07 Oct 2019 18:03:18 -0700
+Subject: [PATCH 2/4] xfs/{088, 089,
+ 091}: redirect stderr when writing to corrupt fs
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     guaneryu@gmail.com, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Date:   Mon, 07 Oct 2019 18:03:11 -0700
-Message-ID: <157049659135.2397321.4055705884999858018.stgit@magnolia>
+Date:   Mon, 07 Oct 2019 18:03:17 -0700
+Message-ID: <157049659754.2397321.4949328613812405852.stgit@magnolia>
 In-Reply-To: <157049658503.2397321.13914737091290093511.stgit@magnolia>
 References: <157049658503.2397321.13914737091290093511.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,28 +81,55 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-This test depends on the pwrite creating delalloc blocks, which doesn't
-happen if the scratch fs is mounted in dax mode (or has an extent size
-hint applied).  Therefore, check for delalloc blocks and _notrun if we
-didn't get any.
+These tests primarily check that writes to a corrupt fs don't take down
+the system, and that running repair will fix them.  Therefore, redirect
+stderr to seqres.full so that we don't fail these tests in DAX mode.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- tests/xfs/196 |    2 ++
- 1 file changed, 2 insertions(+)
+ tests/xfs/088 |    2 +-
+ tests/xfs/089 |    2 +-
+ tests/xfs/091 |    2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
 
 
-diff --git a/tests/xfs/196 b/tests/xfs/196
-index 5dc28670..406146c5 100755
---- a/tests/xfs/196
-+++ b/tests/xfs/196
-@@ -50,6 +50,8 @@ bytes=$((64 * 1024))
+diff --git a/tests/xfs/088 b/tests/xfs/088
+index 74b45163..d8ca877a 100755
+--- a/tests/xfs/088
++++ b/tests/xfs/088
+@@ -80,7 +80,7 @@ echo "+ mount image && modify files"
+ if _try_scratch_mount >> $seqres.full 2>&1; then
  
- # create sequential delayed allocation
- $XFS_IO_PROG -f -c "pwrite 0 $bytes" $file >> $seqres.full 2>&1
-+$XFS_IO_PROG -c "bmap -elpv" $file | grep -q delalloc || \
-+	_notrun "Unable to create delayed allocations"
+ 	for x in `seq 1 64`; do
+-		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full
++		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full 2>> $seqres.full
+ 	done
+ 	umount "${SCRATCH_MNT}"
+ fi
+diff --git a/tests/xfs/089 b/tests/xfs/089
+index bcbc6363..ad980769 100755
+--- a/tests/xfs/089
++++ b/tests/xfs/089
+@@ -80,7 +80,7 @@ echo "+ mount image && modify files"
+ if _try_scratch_mount >> $seqres.full 2>&1; then
  
- # Enable write drops. All buffered writes are dropped from this point on.
- _scratch_inject_error "drop_writes" 1
+ 	for x in `seq 1 64`; do
+-		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full
++		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full 2>> $seqres.full
+ 	done
+ 	umount "${SCRATCH_MNT}"
+ fi
+diff --git a/tests/xfs/091 b/tests/xfs/091
+index be56d8ae..37c07a52 100755
+--- a/tests/xfs/091
++++ b/tests/xfs/091
+@@ -80,7 +80,7 @@ echo "+ mount image && modify files"
+ if _try_scratch_mount >> $seqres.full 2>&1; then
+ 
+ 	for x in `seq 1 64`; do
+-		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full
++		$XFS_IO_PROG -f -c "pwrite -S 0x62 0 ${blksz}" "${TESTFILE}.${x}" >> $seqres.full 2>> $seqres.full
+ 	done
+ 	umount "${SCRATCH_MNT}"
+ fi
 
