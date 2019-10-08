@@ -4,50 +4,50 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 53492C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:00:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A32C1C4360C
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:01:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D74D21721
-	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:00:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 723D921721
+	for <linux-xfs@archiver.kernel.org>; Tue,  8 Oct 2019 07:01:30 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="LE2p20Zi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Pd2AlDdr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729740AbfJHHA4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 03:00:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:50174 "EHLO
+        id S1730115AbfJHHBa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 03:01:30 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:50198 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729693AbfJHHA4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 03:00:56 -0400
+        with ESMTP id S1729693AbfJHHB3 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 03:01:29 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=vYJQ60I/CIdmk2+j28VtQwfOkVuDtxgRlxs/CxBtiKs=; b=LE2p20Zi9zm7Feo3sG9a/6zkd
-        PqQ6ZW25mesYVEoYkrsqY8gZFgNwinOxrqj26iILqR/4v5pNjq8f2Yvppx2qXcVjXO2Z6TMPKQj82
-        cNxe6l0sTAG78SbSIVJlGo6G7iS6tb86XRZOXI4a5Bg0VG3/J2WAiFFsnh+jVGURo3vmyL+GkcETD
-        UofVtjMu2TM8p2s54agU7Lt7AU8c2n0+jCtw3ftRxl7Ua5d62HDmc7+aaACoezTeOmWdLOMl2+dsd
-        ItTbHjRUOuxpYz8+oeOQHiualyamDUk/ZyuQ1DUyPmvRBgy/lpOjLX1vWaZtyJftqD/sjkGksHaVj
-        U+6Bv6VGg==;
+         bh=O7eFktMssjHYs9w+Lb2i2FfNl7Qsj/YhDvX2Tr0EAV0=; b=Pd2AlDdrj1ZUsDyKBEol+tW98
+        TOYCzfGgfitpzPgu9eskSFJg9UUIog1QX7t28d/4iCVMzFAo/9m/WoqdVZsZ+1D6I4yJA/d2jPG8K
+        RUdonlaBQHWPSHNWYC6YpZMjnyCXJFTLbUeXleN2a4xtjLfs7UF/nwenf+pZXUnpZJzc0+jdA7fWw
+        jg0JXJ/IBoNBxwZ+ijHUyuIoEorqw93XJmbbeRfVvIehF+ToOaJPOTZQlVZa8cXU4DSluuQZenb/T
+        3mA2LqWVR6eW2d4amaKOPJAz1t27w+oPlsvFBHA1u76I1Lhiby9LcSO0Ny9d5+Sbq/ynzBRnLF9Fl
+        OlOW+9IoA==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iHjUO-00071V-Dp; Tue, 08 Oct 2019 07:00:56 +0000
-Date:   Tue, 8 Oct 2019 00:00:56 -0700
+        id 1iHjUu-000740-Ts; Tue, 08 Oct 2019 07:01:28 +0000
+Date:   Tue, 8 Oct 2019 00:01:28 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH v2 3/3] xfs: move local to extent inode logging into bmap
- helper
-Message-ID: <20191008070056.GC21805@infradead.org>
-References: <20191007131938.23839-1-bfoster@redhat.com>
- <20191007131938.23839-4-bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 1/4] xfs/196: check for delalloc blocks after pwrite
+Message-ID: <20191008070128.GD21805@infradead.org>
+References: <157049658503.2397321.13914737091290093511.stgit@magnolia>
+ <157049659135.2397321.4055705884999858018.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191007131938.23839-4-bfoster@redhat.com>
+In-Reply-To: <157049659135.2397321.4055705884999858018.stgit@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -55,18 +55,15 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 07, 2019 at 09:19:38AM -0400, Brian Foster wrote:
-> The callers of xfs_bmap_local_to_extents_empty() log the inode
-> external to the function, yet this function is where the on-disk
-> format value is updated. Push the inode logging down into the
-> function itself to help prevent future mistakes.
+On Mon, Oct 07, 2019 at 06:03:11PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Note that internal bmap callers track the inode logging flags
-> independently and thus may log the inode core twice due to this
-> change. This is harmless, so leave this code around for consistency
-> with the other attr fork conversion functions.
+> This test depends on the pwrite creating delalloc blocks, which doesn't
+> happen if the scratch fs is mounted in dax mode (or has an extent size
+> hint applied).  Therefore, check for delalloc blocks and _notrun if we
+> didn't get any.
 > 
-> Signed-off-by: Brian Foster <bfoster@redhat.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Looks good,
 
