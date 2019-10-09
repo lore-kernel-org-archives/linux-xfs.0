@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A22ECE58D
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E3CBECE58E
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B48F320B7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1B4E420B7C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729575AbfJILbL (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 07:31:11 -0400
+        id S1730339AbfJILbQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 07:31:16 -0400
 Received: from icp-osb-irony-out3.external.iinet.net.au ([203.59.1.153]:33473
         "EHLO icp-osb-irony-out3.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730111AbfJILbL (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 07:31:11 -0400
+        by vger.kernel.org with ESMTP id S1730111AbfJILbQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 07:31:16 -0400
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BRAABxxJ1d/0e30XYNWRwBAQEBAQc?=
- =?us-ascii?q?BAREBBAQBAYFqBAEBCwGEOYQjjygBAQEDBosuhR+MDwkBAQEBAQEBAQE3AQG?=
- =?us-ascii?q?EOwMCAoJyNwYOAgwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiYCAkcQBhO?=
- =?us-ascii?q?FGa9vdX8zGoosgQwoAYFkikF4gQeEYYdSglgEjHsKgi83hjxDcZVogiyVNAy?=
- =?us-ascii?q?CLotnAxCLDC2ECos1mgeBe00uCoMnUJBGZ5EUAQE?=
-X-IPAS-Result: =?us-ascii?q?A2BRAABxxJ1d/0e30XYNWRwBAQEBAQcBAREBBAQBAYFqB?=
- =?us-ascii?q?AEBCwGEOYQjjygBAQEDBosuhR+MDwkBAQEBAQEBAQE3AQGEOwMCAoJyNwYOA?=
- =?us-ascii?q?gwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiYCAkcQBhOFGa9vdX8zGoosg?=
- =?us-ascii?q?QwoAYFkikF4gQeEYYdSglgEjHsKgi83hjxDcZVogiyVNAyCLotnAxCLDC2EC?=
- =?us-ascii?q?os1mgeBe00uCoMnUJBGZ5EUAQE?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AaAABxxJ1d/0e30XYNWRsBAQEBAQE?=
+ =?us-ascii?q?BBQEBAREBAQMDAQEBgWoDAQEBCwGEOYQjjygBAQEDBosuhR+MDwkBAQEBAQE?=
+ =?us-ascii?q?BAQE3AQGEOwMCAoJyNwYOAgwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiY?=
+ =?us-ascii?q?CAkcQBhOFGa9vdX8zGoosgQwoAYFkikF4gQeBEYNQh1KCWASNBYIvN4Y8Q5Z?=
+ =?us-ascii?q?ZgiyVNAyCLotnAxCLDC2ECqU8gXtNLgqDJ1CBfxeOMGeRFAEB?=
+X-IPAS-Result: =?us-ascii?q?A2AaAABxxJ1d/0e30XYNWRsBAQEBAQEBBQEBAREBAQMDA?=
+ =?us-ascii?q?QEBgWoDAQEBCwGEOYQjjygBAQEDBosuhR+MDwkBAQEBAQEBAQE3AQGEOwMCA?=
+ =?us-ascii?q?oJyNwYOAgwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiYCAkcQBhOFGa9vd?=
+ =?us-ascii?q?X8zGoosgQwoAYFkikF4gQeBEYNQh1KCWASNBYIvN4Y8Q5ZZgiyVNAyCLotnA?=
+ =?us-ascii?q?xCLDC2ECqU8gXtNLgqDJ1CBfxeOMGeRFAEB?=
 X-IronPort-AV: E=Sophos;i="5.67,273,1566835200"; 
-   d="scan'208";a="216229078"
+   d="scan'208";a="216229089"
 Received: from unknown (HELO [192.168.1.222]) ([118.209.183.71])
-  by icp-osb-irony-out3.iinet.net.au with ESMTP; 09 Oct 2019 19:31:09 +0800
-Subject: [PATCH v5 11/17] xfs: mount-api - add xfs_remount_rw() helper
+  by icp-osb-irony-out3.iinet.net.au with ESMTP; 09 Oct 2019 19:31:14 +0800
+Subject: [PATCH v5 12/17] xfs: mount-api - add xfs_remount_ro() helper
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>,
@@ -41,8 +41,8 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Wed, 09 Oct 2019 19:31:09 +0800
-Message-ID: <157062066896.32346.115451854887763480.stgit@fedora-28>
+Date:   Wed, 09 Oct 2019 19:31:14 +0800
+Message-ID: <157062067418.32346.306283917170690609.stgit@fedora-28>
 In-Reply-To: <157062043952.32346.977737248061083292.stgit@fedora-28>
 References: <157062043952.32346.977737248061083292.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -54,82 +54,61 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Factor the remount read write code into a helper to simplify the
+Factor the remount read only code into a helper to simplify the
 subsequent change from the super block method .remount_fs to the
 mount-api fs_context_operations method .reconfigure.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_super.c |  115 +++++++++++++++++++++++++++++-----------------------
- 1 file changed, 64 insertions(+), 51 deletions(-)
+ fs/xfs/xfs_super.c |   73 +++++++++++++++++++++++++++++++---------------------
+ 1 file changed, 43 insertions(+), 30 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 314acafffd0b..94996d1a8c0f 100644
+index 94996d1a8c0f..7e634706626b 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1363,6 +1363,68 @@ xfs_test_remount_options(
- 	return error;
+@@ -1425,6 +1425,47 @@ xfs_remount_rw(
+ 	return 0;
  }
  
 +STATIC int
-+xfs_remount_rw(
++xfs_remount_ro(
 +	struct xfs_mount	*mp)
 +{
-+	xfs_sb_t		*sbp = &mp->m_sb;
 +	int error;
 +
-+	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-+		xfs_warn(mp,
-+			"ro->rw transition prohibited on norecovery mount");
-+		return -EINVAL;
-+	}
-+
-+	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-+	    xfs_sb_has_ro_compat_feature(sbp, XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-+		xfs_warn(mp,
-+	"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
-+			(sbp->sb_features_ro_compat &
-+				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-+		return -EINVAL;
-+	}
-+
-+	mp->m_flags &= ~XFS_MOUNT_RDONLY;
-+
 +	/*
-+	 * If this is the first remount to writeable state we
-+	 * might have some superblock changes to update.
++	 * Cancel background eofb scanning so it cannot race with the
++	 * final log force+buftarg wait and deadlock the remount.
 +	 */
-+	if (mp->m_update_sb) {
-+		error = xfs_sync_sb(mp, false);
-+		if (error) {
-+			xfs_warn(mp, "failed to write sb changes");
-+			return error;
-+		}
-+		mp->m_update_sb = false;
-+	}
++	xfs_stop_block_reaping(mp);
 +
-+	/*
-+	 * Fill out the reserve pool if it is empty. Use the stashed
-+	 * value if it is non-zero, otherwise go with the default.
-+	 */
-+	xfs_restore_resvblks(mp);
-+	xfs_log_work_queue(mp);
-+
-+	/* Recover any CoW blocks that never got remapped. */
-+	error = xfs_reflink_recover_cow(mp);
++	/* Get rid of any leftover CoW reservations... */
++	error = xfs_icache_free_cowblocks(mp, NULL);
 +	if (error) {
-+		xfs_err(mp,
-+			"Error %d recovering leftover CoW allocations.", error);
-+			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 +		return error;
 +	}
-+	xfs_start_block_reaping(mp);
 +
-+	/* Create the per-AG metadata reservation pool .*/
-+	error = xfs_fs_reserve_ag_blocks(mp);
-+	if (error && error != -ENOSPC)
++	/* Free the per-AG metadata reservation pool. */
++	error = xfs_fs_unreserve_ag_blocks(mp);
++	if (error) {
++		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 +		return error;
++	}
++
++	/*
++	 * Before we sync the metadata, we need to free up the reserve
++	 * block pool so that the used block count in the superblock on
++	 * disk is correct at the end of the remount. Stash the current
++	 * reserve pool size so that if we get remounted rw, we can
++	 * return it to the same size.
++	 */
++	xfs_save_resvblks(mp);
++
++	xfs_quiesce_attr(mp);
++	mp->m_flags |= XFS_MOUNT_RDONLY;
 +
 +	return 0;
 +}
@@ -137,64 +116,44 @@ index 314acafffd0b..94996d1a8c0f 100644
  STATIC int
  xfs_fs_remount(
  	struct super_block	*sb,
-@@ -1426,57 +1488,8 @@ xfs_fs_remount(
+@@ -1495,37 +1536,9 @@ xfs_fs_remount(
  
- 	/* ro -> rw */
- 	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & SB_RDONLY)) {
--		if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
--			xfs_warn(mp,
--		"ro->rw transition prohibited on norecovery mount");
--			return -EINVAL;
--		}
--
--		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
--		    xfs_sb_has_ro_compat_feature(sbp,
--					XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
--			xfs_warn(mp,
--"ro->rw transition prohibited on unknown (0x%x) ro-compat filesystem",
--				(sbp->sb_features_ro_compat &
--					XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
--			return -EINVAL;
--		}
--
--		mp->m_flags &= ~XFS_MOUNT_RDONLY;
--
+ 	/* rw -> ro */
+ 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
 -		/*
--		 * If this is the first remount to writeable state we
--		 * might have some superblock changes to update.
+-		 * Cancel background eofb scanning so it cannot race with the
+-		 * final log force+buftarg wait and deadlock the remount.
 -		 */
--		if (mp->m_update_sb) {
--			error = xfs_sync_sb(mp, false);
--			if (error) {
--				xfs_warn(mp, "failed to write sb changes");
--				return error;
--			}
--			mp->m_update_sb = false;
--		}
+-		xfs_stop_block_reaping(mp);
 -
--		/*
--		 * Fill out the reserve pool if it is empty. Use the stashed
--		 * value if it is non-zero, otherwise go with the default.
--		 */
--		xfs_restore_resvblks(mp);
--		xfs_log_work_queue(mp);
--
--		/* Recover any CoW blocks that never got remapped. */
--		error = xfs_reflink_recover_cow(mp);
+-		/* Get rid of any leftover CoW reservations... */
+-		error = xfs_icache_free_cowblocks(mp, NULL);
 -		if (error) {
--			xfs_err(mp,
--	"Error %d recovering leftover CoW allocations.", error);
 -			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
 -			return error;
 -		}
--		xfs_start_block_reaping(mp);
 -
--		/* Create the per-AG metadata reservation pool .*/
--		error = xfs_fs_reserve_ag_blocks(mp);
--		if (error && error != -ENOSPC)
-+		error = xfs_remount_rw(mp);
+-		/* Free the per-AG metadata reservation pool. */
+-		error = xfs_fs_unreserve_ag_blocks(mp);
+-		if (error) {
+-			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++		error = xfs_remount_ro(mp);
 +		if (error)
  			return error;
+-		}
+-
+-		/*
+-		 * Before we sync the metadata, we need to free up the reserve
+-		 * block pool so that the used block count in the superblock on
+-		 * disk is correct at the end of the remount. Stash the current
+-		 * reserve pool size so that if we get remounted rw, we can
+-		 * return it to the same size.
+-		 */
+-		xfs_save_resvblks(mp);
+-
+-		xfs_quiesce_attr(mp);
+-		mp->m_flags |= XFS_MOUNT_RDONLY;
  	}
  
+ 	return 0;
 
