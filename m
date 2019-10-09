@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 031B2FA372A
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C803EECE58D
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA398206C2
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A44AE21920
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730593AbfJIDVr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 23:21:47 -0400
+        id S1730537AbfJIDVj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 23:21:39 -0400
 Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46731 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730592AbfJIDVq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:46 -0400
+        by vger.kernel.org with ESMTP id S1730502AbfJIDVi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:38 -0400
 Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 10E5543EACC;
-        Wed,  9 Oct 2019 14:21:29 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 402B743EC4D;
+        Wed,  9 Oct 2019 14:21:27 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-0006CD-JQ; Wed, 09 Oct 2019 14:21:27 +1100
+        id 1iI2XX-0006By-CK; Wed, 09 Oct 2019 14:21:27 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-0003A6-HG; Wed, 09 Oct 2019 14:21:27 +1100
+        id 1iI2XX-00039r-Ac; Wed, 09 Oct 2019 14:21:27 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 25/26] xfs: rework unreferenced inode lookups
-Date:   Wed,  9 Oct 2019 14:21:23 +1100
-Message-Id: <20191009032124.10541-26-david@fromorbit.com>
+Subject: [PATCH 20/26] xfs: use AIL pushing for inode reclaim IO
+Date:   Wed,  9 Oct 2019 14:21:18 +1100
+Message-Id: <20191009032124.10541-21-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20191009032124.10541-1-david@fromorbit.com>
 References: <20191009032124.10541-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
         a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=XobE76Q3jBoA:10 a=20KFwNOVAAAA:8
-        a=VlnApPuOkL4U3gyNBW0A:9 a=tgTecsELLDXGZ-Jq:21 a=o5b6YgS90KOZ5V1B:21
+        a=1ffGU6BmlR_CJC1Va-MA:9 a=C1E4cXzGdla5xFYO:21 a=f_UNZQBlpuBpCn4x:21
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -51,532 +51,442 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Looking up an unreferenced inode in the inode cache is a bit hairy.
-We do this for inode invalidation and writeback clustering purposes,
-which is all invisible to the VFS. Hence we can't take reference
-counts to the inode and so must be very careful how we do it.
+Inode reclaim currently issues it's own inode IO when it comes
+across dirty inodes. This is used to throttle direct reclaim down to
+the rate at which we can reclaim dirty inodes. Failure to throttle
+in this manner results in the OOM killer being trivial to trigger
+even when there is lots of free memory available.
 
-There are several different places that all do the lookups and
-checks slightly differently. Fundamentally, though, they are all
-racy and inode reclaim has to block waiting for the inode lock if it
-loses the race. This is not very optimal given all the work we;ve
-already done to make reclaim non-blocking.
+However, having direct reclaimers issue IO causes an amount of
+IO thrashing to occur. We can have up to the number of AGs in the
+filesystem concurrently issuing IO, plus the AIL pushing thread as
+well. This means we can many competing sources of IO and they all
+end up thrashing and competing for the request slots in the block
+device.
 
-We can make the reclaim process nonblocking with a couple of simple
-changes. If we define the unreferenced lookup process in a way that
-will either always grab an inode in a way that reclaim will notice
-and skip, or will notice a reclaim has grabbed the inode so it can
-skip the inode, then there is no need for reclaim to need to cycle
-the inode ILOCK at all.
+Similar to dirty page throttling and the BDI flusher thread, we can
+use the AIL pushing thread the sole place we issue inode writeback
+from and everything else waits for it to make progress. To do this,
+reclaim will skip over dirty inodes, but in doing so will record the
+lowest LSN of all the dirty inodes it skips. It will then push the
+AIL to this LSN and wait for it to complete that work.
 
-Selecting an inode for reclaim is already non-blocking, so if the
-ILOCK is held the inode will be skipped. If we ensure that reclaim
-holds the ILOCK until the inode is freed, then we can do the same
-thing in the unreferenced lookup to avoid inodes in reclaim. We can
-do this simply by holding the ILOCK until the RCU grace period
-expires and the inode freeing callback is run. As all unreferenced
-lookups have to hold the rcu_read_lock(), we are guaranteed that
-a reclaimed inode will be noticed as the trylock will fail.
+In doing so, we block direct reclaim on the IO of at least one IO,
+thereby providing some level of throttling for when we encounter
+dirty inodes. However we gain the ability to scan and reclaim
+clean inodes in a non-blocking fashion. This allows us to
+remove all the per-ag reclaim locking that avoids excessive direct
+reclaim, as repeated concurrent direct reclaim will hit the same
+dirty inodes and block waiting on the same IO to complete.
 
+Hence direct reclaim will be throttled directly by the rate at which
+dirty inodes are cleaned by AIL pushing, rather than by delays
+caused by competing IO submissions. This allows us to remove all the
+locking that limits direct reclaim concurrency and greatly
+simplifies the inode reclaim code now that it just skips dirty
+inodes.
 
-Additional research notes on final reclaim locking before free
---------------------------------------------------------------
-
-2016: 1f2dcfe89eda ("xfs: xfs_inode_free() isn't RCU safe")
-
-Fixes situation where the inode is found during RCU lookup within
-the freeing grace period, but critical structures have already been
-freed. lookup code that has this problem is stuff like
-xfs_iflush_cluster.
-
-
-2008: 455486b9ccdd ("[XFS] avoid all reclaimable inodes in xfs_sync_inodes_ag")
-
-Prior to this commit, the flushing of inodes required serialisation
-with xfs_ireclaim(), which did this lock/unlock thingy to ensure
-that it waited for flushing in xfs_sync_inodes_ag() to complete
-before freeing the inode:
-
-                /*
--                * If we can't get a reference on the VFS_I, the inode must be
--                * in reclaim. If we can get the inode lock without blocking,
--                * it is safe to flush the inode because we hold the tree lock
--                * and xfs_iextract will block right now. Hence if we lock the
--                * inode while holding the tree lock, xfs_ireclaim() is
--                * guaranteed to block on the inode lock we now hold and hence
--                * it is safe to reference the inode until we drop the inode
--                * locks completely.
-+                * If we can't get a reference on the inode, it must be
-+                * in reclaim. Leave it for the reclaim code to flush.
-                 */
-
-This case is completely gone from the modern code.
-
-lock/unlock exists at start of git era. Switching to archive tree.
-
-This xfs_sync() functionality goes back to 1994 when inode
-writeback was first introduced by:
-
-47ac6d60 ("Add support to xfs_ireclaim() needed for xfs_sync().")
-
-So it has been there forever -  lets see if we can get rid of it.
-State of existing codeL
-
-- xfs_iflush_cluster() does not check for XFS_IRECLAIM inode flag
-  while holding rcu_read_lock()/i_flags_lock, so doesn't avoid
-  reclaimable or inodes that are in the process of being reclaimed.
-  Inodes at this point of reclaim are clean, so if xfs_iflush_cluster
-  wins the race to the ILOCK, then inode reclaim has to wait
-  for the lock to be dropped by xfs_iflush_cluster() once it detects
-  the inode is clean.
-
-- xfs_ifree_cluster() has similar logic based around XFS_ISTALE,
-  results in similar race conditions that require inode reclaim to
-  cycle the ILOCK to serialise against.
-
-- xfs_inode_ag_walk() uses xfs_inode_ag_walk_grab(), and it checks
-  XFS_IRECLAIM under RCU. It then tries to take a reference to the
-  VFS inode via igrab(), which will fail if the inode is either
-  XFS_IRECLAIMABLE | XFS_IRECLAIM, and it if races then igrab() will
-  fail because the inode has I_FREEING still set, so it's protected
-  against reclaim races.
-
-That leaves xfs_iflush_cluster() + xfs_ifree_cluster() to be
-modified to do reclaim-safe lookups. W.r.t. new inode reclaim LRU
-isolate function:
-
-	1. inode can be referenced while rcu_read_lock() is held.
-
-	2. XFS_IRECLAIM means inode has been fully locked down and
-	   has placed on the dispose list, and will be freed soon.
-		- ilock_nowait() will fail once IRECLAIM is set due
-		  to lock order in isolation code.
-
-	3. ip->i_ino == 0 means it's been removed from the dispose
-	   list and is about to or has been removed from the radix
-	   tree and may have already been queued on the rcu freeing
-	   list to be freed at the end of the current grace period.
-
-		- the old xfs_ireclaim() code will have dropped the
-		  ILOCK here, and so there's a race between checking
-		  IRECLAIM, grabbing ilock_nowait() and reclaim
-		  freeing the inode.
-		- this is what the spurious lock/unlock avoids.
-
-	4. it xfs_ilock_nowait() fails until the rcu grace period
-	   expires, it doesn't matter if we race between checking
-	   IRECLAIM and failing the lock attempt. In fact, we don't
-	   even have to check XFS_IRECLAIM - just failing
-	   xfs_ilock_nowait() is sufficient to avoid inodes being
-	   reclaimed.
-
-	   Hence when xfs_ilock_nowait() fails, we can either drop the
-	   rcu_read_lock at that point and restart the inode lookup,
-	   or we just skip the inode altogether. If we raced with
-	   reclaim, the retry will not find the inode in reclaim
-	   again. If we raced wtih some other lock holder, then
-	   we'll find the inode and try to lock it again.
-
-		- Requires holding ILOCK into rcu freeing callback
-		  and dropping it there. i.e. inode to be reclaimed
-		  remains locked until grace period expires.
-		- No window at all between IRECLAIM being set and
-		  visible to other CPUs and the inode being removed
-		  from the cache and freed where ilock_nowait will
-		  succeed.
-		- simple, effective, reliable.
+Note: this patch by itself isn't completely able to throttle direct
+reclaim sufficiently to prevent OOM killer madness. We can't do that
+until we change the way we index reclaimable inodes in the next
+patch and can feed back state to the mm core sanely.  However, we
+can't change the way we index reclaimable inodes until we have
+IO-less non-blocking reclaim for both direct reclaim and kswapd
+reclaim.  Catch-22...
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c |  86 ++++++++++++++++++++++-------
- fs/xfs/xfs_inode.c  | 131 +++++++++++++++++++++-----------------------
- 2 files changed, 126 insertions(+), 91 deletions(-)
+ fs/xfs/xfs_icache.c | 215 +++++++++++++++++++-------------------------
+ 1 file changed, 90 insertions(+), 125 deletions(-)
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index a6de159c71c2..7a507aefeea6 100644
+index 7e175304e146..ed996b37bda0 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -105,6 +105,7 @@ xfs_inode_free_callback(
- 		ip->i_itemp = NULL;
+@@ -22,6 +22,7 @@
+ #include "xfs_dquot_item.h"
+ #include "xfs_dquot.h"
+ #include "xfs_reflink.h"
++#include "xfs_log.h"
+ 
+ #include <linux/iversion.h>
+ 
+@@ -967,28 +968,42 @@ xfs_inode_ag_iterator_tag(
+ }
+ 
+ /*
+- * Grab the inode for reclaim exclusively.
+- * Return 0 if we grabbed it, non-zero otherwise.
++ * Grab the inode for reclaim.
++ *
++ * Return false if we aren't going to reclaim it, true if it is a reclaim
++ * candidate.
++ *
++ * If the inode is clean or unreclaimable, return 0 to tell the caller it does
++ * not require flushing. Otherwise return the log item lsn of the inode so the
++ * caller can determine it's inode flush target.  If we get the clean/dirty
++ * state wrong then it will be sorted in xfs_reclaim_inode() once we have locks
++ * held.
+  */
+-STATIC int
++STATIC bool
+ xfs_reclaim_inode_grab(
+ 	struct xfs_inode	*ip,
+-	int			flags)
++	int			flags,
++	xfs_lsn_t		*lsn)
+ {
+ 	ASSERT(rcu_read_lock_held());
++	*lsn = 0;
+ 
+ 	/* quick check for stale RCU freed inode */
+ 	if (!ip->i_ino)
+-		return 1;
++		return false;
+ 
+ 	/*
+-	 * If we are asked for non-blocking operation, do unlocked checks to
+-	 * see if the inode already is being flushed or in reclaim to avoid
+-	 * lock traffic.
++	 * Do unlocked checks to see if the inode already is being flushed or in
++	 * reclaim to avoid lock traffic. If the inode is not clean, return the
++	 * it's position in the AIL for the caller to push to.
+ 	 */
+-	if ((flags & SYNC_TRYLOCK) &&
+-	    __xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
+-		return 1;
++	if (!xfs_inode_clean(ip)) {
++		*lsn = ip->i_itemp->ili_item.li_lsn;
++		return false;
++	}
++
++	if (__xfs_iflags_test(ip, XFS_IFLOCK | XFS_IRECLAIM))
++		return false;
+ 
+ 	/*
+ 	 * The radix tree lock here protects a thread in xfs_iget from racing
+@@ -1005,11 +1020,11 @@ xfs_reclaim_inode_grab(
+ 	    __xfs_iflags_test(ip, XFS_IRECLAIM)) {
+ 		/* not a reclaim candidate. */
+ 		spin_unlock(&ip->i_flags_lock);
+-		return 1;
++		return false;
+ 	}
+ 	__xfs_iflags_set(ip, XFS_IRECLAIM);
+ 	spin_unlock(&ip->i_flags_lock);
+-	return 0;
++	return true;
+ }
+ 
+ /*
+@@ -1050,92 +1065,64 @@ xfs_reclaim_inode_grab(
+  *	clean		=> reclaim
+  *	dirty, async	=> requeue
+  *	dirty, sync	=> flush, wait and reclaim
++ *
++ * Returns true if the inode was reclaimed, false otherwise.
+  */
+-STATIC int
++STATIC bool
+ xfs_reclaim_inode(
+ 	struct xfs_inode	*ip,
+ 	struct xfs_perag	*pag,
+-	int			sync_mode)
++	xfs_lsn_t		*lsn)
+ {
+-	struct xfs_buf		*bp = NULL;
+-	xfs_ino_t		ino = ip->i_ino; /* for radix_tree_delete */
+-	int			error;
++	xfs_ino_t		ino;
++
++	*lsn = 0;
+ 
+-restart:
+-	error = 0;
+ 	/*
+ 	 * Don't try to flush the inode if another inode in this cluster has
+ 	 * already flushed it after we did the initial checks in
+ 	 * xfs_reclaim_inode_grab().
+ 	 */
+-	if (sync_mode & SYNC_TRYLOCK) {
+-		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
+-			goto out;
+-		if (!xfs_iflock_nowait(ip))
+-			goto out_unlock;
+-	} else {
+-		xfs_ilock(ip, XFS_ILOCK_EXCL);
+-		if (!xfs_iflock_nowait(ip)) {
+-			if (!(sync_mode & SYNC_WAIT))
+-				goto out_unlock;
+-			xfs_iflock(ip);
+-		}
+-	}
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++		goto out;
++	if (!xfs_iflock_nowait(ip))
++		goto out_unlock;
+ 
++	/* If we are in shutdown, we don't care about blocking. */
+ 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
+ 		xfs_iunpin_wait(ip);
+ 		/* xfs_iflush_abort() drops the flush lock */
+ 		xfs_iflush_abort(ip, false);
+ 		goto reclaim;
+ 	}
+-	if (xfs_ipincount(ip)) {
+-		if (!(sync_mode & SYNC_WAIT))
+-			goto out_ifunlock;
+-		xfs_iunpin_wait(ip);
+-	}
+-	if (xfs_iflags_test(ip, XFS_ISTALE) || xfs_inode_clean(ip)) {
+-		xfs_ifunlock(ip);
+-		goto reclaim;
+-	}
+ 
+ 	/*
+-	 * Never flush out dirty data during non-blocking reclaim, as it would
+-	 * just contend with AIL pushing trying to do the same job.
++	 * If it is pinned, we don't have an LSN we can push the AIL to - just
++	 * an LSN that we can push the CIL with. We don't want to block doing
++	 * that, so we'll just skip over this one without triggering writeback
++	 * for now.
+ 	 */
+-	if (!(sync_mode & SYNC_WAIT))
++	if (xfs_ipincount(ip))
+ 		goto out_ifunlock;
+ 
+ 	/*
+-	 * Now we have an inode that needs flushing.
+-	 *
+-	 * Note that xfs_iflush will never block on the inode buffer lock, as
+-	 * xfs_ifree_cluster() can lock the inode buffer before it locks the
+-	 * ip->i_lock, and we are doing the exact opposite here.  As a result,
+-	 * doing a blocking xfs_imap_to_bp() to get the cluster buffer would
+-	 * result in an ABBA deadlock with xfs_ifree_cluster().
+-	 *
+-	 * As xfs_ifree_cluser() must gather all inodes that are active in the
+-	 * cache to mark them stale, if we hit this case we don't actually want
+-	 * to do IO here - we want the inode marked stale so we can simply
+-	 * reclaim it.  Hence if we get an EAGAIN error here,  just unlock the
+-	 * inode, back off and try again.  Hopefully the next pass through will
+-	 * see the stale flag set on the inode.
++	 * Dirty inode we didn't catch, skip it.
+ 	 */
+-	error = xfs_iflush(ip, &bp);
+-	if (error == -EAGAIN) {
+-		xfs_iunlock(ip, XFS_ILOCK_EXCL);
+-		/* backoff longer than in xfs_ifree_cluster */
+-		delay(2);
+-		goto restart;
++	if (!xfs_inode_clean(ip) && !xfs_iflags_test(ip, XFS_ISTALE)) {
++		*lsn = ip->i_itemp->ili_item.li_lsn;
++		goto out_ifunlock;
  	}
  
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 	kmem_zone_free(xfs_inode_zone, ip);
- }
+-	if (!error) {
+-		error = xfs_bwrite(bp);
+-		xfs_buf_relse(bp);
+-	}
++	/*
++	 * It's clean, we have it locked, we can now drop the flush lock
++	 * and reclaim it.
++	 */
++	xfs_ifunlock(ip);
  
-@@ -131,6 +132,7 @@ xfs_inode_free(
- 	 * free state. The ip->i_flags_lock provides the barrier against lookup
- 	 * races.
- 	 */
-+	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	spin_lock(&ip->i_flags_lock);
- 	ip->i_flags = XFS_IRECLAIM;
- 	ip->i_ino = 0;
-@@ -294,11 +296,24 @@ xfs_iget_cache_hit(
- 		}
+ reclaim:
+ 	ASSERT(!xfs_isiflocked(ip));
++	ASSERT(xfs_inode_clean(ip) || xfs_iflags_test(ip, XFS_ISTALE));
++	ASSERT(ip->i_ino != 0);
  
- 		/*
--		 * We need to set XFS_IRECLAIM to prevent xfs_reclaim_inode
--		 * from stomping over us while we recycle the inode. Remove it
--		 * from the LRU straight away so we can re-init the VFS inode.
-+		 * Before we reinitialise the inode, we need to make sure
-+		 * reclaim does not pull it out from underneath us. We already
-+		 * hold the i_flags_lock, and because the XFS_IRECLAIM is not
-+		 * set we know the inode is still on the LRU. However, the LRU
-+		 * code may have just selected this inode to reclaim, so we need
-+		 * to ensure we hold the i_flags_lock long enough for the
-+		 * trylock in xfs_inode_reclaim_isolate() to fail. We do this by
-+		 * removing the inode from the LRU, which will spin on the LRU
-+		 * list locks until reclaim stops walking, at which point we
-+		 * know there is no possible race between reclaim isolation and
-+		 * this lookup.
-+		 *
-+		 * We also set the XFS_IRECLAIM flag here while trying to do the
-+		 * re-initialisation to prevent multiple racing lookups on this
-+		 * inode from all landing here at the same time.
- 		 */
- 		ip->i_flags |= XFS_IRECLAIM;
-+		list_lru_del(&mp->m_inode_lru, &inode->i_lru);
- 		spin_unlock(&ip->i_flags_lock);
- 		rcu_read_unlock();
- 
-@@ -312,7 +327,8 @@ xfs_iget_cache_hit(
- 			rcu_read_lock();
- 			spin_lock(&ip->i_flags_lock);
- 			wake = !!__xfs_iflags_test(ip, XFS_INEW);
--			ip->i_flags &= ~(XFS_INEW | XFS_IRECLAIM);
-+			ip->i_flags &= ~XFS_INEW | XFS_IRECLAIM;
-+			list_lru_add(&mp->m_inode_lru, &inode->i_lru);
- 			if (wake)
- 				wake_up_bit(&ip->i_flags, __XFS_INEW_BIT);
- 			ASSERT(ip->i_flags & XFS_IRECLAIMABLE);
-@@ -329,7 +345,6 @@ xfs_iget_cache_hit(
- 		spin_lock(&ip->i_flags_lock);
- 		ip->i_flags &= ~XFS_IRECLAIM_RESET_FLAGS;
- 		ip->i_flags |= XFS_INEW;
--		list_lru_del(&mp->m_inode_lru, &inode->i_lru);
- 		inode->i_state = I_NEW;
- 		ip->i_sick = 0;
- 		ip->i_checked = 0;
-@@ -609,8 +624,7 @@ xfs_icache_inode_is_allocated(
- /*
-  * The inode lookup is done in batches to keep the amount of lock traffic and
-  * radix tree lookups to a minimum. The batch size is a trade off between
-- * lookup reduction and stack usage. This is in the reclaim path, so we can't
-- * be too greedy.
-+ * lookup reduction and stack usage.
-  */
- #define XFS_LOOKUP_BATCH	32
- 
-@@ -967,6 +981,41 @@ xfs_inode_reclaim_isolate(
- 	return ret;
- }
- 
-+/*
-+ * We are passed a locked inode to dispose of.
-+ *
-+ * To avoid race conditions with lookups that don't take references, we do
-+ * not drop the XFS_ILOCK_EXCL until the RCU callback that frees the inode.
-+ * This means that any attempt to lock the inode during the current RCU grace
-+ * period will fail, and hence we do not need any synchonisation here to wait
-+ * for code that pins unreferenced inodes with the XFS_ILOCK to drain.
-+ *
-+ * This requires code that requires such pins to do the following under a single
-+ * rcu_read_lock() context:
-+ *
-+ *	- rcu_read_lock
-+ *	- find the inode via radix tree lookup
-+ *	- take the ip->i_flags_lock
-+ *	- check ip->i_ino != 0
-+ *	- check XFS_IRECLAIM is not set
-+ *	- call xfs_ilock_nowait(ip, XFS_ILOCK_[SHARED|EXCL]) to lock the inode
-+ *	- drop ip->i_flags_lock
-+ *	- rcu_read_unlock()
-+ *
-+ * Only if all this succeeds and the caller has the inode locked and protected
-+ * against it being freed until the ilock is released. If the XFS_IRECLAIM flag
-+ * is set or xfs_ilock_nowait() fails, then the caller must either skip the
-+ * inode and move on to the next inode (gang lookup) or drop the rcu_read_lock
-+ * and start the entire inode lookup process again (individual lookup).
-+ *
-+ * This works because  i_flags_lock serialises against
-+ * xfs_inode_reclaim_isolate() - if the lookup wins the race on i_flags_lock and
-+ * XFS_IRECLAIM is not set, then it will be able to lock the inode and hold off
-+ * reclaim. If the isolate function wins the race, it will lock the inode and
-+ * set the XFS_IRECLAIM flag if it is going to free the inode and this will
-+ * prevent the lookup callers from succeeding in getting unreferenced pin via
-+ * the ILOCK.
-+ */
- static void
- xfs_dispose_inode(
- 	struct xfs_inode	*ip)
-@@ -975,11 +1024,14 @@ xfs_dispose_inode(
- 	struct xfs_perag	*pag;
- 	xfs_ino_t		ino;
- 
-+	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
- 	ASSERT(xfs_isiflocked(ip));
- 	ASSERT(xfs_inode_clean(ip) || xfs_iflags_test(ip, XFS_ISTALE) ||
- 	       XFS_FORCED_SHUTDOWN(mp));
- 	ASSERT(ip->i_ino != 0);
- 
-+	XFS_STATS_INC(mp, xs_ig_reclaims);
-+
  	/*
- 	 * Process the shutdown reclaim work we deferred from the LRU isolation
- 	 * callback before we go any further.
-@@ -1006,9 +1058,7 @@ xfs_dispose_inode(
+ 	 * Because we use RCU freeing we need to ensure the inode always appears
+@@ -1148,6 +1135,7 @@ xfs_reclaim_inode(
+ 	 * will see an invalid inode that it can skip.
+ 	 */
+ 	spin_lock(&ip->i_flags_lock);
++	ino = ip->i_ino; /* for radix_tree_delete */
  	ip->i_flags = XFS_IRECLAIM;
  	ip->i_ino = 0;
  	spin_unlock(&ip->i_flags_lock);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 
--	XFS_STATS_INC(mp, xs_ig_reclaims);
- 	/*
- 	 * Remove the inode from the per-AG radix tree.
- 	 *
-@@ -1023,19 +1073,7 @@ xfs_dispose_inode(
- 	spin_unlock(&pag->pag_ici_lock);
- 	xfs_perag_put(pag);
- 
--	/*
--	 * Here we do an (almost) spurious inode lock in order to coordinate
--	 * with inode cache radix tree lookups.  This is because the lookup
--	 * can reference the inodes in the cache without taking references.
--	 *
--	 * We make that OK here by ensuring that we wait until the inode is
--	 * unlocked after the lookup before we go ahead and free it.
--	 *
--	 * XXX: need to check this is still true. Not sure it is.
--	 */
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
- 	xfs_qm_dqdetach(ip);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+@@ -1182,7 +1170,7 @@ xfs_reclaim_inode(
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
  
  	__xfs_inode_free(ip);
+-	return error;
++	return true;
+ 
+ out_ifunlock:
+ 	xfs_ifunlock(ip);
+@@ -1190,14 +1178,7 @@ xfs_reclaim_inode(
+ 	xfs_iunlock(ip, XFS_ILOCK_EXCL);
+ out:
+ 	xfs_iflags_clear(ip, XFS_IRECLAIM);
+-	/*
+-	 * We could return -EAGAIN here to make reclaim rescan the inode tree in
+-	 * a short while. However, this just burns CPU time scanning the tree
+-	 * waiting for IO to complete and the reclaim work never goes back to
+-	 * the idle state. Instead, return 0 to let the next scheduled
+-	 * background reclaim attempt to reclaim the inode again.
+-	 */
+-	return 0;
++	return false;
  }
-@@ -1062,6 +1100,12 @@ xfs_reclaim_inodes(
- 		struct xfs_ireclaim_args ra;
- 		long freed, to_free;
  
-+		/* push the AIL to clean dirty reclaimable inodes */
-+		xfs_ail_push_all(mp->m_ail);
+ /*
+@@ -1205,44 +1186,34 @@ xfs_reclaim_inode(
+  * corrupted, we still want to try to reclaim all the inodes. If we don't,
+  * then a shut down during filesystem unmount reclaim walk leak all the
+  * unreclaimed inodes.
++ *
++ * Return the number of inodes freed.
+  */
+ STATIC int
+ xfs_reclaim_inodes_ag(
+ 	struct xfs_mount	*mp,
+ 	int			flags,
+-	int			*nr_to_scan)
++	int			nr_to_scan)
+ {
+ 	struct xfs_perag	*pag;
+-	int			error = 0;
+-	int			last_error = 0;
+ 	xfs_agnumber_t		ag;
+-	int			trylock = flags & SYNC_TRYLOCK;
+-	int			skipped;
++	xfs_lsn_t		lsn, lowest_lsn = NULLCOMMITLSN;
++	long			freed = 0;
+ 
+-restart:
+ 	ag = 0;
+-	skipped = 0;
+ 	while ((pag = xfs_perag_get_tag(mp, ag, XFS_ICI_RECLAIM_TAG))) {
+ 		unsigned long	first_index = 0;
+ 		int		done = 0;
+ 		int		nr_found = 0;
+ 
+ 		ag = pag->pag_agno + 1;
+-
+-		if (trylock) {
+-			if (!mutex_trylock(&pag->pag_ici_reclaim_lock)) {
+-				skipped++;
+-				xfs_perag_put(pag);
+-				continue;
+-			}
+-			first_index = pag->pag_ici_reclaim_cursor;
+-		} else
+-			mutex_lock(&pag->pag_ici_reclaim_lock);
+-
+ 		do {
+ 			struct xfs_inode *batch[XFS_LOOKUP_BATCH];
+ 			int	i;
+ 
++			mutex_lock(&pag->pag_ici_reclaim_lock);
++			first_index = pag->pag_ici_reclaim_cursor;
 +
-+		/* push the AIL to clean dirty reclaimable inodes */
-+		xfs_ail_push_all(mp->m_ail);
+ 			rcu_read_lock();
+ 			nr_found = radix_tree_gang_lookup_tag(
+ 					&pag->pag_ici_root,
+@@ -1262,9 +1233,13 @@ xfs_reclaim_inodes_ag(
+ 			for (i = 0; i < nr_found; i++) {
+ 				struct xfs_inode *ip = batch[i];
+ 
+-				if (done || xfs_reclaim_inode_grab(ip, flags))
++				if (done ||
++				    !xfs_reclaim_inode_grab(ip, flags, &lsn))
+ 					batch[i] = NULL;
+ 
++				if (lsn && XFS_LSN_CMP(lsn, lowest_lsn) < 0)
++					lowest_lsn = lsn;
 +
- 		INIT_LIST_HEAD(&ra.freeable);
- 		ra.lowest_lsn = NULLCOMMITLSN;
- 		to_free = list_lru_count(&mp->m_inode_lru);
-diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
-index 18f4b262e61c..1d7e3f575952 100644
---- a/fs/xfs/xfs_inode.c
-+++ b/fs/xfs/xfs_inode.c
-@@ -2622,52 +2622,54 @@ xfs_ifree_cluster(
- 			}
+ 				/*
+ 				 * Update the index for the next lookup. Catch
+ 				 * overflows into the next AG range which can
+@@ -1289,41 +1264,33 @@ xfs_reclaim_inodes_ag(
  
- 			/*
--			 * because this is an RCU protected lookup, we could
--			 * find a recently freed or even reallocated inode
--			 * during the lookup. We need to check under the
--			 * i_flags_lock for a valid inode here. Skip it if it
--			 * is not valid, the wrong inode or stale.
-+			 * See xfs_dispose_inode() for an explanation of the
-+			 * tests here to avoid inode reclaim races.
- 			 */
- 			spin_lock(&ip->i_flags_lock);
--			if (ip->i_ino != inum + i ||
--			    __xfs_iflags_test(ip, XFS_ISTALE)) {
-+			if (!ip->i_ino ||
-+			    __xfs_iflags_test(ip, XFS_IRECLAIM)) {
- 				spin_unlock(&ip->i_flags_lock);
- 				rcu_read_unlock();
- 				continue;
- 			}
--			spin_unlock(&ip->i_flags_lock);
- 
- 			/*
--			 * Don't try to lock/unlock the current inode, but we
--			 * _cannot_ skip the other inodes that we did not find
--			 * in the list attached to the buffer and are not
--			 * already marked stale. If we can't lock it, back off
--			 * and retry.
-+			 * The inode isn't in reclaim, but it might be locked by
-+			 * someone else. In that case, we retry the inode rather
-+			 * than skipping it completely.
- 			 */
--			if (ip != free_ip) {
--				if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
--					rcu_read_unlock();
--					delay(1);
--					goto retry;
--				}
-+			if (ip != free_ip &&
-+			    !xfs_ilock_nowait(ip, XFS_ILOCK_EXCL)) {
-+				spin_unlock(&ip->i_flags_lock);
-+				rcu_read_unlock();
-+				delay(1);
-+				goto retry;
-+			}
- 
--				/*
--				 * Check the inode number again in case we're
--				 * racing with freeing in xfs_reclaim_inode().
--				 * See the comments in that function for more
--				 * information as to why the initial check is
--				 * not sufficient.
--				 */
--				if (ip->i_ino != inum + i) {
-+			/*
-+			 * Inode is now pinned against reclaim until we unlock
-+			 * it, so now we can do the work necessary to mark the
-+			 * inode stale and get it held until the cluster freeing
-+			 * transaction is logged. If it's stale, then it has
-+			 * already been attached to the buffer and we're done.
-+			 */
-+			if (__xfs_iflags_test(ip, XFS_ISTALE)) {
-+				spin_unlock(&ip->i_flags_lock);
-+				if (ip != free_ip)
- 					xfs_iunlock(ip, XFS_ILOCK_EXCL);
--					rcu_read_unlock();
--					continue;
--				}
-+				rcu_read_unlock();
-+				continue;
- 			}
-+			__xfs_iflags_set(ip, XFS_ISTALE);
-+			spin_unlock(&ip->i_flags_lock);
+ 			/* unlock now we've grabbed the inodes. */
  			rcu_read_unlock();
++			if (!done)
++				pag->pag_ici_reclaim_cursor = first_index;
++			else
++				pag->pag_ici_reclaim_cursor = 0;
++			mutex_unlock(&pag->pag_ici_reclaim_lock);
  
-+			/*
-+			 * Flush lock will hold off inode reclaim until the
-+			 * buffer completion routine runs the xfs_istale_done
-+			 * callback on the inode and unlocks it.
-+			 */
- 			xfs_iflock(ip);
--			xfs_iflags_set(ip, XFS_ISTALE);
- 
- 			/*
- 			 * we don't need to attach clean inodes or those only
-@@ -2677,7 +2679,8 @@ xfs_ifree_cluster(
- 			if (!iip || xfs_inode_clean(ip)) {
- 				ASSERT(ip != free_ip);
- 				xfs_ifunlock(ip);
--				xfs_iunlock(ip, XFS_ILOCK_EXCL);
-+				if (ip != free_ip)
-+					xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 				continue;
+ 			for (i = 0; i < nr_found; i++) {
+ 				if (!batch[i])
+ 					continue;
+-				error = xfs_reclaim_inode(batch[i], pag, flags);
+-				if (error && last_error != -EFSCORRUPTED)
+-					last_error = error;
++				if (xfs_reclaim_inode(batch[i], pag, &lsn))
++					freed++;
++				if (lsn && XFS_LSN_CMP(lsn, lowest_lsn) < 0)
++					lowest_lsn = lsn;
  			}
  
-@@ -3498,44 +3501,40 @@ xfs_iflush_cluster(
- 			continue;
- 
- 		/*
--		 * because this is an RCU protected lookup, we could find a
--		 * recently freed or even reallocated inode during the lookup.
--		 * We need to check under the i_flags_lock for a valid inode
--		 * here. Skip it if it is not valid or the wrong inode.
-+		 * See xfs_dispose_inode() for an explanation of the
-+		 * tests here to avoid inode reclaim races.
- 		 */
- 		spin_lock(&cip->i_flags_lock);
- 		if (!cip->i_ino ||
--		    __xfs_iflags_test(cip, XFS_ISTALE)) {
-+		    __xfs_iflags_test(cip, XFS_IRECLAIM)) {
- 			spin_unlock(&cip->i_flags_lock);
- 			continue;
- 		}
- 
--		/*
--		 * Once we fall off the end of the cluster, no point checking
--		 * any more inodes in the list because they will also all be
--		 * outside the cluster.
--		 */
-+		/* ILOCK will pin the inode against reclaim */
-+		if (!xfs_ilock_nowait(cip, XFS_ILOCK_SHARED)) {
-+			spin_unlock(&cip->i_flags_lock);
-+			continue;
-+		}
-+
-+		if (__xfs_iflags_test(cip, XFS_ISTALE)) {
-+			xfs_iunlock(cip, XFS_ILOCK_SHARED);
-+			spin_unlock(&cip->i_flags_lock);
-+			continue;
-+		}
-+
-+		/* Lookup can find inodes outside the cluster being flushed. */
- 		if ((XFS_INO_TO_AGINO(mp, cip->i_ino) & mask) != first_index) {
-+			xfs_iunlock(cip, XFS_ILOCK_SHARED);
- 			spin_unlock(&cip->i_flags_lock);
- 			break;
- 		}
- 		spin_unlock(&cip->i_flags_lock);
- 
- 		/*
--		 * Do an un-protected check to see if the inode is dirty and
--		 * is a candidate for flushing.  These checks will be repeated
--		 * later after the appropriate locks are acquired.
--		 */
--		if (xfs_inode_clean(cip) && xfs_ipincount(cip) == 0)
--			continue;
+-			*nr_to_scan -= XFS_LOOKUP_BATCH;
 -
--		/*
--		 * Try to get locks.  If any are unavailable or it is pinned,
-+		 * If we can't get the flush lock now or the inode is pinned,
- 		 * then this inode cannot be flushed and is skipped.
- 		 */
--
--		if (!xfs_ilock_nowait(cip, XFS_ILOCK_SHARED))
--			continue;
- 		if (!xfs_iflock_nowait(cip)) {
- 			xfs_iunlock(cip, XFS_ILOCK_SHARED);
- 			continue;
-@@ -3546,22 +3545,9 @@ xfs_iflush_cluster(
- 			continue;
- 		}
++			nr_to_scan -= XFS_LOOKUP_BATCH;
+ 			cond_resched();
  
--
- 		/*
--		 * Check the inode number again, just to be certain we are not
--		 * racing with freeing in xfs_reclaim_inode(). See the comments
--		 * in that function for more information as to why the initial
--		 * check is not sufficient.
--		 */
--		if (!cip->i_ino) {
--			xfs_ifunlock(cip);
--			xfs_iunlock(cip, XFS_ILOCK_SHARED);
--			continue;
--		}
--
--		/*
--		 * arriving here means that this inode can be flushed.  First
--		 * re-check that it's dirty before flushing.
-+		 * Arriving here means that this inode can be flushed. First
-+		 * check that it's dirty before flushing.
- 		 */
- 		if (!xfs_inode_clean(cip)) {
- 			int	error;
-@@ -3575,6 +3561,7 @@ xfs_iflush_cluster(
- 			xfs_ifunlock(cip);
- 		}
- 		xfs_iunlock(cip, XFS_ILOCK_SHARED);
-+		/* unsafe to reference cip from here */
+-		} while (nr_found && !done && *nr_to_scan > 0);
++		} while (nr_found && !done && nr_to_scan > 0);
+ 
+-		if (trylock && !done)
+-			pag->pag_ici_reclaim_cursor = first_index;
+-		else
+-			pag->pag_ici_reclaim_cursor = 0;
+-		mutex_unlock(&pag->pag_ici_reclaim_lock);
+ 		xfs_perag_put(pag);
  	}
  
- 	if (clcount) {
-@@ -3613,7 +3600,11 @@ xfs_iflush_cluster(
+-	/*
+-	 * if we skipped any AG, and we still have scan count remaining, do
+-	 * another pass this time using blocking reclaim semantics (i.e
+-	 * waiting on the reclaim locks and ignoring the reclaim cursors). This
+-	 * ensure that when we get more reclaimers than AGs we block rather
+-	 * than spin trying to execute reclaim.
+-	 */
+-	if (skipped && (flags & SYNC_WAIT) && *nr_to_scan > 0) {
+-		trylock = 0;
+-		goto restart;
+-	}
+-	return last_error;
++	if ((flags & SYNC_WAIT) && lowest_lsn != NULLCOMMITLSN)
++		xfs_ail_push_sync(mp->m_ail, lowest_lsn);
++
++	return freed;
+ }
  
- 	xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+ int
+@@ -1331,9 +1298,7 @@ xfs_reclaim_inodes(
+ 	xfs_mount_t	*mp,
+ 	int		mode)
+ {
+-	int		nr_to_scan = INT_MAX;
+-
+-	return xfs_reclaim_inodes_ag(mp, mode, &nr_to_scan);
++	return xfs_reclaim_inodes_ag(mp, mode, INT_MAX);
+ }
  
--	/* abort the corrupt inode, as it was not attached to the buffer */
-+	/*
-+	 * Abort the corrupt inode, as it was not attached to the buffer. It is
-+	 * unlocked, but still pinned against reclaim by the flush lock so it is
-+	 * safe to reference here until after the flush abort completes.
-+	 */
- 	xfs_iflush_abort(cip, false);
- 	kmem_free(cilist);
- 	xfs_perag_put(pag);
+ /*
+@@ -1350,7 +1315,7 @@ xfs_reclaim_inodes_nr(
+ 	struct xfs_mount	*mp,
+ 	int			nr_to_scan)
+ {
+-	int			sync_mode = SYNC_TRYLOCK;
++	int			sync_mode = 0;
+ 
+ 	/*
+ 	 * For kswapd, we kick background inode writeback. For direct
+@@ -1362,7 +1327,7 @@ xfs_reclaim_inodes_nr(
+ 	else
+ 		sync_mode |= SYNC_WAIT;
+ 
+-	return xfs_reclaim_inodes_ag(mp, sync_mode, &nr_to_scan);
++	return xfs_reclaim_inodes_ag(mp, sync_mode, nr_to_scan);
+ }
+ 
+ /*
 -- 
 2.23.0.rc1
 
