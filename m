@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B089C47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BF36AECE59A
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:35 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 76273206C2
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97F00206C2
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730504AbfJIDVd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 23:21:33 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46265 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730339AbfJIDVc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:32 -0400
+        id S1730514AbfJIDVe (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 23:21:34 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57921 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730475AbfJIDVd (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:33 -0400
 Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 40EF943EC51;
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4133D362EDA;
         Wed,  9 Oct 2019 14:21:27 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XW-0006BS-Ty; Wed, 09 Oct 2019 14:21:26 +1100
+        id 1iI2XW-0006B9-Nw; Wed, 09 Oct 2019 14:21:26 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XW-00039K-Rj; Wed, 09 Oct 2019 14:21:26 +1100
+        id 1iI2XW-000395-M9; Wed, 09 Oct 2019 14:21:26 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 09/26] shrinkers: use defer_work for GFP_NOFS sensitive shrinkers
-Date:   Wed,  9 Oct 2019 14:21:07 +1100
-Message-Id: <20191009032124.10541-10-david@fromorbit.com>
+Subject: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
+Date:   Wed,  9 Oct 2019 14:21:02 +1100
+Message-Id: <20191009032124.10541-5-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20191009032124.10541-1-david@fromorbit.com>
 References: <20191009032124.10541-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=XobE76Q3jBoA:10 a=20KFwNOVAAAA:8
-        a=bIsfdx-f5ddGStTJopEA:9
+        a=1dk79d6Hl8FtNpQQbMkA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -51,197 +51,48 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-For shrinkers that currently avoid scanning when called under
-GFP_NOFS contexts, convert them to use the new ->defer_work flag
-rather than checking and returning errors during scans.
+The buffer cache shrinker frees more than just the xfs_buf slab
+objects - it also frees the pages attached to the buffers. Make sure
+the memory reclaim code accounts for this memory being freed
+correctly, similar to how the inode shrinker accounts for pages
+freed from the page cache due to mapping invalidation.
 
-This makes it very clear that these shrinkers are not doing any work
-because of the context limitations, not because there is no work
-that can be done.
+We also need to make sure that the mm subsystem knows these are
+reclaimable objects. We provide the memory reclaim subsystem with a
+a shrinker to reclaim xfs_bufs, so we should really mark the slab
+that way.
+
+We also have a lot of xfs_bufs in a busy system, spread them around
+like we do inodes.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- drivers/staging/android/ashmem.c |  8 ++++----
- fs/gfs2/glock.c                  |  5 +++--
- fs/gfs2/quota.c                  |  6 +++---
- fs/nfs/dir.c                     |  6 +++---
- fs/super.c                       |  6 +++---
- fs/xfs/xfs_qm.c                  | 11 ++++++++---
- net/sunrpc/auth.c                |  5 ++---
- 7 files changed, 26 insertions(+), 21 deletions(-)
+ fs/xfs/xfs_buf.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/staging/android/ashmem.c b/drivers/staging/android/ashmem.c
-index 74d497d39c5a..0b80149f0ac5 100644
---- a/drivers/staging/android/ashmem.c
-+++ b/drivers/staging/android/ashmem.c
-@@ -438,10 +438,6 @@ ashmem_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index e484f6bead53..45b470f55ad7 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -324,6 +324,9 @@ xfs_buf_free(
+ 
+ 			__free_page(page);
+ 		}
++		if (current->reclaim_state)
++			current->reclaim_state->reclaimed_slab +=
++							bp->b_page_count;
+ 	} else if (bp->b_flags & _XBF_KMEM)
+ 		kmem_free(bp->b_addr);
+ 	_xfs_buf_free_pages(bp);
+@@ -2064,7 +2067,8 @@ int __init
+ xfs_buf_init(void)
  {
- 	unsigned long freed = 0;
- 
--	/* We might recurse into filesystem code, so bail out if necessary */
--	if (!(sc->gfp_mask & __GFP_FS))
--		return SHRINK_STOP;
--
- 	if (!mutex_trylock(&ashmem_mutex))
- 		return -1;
- 
-@@ -478,6 +474,10 @@ ashmem_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
- static unsigned long
- ashmem_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
- {
-+	/* We might recurse into filesystem code, so bail out if necessary */
-+	if (!(sc->gfp_mask & __GFP_FS))
-+		sc->defer_work = true;
-+
- 	/*
- 	 * note that lru_count is count of pages on the lru, not a count of
- 	 * objects on the list. This means the scan function needs to return the
-diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
-index 0290a22ebccf..a25161b93f96 100644
---- a/fs/gfs2/glock.c
-+++ b/fs/gfs2/glock.c
-@@ -1614,14 +1614,15 @@ static long gfs2_scan_glock_lru(int nr)
- static unsigned long gfs2_glock_shrink_scan(struct shrinker *shrink,
- 					    struct shrink_control *sc)
- {
--	if (!(sc->gfp_mask & __GFP_FS))
--		return SHRINK_STOP;
- 	return gfs2_scan_glock_lru(sc->nr_to_scan);
- }
- 
- static unsigned long gfs2_glock_shrink_count(struct shrinker *shrink,
- 					     struct shrink_control *sc)
- {
-+	if (!(sc->gfp_mask & __GFP_FS))
-+		sc->defer_work = true;
-+
- 	return vfs_pressure_ratio(atomic_read(&lru_count));
- }
- 
-diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
-index 7c016a082aa6..661189b42c31 100644
---- a/fs/gfs2/quota.c
-+++ b/fs/gfs2/quota.c
-@@ -166,9 +166,6 @@ static unsigned long gfs2_qd_shrink_scan(struct shrinker *shrink,
- 	LIST_HEAD(dispose);
- 	unsigned long freed;
- 
--	if (!(sc->gfp_mask & __GFP_FS))
--		return SHRINK_STOP;
--
- 	freed = list_lru_shrink_walk(&gfs2_qd_lru, sc,
- 				     gfs2_qd_isolate, &dispose);
- 
-@@ -180,6 +177,9 @@ static unsigned long gfs2_qd_shrink_scan(struct shrinker *shrink,
- static unsigned long gfs2_qd_shrink_count(struct shrinker *shrink,
- 					  struct shrink_control *sc)
- {
-+	if (!(sc->gfp_mask & __GFP_FS))
-+		sc->defer_work = true;
-+
- 	return vfs_pressure_ratio(list_lru_shrink_count(&gfs2_qd_lru, sc));
- }
- 
-diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
-index e180033e35cf..fd4a70479790 100644
---- a/fs/nfs/dir.c
-+++ b/fs/nfs/dir.c
-@@ -2211,10 +2211,7 @@ unsigned long
- nfs_access_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- {
- 	int nr_to_scan = sc->nr_to_scan;
--	gfp_t gfp_mask = sc->gfp_mask;
- 
--	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
--		return SHRINK_STOP;
- 	return nfs_do_access_cache_scan(nr_to_scan);
- }
- 
-@@ -2222,6 +2219,9 @@ nfs_access_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
- unsigned long
- nfs_access_cache_count(struct shrinker *shrink, struct shrink_control *sc)
- {
-+	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
-+		sc->defer_work = true;
-+
- 	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
- }
- 
-diff --git a/fs/super.c b/fs/super.c
-index f627b7c53d2b..d6a93d7fe05f 100644
---- a/fs/super.c
-+++ b/fs/super.c
-@@ -74,9 +74,6 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
- 	 * Deadlock avoidance.  We may hold various FS locks, and we don't want
- 	 * to recurse into the FS that called us in clear_inode() and friends..
- 	 */
--	if (!(sc->gfp_mask & __GFP_FS))
--		return SHRINK_STOP;
--
- 	if (!trylock_super(sb))
- 		return SHRINK_STOP;
- 
-@@ -141,6 +138,9 @@ static unsigned long super_cache_count(struct shrinker *shrink,
- 		return 0;
- 	smp_rmb();
- 
-+	if (!(sc->gfp_mask & __GFP_FS))
-+		sc->defer_work = true;
-+
- 	if (sb->s_op && sb->s_op->nr_cached_objects)
- 		total_objects = sb->s_op->nr_cached_objects(sb, sc);
- 
-diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
-index ecd8ce152ab1..aa03f2448145 100644
---- a/fs/xfs/xfs_qm.c
-+++ b/fs/xfs/xfs_qm.c
-@@ -502,9 +502,6 @@ xfs_qm_shrink_scan(
- 	unsigned long		freed;
- 	int			error;
- 
--	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) != (__GFP_FS|__GFP_DIRECT_RECLAIM))
--		return 0;
--
- 	INIT_LIST_HEAD(&isol.buffers);
- 	INIT_LIST_HEAD(&isol.dispose);
- 
-@@ -534,6 +531,14 @@ xfs_qm_shrink_count(
- 	struct xfs_quotainfo	*qi = container_of(shrink,
- 					struct xfs_quotainfo, qi_shrinker);
- 
-+	/*
-+	 * __GFP_DIRECT_RECLAIM is used here to avoid blocking kswapd
-+	 */
-+	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) !=
-+					(__GFP_FS|__GFP_DIRECT_RECLAIM)) {
-+		sc->defer_work = true;
-+	}
-+
- 	return list_lru_shrink_count(&qi->qi_lru, sc);
- }
- 
-diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
-index cdb05b48de44..7d11a7034fee 100644
---- a/net/sunrpc/auth.c
-+++ b/net/sunrpc/auth.c
-@@ -527,9 +527,6 @@ static unsigned long
- rpcauth_cache_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
- 
- {
--	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
--		return SHRINK_STOP;
--
- 	/* nothing left, don't come back */
- 	if (list_empty(&cred_unused))
- 		return SHRINK_STOP;
-@@ -541,6 +538,8 @@ static unsigned long
- rpcauth_cache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
- 
- {
-+	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
-+		sc->defer_work = true;
- 	return number_cred_unused * sysctl_vfs_cache_pressure / 100;
- }
+ 	xfs_buf_zone = kmem_zone_init_flags(sizeof(xfs_buf_t), "xfs_buf",
+-						KM_ZONE_HWALIGN, NULL);
++			KM_ZONE_HWALIGN | KM_ZONE_SPREAD | KM_ZONE_RECLAIM,
++			NULL);
+ 	if (!xfs_buf_zone)
+ 		goto out;
  
 -- 
 2.23.0.rc1
