@@ -2,113 +2,81 @@ Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E0FCFA3733
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EDC2CC47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 06:28:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 01A4D206C2
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CD5E0218AC
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 06:28:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730652AbfJIDVy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 23:21:54 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58005 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730503AbfJIDVe (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:34 -0400
-Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4587736317F;
-        Wed,  9 Oct 2019 14:21:28 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-0006Bp-8N; Wed, 09 Oct 2019 14:21:27 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.92)
-        (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-00039i-6J; Wed, 09 Oct 2019 14:21:27 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 17/26] xfs: don't block kswapd in inode reclaim
-Date:   Wed,  9 Oct 2019 14:21:15 +1100
-Message-Id: <20191009032124.10541-18-david@fromorbit.com>
-X-Mailer: git-send-email 2.23.0.rc1
-In-Reply-To: <20191009032124.10541-1-david@fromorbit.com>
-References: <20191009032124.10541-1-david@fromorbit.com>
+        id S1727002AbfJIG22 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 02:28:28 -0400
+Received: from verein.lst.de ([213.95.11.211]:50466 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726698AbfJIG22 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Oct 2019 02:28:28 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id B14CB68B05; Wed,  9 Oct 2019 08:28:24 +0200 (CEST)
+Date:   Wed, 9 Oct 2019 08:28:24 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Goldwyn Rodrigues <rgoldwyn@suse.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 08/20] iomap: use a srcmap for a read-modify-write I/O
+Message-ID: <20191009062824.GA29833@lst.de>
+References: <20191008071527.29304-1-hch@lst.de> <20191008071527.29304-9-hch@lst.de> <20191008150044.GV13108@magnolia>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=XobE76Q3jBoA:10 a=20KFwNOVAAAA:8
-        a=x2yLRZ3W9cWBXR4-ZBgA:9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191008150044.GV13108@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Tue, Oct 08, 2019 at 08:00:44AM -0700, Darrick J. Wong wrote:
+> >  	unsigned long vaddr = vmf->address;
+> >  	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+> >  	struct iomap iomap = { 0 };
+> 
+> Does this definition ^^^^^ need to be converted too?  You convert the
+> one in iomap_apply()...
 
-We have a number of reasons for blocking kswapd in XFS inode
-reclaim, mainly all to do with the fact that memory reclaim has no
-feedback mechanisms to throttle on dirty slab objects that need IO
-to reclaim.
+Doesn't strictly need to, but it sure would look nicer and fit the theme.
 
-As a result, we currently throttle inode reclaim by issuing IO in
-the reclaim context. The unfortunate side effect of this is that it
-can cause long tail latencies in reclaim and for some workloads this
-can be a problem.
+> 	/*
+> 	 * The @iomap and @srcmap parameters should be set to a hole
+> 	 * prior to calling ->iomap_begin.
+> 	 */
+> 	#define IOMAP_EMPTY_RECORD	{ .type = IOMAP_HOLE }
+> 
+> ...and later...
+> 
+> 	struct iomap srcmap = IOMAP_EMPTY_RECORD;
+> 
+> ..but meh, I'm not sure that adds much.
 
-Now that the shrinkers finally have a method of telling kswapd to
-back off, we can start the process of making inode reclaim in XFS
-non-blocking. The first thing we need to do is not block kswapd, but
-so that doesn't cause immediate serious problems, make sure inode
-writeback is always underway when kswapd is running.
+I don't really see the point.
 
-As we don't block kswapd now, we don't have to worry about reclaim
-scans taking long delays due to IO being issued and waited for.
-Hence while direct reclaim gets delayed by IO, kswapd will not and
-so it will keep pushing the AIL to clean inodes. Hence direct
-reclaim doesn't need to push the AIL anymore as kswapd will do it
-reliably now.
+> >  	unsigned flags = IOMAP_FAULT;
+> >  	int error, major = 0;
+> >  	bool write = vmf->flags & FAULT_FLAG_WRITE;
+> > @@ -1292,7 +1293,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+> >  	 * the file system block size to be equal the page size, which means
+> >  	 * that we never have to deal with more than a single extent here.
+> >  	 */
+> > -	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
+> > +	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap, &srcmap);
+> 
+> ->iomap_begin callers are never supposed to touch srcmap, right?
+> Maybe we ought to check that srcmap.io_type == HOLE, at least until
+> someone fixes this code to dax-copy the data from srcmap to iomap?
 
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
----
- fs/xfs/xfs_icache.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 944add5ff8e0..edcc3f6bb3bf 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1378,11 +1378,22 @@ xfs_reclaim_inodes_nr(
- 	struct xfs_mount	*mp,
- 	int			nr_to_scan)
- {
--	/* kick background reclaimer and push the AIL */
-+	int			sync_mode = SYNC_TRYLOCK;
-+
-+	/* kick background reclaimer */
- 	xfs_reclaim_work_queue(mp);
--	xfs_ail_push_all(mp->m_ail);
- 
--	return xfs_reclaim_inodes_ag(mp, SYNC_TRYLOCK | SYNC_WAIT, &nr_to_scan);
-+	/*
-+	 * For kswapd, we kick background inode writeback. For direct
-+	 * reclaim, we issue and wait on inode writeback to throttle
-+	 * reclaim rates and avoid shouty OOM-death.
-+	 */
-+	if (current_is_kswapd())
-+		xfs_ail_push_all(mp->m_ail);
-+	else
-+		sync_mode |= SYNC_WAIT;
-+
-+	return xfs_reclaim_inodes_ag(mp, sync_mode, &nr_to_scan);
- }
- 
- /*
--- 
-2.23.0.rc1
-
+What do you mean with touch?  ->iomap_begin fills it out and then the
+caller looks at it, at least for places that can deal with
+read-modify-write operations (DAX currently can't).
