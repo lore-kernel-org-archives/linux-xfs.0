@@ -2,137 +2,88 @@ Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E502FC47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 17:17:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3AC61C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 18:01:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B8212206BB
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 17:17:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0AF0621848
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 18:01:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MFd5gIu5"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="QP5Pv7nL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731451AbfJIRRJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 13:17:09 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:33868 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731173AbfJIRRJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 13:17:09 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99H4Qat019726;
-        Wed, 9 Oct 2019 17:17:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=e+kWzQrxQf2byJbjBKkRpHqcXy+znI5WFkUC4BF4dKM=;
- b=MFd5gIu5N/dFInw2DBQ7xOBpzZnzFg4bPYJ1bdzcA5P9kbllDuUGHyEolf964rUu98PS
- JipL/IwHqHdcxvxoVRigQxrJrzqCr1McplxIj+qa6ALCVGMeIJo0hnKo9QNNIlcL1g3z
- uaEPXesTMU10bOIMTJtQkdWN11RIQy0xgStHs/TCG9gvtRrqnm/qLm9+xHwRCTxQ4mCO
- YdYlM41tpkH7BvfgferiNGniQbdzcyA3zIBYNY4NtllSWN9fONaQydyL5cafrFtbk1Mg
- OelPehqO7ePXS5v0xVp8wUH96yRr9OEdKozWXEZgYrvN+rCmcmLgVMAz+bMGDaBSbFNF pg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vek4qp4nk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Oct 2019 17:17:02 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99H3ABr164231;
-        Wed, 9 Oct 2019 17:17:01 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2vgev1vpa9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 09 Oct 2019 17:17:01 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x99HGxlW025151;
-        Wed, 9 Oct 2019 17:17:00 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Oct 2019 17:16:58 +0000
-Date:   Wed, 9 Oct 2019 10:16:57 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 08/20] iomap: use a srcmap for a read-modify-write I/O
-Message-ID: <20191009171657.GG13108@magnolia>
-References: <20191008071527.29304-1-hch@lst.de>
- <20191008071527.29304-9-hch@lst.de>
- <20191008150044.GV13108@magnolia>
- <20191009062824.GA29833@lst.de>
+        id S1730955AbfJISBG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 14:01:06 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:54440 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730546AbfJISBG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 14:01:06 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=6ZhP/rcUrii8bESruUVlQpzTgpRl/gqphA+BDKAOllc=; b=QP5Pv7nL+Yr/3J5hrydGZvQSY
+        RbjRR3LZZhQo1VSUd56Hf1wI/Y//j1Mh22tBE5OuxHFT8AO9rYbsWl6MuZK6zSv+AlWrEasNIyxsH
+        b8d0NV43oUuti8IUmFBn4bNftU5zkKs2FzVJtrEmAwZdiIKB1wYEUR+M/wawLaQssTrth6pLjGmwH
+        cUhMTi0+nd7fG0/tD6db0AOWyV5GhWLiqLkN1EP2uxLEufir3OQLqptHqQwpr445dRy8DlgmvoGww
+        bkaZPFPnW4aR9JE510BLZiPno3qwSs3lVcvXc02FpcpLbz47lbuaZ4Yf7jvJgTjDMBfG6SEZTOGXw
+        nWOIAR2sA==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
+        id 1iIGGk-0003lg-CL; Wed, 09 Oct 2019 18:01:02 +0000
+Date:   Wed, 9 Oct 2019 11:01:02 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Al Viro <viro@zeniv.linux.org.uk>
+Cc:     Christoph Hellwig <hch@infradead.org>, Ian Kent <raven@themaw.net>,
+        linux-xfs <linux-xfs@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>
+Subject: Re: [PATCH v5 05/17] xfs: mount-api - refactor suffix_kstrtoint()
+Message-ID: <20191009180102.GA9056@infradead.org>
+References: <157062043952.32346.977737248061083292.stgit@fedora-28>
+ <157062063684.32346.12253005903079702405.stgit@fedora-28>
+ <20191009144859.GB10349@infradead.org>
+ <20191009152127.GZ26530@ZenIV.linux.org.uk>
+ <20191009152911.GA30439@infradead.org>
+ <20191009160310.GA26530@ZenIV.linux.org.uk>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191009062824.GA29833@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910090148
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910090148
+In-Reply-To: <20191009160310.GA26530@ZenIV.linux.org.uk>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 08:28:24AM +0200, Christoph Hellwig wrote:
-> On Tue, Oct 08, 2019 at 08:00:44AM -0700, Darrick J. Wong wrote:
-> > >  	unsigned long vaddr = vmf->address;
-> > >  	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
-> > >  	struct iomap iomap = { 0 };
-> > 
-> > Does this definition ^^^^^ need to be converted too?  You convert the
-> > one in iomap_apply()...
-> 
-> Doesn't strictly need to, but it sure would look nicer and fit the theme.
-> 
-> > 	/*
-> > 	 * The @iomap and @srcmap parameters should be set to a hole
-> > 	 * prior to calling ->iomap_begin.
-> > 	 */
-> > 	#define IOMAP_EMPTY_RECORD	{ .type = IOMAP_HOLE }
-> > 
-> > ...and later...
-> > 
-> > 	struct iomap srcmap = IOMAP_EMPTY_RECORD;
-> > 
-> > ..but meh, I'm not sure that adds much.
-> 
-> I don't really see the point.
+On Wed, Oct 09, 2019 at 05:03:10PM +0100, Al Viro wrote:
+> Except that I want to be able to have something like
+> -       fsparam_enum   ("errors",             Opt_errors),
+> +       fsparam_enum   ("errors",             Opt_errors, gfs2_param_errors),
+> with
+> +static const struct fs_parameter_enum gfs2_param_errors[] = {
+> +       {"withdraw",   Opt_errors_withdraw },
+> +       {"panic",      Opt_errors_panic },
+> +       {}
+> +};
+> instead of having them all squashed into one array, as in
 
-Yeah.  Agreed.
+Makes total sense and still fits the above scheme.
 
-> > >  	unsigned flags = IOMAP_FAULT;
-> > >  	int error, major = 0;
-> > >  	bool write = vmf->flags & FAULT_FLAG_WRITE;
-> > > @@ -1292,7 +1293,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
-> > >  	 * the file system block size to be equal the page size, which means
-> > >  	 * that we never have to deal with more than a single extent here.
-> > >  	 */
-> > > -	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
-> > > +	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap, &srcmap);
-> > 
-> > ->iomap_begin callers are never supposed to touch srcmap, right?
-> > Maybe we ought to check that srcmap.io_type == HOLE, at least until
-> > someone fixes this code to dax-copy the data from srcmap to iomap?
-> 
-> What do you mean with touch?  ->iomap_begin fills it out and then the
-> caller looks at it, at least for places that can deal with
-> read-modify-write operations (DAX currently can't).
+> IOW, I want to kill ->enums thing.  And ->name is also trivial
+> to kill, at which point we are left with just what used to be
+> ->specs.
 
-Yes, I grok that the DAX code should never get fed a shared mapping, but
-maybe we ought to have a WARN_ON_ONCE just in case some filesystem AI
-programmer decides to backport a fs patch that results in sending a
-non-hole srcmap back to the dax iomap callers.  /We/ know that you
-should never do this, but does the AI know? <grumble>
+Agreed.
 
-(Yeah, pure paranoia on my part :P)
+> I have some experiments in that direction (very incomplete right
+> now) in #work.mount-parser-later; next cycle fodder, I'm afraid.
 
---D
+I like that a lot, and feel like we really shouldn't do more
+conversions until that ground work has been done
