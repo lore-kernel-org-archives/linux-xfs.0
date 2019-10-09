@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2241C47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:47:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A73BECE58C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:49:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B4A99206B6
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:47:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5E320206B6
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:49:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730490AbfJIVrt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 17:47:49 -0400
-Received: from sandeen.net ([63.231.237.45]:36938 "EHLO sandeen.net"
+        id S1731140AbfJIVte (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 17:49:34 -0400
+Received: from sandeen.net ([63.231.237.45]:36998 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729161AbfJIVrt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Oct 2019 17:47:49 -0400
+        id S1727046AbfJIVtd (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Oct 2019 17:49:33 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id E7A6AD5E;
-        Wed,  9 Oct 2019 16:47:19 -0500 (CDT)
-Subject: Re: [PATCH 10/13] xfs_scrub: report all progressbar creation failures
+        by sandeen.net (Postfix) with ESMTPSA id 1B0E1D5E;
+        Wed,  9 Oct 2019 16:49:04 -0500 (CDT)
+Subject: Re: [PATCH 11/13] xfs_scrub: check progress bar timedwait failures
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
- <156944726395.297677.157416048420551315.stgit@magnolia>
+ <156944727002.297677.2767314073387682430.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -72,15 +72,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <fa4485cc-985e-859c-0c91-43f7247cb6a1@sandeen.net>
-Date:   Wed, 9 Oct 2019 16:47:47 -0500
+Message-ID: <42a6b464-0e0b-a6e5-b254-908737026ad7@sandeen.net>
+Date:   Wed, 9 Oct 2019 16:49:31 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156944726395.297677.157416048420551315.stgit@magnolia>
+In-Reply-To: <156944727002.297677.2767314073387682430.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -89,7 +89,7 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:34 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Always report failures when creating progress bars.
+> Check for failures in the timedwait for progressbar reporting.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
@@ -101,19 +101,18 @@ Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 > 
 > 
 > diff --git a/scrub/progress.c b/scrub/progress.c
-> index 08c7233e..5fda4ccb 100644
+> index 5fda4ccb..e93b607f 100644
 > --- a/scrub/progress.c
 > +++ b/scrub/progress.c
-> @@ -198,8 +198,10 @@ progress_init_phase(
->  	}
->  
->  	ret = pthread_create(&pt.thread, NULL, progress_report_thread, NULL);
-> -	if (ret)
-> +	if (ret) {
-> +		str_liberror(ctx, ret, _("creating progress reporting thread"));
->  		goto out_ptcounter;
-> +	}
->  
->  	return true;
->  
+> @@ -130,7 +130,9 @@ progress_report_thread(void *arg)
+>  			abstime.tv_sec++;
+>  			abstime.tv_nsec -= NSEC_PER_SEC;
+>  		}
+> -		pthread_cond_timedwait(&pt.wakeup, &pt.lock, &abstime);
+> +		ret = pthread_cond_timedwait(&pt.wakeup, &pt.lock, &abstime);
+> +		if (ret && ret != ETIMEDOUT)
+> +			break;
+>  		if (pt.terminate)
+>  			break;
+>  		ret = ptcounter_value(pt.ptc, &progress_val);
 > 
