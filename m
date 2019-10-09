@@ -2,78 +2,64 @@ Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10826ECE58C
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7993ECE58D
 	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 20:41:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E42D720B7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 20:41:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8C374218DE
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 20:41:33 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730999AbfJIUlc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728804AbfJIUlc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Wed, 9 Oct 2019 16:41:32 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46524 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46526 "EHLO mx1.suse.de"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728804AbfJIUlc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        id S1730955AbfJIUlc (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
         Wed, 9 Oct 2019 16:41:32 -0400
 X-Virus-Scanned: by amavisd-new at test-mx.suse.de
 Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 75C46B14E;
+        by mx1.suse.de (Postfix) with ESMTP id 759F7AF6B;
         Wed,  9 Oct 2019 20:41:30 +0000 (UTC)
 Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 222231E4236; Wed,  9 Oct 2019 22:41:30 +0200 (CEST)
+        id 1CB231E422A; Wed,  9 Oct 2019 22:41:30 +0200 (CEST)
 From:   Jan Kara <jack@suse.cz>
 To:     <linux-fsdevel@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>, darrick.wong@oracle.com,
         <linux-xfs@vger.kernel.org>,
         Matthew Bobrowski <mbobrowski@mbobrowski.org>,
         Jan Kara <jack@suse.cz>
-Subject: [PATCH 2/2] xfs: Use iomap_dio_rw_wait()
-Date:   Wed,  9 Oct 2019 22:41:26 +0200
-Message-Id: <20191009204130.15974-2-jack@suse.cz>
+Subject: [PATCH 0/2] iomap: Waiting for IO in iomap_dio_rw()
+Date:   Wed,  9 Oct 2019 22:41:24 +0200
+Message-Id: <20191009202736.19227-1-jack@suse.cz>
 X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20191009202736.19227-1-jack@suse.cz>
-References: <20191009202736.19227-1-jack@suse.cz>
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Use iomap_dio_rw() to wait for unaligned direct IO instead of opencoding
-the wait.
+Hello,
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/xfs/xfs_file.c | 12 ++++--------
- 1 file changed, 4 insertions(+), 8 deletions(-)
+when doing the ext4 conversion of direct IO code to iomap, we found it very
+difficult to handle inode extension with what iomap code currently provides.
+Ext4 wants to do inode extension as sync IO (so that the whole duration of
+IO is protected by inode->i_rwsem), also we need to truncate blocks beyond
+end of file in case of error or short write. Now in ->end_io handler we don't
+have the information how long originally the write was (to judge whether we
+may have allocated more blocks than we actually used) and in ->write_iter
+we don't know whether / how much of the IO actually succeeded in case of AIO.
 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 7d0dc21c14ca..f35cea628bed 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -547,16 +547,12 @@ xfs_file_dio_aio_write(
- 	}
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
--	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, &xfs_dio_write_ops,
--			   false);
--
- 	/*
--	 * If unaligned, this is the only IO in-flight. If it has not yet
--	 * completed, wait on it before we release the iolock to prevent
--	 * subsequent overlapping IO.
-+	 * If unaligned, this is the only IO in-flight. Wait on it before we
-+	 * release the iolock to prevent subsequent overlapping IO.
- 	 */
--	if (ret == -EIOCBQUEUED && unaligned_io)
--		inode_dio_wait(inode);
-+	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, &xfs_dio_write_ops,
-+			   unaligned_io);
- out:
- 	xfs_iunlock(ip, iolock);
- 
--- 
-2.16.4
+Thinking about it for some time I think iomap code makes it unnecessarily
+complex for the filesystem in case it decides it doesn't want to perform AIO
+and wants to fall back to good old synchronous IO. In such case it is much
+easier for the filesystem if it just gets normal error return from
+iomap_dio_rw() and not just -EIOCBQUEUED.
 
+The first patch in the series adds argument to iomap_dio_rw() to wait for IO
+completion (internally iomap_dio_rw() already supports this!) and the second
+patch converts XFS waiting for unaligned DIO write to this new API.
+
+What do people think?
+
+								Honza 
