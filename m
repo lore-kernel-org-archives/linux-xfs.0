@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E0FDC47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 269BAC47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 763E220B7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0545B21721
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730504AbfJILb1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 07:31:27 -0400
+        id S1730523AbfJILbb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 07:31:31 -0400
 Received: from icp-osb-irony-out3.external.iinet.net.au ([203.59.1.153]:33473
         "EHLO icp-osb-irony-out3.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730398AbfJILb1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 07:31:27 -0400
+        by vger.kernel.org with ESMTP id S1730398AbfJILbb (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 07:31:31 -0400
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BZAQBxxJ1d/0e30XYNWRwBAQEBAQc?=
- =?us-ascii?q?BAREBBAQBAYF7hDqEI48oAQEBAwaBEYodhR+MDwkBAQEBAQEBAQE3AQGEOwM?=
- =?us-ascii?q?CAoJyOBMCDAEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGCgmFGa9?=
- =?us-ascii?q?vdX8zGoosgQwogWWKQXiBB4FEgx2HUoJYBI80N4Y8Q5ZZgiyVNAyOFQOLHC2?=
- =?us-ascii?q?ECqU9gXpNLgqDJ1CBfxeOMGeRFAEB?=
-X-IPAS-Result: =?us-ascii?q?A2BZAQBxxJ1d/0e30XYNWRwBAQEBAQcBAREBBAQBAYF7h?=
- =?us-ascii?q?DqEI48oAQEBAwaBEYodhR+MDwkBAQEBAQEBAQE3AQGEOwMCAoJyOBMCDAEBA?=
- =?us-ascii?q?QQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGCgmFGa9vdX8zGoosgQwog?=
- =?us-ascii?q?WWKQXiBB4FEgx2HUoJYBI80N4Y8Q5ZZgiyVNAyOFQOLHC2ECqU9gXpNLgqDJ?=
- =?us-ascii?q?1CBfxeOMGeRFAEB?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BYAQBxxJ1d/0e30XYNWRwBAQEBAQc?=
+ =?us-ascii?q?BAREBBAQBAYF7gW+CS4QjjygBAQEDBosuhR+MDwkBAQEBAQEBAQE3AQGEOwM?=
+ =?us-ascii?q?CAoJyOBMCDAEBAQQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4UZr29?=
+ =?us-ascii?q?1fzMaiiyBDCiBZYpBeIEHgRGDUIdSglgEjzQ3hjxDllmCLJU0DI4VA4scLYQ?=
+ =?us-ascii?q?KpT2Bek0uCoMnUIF/F44wZ5EUAQE?=
+X-IPAS-Result: =?us-ascii?q?A2BYAQBxxJ1d/0e30XYNWRwBAQEBAQcBAREBBAQBAYF7g?=
+ =?us-ascii?q?W+CS4QjjygBAQEDBosuhR+MDwkBAQEBAQEBAQE3AQGEOwMCAoJyOBMCDAEBA?=
+ =?us-ascii?q?QQBAQEBAQUDAYVYhhoCAQMjBFIQGA0CJgICRxAGE4UZr291fzMaiiyBDCiBZ?=
+ =?us-ascii?q?YpBeIEHgRGDUIdSglgEjzQ3hjxDllmCLJU0DI4VA4scLYQKpT2Bek0uCoMnU?=
+ =?us-ascii?q?IF/F44wZ5EUAQE?=
 X-IronPort-AV: E=Sophos;i="5.67,273,1566835200"; 
-   d="scan'208";a="216229105"
+   d="scan'208";a="216229114"
 Received: from unknown (HELO [192.168.1.222]) ([118.209.183.71])
-  by icp-osb-irony-out3.iinet.net.au with ESMTP; 09 Oct 2019 19:31:24 +0800
-Subject: [PATCH v5 14/17] xfs: mount-api - add xfs_fc_free()
+  by icp-osb-irony-out3.iinet.net.au with ESMTP; 09 Oct 2019 19:31:30 +0800
+Subject: [PATCH v5 15/17] xfs: mount-api - dont set sb in xfs_mount_alloc()
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>,
@@ -41,8 +41,8 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Wed, 09 Oct 2019 19:31:24 +0800
-Message-ID: <157062068470.32346.8530858639686710763.stgit@fedora-28>
+Date:   Wed, 09 Oct 2019 19:31:30 +0800
+Message-ID: <157062068996.32346.198461609951852574.stgit@fedora-28>
 In-Reply-To: <157062043952.32346.977737248061083292.stgit@fedora-28>
 References: <157062043952.32346.977737248061083292.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -54,46 +54,52 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Add the fs_context_operations method .free that performs fs
-context cleanup on context release.
+When changing to use the new mount api the super block won't be
+available when the xfs_mount info struct is allocated so move
+setting the super block in xfs_mount to xfs_fs_fill_super().
+
+Also change xfs_mount_alloc() decalaration static -> STATIC.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_super.c |   19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ fs/xfs/xfs_super.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 230b0e2a184c..c7c33395b648 100644
+index c7c33395b648..910739789aed 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -2127,10 +2127,29 @@ static const struct super_operations xfs_super_operations = {
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
- };
+@@ -1766,9 +1766,8 @@ xfs_destroy_percpu_counters(
+ 	percpu_counter_destroy(&mp->m_delalloc_blks);
+ }
  
-+static void xfs_fc_free(struct fs_context *fc)
-+{
-+	struct xfs_fs_context	*ctx = fc->fs_private;
-+	struct xfs_mount	*mp = fc->s_fs_info;
-+
-+	/*
-+	 * mp and ctx are stored in the fs_context when it is
-+	 * initialized. mp is transferred to the superblock on
-+	 * a successful mount, but if an error occurs before the
-+	 * transfer we have to free it here.
-+	 */
-+	if (mp) {
-+		xfs_free_fsname(mp);
-+		kfree(mp);
-+	}
-+	kfree(ctx);
-+}
-+
- static const struct fs_context_operations xfs_context_ops = {
- 	.parse_param = xfs_parse_param,
- 	.get_tree    = xfs_get_tree,
- 	.reconfigure = xfs_reconfigure,
-+	.free        = xfs_fc_free,
- };
+-static struct xfs_mount *
+-xfs_mount_alloc(
+-	struct super_block	*sb)
++STATIC struct xfs_mount *
++xfs_mount_alloc(void)
+ {
+ 	struct xfs_mount	*mp;
  
- static struct file_system_type xfs_fs_type = {
+@@ -1776,7 +1775,6 @@ xfs_mount_alloc(
+ 	if (!mp)
+ 		return NULL;
+ 
+-	mp->m_super = sb;
+ 	spin_lock_init(&mp->m_sb_lock);
+ 	spin_lock_init(&mp->m_agirotor_lock);
+ 	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
+@@ -1990,9 +1988,10 @@ xfs_fs_fill_super(
+ 	 * allocate mp and do all low-level struct initializations before we
+ 	 * attach it to the super
+ 	 */
+-	mp = xfs_mount_alloc(sb);
++	mp = xfs_mount_alloc();
+ 	if (!mp)
+ 		return -ENOMEM;
++	mp->m_super = sb;
+ 	sb->s_fs_info = mp;
+ 
+ 	error = xfs_parseargs(mp, (char *)data);
 
