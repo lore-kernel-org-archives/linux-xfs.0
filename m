@@ -2,33 +2,32 @@ Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5328C47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:46:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2241C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:47:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A5DDD2190F
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:46:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4A99206B6
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:47:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729535AbfJIVqi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 17:46:38 -0400
-Received: from sandeen.net ([63.231.237.45]:36848 "EHLO sandeen.net"
+        id S1730490AbfJIVrt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 17:47:49 -0400
+Received: from sandeen.net ([63.231.237.45]:36938 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727046AbfJIVqh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Oct 2019 17:46:37 -0400
+        id S1729161AbfJIVrt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Oct 2019 17:47:49 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8F81CD5E;
-        Wed,  9 Oct 2019 16:46:08 -0500 (CDT)
-Subject: Re: [PATCH 09/13] xfs_scrub: fix per-thread counter error
- communication problems
+        by sandeen.net (Postfix) with ESMTPSA id E7A6AD5E;
+        Wed,  9 Oct 2019 16:47:19 -0500 (CDT)
+Subject: Re: [PATCH 10/13] xfs_scrub: report all progressbar creation failures
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
- <156944725787.297677.340556438029903962.stgit@magnolia>
+ <156944726395.297677.157416048420551315.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,15 +72,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <2eff88dc-29bc-5164-c9a3-cc293c1bfc3b@sandeen.net>
-Date:   Wed, 9 Oct 2019 16:46:36 -0500
+Message-ID: <fa4485cc-985e-859c-0c91-43f7247cb6a1@sandeen.net>
+Date:   Wed, 9 Oct 2019 16:47:47 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156944725787.297677.340556438029903962.stgit@magnolia>
+In-Reply-To: <156944726395.297677.157416048420551315.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -90,32 +89,31 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:34 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Fix all the places in the per-thread counter functions either we fail to
-> check for runtime errors or fail to communicate them properly to
-> callers.  Then fix all the callers to report the error messages instead
-> of hiding them.
+> Always report failures when creating progress bars.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 > ---
->  scrub/counter.c     |   33 ++++++++++++++++++---------------
->  scrub/counter.h     |    6 +++---
->  scrub/phase3.c      |   23 +++++++++++++++++------
->  scrub/progress.c    |   12 +++++++++---
->  scrub/read_verify.c |    9 ++++++---
->  5 files changed, 53 insertions(+), 30 deletions(-)
-
-...
-
-> @@ -282,5 +282,8 @@ uint64_t
->  read_verify_bytes(
->  	struct read_verify_pool		*rvp)
->  {
-> -	return ptcounter_value(rvp->verified_bytes);
-> +	uint64_t			ret;
-> +
-> +	ptcounter_value(rvp->verified_bytes, &ret);
-> +	return ret;
->  }
-
-IMHO this is a confusing use of "ret" which is normally return status but
-here it is the sum?  And errors are ignored? We just get a ret ("sum") of zero?
+>  scrub/progress.c |    4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> 
+> diff --git a/scrub/progress.c b/scrub/progress.c
+> index 08c7233e..5fda4ccb 100644
+> --- a/scrub/progress.c
+> +++ b/scrub/progress.c
+> @@ -198,8 +198,10 @@ progress_init_phase(
+>  	}
+>  
+>  	ret = pthread_create(&pt.thread, NULL, progress_report_thread, NULL);
+> -	if (ret)
+> +	if (ret) {
+> +		str_liberror(ctx, ret, _("creating progress reporting thread"));
+>  		goto out_ptcounter;
+> +	}
+>  
+>  	return true;
+>  
+> 
