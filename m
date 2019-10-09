@@ -7,57 +7,58 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 138F3C47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:49:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DA03ECE58C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:49:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E0D7221848
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:49:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CA17F21848
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:49:58 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jbYgLTGU"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FGsELX0K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731538AbfJIQtn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 12:49:43 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:56800 "EHLO
+        id S1731416AbfJIQt6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 12:49:58 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:57006 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731416AbfJIQtm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 12:49:42 -0400
+        with ESMTP id S1730490AbfJIQt6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 12:49:58 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99Gjfnn003589
-        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:49:41 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99Gjcr0003549
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:49:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=dfBMulgGiXetD3+vyjJft3SGyfo4qvKQmEw1t1I9mfU=;
- b=jbYgLTGUCyB4wJRXVzRdivzJwhEswYX/1dJd7v+M2CtZ9M8hf10I+8dCQDhwBVOV9OQj
- ORV4zTFXWUPCCW0McpKNrCsUYfSr5VYvDQ+Lk/6ZrQQRr5+BSipbQYYjyFdgiDYTR8TT
- u0gv4251Faq+MANaAC9l7KXBFwDlNWLhuNoe7gvVxgAry4MbxVVgpzjQKSpnNMYgSdsX
- 3P1C/mvw+0k35Q7mq4PPvD2pqkETHeq9DpQ9Oxm9ZjNErjhHPyP/olYTGcEG9sHTQkKn
- jo/sIm1LEpQWZYzECXOWTYhV+9XgRUPltvfZyRNG4dEFb6RvUW9U2YsFOgtSMkWsqbZV tQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2vek4qnyv6-1
+ bh=hQ+lKnTERpzIcIBS1QXBXMC5jywWBD9kib2Ub0diBXY=;
+ b=FGsELX0KKGcMcePHbJPcI31Q6QkXcyfHYOcJ+/rrvB+ndxomjDULJ04zE8RYKNed+6y0
+ p0A/IbJCdMwPOVBTS65it4WEXug7ZNsjtaX9hWLme75gPx32v0yq+jitsAVPuBnUWFFc
+ W8GDQIRAH0amxZ0R00sD5Jpvg9PYuZE524ORJksjNKtQ4g04dbpppfthF1BqqC6OlwPe
+ Chr9ZCNTrIkYAqOy1gycKqKMxHQKa3X838JQaCaimP9ysKarzZk3OiwDXZiMxc0KkADr
+ AmG/A+RQqOwu41j3qVyiqEUv0YlmY0kaX3AfryeUcmJEjkbt7JcynoDDhyyQ4Wy9o1Y7 7w== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2vek4qnyw4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2019 16:49:41 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99GiZRL174362
-        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:49:41 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2vhhsmx1dp-1
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2019 16:49:56 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99GjWgi054889
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:49:55 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2vh5cb20jf-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2019 16:49:41 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x99GneAL016501
-        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:49:40 GMT
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2019 16:49:55 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x99GnsmH027856
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:49:54 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 09 Oct 2019 09:49:40 -0700
-Subject: [PATCH 1/2] xfs: add a repair revalidation function pointer
+        with ESMTP ; Wed, 09 Oct 2019 09:49:54 -0700
+Subject: [PATCH 1/3] xfs: add debug knobs to control btree bulk load slack
+ factors
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Wed, 09 Oct 2019 09:49:39 -0700
-Message-ID: <157063977906.2913625.11610063964985485066.stgit@magnolia>
-In-Reply-To: <157063977277.2913625.2221058732448775822.stgit@magnolia>
-References: <157063977277.2913625.2221058732448775822.stgit@magnolia>
+Date:   Wed, 09 Oct 2019 09:49:53 -0700
+Message-ID: <157063979364.2914891.5142110960507331172.stgit@magnolia>
+In-Reply-To: <157063978750.2914891.14339604572380248276.stgit@magnolia>
+References: <157063978750.2914891.14339604572380248276.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,52 +81,115 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Allow repair functions to set a separate function pointer to validate
-the metadata that they've rebuilt.  This prevents us from exiting from a
-repair function that rebuilds both A and B without checking that both A
-and B can pass a scrub test.  We'll need this for the free space and
-inode btree repair strategies.
+Add some debug knobs so that we can control the leaf and node block
+slack when rebuilding btrees.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/scrub/scrub.c |    5 ++++-
- fs/xfs/scrub/scrub.h |    8 ++++++++
- 2 files changed, 12 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_globals.c |    6 ++++++
+ fs/xfs/xfs_sysctl.h  |    2 ++
+ fs/xfs/xfs_sysfs.c   |   54 ++++++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 62 insertions(+)
 
 
-diff --git a/fs/xfs/scrub/scrub.c b/fs/xfs/scrub/scrub.c
-index 15c8c5f3f688..0f0b64d7164b 100644
---- a/fs/xfs/scrub/scrub.c
-+++ b/fs/xfs/scrub/scrub.c
-@@ -495,7 +495,10 @@ xfs_scrub_metadata(
- 		goto out_teardown;
- 
- 	/* Scrub for errors. */
--	error = sc.ops->scrub(&sc);
-+	if ((sc.flags & XREP_ALREADY_FIXED) && sc.ops->repair_eval != NULL)
-+		error = sc.ops->repair_eval(&sc);
-+	else
-+		error = sc.ops->scrub(&sc);
- 	if (!(sc.flags & XCHK_TRY_HARDER) && error == -EDEADLOCK) {
- 		/*
- 		 * Scrubbers return -EDEADLOCK to mean 'try harder'.
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index ad1ceb44a628..94a30637a127 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -27,6 +27,14 @@ struct xchk_meta_ops {
- 	/* Repair or optimize the metadata. */
- 	int		(*repair)(struct xfs_scrub *);
- 
-+	/*
-+	 * Re-scrub the metadata we repaired, in case there's extra work that
-+	 * we need to do to check our repair work.  If this is NULL, we'll use
-+	 * the ->scrub function pointer, assuming that the regular scrub is
-+	 * sufficient.
-+	 */
-+	int		(*repair_eval)(struct xfs_scrub *sc);
+diff --git a/fs/xfs/xfs_globals.c b/fs/xfs/xfs_globals.c
+index fa55ab8b8d80..8f67027c144b 100644
+--- a/fs/xfs/xfs_globals.c
++++ b/fs/xfs/xfs_globals.c
+@@ -43,4 +43,10 @@ struct xfs_globals xfs_globals = {
+ #ifdef DEBUG
+ 	.pwork_threads		=	-1,	/* automatic thread detection */
+ #endif
 +
- 	/* Decide if we even have this piece of metadata. */
- 	bool		(*has)(struct xfs_sb *);
++	/* Bulk load new btree leaf blocks to 75% full. */
++	.bload_leaf_slack	=	-1,
++
++	/* Bulk load new btree node blocks to 75% full. */
++	.bload_node_slack	=	-1,
+ };
+diff --git a/fs/xfs/xfs_sysctl.h b/fs/xfs/xfs_sysctl.h
+index 8abf4640f1d5..aecccceee4ca 100644
+--- a/fs/xfs/xfs_sysctl.h
++++ b/fs/xfs/xfs_sysctl.h
+@@ -85,6 +85,8 @@ struct xfs_globals {
+ #ifdef DEBUG
+ 	int	pwork_threads;		/* parallel workqueue threads */
+ #endif
++	int	bload_leaf_slack;	/* btree bulk load leaf slack */
++	int	bload_node_slack;	/* btree bulk load node slack */
+ 	int	log_recovery_delay;	/* log recovery delay (secs) */
+ 	int	mount_delay;		/* mount setup delay (secs) */
+ 	bool	bug_on_assert;		/* BUG() the kernel on assert failure */
+diff --git a/fs/xfs/xfs_sysfs.c b/fs/xfs/xfs_sysfs.c
+index f1bc88f4367c..673ad21a9585 100644
+--- a/fs/xfs/xfs_sysfs.c
++++ b/fs/xfs/xfs_sysfs.c
+@@ -228,6 +228,58 @@ pwork_threads_show(
+ XFS_SYSFS_ATTR_RW(pwork_threads);
+ #endif /* DEBUG */
+ 
++STATIC ssize_t
++bload_leaf_slack_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
++{
++	int		ret;
++	int		val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	xfs_globals.bload_leaf_slack = val;
++	return count;
++}
++
++STATIC ssize_t
++bload_leaf_slack_show(
++	struct kobject	*kobject,
++	char		*buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_leaf_slack);
++}
++XFS_SYSFS_ATTR_RW(bload_leaf_slack);
++
++STATIC ssize_t
++bload_node_slack_store(
++	struct kobject	*kobject,
++	const char	*buf,
++	size_t		count)
++{
++	int		ret;
++	int		val;
++
++	ret = kstrtoint(buf, 0, &val);
++	if (ret)
++		return ret;
++
++	xfs_globals.bload_node_slack = val;
++	return count;
++}
++
++STATIC ssize_t
++bload_node_slack_show(
++	struct kobject	*kobject,
++	char		*buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%d\n", xfs_globals.bload_node_slack);
++}
++XFS_SYSFS_ATTR_RW(bload_node_slack);
++
+ static struct attribute *xfs_dbg_attrs[] = {
+ 	ATTR_LIST(bug_on_assert),
+ 	ATTR_LIST(log_recovery_delay),
+@@ -236,6 +288,8 @@ static struct attribute *xfs_dbg_attrs[] = {
+ #ifdef DEBUG
+ 	ATTR_LIST(pwork_threads),
+ #endif
++	ATTR_LIST(bload_leaf_slack),
++	ATTR_LIST(bload_node_slack),
+ 	NULL,
+ };
  
 
