@@ -2,127 +2,105 @@ Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 25095ECE58E
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:03:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E3CEAC47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:48:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F388720679
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:03:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4AE621848
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 16:48:04 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eaQ/Uc/K"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731738AbfJIQDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 12:03:15 -0400
-Received: from zeniv.linux.org.uk ([195.92.253.2]:48624 "EHLO
-        ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731724AbfJIQDP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 12:03:15 -0400
-Received: from viro by ZenIV.linux.org.uk with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iIEQg-0005ME-Nv; Wed, 09 Oct 2019 16:03:10 +0000
-Date:   Wed, 9 Oct 2019 17:03:10 +0100
-From:   Al Viro <viro@zeniv.linux.org.uk>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Ian Kent <raven@themaw.net>, linux-xfs <linux-xfs@vger.kernel.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH v5 05/17] xfs: mount-api - refactor suffix_kstrtoint()
-Message-ID: <20191009160310.GA26530@ZenIV.linux.org.uk>
-References: <157062043952.32346.977737248061083292.stgit@fedora-28>
- <157062063684.32346.12253005903079702405.stgit@fedora-28>
- <20191009144859.GB10349@infradead.org>
- <20191009152127.GZ26530@ZenIV.linux.org.uk>
- <20191009152911.GA30439@infradead.org>
+        id S1731158AbfJIQsE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 12:48:04 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:54702 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1730490AbfJIQsE (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 12:48:04 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99GjbPa003524
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:48:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=50b1vKHsuEYIkyyJvtmfO3HFT5Y610LdxL2xpzD9Co8=;
+ b=eaQ/Uc/KZ9t7SguRrofotEb/oUy1JLrrYnmpO3cHwGR4ZoFZZA/A+vGNMGmip6s0BvBs
+ MBtsje6Vn9U0JNIUIJuTbutolA+AJSnAje0UNOrQH3fC5sPz+QVpIBdmkWRVl0zd+x7v
+ YtcMGWLNhh8h50DwCQ6+w0k88a19OqkC3mGz5rKQC7BWxFsMAELPzCyKoL+V1b/KghEx
+ fw2TP8ZZeasGHnrvR9E405k0OMekv/MIaioggEpF+b9KvjyvVjm13F069cck/4fTLg4Q
+ 2JADkai6y7pfgo6ZOHJE9lKxFVxy0CLyPPxQ4TpEwymLDNbL+T3IlGhn5sQMzXMlCee5 yg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2vek4qnyjp-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2019 16:48:02 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x99GjQOn111688
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:48:01 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2vgev1tkva-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Wed, 09 Oct 2019 16:48:01 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x99Gm0ix020888
+        for <linux-xfs@vger.kernel.org>; Wed, 9 Oct 2019 16:48:00 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 09 Oct 2019 16:48:00 +0000
+Subject: [PATCH 0/4] xfs: btree bulk loading
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Wed, 09 Oct 2019 09:47:58 -0700
+Message-ID: <157063967800.2912204.4012307770844087647.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191009152911.GA30439@infradead.org>
-User-Agent: Mutt/1.12.1 (2019-06-15)
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=767
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910090147
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9405 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=849 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910090147
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 08:29:11AM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 09, 2019 at 04:21:27PM +0100, Al Viro wrote:
-> > What we need to do is to turn fs_parameter_type into a pointer
-> > to function.  With fs_param_is_bool et.al. becoming instances
-> > of such, and fs_parse() switch from hell turning into
-> > 	err = p->type(p, param, result);
-> > 
-> > That won't affect the existing macros or any filesystem code.
-> > If some filesystem wants to have helpers of its own - more
-> > power to it, just use __fsparam(my_bloody_helper, "foo", Opt_foo, 0)
-> > and be done with that.
-> 
-> Actually, while we could keep the old macros around at least
-> temporarily for existing users I think killing them actually would
-> improve the file systems as well.
-> 
-> This:
-> 
-> static const struct fs_parameter_spec afs_param_specs[] = {
-> 	{ "autocell",	Opt_autocell,	fs_parse_flag },
-> 	{ "dyn",	Opt_dyn,	fs_parse_flag },
-> 	{ "flock",	Opt_flock,	fs_parse_enum },
-> 	{ "source",	Opt_source,	fs_parse_string },
->         {}
-> };
-> 
-> 
-> is a lot more obvious than:
-> 
-> static const struct fs_parameter_spec afs_param_specs[] = {
->         fsparam_flag  ("autocell",      Opt_autocell),
->         fsparam_flag  ("dyn",           Opt_dyn),
->         fsparam_enum  ("flock",         Opt_flock),
->         fsparam_string("source",        Opt_source),
->         {}
-> };
+Hi all,
 
-Except that I want to be able to have something like
--       fsparam_enum   ("errors",             Opt_errors),
-+       fsparam_enum   ("errors",             Opt_errors, gfs2_param_errors),
-with
-+static const struct fs_parameter_enum gfs2_param_errors[] = {
-+       {"withdraw",   Opt_errors_withdraw },
-+       {"panic",      Opt_errors_panic },
-+       {}
-+};
-instead of having them all squashed into one array, as in
--static const struct fs_parameter_enum gfs2_param_enums[] = {
--       { Opt_quota,    "off",        Opt_quota_off },
--       { Opt_quota,    "account",    Opt_quota_account },
--       { Opt_quota,    "on",         Opt_quota_on },
--       { Opt_data,     "writeback",  Opt_data_writeback },
--       { Opt_data,     "ordered",    Opt_data_ordered },
--       { Opt_errors,   "withdraw",   Opt_errors_withdraw },
--       { Opt_errors,   "panic",      Opt_errors_panic },
-...
- const struct fs_parameter_description gfs2_fs_parameters = {
-        .name = "gfs2",
-        .specs = gfs2_param_specs,
--       .enums = gfs2_param_enums,
- };
+This series creates a bulk loading function for metadata btree cursors.
 
-IOW, I want to kill ->enums thing.  And ->name is also trivial
-to kill, at which point we are left with just what used to be
-->specs.
+We start by creating the idea of a "fake root" for the btree type so
+that we can use a special btree cursor to stage a new btree without
+altering anything that might already exist.
 
-Another thing is, struct fs_parameter_enum becomes pretty
-much identical to struct constant_table and can be folded into it.
+Next, we add utility functions to compute the desired btree shape for a
+given number of records.
 
-I have some experiments in that direction (very incomplete right
-now) in #work.mount-parser-later; next cycle fodder, I'm afraid.
+Finally we extend all four per-AG btree cursor types to support staging
+cursors and therefore bulk loading.  This will be used by upcoming patch
+series to implement online repair and refactor offline repair.
 
-	Another thing is, consider something like "it's an
-integer in range from 2 to 36".  Fairly useful in many cases,
-and we could do helpers for that.  Except that they need a pointer
-to helper-private data (the limits)...
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-	These macros somewhat isolate the filesystems until the
-things settle down.  And one needs examples of conversions to
-see what's missing - inventing a grand scheme out of thin air
-doesn't work...
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=btree-bulk-loading
+
+xfsprogs git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfsprogs-dev.git/log/?h=btree-bulk-loading
