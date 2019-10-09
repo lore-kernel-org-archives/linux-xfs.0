@@ -3,37 +3,37 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
-	autolearn=ham autolearn_force=no version=3.4.0
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3E3CBECE58E
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E137C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1B4E420B7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:17 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2E2DB20B7C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 11:31:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730339AbfJILbQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 07:31:16 -0400
+        id S1730384AbfJILbW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 07:31:22 -0400
 Received: from icp-osb-irony-out3.external.iinet.net.au ([203.59.1.153]:33473
         "EHLO icp-osb-irony-out3.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730111AbfJILbQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 07:31:16 -0400
+        by vger.kernel.org with ESMTP id S1730111AbfJILbW (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 07:31:22 -0400
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AaAABxxJ1d/0e30XYNWRsBAQEBAQE?=
- =?us-ascii?q?BBQEBAREBAQMDAQEBgWoDAQEBCwGEOYQjjygBAQEDBosuhR+MDwkBAQEBAQE?=
- =?us-ascii?q?BAQE3AQGEOwMCAoJyNwYOAgwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiY?=
- =?us-ascii?q?CAkcQBhOFGa9vdX8zGoosgQwoAYFkikF4gQeBEYNQh1KCWASNBYIvN4Y8Q5Z?=
- =?us-ascii?q?ZgiyVNAyCLotnAxCLDC2ECqU8gXtNLgqDJ1CBfxeOMGeRFAEB?=
-X-IPAS-Result: =?us-ascii?q?A2AaAABxxJ1d/0e30XYNWRsBAQEBAQEBBQEBAREBAQMDA?=
- =?us-ascii?q?QEBgWoDAQEBCwGEOYQjjygBAQEDBosuhR+MDwkBAQEBAQEBAQE3AQGEOwMCA?=
- =?us-ascii?q?oJyNwYOAgwBAQEEAQEBAQEFAwGFWIYaAgEDIwRSEBgNAiYCAkcQBhOFGa9vd?=
- =?us-ascii?q?X8zGoosgQwoAYFkikF4gQeBEYNQh1KCWASNBYIvN4Y8Q5ZZgiyVNAyCLotnA?=
- =?us-ascii?q?xCLDC2ECqU8gXtNLgqDJ1CBfxeOMGeRFAEB?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BZAQBxxJ1d/0e30XYNWRwBAQEBAQc?=
+ =?us-ascii?q?BAREBBAQBAYF7hDqEI48oAQEBAwaBEYodhR+MDwkBAQEBAQEBAQE3AQGEOwM?=
+ =?us-ascii?q?CAoJyOBMCDAEBAQQBAQEBAQUDAYVYhhoCAQMjBE0FEBgNAiYCAkcQBhOFGa9?=
+ =?us-ascii?q?vdX8zGoosgQwogWWKQXiBB4EQNIMdh1KCWASPNDeGPEOWWYIslTQMjhUDixw?=
+ =?us-ascii?q?thAqlPYF6TS4KgydQkEZnjkIrgicBAQ?=
+X-IPAS-Result: =?us-ascii?q?A2BZAQBxxJ1d/0e30XYNWRwBAQEBAQcBAREBBAQBAYF7h?=
+ =?us-ascii?q?DqEI48oAQEBAwaBEYodhR+MDwkBAQEBAQEBAQE3AQGEOwMCAoJyOBMCDAEBA?=
+ =?us-ascii?q?QQBAQEBAQUDAYVYhhoCAQMjBE0FEBgNAiYCAkcQBhOFGa9vdX8zGoosgQwog?=
+ =?us-ascii?q?WWKQXiBB4EQNIMdh1KCWASPNDeGPEOWWYIslTQMjhUDixwthAqlPYF6TS4Kg?=
+ =?us-ascii?q?ydQkEZnjkIrgicBAQ?=
 X-IronPort-AV: E=Sophos;i="5.67,273,1566835200"; 
-   d="scan'208";a="216229089"
+   d="scan'208";a="216229097"
 Received: from unknown (HELO [192.168.1.222]) ([118.209.183.71])
-  by icp-osb-irony-out3.iinet.net.au with ESMTP; 09 Oct 2019 19:31:14 +0800
-Subject: [PATCH v5 12/17] xfs: mount-api - add xfs_remount_ro() helper
+  by icp-osb-irony-out3.iinet.net.au with ESMTP; 09 Oct 2019 19:31:19 +0800
+Subject: [PATCH v5 13/17] xfs: mount api - add xfs_reconfigure()
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Brian Foster <bfoster@redhat.com>,
@@ -41,8 +41,8 @@ Cc:     Brian Foster <bfoster@redhat.com>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Wed, 09 Oct 2019 19:31:14 +0800
-Message-ID: <157062067418.32346.306283917170690609.stgit@fedora-28>
+Date:   Wed, 09 Oct 2019 19:31:19 +0800
+Message-ID: <157062067944.32346.8228418435930532076.stgit@fedora-28>
 In-Reply-To: <157062043952.32346.977737248061083292.stgit@fedora-28>
 References: <157062043952.32346.977737248061083292.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -54,106 +54,93 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Factor the remount read only code into a helper to simplify the
-subsequent change from the super block method .remount_fs to the
-mount-api fs_context_operations method .reconfigure.
+Add the fs_context_operations method .reconfigure that performs
+remount validation as previously done by the super_operations
+.remount_fs method.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_super.c |   73 +++++++++++++++++++++++++++++++---------------------
- 1 file changed, 43 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_super.c |   62 ++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 62 insertions(+)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 94996d1a8c0f..7e634706626b 100644
+index 7e634706626b..230b0e2a184c 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1425,6 +1425,47 @@ xfs_remount_rw(
+@@ -1544,6 +1544,67 @@ xfs_fs_remount(
  	return 0;
  }
  
++/*
++ * Logically we would return an error here to prevent users
++ * from believing they might have changed mount options using
++ * remount which can't be changed.
++ *
++ * But unfortunately mount(8) adds all options from mtab and
++ * fstab to the mount arguments in some cases so we can't
++ * blindly reject options, but have to check for each specified
++ * option if it actually differs from the currently set option
++ * and only reject it if that's the case.
++ *
++ * Until that is implemented we return success for every remount
++ * request, and silently ignore all options that we can't actually
++ * change.
++ */
 +STATIC int
-+xfs_remount_ro(
-+	struct xfs_mount	*mp)
++xfs_reconfigure(
++	struct fs_context *fc)
 +{
-+	int error;
++	struct xfs_fs_context	*ctx = fc->fs_private;
++	struct xfs_mount	*mp = XFS_M(fc->root->d_sb);
++	struct xfs_mount        *new_mp = fc->s_fs_info;
++	xfs_sb_t		*sbp = &mp->m_sb;
++	int			flags = fc->sb_flags;
++	int			error;
 +
-+	/*
-+	 * Cancel background eofb scanning so it cannot race with the
-+	 * final log force+buftarg wait and deadlock the remount.
-+	 */
-+	xfs_stop_block_reaping(mp);
-+
-+	/* Get rid of any leftover CoW reservations... */
-+	error = xfs_icache_free_cowblocks(mp, NULL);
-+	if (error) {
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
++	error = xfs_validate_params(new_mp, ctx, false);
++	if (error)
 +		return error;
++
++	/* inode32 -> inode64 */
++	if ((mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
++	    !(new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
++		mp->m_flags &= ~XFS_MOUNT_SMALL_INUMS;
++		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
 +	}
 +
-+	/* Free the per-AG metadata reservation pool. */
-+	error = xfs_fs_unreserve_ag_blocks(mp);
-+	if (error) {
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		return error;
++	/* inode64 -> inode32 */
++	if (!(mp->m_flags & XFS_MOUNT_SMALL_INUMS) &&
++	    (new_mp->m_flags & XFS_MOUNT_SMALL_INUMS)) {
++		mp->m_flags |= XFS_MOUNT_SMALL_INUMS;
++		mp->m_maxagi = xfs_set_inode_alloc(mp, sbp->sb_agcount);
 +	}
 +
-+	/*
-+	 * Before we sync the metadata, we need to free up the reserve
-+	 * block pool so that the used block count in the superblock on
-+	 * disk is correct at the end of the remount. Stash the current
-+	 * reserve pool size so that if we get remounted rw, we can
-+	 * return it to the same size.
-+	 */
-+	xfs_save_resvblks(mp);
++	/* ro -> rw */
++	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(flags & SB_RDONLY)) {
++		error = xfs_remount_rw(mp);
++		if (error)
++			return error;
++	}
 +
-+	xfs_quiesce_attr(mp);
-+	mp->m_flags |= XFS_MOUNT_RDONLY;
++	/* rw -> ro */
++	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (flags & SB_RDONLY)) {
++		error = xfs_remount_ro(mp);
++		if (error)
++			return error;
++	}
 +
 +	return 0;
 +}
 +
- STATIC int
- xfs_fs_remount(
- 	struct super_block	*sb,
-@@ -1495,37 +1536,9 @@ xfs_fs_remount(
+ /*
+  * Second stage of a freeze. The data is already frozen so we only
+  * need to take care of the metadata. Once that's done sync the superblock
+@@ -2069,6 +2130,7 @@ static const struct super_operations xfs_super_operations = {
+ static const struct fs_context_operations xfs_context_ops = {
+ 	.parse_param = xfs_parse_param,
+ 	.get_tree    = xfs_get_tree,
++	.reconfigure = xfs_reconfigure,
+ };
  
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
--		/*
--		 * Cancel background eofb scanning so it cannot race with the
--		 * final log force+buftarg wait and deadlock the remount.
--		 */
--		xfs_stop_block_reaping(mp);
--
--		/* Get rid of any leftover CoW reservations... */
--		error = xfs_icache_free_cowblocks(mp, NULL);
--		if (error) {
--			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--			return error;
--		}
--
--		/* Free the per-AG metadata reservation pool. */
--		error = xfs_fs_unreserve_ag_blocks(mp);
--		if (error) {
--			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		error = xfs_remount_ro(mp);
-+		if (error)
- 			return error;
--		}
--
--		/*
--		 * Before we sync the metadata, we need to free up the reserve
--		 * block pool so that the used block count in the superblock on
--		 * disk is correct at the end of the remount. Stash the current
--		 * reserve pool size so that if we get remounted rw, we can
--		 * return it to the same size.
--		 */
--		xfs_save_resvblks(mp);
--
--		xfs_quiesce_attr(mp);
--		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
- 
- 	return 0;
+ static struct file_system_type xfs_fs_type = {
 
