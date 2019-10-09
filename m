@@ -2,143 +2,150 @@ Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E5EBCECE596
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 20:41:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1E5DECE58C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:16:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C8F9B2190F
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 20:41:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D6A79218AC
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:16:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731158AbfJIUld (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 16:41:33 -0400
-Received: from mx2.suse.de ([195.135.220.15]:46522 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1729535AbfJIUld (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Oct 2019 16:41:33 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 7617AB165;
-        Wed,  9 Oct 2019 20:41:30 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 1E8C71E3EED; Wed,  9 Oct 2019 22:41:30 +0200 (CEST)
-From:   Jan Kara <jack@suse.cz>
-To:     <linux-fsdevel@vger.kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>, darrick.wong@oracle.com,
-        <linux-xfs@vger.kernel.org>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>,
-        Jan Kara <jack@suse.cz>
-Subject: [PATCH 1/2] iomap: Allow forcing of waiting for running DIO in iomap_dio_rw()
-Date:   Wed,  9 Oct 2019 22:41:25 +0200
-Message-Id: <20191009204130.15974-1-jack@suse.cz>
-X-Mailer: git-send-email 2.16.4
-In-Reply-To: <20191009202736.19227-1-jack@suse.cz>
-References: <20191009202736.19227-1-jack@suse.cz>
+        id S1731155AbfJIVQi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 17:16:38 -0400
+Received: from sandeen.net ([63.231.237.45]:35374 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729865AbfJIVQi (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Oct 2019 17:16:38 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 0EAC4D5E;
+        Wed,  9 Oct 2019 16:16:08 -0500 (CDT)
+Subject: Re: [PATCH 06/13] libfrog: add missing per-thread variable error
+ handling
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <156944720314.297677.12837037497727069563.stgit@magnolia>
+ <156944723982.297677.3080857602921528738.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Openpgp: preference=signencrypt
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <411225b6-634c-11da-02cd-8fd371c01ae4@sandeen.net>
+Date:   Wed, 9 Oct 2019 16:16:36 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
+ Gecko/20100101 Thunderbird/60.9.0
+MIME-Version: 1.0
+In-Reply-To: <156944723982.297677.3080857602921528738.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Filesystems do not support doing IO as asynchronous in some cases. For
-example in case of unaligned writes or in case file size needs to be
-extended (e.g. for ext4). Instead of forcing filesystem to wait for AIO
-in such cases, add argument to iomap_dio_rw() which makes the function
-wait for IO completion. This also results in executing
-iomap_dio_complete() inline in iomap_dio_rw() providing its return value
-to the caller as for ordinary sync IO.
+On 9/25/19 4:33 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Add missing return value checks for everything that the per-thread
+> variable code calls.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  libfrog/ptvar.c |   17 +++++++++++++++--
+>  1 file changed, 15 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/libfrog/ptvar.c b/libfrog/ptvar.c
+> index 6cb58208..55324b71 100644
+> --- a/libfrog/ptvar.c
+> +++ b/libfrog/ptvar.c
+> @@ -44,8 +44,12 @@ ptvar_alloc(
+>  	int		ret;
+>  
+>  #ifdef _SC_LEVEL1_DCACHE_LINESIZE
+> +	long		l1_dcache;
+> +
+>  	/* Try to prevent cache pingpong by aligning to cacheline size. */
+> -	size = max(size, sysconf(_SC_LEVEL1_DCACHE_LINESIZE));
+> +	l1_dcache = sysconf(_SC_LEVEL1_DCACHE_LINESIZE);
+> +	if (l1_dcache > 0)
+> +		size = roundup(size, l1_dcache);
+>  #endif
+>  
+>  	ptv = malloc(PTVAR_SIZE(nr, size));
+> @@ -88,17 +92,26 @@ ptvar_get(
+>  	int		*retp)
+>  {
+>  	void		*p;
+> +	int		ret;
+>  
+>  	p = pthread_getspecific(ptv->key);
+>  	if (!p) {
+>  		pthread_mutex_lock(&ptv->lock);
+>  		assert(ptv->nr_used < ptv->nr_counters);
+>  		p = &ptv->data[(ptv->nr_used++) * ptv->data_size];
+> -		pthread_setspecific(ptv->key, p);
+> +		ret = pthread_setspecific(ptv->key, p);
+> +		if (ret)
+> +			goto out_unlock;
+>  		pthread_mutex_unlock(&ptv->lock);
+>  	}
+>  	*retp = 0;
+>  	return p;
+> +
+> +out_unlock:
+> +	ptv->nr_used--;
+> +	pthread_mutex_unlock(&ptv->lock);
+> +	*retp = ret;
+> +	return NULL;
 
-Signed-off-by: Jan Kara <jack@suse.cz>
----
- fs/gfs2/file.c        | 4 ++--
- fs/iomap/direct-io.c  | 5 +++--
- fs/xfs/xfs_file.c     | 5 +++--
- include/linux/iomap.h | 3 ++-
- 4 files changed, 10 insertions(+), 7 deletions(-)
+As of this patch I'm a little confused by the "error handling" in ptcounter_add():
 
-diff --git a/fs/gfs2/file.c b/fs/gfs2/file.c
-index 997b326247e2..4650a7920ad8 100644
---- a/fs/gfs2/file.c
-+++ b/fs/gfs2/file.c
-@@ -732,7 +732,7 @@ static ssize_t gfs2_file_direct_read(struct kiocb *iocb, struct iov_iter *to)
- 	if (ret)
- 		goto out_uninit;
- 
--	ret = iomap_dio_rw(iocb, to, &gfs2_iomap_ops, NULL);
-+	ret = iomap_dio_rw(iocb, to, &gfs2_iomap_ops, NULL, false);
- 
- 	gfs2_glock_dq(&gh);
- out_uninit:
-@@ -767,7 +767,7 @@ static ssize_t gfs2_file_direct_write(struct kiocb *iocb, struct iov_iter *from)
- 	if (offset + len > i_size_read(&ip->i_inode))
- 		goto out;
- 
--	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL);
-+	ret = iomap_dio_rw(iocb, from, &gfs2_iomap_ops, NULL, false);
- 
- out:
- 	gfs2_glock_dq(&gh);
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 1fc28c2da279..9969cc135aeb 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -392,7 +392,8 @@ iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
-  */
- ssize_t
- iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops, const struct iomap_dio_ops *dops)
-+		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-+		bool force_wait)
- {
- 	struct address_space *mapping = iocb->ki_filp->f_mapping;
- 	struct inode *inode = file_inode(iocb->ki_filp);
-@@ -400,7 +401,7 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
- 	loff_t pos = iocb->ki_pos, start = pos;
- 	loff_t end = iocb->ki_pos + count - 1, ret = 0;
- 	unsigned int flags = IOMAP_DIRECT;
--	bool wait_for_completion = is_sync_kiocb(iocb);
-+	bool wait_for_completion = is_sync_kiocb(iocb) || force_wait;
- 	struct blk_plug plug;
- 	struct iomap_dio *dio;
- 
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 1ffb179f35d2..7d0dc21c14ca 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -188,7 +188,7 @@ xfs_file_dio_aio_read(
- 	file_accessed(iocb->ki_filp);
- 
- 	xfs_ilock(ip, XFS_IOLOCK_SHARED);
--	ret = iomap_dio_rw(iocb, to, &xfs_iomap_ops, NULL);
-+	ret = iomap_dio_rw(iocb, to, &xfs_iomap_ops, NULL, false);
- 	xfs_iunlock(ip, XFS_IOLOCK_SHARED);
- 
- 	return ret;
-@@ -547,7 +547,8 @@ xfs_file_dio_aio_write(
- 	}
- 
- 	trace_xfs_file_direct_write(ip, count, iocb->ki_pos);
--	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, &xfs_dio_write_ops);
-+	ret = iomap_dio_rw(iocb, from, &xfs_iomap_ops, &xfs_dio_write_ops,
-+			   false);
- 
- 	/*
- 	 * If unaligned, this is the only IO in-flight. If it has not yet
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7aa5d6117936..fd245f4e8249 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -195,7 +195,8 @@ struct iomap_dio_ops {
- };
- 
- ssize_t iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
--		const struct iomap_ops *ops, const struct iomap_dio_ops *dops);
-+		const struct iomap_ops *ops, const struct iomap_dio_ops *dops,
-+		bool force_wait);
- int iomap_dio_iopoll(struct kiocb *kiocb, bool spin);
- 
- #ifdef CONFIG_SWAP
--- 
-2.16.4
+        p = ptvar_get(ptc->var, &ret);
+        assert(ret == 0);
 
+?
