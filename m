@@ -6,48 +6,48 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2F48DECE58D
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 06:31:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94421ECE58E
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 07:03:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EE2EB20B7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 06:31:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5F28021920
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 07:03:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="C9FuX4qv"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KlGt3Z/l"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727657AbfJIGbp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 02:31:45 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42176 "EHLO
+        id S1725903AbfJIHDy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 03:03:54 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:48916 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727649AbfJIGbp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 02:31:45 -0400
+        with ESMTP id S1725848AbfJIHDy (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 03:03:54 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=8EvJWeGlkis4V2qIrGZdCq8ITBADZ0WXtWxnOLtuFGc=; b=C9FuX4qvjvy4ms/l5dezaCgWE
-        D90I0HKSpMbtznxYLCsHSjqrHs2J/MkxPIYVYyX6kwEf0OrcwIbT/Sx1DH6pVAnrXYSnK0FmCR3j7
-        Z4petnP2+b93gL/dw8bLlqDNEVkEO7Q0utY6Q4Htm0fOEcHQcIKmB5jRi0BROdB87VX1wplpBEiLB
-        epblpnpy35u27Tokbyn1wtomolNlbxxZltrtlhQwOQP6cd8kbnrCQpslH9Uo8A6rPPh26ZyPjT9pf
-        a8p0zyqwI7Hed+GDLTLw6QaNwS9mX2s3omcgw/10Yf5nZl7LTpjteApAupK6H4Qgcx2tqT/QMkyDC
-        U35ZF3mVg==;
+         bh=rwfL8oNHkRnTGyY2lKOFYK8nXi0lp9j+ggd3u7/w19Y=; b=KlGt3Z/lYhiAQFywHhMrCseGO
+        rbUUIQEoTHn/zIujobsJ75c4a+yRAIjgAyirVquxIzga5aMrgUj+DcsPyTGJcB1bh+gItDUAn2b1m
+        Icqo7Te6VC2FN9JYjGy8Z+Rs3qiBPkEraHFL75SfB42zp3Xssn/9xRGYylTffD/0Vj7OGqqPG6TJE
+        p/XzBLCsBTNSoA4Y+HqG4LFbR7jN6owYa8g86OtBlp41CvR67j4csKHAJVEacThy94h34LTcNMYWD
+        0kNvVy8evkX4X/0f5hmcM4qhAbSCxMvmPTXVIVWLoxXQnRM7fgq6DQzIxFi1AklBScnP12hnrqC13
+        0sWo/0oNg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iI5Vg-0002v9-Dc; Wed, 09 Oct 2019 06:31:44 +0000
-Date:   Tue, 8 Oct 2019 23:31:44 -0700
+        id 1iI60n-0006u3-Lu; Wed, 09 Oct 2019 07:03:53 +0000
+Date:   Wed, 9 Oct 2019 00:03:53 -0700
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
-Cc:     linux-xfs@vger.kernel.org, linux-nvdimm@lists.01.org,
-        darrick.wong@oracle.com, linux-kernel@vger.kernel.org,
-        rgoldwyn@suse.de, gujx@cn.fujitsu.com, david@fromorbit.com,
-        qi.fuli@fujitsu.com, caoj.fnst@cn.fujitsu.com
-Subject: Re: [RFC PATCH 0/7] xfs: add reflink & dedupe support for fsdax.
-Message-ID: <20191009063144.GA4300@infradead.org>
-References: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     guaneryu@gmail.com, linux-xfs@vger.kernel.org,
+        fstests@vger.kernel.org
+Subject: Re: [PATCH 4/4] populate: punch files after writing to fragment free
+ space properly
+Message-ID: <20191009070353.GB24658@infradead.org>
+References: <157049658503.2397321.13914737091290093511.stgit@magnolia>
+ <157049660991.2397321.6295105033631507023.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20190731114935.11030-1-ruansy.fnst@cn.fujitsu.com>
+In-Reply-To: <157049660991.2397321.6295105033631507023.stgit@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -55,10 +55,23 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Btw, I just had a chat with Dan last week on this.  And he pointed out
-that while this series deals with the read/write path issues of 
-reflink on DAX it doesn't deal with the mmap side issue that
-page->mapping and page->index can point back to exactly one file.
+On Mon, Oct 07, 2019 at 06:03:29PM -0700, Darrick J. Wong wrote:
+> To fix this, we need to force the filesystem to allocate all blocks
+> before freeing any blocks.  Split the creation of swiss-cheese files
+> into two parts: (a) writing data to the file to force allocation, and
+> (b) punching the holes to fragment free space.  It's a little hokey for
+> helpers to be modifying variables in the caller's scope, but there's not
+> really a better way to do that in bash.
 
-I think we want a few xfstests that reflink a file and then use the
-different links using mmap, as that should blow up pretty reliably.
+Why can't we just split the operations into creating a large contigous
+file and then fragment them?
+
+
+create_large_file foo
+create_large_file bar
+create_large_file baz
+
+fragment_large_file foo
+fragment_large_file bar
+fragment_large_file baz
+
