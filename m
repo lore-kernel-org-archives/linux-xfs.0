@@ -6,29 +6,28 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 75DBAC47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:54:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 372D6C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:58:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5A37F206B6
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:54:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1EF46205F4
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:58:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730490AbfJIVyl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 17:54:41 -0400
-Received: from sandeen.net ([63.231.237.45]:37264 "EHLO sandeen.net"
+        id S1730490AbfJIV6A (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 17:58:00 -0400
+Received: from sandeen.net ([63.231.237.45]:37428 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727046AbfJIVyk (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Oct 2019 17:54:40 -0400
+        id S1729865AbfJIV6A (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Oct 2019 17:58:00 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id F2666D5E;
-        Wed,  9 Oct 2019 16:54:10 -0500 (CDT)
-Subject: Re: [PATCH 12/13] xfs_scrub: move all the queue_subdir error
- reporting to callers
+        by sandeen.net (Postfix) with ESMTPSA id 94E50D5E;
+        Wed,  9 Oct 2019 16:57:30 -0500 (CDT)
+Subject: Re: [PATCH 13/13] xfs_scrub: fix error handling problems in vfs.c
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
- <156944727937.297677.492739673247248919.stgit@magnolia>
+ <156944728540.297677.4918291027551224418.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -73,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <d09a1f7e-f4d6-a921-5064-2d0d4b17da62@sandeen.net>
-Date:   Wed, 9 Oct 2019 16:54:38 -0500
+Message-ID: <13c6b5cb-0a43-3557-8821-b4471cfe3b22@sandeen.net>
+Date:   Wed, 9 Oct 2019 16:57:57 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156944727937.297677.492739673247248919.stgit@magnolia>
+In-Reply-To: <156944728540.297677.4918291027551224418.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -90,11 +89,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:34 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Change queue_subdir to return a positive error code to callers and move
-> the error reporting to the callers.  This continues the process of
-> changing internal functions to return error codes.
+> Fix all the places where we drop or screw up error handling in
+> scan_fs_tree.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
