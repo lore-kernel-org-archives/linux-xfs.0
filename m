@@ -4,46 +4,46 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EB775ECE59C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 78B57C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:49 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CD3EB206C2
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 522F5206C2
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:49 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730532AbfJIDVl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 23:21:41 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46731 "EHLO
+        id S1730644AbfJIDVr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 23:21:47 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:47367 "EHLO
         mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730530AbfJIDVk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:40 -0400
+        by vger.kernel.org with ESMTP id S1730339AbfJIDVp (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:45 -0400
 Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5674943ECB3;
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 5621A43EC8D;
         Wed,  9 Oct 2019 14:21:27 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-0006Bw-BE; Wed, 09 Oct 2019 14:21:27 +1100
+        id 1iI2XX-0006C6-G7; Wed, 09 Oct 2019 14:21:27 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-00039o-8x; Wed, 09 Oct 2019 14:21:27 +1100
+        id 1iI2XX-0003A0-EG; Wed, 09 Oct 2019 14:21:27 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 19/26] xfs: kill background reclaim work
-Date:   Wed,  9 Oct 2019 14:21:17 +1100
-Message-Id: <20191009032124.10541-20-david@fromorbit.com>
+Subject: [PATCH 23/26] xfs: reclaim inodes from the LRU
+Date:   Wed,  9 Oct 2019 14:21:21 +1100
+Message-Id: <20191009032124.10541-24-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20191009032124.10541-1-david@fromorbit.com>
 References: <20191009032124.10541-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
         a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=XobE76Q3jBoA:10 a=20KFwNOVAAAA:8
-        a=1xoyCpcK-Ekt5S4qF2sA:9
+        a=DZylAeVkA9-7jzjJDzkA:9 a=I6VJddeCkTb8Bg0N:21 a=kod2Zbzq7Elvxm72:21
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -51,186 +51,413 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-This function is now entirely done by kswapd, so we don't need the
-worker thread to do async reclaim anymore.
+Replace the AG radix tree walking reclaim code with a list_lru
+walker, giving us both node-aware and memcg-aware inode reclaim
+at the XFS level. This requires adding an inode isolation function to
+determine if the inode can be reclaim, and a list walker to
+dispose of the inodes that were isolated.
+
+We want the isolation function to be non-blocking. If we can't
+grab an inode then we either skip it or rotate it. If it's clean
+then we skip it, if it's dirty then we rotate to give it time to be
+cleaned before it is scanned again.
+
+This congregates the dirty inodes at the tail of the LRU, which
+means that if we start hitting a majority of dirty inodes either
+there are lots of unlinked inodes in the reclaim list or we've
+reclaimed all the clean inodes and we're looped back on the dirty
+inodes. Either way, this is an indication we should tell kswapd to
+back off.
+
+The non-blocking isolation function introduces a complexity for the
+filesystem shutdown case. When the filesystem is shut down, we want
+to free the inode even if it is dirty, and this may require
+blocking. We already hold the locks needed to do this blocking, so
+what we do is that we leave inodes locked - both the ILOCK and the
+flush lock - while they are sitting on the dispose list to be freed
+after the LRU walk completes.  This allows us to process the
+shutdown state outside the LRU walk where we can block safely.
+
+Because we now are reclaiming inodes from the context that it needs
+memory in (memcg and/or node), direct reclaim throttling within the
+high level reclaim code in now much more effective. Hence we don't
+wait on IO for either kswapd or direct reclaim. However, we have to
+tell kswapd to back off if we start hitting too many dirty inodes.
+This implies we've wrapped around the LRU and don't have many clean
+inodes left to reclaim, so it needs to wait a while for the AIL
+pushing to clean some of the remaining reclaimable inodes.
+
+Keep in mind we don't have to care about inode lock order or
+blocking with inode locks held here because a) we are using
+trylocks, and b) once marked with XFS_IRECLAIM they can't be found
+via the LRU and inode cache lookups will abort and retry. Hence
+nobody will try to lock them in any other context that might also be
+holding other inode locks.
+
+Also convert xfs_reclaim_inodes() to use a LRU walk to free all
+the reclaimable inodes in the filesystem.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_icache.c | 44 --------------------------------------------
- fs/xfs/xfs_icache.h |  2 --
- fs/xfs/xfs_mount.c  |  2 --
- fs/xfs/xfs_mount.h  |  2 --
- fs/xfs/xfs_super.c  | 11 +----------
- 5 files changed, 1 insertion(+), 60 deletions(-)
+ fs/xfs/xfs_icache.c | 210 ++++++++++++++++++++++++++++++++++++++------
+ fs/xfs/xfs_icache.h |  10 ++-
+ fs/xfs/xfs_inode.h  |   8 ++
+ fs/xfs/xfs_super.c  |  48 ++++++++--
+ 4 files changed, 241 insertions(+), 35 deletions(-)
 
 diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index 189cf423fe8f..7e175304e146 100644
+index 06fdaa746674..ef9ef46cfe6c 100644
 --- a/fs/xfs/xfs_icache.c
 +++ b/fs/xfs/xfs_icache.c
-@@ -138,44 +138,6 @@ xfs_inode_free(
- 	__xfs_inode_free(ip);
+@@ -1193,7 +1193,7 @@ xfs_reclaim_inode(
+  *
+  * Return the number of inodes freed.
+  */
+-STATIC int
++int
+ xfs_reclaim_inodes_ag(
+ 	struct xfs_mount	*mp,
+ 	int			flags,
+@@ -1297,40 +1297,196 @@ xfs_reclaim_inodes_ag(
+ 	return freed;
  }
  
--/*
-- * Queue a new inode reclaim pass if there are reclaimable inodes and there
-- * isn't a reclaim pass already in progress. By default it runs every 5s based
-- * on the xfs periodic sync default of 30s. Perhaps this should have it's own
-- * tunable, but that can be done if this method proves to be ineffective or too
-- * aggressive.
-- */
--static void
--xfs_reclaim_work_queue(
--	struct xfs_mount        *mp)
--{
--
--	rcu_read_lock();
--	if (radix_tree_tagged(&mp->m_perag_tree, XFS_ICI_RECLAIM_TAG)) {
--		queue_delayed_work(mp->m_reclaim_workqueue, &mp->m_reclaim_work,
--			msecs_to_jiffies(xfs_syncd_centisecs / 6 * 10));
--	}
--	rcu_read_unlock();
--}
--
--/*
-- * This is a fast pass over the inode cache to try to get reclaim moving on as
-- * many inodes as possible in a short period of time. It kicks itself every few
-- * seconds, as well as being kicked by the inode cache shrinker when memory
-- * goes low. It scans as quickly as possible avoiding locked inodes or those
-- * already being flushed, and once done schedules a future pass.
-- */
 -void
--xfs_reclaim_worker(
--	struct work_struct *work)
--{
--	struct xfs_mount *mp = container_of(to_delayed_work(work),
--					struct xfs_mount, m_reclaim_work);
--
--	xfs_reclaim_inodes(mp, SYNC_TRYLOCK);
--	xfs_reclaim_work_queue(mp);
--}
--
- static void
- xfs_perag_set_reclaim_tag(
- 	struct xfs_perag	*pag)
-@@ -192,9 +154,6 @@ xfs_perag_set_reclaim_tag(
- 			   XFS_ICI_RECLAIM_TAG);
- 	spin_unlock(&mp->m_perag_lock);
- 
--	/* schedule periodic background inode reclaim */
--	xfs_reclaim_work_queue(mp);
--
- 	trace_xfs_perag_set_reclaim(mp, pag->pag_agno, -1, _RET_IP_);
+-xfs_reclaim_inodes(
+-	struct xfs_mount	*mp)
++enum lru_status
++xfs_inode_reclaim_isolate(
++	struct list_head	*item,
++	struct list_lru_one	*lru,
++	spinlock_t		*lru_lock,
++	void			*arg)
+ {
+-	xfs_reclaim_inodes_ag(mp, SYNC_WAIT, INT_MAX);
++        struct xfs_ireclaim_args *ra = arg;
++        struct inode		*inode = container_of(item, struct inode, i_lru);
++        struct xfs_inode	*ip = XFS_I(inode);
++	enum lru_status		ret;
++	xfs_lsn_t		lsn = 0;
++
++	/* Careful: inversion of iflags_lock and everything else here */
++	if (!spin_trylock(&ip->i_flags_lock))
++		return LRU_SKIP;
++
++	/* if we are in shutdown, we'll reclaim it even if dirty */
++	ret = LRU_ROTATE;
++	if (!xfs_inode_clean(ip) && !__xfs_iflags_test(ip, XFS_ISTALE) &&
++	    !XFS_FORCED_SHUTDOWN(ip->i_mount)) {
++		lsn = ip->i_itemp->ili_item.li_lsn;
++		ra->dirty_skipped++;
++		goto out_unlock_flags;
++	}
++
++	ret = LRU_SKIP;
++	if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
++		goto out_unlock_flags;
++
++	if (!__xfs_iflock_nowait(ip)) {
++		lsn = ip->i_itemp->ili_item.li_lsn;
++		ra->dirty_skipped++;
++		goto out_unlock_inode;
++	}
++
++	if (XFS_FORCED_SHUTDOWN(ip->i_mount))
++		goto reclaim;
++
++	/*
++	 * Now the inode is locked, we can actually determine if it is dirty
++	 * without racing with anything.
++	 */
++	ret = LRU_ROTATE;
++	if (xfs_ipincount(ip)) {
++		ra->dirty_skipped++;
++		goto out_ifunlock;
++	}
++	if (!xfs_inode_clean(ip) && !__xfs_iflags_test(ip, XFS_ISTALE)) {
++		lsn = ip->i_itemp->ili_item.li_lsn;
++		ra->dirty_skipped++;
++		goto out_ifunlock;
++	}
++
++reclaim:
++	/*
++	 * Once we mark the inode with XFS_IRECLAIM, no-one will grab it again.
++	 * RCU lookups will still find the inode, but they'll stop when they set
++	 * the IRECLAIM flag. Hence we can leave the inode locked as we move it
++	 * to the dispose list so we can deal with shutdown cleanup there
++	 * outside the LRU lock context.
++	 */
++	__xfs_iflags_set(ip, XFS_IRECLAIM);
++	list_lru_isolate_move(lru, &inode->i_lru, &ra->freeable);
++	spin_unlock(&ip->i_flags_lock);
++	return LRU_REMOVED;
++
++out_ifunlock:
++	xfs_ifunlock(ip);
++out_unlock_inode:
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++out_unlock_flags:
++	spin_unlock(&ip->i_flags_lock);
++
++	if (lsn && XFS_LSN_CMP(lsn, ra->lowest_lsn) < 0)
++		ra->lowest_lsn = lsn;
++	return ret;
  }
  
-@@ -1393,9 +1352,6 @@ xfs_reclaim_inodes_nr(
+-/*
+- * Scan a certain number of inodes for reclaim.
+- *
+- * When called we make sure that there is a background (fast) inode reclaim in
+- * progress, while we will throttle the speed of reclaim via doing synchronous
+- * reclaim of inodes. That means if we come across dirty inodes, we wait for
+- * them to be cleaned, which we hope will not be very long due to the
+- * background walker having already kicked the IO off on those dirty inodes.
+- */
+-long
+-xfs_reclaim_inodes_nr(
+-	struct xfs_mount	*mp,
+-	int			nr_to_scan)
++static void
++xfs_dispose_inode(
++	struct xfs_inode	*ip)
  {
- 	int			sync_mode = SYNC_TRYLOCK;
+-	int			sync_mode = 0;
++	struct xfs_mount	*mp = ip->i_mount;
++	struct xfs_perag	*pag;
++	xfs_ino_t		ino;
++
++	ASSERT(xfs_isiflocked(ip));
++	ASSERT(xfs_inode_clean(ip) || xfs_iflags_test(ip, XFS_ISTALE) ||
++	       XFS_FORCED_SHUTDOWN(mp));
++	ASSERT(ip->i_ino != 0);
  
--	/* kick background reclaimer */
--	xfs_reclaim_work_queue(mp);
--
  	/*
- 	 * For kswapd, we kick background inode writeback. For direct
- 	 * reclaim, we issue and wait on inode writeback to throttle
+-	 * For kswapd, we kick background inode writeback. For direct
+-	 * reclaim, we issue and wait on inode writeback to throttle
+-	 * reclaim rates and avoid shouty OOM-death.
++	 * Process the shutdown reclaim work we deferred from the LRU isolation
++	 * callback before we go any further.
+ 	 */
+-	if (current_is_kswapd())
+-		xfs_ail_push_all(mp->m_ail);
+-	else
+-		sync_mode |= SYNC_WAIT;
++	if (XFS_FORCED_SHUTDOWN(mp)) {
++		xfs_iunpin_wait(ip);
++		xfs_iflush_abort(ip, false);
++	} else {
++		xfs_ifunlock(ip);
++	}
+ 
+-	return xfs_reclaim_inodes_ag(mp, sync_mode, nr_to_scan);
++	/*
++	 * Because we use RCU freeing we need to ensure the inode always appears
++	 * to be reclaimed with an invalid inode number when in the free state.
++	 * We do this as early as possible under the ILOCK so that
++	 * xfs_iflush_cluster() and xfs_ifree_cluster() can be guaranteed to
++	 * detect races with us here. By doing this, we guarantee that once
++	 * xfs_iflush_cluster() or xfs_ifree_cluster() has locked XFS_ILOCK that
++	 * it will see either a valid inode that will serialise correctly, or it
++	 * will see an invalid inode that it can skip.
++	 */
++	spin_lock(&ip->i_flags_lock);
++	ino = ip->i_ino; /* for radix_tree_delete */
++	ip->i_flags = XFS_IRECLAIM;
++	ip->i_ino = 0;
++	spin_unlock(&ip->i_flags_lock);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	XFS_STATS_INC(mp, xs_ig_reclaims);
++	/*
++	 * Remove the inode from the per-AG radix tree.
++	 *
++	 * Because radix_tree_delete won't complain even if the item was never
++	 * added to the tree assert that it's been there before to catch
++	 * problems with the inode life time early on.
++	 */
++	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
++	spin_lock(&pag->pag_ici_lock);
++	if (!radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ino)))
++		ASSERT(0);
++	spin_unlock(&pag->pag_ici_lock);
++	xfs_perag_put(pag);
++
++	/*
++	 * Here we do an (almost) spurious inode lock in order to coordinate
++	 * with inode cache radix tree lookups.  This is because the lookup
++	 * can reference the inodes in the cache without taking references.
++	 *
++	 * We make that OK here by ensuring that we wait until the inode is
++	 * unlocked after the lookup before we go ahead and free it.
++	 *
++	 * XXX: need to check this is still true. Not sure it is.
++	 */
++	xfs_ilock(ip, XFS_ILOCK_EXCL);
++	xfs_qm_dqdetach(ip);
++	xfs_iunlock(ip, XFS_ILOCK_EXCL);
++
++	__xfs_inode_free(ip);
++}
++
++void
++xfs_dispose_inodes(
++	struct list_head	*freeable)
++{
++	while (!list_empty(freeable)) {
++		struct inode *inode;
++
++		inode = list_first_entry(freeable, struct inode, i_lru);
++		list_del_init(&inode->i_lru);
++
++		xfs_dispose_inode(XFS_I(inode));
++		cond_resched();
++	}
++}
++void
++xfs_reclaim_inodes(
++	struct xfs_mount	*mp)
++{
++	while (list_lru_count(&mp->m_inode_lru)) {
++		struct xfs_ireclaim_args ra;
++		long freed, to_free;
++
++		INIT_LIST_HEAD(&ra.freeable);
++		ra.lowest_lsn = NULLCOMMITLSN;
++		to_free = list_lru_count(&mp->m_inode_lru);
++
++		freed = list_lru_walk(&mp->m_inode_lru, xfs_inode_reclaim_isolate,
++				&ra, to_free);
++		xfs_dispose_inodes(&ra.freeable);
++
++		if (freed == 0) {
++			xfs_log_force(mp, XFS_LOG_SYNC);
++			xfs_ail_push_all(mp->m_ail);
++		} else if (ra.lowest_lsn != NULLCOMMITLSN) {
++			xfs_ail_push_sync(mp->m_ail, ra.lowest_lsn);
++		}
++		cond_resched();
++	}
+ }
+ 
+ STATIC int
 diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
-index 48f1fd2bb6ad..4c0d8920cc54 100644
+index 0ab08b58cd45..dadc69a30f33 100644
 --- a/fs/xfs/xfs_icache.h
 +++ b/fs/xfs/xfs_icache.h
-@@ -49,8 +49,6 @@ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
+@@ -49,8 +49,16 @@ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
  struct xfs_inode * xfs_inode_alloc(struct xfs_mount *mp, xfs_ino_t ino);
  void xfs_inode_free(struct xfs_inode *ip);
  
--void xfs_reclaim_worker(struct work_struct *work);
--
- int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
- int xfs_reclaim_inodes_count(struct xfs_mount *mp);
- long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
-diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-index ba5b6f3b2b88..ecbc21af9100 100644
---- a/fs/xfs/xfs_mount.c
-+++ b/fs/xfs/xfs_mount.c
-@@ -988,7 +988,6 @@ xfs_mountfs(
- 	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
- 	 * quota inodes.
- 	 */
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
- 	xfs_health_unmount(mp);
-  out_log_dealloc:
-@@ -1071,7 +1070,6 @@ xfs_unmountfs(
- 	 * reclaim just to be sure. We can stop background inode reclaim
- 	 * here as well if it is still running.
- 	 */
--	cancel_delayed_work_sync(&mp->m_reclaim_work);
- 	xfs_reclaim_inodes(mp, SYNC_WAIT);
- 	xfs_health_unmount(mp);
++struct xfs_ireclaim_args {
++	struct list_head	freeable;
++	xfs_lsn_t		lowest_lsn;
++	unsigned long		dirty_skipped;
++};
++
++enum lru_status xfs_inode_reclaim_isolate(struct list_head *item,
++		struct list_lru_one *lru, spinlock_t *lru_lock, void *arg);
++void xfs_dispose_inodes(struct list_head *freeable);
+ void xfs_reclaim_inodes(struct xfs_mount *mp);
+-long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
  
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index fdb60e09a9c5..f0cc952ad527 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -165,7 +165,6 @@ typedef struct xfs_mount {
- 	uint			m_chsize;	/* size of next field */
- 	atomic_t		m_active_trans;	/* number trans frozen */
- 	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
--	struct delayed_work	m_reclaim_work;	/* background inode reclaim */
- 	struct delayed_work	m_eofblocks_work; /* background eof blocks
- 						     trimming */
- 	struct delayed_work	m_cowblocks_work; /* background cow blocks
-@@ -182,7 +181,6 @@ typedef struct xfs_mount {
- 	struct workqueue_struct *m_buf_workqueue;
- 	struct workqueue_struct	*m_unwritten_workqueue;
- 	struct workqueue_struct	*m_cil_workqueue;
--	struct workqueue_struct	*m_reclaim_workqueue;
- 	struct workqueue_struct *m_eofblocks_workqueue;
- 	struct workqueue_struct	*m_sync_workqueue;
+ void xfs_inode_set_reclaim_tag(struct xfs_inode *ip);
  
+diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+index 558173f95a03..463170dc4c02 100644
+--- a/fs/xfs/xfs_inode.h
++++ b/fs/xfs/xfs_inode.h
+@@ -263,6 +263,14 @@ static inline int xfs_isiflocked(struct xfs_inode *ip)
+ 
+ extern void __xfs_iflock(struct xfs_inode *ip);
+ 
++static inline int __xfs_iflock_nowait(struct xfs_inode *ip)
++{
++	if (ip->i_flags & XFS_IFLOCK)
++		return false;
++	ip->i_flags |= XFS_IFLOCK;
++	return true;
++}
++
+ static inline int xfs_iflock_nowait(struct xfs_inode *ip)
+ {
+ 	return !xfs_iflags_test_and_set(ip, XFS_IFLOCK);
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index f0aff1f034e6..74767e6f48a7 100644
+index 01f08706a3fb..3dfddd3a443b 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -823,15 +823,10 @@ xfs_init_mount_workqueues(
- 	if (!mp->m_cil_workqueue)
- 		goto out_destroy_unwritten;
+@@ -17,6 +17,7 @@
+ #include "xfs_alloc.h"
+ #include "xfs_fsops.h"
+ #include "xfs_trans.h"
++#include "xfs_trans_priv.h"
+ #include "xfs_buf_item.h"
+ #include "xfs_log.h"
+ #include "xfs_log_priv.h"
+@@ -1811,23 +1812,56 @@ xfs_fs_mount(
+ }
  
--	mp->m_reclaim_workqueue = alloc_workqueue("xfs-reclaim/%s",
--			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
--	if (!mp->m_reclaim_workqueue)
--		goto out_destroy_cil;
--
- 	mp->m_eofblocks_workqueue = alloc_workqueue("xfs-eofblocks/%s",
- 			WQ_MEM_RECLAIM|WQ_FREEZABLE, 0, mp->m_fsname);
- 	if (!mp->m_eofblocks_workqueue)
--		goto out_destroy_reclaim;
-+		goto out_destroy_cil;
- 
- 	mp->m_sync_workqueue = alloc_workqueue("xfs-sync/%s", WQ_FREEZABLE, 0,
- 					       mp->m_fsname);
-@@ -842,8 +837,6 @@ xfs_init_mount_workqueues(
- 
- out_destroy_eofb:
- 	destroy_workqueue(mp->m_eofblocks_workqueue);
--out_destroy_reclaim:
--	destroy_workqueue(mp->m_reclaim_workqueue);
- out_destroy_cil:
- 	destroy_workqueue(mp->m_cil_workqueue);
- out_destroy_unwritten:
-@@ -860,7 +853,6 @@ xfs_destroy_mount_workqueues(
+ static long
+-xfs_fs_nr_cached_objects(
++xfs_fs_free_cached_objects(
+ 	struct super_block	*sb,
+ 	struct shrink_control	*sc)
  {
- 	destroy_workqueue(mp->m_sync_workqueue);
- 	destroy_workqueue(mp->m_eofblocks_workqueue);
--	destroy_workqueue(mp->m_reclaim_workqueue);
- 	destroy_workqueue(mp->m_cil_workqueue);
- 	destroy_workqueue(mp->m_unwritten_workqueue);
- 	destroy_workqueue(mp->m_buf_workqueue);
-@@ -1558,7 +1550,6 @@ xfs_mount_alloc(
- 	spin_lock_init(&mp->m_perag_lock);
- 	mutex_init(&mp->m_growlock);
- 	atomic_set(&mp->m_active_trans, 0);
--	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
- 	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
- 	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
- 	mp->m_kobj.kobject.kset = xfs_kset;
+-	/* Paranoia: catch incorrect calls during mount setup or teardown */
+-	if (WARN_ON_ONCE(!sb->s_fs_info))
+-		return 0;
++	struct xfs_mount	*mp = XFS_M(sb);
++	struct xfs_ireclaim_args ra;
++	long			freed;
+ 
+-	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
++	INIT_LIST_HEAD(&ra.freeable);
++	ra.lowest_lsn = NULLCOMMITLSN;
++	ra.dirty_skipped = 0;
++
++	freed = list_lru_shrink_walk(&mp->m_inode_lru, sc,
++					xfs_inode_reclaim_isolate, &ra);
++	xfs_dispose_inodes(&ra.freeable);
++
++	/*
++	 * Deal with dirty inodes. We will have the LSN of
++	 * the oldest dirty inode in our reclaim args if we skipped any.
++	 *
++	 * For kswapd, if we skipped too many dirty inodes (i.e. more dirty than
++	 * we freed) then we need kswapd to back off once it's scan has been
++	 * completed. That way it will have some clean inodes once it comes back
++	 * and can make progress, but make sure we have inode cleaning in
++	 * progress.
++	 *
++	 * Direct reclaim will be throttled by the caller as it winds the
++	 * priority up. All we need to do is keep pushing on dirty inodes
++	 * in the background so when we come back progress will be made.
++	 */
++	if (current_is_kswapd() && ra.dirty_skipped >= freed) {
++		if (current->reclaim_state)
++			current->reclaim_state->need_backoff = true;
++	}
++	if (ra.lowest_lsn != NULLCOMMITLSN)
++		xfs_ail_push(mp->m_ail, ra.lowest_lsn);
++
++	return freed;
+ }
+ 
+ static long
+-xfs_fs_free_cached_objects(
++xfs_fs_nr_cached_objects(
+ 	struct super_block	*sb,
+ 	struct shrink_control	*sc)
+ {
+-	return xfs_reclaim_inodes_nr(XFS_M(sb), sc->nr_to_scan);
++	/* Paranoia: catch incorrect calls during mount setup or teardown */
++	if (WARN_ON_ONCE(!sb->s_fs_info))
++		return 0;
++
++	return list_lru_shrink_count(&XFS_M(sb)->m_inode_lru, sc);
+ }
+ 
+ static const struct super_operations xfs_super_operations = {
 -- 
 2.23.0.rc1
 
