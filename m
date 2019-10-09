@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74001ECE58D
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 15:03:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DFA2C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 15:04:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4163B218AC
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 15:03:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3786C20B7C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 15:04:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="KTTtOQh9"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="g/Dcn2EK"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731563AbfJIPDB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 11:03:01 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55430 "EHLO
+        id S1729865AbfJIPEV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 11:04:21 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:56808 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731037AbfJIPDA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 11:03:00 -0400
+        with ESMTP id S1730490AbfJIPEV (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 11:04:21 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=gTdIumPMRj3wK50/w6XxEU5jaq2QeL+TAb3odFDnJ1I=; b=KTTtOQh9RVWFIh9e8z8S7fugc
-        IWamSA5o7nwLQrm5RuI5Y5WNJphkQ8s0XPSOyKiZy20j22hWnYESX8BEe5frFKyuaHt3M67TEJm4a
-        hP/OlFH5KHiK2Oy6P57O4peDf/1EAyK+IkLbMQxUFGEYzB4zxDHV6xqRnJYTD7B6O0Ny8IXuPX5P0
-        2HpU7ESy52LLLRdwFRx+jaIhjHtLXAXxbR8kVJSRBrzvUcksg9eg4YGHrktxkFWCPwKeBgdPeifUu
-        YpcAUzLkPuM8UtNoBOoxnksZdHPekRkqyOEY9gceNqYuLjd4L4UMPumxbabNzrAWFV3owiFXmi5E9
-        JR9Aju7PQ==;
+         bh=1Tl6j31xxo/KnQrHWYh44uW90pFZtzXOwGnNqyejp2k=; b=g/Dcn2EKN5e12be0cU6LBU/dv
+        MA9zAE94FpmW7AybY30xXn7fDoCz2BXD4CLEgOzKG2m70KSMIdbi0FfFSCt6o794TxGiX41gs9pqA
+        3zPk99PI5H97HVkUtXseyvchAKm9dspt0PzTATBuD3DjsDBrlv3mmhlkbLLrRRoG8mCCmdxXgUoyz
+        BdE2k0V8EKkgtZ4o8uqgx4JP5X1No46figdlgJ1Wx6w2ahmhFyPzb+KdEad6flAwf0zGDEr666yTU
+        w6Es7caMBaxt3N3RaA+jGZIsjklYtVaWPQCD4slIAjJdk6mlvsMUWVgbsWsvqoNpD0XdHXPBrNyLw
+        /1YnePWWQ==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iIDUS-00084P-LU; Wed, 09 Oct 2019 15:03:00 +0000
-Date:   Wed, 9 Oct 2019 08:03:00 -0700
+        id 1iIDVl-0008MY-HV; Wed, 09 Oct 2019 15:04:21 +0000
+Date:   Wed, 9 Oct 2019 08:04:21 -0700
 From:   Christoph Hellwig <hch@infradead.org>
 To:     Ian Kent <raven@themaw.net>
 Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
@@ -43,14 +43,14 @@ Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v5 09/17] xfs: mount-api - refactor xfs_fs_fill_super()
-Message-ID: <20191009150300.GG10349@infradead.org>
+Subject: Re: [PATCH v5 10/17] xfs: mount-api - add xfs_get_tree()
+Message-ID: <20191009150421.GH10349@infradead.org>
 References: <157062043952.32346.977737248061083292.stgit@fedora-28>
- <157062065791.32346.8183392339697088078.stgit@fedora-28>
+ <157062066316.32346.11258138585168789863.stgit@fedora-28>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157062065791.32346.8183392339697088078.stgit@fedora-28>
+In-Reply-To: <157062066316.32346.11258138585168789863.stgit@fedora-28>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -58,13 +58,14 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 07:30:58PM +0800, Ian Kent wrote:
-> Much of the code in xfs_fs_fill_super() will be used by the fill super
-> function of the new mount-api.
-> 
-> So refactor the common code into a helper in an attempt to show what's
-> actually changed.
+> +	/*
+> +	 * set up the mount name first so all the errors will refer to the
+> +	 * correct device.
+> +	 */
+> +	mp->m_fsname = kstrndup(sb->s_id, MAXNAMELEN, GFP_KERNEL);
+> +	if (!mp->m_fsname)
+> +		goto out_error;
+> +	mp->m_fsname_len = strlen(mp->m_fsname) + 1;
 
-I hate how this ends up leaving a pointless helper around.  If you
-really absolutely want to add the helper here please also remove it
-again at the end of the series.
+m_fsname_len is entirelt unused.  m_fsname just has a few users, so
+maybe in a prep patch just kill both of them and use sb->s_id instead.
