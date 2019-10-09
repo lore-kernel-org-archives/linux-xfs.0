@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3A4FC47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:30:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1359DECE58C
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:40:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 85A0320B7C
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:30:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ECA81206BB
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 21:40:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730815AbfJIVaN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 17:30:13 -0400
-Received: from sandeen.net ([63.231.237.45]:36046 "EHLO sandeen.net"
+        id S1731936AbfJIVkT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 17:40:19 -0400
+Received: from sandeen.net ([63.231.237.45]:36532 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729908AbfJIVaM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 9 Oct 2019 17:30:12 -0400
+        id S1728804AbfJIVkT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 9 Oct 2019 17:40:19 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 69606D5E;
-        Wed,  9 Oct 2019 16:29:43 -0500 (CDT)
-Subject: Re: [PATCH 08/13] libfrog: fix missing error checking in bitmap code
+        by sandeen.net (Postfix) with ESMTPSA id D025DD5E;
+        Wed,  9 Oct 2019 16:39:49 -0500 (CDT)
+Subject: Re: [PATCH 06/13] libfrog: add missing per-thread variable error
+ handling
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944720314.297677.12837037497727069563.stgit@magnolia>
- <156944725182.297677.5778254084930145538.stgit@magnolia>
+ <156944723982.297677.3080857602921528738.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Openpgp: preference=signencrypt
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
@@ -72,29 +73,29 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <3b5804c5-0bdf-4353-6baa-5f42c7ccbba5@sandeen.net>
-Date:   Wed, 9 Oct 2019 16:30:11 -0500
+Message-ID: <3398ad6b-97eb-02cf-c4c3-d817509dea32@sandeen.net>
+Date:   Wed, 9 Oct 2019 16:40:17 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.14; rv:60.0)
  Gecko/20100101 Thunderbird/60.9.0
 MIME-Version: 1.0
-In-Reply-To: <156944725182.297677.5778254084930145538.stgit@magnolia>
+In-Reply-To: <156944723982.297677.3080857602921528738.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/25/19 4:34 PM, Darrick J. Wong wrote:
+On 9/25/19 4:33 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Check library calls for error codes being returned.
+> Add missing return value checks for everything that the per-thread
+> variable code calls.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  libfrog/bitmap.c |   15 ++++++++++++---
->  1 file changed, 12 insertions(+), 3 deletions(-)
-> 
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+my question about handling in the caller got addressed by patch 9,
+good enough.
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com
