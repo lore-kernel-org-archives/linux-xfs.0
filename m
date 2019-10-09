@@ -6,44 +6,44 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2845EECE597
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B089C47404
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0B37C218DE
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76273206C2
+	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 03:21:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730485AbfJIDVc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 8 Oct 2019 23:21:32 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:57561 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730274AbfJIDVc (ORCPT
+        id S1730504AbfJIDVd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 8 Oct 2019 23:21:33 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:46265 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1730339AbfJIDVc (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Tue, 8 Oct 2019 23:21:32 -0400
 Received: from dread.disaster.area (pa49-181-226-196.pa.nsw.optusnet.com.au [49.181.226.196])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 4039F362956;
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 40EF943EC51;
         Wed,  9 Oct 2019 14:21:27 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-0006Bm-7A; Wed, 09 Oct 2019 14:21:27 +1100
+        id 1iI2XW-0006BS-Ty; Wed, 09 Oct 2019 14:21:26 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92)
         (envelope-from <david@fromorbit.com>)
-        id 1iI2XX-00039f-5C; Wed, 09 Oct 2019 14:21:27 +1100
+        id 1iI2XW-00039K-Rj; Wed, 09 Oct 2019 14:21:26 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 16/26] xfs: synchronous AIL pushing
-Date:   Wed,  9 Oct 2019 14:21:14 +1100
-Message-Id: <20191009032124.10541-17-david@fromorbit.com>
+Subject: [PATCH 09/26] shrinkers: use defer_work for GFP_NOFS sensitive shrinkers
+Date:   Wed,  9 Oct 2019 14:21:07 +1100
+Message-Id: <20191009032124.10541-10-david@fromorbit.com>
 X-Mailer: git-send-email 2.23.0.rc1
 In-Reply-To: <20191009032124.10541-1-david@fromorbit.com>
 References: <20191009032124.10541-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
         a=dRuLqZ1tmBNts2YiI0zFQg==:117 a=dRuLqZ1tmBNts2YiI0zFQg==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=XobE76Q3jBoA:10 a=20KFwNOVAAAA:8
-        a=LpVGDu2G9yASKScQ9C8A:9
+        a=bIsfdx-f5ddGStTJopEA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -51,108 +51,198 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Provide an interface to push the AIL to a target LSN and wait for
-the tail of the log to move past that LSN. This is used to wait for
-all items older than a specific LSN to either be cleaned (written
-back) or relogged to a higher LSN in the AIL. The primary use for
-this is to allow IO free inode reclaim throttling.
+For shrinkers that currently avoid scanning when called under
+GFP_NOFS contexts, convert them to use the new ->defer_work flag
+rather than checking and returning errors during scans.
 
-Factor the common AIL deletion code that does all the wakeups into a
-helper so we only have one copy of this somewhat tricky code to
-interface with all the wakeups necessary when the LSN of the log
-tail changes.
-
-xfs_ail_push_sync() is temporary infrastructure to facilitate
-non-blocking, IO-less inode reclaim throttling that allows further
-structural changes to be made. Once those structural changes are
-made, the need for this function goes away and it is removed,
-leaving us with only the xfs_ail_update_finish() factoring when this
-is all done.
+This makes it very clear that these shrinkers are not doing any work
+because of the context limitations, not because there is no work
+that can be done.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
- fs/xfs/xfs_trans_ail.c  | 33 +++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans_priv.h |  2 ++
- 2 files changed, 35 insertions(+)
+ drivers/staging/android/ashmem.c |  8 ++++----
+ fs/gfs2/glock.c                  |  5 +++--
+ fs/gfs2/quota.c                  |  6 +++---
+ fs/nfs/dir.c                     |  6 +++---
+ fs/super.c                       |  6 +++---
+ fs/xfs/xfs_qm.c                  | 11 ++++++++---
+ net/sunrpc/auth.c                |  5 ++---
+ 7 files changed, 26 insertions(+), 21 deletions(-)
 
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 685a21cd24c0..5e500a75b62b 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -662,6 +662,37 @@ xfs_ail_push_all(
- 		xfs_ail_push(ailp, threshold_lsn);
+diff --git a/drivers/staging/android/ashmem.c b/drivers/staging/android/ashmem.c
+index 74d497d39c5a..0b80149f0ac5 100644
+--- a/drivers/staging/android/ashmem.c
++++ b/drivers/staging/android/ashmem.c
+@@ -438,10 +438,6 @@ ashmem_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ {
+ 	unsigned long freed = 0;
+ 
+-	/* We might recurse into filesystem code, so bail out if necessary */
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+-
+ 	if (!mutex_trylock(&ashmem_mutex))
+ 		return -1;
+ 
+@@ -478,6 +474,10 @@ ashmem_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ static unsigned long
+ ashmem_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+ {
++	/* We might recurse into filesystem code, so bail out if necessary */
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->defer_work = true;
++
+ 	/*
+ 	 * note that lru_count is count of pages on the lru, not a count of
+ 	 * objects on the list. This means the scan function needs to return the
+diff --git a/fs/gfs2/glock.c b/fs/gfs2/glock.c
+index 0290a22ebccf..a25161b93f96 100644
+--- a/fs/gfs2/glock.c
++++ b/fs/gfs2/glock.c
+@@ -1614,14 +1614,15 @@ static long gfs2_scan_glock_lru(int nr)
+ static unsigned long gfs2_glock_shrink_scan(struct shrinker *shrink,
+ 					    struct shrink_control *sc)
+ {
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+ 	return gfs2_scan_glock_lru(sc->nr_to_scan);
  }
  
-+/*
-+ * Push the AIL to a specific lsn and wait for it to complete.
-+ */
-+void
-+xfs_ail_push_sync(
-+	struct xfs_ail		*ailp,
-+	xfs_lsn_t		threshold_lsn)
-+{
-+	struct xfs_log_item	*lip;
-+	DEFINE_WAIT(wait);
+ static unsigned long gfs2_glock_shrink_count(struct shrinker *shrink,
+ 					     struct shrink_control *sc)
+ {
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->defer_work = true;
 +
-+	spin_lock(&ailp->ail_lock);
-+	while ((lip = xfs_ail_min(ailp)) != NULL) {
-+		prepare_to_wait(&ailp->ail_push, &wait, TASK_UNINTERRUPTIBLE);
-+		if (XFS_FORCED_SHUTDOWN(ailp->ail_mount) ||
-+		    XFS_LSN_CMP(threshold_lsn, lip->li_lsn) <= 0)
-+			break;
-+		/* XXX: cmpxchg? */
-+		while (XFS_LSN_CMP(threshold_lsn, ailp->ail_target) > 0)
-+			xfs_trans_ail_copy_lsn(ailp, &ailp->ail_target, &threshold_lsn);
-+		wake_up_process(ailp->ail_task);
-+		spin_unlock(&ailp->ail_lock);
-+		schedule();
-+		spin_lock(&ailp->ail_lock);
+ 	return vfs_pressure_ratio(atomic_read(&lru_count));
+ }
+ 
+diff --git a/fs/gfs2/quota.c b/fs/gfs2/quota.c
+index 7c016a082aa6..661189b42c31 100644
+--- a/fs/gfs2/quota.c
++++ b/fs/gfs2/quota.c
+@@ -166,9 +166,6 @@ static unsigned long gfs2_qd_shrink_scan(struct shrinker *shrink,
+ 	LIST_HEAD(dispose);
+ 	unsigned long freed;
+ 
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+-
+ 	freed = list_lru_shrink_walk(&gfs2_qd_lru, sc,
+ 				     gfs2_qd_isolate, &dispose);
+ 
+@@ -180,6 +177,9 @@ static unsigned long gfs2_qd_shrink_scan(struct shrinker *shrink,
+ static unsigned long gfs2_qd_shrink_count(struct shrinker *shrink,
+ 					  struct shrink_control *sc)
+ {
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->defer_work = true;
++
+ 	return vfs_pressure_ratio(list_lru_shrink_count(&gfs2_qd_lru, sc));
+ }
+ 
+diff --git a/fs/nfs/dir.c b/fs/nfs/dir.c
+index e180033e35cf..fd4a70479790 100644
+--- a/fs/nfs/dir.c
++++ b/fs/nfs/dir.c
+@@ -2211,10 +2211,7 @@ unsigned long
+ nfs_access_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+ {
+ 	int nr_to_scan = sc->nr_to_scan;
+-	gfp_t gfp_mask = sc->gfp_mask;
+ 
+-	if ((gfp_mask & GFP_KERNEL) != GFP_KERNEL)
+-		return SHRINK_STOP;
+ 	return nfs_do_access_cache_scan(nr_to_scan);
+ }
+ 
+@@ -2222,6 +2219,9 @@ nfs_access_cache_scan(struct shrinker *shrink, struct shrink_control *sc)
+ unsigned long
+ nfs_access_cache_count(struct shrinker *shrink, struct shrink_control *sc)
+ {
++	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
++		sc->defer_work = true;
++
+ 	return vfs_pressure_ratio(atomic_long_read(&nfs_access_nr_entries));
+ }
+ 
+diff --git a/fs/super.c b/fs/super.c
+index f627b7c53d2b..d6a93d7fe05f 100644
+--- a/fs/super.c
++++ b/fs/super.c
+@@ -74,9 +74,6 @@ static unsigned long super_cache_scan(struct shrinker *shrink,
+ 	 * Deadlock avoidance.  We may hold various FS locks, and we don't want
+ 	 * to recurse into the FS that called us in clear_inode() and friends..
+ 	 */
+-	if (!(sc->gfp_mask & __GFP_FS))
+-		return SHRINK_STOP;
+-
+ 	if (!trylock_super(sb))
+ 		return SHRINK_STOP;
+ 
+@@ -141,6 +138,9 @@ static unsigned long super_cache_count(struct shrinker *shrink,
+ 		return 0;
+ 	smp_rmb();
+ 
++	if (!(sc->gfp_mask & __GFP_FS))
++		sc->defer_work = true;
++
+ 	if (sb->s_op && sb->s_op->nr_cached_objects)
+ 		total_objects = sb->s_op->nr_cached_objects(sb, sc);
+ 
+diff --git a/fs/xfs/xfs_qm.c b/fs/xfs/xfs_qm.c
+index ecd8ce152ab1..aa03f2448145 100644
+--- a/fs/xfs/xfs_qm.c
++++ b/fs/xfs/xfs_qm.c
+@@ -502,9 +502,6 @@ xfs_qm_shrink_scan(
+ 	unsigned long		freed;
+ 	int			error;
+ 
+-	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) != (__GFP_FS|__GFP_DIRECT_RECLAIM))
+-		return 0;
+-
+ 	INIT_LIST_HEAD(&isol.buffers);
+ 	INIT_LIST_HEAD(&isol.dispose);
+ 
+@@ -534,6 +531,14 @@ xfs_qm_shrink_count(
+ 	struct xfs_quotainfo	*qi = container_of(shrink,
+ 					struct xfs_quotainfo, qi_shrinker);
+ 
++	/*
++	 * __GFP_DIRECT_RECLAIM is used here to avoid blocking kswapd
++	 */
++	if ((sc->gfp_mask & (__GFP_FS|__GFP_DIRECT_RECLAIM)) !=
++					(__GFP_FS|__GFP_DIRECT_RECLAIM)) {
++		sc->defer_work = true;
 +	}
-+	spin_unlock(&ailp->ail_lock);
 +
-+	finish_wait(&ailp->ail_push, &wait);
-+}
-+
-+
- /*
-  * Push out all items in the AIL immediately and wait until the AIL is empty.
-  */
-@@ -702,6 +733,7 @@ xfs_ail_update_finish(
- 	if (!XFS_FORCED_SHUTDOWN(mp))
- 		xlog_assign_tail_lsn_locked(mp);
- 
-+	wake_up_all(&ailp->ail_push);
- 	if (list_empty(&ailp->ail_head))
- 		wake_up_all(&ailp->ail_empty);
- 	spin_unlock(&ailp->ail_lock);
-@@ -858,6 +890,7 @@ xfs_trans_ail_init(
- 	spin_lock_init(&ailp->ail_lock);
- 	INIT_LIST_HEAD(&ailp->ail_buf_list);
- 	init_waitqueue_head(&ailp->ail_empty);
-+	init_waitqueue_head(&ailp->ail_push);
- 
- 	ailp->ail_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
- 			ailp->ail_mount->m_fsname);
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 35655eac01a6..1b6f4bbd47c0 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -61,6 +61,7 @@ struct xfs_ail {
- 	int			ail_log_flush;
- 	struct list_head	ail_buf_list;
- 	wait_queue_head_t	ail_empty;
-+	wait_queue_head_t	ail_push;
- };
- 
- /*
-@@ -113,6 +114,7 @@ xfs_trans_ail_remove(
+ 	return list_lru_shrink_count(&qi->qi_lru, sc);
  }
  
- void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
-+void			xfs_ail_push_sync(struct xfs_ail *, xfs_lsn_t);
- void			xfs_ail_push_all(struct xfs_ail *);
- void			xfs_ail_push_all_sync(struct xfs_ail *);
- struct xfs_log_item	*xfs_ail_min(struct xfs_ail  *ailp);
+diff --git a/net/sunrpc/auth.c b/net/sunrpc/auth.c
+index cdb05b48de44..7d11a7034fee 100644
+--- a/net/sunrpc/auth.c
++++ b/net/sunrpc/auth.c
+@@ -527,9 +527,6 @@ static unsigned long
+ rpcauth_cache_shrink_scan(struct shrinker *shrink, struct shrink_control *sc)
+ 
+ {
+-	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
+-		return SHRINK_STOP;
+-
+ 	/* nothing left, don't come back */
+ 	if (list_empty(&cred_unused))
+ 		return SHRINK_STOP;
+@@ -541,6 +538,8 @@ static unsigned long
+ rpcauth_cache_shrink_count(struct shrinker *shrink, struct shrink_control *sc)
+ 
+ {
++	if ((sc->gfp_mask & GFP_KERNEL) != GFP_KERNEL)
++		sc->defer_work = true;
+ 	return number_cred_unused * sysctl_vfs_cache_pressure / 100;
+ }
+ 
 -- 
 2.23.0.rc1
 
