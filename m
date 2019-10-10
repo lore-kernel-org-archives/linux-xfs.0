@@ -1,118 +1,128 @@
-Return-Path: <SRS0=7gTY=YC=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=apCn=YD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46953C47404
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 23:02:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C6EEC47404
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Oct 2019 00:56:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2ABFB206BB
-	for <linux-xfs@archiver.kernel.org>; Wed,  9 Oct 2019 23:02:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 147C7206C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Oct 2019 00:56:41 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="zt7HhYpl";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="anAN8YgJ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732038AbfJIXCc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 9 Oct 2019 19:02:32 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:32940 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1730815AbfJIXCc (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 19:02:32 -0400
-Received: from dread.disaster.area (pa49-195-199-207.pa.nsw.optusnet.com.au [49.195.199.207])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id AF593363877;
-        Thu, 10 Oct 2019 10:02:29 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iIKyR-0006cx-LW; Thu, 10 Oct 2019 10:02:27 +1100
-Date:   Thu, 10 Oct 2019 10:02:27 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>, darrick.wong@oracle.com,
-        linux-xfs@vger.kernel.org,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: [PATCH 0/2] iomap: Waiting for IO in iomap_dio_rw()
-Message-ID: <20191009230227.GH16973@dread.disaster.area>
-References: <20191009202736.19227-1-jack@suse.cz>
+        id S1731916AbfJJA4k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 9 Oct 2019 20:56:40 -0400
+Received: from wout4-smtp.messagingengine.com ([64.147.123.20]:42939 "EHLO
+        wout4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1731553AbfJJA4k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 9 Oct 2019 20:56:40 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.west.internal (Postfix) with ESMTP id 032D75ED;
+        Wed,  9 Oct 2019 20:56:38 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute1.internal (MEProxy); Wed, 09 Oct 2019 20:56:39 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
+        MTB3tbOgvl8Yl9d3lGS9pd/NxzKnWtpRa2su3lK2RZw=; b=zt7HhYplU/LD0Wzb
+        Ek/0TnLD1J/q4ktgAczvVJX+00FiPz2b/Wr6QgkWtDnlsE+vwoTIlNSM4+EJ7jM+
+        cesP+y6gQGqXE6RycdbdKY5eHhAEwWCUDarwcvhmU1HYo1UV0SiJqTfXsidacmpb
+        EjSobYmmNv2VQTxkYKXuGDTO4YzaBe+hxxEEZjU0aCKtUrRo/3bfvdQZMOh7tupG
+        U8y55Qqez2mkgdD3EqE582cgSJ6x5cj91v/tzqWwMgYNGNVBVFKae0MrCrdkPIJf
+        kW9kF/trtdAxvZItB1oU/AHG7TgQ1+yrhh+GRF0nFMddP7G0448lt28/VWuepToI
+        2DmcQA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm1; bh=MTB3tbOgvl8Yl9d3lGS9pd/NxzKnWtpRa2su3lK2R
+        Zw=; b=anAN8YgJgnzPVbi+wtY8LPx43RYxmIxWhkYZ+CSgy8cnW4S5eu2qkRBgP
+        fGMJlwKYgsEMQf6mRYlmiE3u1EiuKaxwIdECcul8irBtMX+t8yAKvNkxOMfONiWv
+        EWWiMUH19r8JLSNgelYSEg4byuGRPTD/1RplaK6ERPdwF/kn8HXrvVeMYtzz2753
+        A/4brbiLmWyjmEVvoYQfd8WPFanFGjwvcrFARNznD0eWCALa93X6C1krJQ3u5MKO
+        xiCsO5TbvY+QTKYoauJMl0FHpsAjKu7EXQQvcGmnH6XFOQM4wUA+Rdr4kQycrJy3
+        /p/Pp4kzvt2aKETOHq9MEOEdpAb/g==
+X-ME-Sender: <xms:xoGeXdB7DRS60duhVNhTmfZuus8B5PNNrelS42pyUJP41ZOgifLqPg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedriedvgdegvdcutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecukfhppeduudekrddvtdelrd
+    dukeefrdejudenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghmrgif
+    rdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
+X-ME-Proxy: <xmx:xoGeXQgC0Pf_iij6LzGiTef3q2lt2BiTDe5y15DSqqLX1ukvO0oKJg>
+    <xmx:xoGeXQdbmnF_yal5GUI8vQXvry1pFdhS2B_ZWuqb0a8LaVWTK_e4Ww>
+    <xmx:xoGeXVlg-JXfJViVQSehwRIZ3uhub-sqiE6-byGOWdNEH2YtySZIXw>
+    <xmx:xoGeXTsw85j1PtMlDdH7vNQOzYOTHae3x6A8G5mqgNJp1Yn7yxQ1Jw>
+Received: from mickey.themaw.net (unknown [118.209.183.71])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 46BC0D60057;
+        Wed,  9 Oct 2019 20:56:34 -0400 (EDT)
+Message-ID: <1a612dc55f81e2dbde1b72994399bdcbaee5b2d2.camel@themaw.net>
+Subject: Re: [PATCH v5 04/17] xfs: mount-api - add fs parameter description
+From:   Ian Kent <raven@themaw.net>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>
+Date:   Thu, 10 Oct 2019 08:56:31 +0800
+In-Reply-To: <20191009144817.GA10349@infradead.org>
+References: <157062043952.32346.977737248061083292.stgit@fedora-28>
+         <157062063161.32346.15357252773768069084.stgit@fedora-28>
+         <20191009144817.GA10349@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191009202736.19227-1-jack@suse.cz>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=U3CgBz6+VuTzJ8lMfNbwVQ==:117 a=U3CgBz6+VuTzJ8lMfNbwVQ==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=7-415B0cAAAA:8 a=Nb0Mfos4mOhxgEr3ClsA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 10:41:24PM +0200, Jan Kara wrote:
-> Hello,
+Hi Christoph,
+
+On Wed, 2019-10-09 at 07:48 -0700, Christoph Hellwig wrote:
+> On Wed, Oct 09, 2019 at 07:30:31PM +0800, Ian Kent wrote:
+> > +static const struct fs_parameter_spec xfs_param_specs[] = {
+> > + fsparam_u32	("logbufs",    Opt_logbufs),   /* number of XFS
+> > log buffers */
+> > + fsparam_string ("logbsize",   Opt_logbsize),  /* size of XFS log
+> > buffers */
 > 
-> when doing the ext4 conversion of direct IO code to iomap, we found it very
-> difficult to handle inode extension with what iomap code currently provides.
-> Ext4 wants to do inode extension as sync IO (so that the whole duration of
-> IO is protected by inode->i_rwsem), also we need to truncate blocks beyond
-> end of file in case of error or short write. Now in ->end_io handler we don't
-> have the information how long originally the write was (to judge whether we
-> may have allocated more blocks than we actually used) and in ->write_iter
-> we don't know whether / how much of the IO actually succeeded in case of AIO.
+> This has really weird indentation, and a couple overly long lines
+> below.
+> I'm also not really sure the comments are all that useful here vs in
+> the actual parser.
 > 
-> Thinking about it for some time I think iomap code makes it unnecessarily
-> complex for the filesystem in case it decides it doesn't want to perform AIO
-> and wants to fall back to good old synchronous IO. In such case it is much
-> easier for the filesystem if it just gets normal error return from
-> iomap_dio_rw() and not just -EIOCBQUEUED.
-
-Yeah, that'd be nice. :)
-
-> The first patch in the series adds argument to iomap_dio_rw() to wait for IO
-> completion (internally iomap_dio_rw() already supports this!) and the second
-> patch converts XFS waiting for unaligned DIO write to this new API.
+> Why not:
 > 
-> What do people think?
+> static const struct fs_parameter_spec xfs_param_specs[] = {
+> 	fsparam_u32("logbufs", Opt_logbufs),
+> 	fsparam_string("logbsize", Opt_logbsize),
+> 	..
+> };
+> 
+> ?
 
-I've just caught up on the ext4 iomap dio thread where this came up,
-so I have some idea of what is going on now :)
+The indentation is purely an effort to preserve the comments.
 
-My main issue is that I don't like the idea of a "force_wait"
-parameter to iomap_dio_rw() that overrides what the kiocb says to
-do inside iomap_dio_rw(). It just seems ... clunky.
+I originally interleaved them in the structure declaration but
+that was even uglier and naturally attracted comments.
 
-I'd much prefer that the entire sync/async IO decision is done in
-one spot, and the result of that is passed into iomap_dio_rw(). i.e.
-the caller always determines the behaviour.
+I can't remember now if there was a specific request to preserve
+the comments.
 
-That would mean the callers need to do something like this by
-default:
+You suggestion is to add these comments to the case handling in
+xfs_parse_param(), correct?
 
-	ret = iomap_dio_rw(iocb, iter, ops, dops, is_sync_kiocb(iocb));
+I can do that if there are no other suggestions.
 
-And filesystems like XFS will need to do:
+Ian
 
-	ret = iomap_dio_rw(iocb, iter, ops, dops,
-			is_sync_kiocb(iocb) || unaligned);
-
-and ext4 will calculate the parameter in whatever way it needs to.
-
-In fact, it may be that a wrapper function is better for existing
-callers:
-
-static inline ssize_t iomap_dio_rw()
-{
-	return iomap_dio_rw_wait(iocb, iter, ops, dops, is_sync_kiocb(iocb));
-}
-
-And XFS/ext4 writes call iomap_dio_rw_wait() directly. That way we
-don't need to change the read code at all...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
