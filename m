@@ -2,86 +2,102 @@ Return-Path: <SRS0=apCn=YD=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72740C4360C
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Oct 2019 07:57:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B8CC4360C
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Oct 2019 08:31:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4BD4321929
-	for <linux-xfs@archiver.kernel.org>; Thu, 10 Oct 2019 07:57:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8BB5320B7C
+	for <linux-xfs@archiver.kernel.org>; Thu, 10 Oct 2019 08:31:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="sL5l04Ih"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="HsgG6Bbo";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="kYdfSDl/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733067AbfJJH54 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 10 Oct 2019 03:57:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:38546 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733062AbfJJH54 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Oct 2019 03:57:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=cmVO/krAmz0iAXnK2DrI/Zo0nRjnOCzLPpRIvl3zHSU=; b=sL5l04IhMP1D8PYrUWNdqwbND
-        7bM+KaKbyhfaq4xIPeDc5aN9sytobZQ0Y6+ia/yYmudNqrAOwvaNfOpc5RxkepP+N/d6t/Tl6zqgN
-        67299YDfEnoCOMaQHEiA91R8qvBDjCg1mTCVL0kyQHfjp5owszXd+tVYkv78B8TgIneLaH0/HIBIS
-        eaNihYexMr3WpMXMfm0HMOt0csK+XMP8cBWsThhOp6HI++zj7/hcc8Wkt60E5H7tujzqhFieLUdHV
-        OlhkxabQPCEkcmmfEi5dfljK6k2BNA3dk7hNITp1WXwCxF+V5lAsuen41MKFq77+10lK5Pa5wAspc
-        lkHroLIqg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.2 #3 (Red Hat Linux))
-        id 1iITKZ-0004LD-Qf; Thu, 10 Oct 2019 07:57:51 +0000
-Date:   Thu, 10 Oct 2019 00:57:51 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>, Ian Kent <raven@themaw.net>,
-        linux-xfs <linux-xfs@vger.kernel.org>,
+        id S1733150AbfJJIbx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 10 Oct 2019 04:31:53 -0400
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:59361 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1729932AbfJJIbw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 10 Oct 2019 04:31:52 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.nyi.internal (Postfix) with ESMTP id 3E34D21F92;
+        Thu, 10 Oct 2019 04:31:52 -0400 (EDT)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute1.internal (MEProxy); Thu, 10 Oct 2019 04:31:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
+        VL9YWiIhykwDRIFLp1ouiR5A/yDYgK3gzfy/ISYIXiI=; b=HsgG6Bbo7eiMfU8I
+        k1tnzx/ljH7seIauBAJ6zg1iyLKXhQF/mWUVHeQKbUlBSrOUPkAwlEPR/DKfeNui
+        BIbhnGA48SfOyZKhWXZvi/T/FbzAeR7vjgcltgg4xCe0Yc+1qvYxCw0wu8x72yx+
+        JDoVyTmtkxRcvlrTovANyLt3Hwh3bBMWBeTb5IhDR1MTbrVKSCkmYpDOW8FFYt0O
+        iumMbyjWF5u3zto85rWkR8pu1JLssJZsga1W/Tgv1LUlo9+Krd8QCeghB3ewuQAB
+        Tu/6JyQmPp5NBz5HWGDxy7UsyGU4dXXR7vGTgpEmVtYeLKdfkKYJc68kKPpqKjvI
+        s59YBQ==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm1; bh=VL9YWiIhykwDRIFLp1ouiR5A/yDYgK3gzfy/ISYIX
+        iI=; b=kYdfSDl/NghYv1zJTSxFuMYFcavhMhARy5eK4l8XLWwlfe9OJrmpfGOXy
+        v7h8QKaFZSC1G4kcUR9OWC/L+er9808IniVYXv3pF/yZ5TGxUkOv86bBVD4Ap6yR
+        qSywO5gfzSnDwsoKvCkZBZxNGNBDJkZrDCBIegVrxXGhNoPtnUNXvINyyrx0Jgz5
+        1PK+Ql0IzVFKzAKMntaDxGgUQecDblzEl74QlwcfcuCGEvfpVqrLaipuEfHBFfkM
+        SV5ZeQWNsV3U62q4m+XeUCY0S9lVHkzgJa09hB++48Ij/cHP9Jpbz0EbGnkgYjil
+        WkB+cuOP55klkzYc7yPgO4owNBa4A==
+X-ME-Sender: <xms:d-yeXWmnizAwSfcZVp2sw0-gfwiPqfFuLye_RIFsM59aI8M_2AEkiQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrieefgddtiecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecukfhppeduudekrddvtdelrd
+    dukeefrdejudenucfrrghrrghmpehmrghilhhfrhhomheprhgrvhgvnhesthhhvghmrgif
+    rdhnvghtnecuvehluhhsthgvrhfuihiivgeptd
+X-ME-Proxy: <xmx:d-yeXQFK74Nm74wEhG06s5dllleytTMiTTCPVhZ0hol8NC5T5yvLCA>
+    <xmx:d-yeXUuHil4GuCtrj9-DfsTIafQ1AIeRXCNaZDhgwK9aCyi4LbTeuw>
+    <xmx:d-yeXTgDXqbH9C8KlHw_F2Bi5htXyh2oDJp0bfaHrCmpgCSeTkrWuQ>
+    <xmx:eOyeXa2CAITD7_lZWBEZEN_7NbvOD0bdl3BOvqXXFRwFsJbcySWFUg>
+Received: from mickey.themaw.net (unknown [118.209.183.71])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 5F9B28005B;
+        Thu, 10 Oct 2019 04:31:48 -0400 (EDT)
+Message-ID: <1b1cff6c164d0840fe50aaf6ae59fa865503c529.camel@themaw.net>
+Subject: Re: [PATCH v5 04/17] xfs: mount-api - add fs parameter description
+From:   Ian Kent <raven@themaw.net>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
         Brian Foster <bfoster@redhat.com>,
         Eric Sandeen <sandeen@sandeen.net>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@zeniv.linux.org.uk>
-Subject: Re: [PATCH v5 08/17] xfs: mount-api - move xfs_parseargs()
- validation to a helper
-Message-ID: <20191010075751.GA16305@infradead.org>
+Date:   Thu, 10 Oct 2019 16:31:44 +0800
+In-Reply-To: <20191010063917.GB15004@infradead.org>
 References: <157062043952.32346.977737248061083292.stgit@fedora-28>
- <157062065250.32346.13350789812067183237.stgit@fedora-28>
- <20191009150206.GF10349@infradead.org>
- <20191009194747.GH13108@magnolia>
- <20191010063824.GA15004@infradead.org>
+         <157062063161.32346.15357252773768069084.stgit@fedora-28>
+         <20191009144817.GA10349@infradead.org>
+         <1a612dc55f81e2dbde1b72994399bdcbaee5b2d2.camel@themaw.net>
+         <20191010063917.GB15004@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191010063824.GA15004@infradead.org>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 11:38:24PM -0700, Christoph Hellwig wrote:
-> On Wed, Oct 09, 2019 at 12:47:47PM -0700, Darrick J. Wong wrote:
-> > On Wed, Oct 09, 2019 at 08:02:06AM -0700, Christoph Hellwig wrote:
-> > > On Wed, Oct 09, 2019 at 07:30:52PM +0800, Ian Kent wrote:
-> > > > +#ifndef CONFIG_XFS_QUOTA
-> > > > +	if (XFS_IS_QUOTA_RUNNING(mp)) {
-> > > > +		xfs_warn(mp, "quota support not available in this kernel.");
-> > > > +		return -EINVAL;
-> > > > +	}
-> > > > +#endif
-> > > 
-> > > this can use IS_ENABLED.
-> > 
-> > I didn't think that macro needed a CONFIG_XFS_QUOTA check...?
+On Wed, 2019-10-09 at 23:39 -0700, Christoph Hellwig wrote:
+> On Thu, Oct 10, 2019 at 08:56:31AM +0800, Ian Kent wrote:
+> > You suggestion is to add these comments to the case handling in
+> > xfs_parse_param(), correct?
 > 
-> Even better if we don't need anything at al..
+> If there is a strong case for keeping them at all.  Some of them
+> might be so obvious that we can just drop them I think.
 
-Actually.  The test is and #ifndef, so yes we ctually need the check.
-That being said I think and opencoded m_qflags != 0 instead of
-XFS_IS_QUOTA_RUNNING would actually describing the intent to the
-reader as we directly manipulate m_qflags elsewhere in the mount
-code.
+I'll try and make sensible judgements when I change it and see
+who complains, ;)
+
+Ian
+
