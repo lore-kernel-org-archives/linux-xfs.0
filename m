@@ -2,128 +2,90 @@ Return-Path: <SRS0=M45Y=YE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB434ECE58D
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 21:13:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E102C47404
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 23:13:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 980AC2084C
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 21:13:49 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TAIgJwYA"
+	by mail.kernel.org (Postfix) with ESMTP id E137F214E0
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 23:13:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728474AbfJKVNt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Oct 2019 17:13:49 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54600 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726281AbfJKVNt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 17:13:49 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9BL9Dji145832;
-        Fri, 11 Oct 2019 21:13:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=PGddUgejHXfRGpbobx+zKcIyvwWSaqVNNU9qnxGoSL0=;
- b=TAIgJwYAwH8yqdFRxRlMkoNVEF3eHMFt1A/d/NGfzwxprMmVYI3I+VAk0RT9tv5dr90G
- xvtzJdHjjwVUTDLhqR+5CQ+/ZIGQHbHoTAzDPncYSfa1fEdpbNX/plqkhP4k2zbXskhT
- oOqkp9jdzC5jcM8XfMvx+oxbduGclSz90nuTzaci1Bl8Ol1kZ+Zb+3NdMtCiMFaQKKou
- DDE+Qr1yioJLQr9XUpH2tRziqK0FinUeItZCBVmGl/52NSXrqxjBRaBlP5ujlM2AgKfe
- mbg6kXUrKjDkLcKkGhYO9by0Bq8u6/lSk02eB9YhtDd0MByCX9TPalAYRgFPiKyqsI7d Jw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vek4r42gy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Oct 2019 21:13:35 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9BL8YmH172115;
-        Fri, 11 Oct 2019 21:13:34 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2vjryd3cbx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 11 Oct 2019 21:13:34 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9BLDSdM005306;
-        Fri, 11 Oct 2019 21:13:29 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 11 Oct 2019 14:13:27 -0700
-Date:   Fri, 11 Oct 2019 14:13:26 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Jan Kara <jack@suse.cz>
-Cc:     linux-fsdevel@vger.kernel.org,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>,
-        Matthew Bobrowski <mbobrowski@mbobrowski.org>
-Subject: Re: [PATCH 1/2] iomap: Allow forcing of waiting for running DIO in
- iomap_dio_rw()
-Message-ID: <20191011211326.GL13108@magnolia>
-References: <20191011125520.11697-1-jack@suse.cz>
- <20191011141433.18354-1-jack@suse.cz>
- <20191011152821.GJ13108@magnolia>
- <20191011163127.GA22122@quack2.suse.cz>
- <20191011180412.GE13098@magnolia>
+        id S1726910AbfJKXN2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Oct 2019 19:13:28 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55425 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726354AbfJKXN2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 19:13:28 -0400
+Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B8102361FE7;
+        Sat, 12 Oct 2019 10:13:25 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iJ467-0007it-WD; Sat, 12 Oct 2019 10:13:24 +1100
+Date:   Sat, 12 Oct 2019 10:13:23 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
+Message-ID: <20191011231323.GK16973@dread.disaster.area>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-5-david@fromorbit.com>
+ <20191011123939.GD61257@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191011180412.GE13098@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9407 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910110172
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9407 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910110172
+In-Reply-To: <20191011123939.GD61257@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=KXxIyV-1b6rYZK5WPMkA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 11, 2019 at 11:04:12AM -0700, Darrick J. Wong wrote:
-> On Fri, Oct 11, 2019 at 06:31:27PM +0200, Jan Kara wrote:
-> > On Fri 11-10-19 08:28:21, Darrick J. Wong wrote:
-> > > On Fri, Oct 11, 2019 at 04:14:31PM +0200, Jan Kara wrote:
-> > > > Filesystems do not support doing IO as asynchronous in some cases. For
-> > > > example in case of unaligned writes or in case file size needs to be
-> > > > extended (e.g. for ext4). Instead of forcing filesystem to wait for AIO
-> > > > in such cases, add argument to iomap_dio_rw() which makes the function
-> > > > wait for IO completion. This also results in executing
-> > > > iomap_dio_complete() inline in iomap_dio_rw() providing its return value
-> > > > to the caller as for ordinary sync IO.
-> > > > 
-> > > > Signed-off-by: Jan Kara <jack@suse.cz>
+On Fri, Oct 11, 2019 at 08:39:39AM -0400, Brian Foster wrote:
+> On Wed, Oct 09, 2019 at 02:21:02PM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
 > > 
-> > ...
+> > The buffer cache shrinker frees more than just the xfs_buf slab
+> > objects - it also frees the pages attached to the buffers. Make sure
+> > the memory reclaim code accounts for this memory being freed
+> > correctly, similar to how the inode shrinker accounts for pages
+> > freed from the page cache due to mapping invalidation.
 > > 
-> > > > @@ -409,6 +409,9 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> > > >  	if (!count)
-> > > >  		return 0;
-> > > >  
-> > > > +	if (WARN_ON(is_sync_kiocb(iocb) && !wait_for_completion))
-> > > > +		return -EINVAL;
-> > > 
-> > > So far in iomap we've been returning EIO when someone internal screws
-> > > up, which (AFAICT) is the case here.
+> > We also need to make sure that the mm subsystem knows these are
+> > reclaimable objects. We provide the memory reclaim subsystem with a
+> > a shrinker to reclaim xfs_bufs, so we should really mark the slab
+> > that way.
 > > 
-> > Yes. Should I resend with -EIO or will you tweak that on commit?
+> > We also have a lot of xfs_bufs in a busy system, spread them around
+> > like we do inodes.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > ---
 > 
-> Yes, please. :)
+> Seems reasonable, but for inodes we also spread the ili zone. Should we
+> not be consistent with bli's as well?
 
-"Yes, resend the patch with -EIO, please." :/
+bli's are reclaimed when the buffer is cleaned. ili's live for the
+live of the inode in cache. Hence bli's are short term allocations
+(much shorter than xfs_bufs they attach to) and are reclaimed much
+faster than inodes and their ilis. There's also a lot less blis than
+ili's, so the spread of their footprint across memory nodes doesn't
+matter that much. Local access for the memcpy during formatting is
+probably more important than spreading the memory usage of them
+these days, anyway.
 
---D
+Cheers,
 
-> 
-> --D
-> 
-> > 								Honza
-> > -- 
-> > Jan Kara <jack@suse.com>
-> > SUSE Labs, CR
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
