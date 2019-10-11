@@ -2,65 +2,87 @@ Return-Path: <SRS0=M45Y=YE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 82AB2C47404
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 13:06:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E1430C47404
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 13:39:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 544862089F
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 13:06:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BC24721D82
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 13:39:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="RmZkfXzi"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="F4yA5MdU"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728122AbfJKNG4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Oct 2019 09:06:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:33306 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727709AbfJKNG4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 09:06:56 -0400
+        id S1728253AbfJKNjk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Oct 2019 09:39:40 -0400
+Received: from merlin.infradead.org ([205.233.59.134]:42786 "EHLO
+        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727950AbfJKNjk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 09:39:40 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=VJPwvfHIvtLJZWfIUInsoNX3aOxAk5L6tKcqHih/7qA=; b=RmZkfXzi70T8NYuZbanez7ZDm
-        D5FBCN1pONmF95o0Wj2wl9GpJTSNM6gXdayQLQum+4oAybwNarypjOhDvL2zSJ4JloP1hcGznA4+e
-        DY8Ln7z8cF0t0QIGz5dwCRm8ByWyOLhBtEzwnZP8R1/rEUm3soUndCsPfzIdl7CsTwJTjJthCB3Ea
-        OGULnxrngNdSkgkBuIQNJCi+3PBf9J+OeI46RYtHRNKD07wgv2TeaIJDW7oYxDQT++Uq5Fb1VskGQ
-        OzW4u/WAef1LWxsjDFeZVK5VwqyuifWMARxT1CNb3EpLK9IPK57FUu+3LbKzrb6liJBrWZfZYDj3R
-        0AnX65mTw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iIud1-0000RS-HP; Fri, 11 Oct 2019 13:06:43 +0000
-Date:   Fri, 11 Oct 2019 06:06:43 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     kaixuxia <xiakaixu1987@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eryu Guan <guaneryu@gmail.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH] fstests: remove duplicated renameat2 system call number
- for i386
-Message-ID: <20191011130643.GB27614@infradead.org>
-References: <6d0c1a12-b4b2-cb35-1150-001ffa83a5db@gmail.com>
+        d=infradead.org; s=merlin.20170209; h=In-Reply-To:Content-Transfer-Encoding:
+        Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=fdMe6cL6Uk37LOFczS5vgqxs2TCG8T5VUGagwWOW2o0=; b=F4yA5MdUoG1tVIls/gBlimaPMp
+        WtDnwEIL7aV4Nd12pNip8rGAfAJDN1beLlinen3KE/SkqeiCNceOUaJ5I3ztinH0qKzMxxqxjhG+t
+        bba+/drYqY64YMPAutj20ik4URd3F5/bAMH9J29hbjYPUD7PB0RgexHUvxZdiqOLwYMvp82lz4GHq
+        VMlU3CDcsJM6Gemsn0ySieH+pcnQLVr6XOVUZtM1n7Bdg6I0XXFwZjhB8/NMmLVD27mr3yCCyvElj
+        OQPzT55mPghtUoLWJCR8IrsjIY/fp8xzGEsYnjdQkGfIPINLgF4w8d7do7AcQcBgDk85zAsbJxxxa
+        VzbsrJQA==;
+Received: from j217100.upc-j.chello.nl ([24.132.217.100] helo=noisy.programming.kicks-ass.net)
+        by merlin.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iIv8i-00089i-Q5; Fri, 11 Oct 2019 13:39:28 +0000
+Received: from hirez.programming.kicks-ass.net (hirez.programming.kicks-ass.net [192.168.1.225])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+        (Client did not present a certificate)
+        by noisy.programming.kicks-ass.net (Postfix) with ESMTPS id 919BA301224;
+        Fri, 11 Oct 2019 15:38:33 +0200 (CEST)
+Received: by hirez.programming.kicks-ass.net (Postfix, from userid 1000)
+        id 402A22023D649; Fri, 11 Oct 2019 15:39:26 +0200 (CEST)
+Date:   Fri, 11 Oct 2019 15:39:26 +0200
+From:   Peter Zijlstra <peterz@infradead.org>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org,
+        Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
+        "Paul E. McKenney" <paulmck@kernel.org>
+Subject: Re: [PATCH 25/26] xfs: rework unreferenced inode lookups
+Message-ID: <20191011133926.GY2328@hirez.programming.kicks-ass.net>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-26-david@fromorbit.com>
+ <20191011125522.GA13167@infradead.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <6d0c1a12-b4b2-cb35-1150-001ffa83a5db@gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191011125522.GA13167@infradead.org>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 11, 2019 at 03:03:24PM +0800, kaixuxia wrote:
-> Remove duplicated renameat2 system call number for i386.
+On Fri, Oct 11, 2019 at 05:55:22AM -0700, Christoph Hellwig wrote:
+> On Wed, Oct 09, 2019 at 02:21:23PM +1100, Dave Chinner wrote:
+
+> > @@ -131,6 +132,7 @@ xfs_inode_free(
+> >  	 * free state. The ip->i_flags_lock provides the barrier against lookup
+> >  	 * races.
+> >  	 */
+> > +	xfs_ilock(ip, XFS_ILOCK_EXCL);
 > 
-> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+> This introduceѕ a non-owner unlock of an exclusively held rwsem.  As-is
+> this will make lockdep very unhappy.  We have a non-owner unlock version
+> of up_read, but not of up_write currently.  I'm also not sure if those
+> are allowed from RCU callback, which IIRC can run from softirq context.
+> 
+> That being said this scheme of only unlocking the inode in the rcu free
+> callback makes totaly sense to me, so I wish we can accomodate it
+> somehow.
 
-Looks good,
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+I'm thinking that, barring the little issue of not actually having the
+function, up_write_non_owner() should work from RCU callback context.
+That is, I don't see rwsem_wake() do anything not allowed there.
