@@ -2,141 +2,70 @@ Return-Path: <SRS0=M45Y=YE=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2A5EC47404
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 10:56:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B70E9C47404
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 11:07:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A2D822084C
-	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 10:56:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="tH5aJV1D"
+	by mail.kernel.org (Postfix) with ESMTP id 9630F2084C
+	for <linux-xfs@archiver.kernel.org>; Fri, 11 Oct 2019 11:07:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727176AbfJKK4T (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Oct 2019 06:56:19 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:33418 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726935AbfJKK4T (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 06:56:19 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=8J3W7Cl2wMMFds+YArgYo/Ec7rccaeMMqNp79ldFNbA=; b=tH5aJV1DCcLN5MSOqhB7IT4W9
-        PugdNc1CeS9C86mYRcE5qZDqSJc6pyLrOSX6Td0YZD1NbszrBVlNGOmpkj/C6c+WQbbUoQYf23kON
-        0xvREbxALu2e0gjffR/qMQabpUwYPEhQr6bxJIvq3QWfNTzzaB9o57uKVItryoXEdIZviVhElvpzq
-        yTkusDd6RoNr6Fu7pqRTeQzN4l75BR0Tqz6bHytcoIXBLGqiX2pKSw7lS/4IqLoNkiuBPooDWd5/W
-        EJPlF07IrlpNIjUEKXNB5a06XdsW0LQrTXhUpUYSncC8A3RPq7Wj9sdpSdbihAxQx6XoNGmubrbKI
-        xd+nviNHg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iIsao-0004VY-CW; Fri, 11 Oct 2019 10:56:18 +0000
-Date:   Fri, 11 Oct 2019 03:56:18 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 23/26] xfs: reclaim inodes from the LRU
-Message-ID: <20191011105618.GE12811@infradead.org>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191009032124.10541-24-david@fromorbit.com>
+        id S1727653AbfJKLHs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Oct 2019 07:07:48 -0400
+Received: from szxga06-in.huawei.com ([45.249.212.32]:49958 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1727198AbfJKLHs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 11 Oct 2019 07:07:48 -0400
+Received: from DGGEMS402-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 84E421BF4096B01C14F3;
+        Fri, 11 Oct 2019 19:07:45 +0800 (CST)
+Received: from huawei.com (10.90.53.225) by DGGEMS402-HUB.china.huawei.com
+ (10.3.19.202) with Microsoft SMTP Server id 14.3.439.0; Fri, 11 Oct 2019
+ 19:07:35 +0800
+From:   yu kuai <yukuai3@huawei.com>
+To:     <darrick.wong@oracle.com>, <bfoster@redhat.com>,
+        <dchinner@redhat.com>
+CC:     <linux-xfs@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <yukuai3@huawei.com>, <zhengbin13@huawei.com>,
+        <yi.zhang@huawei.com>, <zhangxiaoxu5@huawei.com>
+Subject: [PATCH] xfs: fix wrong struct type in ioctl definition whih cmd XFS_IOC_GETBMAPAX
+Date:   Fri, 11 Oct 2019 19:14:46 +0800
+Message-ID: <1570792486-84374-1-git-send-email-yukuai3@huawei.com>
+X-Mailer: git-send-email 2.7.4
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191009032124.10541-24-david@fromorbit.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain
+X-Originating-IP: [10.90.53.225]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-> +++ b/fs/xfs/xfs_icache.c
-> @@ -1193,7 +1193,7 @@ xfs_reclaim_inode(
->   *
->   * Return the number of inodes freed.
->   */
-> -STATIC int
-> +int
->  xfs_reclaim_inodes_ag(
->  	struct xfs_mount	*mp,
->  	int			flags,
+ioctl expect 'getbmapx' as the 'arg' when the cmd is XFS_IOC_GETBMAPX.
+But the definition in 'xfs_fs.h' is 'getbmap'
 
-This looks odd.  This function actually is unused now.  I think you
-want to fold in the patch that removes it instead of this little hack
-to make the compiler happy.
+So, change it to 'getbmapx'
 
-> -	xfs_reclaim_inodes_ag(mp, SYNC_WAIT, INT_MAX);
-> +        struct xfs_ireclaim_args *ra = arg;
-> +        struct inode		*inode = container_of(item, struct inode, i_lru);
-> +        struct xfs_inode	*ip = XFS_I(inode);
+Signed-off-by: yu kuai <yukuai3@huawei.com>
+---
+ fs/xfs/libxfs/xfs_fs.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Whitespace damage, and a line > 80 chars.
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index 39dd2b9..cad245a 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -764,7 +764,7 @@ struct xfs_scrub_metadata {
+ #define XFS_IOC_FSGETXATTRA	_IOR ('X', 45, struct fsxattr)
+ /*	XFS_IOC_SETBIOSIZE ---- deprecated 46	   */
+ /*	XFS_IOC_GETBIOSIZE ---- deprecated 47	   */
+-#define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmap)
++#define XFS_IOC_GETBMAPX	_IOWR('X', 56, struct getbmapx)
+ #define XFS_IOC_ZERO_RANGE	_IOW ('X', 57, struct xfs_flock64)
+ #define XFS_IOC_FREE_EOFBLOCKS	_IOR ('X', 58, struct xfs_fs_eofblocks)
+ /*	XFS_IOC_GETFSMAP ------ hoisted 59         */
+-- 
+2.7.4
 
-> +out_ifunlock:
-> +	xfs_ifunlock(ip);
-
-This error path will instantly deadlock, given that xfs_ifunlock takes
-i_flags_lock through xfs_iflags_clear, and we already hold it here.
-
-> +	/*
-> +	 * Remove the inode from the per-AG radix tree.
-> +	 *
-> +	 * Because radix_tree_delete won't complain even if the item was never
-> +	 * added to the tree assert that it's been there before to catch
-> +	 * problems with the inode life time early on.
-> +	 */
-> +	pag = xfs_perag_get(mp, XFS_INO_TO_AGNO(mp, ino));
-> +	spin_lock(&pag->pag_ici_lock);
-> +	if (!radix_tree_delete(&pag->pag_ici_root, XFS_INO_TO_AGINO(mp, ino)))
-> +		ASSERT(0);
-
-Well, it "complains" by returning NULL instead of the entry.  So I think
-that comment could use some updates or simply be removed.
-
-> +void
-> +xfs_dispose_inodes(
-> +	struct list_head	*freeable)
-> +{
-> +	while (!list_empty(freeable)) {
-> +		struct inode *inode;
-> +
-> +		inode = list_first_entry(freeable, struct inode, i_lru);
-
-This could use list_first_entry_or_null in the while loop, or not.
-Or list_pop_entry if we had it, but Linus hates that :)
-
-> +xfs_reclaim_inodes(
-> +	struct xfs_mount	*mp)
-> +{
-> +	while (list_lru_count(&mp->m_inode_lru)) {
-> +		struct xfs_ireclaim_args ra;
-> +		long freed, to_free;
-> +
-> +		INIT_LIST_HEAD(&ra.freeable);
-> +		ra.lowest_lsn = NULLCOMMITLSN;
-> +		to_free = list_lru_count(&mp->m_inode_lru);
-
-Do we want a helper to initialize the xfs_ireclaim_args?  That would
-solve the "issue" of not initializing dirty_skipped in a few users
-and make it a little easier to use.
-
-> +
-> +		freed = list_lru_walk(&mp->m_inode_lru, xfs_inode_reclaim_isolate,
-
-Line > 80 chars.
-
-> +static inline int __xfs_iflock_nowait(struct xfs_inode *ip)
-> +{
-> +	if (ip->i_flags & XFS_IFLOCK)
-> +		return false;
-> +	ip->i_flags |= XFS_IFLOCK;
-> +	return true;
-> +}
-
-I wonder if simply open coding this would be simpler, given how magic
-xfs_inode_reclaim_isolate already is, and given that we really shouldn't
-use this helper anywhere else.
