@@ -2,77 +2,143 @@ Return-Path: <SRS0=POS4=YF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,
+	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B45EECE58D
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 00:48:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 68B4AC4360C
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 06:34:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 729A2214E0
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 00:48:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3D9DA20659
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 06:34:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="vZ8xgYMu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727741AbfJLAs1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Oct 2019 20:48:27 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50934 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726269AbfJLAs0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 20:48:26 -0400
-Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 3608943EA12;
-        Sat, 12 Oct 2019 11:48:23 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iJ5a1-0008Iw-Qv; Sat, 12 Oct 2019 11:48:21 +1100
-Date:   Sat, 12 Oct 2019 11:48:21 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Josef Bacik <josef@toxicpanda.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V2 00/26] mm, xfs: non-blocking inode reclaim
-Message-ID: <20191012004821.GR16973@dread.disaster.area>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191011190305.towurweq7gsah4vr@macbook-pro-91.dhcp.thefacebook.com>
- <20191011234842.GQ16973@dread.disaster.area>
- <20191012001919.lknks3k2at5xpxwf@macbook-pro-91.dhcp.thefacebook.com>
+        id S1726891AbfJLGeG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 12 Oct 2019 02:34:06 -0400
+Received: from mail-wr1-f52.google.com ([209.85.221.52]:35380 "EHLO
+        mail-wr1-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726728AbfJLGeG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 12 Oct 2019 02:34:06 -0400
+Received: by mail-wr1-f52.google.com with SMTP id v8so14069188wrt.2;
+        Fri, 11 Oct 2019 23:34:04 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to;
+        bh=yX5F7UQ9XF6+RagIHPxa9+er8AVmn045CyrMl3Uj8II=;
+        b=vZ8xgYMuZtf2K6miCpSfiKIWBcIiN4f7xMdAW1E/JFPPSxKimGzy/nt9SZ4EclWSCr
+         SiN7qQp2vPL+aLEYATYMY0pdwhIFnMLdxAzKrJAh9V/Xyx6aoo0B9WtfdS8vOJIZWK2z
+         e8UnoGVRDABmn4L6EWMrzibBdrpT81TWNJNWCx1s0pIwLSQHfpBQA5WZRzYtfduvVJlz
+         guQU4qV7oBxclyYwDyMh/4yO/EXH45+18IHMAOS021i57nr14Um7CUXucOmjIvxPGT5R
+         G1Qkvss+BjCKBorwBFcTIinWuFamTzdlFmBuy6PPAc6Q+qWiBcafrMdFifi6wo6yriU9
+         0ssg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to;
+        bh=yX5F7UQ9XF6+RagIHPxa9+er8AVmn045CyrMl3Uj8II=;
+        b=BeIVaaggx2YCZUHmWlBHTeRbke2hph4aLy92qk3NNYO+09ITp8HGdD+s/ULzXLglch
+         ugQJnPRGLYCt2iPhzgOGn9lTCQ9xM4xKtUoww6HM6EYReoWq5yytVxW6yNKIej42uXkE
+         N16GRzbJFpaff9A8vLIUdQApREngG4wdcDqvJguwAgUvIKG3dRNFrSqQunhvwL4h2sj1
+         uYp5IClHLD8e2ZjeHrrc2h8dgzQtduna63LQeZ5QLUomqCOxNoZwesKH8N810r7KtNQZ
+         R0EjEqeCTLJoJSZVROs2GC8S+C13Dva94Q1qRPm6dgYqaLJgukGfXQRnZ6VMzqIKrEAA
+         lYgg==
+X-Gm-Message-State: APjAAAXHsgNrMcWYsL5hLHIwMu5a22We5MGg7iwy8eurvGFlaOWd/YSY
+        85slG7bQI0WTVEUmg1dveDgcxwqFg8Wrzkcl87bKL6Pkid0=
+X-Google-Smtp-Source: APXvYqw/sLpBqdBHOPU9qSM2L8NublyOyWrSLwEFjTf+YsKt7TtPut7dovRhNhmqzW2j39UQAjzxVd9jsFKttBMVXNg=
+X-Received: by 2002:a5d:638b:: with SMTP id p11mr10510005wru.372.1570862043467;
+ Fri, 11 Oct 2019 23:34:03 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191012001919.lknks3k2at5xpxwf@macbook-pro-91.dhcp.thefacebook.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=FNpr/6gs c=1 sm=1 tr=0
-        a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=7-415B0cAAAA:8 a=lunlTiudoaBRvRPLOwEA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+From:   Wang Shilong <wangshilong1991@gmail.com>
+Date:   Sat, 12 Oct 2019 14:33:36 +0800
+Message-ID: <CAP9B-QmQ-mbWgJwEWrVOMabsgnPwyJsxSQbMkWuFk81-M4dRPQ@mail.gmail.com>
+Subject: [Project Quota]file owner could change its project ID?
+To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Andreas Dilger <adilger@dilger.ca>, Li Xi <lixi@ddn.com>,
+        Wang Shilong <wshilong@ddn.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 11, 2019 at 08:19:21PM -0400, Josef Bacik wrote:
-> Ok, I just read the mm patches and made assumptions about what you were trying
-> to accomplish.  I suppose I should probably dig my stuff back out.  Thanks,
+Steps to reproduce:
+[wangsl@localhost tmp]$ mkdir project
+[wangsl@localhost tmp]$ lsattr -p project -d
+    0 ------------------ project
+[wangsl@localhost tmp]$ chattr -p 1 project
+[wangsl@localhost tmp]$ lsattr -p -d project
+    1 ------------------ project
+[wangsl@localhost tmp]$ chattr -p 2 project
+[wangsl@localhost tmp]$ lsattr -p -d project
+    2 ------------------ project
+[wangsl@localhost tmp]$ df -Th .
+Filesystem     Type  Size  Used Avail Use% Mounted on
+/dev/sda3      xfs    36G  4.1G   32G  12% /
+[wangsl@localhost tmp]$ uname -r
+5.4.0-rc2+
 
-Fair enough.
+As above you could see file owner could change project ID of file its self.
+As my understanding, we could set project ID and inherit attribute to account
+Directory usage, and implement a similar 'Directory Quota' based on this.
 
-The mm bits are basically providing backoffs when shrinkers can't
-make progress for whatever reason (e.g. GFP_NOFS context, requires
-IO, etc) so that other reclaim scanning can be done while we wait
-for other progress (like cleaning inodes) can be made before trying
-to reclaim inodes again.
+But Directories could easily break this limit by change its file to
+other project ID.
 
-The back-offs are required to prevent priority wind-up and OOM if
-reclaim progress is extremely slow. These patches aggregate them
-into bound global reclaim delays between page reclaim and slab
-shrinking rather than lots of unbound individual delays inside
-specific shrinkers that end up slowing down the entire slab
-shrinking scan.
+And we used vfs_ioc_fssetxattr_check() to only allow init userspace to
+change project quota:
 
-Cheers,
+        /*
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+         * Project Quota ID state is only allowed to change from within the init
+
+         * namespace. Enforce that restriction only if we are trying to change
+
+         * the quota ID state. Everything else is allowed in user namespaces.
+
+         */
+
+        if (current_user_ns() != &init_user_ns) {
+
+                if (old_fa->fsx_projid != fa->fsx_projid)
+
+                        return -EINVAL;
+
+                if ((old_fa->fsx_xflags ^ fa->fsx_xflags) &
+
+                                FS_XFLAG_PROJINHERIT)
+
+                        return -EINVAL;
+
+        }
+
+Shall we have something like following to limit admin change for
+Project state too?
+
+diff --git a/fs/inode.c b/fs/inode.c
+
+index fef457a42882..3e324931ee84 100644
+
+--- a/fs/inode.c
+
++++ b/fs/inode.c
+
+@@ -2273,7 +2273,7 @@ int vfs_ioc_fssetxattr_check(struct inode
+*inode, const struct fsxattr *old_fa,
+
+         * namespace. Enforce that restriction only if we are trying to change
+
+         * the quota ID state. Everything else is allowed in user namespaces.
+
+         */
+
+-       if (current_user_ns() != &init_user_ns) {
+
++       if (current_user_ns() != &init_user_ns || !capable(CAP_SYS_ADMIN)){
+
+                if (old_fa->fsx_projid != fa->fsx_projid)
+
+                        return -EINVAL;
+
+                if ((old_fa->fsx_xflags ^ fa->fsx_xflags) &
