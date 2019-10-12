@@ -2,129 +2,124 @@ Return-Path: <SRS0=POS4=YF=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC6B4ECE58E
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 00:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08E14C47404
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 00:30:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A720621835
-	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 00:19:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D00EE21835
+	for <linux-xfs@archiver.kernel.org>; Sat, 12 Oct 2019 00:30:07 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=toxicpanda-com.20150623.gappssmtp.com header.i=@toxicpanda-com.20150623.gappssmtp.com header.b="cR3zj9Qq"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bEcywwnu"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727500AbfJLATY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 11 Oct 2019 20:19:24 -0400
-Received: from mail-qt1-f196.google.com ([209.85.160.196]:33214 "EHLO
-        mail-qt1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727345AbfJLATY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 20:19:24 -0400
-Received: by mail-qt1-f196.google.com with SMTP id r5so16468195qtd.0
-        for <linux-xfs@vger.kernel.org>; Fri, 11 Oct 2019 17:19:24 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=toxicpanda-com.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=sP8HW4cnr13JQ9Tgtb6yVwceIcj+0+sDklR8/gApWqw=;
-        b=cR3zj9Qql7kG9GpPxfYCuKNUUNbDiBlJ/Ui7C2d1cL2+QM65yqPTNjbV9JbTARB4Yy
-         KEfJfnMh557qqgYFT1XHYPtzH9ONT6qkHjxIlCFoEZzQ4ZGswrqBdxzc6oweEGAU5ur+
-         xJELJSKHTYKU7K0PQmOy8HruWihvJahIFnjI5VDGdUYir1heYgJoboYmLX2Qe1VTTKvs
-         oH4TFU9okxA10c9ZOFxh284/E63t4FYHNLA44HmHiSf2furN5XD70hf/AeWrc6hZh+ks
-         fS6vlRwHZ3Jr4rWR3Ri0IfTGAK567CLYZJ+fgNawIQafZnVaBo2fnxatd3rOg4h0o/cM
-         OznA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=sP8HW4cnr13JQ9Tgtb6yVwceIcj+0+sDklR8/gApWqw=;
-        b=VfCnSR3JxQYDeSyrRry1VpmmUj362H0+6NADvLlfEaBfN2qCdkXXUqrNPOZvLJpSB5
-         0jB1p/lRBApCWQBfjU3ArMrUbVo2MeHrg2SgzZLSUhx/dDiZ02PHKnx0aDCUsZ+TH5Ke
-         RwZqR/VztMUBShcHYqWzMzJ3npOv2nGIrw44mZpR8BA0OUOPegDOq1mJFt4gI8jZiHDQ
-         tZyuBe1so/+5Z+oPPvAB+7ZXglEIUu69l+i3Rak9OjIVM4aSzU65Hyz/58Ia13wGVIO2
-         zhJwmQ2T3p26IO8MVAzD2bFcS7tMJE36N4Fw5y7zQgxw9jyIPax2hzkqwv//egtqWRuI
-         poeA==
-X-Gm-Message-State: APjAAAW5JjUAh7SY87GpgNWS1jw40s/FatpfFlRro+wNGl1mhmxdlfgc
-        Eqq41r1ObXfkfiHjom610SIsjg==
-X-Google-Smtp-Source: APXvYqxWIXOP4Z52KJMcefy+9D5D6SKAoYIhhWNU+dSOWCOleqgSV74M58GLHL9vPSgtV8bFeFwmkg==
-X-Received: by 2002:a0c:ef87:: with SMTP id w7mr19241403qvr.49.1570839563472;
-        Fri, 11 Oct 2019 17:19:23 -0700 (PDT)
-Received: from localhost ([2620:10d:c091:480::677f])
-        by smtp.gmail.com with ESMTPSA id t19sm4254918qto.55.2019.10.11.17.19.22
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 11 Oct 2019 17:19:22 -0700 (PDT)
-Date:   Fri, 11 Oct 2019 20:19:21 -0400
-From:   Josef Bacik <josef@toxicpanda.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Josef Bacik <josef@toxicpanda.com>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH V2 00/26] mm, xfs: non-blocking inode reclaim
-Message-ID: <20191012001919.lknks3k2at5xpxwf@macbook-pro-91.dhcp.thefacebook.com>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191011190305.towurweq7gsah4vr@macbook-pro-91.dhcp.thefacebook.com>
- <20191011234842.GQ16973@dread.disaster.area>
+        id S1726827AbfJLAaH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 11 Oct 2019 20:30:07 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:53786 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726728AbfJLAaH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 11 Oct 2019 20:30:07 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9C0U25i104936;
+        Sat, 12 Oct 2019 00:30:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=sqfySJR2AX9Mn7ITNk2KaVjiKTP7FKS6INSiATBNI9k=;
+ b=bEcywwnu02kIaZj8cvg6pCgNNpqgFwxDvoC0OLGxj4l4UodRZEddwkOqCFSm23Z94tO1
+ 0ynQ8KciqstIFQfarMp+/trdJDXiIroLgOgre17QhD460/f6SLYG2WStmdRzOmf8kMVx
+ 1s9fYiwOYe3R2AO9gz5f6Y4uh/RK4QheJCnxCW8SoUpvXbfLVn57AYQbEA6zEwx7oKRH
+ 2m0n9laAQpIzZFkI1vTNX86RoqDDEoE44cG06lSZ4PyhzVbI+RTN7DhgODTR9hiPiBHg
+ qbL7itmlo38DOxeEqrciDvYotssFy0NP4TjCP+nCl+ZJJlOdD7QYhh2GII0UmBtPyn5g Eg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vekts4bwa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 12 Oct 2019 00:30:02 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9C0SmKm172207;
+        Sat, 12 Oct 2019 00:30:01 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2vk3533er9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Sat, 12 Oct 2019 00:30:01 +0000
+Received: from abhmp0004.oracle.com (abhmp0004.oracle.com [141.146.116.10])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9C0TuP1005368;
+        Sat, 12 Oct 2019 00:29:56 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 11 Oct 2019 17:29:56 -0700
+Date:   Fri, 11 Oct 2019 17:29:54 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/2] xfs: disable xfs_ioc_space for always COW inodes
+Message-ID: <20191012002954.GM13108@magnolia>
+References: <20191011130316.13373-1-hch@lst.de>
+ <20191011130316.13373-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191011234842.GQ16973@dread.disaster.area>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20191011130316.13373-2-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9407 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=822
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910120001
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9407 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=902 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910120001
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Oct 12, 2019 at 10:48:42AM +1100, Dave Chinner wrote:
-> On Fri, Oct 11, 2019 at 03:03:08PM -0400, Josef Bacik wrote:
-> > On Wed, Oct 09, 2019 at 02:20:58PM +1100, Dave Chinner wrote:
-> > > Hi folks,
-> > > 
-> > > This is the second version of the RFC I originally posted here:
-> > > 
-> > > https://lore.kernel.org/linux-xfs/20190801021752.4986-1-david@fromorbit.com/
-> > > 
-> > > The original description of the patchset is below, the issues and
-> > > approach to solving them has not changed. THere is some
-> > > restructuring of the patch set - the first few patches are all the
-> > > XFS fixes that can be merged regardless of the rest of the patchset,
-> > > but the non-blocking reclaim is somewhat dependent of them for
-> > > correct behaviour. The second set of patches are the shrinker
-> > > infrastructure changes needed for the shrinkers to feed back
-> > > reclaim progress to the main reclaim instructure and act on the
-> > > feedback. The last set of patches are the XFS changes needed to
-> > > convert inode reclaim over to a non-blocking, IO-less algorithm.
-> > 
-> > I looked through the MM patches and other than the congestion thing they look
-> > reasonable.  I think I can probably use this stuff to drop the use of the btree
-> > inode.  However I'm wondering if it would be a good idea to add an explicit
-> > backoff thing for heavy metadata dirty'ing operations.  Btrfs generates a lot
-> > more dirty metadata than most, partly why my attempt to deal with this was tied
-> > to using balance dirty pages since it already has all of the backoff logic.
-> 
-> That's an orthorgonal problem, I think. We still need the IO-less
-> reclaim in XFS regardless of how we throttle build up of dirty
-> metadata...
-> 
-> > Perhaps an explict balance_dirty_metadata() that we put after all
-> > metadata operations so we have a good way to throttle dirtiers
-> > when we aren't able to keep up?  Just a thought, based on my
-> > previous experiences trying to tackle this issue for btrfs, what
-> > you've done already may be enough to address these concerns.
-> 
-> The biggest issue is that different filesystems need different
-> mechanisms for throttling dirty metadata build-up. In ext4/XFS, the
-> amount of dirty metadata is bound by the log size, but that can
-> still be massively more metadata than the disk subsystem can handle
-> in a finite time.
-> 
-> IOWs, for XFS, the way to throttle dirty metadata buildup is to
-> limit the amount of log space we allow the filesystem to use when we
-> are able to throttle incoming transaction reservations. Nothing in
-> the VFS/mm subsystem can see any of this inside XFS, so I'm not
-> really sure how generic we could make a metadata dirtying throttle
-> implementation....
->
+On Fri, Oct 11, 2019 at 03:03:15PM +0200, Christoph Hellwig wrote:
+> If we always have to write out of place preallocating blocks is
+> pointless.  We already check for this in the normal falloc path, but
+> the check was missig in the legacy ALLOCSP path.
 
-Ok, I just read the mm patches and made assumptions about what you were trying
-to accomplish.  I suppose I should probably dig my stuff back out.  Thanks,
+This function handles other things than preallocation, such as
+XFS_IOC_ZERO_RANGE and XFS_IOC_UNRESVSP, which call xfs_zero_file_space
+and xfs_free_file_space, respectively.  We don't prohibit fallocate
+from calling those two functions on an always_cow inode, so why do that
+here?
 
-Josef 
+--D
+
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_ioctl.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+> index d58f0d6a699e..abf7a102376f 100644
+> --- a/fs/xfs/xfs_ioctl.c
+> +++ b/fs/xfs/xfs_ioctl.c
+> @@ -33,6 +33,7 @@
+>  #include "xfs_sb.h"
+>  #include "xfs_ag.h"
+>  #include "xfs_health.h"
+> +#include "xfs_reflink.h"
+>  
+>  #include <linux/mount.h>
+>  #include <linux/namei.h>
+> @@ -607,6 +608,9 @@ xfs_ioc_space(
+>  	if (!S_ISREG(inode->i_mode))
+>  		return -EINVAL;
+>  
+> +	if (xfs_is_always_cow_inode(ip))
+> +		return -EOPNOTSUPP;
+> +
+>  	if (filp->f_flags & O_DSYNC)
+>  		flags |= XFS_PREALLOC_SYNC;
+>  	if (filp->f_mode & FMODE_NOCMTIME)
+> -- 
+> 2.20.1
+> 
