@@ -7,62 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C54B5C4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:13:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1085FECE587
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:13:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9A17521835
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:13:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D9CE3217D9
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:13:27 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZghjgVva"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="JsDQLG4e"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388235AbfJNRNC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 13:13:02 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:48768 "EHLO
+        id S2388253AbfJNRN1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 13:13:27 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:49362 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387910AbfJNRNC (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 13:13:02 -0400
+        with ESMTP id S2387910AbfJNRN1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 13:13:27 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH9qbr029431;
-        Mon, 14 Oct 2019 17:12:58 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EHA85S029637;
+        Mon, 14 Oct 2019 17:13:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=UVLC+E209EGtPM/JXRVAGlV+1fgd+evXadddScTsJ4E=;
- b=ZghjgVvafDCWM48haMCnKfSdi/8wWyvLOXYtNiU6D4NP4DYVaEPBCV5p6Fbwq7dl1kkG
- z9sDOeQDaKsctS881+xIIhwWQiMecavC27kzMqLVmb1kBhreRPm2MXjdAkAuZ0tVMm/b
- UVAw62Dch7bLYDPfwFP8fT/ehkbyLroDyjPVRUtim59tO6L1TSk/tJ8HZmprFvFHRQRN
- nTzEBa753S3ihlV8ZnrdSZ0UTGvyF8c8893JcfS4NV1tbbGfmBOAYetNBrLGlKcu7OJU
- pJznBYtSEcUcmijiP8fTZuQA6ohazTFmzPF6y28RGBmy5uhq4h9JvM1Lypq30UzdtE6K 5A== 
+ bh=PfcFSqTpuPhmivBcFkJGJT0aUKnL7oaKvSeo6NiE+A8=;
+ b=JsDQLG4eLljHRQXQes4PtidqZGNbTCF1mH/KbL+ZNjijxWaKw70HAfNTO0FeRIg0kP3I
+ gOevsyBZJEYNjw4KEw/p7hELA7wKuJSn94zkZ1M1VIxp9JoNqWLqAQKQQEQf8ZQ5WfDj
+ oJlEXNgj29CG8d2F+hwKr3N5F57NUSChe6XMddXmvkdyIrcGwaRIBfZn3j/jAOvZQ6eq
+ zhR2PiE804YoiqQcMGCaeKkgNvzKHyYrUyOhlNu66S8G9VLEcFBbT1ys+hsOIKvb1ImZ
+ ljHpVcNdqmSs1gjZda8frH90wJy/MF94Cy5s5cXFeMIW1jUc+j50sDWzatg6DS36TXIZ yA== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2vk6sqabq0-1
+        by aserp2120.oracle.com with ESMTP id 2vk6sqabsq-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 17:12:58 +0000
+        Mon, 14 Oct 2019 17:13:23 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH7wFu149572;
-        Mon, 14 Oct 2019 17:12:57 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2vkry6r56m-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH7wa2149632;
+        Mon, 14 Oct 2019 17:13:23 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vkry6r67t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 17:12:57 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9EHCurq016365;
-        Mon, 14 Oct 2019 17:12:56 GMT
+        Mon, 14 Oct 2019 17:13:23 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9EHDMur013121;
+        Mon, 14 Oct 2019 17:13:22 GMT
 Received: from localhost (/10.159.144.186)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 14 Oct 2019 17:12:56 +0000
-Date:   Mon, 14 Oct 2019 10:12:55 -0700
+        with ESMTP ; Mon, 14 Oct 2019 10:13:21 -0700
+Date:   Mon, 14 Oct 2019 10:13:20 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/8] xfs: remove the unused ic_io_size field from
- xlog_in_core
-Message-ID: <20191014171255.GV13108@magnolia>
+Subject: Re: [PATCH 5/8] xfs: remove dead ifdef XFSERRORDEBUG code
+Message-ID: <20191014171320.GW13108@magnolia>
 References: <20191009142748.18005-1-hch@lst.de>
- <20191009142748.18005-3-hch@lst.de>
+ <20191009142748.18005-6-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191009142748.18005-3-hch@lst.de>
+In-Reply-To: <20191009142748.18005-6-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -80,9 +79,9 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 04:27:42PM +0200, Christoph Hellwig wrote:
-> ic_io_size is only used inside xlog_write_iclog, where we can just use
-> the count parameter intead.
+On Wed, Oct 09, 2019 at 04:27:45PM +0200, Christoph Hellwig wrote:
+> XFSERRORDEBUG is never set and the code isn't all that useful, so remove
+> it.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
@@ -92,56 +91,33 @@ Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 --D
 
 > ---
->  fs/xfs/xfs_log.c      | 6 ++----
->  fs/xfs/xfs_log_priv.h | 3 ---
->  2 files changed, 2 insertions(+), 7 deletions(-)
+>  fs/xfs/xfs_log.c | 13 -------------
+>  1 file changed, 13 deletions(-)
 > 
 > diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-> index cd90871c2101..4f5927ddfa40 100644
+> index 67a767d90ebf..7a429e5dc27c 100644
 > --- a/fs/xfs/xfs_log.c
 > +++ b/fs/xfs/xfs_log.c
-> @@ -1740,8 +1740,6 @@ xlog_write_iclog(
->  		return;
->  	}
+> @@ -3996,19 +3996,6 @@ xfs_log_force_umount(
+>  	spin_unlock(&log->l_cilp->xc_push_lock);
+>  	xlog_state_do_callback(log, true, NULL);
 >  
-> -	iclog->ic_io_size = count;
+> -#ifdef XFSERRORDEBUG
+> -	{
+> -		xlog_in_core_t	*iclog;
 > -
->  	bio_init(&iclog->ic_bio, iclog->ic_bvec, howmany(count, PAGE_SIZE));
->  	bio_set_dev(&iclog->ic_bio, log->l_targ->bt_bdev);
->  	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
-> @@ -1751,9 +1749,9 @@ xlog_write_iclog(
->  	if (need_flush)
->  		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
->  
-> -	xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, iclog->ic_io_size);
-> +	xlog_map_iclog_data(&iclog->ic_bio, iclog->ic_data, count);
->  	if (is_vmalloc_addr(iclog->ic_data))
-> -		flush_kernel_vmap_range(iclog->ic_data, iclog->ic_io_size);
-> +		flush_kernel_vmap_range(iclog->ic_data, count);
->  
->  	/*
->  	 * If this log buffer would straddle the end of the log we will have
-> diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-> index b880c23cb6e4..90e210e433cf 100644
-> --- a/fs/xfs/xfs_log_priv.h
-> +++ b/fs/xfs/xfs_log_priv.h
-> @@ -179,8 +179,6 @@ typedef struct xlog_ticket {
->   * - ic_next is the pointer to the next iclog in the ring.
->   * - ic_log is a pointer back to the global log structure.
->   * - ic_size is the full size of the log buffer, minus the cycle headers.
-> - * - ic_io_size is the size of the currently pending log buffer write, which
-> - *	might be smaller than ic_size
->   * - ic_offset is the current number of bytes written to in this iclog.
->   * - ic_refcnt is bumped when someone is writing to the log.
->   * - ic_state is the state of the iclog.
-> @@ -205,7 +203,6 @@ typedef struct xlog_in_core {
->  	struct xlog_in_core	*ic_prev;
->  	struct xlog		*ic_log;
->  	u32			ic_size;
-> -	u32			ic_io_size;
->  	u32			ic_offset;
->  	unsigned short		ic_state;
->  	char			*ic_datap;	/* pointer to iclog data */
+> -		spin_lock(&log->l_icloglock);
+> -		iclog = log->l_iclog;
+> -		do {
+> -			ASSERT(iclog->ic_callback == 0);
+> -			iclog = iclog->ic_next;
+> -		} while (iclog != log->l_iclog);
+> -		spin_unlock(&log->l_icloglock);
+> -	}
+> -#endif
+>  	/* return non-zero if log IOERROR transition had already happened */
+>  	return retval;
+>  }
 > -- 
 > 2.20.1
 > 
