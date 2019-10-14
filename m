@@ -2,158 +2,629 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A3A0DC4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 20:09:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86BB5ECE58E
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 23:27:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6EC4021721
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 20:09:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 601D221925
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 23:27:30 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="LI5atSRS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731895AbfJNUJv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 16:09:51 -0400
-Received: from sandeen.net ([63.231.237.45]:53090 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1731587AbfJNUJu (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Oct 2019 16:09:50 -0400
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 1C6EE7907;
-        Mon, 14 Oct 2019 15:09:14 -0500 (CDT)
-Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
-To:     Jan Kara <jack@suse.cz>
-Cc:     Pingfan Liu <kernelfans@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hari Bathini <hbathini@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
- <20191013163417.GQ13108@magnolia> <20191014083315.GA10091@mypc>
- <20191014094311.GD5939@quack2.suse.cz>
- <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
- <20191014200303.GF5939@quack2.suse.cz>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <5796090e-6206-1bd7-174e-58798c9af052@sandeen.net>
-Date:   Mon, 14 Oct 2019 15:09:48 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.1.2
+        id S1726462AbfJNX13 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 19:27:29 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:38938 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726438AbfJNX13 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 19:27:29 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ENO8ut140044;
+        Mon, 14 Oct 2019 23:27:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=JcUwtd/0qbut4Lpaw6hvdWuCX9STYZs7tk/6dffAGiU=;
+ b=LI5atSRSr342CVudRe20QBPqPyTTNRC/fnHhI6+iWXwb0uel/2s0t0/piQDzSFU2Ut0O
+ hfD3kfpp4PtpLaD72f0485dpfPvXwjIQwNRVyfWijJraY+xhZ9uJPBNWUyG5uR+zIfHD
+ yrUxhudmBfBMLscgWJkG/tsssXmnTIwNadgeXuktyw9uTM8wbZumLUaPu+h/vmkYKa5q
+ OS+OCsd5WulzQiDM5IIyfYOo++8ZMyo4uDQNYes6Gn1tlbQpKnh2CrYlv5UDQKHqpbjR
+ VMVUNqPp7PflIOGoMlzF9XTLwCmzfrmSYO1VxxC9TkLH9Te1A8gF5IJ6AI9nzJqitOrV VQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2vk7fr3xh2-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 14 Oct 2019 23:27:18 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ENOENp117116;
+        Mon, 14 Oct 2019 23:27:17 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2vks07ppnd-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 14 Oct 2019 23:27:17 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9ENRBJU025154;
+        Mon, 14 Oct 2019 23:27:12 GMT
+Received: from localhost (/10.159.232.14)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 14 Oct 2019 23:27:10 +0000
+Date:   Mon, 14 Oct 2019 16:27:09 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Goldwyn Rodrigues <rgoldwyn@suse.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 08/20] iomap: use a srcmap for a read-modify-write I/O
+Message-ID: <20191014232709.GB13108@magnolia>
+References: <20191008071527.29304-1-hch@lst.de>
+ <20191008071527.29304-9-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20191014200303.GF5939@quack2.suse.cz>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191008071527.29304-9-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910140197
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910140197
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 10/14/19 3:03 PM, Jan Kara wrote:
-> On Mon 14-10-19 08:23:39, Eric Sandeen wrote:
->> On 10/14/19 4:43 AM, Jan Kara wrote:
->>> On Mon 14-10-19 16:33:15, Pingfan Liu wrote:
->>>> On Sun, Oct 13, 2019 at 09:34:17AM -0700, Darrick J. Wong wrote:
->>>>> On Sun, Oct 13, 2019 at 10:37:00PM +0800, Pingfan Liu wrote:
->>>>>> When using fadump (fireware assist dump) mode on powerpc, a mismatch
->>>>>> between grub xfs driver and kernel xfs driver has been obsevered.  Note:
->>>>>> fadump boots up in the following sequence: fireware -> grub reads kernel
->>>>>> and initramfs -> kernel boots.
->>>>>>
->>>>>> The process to reproduce this mismatch:
->>>>>>     - On powerpc, boot kernel with fadump=on and edit /etc/kdump.conf.
->>>>>>     - Replacing "path /var/crash" with "path /var/crashnew", then, "kdumpctl
->>>>>>       restart" to rebuild the initramfs. Detail about the rebuilding looks
->>>>>>       like: mkdumprd /boot/initramfs-`uname -r`.img.tmp;
->>>>>>             mv /boot/initramfs-`uname -r`.img.tmp /boot/initramfs-`uname -r`.img
->>>>>>             sync
->>>>>>     - "echo c >/proc/sysrq-trigger".
->>>>>>
->>>>>> The result:
->>>>>> The dump image will not be saved under /var/crashnew/* as expected, but
->>>>>> still saved under /var/crash.
->>>>>>
->>>>>> The root cause:
->>>>>> As Eric pointed out that on xfs, 'sync' ensures the consistency by writing
->>>>>> back metadata to xlog, but not necessary to fsblock. This raises issue if
->>>>>> grub can not replay the xlog before accessing the xfs files. Since the
->>>>>> above dir entry of initramfs should be saved as inline data with xfs_inode,
->>>>>> so xfs_fs_sync_fs() does not guarantee it written to fsblock.
->>>>>>
->>>>>> umount can be used to write metadata fsblock, but the filesystem can not be
->>>>>> umounted if still in use.
->>>>>>
->>>>>> There are two ways to fix this mismatch, either grub or xfs. It may be
->>>>>> easier to do this in xfs side by introducing an interface to flush metadata
->>>>>> to fsblock explicitly.
->>>>>>
->>>>>> With this patch, metadata can be written to fsblock by:
->>>>>>     # update AIL
->>>>>>     sync
->>>>>>     # new introduced interface to flush metadata to fsblock
->>>>>>     mount -o remount,metasync mountpoint
->>>>>
->>>>> I think this ought to be an ioctl or some sort of generic call since the
->>>>> jbd2 filesystems (ext3, ext4, ocfs2) suffer from the same "$BOOTLOADER
->>>>> is too dumb to recover logs but still wants to write to the fs"
->>>>> checkpointing problem.
->>>> Yes, a syscall sounds more reasonable.
->>>>>
->>>>> (Or maybe we should just put all that stuff in a vfat filesystem, I
->>>>> don't know...)
->>>> I think it is unavoidable to involve in each fs' implementation. What
->>>> about introducing an interface sync_to_fsblock(struct super_block *sb) in
->>>> the struct super_operations, then let each fs manage its own case?
->>>
->>> Well, we already have a way to achieve what you need: fsfreeze.
->>> Traditionally, that is guaranteed to put fs into a "clean" state very much
->>> equivalent to the fs being unmounted and that seems to be what the
->>> bootloader wants so that it can access the filesystem without worrying
->>> about some recovery details. So do you see any problem with replacing
->>> 'sync' in your example above with 'fsfreeze /boot && fsfreeze -u /boot'?
->>>
->>> 								Honza
->>
->> The problem with fsfreeze is that if the device you want to quiesce is, say,
->> the root fs, freeze isn't really a good option.
+On Tue, Oct 08, 2019 at 09:15:15AM +0200, Christoph Hellwig wrote:
+> From: Goldwyn Rodrigues <rgoldwyn@suse.com>
 > 
-> I agree you need to be really careful not to deadlock against yourself in
-> that case. But this particular use actually has a chance to work.
+> The srcmap is used to identify where the read is to be performed from.
+> It is passed to ->iomap_begin, which can fill it in if we need to read
+> data for partially written blocks from a different location than the
+> write target.  The srcmap is only supported for buffered writes so far.
 > 
->> But the other thing I want to highlight about this approach is that it does not
->> solve the root problem: something is trying to read the block device without
->> first replaying the log.
->>
->> A call such as the proposal here is only going to leave consistent metadata at
->> the time the call returns; at any time after that, all guarantees are off again,
->> so the problem hasn't been solved.
+> Signed-off-by: Goldwyn Rodrigues <rgoldwyn@suse.com>
+
+Goldwyn,
+
+Since we've reworked your original patch quite extensively, could you
+please have a look at (and if you approve, add an Acked-by) this new(er)
+version so we can get this series moving for 5.5?
+
+--D
+
+> [hch: merged two patches, removed the IOMAP_F_COW flag, use iomap as
+>       srcmap if not set, adjust length down to srcmap end as well]
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/dax.c               |  9 ++++--
+>  fs/ext2/inode.c        |  2 +-
+>  fs/ext4/inode.c        |  2 +-
+>  fs/gfs2/bmap.c         |  3 +-
+>  fs/iomap/apply.c       | 25 ++++++++++++----
+>  fs/iomap/buffered-io.c | 65 +++++++++++++++++++++++-------------------
+>  fs/iomap/direct-io.c   |  2 +-
+>  fs/iomap/fiemap.c      |  4 +--
+>  fs/iomap/seek.c        |  4 +--
+>  fs/iomap/swapfile.c    |  3 +-
+>  fs/xfs/xfs_iomap.c     |  9 ++++--
+>  include/linux/iomap.h  |  5 ++--
+>  12 files changed, 80 insertions(+), 53 deletions(-)
 > 
-> Oh, absolutely agreed. I was also thinking about this before sending my
-> reply. Once you unfreeze, the log can start filling with changes and
-> there's no guarantee that e.g. inode does not move as part of these
-> changes. But to be fair, replaying the log isn't easy either, even more so
-> from a bootloader. You cannot write the changes from the log back into the
-> filesystem as e.g. in case of suspend-to-disk the resumed kernel gets
-> surprised and corrupts the fs under its hands (been there, tried that). So
-> you must keep changes only in memory and that's not really easy in the
-> constrained bootloader environment.
-> 
-> So I guess we are left with hacks that kind of mostly work and fsfreeze is
-> one of those. If you don't mess with the files after fsfreeze, you're
-> likely to find what you need even without replaying the log.
-
-We're in agreement here.  ;)  I only worry about implementing things like this
-which sound like guarantees, but aren't, and end up encouraging bad behavior
-or promoting misconceptions.
-
-More and more, I think we should reconsider Darrick's "bootfs" (ext2 by another
-name, but with extra-sync-iness) proposal...
-
--Eric
-
-> 								Honza
+> diff --git a/fs/dax.c b/fs/dax.c
+> index 6bf81f931de3..920105457c2c 100644
+> --- a/fs/dax.c
+> +++ b/fs/dax.c
+> @@ -1090,7 +1090,7 @@ EXPORT_SYMBOL_GPL(__dax_zero_page_range);
+>  
+>  static loff_t
+>  dax_iomap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct block_device *bdev = iomap->bdev;
+>  	struct dax_device *dax_dev = iomap->dax_dev;
+> @@ -1248,6 +1248,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	unsigned long vaddr = vmf->address;
+>  	loff_t pos = (loff_t)vmf->pgoff << PAGE_SHIFT;
+>  	struct iomap iomap = { 0 };
+> +	struct iomap srcmap = { .type = IOMAP_HOLE };
+>  	unsigned flags = IOMAP_FAULT;
+>  	int error, major = 0;
+>  	bool write = vmf->flags & FAULT_FLAG_WRITE;
+> @@ -1292,7 +1293,7 @@ static vm_fault_t dax_iomap_pte_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	 * the file system block size to be equal the page size, which means
+>  	 * that we never have to deal with more than a single extent here.
+>  	 */
+> -	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap);
+> +	error = ops->iomap_begin(inode, pos, PAGE_SIZE, flags, &iomap, &srcmap);
+>  	if (iomap_errp)
+>  		*iomap_errp = error;
+>  	if (error) {
+> @@ -1472,6 +1473,7 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	struct inode *inode = mapping->host;
+>  	vm_fault_t result = VM_FAULT_FALLBACK;
+>  	struct iomap iomap = { 0 };
+> +	struct iomap srcmap = { .type = IOMAP_HOLE };
+>  	pgoff_t max_pgoff;
+>  	void *entry;
+>  	loff_t pos;
+> @@ -1546,7 +1548,8 @@ static vm_fault_t dax_iomap_pmd_fault(struct vm_fault *vmf, pfn_t *pfnp,
+>  	 * to look up our filesystem block.
+>  	 */
+>  	pos = (loff_t)xas.xa_index << PAGE_SHIFT;
+> -	error = ops->iomap_begin(inode, pos, PMD_SIZE, iomap_flags, &iomap);
+> +	error = ops->iomap_begin(inode, pos, PMD_SIZE, iomap_flags, &iomap,
+> +			&srcmap);
+>  	if (error)
+>  		goto unlock_entry;
+>  
+> diff --git a/fs/ext2/inode.c b/fs/ext2/inode.c
+> index 7004ce581a32..467c13ff6b40 100644
+> --- a/fs/ext2/inode.c
+> +++ b/fs/ext2/inode.c
+> @@ -801,7 +801,7 @@ int ext2_get_block(struct inode *inode, sector_t iblock,
+>  
+>  #ifdef CONFIG_FS_DAX
+>  static int ext2_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+> -		unsigned flags, struct iomap *iomap)
+> +		unsigned flags, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	unsigned int blkbits = inode->i_blkbits;
+>  	unsigned long first_block = offset >> blkbits;
+> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
+> index 516faa280ced..abaaf7d96ca4 100644
+> --- a/fs/ext4/inode.c
+> +++ b/fs/ext4/inode.c
+> @@ -3407,7 +3407,7 @@ static bool ext4_inode_datasync_dirty(struct inode *inode)
+>  }
+>  
+>  static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
+> -			    unsigned flags, struct iomap *iomap)
+> +		unsigned flags, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct ext4_sb_info *sbi = EXT4_SB(inode->i_sb);
+>  	unsigned int blkbits = inode->i_blkbits;
+> diff --git a/fs/gfs2/bmap.c b/fs/gfs2/bmap.c
+> index f63df54a08c6..516103248272 100644
+> --- a/fs/gfs2/bmap.c
+> +++ b/fs/gfs2/bmap.c
+> @@ -1149,7 +1149,8 @@ static inline bool gfs2_iomap_need_write_lock(unsigned flags)
+>  }
+>  
+>  static int gfs2_iomap_begin(struct inode *inode, loff_t pos, loff_t length,
+> -			    unsigned flags, struct iomap *iomap)
+> +			    unsigned flags, struct iomap *iomap,
+> +			    struct iomap *srcmap)
+>  {
+>  	struct gfs2_inode *ip = GFS2_I(inode);
+>  	struct metapath mp = { .mp_aheight = 1, };
+> diff --git a/fs/iomap/apply.c b/fs/iomap/apply.c
+> index 54c02aecf3cd..484dd8eda861 100644
+> --- a/fs/iomap/apply.c
+> +++ b/fs/iomap/apply.c
+> @@ -23,8 +23,10 @@ loff_t
+>  iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  		const struct iomap_ops *ops, void *data, iomap_actor_t actor)
+>  {
+> -	struct iomap iomap = { 0 };
+> +	struct iomap iomap = { .type = IOMAP_HOLE };
+> +	struct iomap srcmap = { .type = IOMAP_HOLE };
+>  	loff_t written = 0, ret;
+> +	u64 end;
+>  
+>  	/*
+>  	 * Need to map a range from start position for length bytes. This can
+> @@ -38,7 +40,7 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	 * expose transient stale data. If the reserve fails, we can safely
+>  	 * back out at this point as there is nothing to undo.
+>  	 */
+> -	ret = ops->iomap_begin(inode, pos, length, flags, &iomap);
+> +	ret = ops->iomap_begin(inode, pos, length, flags, &iomap, &srcmap);
+>  	if (ret)
+>  		return ret;
+>  	if (WARN_ON(iomap.offset > pos))
+> @@ -50,15 +52,26 @@ iomap_apply(struct inode *inode, loff_t pos, loff_t length, unsigned flags,
+>  	 * Cut down the length to the one actually provided by the filesystem,
+>  	 * as it might not be able to give us the whole size that we requested.
+>  	 */
+> -	if (iomap.offset + iomap.length < pos + length)
+> -		length = iomap.offset + iomap.length - pos;
+> +	end = iomap.offset + iomap.length;
+> +	if (srcmap.type != IOMAP_HOLE)
+> +		end = min(end, srcmap.offset + srcmap.length);
+> +	if (pos + length > end)
+> +		length = end - pos;
+>  
+>  	/*
+> -	 * Now that we have guaranteed that the space allocation will succeed.
+> +	 * Now that we have guaranteed that the space allocation will succeed,
+>  	 * we can do the copy-in page by page without having to worry about
+>  	 * failures exposing transient data.
+> +	 *
+> +	 * To support COW operations, we read in data for partially blocks from
+> +	 * the srcmap if the file system filled it in.  In that case we the
+> +	 * length needs to be limited to the earlier of the ends of the iomaps.
+> +	 * If the file system did not provide a srcmap we pass in the normal
+> +	 * iomap into the actors so that they don't need to have special
+> +	 * handling for the two cases.
+>  	 */
+> -	written = actor(inode, pos, length, data, &iomap);
+> +	written = actor(inode, pos, length, data, &iomap,
+> +			srcmap.type != IOMAP_HOLE ? &srcmap : &iomap);
+>  
+>  	/*
+>  	 * Now the data has been copied, commit the range we've copied.  This
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index ac1bbed71a9b..eb2c6d73a837 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -234,7 +234,7 @@ static inline bool iomap_block_needs_zeroing(struct inode *inode,
+>  
+>  static loff_t
+>  iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iomap_readpage_ctx *ctx = data;
+>  	struct page *page = ctx->cur_page;
+> @@ -382,7 +382,7 @@ iomap_next_page(struct inode *inode, struct list_head *pages, loff_t pos,
+>  
+>  static loff_t
+>  iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iomap_readpage_ctx *ctx = data;
+>  	loff_t done, ret;
+> @@ -402,7 +402,7 @@ iomap_readpages_actor(struct inode *inode, loff_t pos, loff_t length,
+>  			ctx->cur_page_in_bio = false;
+>  		}
+>  		ret = iomap_readpage_actor(inode, pos + done, length - done,
+> -				ctx, iomap);
+> +				ctx, iomap, srcmap);
+>  	}
+>  
+>  	return done;
+> @@ -582,7 +582,7 @@ iomap_read_page_sync(loff_t block_start, struct page *page, unsigned poff,
+>  
+>  static int
+>  __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+> -		struct page *page, struct iomap *iomap)
+> +		struct page *page, struct iomap *srcmap)
+>  {
+>  	struct iomap_page *iop = iomap_page_create(inode, page);
+>  	loff_t block_size = i_blocksize(inode);
+> @@ -605,7 +605,7 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  		    (to <= poff || to >= poff + plen))
+>  			continue;
+>  
+> -		if (iomap_block_needs_zeroing(inode, iomap, block_start)) {
+> +		if (iomap_block_needs_zeroing(inode, srcmap, block_start)) {
+>  			if (WARN_ON_ONCE(flags & IOMAP_WRITE_F_UNSHARE))
+>  				return -EIO;
+>  			zero_user_segments(page, poff, from, to, poff + plen);
+> @@ -614,7 +614,7 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  		}
+>  
+>  		status = iomap_read_page_sync(block_start, page, poff, plen,
+> -				iomap);
+> +				srcmap);
+>  		if (status)
+>  			return status;
+>  	} while ((block_start += plen) < block_end);
+> @@ -624,13 +624,15 @@ __iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, int flags,
+>  
+>  static int
+>  iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+> -		struct page **pagep, struct iomap *iomap)
+> +		struct page **pagep, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	const struct iomap_page_ops *page_ops = iomap->page_ops;
+>  	struct page *page;
+>  	int status = 0;
+>  
+>  	BUG_ON(pos + len > iomap->offset + iomap->length);
+> +	if (srcmap != iomap)
+> +		BUG_ON(pos + len > srcmap->offset + srcmap->length);
+>  
+>  	if (fatal_signal_pending(current))
+>  		return -EINTR;
+> @@ -648,13 +650,13 @@ iomap_write_begin(struct inode *inode, loff_t pos, unsigned len, unsigned flags,
+>  		goto out_no_page;
+>  	}
+>  
+> -	if (iomap->type == IOMAP_INLINE)
+> -		iomap_read_inline_data(inode, page, iomap);
+> +	if (srcmap->type == IOMAP_INLINE)
+> +		iomap_read_inline_data(inode, page, srcmap);
+>  	else if (iomap->flags & IOMAP_F_BUFFER_HEAD)
+> -		status = __block_write_begin_int(page, pos, len, NULL, iomap);
+> +		status = __block_write_begin_int(page, pos, len, NULL, srcmap);
+>  	else
+>  		status = __iomap_write_begin(inode, pos, len, flags, page,
+> -				iomap);
+> +				srcmap);
+>  
+>  	if (unlikely(status))
+>  		goto out_unlock;
+> @@ -740,16 +742,16 @@ iomap_write_end_inline(struct inode *inode, struct page *page,
+>  }
+>  
+>  static int
+> -iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+> -		unsigned copied, struct page *page, struct iomap *iomap)
+> +iomap_write_end(struct inode *inode, loff_t pos, unsigned len, unsigned copied,
+> +		struct page *page, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	const struct iomap_page_ops *page_ops = iomap->page_ops;
+>  	loff_t old_size = inode->i_size;
+>  	int ret;
+>  
+> -	if (iomap->type == IOMAP_INLINE) {
+> +	if (srcmap->type == IOMAP_INLINE) {
+>  		ret = iomap_write_end_inline(inode, page, iomap, pos, copied);
+> -	} else if (iomap->flags & IOMAP_F_BUFFER_HEAD) {
+> +	} else if (srcmap->flags & IOMAP_F_BUFFER_HEAD) {
+>  		ret = block_write_end(NULL, inode->i_mapping, pos, len, copied,
+>  				page, NULL);
+>  	} else {
+> @@ -780,7 +782,7 @@ iomap_write_end(struct inode *inode, loff_t pos, unsigned len,
+>  
+>  static loff_t
+>  iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iov_iter *i = data;
+>  	long status = 0;
+> @@ -814,7 +816,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  			break;
+>  		}
+>  
+> -		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
+> +		status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap,
+> +				srcmap);
+>  		if (unlikely(status))
+>  			break;
+>  
+> @@ -825,8 +828,8 @@ iomap_write_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  
+>  		flush_dcache_page(page);
+>  
+> -		status = iomap_write_end(inode, pos, bytes, copied, page,
+> -				iomap);
+> +		status = iomap_write_end(inode, pos, bytes, copied, page, iomap,
+> +				srcmap);
+>  		if (unlikely(status < 0))
+>  			break;
+>  		copied = status;
+> @@ -879,7 +882,7 @@ EXPORT_SYMBOL_GPL(iomap_file_buffered_write);
+>  
+>  static loff_t
+>  iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	long status = 0;
+>  	ssize_t written = 0;
+> @@ -888,7 +891,7 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  	if (!(iomap->flags & IOMAP_F_SHARED))
+>  		return length;
+>  	/* don't bother with holes or unwritten extents */
+> -	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
+> +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+>  		return length;
+>  
+>  	do {
+> @@ -897,11 +900,12 @@ iomap_unshare_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+>  		struct page *page;
+>  
+>  		status = iomap_write_begin(inode, pos, bytes,
+> -				IOMAP_WRITE_F_UNSHARE, &page, iomap);
+> +				IOMAP_WRITE_F_UNSHARE, &page, iomap, srcmap);
+>  		if (unlikely(status))
+>  			return status;
+>  
+> -		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+> +		status = iomap_write_end(inode, pos, bytes, bytes, page, iomap,
+> +				srcmap);
+>  		if (unlikely(status <= 0)) {
+>  			if (WARN_ON_ONCE(status == 0))
+>  				return -EIO;
+> @@ -940,19 +944,19 @@ iomap_file_unshare(struct inode *inode, loff_t pos, loff_t len,
+>  EXPORT_SYMBOL_GPL(iomap_file_unshare);
+>  
+>  static int iomap_zero(struct inode *inode, loff_t pos, unsigned offset,
+> -		unsigned bytes, struct iomap *iomap)
+> +		unsigned bytes, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct page *page;
+>  	int status;
+>  
+> -	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap);
+> +	status = iomap_write_begin(inode, pos, bytes, 0, &page, iomap, srcmap);
+>  	if (status)
+>  		return status;
+>  
+>  	zero_user(page, offset, bytes);
+>  	mark_page_accessed(page);
+>  
+> -	return iomap_write_end(inode, pos, bytes, bytes, page, iomap);
+> +	return iomap_write_end(inode, pos, bytes, bytes, page, iomap, srcmap);
+>  }
+>  
+>  static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+> @@ -964,14 +968,14 @@ static int iomap_dax_zero(loff_t pos, unsigned offset, unsigned bytes,
+>  
+>  static loff_t
+>  iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	bool *did_zero = data;
+>  	loff_t written = 0;
+>  	int status;
+>  
+>  	/* already zeroed?  we're done. */
+> -	if (iomap->type == IOMAP_HOLE || iomap->type == IOMAP_UNWRITTEN)
+> +	if (srcmap->type == IOMAP_HOLE || srcmap->type == IOMAP_UNWRITTEN)
+>  		return count;
+>  
+>  	do {
+> @@ -983,7 +987,8 @@ iomap_zero_range_actor(struct inode *inode, loff_t pos, loff_t count,
+>  		if (IS_DAX(inode))
+>  			status = iomap_dax_zero(pos, offset, bytes, iomap);
+>  		else
+> -			status = iomap_zero(inode, pos, offset, bytes, iomap);
+> +			status = iomap_zero(inode, pos, offset, bytes, iomap,
+> +					srcmap);
+>  		if (status < 0)
+>  			return status;
+>  
+> @@ -1033,7 +1038,7 @@ EXPORT_SYMBOL_GPL(iomap_truncate_page);
+>  
+>  static loff_t
+>  iomap_page_mkwrite_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct page *page = data;
+>  	int ret;
+> diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+> index 1fc28c2da279..e3ccbf7daaae 100644
+> --- a/fs/iomap/direct-io.c
+> +++ b/fs/iomap/direct-io.c
+> @@ -358,7 +358,7 @@ iomap_dio_inline_actor(struct inode *inode, loff_t pos, loff_t length,
+>  
+>  static loff_t
+>  iomap_dio_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct iomap_dio *dio = data;
+>  
+> diff --git a/fs/iomap/fiemap.c b/fs/iomap/fiemap.c
+> index f26fdd36e383..690ef2d7c6c8 100644
+> --- a/fs/iomap/fiemap.c
+> +++ b/fs/iomap/fiemap.c
+> @@ -44,7 +44,7 @@ static int iomap_to_fiemap(struct fiemap_extent_info *fi,
+>  
+>  static loff_t
+>  iomap_fiemap_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
+> -		struct iomap *iomap)
+> +		struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	struct fiemap_ctx *ctx = data;
+>  	loff_t ret = length;
+> @@ -111,7 +111,7 @@ EXPORT_SYMBOL_GPL(iomap_fiemap);
+>  
+>  static loff_t
+>  iomap_bmap_actor(struct inode *inode, loff_t pos, loff_t length,
+> -		void *data, struct iomap *iomap)
+> +		void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	sector_t *bno = data, addr;
+>  
+> diff --git a/fs/iomap/seek.c b/fs/iomap/seek.c
+> index c04bad4b2b43..89f61d93c0bc 100644
+> --- a/fs/iomap/seek.c
+> +++ b/fs/iomap/seek.c
+> @@ -119,7 +119,7 @@ page_cache_seek_hole_data(struct inode *inode, loff_t offset, loff_t length,
+>  
+>  static loff_t
+>  iomap_seek_hole_actor(struct inode *inode, loff_t offset, loff_t length,
+> -		      void *data, struct iomap *iomap)
+> +		      void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	switch (iomap->type) {
+>  	case IOMAP_UNWRITTEN:
+> @@ -165,7 +165,7 @@ EXPORT_SYMBOL_GPL(iomap_seek_hole);
+>  
+>  static loff_t
+>  iomap_seek_data_actor(struct inode *inode, loff_t offset, loff_t length,
+> -		      void *data, struct iomap *iomap)
+> +		      void *data, struct iomap *iomap, struct iomap *srcmap)
+>  {
+>  	switch (iomap->type) {
+>  	case IOMAP_HOLE:
+> diff --git a/fs/iomap/swapfile.c b/fs/iomap/swapfile.c
+> index 152a230f668d..a648dbf6991e 100644
+> --- a/fs/iomap/swapfile.c
+> +++ b/fs/iomap/swapfile.c
+> @@ -76,7 +76,8 @@ static int iomap_swapfile_add_extent(struct iomap_swapfile_info *isi)
+>   * distinction between written and unwritten extents.
+>   */
+>  static loff_t iomap_swapfile_activate_actor(struct inode *inode, loff_t pos,
+> -		loff_t count, void *data, struct iomap *iomap)
+> +		loff_t count, void *data, struct iomap *iomap,
+> +		struct iomap *srcmap)
+>  {
+>  	struct iomap_swapfile_info *isi = data;
+>  	int error;
+> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+> index c0a492353826..016adcd7dd66 100644
+> --- a/fs/xfs/xfs_iomap.c
+> +++ b/fs/xfs/xfs_iomap.c
+> @@ -928,7 +928,8 @@ xfs_file_iomap_begin(
+>  	loff_t			offset,
+>  	loff_t			length,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -1154,7 +1155,8 @@ xfs_seek_iomap_begin(
+>  	loff_t			offset,
+>  	loff_t			length,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> @@ -1240,7 +1242,8 @@ xfs_xattr_iomap_begin(
+>  	loff_t			offset,
+>  	loff_t			length,
+>  	unsigned		flags,
+> -	struct iomap		*iomap)
+> +	struct iomap		*iomap,
+> +	struct iomap		*srcmap)
+>  {
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct xfs_mount	*mp = ip->i_mount;
+> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
+> index 24c784e44274..37af5f9dc722 100644
+> --- a/include/linux/iomap.h
+> +++ b/include/linux/iomap.h
+> @@ -127,7 +127,8 @@ struct iomap_ops {
+>  	 * The actual length is returned in iomap->length.
+>  	 */
+>  	int (*iomap_begin)(struct inode *inode, loff_t pos, loff_t length,
+> -			unsigned flags, struct iomap *iomap);
+> +			unsigned flags, struct iomap *iomap,
+> +			struct iomap *srcmap);
+>  
+>  	/*
+>  	 * Commit and/or unreserve space previous allocated using iomap_begin.
+> @@ -143,7 +144,7 @@ struct iomap_ops {
+>   * Main iomap iterator function.
+>   */
+>  typedef loff_t (*iomap_actor_t)(struct inode *inode, loff_t pos, loff_t len,
+> -		void *data, struct iomap *iomap);
+> +		void *data, struct iomap *iomap, struct iomap *srcmap);
+>  
+>  loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
+>  		unsigned flags, const struct iomap_ops *ops, void *data,
+> -- 
+> 2.20.1
 > 
