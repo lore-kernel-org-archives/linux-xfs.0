@@ -2,112 +2,148 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A99B7C4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 09:43:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B6D83C4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 13:05:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8861820663
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 09:43:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 978BA217D9
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 13:05:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730935AbfJNJnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 05:43:14 -0400
-Received: from mx2.suse.de ([195.135.220.15]:57214 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1730872AbfJNJnO (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Oct 2019 05:43:14 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 79792BE14;
-        Mon, 14 Oct 2019 09:43:11 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 339E81E4A86; Mon, 14 Oct 2019 11:43:11 +0200 (CEST)
-Date:   Mon, 14 Oct 2019 11:43:11 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     Pingfan Liu <kernelfans@gmail.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hari Bathini <hbathini@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
-Message-ID: <20191014094311.GD5939@quack2.suse.cz>
-References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
- <20191013163417.GQ13108@magnolia>
- <20191014083315.GA10091@mypc>
+        id S1730799AbfJNNFN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 09:05:13 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:53590 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1730619AbfJNNFM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Oct 2019 09:05:12 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2DA5AC024B08;
+        Mon, 14 Oct 2019 13:05:12 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id A1D0B608C2;
+        Mon, 14 Oct 2019 13:05:11 +0000 (UTC)
+Date:   Mon, 14 Oct 2019 09:05:09 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
+Message-ID: <20191014130509.GA12380@bfoster>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-5-david@fromorbit.com>
+ <20191011123939.GD61257@bfoster>
+ <20191011231323.GK16973@dread.disaster.area>
+ <20191012120558.GA3307@bfoster>
+ <20191013031450.GT16973@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191014083315.GA10091@mypc>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191013031450.GT16973@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.32]); Mon, 14 Oct 2019 13:05:12 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon 14-10-19 16:33:15, Pingfan Liu wrote:
-> On Sun, Oct 13, 2019 at 09:34:17AM -0700, Darrick J. Wong wrote:
-> > On Sun, Oct 13, 2019 at 10:37:00PM +0800, Pingfan Liu wrote:
-> > > When using fadump (fireware assist dump) mode on powerpc, a mismatch
-> > > between grub xfs driver and kernel xfs driver has been obsevered.  Note:
-> > > fadump boots up in the following sequence: fireware -> grub reads kernel
-> > > and initramfs -> kernel boots.
+On Sun, Oct 13, 2019 at 02:14:50PM +1100, Dave Chinner wrote:
+> On Sat, Oct 12, 2019 at 08:05:58AM -0400, Brian Foster wrote:
+> > On Sat, Oct 12, 2019 at 10:13:23AM +1100, Dave Chinner wrote:
+> > > On Fri, Oct 11, 2019 at 08:39:39AM -0400, Brian Foster wrote:
+> > > > On Wed, Oct 09, 2019 at 02:21:02PM +1100, Dave Chinner wrote:
+> > > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > > 
+> > > > > The buffer cache shrinker frees more than just the xfs_buf slab
+> > > > > objects - it also frees the pages attached to the buffers. Make sure
+> > > > > the memory reclaim code accounts for this memory being freed
+> > > > > correctly, similar to how the inode shrinker accounts for pages
+> > > > > freed from the page cache due to mapping invalidation.
+> > > > > 
+> > > > > We also need to make sure that the mm subsystem knows these are
+> > > > > reclaimable objects. We provide the memory reclaim subsystem with a
+> > > > > a shrinker to reclaim xfs_bufs, so we should really mark the slab
+> > > > > that way.
+> > > > > 
+> > > > > We also have a lot of xfs_bufs in a busy system, spread them around
+> > > > > like we do inodes.
+> > > > > 
+> > > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > > ---
+> > > > 
+> > > > Seems reasonable, but for inodes we also spread the ili zone. Should we
+> > > > not be consistent with bli's as well?
 > > > 
-> > > The process to reproduce this mismatch:
-> > >   - On powerpc, boot kernel with fadump=on and edit /etc/kdump.conf.
-> > >   - Replacing "path /var/crash" with "path /var/crashnew", then, "kdumpctl
-> > >     restart" to rebuild the initramfs. Detail about the rebuilding looks
-> > >     like: mkdumprd /boot/initramfs-`uname -r`.img.tmp;
-> > >           mv /boot/initramfs-`uname -r`.img.tmp /boot/initramfs-`uname -r`.img
-> > >           sync
-> > >   - "echo c >/proc/sysrq-trigger".
+> > > bli's are reclaimed when the buffer is cleaned. ili's live for the
+> > > live of the inode in cache. Hence bli's are short term allocations
+> > > (much shorter than xfs_bufs they attach to) and are reclaimed much
+> > > faster than inodes and their ilis. There's also a lot less blis than
+> > > ili's, so the spread of their footprint across memory nodes doesn't
+> > > matter that much. Local access for the memcpy during formatting is
+> > > probably more important than spreading the memory usage of them
+> > > these days, anyway.
 > > > 
-> > > The result:
-> > > The dump image will not be saved under /var/crashnew/* as expected, but
-> > > still saved under /var/crash.
-> > > 
-> > > The root cause:
-> > > As Eric pointed out that on xfs, 'sync' ensures the consistency by writing
-> > > back metadata to xlog, but not necessary to fsblock. This raises issue if
-> > > grub can not replay the xlog before accessing the xfs files. Since the
-> > > above dir entry of initramfs should be saved as inline data with xfs_inode,
-> > > so xfs_fs_sync_fs() does not guarantee it written to fsblock.
-> > > 
-> > > umount can be used to write metadata fsblock, but the filesystem can not be
-> > > umounted if still in use.
-> > > 
-> > > There are two ways to fix this mismatch, either grub or xfs. It may be
-> > > easier to do this in xfs side by introducing an interface to flush metadata
-> > > to fsblock explicitly.
-> > > 
-> > > With this patch, metadata can be written to fsblock by:
-> > >   # update AIL
-> > >   sync
-> > >   # new introduced interface to flush metadata to fsblock
-> > >   mount -o remount,metasync mountpoint
 > > 
-> > I think this ought to be an ioctl or some sort of generic call since the
-> > jbd2 filesystems (ext3, ext4, ocfs2) suffer from the same "$BOOTLOADER
-> > is too dumb to recover logs but still wants to write to the fs"
-> > checkpointing problem.
-> Yes, a syscall sounds more reasonable.
-> > 
-> > (Or maybe we should just put all that stuff in a vfat filesystem, I
-> > don't know...)
-> I think it is unavoidable to involve in each fs' implementation. What
-> about introducing an interface sync_to_fsblock(struct super_block *sb) in
-> the struct super_operations, then let each fs manage its own case?
+> > Yes, the buffer/inode lifecycle difference is why why I presume bli
+> > zones are not ZONE_RECLAIM like ili zones.
+> 
+> No, that is not the case. IO completion cleaning the buffer is what
+> frees the bli. The ili can only be freed by reclaiming the inode, so
+> it's memory that can only be returned to the free pool by running a
+> shrinker. Hence ilis are ZONE_RECLAIM to account them as memory that
+> can be reclaimed through shrinker invocation, while BLIs are not
+> because memory reclaim can't directly cause them to be freed.
+> 
 
-Well, we already have a way to achieve what you need: fsfreeze.
-Traditionally, that is guaranteed to put fs into a "clean" state very much
-equivalent to the fs being unmounted and that seems to be what the
-bootloader wants so that it can access the filesystem without worrying
-about some recovery details. So do you see any problem with replacing
-'sync' in your example above with 'fsfreeze /boot && fsfreeze -u /boot'?
+That is pretty much what I said. I think we're in agreement.
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+> > This doesn't tell me anything about why buffers should be spread
+> > around as such and buffer log items not, though..
+> 
+> xfs_bufs are long lived, are global structures, and can accumulate
+> in the millions if the workload requires it. IOWs, we should spread
+> xfs_bufs for exactly the same reasons inodes are spread.
+> 
+> As for BLIs, they are short term structures - a single xfs_buf might
+> have thousands of different blis attached to it over it's life in
+> the cache because the BLI is freed when the buffer is cleaned.
+> 
+
+Short term relative to the ILI perhaps, but these are still memory
+allocations that outlive the allocating task returning to userspace, are
+reused (across tasks) commonly enough and have an I/O bound life cycle.
+That's also not considering page/slab buildup in the kmem cache beyond
+the lifetime of individual allocations..
+
+> We don't need to spread small short term structures around NUMA
+> memory nodes because they don't present a long term memory imbalance
+> vector. In general it is better to have them allocated local to the
+> process that is using them where the memory access latency is
+> lowest, knowing that they will be freed shortly and not contribute
+> to long term memory usage.
+> 
+
+Hmm.. doesn't this all depend on enablement of a cgroup knob in the
+first place? It looks to me that this behavior is tied to a per-task
+state (not a per-mount or zone setting, which just allows such behavior
+on the zone) where the controller has explicitly requested us to not
+perform sustained allocations in the local node if possible. Instead,
+spread slab allocations around at the cost of bypassing this local
+allocation heuristic, presumably because $application wants prioritized
+access to that memory. What am I missing?
+
+BTW, it also looks like this is only relevant for slab. I don't see any
+references in slub (or slob), but I haven't dug too deeply..
+
+Brian
+
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
