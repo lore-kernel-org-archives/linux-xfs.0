@@ -2,113 +2,154 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D30C4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 14:21:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4235ECE587
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 15:52:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63B702067B
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 14:21:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9D9472133F
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 15:52:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iDCeHIqR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732673AbfJNOVt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 10:21:49 -0400
-Received: from szxga05-in.huawei.com ([45.249.212.191]:3752 "EHLO huawei.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1732262AbfJNOVt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Oct 2019 10:21:49 -0400
-Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
-        by Forcepoint Email with ESMTP id 8F7B2A6780DE5798AD35;
-        Mon, 14 Oct 2019 22:21:42 +0800 (CST)
-Received: from localhost.localdomain (10.175.124.28) by
- DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
- 14.3.439.0; Mon, 14 Oct 2019 22:21:36 +0800
-From:   yangerkun <yangerkun@huawei.com>
-To:     <hch@infradead.org>, <linux-xfs@vger.kernel.org>,
-        <linux-fsdevel@vger.kernel.org>
-CC:     <yangerkun@huawei.com>, <yi.zhang@huawei.com>, <houtao1@huawei.com>
-Subject: [PATCH] iomap: fix the logic about poll io in iomap_dio_bio_actor
-Date:   Mon, 14 Oct 2019 22:43:13 +0800
-Message-ID: <20191014144313.26313-1-yangerkun@huawei.com>
-X-Mailer: git-send-email 2.17.2
+        id S1730126AbfJNPwn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 11:52:43 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:49120 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726304AbfJNPwn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 11:52:43 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EFhfom170955;
+        Mon, 14 Oct 2019 15:52:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=dAqQZcCyUTuxDmQPk4AXRJLxgQPdvhFRocOEDKFgem8=;
+ b=iDCeHIqRe6RhFkBBkJtksVE3BOVkyiQxBY7e4OsSzzv9KvioAzBjmm1JGEPIQ7lljbty
+ qXUuk79MXvHPr9a2LFyD21Ayu2ucWMOtTwowiJcqYGl/U/nwQdhBvRPe62JvFVGUGX9y
+ R1vKwAL8haDxWO8EKeqkpv5kf49fQTEEo8/buMNe/Dp++Lq1YkzJh0PYIJJri1ZyEPSn
+ kvZ6M5utfu1enEwYAbTROHgGvMdpRm8e+eMJDrSmPFKw+gWbkmk3mY72RCyfhf6okJsJ
+ MUhlRbMbhh5QqwI8ZE+CxaTZ2yhT2pujfZRpjch4x7ZvJoyn8zbs3lZn5AsFQKlWrGOX gw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2vk68u9w5s-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 14 Oct 2019 15:52:37 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EFgmT1013336;
+        Mon, 14 Oct 2019 15:50:36 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2vks07187d-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 14 Oct 2019 15:50:36 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9EFoYej007358;
+        Mon, 14 Oct 2019 15:50:34 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 14 Oct 2019 15:50:34 +0000
+Date:   Mon, 14 Oct 2019 08:50:30 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>
+Cc:     linux-block@vger.kernel.org,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        xfs <linux-xfs@vger.kernel.org>
+Subject: [PATCH v3] loop: fix no-unmap write-zeroes request behavior
+Message-ID: <20191014155030.GS13108@magnolia>
+References: <20191010170239.GC13098@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-Originating-IP: [10.175.124.28]
-X-CFilter-Loop: Reflected
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191010170239.GC13098@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910140140
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910140140
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Just set REQ_HIPRI for the last bio in iomap_dio_bio_actor. Because
-multi bio created by this function can goto different cpu since this
-process can be preempted by other process. And in iomap_dio_rw we will
-just poll for the last bio. Fix it by only set polled for the last bio.
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: yangerkun <yangerkun@huawei.com>
+Currently, if the loop device receives a WRITE_ZEROES request, it asks
+the underlying filesystem to punch out the range.  This behavior is
+correct if unmapping is allowed.  However, a NOUNMAP request means that
+the caller doesn't want us to free the storage backing the range, so
+punching out the range is incorrect behavior.
+
+To satisfy a NOUNMAP | WRITE_ZEROES request, loop should ask the
+underlying filesystem to FALLOC_FL_ZERO_RANGE, which is (according to
+the fallocate documentation) required to ensure that the entire range is
+backed by real storage, which suffices for our purposes.
+
+Fixes: 19372e2769179dd ("loop: implement REQ_OP_WRITE_ZEROES")
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap/direct-io.c | 22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+v3: refactor into a single fallocate function
+v2: reorganize a little according to hch feedback
+---
+ drivers/block/loop.c |   26 ++++++++++++++++++--------
+ 1 file changed, 18 insertions(+), 8 deletions(-)
 
-diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
-index 1fc28c2da279..05dee6e7ca64 100644
---- a/fs/iomap/direct-io.c
-+++ b/fs/iomap/direct-io.c
-@@ -59,15 +59,16 @@ int iomap_dio_iopoll(struct kiocb *kiocb, bool spin)
- EXPORT_SYMBOL_GPL(iomap_dio_iopoll);
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index f6f77eaa7217..ef6e251857c8 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -417,18 +417,20 @@ static int lo_read_transfer(struct loop_device *lo, struct request *rq,
+ 	return ret;
+ }
  
- static void iomap_dio_submit_bio(struct iomap_dio *dio, struct iomap *iomap,
--		struct bio *bio)
-+		struct bio *bio, bool is_poll)
+-static int lo_discard(struct loop_device *lo, struct request *rq, loff_t pos)
++static int lo_fallocate(struct loop_device *lo, struct request *rq, loff_t pos,
++			int mode)
  {
- 	atomic_inc(&dio->ref);
- 
--	if (dio->iocb->ki_flags & IOCB_HIPRI)
-+	if (is_poll) {
- 		bio_set_polled(bio, dio->iocb);
--
--	dio->submit.last_queue = bdev_get_queue(iomap->bdev);
--	dio->submit.cookie = submit_bio(bio);
-+		dio->submit.last_queue = bdev_get_queue(iomap->bdev);
-+		dio->submit.cookie = submit_bio(bio);
-+	} else
-+		submit_bio(bio);
- }
- 
- static ssize_t iomap_dio_complete(struct iomap_dio *dio)
-@@ -191,7 +192,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
- 	get_page(page);
- 	__bio_add_page(bio, page, len, 0);
- 	bio_set_op_attrs(bio, REQ_OP_WRITE, flags);
--	iomap_dio_submit_bio(dio, iomap, bio);
-+	iomap_dio_submit_bio(dio, iomap, bio, false);
- }
- 
- static loff_t
-@@ -255,6 +256,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 
- 	do {
- 		size_t n;
-+		bool is_poll = false;
-+
- 		if (dio->error) {
- 			iov_iter_revert(dio->submit.iter, copied);
- 			return 0;
-@@ -301,7 +304,12 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
- 		copied += n;
- 
- 		nr_pages = iov_iter_npages(&iter, BIO_MAX_PAGES);
--		iomap_dio_submit_bio(dio, iomap, bio);
-+
-+		/* Only set poll for the last bio. */
-+		if (!nr_pages && dio->iocb->ki_flags & IOCB_HIPRI)
-+			is_poll = true;
-+
-+		iomap_dio_submit_bio(dio, iomap, bio, is_poll);
- 	} while (nr_pages);
- 
  	/*
--- 
-2.17.2
-
+-	 * We use punch hole to reclaim the free space used by the
+-	 * image a.k.a. discard. However we do not support discard if
+-	 * encryption is enabled, because it may give an attacker
+-	 * useful information.
++	 * We use fallocate to manipulate the space mappings used by the image
++	 * a.k.a. discard/zerorange. However we do not support this if
++	 * encryption is enabled, because it may give an attacker useful
++	 * information.
+ 	 */
+ 	struct file *file = lo->lo_backing_file;
+-	int mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
+ 	int ret;
+ 
++	mode |= FALLOC_FL_KEEP_SIZE;
++
+ 	if ((!file->f_op->fallocate) || lo->lo_encrypt_key_size) {
+ 		ret = -EOPNOTSUPP;
+ 		goto out;
+@@ -596,9 +598,17 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
+ 	switch (req_op(rq)) {
+ 	case REQ_OP_FLUSH:
+ 		return lo_req_flush(lo, rq);
+-	case REQ_OP_DISCARD:
+ 	case REQ_OP_WRITE_ZEROES:
+-		return lo_discard(lo, rq, pos);
++		/*
++		 * If the caller doesn't want deallocation, call zeroout to
++		 * write zeroes the range.  Otherwise, punch them out.
++		 */
++		return lo_fallocate(lo, rq, pos,
++			(rq->cmd_flags & REQ_NOUNMAP) ?
++				FALLOC_FL_ZERO_RANGE :
++				FALLOC_FL_PUNCH_HOLE);
++	case REQ_OP_DISCARD:
++		return lo_fallocate(lo, rq, pos, FALLOC_FL_PUNCH_HOLE);
+ 	case REQ_OP_WRITE:
+ 		if (lo->transfer)
+ 			return lo_write_transfer(lo, rq, pos);
