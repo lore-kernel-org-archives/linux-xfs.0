@@ -2,71 +2,101 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4C3ACECE587
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 08:46:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 877AFC4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 08:52:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 20AAB20673
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 08:46:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5629B20673
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 08:52:29 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ezhPnVWf"
+	dkim=pass (2048-bit key) header.d=mbobrowski-org.20150623.gappssmtp.com header.i=@mbobrowski-org.20150623.gappssmtp.com header.b="Y7dz4/X3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730563AbfJNIqE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 04:46:04 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:42228 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730439AbfJNIqE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 04:46:04 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=AS+vOpGBm4Y0V3guxdRRNronYLbqZeSo4UeGsyrmyY4=; b=ezhPnVWf9CcaO1Cx9AlYyxBFq
-        oTYZrWKtxLHXd4YuxOAYcgYUTsi4IssRCELmEOl5FsJdnivdLrLGjh9Gz/TB2q7KjeSG/f6Hwbyb9
-        uPUgTUzv/iinKHOSn0lQaG5K+foOWlhHqqcuR4lhsn/wd6pYwCyef2yj0IOZcc5FkfANY1S8xGyJI
-        aQlDL8W5OsWZK9Vy5D44EfR4NHx8erlSdnrHJQF6KVBqRC25OP8HBLyKMsYIZODFjRgrE12vSGHGc
-        SJkiHx6Tq6WHifjdn0sCVv7wwriMesfb9i7gVRUZ8v2fB4//DprtMEfdu3QAIdUtZj5kU6pQ0Zv0k
-        3mOJQWj1A==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iJvzQ-0004Yp-2Y; Mon, 14 Oct 2019 08:46:04 +0000
-Date:   Mon, 14 Oct 2019 01:46:04 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 08/26] mm: directed shrinker work deferral
-Message-ID: <20191014084604.GA11758@infradead.org>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191009032124.10541-9-david@fromorbit.com>
+        id S1730480AbfJNIw3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 04:52:29 -0400
+Received: from mail-pg1-f193.google.com ([209.85.215.193]:39166 "EHLO
+        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729928AbfJNIw2 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 04:52:28 -0400
+Received: by mail-pg1-f193.google.com with SMTP id p12so368115pgn.6
+        for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2019 01:52:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=mbobrowski-org.20150623.gappssmtp.com; s=20150623;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=AIRc/FaicU56+x04UFR4BmB8mTK9vi0gG2txvtio5hg=;
+        b=Y7dz4/X3uD/Bsf+PUZqJID/CRfkxmefV8Jvbo4YXJHnBBUgbnxv1z9I0pWrrDQVX+Z
+         YdRDvhZDO7nm11/QfJNUAfxmMTcR8pl+u90KRhpmoSn4RBNzEftEjdV674SluUNl1eLP
+         h9LqX5KWqheV/mDihvcv5BijJtMrzjw7yDsoUj/1+TpMQ67vVhMWuc+62s9r5syUSE5o
+         szBw5K+7MITxEQfJ6R+pfn6fKHcLRVdxbufI7L/MMSXiAEO1XOZI3jVIAnbJJNQ4E78l
+         aWTc2Ld451dpaozwW53BpOOe/uM0aw9lhPF54X8YZPpIrX73/i6Qx82cRPuY0JrQW8Zr
+         Ix8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=AIRc/FaicU56+x04UFR4BmB8mTK9vi0gG2txvtio5hg=;
+        b=pSPITJAVy6ile1hsLMdgX8kkh7K4KfT8580c1IYdWcpl7LHz6awPenF0zVlQYOPurN
+         49RvL+wjRQBtW+P5N9b7azsgorFVfWZYK4hdnY5SgZh8JdHitgh40DCnRICjFxnFhoSJ
+         q+E88X+dtzDwRVvs42BXWjBx201gAiRKBrRT4sDBONUi/mB2KeyyEK/aecfreVKsPxkH
+         6ZZMx5/ktQMMp68Z/0PqgykIi9WVtwXI+XvP68E9sDGvNvHrEUI/Oa8v5FJzABiTFtoT
+         ZTnj9lFmv9AIkEClF2NK8hNQTUgtonnr9Jug7AdNjXkWyq83ipvrpLjsX64pLAorwlPe
+         Wepg==
+X-Gm-Message-State: APjAAAXQ/RdTVqlTX9lfIoayJXo+AHgzA6n+38VwOCSg5L0YVbWMophV
+        10iBIeAOBoV5rR3EwRUEQ1Gx
+X-Google-Smtp-Source: APXvYqzlApQtLhGenT3SpvrnsKz2M9F77t4OCF7q9JWJcXGR5i9AyzEpxV2LYUqpIX6C+Sf5nubqnQ==
+X-Received: by 2002:a17:90a:b38c:: with SMTP id e12mr35243765pjr.114.1571043147713;
+        Mon, 14 Oct 2019 01:52:27 -0700 (PDT)
+Received: from athena.bobrowski.net ([120.18.82.202])
+        by smtp.gmail.com with ESMTPSA id k17sm10138089pgh.30.2019.10.14.01.52.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Oct 2019 01:52:27 -0700 (PDT)
+Date:   Mon, 14 Oct 2019 19:52:18 +1100
+From:   Matthew Bobrowski <mbobrowski@mbobrowski.org>
+To:     Jan Kara <jack@suse.cz>
+Cc:     linux-fsdevel@vger.kernel.org,
+        Christoph Hellwig <hch@infradead.org>, darrick.wong@oracle.com,
+        linux-xfs@vger.kernel.org, Dave Chinner <david@fromorbit.com>
+Subject: Re: [PATCH 0/2 v3] iomap: Waiting for IO in iomap_dio_rw()
+Message-ID: <20191014085218.GA6102@athena.bobrowski.net>
+References: <20191014082418.13885-1-jack@suse.cz>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191009032124.10541-9-david@fromorbit.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20191014082418.13885-1-jack@suse.cz>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 02:21:06PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Mon, Oct 14, 2019 at 10:26:01AM +0200, Jan Kara wrote:
+> Original motivation:
 > 
-> Introduce a mechanism for ->count_objects() to indicate to the
-> shrinker infrastructure that the reclaim context will not allow
-> scanning work to be done and so the work it decides is necessary
-> needs to be deferred.
+> when doing the ext4 conversion of direct IO code to iomap, we found it very
+> difficult to handle inode extension with what iomap code currently provides.
+> Ext4 wants to do inode extension as sync IO (so that the whole duration of
+> IO is protected by inode->i_rwsem), also we need to truncate blocks beyond
+> end of file in case of error or short write. Now in ->end_io handler we don't
+> have the information how long originally the write was (to judge whether we
+> may have allocated more blocks than we actually used) and in ->write_iter
+> we don't know whether / how much of the IO actually succeeded in case of AIO.
 > 
-> This simplifies the code by separating out the accounting of
-> deferred work from the actual doing of the work, and allows better
-> decisions to be made by the shrinekr control logic on what action it
-> can take.
+> Thinking about it for some time I think iomap code makes it unnecessarily
+> complex for the filesystem in case it decides it doesn't want to perform AIO
+> and wants to fall back to good old synchronous IO. In such case it is much
+> easier for the filesystem if it just gets normal error return from
+> iomap_dio_rw() and not just -EIOCBQUEUED.
+> 
+> The first patch in the series adds argument to iomap_dio_rw() to wait for IO
+> completion (internally iomap_dio_rw() already supports this!) and the second
+> patch converts XFS waiting for unaligned DIO write to this new API.
 
-I hate all this boilerplate code in the scanners.  Can't we just add
-a a required_gfp_mask field to struct shrinker and lift the pattern
-to common code?
+Ah, wonderful, I was waiting for this to come through.
+
+I'll rebase my EXT4 direct I/O port on top of these patches and apply
+the discussed changes. Any objections? :)
+
+--<M>--
