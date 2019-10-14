@@ -2,124 +2,113 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40446C4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 13:23:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86D30C4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 14:21:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1D64A21925
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 13:23:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 63B702067B
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 14:21:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731820AbfJNNXl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 09:23:41 -0400
-Received: from sandeen.net ([63.231.237.45]:60940 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725989AbfJNNXl (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Oct 2019 09:23:41 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id F3139544;
-        Mon, 14 Oct 2019 08:23:04 -0500 (CDT)
-Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
-To:     Jan Kara <jack@suse.cz>, Pingfan Liu <kernelfans@gmail.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hari Bathini <hbathini@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
- <20191013163417.GQ13108@magnolia> <20191014083315.GA10091@mypc>
- <20191014094311.GD5939@quack2.suse.cz>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Message-ID: <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
-Date:   Mon, 14 Oct 2019 08:23:39 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.1.2
+        id S1732673AbfJNOVt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 10:21:49 -0400
+Received: from szxga05-in.huawei.com ([45.249.212.191]:3752 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1732262AbfJNOVt (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Oct 2019 10:21:49 -0400
+Received: from DGGEMS414-HUB.china.huawei.com (unknown [172.30.72.59])
+        by Forcepoint Email with ESMTP id 8F7B2A6780DE5798AD35;
+        Mon, 14 Oct 2019 22:21:42 +0800 (CST)
+Received: from localhost.localdomain (10.175.124.28) by
+ DGGEMS414-HUB.china.huawei.com (10.3.19.214) with Microsoft SMTP Server id
+ 14.3.439.0; Mon, 14 Oct 2019 22:21:36 +0800
+From:   yangerkun <yangerkun@huawei.com>
+To:     <hch@infradead.org>, <linux-xfs@vger.kernel.org>,
+        <linux-fsdevel@vger.kernel.org>
+CC:     <yangerkun@huawei.com>, <yi.zhang@huawei.com>, <houtao1@huawei.com>
+Subject: [PATCH] iomap: fix the logic about poll io in iomap_dio_bio_actor
+Date:   Mon, 14 Oct 2019 22:43:13 +0800
+Message-ID: <20191014144313.26313-1-yangerkun@huawei.com>
+X-Mailer: git-send-email 2.17.2
 MIME-Version: 1.0
-In-Reply-To: <20191014094311.GD5939@quack2.suse.cz>
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-Originating-IP: [10.175.124.28]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/14/19 4:43 AM, Jan Kara wrote:
-> On Mon 14-10-19 16:33:15, Pingfan Liu wrote:
->> On Sun, Oct 13, 2019 at 09:34:17AM -0700, Darrick J. Wong wrote:
->>> On Sun, Oct 13, 2019 at 10:37:00PM +0800, Pingfan Liu wrote:
->>>> When using fadump (fireware assist dump) mode on powerpc, a mismatch
->>>> between grub xfs driver and kernel xfs driver has been obsevered.  Note:
->>>> fadump boots up in the following sequence: fireware -> grub reads kernel
->>>> and initramfs -> kernel boots.
->>>>
->>>> The process to reproduce this mismatch:
->>>>    - On powerpc, boot kernel with fadump=on and edit /etc/kdump.conf.
->>>>    - Replacing "path /var/crash" with "path /var/crashnew", then, "kdumpctl
->>>>      restart" to rebuild the initramfs. Detail about the rebuilding looks
->>>>      like: mkdumprd /boot/initramfs-`uname -r`.img.tmp;
->>>>            mv /boot/initramfs-`uname -r`.img.tmp /boot/initramfs-`uname -r`.img
->>>>            sync
->>>>    - "echo c >/proc/sysrq-trigger".
->>>>
->>>> The result:
->>>> The dump image will not be saved under /var/crashnew/* as expected, but
->>>> still saved under /var/crash.
->>>>
->>>> The root cause:
->>>> As Eric pointed out that on xfs, 'sync' ensures the consistency by writing
->>>> back metadata to xlog, but not necessary to fsblock. This raises issue if
->>>> grub can not replay the xlog before accessing the xfs files. Since the
->>>> above dir entry of initramfs should be saved as inline data with xfs_inode,
->>>> so xfs_fs_sync_fs() does not guarantee it written to fsblock.
->>>>
->>>> umount can be used to write metadata fsblock, but the filesystem can not be
->>>> umounted if still in use.
->>>>
->>>> There are two ways to fix this mismatch, either grub or xfs. It may be
->>>> easier to do this in xfs side by introducing an interface to flush metadata
->>>> to fsblock explicitly.
->>>>
->>>> With this patch, metadata can be written to fsblock by:
->>>>    # update AIL
->>>>    sync
->>>>    # new introduced interface to flush metadata to fsblock
->>>>    mount -o remount,metasync mountpoint
->>>
->>> I think this ought to be an ioctl or some sort of generic call since the
->>> jbd2 filesystems (ext3, ext4, ocfs2) suffer from the same "$BOOTLOADER
->>> is too dumb to recover logs but still wants to write to the fs"
->>> checkpointing problem.
->> Yes, a syscall sounds more reasonable.
->>>
->>> (Or maybe we should just put all that stuff in a vfat filesystem, I
->>> don't know...)
->> I think it is unavoidable to involve in each fs' implementation. What
->> about introducing an interface sync_to_fsblock(struct super_block *sb) in
->> the struct super_operations, then let each fs manage its own case?
-> 
-> Well, we already have a way to achieve what you need: fsfreeze.
-> Traditionally, that is guaranteed to put fs into a "clean" state very much
-> equivalent to the fs being unmounted and that seems to be what the
-> bootloader wants so that it can access the filesystem without worrying
-> about some recovery details. So do you see any problem with replacing
-> 'sync' in your example above with 'fsfreeze /boot && fsfreeze -u /boot'?
-> 
-> 								Honza
+Just set REQ_HIPRI for the last bio in iomap_dio_bio_actor. Because
+multi bio created by this function can goto different cpu since this
+process can be preempted by other process. And in iomap_dio_rw we will
+just poll for the last bio. Fix it by only set polled for the last bio.
 
-The problem with fsfreeze is that if the device you want to quiesce is, say,
-the root fs, freeze isn't really a good option.
+Signed-off-by: yangerkun <yangerkun@huawei.com>
+---
+ fs/iomap/direct-io.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-But the other thing I want to highlight about this approach is that it does not
-solve the root problem: something is trying to read the block device without
-first replaying the log.
+diff --git a/fs/iomap/direct-io.c b/fs/iomap/direct-io.c
+index 1fc28c2da279..05dee6e7ca64 100644
+--- a/fs/iomap/direct-io.c
++++ b/fs/iomap/direct-io.c
+@@ -59,15 +59,16 @@ int iomap_dio_iopoll(struct kiocb *kiocb, bool spin)
+ EXPORT_SYMBOL_GPL(iomap_dio_iopoll);
+ 
+ static void iomap_dio_submit_bio(struct iomap_dio *dio, struct iomap *iomap,
+-		struct bio *bio)
++		struct bio *bio, bool is_poll)
+ {
+ 	atomic_inc(&dio->ref);
+ 
+-	if (dio->iocb->ki_flags & IOCB_HIPRI)
++	if (is_poll) {
+ 		bio_set_polled(bio, dio->iocb);
+-
+-	dio->submit.last_queue = bdev_get_queue(iomap->bdev);
+-	dio->submit.cookie = submit_bio(bio);
++		dio->submit.last_queue = bdev_get_queue(iomap->bdev);
++		dio->submit.cookie = submit_bio(bio);
++	} else
++		submit_bio(bio);
+ }
+ 
+ static ssize_t iomap_dio_complete(struct iomap_dio *dio)
+@@ -191,7 +192,7 @@ iomap_dio_zero(struct iomap_dio *dio, struct iomap *iomap, loff_t pos,
+ 	get_page(page);
+ 	__bio_add_page(bio, page, len, 0);
+ 	bio_set_op_attrs(bio, REQ_OP_WRITE, flags);
+-	iomap_dio_submit_bio(dio, iomap, bio);
++	iomap_dio_submit_bio(dio, iomap, bio, false);
+ }
+ 
+ static loff_t
+@@ -255,6 +256,8 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 
+ 	do {
+ 		size_t n;
++		bool is_poll = false;
++
+ 		if (dio->error) {
+ 			iov_iter_revert(dio->submit.iter, copied);
+ 			return 0;
+@@ -301,7 +304,12 @@ iomap_dio_bio_actor(struct inode *inode, loff_t pos, loff_t length,
+ 		copied += n;
+ 
+ 		nr_pages = iov_iter_npages(&iter, BIO_MAX_PAGES);
+-		iomap_dio_submit_bio(dio, iomap, bio);
++
++		/* Only set poll for the last bio. */
++		if (!nr_pages && dio->iocb->ki_flags & IOCB_HIPRI)
++			is_poll = true;
++
++		iomap_dio_submit_bio(dio, iomap, bio, is_poll);
+ 	} while (nr_pages);
+ 
+ 	/*
+-- 
+2.17.2
 
-A call such as the proposal here is only going to leave consistent metadata at
-the time the call returns; at any time after that, all guarantees are off again,
-so the problem hasn't been solved.
-
--Eric
