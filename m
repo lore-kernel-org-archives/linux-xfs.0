@@ -2,106 +2,106 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC070C4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 19:03:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C0E1DC4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 19:06:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 94878206A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 19:03:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 96915206A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 19:06:00 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nUKh70Jd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732674AbfJNTDP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 15:03:15 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:41966 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728005AbfJNTDP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 14 Oct 2019 15:03:15 -0400
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com [209.85.128.70])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id D55D475755
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2019 19:03:14 +0000 (UTC)
-Received: by mail-wm1-f70.google.com with SMTP id p6so4501494wmc.3
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2019 12:03:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id
-         :mail-followup-to:references:mime-version:content-disposition
-         :in-reply-to:user-agent;
-        bh=1qo2+hC7szEvcDXtjNEo7+GiyVoqPh/wiqnJbY50UkU=;
-        b=RBmwYEFbSHJPErHG0+rS+/3KNTcZxEEgMGGIXpSugi/DqxhvTkzDh6AmYm9iItLU+a
-         86dZheZD3CtUazgan0fMhkg8rNWA26EaceZ4JfAazgruvsqUL4KRTH9ec8h6XiGe0oKM
-         wLHkya1iaGo2+7inJuy/MNPIwUMwDd4Kra3dblP5geXfymPLJJvFRxX4xIdI92aRHIA6
-         duu2O9K1+JtA2EKLobfqkROX101Y7Iq6WPygFY/WC5bIk09VPbWCfPoEW8PYePy/RgWh
-         ineJIK8+jx3Is714zZMFivuT/kcvD+TPyyYVEFdb5EexPUrAprBKrGCh0DA+GoPceKOK
-         7dpw==
-X-Gm-Message-State: APjAAAVeWb2Sd4yC9LiJownst/IWeO26U1Um5Y+EDrOzElPmCsoG6lXX
-        W3mdd89JVwQ2KWXvoXjXBSbui1rMJIOFXnrg57jmMq+XcwmruxQakqzhQmLD74k3vN4G9vdi4Ww
-        JESpqCA/qJKov76zu4lgs
-X-Received: by 2002:adf:cc8e:: with SMTP id p14mr28961444wrj.301.1571079793644;
-        Mon, 14 Oct 2019 12:03:13 -0700 (PDT)
-X-Google-Smtp-Source: APXvYqxVazUW1KTfxxVMoy7ZMS42dRodbVOoXELB05h+i577/FcOxK5PiRuX74h5sne+zY5rp4e66Q==
-X-Received: by 2002:adf:cc8e:: with SMTP id p14mr28961423wrj.301.1571079793463;
-        Mon, 14 Oct 2019 12:03:13 -0700 (PDT)
-Received: from orion.maiolino.org (ip-89-103-126-188.net.upcbroadband.cz. [89.103.126.188])
-        by smtp.gmail.com with ESMTPSA id j26sm33915835wrd.2.2019.10.14.12.03.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Oct 2019 12:03:13 -0700 (PDT)
-Date:   Mon, 14 Oct 2019 21:03:10 +0200
-From:   Carlos Maiolino <cmaiolino@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
-Subject: Re: [PATCH] xfs: change the seconds fields in xfs_bulkstat to signed
-Message-ID: <20191014190310.tkelhxq3xdxuxngc@orion.maiolino.org>
-Mail-Followup-To: "Darrick J. Wong" <darrick.wong@oracle.com>,
-        xfs <linux-xfs@vger.kernel.org>, Eric Sandeen <sandeen@redhat.com>
-References: <20191014171211.GG26541@magnolia>
+        id S1733231AbfJNTGA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 15:06:00 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:49652 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1733149AbfJNTF7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 15:05:59 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EJ4BYD148155;
+        Mon, 14 Oct 2019 19:05:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=blDrIQgZJsGufQOaKp9RS+O9ljRPRBS2RsY8yHio/xQ=;
+ b=nUKh70JdDfpb6yTAW65oosjIFnzO/W64glePSfKXaJUcXwA755b4tDgGT/iy3DhXBEXB
+ tuTJOpIoqsfcPguksyu5DOLpqO/cIecelD2C83OOUYFxPvNriQRvu43Dcw8XQCVbGtw7
+ IoNUL0rMbn9A0irPHe4O73rDp6JOalkmgN3RUInzsS7sc6LcuDLiYUiPXd86wrDQoojn
+ iWUAcjhQWXkhj9Y3UYGdvb7HAvllOATjgmo5YBQcG9VQ3/HcgJ3MWRm3MjhKlCugsIiD
+ VauPW2a/liYO9BJGwS7mXCvtoN+tr9D5G/xEkvrk7Tn9uryeZvSDeBhG5eUWfO5v5wTH Wg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2vk68ub008-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 14 Oct 2019 19:05:55 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EJ2gYf049521;
+        Mon, 14 Oct 2019 19:05:55 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2vkr9xjsb3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 14 Oct 2019 19:05:55 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9EJ5s3T008812;
+        Mon, 14 Oct 2019 19:05:54 GMT
+Received: from localhost (/10.159.144.186)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 14 Oct 2019 19:05:54 +0000
+Date:   Mon, 14 Oct 2019 12:05:53 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 8/8] xfs: remove the XLOG_STATE_DO_CALLBACK state
+Message-ID: <20191014190553.GH26541@magnolia>
+References: <20191009142748.18005-1-hch@lst.de>
+ <20191009142748.18005-9-hch@lst.de>
+ <20191012004145.GP13108@magnolia>
+ <20191014072224.GF10081@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191014171211.GG26541@magnolia>
-User-Agent: NeoMutt/20180716
+In-Reply-To: <20191014072224.GF10081@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910140155
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910140156
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 14, 2019 at 10:12:11AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 14, 2019 at 09:22:24AM +0200, Christoph Hellwig wrote:
+> On Fri, Oct 11, 2019 at 05:41:45PM -0700, Darrick J. Wong wrote:
+> > > -#else
+> > > -#define xlog_state_callback_check_state(l)	((void)0)
+> > > -#endif
+> > 
+> > So, uh... does this debugging functionality just disappear?  Is it
+> > unnecessary?  It's not clear (to me anyway) why it's ok for the extra
+> > checking to go away.
 > 
-> 64-bit time is a signed quantity in the kernel, so the bulkstat
-> structure should reflect that.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Lets ask the counter question:  What kind of bug do you think this
+> check would catch?
 
-Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+Dunno, that's why I'm asking /you/ :)
 
-> ---
->  fs/xfs/libxfs/xfs_fs.h |    8 ++++----
->  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-> index b0c884e80915..8b77eace70f1 100644
-> --- a/fs/xfs/libxfs/xfs_fs.h
-> +++ b/fs/xfs/libxfs/xfs_fs.h
-> @@ -368,11 +368,11 @@ struct xfs_bulkstat {
->  	uint64_t	bs_blocks;	/* number of blocks		*/
->  	uint64_t	bs_xflags;	/* extended flags		*/
->  
-> -	uint64_t	bs_atime;	/* access time, seconds		*/
-> -	uint64_t	bs_mtime;	/* modify time, seconds		*/
-> +	int64_t		bs_atime;	/* access time, seconds		*/
-> +	int64_t		bs_mtime;	/* modify time, seconds		*/
->  
-> -	uint64_t	bs_ctime;	/* inode change time, seconds	*/
-> -	uint64_t	bs_btime;	/* creation time, seconds	*/
-> +	int64_t		bs_ctime;	/* inode change time, seconds	*/
-> +	int64_t		bs_btime;	/* creation time, seconds	*/
->  
->  	uint32_t	bs_gen;		/* generation count		*/
->  	uint32_t	bs_uid;		/* user id			*/
+I think the answer is that DO_CALLBACK is pretty pointless since we
+already have a CALLBACK state, and the removed debugging function checks
+among all the iclogs for a state that shouldn't be possible (getting
+ready to be doing callbacks when there are other iclogs further along in
+the list that are still syncing or ioerror'd)?  Particularly since we
+probably end up moving the iclog to the actual CALLBACK state pretty
+quickly anyway?
 
--- 
-Carlos
+--D
