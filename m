@@ -2,106 +2,147 @@ Return-Path: <SRS0=3dSt=YH=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0E1DC4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 19:06:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7C2FCECE58E
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 20:03:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 96915206A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 19:06:00 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nUKh70Jd"
+	by mail.kernel.org (Postfix) with ESMTP id 53AF221928
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 20:03:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1733231AbfJNTGA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 15:06:00 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:49652 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1733149AbfJNTF7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 15:05:59 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EJ4BYD148155;
-        Mon, 14 Oct 2019 19:05:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=blDrIQgZJsGufQOaKp9RS+O9ljRPRBS2RsY8yHio/xQ=;
- b=nUKh70JdDfpb6yTAW65oosjIFnzO/W64glePSfKXaJUcXwA755b4tDgGT/iy3DhXBEXB
- tuTJOpIoqsfcPguksyu5DOLpqO/cIecelD2C83OOUYFxPvNriQRvu43Dcw8XQCVbGtw7
- IoNUL0rMbn9A0irPHe4O73rDp6JOalkmgN3RUInzsS7sc6LcuDLiYUiPXd86wrDQoojn
- iWUAcjhQWXkhj9Y3UYGdvb7HAvllOATjgmo5YBQcG9VQ3/HcgJ3MWRm3MjhKlCugsIiD
- VauPW2a/liYO9BJGwS7mXCvtoN+tr9D5G/xEkvrk7Tn9uryeZvSDeBhG5eUWfO5v5wTH Wg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2130.oracle.com with ESMTP id 2vk68ub008-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 19:05:55 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EJ2gYf049521;
-        Mon, 14 Oct 2019 19:05:55 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2vkr9xjsb3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 19:05:55 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9EJ5s3T008812;
-        Mon, 14 Oct 2019 19:05:54 GMT
-Received: from localhost (/10.159.144.186)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 14 Oct 2019 19:05:54 +0000
-Date:   Mon, 14 Oct 2019 12:05:53 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 8/8] xfs: remove the XLOG_STATE_DO_CALLBACK state
-Message-ID: <20191014190553.GH26541@magnolia>
-References: <20191009142748.18005-1-hch@lst.de>
- <20191009142748.18005-9-hch@lst.de>
- <20191012004145.GP13108@magnolia>
- <20191014072224.GF10081@lst.de>
+        id S1731302AbfJNUDG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 16:03:06 -0400
+Received: from mx2.suse.de ([195.135.220.15]:38372 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1730668AbfJNUDG (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 14 Oct 2019 16:03:06 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 15560B636;
+        Mon, 14 Oct 2019 20:03:04 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 2B23F1E4A89; Mon, 14 Oct 2019 22:03:03 +0200 (CEST)
+Date:   Mon, 14 Oct 2019 22:03:03 +0200
+From:   Jan Kara <jack@suse.cz>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Jan Kara <jack@suse.cz>, Pingfan Liu <kernelfans@gmail.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Hari Bathini <hbathini@linux.ibm.com>,
+        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
+Message-ID: <20191014200303.GF5939@quack2.suse.cz>
+References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
+ <20191013163417.GQ13108@magnolia>
+ <20191014083315.GA10091@mypc>
+ <20191014094311.GD5939@quack2.suse.cz>
+ <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191014072224.GF10081@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910140155
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910140156
+In-Reply-To: <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 14, 2019 at 09:22:24AM +0200, Christoph Hellwig wrote:
-> On Fri, Oct 11, 2019 at 05:41:45PM -0700, Darrick J. Wong wrote:
-> > > -#else
-> > > -#define xlog_state_callback_check_state(l)	((void)0)
-> > > -#endif
+On Mon 14-10-19 08:23:39, Eric Sandeen wrote:
+> On 10/14/19 4:43 AM, Jan Kara wrote:
+> > On Mon 14-10-19 16:33:15, Pingfan Liu wrote:
+> > > On Sun, Oct 13, 2019 at 09:34:17AM -0700, Darrick J. Wong wrote:
+> > > > On Sun, Oct 13, 2019 at 10:37:00PM +0800, Pingfan Liu wrote:
+> > > > > When using fadump (fireware assist dump) mode on powerpc, a mismatch
+> > > > > between grub xfs driver and kernel xfs driver has been obsevered.  Note:
+> > > > > fadump boots up in the following sequence: fireware -> grub reads kernel
+> > > > > and initramfs -> kernel boots.
+> > > > > 
+> > > > > The process to reproduce this mismatch:
+> > > > >    - On powerpc, boot kernel with fadump=on and edit /etc/kdump.conf.
+> > > > >    - Replacing "path /var/crash" with "path /var/crashnew", then, "kdumpctl
+> > > > >      restart" to rebuild the initramfs. Detail about the rebuilding looks
+> > > > >      like: mkdumprd /boot/initramfs-`uname -r`.img.tmp;
+> > > > >            mv /boot/initramfs-`uname -r`.img.tmp /boot/initramfs-`uname -r`.img
+> > > > >            sync
+> > > > >    - "echo c >/proc/sysrq-trigger".
+> > > > > 
+> > > > > The result:
+> > > > > The dump image will not be saved under /var/crashnew/* as expected, but
+> > > > > still saved under /var/crash.
+> > > > > 
+> > > > > The root cause:
+> > > > > As Eric pointed out that on xfs, 'sync' ensures the consistency by writing
+> > > > > back metadata to xlog, but not necessary to fsblock. This raises issue if
+> > > > > grub can not replay the xlog before accessing the xfs files. Since the
+> > > > > above dir entry of initramfs should be saved as inline data with xfs_inode,
+> > > > > so xfs_fs_sync_fs() does not guarantee it written to fsblock.
+> > > > > 
+> > > > > umount can be used to write metadata fsblock, but the filesystem can not be
+> > > > > umounted if still in use.
+> > > > > 
+> > > > > There are two ways to fix this mismatch, either grub or xfs. It may be
+> > > > > easier to do this in xfs side by introducing an interface to flush metadata
+> > > > > to fsblock explicitly.
+> > > > > 
+> > > > > With this patch, metadata can be written to fsblock by:
+> > > > >    # update AIL
+> > > > >    sync
+> > > > >    # new introduced interface to flush metadata to fsblock
+> > > > >    mount -o remount,metasync mountpoint
+> > > > 
+> > > > I think this ought to be an ioctl or some sort of generic call since the
+> > > > jbd2 filesystems (ext3, ext4, ocfs2) suffer from the same "$BOOTLOADER
+> > > > is too dumb to recover logs but still wants to write to the fs"
+> > > > checkpointing problem.
+> > > Yes, a syscall sounds more reasonable.
+> > > > 
+> > > > (Or maybe we should just put all that stuff in a vfat filesystem, I
+> > > > don't know...)
+> > > I think it is unavoidable to involve in each fs' implementation. What
+> > > about introducing an interface sync_to_fsblock(struct super_block *sb) in
+> > > the struct super_operations, then let each fs manage its own case?
 > > 
-> > So, uh... does this debugging functionality just disappear?  Is it
-> > unnecessary?  It's not clear (to me anyway) why it's ok for the extra
-> > checking to go away.
+> > Well, we already have a way to achieve what you need: fsfreeze.
+> > Traditionally, that is guaranteed to put fs into a "clean" state very much
+> > equivalent to the fs being unmounted and that seems to be what the
+> > bootloader wants so that it can access the filesystem without worrying
+> > about some recovery details. So do you see any problem with replacing
+> > 'sync' in your example above with 'fsfreeze /boot && fsfreeze -u /boot'?
+> > 
+> > 								Honza
 > 
-> Lets ask the counter question:  What kind of bug do you think this
-> check would catch?
+> The problem with fsfreeze is that if the device you want to quiesce is, say,
+> the root fs, freeze isn't really a good option.
 
-Dunno, that's why I'm asking /you/ :)
+I agree you need to be really careful not to deadlock against yourself in
+that case. But this particular use actually has a chance to work.
 
-I think the answer is that DO_CALLBACK is pretty pointless since we
-already have a CALLBACK state, and the removed debugging function checks
-among all the iclogs for a state that shouldn't be possible (getting
-ready to be doing callbacks when there are other iclogs further along in
-the list that are still syncing or ioerror'd)?  Particularly since we
-probably end up moving the iclog to the actual CALLBACK state pretty
-quickly anyway?
+> But the other thing I want to highlight about this approach is that it does not
+> solve the root problem: something is trying to read the block device without
+> first replaying the log.
+> 
+> A call such as the proposal here is only going to leave consistent metadata at
+> the time the call returns; at any time after that, all guarantees are off again,
+> so the problem hasn't been solved.
 
---D
+Oh, absolutely agreed. I was also thinking about this before sending my
+reply. Once you unfreeze, the log can start filling with changes and
+there's no guarantee that e.g. inode does not move as part of these
+changes. But to be fair, replaying the log isn't easy either, even more so
+from a bootloader. You cannot write the changes from the log back into the
+filesystem as e.g. in case of suspend-to-disk the resumed kernel gets
+surprised and corrupts the fs under its hands (been there, tried that). So
+you must keep changes only in memory and that's not really easy in the
+constrained bootloader environment.
+
+So I guess we are left with hacks that kind of mostly work and fsfreeze is
+one of those. If you don't mess with the files after fsfreeze, you're
+likely to find what you need even without replaying the log.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
