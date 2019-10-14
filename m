@@ -7,57 +7,61 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C39CCC4CECE
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF157C4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:12:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9BC95206A3
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:12:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B4DE521835
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:12:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iWi6fkZ3"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FiimRFr/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388356AbfJNRMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 13:12:31 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:39386 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729900AbfJNRMa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 13:12:30 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH9TkP038907;
-        Mon, 14 Oct 2019 17:12:14 GMT
+        id S2387993AbfJNRMo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 13:12:44 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:50466 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732046AbfJNRMn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 13:12:43 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH9TRq050261;
+        Mon, 14 Oct 2019 17:12:39 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=8TMgfkcICjuiRPLhcjRMCr/jlUIWDDJGApIKSpIeFlY=;
- b=iWi6fkZ3ymjDJmRX9U0+BJoY5imttPemsylqhNP8HfQuX2EhJyhzH7kAYBWI3U8HFp1q
- SPN/t0VaSR0zf/mRALKrJiopXjm49xYccz4SKIl1RBMdP/xo4k5e1Q6pRf84hOg7KGHd
- JxVFgg8c0PUP3prZkbQdPhUJ7pDB9KEEuRwurXjgv9xnvBncpt0eJaZ9WubY+9l7isUA
- oR7YuBIgEd7WBXs/rZh2CyAEjlGypkOHLIwN25LQW8T/1GDzNeIduvkzyeO1XdTt/VlL
- ognCLaK/Sw2tLnJOSdjEecB6EPFvU0OCkSX5gqQDept3yW5ykrWwfhe8e8cR8nPVThc3 MQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2vk7fr278g-1
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=vDfwWc6+jOeS86Dg1iiwSK0OgfRzyBRt4+oSbPytxXs=;
+ b=FiimRFr/iK7wLkcpLMdw5aWKivXdPFZp8RS7lDzRUajFdbX/RyLivpjiSpVa4XVzraAx
+ vhTxcZ29Y73//xJ9NA/Yjqf2zyJWR5Wep+uCEky0961ZyIBHRi8Gn41YaThnd2zHucOb
+ F+Ggh07L0mFxhWVBco08BZOjgmaJvVQgElCGAHLPrYaAJWYDKJZn6C7WabUxKqKxv3BK
+ oZpjW6keMba2mH3k3okhc3p6ATu7+kgmBEuWk2wB4nADf3gljub+PTSKc8wf8+r7YaJ+
+ 2x3AEdApryZNTYI8NdOIobM6QFpZzcsiMqmM1ACespx8rIpqfOa05AAMPhD+JmiySpOP qg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2vk68uac29-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 17:12:14 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH7w4Q149582;
-        Mon, 14 Oct 2019 17:12:13 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2vkry6r3ea-1
+        Mon, 14 Oct 2019 17:12:39 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH8ZpA050823;
+        Mon, 14 Oct 2019 17:10:38 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2vks075nac-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 17:12:13 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9EHCCbX012319;
-        Mon, 14 Oct 2019 17:12:12 GMT
+        Mon, 14 Oct 2019 17:10:38 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9EHAc78014927;
+        Mon, 14 Oct 2019 17:10:38 GMT
 Received: from localhost (/10.159.144.186)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 14 Oct 2019 17:12:12 +0000
-Date:   Mon, 14 Oct 2019 10:12:11 -0700
+        with ESMTP ; Mon, 14 Oct 2019 17:10:36 +0000
+Date:   Mon, 14 Oct 2019 10:10:35 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Cc:     Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs: change the seconds fields in xfs_bulkstat to signed
-Message-ID: <20191014171211.GG26541@magnolia>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/8] xfs: pass the correct flag to xlog_write_iclog
+Message-ID: <20191014171035.GU13108@magnolia>
+References: <20191009142748.18005-1-hch@lst.de>
+ <20191009142748.18005-2-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191009142748.18005-2-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -75,33 +79,34 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 09, 2019 at 04:27:41PM +0200, Christoph Hellwig wrote:
+> xlog_write_iclog expects a bool for the second argument.  While any
+> non-0 value happens to work fine this makes all calls consistent.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-64-bit time is a signed quantity in the kernel, so the bulkstat
-structure should reflect that.
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/libxfs/xfs_fs.h |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+--D
 
-diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
-index b0c884e80915..8b77eace70f1 100644
---- a/fs/xfs/libxfs/xfs_fs.h
-+++ b/fs/xfs/libxfs/xfs_fs.h
-@@ -368,11 +368,11 @@ struct xfs_bulkstat {
- 	uint64_t	bs_blocks;	/* number of blocks		*/
- 	uint64_t	bs_xflags;	/* extended flags		*/
- 
--	uint64_t	bs_atime;	/* access time, seconds		*/
--	uint64_t	bs_mtime;	/* modify time, seconds		*/
-+	int64_t		bs_atime;	/* access time, seconds		*/
-+	int64_t		bs_mtime;	/* modify time, seconds		*/
- 
--	uint64_t	bs_ctime;	/* inode change time, seconds	*/
--	uint64_t	bs_btime;	/* creation time, seconds	*/
-+	int64_t		bs_ctime;	/* inode change time, seconds	*/
-+	int64_t		bs_btime;	/* creation time, seconds	*/
- 
- 	uint32_t	bs_gen;		/* generation count		*/
- 	uint32_t	bs_uid;		/* user id			*/
+> ---
+>  fs/xfs/xfs_log.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index a2beee9f74da..cd90871c2101 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -1735,7 +1735,7 @@ xlog_write_iclog(
+>  		 * the buffer manually, the code needs to be kept in sync
+>  		 * with the I/O completion path.
+>  		 */
+> -		xlog_state_done_syncing(iclog, XFS_LI_ABORTED);
+> +		xlog_state_done_syncing(iclog, true);
+>  		up(&iclog->ic_sema);
+>  		return;
+>  	}
+> -- 
+> 2.20.1
+> 
