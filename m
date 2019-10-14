@@ -7,170 +7,101 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E726ECE587
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:00:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C39CCC4CECE
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:12:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 342D620673
-	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:00:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9BC95206A3
+	for <linux-xfs@archiver.kernel.org>; Mon, 14 Oct 2019 17:12:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mNjaGKWB"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iWi6fkZ3"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730065AbfJNRA5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 13:00:57 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:55488 "EHLO
+        id S2388356AbfJNRMb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 13:12:31 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39386 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727083AbfJNRA5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 13:00:57 -0400
+        with ESMTP id S1729900AbfJNRMa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 13:12:30 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EGmuot021062;
-        Mon, 14 Oct 2019 17:00:45 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH9TkP038907;
+        Mon, 14 Oct 2019 17:12:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
- bh=drp32Hf0z+K1NYvV7OdTo/hSVCjFrH0pn7yk+X1yaas=;
- b=mNjaGKWBZtyeMjFFnapWg2GN0oFCdyb2LibNHok6lOjc5vC3XeFDfFWesawiuKq5Mcbh
- Q9jRisl1nhuRQH3puvbbqogLUTD6wBwMMCv9fUaZiCDj/MnwyCzSiBI6z2tU6cktl8wc
- Ko5FVseq1+LguhSW5PstvWqy15LXnAWZR293FQMSw372k3RpVuvwM2TqJQPwe1ZX5wZj
- zxYxrWnWow08TIy1qBIcdyZfffc7egTIVNWlruovMjDjvgT7Olc5jyP0pn6bWKeZ0sDz
- zW7kQbWzJKgsVLBNu/MkLsy/IIc9/iilyfZMhPmULfbNV+f2y/6ic6KNPeYRwBj7Vq2a 0A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2vk7fr253r-1
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=8TMgfkcICjuiRPLhcjRMCr/jlUIWDDJGApIKSpIeFlY=;
+ b=iWi6fkZ3ymjDJmRX9U0+BJoY5imttPemsylqhNP8HfQuX2EhJyhzH7kAYBWI3U8HFp1q
+ SPN/t0VaSR0zf/mRALKrJiopXjm49xYccz4SKIl1RBMdP/xo4k5e1Q6pRf84hOg7KGHd
+ JxVFgg8c0PUP3prZkbQdPhUJ7pDB9KEEuRwurXjgv9xnvBncpt0eJaZ9WubY+9l7isUA
+ oR7YuBIgEd7WBXs/rZh2CyAEjlGypkOHLIwN25LQW8T/1GDzNeIduvkzyeO1XdTt/VlL
+ ognCLaK/Sw2tLnJOSdjEecB6EPFvU0OCkSX5gqQDept3yW5ykrWwfhe8e8cR8nPVThc3 MQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vk7fr278g-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 17:00:45 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EGrieE103194;
-        Mon, 14 Oct 2019 17:00:45 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2vkr9xat2g-1
+        Mon, 14 Oct 2019 17:12:14 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9EH7w4Q149582;
+        Mon, 14 Oct 2019 17:12:13 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vkry6r3ea-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 14 Oct 2019 17:00:45 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9EH0hLH027091;
-        Mon, 14 Oct 2019 17:00:44 GMT
-Received: from localhost (/67.169.218.210)
+        Mon, 14 Oct 2019 17:12:13 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9EHCCbX012319;
+        Mon, 14 Oct 2019 17:12:12 GMT
+Received: from localhost (/10.159.144.186)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 14 Oct 2019 17:00:43 +0000
-Date:   Mon, 14 Oct 2019 10:00:41 -0700
+        with ESMTP ; Mon, 14 Oct 2019 17:12:12 +0000
+Date:   Mon, 14 Oct 2019 10:12:11 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Jens Axboe <axboe@kernel.dk>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-block@vger.kernel.org,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH v3] loop: fix no-unmap write-zeroes request behavior
-Message-ID: <20191014170041.GT13108@magnolia>
-References: <20191010170239.GC13098@magnolia>
- <20191014155030.GS13108@magnolia>
- <9605de8e-ecd7-9e30-ab48-943211d8f931@sandeen.net>
+To:     xfs <linux-xfs@vger.kernel.org>
+Cc:     Eric Sandeen <sandeen@redhat.com>
+Subject: [PATCH] xfs: change the seconds fields in xfs_bulkstat to signed
+Message-ID: <20191014171211.GG26541@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <9605de8e-ecd7-9e30-ab48-943211d8f931@sandeen.net>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910140144
+ engine=8.0.1-1908290000 definitions=main-1910140145
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9410 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910140144
+ definitions=main-1910140145
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 14, 2019 at 11:39:43AM -0500, Eric Sandeen wrote:
-> On 10/14/19 10:50 AM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > Currently, if the loop device receives a WRITE_ZEROES request, it asks
-> > the underlying filesystem to punch out the range.  This behavior is
-> > correct if unmapping is allowed.  However, a NOUNMAP request means that
-> > the caller doesn't want us to free the storage backing the range, so
-> > punching out the range is incorrect behavior.
-> > 
-> > To satisfy a NOUNMAP | WRITE_ZEROES request, loop should ask the
-> > underlying filesystem to FALLOC_FL_ZERO_RANGE, which is (according to
-> > the fallocate documentation) required to ensure that the entire range is
-> > backed by real storage, which suffices for our purposes.
-> > 
-> > Fixes: 19372e2769179dd ("loop: implement REQ_OP_WRITE_ZEROES")
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > ---
-> > v3: refactor into a single fallocate function
-> > v2: reorganize a little according to hch feedback
-> > ---
-> >   drivers/block/loop.c |   26 ++++++++++++++++++--------
-> >   1 file changed, 18 insertions(+), 8 deletions(-)
-> > 
-> > diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-> > index f6f77eaa7217..ef6e251857c8 100644
-> > --- a/drivers/block/loop.c
-> > +++ b/drivers/block/loop.c
-> > @@ -417,18 +417,20 @@ static int lo_read_transfer(struct loop_device *lo, struct request *rq,
-> >   	return ret;
-> >   }
-> > -static int lo_discard(struct loop_device *lo, struct request *rq, loff_t pos)
-> > +static int lo_fallocate(struct loop_device *lo, struct request *rq, loff_t pos,
-> > +			int mode)
-> >   {
-> >   	/*
-> > -	 * We use punch hole to reclaim the free space used by the
-> > -	 * image a.k.a. discard. However we do not support discard if
-> > -	 * encryption is enabled, because it may give an attacker
-> > -	 * useful information.
-> > +	 * We use fallocate to manipulate the space mappings used by the image
-> > +	 * a.k.a. discard/zerorange. However we do not support this if
-> > +	 * encryption is enabled, because it may give an attacker useful
-> > +	 * information.
-> >   	 */
-> >   	struct file *file = lo->lo_backing_file;
-> > -	int mode = FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE;
-> >   	int ret;
-> > +	mode |= FALLOC_FL_KEEP_SIZE;
-> > +
-> >   	if ((!file->f_op->fallocate) || lo->lo_encrypt_key_size) {
-> >   		ret = -EOPNOTSUPP;
-> >   		goto out;
-> > @@ -596,9 +598,17 @@ static int do_req_filebacked(struct loop_device *lo, struct request *rq)
-> >   	switch (req_op(rq)) {
-> >   	case REQ_OP_FLUSH:
-> >   		return lo_req_flush(lo, rq);
-> > -	case REQ_OP_DISCARD:
-> >   	case REQ_OP_WRITE_ZEROES:
-> > -		return lo_discard(lo, rq, pos);
-> cxz ÿbvVBV
+From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Yes.
+64-bit time is a signed quantity in the kernel, so the bulkstat
+structure should reflect that.
 
-> > +	case REQ_OP_DISCARD:
-> > +		return lo_fallocate(lo, rq, pos, FALLOC_FL_PUNCH_HOLE);
-> 
-> I get lost in the twisty passages.  What happens if the filesystem hosting the
-> backing file doesn't support fallocate, and REQ_OP_DISCARD / REQ_OP_WRITE_ZEROES
-> returns EOPNOTSUPP - discard is advisory, is it ok to fail REQ_OP_WRITE_ZEROES?
-> Does something at another layer fall back to writing zeros?
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+---
+ fs/xfs/libxfs/xfs_fs.h |    8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-If the REQ_OP_WRITE_ZEROES request was initiated by blkdev_issue_zeroout
-and we send back an error code, blkdev_issue_zeroout will fall back to
-writing zeroes if BLKDEV_ZERO_NOFALLBACK wasn't set its caller.
-
-Note that calling FALLOC_FL_ZERO_RANGE on a block device will generate
-a REQ_OP_WRITE_ZEROES | REQ_OP_NOUNMAP request, which means that it will
-try fallocate zeroing and fall back to writing zeroes.
-
---D
-
-> 
-> -Eric
-> 
-> >   	case REQ_OP_WRITE:
-> >   		if (lo->transfer)
-> >   			return lo_write_transfer(lo, rq, pos);
-> > 
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index b0c884e80915..8b77eace70f1 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -368,11 +368,11 @@ struct xfs_bulkstat {
+ 	uint64_t	bs_blocks;	/* number of blocks		*/
+ 	uint64_t	bs_xflags;	/* extended flags		*/
+ 
+-	uint64_t	bs_atime;	/* access time, seconds		*/
+-	uint64_t	bs_mtime;	/* modify time, seconds		*/
++	int64_t		bs_atime;	/* access time, seconds		*/
++	int64_t		bs_mtime;	/* modify time, seconds		*/
+ 
+-	uint64_t	bs_ctime;	/* inode change time, seconds	*/
+-	uint64_t	bs_btime;	/* creation time, seconds	*/
++	int64_t		bs_ctime;	/* inode change time, seconds	*/
++	int64_t		bs_btime;	/* creation time, seconds	*/
+ 
+ 	uint32_t	bs_gen;		/* generation count		*/
+ 	uint32_t	bs_uid;		/* user id			*/
