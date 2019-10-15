@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB26FECE58F
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:44:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DB259ECE599
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:44:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9223E205F4
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:44:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AD3FC205F4
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:44:46 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="bmG8Jlij"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="kmL1KDpZ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387648AbfJOPoQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 11:44:16 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:48094 "EHLO
+        id S2387604AbfJOPoJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 11:44:09 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:48040 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387623AbfJOPoQ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 11:44:16 -0400
+        with ESMTP id S2387596AbfJOPoJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 11:44:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=QuyT4qjP/N5LExRTgGT+wH3VMTfJMNLEgqsgddzXeSA=; b=bmG8Jlij7ZAtkwQ/XZmiWS7PjN
-        FL9rEFngG6SQy6IFwCylqNZlOwfMt8f/TrluhqoPLWFq/uINHCy/eCJBFlkI8a7/HeC2E0scYaJxw
-        UrqYfkGbi1T6sEt93NoGQ9k0mMxjAJ/Vh4kP6d+Be9/CJhacYtDO2UwmXSlnZG/I+vLBwDX5lyprG
-        IxJhzBKMIxiVTC+ksyTeulnt4hQCXthuEk7VNeejSWhzMrLCNKnsP7lKVikWruxFAuwj9/Jrk8WrJ
-        44GMyji4s2JQIP+vGBB/AyAnbzUO0L5DNMfbW2PpYZQipsWkTZJd5mySoAWy6LGx9iqtVX0VyOJs+
-        SHpyOTtQ==;
+        bh=/ErmilEEyXjJU23fxf3b2Cyj7hddJxYMkisxys+3qlE=; b=kmL1KDpZ6tqEEiaEs67UdlP0Ww
+        oxJH/inokbNCFcbr8XKDo3JpOgjotWhXKSzUKyke4U82Q9MzMbEsDqeplZHnpYmb99uveho6V2Acq
+        oXl0Vj/lzztPEEA8rts+/YK+bwF1FI1wgA6rXS8ijO5QglzXHRh3I5pUY52xxHSNswBCM89jU+rJu
+        qjpVKj77oOeUURGdENvQZ5+6DzqPGixwjs8PHlSDeX/ZUimVqs5fuY7ZdIrxUqN8W8VhHtwxfK3AT
+        Zjzhs0UNfnDkh3893OO0AcO+xjiRODISZ68ERS+6Oszkg3i++D97N1ZI9DhXJZA/qNuwpLvRd5d/S
+        3+ymUihg==;
 Received: from [2001:4bb8:18c:d7b:c70:4a89:bc61:3] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iKOzb-0007x2-Az; Tue, 15 Oct 2019 15:44:11 +0000
+        id 1iKOzS-0007vQ-Q4; Tue, 15 Oct 2019 15:44:03 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     "Darrick J . Wong" <darrick.wong@oracle.com>
 Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 07/12] iomap: zero newly allocated mapped blocks
-Date:   Tue, 15 Oct 2019 17:43:40 +0200
-Message-Id: <20191015154345.13052-8-hch@lst.de>
+Subject: [PATCH 04/12] xfs: refactor the ioend merging code
+Date:   Tue, 15 Oct 2019 17:43:37 +0200
+Message-Id: <20191015154345.13052-5-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191015154345.13052-1-hch@lst.de>
 References: <20191015154345.13052-1-hch@lst.de>
@@ -56,54 +56,141 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-File systems like gfs2 don't support delayed allocations or unwritten
-extents and thus allocate normal mapped blocks to fill holes.  To
-cover the case of such file systems allocating new blocks to fill holes
-also zero out mapped blocks with the new flag.
+Introduce two nicely abstracted helper, which can be moved to the
+iomap code later.  Also use list_pop_entry and list_first_entry_or_null
+to simplify the code a bit.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/iomap/buffered-io.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ fs/xfs/xfs_aops.c | 73 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 42 insertions(+), 31 deletions(-)
 
-diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
-index e25901ae3ff4..181ee8477aad 100644
---- a/fs/iomap/buffered-io.c
-+++ b/fs/iomap/buffered-io.c
-@@ -203,6 +203,14 @@ iomap_read_inline_data(struct inode *inode, struct page *page,
- 	SetPageUptodate(page);
+diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
+index 91899de2be09..c29ef69d1e51 100644
+--- a/fs/xfs/xfs_aops.c
++++ b/fs/xfs/xfs_aops.c
+@@ -116,6 +116,22 @@ xfs_destroy_ioend(
+ 	}
  }
  
-+static inline bool iomap_block_needs_zeroing(struct inode *inode,
-+		struct iomap *iomap, loff_t pos)
++static void
++xfs_destroy_ioends(
++	struct xfs_ioend	*ioend,
++	int			error)
 +{
-+	return iomap->type != IOMAP_MAPPED ||
-+		(iomap->flags & IOMAP_F_NEW) ||
-+		pos >= i_size_read(inode);
++	struct list_head	tmp;
++
++	list_replace_init(&ioend->io_list, &tmp);
++	xfs_destroy_ioend(ioend, error);
++	while ((ioend = list_first_entry_or_null(&tmp, struct xfs_ioend,
++			io_list))) {
++		list_del_init(&ioend->io_list);
++		xfs_destroy_ioend(ioend, error);
++	}
 +}
 +
- static loff_t
- iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 		struct iomap *iomap)
-@@ -226,7 +234,7 @@ iomap_readpage_actor(struct inode *inode, loff_t pos, loff_t length, void *data,
- 	if (plen == 0)
- 		goto done;
+ /*
+  * Fast and loose check if this write could update the on-disk inode size.
+  */
+@@ -230,7 +246,6 @@ STATIC void
+ xfs_end_ioend(
+ 	struct xfs_ioend	*ioend)
+ {
+-	struct list_head	ioend_list;
+ 	struct xfs_inode	*ip = XFS_I(ioend->io_inode);
+ 	xfs_off_t		offset = ioend->io_offset;
+ 	size_t			size = ioend->io_size;
+@@ -275,16 +290,7 @@ xfs_end_ioend(
+ done:
+ 	if (ioend->io_append_trans)
+ 		error = xfs_setfilesize_ioend(ioend, error);
+-	list_replace_init(&ioend->io_list, &ioend_list);
+-	xfs_destroy_ioend(ioend, error);
+-
+-	while (!list_empty(&ioend_list)) {
+-		ioend = list_first_entry(&ioend_list, struct xfs_ioend,
+-				io_list);
+-		list_del_init(&ioend->io_list);
+-		xfs_destroy_ioend(ioend, error);
+-	}
+-
++	xfs_destroy_ioends(ioend, error);
+ 	memalloc_nofs_restore(nofs_flag);
+ }
  
--	if (iomap->type != IOMAP_MAPPED || pos >= i_size_read(inode)) {
-+	if (iomap_block_needs_zeroing(inode, iomap, pos)) {
- 		zero_user(page, poff, plen);
- 		iomap_set_range_uptodate(page, poff, plen);
- 		goto done;
-@@ -532,7 +540,7 @@ iomap_read_page_sync(struct inode *inode, loff_t block_start, struct page *page,
- 	struct bio_vec bvec;
- 	struct bio bio;
+@@ -333,17 +339,18 @@ xfs_ioend_try_merge(
+ 	struct xfs_ioend	*ioend,
+ 	struct list_head	*more_ioends)
+ {
+-	struct xfs_ioend	*next_ioend;
++	struct xfs_ioend	*next;
++
++	INIT_LIST_HEAD(&ioend->io_list);
  
--	if (iomap->type != IOMAP_MAPPED || block_start >= i_size_read(inode)) {
-+	if (iomap_block_needs_zeroing(inode, iomap, block_start)) {
- 		zero_user_segments(page, poff, from, to, poff + plen);
- 		iomap_set_range_uptodate(page, poff, plen);
- 		return 0;
+-	while (!list_empty(more_ioends)) {
+-		next_ioend = list_first_entry(more_ioends, struct xfs_ioend,
+-				io_list);
+-		if (!xfs_ioend_can_merge(ioend, next_ioend))
++	while ((next = list_first_entry_or_null(more_ioends, struct xfs_ioend,
++			io_list))) {
++		if (!xfs_ioend_can_merge(ioend, next))
+ 			break;
+-		list_move_tail(&next_ioend->io_list, &ioend->io_list);
+-		ioend->io_size += next_ioend->io_size;
+-		if (next_ioend->io_append_trans)
+-			xfs_ioend_merge_append_transactions(ioend, next_ioend);
++		list_move_tail(&next->io_list, &ioend->io_list);
++		ioend->io_size += next->io_size;
++		if (next->io_append_trans)
++			xfs_ioend_merge_append_transactions(ioend, next);
+ 	}
+ }
+ 
+@@ -366,29 +373,33 @@ xfs_ioend_compare(
+ 	return 0;
+ }
+ 
++static void
++xfs_sort_ioends(
++	struct list_head	*ioend_list)
++{
++	list_sort(NULL, ioend_list, xfs_ioend_compare);
++}
++
+ /* Finish all pending io completions. */
+ void
+ xfs_end_io(
+ 	struct work_struct	*work)
+ {
+-	struct xfs_inode	*ip;
++	struct xfs_inode	*ip =
++		container_of(work, struct xfs_inode, i_ioend_work);
+ 	struct xfs_ioend	*ioend;
+-	struct list_head	completion_list;
++	struct list_head	tmp;
+ 	unsigned long		flags;
+ 
+-	ip = container_of(work, struct xfs_inode, i_ioend_work);
+-
+ 	spin_lock_irqsave(&ip->i_ioend_lock, flags);
+-	list_replace_init(&ip->i_ioend_list, &completion_list);
++	list_replace_init(&ip->i_ioend_list, &tmp);
+ 	spin_unlock_irqrestore(&ip->i_ioend_lock, flags);
+ 
+-	list_sort(NULL, &completion_list, xfs_ioend_compare);
+-
+-	while (!list_empty(&completion_list)) {
+-		ioend = list_first_entry(&completion_list, struct xfs_ioend,
+-				io_list);
++	xfs_sort_ioends(&tmp);
++	while ((ioend = list_first_entry_or_null(&tmp, struct xfs_ioend,
++			io_list))) {
+ 		list_del_init(&ioend->io_list);
+-		xfs_ioend_try_merge(ioend, &completion_list);
++		xfs_ioend_try_merge(ioend, &tmp);
+ 		xfs_end_ioend(ioend);
+ 	}
+ }
 -- 
 2.20.1
 
