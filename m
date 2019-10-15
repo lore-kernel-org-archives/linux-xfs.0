@@ -2,129 +2,116 @@ Return-Path: <SRS0=TKSY=YI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7F395ECE58F
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 16:19:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9263AC10F14
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 16:49:25 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 522BA20873
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 16:19:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 66B5B20650
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 16:49:25 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GYpHVd54"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PevSynqO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2387867AbfJOQTc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 12:19:32 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:58356 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727809AbfJOQTb (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 12:19:31 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FGE7m4003174;
-        Tue, 15 Oct 2019 16:19:00 GMT
+        id S2388258AbfJOQtY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 12:49:24 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:59866 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726362AbfJOQtY (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 12:49:24 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FGctRZ039253;
+        Tue, 15 Oct 2019 16:49:07 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=RseHhUHVSGnYt/53lXUsPHsqa6HrkkpmijudFUk1PGQ=;
- b=GYpHVd54dUFvc4CzF9J3oaFBSTS/ly2ecg/7l5ZswJQ5TR0e6nuxqZWlPZEFHktnXi8C
- VA3GD+1FU0v1JVSWu70jKuTkS1YIaGWY2TkJvtmwSZJbi+epnqOY5T6Y9pXH41mqhnbG
- CSb6pF48yO5PtAzbSOJ03lqM4WsXL1eLViUrOXq4n7xBL3dPFuZBEhaZxbAvnb/r6L+w
- Jdxan1uWoKbOcvbD+cVApWz7kC2Z19qvZ/Ks8cbDWAI/6u0G0oKhRnT3NPublsmRb9SY
- tcJTVcE7uERN8M+VGQyYP7hO4N8K/2NSePLhM6cjbWSlJfCvGPzbf0FikAainQFbgoFE ww== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2vk7fr92x4-1
+ : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=dMsf5RtB6vxQ3LZkfe1f47o7Uva/KHSz5Ae9vjAzzcs=;
+ b=PevSynqO3wEizftOzPfMowA0akeis1xmawlTj6gi5N4EWPEat5VPIMHNkZQE9xzrGsL9
+ hCVAXIe6ZBMRqtwk7Lra3TKaxuU/xhoVu4KMUr2mGipvoecRPHS+gwoAIO0z+8yN5+ld
+ 3Gb2IgxK9ZEHxs4+8ZILr+a7+Vw6BOHfwGZFlpb/CRGCbVN2TdtHE0KpPAFlKWotXnc2
+ 0i4ejVHGHE5MRxzpBPFNA9pUMx4bh7E4GLgv63V4FrHelwznNf02fCKgXZvThJqm9san
+ qeNMAvcn1dfc5zbeG1g1whq0JCw6kZSHgkw2hldydqrmMiNiGQuRBBqn5M5c5F+XfXci Pg== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2vk68uheqp-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Oct 2019 16:19:00 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FGIqvB185260;
-        Tue, 15 Oct 2019 16:18:59 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2vnf7rgcnv-1
+        Tue, 15 Oct 2019 16:49:06 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FGcQLE104487;
+        Tue, 15 Oct 2019 16:49:06 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vn718mu9u-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Oct 2019 16:18:59 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9FGID9k012141;
-        Tue, 15 Oct 2019 16:18:13 GMT
+        Tue, 15 Oct 2019 16:49:06 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9FGn3k0025393;
+        Tue, 15 Oct 2019 16:49:05 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Oct 2019 16:18:13 +0000
-Date:   Tue, 15 Oct 2019 09:18:11 -0700
+        with ESMTP ; Tue, 15 Oct 2019 16:49:03 +0000
+Date:   Tue, 15 Oct 2019 09:49:01 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     "Theodore Y. Ts'o" <tytso@mit.edu>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        Eric Sandeen <sandeen@sandeen.net>, Jan Kara <jack@suse.cz>,
-        Pingfan Liu <kernelfans@gmail.com>,
-        Hari Bathini <hbathini@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
-Message-ID: <20191015161811.GE13108@magnolia>
-References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
- <20191013163417.GQ13108@magnolia>
- <20191014083315.GA10091@mypc>
- <20191014094311.GD5939@quack2.suse.cz>
- <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
- <20191014200303.GF5939@quack2.suse.cz>
- <5796090e-6206-1bd7-174e-58798c9af052@sandeen.net>
- <20191015080102.GB3055@infradead.org>
- <20191015131004.GA7456@mit.edu>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     xfs <linux-xfs@vger.kernel.org>,
+        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Jan Kara <jack@suse.cz>, mbobrowski@mbobrowski.org
+Subject: [ANNOUNCE] xfs-linux: iomap-5.5-merge updated to c9acd3aee077
+Message-ID: <20191015164901.GF13108@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191015131004.GA7456@mit.edu>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9411 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910150142
+ engine=8.0.1-1908290000 definitions=main-1910150145
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9411 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910150141
+ definitions=main-1910150145
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 15, 2019 at 09:10:04AM -0400, Theodore Y. Ts'o wrote:
-> On Tue, Oct 15, 2019 at 01:01:02AM -0700, Christoph Hellwig wrote:
-> > On Mon, Oct 14, 2019 at 03:09:48PM -0500, Eric Sandeen wrote:
-> > > We're in agreement here.  ;)  I only worry about implementing things like this
-> > > which sound like guarantees, but aren't, and end up encouraging bad behavior
-> > > or promoting misconceptions.
-> > > 
-> > > More and more, I think we should reconsider Darrick's "bootfs" (ext2 by another
-> > > name, but with extra-sync-iness) proposal...
-> > 
-> > Having a separate simple file system for the boot loader makes a lot of
-> > sense.  Note that vfat of EFI is the best choice, but at least it is
-> > something.  SysV Unix from the 90s actually had a special file system just
-> > for that, and fs/bfs/ in Linux supports that.  So this isn't really a new
-> > thing either.
-> 
-> Did you mean to say "vfaat of EFI isn't the best choice"?
-> 
-> If we were going to be doing something like "bootfs", what sort of
-> semantics would be sufficient?  Is doing an implied fsync() on every
-> close(2) enough, or do we need to do something even more conservative?
+Hi folks,
 
-I'm assuming you'd also want to make sure the journal checkpoints as
-part of fsync, right?  Aside from being an April Fools joke, bootfs[1]
-does implement the semantics I needed to fix all the complaining about
-grub being broken. 8-)
+The iomap-5.5-merge branch of the xfs-linux repository at:
 
-Granted there's also the systemd bootloader spec[2] which says
-FAT{16,32}...
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-[1] https://lore.kernel.org/linux-fsdevel/20190401070001.GJ1173@magnolia/
-[2] https://systemd.io/BOOT_LOADER_SPECIFICATION.html
+has just been updated.
 
---D
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  The intent is to establish this as a stable branch for
+everyone else's 5.5 development activities by the end of the week.
 
-> 	 	       	       	     - Ted
+Note that this is an interim update, since I intend to review
+Christoph's v5 iomap writeback series when I'm done sending these
+announcements.
+
+The new head of the iomap-5.5-merge branch is commit:
+
+c9acd3aee077 xfs: Use iomap_dio_rw_wait()
+
+New Commits:
+
+Jan Kara (2):
+      [13ef954445df] iomap: Allow forcing of waiting for running DIO in iomap_dio_rw()
+      [c9acd3aee077] xfs: Use iomap_dio_rw_wait()
+
+
+Code Diffstat:
+
+ fs/gfs2/file.c        |  6 ++++--
+ fs/iomap/direct-io.c  |  7 +++++--
+ fs/xfs/xfs_file.c     | 13 +++++--------
+ include/linux/iomap.h |  3 ++-
+ 4 files changed, 16 insertions(+), 13 deletions(-)
