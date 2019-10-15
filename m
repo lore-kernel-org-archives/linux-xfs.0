@@ -7,96 +7,160 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DAB1AECE58C
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 01:56:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3F9D0ECE58C
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 02:12:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B0F97217F9
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 01:56:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0CF9C21835
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 02:12:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TIHUzyDc"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OZVQhXv/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726684AbfJOB4b (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 14 Oct 2019 21:56:31 -0400
-Received: from mail-pl1-f196.google.com ([209.85.214.196]:35915 "EHLO
-        mail-pl1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726440AbfJOB4b (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 21:56:31 -0400
-Received: by mail-pl1-f196.google.com with SMTP id j11so8794337plk.3
-        for <linux-xfs@vger.kernel.org>; Mon, 14 Oct 2019 18:56:30 -0700 (PDT)
+        id S1727101AbfJOCMu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 14 Oct 2019 22:12:50 -0400
+Received: from mail-pl1-f195.google.com ([209.85.214.195]:39535 "EHLO
+        mail-pl1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727100AbfJOCMu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 14 Oct 2019 22:12:50 -0400
+Received: by mail-pl1-f195.google.com with SMTP id s17so8806232plp.6;
+        Mon, 14 Oct 2019 19:12:49 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=date:from:to:cc:subject:message-id:references:mime-version
          :content-disposition:in-reply-to:user-agent;
-        bh=Kwwu5kbmkBQ1HH+8pWXVXW0xmQfdqCxeByRCN8KSXEY=;
-        b=TIHUzyDc6SGbORZPiz2reZIw7vN60Ixo8blMx0SNx6RBtQI/zstwu3hsCiWqL9JZQ6
-         IPThY2YzkQg8LrKB3cqxmkqsAs5VVvubIY28QgI45g0H0yaF5IzjbklpNV2+uzg7ULhD
-         41VHOncIQSJhMRT2o32TECBBQ+NfE0tIi1QkvfROvb7aKd+NouZWdTt5bs63H5tk7Ji2
-         lgJqac9vy5pPNqpqTuv8j8JQxXSpPEXx8cXPgJNtDNi+Fb3nWytmId8qoUaiqQJznwsD
-         RzvUXAbBZYq4mAHTGUiGi8GCDb+XMcbtyT4TfXEdMoBGZjYFytyAH9oMmYLxg4F/HIz4
-         PdUw==
+        bh=QkrBW78afE0mQwWYjfkjXOFMLoHqmY36U1/V151SyV4=;
+        b=OZVQhXv/nbs175o9O2gug9qXbAkURJTb5dRnma8sorrZi4V2NYZNFz6aJ0ZJUXDxEM
+         ukXnyaB5/9c+Bm8kpCXHusb60AFqZ7R/zOtJtXysndSXoQ/O2R/ppi0znVmvlPWLTPCh
+         aZbhtfC/vdtYe1md2ezzkAuz35pGxMd4RpbDiUX6h8m9x3/X8T+rrvgbOy7AQOfuz+6j
+         AKNvNU8/HPlNt4yxnNr5wwwxMwFiJZvO8pLj8dd1sMFcA7p958Cst+tPxbj59638G1Ju
+         F39PTHoDVM6ACPeEBGeQdWTfxVj2Jxq87+h4gz2ncTEbMqnvwHF4xkDfPZFsDd8yBMts
+         i+gA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:date:from:to:cc:subject:message-id:references
          :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=Kwwu5kbmkBQ1HH+8pWXVXW0xmQfdqCxeByRCN8KSXEY=;
-        b=PbeO2sQ1mRDwhGUVyrHGp/PgUxbRyPwrvAsIysTaRdh/S7dn1yz2xomAOAfk5MNc7z
-         32z6OLBDpOxHuAr6fxQwtOlcCtv1Xhj7AICccxVfhK9XzteN9nj5Aqot3lOzzjQtHTXT
-         +ULcqUvc8sC1j3vvoui8LlBzJjEJIUnoRKOUSUhgCbpLZ71XbJUESIRv1nqI+B/gJUdV
-         X+ClYUaPh/jMusDZGS5Pupr/eFbyqUK30we/0awAN3zH882NrMaSI6FBrsf6YEaxgHLJ
-         Tba2URCb1snNK61xUccDdXCmQF0qRudZJ/jLK1TPzC7kxkVeCQxTcLKdu78TgIM4FQ49
-         oOTA==
-X-Gm-Message-State: APjAAAUIzPUK4E3IZSfmQBYOXiUfZQ6pa3y72HxMK7GDpu3LSg++4QsD
-        15UlhTjXZyBJObtrtY3NYA==
-X-Google-Smtp-Source: APXvYqw8OLndhpbDZgTRsz4NpKzRxTwytzyi9coZcCx6lgDY9wvvn1k4hzSKoy8pOwXWtzGMS7S1MA==
-X-Received: by 2002:a17:902:2e:: with SMTP id 43mr32776368pla.270.1571104590386;
-        Mon, 14 Oct 2019 18:56:30 -0700 (PDT)
+        bh=QkrBW78afE0mQwWYjfkjXOFMLoHqmY36U1/V151SyV4=;
+        b=jkEJRygXEcYt4q94oEl1cL1383FF9/JdjmlsmakS9xm1wabXZXDFFXsLe/NEWKJ9s9
+         FXDFxAcP2cvoWVgB+K2MMlyNxv4wHSwRx5uR03cFG70YmiHRwbg6UwBCa5voI6a3CTim
+         i0tGCK7JKx/Jy2396ewrCY+75Tp1T7OKCDWcLNwHvtolL8u9sZcl2Tdv7siT8I54ze8q
+         eyINFmy90gvw4y5DHfale4PW8vI9DMYJXGtzWKJUZLl/KXchOxl5rznU7VgLzywuBBmk
+         /xykjGjmh4DsYUtReaxcWUwmf3FoT1zgPUGxLzOB2/TOoRiVm16zuc1CdJ3gVfnMKrNz
+         Q5sg==
+X-Gm-Message-State: APjAAAVz94/uJQ0BMPp848Y1+AkkmzQHBHdETCoGCBFkUdxE+ih3Mo7D
+        f43JKIP8e+nu36q6QVNYSw==
+X-Google-Smtp-Source: APXvYqxU06DbwSsvNnwFQ7+825WJKzoBMS5002wiGqa3CdsIYCBQ+5QUDJjG8RSeC96No3dtrNx9DQ==
+X-Received: by 2002:a17:902:8545:: with SMTP id d5mr33837178plo.145.1571105569194;
+        Mon, 14 Oct 2019 19:12:49 -0700 (PDT)
 Received: from mypc ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id b16sm24060901pfb.54.2019.10.14.18.56.27
+        by smtp.gmail.com with ESMTPSA id f6sm20266446pfq.169.2019.10.14.19.12.45
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 14 Oct 2019 18:56:29 -0700 (PDT)
-Date:   Tue, 15 Oct 2019 09:56:20 +0800
+        Mon, 14 Oct 2019 19:12:48 -0700 (PDT)
+Date:   Tue, 15 Oct 2019 10:12:42 +0800
 From:   Pingfan Liu <kernelfans@gmail.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org,
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     Jan Kara <jack@suse.cz>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <esandeen@redhat.com>,
         Hari Bathini <hbathini@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org
+        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
+        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
+        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
 Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
-Message-ID: <20191015015620.GA14327@mypc>
+Message-ID: <20191015021242.GB14327@mypc>
 References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
- <20191014084027.GA3593@infradead.org>
+ <20191013163417.GQ13108@magnolia>
+ <20191014083315.GA10091@mypc>
+ <20191014094311.GD5939@quack2.suse.cz>
+ <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191014084027.GA3593@infradead.org>
+In-Reply-To: <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
 User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 14, 2019 at 01:40:27AM -0700, Christoph Hellwig wrote:
-> On Sun, Oct 13, 2019 at 10:37:00PM +0800, Pingfan Liu wrote:
-> > When using fadump (fireware assist dump) mode on powerpc, a mismatch
-> > between grub xfs driver and kernel xfs driver has been obsevered.  Note:
-> > fadump boots up in the following sequence: fireware -> grub reads kernel
-> > and initramfs -> kernel boots.
+On Mon, Oct 14, 2019 at 08:23:39AM -0500, Eric Sandeen wrote:
+> On 10/14/19 4:43 AM, Jan Kara wrote:
+> > On Mon 14-10-19 16:33:15, Pingfan Liu wrote:
+> > > On Sun, Oct 13, 2019 at 09:34:17AM -0700, Darrick J. Wong wrote:
+> > > > On Sun, Oct 13, 2019 at 10:37:00PM +0800, Pingfan Liu wrote:
+> > > > > When using fadump (fireware assist dump) mode on powerpc, a mismatch
+> > > > > between grub xfs driver and kernel xfs driver has been obsevered.  Note:
+> > > > > fadump boots up in the following sequence: fireware -> grub reads kernel
+> > > > > and initramfs -> kernel boots.
+> > > > > 
+> > > > > The process to reproduce this mismatch:
+> > > > >    - On powerpc, boot kernel with fadump=on and edit /etc/kdump.conf.
+> > > > >    - Replacing "path /var/crash" with "path /var/crashnew", then, "kdumpctl
+> > > > >      restart" to rebuild the initramfs. Detail about the rebuilding looks
+> > > > >      like: mkdumprd /boot/initramfs-`uname -r`.img.tmp;
+> > > > >            mv /boot/initramfs-`uname -r`.img.tmp /boot/initramfs-`uname -r`.img
+> > > > >            sync
+> > > > >    - "echo c >/proc/sysrq-trigger".
+> > > > > 
+> > > > > The result:
+> > > > > The dump image will not be saved under /var/crashnew/* as expected, but
+> > > > > still saved under /var/crash.
+> > > > > 
+> > > > > The root cause:
+> > > > > As Eric pointed out that on xfs, 'sync' ensures the consistency by writing
+> > > > > back metadata to xlog, but not necessary to fsblock. This raises issue if
+> > > > > grub can not replay the xlog before accessing the xfs files. Since the
+> > > > > above dir entry of initramfs should be saved as inline data with xfs_inode,
+> > > > > so xfs_fs_sync_fs() does not guarantee it written to fsblock.
+> > > > > 
+> > > > > umount can be used to write metadata fsblock, but the filesystem can not be
+> > > > > umounted if still in use.
+> > > > > 
+> > > > > There are two ways to fix this mismatch, either grub or xfs. It may be
+> > > > > easier to do this in xfs side by introducing an interface to flush metadata
+> > > > > to fsblock explicitly.
+> > > > > 
+> > > > > With this patch, metadata can be written to fsblock by:
+> > > > >    # update AIL
+> > > > >    sync
+> > > > >    # new introduced interface to flush metadata to fsblock
+> > > > >    mount -o remount,metasync mountpoint
+> > > > 
+> > > > I think this ought to be an ioctl or some sort of generic call since the
+> > > > jbd2 filesystems (ext3, ext4, ocfs2) suffer from the same "$BOOTLOADER
+> > > > is too dumb to recover logs but still wants to write to the fs"
+> > > > checkpointing problem.
+> > > Yes, a syscall sounds more reasonable.
+> > > > 
+> > > > (Or maybe we should just put all that stuff in a vfat filesystem, I
+> > > > don't know...)
+> > > I think it is unavoidable to involve in each fs' implementation. What
+> > > about introducing an interface sync_to_fsblock(struct super_block *sb) in
+> > > the struct super_operations, then let each fs manage its own case?
+> > 
+> > Well, we already have a way to achieve what you need: fsfreeze.
+> > Traditionally, that is guaranteed to put fs into a "clean" state very much
+> > equivalent to the fs being unmounted and that seems to be what the
+> > bootloader wants so that it can access the filesystem without worrying
+> > about some recovery details. So do you see any problem with replacing
+> > 'sync' in your example above with 'fsfreeze /boot && fsfreeze -u /boot'?
+> > 
+> > 								Honza
 > 
-> This isn't something new.  To fundamentally fix this you need to
-> implement (in-memory) log recovery in grub.  That is the only really safe
-> long-term solutioin.  But the equivalent of your patch you can already
-Agree. For the consistency of the whole fs, we need grub to be aware of
-log. While this patch just assumes that files accessed by grub are
-known, and the consistency is forced only on these files.
-> get by freezing and unfreezing the file system using the FIFREEZE and
-> FITHAW ioctls.  And if my memory is serving me correctly Dave has been
-freeze will block any further modification to the fs. That is different
-from my patch, which does not have such limitation.
-> preaching that to the bootloader folks for a long time, but apparently
-> without visible results.
-Yes, it is a pity. And maybe it is uneasy to do.
+> The problem with fsfreeze is that if the device you want to quiesce is, say,
+> the root fs, freeze isn't really a good option.
+Yes, that is the difference between my patch and fsfreeze.  But
+honestly, it is a rare case where a system has not a /boot partition. Due
+to the activity on /boot is very low, fsfreeze may meet the need, or
+repeatly retry fsfress until success.
+> 
+> But the other thing I want to highlight about this approach is that it does not
+> solve the root problem: something is trying to read the block device without
+> first replaying the log.
+> 
+> A call such as the proposal here is only going to leave consistent metadata at
+> the time the call returns; at any time after that, all guarantees are off again,
+My patch places assumption that grub only accesses limited files and ensures the
+consistency only on those files (kernel,initramfs).
+> so the problem hasn't been solved.
+Agree. The perfect solution should be a log aware bootloader.
 
 Thanks and regards,
 	Pingfan
