@@ -2,120 +2,401 @@ Return-Path: <SRS0=TKSY=YI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46067C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:07:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 532CCECE588
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:07:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 27D112084B
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:07:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1FC932084B
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:07:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730068AbfJORHN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 13:07:13 -0400
-Received: from sandeen.net ([63.231.237.45]:34046 "EHLO sandeen.net"
+        id S1726846AbfJORHW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 13:07:22 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:43958 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726289AbfJORHM (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Oct 2019 13:07:12 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1726599AbfJORHW (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Oct 2019 13:07:22 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id AA2B133FD;
-        Tue, 15 Oct 2019 12:06:34 -0500 (CDT)
-Subject: Re: [PATCH 01/11] xfs_scrub: fix handling of read-verify pool runtime
- errors
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        by mx1.redhat.com (Postfix) with ESMTPS id 276A8693F3;
+        Tue, 15 Oct 2019 17:07:22 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B04AB5D6A9;
+        Tue, 15 Oct 2019 17:07:21 +0000 (UTC)
+Date:   Tue, 15 Oct 2019 13:07:19 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-References: <156944728875.298887.8311229116097714980.stgit@magnolia>
- <156944729476.298887.15638727982082805193.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <186d9d11-f02e-8c0f-ed85-b73a32ba9670@sandeen.net>
-Date:   Tue, 15 Oct 2019 12:07:11 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.1.2
+Subject: Re: [PATCH 4/8] xfs: call xlog_state_release_iclog with l_icloglock
+ held
+Message-ID: <20191015170719.GF36108@bfoster>
+References: <20191009142748.18005-1-hch@lst.de>
+ <20191009142748.18005-5-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <156944729476.298887.15638727982082805193.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191009142748.18005-5-hch@lst.de>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.25]); Tue, 15 Oct 2019 17:07:22 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/25/19 4:34 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Wed, Oct 09, 2019 at 04:27:44PM +0200, Christoph Hellwig wrote:
+> All but one caller of xlog_state_release_iclog hold l_icloglock and need
+> to drop and reacquire it to call xlog_state_release_iclog.  Switch the
+> xlog_state_release_iclog calling conventions to expect the lock to be
+> held, and open code the logic (using a shared helper) in the only
+> remaining caller that does not have the lock (and where not holding it
+> is a nice performance optimization).  Also move the refactored code to
+> require the least amount of forward declarations.
 > 
-> Fix some bogosity with how we handle runtime errors in the read verify
-> pool functions.  First of all, memory allocation failures shouldn't be
-> recorded as disk IO errors, they should just complain and abort the
-> phase.  Second, we need to collect any other runtime errors in the IO
-> thread and abort the phase instead of silently ignoring them.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  scrub/read_verify.c |   23 +++++++++++++++++++----
->  1 file changed, 19 insertions(+), 4 deletions(-)
+
+Modulo the whitespace thing:
+
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+
+>  fs/xfs/xfs_log.c | 188 +++++++++++++++++++++++------------------------
+>  1 file changed, 90 insertions(+), 98 deletions(-)
 > 
+> diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
+> index 860a555772fe..67a767d90ebf 100644
+> --- a/fs/xfs/xfs_log.c
+> +++ b/fs/xfs/xfs_log.c
+> @@ -57,10 +57,6 @@ xlog_state_get_iclog_space(
+>  	struct xlog_ticket	*ticket,
+>  	int			*continued_write,
+>  	int			*logoffsetp);
+> -STATIC int
+> -xlog_state_release_iclog(
+> -	struct xlog		*log,
+> -	struct xlog_in_core	*iclog);
+>  STATIC void
+>  xlog_state_switch_iclogs(
+>  	struct xlog		*log,
+> @@ -83,7 +79,10 @@ STATIC void
+>  xlog_ungrant_log_space(
+>  	struct xlog		*log,
+>  	struct xlog_ticket	*ticket);
+> -
+> +STATIC void
+> +xlog_sync(
+> +	struct xlog		*log,
+> +	struct xlog_in_core	*iclog);
+>  #if defined(DEBUG)
+>  STATIC void
+>  xlog_verify_dest_ptr(
+> @@ -552,16 +551,71 @@ xfs_log_done(
+>  	return lsn;
+>  }
+>  
+> +static bool
+> +__xlog_state_release_iclog(
+> +	struct xlog		*log,
+> +	struct xlog_in_core	*iclog)
+> +{
+> +	lockdep_assert_held(&log->l_icloglock);
+> +
+> +	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
+> +		/* update tail before writing to iclog */
+> +		xfs_lsn_t tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+> +
+> +		iclog->ic_state = XLOG_STATE_SYNCING;
+> +		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+> +		xlog_verify_tail_lsn(log, iclog, tail_lsn);
+> +		/* cycle incremented when incrementing curr_block */
+> +		return true;
+> +	}
+> +
+> +	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE);
+> +	return false;
+> +}
+> +
+> +/*
+> + * Flush iclog to disk if this is the last reference to the given iclog and the
+> + * it is in the WANT_SYNC state.
+> + */
+> +static int
+> +xlog_state_release_iclog(
+> +	struct xlog		*log,
+> +	struct xlog_in_core	*iclog)
+> +{
+> +	lockdep_assert_held(&log->l_icloglock);
+> +
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> +		return -EIO;
+> +
+> +	if (atomic_dec_and_test(&iclog->ic_refcnt) &&
+> +	    __xlog_state_release_iclog(log, iclog)) {
+> +		spin_unlock(&log->l_icloglock);
+> +		xlog_sync(log, iclog);
+> +		spin_lock(&log->l_icloglock);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  int
+>  xfs_log_release_iclog(
+> -	struct xfs_mount	*mp,
+> +	struct xfs_mount        *mp,
+>  	struct xlog_in_core	*iclog)
+>  {
+> -	if (xlog_state_release_iclog(mp->m_log, iclog)) {
+> +	struct xlog		*log = mp->m_log;
+> +	bool			sync;
+> +
+> +	if (iclog->ic_state & XLOG_STATE_IOERROR) {
+>  		xfs_force_shutdown(mp, SHUTDOWN_LOG_IO_ERROR);
+>  		return -EIO;
+>  	}
+>  
+> +	if (atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock)) {
+> +		sync = __xlog_state_release_iclog(log, iclog);
+> +		spin_unlock(&log->l_icloglock);
+> +		if (sync)
+> +			xlog_sync(log, iclog);
+> +	}
+>  	return 0;
+>  }
+>  
+> @@ -866,10 +920,7 @@ xfs_log_write_unmount_record(
+>  	iclog = log->l_iclog;
+>  	atomic_inc(&iclog->ic_refcnt);
+>  	xlog_state_want_sync(log, iclog);
+> -	spin_unlock(&log->l_icloglock);
+>  	error = xlog_state_release_iclog(log, iclog);
+> -
+> -	spin_lock(&log->l_icloglock);
+>  	switch (iclog->ic_state) {
+>  	default:
+>  		if (!XLOG_FORCED_SHUTDOWN(log)) {
+> @@ -950,13 +1001,9 @@ xfs_log_unmount_write(xfs_mount_t *mp)
+>  		spin_lock(&log->l_icloglock);
+>  		iclog = log->l_iclog;
+>  		atomic_inc(&iclog->ic_refcnt);
+> -
+>  		xlog_state_want_sync(log, iclog);
+> -		spin_unlock(&log->l_icloglock);
+>  		error =  xlog_state_release_iclog(log, iclog);
+>  
+> -		spin_lock(&log->l_icloglock);
+> -
+>  		if ( ! (   iclog->ic_state == XLOG_STATE_ACTIVE
+>  			|| iclog->ic_state == XLOG_STATE_DIRTY
+>  			|| iclog->ic_state == XLOG_STATE_IOERROR) ) {
+> @@ -2255,6 +2302,8 @@ xlog_write_copy_finish(
+>  	int			log_offset,
+>  	struct xlog_in_core	**commit_iclog)
+>  {
+> +	int			error;
+> +
+>  	if (*partial_copy) {
+>  		/*
+>  		 * This iclog has already been marked WANT_SYNC by
+> @@ -2262,10 +2311,9 @@ xlog_write_copy_finish(
+>  		 */
+>  		spin_lock(&log->l_icloglock);
+>  		xlog_state_finish_copy(log, iclog, *record_cnt, *data_cnt);
+> -		spin_unlock(&log->l_icloglock);
+>  		*record_cnt = 0;
+>  		*data_cnt = 0;
+> -		return xlog_state_release_iclog(log, iclog);
+> +		goto release_iclog;
+>  	}
+>  
+>  	*partial_copy = 0;
+> @@ -2279,15 +2327,19 @@ xlog_write_copy_finish(
+>  		*data_cnt = 0;
+>  
+>  		xlog_state_want_sync(log, iclog);
+> -		spin_unlock(&log->l_icloglock);
+> -
+>  		if (!commit_iclog)
+> -			return xlog_state_release_iclog(log, iclog);
+> +			goto release_iclog;
+> +		spin_unlock(&log->l_icloglock);
+>  		ASSERT(flags & XLOG_COMMIT_TRANS);
+>  		*commit_iclog = iclog;
+>  	}
+>  
+>  	return 0;
+> +
+> +release_iclog:
+> +	error = xlog_state_release_iclog(log, iclog);
+> +	spin_unlock(&log->l_icloglock);
+> +	return error;
+>  }
+>  
+>  /*
+> @@ -2349,7 +2401,7 @@ xlog_write(
+>  	int			contwr = 0;
+>  	int			record_cnt = 0;
+>  	int			data_cnt = 0;
+> -	int			error;
+> +	int			error = 0;
+>  
+>  	*start_lsn = 0;
+>  
+> @@ -2502,13 +2554,15 @@ xlog_write(
+>  
+>  	spin_lock(&log->l_icloglock);
+>  	xlog_state_finish_copy(log, iclog, record_cnt, data_cnt);
+> +	if (commit_iclog) {
+> +		ASSERT(flags & XLOG_COMMIT_TRANS);
+> +		*commit_iclog = iclog;
+> +	} else {
+> +		error = xlog_state_release_iclog(log, iclog);
+> +	}
+>  	spin_unlock(&log->l_icloglock);
+> -	if (!commit_iclog)
+> -		return xlog_state_release_iclog(log, iclog);
+>  
+> -	ASSERT(flags & XLOG_COMMIT_TRANS);
+> -	*commit_iclog = iclog;
+> -	return 0;
+> +	return error;
+>  }
+>  
+>  
+> @@ -2979,7 +3033,6 @@ xlog_state_get_iclog_space(
+>  	int		  log_offset;
+>  	xlog_rec_header_t *head;
+>  	xlog_in_core_t	  *iclog;
+> -	int		  error;
+>  
+>  restart:
+>  	spin_lock(&log->l_icloglock);
+> @@ -3028,24 +3081,22 @@ xlog_state_get_iclog_space(
+>  	 * can fit into remaining data section.
+>  	 */
+>  	if (iclog->ic_size - iclog->ic_offset < 2*sizeof(xlog_op_header_t)) {
+> +		int		error = 0;
+> +
+>  		xlog_state_switch_iclogs(log, iclog, iclog->ic_size);
+>  
+>  		/*
+> -		 * If I'm the only one writing to this iclog, sync it to disk.
+> -		 * We need to do an atomic compare and decrement here to avoid
+> -		 * racing with concurrent atomic_dec_and_lock() calls in
+> +		 * If we are the only one writing to this iclog, sync it to
+> +		 * disk.  We need to do an atomic compare and decrement here to
+> +		 * avoid racing with concurrent atomic_dec_and_lock() calls in
+>  		 * xlog_state_release_iclog() when there is more than one
+>  		 * reference to the iclog.
+>  		 */
+> -		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1)) {
+> -			/* we are the only one */
+> -			spin_unlock(&log->l_icloglock);
+> +		if (!atomic_add_unless(&iclog->ic_refcnt, -1, 1))
+>  			error = xlog_state_release_iclog(log, iclog);
+> -			if (error)
+> -				return error;
+> -		} else {
+> -			spin_unlock(&log->l_icloglock);
+> -		}
+> +		spin_unlock(&log->l_icloglock);
+> +		if (error)
+> +			return error;
+>  		goto restart;
+>  	}
+>  
+> @@ -3156,60 +3207,6 @@ xlog_ungrant_log_space(
+>  	xfs_log_space_wake(log->l_mp);
+>  }
+>  
+> -/*
+> - * Flush iclog to disk if this is the last reference to the given iclog and
+> - * the WANT_SYNC bit is set.
+> - *
+> - * When this function is entered, the iclog is not necessarily in the
+> - * WANT_SYNC state.  It may be sitting around waiting to get filled.
+> - *
+> - *
+> - */
+> -STATIC int
+> -xlog_state_release_iclog(
+> -	struct xlog		*log,
+> -	struct xlog_in_core	*iclog)
+> -{
+> -	int		sync = 0;	/* do we sync? */
+> -
+> -	if (iclog->ic_state & XLOG_STATE_IOERROR)
+> -		return -EIO;
+> -
+> -	ASSERT(atomic_read(&iclog->ic_refcnt) > 0);
+> -	if (!atomic_dec_and_lock(&iclog->ic_refcnt, &log->l_icloglock))
+> -		return 0;
+> -
+> -	if (iclog->ic_state & XLOG_STATE_IOERROR) {
+> -		spin_unlock(&log->l_icloglock);
+> -		return -EIO;
+> -	}
+> -	ASSERT(iclog->ic_state == XLOG_STATE_ACTIVE ||
+> -	       iclog->ic_state == XLOG_STATE_WANT_SYNC);
+> -
+> -	if (iclog->ic_state == XLOG_STATE_WANT_SYNC) {
+> -		/* update tail before writing to iclog */
+> -		xfs_lsn_t tail_lsn = xlog_assign_tail_lsn(log->l_mp);
+> -		sync++;
+> -		iclog->ic_state = XLOG_STATE_SYNCING;
+> -		iclog->ic_header.h_tail_lsn = cpu_to_be64(tail_lsn);
+> -		xlog_verify_tail_lsn(log, iclog, tail_lsn);
+> -		/* cycle incremented when incrementing curr_block */
+> -	}
+> -	spin_unlock(&log->l_icloglock);
+> -
+> -	/*
+> -	 * We let the log lock go, so it's possible that we hit a log I/O
+> -	 * error or some other SHUTDOWN condition that marks the iclog
+> -	 * as XLOG_STATE_IOERROR before the bwrite. However, we know that
+> -	 * this iclog has consistent data, so we ignore IOERROR
+> -	 * flags after this point.
+> -	 */
+> -	if (sync)
+> -		xlog_sync(log, iclog);
+> -	return 0;
+> -}	/* xlog_state_release_iclog */
+> -
+> -
+>  /*
+>   * This routine will mark the current iclog in the ring as WANT_SYNC
+>   * and move the current iclog pointer to the next iclog in the ring.
+> @@ -3333,12 +3330,9 @@ xfs_log_force(
+>  			atomic_inc(&iclog->ic_refcnt);
+>  			lsn = be64_to_cpu(iclog->ic_header.h_lsn);
+>  			xlog_state_switch_iclogs(log, iclog, 0);
+> -			spin_unlock(&log->l_icloglock);
+> -
+>  			if (xlog_state_release_iclog(log, iclog))
+> -				return -EIO;
+> +				goto out_error;	
+>  
+> -			spin_lock(&log->l_icloglock);
+>  			if (be64_to_cpu(iclog->ic_header.h_lsn) != lsn ||
+>  			    iclog->ic_state == XLOG_STATE_DIRTY)
+>  				goto out_unlock;
+> @@ -3433,12 +3427,10 @@ __xfs_log_force_lsn(
+>  		}
+>  		atomic_inc(&iclog->ic_refcnt);
+>  		xlog_state_switch_iclogs(log, iclog, 0);
+> -		spin_unlock(&log->l_icloglock);
+>  		if (xlog_state_release_iclog(log, iclog))
+> -			return -EIO;
+> +			goto out_error;
+>  		if (log_flushed)
+>  			*log_flushed = 1;
+> -		spin_lock(&log->l_icloglock);
+>  	}
+>  
+>  	if (!(flags & XFS_LOG_SYNC) ||
+> -- 
+> 2.20.1
 > 
-> diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-> index b890c92f..00627307 100644
-> --- a/scrub/read_verify.c
-> +++ b/scrub/read_verify.c
-> @@ -53,6 +53,7 @@ struct read_verify_pool {
->  	struct disk		*disk;		/* which disk? */
->  	read_verify_ioerr_fn_t	ioerr_fn;	/* io error callback */
->  	size_t			miniosz;	/* minimum io size, bytes */
-> +	int			errors_seen;
->  };
-
-I'd like to see a comment that says /* runtime/operational errors */
-to differentiate between verification errors.
-
-Or maybe even rename it to runtime_errors or something.
-
-I'm also confused; it's an int, but this patch assigns it with true/false,
-the next patch assigns errnos i.e. ECANCELED, .... what's it supposed to be?
