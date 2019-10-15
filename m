@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BD54AC10F14
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:22:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1EEECE588
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:23:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7F0C4217D6
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:22:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2D7F920650
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 17:23:41 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aRl0CGP5"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="J0rnXwzo"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726125AbfJORWg (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 13:22:36 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:38712 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731903AbfJORWf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 13:22:35 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FHInrI073903;
-        Tue, 15 Oct 2019 17:22:33 GMT
+        id S2388425AbfJORXk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 13:23:40 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:44812 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727387AbfJORXk (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 13:23:40 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FHInus059692;
+        Tue, 15 Oct 2019 17:23:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=sjhApLfoXKQ1yUiLwr3AZSNZRBo3chmFpnkVvtF74fY=;
- b=aRl0CGP5akRo3UmSs84F0Q6NHVNQ6hMxYYOTgA1Z15PcQ56yAflRaxBcPox9+BU9/nyH
- 9HIAXsi7krKMHZ3a87yLVCWXT5L/YzbgCC96ozUIxzFE3R2muBTOvDIYeXDT+lsR5XPT
- URUdchkHUIMfh34Ag+IAVoH9bp6uPY97P+XWCNFjUFLrxVA7dc5nAoo0r4ucAPAybQKn
- OEbLzY4+Opv9g/UYMIoC+JRbSdyd7byrZZowR6ckxgXtLyllWN8jqEw3B0MjH/5FC6nx
- RTlbUcVAuovPG2kprxSuXG5azqWnmg3KXyf9FZUe9AEkF0yC5j59JaUNlJOcI/CIIHz2 iA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2vk68uhmsk-1
+ bh=zdUJIw2yrRA17eHu1vY34DvjBL6df6zATXz0rzYu1Hk=;
+ b=J0rnXwzoQ6EIhfBRcrOTQcPht/oWjL4a2ecuUUvZNOfB3Giiewmm2hfJ7yS6MlaAyBVL
+ bFMa38sj4Kf/V/XbQiYxYXtyiNbDSBQRaRRx66eWYw8TYfs5dFQU3+/NwS7+udLfxvRs
+ 1nnltt/CE9JpLtUE9tf9ON6GgAbp9GzEyMvDjn3t2ywrBiD5U66eOiHXvyJgKbgg4Mhi
+ aw+vk1mp2bzjL9a32zcPeLdNxlBjTbspXZvUKE1DU1iBK3tmiWm1IY1HiNSuPSx92eVH
+ pACyQdPA2yBfeSVkdgHnzrt9KosOrQdvp+p2Toy1W3nEbjyAsdT0U3jn/uhjdNDBOX5M Zw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vk7fr9f07-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Oct 2019 17:22:33 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FHILVq172038;
-        Tue, 15 Oct 2019 17:22:32 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2vnb0fhvw5-1
+        Tue, 15 Oct 2019 17:23:38 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9FHJBN1030467;
+        Tue, 15 Oct 2019 17:23:37 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vn718q36n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 15 Oct 2019 17:22:32 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9FHMUvc020112;
-        Tue, 15 Oct 2019 17:22:30 GMT
+        Tue, 15 Oct 2019 17:23:37 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9FHNarj013627;
+        Tue, 15 Oct 2019 17:23:36 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 15 Oct 2019 17:22:30 +0000
-Date:   Tue, 15 Oct 2019 10:22:29 -0700
+        with ESMTP ; Tue, 15 Oct 2019 17:23:36 +0000
+Date:   Tue, 15 Oct 2019 10:23:33 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH v2 03/11] xfs_scrub: fix read-verify pool error communication
- problems
-Message-ID: <20191015172229.GK13108@magnolia>
+Subject: [PATCH v2 10/11] xfs_scrub: fix read verify disk error handling
+ strategy
+Message-ID: <20191015172333.GL13108@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
@@ -78,395 +78,135 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Fix all the places in the read-verify pool functions either we fail to
-check for runtime errors or fail to communicate them properly to
-callers.  Then fix all the callers to report the error messages instead
-of hiding them.
+The error handling strategy for media errors is totally bogus.  First of
+all, short reads are entirely unhandled -- when we encounter a short
+read, we know the disk was able to feed us the beginning of what we
+asked for, so we need to single-step through the remainder to try to
+capture the exact error that we hit.
+
+Second, an actual IO error causes the entire region to be marked bad
+even though it could be just a few MB of a multi-gigabyte extent that's
+bad.  Therefore, single-step each block in the IO request until we stop
+getting IO errors to find out if all the blocks are bad or if it's just
+that extent.
+
+Third, fix the fact that the loop updates its own counter variables with
+the length fed to read(), which doesn't necessarily have anything to do
+with the amount of data that the read actually produced.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
 v2: fix errors_seen bogosity
 ---
- scrub/phase6.c      |   89 ++++++++++++++++++++++++++++++++++++---------------
- scrub/read_verify.c |   79 ++++++++++++++++++++-------------------------
- scrub/read_verify.h |   16 +++++----
- 3 files changed, 105 insertions(+), 79 deletions(-)
+ scrub/read_verify.c |   86 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 74 insertions(+), 12 deletions(-)
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 4c81ee7b..f6274a49 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -387,6 +387,7 @@ xfs_check_rmap(
- {
- 	struct media_verify_state	*vs = arg;
- 	struct read_verify_pool		*rvp;
-+	int				ret;
- 
- 	rvp = xfs_dev_to_pool(ctx, vs, map->fmr_device);
- 
-@@ -415,28 +416,48 @@ xfs_check_rmap(
- 	/* XXX: Filter out directory data blocks. */
- 
- 	/* Schedule the read verify command for (eventual) running. */
--	read_verify_schedule_io(rvp, map->fmr_physical, map->fmr_length, vs);
-+	ret = read_verify_schedule_io(rvp, map->fmr_physical, map->fmr_length,
-+			vs);
-+	if (ret) {
-+		str_liberror(ctx, ret, descr);
-+		return false;
-+	}
- 
- out:
- 	/* Is this the last extent?  Fire off the read. */
--	if (map->fmr_flags & FMR_OF_LAST)
--		read_verify_force_io(rvp);
-+	if (map->fmr_flags & FMR_OF_LAST) {
-+		ret = read_verify_force_io(rvp);
-+		if (ret) {
-+			str_liberror(ctx, ret, descr);
-+			return false;
-+		}
-+	}
- 
- 	return true;
- }
- 
- /* Wait for read/verify actions to finish, then return # bytes checked. */
--static uint64_t
-+static int
- clean_pool(
--	struct read_verify_pool	*rvp)
-+	struct read_verify_pool	*rvp,
-+	unsigned long long	*bytes_checked)
- {
--	uint64_t		ret;
-+	uint64_t		pool_checked;
-+	int			ret;
- 
- 	if (!rvp)
- 		return 0;
- 
--	read_verify_pool_flush(rvp);
--	ret = read_verify_bytes(rvp);
-+	ret = read_verify_pool_flush(rvp);
-+	if (ret)
-+		goto out_destroy;
-+
-+	ret = read_verify_bytes(rvp, &pool_checked);
-+	if (ret)
-+		goto out_destroy;
-+
-+	*bytes_checked += pool_checked;
-+out_destroy:
- 	read_verify_pool_destroy(rvp);
- 	return ret;
- }
-@@ -469,43 +490,57 @@ xfs_scan_blocks(
- 		goto out_dbad;
- 	}
- 
--	vs.rvp_data = read_verify_pool_init(ctx, ctx->datadev,
-+	ret = read_verify_pool_alloc(ctx, ctx->datadev,
- 			ctx->mnt.fsgeom.blocksize, xfs_check_rmap_ioerr,
--			scrub_nproc(ctx));
--	if (!vs.rvp_data) {
--		str_info(ctx, ctx->mntpoint,
--_("Could not create data device media verifier."));
-+			scrub_nproc(ctx), &vs.rvp_data);
-+	if (ret) {
-+		str_liberror(ctx, ret, _("creating datadev media verifier"));
- 		goto out_rbad;
- 	}
- 	if (ctx->logdev) {
--		vs.rvp_log = read_verify_pool_init(ctx, ctx->logdev,
-+		ret = read_verify_pool_alloc(ctx, ctx->logdev,
- 				ctx->mnt.fsgeom.blocksize, xfs_check_rmap_ioerr,
--				scrub_nproc(ctx));
--		if (!vs.rvp_log) {
--			str_info(ctx, ctx->mntpoint,
--	_("Could not create log device media verifier."));
-+				scrub_nproc(ctx), &vs.rvp_log);
-+		if (ret) {
-+			str_liberror(ctx, ret,
-+					_("creating logdev media verifier"));
- 			goto out_datapool;
- 		}
- 	}
- 	if (ctx->rtdev) {
--		vs.rvp_realtime = read_verify_pool_init(ctx, ctx->rtdev,
-+		ret = read_verify_pool_alloc(ctx, ctx->rtdev,
- 				ctx->mnt.fsgeom.blocksize, xfs_check_rmap_ioerr,
--				scrub_nproc(ctx));
--		if (!vs.rvp_realtime) {
--			str_info(ctx, ctx->mntpoint,
--	_("Could not create realtime device media verifier."));
-+				scrub_nproc(ctx), &vs.rvp_realtime);
-+		if (ret) {
-+			str_liberror(ctx, ret,
-+					_("creating rtdev media verifier"));
- 			goto out_logpool;
- 		}
- 	}
- 	moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &vs);
- 	if (!moveon)
- 		goto out_rtpool;
--	ctx->bytes_checked += clean_pool(vs.rvp_data);
--	ctx->bytes_checked += clean_pool(vs.rvp_log);
--	ctx->bytes_checked += clean_pool(vs.rvp_realtime);
-+
-+	ret = clean_pool(vs.rvp_data, &ctx->bytes_checked);
-+	if (ret) {
-+		str_liberror(ctx, ret, _("flushing datadev verify pool"));
-+		moveon = false;
-+	}
-+
-+	ret = clean_pool(vs.rvp_log, &ctx->bytes_checked);
-+	if (ret) {
-+		str_liberror(ctx, ret, _("flushing logdev verify pool"));
-+		moveon = false;
-+	}
-+
-+	ret = clean_pool(vs.rvp_realtime, &ctx->bytes_checked);
-+	if (ret) {
-+		str_liberror(ctx, ret, _("flushing rtdev verify pool"));
-+		moveon = false;
-+	}
- 
- 	/* Scan the whole dir tree to see what matches the bad extents. */
--	if (!bitmap_empty(vs.d_bad) || !bitmap_empty(vs.r_bad))
-+	if (moveon && (!bitmap_empty(vs.d_bad) || !bitmap_empty(vs.r_bad)))
- 		moveon = xfs_report_verify_errors(ctx, &vs);
- 
- 	bitmap_free(&vs.r_bad);
 diff --git a/scrub/read_verify.c b/scrub/read_verify.c
-index 835b9660..c19b2289 100644
+index 231df802..8aec25de 100644
 --- a/scrub/read_verify.c
 +++ b/scrub/read_verify.c
-@@ -70,36 +70,36 @@ struct read_verify_pool {
-  * @submitter_threads is the number of threads that may be sending verify
-  * requests at any given time.
-  */
--struct read_verify_pool *
--read_verify_pool_init(
-+int
-+read_verify_pool_alloc(
- 	struct scrub_ctx		*ctx,
- 	struct disk			*disk,
- 	size_t				miniosz,
- 	read_verify_ioerr_fn_t		ioerr_fn,
--	unsigned int			submitter_threads)
-+	unsigned int			submitter_threads,
-+	struct read_verify_pool		**prvp)
- {
+@@ -173,30 +173,92 @@ read_verify(
+ 	struct read_verify		*rv = arg;
  	struct read_verify_pool		*rvp;
--	bool				ret;
--	int				error;
-+	int				ret;
- 
- 	rvp = calloc(1, sizeof(struct read_verify_pool));
- 	if (!rvp)
--		return NULL;
-+		return errno;
- 
--	error = posix_memalign((void **)&rvp->readbuf, page_size,
-+	ret = posix_memalign((void **)&rvp->readbuf, page_size,
- 			RVP_IO_MAX_SIZE);
--	if (error || !rvp->readbuf)
-+	if (ret)
- 		goto out_free;
--	error = ptcounter_alloc(nproc, &rvp->verified_bytes);
--	if (error)
-+	ret = ptcounter_alloc(nproc, &rvp->verified_bytes);
-+	if (ret)
- 		goto out_buf;
- 	rvp->miniosz = miniosz;
- 	rvp->ctx = ctx;
- 	rvp->disk = disk;
- 	rvp->ioerr_fn = ioerr_fn;
--	error = ptvar_alloc(submitter_threads, sizeof(struct read_verify),
-+	ret = ptvar_alloc(submitter_threads, sizeof(struct read_verify),
- 			&rvp->rvstate);
--	if (error)
-+	if (ret)
- 		goto out_counter;
- 	/* Run in the main thread if we only want one thread. */
- 	if (nproc == 1)
-@@ -108,7 +108,8 @@ read_verify_pool_init(
- 			disk_heads(disk));
- 	if (ret)
- 		goto out_rvstate;
--	return rvp;
-+	*prvp = rvp;
-+	return 0;
- 
- out_rvstate:
- 	ptvar_free(rvp->rvstate);
-@@ -118,7 +119,7 @@ read_verify_pool_init(
- 	free(rvp->readbuf);
- out_free:
- 	free(rvp);
--	return NULL;
-+	return ret;
- }
- 
- /* Abort all verification work. */
-@@ -132,11 +133,11 @@ read_verify_pool_abort(
- }
- 
- /* Finish up any read verification work. */
--void
-+int
- read_verify_pool_flush(
- 	struct read_verify_pool		*rvp)
- {
--	workqueue_terminate(&rvp->wq);
-+	return workqueue_terminate(&rvp->wq);
- }
- 
- /* Finish up any read verification work and tear it down. */
-@@ -191,15 +192,12 @@ read_verify(
- 
- 	free(rv);
- 	ret = ptcounter_add(rvp->verified_bytes, verified);
--	if (ret) {
--		str_liberror(rvp->ctx, ret,
--				_("updating bytes verified counter"));
-+	if (ret)
- 		rvp->runtime_error = ret;
--	}
- }
- 
- /* Queue a read verify request. */
--static bool
-+static int
- read_verify_queue(
- 	struct read_verify_pool		*rvp,
- 	struct read_verify		*rv)
-@@ -212,34 +210,33 @@ read_verify_queue(
- 
- 	/* Worker thread saw a runtime error, don't queue more. */
- 	if (rvp->runtime_error)
--		return false;
-+		return rvp->runtime_error;
- 
- 	/* Otherwise clone the request and queue the copy. */
- 	tmp = malloc(sizeof(struct read_verify));
- 	if (!tmp) {
- 		rvp->runtime_error = errno;
--		str_errno(rvp->ctx, _("allocating read-verify request"));
--		return false;
-+		return errno;
- 	}
- 
- 	memcpy(tmp, rv, sizeof(*tmp));
- 
- 	ret = workqueue_add(&rvp->wq, read_verify, 0, tmp);
- 	if (ret) {
--		str_liberror(rvp->ctx, ret, _("queueing read-verify work"));
- 		free(tmp);
- 		rvp->runtime_error = ret;
--		return false;
-+		return ret;
- 	}
-+
- 	rv->io_length = 0;
--	return true;
-+	return 0;
- }
- 
- /*
-  * Issue an IO request.  We'll batch subsequent requests if they're
-  * within 64k of each other
-  */
--bool
-+int
- read_verify_schedule_io(
- 	struct read_verify_pool		*rvp,
- 	uint64_t			start,
-@@ -254,7 +251,7 @@ read_verify_schedule_io(
- 	assert(rvp->readbuf);
- 	rv = ptvar_get(rvp->rvstate, &ret);
- 	if (ret)
--		return false;
-+		return ret;
- 	req_end = start + length;
- 	rv_end = rv->io_start + rv->io_length;
- 
-@@ -281,38 +278,32 @@ read_verify_schedule_io(
- 		rv->io_end_arg = end_arg;
- 	}
- 
--	return true;
-+	return 0;
- }
- 
- /* Force any stashed IOs into the verifier. */
--bool
-+int
- read_verify_force_io(
- 	struct read_verify_pool		*rvp)
- {
- 	struct read_verify		*rv;
--	bool				moveon;
+ 	unsigned long long		verified = 0;
++	ssize_t				io_max_size;
+ 	ssize_t				sz;
+ 	ssize_t				len;
++	int				io_error;
  	int				ret;
  
- 	assert(rvp->readbuf);
- 	rv = ptvar_get(rvp->rvstate, &ret);
- 	if (ret)
--		return false;
-+		return ret;
- 	if (rv->io_length == 0)
--		return true;
-+		return 0;
+ 	rvp = (struct read_verify_pool *)wq->wq_ctx;
++	if (rvp->runtime_error)
++		return;
++
++	io_max_size = RVP_IO_MAX_SIZE;
++
+ 	while (rv->io_length > 0) {
+-		len = min(rv->io_length, RVP_IO_MAX_SIZE);
++		io_error = 0;
++		len = min(rv->io_length, io_max_size);
+ 		dbg_printf("diskverify %d %"PRIu64" %zu\n", rvp->disk->d_fd,
+ 				rv->io_start, len);
+ 		sz = disk_read_verify(rvp->disk, rvp->readbuf, rv->io_start,
+ 				len);
+-		if (sz < 0) {
+-			dbg_printf("IOERR %d %"PRIu64" %zu\n",
+-					rvp->disk->d_fd, rv->io_start, len);
+-			/* IO error, so try the next logical block. */
+-			len = rvp->miniosz;
+-			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, len,
+-					errno, rv->io_end_arg);
++		if (sz == len && io_max_size < rvp->miniosz) {
++			/*
++			 * If the verify request was 100% successful and less
++			 * than a single block in length, we were trying to
++			 * read to the end of a block after a short read.  That
++			 * suggests there's something funny with this device,
++			 * so single-step our way through the rest of the @rv
++			 * range.
++			 */
++			io_max_size = rvp->miniosz;
++		} else if (sz < 0) {
++			io_error = errno;
++
++			/* Runtime error, bail out... */
++			if (io_error != EIO && io_error != EILSEQ) {
++				rvp->runtime_error = io_error;
++				return;
++			}
++
++			/*
++			 * A direct read encountered an error while performing
++			 * a multi-block read.  Reduce the transfer size to a
++			 * single block so that we can identify the exact range
++			 * of bad blocks and good blocks.  We single-step all
++			 * the way to the end of the @rv range, (re)starting
++			 * with the block that just failed.
++			 */
++			if (io_max_size > rvp->miniosz) {
++				io_max_size = rvp->miniosz;
++				continue;
++			}
++
++			/*
++			 * A direct read hit an error while we were stepping
++			 * through single blocks.  Mark everything bad from
++			 * io_start to the next miniosz block.
++			 */
++			sz = rvp->miniosz - (rv->io_start % rvp->miniosz);
++			dbg_printf("IOERR %d @ %"PRIu64" %zu err %d\n",
++					rvp->disk->d_fd, rv->io_start, sz,
++					io_error);
++			rvp->ioerr_fn(rvp->ctx, rvp->disk, rv->io_start, sz,
++					io_error, rv->io_end_arg);
++		} else if (sz < len) {
++			/*
++			 * A short direct read suggests that we might have hit
++			 * an IO error midway through the read but still had to
++			 * return the number of bytes that were actually read.
++			 *
++			 * We need to force an EIO, so try reading the rest of
++			 * the block (if it was a partial block read) or the
++			 * next full block.
++			 */
++			io_max_size = rvp->miniosz - (sz % rvp->miniosz);
++			dbg_printf("SHORT %d READ @ %"PRIu64" %zu try for %zd\n",
++					rvp->disk->d_fd, rv->io_start, sz,
++					io_max_size);
++		} else {
++			/* We should never get back more bytes than we asked. */
++			assert(sz == len);
+ 		}
  
--	moveon = read_verify_queue(rvp, rv);
--	if (moveon)
--		rv->io_length = 0;
--	return moveon;
-+	return read_verify_queue(rvp, rv);
- }
+-		progress_add(len);
+-		verified += len;
+-		rv->io_start += len;
+-		rv->io_length -= len;
++		progress_add(sz);
++		if (io_error == 0)
++			verified += sz;
++		rv->io_start += sz;
++		rv->io_length -= sz;
+ 	}
  
- /* How many bytes has this process verified? */
--uint64_t
-+int
- read_verify_bytes(
--	struct read_verify_pool		*rvp)
-+	struct read_verify_pool		*rvp,
-+	uint64_t			*bytes_checked)
- {
--	uint64_t			ret;
--
--	ptcounter_value(rvp->verified_bytes, &ret);
--	return ret;
-+	return ptcounter_value(rvp->verified_bytes, bytes_checked);
- }
-diff --git a/scrub/read_verify.h b/scrub/read_verify.h
-index f0ed8902..650c46d4 100644
---- a/scrub/read_verify.h
-+++ b/scrub/read_verify.h
-@@ -15,17 +15,17 @@ typedef void (*read_verify_ioerr_fn_t)(struct scrub_ctx *ctx,
- 		struct disk *disk, uint64_t start, uint64_t length,
- 		int error, void *arg);
- 
--struct read_verify_pool *read_verify_pool_init(struct scrub_ctx *ctx,
--		struct disk *disk, size_t miniosz,
--		read_verify_ioerr_fn_t ioerr_fn,
--		unsigned int submitter_threads);
-+int read_verify_pool_alloc(struct scrub_ctx *ctx, struct disk *disk,
-+		size_t miniosz, read_verify_ioerr_fn_t ioerr_fn,
-+		unsigned int submitter_threads,
-+		struct read_verify_pool **prvp);
- void read_verify_pool_abort(struct read_verify_pool *rvp);
--void read_verify_pool_flush(struct read_verify_pool *rvp);
-+int read_verify_pool_flush(struct read_verify_pool *rvp);
- void read_verify_pool_destroy(struct read_verify_pool *rvp);
- 
--bool read_verify_schedule_io(struct read_verify_pool *rvp, uint64_t start,
-+int read_verify_schedule_io(struct read_verify_pool *rvp, uint64_t start,
- 		uint64_t length, void *end_arg);
--bool read_verify_force_io(struct read_verify_pool *rvp);
--uint64_t read_verify_bytes(struct read_verify_pool *rvp);
-+int read_verify_force_io(struct read_verify_pool *rvp);
-+int read_verify_bytes(struct read_verify_pool *rvp, uint64_t *bytes);
- 
- #endif /* XFS_SCRUB_READ_VERIFY_H_ */
+ 	free(rv);
