@@ -4,67 +4,66 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5EFC9ECE58F
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 21:21:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8EEEAECE59D
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 21:23:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3D9D320873
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 21:21:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64BFE20872
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 21:23:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727705AbfJOVVO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 17:21:14 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45176 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727523AbfJOVVO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 17:21:14 -0400
+        id S1727047AbfJOVXY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 17:23:24 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:38183 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726527AbfJOVXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 17:23:23 -0400
 Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id BEC3643E48C;
-        Wed, 16 Oct 2019 08:21:11 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 02565362ABE;
+        Wed, 16 Oct 2019 08:23:19 +1100 (AEDT)
 Received: from dave by dread.disaster.area with local (Exim 4.92.2)
         (envelope-from <david@fromorbit.com>)
-        id 1iKUFj-0000bV-AG; Wed, 16 Oct 2019 08:21:11 +1100
-Date:   Wed, 16 Oct 2019 08:21:11 +1100
+        id 1iKUHm-0000bs-TN; Wed, 16 Oct 2019 08:23:18 +1100
+Date:   Wed, 16 Oct 2019 08:23:18 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
         Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/12] xfs: set IOMAP_F_NEW more carefully
-Message-ID: <20191015212111.GV16973@dread.disaster.area>
+        linux-kernel@vger.kernel.org,
+        Carlos Maiolino <cmaiolino@redhat.com>
+Subject: Re: [PATCH 03/12] xfs: use a struct iomap in xfs_writepage_ctx
+Message-ID: <20191015212318.GW16973@dread.disaster.area>
 References: <20191015154345.13052-1-hch@lst.de>
- <20191015154345.13052-3-hch@lst.de>
+ <20191015154345.13052-4-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191015154345.13052-3-hch@lst.de>
+In-Reply-To: <20191015154345.13052-4-hch@lst.de>
 User-Agent: Mutt/1.10.1 (2018-07-13)
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=KHnzD9ULXBYcAXR4xScA:9
+        a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=7-415B0cAAAA:8 a=Yo5lynH-2DwgSaF5JXMA:9
         a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 15, 2019 at 05:43:35PM +0200, Christoph Hellwig wrote:
-> Don't set IOMAP_F_NEW if we COW over and existing allocated range, as
-> these aren't strictly new allocations.  This is required to be able to
-> use IOMAP_F_NEW to zero newly allocated blocks, which is required for
-> the iomap code to fully support file systems that don't do delayed
-> allocations or use unwritten extents.
+On Tue, Oct 15, 2019 at 05:43:36PM +0200, Christoph Hellwig wrote:
+> In preparation for moving the XFS writeback code to fs/iomap.c, switch
+> it to use struct iomap instead of the XFS-specific struct xfs_bmbt_irec.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Carlos Maiolino <cmaiolino@redhat.com>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-looks fine.
+Pretty straight forward.
 
 Reviewed-by: Dave Chinner <dchinner@redhat.com>
-
 -- 
 Dave Chinner
 david@fromorbit.com
