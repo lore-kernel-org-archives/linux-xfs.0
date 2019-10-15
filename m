@@ -6,75 +6,67 @@ X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECEA3C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 13:11:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58377C10F14
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 13:50:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CA70621848
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 13:11:05 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27B5921848
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 13:50:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725710AbfJONLF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 09:11:05 -0400
-Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:33416 "EHLO
-        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729773AbfJONLF (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 09:11:05 -0400
-Received: from callcc.thunk.org (guestnat-104-133-0-98.corp.google.com [104.133.0.98] (may be forged))
-        (authenticated bits=0)
-        (User authenticated as tytso@ATHENA.MIT.EDU)
-        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id x9FDA5N0018119
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 15 Oct 2019 09:10:06 -0400
-Received: by callcc.thunk.org (Postfix, from userid 15806)
-        id CA393420287; Tue, 15 Oct 2019 09:10:04 -0400 (EDT)
-Date:   Tue, 15 Oct 2019 09:10:04 -0400
-From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+        id S1732064AbfJONum (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 09:50:42 -0400
+Received: from szxga07-in.huawei.com ([45.249.212.35]:35766 "EHLO huawei.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728652AbfJONum (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Oct 2019 09:50:42 -0400
+Received: from DGGEMS409-HUB.china.huawei.com (unknown [172.30.72.60])
+        by Forcepoint Email with ESMTP id 69A1C8D7789845CC527B;
+        Tue, 15 Oct 2019 21:50:39 +0800 (CST)
+Received: from [127.0.0.1] (10.133.210.141) by DGGEMS409-HUB.china.huawei.com
+ (10.3.19.209) with Microsoft SMTP Server id 14.3.439.0; Tue, 15 Oct 2019
+ 21:50:31 +0800
+Subject: Re: [PATCH] iomap: fix the logic about poll io in iomap_dio_bio_actor
 To:     Christoph Hellwig <hch@infradead.org>
-Cc:     Eric Sandeen <sandeen@sandeen.net>, Jan Kara <jack@suse.cz>,
-        Pingfan Liu <kernelfans@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Hari Bathini <hbathini@linux.ibm.com>,
-        linuxppc-dev@lists.ozlabs.org, Dave Chinner <dchinner@redhat.com>,
-        Eric Sandeen <esandeen@redhat.com>, Jan Kara <jack@suse.com>,
-        linux-fsdevel@vger.kernel.org, linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: introduce "metasync" api to sync metadata to fsblock
-Message-ID: <20191015131004.GA7456@mit.edu>
-References: <1570977420-3944-1-git-send-email-kernelfans@gmail.com>
- <20191013163417.GQ13108@magnolia>
- <20191014083315.GA10091@mypc>
- <20191014094311.GD5939@quack2.suse.cz>
- <d3ffa114-8b73-90dc-8ba6-3f44f47135d7@sandeen.net>
- <20191014200303.GF5939@quack2.suse.cz>
- <5796090e-6206-1bd7-174e-58798c9af052@sandeen.net>
- <20191015080102.GB3055@infradead.org>
+CC:     <linux-xfs@vger.kernel.org>, <linux-fsdevel@vger.kernel.org>,
+        <yi.zhang@huawei.com>, <houtao1@huawei.com>
+References: <20191014144313.26313-1-yangerkun@huawei.com>
+ <20191015080541.GE3055@infradead.org>
+From:   yangerkun <yangerkun@huawei.com>
+Message-ID: <1ed52fe7-b1b8-0a90-5079-16d9b6593ca4@huawei.com>
+Date:   Tue, 15 Oct 2019 21:50:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191015080102.GB3055@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+In-Reply-To: <20191015080541.GE3055@infradead.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.133.210.141]
+X-CFilter-Loop: Reflected
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 15, 2019 at 01:01:02AM -0700, Christoph Hellwig wrote:
-> On Mon, Oct 14, 2019 at 03:09:48PM -0500, Eric Sandeen wrote:
-> > We're in agreement here.  ;)  I only worry about implementing things like this
-> > which sound like guarantees, but aren't, and end up encouraging bad behavior
-> > or promoting misconceptions.
-> > 
-> > More and more, I think we should reconsider Darrick's "bootfs" (ext2 by another
-> > name, but with extra-sync-iness) proposal...
+
+
+On 2019/10/15 16:05, Christoph Hellwig wrote:
+> On Mon, Oct 14, 2019 at 10:43:13PM +0800, yangerkun wrote:
+>> Just set REQ_HIPRI for the last bio in iomap_dio_bio_actor. Because
+>> multi bio created by this function can goto different cpu since this
+>> process can be preempted by other process. And in iomap_dio_rw we will
+>> just poll for the last bio. Fix it by only set polled for the last bio.
 > 
-> Having a separate simple file system for the boot loader makes a lot of
-> sense.  Note that vfat of EFI is the best choice, but at least it is
-> something.  SysV Unix from the 90s actually had a special file system just
-> for that, and fs/bfs/ in Linux supports that.  So this isn't really a new
-> thing either.
+> I agree that there is a problem with the separate poll queue now.  But
+> doing partially polled I/O also doesn't seem very useful.  Until we
+> can find a way to poll for multiple bios from one kiocb I think we need
+> to limit polling to iocbs with just a single bio.  Can you look into
+> that?  __blkdev_direct_IO do_blockdev_direct_IO probably have the same
+> issues.  The former should be just as simple to fix, and for the latter
+> it might make sense to drop polling support entirely.
+> 
+Thanks for your suggestion, i will try to fix it.
 
-Did you mean to say "vfaat of EFI isn't the best choice"?
+Thanks,
+Kun.
+> 
 
-If we were going to be doing something like "bootfs", what sort of
-semantics would be sufficient?  Is doing an implied fsync() on every
-close(2) enough, or do we need to do something even more conservative?
-
-	 	       	       	     - Ted
