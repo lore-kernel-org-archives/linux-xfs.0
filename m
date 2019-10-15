@@ -6,29 +6,30 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6031ECE58F
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 22:12:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF429ECE58F
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 23:25:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BF3EB20854
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 22:12:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id AF9842067B
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 23:25:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727213AbfJOWMr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 18:12:47 -0400
-Received: from sandeen.net ([63.231.237.45]:53676 "EHLO sandeen.net"
+        id S1728235AbfJOXZN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 19:25:13 -0400
+Received: from sandeen.net ([63.231.237.45]:58354 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726231AbfJOWMr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Oct 2019 18:12:47 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
+        id S1726990AbfJOXZN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 15 Oct 2019 19:25:13 -0400
+Received: from Liberator-6.local (c-174-53-190-166.hsd1.mn.comcast.net [174.53.190.166])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 49D0D7BDB;
-        Tue, 15 Oct 2019 17:12:09 -0500 (CDT)
+        by sandeen.net (Postfix) with ESMTPSA id B13CE7BDB;
+        Tue, 15 Oct 2019 18:24:34 -0500 (CDT)
 Subject: Re: [PATCH 06/11] xfs_scrub: refactor inode prefix rendering code
+From:   Eric Sandeen <sandeen@sandeen.net>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944728875.298887.8311229116097714980.stgit@magnolia>
  <156944733375.298887.14903136321208702854.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
+ <0afea659-939d-d82b-67ea-b2742748921c@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
  nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
@@ -71,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <0afea659-939d-d82b-67ea-b2742748921c@sandeen.net>
-Date:   Tue, 15 Oct 2019 17:12:45 -0500
+Message-ID: <a4cd281d-8d05-debe-1af9-1192770c6cd1@sandeen.net>
+Date:   Tue, 15 Oct 2019 18:25:10 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944733375.298887.14903136321208702854.stgit@magnolia>
+In-Reply-To: <0afea659-939d-d82b-67ea-b2742748921c@sandeen.net>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -85,110 +86,209 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/25/19 4:35 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
-> 
-> Refactor all the places in the code where we try to render an inode
-> number as a prefix for some sort of status message.  This will help make
-> message prefixes more consistent, which should help users to locate
-> broken metadata.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/common.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
->  scrub/common.h |    6 ++++++
->  scrub/inodes.c |    4 ++--
->  scrub/phase3.c |    8 ++------
->  scrub/phase5.c |    8 ++------
->  scrub/phase6.c |    6 +++---
->  scrub/scrub.c  |   17 +++++++++--------
->  7 files changed, 71 insertions(+), 25 deletions(-)
-> 
-> 
-> diff --git a/scrub/common.c b/scrub/common.c
-> index 7db47044..a814f568 100644
-> --- a/scrub/common.c
-> +++ b/scrub/common.c
-> @@ -354,3 +354,50 @@ within_range(
->  
->  	return true;
->  }
-> +
-> +/*
-> + * Render an inode number as both the raw inode number and as an AG number
-> + * and AG inode pair.  This is intended for use with status message reporting.
-> + * If @format is not NULL, it should provide any desired leading whitespace.
-> + *
-> + * For example, "inode 287232352 (13/352) <suffix>: <status message>"
-> + */
+How about this:
 
-This comment is a bit odd, the <suffix>: part seems to indicate something special
-but presumably it's just part of the provided format ... although the function
-is named scrub_render_ino_suffix so... ???
+Refactor all the places in the code where we try to render an inode
+number as a prefix for some sort of status message.  This will help make
+message prefixes more consistent, which should help users to locate
+broken metadata.
 
-Also: can we do away with requiring a leading space in the format?  That seems
-a little bit error prone and funky.
+Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+[sandeen: swizzle stuff]
+Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+---
 
-> +int
-> +scrub_render_ino_suffix(
-> +	const struct scrub_ctx	*ctx,
-> +	char			*buf,
-> +	size_t			buflen,
-> +	uint64_t		ino,
-> +	uint32_t		gen,
-> +	const char		*format,
-> +	...)
-> +{
-> +	va_list			args;
-> +	uint32_t		agno;
-> +	uint32_t		agino;
-> +	int			ret;
-> +
-> +	agno = cvt_ino_to_agno(&ctx->mnt, ino);
-> +	agino = cvt_ino_to_agino(&ctx->mnt, ino);
-> +	ret = snprintf(buf, buflen, _("inode %"PRIu64" (%"PRIu32"/%"PRIu32")"),
-> +			ino, agno, agino);
-> +	if (ret < 0 || ret >= buflen || format == NULL)
-> +		return ret;
-> +
-> +	va_start(args, format);
-> +	ret += vsnprintf(buf + ret, buflen - ret, format, args);
-> +	va_end(args);
-> +	return ret;
-> +}
-> +
-> +/* Render an inode number for message reporting with no suffix. */
-> +int
-> +scrub_render_ino(
-> +	const struct scrub_ctx	*ctx,
-> +	char			*buf,
-> +	size_t			buflen,
-> +	uint64_t		ino,
-> +	uint32_t		gen)
-> +{
-> +	return scrub_render_ino_suffix(ctx, buf, buflen, ino, gen, NULL);
-> +}
+this uses a single function, scrub_render_ino_descr() with a new comment,
+and automatic space-adding for any extra format.
 
-Could we call these scrub_render_ino / scrub_render_ino_message or
-something?  That seems more clear to me.
 
-Actually, why not just do away w/ the wrapper altogether and just call
-it with NULL if you don't want more verbage.  That seems clear enough.
-
-So maybe just:
-
-/*
- * Render an inode number into a buffer in a format suitable for use as a
- * prefix for log messages. The buffer will be filled with:
- *      "inode <inode number> (<ag number>/<ag inode number>)"
- * If the @format argument is non-NULL, it will be rendered into the buffer
- * immediately afterwards.
- */
-int
-scrub_render_ino_descr(...
-
-because that's how it's generally used, right?
-
--Eric
-
+diff --git a/scrub/common.c b/scrub/common.c
+index 7db47044..7f971de8 100644
+--- a/scrub/common.c
++++ b/scrub/common.c
+@@ -354,3 +354,38 @@ within_range(
+ 
+ 	return true;
+ }
++
++/*
++ * Render an inode number into a buffer in a format suitable for use as a
++ * prefix for log messages. The buffer will be filled with:
++ * 	"inode <inode number> (<ag number>/<ag inode number>)"
++ * If the @format argument is non-NULL, it will be rendered into the buffer
++ * after the inode representation and a single space.
++ */
++int
++scrub_render_ino_descr(
++	const struct scrub_ctx	*ctx,
++	char			*buf,
++	size_t			buflen,
++	uint64_t		ino,
++	uint32_t		gen,
++	const char		*format,
++	...)
++{
++	va_list			args;
++	uint32_t		agno;
++	uint32_t		agino;
++	int			ret;
++
++	agno = cvt_ino_to_agno(&ctx->mnt, ino);
++	agino = cvt_ino_to_agino(&ctx->mnt, ino);
++	ret = snprintf(buf, buflen, _("inode %"PRIu64" (%"PRIu32"/%"PRIu32")%s"),
++			ino, agno, agino, format ? " " : "");
++	if (ret < 0 || ret >= buflen || format == NULL)
++		return ret;
++
++	va_start(args, format);
++	ret += vsnprintf(buf + ret, buflen - ret, format, args);
++	va_end(args);
++	return ret;
++}
+diff --git a/scrub/common.h b/scrub/common.h
+index 33555891..9a37e9ed 100644
+--- a/scrub/common.h
++++ b/scrub/common.h
+@@ -86,4 +86,8 @@ bool within_range(struct scrub_ctx *ctx, unsigned long long value,
+ 		unsigned long long desired, unsigned long long abs_threshold,
+ 		unsigned int n, unsigned int d, const char *descr);
+ 
++int scrub_render_ino_descr(const struct scrub_ctx *ctx, char *buf,
++		size_t buflen, uint64_t ino, uint32_t gen,
++		const char *format, ...);
++
+ #endif /* XFS_SCRUB_COMMON_H_ */
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 91632b55..7aa61ebe 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -159,8 +159,8 @@ xfs_iterate_inodes_ag(
+ 					ireq->hdr.ino = inumbers->xi_startino;
+ 					goto igrp_retry;
+ 				}
+-				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
+-						(uint64_t)bs->bs_ino);
++				scrub_render_ino_descr(ctx, idescr, DESCR_BUFSZ,
++						bs->bs_ino, bs->bs_gen, NULL);
+ 				str_info(ctx, idescr,
+ _("Changed too many times during scan; giving up."));
+ 				break;
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 1e908c2c..0d2c9019 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -48,14 +48,10 @@ xfs_scrub_inode_vfs_error(
+ 	struct xfs_bulkstat	*bstat)
+ {
+ 	char			descr[DESCR_BUFSZ];
+-	xfs_agnumber_t		agno;
+-	xfs_agino_t		agino;
+ 	int			old_errno = errno;
+ 
+-	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+-	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
+-	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+-			(uint64_t)bstat->bs_ino, agno, agino);
++	scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ, bstat->bs_ino,
++			bstat->bs_gen, NULL);
+ 	errno = old_errno;
+ 	str_errno(ctx, descr);
+ }
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 99cd51b2..27941907 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -234,15 +234,11 @@ xfs_scrub_connections(
+ 	bool			*pmoveon = arg;
+ 	char			descr[DESCR_BUFSZ];
+ 	bool			moveon = true;
+-	xfs_agnumber_t		agno;
+-	xfs_agino_t		agino;
+ 	int			fd = -1;
+ 	int			error;
+ 
+-	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+-	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
+-	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+-			(uint64_t)bstat->bs_ino, agno, agino);
++	scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ, bstat->bs_ino,
++			bstat->bs_gen, NULL);
+ 	background_sleep();
+ 
+ 	/* Warn about naming problems in xattrs. */
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 8063d6ce..2ce2a19e 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -180,15 +180,15 @@ xfs_report_verify_inode(
+ 	int				fd;
+ 	int				error;
+ 
+-	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (unlinked)"),
+-			(uint64_t)bstat->bs_ino);
+-
+ 	/* Ignore linked files and things we can't open. */
+ 	if (bstat->bs_nlink != 0)
+ 		return 0;
+ 	if (!S_ISREG(bstat->bs_mode) && !S_ISDIR(bstat->bs_mode))
+ 		return 0;
+ 
++	scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ,
++			bstat->bs_ino, bstat->bs_gen, _("(unlinked)"));
++
+ 	/* Try to open the inode. */
+ 	fd = xfs_open_handle(handle);
+ 	if (fd < 0) {
+diff --git a/scrub/scrub.c b/scrub/scrub.c
+index d7a6b49b..0293ce30 100644
+--- a/scrub/scrub.c
++++ b/scrub/scrub.c
+@@ -26,11 +26,13 @@
+ /* Format a scrub description. */
+ static void
+ format_scrub_descr(
++	struct scrub_ctx		*ctx,
+ 	char				*buf,
+ 	size_t				buflen,
+-	struct xfs_scrub_metadata	*meta,
+-	const struct xfrog_scrub_descr	*sc)
++	struct xfs_scrub_metadata	*meta)
+ {
++	const struct xfrog_scrub_descr	*sc = &xfrog_scrubbers[meta->sm_type];
++
+ 	switch (sc->type) {
+ 	case XFROG_SCRUB_TYPE_AGHEADER:
+ 	case XFROG_SCRUB_TYPE_PERAG:
+@@ -38,8 +40,9 @@ format_scrub_descr(
+ 				_(sc->descr));
+ 		break;
+ 	case XFROG_SCRUB_TYPE_INODE:
+-		snprintf(buf, buflen, _("Inode %"PRIu64" %s"),
+-				(uint64_t)meta->sm_ino, _(sc->descr));
++		scrub_render_ino_descr(ctx, buf, buflen,
++				meta->sm_ino, meta->sm_gen, "%s",
++				_(sc->descr));
+ 		break;
+ 	case XFROG_SCRUB_TYPE_FS:
+ 		snprintf(buf, buflen, _("%s"), _(sc->descr));
+@@ -123,8 +126,7 @@ xfs_check_metadata(
+ 
+ 	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
+ 	assert(meta->sm_type < XFS_SCRUB_TYPE_NR);
+-	format_scrub_descr(buf, DESCR_BUFSZ, meta,
+-			&xfrog_scrubbers[meta->sm_type]);
++	format_scrub_descr(ctx, buf, DESCR_BUFSZ, meta);
+ 
+ 	dbg_printf("check %s flags %xh\n", buf, meta->sm_flags);
+ retry:
+@@ -681,8 +683,7 @@ xfs_repair_metadata(
+ 		return CHECK_RETRY;
+ 
+ 	memcpy(&oldm, &meta, sizeof(oldm));
+-	format_scrub_descr(buf, DESCR_BUFSZ, &meta,
+-			&xfrog_scrubbers[meta.sm_type]);
++	format_scrub_descr(ctx, buf, DESCR_BUFSZ, &meta);
+ 
+ 	if (needs_repair(&meta))
+ 		str_info(ctx, buf, _("Attempting repair."));
 
