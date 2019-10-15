@@ -2,71 +2,91 @@ Return-Path: <SRS0=TKSY=YI=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A4074C10F14
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:39:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1863ECE588
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:44:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7EE8420873
-	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:39:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6EAF4205F4
+	for <linux-xfs@archiver.kernel.org>; Tue, 15 Oct 2019 15:44:06 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CdNtKYwS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727984AbfJOPjh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 11:39:37 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:64282 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726231AbfJOPjh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 15 Oct 2019 11:39:37 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 89F4A801682;
-        Tue, 15 Oct 2019 15:39:37 +0000 (UTC)
-Received: from Liberator-6.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 2D86610018F8;
-        Tue, 15 Oct 2019 15:39:37 +0000 (UTC)
-To:     fsdevel <linux-fsdevel@vger.kernel.org>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@infradead.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: iomap: use SECTOR_SIZE instead of 512 in iomap_page definition
-Message-ID: <123556d7-968c-70a6-1049-38b2f279f5a1@redhat.com>
-Date:   Tue, 15 Oct 2019 10:39:36 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.1.2
+        id S1733306AbfJOPoB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 15 Oct 2019 11:44:01 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:47986 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1731230AbfJOPn6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 11:43:58 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=Z2mOV5fCnzJ/ajtJffEAioA43RGvYrL3qCbBjued7wQ=; b=CdNtKYwSXmP7KlUNGRzsNW9j82
+        Vn6sBfLdpMUS6sC/oIgDOCC9n9TxPv1q1B4AchmEVzjGq3d9pz8pCa3euTaYQ1ZvOCv44+Yy2cmRz
+        F4xorByijm4gHqGmShZ5O/BwNiARIEmeBMKSTFr0/Aca4tvn2qPLhqh0JZMH1AcMgbW6wVsNnDM4N
+        arv2+HS4NY7sKICPf7FoW/68/C91s2sjvqVa+B6DOSlZoZRvJTAJepYaAkyl/HFOxRUMv6sg5O392
+        CnaudvhiSxtLY/I5P/JTExcTSRYjpEkqZF6Ohrmdfb+q02cVmZtMRN9HZHG73oEo+mt172wT/Jh+0
+        VnF/b7Jw==;
+Received: from [2001:4bb8:18c:d7b:c70:4a89:bc61:3] (helo=localhost)
+        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iKOzM-0007uc-Rf; Tue, 15 Oct 2019 15:43:57 +0000
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J . Wong" <darrick.wong@oracle.com>
+Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: [PATCH 02/12] xfs: set IOMAP_F_NEW more carefully
+Date:   Tue, 15 Oct 2019 17:43:35 +0200
+Message-Id: <20191015154345.13052-3-hch@lst.de>
+X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191015154345.13052-1-hch@lst.de>
+References: <20191015154345.13052-1-hch@lst.de>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.67]); Tue, 15 Oct 2019 15:39:37 +0000 (UTC)
+Content-Transfer-Encoding: 8bit
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-iomap_page_create() initializes the uptodate bitmap using the SECTOR_SIZE
-macro, so use that in the definition as well, for consistency and safety.
+Don't set IOMAP_F_NEW if we COW over and existing allocated range, as
+these aren't strictly new allocations.  This is required to be able to
+use IOMAP_F_NEW to zero newly allocated blocks, which is required for
+the iomap code to fully support file systems that don't do delayed
+allocations or use unwritten extents.
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
+ fs/xfs/xfs_iomap.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-Last time there was a concern about pulling in blkdev.h just for this,
-but that's already been done now, so try again.
-
-diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-index 7aa5d6117936..9cd1db007a0d 100644
---- a/include/linux/iomap.h
-+++ b/include/linux/iomap.h
-@@ -139,7 +139,7 @@ loff_t iomap_apply(struct inode *inode, loff_t pos, loff_t length,
- struct iomap_page {
- 	atomic_t		read_count;
- 	atomic_t		write_count;
--	DECLARE_BITMAP(uptodate, PAGE_SIZE / 512);
-+	DECLARE_BITMAP(uptodate, PAGE_SIZE / SECTOR_SIZE);
- };
- 
- static inline struct iomap_page *to_iomap_page(struct page *page)
+diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
+index 54c9ec7ad337..c0a492353826 100644
+--- a/fs/xfs/xfs_iomap.c
++++ b/fs/xfs/xfs_iomap.c
+@@ -707,9 +707,12 @@ xfs_file_iomap_begin_delay(
+ 	 * Flag newly allocated delalloc blocks with IOMAP_F_NEW so we punch
+ 	 * them out if the write happens to fail.
+ 	 */
+-	iomap_flags |= IOMAP_F_NEW;
+-	trace_xfs_iomap_alloc(ip, offset, count, whichfork,
+-			whichfork == XFS_DATA_FORK ? &imap : &cmap);
++	if (whichfork == XFS_DATA_FORK) {
++		iomap_flags |= IOMAP_F_NEW;
++		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &imap);
++	} else {
++		trace_xfs_iomap_alloc(ip, offset, count, whichfork, &cmap);
++	}
+ done:
+ 	if (whichfork == XFS_COW_FORK) {
+ 		if (imap.br_startoff > offset_fsb) {
+-- 
+2.20.1
 
