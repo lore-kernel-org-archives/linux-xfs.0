@@ -2,69 +2,115 @@ Return-Path: <SRS0=pjFm=YJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC119C4360C
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 09:35:37 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD04FA3728
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 11:52:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 98B412168B
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 09:35:37 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A1B3720854
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 11:52:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M6eTKyA9"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391997AbfJPJfh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 05:35:37 -0400
-Received: from mx2.suse.de ([195.135.220.15]:60880 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S2391829AbfJPJfh (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Oct 2019 05:35:37 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 2935DABB1;
-        Wed, 16 Oct 2019 09:35:35 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 7907F1E3BDE; Wed, 16 Oct 2019 11:35:34 +0200 (CEST)
-Date:   Wed, 16 Oct 2019 11:35:34 +0200
-From:   Jan Kara <jack@suse.cz>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Jan Kara <jack@suse.cz>, mbobrowski@mbobrowski.org
-Subject: Re: [ANNOUNCE] xfs-linux: iomap-5.5-merge updated to c9acd3aee077
-Message-ID: <20191016093534.GD30337@quack2.suse.cz>
-References: <20191015164901.GF13108@magnolia>
- <20191015165554.GA10728@infradead.org>
- <20191015173616.GM13108@magnolia>
+        id S1732706AbfJPLwj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 07:52:39 -0400
+Received: from mail-wm1-f54.google.com ([209.85.128.54]:39554 "EHLO
+        mail-wm1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728515AbfJPLwJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Oct 2019 07:52:09 -0400
+Received: by mail-wm1-f54.google.com with SMTP id v17so2425604wml.4;
+        Wed, 16 Oct 2019 04:52:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
+         :cc;
+        bh=iFLLQScTxl1Kxv46iUCfFAsgppvcBNhe7F96dYnGJQ4=;
+        b=M6eTKyA9F9F7Kqy+qseqIK+ejOB+jYYhW3znesf9bpLgfDbAv7iRDzuSiVE8G4kyLj
+         v2w4chGyfNM9SE7SYpZ1fMigJPR7Xgu6OmS/g/2/MRuIWA93cCPQHZ9sa3tfSFOMj2hG
+         R/cDGX3Me8iWggaGjAA5CXzSf5UyiioXmkzSN8J8gO8pQ554oUcVCeoPkEp3lXraR2Cz
+         A+Wp0vTJIQTd31oNYsnSfsRxeaD8FGvGzDkbMgKhpCKc2OvQ7vWs61wFrq95mBU45hwG
+         NBwgdVQLiTL8pL85a+DHDJ/KHTNvT45oAAzqR1oeSnlvxQbWCO4xqAJ1Do735N+ZzfOS
+         V8Eg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
+         :message-id:subject:to:cc;
+        bh=iFLLQScTxl1Kxv46iUCfFAsgppvcBNhe7F96dYnGJQ4=;
+        b=kUu79M/0kc/eaEqTTu5eUglMD3k+o+IeT9PpKoqmOvdpdb9SEm+9ACc6v1vMWyPwcA
+         BYQEhVatbd5U4h+IdGvEqUIVLu722OZ5Frh89tNRH3RVM2FvPZkHtZHgYOzD9LJSluAX
+         rFDu1qagvicqk7jJMbCVB0SvXHUIVCMK1jmhz+fMdZCJc7ZqWLA1vJeZT853HMdTwU1G
+         eXeFJKDY+v+nAqy2EYyyT7MAuCWsCBmn3o4AVoYnsO5DSoTgIPMnAxB/LceP7fNV2eah
+         oZ542P1fdEjtae+LJ4AeyndBEYYIpGeO132ekvKrwW6l6RTjZI83KL9PXX/mm8G4ncli
+         7YcA==
+X-Gm-Message-State: APjAAAXetMA23ZdERVWeDUa9OHhEKecdf2sB41ilXisYyDLhSj9kOhtM
+        PBmufbO7SWGc+s5H3VhGEnEYqxqM9rLpz8nC9yKYxA==
+X-Google-Smtp-Source: APXvYqyGCy2L/z06xfei6Fna0oKHQhTYFAiCGiyEPAfHfJELDGnPW8qRSa/hGQAxI1aqKdjDgZ6hYXrWTCZmhhiOk7A=
+X-Received: by 2002:a1c:f00a:: with SMTP id a10mr3194598wmb.89.1571226726484;
+ Wed, 16 Oct 2019 04:52:06 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191015173616.GM13108@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <CAP9B-QmQ-mbWgJwEWrVOMabsgnPwyJsxSQbMkWuFk81-M4dRPQ@mail.gmail.com>
+ <20191013164124.GR13108@magnolia>
+In-Reply-To: <20191013164124.GR13108@magnolia>
+From:   Wang Shilong <wangshilong1991@gmail.com>
+Date:   Wed, 16 Oct 2019 19:51:15 +0800
+Message-ID: <CAP9B-Q=SfhnA6iO7h1TWAoSOfZ+BvT7d8=OE4176FZ3GXiU-xw@mail.gmail.com>
+Subject: Re: [Project Quota]file owner could change its project ID?
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Andreas Dilger <adilger@dilger.ca>, Li Xi <lixi@ddn.com>,
+        Wang Shilong <wshilong@ddn.com>
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue 15-10-19 10:36:16, Darrick J. Wong wrote:
-> On Tue, Oct 15, 2019 at 09:55:54AM -0700, Christoph Hellwig wrote:
-> > On Tue, Oct 15, 2019 at 09:49:01AM -0700, Darrick J. Wong wrote:
-> > > 
-> > > Jan Kara (2):
-> > >       [13ef954445df] iomap: Allow forcing of waiting for running DIO in iomap_dio_rw()
-> > >       [c9acd3aee077] xfs: Use iomap_dio_rw_wait()
-> > 
-> > The second commit seems to be mis-titled as there is no function
-> > called iomap_dio_rw_wait in that tree.
-> 
-> Yeah.  Jan, can I fix that and repush?
+On Mon, Oct 14, 2019 at 12:41 AM Darrick J. Wong
+<darrick.wong@oracle.com> wrote:
+>
+> On Sat, Oct 12, 2019 at 02:33:36PM +0800, Wang Shilong wrote:
+> > Steps to reproduce:
+> > [wangsl@localhost tmp]$ mkdir project
+> > [wangsl@localhost tmp]$ lsattr -p project -d
+> >     0 ------------------ project
+> > [wangsl@localhost tmp]$ chattr -p 1 project
+> > [wangsl@localhost tmp]$ lsattr -p -d project
+> >     1 ------------------ project
+> > [wangsl@localhost tmp]$ chattr -p 2 project
+> > [wangsl@localhost tmp]$ lsattr -p -d project
+> >     2 ------------------ project
+> > [wangsl@localhost tmp]$ df -Th .
+> > Filesystem     Type  Size  Used Avail Use% Mounted on
+> > /dev/sda3      xfs    36G  4.1G   32G  12% /
+> > [wangsl@localhost tmp]$ uname -r
+> > 5.4.0-rc2+
+> >
+> > As above you could see file owner could change project ID of file its self.
+> > As my understanding, we could set project ID and inherit attribute to account
+> > Directory usage, and implement a similar 'Directory Quota' based on this.
+>
+> So the problem here is that the admin sets up a project quota on a
+> directory, then non-container users change the project id and thereby
+> break quota enforcement?  Dave didn't sound at all enthusiastic, but I'm
+> still wondering what exactly you're trying to prevent.
 
-Sure, that was left from previous versions of the series and I didn't
-notice... Thanks!
+Yup, we are trying to prevent no-root users to change their project ID.
+As we want to implement 'Directory Quota':
 
-								Honza
--- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+If non-root users could change their project ID, they could always try
+to change its project ID to steal space when EDQUOT returns.
+
+Yup, if mount option could be introduced to make this case work,
+that will be nice.
+
+
+>
+> (Which is to say, maybe we introduce a mount option to prevent changing
+> projid if project quota *enforcement* is enabled?)
+>
+> --D
+>
