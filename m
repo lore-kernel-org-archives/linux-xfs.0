@@ -2,95 +2,107 @@ Return-Path: <SRS0=pjFm=YJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.7 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS autolearn=no autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4F147FA372A
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 19:08:53 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A7A29ECE599
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 20:29:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16A9C222BE
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 19:08:53 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="Y8TvENLa"
+	by mail.kernel.org (Postfix) with ESMTP id 858D721835
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 20:29:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2436638AbfJPTIw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 15:08:52 -0400
-Received: from mout.gmx.net ([212.227.17.21]:57093 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1730057AbfJPTIw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Oct 2019 15:08:52 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1571252931;
-        bh=VUV7qWtLkRGfbCxKGo9szoBT7k7BIlRt4JeDVGJ+YdU=;
-        h=X-UI-Sender-Class:From:To:Subject:Date;
-        b=Y8TvENLa4uza4h+xYouEP6fePh3pRZqDBPNItjgy1YuULPyM+WNKLr/h4mIWrkVpf
-         R5oVrVO+Oce/6mcAEbSZAqr6Wep7ev8EOyx8N2i594kXyU3lcEkFrDI+kXU90pD1bn
-         MOlLldpInz0XqHbT/cV2nef6oMa5vapw06t9gz4M=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [2.50.152.200] ([2.50.152.200]) by web-mail.gmx.net
- (3c-app-gmx-bs59.server.lan [172.19.170.143]) (via HTTP); Wed, 16 Oct 2019
- 21:08:51 +0200
+        id S2437130AbfJPU3F (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 16:29:05 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:34146 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728881AbfJPU3F (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Oct 2019 16:29:05 -0400
+Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C67EA43E9FD;
+        Thu, 17 Oct 2019 07:29:00 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iKpul-00017O-7K; Thu, 17 Oct 2019 07:28:59 +1100
+Date:   Thu, 17 Oct 2019 07:28:59 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     =?iso-8859-1?Q?=22Marc_Sch=F6nefeld=22?= <marc.schoenefeld@gmx.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Sanity check for m_ialloc_blks in libxfs_mount()
+Message-ID: <20191016202859.GI16973@dread.disaster.area>
+References: <trinity-92785614-c99b-4de9-98e8-71be71c0df0d-1571252931141@3c-app-gmx-bs59>
 MIME-Version: 1.0
-Message-ID: <trinity-92785614-c99b-4de9-98e8-71be71c0df0d-1571252931141@3c-app-gmx-bs59>
-From:   =?UTF-8?Q?=22Marc_Sch=C3=B6nefeld=22?= <marc.schoenefeld@gmx.org>
-To:     linux-xfs@vger.kernel.org
-Subject: Sanity check for m_ialloc_blks in libxfs_mount()
-Content-Type: text/plain; charset=UTF-8
-Date:   Wed, 16 Oct 2019 21:08:51 +0200
-Importance: normal
-Sensitivity: Normal
-Content-Transfer-Encoding: quoted-printable
-X-Priority: 3
-X-Provags-ID: V03:K1:UE06zkszPMk7n+l/guBzLrcI5UcVQ0K8TBQVBSS8B1DYNDcpSfVNVQpqq4HAxAi0eayq7
- 9AFte8pvUwxIBgg1BmlNDGRulZT14ZQT8zxyjDWGRhq+SCNgwknZJPfyVT2j5R5/owB7LVZfpEsn
- AHSJk9X4ZFUejOxswf10VVYlOhaVDZ3EDtVYvDTJxjo+49z6FcIV7ADjVoB5EoF9BT1XNMm3wV1Z
- 3qUoGOVhmzZpi0VYWdsw8PbPOLVN02bg72g11JCQLD+Nhkk2fJZPOAozywBURNfipBOd+Ly02LqR
- G4=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:+jc44KPO7kA=:W/orDBDWYLGHF+hfqE/e8T
- PkW8k2fnYP748H56Rq/Tbod95joshB9hVhD9Hpu5HmAp5cUbyPHYUvQfKXhTpVphN28v3qsMI
- aYYE6GU0Ab46KBQF+Nt6ax3c9+ih2Tc/OiZGfLxYgAfPoeqFiy/wOegYkm9dhwGqRt3pQBzS8
- dFLD4OHONBK1vP+Z9jQMdvvb5nU3q9xvOpEfOS6AZmMsC1iMbUG6Y5FE5qPLFtXCfa2yJZX1m
- RD2vpVn0IruL/tO8kRWrrUWJYeWXt02PdNSbIa5xkJ2R48KreUGFF6/NM/KRvcdR/1k9Y/NEu
- jJf8/ekOR34UKvrX2GRO2fvCzWWxwzvepwgJYV55AZEhPgAhmVdCBFZ7pMV5JMEkh/uCqDMph
- eBiMPlHohXpX6R55HZwO5BMMsyxO0Gv297u8C0YbNwR6kpIG1K5Z+vsY0h24GtvTIOddqJdvK
- UdRu7OMPpwoB5mQvAXsTMUHAxqIWlXFAgFDB1IdNfUh5113rnwS1nxye6TNjgURQzC1vXEKM8
- KKyXdyaE6H4BRICulMYbcaGCQUvmRmKLLKl4dKSVeBSMZWbUeWQMZvcLGCn1jRCu7dIFANuk3
- +G+ze2n5yv0EyQ7vQWsrGnFZk/SI9OQpFFBB8tx9lcisHcKBCpun7h+0SNroOOgjuPEw0cPxA
- pQw6Bv/3q1EFYG2Hw0n229EaPATNMosnJnfyOQI8wZjMCbLImnnexNyyXydt9PNc/rHs=
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <trinity-92785614-c99b-4de9-98e8-71be71c0df0d-1571252931141@3c-app-gmx-bs59>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=8nJEP1OIZ-IA:10 a=XobE76Q3jBoA:10
+        a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=5xOlfOR4AAAA:8 a=7-415B0cAAAA:8
+        a=nGdYznVvUrD5B_u1YPsA:9 a=wPNLvfGTeEIA:10 a=SGlsW6VomvECssOqsvzv:22
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,=C2=A0
+On Wed, Oct 16, 2019 at 09:08:51PM +0200, "Marc Schönefeld" wrote:
+> Hi all, 
+> 
+> it looks like there is a sanity check missing for the divisor
+> (m_ialloc_blks) in line 664 of xfsprogs-5.2.1/libxfs/init.c: 
+> Program received signal SIGFPE, Arithmetic exception.
+> 
+> 0x0000000000427ddf in libxfs_mount (mp=mp@entry=0x6a2de0 <xmount>, sb=sb@entry=0x6a2de0 <xmount>, dev=18446744073709551615, 
+>     logdev=<optimized out>, rtdev=<optimized out>, flags=flags@entry=1) at init.c:663
+> 
+> which is 
+> 
+>     663                 mp->m_maxicount = XFS_FSB_TO_INO(mp,
+>     664                                 (mp->m_maxicount / mp->m_ialloc_blks) *
+>     665                                  mp->m_ialloc_blks);
 
-it looks like there is a sanity check missing for the divisor (m_ialloc_bl=
-ks) in line 664 of xfsprogs-5=2E2=2E1/libxfs/init=2Ec:=C2=A0
-Program received signal SIGFPE, Arithmetic exception=2E
+That's code is gone now. The current calculation in the dev tree is
+quite different thanks to:
 
-0x0000000000427ddf in libxfs_mount (mp=3Dmp@entry=3D0x6a2de0 <xmount>, sb=
-=3Dsb@entry=3D0x6a2de0 <xmount>, dev=3D18446744073709551615,=C2=A0
-=C2=A0 =C2=A0 logdev=3D<optimized out>, rtdev=3D<optimized out>, flags=3Df=
-lags@entry=3D1) at init=2Ec:663
+commit 3a05ab227ebd5982f910f752692c87005c7b3ad3
+Author: Darrick J. Wong <darrick.wong@oracle.com>
+Date:   Wed Aug 28 12:08:08 2019 -0400
 
-which is=C2=A0
+    xfs: refactor inode geometry setup routines
+    
+    Source kernel commit: 494dba7b276e12bc3f6ff2b9b584b6e9f693af45
+    
+    Migrate all of the inode geometry setup code from xfs_mount.c into a
+    single libxfs function that we can share with xfsprogs.
+    
+    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+    Reviewed-by: Dave Chinner <dchinner@redhat.com>
+    Signed-off-by: Eric Sandeen <sandeen@sandeen.net>
 
-=C2=A0 =C2=A0 663 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-mp->m_maxicount =3D XFS_FSB_TO_INO(mp,
-=C2=A0 =C2=A0 664 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (mp->m_maxicount / =
-mp->m_ialloc_blks) *
-=C2=A0 =C2=A0 665=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mp->m_ialloc=
-_blks);
+And so it doesn't have a divide-by-zero vector in it anymore. 
 
-In case it would be required I=C2=A0have a reproducer file for this, which=
- I can share via pm=2E The bug is reachable from user input via the "xfs_db=
- -c _cmd_=C2=A0_xfsfile_" command=2E=C2=A0=C2=A0=C2=A0
+So it's probably best that you update your source tree to the latest
+for-next and retest. It's almost always a good idea to test against
+the latest dev tree, that way you aren't finding bugs we've already
+found and fixed...
 
-Sincerely
-Marc Schoenefeld=C2=A0
-=C2=A0
+> In case it would be required I have a reproducer file for this,
+> which I can share via pm. The bug is reachable from user input via
+> the "xfs_db -c _cmd_ _xfsfile_" command.   
 
+I'm guessing that you are fuzzing filesystem images and the issue is
+that the inode geometry values in the superblock have been fuzzed to
+be incorrect?  What fuzzer are you using to generate the image, and
+what's the mkfs.xfs output that was used to create the base image
+that was then fuzzed?
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
