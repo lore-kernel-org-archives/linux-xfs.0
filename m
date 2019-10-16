@@ -2,330 +2,294 @@ Return-Path: <SRS0=pjFm=YJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A55C7ECE58F
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 03:11:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E7B55ECE59D
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 05:00:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7ACD9217F9
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 03:11:38 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id ABD6E217D6
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 05:00:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rhzD9c2D"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kbHL8Pg/"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730971AbfJPDLh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 15 Oct 2019 23:11:37 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:34228 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726906AbfJPDLh (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 15 Oct 2019 23:11:37 -0400
-Received: by mail-pf1-f194.google.com with SMTP id b128so13775193pfa.1;
-        Tue, 15 Oct 2019 20:11:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=9KNhiy2FQ9z3m+zvnetenQ8X88h60iXNvUk2Hp1BOk8=;
-        b=rhzD9c2DfiPrG8YQoKMcAkU6/80b885e6Q9iNKkJn0HJLiOvXuYRI/oj6rUGEiBCtV
-         MYtGqaZ8GjqQcosxjTB0SkGr2332gMaIiMeL1gzTS/u7LyJyxQOh8DkRWJPugiaRyPAY
-         6TLzgDs+hvqs6m4rTQ/UJikFLKpYFwUV0vZFlrnbguonmoj0D2ERYd8VhUFcvyR3ePt7
-         /PXJI48x3oVzT9cnhtltzCeoNvXvNcazSC4ymbLKfGXKRkZDAlj6RPY/2bmYnGfF7qE6
-         Yt1Pdfv/CJf2mHpFnp5jHC0BdjCkPCXRKZTmvns83roqNfCyZKnjk6a1RopB2BxiE4VT
-         xLNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=9KNhiy2FQ9z3m+zvnetenQ8X88h60iXNvUk2Hp1BOk8=;
-        b=ZxbcRyZGkmaO3cRhDPrMR8l84VHowclNOdLXCeUeuYyab3LFpfKKBccsHiRo3IP7td
-         GFeSFeP5wdTj2irSyCHYsjyt0uIqLQ0ivCYbV+8kAmGbll0JwAE46uB+2Hp2BpNA+Q2p
-         AgBsIT+/3zu36nCyWlUkkIEUTh5ahUVlaWQ0ARwW618sATJWWQlpYrSZ+eMcqAXu8HW9
-         qABODnfNcZ0VsS803/2ur8WxEtlfLM2olZydS3kFXCtMES9fEi2VwFHLNUs5EygmAujY
-         B8m+GRjSJWYogt2jQhgk5SVrbobC9HYbH+2Tqer6HkfQtHFurgUX2Rl4PRrx4HSq8unJ
-         5+Qg==
-X-Gm-Message-State: APjAAAX607o7HBKjlH0mjKQWDb3tVgxmu4/xr+pWGAstIfo6o9BWpV3z
-        t7pT8m02hSgqcbPSxC9ZGg==
-X-Google-Smtp-Source: APXvYqx/yIgnL8ksOJx6/0pRRD/Jru60gTndrEHsG15uXNa+aI56M0la2s+tzRUea5uFG3Tl4vVDbQ==
-X-Received: by 2002:a17:90a:9104:: with SMTP id k4mr2100107pjo.39.1571195494954;
-        Tue, 15 Oct 2019 20:11:34 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id n23sm20828762pff.137.2019.10.15.20.11.29
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 15 Oct 2019 20:11:34 -0700 (PDT)
-Subject: Re: [PATCH] fsstress: add renameat2 support
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eryu Guan <guaneryu@gmail.com>,
-        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-References: <09bd0206-7460-a18f-990b-391fd1d2b361@gmail.com>
- <9b36578b-00da-2621-8fae-2359fe751a67@gmail.com>
- <20191015150550.GC13108@magnolia>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <cf987e30-0103-700f-4f7d-92a1d44bfefa@gmail.com>
-Date:   Wed, 16 Oct 2019 11:11:26 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1732110AbfJPFAG (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 01:00:06 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:55268 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732018AbfJPFAG (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Oct 2019 01:00:06 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9G4xAHm186191;
+        Wed, 16 Oct 2019 05:00:03 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=Uu/YFDaFen8f6qL+0UApS6QRwT+hszdY0zbEkXSTnhs=;
+ b=kbHL8Pg/pDjrRZAjNdWP2w7SginmCWmhoO3RMW3u8g/RdyYy3IHb8+3RVsqGvHv706hW
+ pZEAhU2ESASpjQ9ZlLSR+j+LcnhP3nkCVAwTFHkXweOA9U3HmzJzvbcu41V985P4GHWI
+ sIfTsTkjqvJ9V2sJoW0WAjw53qeEKny0U4R+4IDQAc/81kf9U/RtNh6MntsA4NRqZv/G
+ r8SFd5FBJYUsoW7pFjIIDcapZjjoGzp48odc8azPiAGvQ0WQ2laZsscW8pAi95JPADrq
+ StO1d20Nk6zbs9CR2JAlCLlji0A1eR4vuK1exjoEieOh3wXsVhxLfYV2TT3DNUC2mLdB Vg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2vk7frc0ux-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Oct 2019 05:00:02 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9G4wkjA020317;
+        Wed, 16 Oct 2019 05:00:02 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3030.oracle.com with ESMTP id 2vnf7smavs-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 16 Oct 2019 05:00:01 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9G501xN016430;
+        Wed, 16 Oct 2019 05:00:01 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 16 Oct 2019 05:00:00 +0000
+Date:   Tue, 15 Oct 2019 21:59:57 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 06/11] xfs_scrub: refactor inode prefix rendering code
+Message-ID: <20191016045957.GV13108@magnolia>
+References: <156944728875.298887.8311229116097714980.stgit@magnolia>
+ <156944733375.298887.14903136321208702854.stgit@magnolia>
+ <0afea659-939d-d82b-67ea-b2742748921c@sandeen.net>
+ <a4cd281d-8d05-debe-1af9-1192770c6cd1@sandeen.net>
 MIME-Version: 1.0
-In-Reply-To: <20191015150550.GC13108@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <a4cd281d-8d05-debe-1af9-1192770c6cd1@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9411 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910160045
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9411 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910160045
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
-On 2019/10/15 23:05, Darrick J. Wong wrote:
-> On Tue, Oct 15, 2019 at 10:34:31AM +0800, kaixuxia wrote:
->> According to the comments, after adding this fsstress renameat2 support,
->> the deadlock between the AGI and AGF with RENAME_WHITEOUT can be reproduced
->> by using customized parameters(limited to rename_whiteout and creates). If
->> this patch is okay, I will send the fsstress test patch. 
+On Tue, Oct 15, 2019 at 06:25:10PM -0500, Eric Sandeen wrote:
+> How about this:
 > 
-> /me looks forward to that, particularly because I asked weeks ago if the
-> xfs_droplink calls in xfs_rename() could try to lock the AGI after we'd
-> already locked the AGF for the directory expansion, but nobody sent an
-> answer...
+> Refactor all the places in the code where we try to render an inode
+> number as a prefix for some sort of status message.  This will help make
+> message prefixes more consistent, which should help users to locate
+> broken metadata.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> [sandeen: swizzle stuff]
+> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
 
-Yeah, It's been a long time since we talked this xfs_droplink() deadlock
-problem. I already have the simple fix patch, now I'm trying to get a
-xfstests test patch to reproduce this deadlock problem with high possibility.
-I will send the fix patch ASAP.
- 
-> 
->> So, Eryu, Brian, comments? 
->>
->> On 2019/10/11 15:56, kaixuxia wrote:
->>> Support the renameat2 syscall in fsstress.
->>>
->>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
->>> ---
->>>  ltp/fsstress.c | 90 +++++++++++++++++++++++++++++++++++++++++++++++++++-------
->>>  1 file changed, 79 insertions(+), 11 deletions(-)
->>>
->>> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
->>> index 51976f5..21529a2 100644
->>> --- a/ltp/fsstress.c
->>> +++ b/ltp/fsstress.c
->>> @@ -44,6 +44,16 @@ io_context_t	io_ctx;
->>>  #define IOV_MAX 1024
->>>  #endif
->>>  
->>> +#ifndef RENAME_NOREPLACE
->>> +#define RENAME_NOREPLACE	(1 << 0)	/* Don't overwrite target */
->>> +#endif
->>> +#ifndef RENAME_EXCHANGE
->>> +#define RENAME_EXCHANGE		(1 << 1)	/* Exchange source and dest */
->>> +#endif
->>> +#ifndef RENAME_WHITEOUT
->>> +#define RENAME_WHITEOUT		(1 << 2)	/* Whiteout source */
->>> +#endif
->>> +
->>>  #define FILELEN_MAX		(32*4096)
->>>  
->>>  typedef enum {
->>> @@ -85,6 +95,9 @@ typedef enum {
->>>  	OP_READV,
->>>  	OP_REMOVEFATTR,
->>>  	OP_RENAME,
->>> +	OP_RNOREPLACE,
->>> +	OP_REXCHANGE,
->>> +	OP_RWHITEOUT,
->>>  	OP_RESVSP,
->>>  	OP_RMDIR,
->>>  	OP_SETATTR,
->>> @@ -203,6 +216,9 @@ void	readlink_f(int, long);
->>>  void	readv_f(int, long);
->>>  void	removefattr_f(int, long);
->>>  void	rename_f(int, long);
->>> +void    rnoreplace_f(int, long);
->>> +void    rexchange_f(int, long);
->>> +void    rwhiteout_f(int, long);
->>>  void	resvsp_f(int, long);
->>>  void	rmdir_f(int, long);
->>>  void	setattr_f(int, long);
->>> @@ -262,6 +278,9 @@ opdesc_t	ops[] = {
->>>  	/* remove (delete) extended attribute */
->>>  	{ OP_REMOVEFATTR, "removefattr", removefattr_f, 1, 1 },
->>>  	{ OP_RENAME, "rename", rename_f, 2, 1 },
->>> +	{ OP_RNOREPLACE, "rnoreplace", rnoreplace_f, 2, 1 },
->>> +	{ OP_REXCHANGE, "rexchange", rexchange_f, 2, 1 },
->>> +	{ OP_RWHITEOUT, "rwhiteout", rwhiteout_f, 2, 1 },
->>>  	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
->>>  	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
->>>  	/* set attribute flag (FS_IOC_SETFLAGS ioctl) */
->>> @@ -354,7 +373,7 @@ int	open_path(pathname_t *, int);
->>>  DIR	*opendir_path(pathname_t *);
->>>  void	process_freq(char *);
->>>  int	readlink_path(pathname_t *, char *, size_t);
->>> -int	rename_path(pathname_t *, pathname_t *);
->>> +int	rename_path(pathname_t *, pathname_t *, int);
->>>  int	rmdir_path(pathname_t *);
->>>  void	separate_pathname(pathname_t *, char *, pathname_t *);
->>>  void	show_ops(int, char *);
->>> @@ -1519,7 +1538,7 @@ readlink_path(pathname_t *name, char *lbuf, size_t lbufsiz)
->>>  }
->>>  
->>>  int
->>> -rename_path(pathname_t *name1, pathname_t *name2)
->>> +rename_path(pathname_t *name1, pathname_t *name2, int mode)
->>>  {
->>>  	char		buf1[NAME_MAX + 1];
->>>  	char		buf2[NAME_MAX + 1];
->>> @@ -1528,14 +1547,14 @@ rename_path(pathname_t *name1, pathname_t *name2)
->>>  	pathname_t	newname2;
->>>  	int		rval;
->>>  
->>> -	rval = rename(name1->path, name2->path);
->>> +	rval = syscall(__NR_renameat2, AT_FDCWD, name1->path, AT_FDCWD, name2->path, mode);
-> 
-> For the rename(..., 0) case, would we be crippling fsstress if the
-> kernel doesn't know about renameat2 and doesn't fall back to renameat()
-> or regular rename()?  I guess renameat2 showed up in 3.15 which was
-> quite a long time ago except in RHEL land. :)
-> 
-Yeah, will preserve the rename() call when it is not available in V2. 
+Looks good to me. :)
 
-> --D
-> 
->>>  	if (rval >= 0 || errno != ENAMETOOLONG)
->>>  		return rval;
->>>  	separate_pathname(name1, buf1, &newname1);
->>>  	separate_pathname(name2, buf2, &newname2);
->>>  	if (strcmp(buf1, buf2) == 0) {
->>>  		if (chdir(buf1) == 0) {
->>> -			rval = rename_path(&newname1, &newname2);
->>> +			rval = rename_path(&newname1, &newname2, mode);
->>>  			assert(chdir("..") == 0);
->>>  		}
->>>  	} else {
->>> @@ -1555,7 +1574,7 @@ rename_path(pathname_t *name1, pathname_t *name2)
->>>  			append_pathname(&newname2, "../");
->>>  			append_pathname(&newname2, name2->path);
->>>  			if (chdir(buf1) == 0) {
->>> -				rval = rename_path(&newname1, &newname2);
->>> +				rval = rename_path(&newname1, &newname2, mode);
->>>  				assert(chdir("..") == 0);
->>>  			}
->>>  		} else {
->>> @@ -1563,7 +1582,7 @@ rename_path(pathname_t *name1, pathname_t *name2)
->>>  			append_pathname(&newname1, "../");
->>>  			append_pathname(&newname1, name1->path);
->>>  			if (chdir(buf2) == 0) {
->>> -				rval = rename_path(&newname1, &newname2);
->>> +				rval = rename_path(&newname1, &newname2, mode);
->>>  				assert(chdir("..") == 0);
->>>  			}
->>>  		}
->>> @@ -4215,8 +4234,18 @@ out:
->>>  	free_pathname(&f);
->>>  }
->>>  
->>> +struct print_flags renameat2_flags [] = {
->>> +	{ RENAME_NOREPLACE, "NOREPLACE"},
->>> +	{ RENAME_EXCHANGE, "EXCHANGE"},
->>> +	{ RENAME_WHITEOUT, "WHITEOUT"},
->>> +	{ -1, NULL}
->>> +};
->>> +
->>> +#define translate_renameat2_flags(mode)	\
->>> +	({translate_flags(mode, "|", renameat2_flags);})
->>> +
->>>  void
->>> -rename_f(int opno, long r)
->>> +do_renameat2(int opno, long r, int mode)
->>>  {
->>>  	fent_t		*dfep;
->>>  	int		e;
->>> @@ -4229,6 +4258,7 @@ rename_f(int opno, long r)
->>>  	int		parid;
->>>  	int		v;
->>>  	int		v1;
->>> +	int		fd;
->>>  
->>>  	/* get an existing path for the source of the rename */
->>>  	init_pathname(&f);
->>> @@ -4260,7 +4290,21 @@ rename_f(int opno, long r)
->>>  		free_pathname(&f);
->>>  		return;
->>>  	}
->>> -	e = rename_path(&f, &newf) < 0 ? errno : 0;
->>> +	/* Both pathnames must exist for the RENAME_EXCHANGE */
->>> +	if (mode == RENAME_EXCHANGE) {
->>> +		fd = creat_path(&newf, 0666);
->>> +		e = fd < 0 ? errno : 0;
->>> +		check_cwd();
->>> +		if (fd < 0) {
->>> +			if (v)
->>> +				printf("%d/%d: renameat2 - creat %s failed %d\n",
->>> +					procid, opno, newf.path, e);
->>> +			free_pathname(&newf);
->>> +			free_pathname(&f);
->>> +			return;
->>> +		}
->>> +	}
->>> +	e = rename_path(&f, &newf, mode) < 0 ? errno : 0;
->>>  	check_cwd();
->>>  	if (e == 0) {
->>>  		int xattr_counter = fep->xattr_counter;
->>> @@ -4273,12 +4317,13 @@ rename_f(int opno, long r)
->>>  		add_to_flist(flp - flist, id, parid, xattr_counter);
->>>  	}
->>>  	if (v) {
->>> -		printf("%d/%d: rename %s to %s %d\n", procid, opno, f.path,
->>> +		printf("%d/%d: rename(%s) %s to %s %d\n", procid,
->>> +			opno, translate_renameat2_flags(mode), f.path,
->>>  			newf.path, e);
->>>  		if (e == 0) {
->>> -			printf("%d/%d: rename del entry: id=%d,parent=%d\n",
->>> +			printf("%d/%d: rename source entry: id=%d,parent=%d\n",
->>>  				procid, opno, fep->id, fep->parent);
->>> -			printf("%d/%d: rename add entry: id=%d,parent=%d\n",
->>> +			printf("%d/%d: rename target entry: id=%d,parent=%d\n",
->>>  				procid, opno, id, parid);
->>>  		}
->>>  	}
->>> @@ -4287,6 +4332,29 @@ rename_f(int opno, long r)
->>>  }
->>>  
->>>  void
->>> +rename_f(int opno, long r)
->>> +{
->>> +	do_renameat2(opno, r, 0);
->>> +}
->>> +void
->>> +rnoreplace_f(int opno, long r)
->>> +{
->>> +	do_renameat2(opno, r, RENAME_NOREPLACE);
->>> +}
->>> +
->>> +void
->>> +rexchange_f(int opno, long r)
->>> +{
->>> +	do_renameat2(opno, r, RENAME_EXCHANGE);
->>> +}
->>> +
->>> +void
->>> +rwhiteout_f(int opno, long r)
->>> +{
->>> +	do_renameat2(opno, r, RENAME_WHITEOUT);
->>> +}
->>> +
->>> +void
->>>  resvsp_f(int opno, long r)
->>>  {
->>>  	int		e;
->>>
->>
->> -- 
->> kaixuxia
+--D
 
--- 
-kaixuxia
+> ---
+> 
+> this uses a single function, scrub_render_ino_descr() with a new comment,
+> and automatic space-adding for any extra format.
+> 
+> 
+> diff --git a/scrub/common.c b/scrub/common.c
+> index 7db47044..7f971de8 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -354,3 +354,38 @@ within_range(
+>  
+>  	return true;
+>  }
+> +
+> +/*
+> + * Render an inode number into a buffer in a format suitable for use as a
+> + * prefix for log messages. The buffer will be filled with:
+> + * 	"inode <inode number> (<ag number>/<ag inode number>)"
+> + * If the @format argument is non-NULL, it will be rendered into the buffer
+> + * after the inode representation and a single space.
+> + */
+> +int
+> +scrub_render_ino_descr(
+> +	const struct scrub_ctx	*ctx,
+> +	char			*buf,
+> +	size_t			buflen,
+> +	uint64_t		ino,
+> +	uint32_t		gen,
+> +	const char		*format,
+> +	...)
+> +{
+> +	va_list			args;
+> +	uint32_t		agno;
+> +	uint32_t		agino;
+> +	int			ret;
+> +
+> +	agno = cvt_ino_to_agno(&ctx->mnt, ino);
+> +	agino = cvt_ino_to_agino(&ctx->mnt, ino);
+> +	ret = snprintf(buf, buflen, _("inode %"PRIu64" (%"PRIu32"/%"PRIu32")%s"),
+> +			ino, agno, agino, format ? " " : "");
+> +	if (ret < 0 || ret >= buflen || format == NULL)
+> +		return ret;
+> +
+> +	va_start(args, format);
+> +	ret += vsnprintf(buf + ret, buflen - ret, format, args);
+> +	va_end(args);
+> +	return ret;
+> +}
+> diff --git a/scrub/common.h b/scrub/common.h
+> index 33555891..9a37e9ed 100644
+> --- a/scrub/common.h
+> +++ b/scrub/common.h
+> @@ -86,4 +86,8 @@ bool within_range(struct scrub_ctx *ctx, unsigned long long value,
+>  		unsigned long long desired, unsigned long long abs_threshold,
+>  		unsigned int n, unsigned int d, const char *descr);
+>  
+> +int scrub_render_ino_descr(const struct scrub_ctx *ctx, char *buf,
+> +		size_t buflen, uint64_t ino, uint32_t gen,
+> +		const char *format, ...);
+> +
+>  #endif /* XFS_SCRUB_COMMON_H_ */
+> diff --git a/scrub/inodes.c b/scrub/inodes.c
+> index 91632b55..7aa61ebe 100644
+> --- a/scrub/inodes.c
+> +++ b/scrub/inodes.c
+> @@ -159,8 +159,8 @@ xfs_iterate_inodes_ag(
+>  					ireq->hdr.ino = inumbers->xi_startino;
+>  					goto igrp_retry;
+>  				}
+> -				snprintf(idescr, DESCR_BUFSZ, "inode %"PRIu64,
+> -						(uint64_t)bs->bs_ino);
+> +				scrub_render_ino_descr(ctx, idescr, DESCR_BUFSZ,
+> +						bs->bs_ino, bs->bs_gen, NULL);
+>  				str_info(ctx, idescr,
+>  _("Changed too many times during scan; giving up."));
+>  				break;
+> diff --git a/scrub/phase3.c b/scrub/phase3.c
+> index 1e908c2c..0d2c9019 100644
+> --- a/scrub/phase3.c
+> +++ b/scrub/phase3.c
+> @@ -48,14 +48,10 @@ xfs_scrub_inode_vfs_error(
+>  	struct xfs_bulkstat	*bstat)
+>  {
+>  	char			descr[DESCR_BUFSZ];
+> -	xfs_agnumber_t		agno;
+> -	xfs_agino_t		agino;
+>  	int			old_errno = errno;
+>  
+> -	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+> -	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
+> -	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+> -			(uint64_t)bstat->bs_ino, agno, agino);
+> +	scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ, bstat->bs_ino,
+> +			bstat->bs_gen, NULL);
+>  	errno = old_errno;
+>  	str_errno(ctx, descr);
+>  }
+> diff --git a/scrub/phase5.c b/scrub/phase5.c
+> index 99cd51b2..27941907 100644
+> --- a/scrub/phase5.c
+> +++ b/scrub/phase5.c
+> @@ -234,15 +234,11 @@ xfs_scrub_connections(
+>  	bool			*pmoveon = arg;
+>  	char			descr[DESCR_BUFSZ];
+>  	bool			moveon = true;
+> -	xfs_agnumber_t		agno;
+> -	xfs_agino_t		agino;
+>  	int			fd = -1;
+>  	int			error;
+>  
+> -	agno = cvt_ino_to_agno(&ctx->mnt, bstat->bs_ino);
+> -	agino = cvt_ino_to_agino(&ctx->mnt, bstat->bs_ino);
+> -	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (%u/%u)"),
+> -			(uint64_t)bstat->bs_ino, agno, agino);
+> +	scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ, bstat->bs_ino,
+> +			bstat->bs_gen, NULL);
+>  	background_sleep();
+>  
+>  	/* Warn about naming problems in xattrs. */
+> diff --git a/scrub/phase6.c b/scrub/phase6.c
+> index 8063d6ce..2ce2a19e 100644
+> --- a/scrub/phase6.c
+> +++ b/scrub/phase6.c
+> @@ -180,15 +180,15 @@ xfs_report_verify_inode(
+>  	int				fd;
+>  	int				error;
+>  
+> -	snprintf(descr, DESCR_BUFSZ, _("inode %"PRIu64" (unlinked)"),
+> -			(uint64_t)bstat->bs_ino);
+> -
+>  	/* Ignore linked files and things we can't open. */
+>  	if (bstat->bs_nlink != 0)
+>  		return 0;
+>  	if (!S_ISREG(bstat->bs_mode) && !S_ISDIR(bstat->bs_mode))
+>  		return 0;
+>  
+> +	scrub_render_ino_descr(ctx, descr, DESCR_BUFSZ,
+> +			bstat->bs_ino, bstat->bs_gen, _("(unlinked)"));
+> +
+>  	/* Try to open the inode. */
+>  	fd = xfs_open_handle(handle);
+>  	if (fd < 0) {
+> diff --git a/scrub/scrub.c b/scrub/scrub.c
+> index d7a6b49b..0293ce30 100644
+> --- a/scrub/scrub.c
+> +++ b/scrub/scrub.c
+> @@ -26,11 +26,13 @@
+>  /* Format a scrub description. */
+>  static void
+>  format_scrub_descr(
+> +	struct scrub_ctx		*ctx,
+>  	char				*buf,
+>  	size_t				buflen,
+> -	struct xfs_scrub_metadata	*meta,
+> -	const struct xfrog_scrub_descr	*sc)
+> +	struct xfs_scrub_metadata	*meta)
+>  {
+> +	const struct xfrog_scrub_descr	*sc = &xfrog_scrubbers[meta->sm_type];
+> +
+>  	switch (sc->type) {
+>  	case XFROG_SCRUB_TYPE_AGHEADER:
+>  	case XFROG_SCRUB_TYPE_PERAG:
+> @@ -38,8 +40,9 @@ format_scrub_descr(
+>  				_(sc->descr));
+>  		break;
+>  	case XFROG_SCRUB_TYPE_INODE:
+> -		snprintf(buf, buflen, _("Inode %"PRIu64" %s"),
+> -				(uint64_t)meta->sm_ino, _(sc->descr));
+> +		scrub_render_ino_descr(ctx, buf, buflen,
+> +				meta->sm_ino, meta->sm_gen, "%s",
+> +				_(sc->descr));
+>  		break;
+>  	case XFROG_SCRUB_TYPE_FS:
+>  		snprintf(buf, buflen, _("%s"), _(sc->descr));
+> @@ -123,8 +126,7 @@ xfs_check_metadata(
+>  
+>  	assert(!debug_tweak_on("XFS_SCRUB_NO_KERNEL"));
+>  	assert(meta->sm_type < XFS_SCRUB_TYPE_NR);
+> -	format_scrub_descr(buf, DESCR_BUFSZ, meta,
+> -			&xfrog_scrubbers[meta->sm_type]);
+> +	format_scrub_descr(ctx, buf, DESCR_BUFSZ, meta);
+>  
+>  	dbg_printf("check %s flags %xh\n", buf, meta->sm_flags);
+>  retry:
+> @@ -681,8 +683,7 @@ xfs_repair_metadata(
+>  		return CHECK_RETRY;
+>  
+>  	memcpy(&oldm, &meta, sizeof(oldm));
+> -	format_scrub_descr(buf, DESCR_BUFSZ, &meta,
+> -			&xfrog_scrubbers[meta.sm_type]);
+> +	format_scrub_descr(ctx, buf, DESCR_BUFSZ, &meta);
+>  
+>  	if (needs_repair(&meta))
+>  		str_info(ctx, buf, _("Attempting repair."));
+> 
