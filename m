@@ -2,61 +2,64 @@ Return-Path: <SRS0=pjFm=YJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1066FC4360C
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 06:43:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B6BECE59E
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 07:43:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7FE52168B
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 06:43:54 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E21R+IZH"
+	by mail.kernel.org (Postfix) with ESMTP id A8EC520854
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 07:43:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731226AbfJPGny (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 02:43:54 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:46538 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726372AbfJPGny (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Oct 2019 02:43:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=RlX7GJA1mPLD3DZ4u1ksZQlVybr4nI9WtXqdX6/HNAI=; b=E21R+IZHsbiYeZprJLL7Bwber
-        u5gP7U/A1/qmRpkMDA2njgnRtbisZyBRQiDIrdtJ0XpblzccJMYtOysbM3DXrCr8hxfvPnce13Uzf
-        xeSb+g7zPxAT+yEcESNTcNhZmgr+rGuos8M0NIMyrVnd47t4QqDIstN8suzvKre4wHIkP6bm+LnZU
-        P9hJfWij6CzsJn1F0AO2OxU3VhH+imaEwItRYRm/bSb3GKPON2nuscyo9+Wd8S3y0CtdZDKibXwJ1
-        x/8kSFgOlOH710WQmIfNy6cnYkReK2rGp3aQNjbWr9eUD3xpmtY4qcqLnQWXJ5Iy5kVJ71wQEiiuZ
-        P9KgrDLxw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iKd2H-0007Ek-Sw; Wed, 16 Oct 2019 06:43:53 +0000
-Date:   Tue, 15 Oct 2019 23:43:53 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH v2] iomap: iomap that extends beyond EOF should be marked
- dirty
-Message-ID: <20191016064353.GA25846@infradead.org>
-References: <20191016051101.12620-1-david@fromorbit.com>
- <20191016060604.GH16973@dread.disaster.area>
+        id S2391248AbfJPHng (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 03:43:36 -0400
+Received: from verein.lst.de ([213.95.11.211]:59476 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2387890AbfJPHng (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Oct 2019 03:43:36 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id D8C8E68B20; Wed, 16 Oct 2019 09:43:31 +0200 (CEST)
+Date:   Wed, 16 Oct 2019 09:43:31 +0200
+From:   Christoph Hellwig <hch@lst.de>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 09/12] iomap: lift the xfs writeback code to iomap
+Message-ID: <20191016074331.GA23696@lst.de>
+References: <20191015154345.13052-1-hch@lst.de> <20191015154345.13052-10-hch@lst.de> <20191015184040.GU13108@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191016060604.GH16973@dread.disaster.area>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20191015184040.GU13108@magnolia>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I wonder if the i_size check should be done in core, similar to the
-iomap_block_needs_zeroing helper.  But independent of what is nicer
-this version does look correct to me:
+On Tue, Oct 15, 2019 at 11:40:40AM -0700, Darrick J. Wong wrote:
+> > +	if (unlikely(error && !quiet)) {
+> > +		printk_ratelimited(KERN_ERR
+> > +			"%s: writeback error on sector %llu",
+> > +			inode->i_sb->s_id, start);
+> 
+> Ugh, /this/ message.  It's pretty annoying how it doesn't tell you which
+> file or where in that file the write was lost.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Sure, feel free to improve it in a follow on patch.
+
+> 
+> I want to send in a patch atop your series to fix this, though I'm a
+> also little inclined to want to keep the message inside XFS.
+> 
+> Thoughts?
+
+I don't see a sensible way to keep it in the file system, and I also
+don't really see what that would buy us.  I'd rather use the same
+message for all iomap using file systems rather than having slightly
+different error reporting for each of them.
+inside the iomap callstack.
