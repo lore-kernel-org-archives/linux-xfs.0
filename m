@@ -2,115 +2,107 @@ Return-Path: <SRS0=pjFm=YJ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CCD04FA3728
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 11:52:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 57D8BFA3728
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 12:08:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A1B3720854
-	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 11:52:43 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M6eTKyA9"
+	by mail.kernel.org (Postfix) with ESMTP id 38FD621848
+	for <linux-xfs@archiver.kernel.org>; Wed, 16 Oct 2019 12:08:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732706AbfJPLwj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 07:52:39 -0400
-Received: from mail-wm1-f54.google.com ([209.85.128.54]:39554 "EHLO
-        mail-wm1-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728515AbfJPLwJ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Oct 2019 07:52:09 -0400
-Received: by mail-wm1-f54.google.com with SMTP id v17so2425604wml.4;
-        Wed, 16 Oct 2019 04:52:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=iFLLQScTxl1Kxv46iUCfFAsgppvcBNhe7F96dYnGJQ4=;
-        b=M6eTKyA9F9F7Kqy+qseqIK+ejOB+jYYhW3znesf9bpLgfDbAv7iRDzuSiVE8G4kyLj
-         v2w4chGyfNM9SE7SYpZ1fMigJPR7Xgu6OmS/g/2/MRuIWA93cCPQHZ9sa3tfSFOMj2hG
-         R/cDGX3Me8iWggaGjAA5CXzSf5UyiioXmkzSN8J8gO8pQ554oUcVCeoPkEp3lXraR2Cz
-         A+Wp0vTJIQTd31oNYsnSfsRxeaD8FGvGzDkbMgKhpCKc2OvQ7vWs61wFrq95mBU45hwG
-         NBwgdVQLiTL8pL85a+DHDJ/KHTNvT45oAAzqR1oeSnlvxQbWCO4xqAJ1Do735N+ZzfOS
-         V8Eg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=iFLLQScTxl1Kxv46iUCfFAsgppvcBNhe7F96dYnGJQ4=;
-        b=kUu79M/0kc/eaEqTTu5eUglMD3k+o+IeT9PpKoqmOvdpdb9SEm+9ACc6v1vMWyPwcA
-         BYQEhVatbd5U4h+IdGvEqUIVLu722OZ5Frh89tNRH3RVM2FvPZkHtZHgYOzD9LJSluAX
-         rFDu1qagvicqk7jJMbCVB0SvXHUIVCMK1jmhz+fMdZCJc7ZqWLA1vJeZT853HMdTwU1G
-         eXeFJKDY+v+nAqy2EYyyT7MAuCWsCBmn3o4AVoYnsO5DSoTgIPMnAxB/LceP7fNV2eah
-         oZ542P1fdEjtae+LJ4AeyndBEYYIpGeO132ekvKrwW6l6RTjZI83KL9PXX/mm8G4ncli
-         7YcA==
-X-Gm-Message-State: APjAAAXetMA23ZdERVWeDUa9OHhEKecdf2sB41ilXisYyDLhSj9kOhtM
-        PBmufbO7SWGc+s5H3VhGEnEYqxqM9rLpz8nC9yKYxA==
-X-Google-Smtp-Source: APXvYqyGCy2L/z06xfei6Fna0oKHQhTYFAiCGiyEPAfHfJELDGnPW8qRSa/hGQAxI1aqKdjDgZ6hYXrWTCZmhhiOk7A=
-X-Received: by 2002:a1c:f00a:: with SMTP id a10mr3194598wmb.89.1571226726484;
- Wed, 16 Oct 2019 04:52:06 -0700 (PDT)
+        id S2389706AbfJPMIR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 08:08:17 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:45436 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2389612AbfJPMIR (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Oct 2019 08:08:17 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 2024987642;
+        Wed, 16 Oct 2019 12:08:17 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 00D6B19C68;
+        Wed, 16 Oct 2019 12:08:14 +0000 (UTC)
+Date:   Wed, 16 Oct 2019 08:08:13 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     Dave Chinner <david@fromorbit.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Damien Le Moal <Damien.LeMoal@wdc.com>,
+        Andreas Gruenbacher <agruenba@redhat.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 09/12] iomap: lift the xfs writeback code to iomap
+Message-ID: <20191016120813.GA40434@bfoster>
+References: <20191015154345.13052-1-hch@lst.de>
+ <20191015154345.13052-10-hch@lst.de>
+ <20191015220721.GC16973@dread.disaster.area>
+ <20191016074836.GB23696@lst.de>
 MIME-Version: 1.0
-References: <CAP9B-QmQ-mbWgJwEWrVOMabsgnPwyJsxSQbMkWuFk81-M4dRPQ@mail.gmail.com>
- <20191013164124.GR13108@magnolia>
-In-Reply-To: <20191013164124.GR13108@magnolia>
-From:   Wang Shilong <wangshilong1991@gmail.com>
-Date:   Wed, 16 Oct 2019 19:51:15 +0800
-Message-ID: <CAP9B-Q=SfhnA6iO7h1TWAoSOfZ+BvT7d8=OE4176FZ3GXiU-xw@mail.gmail.com>
-Subject: Re: [Project Quota]file owner could change its project ID?
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        Ext4 Developers List <linux-ext4@vger.kernel.org>,
-        Andreas Dilger <adilger@dilger.ca>, Li Xi <lixi@ddn.com>,
-        Wang Shilong <wshilong@ddn.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191016074836.GB23696@lst.de>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.26]); Wed, 16 Oct 2019 12:08:17 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 14, 2019 at 12:41 AM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> On Sat, Oct 12, 2019 at 02:33:36PM +0800, Wang Shilong wrote:
-> > Steps to reproduce:
-> > [wangsl@localhost tmp]$ mkdir project
-> > [wangsl@localhost tmp]$ lsattr -p project -d
-> >     0 ------------------ project
-> > [wangsl@localhost tmp]$ chattr -p 1 project
-> > [wangsl@localhost tmp]$ lsattr -p -d project
-> >     1 ------------------ project
-> > [wangsl@localhost tmp]$ chattr -p 2 project
-> > [wangsl@localhost tmp]$ lsattr -p -d project
-> >     2 ------------------ project
-> > [wangsl@localhost tmp]$ df -Th .
-> > Filesystem     Type  Size  Used Avail Use% Mounted on
-> > /dev/sda3      xfs    36G  4.1G   32G  12% /
-> > [wangsl@localhost tmp]$ uname -r
-> > 5.4.0-rc2+
-> >
-> > As above you could see file owner could change project ID of file its self.
-> > As my understanding, we could set project ID and inherit attribute to account
-> > Directory usage, and implement a similar 'Directory Quota' based on this.
->
-> So the problem here is that the admin sets up a project quota on a
-> directory, then non-container users change the project id and thereby
-> break quota enforcement?  Dave didn't sound at all enthusiastic, but I'm
-> still wondering what exactly you're trying to prevent.
+On Wed, Oct 16, 2019 at 09:48:36AM +0200, Christoph Hellwig wrote:
+> On Wed, Oct 16, 2019 at 09:07:21AM +1100, Dave Chinner wrote:
+...
+> > > +/*
+> > > + * Submit the bio for an ioend. We are passed an ioend with a bio attached to
+> > > + * it, and we submit that bio. The ioend may be used for multiple bio
+> > > + * submissions, so we only want to allocate an append transaction for the ioend
+> > > + * once.  In the case of multiple bio submission, each bio will take an IO
+> > 
+> > This needs to be changed to describe what wpc->ops->submit_ioend()
+> > is used for rather than what XFS might use this hook for.
+> 
+> True.  The real documentation now is in the header near the ops defintion,
+> but I'll update this one to make more sense as well.
+> 
+> > > +static int
+> > > +iomap_submit_ioend(struct iomap_writepage_ctx *wpc, struct iomap_ioend *ioend,
+> > > +		int error)
+> > > +{
+> > > +	ioend->io_bio->bi_private = ioend;
+> > > +	ioend->io_bio->bi_end_io = iomap_writepage_end_bio;
+> > > +
+> > > +	if (wpc->ops->submit_ioend)
+> > > +		error = wpc->ops->submit_ioend(ioend, error);
+> > 
+> > I'm not sure that "submit_ioend" is the best name for this method,
+> > as it is a pre-bio-submission hook, not an actual IO submission
+> > method. "prepare_ioend_for_submit" is more descriptive, but probably
+> > too long. wpc->ops->prepare_submit(ioend, error) reads pretty well,
+> > though...
+> 
+> Not a huge fan of that name either, but Brian complained.  Let's hold
+> a popular vote for a name and see if we have a winner.
+> 
 
-Yup, we are trying to prevent no-root users to change their project ID.
-As we want to implement 'Directory Quota':
+Just to recall, I suggested something like ->pre_submit_ioend() back in
+v5. Short of that, I asked for extra comments to clearly document
+semantics which I believe Christoph added to the header, and I acked (it
+looks like the handful of R-B tags I sent were all dropped btw...? Have
+all of those patches changed?).
 
-If non-root users could change their project ID, they could always try
-to change its project ID to steal space when EDQUOT returns.
+To give my .02 on the naming thing, I care about functional clarity more
+than aesthetics. In that regard, ->submit_ioend() reads like a
+submission hook and thus sounds rather confusing to me when I don't see
+it actually submit anything. ->pre_submit_ioend(), ->prepare_ioend() or
+->prepare_submission() all clearly indicate semantics to me, so I'm good
+with any of those over ->submit_ioend(). :)
 
-Yup, if mount option could be introduced to make this case work,
-that will be nice.
+Brian
 
-
->
-> (Which is to say, maybe we introduce a mount option to prevent changing
-> projid if project quota *enforcement* is enabled?)
->
-> --D
->
+> As for the grammar comments - all this is copied over as-is.  I'll add
+> another patch to fix that up.
+> 
