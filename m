@@ -2,240 +2,98 @@ Return-Path: <SRS0=4OPL=YK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3320CFA372B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:24:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 00255FA3728
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:35:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0A4822082C
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:24:45 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CEB3E2067B
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:35:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2395181AbfJQBYo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 21:24:44 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:56762 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2389094AbfJQBYo (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 16 Oct 2019 21:24:44 -0400
-Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 2F92243F10C;
-        Thu, 17 Oct 2019 12:24:39 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iKuWs-0002ny-EI; Thu, 17 Oct 2019 12:24:38 +1100
-Date:   Thu, 17 Oct 2019 12:24:38 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 25/26] xfs: rework unreferenced inode lookups
-Message-ID: <20191017012438.GK16973@dread.disaster.area>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191009032124.10541-26-david@fromorbit.com>
- <20191014130719.GE12380@bfoster>
+        id S2389661AbfJQBfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 21:35:04 -0400
+Received: from sandeen.net ([63.231.237.45]:45722 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S2388519AbfJQBfE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Oct 2019 21:35:04 -0400
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id 26ED22B37;
+        Wed, 16 Oct 2019 20:34:24 -0500 (CDT)
+Subject: Re: [PATCH 07/11] xfs_scrub: record disk LBA size
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+References: <156944728875.298887.8311229116097714980.stgit@magnolia>
+ <156944733983.298887.16069098997659074747.stgit@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
+ nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
+ WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
+ vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
+ ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
+ sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
+ BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
+ gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
+ LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
+ dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
+ bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
+ aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
+ UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
+ EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
+ sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
+ 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
+ gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
+ 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
+ 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
+ WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
+ Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
+ X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
+ SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
+ 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
+ GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
+ 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
+ Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
+ ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
+ TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
+ gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
+ AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
+ YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
+ mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
+ LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
+ LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
+ MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
+ JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
+ Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
+ m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
+ fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
+Message-ID: <2f7ee9d9-84c4-58c4-43a6-d0e9636edadc@sandeen.net>
+Date:   Wed, 16 Oct 2019 20:35:02 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191014130719.GE12380@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=EAVp18LdDQemWk_WkQQA:9
-        a=EmKiWjmp_L8mRC9U:21 a=UZRRpvRsP4kJHxoh:21 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <156944733983.298887.16069098997659074747.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 14, 2019 at 09:07:19AM -0400, Brian Foster wrote:
-> On Wed, Oct 09, 2019 at 02:21:23PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
-> > 
-> > Looking up an unreferenced inode in the inode cache is a bit hairy.
-> > We do this for inode invalidation and writeback clustering purposes,
-> > which is all invisible to the VFS. Hence we can't take reference
-> > counts to the inode and so must be very careful how we do it.
-> > 
-> > There are several different places that all do the lookups and
-> > checks slightly differently. Fundamentally, though, they are all
-> > racy and inode reclaim has to block waiting for the inode lock if it
-> > loses the race. This is not very optimal given all the work we;ve
-> > already done to make reclaim non-blocking.
-> > 
-> > We can make the reclaim process nonblocking with a couple of simple
-> > changes. If we define the unreferenced lookup process in a way that
-> > will either always grab an inode in a way that reclaim will notice
-> > and skip, or will notice a reclaim has grabbed the inode so it can
-> > skip the inode, then there is no need for reclaim to need to cycle
-> > the inode ILOCK at all.
-> > 
-> > Selecting an inode for reclaim is already non-blocking, so if the
-> > ILOCK is held the inode will be skipped. If we ensure that reclaim
-> > holds the ILOCK until the inode is freed, then we can do the same
-> > thing in the unreferenced lookup to avoid inodes in reclaim. We can
-> > do this simply by holding the ILOCK until the RCU grace period
-> > expires and the inode freeing callback is run. As all unreferenced
-> > lookups have to hold the rcu_read_lock(), we are guaranteed that
-> > a reclaimed inode will be noticed as the trylock will fail.
-> > 
-> > 
-> > Additional research notes on final reclaim locking before free
-> > --------------------------------------------------------------
-> > 
-> > 2016: 1f2dcfe89eda ("xfs: xfs_inode_free() isn't RCU safe")
-> > 
-> > Fixes situation where the inode is found during RCU lookup within
-> > the freeing grace period, but critical structures have already been
-> > freed. lookup code that has this problem is stuff like
-> > xfs_iflush_cluster.
-> > 
-> > 
-> > 2008: 455486b9ccdd ("[XFS] avoid all reclaimable inodes in xfs_sync_inodes_ag")
-> > 
-> > Prior to this commit, the flushing of inodes required serialisation
-> > with xfs_ireclaim(), which did this lock/unlock thingy to ensure
-> > that it waited for flushing in xfs_sync_inodes_ag() to complete
-> > before freeing the inode:
-> > 
-> >                 /*
-> > -                * If we can't get a reference on the VFS_I, the inode must be
-> > -                * in reclaim. If we can get the inode lock without blocking,
-> > -                * it is safe to flush the inode because we hold the tree lock
-> > -                * and xfs_iextract will block right now. Hence if we lock the
-> > -                * inode while holding the tree lock, xfs_ireclaim() is
-> > -                * guaranteed to block on the inode lock we now hold and hence
-> > -                * it is safe to reference the inode until we drop the inode
-> > -                * locks completely.
-> > +                * If we can't get a reference on the inode, it must be
-> > +                * in reclaim. Leave it for the reclaim code to flush.
-> >                  */
-> > 
-> > This case is completely gone from the modern code.
-> > 
-> > lock/unlock exists at start of git era. Switching to archive tree.
-> > 
-> > This xfs_sync() functionality goes back to 1994 when inode
-> > writeback was first introduced by:
-> > 
-> > 47ac6d60 ("Add support to xfs_ireclaim() needed for xfs_sync().")
-> > 
-> > So it has been there forever -  lets see if we can get rid of it.
-> > State of existing codeL
-> > 
-> > - xfs_iflush_cluster() does not check for XFS_IRECLAIM inode flag
-> >   while holding rcu_read_lock()/i_flags_lock, so doesn't avoid
-> >   reclaimable or inodes that are in the process of being reclaimed.
-> >   Inodes at this point of reclaim are clean, so if xfs_iflush_cluster
-> >   wins the race to the ILOCK, then inode reclaim has to wait
-> >   for the lock to be dropped by xfs_iflush_cluster() once it detects
-> >   the inode is clean.
-> > 
+On 9/25/19 4:35 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Ok, so the iflush/ifree clustering functionality doesn't account for
-> inodes under reclaim, thus has the potential to contend with reclaim in
-> progress via ilock. The new isolate function trylocks the ilock and
-> iflock to check dirty state and whatnot before it sets XFS_IRECLAIM and
-> continues scanning, so we aren't blocking through that code. Both of
-> those locks are held until the dispose, where ->i_ino is zeroed and
-> ilock released.
-
-Not quite. The XFS_IRECLAIM flag indicates the inode has been
-isolated but may not yet have been disposed. There can be a
-substantial delay between isolation and disposal, and the ip->i_ino
-is not cleared until disposal is run. IOWs, it handles this case:
-
-reclaim:				iflush/ifree
-
-isolate
-  spin_trylock(ip->i_flags_lock)
-  xfs_ilock_nowait(ip, ILOCK_EXCL)
-  xfs_iflock(ip)
-  ip->i_flags |= XFS_IRECLAIM
-  spin_unlock(ip->i_flags_lock);
-<loops isolating more inodes>
-					rcu_read_lock()
-					ip = radix_tree_lookup()
-					spin_lock(ip->i_flags_lock)
-					ip->i_ino still set
-					if XFS_IRECLAIM set
-					  <skip inode>
-
-So when the inode has been isolated, we see the XFS_IRECLAIM just
-fine because of the i_flags_lock.
-
-The reason why the ILOCK is taken under the i_flags_lock in
-iflush/ifree is that we can have this happen if we drop the spin
-lock first:
-
-					ip = radix_tree_lookup()
-					spin_lock(ip->i_flags_lock)
-					ip->i_ino still set
-					if XFS_IRECLAIM set
-					  skip inode
-					spin_unlock(ip->i_flags_lock)
-					rcu_read_unlock()
-					<preempted>
-isolate
-  spin_trylock(ip->i_flags_lock)
-  xfs_ilock_nowait(ip, ILOCK_EXCL)
-  xfs_iflock(ip)
-  ip->i_flags |= XFS_IRECLAIM
-  spin_unlock(ip->i_flags_lock);
-dispose inode
-  rcu_free
-<...>
-rcu_callbacks
-  xfs_iunlock(ip, ILOCK_EXCL)
-  kmem_cache_free(ip)
-					<scheduled again>
-					xfs_ilock_nowait(ip, ILOCK_EXCL)
-					accesses freed inode
-
-IOWs, it's the combination of using the same locking heirarchy in
-the isolation routine and the iflush/ifree that provide the
-serialisation. We have to serialise the taking of the ILOCK under
-the i_flags_lock, because it's the i_flags_lock that actually
-provides the RCU lookup object validity serialisation. Hence we have
-to ensure that the inode cannot be reclaimed via RCU callbacks while
-under the rcu_read_lock context. That means we have to:
-
-a) hold off RCU freeing of inodes (rcu_read_lock)
-b) hold the object spinlock to ensure the object is not yet 
-queued for RCU freeing (!ip->i_ino checks)
-c) Hold the object spin lock to ensure the object has not been
-locked for reclaim and is about to be disposed (XFS_IRECLAIM checks)
-d) Hold the object spinlock while we grab the lock(s) that will hold
-off reclaim once we drop the object spin lock until we are finished
-with the object (ILOCK -> iflock)
-
-So XFS_IRECLAIM plays a part in this dance, but it's only one step
-in the process...
-
-> I'd think at this point a racing iflush/ifree would see the ->i_ino
-> update. If I'm following this correctly, blocking in reclaim would
-> require a race where iflush gets ->i_flags_lock and sees a valid
-> ->i_ino, a reclaim in progress is waiting on ->i_flags_lock to reset
-> ->i_ino, iflush releases ->i_flags_lock in time for reclaim to acquire
-> it, reset ->i_ino and then release ilock before the iflush ilock_nowait
-> fails (since reclaim still has it) or reclaim itself reacquires it. At
-> that point, reclaim blocks on ilock and ends up waiting on iflush to
-> identify that ->i_ino is zero and drop the lock. Am I following that
-> correctly?
+> Remember the size (in bytes) of a logical block on the disk.  We'll use
+> this in subsequent patches to improve the ability of media scans to
+> report on which files are corrupt.
 > 
-> If so, then to avoid that race condition (this sounds more like a lock
-> contention inefficiency than a blocking problem),
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-It's not a contention issue - there's real bugs if we don't order
-the locking correctly here.
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-Cheers,
 
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
