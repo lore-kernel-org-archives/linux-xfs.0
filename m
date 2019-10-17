@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 00255FA3728
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:35:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D80CECE599
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:46:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CEB3E2067B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:35:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B78620854
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:46:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389661AbfJQBfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 21:35:04 -0400
-Received: from sandeen.net ([63.231.237.45]:45722 "EHLO sandeen.net"
+        id S1727085AbfJQBqT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 21:46:19 -0400
+Received: from sandeen.net ([63.231.237.45]:46468 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2388519AbfJQBfE (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Oct 2019 21:35:04 -0400
+        id S1726480AbfJQBqT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Oct 2019 21:46:19 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 26ED22B37;
-        Wed, 16 Oct 2019 20:34:24 -0500 (CDT)
-Subject: Re: [PATCH 07/11] xfs_scrub: record disk LBA size
+        by sandeen.net (Postfix) with ESMTPSA id F0DA42B37;
+        Wed, 16 Oct 2019 20:45:39 -0500 (CDT)
+Subject: Re: [PATCH 08/11] xfs_scrub: enforce read verify pool minimum io size
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944728875.298887.8311229116097714980.stgit@magnolia>
- <156944733983.298887.16069098997659074747.stgit@magnolia>
+ <156944734585.298887.10261889375809730388.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <2f7ee9d9-84c4-58c4-43a6-d0e9636edadc@sandeen.net>
-Date:   Wed, 16 Oct 2019 20:35:02 -0500
+Message-ID: <24cbb3dc-8904-0bf5-ffda-35b642184043@sandeen.net>
+Date:   Wed, 16 Oct 2019 20:46:17 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944733983.298887.16069098997659074747.stgit@magnolia>
+In-Reply-To: <156944734585.298887.10261889375809730388.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,12 +88,10 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:35 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Remember the size (in bytes) of a logical block on the disk.  We'll use
-> this in subsequent patches to improve the ability of media scans to
-> report on which files are corrupt.
+> Make sure we always issue media verification requests aligned to the
+> minimum IO size that the caller cares about.  Concretely, this means
+> that we only care about doing IO in filesystem block-sized chunks.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-
