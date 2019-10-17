@@ -2,150 +2,256 @@ Return-Path: <SRS0=4OPL=YK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AAED2FA372B
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 06:56:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EF655FA372A
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 07:57:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7592820872
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 06:56:24 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=gmx.net header.i=@gmx.net header.b="DRwhWfeY"
+	by mail.kernel.org (Postfix) with ESMTP id C22432082C
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 07:57:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2407856AbfJQG4Y (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Oct 2019 02:56:24 -0400
-Received: from mout.gmx.net ([212.227.17.22]:37619 "EHLO mout.gmx.net"
+        id S2404951AbfJQH5c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Oct 2019 03:57:32 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:33494 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2407840AbfJQG4X (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Oct 2019 02:56:23 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=gmx.net;
-        s=badeba3b8450; t=1571295382;
-        bh=gOLIKHz7V8+LGbpUpHzXWGzWvJ5jnBKGf8pSm4XzBJY=;
-        h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
-        b=DRwhWfeYQvpErpXp7C5amtYuqOIAon2zBEwzlQdqQq48k8Cr69OjnWwU04R6TLPiT
-         sGmPJa8YTFamwFQB0o7woa2Pplqjg74Rv/Z7rUbWlLLnHzvxPb7sI9gvBcoQwhpQm/
-         1nflcpogIBamwy+t5QDT9JQMzDeaplDt8sYEFOHo=
-X-UI-Sender-Class: 01bb95c1-4bf8-414a-932a-4f6e2808ef9c
-Received: from [2.50.152.200] ([2.50.152.200]) by web-mail.gmx.net
- (3c-app-gmx-bs26.server.lan [172.19.170.78]) (via HTTP); Thu, 17 Oct 2019
- 08:56:21 +0200
+        id S1732594AbfJQH5c (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Oct 2019 03:57:32 -0400
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 5788F4E93D;
+        Thu, 17 Oct 2019 07:57:31 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B957C5D9D5;
+        Thu, 17 Oct 2019 07:57:30 +0000 (UTC)
+Date:   Thu, 17 Oct 2019 03:57:29 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 25/26] xfs: rework unreferenced inode lookups
+Message-ID: <20191017075729.GA19442@bfoster>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-26-david@fromorbit.com>
+ <20191014130719.GE12380@bfoster>
+ <20191017012438.GK16973@dread.disaster.area>
 MIME-Version: 1.0
-Message-ID: <trinity-0da2b218-4863-4722-86f8-702d39a9f882-1571295381809@3c-app-gmx-bs26>
-From:   =?UTF-8?Q?=22Marc_Sch=C3=B6nefeld=22?= <marc.schoenefeld@gmx.org>
-To:     "Dave Chinner" <david@fromorbit.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Aw: Re: Sanity check for m_ialloc_blks in libxfs_mount()
-Content-Type: text/plain; charset=UTF-8
-Date:   Thu, 17 Oct 2019 08:56:21 +0200
-Importance: normal
-Sensitivity: Normal
-Content-Transfer-Encoding: quoted-printable
-X-Priority: 3
-X-Provags-ID: V03:K1:LjWjKiI9s3t4VLo4q8D2+oaqJmUKLTJ1SxTVRf2Aij8FuZK7jfJTe3areXRy6/s71Mew3
- YUEXhyLWgpA09HH4svsf2XtsgwTJHlgjRkDsm7QRzSvl/U8jNor/V8l8XXXf8oZ1n6wtV0SrqfDR
- H9riGKz3zifpsQJu6lwwiStO6Bdv63HradlgrI0cO0abYRrNAz7q+ZlPuqhjHTBqOJ/Wpesck+fP
- RhOwUaOx8eHNE5675VoN+2fTmjasNyV3f0BJDvlWykrb2WJ1Hiu0WGNQMMXV/nR7/gd5MZm5CV39
- UI=
-X-UI-Out-Filterresults: notjunk:1;V03:K0:vihja72A2NM=:gwKrjZnSlpiK7yefcTZ8+S
- ZdmTie/pERdgaqbv4wtY5MQcaaPbCWmeWkOqfAV4qGmJpq0S5da4JHYI+PGdQ/+mQhDzZSAun
- YrPPVtnALilnIGEOSmN0k++wm+keNFUaVewliLkCrkmW6H0NMbR5sMOO21G7dzhlnAzqQzk2l
- IWkMOXaw42KcGPBPecD+wLlxoX4koCVtls9iQkiIMrvi/s+wdoTTg3Pelen5ak33JaKANS0hJ
- 5dOT6g805tIIq1Ez26hretLj8HxAORdZ88V8SZvFnvVU1XiHqIFSeKGLrO+OHuGDpjsjCp84R
- gh6rZPrnhimQGK5k7lPef2RwJVdWjdZFaZT0NkmseT2nDPw2GQTjRKezOoZHfJ7iR1b+uL66p
- QtATC0naA6M4me8V5da/+1DuweEnOkSlJSA0WQfAvpynTmfdLIV6diMTjvgEWmzlstLz+mGYj
- oxh6l8Exp3GhTF1AOMkilMtqygUUeffn4n8N63Ur1U9/KCF7OqVttC4S9qjwUUFSW2O6Fsee5
- 8yDcaSXPa3d/m1HIkSwwiC9RHoufLtO3l0fYuZe+Pdy11Ll3k4q/tO5HEPMGrEPQVwcKiR7yM
- 0K5IizH1XE4Tis9NwtEKmY7Eg5esL9uZK25MM1dvqZnoapa33KI99uEzGCmGs2AJ8Bk/vFHE/
- GM/cCts4OWCEhqRMe1HD0G+VuisgMOEjtf6MX7ewufZ9r23crHKAhLE150iFDdAhbePM=
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191017012438.GK16973@dread.disaster.area>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.38]); Thu, 17 Oct 2019 07:57:31 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Dave,=C2=A0[resent due to smtp error]=20
-=C2=A0
-thanks for the help, now using=C2=A0the for-next branch, there is still an=
-=C2=A0Arithmetic exception, however somewhere else:
-=C2=A0
-Program received signal SIGFPE, Arithmetic exception=2E
-xfs_ialloc_setup_geometry (mp=3Dmp@entry=3D0x6a5e60 <xmount>) at xfs_iallo=
-c=2Ec:2792
-2792 do_div(icount, igeo->ialloc_blks);
+On Thu, Oct 17, 2019 at 12:24:38PM +1100, Dave Chinner wrote:
+> On Mon, Oct 14, 2019 at 09:07:19AM -0400, Brian Foster wrote:
+> > On Wed, Oct 09, 2019 at 02:21:23PM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
+> > > 
+> > > Looking up an unreferenced inode in the inode cache is a bit hairy.
+> > > We do this for inode invalidation and writeback clustering purposes,
+> > > which is all invisible to the VFS. Hence we can't take reference
+> > > counts to the inode and so must be very careful how we do it.
+> > > 
+> > > There are several different places that all do the lookups and
+> > > checks slightly differently. Fundamentally, though, they are all
+> > > racy and inode reclaim has to block waiting for the inode lock if it
+> > > loses the race. This is not very optimal given all the work we;ve
+> > > already done to make reclaim non-blocking.
+> > > 
+> > > We can make the reclaim process nonblocking with a couple of simple
+> > > changes. If we define the unreferenced lookup process in a way that
+> > > will either always grab an inode in a way that reclaim will notice
+> > > and skip, or will notice a reclaim has grabbed the inode so it can
+> > > skip the inode, then there is no need for reclaim to need to cycle
+> > > the inode ILOCK at all.
+> > > 
+> > > Selecting an inode for reclaim is already non-blocking, so if the
+> > > ILOCK is held the inode will be skipped. If we ensure that reclaim
+> > > holds the ILOCK until the inode is freed, then we can do the same
+> > > thing in the unreferenced lookup to avoid inodes in reclaim. We can
+> > > do this simply by holding the ILOCK until the RCU grace period
+> > > expires and the inode freeing callback is run. As all unreferenced
+> > > lookups have to hold the rcu_read_lock(), we are guaranteed that
+> > > a reclaimed inode will be noticed as the trylock will fail.
+> > > 
+> > > 
+> > > Additional research notes on final reclaim locking before free
+> > > --------------------------------------------------------------
+> > > 
+> > > 2016: 1f2dcfe89eda ("xfs: xfs_inode_free() isn't RCU safe")
+> > > 
+> > > Fixes situation where the inode is found during RCU lookup within
+> > > the freeing grace period, but critical structures have already been
+> > > freed. lookup code that has this problem is stuff like
+> > > xfs_iflush_cluster.
+> > > 
+> > > 
+> > > 2008: 455486b9ccdd ("[XFS] avoid all reclaimable inodes in xfs_sync_inodes_ag")
+> > > 
+> > > Prior to this commit, the flushing of inodes required serialisation
+> > > with xfs_ireclaim(), which did this lock/unlock thingy to ensure
+> > > that it waited for flushing in xfs_sync_inodes_ag() to complete
+> > > before freeing the inode:
+> > > 
+> > >                 /*
+> > > -                * If we can't get a reference on the VFS_I, the inode must be
+> > > -                * in reclaim. If we can get the inode lock without blocking,
+> > > -                * it is safe to flush the inode because we hold the tree lock
+> > > -                * and xfs_iextract will block right now. Hence if we lock the
+> > > -                * inode while holding the tree lock, xfs_ireclaim() is
+> > > -                * guaranteed to block on the inode lock we now hold and hence
+> > > -                * it is safe to reference the inode until we drop the inode
+> > > -                * locks completely.
+> > > +                * If we can't get a reference on the inode, it must be
+> > > +                * in reclaim. Leave it for the reclaim code to flush.
+> > >                  */
+> > > 
+> > > This case is completely gone from the modern code.
+> > > 
+> > > lock/unlock exists at start of git era. Switching to archive tree.
+> > > 
+> > > This xfs_sync() functionality goes back to 1994 when inode
+> > > writeback was first introduced by:
+> > > 
+> > > 47ac6d60 ("Add support to xfs_ireclaim() needed for xfs_sync().")
+> > > 
+> > > So it has been there forever -  lets see if we can get rid of it.
+> > > State of existing codeL
+> > > 
+> > > - xfs_iflush_cluster() does not check for XFS_IRECLAIM inode flag
+> > >   while holding rcu_read_lock()/i_flags_lock, so doesn't avoid
+> > >   reclaimable or inodes that are in the process of being reclaimed.
+> > >   Inodes at this point of reclaim are clean, so if xfs_iflush_cluster
+> > >   wins the race to the ILOCK, then inode reclaim has to wait
+> > >   for the lock to be dropped by xfs_iflush_cluster() once it detects
+> > >   the inode is clean.
+> > > 
+> > 
+> > Ok, so the iflush/ifree clustering functionality doesn't account for
+> > inodes under reclaim, thus has the potential to contend with reclaim in
+> > progress via ilock. The new isolate function trylocks the ilock and
+> > iflock to check dirty state and whatnot before it sets XFS_IRECLAIM and
+> > continues scanning, so we aren't blocking through that code. Both of
+> > those locks are held until the dispose, where ->i_ino is zeroed and
+> > ilock released.
+> 
+> Not quite. The XFS_IRECLAIM flag indicates the inode has been
+> isolated but may not yet have been disposed. There can be a
+> substantial delay between isolation and disposal, and the ip->i_ino
+> is not cleared until disposal is run. IOWs, it handles this case:
+> 
+> reclaim:				iflush/ifree
+> 
+> isolate
+>   spin_trylock(ip->i_flags_lock)
+>   xfs_ilock_nowait(ip, ILOCK_EXCL)
+>   xfs_iflock(ip)
+>   ip->i_flags |= XFS_IRECLAIM
+>   spin_unlock(ip->i_flags_lock);
+> <loops isolating more inodes>
+> 					rcu_read_lock()
+> 					ip = radix_tree_lookup()
+> 					spin_lock(ip->i_flags_lock)
+> 					ip->i_ino still set
+> 					if XFS_IRECLAIM set
+> 					  <skip inode>
+> 
+> So when the inode has been isolated, we see the XFS_IRECLAIM just
+> fine because of the i_flags_lock.
+> 
+> The reason why the ILOCK is taken under the i_flags_lock in
+> iflush/ifree is that we can have this happen if we drop the spin
+> lock first:
+> 
+> 					ip = radix_tree_lookup()
+> 					spin_lock(ip->i_flags_lock)
+> 					ip->i_ino still set
+> 					if XFS_IRECLAIM set
+> 					  skip inode
+> 					spin_unlock(ip->i_flags_lock)
+> 					rcu_read_unlock()
+> 					<preempted>
+> isolate
+>   spin_trylock(ip->i_flags_lock)
+>   xfs_ilock_nowait(ip, ILOCK_EXCL)
+>   xfs_iflock(ip)
+>   ip->i_flags |= XFS_IRECLAIM
+>   spin_unlock(ip->i_flags_lock);
+> dispose inode
+>   rcu_free
+> <...>
+> rcu_callbacks
+>   xfs_iunlock(ip, ILOCK_EXCL)
+>   kmem_cache_free(ip)
+> 					<scheduled again>
+> 					xfs_ilock_nowait(ip, ILOCK_EXCL)
+> 					accesses freed inode
+> 
+> IOWs, it's the combination of using the same locking heirarchy in
+> the isolation routine and the iflush/ifree that provide the
+> serialisation. We have to serialise the taking of the ILOCK under
+> the i_flags_lock, because it's the i_flags_lock that actually
+> provides the RCU lookup object validity serialisation. Hence we have
+> to ensure that the inode cannot be reclaimed via RCU callbacks while
+> under the rcu_read_lock context. That means we have to:
+> 
+> a) hold off RCU freeing of inodes (rcu_read_lock)
+> b) hold the object spinlock to ensure the object is not yet 
+> queued for RCU freeing (!ip->i_ino checks)
+> c) Hold the object spin lock to ensure the object has not been
+> locked for reclaim and is about to be disposed (XFS_IRECLAIM checks)
+> d) Hold the object spinlock while we grab the lock(s) that will hold
+> off reclaim once we drop the object spin lock until we are finished
+> with the object (ILOCK -> iflock)
+> 
+> So XFS_IRECLAIM plays a part in this dance, but it's only one step
+> in the process...
+> 
 
-Thanks
-Marc=C2=A0
+Yeah, I grok the reclaim isolation stuff (for the most part). My comment
+above was trying to reason through where/how this process actually
+blocks reclaim, which is the problem described in the commit log
+description.
 
-=C2=A0
+> > I'd think at this point a racing iflush/ifree would see the ->i_ino
+> > update. If I'm following this correctly, blocking in reclaim would
+> > require a race where iflush gets ->i_flags_lock and sees a valid
+> > ->i_ino, a reclaim in progress is waiting on ->i_flags_lock to reset
+> > ->i_ino, iflush releases ->i_flags_lock in time for reclaim to acquire
+> > it, reset ->i_ino and then release ilock before the iflush ilock_nowait
+> > fails (since reclaim still has it) or reclaim itself reacquires it. At
+> > that point, reclaim blocks on ilock and ends up waiting on iflush to
+> > identify that ->i_ino is zero and drop the lock. Am I following that
+> > correctly?
+> > 
+> > If so, then to avoid that race condition (this sounds more like a lock
+> > contention inefficiency than a blocking problem),
+> 
+> It's not a contention issue - there's real bugs if we don't order
+> the locking correctly here.
+> 
 
-Gesendet:=C2=A0Donnerstag, 17=2E Oktober 2019 um 00:28 Uhr
-Von:=C2=A0"Dave Chinner" <david@fromorbit=2Ecom>
-An:=C2=A0"Marc Sch=C3=B6nefeld" <marc=2Eschoenefeld@gmx=2Eorg>
-Cc:=C2=A0linux-xfs@vger=2Ekernel=2Eorg
-Betreff:=C2=A0Re: Sanity check for m_ialloc_blks in libxfs_mount()
-On Wed, Oct 16, 2019 at 09:08:51PM +0200, "Marc Sch=C3=B6nefeld" wrote:
-> Hi all,=C2=A0
->
-> it looks like there is a sanity check missing for the divisor
-> (m_ialloc_blks) in line 664 of xfsprogs-5=2E2=2E1/libxfs/init=2Ec:=C2=A0
-> Program received signal SIGFPE, Arithmetic exception=2E
->
-> 0x0000000000427ddf in libxfs_mount (mp=3Dmp@entry=3D0x6a2de0 <xmount>, s=
-b=3Dsb@entry=3D0x6a2de0 <xmount>, dev=3D18446744073709551615,=C2=A0
-> =C2=A0 =C2=A0 logdev=3D<optimized out>, rtdev=3D<optimized out>, flags=
-=3Dflags@entry=3D1) at init=2Ec:663
->
-> which is=C2=A0
->
-> =C2=A0 =C2=A0 663 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 mp->m_maxicount =3D XFS_FSB_TO_INO(mp,
-> =C2=A0 =C2=A0 664 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 (mp->m_maxicoun=
-t / mp->m_ialloc_blks) *
-> =C2=A0 =C2=A0 665=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0=
- =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 mp->m_iallo=
-c_blks);
+Is this patch fixing real bugs in the existing code or reducing
+contention/blocking in the reclaim codepath? My understanding was the
+latter, so thus I'm trying to make sure I follow how this blocking can
+actually happen that this patch purports to address. The reasoning in my
+comment above is basically how I followed the existing code as it
+pertains to blocking in reclaim, and that is the scenario I was asking
+about...
 
-That's code is gone now=2E The current calculation in the dev tree is
-quite different thanks to:
+Brian
 
-commit 3a05ab227ebd5982f910f752692c87005c7b3ad3
-Author: Darrick J=2E Wong <darrick=2Ewong@oracle=2Ecom>
-Date: Wed Aug 28 12:08:08 2019 -0400
-
-xfs: refactor inode geometry setup routines
-
-Source kernel commit: 494dba7b276e12bc3f6ff2b9b584b6e9f693af45
-
-Migrate all of the inode geometry setup code from xfs_mount=2Ec into a
-single libxfs function that we can share with xfsprogs=2E
-
-Signed-off-by: Darrick J=2E Wong <darrick=2Ewong@oracle=2Ecom>
-Reviewed-by: Dave Chinner <dchinner@redhat=2Ecom>
-Signed-off-by: Eric Sandeen <sandeen@sandeen=2Enet>
-
-And so it doesn't have a divide-by-zero vector in it anymore=2E
-
-So it's probably best that you update your source tree to the latest
-for-next and retest=2E It's almost always a good idea to test against
-the latest dev tree, that way you aren't finding bugs we've already
-found and fixed=2E=2E=2E
-
-> In case it would be required I=C2=A0have a reproducer file for this,
-> which I can share via pm=2E The bug is reachable from user input via
-> the "xfs_db -c _cmd_=C2=A0_xfsfile_" command=2E=C2=A0=C2=A0=C2=A0
-
-I'm guessing that you are fuzzing filesystem images and the issue is
-that the inode geometry values in the superblock have been fuzzed to
-be incorrect? What fuzzer are you using to generate the image, and
-what's the mkfs=2Exfs output that was used to create the base image
-that was then fuzzed?
-
-Cheers,
-
-Dave=2E
---
-Dave Chinner
-david@fromorbit=2Ecom
+> Cheers,
+> 
+> Dave.
+> 
+> -- 
+> Dave Chinner
+> david@fromorbit.com
