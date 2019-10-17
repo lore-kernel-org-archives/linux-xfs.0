@@ -2,174 +2,132 @@ Return-Path: <SRS0=4OPL=YK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F19EFFA3732
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 09:41:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 89477FA372A
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 09:58:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C38E721848
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 09:41:02 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QiT17T8E"
+	by mail.kernel.org (Postfix) with ESMTP id 69274214E0
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 09:58:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439521AbfJQJlB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Oct 2019 05:41:01 -0400
-Received: from mail-pl1-f194.google.com ([209.85.214.194]:44716 "EHLO
-        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2439516AbfJQJk7 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 05:40:59 -0400
-Received: by mail-pl1-f194.google.com with SMTP id q15so846418pll.11;
-        Thu, 17 Oct 2019 02:40:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=IFU/J9klOPXpeK+FUQd7ZcRQH26PWNssyQpLrq+S1gY=;
-        b=QiT17T8EblTRQ1ZF9Yppbw/JKsPQwI6fyqiKIbUpXQwKGqFfdtJkaJyZDoxuCW8xPg
-         chn8bYmzHRx65TW/2Gswu/10UoAvXzrnP/uyOlWPu+5HB5PnZErfdfAKa/3VJGZey14p
-         6gz4Gr9gr817GhbgrhRJB7dJNFv7QWyhdvRSVr7+0QSHiK/FYtF2al0/HhEEjuGjGldK
-         KPJM9RCubBBCS2Re9yYwGec24yVxd3kyqj6bfuPxdjFsXnf70x/8wk1bcxQm4c+b4V7N
-         QAdAlkN39Wwr1Y0shWDH0CaeyeKPQYioP0p43lLapM6mEMfPL8b27CcCy9GtjkeDeBrX
-         qTNw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=IFU/J9klOPXpeK+FUQd7ZcRQH26PWNssyQpLrq+S1gY=;
-        b=b/4yzqMoGW9wbpoO59heAb/B/DKD9Z6f6igRIJ49aRCkw3s0p17WvVsosmuoksUCba
-         pJHbvBRng+q7USNcnXQKoH8suGVVCEq65XKS3V6RZ/EFTy8gZrhrDlTl4PHIi9nWT4f+
-         k5b5zexaNMTXPIh32i3zdQkM0tIz1WyjcvbIvpogxeN5Mzbu8N1GweoyXKlEZHzLD2dE
-         rSDfqriQ5UBvZ9gaLwXAJwXqCPaC4o20xcWSOYRqTOor3iaw12McAeh2b1OQNLExyklv
-         9oEvnPYoQ3Us7j7cYyGaPuKDESU9IzoxpkawYGkEGQQXIeAzXb9RIKDaCfIlUcsNuCUB
-         +K0g==
-X-Gm-Message-State: APjAAAVgRSnLBa0gOxMZt6zdi3ffeiRF7zn8N0eogofidrTmFdrv2+cA
-        gQWFfrwrYzIZjTHi9OYj7A==
-X-Google-Smtp-Source: APXvYqzcUxD9mpqCSqkvLuTalAyLgguCff3yuJWptdLSN68g0N1RyFUxHlTDhAihx1lmQn9U4zQONg==
-X-Received: by 2002:a17:902:2e:: with SMTP id 43mr3115502pla.55.1571305256705;
-        Thu, 17 Oct 2019 02:40:56 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id q76sm3748063pfc.86.2019.10.17.02.40.54
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 17 Oct 2019 02:40:56 -0700 (PDT)
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Subject: [PATCH RFC] xfs: test the deadlock between the AGI and AGF with
- RENAME_WHITEOUT
-Message-ID: <a1a28793-6fc3-fb53-2ec3-646f1a758443@gmail.com>
-Date:   Thu, 17 Oct 2019 17:40:51 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S2439582AbfJQJ6L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Oct 2019 05:58:11 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50538 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2393881AbfJQJ6K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 05:58:10 -0400
+Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D5F1243E5F1;
+        Thu, 17 Oct 2019 20:58:06 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iL2Xl-000622-0E; Thu, 17 Oct 2019 20:58:05 +1100
+Date:   Thu, 17 Oct 2019 20:58:04 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     =?iso-8859-1?Q?=22Marc_Sch=F6nefeld=22?= <marc.schoenefeld@gmx.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: Re: Sanity check for m_ialloc_blks in libxfs_mount()
+Message-ID: <20191017095804.GL16973@dread.disaster.area>
+References: <trinity-0da2b218-4863-4722-86f8-702d39a9f882-1571295381809@3c-app-gmx-bs26>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <trinity-0da2b218-4863-4722-86f8-702d39a9f882-1571295381809@3c-app-gmx-bs26>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=8nJEP1OIZ-IA:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=3oNBbgyL5Baj1lQHxwMA:9 a=nB4qUZYVcwngDOR-:21
+        a=yVLkn_vBY3MJZUO3:21 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is ABBA deadlock bug between the AGI and AGF when performing
-rename() with RENAME_WHITEOUT flag, and add this testcase to make
-sure the rename() call works well.
+On Thu, Oct 17, 2019 at 08:56:21AM +0200, "Marc Schönefeld" wrote:
+> Hi Dave, [resent due to smtp error] 
 
-Signed-off-by: kaixuxia <kaixuxia@tencent.com>
----
- tests/generic/579     | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/579.out |  2 ++
- tests/generic/group   |  1 +
- 3 files changed, 59 insertions(+)
- create mode 100755 tests/generic/579
- create mode 100644 tests/generic/579.out
+It got rejected because you sent a HTML-only email to the list.
 
-diff --git a/tests/generic/579 b/tests/generic/579
-new file mode 100755
-index 0000000..d6b0042
---- /dev/null
-+++ b/tests/generic/579
-@@ -0,0 +1,56 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Tencent.  All Rights Reserved.
-+#
-+# FS QA Test No. 579
-+#
-+# Regression test for:
-+#    bc56ad8c74b8: ("xfs: Fix deadlock between AGI and AGF with RENAME_WHITEOUT")
-+#
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1        # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+        cd /
-+        rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+. ./common/renameat2
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs generic
-+_require_scratch
-+_require_renameat2 whiteout
-+
-+_scratch_mkfs > $seqres.full 2>&1 || _fail "mkfs failed"
-+_scratch_mount >> $seqres.full 2>&1
-+
-+# start a create and rename(rename_whiteout) workload. These processes
-+# occur simultaneously may cause the deadlock between AGI and AGF with
-+# RENAME_WHITEOUT.
-+$FSSTRESS_PROG -z -n 100 -p 100 \
-+		-f creat=5 \
-+		-f rwhiteout=5 \
-+		-d $SCRATCH_MNT/fsstress >> $seqres.full 2>&1
-+
-+echo Silence is golden
-+
-+# Failure comes in the form of a deadlock.
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/579.out b/tests/generic/579.out
-new file mode 100644
-index 0000000..06f4633
---- /dev/null
-+++ b/tests/generic/579.out
-@@ -0,0 +1,2 @@
-+QA output created by 579
-+Silence is golden
-diff --git a/tests/generic/group b/tests/generic/group
-index 6f9c4e1..21870d2 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -581,3 +581,4 @@
- 576 auto quick verity encrypt
- 577 auto quick verity
- 578 auto quick rw clone
-+579 auto rename
+> thanks for the help, now using the for-next branch, there is still an Arithmetic exception, however somewhere else:
+
+Also, while on list-etiquette, can you please wrap your comments at
+72 columns, and please try not to top post as it makes it really hard
+to keep the discussion context straight.
+
+> Program received signal SIGFPE, Arithmetic exception.
+> xfs_ialloc_setup_geometry (mp=mp@entry=0x6a5e60 <xmount>) at xfs_ialloc.c:2792
+> 2792 do_div(icount, igeo->ialloc_blks);
+
+So, same as last time, there's a discrepancy between two fields
+in the superblock: sbp->sb_inopblock and sbp->sb_inopblog.
+
+Basically, the inodes per block is smaller than the log2 value of
+the number of inodes per block. which implies that sb_inopblog is
+greater than 7, unless you've configured the filesystem with a block
+size > 4kB.
+
+It also implies that this verifier check:
+
+	(sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)
+
+has also passed, which means either sb_blocklog (the filesystem
+block size) and/or the sb_inodelog (inode size) values have also
+been tweaked in a way for this test to pass, but to still ahve an
+a mismatch betwen sb_inopblock and sb_inopblog.
+
+But we also have a check:
+
+	sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize)
+
+which checks taht the number of inodes per block matches the
+filesystem block size and the inode size configured, and:
+
+	sbp->sb_blocksize != (1 << sbp->sb_blocklog)
+
+and
+	sbp->sb_inodesize != (1 << sbp->sb_inodelog)
+
+which validate the log2 values match the byte based values.
+
+So I can't see how it got to this code with such a mismatch unless
+xfs_db actually ignored it.  And without all the output from xfs_db,
+I don't know what errors it has detected and ignored. Hence, when
+reporting a problem, can you please include the full output from the
+program that has failed, including the command line used to invoke
+it?
+
+Further, knowing what the filesystem geometry is supposed to be
+tells me an awful lot, too, which is why I asked this last time:
+
+> I'm guessing that you are fuzzing filesystem images and the issue is
+> that the inode geometry values in the superblock have been fuzzed to
+> be incorrect? What fuzzer are you using to generate the image, and
+> what's the mkfs.xfs output that was used to create the base image
+> that was then fuzzed?
+
+Because then I know what the values are supposed to be before I look
+at the fuzzed image and can clearly tell waht has been manipulated
+by the fuzzer.
+
+Also, keep in mind that xfs_db is a diagnostic tool for developers -
+it's not a user tool. We use it for digging around in corrupt
+structures and hence it often reports then ignores corruption iti
+detects so it can display the corrupt structure to the user. i.e.
+it's a tool intended to what it is asked to do regardless of the
+fact it might not be able to handle the result cleanly.
+
+Hence I'm not sure there is a huge value in actually fuzz testing
+xfs_db. It's certainly not at all interesting from a security point
+of view...
+
+Cheers,
+
+Dave.
 -- 
-1.8.3.1
-
--- 
-kaixuxia
+Dave Chinner
+david@fromorbit.com
