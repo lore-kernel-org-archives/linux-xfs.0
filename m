@@ -6,29 +6,28 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9B1CECE599
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:56:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ECA99ECE599
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 02:18:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9550821928
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 01:56:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CB2E9218DE
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 02:18:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2391426AbfJQB44 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 16 Oct 2019 21:56:56 -0400
-Received: from sandeen.net ([63.231.237.45]:47138 "EHLO sandeen.net"
+        id S2437626AbfJQCS7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 16 Oct 2019 22:18:59 -0400
+Received: from sandeen.net ([63.231.237.45]:48564 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1729268AbfJQB4z (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 16 Oct 2019 21:56:55 -0400
+        id S1729268AbfJQCS7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 16 Oct 2019 22:18:59 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C5E602B37;
-        Wed, 16 Oct 2019 20:56:15 -0500 (CDT)
-Subject: Re: [PATCH 09/11] xfs_scrub: return bytes verified from a SCSI VERIFY
- command
+        by sandeen.net (Postfix) with ESMTPSA id 9A1702B37;
+        Wed, 16 Oct 2019 21:18:19 -0500 (CDT)
+Subject: Re: [PATCH v2 10/11] xfs_scrub: fix read verify disk error handling
+ strategy
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <156944728875.298887.8311229116097714980.stgit@magnolia>
- <156944735184.298887.10018131559275191626.stgit@magnolia>
+References: <20191015172333.GL13108@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,29 +71,44 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <b485a02d-a2d3-0a98-3688-598c0b10903e@sandeen.net>
-Date:   Wed, 16 Oct 2019 20:56:53 -0500
+Message-ID: <476fd08a-c3cf-eb21-4db5-15343f742374@sandeen.net>
+Date:   Wed, 16 Oct 2019 21:18:57 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944735184.298887.10018131559275191626.stgit@magnolia>
+In-Reply-To: <20191015172333.GL13108@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 9/25/19 4:35 PM, Darrick J. Wong wrote:
+On 10/15/19 12:23 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Since disk_scsi_verify and pread are interchangeably called from
-> disk_read_verify(), we must return the number of bytes verified (or -1)
-> just like what pread returns.  This doesn't matter now due to bugs in
-> scrub, but we're about to fix those bugs.
+> The error handling strategy for media errors is totally bogus.  First of
+> all, short reads are entirely unhandled -- when we encounter a short
+> read, we know the disk was able to feed us the beginning of what we
+> asked for, so we need to single-step through the remainder to try to
+> capture the exact error that we hit.
+> 
+> Second, an actual IO error causes the entire region to be marked bad
+> even though it could be just a few MB of a multi-gigabyte extent that's
+> bad.  Therefore, single-step each block in the IO request until we stop
+> getting IO errors to find out if all the blocks are bad or if it's just
+> that extent.
+> 
+> Third, fix the fact that the loop updates its own counter variables with
+> the length fed to read(), which doesn't necessarily have anything to do
+> with the amount of data that the read actually produced.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+> v2: fix errors_seen bogosity
+
+changing io_error to read_error on commit (since io_error != EIO is odd?)
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
