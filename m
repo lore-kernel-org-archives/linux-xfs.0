@@ -2,132 +2,234 @@ Return-Path: <SRS0=4OPL=YK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 89477FA372A
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 09:58:11 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D64D7FA3733
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 11:49:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 69274214E0
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 09:58:11 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B7D0A2089C
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 11:49:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2439582AbfJQJ6L (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Oct 2019 05:58:11 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:50538 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S2393881AbfJQJ6K (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 05:58:10 -0400
-Received: from dread.disaster.area (pa49-181-198-88.pa.nsw.optusnet.com.au [49.181.198.88])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id D5F1243E5F1;
-        Thu, 17 Oct 2019 20:58:06 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.2)
-        (envelope-from <david@fromorbit.com>)
-        id 1iL2Xl-000622-0E; Thu, 17 Oct 2019 20:58:05 +1100
-Date:   Thu, 17 Oct 2019 20:58:04 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     =?iso-8859-1?Q?=22Marc_Sch=F6nefeld=22?= <marc.schoenefeld@gmx.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: Re: Sanity check for m_ialloc_blks in libxfs_mount()
-Message-ID: <20191017095804.GL16973@dread.disaster.area>
-References: <trinity-0da2b218-4863-4722-86f8-702d39a9f882-1571295381809@3c-app-gmx-bs26>
+        id S1727881AbfJQLtA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Oct 2019 07:49:00 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:56230 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726707AbfJQLs7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 17 Oct 2019 07:48:59 -0400
+Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mx1.redhat.com (Postfix) with ESMTPS id 3AF2F3082DDD;
+        Thu, 17 Oct 2019 11:48:59 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 45E8919C68;
+        Thu, 17 Oct 2019 11:48:58 +0000 (UTC)
+Date:   Thu, 17 Oct 2019 07:48:56 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     kaixuxia <xiakaixu1987@gmail.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        Eryu Guan <guaneryu@gmail.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
+        jasperwang@tencent.com
+Subject: Re: [PATCH v3] fsstress: add renameat2 support
+Message-ID: <20191017114856.GA20114@bfoster>
+References: <b6fa2a70-a603-7ebc-f913-593a3731a4fc@gmail.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <trinity-0da2b218-4863-4722-86f8-702d39a9f882-1571295381809@3c-app-gmx-bs26>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=ocld+OpnWJCUTqzFQA3oTA==:117 a=ocld+OpnWJCUTqzFQA3oTA==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=8nJEP1OIZ-IA:10 a=XobE76Q3jBoA:10
-        a=7-415B0cAAAA:8 a=3oNBbgyL5Baj1lQHxwMA:9 a=nB4qUZYVcwngDOR-:21
-        a=yVLkn_vBY3MJZUO3:21 a=wPNLvfGTeEIA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <b6fa2a70-a603-7ebc-f913-593a3731a4fc@gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
+X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.5.16 (mx1.redhat.com [10.5.110.46]); Thu, 17 Oct 2019 11:48:59 +0000 (UTC)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 17, 2019 at 08:56:21AM +0200, "Marc Schönefeld" wrote:
-> Hi Dave, [resent due to smtp error] 
+On Thu, Oct 17, 2019 at 09:47:19AM +0800, kaixuxia wrote:
+> Support the renameat2 syscall in fsstress.
+> 
+> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+> ---
+> Changes in v3:
+>  - Fix the rename(..., 0) case, avoide to cripple fsstress.
+> 
+>  ltp/fsstress.c | 158 +++++++++++++++++++++++++++++++++++++++++++++------------
+>  1 file changed, 125 insertions(+), 33 deletions(-)
+> 
+> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+> index 51976f5..1a20358 100644
+> --- a/ltp/fsstress.c
+> +++ b/ltp/fsstress.c
+...
+> @@ -1528,14 +1569,17 @@ rename_path(pathname_t *name1, pathname_t *name2)
+>  	pathname_t	newname2;
+>  	int		rval;
+>  
+> -	rval = rename(name1->path, name2->path);
+> +	if (mode == 0)
+> +		rval = rename(name1->path, name2->path);
+> +	else
+> +		rval = renameat2(AT_FDCWD, name1->path, AT_FDCWD, name2->path, mode);
 
-It got rejected because you sent a HTML-only email to the list.
+This adds a long line (> 80 characters) here and in several more places
+below. I know there are other instances of this in the file, but we
+probably shouldn't add new ones.
 
-> thanks for the help, now using the for-next branch, there is still an Arithmetic exception, however somewhere else:
+>  	if (rval >= 0 || errno != ENAMETOOLONG)
+>  		return rval;
+>  	separate_pathname(name1, buf1, &newname1);
+>  	separate_pathname(name2, buf2, &newname2);
+>  	if (strcmp(buf1, buf2) == 0) {
+>  		if (chdir(buf1) == 0) {
+> -			rval = rename_path(&newname1, &newname2);
+> +			rval = rename_path(&newname1, &newname2, mode);
+>  			assert(chdir("..") == 0);
+>  		}
+>  	} else {
+...
+> @@ -4234,35 +4288,49 @@ rename_f(int opno, long r)
+>  	init_pathname(&f);
+>  	if (!get_fname(FT_ANYm, r, &f, &flp, &fep, &v1)) {
+>  		if (v1)
+> -			printf("%d/%d: rename - no filename\n", procid, opno);
+> +			printf("%d/%d: rename - no source filename\n", procid, opno);
+>  		free_pathname(&f);
+>  		return;
+>  	}
+> -
+> -	/* get an existing directory for the destination parent directory name */
+> -	if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
+> -		parid = -1;
+> -	else
+> -		parid = dfep->id;
+> -	v |= v1;
+> -
+> -	/* generate a new path using an existing parent directory in name */
+> -	init_pathname(&newf);
+> -	e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
+> -	v |= v1;
+> -	if (!e) {
+> -		if (v) {
+> -			(void)fent_to_name(&f, &flist[FT_DIR], dfep);
+> -			printf("%d/%d: rename - no filename from %s\n",
+> -				procid, opno, f.path);
+> +	/* Both pathnames must exist for the RENAME_EXCHANGE */
+> +	if (mode == RENAME_EXCHANGE) {
+> +		init_pathname(&newf);
+> +		if (!get_fname(FT_ANYm, random(), &newf, NULL, &dfep, &v1)) {
+> +			if (v1)
+> +				printf("%d/%d: rename - no target filename\n", procid, opno);
+> +			free_pathname(&newf);
+> +			free_pathname(&f);
+> +			return;
+> +		}
 
-Also, while on list-etiquette, can you please wrap your comments at
-72 columns, and please try not to top post as it makes it really hard
-to keep the discussion context straight.
+Need a v |= v1 here.
 
-> Program received signal SIGFPE, Arithmetic exception.
-> xfs_ialloc_setup_geometry (mp=mp@entry=0x6a5e60 <xmount>) at xfs_ialloc.c:2792
-> 2792 do_div(icount, igeo->ialloc_blks);
+> +		id = dfep->id;
+> +		parid = dfep->parent;
+> +	} else {
+> +		/* get an existing directory for the destination parent directory name */
+> +		if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
+> +			parid = -1;
+> +		else
+> +			parid = dfep->id;
+> +		v |= v1;
+> +
+> +		/* generate a new path using an existing parent directory in name */
+> +		init_pathname(&newf);
+> +		e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
+> +		v |= v1;
+> +		if (!e) {
+> +			if (v) {
+> +				(void)fent_to_name(&f, &flist[FT_DIR], dfep);
+> +				printf("%d/%d: rename - no filename from %s\n",
+> +					procid, opno, f.path);
+> +			}
+> +			free_pathname(&newf);
+> +			free_pathname(&f);
+> +			return;
+>  		}
+> -		free_pathname(&newf);
+> -		free_pathname(&f);
+> -		return;
+>  	}
+> -	e = rename_path(&f, &newf) < 0 ? errno : 0;
+> +
+> +	e = rename_path(&f, &newf, mode) < 0 ? errno : 0;
+>  	check_cwd();
+> -	if (e == 0) {
+> +	if (e == 0 && mode != RENAME_EXCHANGE) {
 
-So, same as last time, there's a discrepancy between two fields
-in the superblock: sbp->sb_inopblock and sbp->sb_inopblog.
+In the normal rename case, this block of code looks like it removes the
+old entry from the global file list and adds the new one with an updated
+parent. If the source was a directory, we also update the parent id of
+the files within that directory.
 
-Basically, the inodes per block is smaller than the log2 value of
-the number of inodes per block. which implies that sb_inopblog is
-greater than 7, unless you've configured the filesystem with a block
-size > 4kB.
+Don't we need corresponding file list fixups for exchange and whiteout?
+Whiteout leaves around a special device file that probably should be
+accounted for in the list. Exchange looks a bit more tricky, but we
+could be changing file types and/or parent inodes there too. I.e.,
+consider an exchange of a regular file and symlink under two different
+parent dirs.
 
-It also implies that this verifier check:
+Brian
 
-	(sbp->sb_blocklog - sbp->sb_inodelog != sbp->sb_inopblog)
-
-has also passed, which means either sb_blocklog (the filesystem
-block size) and/or the sb_inodelog (inode size) values have also
-been tweaked in a way for this test to pass, but to still ahve an
-a mismatch betwen sb_inopblock and sb_inopblog.
-
-But we also have a check:
-
-	sbp->sb_inopblock != howmany(sbp->sb_blocksize,sbp->sb_inodesize)
-
-which checks taht the number of inodes per block matches the
-filesystem block size and the inode size configured, and:
-
-	sbp->sb_blocksize != (1 << sbp->sb_blocklog)
-
-and
-	sbp->sb_inodesize != (1 << sbp->sb_inodelog)
-
-which validate the log2 values match the byte based values.
-
-So I can't see how it got to this code with such a mismatch unless
-xfs_db actually ignored it.  And without all the output from xfs_db,
-I don't know what errors it has detected and ignored. Hence, when
-reporting a problem, can you please include the full output from the
-program that has failed, including the command line used to invoke
-it?
-
-Further, knowing what the filesystem geometry is supposed to be
-tells me an awful lot, too, which is why I asked this last time:
-
-> I'm guessing that you are fuzzing filesystem images and the issue is
-> that the inode geometry values in the superblock have been fuzzed to
-> be incorrect? What fuzzer are you using to generate the image, and
-> what's the mkfs.xfs output that was used to create the base image
-> that was then fuzzed?
-
-Because then I know what the values are supposed to be before I look
-at the fuzzed image and can clearly tell waht has been manipulated
-by the fuzzer.
-
-Also, keep in mind that xfs_db is a diagnostic tool for developers -
-it's not a user tool. We use it for digging around in corrupt
-structures and hence it often reports then ignores corruption iti
-detects so it can display the corrupt structure to the user. i.e.
-it's a tool intended to what it is asked to do regardless of the
-fact it might not be able to handle the result cleanly.
-
-Hence I'm not sure there is a huge value in actually fuzz testing
-xfs_db. It's certainly not at all interesting from a security point
-of view...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+>  		int xattr_counter = fep->xattr_counter;
+>  
+>  		if (flp - flist == FT_DIR) {
+> @@ -4273,12 +4341,13 @@ rename_f(int opno, long r)
+>  		add_to_flist(flp - flist, id, parid, xattr_counter);
+>  	}
+>  	if (v) {
+> -		printf("%d/%d: rename %s to %s %d\n", procid, opno, f.path,
+> +		printf("%d/%d: rename(%s) %s to %s %d\n", procid,
+> +			opno, translate_renameat2_flags(mode), f.path,
+>  			newf.path, e);
+>  		if (e == 0) {
+> -			printf("%d/%d: rename del entry: id=%d,parent=%d\n",
+> +			printf("%d/%d: rename source entry: id=%d,parent=%d\n",
+>  				procid, opno, fep->id, fep->parent);
+> -			printf("%d/%d: rename add entry: id=%d,parent=%d\n",
+> +			printf("%d/%d: rename target entry: id=%d,parent=%d\n",
+>  				procid, opno, id, parid);
+>  		}
+>  	}
+> @@ -4287,6 +4356,29 @@ rename_f(int opno, long r)
+>  }
+>  
+>  void
+> +rename_f(int opno, long r)
+> +{
+> +	do_renameat2(opno, r, 0);
+> +}
+> +void
+> +rnoreplace_f(int opno, long r)
+> +{
+> +	do_renameat2(opno, r, RENAME_NOREPLACE);
+> +}
+> +
+> +void
+> +rexchange_f(int opno, long r)
+> +{
+> +	do_renameat2(opno, r, RENAME_EXCHANGE);
+> +}
+> +
+> +void
+> +rwhiteout_f(int opno, long r)
+> +{
+> +	do_renameat2(opno, r, RENAME_WHITEOUT);
+> +}
+> +
+> +void
+>  resvsp_f(int opno, long r)
+>  {
+>  	int		e;
+> -- 
+> 1.8.3.1
+> 
+> -- 
+> kaixuxia
