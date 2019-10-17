@@ -5,68 +5,67 @@ X-Spam-Level:
 X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 126A3ECE58E
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 18:41:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D303FECE58D
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 18:41:55 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D953F2089C
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 18:41:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A35BB2089C
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 18:41:55 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mPjZen38"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="OFxuw2iy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441242AbfJQSll (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Oct 2019 14:41:41 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:42006 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390183AbfJQSll (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 14:41:41 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9HIdUii173365;
-        Thu, 17 Oct 2019 18:41:26 GMT
+        id S2406713AbfJQSlz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Oct 2019 14:41:55 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:42330 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2406702AbfJQSlz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 14:41:55 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9HIe1Oi191239;
+        Thu, 17 Oct 2019 18:41:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=ynIkxSCdwQKk9aa/KnzRuvgSRVE+FPNztS00eAkD9AQ=;
- b=mPjZen38MEfU2u+YmLexAo/03+Uu92Ep0QWKcFeN0+tBJ5S43xI4/X7O2AoBSdgHwl+W
- xZTccM7Fs57m7i8b2AkBqMW9eW/yEfmevsPpBJcrILfbUip6wLtOFDxI5uvzjHP4ltu3
- xRbJTH7ipCBPwmhwOlBwH0vMovgPHtZ7W6HUDrZfUlrkdB7IE4Y2FMZfkgKglpYU0I37
- f3qDVqId1krq0dFzksKL9mT7zIDuO2tAVK9DEbwyMiArY7D3nyHeSEGZebDsePu/U/ut
- yYLrqSzdu9F7xciMRN4Bk34r2RtON+1+8FtUVXdIlCPOtFKmWyDpQgKyZ3PYhQxaP+PJ sA== 
+ bh=iYr+RkFrcZuWgQ1ne8vBmSzPST8gKEQ3JN/fp2+IPTQ=;
+ b=OFxuw2iyzM9XEdd7/Iscl3SSNLY+m27O6ljqG1OE988Qgu7VkfH32zlfU4py66s4xmLI
+ A4Rgo+25RBo5yC8Erjuzjy58ghS1vmQ0OfTEvP8v2n/qX9V/rhZdA9CTK4jOKJaNDm97
+ vOFchT7abGSs0r5eKX4hD4EdjNVr61yyGaCzZy+UI+lPLinmu1opYhwJrQ7ezcVkFx3t
+ vRY4UqcK1Lox559ZnPPV7/yUcJYDDzTzEunA5e1OC86GVgcKwSbOPIePR8QeYEfYfC/n
+ t8bJEE6nBmkT6J4qsloQPhVd4d95NFQUxPlxPi3/ymZgjPwMf2B/PuUpKwwu7wKOUaM5 Eg== 
 Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vk6sr0any-1
+        by userp2130.oracle.com with ESMTP id 2vk68v0arg-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Oct 2019 18:41:26 +0000
+        Thu, 17 Oct 2019 18:41:35 +0000
 Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9HIXHug050325;
-        Thu, 17 Oct 2019 18:39:25 GMT
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9HIXI8q050397;
+        Thu, 17 Oct 2019 18:41:35 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3030.oracle.com with ESMTP id 2vpvtm3d6x-1
+        by userp3030.oracle.com with ESMTP id 2vpvtm3j3n-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 17 Oct 2019 18:39:25 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9HIdImJ007701;
-        Thu, 17 Oct 2019 18:39:18 GMT
+        Thu, 17 Oct 2019 18:41:34 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9HIfXoC009140;
+        Thu, 17 Oct 2019 18:41:33 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 17 Oct 2019 18:39:18 +0000
-Date:   Thu, 17 Oct 2019 11:39:17 -0700
+        with ESMTP ; Thu, 17 Oct 2019 18:41:33 +0000
+Date:   Thu, 17 Oct 2019 11:41:28 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     Damien Le Moal <Damien.LeMoal@wdc.com>,
         Andreas Gruenbacher <agruenba@redhat.com>,
         linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 01/14] iomap: iomap that extends beyond EOF should be
- marked dirty
-Message-ID: <20191017183917.GL13108@magnolia>
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 14/14] iomap: pass a struct page to
+ iomap_finish_page_writeback
+Message-ID: <20191017184128.GN13108@magnolia>
 References: <20191017175624.30305-1-hch@lst.de>
- <20191017175624.30305-2-hch@lst.de>
+ <20191017175624.30305-15-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191017175624.30305-2-hch@lst.de>
+In-Reply-To: <20191017175624.30305-15-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9413 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
@@ -84,93 +83,59 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 17, 2019 at 07:56:11PM +0200, Christoph Hellwig wrote:
-> From: Dave Chinner <dchinner@redhat.com>
+On Thu, Oct 17, 2019 at 07:56:24PM +0200, Christoph Hellwig wrote:
+> No need to pass the full bio_vec.
 > 
-> When doing a direct IO that spans the current EOF, and there are
-> written blocks beyond EOF that extend beyond the current write, the
-> only metadata update that needs to be done is a file size extension.
-> 
-> However, we don't mark such iomaps as IOMAP_F_DIRTY to indicate that
-> there is IO completion metadata updates required, and hence we may
-> fail to correctly sync file size extensions made in IO completion
-> when O_DSYNC writes are being used and the hardware supports FUA.
-> 
-> Hence when setting IOMAP_F_DIRTY, we need to also take into account
-> whether the iomap spans the current EOF. If it does, then we need to
-> mark it dirty so that IO completion will call generic_write_sync()
-> to flush the inode size update to stable storage correctly.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Looks ok, but need fixes tag.  Also, might it be wise to split off the
-ext4 section into a separate patch so that it can be backported
-separately?
-
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/ext4/inode.c       | 9 ++++++++-
->  fs/xfs/xfs_iomap.c    | 7 +++++++
->  include/linux/iomap.h | 2 ++
->  3 files changed, 17 insertions(+), 1 deletion(-)
+>  fs/iomap/buffered-io.c | 10 +++++-----
+>  1 file changed, 5 insertions(+), 5 deletions(-)
 > 
-> diff --git a/fs/ext4/inode.c b/fs/ext4/inode.c
-> index 516faa280ced..e9dc52537e5b 100644
-> --- a/fs/ext4/inode.c
-> +++ b/fs/ext4/inode.c
-> @@ -3523,9 +3523,16 @@ static int ext4_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
->  			return ret;
+> diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+> index bb96499c352f..755b75424a97 100644
+> --- a/fs/iomap/buffered-io.c
+> +++ b/fs/iomap/buffered-io.c
+> @@ -1110,13 +1110,13 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf, const struct iomap_ops *ops)
+>  EXPORT_SYMBOL_GPL(iomap_page_mkwrite);
+>  
+>  static void
+> -iomap_finish_page_writeback(struct inode *inode, struct bio_vec *bvec,
+> +iomap_finish_page_writeback(struct inode *inode, struct page *page,
+>  		int error)
+>  {
+> -	struct iomap_page *iop = to_iomap_page(bvec->bv_page);
+> +	struct iomap_page *iop = to_iomap_page(page);
+>  
+>  	if (error) {
+> -		SetPageError(bvec->bv_page);
+> +		SetPageError(page);
+>  		mapping_set_error(inode->i_mapping, -EIO);
 >  	}
 >  
-> +	/*
-> +	 * Writes that span EOF might trigger an IO size update on completion,
-> +	 * so consider them to be dirty for the purposes of O_DSYNC even if
-> +	 * there is no other metadata changes being made or are pending here.
-> +	 */
->  	iomap->flags = 0;
-> -	if (ext4_inode_datasync_dirty(inode))
-> +	if (ext4_inode_datasync_dirty(inode) ||
-> +	    offset + length > i_size_read(inode))
->  		iomap->flags |= IOMAP_F_DIRTY;
-> +
->  	iomap->bdev = inode->i_sb->s_bdev;
->  	iomap->dax_dev = sbi->s_daxdev;
->  	iomap->offset = (u64)first_block << blkbits;
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index f780e223b118..32993c2acbd9 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -1049,6 +1049,13 @@ xfs_file_iomap_begin(
->  	trace_xfs_iomap_alloc(ip, offset, length, XFS_DATA_FORK, &imap);
+> @@ -1124,7 +1124,7 @@ iomap_finish_page_writeback(struct inode *inode, struct bio_vec *bvec,
+>  	WARN_ON_ONCE(iop && atomic_read(&iop->write_count) <= 0);
 >  
->  out_finish:
-> +	/*
-> +	 * Writes that span EOF might trigger an IO size update on completion,
-> +	 * so consider them to be dirty for the purposes of O_DSYNC even if
-> +	 * there is no other metadata changes pending or have been made here.
-> +	 */
-> +	if ((flags & IOMAP_WRITE) && offset + length > i_size_read(inode))
-> +		iomap->flags |= IOMAP_F_DIRTY;
->  	return xfs_bmbt_to_iomap(ip, iomap, &imap, shared);
+>  	if (!iop || atomic_dec_and_test(&iop->write_count))
+> -		end_page_writeback(bvec->bv_page);
+> +		end_page_writeback(page);
+>  }
 >  
->  out_found:
-> diff --git a/include/linux/iomap.h b/include/linux/iomap.h
-> index 7aa5d6117936..24bd227d59f9 100644
-> --- a/include/linux/iomap.h
-> +++ b/include/linux/iomap.h
-> @@ -32,6 +32,8 @@ struct vm_fault;
->   *
->   * IOMAP_F_DIRTY indicates the inode has uncommitted metadata needed to access
->   * written data and requires fdatasync to commit them to persistent storage.
-> + * This needs to take into account metadata changes that *may* be made at IO
-> + * completion, such as file size updates from direct IO.
->   */
->  #define IOMAP_F_NEW		0x01	/* blocks have been newly allocated */
->  #define IOMAP_F_DIRTY		0x02	/* uncommitted metadata */
+>  /*
+> @@ -1156,7 +1156,7 @@ iomap_finish_ioend(struct iomap_ioend *ioend, int error)
+>  
+>  		/* walk each page on bio, ending page IO on them */
+>  		bio_for_each_segment_all(bv, bio, iter_all)
+> -			iomap_finish_page_writeback(inode, bv, error);
+> +			iomap_finish_page_writeback(inode, bv->bv_page, error);
+>  		bio_put(bio);
+>  	}
+>  
 > -- 
 > 2.20.1
 > 
