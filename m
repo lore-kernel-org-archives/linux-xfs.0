@@ -2,156 +2,81 @@ Return-Path: <SRS0=4OPL=YK=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1DF66ECE58E
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 11:49:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F0835FA3733
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 12:13:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EEFD32082C
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 11:49:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C78DE21835
+	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 12:13:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2502149AbfJQLta (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Oct 2019 07:49:30 -0400
-Received: from mx1.redhat.com ([209.132.183.28]:57722 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S2502148AbfJQLt3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 17 Oct 2019 07:49:29 -0400
-Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 0CB8C89B009;
-        Thu, 17 Oct 2019 11:49:29 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 47ECF5D71C;
-        Thu, 17 Oct 2019 11:49:28 +0000 (UTC)
-Date:   Thu, 17 Oct 2019 07:49:26 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     kaixuxia <xiakaixu1987@gmail.com>
-Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
-        Eryu Guan <guaneryu@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-Subject: Re: [PATCH RFC] xfs: test the deadlock between the AGI and AGF with
- RENAME_WHITEOUT
-Message-ID: <20191017114926.GB20114@bfoster>
-References: <a1a28793-6fc3-fb53-2ec3-646f1a758443@gmail.com>
+        id S2393214AbfJQMNC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Oct 2019 08:13:02 -0400
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:55323 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1731634AbfJQMNC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 08:13:02 -0400
+Received: from callcc.thunk.org (guestnat-104-133-0-98.corp.google.com [104.133.0.98] (may be forged))
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id x9HCCqag024199
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 17 Oct 2019 08:12:53 -0400
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 13A9E420458; Thu, 17 Oct 2019 08:12:52 -0400 (EDT)
+Date:   Thu, 17 Oct 2019 08:12:52 -0400
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Andreas Dilger <adilger@dilger.ca>
+Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Wang Shilong <wangshilong1991@gmail.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        Li Xi <lixi@ddn.com>, Wang Shilong <wshilong@ddn.com>
+Subject: Re: [Project Quota]file owner could change its project ID?
+Message-ID: <20191017121251.GB25548@mit.edu>
+References: <CAP9B-QmQ-mbWgJwEWrVOMabsgnPwyJsxSQbMkWuFk81-M4dRPQ@mail.gmail.com>
+ <20191013164124.GR13108@magnolia>
+ <CAP9B-Q=SfhnA6iO7h1TWAoSOfZ+BvT7d8=OE4176FZ3GXiU-xw@mail.gmail.com>
+ <20191016213700.GH13108@magnolia>
+ <648712FB-0ECE-41F4-B6B8-98BD3168B2A4@dilger.ca>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <a1a28793-6fc3-fb53-2ec3-646f1a758443@gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-Greylist: Sender IP whitelisted, not delayed by milter-greylist-4.6.2 (mx1.redhat.com [10.5.110.67]); Thu, 17 Oct 2019 11:49:29 +0000 (UTC)
+In-Reply-To: <648712FB-0ECE-41F4-B6B8-98BD3168B2A4@dilger.ca>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 17, 2019 at 05:40:51PM +0800, kaixuxia wrote:
-> There is ABBA deadlock bug between the AGI and AGF when performing
-> rename() with RENAME_WHITEOUT flag, and add this testcase to make
-> sure the rename() call works well.
+On Wed, Oct 16, 2019 at 06:28:08PM -0600, Andreas Dilger wrote:
+> I don't think that this is really "directory quotas" in the end, since it
+> isn't changing the semantics that the same projid could exist in multiple
+> directory trees.  The real difference is the ability to enforce existing
+> project quota limits for regular users outside of a container.  Basically,
+> it is the same as regular users not being able to change the UID of their
+> files to dump quota to some other user.
 > 
-> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
-> ---
+> So rather than rename this "dirquota", it would be better to have a
+> an option like "projid_enforce" or "projid_restrict", or maybe some
+> more flexibility to allow only users in specific groups to change the
+> projid like "projid_admin=<gid>" so that e.g. "staff" or "admin" groups
+> can still change it (in addition to root) but not regular users.  To
+> restrict it to root only, leave "projid_admin=0" and the default (to
+> keep the same "everyone can change projid" behavior) would be -1?
 
-This runs in about 5-7s on my VM and reproduced the deadlock on the
-first try with the kernel fix reverted. Very nice. Thanks for working
-this into a cleaner test!
+I'm not sure how common the need for restsrictive quota enforcement is
+really going to be.  Can someone convince me this is actually going to
+be a common use case?
 
-Reviewed-by: Brian Foster <bfoster@redhat.com>
+We could also solve the problem by adding an LSM hook called when
+there is an attempt to set the project ID, and for people who really
+want this, they can create a stackable LSM which enforces whatever
+behavior they want.
 
->  tests/generic/579     | 56 +++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/generic/579.out |  2 ++
->  tests/generic/group   |  1 +
->  3 files changed, 59 insertions(+)
->  create mode 100755 tests/generic/579
->  create mode 100644 tests/generic/579.out
-> 
-> diff --git a/tests/generic/579 b/tests/generic/579
-> new file mode 100755
-> index 0000000..d6b0042
-> --- /dev/null
-> +++ b/tests/generic/579
-> @@ -0,0 +1,56 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Tencent.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 579
-> +#
-> +# Regression test for:
-> +#    bc56ad8c74b8: ("xfs: Fix deadlock between AGI and AGF with RENAME_WHITEOUT")
-> +#
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1        # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +        cd /
-> +        rm -f $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/renameat2
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
-> +
-> +# real QA test starts here
-> +_supported_os Linux
-> +_supported_fs generic
-> +_require_scratch
-> +_require_renameat2 whiteout
-> +
-> +_scratch_mkfs > $seqres.full 2>&1 || _fail "mkfs failed"
-> +_scratch_mount >> $seqres.full 2>&1
-> +
-> +# start a create and rename(rename_whiteout) workload. These processes
-> +# occur simultaneously may cause the deadlock between AGI and AGF with
-> +# RENAME_WHITEOUT.
-> +$FSSTRESS_PROG -z -n 100 -p 100 \
-> +		-f creat=5 \
-> +		-f rwhiteout=5 \
-> +		-d $SCRATCH_MNT/fsstress >> $seqres.full 2>&1
-> +
-> +echo Silence is golden
-> +
-> +# Failure comes in the form of a deadlock.
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/generic/579.out b/tests/generic/579.out
-> new file mode 100644
-> index 0000000..06f4633
-> --- /dev/null
-> +++ b/tests/generic/579.out
-> @@ -0,0 +1,2 @@
-> +QA output created by 579
-> +Silence is golden
-> diff --git a/tests/generic/group b/tests/generic/group
-> index 6f9c4e1..21870d2 100644
-> --- a/tests/generic/group
-> +++ b/tests/generic/group
-> @@ -581,3 +581,4 @@
->  576 auto quick verity encrypt
->  577 auto quick verity
->  578 auto quick rw clone
-> +579 auto rename
-> -- 
-> 1.8.3.1
-> 
-> -- 
-> kaixuxia
+If we think this going to be an speciality request, this might be the
+better way to go.
+
+						- Ted
