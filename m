@@ -2,119 +2,84 @@ Return-Path: <SRS0=TFM3=YL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 30C7ACA9EA9
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Oct 2019 17:53:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 77AC9CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Oct 2019 20:30:05 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0812A21835
-	for <linux-xfs@archiver.kernel.org>; Fri, 18 Oct 2019 17:53:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel-com.20150623.gappssmtp.com header.i=@intel-com.20150623.gappssmtp.com header.b="lVXh/T6J"
+	by mail.kernel.org (Postfix) with ESMTP id 4C9C02054F
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Oct 2019 20:30:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2505159AbfJRRx4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Oct 2019 13:53:56 -0400
-Received: from mail-ot1-f67.google.com ([209.85.210.67]:41188 "EHLO
-        mail-ot1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2502168AbfJRRx4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Oct 2019 13:53:56 -0400
-Received: by mail-ot1-f67.google.com with SMTP id g13so5668271otp.8
-        for <linux-xfs@vger.kernel.org>; Fri, 18 Oct 2019 10:53:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=intel-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=+suchrC7dSYtry6mpduWs9WUcNYGz70N938WmY7t+Q8=;
-        b=lVXh/T6JgSMtjgWCkm4WK9OaqI3i1kwUs46H8NXjs5ptwtZGQSLN2UA8souKaP8vKQ
-         HYQ+ZKbP+QAezbvkC+auMHsGSBH3YutpkXyuAsNeEYTwxWqzEPae0SrARi9yWwS1eSkk
-         Dhi366UIsjikxpQVAXgIFz2amNUq7LvOEP4PsEBkMzed9mAcwR/5is8y7lhIwJGa/pEm
-         jPV057Rye+DnLyrPzbY8kh+zAFw/N6bNKQPJkOR6KTQJSFqLLPyXVmvhGJ1BRbux9A8d
-         5zOpdxX4tkHtzNSwYUzvRmcn/H9rUot5fkMj+PuiFkHdEkeWQtukqjGf9PUU/LekRFuq
-         Gf9g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=+suchrC7dSYtry6mpduWs9WUcNYGz70N938WmY7t+Q8=;
-        b=L8XlA+g1LEUhNKEkY7qCEukMpn3H/xrFdsUa8LZSOxDeQGvblEQWqIOSgcRXTCSpA/
-         MB3bn4vUtCGbApxTvBnWex1DqrnYIND/I3/lUAsecJFAlwf3lKC1JL6L2lnLlV5OkndT
-         8miIMV3w2MfP6uKE8+QosCZdnktlaTJHaiZDubZZ6caDCmFonDzJ6LS/gwuO6DYXVush
-         xn32JPzKRWdE6YtD/Jd4jkeaPyMoKpt+nuCb8WGAFUwLjAohojDuHfBj17L6f8K816gh
-         HVMaE/y421oy+1PME3XYUwrI2z/AH0kP7g0roCG83CCANsYbulQyo7MjikBGsEwVXYD2
-         H3mQ==
-X-Gm-Message-State: APjAAAUbfRPtQNd+a3ywYdbPhHduMetR/fcdrlUtSo0QeDF4g9YjOpsi
-        Ys4PUfNxIU7zRuiWeMDs6Okjj7J6bS5lI53YAtmp6w==
-X-Google-Smtp-Source: APXvYqxWDwvCnXnm7fCfDgQLRk7yVqoBcgYqVjS4uxzeo39UcJeWaDU2nThVUFXBVOC98Rw/jSi2KnKvyYLQQW4lDF8=
-X-Received: by 2002:a9d:7c92:: with SMTP id q18mr8783006otn.363.1571421235236;
- Fri, 18 Oct 2019 10:53:55 -0700 (PDT)
+        id S2406152AbfJRU3z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 18 Oct 2019 16:29:55 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43686 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S2404558AbfJRU3q (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Oct 2019 16:29:46 -0400
+Received: from dread.disaster.area (pa49-179-0-183.pa.nsw.optusnet.com.au [49.179.0.183])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id D87D93638E6;
+        Sat, 19 Oct 2019 07:29:28 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.2)
+        (envelope-from <david@fromorbit.com>)
+        id 1iLYsJ-0002Bf-R3; Sat, 19 Oct 2019 07:29:27 +1100
+Date:   Sat, 19 Oct 2019 07:29:27 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 25/26] xfs: rework unreferenced inode lookups
+Message-ID: <20191018202927.GQ16973@dread.disaster.area>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-26-david@fromorbit.com>
+ <20191014130719.GE12380@bfoster>
+ <20191017012438.GK16973@dread.disaster.area>
+ <20191017075729.GA19442@bfoster>
 MIME-Version: 1.0
-References: <CAPcyv4jZTM6m7=UdoMrC=QpS4X8W4_6X_t_wM8ZjoYDCc_Z4=A@mail.gmail.com>
- <20191018171630.GA6719@magnolia>
-In-Reply-To: <20191018171630.GA6719@magnolia>
-From:   Dan Williams <dan.j.williams@intel.com>
-Date:   Fri, 18 Oct 2019 10:53:43 -0700
-Message-ID: <CAPcyv4g2U6YYj6BO_nMgUYPfE2d04pZvKP0JQwNAMy9HZ3UNvg@mail.gmail.com>
-Subject: Re: filesystem-dax huge page test fails due to misaligned extents
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Eric Sandeen <esandeen@redhat.com>,
-        Brian Foster <bfoster@redhat.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191017075729.GA19442@bfoster>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=52fyy8O0dbGPTevbDZN8bg==:117 a=52fyy8O0dbGPTevbDZN8bg==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=2sWhKzXocK4_PVnBHZEA:9 a=hOR0AJh8QWLIpmh6:21
+        a=lVIhb6QhHtTIAenZ:21 a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 18, 2019 at 10:16 AM Darrick J. Wong
-<darrick.wong@oracle.com> wrote:
->
-> On Fri, Oct 18, 2019 at 09:10:34AM -0700, Dan Williams wrote:
-> > Hi,
-> >
-> > In the course of tracking down a v5.3 regression with filesystem-dax
-> > unable to generate huge page faults on any filesystem, I found that I
-> > can't generate huge faults on v5.2 with xfs, but ext4 works. That
-> > result indicates that the block device is properly physically aligned,
-> > but the allocator is generating misaligned extents.
-> >
-> > The test fallocates a 1GB file and then looks for a 2MB aligned
-> > extent. However, fiemap reports:
-> >
-> >         for (i = 0; i < map->fm_mapped_extents; i++) {
-> >                 ext = &map->fm_extents[i];
-> >                 fprintf(stderr, "[%ld]: l: %llx p: %llx len: %llx flags: %x\n",
-> >                                 i, ext->fe_logical, ext->fe_physical,
-> >                                 ext->fe_length, ext->fe_flags);
-> >         }
-> >
-> > [0]: l: 0 p: 208000 len: 1fdf8000 flags: 800
-> > [1]: l: 1fdf8000 p: c000 len: 170000 flags: 800
-> > [2]: l: 1ff68000 p: 2000c000 len: 1ff70000 flags: 800
-> > [3]: l: 3fed8000 p: 4000c000 len: 128000 flags: 801
-> >
-> > ...where l == ->fe_logical and p == ->fe_physical.
-> >
-> > I'm still searching for the kernel where this behavior changed, but in
-> > the meantime wanted to report this in case its something
-> > straightforward in the allocator. The mkfs.xfs invocation in this case
-> > was:
-> >
-> >     mkfs.xfs -f -d su=2m,sw=1 -m reflink=0 /dev/pmem0
->
-> As we talked about on irc while I waited for a slooow imap server, I
-> think this is caused by fallocate asking for a larger allocation than
-> the AG size.  The allocator of course declines this, and bmap code is
-> too fast to drop the alignment hints.  IIRC Brian and Carlos and Dave
-> were working on something in this area[1] but I don't think there's been
-> any progress in a month(?)
->
-> Then Dan said agsize=131072, which means 512M AGs, so a 1G fallocate
-> will never generate an aligned allocation... but a 256M one seems to
-> work fine on my test vm.
->
+On Thu, Oct 17, 2019 at 03:57:29AM -0400, Brian Foster wrote:
+> On Thu, Oct 17, 2019 at 12:24:38PM +1100, Dave Chinner wrote:
+> > It's not a contention issue - there's real bugs if we don't order
+> > the locking correctly here.
+> > 
+> 
+> Is this patch fixing real bugs in the existing code or reducing
+> contention/blocking in the reclaim codepath?  My understanding was the
+> latter, so thus I'm trying to make sure I follow how this blocking can
+> actually happen that this patch purports to address. The reasoning in my
+> comment above is basically how I followed the existing code as it
+> pertains to blocking in reclaim, and that is the scenario I was asking
+> about...
 
-Thanks Darrick. While reducing the fallocate causes physical alignment
-to happen some extents are still misaligned to the logical offset, but
-adding agcount=2 cleans it up for me.
+Neither. It's a patch that simplifies and formalises the
+unreferenced inode lookup alogrithm. Previous patches change the way
+we isolate inodes for reclaim, opening up the opportunity to
+simplify the lookup/reclaim synchronisation and remove a race
+condition that that we've carried a workaround to avoid for 20+
+years.
+
+Yes, it has the added bonus of removing a potential blocking point
+in reclaim, but hitting that blocking point it is pretty rare so
+it's not really a reduction in anything measurable.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
