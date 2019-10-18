@@ -1,118 +1,138 @@
-Return-Path: <SRS0=4OPL=YK=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=TFM3=YL=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E363ECA9EC8
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 23:08:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7A743CA9EB3
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Oct 2019 00:38:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B552B21D7A
-	for <linux-xfs@archiver.kernel.org>; Thu, 17 Oct 2019 23:08:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4620B21D80
+	for <linux-xfs@archiver.kernel.org>; Fri, 18 Oct 2019 00:38:54 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=mbobrowski-org.20150623.gappssmtp.com header.i=@mbobrowski-org.20150623.gappssmtp.com header.b="P9ne7A9V"
+	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="Jig6UPG/";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="ei6jqlLA"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2441709AbfJQXIW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 17 Oct 2019 19:08:22 -0400
-Received: from mail-pg1-f195.google.com ([209.85.215.195]:32816 "EHLO
-        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2441706AbfJQXIW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 19:08:22 -0400
-Received: by mail-pg1-f195.google.com with SMTP id i76so2232876pgc.0
-        for <linux-xfs@vger.kernel.org>; Thu, 17 Oct 2019 16:08:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=mbobrowski-org.20150623.gappssmtp.com; s=20150623;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=98GpYLRwSkTQW+31mE56KMoWjsDPbX3fOPDTfwNIEJY=;
-        b=P9ne7A9VWvIgJ2CO0Eq3g3Kuwsg77OIPUU+GUMXqFkhK5opoPq3Il7YFz+76EO/J+t
-         7QHE4Aa6cQMU7X2JhpLe3yAyTAaLF5dtPVAkZa0M2g4Ixr6Usjl5mItPREAGWevki8rq
-         ngIG77OZuG6GQMqfLAtfu/F/e9wekmOYLZQWeo38NfDgj/NkBIO4ScpZr00AYYlcZZC5
-         OKtHkwEQDctGBeSTwEH9caCaMmriRHAgWvOHonl9dKWoOkGJwRoKWfM4geEtbeDP/Ico
-         tCrVeZ/0+dk1GqzmjU9kl/zbuu3nmGqOiLdOxNzZH49j0tNMfIHi9qcb5fo8To4wJQHP
-         xRRg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=98GpYLRwSkTQW+31mE56KMoWjsDPbX3fOPDTfwNIEJY=;
-        b=Z8VOioyqu4nv7yhFkauQdrklPNIA+9A+7ETDPp+i3rQtVJciEv/itojOP0wUw6/D/N
-         SzdVlp+5VpqzchejmUHv0iu5Xl4Nl9mTrO4S70S5hUft8H4fO7jn39M6RhRPdk09ev5u
-         8rFGMsFg5Ty2Kplzr59Tf1HtfQO1Ttrj/wZ1vUwtiTaEpVszF4xtK4UIE0mhP2SLVg/c
-         k7q6smkFvP1O85CSSrmA+HW8209nC63/7ZuQ2v7kWoZ2PnNxW9Oz1WrY9yn8f9tvtMWG
-         o3emuezeWym1gz6OKFo+TS0yajvkIdKrKSAesynzN+sUuR8ATCEkb4FiloRpGDDYqqKF
-         /T8g==
-X-Gm-Message-State: APjAAAWlOoW0gteM/LOrXOikGewWvBTfhe7VP1TJ9SqCDH9RwE16V6fu
-        Vc7Elm7xSoVYugfR6jGGcru4gX5TX2NJ
-X-Google-Smtp-Source: APXvYqyYF3m9FhGnMdMs4e2xcow7BtBbKNzso2k1mf749r04JEdi6TI4LKrua9x0eLSiK5Xnypurvw==
-X-Received: by 2002:a63:41c7:: with SMTP id o190mr6771050pga.6.1571353701420;
-        Thu, 17 Oct 2019 16:08:21 -0700 (PDT)
-Received: from bobrowski ([110.232.114.101])
-        by smtp.gmail.com with ESMTPSA id t11sm3418848pjy.10.2019.10.17.16.08.17
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 17 Oct 2019 16:08:20 -0700 (PDT)
-Date:   Fri, 18 Oct 2019 10:08:14 +1100
-From:   Matthew Bobrowski <mbobrowski@mbobrowski.org>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-kernel@vger.kernel.org, Dave Chinner <dchinner@redhat.com>
-Subject: Re: [PATCH 01/14] iomap: iomap that extends beyond EOF should be
- marked dirty
-Message-ID: <20191017230814.GB31874@bobrowski>
-References: <20191017175624.30305-1-hch@lst.de>
- <20191017175624.30305-2-hch@lst.de>
- <20191017183917.GL13108@magnolia>
- <20191017215613.GN16973@dread.disaster.area>
+        id S2391570AbfJRAix (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 17 Oct 2019 20:38:53 -0400
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:40707 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726633AbfJRAix (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 17 Oct 2019 20:38:53 -0400
+Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
+        by mailout.nyi.internal (Postfix) with ESMTP id 24E0321BF9;
+        Thu, 17 Oct 2019 20:38:52 -0400 (EDT)
+Received: from mailfrontend2 ([10.202.2.163])
+  by compute1.internal (MEProxy); Thu, 17 Oct 2019 20:38:52 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
+        message-id:subject:from:to:cc:date:in-reply-to:references
+        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
+        AoTYpCtVhexiqtPeNw0D02oSJb4IBboHUR2usOR4ZfU=; b=Jig6UPG/uwFs6SJb
+        NT7dSvtiMBbu7Cb8o7xcmWFOPXxigIjZ09rHEff0sBJQhuGA/a/PtVi0X4Jyn0U5
+        Csy6+RlkKY9Nro68ObT0VE5ZwqaeXfDfs0WsO+HHHVhKqksuuLnCiPATWPI55M14
+        qFftX8R2kdL8pcG/vGRkAaZkB0p6gVXRKZJnX5ZGqBJ0DP0dAwcmdEVBIHP7YTVN
+        2cdlBuCa2V/xa8Jn/sEuAzEm+0oHAEBXz9gf2BBAcDWE5mUTTBTOSIqr/eThthRL
+        63cGibf8sWsy97ae4z+EkIvLRCc9tTCgClNjDTz4t+d7Gwpla7zAA+hHENHoDvjk
+        fM7Q+g==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-transfer-encoding:content-type
+        :date:from:in-reply-to:message-id:mime-version:references
+        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+        :x-sasl-enc; s=fm1; bh=AoTYpCtVhexiqtPeNw0D02oSJb4IBboHUR2usOR4Z
+        fU=; b=ei6jqlLA6BuMVq9GPjmo7rGvbZmmvZPiHz3Df8ylxRueoFgqOsV/sXE4k
+        LpOkQBMDOFLY75GBBqqxyskgpJwXUBSlbCdogNecekO/OIBCTT5lLj+6+yeWPObS
+        +2PIFyKHzDXmsNgviPLZvhP8ffV0ssVTH/euqaYwLpc/8RuV4RrTZoHY1Db7AW3p
+        7lWr+/rCC41f6o9aFaTevVjEbbuUiDzOTFdVH/tB6Kd4pOcquFHi4bcQlQaQL+y+
+        8TJB+fH7b8FfGJtoPVqAoKL+33/WfDcnruGu2G12aynmRQj6MKrlLlrXDJXHOKu5
+        ZTjjyeFfwE3e/dn5jWpSO0IUOmK2Q==
+X-ME-Sender: <xms:mgmpXT_K6_FlM1wPSoB7qnACykTLhxSE-Y9FoUTltoqiHAtvQvVieQ>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedrjeekgdeffecutefuodetggdotefrodftvf
+    curfhrohhfihhlvgemucfhrghsthforghilhdpqfgfvfdpuffrtefokffrpgfnqfghnecu
+    uegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenuc
+    fjughrpefkuffhvfffjghftggfggfgsehtjeertddtreejnecuhfhrohhmpefkrghnucfm
+    vghnthcuoehrrghvvghnsehthhgvmhgrfidrnhgvtheqnecuffhomhgrihhnpehkvghrnh
+    gvlhdrohhrghenucfkphepuddukedrvddtledrudekfedrjedunecurfgrrhgrmhepmhgr
+    ihhlfhhrohhmpehrrghvvghnsehthhgvmhgrfidrnhgvthenucevlhhushhtvghrufhiii
+    gvpedt
+X-ME-Proxy: <xmx:mgmpXbzJQu_CEERseesiP_Gn8HWzE1oDarMpR4SNJLblClB-NXmbOQ>
+    <xmx:mgmpXabTmw-DOmZSeoHQ6ZtvXShTrjTQzd1AmYTlvrYG0yuThdNAgA>
+    <xmx:mgmpXXoYIHqtGfcjzgbAXDvYP1K2snEkuC44uV1VSo24rm_j_IiPEQ>
+    <xmx:nAmpXUi4YSDF0hxYp22gJUFCsS5-_gAF9hq3v6M54IlIoiO8mXJy8Q>
+Received: from mickey.themaw.net (unknown [118.209.183.71])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 03B7ED6005A;
+        Thu, 17 Oct 2019 20:38:46 -0400 (EDT)
+Message-ID: <88c7e5fe1ee4e0cc3c3ca3e87588f8ebf9c86b14.camel@themaw.net>
+Subject: Re: [PATCH v6 12/12] xfs: switch to use the new mount-api
+From:   Ian Kent <raven@themaw.net>
+To:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@zeniv.linux.org.uk>
+Date:   Fri, 18 Oct 2019 08:38:43 +0800
+In-Reply-To: <20191017065147.GB32610@infradead.org>
+References: <157118625324.9678.16275725173770634823.stgit@fedora-28>
+         <157118650856.9678.4798822571611205029.stgit@fedora-28>
+         <20191016181829.GA4870@infradead.org>
+         <322766092bbf885ae17eee046c917937f9e76cfc.camel@themaw.net>
+         <20191017045330.GI13108@magnolia> <20191017065147.GB32610@infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191017215613.GN16973@dread.disaster.area>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 18, 2019 at 08:56:13AM +1100, Dave Chinner wrote:
-> On Thu, Oct 17, 2019 at 11:39:17AM -0700, Darrick J. Wong wrote:
-> > On Thu, Oct 17, 2019 at 07:56:11PM +0200, Christoph Hellwig wrote:
-> > > From: Dave Chinner <dchinner@redhat.com>
+On Wed, 2019-10-16 at 23:51 -0700, Christoph Hellwig wrote:
+> On Wed, Oct 16, 2019 at 09:53:30PM -0700, Darrick J. Wong wrote:
+> > > The problem is that this will probably be used in logging later
+> > > and
+> > > there's a lot of logging that uses the upper case variant.
 > > > 
-> > > When doing a direct IO that spans the current EOF, and there are
-> > > written blocks beyond EOF that extend beyond the current write, the
-> > > only metadata update that needs to be done is a file size extension.
+> > > OTOH if all the log messages were changed to use lower case "xfs"
+> > > then
+> > > one of the problems I see with logging (that name inconsistency)
+> > > would
+> > > go away.
 > > > 
-> > > However, we don't mark such iomaps as IOMAP_F_DIRTY to indicate that
-> > > there is IO completion metadata updates required, and hence we may
-> > > fail to correctly sync file size extensions made in IO completion
-> > > when O_DSYNC writes are being used and the hardware supports FUA.
-> > > 
-> > > Hence when setting IOMAP_F_DIRTY, we need to also take into account
-> > > whether the iomap spans the current EOF. If it does, then we need to
-> > > mark it dirty so that IO completion will call generic_write_sync()
-> > > to flush the inode size update to stable storage correctly.
-> > > 
-> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
+> > > So I'm not sure what I should do here.
 > > 
-> > Looks ok, but need fixes tag.  Also, might it be wise to split off the
-> > ext4 section into a separate patch so that it can be backported
-> > separately?
+> > I would just leave it 'XFS' for consistency, but I might be in the
+> > back
+> > pocket of Big Letter. ;)
 > 
-> I 've done a bit more digging on this, and the ext4 part is not
-> needed for DAX as IOMAP_F_DIRTY is only used in the page fault path
-> and hence can't change the file size. As such, this only affects
-> direct IO. Hence the ext4 hunk can be added to the ext4 iomap-dio
-> patchset that is being developed rather than being in this patch.
+> I isn't really used for much, and Al already has a patch from Eric in
+> on
+> of his trees that kills the field in favor of the file_system_type
+> name
+> field:
+> 
+> https://git.kernel.org/pub/scm/linux/kernel/git/viro/vfs.git/commit/?h=work.mount-parser-later&id=543fdf1d617edd6d681fcc50e16478e832a7a2ac
 
-Noted, thanks Dave. I've incorporated the ext4 related change into my patch
-series.
+Yes, I was thinking about that when I replied.
 
---<M>--
+> 
+> So we should not spell them differently if we can.
+
+I don't think it will make much difference in the long run, I'll just
+change it to lower case for the time being.
+
+I think the implications of the mount api on logging need to be
+discussed further (see my thoughts in the series cover letter), there's
+not just a log entry case issue. I plan on making some RFC patches for
+this later.
+
+Since I'm doing the mount api change for xfs I'll base my RFC patches
+on xfs and they will need to go to a wider audience (fsdevel as well
+I expect).
+
+Ian
+
