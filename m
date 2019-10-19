@@ -2,177 +2,168 @@ Return-Path: <SRS0=7yvF=YM=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 601A4CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Oct 2019 01:27:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F2886CA9EAC
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Oct 2019 07:43:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 28D87222C5
-	for <linux-xfs@archiver.kernel.org>; Sat, 19 Oct 2019 01:27:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="THJsi6Tw"
+	by mail.kernel.org (Postfix) with ESMTP id B4024222C5
+	for <linux-xfs@archiver.kernel.org>; Sat, 19 Oct 2019 07:43:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726049AbfJSB1P (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 18 Oct 2019 21:27:15 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:46962 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725793AbfJSB1O (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 18 Oct 2019 21:27:14 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9J1PLDv026137;
-        Sat, 19 Oct 2019 01:26:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=+eN2dHDKqzKzkek8Upk0U7xYgl91txQoJvCOcPqOmSQ=;
- b=THJsi6TwAS2Db0taHIc605mV/PwPgDinOuAQFDGrxwvd+qX1nu7j0sKSER2+DotlfM1x
- Q3W+ztw3Jq/nsSMiQW4VA6eOUqAiMxdEC46nXr5RZ1ZSuz13hEExJGpmyMGIWcy8viaD
- dmo9py6L3+WqibN2sLuFnTuqUuuML5NJmvMm2KvYepcWuv+Xc+LeW2F1JXIh09izxVtG
- dx8i+UR+kdt5mFpGEs5fJIEUNi6wOxpg0E97YQCGwL+h8M3vphAoVeuizjtbqttbt7fq
- O6DpmOCCehPwvuW1FqgX97XWC8laY9c1VpqnlzvVv/AzP+xkFHPutCUA+nya4m+JiblZ 9A== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vq0q46r75-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 19 Oct 2019 01:26:50 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9J1MvfF107693;
-        Sat, 19 Oct 2019 01:26:49 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2vqqmgk9qj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Sat, 19 Oct 2019 01:26:49 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9J1QbXl010915;
-        Sat, 19 Oct 2019 01:26:47 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sat, 19 Oct 2019 01:26:37 +0000
-Date:   Fri, 18 Oct 2019 18:26:35 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Jan Kara <jack@suse.cz>, mbobrowski@mbobrowski.org,
-        riteshh@linux.ibm.com
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to b7b293bdaaf4
-Message-ID: <20191019012635.GC6719@magnolia>
+        id S1725995AbfJSHnT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 19 Oct 2019 03:43:19 -0400
+Received: from www17.your-server.de ([213.133.104.17]:60082 "EHLO
+        www17.your-server.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725940AbfJSHnS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 19 Oct 2019 03:43:18 -0400
+X-Greylist: delayed 1353 seconds by postgrey-1.27 at vger.kernel.org; Sat, 19 Oct 2019 03:43:17 EDT
+Received: from sslproxy05.your-server.de ([78.46.172.2])
+        by www17.your-server.de with esmtpsa (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256)
+        (Exim 4.89_1)
+        (envelope-from <thomas@m3y3r.de>)
+        id 1iLj2Y-0001pf-Kr; Sat, 19 Oct 2019 09:20:42 +0200
+Received: from [2a02:908:4c22:ec00:8ad5:993:4cda:a89f] (helo=localhost.localdomain)
+        by sslproxy05.your-server.de with esmtpsa (TLSv1.2:DHE-RSA-AES256-GCM-SHA384:256)
+        (Exim 4.89)
+        (envelope-from <thomas@m3y3r.de>)
+        id 1iLj2Y-0000W2-Ey; Sat, 19 Oct 2019 09:20:42 +0200
+From:   Thomas Meyer <thomas@m3y3r.de>
+To:     linux-kernel@vger.kernel.org, linux-xfs@vger.kernel.org
+Cc:     Thomas Meyer <thomas@m3y3r.de>
+Subject: [PATCH 1/2] lib/bsearch.c: introduce bsearch_idx
+Date:   Sat, 19 Oct 2019 09:20:32 +0200
+Message-Id: <20191019072033.17744-1-thomas@m3y3r.de>
+X-Mailer: git-send-email 2.21.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910190009
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9414 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910190009
+Content-Transfer-Encoding: 8bit
+X-Authenticated-Sender: thomas@m3y3r.de
+X-Virus-Scanned: Clear (ClamAV 0.101.4/25606/Fri Oct 18 10:58:40 2019)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+many existing bsearch implementations don't want to have the pointer to the
+found element, but the index position, or if the searched element doesn't
+exist, the index position the search element would be placed in the array.
 
-The iomap-for-next branch of the xfs-linux repository at:
+Signed-off-by: Thomas Meyer <thomas@m3y3r.de>
+---
+ include/linux/bsearch.h |  7 +++++
+ lib/bsearch.c           | 62 +++++++++++++++++++++++++++++++++--------
+ 2 files changed, 58 insertions(+), 11 deletions(-)
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+diff --git a/include/linux/bsearch.h b/include/linux/bsearch.h
+index 62b1eb3488584..0c40c8b39b881 100644
+--- a/include/linux/bsearch.h
++++ b/include/linux/bsearch.h
+@@ -7,4 +7,11 @@
+ void *bsearch(const void *key, const void *base, size_t num, size_t size,
+ 	      int (*cmp)(const void *key, const void *elt));
+ 
++struct bsearch_result { size_t idx; bool found; };
++
++struct bsearch_result bsearch_idx(const void *key, const void *base,
++		      size_t num,
++		      size_t size,
++		      int (*cmp)(const void *key, const void *elt));
++
+ #endif /* _LINUX_BSEARCH_H */
+diff --git a/lib/bsearch.c b/lib/bsearch.c
+index 8baa839681628..5c46d0ec1e473 100644
+--- a/lib/bsearch.c
++++ b/lib/bsearch.c
+@@ -10,8 +10,8 @@
+ #include <linux/bsearch.h>
+ #include <linux/kprobes.h>
+ 
+-/*
+- * bsearch - binary search an array of elements
++/**
++ * bsearch() - binary search an array of elements
+  * @key: pointer to item being searched for
+  * @base: pointer to first element to search
+  * @num: number of elements
+@@ -27,28 +27,68 @@
+  * could compare the string with the struct's name field.  However, if
+  * the key and elements in the array are of the same type, you can use
+  * the same comparison function for both sort() and bsearch().
++ *
++ * Return: Either a pointer to the search element or NULL if not found.
+  */
+ void *bsearch(const void *key, const void *base, size_t num, size_t size,
+ 	      int (*cmp)(const void *key, const void *elt))
+ {
+-	const char *pivot;
++	struct bsearch_result idx = bsearch_idx(key, base, num, size, cmp);
++
++	if (idx.found == true)
++		return (void *)base + idx.idx * size;
++
++	return NULL;
++}
++EXPORT_SYMBOL(bsearch);
++NOKPROBE_SYMBOL(bsearch);
++
++/**
++ * bsearch_idx() - binary search an array of elements
++ * @key: pointer to item being searched for
++ * @base: pointer to first element to search
++ * @num: number of elements
++ * @size: size of each element
++ * @cmp: pointer to comparison function
++ *
++ * This function does a binary search on the given array.  The
++ * contents of the array should already be in ascending sorted order
++ * under the provided comparison function.
++ *
++ * Returns an index position and a bool if an exact match was found
++ * if an exact match was found the idx is the index in the base array.
++ * if no exact match was found the idx will point the the next higher index
++ * entry in the base array. this can also be base[num], i.e. after the actual
++ * allocated array.
++ */
++struct bsearch_result bsearch_idx(const void *key, const void *base,
++				  size_t num,
++				  size_t size,
++				  int (*cmp)(const void *key, const void *elt))
++{
++	struct bsearch_result res = { .found = false };
+ 	int result;
++	size_t base_idx = 0;
++	size_t pivot_idx;
+ 
+ 	while (num > 0) {
+-		pivot = base + (num >> 1) * size;
+-		result = cmp(key, pivot);
++		pivot_idx = base_idx + (num >> 1);
++		result = cmp(key, base + pivot_idx * size);
+ 
+-		if (result == 0)
+-			return (void *)pivot;
++		if (result == 0) {
++			res.idx = pivot_idx;
++			res.found = true;
++			return res;
++		}
+ 
+ 		if (result > 0) {
+-			base = pivot + size;
++			base_idx = pivot_idx + 1;
+ 			num--;
+ 		}
+ 		num >>= 1;
+ 	}
+ 
+-	return NULL;
++	res.idx = base_idx;
++	return res;
+ }
+-EXPORT_SYMBOL(bsearch);
+-NOKPROBE_SYMBOL(bsearch);
++EXPORT_SYMBOL(bsearch_idx);
+-- 
+2.21.0
 
-has just been updated.
-
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.
-
-The branch now contains three major API changes for 5.5: Jan's explicit
-synchronous iomap_dio_rw parameter; Christoph's porting of the xfs
-writeback implementation to iomap; and Goldwyn/Christoph's addition of
-srcmap support to iomap_begin for COW staging.  I think this is it for
-5.5, modulo any bug fixes anyone wants to submit.  If anyone sees
-anything bad enough to warrant a push -f, please scream quickly,
-otherwise I'll consider this branch a stable working branch on 22 Oct
-2019 at 00:00 UTC.  (Extra time because I'm sending this late on a
-Friday afternoon.)
-
-The new head of the iomap-for-next branch is commit:
-
-b7b293bdaaf4 iomap: use a srcmap for a read-modify-write I/O
-
-New Commits:
-
-Christoph Hellwig (20):
-      [5d816b81d09d] xfs: initialize iomap->flags in xfs_bmbt_to_iomap
-      [34c8fe914a5c] xfs: set IOMAP_F_NEW more carefully
-      [17950b4e5396] xfs: use a struct iomap in xfs_writepage_ctx
-      [207e86dd487d] xfs: refactor the ioend merging code
-      [be0bbd4c6859] xfs: turn io_append_trans into an io_private void pointer
-      [b931cda62c8c] xfs: remove the fork fields in the writepage_ctx and ioend
-      [786717533e97] iomap: zero newly allocated mapped blocks
-      [f9208606ee98] iomap: lift common tracing code from xfs to iomap
-      [21ae4d097bb2] iomap: lift the xfs writeback code to iomap
-      [f0c130fd34f2] iomap: warn on inline maps in iomap_writepage_map
-      [4e29ff8b6f00] iomap: move struct iomap_page out of iomap.h
-      [e09ffca48f47] iomap: cleanup iomap_ioend_compare
-      [1ccb2c4a5415] iomap: pass a struct page to iomap_finish_page_writeback
-      [b28d0615b4ec] iomap: better document the IOMAP_F_* flags
-      [f47fd1f1f5bd] iomap: remove the unused iomap argument to __iomap_write_end
-      [0d84ea778c24] iomap: always use AOP_FLAG_NOFS in iomap_write_begin
-      [213c6dfea828] iomap: ignore non-shared or non-data blocks in xfs_file_dirty
-      [1c979fce8c91] iomap: move the zeroing case out of iomap_read_page_sync
-      [c47007977d2e] iomap: use write_begin to read pages to unshare
-      [37370b729fbd] iomap: renumber IOMAP_HOLE to 0
-
-Darrick J. Wong (1):
-      [a936fb253791] iomap: enhance writeback error message
-
-Dave Chinner (1):
-      [8a23414ee345] iomap: iomap that extends beyond EOF should be marked dirty
-
-Goldwyn Rodrigues (1):
-      [b7b293bdaaf4] iomap: use a srcmap for a read-modify-write I/O
-
-Jan Kara (2):
-      [13ef954445df] iomap: Allow forcing of waiting for running DIO in iomap_dio_rw()
-      [906753befc4d] xfs: Use iomap_dio_rw to wait for unaligned direct IO
-
-
-Code Diffstat:
-
- fs/dax.c                 |  13 +-
- fs/ext2/inode.c          |   2 +-
- fs/ext4/inode.c          |   2 +-
- fs/gfs2/bmap.c           |   3 +-
- fs/gfs2/file.c           |   6 +-
- fs/iomap/Makefile        |  16 +-
- fs/iomap/apply.c         |  25 +-
- fs/iomap/buffered-io.c   | 749 ++++++++++++++++++++++++++++++++++++++++------
- fs/iomap/direct-io.c     |   9 +-
- fs/iomap/fiemap.c        |   4 +-
- fs/iomap/seek.c          |   4 +-
- fs/iomap/swapfile.c      |   3 +-
- fs/iomap/trace.c         |  12 +
- fs/iomap/trace.h         |  88 ++++++
- fs/xfs/libxfs/xfs_bmap.c |  14 +-
- fs/xfs/libxfs/xfs_bmap.h |   3 +-
- fs/xfs/xfs_aops.c        | 754 ++++++++---------------------------------------
- fs/xfs/xfs_aops.h        |  17 --
- fs/xfs/xfs_file.c        |  13 +-
- fs/xfs/xfs_iomap.c       |  51 +++-
- fs/xfs/xfs_iomap.h       |   2 +-
- fs/xfs/xfs_pnfs.c        |   2 +-
- fs/xfs/xfs_reflink.c     |   2 +-
- fs/xfs/xfs_super.c       |  11 +-
- fs/xfs/xfs_trace.h       |  65 ----
- include/linux/iomap.h    | 129 +++++---
- 26 files changed, 1085 insertions(+), 914 deletions(-)
- create mode 100644 fs/iomap/trace.c
- create mode 100644 fs/iomap/trace.h
