@@ -2,107 +2,251 @@ Return-Path: <SRS0=IeGX=YO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36AB5CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 17:40:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C671CA9EB7
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 17:56:29 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 15F5E2064B
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 17:40:29 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DD55920B7C
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 17:56:28 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RaB6dCOh"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727767AbfJURk2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Oct 2019 13:40:28 -0400
-Received: from mga04.intel.com ([192.55.52.120]:38681 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726289AbfJURk2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Oct 2019 13:40:28 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 21 Oct 2019 10:40:27 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.67,324,1566889200"; 
-   d="scan'208";a="200508215"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by orsmga003.jf.intel.com with ESMTP; 21 Oct 2019 10:40:26 -0700
-Date:   Mon, 21 Oct 2019 10:40:26 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 2/5] fs/xfs: Isolate the physical DAX flag from effective
-Message-ID: <20191021174025.GA23024@iweiny-DESK2.sc.intel.com>
-References: <20191020155935.12297-1-ira.weiny@intel.com>
- <20191020155935.12297-3-ira.weiny@intel.com>
- <20191021002621.GC8015@dread.disaster.area>
+        id S1726955AbfJUR41 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Oct 2019 13:56:27 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:49664 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726819AbfJUR41 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Oct 2019 13:56:27 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9LHrtR3033929;
+        Mon, 21 Oct 2019 17:56:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=sJLMt5EkGmSRwrSsUVpUeGl2PL5fA9EvfbF5maBnRDw=;
+ b=RaB6dCOh6k2ct4kG/fnVskBWaza46O6ZJBFoNWpxfgIfBdsJiC2aE7PS5YBnWXzMYRzC
+ zVdfB+YskWqUvRZD+7HLl+1X+M+rhMzWdHaevbBcpgSExzN9+rRVyOA2uzU0rcuaOf9D
+ RR8l7oqksKhoUokRLXu7GzzsDWWCjM10HXD6lhD1zbkYC0qw+BioulI2oeIsf9OjiWk6
+ 6k11/C1FZm3cJ53xivKFKaXrsJyjNVKpuWZ94KheIuTnZFoDduIcq/A2p7Hi4/K7h8d6
+ Z/jGE+VKWA/G/250mMhKxNSqUW5TJdM5QtMt0Y3VKaD5uKxUqGOPQyoVkmixExM7zu06 Ww== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2vqu4qh7m9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Oct 2019 17:56:24 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9LHrLr3150919;
+        Mon, 21 Oct 2019 17:56:24 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3030.oracle.com with ESMTP id 2vsakbmdaa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Oct 2019 17:56:23 +0000
+Received: from abhmp0002.oracle.com (abhmp0002.oracle.com [141.146.116.8])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9LHuM4g030706;
+        Mon, 21 Oct 2019 17:56:23 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 21 Oct 2019 10:56:22 -0700
+Date:   Mon, 21 Oct 2019 10:56:21 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 02/11] xfs_scrub: improve reporting of file data media
+ errors
+Message-ID: <20191021175621.GB913374@magnolia>
+References: <156944736739.300131.5717633994765951730.stgit@magnolia>
+ <156944737999.300131.8592981210219230662.stgit@magnolia>
+ <79b3273d-fe63-9bee-7be9-793a55aabb69@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191021002621.GC8015@dread.disaster.area>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <79b3273d-fe63-9bee-7be9-793a55aabb69@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9417 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910210171
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9417 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910210171
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 21, 2019 at 11:26:21AM +1100, Dave Chinner wrote:
-> On Sun, Oct 20, 2019 at 08:59:32AM -0700, ira.weiny@intel.com wrote:
-> > From: Ira Weiny <ira.weiny@intel.com>
+On Mon, Oct 21, 2019 at 11:33:59AM -0500, Eric Sandeen wrote:
+> On 9/25/19 4:36 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > xfs_ioctl_setattr_dax_invalidate() currently checks if the DAX flag is
-> > changing as a quick check.
+> > When we report media errors, we should tell the administrator the file
+> > offset and length of the bad region, not just the offset of the entire
+> > file extent record that overlaps a bad region.
 > > 
-> > But the implementation mixes the physical (XFS_DIFLAG2_DAX) and
-> > effective (S_DAX) DAX flags.
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  libfrog/bitmap.c |   37 +++++++++++++++++++++++++++++++++++++
+> >  libfrog/bitmap.h |    2 ++
+> >  scrub/phase6.c   |   52 +++++++++++++++++++++++++++++++++++++++++++++++-----
+> >  3 files changed, 86 insertions(+), 5 deletions(-)
+> > 
+> > 
+> > diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
+> > index a75d085a..6a88ef48 100644
+> > --- a/libfrog/bitmap.c
+> > +++ b/libfrog/bitmap.c
+> > @@ -339,6 +339,43 @@ bitmap_iterate(
+> >  }
+> >  #endif
+> >  
+> > +/* Iterate the set regions of part of this bitmap. */
+> > +int
+> > +bitmap_iterate_range(
+> > +	struct bitmap		*bmap,
+> > +	uint64_t		start,
+> > +	uint64_t		length,
+> > +	int			(*fn)(uint64_t, uint64_t, void *),
+> > +	void			*arg)
+> > +{
+> > +	struct avl64node	*firstn;
+> > +	struct avl64node	*lastn;
+> > +	struct avl64node	*pos;
+> > +	struct avl64node	*n;
+> > +	struct avl64node	*l;
+> > +	struct bitmap_node	*ext;
+> > +	int			ret = 0;
+> > +
+> > +	pthread_mutex_lock(&bmap->bt_lock);
+> > +
+> > +	avl64_findranges(bmap->bt_tree, start, start + length, &firstn,
+> > +			&lastn);
+> > +
+> > +	if (firstn == NULL && lastn == NULL)
+> > +		goto out;
+> > +
+> > +	avl_for_each_range_safe(pos, n, l, firstn, lastn) {
+> > +		ext = container_of(pos, struct bitmap_node, btn_node);
+> > +		ret = fn(ext->btn_start, ext->btn_length, arg);
+> > +		if (ret)
+> > +			break;
+> > +	}
+> > +
+> > +out:
+> > +	pthread_mutex_unlock(&bmap->bt_lock);
+> > +	return ret;
+> > +}
+> > +
+> >  /* Do any bitmap extents overlap the given one?  (locked) */
+> >  static bool
+> >  __bitmap_test(
+> > diff --git a/libfrog/bitmap.h b/libfrog/bitmap.h
+> > index 759386a8..043b77ee 100644
+> > --- a/libfrog/bitmap.h
+> > +++ b/libfrog/bitmap.h
+> > @@ -16,6 +16,8 @@ void bitmap_free(struct bitmap **bmap);
+> >  int bitmap_set(struct bitmap *bmap, uint64_t start, uint64_t length);
+> >  int bitmap_iterate(struct bitmap *bmap, int (*fn)(uint64_t, uint64_t, void *),
+> >  		void *arg);
+> > +int bitmap_iterate_range(struct bitmap *bmap, uint64_t start, uint64_t length,
+> > +		int (*fn)(uint64_t, uint64_t, void *), void *arg);
+> >  bool bitmap_test(struct bitmap *bmap, uint64_t start,
+> >  		uint64_t len);
+> >  bool bitmap_empty(struct bitmap *bmap);
+> > diff --git a/scrub/phase6.c b/scrub/phase6.c
+> > index 1edd98af..a16ad114 100644
+> > --- a/scrub/phase6.c
+> > +++ b/scrub/phase6.c
+> > @@ -111,6 +111,41 @@ xfs_decode_special_owner(
+> >  
+> >  /* Routines to translate bad physical extents into file paths and offsets. */
+> >  
+> > +struct badfile_report {
+> > +	struct scrub_ctx	*ctx;
+> > +	const char		*descr;
+> > +	struct xfs_bmap		*bmap;
+> > +};
+> > +
+> > +/* Report on bad extents found during a media scan. */
+> > +static int
+> > +report_badfile(
+> > +	uint64_t		start,
+> > +	uint64_t		length,
+> > +	void			*arg)
+> > +{
+> > +	struct badfile_report	*br = arg;
+> > +	unsigned long long	bad_offset;
+> > +	unsigned long long	bad_length;
+> > +
+> > +	/* Clamp the bad region to the file mapping. */
+> > +	if (start < br->bmap->bm_physical) {
+> > +		length -= br->bmap->bm_physical - start;
+> > +		start = br->bmap->bm_physical;
+> > +	}
+> > +	length = min(length, br->bmap->bm_length);
+> > +
+> > +	/* Figure out how far into the bmap is the bad mapping and report it. */
+> > +	bad_offset = start - br->bmap->bm_physical;
+> > +	bad_length = min(start + length,
+> > +			 br->bmap->bm_physical + br->bmap->bm_length) - start;
+> > +
+> > +	str_error(br->ctx, br->descr,
+> > +_("media error at data offset %llu length %llu."),
+> > +			br->bmap->bm_offset + bad_offset, bad_length);
+> > +	return 0;
+> > +}
+> > +
+> >  /* Report if this extent overlaps a bad region. */
+> >  static bool
+> >  report_data_loss(
+> > @@ -122,8 +157,14 @@ report_data_loss(
+> >  	struct xfs_bmap			*bmap,
+> >  	void				*arg)
+> >  {
+> > +	struct badfile_report		br = {
+> > +		.ctx			= ctx,
+> > +		.descr			= descr,
+> > +		.bmap			= bmap,
+> > +	};
+> >  	struct media_verify_state	*vs = arg;
+> >  	struct bitmap			*bmp;
+> > +	int				ret;
+> >  
+> >  	/* Only report errors for real extents. */
+> >  	if (bmap->bm_flags & (BMV_OF_PREALLOC | BMV_OF_DELALLOC))
+> > @@ -134,11 +175,12 @@ report_data_loss(
+> >  	else
+> >  		bmp = vs->d_bad;
+> >  
+> > -	if (!bitmap_test(bmp, bmap->bm_physical, bmap->bm_length))
+> > -		return true;
+> > -
+> > -	str_error(ctx, descr,
+> > -_("offset %llu failed read verification."), bmap->bm_offset);
+> > +	ret = bitmap_iterate_range(bmp, bmap->bm_physical, bmap->bm_length,
+> > +			report_badfile, &br);
+> > +	if (ret) {
+> > +		str_liberror(ctx, ret, descr);
+> > +		return false;
 > 
-> More nuanced than that.
-> 
-> The idea was that if the mount option was set, clearing the
-> per-inode flag would override the mount option. i.e. the mount
-> option sets the S_DAX flag at inode instantiation, so using
-> FSSETXATTR to ensure the FS_XFLAG_DAX is not set would override the
-> mount option setting, giving applications a way of guranteeing they
-> aren't using DAX to access the data.
+> So related to the prior question; why does changing the way we report a
+> media error in a file change the flow with a "return false" here?
 
-At LSF/MM we discussed keeping the mount option as a global "chicken bit" as
-described by Matt Wilcox[1].  This preserves the existing behavior of turning
-it on no matter what but offers an alternative with the per-file flag.
+The bitmap iteration itself failed (since report_badfile never returns
+false), which means it hit a runtime error and the program should exit.
 
-To do what you describe above, it was suggested, by Ted I believe, that an
-admin can set DAX on the root directory which will enable DAX by default
-through inheritance but allow users to turn it off if they desire.
+(Granted, bitmap iteration never fails, so this is merely defensive
+programming.)
 
-I'm concerned that all users who currently use '-o dax' will expect their
-current file systems to be using DAX when those mounts occur.  Their physical
-inode flag is going to be 0 which, if we implement the 'turn off DAX' as you
-describe will mean they will not get the behavior they expect when booting on a
-new kernel.
+--D
 
-> 
-> So if the mount option is going to live on, I suspect that we want
-> to keep this code as it stands.
-
-I don't think we can get rid of it soon but I would be in favor of working
-toward deprecating it.  Regardless I think this keeps the semantics simple WRT
-the interaction of the mount and per-file flags.
-
-Ira
-
-[1] https://lwn.net/Articles/787973/
-
-> 
-> Cheers,
-> 
-> Dave.
-> -- 
-> Dave Chinner
-> david@fromorbit.com
+> > +	}
+> >  	return true;
+> >  }
+> >  
+> > 
