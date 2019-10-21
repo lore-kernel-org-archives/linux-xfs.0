@@ -6,29 +6,28 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF31DCA9EAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 16:54:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 16671CA9EAF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 17:17:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AC2C92086D
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 16:54:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D4A1820882
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 17:17:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726819AbfJUQyv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Oct 2019 12:54:51 -0400
-Received: from sandeen.net ([63.231.237.45]:42312 "EHLO sandeen.net"
+        id S1726289AbfJURRz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Oct 2019 13:17:55 -0400
+Received: from sandeen.net ([63.231.237.45]:43856 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726672AbfJUQyv (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Oct 2019 12:54:51 -0400
+        id S1728375AbfJURRz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Oct 2019 13:17:55 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id CC350EC3;
-        Mon, 21 Oct 2019 11:54:04 -0500 (CDT)
-Subject: Re: [PATCH 05/11] xfs_scrub: don't report media errors on unwritten
- extents
+        by sandeen.net (Postfix) with ESMTPSA id BFD1AEC3;
+        Mon, 21 Oct 2019 12:17:08 -0500 (CDT)
+Subject: Re: [PATCH 06/11] xfs_scrub: reduce fsmap activity for media errors
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944736739.300131.5717633994765951730.stgit@magnolia>
- <156944739811.300131.17079426522479861861.stgit@magnolia>
+ <156944740409.300131.11774965759850122284.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <f8383f2b-a398-4038-5c41-17ba5312299f@sandeen.net>
-Date:   Mon, 21 Oct 2019 11:54:49 -0500
+Message-ID: <bda4db03-54a2-8ed7-26b2-369ddcc1b697@sandeen.net>
+Date:   Mon, 21 Oct 2019 12:17:52 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944739811.300131.17079426522479861861.stgit@magnolia>
+In-Reply-To: <156944740409.300131.11774965759850122284.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,31 +88,288 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:36 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Don't report media errors for unwritten extents since no data has been
-> lost.
+> Right now we rather foolishly query the fsmap data for every single
+> media error that we find.  This is a silly waste of time since we
+> have yet to combine adjacent bad blocks into bad extents, so move the
+> rmap query until after we've constructed the bad block bitmap data.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
 > ---
->  scrub/phase6.c |    4 ++++
->  1 file changed, 4 insertions(+)
+>  libfrog/bitmap.c |   10 +---
+>  scrub/phase6.c   |  148 ++++++++++++++++++++++++++++++++++++++----------------
+>  2 files changed, 108 insertions(+), 50 deletions(-)
 > 
 > 
+> diff --git a/libfrog/bitmap.c b/libfrog/bitmap.c
+> index 6a88ef48..5daa1081 100644
+> --- a/libfrog/bitmap.c
+> +++ b/libfrog/bitmap.c
+> @@ -314,7 +314,6 @@ bitmap_clear(
+>  }
+>  #endif
+>  
+> -#ifdef DEBUG
+>  /* Iterate the set regions of this bitmap. */
+>  int
+>  bitmap_iterate(
+> @@ -324,20 +323,19 @@ bitmap_iterate(
+>  {
+>  	struct avl64node	*node;
+>  	struct bitmap_node	*ext;
+> -	int			error = 0;
+> +	int			ret;
+>  
+>  	pthread_mutex_lock(&bmap->bt_lock);
+>  	avl_for_each(bmap->bt_tree, node) {
+>  		ext = container_of(node, struct bitmap_node, btn_node);
+> -		error = fn(ext->btn_start, ext->btn_length, arg);
+> -		if (error)
+> +		ret = fn(ext->btn_start, ext->btn_length, arg);
+> +		if (ret)
+>  			break;
+>  	}
+>  	pthread_mutex_unlock(&bmap->bt_lock);
+>  
+> -	return error;
+> +	return ret;
+>  }
+> -#endif
+>  
+>  /* Iterate the set regions of part of this bitmap. */
+>  int
 > diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index 1013ba6d..ec821373 100644
+> index ec821373..378ea0fb 100644
 > --- a/scrub/phase6.c
 > +++ b/scrub/phase6.c
-> @@ -372,6 +372,10 @@ xfs_check_rmap_error_report(
->  	uint64_t		err_physical = *(uint64_t *)arg;
->  	uint64_t		err_off;
+> @@ -341,27 +341,9 @@ xfs_report_verify_dirent(
+>  	return moveon;
+>  }
 >  
-> +	/* Don't care about unwritten extents. */
-> +	if (map->fmr_flags & FMR_OF_PREALLOC)
-> +		return true;
+> -/* Given bad extent lists for the data & rtdev, find bad files. */
+> -static bool
+> -xfs_report_verify_errors(
+> -	struct scrub_ctx		*ctx,
+> -	struct media_verify_state	*vs)
+> -{
+> -	bool				moveon;
+> -
+> -	/* Scan the directory tree to get file paths. */
+> -	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
+> -			xfs_report_verify_dirent, vs);
+> -	if (!moveon)
+> -		return false;
+> -
+> -	/* Scan for unlinked files. */
+> -	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, vs);
+> -}
+> -
+>  /* Report an IO error resulting from read-verify based off getfsmap. */
+>  static bool
+> -xfs_check_rmap_error_report(
+> +ioerr_fsmap_report(
+>  	struct scrub_ctx	*ctx,
+>  	const char		*descr,
+>  	struct fsmap		*map,
+> @@ -409,12 +391,31 @@ xfs_check_rmap_error_report(
+>  	return true;
+>  }
+>  
+> +static struct bitmap *
+> +bitmap_for_disk(
+> +	struct scrub_ctx		*ctx,
+> +	struct disk			*disk,
+> +	struct media_verify_state	*vs)
+> +{
+> +	dev_t				dev = xfs_disk_to_dev(ctx, disk);
 > +
->  	if (err_physical > map->fmr_physical)
->  		err_off = err_physical - map->fmr_physical;
->  	else
+> +	/*
+> +	 * If we don't have parent pointers, save the bad extent for
+> +	 * later rescanning.
+> +	 */
+
+This comment doesn't make sense here, does it?
+
+> +	if (dev == ctx->fsinfo.fs_datadev)
+> +		return vs->d_bad;
+> +	else if (dev == ctx->fsinfo.fs_rtdev)
+> +		return vs->r_bad;
+> +	return NULL;
+> +}
+> +
+>  /*
+>   * Remember a read error for later, and see if rmap will tell us about the
+>   * owner ahead of time.
+>   */
+>  static void
+> -xfs_check_rmap_ioerr(
+> +remember_ioerr(
+>  	struct scrub_ctx		*ctx,
+>  	struct disk			*disk,
+>  	uint64_t			start,
+> @@ -422,32 +423,39 @@ xfs_check_rmap_ioerr(
+>  	int				error,
+>  	void				*arg)
+>  {
+> -	struct fsmap			keys[2];
+> -	char				descr[DESCR_BUFSZ];
+>  	struct media_verify_state	*vs = arg;
+>  	struct bitmap			*tree;
+> -	dev_t				dev;
+>  	int				ret;
+>  
+> -	dev = xfs_disk_to_dev(ctx, disk);
+> +	tree = bitmap_for_disk(ctx, disk, vs);
+> +	if (!tree)
+> +		return;
+>  
+> -	/*
+> -	 * If we don't have parent pointers, save the bad extent for
+> -	 * later rescanning.
+> -	 */
+> -	if (dev == ctx->fsinfo.fs_datadev)
+> -		tree = vs->d_bad;
+> -	else if (dev == ctx->fsinfo.fs_rtdev)
+> -		tree = vs->r_bad;
+> -	else
+> -		tree = NULL;
+> -	if (tree) {
+> -		ret = bitmap_set(tree, start, length);
+> -		if (ret)
+> -			str_liberror(ctx, ret, _("setting bad block bitmap"));
+> -	}
+
+Maybe that comment should be here?
+
+> +	ret = bitmap_set(tree, start, length);
+> +	if (ret)
+> +		str_liberror(ctx, ret, _("setting bad block bitmap"));
+> +}
+> +
+> +struct walk_ioerr {
+> +	struct scrub_ctx	*ctx;
+> +	struct disk		*disk;
+> +};
+
+comment here would be great.  Is this walking an ioerror?  Reporting an ioerror
+from a walk?  (or maybe also/instead a comment on walk_ioerrs())
+
+also whee, functions and structures w/ the same name :D
+
+> +static int
+> +walk_ioerr(
+> +	uint64_t		start,
+> +	uint64_t		length,
+> +	void			*arg)
+> +{
+> +	struct walk_ioerr	*wioerr = arg;
+> +	struct fsmap		keys[2];
+> +	char			descr[DESCR_BUFSZ];
+> +	dev_t			dev;
+> +
+> +	dev = xfs_disk_to_dev(wioerr->ctx, wioerr->disk);
+>  
+> -	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d ioerr @ %"PRIu64":%"PRIu64" "),
+> +	snprintf(descr, DESCR_BUFSZ,
+> +_("dev %d:%d ioerr @ %"PRIu64":%"PRIu64" "),
+>  			major(dev), minor(dev), start, length);
+>  
+>  	/* Go figure out which blocks are bad from the fsmap. */
+> @@ -459,8 +467,60 @@ xfs_check_rmap_ioerr(
+>  	(keys + 1)->fmr_owner = ULLONG_MAX;
+>  	(keys + 1)->fmr_offset = ULLONG_MAX;
+>  	(keys + 1)->fmr_flags = UINT_MAX;
+> -	xfs_iterate_fsmap(ctx, descr, keys, xfs_check_rmap_error_report,
+> +	xfs_iterate_fsmap(wioerr->ctx, descr, keys, ioerr_fsmap_report,
+>  			&start);
+> +	return 0;
+> +}
+> +
+> +static int
+> +walk_ioerrs(
+> +	struct scrub_ctx		*ctx,
+> +	struct disk			*disk,
+> +	struct media_verify_state	*vs)
+> +{
+> +	struct walk_ioerr		wioerr = {
+> +		.ctx			= ctx,
+> +		.disk			= disk,
+> +	};> +	struct bitmap			*tree;
+> +
+> +	if (!disk)
+> +		return 0;
+> +	tree = bitmap_for_disk(ctx, disk, vs);
+> +	if (!tree)
+> +		return 0;
+> +	return bitmap_iterate(tree, walk_ioerr, &wioerr);
+> +}
+> +
+> +/* Given bad extent lists for the data & rtdev, find bad files. */
+
+maybe "find and report bad files" just to tie it in w/ the "report" in
+the function name?
+
+is this only for media errors?  Maybev xfs_report_media_errors?  There are
+so many things going on in scrub (and apparently such a limited namespace
+for functions :D) that I find myself wishing for a little more context
+when I read something in isolation...
+
+
+> +static bool
+> +xfs_report_verify_errors(
+> +	struct scrub_ctx		*ctx,
+> +	struct media_verify_state	*vs)
+> +{
+> +	bool				moveon;
+> +	int				ret;
+> +
+> +	ret = walk_ioerrs(ctx, ctx->datadev, vs);
+> +	if (ret) {
+> +		str_liberror(ctx, ret, _("walking datadev io errors"));
+> +		return false;
+> +	}
+> +
+> +	ret = walk_ioerrs(ctx, ctx->rtdev, vs);
+> +	if (ret) {
+> +		str_liberror(ctx, ret, _("walking rtdev io errors"));
+> +		return false;
+> +	}
+> +
+> +	/* Scan the directory tree to get file paths. */
+> +	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
+> +			xfs_report_verify_dirent, vs);
+> +	if (!moveon)
+> +		return false;
+> +
+> +	/* Scan for unlinked files. */
+> +	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, vs);
+>  }
+>  
+>  /* Schedule a read-verify of a (data block) extent. */
+> @@ -571,7 +631,7 @@ xfs_scan_blocks(
+>  	}
+>  
+>  	ret = read_verify_pool_alloc(ctx, ctx->datadev,
+> -			ctx->mnt.fsgeom.blocksize, xfs_check_rmap_ioerr,
+> +			ctx->mnt.fsgeom.blocksize, remember_ioerr,
+>  			scrub_nproc(ctx), &vs.rvp_data);
+>  	if (ret) {
+>  		str_liberror(ctx, ret, _("creating datadev media verifier"));
+> @@ -579,7 +639,7 @@ xfs_scan_blocks(
+>  	}
+>  	if (ctx->logdev) {
+>  		ret = read_verify_pool_alloc(ctx, ctx->logdev,
+> -				ctx->mnt.fsgeom.blocksize, xfs_check_rmap_ioerr,
+> +				ctx->mnt.fsgeom.blocksize, remember_ioerr,
+>  				scrub_nproc(ctx), &vs.rvp_log);
+>  		if (ret) {
+>  			str_liberror(ctx, ret,
+> @@ -589,7 +649,7 @@ xfs_scan_blocks(
+>  	}
+>  	if (ctx->rtdev) {
+>  		ret = read_verify_pool_alloc(ctx, ctx->rtdev,
+> -				ctx->mnt.fsgeom.blocksize, xfs_check_rmap_ioerr,
+> +				ctx->mnt.fsgeom.blocksize, remember_ioerr,
+>  				scrub_nproc(ctx), &vs.rvp_realtime);
+>  		if (ret) {
+>  			str_liberror(ctx, ret,
 > 
