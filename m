@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 732B7CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 16:46:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 664A7CA9EAF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 16:53:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 523FB20882
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 16:46:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 435772086D
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 16:53:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728018AbfJUQqZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Oct 2019 12:46:25 -0400
-Received: from sandeen.net ([63.231.237.45]:41774 "EHLO sandeen.net"
+        id S1726289AbfJUQxU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Oct 2019 12:53:20 -0400
+Received: from sandeen.net ([63.231.237.45]:42214 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726289AbfJUQqZ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Oct 2019 12:46:25 -0400
+        id S1726276AbfJUQxU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Oct 2019 12:53:20 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 0A4B5EC3;
-        Mon, 21 Oct 2019 11:45:38 -0500 (CDT)
-Subject: Re: [PATCH 03/11] xfs_scrub: better reporting of metadata media
+        by sandeen.net (Postfix) with ESMTPSA id 8D58EEC3;
+        Mon, 21 Oct 2019 11:52:34 -0500 (CDT)
+Subject: Re: [PATCH 04/11] xfs_scrub: improve reporting of file metadata media
  errors
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944736739.300131.5717633994765951730.stgit@magnolia>
- <156944738604.300131.8278382614496808681.stgit@magnolia>
+ <156944739208.300131.5955900694911585741.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,15 +72,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <a8138e48-c327-3eef-eb35-5dbe31595fcb@sandeen.net>
-Date:   Mon, 21 Oct 2019 11:46:23 -0500
+Message-ID: <ee46dce3-e295-3e17-9ada-e64aef0a94b9@sandeen.net>
+Date:   Mon, 21 Oct 2019 11:53:19 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944738604.300131.8278382614496808681.stgit@magnolia>
+In-Reply-To: <156944739208.300131.5955900694911585741.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -89,55 +89,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:36 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> When we report bad metadata, we inexplicably report the physical address
-> in units of sectors, whereas for file data we report file offsets in
-> units of bytes.  Fix the metadata reporting units to match the file data
-> units (i.e. bytes) and skip the printf for all other cases.
+> Report media errors that map to data and attr fork extent maps.
 
-kernelspace has been plagued with stuff like this - sectors vs bytes vs
-blocks, hex vs decimal, leading 0x or not ... A doc in xfs_scrub about
-how everything should be reported seems like it might be a good idea?
+Ok so I think the last patch removed reporting on files but this adds it
+back...
+
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  scrub/phase6.c |   12 +++++-------
->  1 file changed, 5 insertions(+), 7 deletions(-)
+>  scrub/phase6.c |   11 +++++++++++
+>  1 file changed, 11 insertions(+)
 > 
 > 
 > diff --git a/scrub/phase6.c b/scrub/phase6.c
-> index a16ad114..310ab36c 100644
+> index 310ab36c..1013ba6d 100644
 > --- a/scrub/phase6.c
 > +++ b/scrub/phase6.c
-> @@ -368,7 +368,7 @@ xfs_check_rmap_error_report(
->  	void			*arg)
->  {
->  	const char		*type;
-> -	char			buf[32];
-> +	char			buf[DESCR_BUFSZ];
->  	uint64_t		err_physical = *(uint64_t *)arg;
->  	uint64_t		err_off;
->  
-> @@ -377,14 +377,12 @@ xfs_check_rmap_error_report(
->  	else
->  		err_off = 0;
->  
-> -	snprintf(buf, 32, _("disk offset %"PRIu64),
-> -			(uint64_t)BTOBB(map->fmr_physical + err_off));
-> -
-
-so did this double-report if the error was associated with a file?
-
-> +	/* Report special owners */
->  	if (map->fmr_flags & FMR_OF_SPECIAL_OWNER) {
-> +		snprintf(buf, DESCR_BUFSZ, _("disk offset %"PRIu64),
-> +				(uint64_t)map->fmr_physical + err_off);
->  		type = xfs_decode_special_owner(map->fmr_owner);
-> -		str_error(ctx, buf,
-> -_("%s failed read verification."),
-> -				type);
-> +		str_error(ctx, buf, _("media error in %s."), type);
+> @@ -385,6 +385,17 @@ xfs_check_rmap_error_report(
+>  		str_error(ctx, buf, _("media error in %s."), type);
 >  	}
-
- 
+>  
+> +	/* Report extent maps */
+> +	if (map->fmr_flags & FMR_OF_EXTENT_MAP) {
+> +		bool		attr = (map->fmr_flags & FMR_OF_ATTR_FORK);
+> +
+> +		scrub_render_ino_suffix(ctx, buf, DESCR_BUFSZ,
+> +				map->fmr_owner, 0, " %s",
+> +				attr ? _("extended attribute") :
+> +				       _("file data"));
+> +		str_error(ctx, buf, _("media error in extent map"));
+> +	}
+> +
 >  	/*
+>  	 * XXX: If we had a getparent() call we could report IO errors
+>  	 * efficiently.  Until then, we'll have to scan the dir tree
 > 
