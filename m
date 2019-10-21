@@ -2,149 +2,119 @@ Return-Path: <SRS0=IeGX=YO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E3D63CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 14:34:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E8DCCA9EAF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 15:46:06 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B6D2320640
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 14:34:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3B6AD20873
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 15:46:06 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H6opDYOs"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QlCRNBFL"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727111AbfJUOe6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Oct 2019 10:34:58 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:47102 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1727040AbfJUOe6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Oct 2019 10:34:58 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571668496;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=D/43XNaQxiXDAvzT4qVM4BARY4zkRTUMfi5MBBSEd+w=;
-        b=H6opDYOsY7vpe7aduN+eUtD1g6/+D99zPHzg1yNtfg8KDaOspCSAv4u8NGgoLJwAOXxvGz
-        uEp194lGJECExnQokdIOzHapBBoBSMq+w4P9D9FBa0sfqT7uEHTcVxBs97K12Fn4KZlD/G
-        N/V/I5IIOCcBZ9V0zpyKs6TY+LVpJNE=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-6-MgLrePOMNv2kPzCYy94h5Q-1; Mon, 21 Oct 2019 10:34:55 -0400
-Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 1C6E8107AD31;
-        Mon, 21 Oct 2019 14:34:54 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id B92015DA60;
-        Mon, 21 Oct 2019 14:34:53 +0000 (UTC)
-Date:   Mon, 21 Oct 2019 10:34:52 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+        id S1727344AbfJUPqF (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Oct 2019 11:46:05 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:41352 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726847AbfJUPqF (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 21 Oct 2019 11:46:05 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9LFdPZ4109460;
+        Mon, 21 Oct 2019 15:45:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=EqC7zEOe40rZBcleGFFPg6lGt8NIVDWTp9WD6qpdTLM=;
+ b=QlCRNBFL8m0fliL0ZYWZrChXREK36K3DKrMDfbPHVxXWHbQ8KqYnqrWzAbtECwb0B4HC
+ 2cUUciJuXOd04omnqzZ3pE/aaMOEsudpUBsTLn0jqq6bo5uydqL3A7oNB/9Fb6LKKAaI
+ Qho2l0Wuc7dp1ORLReVTG7xd8dmDYAngHb8jEoDa27Vq99nls9DFOrS0ud8DThC/VnEG
+ qA/PNAhCyd5aNX6HuydRP0bx52m6UaEs9vbdvSMevYczIaAMBCCj/dITGHRtVXHUUoGH
+ XG0UJSDTmvhS4ByVpSqn9mAvjI7g7ehK2Z6oVZWI3IaaX4vQhdqI0klQ6Nsj+Prs0ydG RQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2vqtepgkf7-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Oct 2019 15:45:59 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9LFi8rF023604;
+        Mon, 21 Oct 2019 15:45:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2vrbyywjdg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 21 Oct 2019 15:45:58 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9LFjvVu025451;
+        Mon, 21 Oct 2019 15:45:58 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 21 Oct 2019 08:45:57 -0700
+Date:   Mon, 21 Oct 2019 08:45:56 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 2/4] xfs: replace open-coded bitmap weight logic
-Message-ID: <20191021143452.GD26105@bfoster>
-References: <157063973592.2913318.8246472567175058111.stgit@magnolia>
- <157063975219.2913318.17554625502389919068.stgit@magnolia>
+Subject: Re: [PATCH] xfs: fix sparse warning on allocation cursor
+ initialization
+Message-ID: <20191021154556.GE6719@magnolia>
+References: <201910200432.0NRV75fO%lkp@intel.com>
+ <20191021131404.30089-1-bfoster@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <157063975219.2913318.17554625502389919068.stgit@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
-X-MC-Unique: MgLrePOMNv2kPzCYy94h5Q-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191021131404.30089-1-bfoster@redhat.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9417 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910210148
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9417 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910210148
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 09:49:12AM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
->=20
-> Add a xbitmap_hweight helper function so that we can get rid of the
-> open-coded loop.
->=20
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On Mon, Oct 21, 2019 at 09:14:04AM -0400, Brian Foster wrote:
+> sparse complains about the initialization used for the allocation
+> cursor:
+> 
+> >> fs/xfs/libxfs/xfs_alloc.c:1170:41: sparse: sparse: Using plain integer as NULL pointer
+> 
+> Fix it by removing the unnecessary initialization value.
+> 
+> Reported-by: kbuild test robot <lkp@intel.com>
+> Signed-off-by: Brian Foster <bfoster@redhat.com>
+
+Looks ok, though I have to rebase the iomap / xfs branches anyway so I
+might apply this to the original patch.
+
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+
+--D
+
 > ---
-
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-
->  fs/xfs/scrub/agheader_repair.c |   12 ++----------
->  fs/xfs/scrub/bitmap.c          |   15 +++++++++++++++
->  fs/xfs/scrub/bitmap.h          |    1 +
->  3 files changed, 18 insertions(+), 10 deletions(-)
->=20
->=20
-> diff --git a/fs/xfs/scrub/agheader_repair.c b/fs/xfs/scrub/agheader_repai=
-r.c
-> index 9fbb6035f4e2..f35596cc26fb 100644
-> --- a/fs/xfs/scrub/agheader_repair.c
-> +++ b/fs/xfs/scrub/agheader_repair.c
-> @@ -482,8 +482,6 @@ xrep_agfl_collect_blocks(
->  =09struct xrep_agfl=09ra;
->  =09struct xfs_mount=09*mp =3D sc->mp;
->  =09struct xfs_btree_cur=09*cur;
-> -=09struct xbitmap_range=09*br;
-> -=09struct xbitmap_range=09*n;
->  =09int=09=09=09error;
-> =20
->  =09ra.sc =3D sc;
-> @@ -527,14 +525,8 @@ xrep_agfl_collect_blocks(
->  =09 * Calculate the new AGFL size.  If we found more blocks than fit in
->  =09 * the AGFL we'll free them later.
->  =09 */
-> -=09*flcount =3D 0;
-> -=09for_each_xbitmap_extent(br, n, agfl_extents) {
-> -=09=09*flcount +=3D br->len;
-> -=09=09if (*flcount > xfs_agfl_size(mp))
-> -=09=09=09break;
-> -=09}
-> -=09if (*flcount > xfs_agfl_size(mp))
-> -=09=09*flcount =3D xfs_agfl_size(mp);
-> +=09*flcount =3D min_t(uint64_t, xbitmap_hweight(agfl_extents),
-> +=09=09=09 xfs_agfl_size(mp));
->  =09return 0;
-> =20
->  err:
-> diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
-> index 5b07b46c89c9..8b704d7b5855 100644
-> --- a/fs/xfs/scrub/bitmap.c
-> +++ b/fs/xfs/scrub/bitmap.c
-> @@ -296,3 +296,18 @@ xbitmap_set_btblocks(
+>  fs/xfs/libxfs/xfs_alloc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+> index e9f74eb92073..925eba9489d5 100644
+> --- a/fs/xfs/libxfs/xfs_alloc.c
+> +++ b/fs/xfs/libxfs/xfs_alloc.c
+> @@ -1471,7 +1471,7 @@ STATIC int
+>  xfs_alloc_ag_vextent_near(
+>  	struct xfs_alloc_arg	*args)
 >  {
->  =09return xfs_btree_visit_blocks(cur, xbitmap_collect_btblock, bitmap);
->  }
-> +
-> +/* How many bits are set in this bitmap? */
-> +uint64_t
-> +xbitmap_hweight(
-> +=09struct xbitmap=09=09*bitmap)
-> +{
-> +=09struct xbitmap_range=09*bmr;
-> +=09struct xbitmap_range=09*n;
-> +=09uint64_t=09=09ret =3D 0;
-> +
-> +=09for_each_xbitmap_extent(bmr, n, bitmap)
-> +=09=09ret +=3D bmr->len;
-> +
-> +=09return ret;
-> +}
-> diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
-> index 8db4017ac78e..900646b72de1 100644
-> --- a/fs/xfs/scrub/bitmap.h
-> +++ b/fs/xfs/scrub/bitmap.h
-> @@ -32,5 +32,6 @@ int xbitmap_set_btcur_path(struct xbitmap *bitmap,
->  =09=09struct xfs_btree_cur *cur);
->  int xbitmap_set_btblocks(struct xbitmap *bitmap,
->  =09=09struct xfs_btree_cur *cur);
-> +uint64_t xbitmap_hweight(struct xbitmap *bitmap);
-> =20
->  #endif=09/* __XFS_SCRUB_BITMAP_H__ */
->=20
-
+> -	struct xfs_alloc_cur	acur = {0,};
+> +	struct xfs_alloc_cur	acur = {};
+>  	int			error;		/* error code */
+>  	int			i;		/* result code, temporary */
+>  	xfs_agblock_t		bno;
+> -- 
+> 2.20.1
+> 
