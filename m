@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AF112CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:33:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C53ECA9EAF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:45:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 860E0205ED
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:33:00 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0525F2086D
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:45:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728056AbfJUTdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Oct 2019 15:33:00 -0400
-Received: from sandeen.net ([63.231.237.45]:52516 "EHLO sandeen.net"
+        id S1727953AbfJUTpT (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Oct 2019 15:45:19 -0400
+Received: from sandeen.net ([63.231.237.45]:53278 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726672AbfJUTc7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Oct 2019 15:32:59 -0400
+        id S1726672AbfJUTpT (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Oct 2019 15:45:19 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id ACB9AEC3;
-        Mon, 21 Oct 2019 14:32:13 -0500 (CDT)
-Subject: Re: [PATCH 10/11] xfs_scrub: clean out the nproc global variable
+        by sandeen.net (Postfix) with ESMTPSA id D2F1CEC3;
+        Mon, 21 Oct 2019 14:44:32 -0500 (CDT)
+Subject: Re: [PATCH 11/11] xfs_scrub: create a new category for unfixable
+ errors
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944736739.300131.5717633994765951730.stgit@magnolia>
- <156944742829.300131.10853963179326362863.stgit@magnolia>
+ <156944743430.300131.9710870375452494499.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,15 +72,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <67128e66-fcc5-2a79-efa3-4e98c53d7cb4@sandeen.net>
-Date:   Mon, 21 Oct 2019 14:32:58 -0500
+Message-ID: <9ad60a97-0931-f85b-d31d-bf503d4e514d@sandeen.net>
+Date:   Mon, 21 Oct 2019 14:45:17 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944742829.300131.10853963179326362863.stgit@magnolia>
+In-Reply-To: <156944743430.300131.9710870375452494499.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -88,10 +89,18 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:37 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Get rid of this global variable since we already have a libfrog function
-> that does exactly what it does.
+> There's nothing that xfs_scrub (or XFS) can do about media errors for
+> data file blocks -- the data are gone.  Create a new category for these
+> unfixable errors so that we don't advise the user to take further action
+> that won't fix the problem.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+<bikeshed>
+What if unfixable_errors was a subcounter for total errors_found?
+Would that simplify all the places that need to check both?
+
+Or would that be confusing?
+
+</bikeshed>
 
