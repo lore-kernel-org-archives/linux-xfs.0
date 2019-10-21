@@ -2,32 +2,32 @@ Return-Path: <SRS0=IeGX=YO=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id ECB78CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:31:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AF112CA9EAF
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:33:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C224020B7C
-	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:31:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 860E0205ED
+	for <linux-xfs@archiver.kernel.org>; Mon, 21 Oct 2019 19:33:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728543AbfJUTbz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 21 Oct 2019 15:31:55 -0400
-Received: from sandeen.net ([63.231.237.45]:52458 "EHLO sandeen.net"
+        id S1728056AbfJUTdA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 21 Oct 2019 15:33:00 -0400
+Received: from sandeen.net ([63.231.237.45]:52516 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728056AbfJUTbz (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 21 Oct 2019 15:31:55 -0400
+        id S1726672AbfJUTc7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 21 Oct 2019 15:32:59 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 56DBFEC3;
-        Mon, 21 Oct 2019 14:31:08 -0500 (CDT)
-Subject: Re: [PATCH 09/11] libfrog: clean up platform_nproc
+        by sandeen.net (Postfix) with ESMTPSA id ACB9AEC3;
+        Mon, 21 Oct 2019 14:32:13 -0500 (CDT)
+Subject: Re: [PATCH 10/11] xfs_scrub: clean out the nproc global variable
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <156944736739.300131.5717633994765951730.stgit@magnolia>
- <156944742224.300131.10235357474710122535.stgit@magnolia>
+ <156944742829.300131.10853963179326362863.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,15 +71,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <dfa0af2b-1f72-40e4-6877-4296e51c7fd9@sandeen.net>
-Date:   Mon, 21 Oct 2019 14:31:52 -0500
+Message-ID: <67128e66-fcc5-2a79-efa3-4e98c53d7cb4@sandeen.net>
+Date:   Mon, 21 Oct 2019 14:32:58 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <156944742224.300131.10235357474710122535.stgit@magnolia>
+In-Reply-To: <156944742829.300131.10853963179326362863.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -88,73 +88,10 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 9/25/19 4:37 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The platform_nproc function should check for error returns and obviously
-> garbage values and deal with them appropriately.  Fix the header
-> declaration since it's part of the libfrog platform support code, not
-> libxfs.  xfs_scrub will make use of it in the next patch.
+> Get rid of this global variable since we already have a libfrog function
+> that does exactly what it does.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  include/libxfs.h           |    1 -
->  include/platform_defs.h.in |    2 ++
->  libfrog/linux.c            |    9 ++++++++-
->  3 files changed, 10 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/include/libxfs.h b/include/libxfs.h
-> index 63696df5..227084ae 100644
-> --- a/include/libxfs.h
-> +++ b/include/libxfs.h
-> @@ -135,7 +135,6 @@ extern void	libxfs_device_close (dev_t);
->  extern int	libxfs_device_alignment (void);
->  extern void	libxfs_report(FILE *);
->  extern void	platform_findsizes(char *path, int fd, long long *sz, int *bsz);
-> -extern int	platform_nproc(void);
->  
->  /* check or write log footer: specify device, log size in blocks & uuid */
->  typedef char	*(libxfs_get_block_t)(char *, int, void *);
-> diff --git a/include/platform_defs.h.in b/include/platform_defs.h.in
-> index d111ec6d..adb00181 100644
-> --- a/include/platform_defs.h.in
-> +++ b/include/platform_defs.h.in
-> @@ -77,4 +77,6 @@ typedef unsigned short umode_t;
->  # define ASSERT(EX)	((void) 0)
->  #endif
->  
-> +extern int	platform_nproc(void);
-> +
->  #endif	/* __XFS_PLATFORM_DEFS_H__ */
-> diff --git a/libfrog/linux.c b/libfrog/linux.c
-> index b6c24879..79bd79eb 100644
-> --- a/libfrog/linux.c
-> +++ b/libfrog/linux.c
-> @@ -242,10 +242,17 @@ platform_align_blockdev(void)
->  	return max_block_alignment;
->  }
->  
-> +/* How many CPUs are online? */
->  int
->  platform_nproc(void)
->  {
-> -	return sysconf(_SC_NPROCESSORS_ONLN);
-> +	long nproc = sysconf(_SC_NPROCESSORS_ONLN);
-> +
-> +	if (nproc < 1)
-> +		return 1;
-> +	if (nproc >= INT_MAX)
-> +		return INT_MAX;
-> +	return nproc;
->  }
 
-hm, may as well remove the test from libxfs then?
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-int
-libxfs_nproc(void)
-{
-        int     nr;
-
-        nr = platform_nproc();
-        if (nr < 1)
-                nr = 1;
-        return nr;
-}
