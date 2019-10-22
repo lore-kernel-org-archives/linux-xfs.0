@@ -2,421 +2,246 @@ Return-Path: <SRS0=PA6D=YP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.1 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C497AC47E49
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 12:19:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD7CCA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 13:35:27 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9AE4A21928
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 12:19:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA83C21783
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 13:35:26 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="rbbi6vSh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OxFgGZKp"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2388636AbfJVMTn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 08:19:43 -0400
-Received: from mail-pg1-f193.google.com ([209.85.215.193]:35868 "EHLO
-        mail-pg1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2387675AbfJVMTm (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 08:19:42 -0400
-Received: by mail-pg1-f193.google.com with SMTP id 23so9850420pgk.3;
-        Tue, 22 Oct 2019 05:19:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=to:cc:from:subject:message-id:date:user-agent:mime-version
-         :content-language:content-transfer-encoding;
-        bh=5TWIVz7dgKnzZqk1U/p/q+JiLakN6F7Bx/i+wT50caM=;
-        b=rbbi6vShoSRaGNU2h3v+gwDu4PmD2V+k69qbZhziaRkK6bYJ1G5o9W14eWdCcejk3U
-         uJSgZ44ZKuEv44s9WCEghU8f5wF/7UyPGzW3Bz2/U964EKAbhA53qj2CUgj/WjLPhfaJ
-         Q7GTTKrpCyRTBOXyfTQouAIlSvqDaG1ZVuEUEf+kceAlR421Q44CepAn91VkiWx69CPb
-         u15ehIFaZadwsl/VqqlBeblNGWRoKiVv3JfCPwTqyfZrGq/1m01yZ7ftKM5OofK/8T4w
-         QqGXW1inGsSpxfLE9bKq4GGbJ2IJBTtpJCoAmQ9T/ADbaGev4gcCYUNgm87D7VnVY9fO
-         adKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:to:cc:from:subject:message-id:date:user-agent
-         :mime-version:content-language:content-transfer-encoding;
-        bh=5TWIVz7dgKnzZqk1U/p/q+JiLakN6F7Bx/i+wT50caM=;
-        b=cf/N/PD0v9iNdpT7RAQJsQwFQ9WygSDiamGcwNAy7De6LuZejBUk1R6dF7ac8com9T
-         /IHw/PKiHJxhN+mRaXojbDt0eLb90uiBhaHfkEcrb3U9mpwyRx/lTrNLpljIaYXuHQOa
-         KSXwwyl00LdwOlW3t3ZblSh9HGGThOUCb9STzy41b1nkBMnY5B0kK+MLrTITnJCz6wxF
-         TW4Do1AQWeaCWqKUHpuyu1Nvov4xDVmZQIYQpPH23hliQRPsIVAYcGWzeAMEBYbDg46g
-         H4t5A6APvNBHNIpHSfTjDlGKkOsVwGJxkhF6t9sZE0RL5zB7cwhBRLwGqYh7q+TOz35m
-         lwag==
-X-Gm-Message-State: APjAAAVn18ufoxUdD+UeCh0hLePHvY3xdWyKicCYkAJb6r5OAYe54MAQ
-        I9aYK8rgmvC16gthXDkAXQ==
-X-Google-Smtp-Source: APXvYqxG0twRUtGj2kmngxbid8m7ForXO/IP5qnpsggjyEHXH5+yEu+aHBGkVerCbZSPLGocW72r1g==
-X-Received: by 2002:aa7:87d9:: with SMTP id i25mr4074261pfo.244.1571746781641;
-        Tue, 22 Oct 2019 05:19:41 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id x11sm33728446pja.3.2019.10.22.05.19.39
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 22 Oct 2019 05:19:41 -0700 (PDT)
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, Eryu Guan <guaneryu@gmail.com>,
-        Brian Foster <bfoster@redhat.com>, newtongao@tencent.com,
-        jasperwang@tencent.com
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Subject: [PATCH v5] fsstress: add renameat2 support
-Message-ID: <a602433c-ec36-a607-e1bc-6e532e3ebaca@gmail.com>
-Date:   Tue, 22 Oct 2019 20:19:37 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1732073AbfJVNf0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 09:35:26 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:54337 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1731981AbfJVNf0 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 09:35:26 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1571751324;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=2ZtaW+HKnie9dwaaQ6SpKXMiotszTeiqu0LuTk2b/IM=;
+        b=OxFgGZKpTjqD0KhA384RzZVP2+T6b+HePgzRJjCh6uVpHU5zwtFgnZ3+hI2k0v21wWc1pG
+        92/VhFWdD53XpSRZX9Us7xUw2P5n2E4+HFCHXoSimUrU8TjrvefOI7KJZm1QWt0eSu2dxo
+        FxM1WY8UxaZK8VBgpnrDkuUIB0iqkb0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-306-BiKGN4_EM1GTIeGtqZbyhA-1; Tue, 22 Oct 2019 09:35:21 -0400
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DF77F80183E;
+        Tue, 22 Oct 2019 13:35:20 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8980910027AD;
+        Tue, 22 Oct 2019 13:35:20 +0000 (UTC)
+Date:   Tue, 22 Oct 2019 09:35:18 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: remove the for_each_xbitmap_ helpers
+Message-ID: <20191022133518.GB51627@bfoster>
+References: <157063973592.2913318.8246472567175058111.stgit@magnolia>
+ <157063976280.2913318.2140616655357544513.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <157063976280.2913318.2140616655357544513.stgit@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: BiKGN4_EM1GTIeGtqZbyhA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Support the renameat2 syscall in fsstress.
+On Wed, Oct 09, 2019 at 09:49:22AM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+>=20
+> Remove the for_each_xbitmap_ macros in favor of proper iterator
+> functions.  We'll soon be switching this data structure over to an
+> interval tree implementation, which means that we can't allow callers to
+> modify the bitmap during iteration without telling us.
+>=20
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  fs/xfs/scrub/agheader_repair.c |   73 ++++++++++++++++++++++++----------=
+------
+>  fs/xfs/scrub/bitmap.c          |   59 ++++++++++++++++++++++++++++++++
+>  fs/xfs/scrub/bitmap.h          |   22 ++++++++----
+>  fs/xfs/scrub/repair.c          |   60 +++++++++++++++++----------------
+>  4 files changed, 148 insertions(+), 66 deletions(-)
+>=20
+>=20
+...
+> diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+> index 900646b72de1..27fde5b4a753 100644
+> --- a/fs/xfs/scrub/bitmap.h
+> +++ b/fs/xfs/scrub/bitmap.h
+...
+> @@ -34,4 +27,19 @@ int xbitmap_set_btblocks(struct xbitmap *bitmap,
+>  =09=09struct xfs_btree_cur *cur);
+>  uint64_t xbitmap_hweight(struct xbitmap *bitmap);
+> =20
+> +/*
+> + * Return codes for the bitmap iterator functions are 0 to continue iter=
+ating,
+> + * and non-zero to stop iterating.  Any non-zero value will be passed up=
+ to the
+> + * iteration caller.  The special value -ECANCELED can be used to stop
+> + * iteration, because neither bitmap iterator ever generates that error =
+code on
+> + * its own.
+> + */
+> +typedef int (*xbitmap_walk_run_fn)(uint64_t start, uint64_t len, void *p=
+riv);
+> +int xbitmap_iter_set(struct xbitmap *bitmap, xbitmap_walk_run_fn fn,
+> +=09=09void *priv);
+> +
+> +typedef int (*xbitmap_walk_bit_fn)(uint64_t bit, void *priv);
+> +int xbitmap_iter_set_bits(struct xbitmap *bitmap, xbitmap_walk_bit_fn fn=
+,
+> +=09=09void *priv);
+> +
 
-Signed-off-by: kaixuxia <kaixuxia@tencent.com>
----
-Changes in v5:
- - Fix the RENAME_EXCHANGE flist fents swap problem.
+Somewhat of a nit, but I read "set" as a verb in the above function
+names which tends to confuse me over what these functions do (i.e.
+iterate bits, not set bits). Could we call them something a bit more
+neutral, like xbitmap[_bit]_iter() perhaps? That aside the rest of the
+patch looks Ok to me.
 
- ltp/fsstress.c | 202 +++++++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 169 insertions(+), 33 deletions(-)
+Brian
 
-diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 51976f5..7c59f2d 100644
---- a/ltp/fsstress.c
-+++ b/ltp/fsstress.c
-@@ -44,6 +44,38 @@ io_context_t	io_ctx;
- #define IOV_MAX 1024
- #endif
- 
-+#ifndef HAVE_RENAMEAT2
-+#if !defined(SYS_renameat2) && defined(__x86_64__)
-+#define SYS_renameat2 316
-+#endif
-+
-+#if !defined(SYS_renameat2) && defined(__i386__)
-+#define SYS_renameat2 353
-+#endif
-+
-+static int renameat2(int dfd1, const char *path1,
-+		     int dfd2, const char *path2,
-+		     unsigned int flags)
-+{
-+#ifdef SYS_renameat2
-+	return syscall(SYS_renameat2, dfd1, path1, dfd2, path2, flags);
-+#else
-+	errno = ENOSYS;
-+	return -1;
-+#endif
-+}
-+#endif
-+
-+#ifndef RENAME_NOREPLACE
-+#define RENAME_NOREPLACE	(1 << 0)	/* Don't overwrite target */
-+#endif
-+#ifndef RENAME_EXCHANGE
-+#define RENAME_EXCHANGE		(1 << 1)	/* Exchange source and dest */
-+#endif
-+#ifndef RENAME_WHITEOUT
-+#define RENAME_WHITEOUT		(1 << 2)	/* Whiteout source */
-+#endif
-+
- #define FILELEN_MAX		(32*4096)
- 
- typedef enum {
-@@ -85,6 +117,9 @@ typedef enum {
- 	OP_READV,
- 	OP_REMOVEFATTR,
- 	OP_RENAME,
-+	OP_RNOREPLACE,
-+	OP_REXCHANGE,
-+	OP_RWHITEOUT,
- 	OP_RESVSP,
- 	OP_RMDIR,
- 	OP_SETATTR,
-@@ -203,6 +238,9 @@ void	readlink_f(int, long);
- void	readv_f(int, long);
- void	removefattr_f(int, long);
- void	rename_f(int, long);
-+void    rnoreplace_f(int, long);
-+void    rexchange_f(int, long);
-+void    rwhiteout_f(int, long);
- void	resvsp_f(int, long);
- void	rmdir_f(int, long);
- void	setattr_f(int, long);
-@@ -262,6 +300,9 @@ opdesc_t	ops[] = {
- 	/* remove (delete) extended attribute */
- 	{ OP_REMOVEFATTR, "removefattr", removefattr_f, 1, 1 },
- 	{ OP_RENAME, "rename", rename_f, 2, 1 },
-+	{ OP_RNOREPLACE, "rnoreplace", rnoreplace_f, 2, 1 },
-+	{ OP_REXCHANGE, "rexchange", rexchange_f, 2, 1 },
-+	{ OP_RWHITEOUT, "rwhiteout", rwhiteout_f, 2, 1 },
- 	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
- 	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
- 	/* set attribute flag (FS_IOC_SETFLAGS ioctl) */
-@@ -321,6 +362,7 @@ int		execute_freq = 1;
- struct print_string	flag_str = {0};
- 
- void	add_to_flist(int, int, int, int);
-+void	swap_flist_fents(int, int, int, int);
- void	append_pathname(pathname_t *, char *);
- int	attr_list_path(pathname_t *, char *, const int, int, attrlist_cursor_t *);
- int	attr_remove_path(pathname_t *, const char *, int);
-@@ -354,7 +396,7 @@ int	open_path(pathname_t *, int);
- DIR	*opendir_path(pathname_t *);
- void	process_freq(char *);
- int	readlink_path(pathname_t *, char *, size_t);
--int	rename_path(pathname_t *, pathname_t *);
-+int	rename_path(pathname_t *, pathname_t *, int);
- int	rmdir_path(pathname_t *);
- void	separate_pathname(pathname_t *, char *, pathname_t *);
- void	show_ops(int, char *);
-@@ -758,6 +800,24 @@ add_to_flist(int ft, int id, int parent, int xattr_counter)
- }
- 
- void
-+swap_flist_fents(int ft, int slot, int dft, int dslot)
-+{
-+	flist_t *ftp;
-+	flist_t *dftp;
-+	fent_t	tmpfent;
-+
-+	ftp = &flist[ft];
-+	dftp = &flist[dft];
-+	if (ft == FT_DIR)
-+		dcache_purge(ftp->fents[slot].id);
-+	if (dft == FT_DIR)
-+		dcache_purge(dftp->fents[dslot].id);
-+	tmpfent = ftp->fents[slot];
-+	ftp->fents[slot] = dftp->fents[dslot];
-+	dftp->fents[dslot] = tmpfent;
-+}
-+
-+void
- append_pathname(pathname_t *name, char *str)
- {
- 	int	len;
-@@ -1519,7 +1579,7 @@ readlink_path(pathname_t *name, char *lbuf, size_t lbufsiz)
- }
- 
- int
--rename_path(pathname_t *name1, pathname_t *name2)
-+rename_path(pathname_t *name1, pathname_t *name2, int mode)
- {
- 	char		buf1[NAME_MAX + 1];
- 	char		buf2[NAME_MAX + 1];
-@@ -1528,14 +1588,18 @@ rename_path(pathname_t *name1, pathname_t *name2)
- 	pathname_t	newname2;
- 	int		rval;
- 
--	rval = rename(name1->path, name2->path);
-+	if (mode == 0)
-+		rval = rename(name1->path, name2->path);
-+	else
-+		rval = renameat2(AT_FDCWD, name1->path,
-+				 AT_FDCWD, name2->path, mode);
- 	if (rval >= 0 || errno != ENAMETOOLONG)
- 		return rval;
- 	separate_pathname(name1, buf1, &newname1);
- 	separate_pathname(name2, buf2, &newname2);
- 	if (strcmp(buf1, buf2) == 0) {
- 		if (chdir(buf1) == 0) {
--			rval = rename_path(&newname1, &newname2);
-+			rval = rename_path(&newname1, &newname2, mode);
- 			assert(chdir("..") == 0);
- 		}
- 	} else {
-@@ -1555,7 +1619,7 @@ rename_path(pathname_t *name1, pathname_t *name2)
- 			append_pathname(&newname2, "../");
- 			append_pathname(&newname2, name2->path);
- 			if (chdir(buf1) == 0) {
--				rval = rename_path(&newname1, &newname2);
-+				rval = rename_path(&newname1, &newname2, mode);
- 				assert(chdir("..") == 0);
- 			}
- 		} else {
-@@ -1563,7 +1627,7 @@ rename_path(pathname_t *name1, pathname_t *name2)
- 			append_pathname(&newname1, "../");
- 			append_pathname(&newname1, name1->path);
- 			if (chdir(buf2) == 0) {
--				rval = rename_path(&newname1, &newname2);
-+				rval = rename_path(&newname1, &newname2, mode);
- 				assert(chdir("..") == 0);
- 			}
- 		}
-@@ -4215,10 +4279,21 @@ out:
- 	free_pathname(&f);
- }
- 
-+struct print_flags renameat2_flags [] = {
-+	{ RENAME_NOREPLACE, "NOREPLACE"},
-+	{ RENAME_EXCHANGE, "EXCHANGE"},
-+	{ RENAME_WHITEOUT, "WHITEOUT"},
-+	{ -1, NULL}
-+};
-+
-+#define translate_renameat2_flags(mode)	\
-+	({translate_flags(mode, "|", renameat2_flags);})
-+
- void
--rename_f(int opno, long r)
-+do_renameat2(int opno, long r, int mode)
- {
- 	fent_t		*dfep;
-+	flist_t		*dflp;
- 	int		e;
- 	pathname_t	f;
- 	fent_t		*fep;
-@@ -4234,33 +4309,56 @@ rename_f(int opno, long r)
- 	init_pathname(&f);
- 	if (!get_fname(FT_ANYm, r, &f, &flp, &fep, &v1)) {
- 		if (v1)
--			printf("%d/%d: rename - no filename\n", procid, opno);
-+			printf("%d/%d: rename - no source filename\n",
-+				procid, opno);
- 		free_pathname(&f);
- 		return;
- 	}
-+	/* Both pathnames must exist for the RENAME_EXCHANGE */
-+	if (mode == RENAME_EXCHANGE) {
-+		init_pathname(&newf);
-+		if (!get_fname(FT_ANYm, random(), &newf, &dflp, &dfep, &v)) {
-+			if (v)
-+				printf("%d/%d: rename - no target filename\n",
-+					procid, opno);
-+			free_pathname(&newf);
-+			free_pathname(&f);
-+			return;
-+		}
-+		v |= v1;
-+		id = dfep->id;
-+		parid = dfep->parent;
-+	} else {
-+		/*
-+		 * get an existing directory for the destination parent
-+		 * directory name.
-+		 */
-+		if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
-+			parid = -1;
-+		else
-+			parid = dfep->id;
-+		v |= v1;
- 
--	/* get an existing directory for the destination parent directory name */
--	if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
--		parid = -1;
--	else
--		parid = dfep->id;
--	v |= v1;
--
--	/* generate a new path using an existing parent directory in name */
--	init_pathname(&newf);
--	e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
--	v |= v1;
--	if (!e) {
--		if (v) {
--			(void)fent_to_name(&f, &flist[FT_DIR], dfep);
--			printf("%d/%d: rename - no filename from %s\n",
--				procid, opno, f.path);
-+		/*
-+		 * generate a new path using an existing parent directory
-+		 * in name.
-+		 */
-+		init_pathname(&newf);
-+		e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
-+		v |= v1;
-+		if (!e) {
-+			if (v) {
-+				(void)fent_to_name(&f, &flist[FT_DIR], dfep);
-+				printf("%d/%d: rename - no filename from %s\n",
-+					procid, opno, f.path);
-+			}
-+			free_pathname(&newf);
-+			free_pathname(&f);
-+			return;
- 		}
--		free_pathname(&newf);
--		free_pathname(&f);
--		return;
- 	}
--	e = rename_path(&f, &newf) < 0 ? errno : 0;
-+
-+	e = rename_path(&f, &newf, mode) < 0 ? errno : 0;
- 	check_cwd();
- 	if (e == 0) {
- 		int xattr_counter = fep->xattr_counter;
-@@ -4269,16 +4367,31 @@ rename_f(int opno, long r)
- 			oldid = fep->id;
- 			fix_parent(oldid, id);
- 		}
--		del_from_flist(flp - flist, fep - flp->fents);
--		add_to_flist(flp - flist, id, parid, xattr_counter);
-+
-+		if (mode == RENAME_WHITEOUT) {
-+			add_to_flist(FT_DEV, fep->id, fep->parent, 0);
-+			del_from_flist(flp - flist, fep - flp->fents);
-+			add_to_flist(flp - flist, id, parid, xattr_counter);
-+		} else if (mode == RENAME_EXCHANGE) {
-+			if (dflp - flist == FT_DIR) {
-+				oldid = dfep->id;
-+				fix_parent(oldid, fep->id);
-+			}
-+			swap_flist_fents(flp - flist, fep - flp->fents,
-+					 dflp - flist, dfep - dflp->fents);
-+		} else {
-+			del_from_flist(flp - flist, fep - flp->fents);
-+			add_to_flist(flp - flist, id, parid, xattr_counter);
-+		}
- 	}
- 	if (v) {
--		printf("%d/%d: rename %s to %s %d\n", procid, opno, f.path,
-+		printf("%d/%d: rename(%s) %s to %s %d\n", procid,
-+			opno, translate_renameat2_flags(mode), f.path,
- 			newf.path, e);
- 		if (e == 0) {
--			printf("%d/%d: rename del entry: id=%d,parent=%d\n",
-+			printf("%d/%d: rename source entry: id=%d,parent=%d\n",
- 				procid, opno, fep->id, fep->parent);
--			printf("%d/%d: rename add entry: id=%d,parent=%d\n",
-+			printf("%d/%d: rename target entry: id=%d,parent=%d\n",
- 				procid, opno, id, parid);
- 		}
- 	}
-@@ -4287,6 +4400,29 @@ rename_f(int opno, long r)
- }
- 
- void
-+rename_f(int opno, long r)
-+{
-+	do_renameat2(opno, r, 0);
-+}
-+void
-+rnoreplace_f(int opno, long r)
-+{
-+	do_renameat2(opno, r, RENAME_NOREPLACE);
-+}
-+
-+void
-+rexchange_f(int opno, long r)
-+{
-+	do_renameat2(opno, r, RENAME_EXCHANGE);
-+}
-+
-+void
-+rwhiteout_f(int opno, long r)
-+{
-+	do_renameat2(opno, r, RENAME_WHITEOUT);
-+}
-+
-+void
- resvsp_f(int opno, long r)
- {
- 	int		e;
--- 
-1.8.3.1
+>  #endif=09/* __XFS_SCRUB_BITMAP_H__ */
+> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> index d41da4c44f10..588bc054db5c 100644
+> --- a/fs/xfs/scrub/repair.c
+> +++ b/fs/xfs/scrub/repair.c
+> @@ -507,15 +507,21 @@ xrep_reap_invalidate_block(
+>  =09xfs_trans_binval(sc->tp, bp);
+>  }
+> =20
+> +struct xrep_reap_block {
+> +=09struct xfs_scrub=09=09*sc;
+> +=09const struct xfs_owner_info=09*oinfo;
+> +=09enum xfs_ag_resv_type=09=09resv;
+> +=09unsigned int=09=09=09deferred;
+> +};
+> +
+>  /* Dispose of a single block. */
+>  STATIC int
+>  xrep_reap_block(
+> -=09struct xfs_scrub=09=09*sc,
+> -=09xfs_fsblock_t=09=09=09fsbno,
+> -=09const struct xfs_owner_info=09*oinfo,
+> -=09enum xfs_ag_resv_type=09=09resv,
+> -=09unsigned int=09=09=09*deferred)
+> +=09uint64_t=09=09=09fsbno,
+> +=09void=09=09=09=09*priv)
+>  {
+> +=09struct xrep_reap_block=09=09*rb =3D priv;
+> +=09struct xfs_scrub=09=09*sc =3D rb->sc;
+>  =09struct xfs_btree_cur=09=09*cur;
+>  =09struct xfs_buf=09=09=09*agf_bp =3D NULL;
+>  =09xfs_agnumber_t=09=09=09agno;
+> @@ -527,6 +533,10 @@ xrep_reap_block(
+>  =09agno =3D XFS_FSB_TO_AGNO(sc->mp, fsbno);
+>  =09agbno =3D XFS_FSB_TO_AGBNO(sc->mp, fsbno);
+> =20
+> +=09ASSERT(sc->ip !=3D NULL || agno =3D=3D sc->sa.agno);
+> +
+> +=09trace_xrep_dispose_btree_extent(sc->mp, agno, agbno, 1);
+> +
+>  =09/*
+>  =09 * If we are repairing per-inode metadata, we need to read in the AGF
+>  =09 * buffer.  Otherwise, we're repairing a per-AG structure, so reuse
+> @@ -544,7 +554,8 @@ xrep_reap_block(
+>  =09cur =3D xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf_bp, agno);
+> =20
+>  =09/* Can we find any other rmappings? */
+> -=09error =3D xfs_rmap_has_other_keys(cur, agbno, 1, oinfo, &has_other_rm=
+ap);
+> +=09error =3D xfs_rmap_has_other_keys(cur, agbno, 1, rb->oinfo,
+> +=09=09=09&has_other_rmap);
+>  =09xfs_btree_del_cursor(cur, error);
+>  =09if (error)
+>  =09=09goto out_free;
+> @@ -563,8 +574,9 @@ xrep_reap_block(
+>  =09 * to run xfs_repair.
+>  =09 */
+>  =09if (has_other_rmap) {
+> -=09=09error =3D xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1, oinfo);
+> -=09} else if (resv =3D=3D XFS_AG_RESV_AGFL) {
+> +=09=09error =3D xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1,
+> +=09=09=09=09rb->oinfo);
+> +=09} else if (rb->resv =3D=3D XFS_AG_RESV_AGFL) {
+>  =09=09xrep_reap_invalidate_block(sc, fsbno);
+>  =09=09error =3D xrep_put_freelist(sc, agbno);
+>  =09} else {
+> @@ -576,16 +588,16 @@ xrep_reap_block(
+>  =09=09 * reservation.
+>  =09=09 */
+>  =09=09xrep_reap_invalidate_block(sc, fsbno);
+> -=09=09__xfs_bmap_add_free(sc->tp, fsbno, 1, oinfo, true);
+> -=09=09(*deferred)++;
+> -=09=09need_roll =3D *deferred > 100;
+> +=09=09__xfs_bmap_add_free(sc->tp, fsbno, 1, rb->oinfo, true);
+> +=09=09rb->deferred++;
+> +=09=09need_roll =3D rb->deferred > 100;
+>  =09}
+>  =09if (agf_bp !=3D sc->sa.agf_bp)
+>  =09=09xfs_trans_brelse(sc->tp, agf_bp);
+>  =09if (error || !need_roll)
+>  =09=09return error;
+> =20
+> -=09*deferred =3D 0;
+> +=09rb->deferred =3D 0;
+>  =09if (sc->ip)
+>  =09=09return xfs_trans_roll_inode(&sc->tp, sc->ip);
+>  =09return xrep_roll_ag_trans(sc);
+> @@ -604,27 +616,17 @@ xrep_reap_extents(
+>  =09const struct xfs_owner_info=09*oinfo,
+>  =09enum xfs_ag_resv_type=09=09type)
+>  {
+> -=09struct xbitmap_range=09=09*bmr;
+> -=09struct xbitmap_range=09=09*n;
+> -=09xfs_fsblock_t=09=09=09fsbno;
+> -=09unsigned int=09=09=09deferred =3D 0;
+> +=09struct xrep_reap_block=09=09rb =3D {
+> +=09=09.sc=09=09=09=3D sc,
+> +=09=09.oinfo=09=09=09=3D oinfo,
+> +=09=09.resv=09=09=09=3D type,
+> +=09};
+>  =09int=09=09=09=09error =3D 0;
+> =20
+>  =09ASSERT(xfs_sb_version_hasrmapbt(&sc->mp->m_sb));
+> =20
+> -=09for_each_xbitmap_block(fsbno, bmr, n, bitmap) {
+> -=09=09ASSERT(sc->ip !=3D NULL ||
+> -=09=09       XFS_FSB_TO_AGNO(sc->mp, fsbno) =3D=3D sc->sa.agno);
+> -=09=09trace_xrep_dispose_btree_extent(sc->mp,
+> -=09=09=09=09XFS_FSB_TO_AGNO(sc->mp, fsbno),
+> -=09=09=09=09XFS_FSB_TO_AGBNO(sc->mp, fsbno), 1);
+> -
+> -=09=09error =3D xrep_reap_block(sc, fsbno, oinfo, type, &deferred);
+> -=09=09if (error)
+> -=09=09=09break;
+> -=09}
+> -
+> -=09if (error || deferred =3D=3D 0)
+> +=09error =3D xbitmap_iter_set_bits(bitmap, xrep_reap_block, &rb);
+> +=09if (error || rb.deferred =3D=3D 0)
+>  =09=09return error;
+> =20
+>  =09if (sc->ip)
+>=20
 
--- 
-kaixuxia
