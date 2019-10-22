@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6A1E9CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:48:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27267CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:48:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3A13F20B7C
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:48:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA21C20B7C
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:48:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gBuCANyc"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sLNbLj9f"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732580AbfJVSst (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 14:48:49 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45902 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729696AbfJVSst (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:48:49 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiA3u109476;
-        Tue, 22 Oct 2019 18:48:43 GMT
+        id S1732251AbfJVSsx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 14:48:53 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:51294 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729696AbfJVSsx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:48:53 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiCmn091007;
+        Tue, 22 Oct 2019 18:48:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=SfUxYsiQ/Tv8u7nKcTamwY5sBmhFYKIjTjZOl9AqeCI=;
- b=gBuCANycH/awjRRytMQ0vgnKUOiKnMjRAHi5Yg/eC0yDHeeG86I0rG0Bl4i++fmr23gJ
- 7FlaVb40ow/XVLcMZoAWFRdvHddwP5h77OZ4ekCZBNLx/AoZeqQ8i6msZ3xlwW8uk9TR
- XFKAyM8qhvV09GeTPpPQzB/XZFhmxXv83rd8veyD6vzbvnMF+GD7sz0e5uI/JoSW8DOH
- u7pFb2VJvADvuh/o+3TqRSxC9onqigngijHXtZq452I+xUXynbjfBUhVD0JyX3zoQPWp
- XRlUOwkAk+GTnzVDKtYgG2XvoX3jywTQiPGBvs+UU2GlgxJGzmDlaM8Kx16h1rBWP6Ou VQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2vqswtguxs-1
+ bh=Bs/R2ke44/I4culw/z6JXYPnUD/HbcD06JTORMYoydA=;
+ b=sLNbLj9fjfYXkgckn7zWzNqNL8M+UHjU+74dsPgFeXvF1tJU9M9mjTJhHemK791M9wuF
+ TPJaU2QUarZwIrVAXbQg+yvWvEscQyygL1+DCmIHaX3tbm48edEEDYdhwCAK5BSyGPln
+ 34ARodyCpSoXhnocjBHECxc+U5qgkkYQFxDU2SyJ0TeGt7UPoONeEE90utjQ6LJ8FG+4
+ WkeZxM8wNsdmuNNkbCI5b59oJaz1FtMVfXBvuuiibOTtj1m9S4VCM2rWW6isoewr0dsc
+ JB253q/9qZCmqSvnrbzOI49qRwqncqp99+4amK49VB8rMBmRM6G+EnDnuIJUNKWcJS8S 9g== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by aserp2120.oracle.com with ESMTP id 2vqteprr7s-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:48:43 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhmo8148188;
-        Tue, 22 Oct 2019 18:48:42 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2vsp400w78-1
+        Tue, 22 Oct 2019 18:48:51 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhOBG125229;
+        Tue, 22 Oct 2019 18:48:49 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2vsx239rex-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:48:42 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MImgD7030050;
-        Tue, 22 Oct 2019 18:48:42 GMT
+        Tue, 22 Oct 2019 18:48:49 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9MImmlL026312;
+        Tue, 22 Oct 2019 18:48:48 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 11:48:41 -0700
-Subject: [PATCH 1/2] xfs_scrub: clean out the nproc global variable
+        with ESMTP ; Tue, 22 Oct 2019 11:48:47 -0700
+Subject: [PATCH 2/2] xfs_scrub: refactor xfs_iterate_inodes_range_check
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Date:   Tue, 22 Oct 2019 11:48:40 -0700
-Message-ID: <157177012076.1460310.2224258008333069219.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 22 Oct 2019 11:48:47 -0700
+Message-ID: <157177012698.1460310.12927607736966109750.stgit@magnolia>
 In-Reply-To: <157177011420.1460310.11140985141007340173.stgit@magnolia>
 References: <157177011420.1460310.11140985141007340173.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,74 +80,79 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Get rid of this global variable since we already have a libfrog function
-that does exactly what it does.
+Move all the bulkstat action into a single helper function.  This gets
+rid of the awkward name and increases cohesion.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- scrub/disk.c      |    2 ++
- scrub/xfs_scrub.c |    8 --------
- scrub/xfs_scrub.h |    1 -
- 3 files changed, 2 insertions(+), 9 deletions(-)
+ scrub/inodes.c |   40 ++++++++++++++++++++++++----------------
+ 1 file changed, 24 insertions(+), 16 deletions(-)
 
 
-diff --git a/scrub/disk.c b/scrub/disk.c
-index 8a8a411b..a1ef798a 100644
---- a/scrub/disk.c
-+++ b/scrub/disk.c
-@@ -22,6 +22,7 @@
- #include "xfs_scrub.h"
- #include "common.h"
- #include "disk.h"
-+#include "platform_defs.h"
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 7aa61ebe..7c04d7f6 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -43,19 +43,37 @@
+  */
  
- #ifndef BLKROTATIONAL
- # define BLKROTATIONAL	_IO(0x12, 126)
-@@ -42,6 +43,7 @@ __disk_heads(
+ /*
+- * Did we get exactly the inodes we expected?  If not, load them one at a
+- * time (or fake it) into the bulkstat data.
++ * Run bulkstat on an entire inode allocation group, then check that we got
++ * exactly the inodes we expected.  If not, load them one at a time (or fake
++ * it) into the bulkstat data.
+  */
+ static void
+-xfs_iterate_inodes_range_check(
++bulkstat_for_inumbers(
+ 	struct scrub_ctx	*ctx,
+-	struct xfs_inumbers	*inumbers,
+-	struct xfs_bulkstat	*bstat)
++	const char		*descr,
++	const struct xfs_inumbers *inumbers,
++	struct xfs_bulkstat_req	*breq)
  {
- 	int			iomin;
- 	int			ioopt;
-+	int			nproc = platform_nproc();
- 	unsigned short		rot;
++	struct xfs_bulkstat	*bstat = breq->bulkstat;
+ 	struct xfs_bulkstat	*bs;
+ 	int			i;
  	int			error;
  
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index b6a01274..147c114c 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -131,9 +131,6 @@ static bool			display_rusage;
- /* Background mode; higher values insert more pauses between scrub calls. */
- unsigned int			bg_mode;
++	/* First we try regular bulkstat, for speed. */
++	breq->hdr.ino = inumbers->xi_startino;
++	breq->hdr.icount = inumbers->xi_alloccount;
++	error = xfrog_bulkstat(&ctx->mnt, breq);
++	if (error) {
++		char	errbuf[DESCR_BUFSZ];
++
++		str_info(ctx, descr, "%s",
++			 strerror_r(error, errbuf, DESCR_BUFSZ));
++	}
++
++	/*
++	 * Check each of the stats we got back to make sure we got the inodes
++	 * we asked for.
++	 */
+ 	for (i = 0, bs = bstat; i < XFS_INODES_PER_CHUNK; i++) {
+ 		if (!(inumbers->xi_allocmask & (1ULL << i)))
+ 			continue;
+@@ -131,17 +149,7 @@ xfs_iterate_inodes_ag(
+ 		if (inumbers->xi_alloccount == 0)
+ 			goto igrp_retry;
  
--/* Maximum number of processors available to us. */
--int				nproc;
+-		breq->hdr.ino = inumbers->xi_startino;
+-		breq->hdr.icount = inumbers->xi_alloccount;
+-		error = xfrog_bulkstat(&ctx->mnt, breq);
+-		if (error) {
+-			char	errbuf[DESCR_BUFSZ];
 -
- /* Number of threads we're allowed to use. */
- unsigned int			force_nr_threads;
- 
-@@ -717,11 +714,6 @@ main(
- 	}
- 	memcpy(&ctx.fsinfo, fsp, sizeof(struct fs_path));
- 
--	/* How many CPUs? */
--	nproc = sysconf(_SC_NPROCESSORS_ONLN);
--	if (nproc < 1)
--		nproc = 1;
+-			str_info(ctx, descr, "%s", strerror_r(error,
+-						errbuf, DESCR_BUFSZ));
+-		}
 -
- 	/* Set up a page-aligned buffer for read verification. */
- 	page_size = sysconf(_SC_PAGESIZE);
- 	if (page_size < 0) {
-diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index f9a72052..37d78f61 100644
---- a/scrub/xfs_scrub.h
-+++ b/scrub/xfs_scrub.h
-@@ -15,7 +15,6 @@ extern char *progname;
- extern unsigned int		force_nr_threads;
- extern unsigned int		bg_mode;
- extern unsigned int		debug;
--extern int			nproc;
- extern bool			verbose;
- extern long			page_size;
- extern bool			want_fstrim;
+-		xfs_iterate_inodes_range_check(ctx, inumbers, breq->bulkstat);
++		bulkstat_for_inumbers(ctx, descr, inumbers, breq);
+ 
+ 		/* Iterate all the inodes. */
+ 		for (i = 0, bs = breq->bulkstat;
 
