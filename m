@@ -7,57 +7,58 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA63ACA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:52:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C252ACA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:52:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2CF220B7C
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:52:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8DD6A21872
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:52:17 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MyE3jLZz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="cwD3eVqy"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732691AbfJVSwO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 14:52:14 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:52784 "EHLO
+        id S1732517AbfJVSwR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 14:52:17 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:52858 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1731740AbfJVSwO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:52:14 -0400
+        with ESMTP id S1731740AbfJVSwR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:52:17 -0400
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiG3b089177;
-        Tue, 22 Oct 2019 18:52:12 GMT
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiAPZ089120;
+        Tue, 22 Oct 2019 18:52:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=54kqjOPuTmr6kIBL0mzmbjNn68JtOpXfhIjQnEVlMsk=;
- b=MyE3jLZzU/f5ivjnB1Fwmv0jXP7pzHImjChBGTQxJOwBetbLLyq8MO+bDyytozrPnm9E
- R0XW30fyslcmWEOT7geryHD0gI7Z+bVqT+FNN9YqchijN6huCNRiZr8KeJh7E/DECXHj
- hyXeWPbbNZDvo0t+inOsslCQspF5AMw+QW+2DIFGLidY+uvUXsLEdF6Rjyu/r8818H4q
- 984CokIX54YnmULOPIWVBO7i0p1zy7v3/V1u55WOe75VxtFoUsOMbcc1KWgrWD9F++z3
- 2B5JKW4BFMYdJL2LBjacLheSXaRIN1++Q89uQB/vrXHKlPzjeAL1+gHPyXwE/ccdyI6Q Dw== 
+ bh=Z8TVZeMAVGY75YHLdDoxrp+YLINPGGwek0VYumRpYf4=;
+ b=cwD3eVqyMjKZC6E9OLALkmAYPT4/YhDLzZWMtHUrRvUK7qHyiejLvQSWIvPKQ8siA+d+
+ cTXWkrefvyRWkL6hyEEeDjHyxXaUuFYMs3ttTkBZL05/RHs5SE24DqfEkQYqNSvXfPOB
+ vM2fWmAvo8Sxw5JEWSMbF123acjEOtdCkVCS5GBzUO8J3tEL4PMWYWbOCEdtf8zh3Hox
+ X6+M3v+GC/MA4NL51b+y2o/kf0TX/2DEfaZrr5IBoNykB6+TROeXhw9bUUC97XfgFhDQ
+ ds1Fou4b9/CroEIRboXlCtrI2ZA4iKSGWXhVGAw+BUVY7vYIGOFdEkOJRWQLZwYHDBA6 sQ== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2vqu4qrksn-1
+        by userp2120.oracle.com with ESMTP id 2vqu4qrkt1-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:52:11 +0000
+        Tue, 22 Oct 2019 18:52:15 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhkLn148043;
-        Tue, 22 Oct 2019 18:52:11 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2vsp401803-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhov5148310;
+        Tue, 22 Oct 2019 18:50:14 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2vsp4010rs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:52:11 +0000
-Received: from abhmp0023.oracle.com (abhmp0023.oracle.com [141.146.116.29])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MIqAPi032038;
-        Tue, 22 Oct 2019 18:52:10 GMT
+        Tue, 22 Oct 2019 18:50:14 +0000
+Received: from abhmp0021.oracle.com (abhmp0021.oracle.com [141.146.116.27])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9MIoE2Y027286;
+        Tue, 22 Oct 2019 18:50:14 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 18:52:10 +0000
-Subject: [PATCH 16/18] xfs_scrub: remove moveon from phase 1 functions
+        with ESMTP ; Tue, 22 Oct 2019 18:50:11 +0000
+Subject: [PATCH 2/3] xfs_scrub: perform media scans of entire devices
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 22 Oct 2019 11:52:09 -0700
-Message-ID: <157177032948.1461658.7286200913132387029.stgit@magnolia>
-In-Reply-To: <157177022106.1461658.18024534947316119946.stgit@magnolia>
-References: <157177022106.1461658.18024534947316119946.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>
+Date:   Tue, 22 Oct 2019 11:50:10 -0700
+Message-ID: <157177021069.1460684.13385243350591362467.stgit@magnolia>
+In-Reply-To: <157177019803.1460684.3524666107607426492.stgit@magnolia>
+References: <157177019803.1460684.3524666107607426492.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -80,209 +81,182 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the moveon returns in the phase 1 code with a direct integer
-error return.
+Add a new feature to xfs_scrub where specifying multiple -x will cause
+it to perform a media scan of the entire disk, not just the file data
+areas.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Allison Collins <allison.henderson@oracle.com>
 ---
- scrub/phase1.c    |   49 ++++++++++++++++++++++++++++---------------------
- scrub/xfs_scrub.c |    5 +++--
- scrub/xfs_scrub.h |    2 +-
- 3 files changed, 32 insertions(+), 24 deletions(-)
+ man/man8/xfs_scrub.8 |    3 +++
+ scrub/phase6.c       |   60 ++++++++++++++++++++++++++++++++++++++++++++++----
+ scrub/phase7.c       |    5 ++++
+ scrub/xfs_scrub.c    |    4 ++-
+ scrub/xfs_scrub.h    |    1 +
+ 5 files changed, 66 insertions(+), 7 deletions(-)
 
 
-diff --git a/scrub/phase1.c b/scrub/phase1.c
-index 5538deae..75ae3b00 100644
---- a/scrub/phase1.c
-+++ b/scrub/phase1.c
-@@ -44,8 +44,8 @@ xfs_shutdown_fs(
+diff --git a/man/man8/xfs_scrub.8 b/man/man8/xfs_scrub.8
+index e881ae76..2cdec380 100644
+--- a/man/man8/xfs_scrub.8
++++ b/man/man8/xfs_scrub.8
+@@ -97,6 +97,9 @@ Prints the version number and exits.
+ .TP
+ .B \-x
+ Read all file data extents to look for disk errors.
++If this option is given more than once, scrub all disk contents.
++If this option is given more than twice, report errors even if they have not
++yet caused data loss.
+ .B xfs_scrub
+ will issue O_DIRECT reads to the block device directly.
+ If the block device is a SCSI disk, it will instead issue READ VERIFY commands
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index aae6b7d8..9ddddef1 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -188,7 +188,9 @@ report_data_loss(
+ 	int				ret;
+ 
+ 	/* Only report errors for real extents. */
+-	if (bmap->bm_flags & (BMV_OF_PREALLOC | BMV_OF_DELALLOC))
++	if (scrub_data < 3 && (bmap->bm_flags & BMV_OF_PREALLOC))
++		return true;
++	if (bmap->bm_flags & BMV_OF_DELALLOC)
+ 		return true;
+ 
+ 	if (fsx->fsx_xflags & FS_XFLAG_REALTIME)
+@@ -376,7 +378,7 @@ report_ioerr_fsmap(
+ 	uint64_t		err_off;
+ 
+ 	/* Don't care about unwritten extents. */
+-	if (map->fmr_flags & FMR_OF_PREALLOC)
++	if (scrub_data < 3 && (map->fmr_flags & FMR_OF_PREALLOC))
+ 		return true;
+ 
+ 	if (err_physical > map->fmr_physical)
+@@ -603,6 +605,49 @@ remember_ioerr(
+ 		str_liberror(ctx, ret, _("setting bad block bitmap"));
  }
  
- /* Clean up the XFS-specific state data. */
--bool
--xfs_cleanup_fs(
-+int
-+scrub_cleanup(
- 	struct scrub_ctx	*ctx)
- {
- 	int			error;
-@@ -65,15 +65,15 @@ xfs_cleanup_fs(
- 		str_liberror(ctx, error, _("closing mountpoint fd"));
- 	fs_table_destroy();
- 
--	return true;
-+	return error;
- }
- 
- /*
-  * Bind to the mountpoint, read the XFS geometry, bind to the block devices.
-- * Anything we've already built will be cleaned up by xfs_cleanup_fs.
-+ * Anything we've already built will be cleaned up by scrub_cleanup.
-  */
--bool
--xfs_setup_fs(
-+int
-+phase1_func(
- 	struct scrub_ctx		*ctx)
- {
- 	int				error;
-@@ -95,23 +95,23 @@ _("Must be root to run scrub."));
- _("Not an XFS filesystem."));
- 		else
- 			str_liberror(ctx, error, ctx->mntpoint);
--		return false;
-+		return error;
- 	}
- 
- 	error = fstat(ctx->mnt.fd, &ctx->mnt_sb);
- 	if (error) {
- 		str_errno(ctx, ctx->mntpoint);
--		return false;
-+		return error;
- 	}
- 	error = fstatvfs(ctx->mnt.fd, &ctx->mnt_sv);
- 	if (error) {
- 		str_errno(ctx, ctx->mntpoint);
--		return false;
-+		return error;
- 	}
- 	error = fstatfs(ctx->mnt.fd, &ctx->mnt_sf);
- 	if (error) {
- 		str_errno(ctx, ctx->mntpoint);
--		return false;
-+		return error;
- 	}
- 
- 	/*
-@@ -122,21 +122,21 @@ _("Not an XFS filesystem."));
- 	error = syncfs(ctx->mnt.fd);
- 	if (error) {
- 		str_errno(ctx, ctx->mntpoint);
--		return false;
-+		return error;
- 	}
- 
- 	error = action_lists_alloc(ctx->mnt.fsgeom.agcount,
- 			&ctx->action_lists);
- 	if (error) {
- 		str_liberror(ctx, error, _("allocating action lists"));
--		return false;
-+		return error;
- 	}
- 
- 	error = path_to_fshandle(ctx->mntpoint, &ctx->fshandle,
- 			&ctx->fshandle_len);
- 	if (error) {
- 		str_errno(ctx, _("getting fshandle"));
--		return false;
-+		return error;
- 	}
- 
- 	/* Do we have kernel-assisted metadata scrubbing? */
-@@ -146,33 +146,33 @@ _("Not an XFS filesystem."));
- 	    !xfs_can_scrub_parent(ctx)) {
- 		str_error(ctx, ctx->mntpoint,
- _("Kernel metadata scrubbing facility is not available."));
--		return false;
-+		return ECANCELED;
- 	}
- 
- 	/* Do we need kernel-assisted metadata repair? */
- 	if (ctx->mode != SCRUB_MODE_DRY_RUN && !xfs_can_repair(ctx)) {
- 		str_error(ctx, ctx->mntpoint,
- _("Kernel metadata repair facility is not available.  Use -n to scrub."));
--		return false;
-+		return ECANCELED;
- 	}
- 
- 	/* Did we find the log and rt devices, if they're present? */
- 	if (ctx->mnt.fsgeom.logstart == 0 && ctx->fsinfo.fs_log == NULL) {
- 		str_error(ctx, ctx->mntpoint,
- _("Unable to find log device path."));
--		return false;
-+		return ECANCELED;
- 	}
- 	if (ctx->mnt.fsgeom.rtblocks && ctx->fsinfo.fs_rt == NULL) {
- 		str_error(ctx, ctx->mntpoint,
- _("Unable to find realtime device path."));
--		return false;
-+		return ECANCELED;
- 	}
- 
- 	/* Open the raw devices. */
- 	ctx->datadev = disk_open(ctx->fsinfo.fs_name);
- 	if (error) {
- 		str_errno(ctx, ctx->fsinfo.fs_name);
--		return false;
-+		return error;
- 	}
- 
- 	ctx->nr_io_threads = disk_heads(ctx->datadev);
-@@ -186,14 +186,14 @@ _("Unable to find realtime device path."));
- 		ctx->logdev = disk_open(ctx->fsinfo.fs_log);
- 		if (error) {
- 			str_errno(ctx, ctx->fsinfo.fs_name);
--			return false;
-+			return error;
- 		}
- 	}
- 	if (ctx->fsinfo.fs_rt) {
- 		ctx->rtdev = disk_open(ctx->fsinfo.fs_rt);
- 		if (error) {
- 			str_errno(ctx, ctx->fsinfo.fs_name);
--			return false;
-+			return error;
- 		}
- 	}
- 
-@@ -204,5 +204,12 @@ _("Unable to find realtime device path."));
- 	 */
- 	log_info(ctx, _("Invoking online scrub."), ctx);
- 	ctx->scrub_setup_succeeded = true;
--	return true;
-+	return 0;
++/* Schedule an entire disk for read verification. */
++static int
++verify_entire_disk(
++	struct read_verify_pool		*rvp,
++	struct disk			*disk,
++	struct media_verify_state	*vs)
++{
++	return read_verify_schedule_io(rvp, 0, disk->d_size, vs);
 +}
 +
-+bool
-+xfs_setup_fs(
-+	struct scrub_ctx		*ctx)
++/* Scan every part of every disk. */
++static bool
++verify_all_disks(
++	struct scrub_ctx		*ctx,
++	struct media_verify_state	*vs)
 +{
-+	return phase1_func(ctx) == 0;
- }
++	int				ret;
++
++	ret = verify_entire_disk(vs->rvp_data, ctx->datadev, vs);
++	if (ret) {
++		str_liberror(ctx, ret, _("scheduling datadev verify"));
++		return false;
++	}
++
++	if (ctx->logdev) {
++		ret = verify_entire_disk(vs->rvp_log, ctx->logdev, vs);
++		if (ret) {
++			str_liberror(ctx, ret, _("scheduling logdev verify"));
++			return false;
++		}
++	}
++
++	if (ctx->rtdev) {
++		ret = verify_entire_disk(vs->rvp_realtime, ctx->rtdev, vs);
++		if (ret) {
++			str_liberror(ctx, ret, _("scheduling rtdev verify"));
++			return false;
++		}
++	}
++
++	return true;
++}
++
+ /*
+  * Read verify all the file data blocks in a filesystem.  Since XFS doesn't
+  * do data checksums, we trust that the underlying storage will pass back
+@@ -658,7 +703,11 @@ xfs_scan_blocks(
+ 			goto out_logpool;
+ 		}
+ 	}
+-	moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &vs);
++
++	if (scrub_data > 1)
++		moveon = verify_all_disks(ctx, &vs);
++	else
++		moveon = xfs_scan_all_spacemaps(ctx, xfs_check_rmap, &vs);
+ 	if (!moveon)
+ 		goto out_rtpool;
+ 
+@@ -730,8 +779,9 @@ xfs_estimate_verify_work(
+ 	if (!moveon)
+ 		return moveon;
+ 
+-	*items = cvt_off_fsb_to_b(&ctx->mnt,
+-			(d_blocks - d_bfree) + (r_blocks - r_bfree));
++	*items = cvt_off_fsb_to_b(&ctx->mnt, d_blocks + r_blocks);
++	if (scrub_data == 1)
++		*items -= cvt_off_fsb_to_b(&ctx->mnt, d_bfree + r_bfree);
+ 	*nr_threads = disk_heads(ctx->datadev);
+ 	*rshift = 20;
+ 	return moveon;
+diff --git a/scrub/phase7.c b/scrub/phase7.c
+index bc959f5b..570ceb3f 100644
+--- a/scrub/phase7.c
++++ b/scrub/phase7.c
+@@ -255,6 +255,11 @@ _("%.*f%s inodes counted; %.*f%s inodes checked.\n"),
+ 		double		b1, b2;
+ 		char		*b1u, *b2u;
+ 
++		if (scrub_data > 1) {
++			used_data = cvt_off_fsb_to_b(&ctx->mnt, d_blocks);
++			used_rt = cvt_off_fsb_to_b(&ctx->mnt, r_blocks);
++		}
++
+ 		b1 = auto_space_units(used_data + used_rt, &b1u);
+ 		b2 = auto_space_units(ctx->bytes_checked, &b2u);
+ 		fprintf(stdout,
 diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index c0e60b92..3751e5af 100644
+index 9945c7f4..b2e58108 100644
 --- a/scrub/xfs_scrub.c
 +++ b/scrub/xfs_scrub.c
-@@ -602,6 +602,7 @@ main(
- 	int			c;
- 	int			fd;
- 	int			ret = SCRUB_RET_SUCCESS;
-+	int			error;
+@@ -139,7 +139,7 @@ unsigned int			force_nr_threads;
+ bool				verbose;
  
- 	fprintf(stdout, "EXPERIMENTAL xfs_scrub program in use! Use at your own risk!\n");
+ /* Should we scrub the data blocks? */
+-static bool			scrub_data;
++int				scrub_data;
  
-@@ -776,8 +777,8 @@ main(
- 		str_info(&ctx, ctx.mntpoint, _("Injecting error."));
- 
- 	/* Clean up scan data. */
--	moveon = xfs_cleanup_fs(&ctx);
--	if (!moveon && ctx.runtime_errors == 0)
-+	error = scrub_cleanup(&ctx);
-+	if (error && ctx.runtime_errors == 0)
- 		ctx.runtime_errors++;
- 
- out:
+ /* Size of a memory page. */
+ long				page_size;
+@@ -668,7 +668,7 @@ main(
+ 			fflush(stdout);
+ 			return SCRUB_RET_SUCCESS;
+ 		case 'x':
+-			scrub_data = true;
++			scrub_data++;
+ 			break;
+ 		case '?':
+ 			/* fall through */
 diff --git a/scrub/xfs_scrub.h b/scrub/xfs_scrub.h
-index 88537b0b..5e7f94f5 100644
+index 61831c92..ed0e63b8 100644
 --- a/scrub/xfs_scrub.h
 +++ b/scrub/xfs_scrub.h
-@@ -88,7 +88,7 @@ struct scrub_ctx {
+@@ -21,6 +21,7 @@ extern bool			want_fstrim;
+ extern bool			stderr_isatty;
+ extern bool			stdout_isatty;
+ extern bool			is_service;
++extern int			scrub_data;
  
- /* Phase helper functions */
- void xfs_shutdown_fs(struct scrub_ctx *ctx);
--bool xfs_cleanup_fs(struct scrub_ctx *ctx);
-+int scrub_cleanup(struct scrub_ctx *ctx);
- bool xfs_setup_fs(struct scrub_ctx *ctx);
- bool xfs_scan_metadata(struct scrub_ctx *ctx);
- bool xfs_scan_inodes(struct scrub_ctx *ctx);
+ enum scrub_mode {
+ 	SCRUB_MODE_DRY_RUN,
 
