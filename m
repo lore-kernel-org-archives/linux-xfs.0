@@ -7,71 +7,71 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 19BC2CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 16:55:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF85CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 16:56:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DC8D7214B2
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 16:55:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 16E3820B7C
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 16:56:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Lwiyla5I"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S4cgQuNQ"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727851AbfJVQzq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 12:55:46 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:58688 "EHLO
+        id S1731806AbfJVQ4c (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 12:56:32 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:59430 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1730432AbfJVQzq (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 12:55:46 -0400
+        with ESMTP id S1727885AbfJVQ4c (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 12:56:32 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MGrvoO012012;
-        Tue, 22 Oct 2019 16:55:37 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MGsLkR012214;
+        Tue, 22 Oct 2019 16:56:20 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=+cQ9RpD4BAvPYsLJOcSiQr8i14t6jR/ke1WaSaa4pV0=;
- b=Lwiyla5IuB5kI1E0lurTBpq1/VcwbZr3ZqKwqg9YvaD6k9S+8sJIPJiGpZfl8LLOJ2gX
- JGz6vx8nsxkhzQ6ScaM20wxrO7LMhSD2HmSwIsDYdmaQJyheST5/Vk+3nCYxVQsNEBzi
- y/iHrW8bcMj4ttVhCwiCpwguq8+1/YzxwEmVXO7umrsmRg5jnOnyYxSPkawpu8QYNiBq
- +3HB7Y5HDcj6UO0A4F7Z5mW/g3liiv0e42qu3fXFBkH/+IGHnzL3GQ573PQwmECn+GR/
- t1nOBs2CbBqKm4niI7f6TLbOOfjLGTMd+r2tfBm/IXOpZGW9gR2lX1kfZ8gkHDhyxpOa PA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2vqswtg7aa-1
+ bh=1yt1Earz6yop/G01Xj3BqWzJsCs6C+Wg1HGZjpM02EA=;
+ b=S4cgQuNQtDgVNWPfYfMCnimg+I/8+IOEgSFWaJa0Bmto97yg/C92+DylBo2zoH9ikhgF
+ F4582PPeW6S+X/j1Dbs56NQl55Ckwp//Auit10qKnhV9x5wYiOMIkbCsWXApvyIvXlze
+ BiN8xPZL69mdcDGKYVM6JLp5rsVYV/5I1pEOF9q94hm/zscNV+BvUvCx7onhD8smzv+0
+ 7bykHI28TL3nhSbPWo718yVe7nAwi4QzLD5WLEmWP980PLb3VdF0RhSBvgW7s4IWtvkj
+ A4hS4SACgSkYekiU81VIxAvEilER6vDRYaTXpEZYPLzK+rg6xpxSA0j4pZZLBNQU7LKT fw== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2vqswtg7cy-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 16:55:36 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MGmNoF117667;
-        Tue, 22 Oct 2019 16:55:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3020.oracle.com with ESMTP id 2vt2hdd1qn-1
+        Tue, 22 Oct 2019 16:56:20 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MGn3Lg181864;
+        Tue, 22 Oct 2019 16:56:19 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3030.oracle.com with ESMTP id 2vsx233y45-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 16:55:36 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MGtYdU007768;
-        Tue, 22 Oct 2019 16:55:34 GMT
+        Tue, 22 Oct 2019 16:56:19 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9MGuIE5005077;
+        Tue, 22 Oct 2019 16:56:18 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 09:55:33 -0700
-Date:   Tue, 22 Oct 2019 09:55:32 -0700
+        with ESMTP ; Tue, 22 Oct 2019 09:56:17 -0700
+Date:   Tue, 22 Oct 2019 09:56:17 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     "Ben Dooks (Codethink)" <ben.dooks@codethink.co.uk>
-Cc:     linux-kernel@lists.codethink.co.uk, linux-xfs@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] xfs: add mising include of xfs_pnfs.h for missing
- declarations
-Message-ID: <20191022165532.GM913374@magnolia>
-References: <20191022153247.10286-1-ben.dooks@codethink.co.uk>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: remove the for_each_xbitmap_ helpers
+Message-ID: <20191022165617.GN913374@magnolia>
+References: <157063973592.2913318.8246472567175058111.stgit@magnolia>
+ <157063976280.2913318.2140616655357544513.stgit@magnolia>
+ <20191022133518.GB51627@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191022153247.10286-1-ben.dooks@codethink.co.uk>
+In-Reply-To: <20191022133518.GB51627@bfoster>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9418 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1910220140
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9418 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
  definitions=main-1910220141
@@ -80,43 +80,182 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 22, 2019 at 04:32:47PM +0100, Ben Dooks (Codethink) wrote:
-> The xfs_pnfs.c file is missing an include of xfs_pnfs.h to
-> add the prototypes of the functions it exports. Include this
-> file to fix the following sparse warnings:
+On Tue, Oct 22, 2019 at 09:35:18AM -0400, Brian Foster wrote:
+> On Wed, Oct 09, 2019 at 09:49:22AM -0700, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > 
+> > Remove the for_each_xbitmap_ macros in favor of proper iterator
+> > functions.  We'll soon be switching this data structure over to an
+> > interval tree implementation, which means that we can't allow callers to
+> > modify the bitmap during iteration without telling us.
+> > 
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > ---
+> >  fs/xfs/scrub/agheader_repair.c |   73 ++++++++++++++++++++++++----------------
+> >  fs/xfs/scrub/bitmap.c          |   59 ++++++++++++++++++++++++++++++++
+> >  fs/xfs/scrub/bitmap.h          |   22 ++++++++----
+> >  fs/xfs/scrub/repair.c          |   60 +++++++++++++++++----------------
+> >  4 files changed, 148 insertions(+), 66 deletions(-)
+> > 
+> > 
+> ...
+> > diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+> > index 900646b72de1..27fde5b4a753 100644
+> > --- a/fs/xfs/scrub/bitmap.h
+> > +++ b/fs/xfs/scrub/bitmap.h
+> ...
+> > @@ -34,4 +27,19 @@ int xbitmap_set_btblocks(struct xbitmap *bitmap,
+> >  		struct xfs_btree_cur *cur);
+> >  uint64_t xbitmap_hweight(struct xbitmap *bitmap);
+> >  
+> > +/*
+> > + * Return codes for the bitmap iterator functions are 0 to continue iterating,
+> > + * and non-zero to stop iterating.  Any non-zero value will be passed up to the
+> > + * iteration caller.  The special value -ECANCELED can be used to stop
+> > + * iteration, because neither bitmap iterator ever generates that error code on
+> > + * its own.
+> > + */
+> > +typedef int (*xbitmap_walk_run_fn)(uint64_t start, uint64_t len, void *priv);
+> > +int xbitmap_iter_set(struct xbitmap *bitmap, xbitmap_walk_run_fn fn,
+> > +		void *priv);
+> > +
+> > +typedef int (*xbitmap_walk_bit_fn)(uint64_t bit, void *priv);
+> > +int xbitmap_iter_set_bits(struct xbitmap *bitmap, xbitmap_walk_bit_fn fn,
+> > +		void *priv);
+> > +
 > 
-> fs/xfs/xfs_pnfs.c:27:1: warning: symbol 'xfs_break_leased_layouts' was not declared. Should it be static?
-> fs/xfs/xfs_pnfs.c:52:1: warning: symbol 'xfs_fs_get_uuid' was not declared. Should it be static?
-> fs/xfs/xfs_pnfs.c:77:1: warning: symbol 'xfs_fs_map_blocks' was not declared. Should it be static?
-> fs/xfs/xfs_pnfs.c:226:1: warning: symbol 'xfs_fs_commit_blocks' was not declared. Should it be static?
-> 
-> Signed-off-by: Ben Dooks (Codethink) <ben.dooks@codethink.co.uk>
+> Somewhat of a nit, but I read "set" as a verb in the above function
+> names which tends to confuse me over what these functions do (i.e.
+> iterate bits, not set bits). Could we call them something a bit more
+> neutral, like xbitmap[_bit]_iter() perhaps? That aside the rest of the
+> patch looks Ok to me.
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Ok, will rename them.
 
 --D
 
-> ---
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: linux-xfs@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> ---
->  fs/xfs/xfs_pnfs.c | 1 +
->  1 file changed, 1 insertion(+)
+> Brian
 > 
-> diff --git a/fs/xfs/xfs_pnfs.c b/fs/xfs/xfs_pnfs.c
-> index a339bd5fa260..b2f6f1e3d9c4 100644
-> --- a/fs/xfs/xfs_pnfs.c
-> +++ b/fs/xfs/xfs_pnfs.c
-> @@ -12,6 +12,7 @@
->  #include "xfs_trans.h"
->  #include "xfs_bmap.h"
->  #include "xfs_iomap.h"
-> +#include "xfs_pnfs.h"
->  
->  /*
->   * Ensure that we do not have any outstanding pNFS layouts that can be used by
-> -- 
-> 2.23.0
+> >  #endif	/* __XFS_SCRUB_BITMAP_H__ */
+> > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> > index d41da4c44f10..588bc054db5c 100644
+> > --- a/fs/xfs/scrub/repair.c
+> > +++ b/fs/xfs/scrub/repair.c
+> > @@ -507,15 +507,21 @@ xrep_reap_invalidate_block(
+> >  	xfs_trans_binval(sc->tp, bp);
+> >  }
+> >  
+> > +struct xrep_reap_block {
+> > +	struct xfs_scrub		*sc;
+> > +	const struct xfs_owner_info	*oinfo;
+> > +	enum xfs_ag_resv_type		resv;
+> > +	unsigned int			deferred;
+> > +};
+> > +
+> >  /* Dispose of a single block. */
+> >  STATIC int
+> >  xrep_reap_block(
+> > -	struct xfs_scrub		*sc,
+> > -	xfs_fsblock_t			fsbno,
+> > -	const struct xfs_owner_info	*oinfo,
+> > -	enum xfs_ag_resv_type		resv,
+> > -	unsigned int			*deferred)
+> > +	uint64_t			fsbno,
+> > +	void				*priv)
+> >  {
+> > +	struct xrep_reap_block		*rb = priv;
+> > +	struct xfs_scrub		*sc = rb->sc;
+> >  	struct xfs_btree_cur		*cur;
+> >  	struct xfs_buf			*agf_bp = NULL;
+> >  	xfs_agnumber_t			agno;
+> > @@ -527,6 +533,10 @@ xrep_reap_block(
+> >  	agno = XFS_FSB_TO_AGNO(sc->mp, fsbno);
+> >  	agbno = XFS_FSB_TO_AGBNO(sc->mp, fsbno);
+> >  
+> > +	ASSERT(sc->ip != NULL || agno == sc->sa.agno);
+> > +
+> > +	trace_xrep_dispose_btree_extent(sc->mp, agno, agbno, 1);
+> > +
+> >  	/*
+> >  	 * If we are repairing per-inode metadata, we need to read in the AGF
+> >  	 * buffer.  Otherwise, we're repairing a per-AG structure, so reuse
+> > @@ -544,7 +554,8 @@ xrep_reap_block(
+> >  	cur = xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf_bp, agno);
+> >  
+> >  	/* Can we find any other rmappings? */
+> > -	error = xfs_rmap_has_other_keys(cur, agbno, 1, oinfo, &has_other_rmap);
+> > +	error = xfs_rmap_has_other_keys(cur, agbno, 1, rb->oinfo,
+> > +			&has_other_rmap);
+> >  	xfs_btree_del_cursor(cur, error);
+> >  	if (error)
+> >  		goto out_free;
+> > @@ -563,8 +574,9 @@ xrep_reap_block(
+> >  	 * to run xfs_repair.
+> >  	 */
+> >  	if (has_other_rmap) {
+> > -		error = xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1, oinfo);
+> > -	} else if (resv == XFS_AG_RESV_AGFL) {
+> > +		error = xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1,
+> > +				rb->oinfo);
+> > +	} else if (rb->resv == XFS_AG_RESV_AGFL) {
+> >  		xrep_reap_invalidate_block(sc, fsbno);
+> >  		error = xrep_put_freelist(sc, agbno);
+> >  	} else {
+> > @@ -576,16 +588,16 @@ xrep_reap_block(
+> >  		 * reservation.
+> >  		 */
+> >  		xrep_reap_invalidate_block(sc, fsbno);
+> > -		__xfs_bmap_add_free(sc->tp, fsbno, 1, oinfo, true);
+> > -		(*deferred)++;
+> > -		need_roll = *deferred > 100;
+> > +		__xfs_bmap_add_free(sc->tp, fsbno, 1, rb->oinfo, true);
+> > +		rb->deferred++;
+> > +		need_roll = rb->deferred > 100;
+> >  	}
+> >  	if (agf_bp != sc->sa.agf_bp)
+> >  		xfs_trans_brelse(sc->tp, agf_bp);
+> >  	if (error || !need_roll)
+> >  		return error;
+> >  
+> > -	*deferred = 0;
+> > +	rb->deferred = 0;
+> >  	if (sc->ip)
+> >  		return xfs_trans_roll_inode(&sc->tp, sc->ip);
+> >  	return xrep_roll_ag_trans(sc);
+> > @@ -604,27 +616,17 @@ xrep_reap_extents(
+> >  	const struct xfs_owner_info	*oinfo,
+> >  	enum xfs_ag_resv_type		type)
+> >  {
+> > -	struct xbitmap_range		*bmr;
+> > -	struct xbitmap_range		*n;
+> > -	xfs_fsblock_t			fsbno;
+> > -	unsigned int			deferred = 0;
+> > +	struct xrep_reap_block		rb = {
+> > +		.sc			= sc,
+> > +		.oinfo			= oinfo,
+> > +		.resv			= type,
+> > +	};
+> >  	int				error = 0;
+> >  
+> >  	ASSERT(xfs_sb_version_hasrmapbt(&sc->mp->m_sb));
+> >  
+> > -	for_each_xbitmap_block(fsbno, bmr, n, bitmap) {
+> > -		ASSERT(sc->ip != NULL ||
+> > -		       XFS_FSB_TO_AGNO(sc->mp, fsbno) == sc->sa.agno);
+> > -		trace_xrep_dispose_btree_extent(sc->mp,
+> > -				XFS_FSB_TO_AGNO(sc->mp, fsbno),
+> > -				XFS_FSB_TO_AGBNO(sc->mp, fsbno), 1);
+> > -
+> > -		error = xrep_reap_block(sc, fsbno, oinfo, type, &deferred);
+> > -		if (error)
+> > -			break;
+> > -	}
+> > -
+> > -	if (error || deferred == 0)
+> > +	error = xbitmap_iter_set_bits(bitmap, xrep_reap_block, &rb);
+> > +	if (error || rb.deferred == 0)
+> >  		return error;
+> >  
+> >  	if (sc->ip)
+> > 
 > 
