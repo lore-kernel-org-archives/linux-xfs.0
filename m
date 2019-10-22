@@ -2,425 +2,212 @@ Return-Path: <SRS0=PA6D=YP=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+X-Spam-Status: No, score=-5.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C452BCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 10:02:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B17FCA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 11:06:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 887E021872
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 10:02:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E1A9321872
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 11:06:09 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="e/9ESv8v"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="P63/Q5qR"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731663AbfJVKCS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 06:02:18 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:32340 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1731594AbfJVKCS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 06:02:18 -0400
+        id S1730701AbfJVLGJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 07:06:09 -0400
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:36236 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1729458AbfJVLGI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 07:06:08 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571738536;
+        s=mimecast20190719; t=1571742366;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=jjtBo56OgxWzpT6Z3+cb5q6/gMLu2fCqwUGua76BJnE=;
-        b=e/9ESv8vVkX3aYuUOZUiJ1YJfEXxFaNTsmDIexr64ha0Ab0swkVCEC8QZRl9kPLaZ8pEgU
-        dKEpPz7vE5sFgwxL/ScziAhZNAMNfmtC2fvthVybdaVtezEJBXffLdiklBGs9pz2wcReBT
-        19tM3/1dTLFmjwyftiVstXPB5uaKpnY=
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=o6jvQo3W0ytldCAS/7ynaKYGhj7OwHmCh6LT9fVtlvc=;
+        b=P63/Q5qRpU9pRSE0z5h7h/2rgVPMSA5yx4jnJO+MZWUbBHhoUMhhK4N4LLo9axjJknxTlI
+        qOTOiceWh6dVPFfGg8vIE6ISMPYtccnmXZmPAvOagyczwwbk3o1f+h9piJBxKoUDQ5lzxF
+        e8h35uBcFmys6Y3A+vvFQ/ngF0/KufY=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-368-eHaudmUZPfq6TQFIMutuGw-1; Tue, 22 Oct 2019 06:02:14 -0400
+ us-mta-370-jlUK3McBNNeRRvzZFUsVTQ-1; Tue, 22 Oct 2019 07:06:04 -0400
 Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B216A1800DD0;
-        Tue, 22 Oct 2019 10:02:13 +0000 (UTC)
-Received: from dhcp-12-171.nay.redhat.com (dhcp-12-171.nay.redhat.com [10.66.12.171])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 5D01B5D6A5;
-        Tue, 22 Oct 2019 10:02:12 +0000 (UTC)
-From:   Zorro Lang <zlang@redhat.com>
-To:     fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org, ikent@redhat.com
-Subject: [PATCH] xfstests: xfs mount option sanity test
-Date:   Tue, 22 Oct 2019 18:01:18 +0800
-Message-Id: <20191022100118.18506-1-zlang@redhat.com>
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 69BE1476;
+        Tue, 22 Oct 2019 11:06:03 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 71A955D6A5;
+        Tue, 22 Oct 2019 11:06:02 +0000 (UTC)
+Date:   Tue, 22 Oct 2019 07:06:00 -0400
+From:   Brian Foster <bfoster@redhat.com>
+To:     Alex Lyakas <alex@zadara.com>
+Cc:     vbendel@redhat.com, linux-xfs@vger.kernel.org
+Subject: Re: xfs_buftarg_isolate(): "Correctly invert xfs_buftarg LRU
+ isolation logic"
+Message-ID: <20191022110600.GA50656@bfoster>
+References: <CC133B1B9D9B46AFAB2D35A366BF7DC4@alyakaslap>
+ <20191021124714.GA26105@bfoster>
+ <CAOcd+r1cwsoGD5=VtJjRwmh5Sp9MVmSv9xRq8S9STs=cUyMH+Q@mail.gmail.com>
 MIME-Version: 1.0
+In-Reply-To: <CAOcd+r1cwsoGD5=VtJjRwmh5Sp9MVmSv9xRq8S9STs=cUyMH+Q@mail.gmail.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
 X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
-X-MC-Unique: eHaudmUZPfq6TQFIMutuGw-1
+X-MC-Unique: jlUK3McBNNeRRvzZFUsVTQ-1
 X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-XFS is changing to suit the new mount API, so add this case to make
-sure the changing won't bring in regression issue on xfs mount option
-parse phase, and won't change some default behaviors either.
+On Tue, Oct 22, 2019 at 09:49:56AM +0300, Alex Lyakas wrote:
+> Hi Brian,
+>=20
+> Thank you for your response.
+>=20
+> On Mon, Oct 21, 2019 at 3:47 PM Brian Foster <bfoster@redhat.com> wrote:
+> >
+> > On Sun, Oct 20, 2019 at 05:54:03PM +0300, Alex Lyakas wrote:
+> > > Hello Vratislav, Brian,
+> > >
+> > > This is with regards to commit "xfs: Correctly invert xfs_buftarg LRU
+> > > isolation logic" [1].
+> > >
+> > > I am hitting this issue in kernel 4.14. However, after some debugging=
+, I do
+> > > not fully agree with the commit message, describing the effect of thi=
+s
+> > > defect.
+> > >
+> > > In case b_lru_ref > 1, then indeed this xfs_buf will be taken off the=
+ LRU
+> > > list, and immediately added back to it, with b_lru_ref being lesser b=
+y 1
+> > > now.
+> > >
+> > > In case b_lru_ref=3D=3D1, then this xfs_buf will be similarly isolate=
+d (due to a
+> > > bug), and xfs_buf_rele() will be called on it. But now its b_lru_ref=
+=3D=3D0. In
+> > > this case, xfs_buf_rele() will free the buffer, rather than re-adding=
+ it
+> > > back to the LRU. This is a problem, because we intended for this buff=
+er to
+> > > have another trip on the LRU. Only when b_lru_ref=3D=3D0 upon entry t=
+o
+> > > xfs_buftarg_isolate(), we want to free the buffer. So we are freeing =
+the
+> > > buffer one trip too early in this case.
+> > >
+> > > In case b_lru_ref=3D=3D0 (somehow), then due to a bug, this xfs_buf w=
+ill not be
+> > > removed off the LRU. It will remain sitting in the LRU with b_lru_ref=
+=3D=3D0. On
+> > > next shrinker call, this xfs_buff will also remain on the LRU, due to=
+ the
+> > > same bug. So this xfs_buf will be freed only on unmount or if
+> > > xfs_buf_stale() is called on it.
+> > >
+> > > Do you agree with the above?
+> > >
+> >
+> > I'm not really sure how you're inferring what cases free the buffer vs.
+> > what don't based on ->b_lru_ref. A buffer is freed when its reference
+> > count (->b_hold) drops to zero unless ->b_lru_ref is non-zero, at which
+> > point the buffer goes on the LRU and the LRU itself takes a ->b_hold
+> > reference to keep the buffer from being freed. This reference is not
+> > associated with how many cycles through the LRU a buffer is allowed
+> > before it is dropped from the LRU, which is what ->b_lru_ref tracks.
+> >
+> > Since the LRU holds a (single) reference to the buffer just like any
+> > other user of the buffer, it doesn't make any direct decision on when t=
+o
+> > free a buffer or not. In other words, the bug fixed by this patch is
+> > related to when we decide to drop the buffer from the LRU based on the
+> > LRU ref count. If the LRU ->b_hold reference happens to be the last on
+> > the buffer when it is dropped from the LRU, then the buffer is freed.
+>=20
+> I apologize for the confusion. By "freed" I really meant "taken off
+> the LRU". I am aware of the fact that b_hold is controlling whether
+> the buffer will be freed or not.
+>=20
 
-Signed-off-by: Zorro Lang <zlang@redhat.com>
----
- tests/xfs/148     | 315 ++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/148.out |   6 +
- tests/xfs/group   |   1 +
- 3 files changed, 322 insertions(+)
- create mode 100755 tests/xfs/148
- create mode 100644 tests/xfs/148.out
+Ok.
 
-diff --git a/tests/xfs/148 b/tests/xfs/148
-new file mode 100755
-index 00000000..5c268f18
---- /dev/null
-+++ b/tests/xfs/148
-@@ -0,0 +1,315 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0
-+# Copyright (c) 2019 Red Hat, Inc. All Rights Reserved.
-+#
-+# FS QA Test 148
-+#
-+# XFS mount options sanity check, refer to 'man 5 xfs'.
-+#
-+seq=3D`basename $0`
-+seqres=3D$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=3D`pwd`
-+tmp=3D/tmp/$$
-+status=3D1=09# failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+=09cd /
-+=09rm -f $tmp.*
-+=09$UMOUNT_PROG $LOOP_MNT 2>/dev/null
-+=09if [ -n "$LOOP_DEV" ];then
-+=09=09_destroy_loop_device $LOOP_DEV 2>/dev/null
-+=09fi
-+=09if [ -n "$LOOP_SPARE_DEV" ];then
-+=09=09_destroy_loop_device $LOOP_SPARE_DEV 2>/dev/null
-+=09fi
-+=09rm -f $LOOP_IMG
-+=09rm -f $LOOP_SPARE_IMG
-+=09rmdir $LOOP_MNT
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+. ./common/filter
-+
-+# remove previous $seqres.full before test
-+rm -f $seqres.full
-+
-+# real QA test starts here
-+_supported_fs xfs
-+_supported_os Linux
-+_require_test
-+_require_loop
-+_require_xfs_io_command "falloc"
-+
-+LOOP_IMG=3D$TEST_DIR/$seq.dev
-+LOOP_SPARE_IMG=3D$TEST_DIR/$seq.logdev
-+LOOP_MNT=3D$TEST_DIR/$seq.mnt
-+
-+echo "** create loop device"
-+$XFS_IO_PROG -f -c "falloc 0 1g" $LOOP_IMG
-+LOOP_DEV=3D`_create_loop_device $LOOP_IMG`
-+
-+echo "** create loop log device"
-+$XFS_IO_PROG -f -c "falloc 0 512m" $LOOP_SPARE_IMG
-+LOOP_SPARE_DEV=3D`_create_loop_device $LOOP_SPARE_IMG`
-+
-+echo "** create loop mount point"
-+rmdir $LOOP_MNT 2>/dev/null
-+mkdir -p $LOOP_MNT || _fail "cannot create loopback mount point"
-+
-+# avoid the effection from MKFS_OPTIONS
-+MKFS_OPTIONS=3D""
-+do_mkfs()
-+{
-+=09$MKFS_XFS_PROG -f $* $LOOP_DEV | _filter_mkfs >$seqres.full 2>$tmp.mkfs
-+=09if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-+=09=09_fail "Fails on _mkfs_dev $* $LOOP_DEV"
-+=09fi
-+=09. $tmp.mkfs
-+}
-+
-+is_dev_mounted()
-+{
-+=09findmnt --source $LOOP_DEV >/dev/null
-+=09return $?
-+}
-+
-+get_mount_info()
-+{
-+=09findmnt --source $LOOP_DEV -o OPTIONS -n
-+}
-+
-+force_unmount()
-+{
-+=09$UMOUNT_PROG $LOOP_MNT >/dev/null 2>&1
-+}
-+
-+# _do_test <mount options> <should be mounted?> [<key string> <key should =
-be found?>]
-+_do_test()
-+{
-+=09local opts=3D"$1"
-+=09local mounted=3D"$2"=09# pass or fail
-+=09local key=3D"$3"
-+=09local found=3D"$4"=09# true or false
-+=09local rc
-+=09local info
-+
-+=09# mount test
-+=09_mount $LOOP_DEV $LOOP_MNT $opts 2>/dev/null
-+=09rc=3D$?
-+=09if [ $rc -eq 0 ];then
-+=09=09if [ "${mounted}" =3D "fail" ];then
-+=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-+=09=09=09echo "ERROR: expect ${mounted}, but pass"
-+=09=09=09return 1
-+=09=09fi
-+=09=09is_dev_mounted
-+=09=09if [ $? -ne 0 ];then
-+=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-+=09=09=09echo "ERROR: fs not mounted even mount return 0"
-+=09=09=09return 1
-+=09=09fi
-+=09else
-+=09=09if [ "${mount_ret}" =3D "pass" ];then
-+=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-+=09=09=09echo "ERROR: expect ${mounted}, but fail"
-+=09=09=09return 1
-+=09=09fi
-+=09=09is_dev_mounted
-+=09=09if [ $? -eq 0 ];then
-+=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-+=09=09=09echo "ERROR: fs is mounted even mount return non-zero"
-+=09=09=09return 1
-+=09=09fi
-+=09fi
-+
-+=09# Skip below checking if "$key" argument isn't specified
-+=09if [ -z "$key" ];then
-+=09=09return 0
-+=09fi
-+=09# Check the mount options after fs mounted.
-+=09info=3D`get_mount_info`
-+=09echo $info | grep -q "${key}"
-+=09rc=3D$?
-+=09if [ $rc -eq 0 ];then
-+=09=09if [ "$found" !=3D "true" ];then
-+=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-+=09=09=09echo "ERROR: expect there's $key in $info, but not found"
-+=09=09=09return 1
-+=09=09fi
-+=09else
-+=09=09if [ "$found" !=3D "false" ];then
-+=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT $opts"
-+=09=09=09echo "ERROR: expect there's not $key in $info, but found"
-+=09=09=09return 1
-+=09=09fi
-+=09fi
-+
-+=09return 0
-+}
-+
-+do_test()
-+{
-+=09# force unmount before testing
-+=09force_unmount
-+=09_do_test "$@"
-+=09# force unmount after testing
-+=09force_unmount
-+}
-+
-+echo "** start xfs mount testing ..."
-+# Test allocsize=3Dsize
-+# Valid values for this option are page size (typically 4KiB) through to 1=
-GiB
-+do_mkfs
-+if [ $dbsize -ge 1024 ];then
-+=09blsize=3D"$((dbsize / 1024))k"
-+fi
-+do_test "" pass "allocsize" "false"
-+do_test "-o allocsize=3D$blsize" pass "allocsize=3D$blsize" "true"
-+do_test "-o allocsize=3D1048576k" pass "allocsize=3D1048576k" "true"
-+do_test "-o allocsize=3D$((dbsize / 2))" fail
-+do_test "-o allocsize=3D2g" fail
-+
-+# Test attr2
-+do_mkfs -m crc=3D1
-+do_test "" pass "attr2" "true"
-+do_test "-o attr2" pass "attr2" "true"
-+do_test "-o noattr2" fail
-+do_mkfs -m crc=3D0
-+do_test "" pass "attr2" "true"
-+do_test "-o attr2" pass "attr2" "true"
-+do_test "-o noattr2" pass "attr2" "false"
-+
-+# Test discard
-+do_mkfs
-+do_test "" pass "discard" "false"
-+do_test "-o discard" pass "discard" "true"
-+do_test "-o nodiscard" pass "discard" "false"
-+
-+# Test grpid|bsdgroups|nogrpid|sysvgroups
-+do_test "" pass "grpid" "false"
-+do_test "-o grpid" pass "grpid" "true"
-+do_test "-o bsdgroups" pass "grpid" "true"
-+do_test "-o nogrpid" pass "grpid" "false"
-+do_test "-o sysvgroups" pass "grpid" "false"
-+
-+# Test filestreams
-+do_test "" pass "filestreams" "false"
-+do_test "-o filestreams" pass "filestreams" "true"
-+
-+# Test ikeep
-+do_test "" pass "ikeep" "false"
-+do_test "-o ikeep" pass "ikeep" "true"
-+do_test "-o noikeep" pass "ikeep" "false"
-+
-+# Test inode32|inode64
-+do_test "" pass "inode64" "true"
-+do_test "-o inode32" pass "inode32" "true"
-+do_test "-o inode64" pass "inode64" "true"
-+
-+# Test largeio
-+do_test "" pass "largeio" "false"
-+do_test "-o largeio" pass "largeio" "true"
-+do_test "-o nolargeio" pass "largeio" "false"
-+
-+# Test logbufs=3Dvalue. Valid numbers range from 2=E2=80=938 inclusive.
-+do_test "" pass "logbufs" "false"
-+do_test "-o logbufs=3D8" pass "logbufs=3D8" "true"
-+do_test "-o logbufs=3D2" pass "logbufs=3D2" "true"
-+do_test "-o logbufs=3D1" fail
-+###### but it gets logbufs=3D8 now, why? bug? #######
-+# do_test "-o logbufs=3D0" fail
-+do_test "-o logbufs=3D9" fail
-+do_test "-o logbufs=3D99999999999999" fail
-+
-+# Test logbsize=3Dvalue.
-+do_mkfs -m crc=3D1 -l version=3D2
-+do_test "" pass "logbsize" "false"
-+do_test "-o logbsize=3D16384" pass "logbsize=3D16k" "true"
-+do_test "-o logbsize=3D16k" pass "logbsize=3D16k" "true"
-+do_test "-o logbsize=3D32k" pass "logbsize=3D32k" "true"
-+do_test "-o logbsize=3D64k" pass "logbsize=3D64k" "true"
-+do_test "-o logbsize=3D128k" pass "logbsize=3D128k" "true"
-+do_test "-o logbsize=3D256k" pass "logbsize=3D256k" "true"
-+do_test "-o logbsize=3D8k" fail
-+do_test "-o logbsize=3D512k" fail
-+####### it's invalid, but it set to default size 32k
-+# do_test "-o logbsize=3D0" false
-+do_mkfs -m crc=3D0 -l version=3D1
-+do_test "" pass "logbsize" "false"
-+do_test "-o logbsize=3D16384" pass "logbsize=3D16k" "true"
-+do_test "-o logbsize=3D16k" pass "logbsize=3D16k" "true"
-+do_test "-o logbsize=3D32k" pass "logbsize=3D32k" "true"
-+do_test "-o logbsize=3D64k" fail
-+
-+# Test logdev
-+do_mkfs
-+do_test "" pass "logdev" "false"
-+do_test "-o logdev=3D$LOOP_SPARE_DEV" fail
-+do_mkfs -l logdev=3D$LOOP_SPARE_DEV
-+do_test "-o logdev=3D$LOOP_SPARE_DEV" pass "logdev=3D$LOOP_SPARE_DEV" "tru=
-e"
-+do_test "" fail
-+
-+# Test noalign
-+do_mkfs
-+do_test "" pass "noalign" "false"
-+do_test "-o noalign" pass "noalign" "true"
-+
-+# Test norecovery
-+do_test "" pass "norecovery" "false"
-+do_test "-o norecovery,ro" pass "norecovery" "true"
-+do_test "-o norecovery" fail
-+
-+# Test nouuid
-+do_test "" pass "nouuid" "false"
-+do_test "-o nouuid" pass "nouuid" "true"
-+
-+# Test noquota
-+do_test "" pass "noquota" "true"
-+do_test "-o noquota" pass "noquota" "true"
-+
-+# Test uquota/usrquota/quota/uqnoenforce/qnoenforce
-+do_test "" pass "usrquota" "false"
-+do_test "-o uquota" pass "usrquota" "true"
-+do_test "-o usrquota" pass "usrquota" "true"
-+do_test "-o quota" pass "usrquota" "true"
-+do_test "-o uqnoenforce" pass "usrquota" "true"
-+do_test "-o qnoenforce" pass "usrquota" "true"
-+
-+# Test gquota/grpquota/gqnoenforce
-+do_test "" pass "grpquota" "false"
-+do_test "-o gquota" pass "grpquota" "true"
-+do_test "-o grpquota" pass "grpquota" "true"
-+do_test "-o gqnoenforce" pass "gqnoenforce" "true"
-+
-+# Test pquota/prjquota/pqnoenforce
-+do_test "" pass "prjquota" "false"
-+do_test "-o pquota" pass "prjquota" "true"
-+do_test "-o prjquota" pass "prjquota" "true"
-+do_test "-o pqnoenforce" pass "pqnoenforce" "true"
-+
-+# Test sunit=3Dvalue and swidth=3Dvalue
-+do_mkfs -d sunit=3D128,swidth=3D128
-+do_test "-o sunit=3D8,swidth=3D8" pass "sunit=3D8,swidth=3D8" "true"
-+do_test "-o sunit=3D8,swidth=3D64" pass "sunit=3D8,swidth=3D64" "true"
-+do_test "-o sunit=3D128,swidth=3D128" pass "sunit=3D128,swidth=3D128" "tru=
-e"
-+do_test "-o sunit=3D256,swidth=3D256" pass "sunit=3D256,swidth=3D256" "tru=
-e"
-+do_test "-o sunit=3D2,swidth=3D2" fail
-+
-+# Test swalloc
-+do_mkfs
-+do_test "" pass "swalloc" "false"
-+do_test "-o swalloc" pass "swalloc" "true"
-+
-+# Test wsync
-+do_test "" pass "wsync" "false"
-+do_test "-o wsync" pass "wsync" "true"
-+
-+echo "** end of testing"
-+# success, all done
-+status=3D0
-+exit
-diff --git a/tests/xfs/148.out b/tests/xfs/148.out
-new file mode 100644
-index 00000000..a71d9231
---- /dev/null
-+++ b/tests/xfs/148.out
-@@ -0,0 +1,6 @@
-+QA output created by 148
-+** create loop device
-+** create loop log device
-+** create loop mount point
-+** start xfs mount testing ...
-+** end of testing
-diff --git a/tests/xfs/group b/tests/xfs/group
-index f4ebcd8c..019aebad 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -145,6 +145,7 @@
- 145 dmapi
- 146 dmapi
- 147 dmapi
-+148 auto quick mount
- 150 dmapi
- 151 dmapi
- 152 dmapi
---=20
-2.20.1
+> What I meant is that the commit description does not address the issue
+> accurately. From the description one can understand that the only
+> problem is the additional trip through the LRU.
+> But in fact, due to this issue, buffers will spend one cycle less in
+> the LRU than intended. If we initialize b_lru_ref to X, we intend the
+> buffer to survive X shrinker calls, and on the X+1'th call to be taken
+> off the LRU (and maybe freed). But with this issue, the buffer will be
+> taken off the LRU and immediately re-added back. But this will happen
+> X-1 times, because on the X'th time the b_lru_ref will be 0, and the
+> buffer will not be readded to the LRU. So the buffer will survive X-1
+> shrinker calls and not X as intended.
+>=20
+
+That sounds like a reasonable description of behavior to me. Personally,
+I also think the commit log description is fine because I read it
+generically as just pointing out the logic is backwards. Your
+description above is more detailed and probably more technically
+accurate, but I'm not sure if/why it matters at this point for anything
+beyond just attempting to understand a historical bug (for stable
+backport purposes?).
+
+Brian
+
+> Furthermore, if somehow we end up with the buffer sitting on the LRU
+> and having b_lru_ref=3D=3D0, this buffer will never be taken off the LRU,
+> due to the bug. I am not sure this can happen, because by default
+> b_lru_ref is set to 1.
+>=20
+>=20
+> >
+> > > If so, I think this fix should be backported to stable kernels.
+> > >
+> >
+> > Seems reasonable to me. Feel free to post a patch. :)
+> Will do.
+>=20
+> Thanks,
+> Alex.
+>=20
+>=20
+> >
+> > Brian
+> >
+> > > Thanks,
+> > > Alex.
+> > >
+> > > [1]
+> > > commit 19957a181608d25c8f4136652d0ea00b3738972d
+> > > Author: Vratislav Bendel <vbendel@redhat.com>
+> > > Date:   Tue Mar 6 17:07:44 2018 -0800
+> > >
+> > >    xfs: Correctly invert xfs_buftarg LRU isolation logic
+> > >
+> > >    Due to an inverted logic mistake in xfs_buftarg_isolate()
+> > >    the xfs_buffers with zero b_lru_ref will take another trip
+> > >    around LRU, while isolating buffers with non-zero b_lru_ref.
+> > >
+> > >    Additionally those isolated buffers end up right back on the LRU
+> > >    once they are released, because b_lru_ref remains elevated.
+> > >
+> > >    Fix that circuitous route by leaving them on the LRU
+> > >    as originally intended.
+> > >
+> > >    Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
+> > >    Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > >    Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > >    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > >    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > >
+> >
 
