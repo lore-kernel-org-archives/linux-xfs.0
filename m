@@ -7,54 +7,54 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BD7CCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 13:35:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FC1ACA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 13:38:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EA83C21783
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 13:35:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 39E202064B
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 13:38:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OxFgGZKp"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KLvXrWfz"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732073AbfJVNf0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 09:35:26 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:54337 "EHLO
+        id S1732102AbfJVNiz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 09:38:55 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:34135 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1731981AbfJVNf0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 09:35:26 -0400
+        by vger.kernel.org with ESMTP id S1731981AbfJVNiz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 09:38:55 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571751324;
+        s=mimecast20190719; t=1571751533;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=2ZtaW+HKnie9dwaaQ6SpKXMiotszTeiqu0LuTk2b/IM=;
-        b=OxFgGZKpTjqD0KhA384RzZVP2+T6b+HePgzRJjCh6uVpHU5zwtFgnZ3+hI2k0v21wWc1pG
-        92/VhFWdD53XpSRZX9Us7xUw2P5n2E4+HFCHXoSimUrU8TjrvefOI7KJZm1QWt0eSu2dxo
-        FxM1WY8UxaZK8VBgpnrDkuUIB0iqkb0=
+        bh=HGRsmkwUER9ug92xsEM8RA29I0LOU5B/0GAX/PrOi3w=;
+        b=KLvXrWfz0uXZrbT7hlQXrMe/BlUkq4DmT2BKyTLVu0kxvSjgcfJzyLN4zbhYKyBSUNzTat
+        GD+8uqoYae1Dry0NB9836sBhV0KtHG3x4/ybi8yyhHJFEWV07TFWNX9j1EUbhiXfAjIdpH
+        hs8By0WYImejq2+6ESZq/lIWTgCtmKQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-306-BiKGN4_EM1GTIeGtqZbyhA-1; Tue, 22 Oct 2019 09:35:21 -0400
-Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+ us-mta-152-D4dylCr0OFOXxTtvLHtAYA-1; Tue, 22 Oct 2019 09:38:50 -0400
+Received: from smtp.corp.redhat.com (int-mx03.intmail.prod.int.phx2.redhat.com [10.5.11.13])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id DF77F80183E;
-        Tue, 22 Oct 2019 13:35:20 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9780E5ED;
+        Tue, 22 Oct 2019 13:38:49 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 8980910027AD;
-        Tue, 22 Oct 2019 13:35:20 +0000 (UTC)
-Date:   Tue, 22 Oct 2019 09:35:18 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 300FB60619;
+        Tue, 22 Oct 2019 13:38:49 +0000 (UTC)
+Date:   Tue, 22 Oct 2019 09:38:47 -0400
 From:   Brian Foster <bfoster@redhat.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 3/4] xfs: remove the for_each_xbitmap_ helpers
-Message-ID: <20191022133518.GB51627@bfoster>
+Subject: Re: [PATCH 4/4] xfs: convert xbitmap to interval tree
+Message-ID: <20191022133847.GC51627@bfoster>
 References: <157063973592.2913318.8246472567175058111.stgit@magnolia>
- <157063976280.2913318.2140616655357544513.stgit@magnolia>
+ <157063977028.2913318.2884583474654943260.stgit@magnolia>
 MIME-Version: 1.0
-In-Reply-To: <157063976280.2913318.2140616655357544513.stgit@magnolia>
+In-Reply-To: <157063977028.2913318.2884583474654943260.stgit@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
-X-MC-Unique: BiKGN4_EM1GTIeGtqZbyhA-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.13
+X-MC-Unique: D4dylCr0OFOXxTtvLHtAYA-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -64,184 +64,451 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 09, 2019 at 09:49:22AM -0700, Darrick J. Wong wrote:
+On Wed, Oct 09, 2019 at 09:49:30AM -0700, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 >=20
-> Remove the for_each_xbitmap_ macros in favor of proper iterator
-> functions.  We'll soon be switching this data structure over to an
-> interval tree implementation, which means that we can't allow callers to
-> modify the bitmap during iteration without telling us.
+> Convert the xbitmap code to use interval trees instead of linked lists.
+> This reduces the amount of coding required to handle the disunion
+> operation and in the future will make it easier to set bits in arbitrary
+> order yet later be able to extract maximally sized extents, which we'll
+> need for rebuilding certain structures.
 >=20
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  fs/xfs/scrub/agheader_repair.c |   73 ++++++++++++++++++++++++----------=
-------
->  fs/xfs/scrub/bitmap.c          |   59 ++++++++++++++++++++++++++++++++
->  fs/xfs/scrub/bitmap.h          |   22 ++++++++----
->  fs/xfs/scrub/repair.c          |   60 +++++++++++++++++----------------
->  4 files changed, 148 insertions(+), 66 deletions(-)
->=20
->=20
-...
-> diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
-> index 900646b72de1..27fde5b4a753 100644
-> --- a/fs/xfs/scrub/bitmap.h
-> +++ b/fs/xfs/scrub/bitmap.h
-...
-> @@ -34,4 +27,19 @@ int xbitmap_set_btblocks(struct xbitmap *bitmap,
->  =09=09struct xfs_btree_cur *cur);
->  uint64_t xbitmap_hweight(struct xbitmap *bitmap);
-> =20
-> +/*
-> + * Return codes for the bitmap iterator functions are 0 to continue iter=
-ating,
-> + * and non-zero to stop iterating.  Any non-zero value will be passed up=
- to the
-> + * iteration caller.  The special value -ECANCELED can be used to stop
-> + * iteration, because neither bitmap iterator ever generates that error =
-code on
-> + * its own.
-> + */
-> +typedef int (*xbitmap_walk_run_fn)(uint64_t start, uint64_t len, void *p=
-riv);
-> +int xbitmap_iter_set(struct xbitmap *bitmap, xbitmap_walk_run_fn fn,
-> +=09=09void *priv);
-> +
-> +typedef int (*xbitmap_walk_bit_fn)(uint64_t bit, void *priv);
-> +int xbitmap_iter_set_bits(struct xbitmap *bitmap, xbitmap_walk_bit_fn fn=
-,
-> +=09=09void *priv);
-> +
 
-Somewhat of a nit, but I read "set" as a verb in the above function
-names which tends to confuse me over what these functions do (i.e.
-iterate bits, not set bits). Could we call them something a bit more
-neutral, like xbitmap[_bit]_iter() perhaps? That aside the rest of the
-patch looks Ok to me.
+Looks mostly straightforward provided my lack of knowledge on interval
+trees. A few random comments..
+
+>  fs/xfs/Kconfig                 |    1=20
+>  fs/xfs/scrub/agheader_repair.c |    4 -
+>  fs/xfs/scrub/bitmap.c          |  292 +++++++++++++++++-----------------=
+------
+>  fs/xfs/scrub/bitmap.h          |   13 +-
+>  4 files changed, 135 insertions(+), 175 deletions(-)
+>=20
+>=20
+...
+> diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+> index 1041f17f6bb6..e1da103bce78 100644
+> --- a/fs/xfs/scrub/bitmap.c
+> +++ b/fs/xfs/scrub/bitmap.c
+> @@ -12,30 +12,105 @@
+>  #include "xfs_btree.h"
+>  #include "scrub/bitmap.h"
+> =20
+> -#define for_each_xbitmap_extent(bex, n, bitmap) \
+> -=09list_for_each_entry_safe((bex), (n), &(bitmap)->list, list)
+> +#define for_each_xbitmap_extent(itn, n, bitmap) \
+> +=09rbtree_postorder_for_each_entry_safe((itn), (n), \
+> +=09=09=09&(bitmap)->root.rb_root, rb)
+> =20
+
+I'm not familiar with the interval tree, but the header for this rbtree_
+macro mentions it is unsafe with respect to rbtree_erase(). Is that a
+concern for any of the users that might call interval_tree_remove()? It
+looks like that calls down into rb_erase_augmented(), but it's not clear
+to me if that's a problem..
+
+> -/*
+> - * Set a range of this bitmap.  Caller must ensure the range is not set.
+> - *
+> - * This is the logical equivalent of bitmap |=3D mask(start, len).
+> - */
+> +/* Clear a range of this bitmap. */
+> +static void
+> +__xbitmap_clear(
+> +=09struct xbitmap=09=09=09*bitmap,
+> +=09uint64_t=09=09=09start,
+> +=09uint64_t=09=09=09last)
+> +{
+> +=09struct interval_tree_node=09*itn;
+> +
+> +=09while ((itn =3D interval_tree_iter_first(&bitmap->root, start, last))=
+) {
+> +=09=09if (itn->start < start) {
+> +=09=09=09/* overlaps with the left side of the clearing range */
+> +=09=09=09interval_tree_remove(itn, &bitmap->root);
+> +=09=09=09itn->last =3D start - 1;
+> +=09=09=09interval_tree_insert(itn, &bitmap->root);
+> +=09=09} else if (itn->last > last) {
+> +=09=09=09/* overlaps with the right side of the clearing range */
+> +=09=09=09interval_tree_remove(itn, &bitmap->root);
+> +=09=09=09itn->start =3D last + 1;
+> +=09=09=09interval_tree_insert(itn, &bitmap->root);
+> +=09=09=09break;
+> +=09=09} else {
+> +=09=09=09/* in the middle of the clearing range */
+> +=09=09=09interval_tree_remove(itn, &bitmap->root);
+> +=09=09=09kmem_free(itn);
+> +=09=09}
+> +=09}
+> +}
+> +
+> +/* Clear a range of this bitmap. */
+> +void
+> +xbitmap_clear(
+> +=09struct xbitmap=09=09=09*bitmap,
+> +=09uint64_t=09=09=09start,
+> +=09uint64_t=09=09=09len)
+> +{
+> +=09__xbitmap_clear(bitmap, start, start + len - 1);
+> +}
+
+It seems unnecessary to split the functions like this just to preserve
+the interface. Could we have the other __xbitmap_clear() caller just
+calculate the len itself and call xbitmap_clear() instead?
+
+> +
+> +/* Set a range of this bitmap. */
+>  int
+>  xbitmap_set(
+> -=09struct xbitmap=09=09*bitmap,
+> -=09uint64_t=09=09start,
+> -=09uint64_t=09=09len)
+> +=09struct xbitmap=09=09=09*bitmap,
+> +=09uint64_t=09=09=09start,
+> +=09uint64_t=09=09=09len)
+>  {
+> -=09struct xbitmap_range=09*bmr;
+> +=09struct interval_tree_node=09*left;
+> +=09struct interval_tree_node=09*right;
+> +=09uint64_t=09=09=09last =3D start + len - 1;
+> =20
+> -=09bmr =3D kmem_alloc(sizeof(struct xbitmap_range), KM_MAYFAIL);
+> -=09if (!bmr)
+> -=09=09return -ENOMEM;
+> +=09/* Is this whole range already set? */
+> +=09left =3D interval_tree_iter_first(&bitmap->root, start, last);
+> +=09if (left && left->start <=3D start && left->last >=3D last)
+> +=09=09return 0;
+> =20
+> -=09INIT_LIST_HEAD(&bmr->list);
+> -=09bmr->start =3D start;
+> -=09bmr->len =3D len;
+> -=09list_add_tail(&bmr->list, &bitmap->list);
+> +=09/* Clear out everything in the range we want to set. */
+> +=09xbitmap_clear(bitmap, start, len);
+> +
+> +=09/* Do we have a left-adjacent extent? */
+> +=09left =3D interval_tree_iter_first(&bitmap->root, start - 1, start - 1=
+);
+> +=09if (left && left->last + 1 !=3D start)
+> +=09=09left =3D NULL;
+> +
+> +=09/* Do we have a right-adjacent extent? */
+> +=09right =3D interval_tree_iter_first(&bitmap->root, last + 1, last + 1)=
+;
+> +=09if (right && right->start !=3D last + 1)
+> +=09=09right =3D NULL;
+
+If we just cleared the range to set above, shouldn't these left/right
+checks always return an adjacent extent or NULL? It seems harmless,
+FWIW, but I'm curious if the logic is necessary.
 
 Brian
 
->  #endif=09/* __XFS_SCRUB_BITMAP_H__ */
-> diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
-> index d41da4c44f10..588bc054db5c 100644
-> --- a/fs/xfs/scrub/repair.c
-> +++ b/fs/xfs/scrub/repair.c
-> @@ -507,15 +507,21 @@ xrep_reap_invalidate_block(
->  =09xfs_trans_binval(sc->tp, bp);
+> +
+> +=09if (left && right) {
+> +=09=09/* combine left and right adjacent extent */
+> +=09=09interval_tree_remove(left, &bitmap->root);
+> +=09=09interval_tree_remove(right, &bitmap->root);
+> +=09=09left->last =3D right->last;
+> +=09=09interval_tree_insert(left, &bitmap->root);
+> +=09=09kmem_free(right);
+> +=09} else if (left) {
+> +=09=09/* combine with left extent */
+> +=09=09interval_tree_remove(left, &bitmap->root);
+> +=09=09left->last =3D last;
+> +=09=09interval_tree_insert(left, &bitmap->root);
+> +=09} else if (right) {
+> +=09=09/* combine with right extent */
+> +=09=09interval_tree_remove(right, &bitmap->root);
+> +=09=09right->start =3D start;
+> +=09=09interval_tree_insert(right, &bitmap->root);
+> +=09} else {
+> +=09=09/* add an extent */
+> +=09=09left =3D kmem_alloc(sizeof(struct interval_tree_node),
+> +=09=09=09=09KM_MAYFAIL);
+> +=09=09if (!left)
+> +=09=09=09return -ENOMEM;
+> +=09=09left->start =3D start;
+> +=09=09left->last =3D last;
+> +=09=09interval_tree_insert(left, &bitmap->root);
+> +=09}
+> =20
+>  =09return 0;
+>  }
+> @@ -43,14 +118,13 @@ xbitmap_set(
+>  /* Free everything related to this bitmap. */
+>  void
+>  xbitmap_destroy(
+> -=09struct xbitmap=09=09*bitmap)
+> +=09struct xbitmap=09=09=09*bitmap)
+>  {
+> -=09struct xbitmap_range=09*bmr;
+> -=09struct xbitmap_range=09*n;
+> +=09struct interval_tree_node=09*itn, *p;
+> =20
+> -=09for_each_xbitmap_extent(bmr, n, bitmap) {
+> -=09=09list_del(&bmr->list);
+> -=09=09kmem_free(bmr);
+> +=09for_each_xbitmap_extent(itn, p, bitmap) {
+> +=09=09interval_tree_remove(itn, &bitmap->root);
+> +=09=09kfree(itn);
+>  =09}
 >  }
 > =20
-> +struct xrep_reap_block {
-> +=09struct xfs_scrub=09=09*sc;
-> +=09const struct xfs_owner_info=09*oinfo;
-> +=09enum xfs_ag_resv_type=09=09resv;
-> +=09unsigned int=09=09=09deferred;
-> +};
-> +
->  /* Dispose of a single block. */
->  STATIC int
->  xrep_reap_block(
-> -=09struct xfs_scrub=09=09*sc,
-> -=09xfs_fsblock_t=09=09=09fsbno,
-> -=09const struct xfs_owner_info=09*oinfo,
-> -=09enum xfs_ag_resv_type=09=09resv,
-> -=09unsigned int=09=09=09*deferred)
-> +=09uint64_t=09=09=09fsbno,
+> @@ -59,27 +133,7 @@ void
+>  xbitmap_init(
+>  =09struct xbitmap=09=09*bitmap)
+>  {
+> -=09INIT_LIST_HEAD(&bitmap->list);
+> -}
+> -
+> -/* Compare two btree extents. */
+> -static int
+> -xbitmap_range_cmp(
+> -=09void=09=09=09*priv,
+> -=09struct list_head=09*a,
+> -=09struct list_head=09*b)
+> -{
+> -=09struct xbitmap_range=09*ap;
+> -=09struct xbitmap_range=09*bp;
+> -
+> -=09ap =3D container_of(a, struct xbitmap_range, list);
+> -=09bp =3D container_of(b, struct xbitmap_range, list);
+> -
+> -=09if (ap->start > bp->start)
+> -=09=09return 1;
+> -=09if (ap->start < bp->start)
+> -=09=09return -1;
+> -=09return 0;
+> +=09bitmap->root =3D RB_ROOT_CACHED;
+>  }
+> =20
+>  /*
+> @@ -96,118 +150,19 @@ xbitmap_range_cmp(
+>   *
+>   * This is the logical equivalent of bitmap &=3D ~sub.
+>   */
+> -#define LEFT_ALIGNED=09(1 << 0)
+> -#define RIGHT_ALIGNED=09(1 << 1)
+> -int
+> +void
+>  xbitmap_disunion(
+> -=09struct xbitmap=09=09*bitmap,
+> -=09struct xbitmap=09=09*sub)
+> +=09struct xbitmap=09=09=09*bitmap,
+> +=09struct xbitmap=09=09=09*sub)
+>  {
+> -=09struct list_head=09*lp;
+> -=09struct xbitmap_range=09*br;
+> -=09struct xbitmap_range=09*new_br;
+> -=09struct xbitmap_range=09*sub_br;
+> -=09uint64_t=09=09sub_start;
+> -=09uint64_t=09=09sub_len;
+> -=09int=09=09=09state;
+> -=09int=09=09=09error =3D 0;
+> -
+> -=09if (list_empty(&bitmap->list) || list_empty(&sub->list))
+> -=09=09return 0;
+> -=09ASSERT(!list_empty(&sub->list));
+> -
+> -=09list_sort(NULL, &bitmap->list, xbitmap_range_cmp);
+> -=09list_sort(NULL, &sub->list, xbitmap_range_cmp);
+> -
+> -=09/*
+> -=09 * Now that we've sorted both lists, we iterate bitmap once, rolling
+> -=09 * forward through sub and/or bitmap as necessary until we find an
+> -=09 * overlap or reach the end of either list.  We do not reset lp to th=
+e
+> -=09 * head of bitmap nor do we reset sub_br to the head of sub.  The
+> -=09 * list traversal is similar to merge sort, but we're deleting
+> -=09 * instead.  In this manner we avoid O(n^2) operations.
+> -=09 */
+> -=09sub_br =3D list_first_entry(&sub->list, struct xbitmap_range,
+> -=09=09=09list);
+> -=09lp =3D bitmap->list.next;
+> -=09while (lp !=3D &bitmap->list) {
+> -=09=09br =3D list_entry(lp, struct xbitmap_range, list);
+> -
+> -=09=09/*
+> -=09=09 * Advance sub_br and/or br until we find a pair that
+> -=09=09 * intersect or we run out of extents.
+> -=09=09 */
+> -=09=09while (sub_br->start + sub_br->len <=3D br->start) {
+> -=09=09=09if (list_is_last(&sub_br->list, &sub->list))
+> -=09=09=09=09goto out;
+> -=09=09=09sub_br =3D list_next_entry(sub_br, list);
+> -=09=09}
+> -=09=09if (sub_br->start >=3D br->start + br->len) {
+> -=09=09=09lp =3D lp->next;
+> -=09=09=09continue;
+> -=09=09}
+> +=09struct interval_tree_node=09*itn, *n;
+> =20
+> -=09=09/* trim sub_br to fit the extent we have */
+> -=09=09sub_start =3D sub_br->start;
+> -=09=09sub_len =3D sub_br->len;
+> -=09=09if (sub_br->start < br->start) {
+> -=09=09=09sub_len -=3D br->start - sub_br->start;
+> -=09=09=09sub_start =3D br->start;
+> -=09=09}
+> -=09=09if (sub_len > br->len)
+> -=09=09=09sub_len =3D br->len;
+> -
+> -=09=09state =3D 0;
+> -=09=09if (sub_start =3D=3D br->start)
+> -=09=09=09state |=3D LEFT_ALIGNED;
+> -=09=09if (sub_start + sub_len =3D=3D br->start + br->len)
+> -=09=09=09state |=3D RIGHT_ALIGNED;
+> -=09=09switch (state) {
+> -=09=09case LEFT_ALIGNED:
+> -=09=09=09/* Coincides with only the left. */
+> -=09=09=09br->start +=3D sub_len;
+> -=09=09=09br->len -=3D sub_len;
+> -=09=09=09break;
+> -=09=09case RIGHT_ALIGNED:
+> -=09=09=09/* Coincides with only the right. */
+> -=09=09=09br->len -=3D sub_len;
+> -=09=09=09lp =3D lp->next;
+> -=09=09=09break;
+> -=09=09case LEFT_ALIGNED | RIGHT_ALIGNED:
+> -=09=09=09/* Total overlap, just delete ex. */
+> -=09=09=09lp =3D lp->next;
+> -=09=09=09list_del(&br->list);
+> -=09=09=09kmem_free(br);
+> -=09=09=09break;
+> -=09=09case 0:
+> -=09=09=09/*
+> -=09=09=09 * Deleting from the middle: add the new right extent
+> -=09=09=09 * and then shrink the left extent.
+> -=09=09=09 */
+> -=09=09=09new_br =3D kmem_alloc(sizeof(struct xbitmap_range),
+> -=09=09=09=09=09KM_MAYFAIL);
+> -=09=09=09if (!new_br) {
+> -=09=09=09=09error =3D -ENOMEM;
+> -=09=09=09=09goto out;
+> -=09=09=09}
+> -=09=09=09INIT_LIST_HEAD(&new_br->list);
+> -=09=09=09new_br->start =3D sub_start + sub_len;
+> -=09=09=09new_br->len =3D br->start + br->len - new_br->start;
+> -=09=09=09list_add(&new_br->list, &br->list);
+> -=09=09=09br->len =3D sub_start - br->start;
+> -=09=09=09lp =3D lp->next;
+> -=09=09=09break;
+> -=09=09default:
+> -=09=09=09ASSERT(0);
+> -=09=09=09break;
+> -=09=09}
+> -=09}
+> +=09if (xbitmap_empty(bitmap) || xbitmap_empty(sub))
+> +=09=09return;
+> =20
+> -out:
+> -=09return error;
+> +=09for_each_xbitmap_extent(itn, n, sub)
+> +=09=09__xbitmap_clear(bitmap, itn->start, itn->last);
+>  }
+> -#undef LEFT_ALIGNED
+> -#undef RIGHT_ALIGNED
+> =20
+>  /*
+>   * Record all btree blocks seen while iterating all records of a btree.
+> @@ -303,14 +258,13 @@ xbitmap_set_btblocks(
+>  /* How many bits are set in this bitmap? */
+>  uint64_t
+>  xbitmap_hweight(
+> -=09struct xbitmap=09=09*bitmap)
+> +=09struct xbitmap=09=09=09*bitmap)
+>  {
+> -=09struct xbitmap_range=09*bmr;
+> -=09struct xbitmap_range=09*n;
+> -=09uint64_t=09=09ret =3D 0;
+> +=09struct interval_tree_node=09*itn, *n;
+> +=09uint64_t=09=09=09ret =3D 0;
+> =20
+> -=09for_each_xbitmap_extent(bmr, n, bitmap)
+> -=09=09ret +=3D bmr->len;
+> +=09for_each_xbitmap_extent(itn, n, bitmap)
+> +=09=09ret +=3D itn->last - itn->start + 1;
+> =20
+>  =09return ret;
+>  }
+> @@ -318,15 +272,15 @@ xbitmap_hweight(
+>  /* Call a function for every run of set bits in this bitmap. */
+>  int
+>  xbitmap_iter_set(
+> -=09struct xbitmap=09=09*bitmap,
+> -=09xbitmap_walk_run_fn=09fn,
+> -=09void=09=09=09*priv)
+> +=09struct xbitmap=09=09=09*bitmap,
+> +=09xbitmap_walk_run_fn=09=09fn,
 > +=09void=09=09=09=09*priv)
 >  {
-> +=09struct xrep_reap_block=09=09*rb =3D priv;
-> +=09struct xfs_scrub=09=09*sc =3D rb->sc;
->  =09struct xfs_btree_cur=09=09*cur;
->  =09struct xfs_buf=09=09=09*agf_bp =3D NULL;
->  =09xfs_agnumber_t=09=09=09agno;
-> @@ -527,6 +533,10 @@ xrep_reap_block(
->  =09agno =3D XFS_FSB_TO_AGNO(sc->mp, fsbno);
->  =09agbno =3D XFS_FSB_TO_AGBNO(sc->mp, fsbno);
+> -=09struct xbitmap_range=09*bex, *n;
+> -=09int=09=09=09error;
+> +=09struct interval_tree_node=09*itn, *n;
+> +=09int=09=09=09=09error;
 > =20
-> +=09ASSERT(sc->ip !=3D NULL || agno =3D=3D sc->sa.agno);
-> +
-> +=09trace_xrep_dispose_btree_extent(sc->mp, agno, agbno, 1);
-> +
->  =09/*
->  =09 * If we are repairing per-inode metadata, we need to read in the AGF
->  =09 * buffer.  Otherwise, we're repairing a per-AG structure, so reuse
-> @@ -544,7 +554,8 @@ xrep_reap_block(
->  =09cur =3D xfs_rmapbt_init_cursor(sc->mp, sc->tp, agf_bp, agno);
-> =20
->  =09/* Can we find any other rmappings? */
-> -=09error =3D xfs_rmap_has_other_keys(cur, agbno, 1, oinfo, &has_other_rm=
-ap);
-> +=09error =3D xfs_rmap_has_other_keys(cur, agbno, 1, rb->oinfo,
-> +=09=09=09&has_other_rmap);
->  =09xfs_btree_del_cursor(cur, error);
->  =09if (error)
->  =09=09goto out_free;
-> @@ -563,8 +574,9 @@ xrep_reap_block(
->  =09 * to run xfs_repair.
->  =09 */
->  =09if (has_other_rmap) {
-> -=09=09error =3D xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1, oinfo);
-> -=09} else if (resv =3D=3D XFS_AG_RESV_AGFL) {
-> +=09=09error =3D xfs_rmap_free(sc->tp, agf_bp, agno, agbno, 1,
-> +=09=09=09=09rb->oinfo);
-> +=09} else if (rb->resv =3D=3D XFS_AG_RESV_AGFL) {
->  =09=09xrep_reap_invalidate_block(sc, fsbno);
->  =09=09error =3D xrep_put_freelist(sc, agbno);
->  =09} else {
-> @@ -576,16 +588,16 @@ xrep_reap_block(
->  =09=09 * reservation.
->  =09=09 */
->  =09=09xrep_reap_invalidate_block(sc, fsbno);
-> -=09=09__xfs_bmap_add_free(sc->tp, fsbno, 1, oinfo, true);
-> -=09=09(*deferred)++;
-> -=09=09need_roll =3D *deferred > 100;
-> +=09=09__xfs_bmap_add_free(sc->tp, fsbno, 1, rb->oinfo, true);
-> +=09=09rb->deferred++;
-> +=09=09need_roll =3D rb->deferred > 100;
+> -=09for_each_xbitmap_extent(bex, n, bitmap) {
+> -=09=09error =3D fn(bex->start, bex->len, priv);
+> +=09for_each_xbitmap_extent(itn, n, bitmap) {
+> +=09=09error =3D fn(itn->start, itn->last - itn->start + 1, priv);
+>  =09=09if (error)
+>  =09=09=09break;
 >  =09}
->  =09if (agf_bp !=3D sc->sa.agf_bp)
->  =09=09xfs_trans_brelse(sc->tp, agf_bp);
->  =09if (error || !need_roll)
->  =09=09return error;
+> @@ -370,3 +324,11 @@ xbitmap_iter_set_bits(
 > =20
-> -=09*deferred =3D 0;
-> +=09rb->deferred =3D 0;
->  =09if (sc->ip)
->  =09=09return xfs_trans_roll_inode(&sc->tp, sc->ip);
->  =09return xrep_roll_ag_trans(sc);
-> @@ -604,27 +616,17 @@ xrep_reap_extents(
->  =09const struct xfs_owner_info=09*oinfo,
->  =09enum xfs_ag_resv_type=09=09type)
->  {
-> -=09struct xbitmap_range=09=09*bmr;
-> -=09struct xbitmap_range=09=09*n;
-> -=09xfs_fsblock_t=09=09=09fsbno;
-> -=09unsigned int=09=09=09deferred =3D 0;
-> +=09struct xrep_reap_block=09=09rb =3D {
-> +=09=09.sc=09=09=09=3D sc,
-> +=09=09.oinfo=09=09=09=3D oinfo,
-> +=09=09.resv=09=09=09=3D type,
-> +=09};
->  =09int=09=09=09=09error =3D 0;
+>  =09return xbitmap_iter_set(bitmap, xbitmap_walk_bits_in_run, &wb);
+>  }
+> +
+> +/* Does this bitmap have no bits set at all? */
+> +bool
+> +xbitmap_empty(
+> +=09struct xbitmap=09=09*bitmap)
+> +{
+> +=09return bitmap->root.rb_root.rb_node =3D=3D NULL;
+> +}
+> diff --git a/fs/xfs/scrub/bitmap.h b/fs/xfs/scrub/bitmap.h
+> index 27fde5b4a753..6be596e60ac8 100644
+> --- a/fs/xfs/scrub/bitmap.h
+> +++ b/fs/xfs/scrub/bitmap.h
+> @@ -6,21 +6,18 @@
+>  #ifndef __XFS_SCRUB_BITMAP_H__
+>  #define __XFS_SCRUB_BITMAP_H__
 > =20
->  =09ASSERT(xfs_sb_version_hasrmapbt(&sc->mp->m_sb));
+> -struct xbitmap_range {
+> -=09struct list_head=09list;
+> -=09uint64_t=09=09start;
+> -=09uint64_t=09=09len;
+> -};
+> +#include <linux/interval_tree.h>
 > =20
-> -=09for_each_xbitmap_block(fsbno, bmr, n, bitmap) {
-> -=09=09ASSERT(sc->ip !=3D NULL ||
-> -=09=09       XFS_FSB_TO_AGNO(sc->mp, fsbno) =3D=3D sc->sa.agno);
-> -=09=09trace_xrep_dispose_btree_extent(sc->mp,
-> -=09=09=09=09XFS_FSB_TO_AGNO(sc->mp, fsbno),
-> -=09=09=09=09XFS_FSB_TO_AGBNO(sc->mp, fsbno), 1);
-> -
-> -=09=09error =3D xrep_reap_block(sc, fsbno, oinfo, type, &deferred);
-> -=09=09if (error)
-> -=09=09=09break;
-> -=09}
-> -
-> -=09if (error || deferred =3D=3D 0)
-> +=09error =3D xbitmap_iter_set_bits(bitmap, xrep_reap_block, &rb);
-> +=09if (error || rb.deferred =3D=3D 0)
->  =09=09return error;
+>  struct xbitmap {
+> -=09struct list_head=09list;
+> +=09struct rb_root_cached=09root;
+>  };
 > =20
->  =09if (sc->ip)
+>  void xbitmap_init(struct xbitmap *bitmap);
+>  void xbitmap_destroy(struct xbitmap *bitmap);
+> =20
+> +void xbitmap_clear(struct xbitmap *bitmap, uint64_t start, uint64_t len)=
+;
+>  int xbitmap_set(struct xbitmap *bitmap, uint64_t start, uint64_t len);
+> -int xbitmap_disunion(struct xbitmap *bitmap, struct xbitmap *sub);
+> +void xbitmap_disunion(struct xbitmap *bitmap, struct xbitmap *sub);
+>  int xbitmap_set_btcur_path(struct xbitmap *bitmap,
+>  =09=09struct xfs_btree_cur *cur);
+>  int xbitmap_set_btblocks(struct xbitmap *bitmap,
+> @@ -42,4 +39,6 @@ typedef int (*xbitmap_walk_bit_fn)(uint64_t bit, void *=
+priv);
+>  int xbitmap_iter_set_bits(struct xbitmap *bitmap, xbitmap_walk_bit_fn fn=
+,
+>  =09=09void *priv);
+> =20
+> +bool xbitmap_empty(struct xbitmap *bitmap);
+> +
+>  #endif=09/* __XFS_SCRUB_BITMAP_H__ */
 >=20
 
