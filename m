@@ -7,70 +7,69 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6944CCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:51:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10E0CCA9EB9
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:51:51 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3C96C20B7C
+	by mail.kernel.org (Postfix) with ESMTP id CEFB821872
 	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:51:50 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I/B3FJj4"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="krQcQRfa"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732615AbfJVSvt (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 14:51:49 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:54868 "EHLO
+        id S1727851AbfJVSvu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 14:51:50 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:54870 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727851AbfJVSvt (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:51:49 -0400
+        with ESMTP id S1732322AbfJVSvu (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:51:50 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiMQw091050;
-        Tue, 22 Oct 2019 18:51:46 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiCn3091007;
+        Tue, 22 Oct 2019 18:51:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=txw/lTZxhNUJ4nOFdM0aYvY5gZvbN6/MxkRXENKKUpI=;
- b=I/B3FJj4xvqH9eXHQzP7JPmOxiUlSTLXV3ttH5M0W70CqzUfWi8hxBHYhYrIc/KVgs2+
- S+gfAilzWNNV6VNTJMU137AMOKyn66aDYCvR1c3MZzUDfWXjb548wQRorymLu2vB/HFF
- cTEICvh+pa3ri/ARmSwYh05Hnx6+P3P0O+MuLC0TyrBuCnR48JRjOcGgTI+rSR7ivCeT
- /idZEC6LHzPDLfpMdOvc37+QS82fqbEULJNB7GVXakv6QRGmQqf360jTbyNneX3lFrKD
- lTImCLkUsAggqGm2fJZgCikFCmKYvmWIzVe7xoAOh1V3dRuA98j/aS23i8DwUGHXFu/Q 7g== 
+ bh=+qPCMXKvRR4d9I25TLvQlYr3BIJfs9X3AJpFlvl+TgE=;
+ b=krQcQRfanz+ILeuxrjtVkh1Melgfq+pbARi8boEAcOynexSzt3X2uGNrKDmN5XJLc6S6
+ Mf3FYS5q791vo9Sto6L5nxqm4OzYRSoOju0tCMgfmO2qPItxqDNkOwleztfTfsEYJsci
+ f8OAu0kg9u6CpIBk65Ap1ITC2hQEdJA8wVhLB/JggMyZ+qTQ4ZkyqVX82LlF6ehcMD59
+ JNRzv6H+Huz07nVlh98f+wjeigASZqoUNg5Uv6ZSzQkM+vRXBhNJYe4FOOhrMxhOHIc9
+ 2qr0OXtWx+ERYoL0vtZzYZvAd1KRuMkJHrDjg+HR9gTGtYmJ8M4cScT6l94/e2wApazP Vw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2vqteprrp7-1
+        by aserp2120.oracle.com with ESMTP id 2vqteprrpc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:51:45 +0000
+        Tue, 22 Oct 2019 18:51:47 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhokd148357;
-        Tue, 22 Oct 2019 18:49:45 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2vsp400y3g-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhlGI148081;
+        Tue, 22 Oct 2019 18:51:47 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2vsp4016r0-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:49:45 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MIniOL031020;
-        Tue, 22 Oct 2019 18:49:44 GMT
+        Tue, 22 Oct 2019 18:51:46 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9MIpjs0005065;
+        Tue, 22 Oct 2019 18:51:45 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 11:49:43 -0700
-Subject: [PATCH 1/3] xfs_scrub: bump work_threads to include the controller
- thread
+        with ESMTP ; Tue, 22 Oct 2019 11:51:45 -0700
+Subject: [PATCH 12/18] xfs_scrub: remove moveon from phase 5 functions
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Date:   Tue, 22 Oct 2019 11:49:42 -0700
-Message-ID: <157177018286.1460581.16476228375864117661.stgit@magnolia>
-In-Reply-To: <157177017664.1460581.13561167273786314634.stgit@magnolia>
-References: <157177017664.1460581.13561167273786314634.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 22 Oct 2019 11:51:44 -0700
+Message-ID: <157177030411.1461658.6044923482666014455.stgit@magnolia>
+In-Reply-To: <157177022106.1461658.18024534947316119946.stgit@magnolia>
+References: <157177022106.1461658.18024534947316119946.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9418 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.0.1-1908290000 definitions=main-1910220156
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9418 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
  definitions=main-1910220156
@@ -81,35 +80,417 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Bump @work_threads in the scrub phase setup function because we will
-soon want the main thread (i.e. the one that coordinates workers) to be
-factored into per-thread data structures.  We'll need this in an
-upcoming patch to render error string prefixes to preallocated
-per-thread buffers.
+Replace the moveon returns in the phase 5 code with a direct integer
+error return.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- scrub/xfs_scrub.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ scrub/phase5.c |  184 ++++++++++++++++++++++++++++++--------------------------
+ 1 file changed, 97 insertions(+), 87 deletions(-)
 
 
-diff --git a/scrub/xfs_scrub.c b/scrub/xfs_scrub.c
-index 963d0d70..fe76d075 100644
---- a/scrub/xfs_scrub.c
-+++ b/scrub/xfs_scrub.c
-@@ -458,6 +458,13 @@ run_scrub_phases(
- 					&work_threads, &rshift);
- 			if (!moveon)
- 				break;
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index c2cccd76..2641a7fb 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -31,9 +31,11 @@
+  * terminal control characters and escape sequences, since that could be used
+  * to do something naughty to the user's computer and/or break scripts.  XFS
+  * doesn't consider any byte sequence invalid, so don't flag these as errors.
++ *
++ * Returns 0 for success or -1 for error.  This function logs errors.
+  */
+-static bool
+-xfs_scrub_check_name(
++static int
++simple_check_name(
+ 	struct scrub_ctx	*ctx,
+ 	struct descr		*dsc,
+ 	const char		*namedescr,
+@@ -46,7 +48,7 @@ xfs_scrub_check_name(
+ 	/* Complain about zero length names. */
+ 	if (*name == '\0' && should_warn_about_name(ctx)) {
+ 		str_warn(ctx, descr_render(dsc), _("Zero length name found."));
+-		return true;
++		return 0;
+ 	}
+ 
+ 	/* control characters */
+@@ -61,7 +63,7 @@ xfs_scrub_check_name(
+ 		errname = string_escape(name);
+ 		if (!errname) {
+ 			str_errno(ctx, descr_render(dsc));
+-			return false;
++			return -1;
+ 		}
+ 		str_info(ctx, descr_render(dsc),
+ _("Control character found in %s name \"%s\"."),
+@@ -69,15 +71,15 @@ _("Control character found in %s name \"%s\"."),
+ 		free(errname);
+ 	}
+ 
+-	return true;
++	return 0;
+ }
+ 
+ /*
+  * Iterate a directory looking for filenames with problematic
+  * characters.
+  */
+-static bool
+-xfs_scrub_scan_dirents(
++static int
++check_dirent_names(
+ 	struct scrub_ctx	*ctx,
+ 	struct descr		*dsc,
+ 	int			*fd,
+@@ -86,45 +88,45 @@ xfs_scrub_scan_dirents(
+ 	struct unicrash		*uc = NULL;
+ 	DIR			*dir;
+ 	struct dirent		*dentry;
+-	bool			moveon = true;
+ 	int			ret;
+ 
+ 	dir = fdopendir(*fd);
+ 	if (!dir) {
+ 		str_errno(ctx, descr_render(dsc));
+-		moveon = false;
+-		goto out;
++		return errno;
+ 	}
+ 	*fd = -1; /* closedir will close *fd for us */
+ 
+ 	ret = unicrash_dir_init(&uc, ctx, bstat);
+ 	if (ret) {
+ 		str_liberror(ctx, ret, descr_render(dsc));
+-		moveon = false;
+ 		goto out_unicrash;
+ 	}
+ 
++	errno = 0;
+ 	dentry = readdir(dir);
+ 	while (dentry) {
+-		if (uc) {
++		if (uc)
+ 			ret = unicrash_check_dir_name(uc, dsc, dentry);
+-			if (ret) {
+-				str_liberror(ctx, ret, descr_render(dsc));
+-				moveon = false;
+-			}
+-		} else
+-			moveon = xfs_scrub_check_name(ctx, dsc,
+-					_("directory"), dentry->d_name);
+-		if (!moveon)
++		else
++			ret = simple_check_name(ctx, dsc, _("directory"),
++					dentry->d_name);
++		if (ret) {
++			str_liberror(ctx, ret, descr_render(dsc));
+ 			break;
++		}
++		errno = 0;
+ 		dentry = readdir(dir);
+ 	}
++	if (errno) {
++		ret = errno;
++		str_liberror(ctx, ret, descr_render(dsc));
++	}
+ 	unicrash_free(uc);
+ 
+ out_unicrash:
+ 	closedir(dir);
+-out:
+-	return moveon;
++	return ret;
+ }
+ 
+ #ifdef HAVE_LIBATTR
+@@ -145,8 +147,8 @@ static const struct attrns_decode attr_ns[] = {
+  * Check all the xattr names in a particular namespace of a file handle
+  * for Unicode normalization problems or collisions.
+  */
+-static bool
+-xfs_scrub_scan_fhandle_namespace_xattrs(
++static int
++check_xattr_ns_names(
+ 	struct scrub_ctx		*ctx,
+ 	struct descr			*dsc,
+ 	struct xfs_handle		*handle,
+@@ -159,14 +161,13 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+ 	struct attrlist			*attrlist = (struct attrlist *)attrbuf;
+ 	struct attrlist_ent		*ent;
+ 	struct unicrash			*uc = NULL;
+-	bool				moveon = true;
+ 	int				i;
+ 	int				error;
+ 
+ 	error = unicrash_xattr_init(&uc, ctx, bstat);
+ 	if (error) {
+ 		str_liberror(ctx, error, descr_render(dsc));
+-		return false;
++		return error;
+ 	}
+ 
+ 	memset(attrbuf, 0, XFS_XATTR_LIST_MAX);
+@@ -180,20 +181,17 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+ 			ent = ATTR_ENTRY(attrlist, i);
+ 			snprintf(keybuf, XATTR_NAME_MAX, "%s.%s", attr_ns->name,
+ 					ent->a_name);
+-			if (uc) {
++			if (uc)
+ 				error = unicrash_check_xattr_name(uc, dsc,
+ 						keybuf);
+-				if (error) {
+-					str_liberror(ctx, error,
+-							descr_render(dsc));
+-					moveon = false;
+-				}
+-			} else
+-				moveon = xfs_scrub_check_name(ctx, dsc,
++			else
++				error = simple_check_name(ctx, dsc,
+ 						_("extended attribute"),
+ 						keybuf);
+-			if (!moveon)
++			if (error) {
++				str_liberror(ctx, error, descr_render(dsc));
+ 				goto out;
++			}
+ 		}
+ 
+ 		if (!attrlist->al_more)
+@@ -201,37 +199,40 @@ xfs_scrub_scan_fhandle_namespace_xattrs(
+ 		error = attr_list_by_handle(handle, sizeof(*handle), attrbuf,
+ 				XFS_XATTR_LIST_MAX, attr_ns->flags, &cur);
+ 	}
+-	if (error && errno != ESTALE)
+-		str_errno(ctx, descr_render(dsc));
++	if (error) {
++		if (errno == ESTALE)
++			errno = 0;
++		if (errno)
++			str_errno(ctx, descr_render(dsc));
++	}
+ out:
+ 	unicrash_free(uc);
+-	return moveon;
++	return error;
+ }
+ 
+ /*
+  * Check all the xattr names in all the xattr namespaces for problematic
+  * characters.
+  */
+-static bool
+-xfs_scrub_scan_fhandle_xattrs(
++static int
++check_xattr_names(
+ 	struct scrub_ctx		*ctx,
+ 	struct descr			*dsc,
+ 	struct xfs_handle		*handle,
+ 	struct xfs_bulkstat		*bstat)
+ {
+ 	const struct attrns_decode	*ns;
+-	bool				moveon = true;
++	int				ret;
+ 
+ 	for (ns = attr_ns; ns->name; ns++) {
+-		moveon = xfs_scrub_scan_fhandle_namespace_xattrs(ctx, dsc,
+-				handle, bstat, ns);
+-		if (!moveon)
++		ret = check_xattr_ns_names(ctx, dsc, handle, bstat, ns);
++		if (ret)
+ 			break;
+ 	}
+-	return moveon;
++	return ret;
+ }
+ #else
+-# define xfs_scrub_scan_fhandle_xattrs(c, d, h, b)	(true)
++# define check_xattr_names(c, d, h, b)	(0)
+ #endif /* HAVE_LIBATTR */
+ 
+ static int
+@@ -255,26 +256,25 @@ render_ino_from_handle(
+  * Check for potential Unicode collisions in names.
+  */
+ static int
+-xfs_scrub_connections(
++check_inode_names(
+ 	struct scrub_ctx	*ctx,
+ 	struct xfs_handle	*handle,
+ 	struct xfs_bulkstat	*bstat,
+ 	void			*arg)
+ {
+-	bool			*pmoveon = arg;
+ 	DEFINE_DESCR(dsc, ctx, render_ino_from_handle);
+-	bool			moveon = true;
++	bool			*aborted = arg;
+ 	int			fd = -1;
+-	int			error;
++	int			error = 0;
++	int			err2;
+ 
+ 	descr_set(&dsc, bstat);
+ 	background_sleep();
+ 
+ 	/* Warn about naming problems in xattrs. */
+ 	if (bstat->bs_xflags & FS_XFLAG_HASATTR) {
+-		moveon = xfs_scrub_scan_fhandle_xattrs(ctx, &dsc, handle,
+-				bstat);
+-		if (!moveon)
++		error = check_xattr_names(ctx, &dsc, handle, bstat);
++		if (error)
+ 			goto out;
+ 	}
+ 
+@@ -282,7 +282,8 @@ xfs_scrub_connections(
+ 	if (S_ISDIR(bstat->bs_mode)) {
+ 		fd = scrub_open_handle(handle);
+ 		if (fd < 0) {
+-			if (errno == ESTALE)
++			error = errno;
++			if (error == ESTALE)
+ 				return ESTALE;
+ 			str_errno(ctx, descr_render(&dsc));
+ 			goto out;
+@@ -291,21 +292,27 @@ xfs_scrub_connections(
+ 
+ 	/* Warn about naming problems in the directory entries. */
+ 	if (fd >= 0 && S_ISDIR(bstat->bs_mode)) {
+-		moveon = xfs_scrub_scan_dirents(ctx, &dsc, &fd, bstat);
+-		if (!moveon)
++		error = check_dirent_names(ctx, &dsc, &fd, bstat);
++		if (error)
+ 			goto out;
+ 	}
+ 
+ out:
+ 	progress_add(1);
+ 	if (fd >= 0) {
+-		error = close(fd);
+-		if (error)
++		err2 = close(fd);
++		if (err2)
+ 			str_errno(ctx, descr_render(&dsc));
++		if (!error && err2)
++			error = err2;
+ 	}
+-	if (!moveon)
+-		*pmoveon = false;
+-	return *pmoveon ? 0 : XFS_ITERATE_INODES_ABORT;
 +
-+			/*
-+			 * The thread that starts the worker threads is also
-+			 * allowed to contribute to the progress counters and
-+			 * whatever other per-thread data we need to allocate.
-+			 */
-+			work_threads++;
- 			moveon = progress_init_phase(ctx, progress_fp, phase,
- 					max_work, rshift, work_threads);
- 		} else {
++	if (error)
++		*aborted = true;
++	if (!error && *aborted)
++		error = ECANCELED;
++
++	return error;
+ }
+ 
+ #ifndef FS_IOC_GETFSLABEL
+@@ -327,20 +334,19 @@ scrub_render_mountpoint(
+  * Check the filesystem label for Unicode normalization problems or misleading
+  * sequences.
+  */
+-static bool
+-xfs_scrub_fs_label(
++static int
++check_fs_label(
+ 	struct scrub_ctx		*ctx)
+ {
+ 	DEFINE_DESCR(dsc, ctx, scrub_render_mountpoint);
+ 	char				label[FSLABEL_MAX];
+ 	struct unicrash			*uc = NULL;
+-	bool				moveon = true;
+ 	int				error;
+ 
+ 	error = unicrash_fs_label_init(&uc, ctx);
+ 	if (error) {
+ 		str_liberror(ctx, error, descr_render(&dsc));
+-		return false;
++		return error;
+ 	}
+ 
+ 	descr_set(&dsc, NULL);
+@@ -349,7 +355,7 @@ xfs_scrub_fs_label(
+ 	error = ioctl(ctx->mnt.fd, FS_IOC_GETFSLABEL, &label);
+ 	if (error) {
+ 		if (errno != EOPNOTSUPP && errno != ENOTTY) {
+-			moveon = false;
++			error = errno;
+ 			perror(ctx->mntpoint);
+ 		}
+ 		goto out;
+@@ -360,45 +366,49 @@ xfs_scrub_fs_label(
+ 		goto out;
+ 
+ 	/* Otherwise check for weirdness. */
+-	if (uc) {
++	if (uc)
+ 		error = unicrash_check_fs_label(uc, &dsc, label);
+-		if (error) {
+-			str_liberror(ctx, error, descr_render(&dsc));
+-			moveon = false;
+-		}
+-	} else
+-		moveon = xfs_scrub_check_name(ctx, &dsc, _("filesystem label"),
++	else
++		error = simple_check_name(ctx, &dsc, _("filesystem label"),
+ 				label);
+-	if (!moveon)
+-		goto out;
++	if (error)
++		str_liberror(ctx, error, descr_render(&dsc));
+ out:
+ 	unicrash_free(uc);
+-	return moveon;
++	return error;
+ }
+ 
+ /* Check directory connectivity. */
+-bool
+-xfs_scan_connections(
++int
++phase5_func(
+ 	struct scrub_ctx	*ctx)
+ {
+-	bool			moveon = true;
++	bool			aborted = false;
+ 	int			ret;
+ 
+ 	if (ctx->corruptions_found || ctx->unfixable_errors) {
+ 		str_info(ctx, ctx->mntpoint,
+ _("Filesystem has errors, skipping connectivity checks."));
+-		return true;
++		return 0;
+ 	}
+ 
+-	ret = xfs_scrub_fs_label(ctx);
++	ret = check_fs_label(ctx);
+ 	if (ret)
+-		return false;
++		return ret;
+ 
+-	ret = scrub_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
++	ret = scrub_scan_all_inodes(ctx, check_inode_names, &aborted);
+ 	if (ret)
+-		return false;
+-	if (!moveon)
+-		return false;
++		return ret;
++	if (aborted)
++		return ECANCELED;
++
+ 	xfs_scrub_report_preen_triggers(ctx);
+-	return true;
++	return 0;
++}
++
++bool
++xfs_scan_connections(
++	struct scrub_ctx	*ctx)
++{
++	return phase5_func(ctx) == 0;
+ }
 
