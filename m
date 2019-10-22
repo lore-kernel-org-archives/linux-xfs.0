@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F7ACA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8AAC9CA9EB9
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9DFFB20B7C
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 52CB420B7C
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sbv7x4VP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="FZ5xyyri"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732784AbfJVSur (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 14:50:47 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:47960 "EHLO
+        id S1732792AbfJVSu4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 14:50:56 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:48130 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732753AbfJVSur (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:50:47 -0400
+        with ESMTP id S1732753AbfJVSuz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:50:55 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiJeF109548;
-        Tue, 22 Oct 2019 18:50:44 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiJeJ109548;
+        Tue, 22 Oct 2019 18:50:53 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=EmFzLAwE6U2NEeXVvf9YpHMV6dODm3lq+4fON4qfVvA=;
- b=sbv7x4VPQbm+EfxblQ+xIlZQyATRDKCkRNeg5NgGBxe6E2kqhQ58kyxflrvbX+Dbp+gI
- 5cYboQnDqy+xS9pjHOnAuLtAkDrnV9Gz21HrG6LOk/0uEnU5SmdTWp+ZF6VANxUNfbOj
- UbQ7WycSfkTyY4ex7+xdi7Q6HHPuvn9nF/HsmcDI3Mu1bzXNmG8sCCJtYmfv68di73as
- n4pvZFochhE7QIi7V5H4RTUkFKrEOIOmxXw0VUmRNP39wtDyAo3tuM/ql0jHheQXiaoR
- ThB1UPcgZD+EwdEKDHVn5ksii0knNaLnPOKmmoMCkueabMTFJAWDSUdNlIb1+ZpAK5Ew zQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2vqswtgv8f-1
+ bh=fAD8NkBKOPPrIUasrBr0d4S+iE6BftRMjDu+PCtTaiM=;
+ b=FZ5xyyriDE+RezziXj4MI6Zcs5xoRs3DrLcljdRrulma+5MnD7kWHbkiqVZAWRQJUBFj
+ i631l2DJSvkBGRy8pjTuupy6TdO1H1mVj1QyoidvF4bfOSIowirsjCptk3J+y+6VbsD1
+ HY8F70vb8B3E1DiCQ+nWWdPwxLcWpad3aro9sGAxyltcYfaUpX8ZTDEXSGc89cBRoUVM
+ WgbwS6pZJ9Gsgq9xafj5jKRSlIMkEmcdOsqjV44hTqD5xZP+PO2Li1XUUDA/rynF0mVr
+ E6PXqJ4Hx8bcpLir746zOw6w9nvfBoLSklQ4r4EOlhy9r0WzutxTK4oTV4Plaloze03y fQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2vqswtgv92-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:50:44 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhNCA125168;
-        Tue, 22 Oct 2019 18:50:43 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2vsx239v3a-1
+        Tue, 22 Oct 2019 18:50:53 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhlTi148116;
+        Tue, 22 Oct 2019 18:50:52 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2vsp40137b-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:50:43 +0000
-Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MIofd2031229;
-        Tue, 22 Oct 2019 18:50:41 GMT
+        Tue, 22 Oct 2019 18:50:52 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9MIoplN004534;
+        Tue, 22 Oct 2019 18:50:51 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 11:50:41 -0700
-Subject: [PATCH 03/18] xfs_scrub: remove moveon from inode iteration
+        with ESMTP ; Tue, 22 Oct 2019 11:50:51 -0700
+Subject: [PATCH 04/18] xfs_scrub: remove moveon from vfs directory tree
+ iteration
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 22 Oct 2019 11:50:40 -0700
-Message-ID: <157177024056.1461658.12800429167341147688.stgit@magnolia>
+Date:   Tue, 22 Oct 2019 11:50:46 -0700
+Message-ID: <157177024676.1461658.4214905324305884109.stgit@magnolia>
 In-Reply-To: <157177022106.1461658.18024534947316119946.stgit@magnolia>
 References: <157177022106.1461658.18024534947316119946.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,365 +81,268 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the moveon retuns in the inode iteration functions with a direct
-integer error return.  While we're at it, drop the xfs_ prefix.
+Replace the moveon returns in the vfs directory tree walking functions
+with a direct integer error return.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/inodes.c |  124 ++++++++++++++++++++++++--------------------------------
- scrub/inodes.h |    6 +--
- scrub/phase3.c |    7 +--
- scrub/phase5.c |   10 ++---
- scrub/phase6.c |    5 +-
- 5 files changed, 67 insertions(+), 85 deletions(-)
+ scrub/phase6.c |   28 +++++++++++++++++-----------
+ scrub/vfs.c    |   52 ++++++++++++++++++++++++++++++----------------------
+ scrub/vfs.h    |   14 +++++++-------
+ 3 files changed, 54 insertions(+), 40 deletions(-)
 
 
-diff --git a/scrub/inodes.c b/scrub/inodes.c
-index 71e53bb6..a2aa6384 100644
---- a/scrub/inodes.c
-+++ b/scrub/inodes.c
-@@ -94,54 +94,66 @@ bulkstat_for_inumbers(
- 	}
- }
- 
-+/* BULKSTAT wrapper routines. */
-+struct scan_inodes {
-+	scrub_inode_iter_fn	fn;
-+	void			*arg;
-+	bool			aborted;
-+};
-+
- /*
-  * Call into the filesystem for inode/bulkstat information and call our
-  * iterator function.  We'll try to fill the bulkstat information in batches,
-  * but we also can detect iget failures.
-  */
--static bool
--xfs_iterate_inodes_ag(
--	struct scrub_ctx	*ctx,
--	const char		*descr,
--	void			*fshandle,
--	uint32_t		agno,
--	xfs_inode_iter_fn	fn,
-+static void
-+scan_ag_inodes(
-+	struct workqueue	*wq,
-+	xfs_agnumber_t		agno,
- 	void			*arg)
- {
- 	struct xfs_handle	handle;
-+	char			descr[DESCR_BUFSZ];
- 	struct xfs_inumbers_req	*ireq;
- 	struct xfs_bulkstat_req	*breq;
--	char			idescr[DESCR_BUFSZ];
-+	struct scan_inodes	*si = arg;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
- 	struct xfs_bulkstat	*bs;
- 	struct xfs_inumbers	*inumbers;
--	bool			moveon = true;
- 	int			i;
- 	int			error;
- 	int			stale_count = 0;
- 
--	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
-+	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
-+				major(ctx->fsinfo.fs_datadev),
-+				minor(ctx->fsinfo.fs_datadev),
-+				agno);
-+
-+	memcpy(&handle.ha_fsid, ctx->fshandle, sizeof(handle.ha_fsid));
- 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
- 			sizeof(handle.ha_fid.fid_len);
- 	handle.ha_fid.fid_pad = 0;
- 
- 	breq = xfrog_bulkstat_alloc_req(XFS_INODES_PER_CHUNK, 0);
- 	if (!breq) {
--		str_liberror(ctx, ENOMEM, _("allocating bulkstat request"));
--		return false;
-+		str_errno(ctx, descr);
-+		si->aborted = true;
-+		return;
- 	}
- 
- 	ireq = xfrog_inumbers_alloc_req(1, 0);
- 	if (!ireq) {
--		str_liberror(ctx, ENOMEM, _("allocating inumbers request"));
-+		str_errno(ctx, descr);
- 		free(breq);
--		return false;
-+		si->aborted = true;
-+		return;
- 	}
- 	inumbers = &ireq->inumbers[0];
- 	xfrog_inumbers_set_ag(ireq, agno);
- 
- 	/* Find the inode chunk & alloc mask */
- 	error = xfrog_inumbers(&ctx->mnt, ireq);
--	while (!error && ireq->hdr.ocount > 0) {
-+	while (!error && !si->aborted && ireq->hdr.ocount > 0) {
- 		/*
- 		 * We can have totally empty inode chunks on filesystems where
- 		 * there are more than 64 inodes per block.  Skip these.
-@@ -153,15 +165,17 @@ xfs_iterate_inodes_ag(
- 
- 		/* Iterate all the inodes. */
- 		for (i = 0, bs = breq->bulkstat;
--		     i < inumbers->xi_alloccount;
-+		     !si->aborted && i < inumbers->xi_alloccount;
- 		     i++, bs++) {
- 			handle.ha_fid.fid_ino = bs->bs_ino;
- 			handle.ha_fid.fid_gen = bs->bs_gen;
--			error = fn(ctx, &handle, bs, arg);
-+			error = si->fn(ctx, &handle, bs, si->arg);
- 			switch (error) {
- 			case 0:
- 				break;
--			case ESTALE:
-+			case ESTALE: {
-+				char	idescr[DESCR_BUFSZ];
-+
- 				stale_count++;
- 				if (stale_count < 30) {
- 					ireq->hdr.ino = inumbers->xi_startino;
-@@ -172,16 +186,15 @@ xfs_iterate_inodes_ag(
- 				str_info(ctx, idescr,
- _("Changed too many times during scan; giving up."));
- 				break;
-+			}
- 			case XFS_ITERATE_INODES_ABORT:
- 				error = 0;
- 				/* fall thru */
- 			default:
--				moveon = false;
--				errno = error;
- 				goto err;
- 			}
- 			if (xfs_scrub_excessive_errors(ctx)) {
--				moveon = false;
-+				si->aborted = true;
- 				goto out;
- 			}
- 		}
-@@ -194,71 +207,42 @@ _("Changed too many times during scan; giving up."));
- err:
- 	if (error) {
- 		str_liberror(ctx, error, descr);
--		moveon = false;
-+		si->aborted = true;
- 	}
- out:
- 	free(ireq);
- 	free(breq);
--	return moveon;
- }
- 
--/* BULKSTAT wrapper routines. */
--struct xfs_scan_inodes {
--	xfs_inode_iter_fn	fn;
--	void			*arg;
--	bool			moveon;
--};
--
--/* Scan all the inodes in an AG. */
--static void
--xfs_scan_ag_inodes(
--	struct workqueue	*wq,
--	xfs_agnumber_t		agno,
--	void			*arg)
--{
--	struct xfs_scan_inodes	*si = arg;
--	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
--	char			descr[DESCR_BUFSZ];
--	bool			moveon;
--
--	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
--				major(ctx->fsinfo.fs_datadev),
--				minor(ctx->fsinfo.fs_datadev),
--				agno);
--
--	moveon = xfs_iterate_inodes_ag(ctx, descr, ctx->fshandle, agno,
--			si->fn, si->arg);
--	if (!moveon)
--		si->moveon = false;
--}
--
--/* Scan all the inodes in a filesystem. */
--bool
--xfs_scan_all_inodes(
-+/*
-+ * Scan all the inodes in a filesystem.  On error, this function will log
-+ * an error message and return -1.
-+ */
-+int
-+scrub_scan_all_inodes(
- 	struct scrub_ctx	*ctx,
--	xfs_inode_iter_fn	fn,
-+	scrub_inode_iter_fn	fn,
- 	void			*arg)
- {
--	struct xfs_scan_inodes	si;
-+	struct scan_inodes	si = {
-+		.fn		= fn,
-+		.arg		= arg,
-+	};
- 	xfs_agnumber_t		agno;
- 	struct workqueue	wq;
- 	int			ret;
- 
--	si.moveon = true;
--	si.fn = fn;
--	si.arg = arg;
--
- 	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
- 			scrub_nproc_workqueue(ctx));
- 	if (ret) {
- 		str_liberror(ctx, ret, _("creating bulkstat workqueue"));
--		return false;
-+		return -1;
- 	}
- 
- 	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
--		ret = workqueue_add(&wq, xfs_scan_ag_inodes, agno, &si);
-+		ret = workqueue_add(&wq, scan_ag_inodes, agno, &si);
- 		if (ret) {
--			si.moveon = false;
-+			si.aborted = true;
- 			str_liberror(ctx, ret, _("queueing bulkstat work"));
- 			break;
- 		}
-@@ -266,19 +250,17 @@ xfs_scan_all_inodes(
- 
- 	ret = workqueue_terminate(&wq);
- 	if (ret) {
--		si.moveon = false;
-+		si.aborted = true;
- 		str_liberror(ctx, ret, _("finishing bulkstat work"));
- 	}
- 	workqueue_destroy(&wq);
- 
--	return si.moveon;
-+	return si.aborted ? -1 : 0;
- }
- 
--/*
-- * Open a file by handle, or return a negative error code.
-- */
-+/* Open a file by handle, returning either the fd or -1 on error. */
- int
--xfs_open_handle(
-+scrub_open_handle(
- 	struct xfs_handle	*handle)
- {
- 	return open_by_fshandle(handle, sizeof(*handle),
-diff --git a/scrub/inodes.h b/scrub/inodes.h
-index e58795e7..3affaa00 100644
---- a/scrub/inodes.h
-+++ b/scrub/inodes.h
-@@ -12,13 +12,13 @@
-  * iteration will be restarted from the beginning of the inode allocation
-  * group.  Any other non zero value will stop iteration.
-  */
--typedef int (*xfs_inode_iter_fn)(struct scrub_ctx *ctx,
-+typedef int (*scrub_inode_iter_fn)(struct scrub_ctx *ctx,
- 		struct xfs_handle *handle, struct xfs_bulkstat *bs, void *arg);
- 
- #define XFS_ITERATE_INODES_ABORT	(-1)
--bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
-+int scrub_scan_all_inodes(struct scrub_ctx *ctx, scrub_inode_iter_fn fn,
- 		void *arg);
- 
--int xfs_open_handle(struct xfs_handle *handle);
-+int scrub_open_handle(struct xfs_handle *handle);
- 
- #endif /* XFS_SCRUB_INODES_H_ */
-diff --git a/scrub/phase3.c b/scrub/phase3.c
-index 0d2c9019..171be3fd 100644
---- a/scrub/phase3.c
-+++ b/scrub/phase3.c
-@@ -78,7 +78,7 @@ xfs_scrub_inode(
- 
- 	/* Try to open the inode to pin it. */
- 	if (S_ISREG(bstat->bs_mode)) {
--		fd = xfs_open_handle(handle);
-+		fd = scrub_open_handle(handle);
- 		/* Stale inode means we scan the whole cluster again. */
- 		if (fd < 0 && errno == ESTALE)
- 			return ESTALE;
-@@ -161,7 +161,6 @@ xfs_scan_inodes(
- 	struct scrub_inode_ctx	ictx;
- 	uint64_t		val;
- 	int			err;
--	bool			ret;
- 
- 	ictx.moveon = true;
- 	err = ptcounter_alloc(scrub_nproc(ctx), &ictx.icount);
-@@ -170,8 +169,8 @@ xfs_scan_inodes(
- 		return false;
- 	}
- 
--	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
--	if (!ret)
-+	err = scrub_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
-+	if (err)
- 		ictx.moveon = false;
- 	if (!ictx.moveon)
- 		goto free;
-diff --git a/scrub/phase5.c b/scrub/phase5.c
-index 101a0a7a..7f4ae1a8 100644
---- a/scrub/phase5.c
-+++ b/scrub/phase5.c
-@@ -264,7 +264,7 @@ xfs_scrub_connections(
- 
- 	/* Open the dir, let the kernel try to reconnect it to the root. */
- 	if (S_ISDIR(bstat->bs_mode)) {
--		fd = xfs_open_handle(handle);
-+		fd = scrub_open_handle(handle);
- 		if (fd < 0) {
- 			if (errno == ESTALE)
- 				return ESTALE;
-@@ -360,7 +360,7 @@ xfs_scan_connections(
- 	struct scrub_ctx	*ctx)
- {
- 	bool			moveon = true;
--	bool			ret;
-+	int			ret;
- 
- 	if (ctx->corruptions_found || ctx->unfixable_errors) {
- 		str_info(ctx, ctx->mntpoint,
-@@ -372,9 +372,9 @@ _("Filesystem has errors, skipping connectivity checks."));
- 	if (!moveon)
- 		return false;
- 
--	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
--	if (!ret)
--		moveon = false;
-+	ret = scrub_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
-+	if (ret)
-+		return false;
- 	if (!moveon)
- 		return false;
- 	xfs_scrub_report_preen_triggers(ctx);
 diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 6a8dabe1..c4511b08 100644
+index c4511b08..3da82e7c 100644
 --- a/scrub/phase6.c
 +++ b/scrub/phase6.c
-@@ -290,7 +290,7 @@ xfs_report_verify_inode(
- 			bstat->bs_ino, bstat->bs_gen, _("(unlinked)"));
+@@ -311,21 +311,24 @@ _("Disappeared during read error reporting."));
+ }
  
- 	/* Try to open the inode. */
--	fd = xfs_open_handle(handle);
-+	fd = scrub_open_handle(handle);
- 	if (fd < 0) {
- 		error = errno;
- 		if (error == ESTALE)
-@@ -502,7 +502,8 @@ report_all_media_errors(
+ /* Scan a directory for matches in the read verify error list. */
+-static bool
++static int
+ xfs_report_verify_dir(
+ 	struct scrub_ctx	*ctx,
+ 	const char		*path,
+ 	int			dir_fd,
+ 	void			*arg)
+ {
+-	return xfs_report_verify_fd(ctx, path, dir_fd, arg);
++	bool			moveon;
++
++	moveon = xfs_report_verify_fd(ctx, path, dir_fd, arg);
++	return moveon ? 0 : -1;
+ }
+ 
+ /*
+  * Scan the inode associated with a directory entry for matches with
+  * the read verify error list.
+  */
+-static bool
++static int
+ xfs_report_verify_dirent(
+ 	struct scrub_ctx	*ctx,
+ 	const char		*path,
+@@ -340,11 +343,11 @@ xfs_report_verify_dirent(
+ 
+ 	/* Ignore things we can't open. */
+ 	if (!S_ISREG(sb->st_mode) && !S_ISDIR(sb->st_mode))
+-		return true;
++		return 0;
+ 
+ 	/* Ignore . and .. */
+ 	if (!strcmp(".", dirent->d_name) || !strcmp("..", dirent->d_name))
+-		return true;
++		return 0;
+ 
+ 	/*
+ 	 * If we were given a dirent, open the associated file under
+@@ -353,8 +356,12 @@ xfs_report_verify_dirent(
+ 	 */
+ 	fd = openat(dir_fd, dirent->d_name,
+ 			O_RDONLY | O_NOATIME | O_NOFOLLOW | O_NOCTTY);
+-	if (fd < 0)
+-		return true;
++	if (fd < 0) {
++		if (errno == ENOENT)
++			return 0;
++		str_errno(ctx, path);
++		return errno;
++	}
+ 
+ 	/* Go find the badness. */
+ 	moveon = xfs_report_verify_fd(ctx, path, fd, arg);
+@@ -365,7 +372,7 @@ xfs_report_verify_dirent(
+ 	error = close(fd);
+ 	if (error)
+ 		str_errno(ctx, path);
+-	return moveon;
++	return moveon ? 0 : -1;
+ }
+ 
+ /* Use a fsmap to report metadata lost to a media error. */
+@@ -480,7 +487,6 @@ report_all_media_errors(
+ 	struct scrub_ctx		*ctx,
+ 	struct media_verify_state	*vs)
+ {
+-	bool				moveon;
+ 	int				ret;
+ 
+ 	ret = report_disk_ioerrs(ctx, ctx->datadev, vs);
+@@ -496,9 +502,9 @@ report_all_media_errors(
+ 	}
+ 
+ 	/* Scan the directory tree to get file paths. */
+-	moveon = scan_fs_tree(ctx, xfs_report_verify_dir,
++	ret = scan_fs_tree(ctx, xfs_report_verify_dir,
+ 			xfs_report_verify_dirent, vs);
+-	if (!moveon)
++	if (ret)
  		return false;
  
  	/* Scan for unlinked files. */
--	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, vs);
-+	ret = scrub_scan_all_inodes(ctx, xfs_report_verify_inode, vs);
-+	return ret == 0;
+diff --git a/scrub/vfs.c b/scrub/vfs.c
+index d7c40239..c807c9b9 100644
+--- a/scrub/vfs.c
++++ b/scrub/vfs.c
+@@ -30,7 +30,7 @@ struct scan_fs_tree {
+ 	pthread_mutex_t		lock;
+ 	pthread_cond_t		wakeup;
+ 	struct stat		root_sb;
+-	bool			moveon;
++	bool			aborted;
+ 	scan_fs_tree_dir_fn	dir_fn;
+ 	scan_fs_tree_dirent_fn	dirent_fn;
+ 	void			*arg;
+@@ -138,8 +138,9 @@ scan_fs_dir(
+ 	}
+ 
+ 	/* Caller-specific directory checks. */
+-	if (!sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg)) {
+-		sft->moveon = false;
++	error = sft->dir_fn(ctx, sftd->path, dir_fd, sft->arg);
++	if (error) {
++		sft->aborted = true;
+ 		error = close(dir_fd);
+ 		if (error)
+ 			str_errno(ctx, sftd->path);
+@@ -150,11 +151,14 @@ scan_fs_dir(
+ 	dir = fdopendir(dir_fd);
+ 	if (!dir) {
+ 		str_errno(ctx, sftd->path);
++		sft->aborted = true;
+ 		close(dir_fd);
+ 		goto out;
+ 	}
+ 	rewinddir(dir);
+-	for (dirent = readdir(dir); dirent != NULL; dirent = readdir(dir)) {
++	for (dirent = readdir(dir);
++	     !sft->aborted && dirent != NULL;
++	     dirent = readdir(dir)) {
+ 		snprintf(newpath, PATH_MAX, "%s/%s", sftd->path,
+ 				dirent->d_name);
+ 
+@@ -171,14 +175,15 @@ scan_fs_dir(
+ 			continue;
+ 
+ 		/* Caller-specific directory entry function. */
+-		if (!sft->dirent_fn(ctx, newpath, dir_fd, dirent, &sb,
+-				sft->arg)) {
+-			sft->moveon = false;
++		error = sft->dirent_fn(ctx, newpath, dir_fd, dirent, &sb,
++				sft->arg);
++		if (error) {
++			sft->aborted = true;
+ 			break;
+ 		}
+ 
+ 		if (xfs_scrub_excessive_errors(ctx)) {
+-			sft->moveon = false;
++			sft->aborted = true;
+ 			break;
+ 		}
+ 
+@@ -189,7 +194,7 @@ scan_fs_dir(
+ 			if (error) {
+ 				str_liberror(ctx, error,
+ _("queueing subdirectory scan"));
+-				sft->moveon = false;
++				sft->aborted = true;
+ 				break;
+ 			}
+ 		}
+@@ -206,8 +211,11 @@ _("queueing subdirectory scan"));
+ 	free(sftd);
  }
  
- /* Schedule a read-verify of a (data block) extent. */
+-/* Scan the entire filesystem. */
+-bool
++/*
++ * Scan the entire filesystem.  This function returns 0 on success; if there
++ * are errors, this function will log them and returns nonzero.
++ */
++int
+ scan_fs_tree(
+ 	struct scrub_ctx	*ctx,
+ 	scan_fs_tree_dir_fn	dir_fn,
+@@ -215,20 +223,18 @@ scan_fs_tree(
+ 	void			*arg)
+ {
+ 	struct workqueue	wq;
+-	struct scan_fs_tree	sft;
+-	bool			moveon = false;
++	struct scan_fs_tree	sft = {
++		.root_sb	= ctx->mnt_sb,
++		.dir_fn		= dir_fn,
++		.dirent_fn	= dirent_fn,
++		.arg		= arg,
++	};
+ 	int			ret;
+ 
+-	sft.moveon = true;
+-	sft.nr_dirs = 0;
+-	sft.root_sb = ctx->mnt_sb;
+-	sft.dir_fn = dir_fn;
+-	sft.dirent_fn = dirent_fn;
+-	sft.arg = arg;
+ 	ret = pthread_mutex_init(&sft.lock, NULL);
+ 	if (ret) {
+ 		str_liberror(ctx, ret, _("creating directory scan lock"));
+-		return false;
++		return ret;
+ 	}
+ 	ret = pthread_cond_init(&sft.wakeup, NULL);
+ 	if (ret) {
+@@ -268,14 +274,16 @@ scan_fs_tree(
+ 		goto out_wq;
+ 	}
+ 
+-	moveon = sft.moveon;
++	if (!ret && sft.aborted)
++		ret = -1;
++
+ out_wq:
+ 	workqueue_destroy(&wq);
+ out_cond:
+ 	pthread_cond_destroy(&sft.wakeup);
+ out_mutex:
+ 	pthread_mutex_destroy(&sft.lock);
+-	return moveon;
++	return ret;
+ }
+ 
+ #ifndef FITRIM
+diff --git a/scrub/vfs.h b/scrub/vfs.h
+index af23674a..dc1099cf 100644
+--- a/scrub/vfs.h
++++ b/scrub/vfs.h
+@@ -8,20 +8,20 @@
+ 
+ /*
+  * Visit a subdirectory prior to iterating entries in that subdirectory.
+- * Return true to continue iteration or false to stop iterating and return to
+- * the caller.
++ * Return 0 to continue iteration or a positive error code to stop iterating
++ * and return to the caller.
+  */
+-typedef bool (*scan_fs_tree_dir_fn)(struct scrub_ctx *, const char *,
++typedef int (*scan_fs_tree_dir_fn)(struct scrub_ctx *, const char *,
+ 		int, void *);
+ 
+ /*
+- * Visit each directory entry in a directory.  Return true to continue
+- * iteration or false to stop iterating and return to the caller.
++ * Visit each directory entry in a directory.  Return 0 to continue iteration
++ * or a positive error code to stop iterating and return to the caller.
+  */
+-typedef bool (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
++typedef int (*scan_fs_tree_dirent_fn)(struct scrub_ctx *, const char *,
+ 		int, struct dirent *, struct stat *, void *);
+ 
+-bool scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
++int scan_fs_tree(struct scrub_ctx *ctx, scan_fs_tree_dir_fn dir_fn,
+ 		scan_fs_tree_dirent_fn dirent_fn, void *arg);
+ 
+ void fstrim(struct scrub_ctx *ctx);
 
