@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46DB8CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:47:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79EAECA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:48:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1864220B7C
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:47:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4BAA620B7C
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:48:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="q9DMfCgT"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="lgdein8G"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732758AbfJVSr6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 14:47:58 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:44894 "EHLO
+        id S1732753AbfJVSsC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 14:48:02 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:44942 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732753AbfJVSr6 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:47:58 -0400
+        with ESMTP id S1732322AbfJVSsB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:48:01 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiS79109626;
-        Tue, 22 Oct 2019 18:47:45 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiCaO109504;
+        Tue, 22 Oct 2019 18:47:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=o1raVtSENsaxaBjVeSWHBYWNG+Dfa9OjT9HpODH2P+0=;
- b=q9DMfCgTfCxJCbJ7YjGNtivGUz9KQyxdXuLnkAZznQEtofQewd2mCHk1Rhdbwct+INFB
- JYnVB8qlJ6MYlKhPF8uRVs9cHhXWph6x4d7g+Xwfd9Zeqw3gS9y3jaBICsb39WgNw5ZF
- P/FYqd4JncDPDVybgYdsaljqvHkb42W9ljejx0bJwhnKWs2lAEFMNG0IPLHsL/S5iCJ9
- DitAkDwJ3E9u7NO6GocFxKDplzcwFPy8s/LMdIxKB7iYuOPjiBX8tsxeXXqucVBfeKfq
- 20Hyt/h6osHZuXTfCp3NF/WVXdpwzowmgk0BB9bbav9cc/dQrPcrewIRr2OHCYs+s2sJ QQ== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2vqswtgurm-1
+ bh=CKjapPa9d9KhldOOvKUSrrgVfBJCFg20jOX8ZrfeivA=;
+ b=lgdein8GsEXdKpOqx0NBV3noNCLDg2Y1lFmq9mMEGQxAVo05n3Pv9XagYYxCsm3UL+p6
+ conbeyvZDzqZWL6pms+3C8zBV1qdMCVOKEh8OGktPl2IJ3wIRhzQxI5UfmgaCv9S0wAy
+ wGLX2l9KpBIbQ2Ax0RWuXyoSITLjVnUgDE6HtZK07BRQIinemn2w32fCbkRvl2qbDoIl
+ zgAauJ1tqZsaJzmEUbnLLzeRxsWAg/ysk49WkR2pO1gnFZY0MS/30laBltBznMd1hLhk
+ KK/fLMUgoGvGq+evB3qFwgoO0wRBRUBf7XiN6rWkJIJ1yLA5mZ7TiPGibd8qJaHnXurj tw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2vqswtgutk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:47:45 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhPvl125303;
-        Tue, 22 Oct 2019 18:47:44 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2vsx239pq0-1
+        Tue, 22 Oct 2019 18:47:59 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhlNm148086;
+        Tue, 22 Oct 2019 18:47:58 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by userp3020.oracle.com with ESMTP id 2vsp400uwk-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:47:44 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MIlh8d029498;
-        Tue, 22 Oct 2019 18:47:43 GMT
+        Tue, 22 Oct 2019 18:47:58 +0000
+Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9MIlvQg002991;
+        Tue, 22 Oct 2019 18:47:57 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 11:47:43 -0700
-Subject: [PATCH 6/9] xfs_scrub: don't report media errors on unwritten
- extents
+        with ESMTP ; Tue, 22 Oct 2019 11:47:57 -0700
+Subject: [PATCH 8/9] xfs_scrub: request fewer bmaps when we can
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org, Eric Sandeen <sandeen@redhat.com>
-Date:   Tue, 22 Oct 2019 11:47:42 -0700
-Message-ID: <157177006198.1459098.9779762719548833617.stgit@magnolia>
+Cc:     linux-xfs@vger.kernel.org
+Date:   Tue, 22 Oct 2019 11:47:54 -0700
+Message-ID: <157177007451.1459098.7077839567802348147.stgit@magnolia>
 In-Reply-To: <157177002473.1459098.11320398367215468164.stgit@magnolia>
 References: <157177002473.1459098.11320398367215468164.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,29 +80,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Don't report media errors for unwritten extents since no data has been
-lost.
+In xfs_iterate_filemaps, we query the number of bmaps for a given file
+that we're going to iterate, so feed that information to bmap so that
+the kernel won't waste time allocating in-kernel memory unnecessarily.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- scrub/phase6.c |    4 ++++
- 1 file changed, 4 insertions(+)
+ scrub/filemap.c |    8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 3125bfd5..71a1922d 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -372,6 +372,10 @@ xfs_check_rmap_error_report(
- 	uint64_t		err_physical = *(uint64_t *)arg;
- 	uint64_t		err_off;
- 
-+	/* Don't care about unwritten extents. */
-+	if (map->fmr_flags & FMR_OF_PREALLOC)
-+		return true;
-+
- 	if (err_physical > map->fmr_physical)
- 		err_off = err_physical - map->fmr_physical;
+diff --git a/scrub/filemap.c b/scrub/filemap.c
+index bdc6d8f9..f92e9620 100644
+--- a/scrub/filemap.c
++++ b/scrub/filemap.c
+@@ -71,7 +71,6 @@ xfs_iterate_filemaps(
+ 		map->bmv_length = ULLONG_MAX;
  	else
+ 		map->bmv_length = BTOBB(key->bm_length);
+-	map->bmv_count = BMAP_NR;
+ 	map->bmv_iflags = BMV_IF_NO_DMAPI_READ | BMV_IF_PREALLOC |
+ 			  BMV_IF_NO_HOLES;
+ 	switch (whichfork) {
+@@ -97,6 +96,13 @@ xfs_iterate_filemaps(
+ 		goto out;
+ 	}
+ 
++	if (fsx.fsx_nextents == 0) {
++		moveon = true;
++		goto out;
++	}
++
++	map->bmv_count = min(fsx.fsx_nextents + 1, BMAP_NR);
++
+ 	while ((error = ioctl(fd, XFS_IOC_GETBMAPX, map)) == 0) {
+ 		for (i = 0, p = &map[i + 1]; i < map->bmv_entries; i++, p++) {
+ 			bmap.bm_offset = BBTOB(p->bmv_offset);
 
