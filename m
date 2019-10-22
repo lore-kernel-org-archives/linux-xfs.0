@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 71CBECA9EA0
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D4F7ACA9EA0
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 35D70218AE
-	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9DFFB20B7C
+	for <linux-xfs@archiver.kernel.org>; Tue, 22 Oct 2019 18:50:47 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mwq5uXqP"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sbv7x4VP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732781AbfJVSuj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 22 Oct 2019 14:50:39 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:53430 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732753AbfJVSuj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:50:39 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiOE0091074;
-        Tue, 22 Oct 2019 18:50:37 GMT
+        id S1732784AbfJVSur (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 22 Oct 2019 14:50:47 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:47960 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1732753AbfJVSur (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 22 Oct 2019 14:50:47 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIiJeF109548;
+        Tue, 22 Oct 2019 18:50:44 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=D0IBcFsvBuWBjDf0dldWjwt5hrYToA9sqKUQrMsQug4=;
- b=mwq5uXqPsOaYC+hVBt9OOAACwqXjpKO/GMsvCP9f97QkNMINiqprJBfFei0qVAGQtB1o
- jiaDpjsQRMyh26JKV0YClIA/ypdG4NIgl7tFvXYWElckQyv5slFj+xrUuClwzOxys0JX
- 0O/mcCcwnlmBP1n749AC1vEvGfoSW/aGWevm0hN3jrUkcBbps2rsJ6/hjAfMoNWOjh++
- OQZnpZIiahj7dzLRDQo9Uh6DwmoY4Uj6Dl16nDY2BrZhXglz1Bv0TDYzsA49FkPzwekN
- 2EaZa66VTP1QAzZaTxLvVm6ZjrcLqgOJ9Ax/6UV9PhwXB2qpBXza6vxciRSvhxcyP2E1 Yw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2vqteprrgb-1
+ bh=EmFzLAwE6U2NEeXVvf9YpHMV6dODm3lq+4fON4qfVvA=;
+ b=sbv7x4VPQbm+EfxblQ+xIlZQyATRDKCkRNeg5NgGBxe6E2kqhQ58kyxflrvbX+Dbp+gI
+ 5cYboQnDqy+xS9pjHOnAuLtAkDrnV9Gz21HrG6LOk/0uEnU5SmdTWp+ZF6VANxUNfbOj
+ UbQ7WycSfkTyY4ex7+xdi7Q6HHPuvn9nF/HsmcDI3Mu1bzXNmG8sCCJtYmfv68di73as
+ n4pvZFochhE7QIi7V5H4RTUkFKrEOIOmxXw0VUmRNP39wtDyAo3tuM/ql0jHheQXiaoR
+ ThB1UPcgZD+EwdEKDHVn5ksii0knNaLnPOKmmoMCkueabMTFJAWDSUdNlIb1+ZpAK5Ew zQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2130.oracle.com with ESMTP id 2vqswtgv8f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:50:37 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhm0t148157;
-        Tue, 22 Oct 2019 18:50:36 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2vsp401238-1
+        Tue, 22 Oct 2019 18:50:44 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9MIhNCA125168;
+        Tue, 22 Oct 2019 18:50:43 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2vsx239v3a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 22 Oct 2019 18:50:36 +0000
-Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MIoZsJ031876;
-        Tue, 22 Oct 2019 18:50:35 GMT
+        Tue, 22 Oct 2019 18:50:43 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9MIofd2031229;
+        Tue, 22 Oct 2019 18:50:41 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 22 Oct 2019 11:50:35 -0700
-Subject: [PATCH 02/18] xfs_scrub: remove moveon from the fscounters functions
+        with ESMTP ; Tue, 22 Oct 2019 11:50:41 -0700
+Subject: [PATCH 03/18] xfs_scrub: remove moveon from inode iteration
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 22 Oct 2019 11:50:33 -0700
-Message-ID: <157177023383.1461658.2534164192787910385.stgit@magnolia>
+Date:   Tue, 22 Oct 2019 11:50:40 -0700
+Message-ID: <157177024056.1461658.12800429167341147688.stgit@magnolia>
 In-Reply-To: <157177022106.1461658.18024534947316119946.stgit@magnolia>
 References: <157177022106.1461658.18024534947316119946.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,94 +80,173 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Replace the moveon returns in the fscounters functions with direct error
-returns.  Drop the xfs_ prefixes while we're at it.
+Replace the moveon retuns in the inode iteration functions with a direct
+integer error return.  While we're at it, drop the xfs_ prefix.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- scrub/fscounters.c |  129 ++++++++++++++++++++--------------------------------
- scrub/fscounters.h |    4 +-
- scrub/phase6.c     |   12 +++--
- scrub/phase7.c     |   15 ++++--
- 4 files changed, 68 insertions(+), 92 deletions(-)
+ scrub/inodes.c |  124 ++++++++++++++++++++++++--------------------------------
+ scrub/inodes.h |    6 +--
+ scrub/phase3.c |    7 +--
+ scrub/phase5.c |   10 ++---
+ scrub/phase6.c |    5 +-
+ 5 files changed, 67 insertions(+), 85 deletions(-)
 
 
-diff --git a/scrub/fscounters.c b/scrub/fscounters.c
-index e064c865..2581947f 100644
---- a/scrub/fscounters.c
-+++ b/scrub/fscounters.c
-@@ -25,8 +25,8 @@
- /* Count the number of inodes in the filesystem. */
+diff --git a/scrub/inodes.c b/scrub/inodes.c
+index 71e53bb6..a2aa6384 100644
+--- a/scrub/inodes.c
++++ b/scrub/inodes.c
+@@ -94,54 +94,66 @@ bulkstat_for_inumbers(
+ 	}
+ }
  
- /* INUMBERS wrapper routines. */
--struct xfs_count_inodes {
--	bool			moveon;
-+struct count_inodes {
-+	int			error;
- 	uint64_t		counters[0];
- };
- 
-@@ -34,13 +34,14 @@ struct xfs_count_inodes {
-  * Count the number of inodes.  Use INUMBERS to figure out how many inodes
-  * exist in the filesystem, assuming we've already scrubbed that.
++/* BULKSTAT wrapper routines. */
++struct scan_inodes {
++	scrub_inode_iter_fn	fn;
++	void			*arg;
++	bool			aborted;
++};
++
+ /*
+  * Call into the filesystem for inode/bulkstat information and call our
+  * iterator function.  We'll try to fill the bulkstat information in batches,
+  * but we also can detect iget failures.
   */
 -static bool
--xfs_count_inodes_ag(
+-xfs_iterate_inodes_ag(
 -	struct scrub_ctx	*ctx,
 -	const char		*descr,
+-	void			*fshandle,
 -	uint32_t		agno,
--	uint64_t		*count)
+-	xfs_inode_iter_fn	fn,
 +static void
-+count_ag_inodes(
++scan_ag_inodes(
 +	struct workqueue	*wq,
 +	xfs_agnumber_t		agno,
-+	void			*arg)
+ 	void			*arg)
  {
-+	struct count_inodes	*ci = arg;
-+	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	struct xfs_handle	handle;
++	char			descr[DESCR_BUFSZ];
  	struct xfs_inumbers_req	*ireq;
- 	uint64_t		nr = 0;
- 	unsigned int		i;
-@@ -48,107 +49,78 @@ xfs_count_inodes_ag(
+ 	struct xfs_bulkstat_req	*breq;
+-	char			idescr[DESCR_BUFSZ];
++	struct scan_inodes	*si = arg;
++	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
+ 	struct xfs_bulkstat	*bs;
+ 	struct xfs_inumbers	*inumbers;
+-	bool			moveon = true;
+ 	int			i;
+ 	int			error;
+ 	int			stale_count = 0;
  
- 	ireq = xfrog_inumbers_alloc_req(64, 0);
- 	if (!ireq) {
--		str_liberror(ctx, ENOMEM, _("allocating inumbers request"));
+-	memcpy(&handle.ha_fsid, fshandle, sizeof(handle.ha_fsid));
++	snprintf(descr, DESCR_BUFSZ, _("dev %d:%d AG %u inodes"),
++				major(ctx->fsinfo.fs_datadev),
++				minor(ctx->fsinfo.fs_datadev),
++				agno);
++
++	memcpy(&handle.ha_fsid, ctx->fshandle, sizeof(handle.ha_fsid));
+ 	handle.ha_fid.fid_len = sizeof(xfs_fid_t) -
+ 			sizeof(handle.ha_fid.fid_len);
+ 	handle.ha_fid.fid_pad = 0;
+ 
+ 	breq = xfrog_bulkstat_alloc_req(XFS_INODES_PER_CHUNK, 0);
+ 	if (!breq) {
+-		str_liberror(ctx, ENOMEM, _("allocating bulkstat request"));
 -		return false;
-+		ci->error = errno;
++		str_errno(ctx, descr);
++		si->aborted = true;
 +		return;
  	}
+ 
+ 	ireq = xfrog_inumbers_alloc_req(1, 0);
+ 	if (!ireq) {
+-		str_liberror(ctx, ENOMEM, _("allocating inumbers request"));
++		str_errno(ctx, descr);
+ 		free(breq);
+-		return false;
++		si->aborted = true;
++		return;
+ 	}
+ 	inumbers = &ireq->inumbers[0];
  	xfrog_inumbers_set_ag(ireq, agno);
  
--	while (!(error = xfrog_inumbers(&ctx->mnt, ireq))) {
-+	while (!ci->error && (error = xfrog_inumbers(&ctx->mnt, ireq)) == 0) {
- 		if (ireq->hdr.ocount == 0)
- 			break;
- 		for (i = 0; i < ireq->hdr.ocount; i++)
- 			nr += ireq->inumbers[i].xi_alloccount;
+ 	/* Find the inode chunk & alloc mask */
+ 	error = xfrog_inumbers(&ctx->mnt, ireq);
+-	while (!error && ireq->hdr.ocount > 0) {
++	while (!error && !si->aborted && ireq->hdr.ocount > 0) {
+ 		/*
+ 		 * We can have totally empty inode chunks on filesystems where
+ 		 * there are more than 64 inodes per block.  Skip these.
+@@ -153,15 +165,17 @@ xfs_iterate_inodes_ag(
+ 
+ 		/* Iterate all the inodes. */
+ 		for (i = 0, bs = breq->bulkstat;
+-		     i < inumbers->xi_alloccount;
++		     !si->aborted && i < inumbers->xi_alloccount;
+ 		     i++, bs++) {
+ 			handle.ha_fid.fid_ino = bs->bs_ino;
+ 			handle.ha_fid.fid_gen = bs->bs_gen;
+-			error = fn(ctx, &handle, bs, arg);
++			error = si->fn(ctx, &handle, bs, si->arg);
+ 			switch (error) {
+ 			case 0:
+ 				break;
+-			case ESTALE:
++			case ESTALE: {
++				char	idescr[DESCR_BUFSZ];
++
+ 				stale_count++;
+ 				if (stale_count < 30) {
+ 					ireq->hdr.ino = inumbers->xi_startino;
+@@ -172,16 +186,15 @@ xfs_iterate_inodes_ag(
+ 				str_info(ctx, idescr,
+ _("Changed too many times during scan; giving up."));
+ 				break;
++			}
+ 			case XFS_ITERATE_INODES_ABORT:
+ 				error = 0;
+ 				/* fall thru */
+ 			default:
+-				moveon = false;
+-				errno = error;
+ 				goto err;
+ 			}
+ 			if (xfs_scrub_excessive_errors(ctx)) {
+-				moveon = false;
++				si->aborted = true;
+ 				goto out;
+ 			}
+ 		}
+@@ -194,71 +207,42 @@ _("Changed too many times during scan; giving up."));
+ err:
+ 	if (error) {
+ 		str_liberror(ctx, error, descr);
+-		moveon = false;
++		si->aborted = true;
  	}
-+	if (error)
-+		ci->error = error;
- 
+ out:
  	free(ireq);
+ 	free(breq);
+-	return moveon;
+ }
  
--	if (error) {
--		str_liberror(ctx, error, descr);
--		return false;
--	}
--
--	*count = nr;
--	return true;
--}
+-/* BULKSTAT wrapper routines. */
+-struct xfs_scan_inodes {
+-	xfs_inode_iter_fn	fn;
+-	void			*arg;
+-	bool			moveon;
+-};
 -
 -/* Scan all the inodes in an AG. */
 -static void
--xfs_count_ag_inodes(
+-xfs_scan_ag_inodes(
 -	struct workqueue	*wq,
 -	xfs_agnumber_t		agno,
 -	void			*arg)
 -{
--	struct xfs_count_inodes	*ci = arg;
+-	struct xfs_scan_inodes	*si = arg;
 -	struct scrub_ctx	*ctx = (struct scrub_ctx *)wq->wq_ctx;
 -	char			descr[DESCR_BUFSZ];
 -	bool			moveon;
@@ -177,210 +256,189 @@ index e064c865..2581947f 100644
 -				minor(ctx->fsinfo.fs_datadev),
 -				agno);
 -
--	moveon = xfs_count_inodes_ag(ctx, descr, agno, &ci->counters[agno]);
+-	moveon = xfs_iterate_inodes_ag(ctx, descr, ctx->fshandle, agno,
+-			si->fn, si->arg);
 -	if (!moveon)
--		ci->moveon = false;
-+	ci->counters[agno] = nr;
- }
- 
--/* Count all the inodes in a filesystem. */
+-		si->moveon = false;
+-}
+-
+-/* Scan all the inodes in a filesystem. */
 -bool
--xfs_count_all_inodes(
+-xfs_scan_all_inodes(
 +/*
-+ * Count all the inodes in a filesystem.  Returns 0 or a positive error number.
++ * Scan all the inodes in a filesystem.  On error, this function will log
++ * an error message and return -1.
 + */
 +int
-+scrub_count_all_inodes(
++scrub_scan_all_inodes(
  	struct scrub_ctx	*ctx,
- 	uint64_t		*count)
+-	xfs_inode_iter_fn	fn,
++	scrub_inode_iter_fn	fn,
+ 	void			*arg)
  {
--	struct xfs_count_inodes	*ci;
-+	struct count_inodes	*ci;
+-	struct xfs_scan_inodes	si;
++	struct scan_inodes	si = {
++		.fn		= fn,
++		.arg		= arg,
++	};
  	xfs_agnumber_t		agno;
  	struct workqueue	wq;
--	bool			moveon = true;
--	int			ret;
-+	int			ret, ret2;
+ 	int			ret;
  
--	ci = calloc(1, sizeof(struct xfs_count_inodes) +
-+	ci = calloc(1, sizeof(struct count_inodes) +
- 			(ctx->mnt.fsgeom.agcount * sizeof(uint64_t)));
- 	if (!ci)
--		return false;
--	ci->moveon = true;
-+		return errno;
- 
+-	si.moveon = true;
+-	si.fn = fn;
+-	si.arg = arg;
+-
  	ret = workqueue_create(&wq, (struct xfs_mount *)ctx,
  			scrub_nproc_workqueue(ctx));
--	if (ret) {
--		moveon = false;
--		str_liberror(ctx, ret, _("creating icount workqueue"));
-+	if (ret)
- 		goto out_free;
--	}
--	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
--		ret = workqueue_add(&wq, xfs_count_ag_inodes, agno, ci);
--		if (ret) {
--			moveon = false;
--			str_liberror(ctx, ret, _("queueing icount work"));
-+
-+	for (agno = 0; agno < ctx->mnt.fsgeom.agcount && !ci->error; agno++) {
-+		ret = workqueue_add(&wq, count_ag_inodes, agno, ci);
-+		if (ret)
- 			break;
--		}
+ 	if (ret) {
+ 		str_liberror(ctx, ret, _("creating bulkstat workqueue"));
+-		return false;
++		return -1;
  	}
  
--	ret = workqueue_terminate(&wq);
--	if (ret) {
--		moveon = false;
--		str_liberror(ctx, ret, _("finishing icount work"));
--	}
-+	ret2 = workqueue_terminate(&wq);
-+	if (!ret && ret2)
-+		ret = ret2;
+ 	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++) {
+-		ret = workqueue_add(&wq, xfs_scan_ag_inodes, agno, &si);
++		ret = workqueue_add(&wq, scan_ag_inodes, agno, &si);
+ 		if (ret) {
+-			si.moveon = false;
++			si.aborted = true;
+ 			str_liberror(ctx, ret, _("queueing bulkstat work"));
+ 			break;
+ 		}
+@@ -266,19 +250,17 @@ xfs_scan_all_inodes(
+ 
+ 	ret = workqueue_terminate(&wq);
+ 	if (ret) {
+-		si.moveon = false;
++		si.aborted = true;
+ 		str_liberror(ctx, ret, _("finishing bulkstat work"));
+ 	}
  	workqueue_destroy(&wq);
  
--	if (!moveon)
-+	if (ci->error) {
-+		ret = ci->error;
- 		goto out_free;
-+	}
- 
- 	for (agno = 0; agno < ctx->mnt.fsgeom.agcount; agno++)
- 		*count += ci->counters[agno];
--	moveon = ci->moveon;
- 
- out_free:
- 	free(ci);
--	return moveon;
-+	return ret;
+-	return si.moveon;
++	return si.aborted ? -1 : 0;
  }
  
--/* Estimate the number of blocks and inodes in the filesystem. */
--bool
--xfs_scan_estimate_blocks(
-+/*
-+ * Estimate the number of blocks and inodes in the filesystem.  Returns 0
-+ * or a positive error number.
-+ */
-+int
-+scrub_scan_estimate_blocks(
- 	struct scrub_ctx		*ctx,
- 	unsigned long long		*d_blocks,
- 	unsigned long long		*d_bfree,
-@@ -164,17 +136,13 @@ xfs_scan_estimate_blocks(
+-/*
+- * Open a file by handle, or return a negative error code.
+- */
++/* Open a file by handle, returning either the fd or -1 on error. */
+ int
+-xfs_open_handle(
++scrub_open_handle(
+ 	struct xfs_handle	*handle)
+ {
+ 	return open_by_fshandle(handle, sizeof(*handle),
+diff --git a/scrub/inodes.h b/scrub/inodes.h
+index e58795e7..3affaa00 100644
+--- a/scrub/inodes.h
++++ b/scrub/inodes.h
+@@ -12,13 +12,13 @@
+  * iteration will be restarted from the beginning of the inode allocation
+  * group.  Any other non zero value will stop iteration.
+  */
+-typedef int (*xfs_inode_iter_fn)(struct scrub_ctx *ctx,
++typedef int (*scrub_inode_iter_fn)(struct scrub_ctx *ctx,
+ 		struct xfs_handle *handle, struct xfs_bulkstat *bs, void *arg);
  
- 	/* Grab the fstatvfs counters, since it has to report accurately. */
- 	error = fstatvfs(ctx->mnt.fd, &sfs);
--	if (error) {
--		str_errno(ctx, ctx->mntpoint);
--		return false;
--	}
-+	if (error)
-+		return errno;
+ #define XFS_ITERATE_INODES_ABORT	(-1)
+-bool xfs_scan_all_inodes(struct scrub_ctx *ctx, xfs_inode_iter_fn fn,
++int scrub_scan_all_inodes(struct scrub_ctx *ctx, scrub_inode_iter_fn fn,
+ 		void *arg);
  
- 	/* Fetch the filesystem counters. */
- 	error = ioctl(ctx->mnt.fd, XFS_IOC_FSCOUNTS, &fc);
--	if (error) {
--		str_errno(ctx, ctx->mntpoint);
--		return false;
--	}
-+	if (error)
-+		return errno;
+-int xfs_open_handle(struct xfs_handle *handle);
++int scrub_open_handle(struct xfs_handle *handle);
  
- 	/*
- 	 * XFS reserves some blocks to prevent hard ENOSPC, so add those
-@@ -182,7 +150,8 @@ xfs_scan_estimate_blocks(
- 	 */
- 	error = ioctl(ctx->mnt.fd, XFS_IOC_GET_RESBLKS, &rb);
- 	if (error)
--		str_errno(ctx, ctx->mntpoint);
-+		return errno;
-+
- 	sfs.f_bfree += rb.resblks_avail;
+ #endif /* XFS_SCRUB_INODES_H_ */
+diff --git a/scrub/phase3.c b/scrub/phase3.c
+index 0d2c9019..171be3fd 100644
+--- a/scrub/phase3.c
++++ b/scrub/phase3.c
+@@ -78,7 +78,7 @@ xfs_scrub_inode(
  
- 	*d_blocks = sfs.f_blocks;
-@@ -194,5 +163,5 @@ xfs_scan_estimate_blocks(
- 	*f_files = sfs.f_files;
- 	*f_free = sfs.f_ffree;
+ 	/* Try to open the inode to pin it. */
+ 	if (S_ISREG(bstat->bs_mode)) {
+-		fd = xfs_open_handle(handle);
++		fd = scrub_open_handle(handle);
+ 		/* Stale inode means we scan the whole cluster again. */
+ 		if (fd < 0 && errno == ESTALE)
+ 			return ESTALE;
+@@ -161,7 +161,6 @@ xfs_scan_inodes(
+ 	struct scrub_inode_ctx	ictx;
+ 	uint64_t		val;
+ 	int			err;
+-	bool			ret;
  
--	return true;
-+	return 0;
- }
-diff --git a/scrub/fscounters.h b/scrub/fscounters.h
-index e3a79740..1fae58a6 100644
---- a/scrub/fscounters.h
-+++ b/scrub/fscounters.h
-@@ -6,10 +6,10 @@
- #ifndef XFS_SCRUB_FSCOUNTERS_H_
- #define XFS_SCRUB_FSCOUNTERS_H_
+ 	ictx.moveon = true;
+ 	err = ptcounter_alloc(scrub_nproc(ctx), &ictx.icount);
+@@ -170,8 +169,8 @@ xfs_scan_inodes(
+ 		return false;
+ 	}
  
--bool xfs_scan_estimate_blocks(struct scrub_ctx *ctx,
-+int scrub_scan_estimate_blocks(struct scrub_ctx *ctx,
- 		unsigned long long *d_blocks, unsigned long long *d_bfree,
- 		unsigned long long *r_blocks, unsigned long long *r_bfree,
- 		unsigned long long *f_files, unsigned long long *f_free);
--bool xfs_count_all_inodes(struct scrub_ctx *ctx, uint64_t *count);
-+int scrub_count_all_inodes(struct scrub_ctx *ctx, uint64_t *count);
+-	ret = xfs_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
+-	if (!ret)
++	err = scrub_scan_all_inodes(ctx, xfs_scrub_inode, &ictx);
++	if (err)
+ 		ictx.moveon = false;
+ 	if (!ictx.moveon)
+ 		goto free;
+diff --git a/scrub/phase5.c b/scrub/phase5.c
+index 101a0a7a..7f4ae1a8 100644
+--- a/scrub/phase5.c
++++ b/scrub/phase5.c
+@@ -264,7 +264,7 @@ xfs_scrub_connections(
  
- #endif /* XFS_SCRUB_FSCOUNTERS_H_ */
-diff --git a/scrub/phase6.c b/scrub/phase6.c
-index 0f22af59..6a8dabe1 100644
---- a/scrub/phase6.c
-+++ b/scrub/phase6.c
-@@ -776,17 +776,19 @@ xfs_estimate_verify_work(
- 	unsigned long long	r_bfree;
- 	unsigned long long	f_files;
- 	unsigned long long	f_free;
--	bool			moveon;
+ 	/* Open the dir, let the kernel try to reconnect it to the root. */
+ 	if (S_ISDIR(bstat->bs_mode)) {
+-		fd = xfs_open_handle(handle);
++		fd = scrub_open_handle(handle);
+ 		if (fd < 0) {
+ 			if (errno == ESTALE)
+ 				return ESTALE;
+@@ -360,7 +360,7 @@ xfs_scan_connections(
+ 	struct scrub_ctx	*ctx)
+ {
+ 	bool			moveon = true;
+-	bool			ret;
 +	int			ret;
  
--	moveon = xfs_scan_estimate_blocks(ctx, &d_blocks, &d_bfree,
-+	ret = scrub_scan_estimate_blocks(ctx, &d_blocks, &d_bfree,
- 				&r_blocks, &r_bfree, &f_files, &f_free);
--	if (!moveon)
--		return moveon;
-+	if (ret) {
-+		str_liberror(ctx, ret, _("estimating verify work"));
-+		return false;
-+	}
+ 	if (ctx->corruptions_found || ctx->unfixable_errors) {
+ 		str_info(ctx, ctx->mntpoint,
+@@ -372,9 +372,9 @@ _("Filesystem has errors, skipping connectivity checks."));
+ 	if (!moveon)
+ 		return false;
  
- 	*items = cvt_off_fsb_to_b(&ctx->mnt, d_blocks + r_blocks);
- 	if (scrub_data == 1)
- 		*items -= cvt_off_fsb_to_b(&ctx->mnt, d_bfree + r_bfree);
- 	*nr_threads = disk_heads(ctx->datadev);
- 	*rshift = 20;
--	return moveon;
-+	return true;
+-	ret = xfs_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
+-	if (!ret)
+-		moveon = false;
++	ret = scrub_scan_all_inodes(ctx, xfs_scrub_connections, &moveon);
++	if (ret)
++		return false;
+ 	if (!moveon)
+ 		return false;
+ 	xfs_scrub_report_preen_triggers(ctx);
+diff --git a/scrub/phase6.c b/scrub/phase6.c
+index 6a8dabe1..c4511b08 100644
+--- a/scrub/phase6.c
++++ b/scrub/phase6.c
+@@ -290,7 +290,7 @@ xfs_report_verify_inode(
+ 			bstat->bs_ino, bstat->bs_gen, _("(unlinked)"));
+ 
+ 	/* Try to open the inode. */
+-	fd = xfs_open_handle(handle);
++	fd = scrub_open_handle(handle);
+ 	if (fd < 0) {
+ 		error = errno;
+ 		if (error == ESTALE)
+@@ -502,7 +502,8 @@ report_all_media_errors(
+ 		return false;
+ 
+ 	/* Scan for unlinked files. */
+-	return xfs_scan_all_inodes(ctx, xfs_report_verify_inode, vs);
++	ret = scrub_scan_all_inodes(ctx, xfs_report_verify_inode, vs);
++	return ret == 0;
  }
-diff --git a/scrub/phase7.c b/scrub/phase7.c
-index 2622bc45..64e52359 100644
---- a/scrub/phase7.c
-+++ b/scrub/phase7.c
-@@ -156,14 +156,19 @@ xfs_scan_summary(
- 	ptvar_free(ptvar);
  
- 	/* Scan the whole fs. */
--	moveon = xfs_count_all_inodes(ctx, &counted_inodes);
--	if (!moveon)
-+	error = scrub_count_all_inodes(ctx, &counted_inodes);
-+	if (error) {
-+		str_liberror(ctx, error, _("counting inodes"));
-+		moveon = false;
- 		goto out;
-+	}
- 
--	moveon = xfs_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
-+	error = scrub_scan_estimate_blocks(ctx, &d_blocks, &d_bfree, &r_blocks,
- 			&r_bfree, &f_files, &f_free);
--	if (!moveon)
--		return moveon;
-+	if (error) {
-+		str_liberror(ctx, error, _("estimating verify work"));
-+		return false;
-+	}
- 
- 	/*
- 	 * If we counted blocks with fsmap, then dblocks includes
+ /* Schedule a read-verify of a (data block) extent. */
 
