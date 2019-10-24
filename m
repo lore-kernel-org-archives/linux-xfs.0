@@ -2,220 +2,140 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E68CCA9EBC
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 00:34:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFD1CCA9EB9
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 02:31:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4DB8D2084C
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 00:34:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7F8D22086D
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 02:31:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gmZF2i8o"
+	dkim=pass (2048-bit key) header.d=plexistor-com.20150623.gappssmtp.com header.i=@plexistor-com.20150623.gappssmtp.com header.b="rWfKpJmH"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2404828AbfJXAeB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Oct 2019 20:34:01 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:54090 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388218AbfJXAeB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Oct 2019 20:34:01 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O0Xxak139370;
-        Thu, 24 Oct 2019 00:33:59 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=Yp88jRNHDAFa6HkOyrP3/IicedvCpq9E5P+Iukyemnk=;
- b=gmZF2i8ooE+O4wgzUDzTHmGGjrCcetbyo5y5pyokvSCv/PxKO6HA68KZB46DReS7RPSX
- 18Q+jLL+YqgTA0UFU8xD/XMM3QbBvKwvbXjcBYf/TI7Lu9T0NCqW61GTjd9VQGmpZfFf
- gTbxq6baSnNaavK0GCN9VUnfuAhazLe5HB5J+5ghWycynxCaDz3TpS7EA00JivXSPp9g
- kkzPu0t1YsD4dIzS37FnStb/MlymVBfWo0dxiX3SwjIU7Q0CDYSWzObiIpbMumHJnstW
- vvu67Mrzbf4T74hENun46gR8qWRAZi8JKRjIzJyE8FxUpb0j5pg28LTep4oRNOvNTKmx IQ== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2vqswtrn5f-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 00:33:59 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O0XRO0074495;
-        Thu, 24 Oct 2019 00:33:58 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2vtsk36d51-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 00:33:58 +0000
-Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9O0XwlI011591;
-        Thu, 24 Oct 2019 00:33:58 GMT
-Received: from localhost (/10.159.148.95)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 23 Oct 2019 17:33:57 -0700
-Date:   Wed, 23 Oct 2019 17:33:56 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
-        Allison Collins <allison.henderson@oracle.com>
-Subject: [PATCH 3/2] generic: check storing and re-reading timestamps
-Message-ID: <20191024003356.GE6706@magnolia>
-References: <157170897992.1172383.2128928990011336996.stgit@magnolia>
+        id S2437068AbfJXCbS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Oct 2019 22:31:18 -0400
+Received: from mail-ed1-f67.google.com ([209.85.208.67]:34000 "EHLO
+        mail-ed1-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2437045AbfJXCbR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Oct 2019 22:31:17 -0400
+Received: by mail-ed1-f67.google.com with SMTP id b72so8398551edf.1
+        for <linux-xfs@vger.kernel.org>; Wed, 23 Oct 2019 19:31:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=plexistor-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=gnpimtDmP0lqthi2a9dQUIzsbuDYbXbk8lwy1rA6ZU4=;
+        b=rWfKpJmH4ifuIAc04embim+n/JBDGLFT0Hj+ihXkCmiMhnOlUJ7dovXsW/rUmYCG6F
+         NxvohT6iNXBI6t174vtu7YcDkT26RFlgZNkwGZix5mNkPhEVfaQJud2KWOstCgH42cLL
+         C6TMjBSQEmYIn9WfT37PSeJ/iFVaR6bQjE0zyQcvJKF2mvrqFmnCmfG0685/oCLWd2D/
+         kj3C67iakdIgJwUCaU7RXbrXgjL50UBwhAsUqAr4lASSx5NA4IH+9zeFS8WnF3708s4S
+         VD43nmX5iXHmxRFB4FSaXMMTYJZZ+KuoOiJB3j+OaIRifCMquB5u1LE663zK8s24CJAE
+         4+WQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=gnpimtDmP0lqthi2a9dQUIzsbuDYbXbk8lwy1rA6ZU4=;
+        b=fGKul0vqudKUGor8lTPtjSV5S43pzSsYUaUwi9JZe9/GavA45JjNXgRStaWFInK4OT
+         cE8Hi4BTRQkgbc+YZ6wzPbqP1cRKYCvi6uahNAouh3GWj3XFYZ2+KJkV6RIMEjssq2EN
+         Z/5iZIYGo/ydU9xQ2Ag2w+pHR6UXCqw7KgE0yQEbXojtJVFENhdwSR2RI+GDWM6FrcyA
+         /DJbm4QJ7cF3DNM7F7xbhATOh+bR9tSNYoPXN9KiagKDu8LxStV08sxG5wCpNa3l0I7P
+         UDTtJlmpQNSwg+bEzB1xIrfN44LpLzjTgBhjsyOIdaqxnRgHoiILDqVkqEc+Fy5xMO3/
+         mNvg==
+X-Gm-Message-State: APjAAAV665pRVC0PdsA/NF+n7E0oNyhtj2ibgpFI4YcjRZkXnC+2tUtP
+        ABXPqWIxW2DVwmipGkMBXdKy4A==
+X-Google-Smtp-Source: APXvYqy84bemiVw55n7fco+FbX1+KuwznFlI0XsqhDfwNJccDH40WXATcHh+QUP1GE+pY3XO2S2c9A==
+X-Received: by 2002:a17:906:780e:: with SMTP id u14mr26591750ejm.97.1571884275784;
+        Wed, 23 Oct 2019 19:31:15 -0700 (PDT)
+Received: from [10.68.217.182] ([217.70.210.43])
+        by smtp.googlemail.com with ESMTPSA id x23sm430555eda.83.2019.10.23.19.31.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 23 Oct 2019 19:31:15 -0700 (PDT)
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20191020155935.12297-1-ira.weiny@intel.com>
+ <b7849297-e4a4-aaec-9a64-2b481663588b@plexistor.com>
+ <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
+ <20191023221332.GE2044@dread.disaster.area>
+From:   Boaz Harrosh <boaz@plexistor.com>
+Message-ID: <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+Date:   Thu, 24 Oct 2019 05:31:13 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <157170897992.1172383.2128928990011336996.stgit@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910240001
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910240001
+In-Reply-To: <20191023221332.GE2044@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On 24/10/2019 01:13, Dave Chinner wrote:
+> On Wed, Oct 23, 2019 at 04:09:50PM +0300, Boaz Harrosh wrote:
+>> On 22/10/2019 14:21, Boaz Harrosh wrote:
+>>> On 20/10/2019 18:59, ira.weiny@intel.com wrote:
+>> Please explain the use case behind your model?
+> 
+> No application changes needed to control whether they use DAX or
+> not. It allows the admin to control the application behaviour
+> completely, so they can turn off DAX if necessary. Applications are
+> unaware of constraints that may prevent DAX from being used, and so
+> admins need a mechanism to prevent DAX aware application from
+> actually using DAX if the capability is present.
+> 
+> e.g. given how slow some PMEM devices are when it comes to writing
+> data, especially under extremely high concurrency, DAX is not
+> necessarily a performance win for every application. Admins need a
+> guaranteed method of turning off DAX in these situations - apps may
+> not provide such a knob, or even be aware of a thing called DAX...
+> 
 
-Add a test to make sure that we can store and retrieve timestamps
-without corrupting them.  Note that this is likely to fail on older
-kernels that do not clamp timestamps properly, though at least in my
-book that counts as corruption.
+Thank you Dave for explaining. Forgive my slowness. I now understand
+your intention.
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- tests/generic/721     |  102 +++++++++++++++++++++++++++++++++++++++++++++++++
- tests/generic/721.out |    1 
- tests/generic/group   |    1 
- 3 files changed, 104 insertions(+)
- create mode 100755 tests/generic/721
- create mode 100644 tests/generic/721.out
+But if so please address my first concern. That in the submitted implementation
+you must set the flag-bit after the create of the file but before the write.
+So exactly the above slow writes must always be DAX if I ever want the file
+to be DAX accessed in the future.
 
-diff --git a/tests/generic/721 b/tests/generic/721
-new file mode 100755
-index 00000000..711d3c5f
---- /dev/null
-+++ b/tests/generic/721
-@@ -0,0 +1,102 @@
-+#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-later
-+# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-+#
-+# FS QA Test No. 721
-+#
-+# Make sure we can store and retrieve timestamps on the extremes of the
-+# supported date ranges.
-+
-+seq=`basename $0`
-+seqres=$RESULT_DIR/$seq
-+echo "QA output created by $seq"
-+
-+here=`pwd`
-+tmp=/tmp/$$
-+status=1    # failure is the default!
-+trap "_cleanup; exit \$status" 0 1 2 3 15
-+
-+_cleanup()
-+{
-+	cd /
-+	rm -f $tmp.*
-+}
-+
-+# get standard environment, filters and checks
-+. ./common/rc
-+
-+# real QA test starts here
-+_supported_os Linux
-+_supported_fs generic
-+_require_scratch
-+
-+rm -f $seqres.full
-+
-+_scratch_mkfs > $seqres.full
-+_scratch_mount
-+
-+# Does our userspace even support large dates?
-+test_bigdates=1
-+touch -d 'May 30 01:53:03 UTC 2514' $SCRATCH_MNT 2>/dev/null || test_bigdates=0
-+
-+# And can we do statx?
-+test_statx=1
-+($XFS_IO_PROG -c 'help statx' | grep -q 'Print raw statx' && \
-+ $XFS_IO_PROG -c 'statx -r' $SCRATCH_MNT 2>/dev/null | grep -q 'stat.mtime') || \
-+	test_statx=0
-+
-+echo "Userspace support of large timestamps: $test_bigdates" >> $seqres.full
-+echo "xfs_io support of statx: $test_statx" >> $seqres.full
-+
-+touchme() {
-+	local arg="$1"
-+	local name="$2"
-+
-+	touch -d "$arg" $SCRATCH_MNT/t_$name
-+}
-+
-+report() {
-+	local files=($SCRATCH_MNT $SCRATCH_MNT/t_*)
-+	TZ=UTC stat -c '%y %Y %n' "${files[@]}"
-+	test $test_statx -gt 0 && \
-+		$XFS_IO_PROG -c 'statx -r' "${files[@]}" | grep 'stat.mtime'
-+}
-+
-+# -2147483648 (S32_MIN, or classic unix min)
-+touchme 'Dec 13 20:45:52 UTC 1901' s32_min
-+
-+# 2147483647 (S32_MAX, or classic unix max)
-+touchme 'Jan 19 03:14:07 UTC 2038' s32_max
-+
-+if [ $test_bigdates -gt 0 ]; then
-+	# 15032385535 (u34 time if you start from s32_min, like ext4 does)
-+	touchme 'May 10 22:38:55 UTC 2446' u34_from_s32_min
-+
-+	# 17179869183 (u34 time if you start from the unix epoch)
-+	touchme 'May 30 01:53:03 UTC 2514' u34_max
-+
-+	# Latest date we can synthesize(?)
-+	touchme 'Dec 31 23:59:59 UTC 2147483647' abs_max_time
-+
-+	# Earliest date we can synthesize(?)
-+	touchme 'Jan 1 00:00:00 UTC 0' abs_min_time
-+fi
-+
-+# Query timestamps from incore
-+echo before >> $seqres.full
-+report > $tmp.times0
-+cat $tmp.times0 >> $seqres.full
-+
-+_scratch_cycle_mount
-+
-+# Query timestamps from disk
-+echo after >> $seqres.full
-+report > $tmp.times1
-+cat $tmp.times1 >> $seqres.full
-+
-+# Did they match?
-+cmp -s $tmp.times0 $tmp.times1
-+
-+# success, all done
-+status=0
-+exit
-diff --git a/tests/generic/721.out b/tests/generic/721.out
-new file mode 100644
-index 00000000..087decb5
---- /dev/null
-+++ b/tests/generic/721.out
-@@ -0,0 +1 @@
-+QA output created by 721
-diff --git a/tests/generic/group b/tests/generic/group
-index 6f9c4e12..a49d4b11 100644
---- a/tests/generic/group
-+++ b/tests/generic/group
-@@ -581,3 +581,4 @@
- 576 auto quick verity encrypt
- 577 auto quick verity
- 578 auto quick rw clone
-+721 auto quick atime
+In fact I do not see how you do this without changing the application because
+most applications create thier own files, so you do not have a chance to set
+the DAX-flag before the write happens. So the only effective fixture is the
+inheritance from the parent directory.
+But then again how do you separate from the slow writes that we would like
+none-DAX to the DAX reads that are fast and save so much resources and latency.
+
+What if, say in XFS when setting the DAX-bit we take all the three write-locks
+same as a truncate. Then we check that there are no active page-cache mappings
+ie. a single opener. Then allow to set the bit. Else return EBUISY. (file is in use)
+
+> e.g. the data set being accessed by the application is mapped and
+> modified by RDMA applications, so those files must not be accessed
+> using DAX by any application because DAX+RDMA are currently
+> incompatible. Hence you can have RDMA on pmem devices co-exist
+> within the same filesystem as other applications using DAX to access
+> the pmem...
+> 
+
+I actually like the lastest patchset that takes a lease on the file.
+But yes an outside admin tool to set different needs.
+
+> Cheers,
+> Dave.
+> 
+
+Yes, thanks
+Boaz
