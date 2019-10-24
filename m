@@ -2,233 +2,122 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD65CA9EBC
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 04:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD9DFCA9EAF
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 07:34:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DA0C621925
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 04:52:14 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iyxI6uCk"
+	by mail.kernel.org (Postfix) with ESMTP id A97502166E
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 07:34:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2406616AbfJXEwO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 00:52:14 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:33740 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725811AbfJXEwO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 00:52:14 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O4nXp6087722;
-        Thu, 24 Oct 2019 04:52:11 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=D86G79K9s9/7971GwIzFZC91QrznxheLFioXcWmQ+cQ=;
- b=iyxI6uCkMeJdThun5PAtNxraZzqC6QSXWLl8pDwzWNThWGjjhWpsnSc14CIWxx/QFqsl
- e0xFsLhEKAyzQtlPAwOK1ltmS3Xe8voR0Zc7nYnukqpzHjt8H2uMq1B4wFcwuOmr6gXD
- mAa7Xvcnw6/ZWDLnEAH+sR6CS4Ri8JwcfIXV3peaUAu+KwvzkuViADrEtf40uHC3BcZv
- 244ElyhRl/CJ9mOwiswvAalfi2DwuvknGmmr8a79DcRR6GmLUzlYjJTRLSogk0L4bjin
- C/RWWZRz9WYpOWz9PekONMfCrz5y1eZ0hcruxESdbrpdKWC1tmZuRjmHdwlntss1PFBe vw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2vqu4r0ya3-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 04:52:11 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O4nViS044083;
-        Thu, 24 Oct 2019 04:52:10 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2vu0fne695-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 04:52:10 +0000
-Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9O4q87k018019;
-        Thu, 24 Oct 2019 04:52:09 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 23 Oct 2019 21:52:08 -0700
-Date:   Wed, 23 Oct 2019 21:52:07 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] xfs: make sure the kernel and repair tools catch
- bad names
-Message-ID: <20191024045207.GF6706@magnolia>
-References: <157170897992.1172383.2128928990011336996.stgit@magnolia>
- <157170899277.1172383.10473571682266133494.stgit@magnolia>
- <20191024003106.GD6706@magnolia>
+        id S2407001AbfJXHe5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 03:34:57 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:42322 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727635AbfJXHe4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 03:34:56 -0400
+Received: from dread.disaster.area (pa49-181-161-154.pa.nsw.optusnet.com.au [49.181.161.154])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7528843E54F;
+        Thu, 24 Oct 2019 18:34:48 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iNXdu-0001Nj-RS; Thu, 24 Oct 2019 18:34:46 +1100
+Date:   Thu, 24 Oct 2019 18:34:46 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Boaz Harrosh <boaz@plexistor.com>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+Message-ID: <20191024073446.GA4614@dread.disaster.area>
+References: <20191020155935.12297-1-ira.weiny@intel.com>
+ <b7849297-e4a4-aaec-9a64-2b481663588b@plexistor.com>
+ <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
+ <20191023221332.GE2044@dread.disaster.area>
+ <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191024003106.GD6706@magnolia>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910240044
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910240044
+In-Reply-To: <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
+        a=l3vQdJ1SkhDHY1nke8Lmag==:117 a=l3vQdJ1SkhDHY1nke8Lmag==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=QyXUC8HyAAAA:8 a=7-415B0cAAAA:8 a=Tfe4Wh1HrYWVbsmHChwA:9
+        a=eAQsJKfVFY_lWVYV:21 a=XZNTOILeClruhaqN:21 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 23, 2019 at 05:31:06PM -0700, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 24, 2019 at 05:31:13AM +0300, Boaz Harrosh wrote:
+> On 24/10/2019 01:13, Dave Chinner wrote:
+> > On Wed, Oct 23, 2019 at 04:09:50PM +0300, Boaz Harrosh wrote:
+> >> On 22/10/2019 14:21, Boaz Harrosh wrote:
+> >>> On 20/10/2019 18:59, ira.weiny@intel.com wrote:
+> >> Please explain the use case behind your model?
+> > 
+> > No application changes needed to control whether they use DAX or
+> > not. It allows the admin to control the application behaviour
+> > completely, so they can turn off DAX if necessary. Applications are
+> > unaware of constraints that may prevent DAX from being used, and so
+> > admins need a mechanism to prevent DAX aware application from
+> > actually using DAX if the capability is present.
+> > 
+> > e.g. given how slow some PMEM devices are when it comes to writing
+> > data, especially under extremely high concurrency, DAX is not
+> > necessarily a performance win for every application. Admins need a
+> > guaranteed method of turning off DAX in these situations - apps may
+> > not provide such a knob, or even be aware of a thing called DAX...
+> > 
 > 
-> Make sure we actually catch bad names in the kernel.
+> Thank you Dave for explaining. Forgive my slowness. I now understand
+> your intention.
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
-> v2: fix various things as pointed out by Eryu
+> But if so please address my first concern. That in the submitted implementation
+> you must set the flag-bit after the create of the file but before the write.
+> So exactly the above slow writes must always be DAX if I ever want the file
+> to be DAX accessed in the future.
 
-Self NAK, I found some bugs in this test and withdraw this patch.
+The on disk DAX flag is inherited from the parent directory at
+create time. Hence an admin only need to set it on the data
+directory of the application when first configuring it, and
+everything the app creates will be configured for DAX access
+automatically.
 
---D
+Or, alternatively, mkfs sets the flag on the root dir so that
+everything in the filesystem uses DAX by default (through
+inheritance) unless the admin turns off the flag on a directory
+before it starts to be used or on a set of files after they have
+been created (because DAX causes problems)...
 
-> ---
->  tests/xfs/749     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/749.out |    3 ++
->  tests/xfs/group   |    1 +
->  3 files changed, 110 insertions(+)
->  create mode 100755 tests/xfs/749
->  create mode 100644 tests/xfs/749.out
-> 
-> diff --git a/tests/xfs/749 b/tests/xfs/749
-> new file mode 100755
-> index 00000000..e8371351
-> --- /dev/null
-> +++ b/tests/xfs/749
-> @@ -0,0 +1,106 @@
-> +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0-or-newer
-> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
-> +#
-> +# FS QA Test No. 749
-> +#
-> +# See if we catch corrupt directory names or attr names with nulls or slashes
-> +# in them.
-> +
-> +seq=`basename $0`
-> +seqres=$RESULT_DIR/$seq
-> +echo "QA output created by $seq"
-> +
-> +here=`pwd`
-> +tmp=/tmp/$$
-> +status=1    # failure is the default!
-> +trap "_cleanup; exit \$status" 0 1 2 3 15
-> +
-> +_cleanup()
-> +{
-> +	cd /
-> +	$UMOUNT_PROG $mntpt > /dev/null 2>&1
-> +	test -n "$loopdev" && _destroy_loop_device $loopdev > /dev/null 2>&1
-> +	rm -r -f $imgfile $mntpt $tmp.*
-> +}
-> +
-> +# get standard environment, filters and checks
-> +. ./common/rc
-> +. ./common/filter
-> +. ./common/attr
-> +
-> +# real QA test starts here
-> +_supported_fs xfs
-> +_supported_os Linux
-> +_require_test
-> +_require_attrs
-> +
-> +rm -f $seqres.full
-> +
-> +imgfile=$TEST_DIR/img-$seq
-> +mntpt=$TEST_DIR/mount-$seq
-> +testdir=$mntpt/testdir
-> +testfile=$mntpt/testfile
-> +nullstr="too_many_beans"
-> +slashstr="are_bad_for_you"
-> +
-> +# Format image file
-> +$XFS_IO_PROG -f -c 'truncate 40m' $imgfile
-> +loopdev=$(_create_loop_device $imgfile)
-> +_mkfs_dev $loopdev >> $seqres.full
-> +
-> +# Mount image file
-> +mkdir -p $mntpt
-> +_mount $loopdev $mntpt
-> +
-> +# Create directory entries
-> +mkdir -p $testdir
-> +touch $testdir/$nullstr
-> +touch $testdir/$slashstr
-> +
-> +# Create attrs
-> +touch $testfile
-> +$ATTR_PROG -s $nullstr -V heh $testfile >> $seqres.full
-> +$ATTR_PROG -s $slashstr -V heh $testfile >> $seqres.full
-> +
-> +# Corrupt the entries
-> +$UMOUNT_PROG $mntpt
-> +_destroy_loop_device $loopdev
-> +cp $imgfile $imgfile.old
-> +sed -b \
-> +	-e "s/$nullstr/too_many\x00beans/g" \
-> +	-e "s/$slashstr/are_bad\/for_you/g" \
-> +	-i $imgfile
-> +test "$(md5sum < $imgfile)" != "$(md5sum < $imgfile.old)" ||
-> +	_fail "sed failed to change the image file?"
-> +rm -f $imgfile.old
-> +loopdev=$(_create_loop_device $imgfile)
-> +_mount $loopdev $mntpt
-> +
-> +# Try to access the corrupt metadata
-> +ls $testdir >> $seqres.full 2> $tmp.err
-> +$ATTR_PROG -l $testfile >> $seqres.full 2>> $tmp.err
-> +cat $tmp.err >> $seqres.full
-> +cat $tmp.err | _filter_test_dir | sed -e '/Could not list/d'
-> +
-> +# Does scrub complain about this?
-> +if _supports_xfs_scrub $mntpt $loopdev; then
-> +	$XFS_SCRUB_PROG -n $mntpt >> $seqres.full 2>&1
-> +	res=$?
-> +	test $((res & 1)) -eq 0 && \
-> +		echo "scrub failed to report corruption ($res)"
-> +fi
-> +
-> +# Does repair complain about this?
-> +$UMOUNT_PROG $mntpt
-> +$XFS_REPAIR_PROG -n $loopdev >> $seqres.full 2>&1
-> +res=$?
-> +test $res -eq 1 || \
-> +	echo "repair failed to report corruption ($res)"
-> +
-> +_destroy_loop_device $loopdev
-> +loopdev=
-> +
-> +# success, all done
-> +status=0
-> +exit
-> diff --git a/tests/xfs/749.out b/tests/xfs/749.out
-> new file mode 100644
-> index 00000000..db3b1beb
-> --- /dev/null
-> +++ b/tests/xfs/749.out
-> @@ -0,0 +1,3 @@
-> +QA output created by 749
-> +ls: cannot access 'TEST_DIR/mount-749/testdir': Structure needs cleaning
-> +attr_list: Structure needs cleaning
-> diff --git a/tests/xfs/group b/tests/xfs/group
-> index f4ebcd8c..9600cb4e 100644
-> --- a/tests/xfs/group
-> +++ b/tests/xfs/group
-> @@ -507,3 +507,4 @@
->  509 auto ioctl
->  510 auto ioctl quick
->  511 auto quick quota
-> +749 auto quick fuzzers
+So, yeah, there's another problem with the basic assertion that we
+only need to allow the on disk flag to be changed on zero length
+files: we actually want to be able to -clear- the DAX flag when the
+file has data attached to it, not just when it is an empty file...
+
+> What if, say in XFS when setting the DAX-bit we take all the three write-locks
+> same as a truncate. Then we check that there are no active page-cache mappings
+> ie. a single opener. Then allow to set the bit. Else return EBUISY. (file is in use)
+
+DAX doesn't have page cache mappings, so anything that relies on
+checking page cache state isn't going to work reliably. I also seem
+to recall that there was a need to take some vm level lock to really
+prevent page fault races, and that we can't safely take that in a
+safe combination with all the filesystem locks we need.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
