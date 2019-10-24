@@ -7,74 +7,73 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E0B4CA9EBC
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 00:33:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E68CCA9EBC
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 00:34:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 238AD2173B
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 00:33:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4DB8D2084C
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 00:34:02 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CngUBRgO"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="gmZF2i8o"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2389946AbfJXAdM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 23 Oct 2019 20:33:12 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:53280 "EHLO
+        id S2404828AbfJXAeB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 23 Oct 2019 20:34:01 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:54090 "EHLO
         userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2388218AbfJXAdM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Oct 2019 20:33:12 -0400
+        with ESMTP id S2388218AbfJXAeB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 23 Oct 2019 20:34:01 -0400
 Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O0DXKS126625;
-        Thu, 24 Oct 2019 00:33:09 GMT
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O0Xxak139370;
+        Thu, 24 Oct 2019 00:33:59 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=d8UFSEH+Rs/WbpqACyX9R/6kc084HbjEoc+RebD09e0=;
- b=CngUBRgOASB/bLDAIOXI7LbmGQLzf+wMUTIeF1CWjZu+tm7HafErEupOqX86h2xLt639
- LZpaBrdEouQSq5KbmKh9uM0UnHbgD7I4RuSxo77ViNEKf/uTLNcFEkLXzX8r3JBYIHmA
- NgpI5WRyAn+BL/DYEGKWQ47k4u7cxxpd3Abg1kNOq8zIMAbeNXhxXLFH4jS6ZiUazSfV
- 5160D0EnFzranbnbY+uddnGvyDL+4Ztbk+g+K//RGGMqRLLwug4/umXIcnSIS/K4mKHQ
- /4Wa0E2m4JYy7whqLt371qsWPlmGL9CBX/mqD2uBqFcjiOWy5paAksXXFo95vQfXWq9d Wg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2130.oracle.com with ESMTP id 2vqswtrn4j-1
+ bh=Yp88jRNHDAFa6HkOyrP3/IicedvCpq9E5P+Iukyemnk=;
+ b=gmZF2i8ooE+O4wgzUDzTHmGGjrCcetbyo5y5pyokvSCv/PxKO6HA68KZB46DReS7RPSX
+ 18Q+jLL+YqgTA0UFU8xD/XMM3QbBvKwvbXjcBYf/TI7Lu9T0NCqW61GTjd9VQGmpZfFf
+ gTbxq6baSnNaavK0GCN9VUnfuAhazLe5HB5J+5ghWycynxCaDz3TpS7EA00JivXSPp9g
+ kkzPu0t1YsD4dIzS37FnStb/MlymVBfWo0dxiX3SwjIU7Q0CDYSWzObiIpbMumHJnstW
+ vvu67Mrzbf4T74hENun46gR8qWRAZi8JKRjIzJyE8FxUpb0j5pg28LTep4oRNOvNTKmx IQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2vqswtrn5f-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 00:33:09 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O0CxiP195434;
-        Thu, 24 Oct 2019 00:31:09 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2vtm23a5s6-1
+        Thu, 24 Oct 2019 00:33:59 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O0XRO0074495;
+        Thu, 24 Oct 2019 00:33:58 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2vtsk36d51-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 00:31:08 +0000
-Received: from abhmp0009.oracle.com (abhmp0009.oracle.com [141.146.116.15])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9O0V7Av007315;
-        Thu, 24 Oct 2019 00:31:07 GMT
+        Thu, 24 Oct 2019 00:33:58 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9O0XwlI011591;
+        Thu, 24 Oct 2019 00:33:58 GMT
 Received: from localhost (/10.159.148.95)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 23 Oct 2019 17:31:07 -0700
-Date:   Wed, 23 Oct 2019 17:31:06 -0700
+        with ESMTP ; Wed, 23 Oct 2019 17:33:57 -0700
+Date:   Wed, 23 Oct 2019 17:33:56 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     guaneryu@gmail.com
-Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
-Subject: [PATCH v2 2/2] xfs: make sure the kernel and repair tools catch bad
- names
-Message-ID: <20191024003106.GD6706@magnolia>
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org,
+        Allison Collins <allison.henderson@oracle.com>
+Subject: [PATCH 3/2] generic: check storing and re-reading timestamps
+Message-ID: <20191024003356.GE6706@magnolia>
 References: <157170897992.1172383.2128928990011336996.stgit@magnolia>
- <157170899277.1172383.10473571682266133494.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157170899277.1172383.10473571682266133494.stgit@magnolia>
+In-Reply-To: <157170897992.1172383.2128928990011336996.stgit@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910240000
+ engine=8.0.1-1908290000 definitions=main-1910240001
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910240000
+ definitions=main-1910240001
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -82,33 +81,34 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Make sure we actually catch bad names in the kernel.
+Add a test to make sure that we can store and retrieve timestamps
+without corrupting them.  Note that this is likely to fail on older
+kernels that do not clamp timestamps properly, though at least in my
+book that counts as corruption.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
-v2: fix various things as pointed out by Eryu
----
- tests/xfs/749     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++++++
- tests/xfs/749.out |    3 ++
- tests/xfs/group   |    1 +
- 3 files changed, 110 insertions(+)
- create mode 100755 tests/xfs/749
- create mode 100644 tests/xfs/749.out
+ tests/generic/721     |  102 +++++++++++++++++++++++++++++++++++++++++++++++++
+ tests/generic/721.out |    1 
+ tests/generic/group   |    1 
+ 3 files changed, 104 insertions(+)
+ create mode 100755 tests/generic/721
+ create mode 100644 tests/generic/721.out
 
-diff --git a/tests/xfs/749 b/tests/xfs/749
+diff --git a/tests/generic/721 b/tests/generic/721
 new file mode 100755
-index 00000000..e8371351
+index 00000000..711d3c5f
 --- /dev/null
-+++ b/tests/xfs/749
-@@ -0,0 +1,106 @@
++++ b/tests/generic/721
+@@ -0,0 +1,102 @@
 +#! /bin/bash
-+# SPDX-License-Identifier: GPL-2.0-or-newer
++# SPDX-License-Identifier: GPL-2.0-or-later
 +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
 +#
-+# FS QA Test No. 749
++# FS QA Test No. 721
 +#
-+# See if we catch corrupt directory names or attr names with nulls or slashes
-+# in them.
++# Make sure we can store and retrieve timestamps on the extremes of the
++# supported date ranges.
 +
 +seq=`basename $0`
 +seqres=$RESULT_DIR/$seq
@@ -122,106 +122,100 @@ index 00000000..e8371351
 +_cleanup()
 +{
 +	cd /
-+	$UMOUNT_PROG $mntpt > /dev/null 2>&1
-+	test -n "$loopdev" && _destroy_loop_device $loopdev > /dev/null 2>&1
-+	rm -r -f $imgfile $mntpt $tmp.*
++	rm -f $tmp.*
 +}
 +
 +# get standard environment, filters and checks
 +. ./common/rc
-+. ./common/filter
-+. ./common/attr
 +
 +# real QA test starts here
-+_supported_fs xfs
 +_supported_os Linux
-+_require_test
-+_require_attrs
++_supported_fs generic
++_require_scratch
 +
 +rm -f $seqres.full
 +
-+imgfile=$TEST_DIR/img-$seq
-+mntpt=$TEST_DIR/mount-$seq
-+testdir=$mntpt/testdir
-+testfile=$mntpt/testfile
-+nullstr="too_many_beans"
-+slashstr="are_bad_for_you"
++_scratch_mkfs > $seqres.full
++_scratch_mount
 +
-+# Format image file
-+$XFS_IO_PROG -f -c 'truncate 40m' $imgfile
-+loopdev=$(_create_loop_device $imgfile)
-+_mkfs_dev $loopdev >> $seqres.full
++# Does our userspace even support large dates?
++test_bigdates=1
++touch -d 'May 30 01:53:03 UTC 2514' $SCRATCH_MNT 2>/dev/null || test_bigdates=0
 +
-+# Mount image file
-+mkdir -p $mntpt
-+_mount $loopdev $mntpt
++# And can we do statx?
++test_statx=1
++($XFS_IO_PROG -c 'help statx' | grep -q 'Print raw statx' && \
++ $XFS_IO_PROG -c 'statx -r' $SCRATCH_MNT 2>/dev/null | grep -q 'stat.mtime') || \
++	test_statx=0
 +
-+# Create directory entries
-+mkdir -p $testdir
-+touch $testdir/$nullstr
-+touch $testdir/$slashstr
++echo "Userspace support of large timestamps: $test_bigdates" >> $seqres.full
++echo "xfs_io support of statx: $test_statx" >> $seqres.full
 +
-+# Create attrs
-+touch $testfile
-+$ATTR_PROG -s $nullstr -V heh $testfile >> $seqres.full
-+$ATTR_PROG -s $slashstr -V heh $testfile >> $seqres.full
++touchme() {
++	local arg="$1"
++	local name="$2"
 +
-+# Corrupt the entries
-+$UMOUNT_PROG $mntpt
-+_destroy_loop_device $loopdev
-+cp $imgfile $imgfile.old
-+sed -b \
-+	-e "s/$nullstr/too_many\x00beans/g" \
-+	-e "s/$slashstr/are_bad\/for_you/g" \
-+	-i $imgfile
-+test "$(md5sum < $imgfile)" != "$(md5sum < $imgfile.old)" ||
-+	_fail "sed failed to change the image file?"
-+rm -f $imgfile.old
-+loopdev=$(_create_loop_device $imgfile)
-+_mount $loopdev $mntpt
++	touch -d "$arg" $SCRATCH_MNT/t_$name
++}
 +
-+# Try to access the corrupt metadata
-+ls $testdir >> $seqres.full 2> $tmp.err
-+$ATTR_PROG -l $testfile >> $seqres.full 2>> $tmp.err
-+cat $tmp.err >> $seqres.full
-+cat $tmp.err | _filter_test_dir | sed -e '/Could not list/d'
++report() {
++	local files=($SCRATCH_MNT $SCRATCH_MNT/t_*)
++	TZ=UTC stat -c '%y %Y %n' "${files[@]}"
++	test $test_statx -gt 0 && \
++		$XFS_IO_PROG -c 'statx -r' "${files[@]}" | grep 'stat.mtime'
++}
 +
-+# Does scrub complain about this?
-+if _supports_xfs_scrub $mntpt $loopdev; then
-+	$XFS_SCRUB_PROG -n $mntpt >> $seqres.full 2>&1
-+	res=$?
-+	test $((res & 1)) -eq 0 && \
-+		echo "scrub failed to report corruption ($res)"
++# -2147483648 (S32_MIN, or classic unix min)
++touchme 'Dec 13 20:45:52 UTC 1901' s32_min
++
++# 2147483647 (S32_MAX, or classic unix max)
++touchme 'Jan 19 03:14:07 UTC 2038' s32_max
++
++if [ $test_bigdates -gt 0 ]; then
++	# 15032385535 (u34 time if you start from s32_min, like ext4 does)
++	touchme 'May 10 22:38:55 UTC 2446' u34_from_s32_min
++
++	# 17179869183 (u34 time if you start from the unix epoch)
++	touchme 'May 30 01:53:03 UTC 2514' u34_max
++
++	# Latest date we can synthesize(?)
++	touchme 'Dec 31 23:59:59 UTC 2147483647' abs_max_time
++
++	# Earliest date we can synthesize(?)
++	touchme 'Jan 1 00:00:00 UTC 0' abs_min_time
 +fi
 +
-+# Does repair complain about this?
-+$UMOUNT_PROG $mntpt
-+$XFS_REPAIR_PROG -n $loopdev >> $seqres.full 2>&1
-+res=$?
-+test $res -eq 1 || \
-+	echo "repair failed to report corruption ($res)"
++# Query timestamps from incore
++echo before >> $seqres.full
++report > $tmp.times0
++cat $tmp.times0 >> $seqres.full
 +
-+_destroy_loop_device $loopdev
-+loopdev=
++_scratch_cycle_mount
++
++# Query timestamps from disk
++echo after >> $seqres.full
++report > $tmp.times1
++cat $tmp.times1 >> $seqres.full
++
++# Did they match?
++cmp -s $tmp.times0 $tmp.times1
 +
 +# success, all done
 +status=0
 +exit
-diff --git a/tests/xfs/749.out b/tests/xfs/749.out
+diff --git a/tests/generic/721.out b/tests/generic/721.out
 new file mode 100644
-index 00000000..db3b1beb
+index 00000000..087decb5
 --- /dev/null
-+++ b/tests/xfs/749.out
-@@ -0,0 +1,3 @@
-+QA output created by 749
-+ls: cannot access 'TEST_DIR/mount-749/testdir': Structure needs cleaning
-+attr_list: Structure needs cleaning
-diff --git a/tests/xfs/group b/tests/xfs/group
-index f4ebcd8c..9600cb4e 100644
---- a/tests/xfs/group
-+++ b/tests/xfs/group
-@@ -507,3 +507,4 @@
- 509 auto ioctl
- 510 auto ioctl quick
- 511 auto quick quota
-+749 auto quick fuzzers
++++ b/tests/generic/721.out
+@@ -0,0 +1 @@
++QA output created by 721
+diff --git a/tests/generic/group b/tests/generic/group
+index 6f9c4e12..a49d4b11 100644
+--- a/tests/generic/group
++++ b/tests/generic/group
+@@ -581,3 +581,4 @@
+ 576 auto quick verity encrypt
+ 577 auto quick verity
+ 578 auto quick rw clone
++721 auto quick atime
