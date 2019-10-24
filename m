@@ -2,352 +2,318 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 56EC6CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 22:43:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 434CDCA9EAF
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 23:13:40 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C42B21BE5
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 22:43:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0BB2A21A4C
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 23:13:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CUg84uSM"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731889AbfJXWnO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 18:43:14 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:42595 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725897AbfJXWnO (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 18:43:14 -0400
-Received: from dread.disaster.area (pa49-181-161-154.pa.nsw.optusnet.com.au [49.181.161.154])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id EBAEF363A6C;
-        Fri, 25 Oct 2019 09:43:09 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iNloy-0006kF-F8; Fri, 25 Oct 2019 09:43:08 +1100
-Date:   Fri, 25 Oct 2019 09:43:08 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH RFC] xfs: automatic log item relogging experiment
-Message-ID: <20191024224308.GD4614@dread.disaster.area>
-References: <20191024172850.7698-1-bfoster@redhat.com>
+        id S1726716AbfJXXNj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 19:13:39 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:50128 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726683AbfJXXNj (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 19:13:39 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ON8swE025643;
+        Thu, 24 Oct 2019 23:13:07 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ewQar+arDr9zB/YUcp2XWykJTKyGO0o2ETqgydYNous=;
+ b=CUg84uSMEhEh0KgW8g1L9qT9Wh+m0tYug0LlTHrj/QaIdMb9ZEk36H5RmL+qdE2wKGLb
+ CNHysL2VUXRQmjiuyh5NN45jRuTF/r7TFijWL1hNIaj6k5hjgCfC69+P0Gn4liHmJ6OY
+ BiXOcI+in/p3yXUPl8zJRIIxe8DRdn8+6Jd187V+WR4LMy4MT7oOObze4+WUbQUQIZzk
+ 7HNLWYbtziYIYL83ieN3BwSot60NXweKC0u8PSyDOY891NlTH0I1L+PwpW8JYXI1LCw8
+ vrREtTM+gn+VsQTYNTrXdWg/eEfLPFLbMkliNhx4zGFIa52n0ie63XNey5rtPsyLUp+g xg== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2vqu4r6jqc-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Oct 2019 23:13:07 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ON7ewx073772;
+        Thu, 24 Oct 2019 23:13:06 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by aserp3030.oracle.com with ESMTP id 2vunbk05hk-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Oct 2019 23:13:06 +0000
+Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9OND0Qu016355;
+        Thu, 24 Oct 2019 23:13:00 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 24 Oct 2019 16:13:00 -0700
+Date:   Thu, 24 Oct 2019 16:12:58 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Ian Kent <raven@themaw.net>
+Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
+        Christoph Hellwig <hch@infradead.org>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@ZenIV.linux.org.uk>
+Subject: Re: [PATCH v7 09/17] xfs: add xfs_remount_rw() helper
+Message-ID: <20191024231258.GZ913374@magnolia>
+References: <157190333868.27074.13987695222060552856.stgit@fedora-28>
+ <157190348247.27074.12897905716268545882.stgit@fedora-28>
+ <20191024153123.GS913374@magnolia>
+ <90501efd6808a0816dbdf03b508130136bc8a94e.camel@themaw.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191024172850.7698-1-bfoster@redhat.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=l3vQdJ1SkhDHY1nke8Lmag==:117 a=l3vQdJ1SkhDHY1nke8Lmag==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8 a=eJfxgxciAAAA:8 a=7-415B0cAAAA:8
-        a=oA2jwj3hEAKrBop-0WYA:9 a=jqgrwSNKIsSY4bJC:21 a=PvKXyZcw2UeU4OcH:21
-        a=CjuIK1q_8ugA:10 a=AjGcO6oz07-iQ99wixmX:22 a=xM9caqqi1sUkTy8OJ5Uh:22
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <90501efd6808a0816dbdf03b508130136bc8a94e.camel@themaw.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910240218
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910240218
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 24, 2019 at 01:28:50PM -0400, Brian Foster wrote:
-> An experimental mechanism to automatically relog specified log
-> items.  This is useful for long running operations, like quotaoff,
-> that otherwise risk deadlocking on log space usage.
+On Fri, Oct 25, 2019 at 05:53:08AM +0800, Ian Kent wrote:
+> On Thu, 2019-10-24 at 08:31 -0700, Darrick J. Wong wrote:
+> > On Thu, Oct 24, 2019 at 03:51:22PM +0800, Ian Kent wrote:
+> > > Factor the remount read write code into a helper to simplify the
+> > > subsequent change from the super block method .remount_fs to the
+> > > mount-api fs_context_operations method .reconfigure.
+> > > 
+> > > This helper is only used by the mount code, so locate it along with
+> > > that code.
+> > > 
+> > > While we are at it change STATIC -> static for
+> > > xfs_restore_resvblks().
+> > > 
+> > > Signed-off-by: Ian Kent <raven@themaw.net>
+> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
+> > > ---
+> > >  fs/xfs/xfs_super.c |  119 +++++++++++++++++++++++++++++-----------
+> > > ------------
+> > >  1 file changed, 67 insertions(+), 52 deletions(-)
+> > > 
+> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> > > index 297e6c98742e..c07e41489e75 100644
+> > > --- a/fs/xfs/xfs_super.c
+> > > +++ b/fs/xfs/xfs_super.c
+> > > @@ -47,6 +47,8 @@ static struct kset *xfs_kset;		/* top-
+> > > level xfs sysfs dir */
+> > >  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs
+> > > attrs */
+> > >  #endif
+> > >  
+> > > +static void xfs_restore_resvblks(struct xfs_mount *mp);
+> > 
+> > What's the reason for putting xfs_remount_rw above
+> > xfs_restore_resvblks?
+> > I assume that's related to where you want to land later code chunks?
 > 
-> Not-signed-off-by: Brian Foster <bfoster@redhat.com>
-> ---
+> In the cover letter:
 > 
-> Hi all,
+> Note: the patches "xfs: add xfs_remount_rw() helper" and
+>  "xfs: add xfs_remount_ro() helper" that have Reviewed-by attributions
+>  each needed a forward declartion added due grouping all the mount
+>  related code together. Reviewers may want to check the attribution
+>  is still acceptable.
 > 
-> This is an experiment that came out of a discussion with Darrick[1] on
-> some design bits of the latest online btree repair work. Specifically,
-> it logs free intents in the same transaction as block allocation to
-> guard against inconsistency in the event of a crash during the repair
-> sequence. These intents happen pin the log tail for an indeterminate
-> amount of time. Darrick was looking for some form of auto relog
-> mechanism to facilitate this general approach. It occurred to us that
-> this is the same problem we've had with quotaoff for some time, so I
-> figured it might be worth prototyping something against that to try and
-> prove the concept.
-
-Interesting idea. :)
-
+> The fill super method needs quite a few more forward declarations
+> too.
 > 
-> Note that this is RFC because the code and interfaces are a complete
-> mess and this is broken in certain ways. This occasionally triggers log
-> reservation overrun shutdowns because transaction reservation checking
-> has not yet been added, the cancellation path is overkill, etc. IOW, the
-> purpose of this patch is purely to test a concept.
-
-*nod*
-
-> The concept is essentially to flag a log item for relogging on first
-> transaction commit such that once it commits to the AIL, the next
-> transaction that happens to commit with sufficient unused reservation
-> opportunistically relogs the item to the current CIL context. For the
-> log intent case, the transaction that commits the done item is required
-> to cancel the relog state of the original intent to prevent further
-> relogging.
-
-Makes sense, but it seems like we removed the hook that would be
-used by transactions to implement their own relogging on CIL commit
-some time ago because nothign had used it for 15+ years....
-
-> In practice, this allows a log item to automatically roll through CIL
-> checkpoints and not pin the tail of the log while something like a
-> quotaoff is running for a potentially long period of time. This is
-> applied to quotaoff and focused testing shows that it avoids the
-> associated deadlock.
-
-Hmmm. How do we deal with multiple identical intents being found in
-checkpoints with different LSNs in log recovery?
-
-> Thoughts, reviews, flames appreciated.
+> I responded to Christoph's suggestion of grouping the mount code
+> together saying this would be needed, and that I thought the
+> improvement of grouping the code together was worth the forward
+> declarations, and asked if anyone had a different POV on it and
+> got no replies, ;)
 > 
-> [1] https://lore.kernel.org/linux-xfs/20191018143856.GA25763@bfoster/
+> The other thing is that the options definitions notionally belong
+> near the top of the mount/super block handling code so moving it
+> all down seemed like the wrong thing to do ...
 > 
->  fs/xfs/xfs_log_cil.c     | 69 ++++++++++++++++++++++++++++++++++++++++
->  fs/xfs/xfs_log_priv.h    |  6 ++++
->  fs/xfs/xfs_qm_syscalls.c | 13 ++++++++
->  fs/xfs/xfs_trace.h       |  2 ++
->  fs/xfs/xfs_trans.c       |  4 +++
->  fs/xfs/xfs_trans.h       |  4 ++-
->  6 files changed, 97 insertions(+), 1 deletion(-)
+> So what do you think of the extra noise of forward declarations
+> in this case?
+
+Eh, fine with me.  I was just curious, having speed-read over the
+previous iterations. :)
+
+--D
+
+> Ian
 > 
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index a1204424a938..b2d8b2d54df6 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -75,6 +75,33 @@ xlog_cil_iovec_space(
->  			sizeof(uint64_t));
->  }
->  
-> +static void
-> +xlog_cil_relog_items(
-> +	struct xlog		*log,
-> +	struct xfs_trans	*tp)
-> +{
-> +	struct xfs_cil		*cil = log->l_cilp;
-> +	struct xfs_log_item	*lip;
-> +
-> +	ASSERT(tp->t_flags & XFS_TRANS_DIRTY);
-> +
-> +	if (list_empty(&cil->xc_relog))
-> +		return;
-> +
-> +	/* XXX: need to check trans reservation, process multiple items, etc. */
-> +	spin_lock(&cil->xc_relog_lock);
-> +	lip = list_first_entry_or_null(&cil->xc_relog, struct xfs_log_item, li_cil);
-> +	if (lip)
-> +		list_del_init(&lip->li_cil);
-> +	spin_unlock(&cil->xc_relog_lock);
-> +
-> +	if (lip) {
-> +		xfs_trans_add_item(tp, lip);
-> +		set_bit(XFS_LI_DIRTY, &lip->li_flags);
-> +		trace_xfs_cil_relog(lip);
-> +	}
-
-I don't think this is safe - the log item needs to be locked to be
-joined to a transaction. Hence this can race with whatever is
-committing the done intent on the object and removing it from the
-relog list and so the item could be clean (and potentially even
-freed) by the time we go to add it to this transaction and mark it
-dirty again...
-
-> +}
-> +
->  /*
->   * Allocate or pin log vector buffers for CIL insertion.
->   *
-> @@ -1001,6 +1028,8 @@ xfs_log_commit_cil(
->  	struct xfs_log_item	*lip, *next;
->  	xfs_lsn_t		xc_commit_lsn;
->  
-> +	xlog_cil_relog_items(log, tp);
-
-Hmmm. This means that when there are relog items on the list, all
-the transactional concurrency is going to be put onto the
-xc_relog_lock spin lock. THis is potentially a major lock contention
-point, especially if there are lots of items that need relogging.
-
-> +
->  	/*
->  	 * Do all necessary memory allocation before we lock the CIL.
->  	 * This ensures the allocation does not deadlock with a CIL
-> @@ -1196,6 +1225,8 @@ xlog_cil_init(
->  	spin_lock_init(&cil->xc_push_lock);
->  	init_rwsem(&cil->xc_ctx_lock);
->  	init_waitqueue_head(&cil->xc_commit_wait);
-> +	INIT_LIST_HEAD(&cil->xc_relog);
-> +	spin_lock_init(&cil->xc_relog_lock);
->  
->  	INIT_LIST_HEAD(&ctx->committing);
->  	INIT_LIST_HEAD(&ctx->busy_extents);
-> @@ -1223,3 +1254,41 @@ xlog_cil_destroy(
->  	kmem_free(log->l_cilp);
->  }
->  
-> +void
-> +xfs_cil_relog_item(
-> +	struct xlog		*log,
-> +	struct xfs_log_item	*lip)
-> +{
-> +	struct xfs_cil		*cil = log->l_cilp;
-> +
-> +	ASSERT(test_bit(XFS_LI_RELOG, &lip->li_flags));
-> +	ASSERT(list_empty(&lip->li_cil));
-
-So this can't be used for things like inodes and buffers?
-
-> +	spin_lock(&cil->xc_relog_lock);
-> +	list_add_tail(&lip->li_cil, &cil->xc_relog);
-> +	spin_unlock(&cil->xc_relog_lock);
-> +
-> +	trace_xfs_cil_relog_queue(lip);
-> +}
-> +
-> +bool
-> +xfs_cil_relog_steal(
-> +	struct xlog		*log,
-> +	struct xfs_log_item	*lip)
-> +{
-> +	struct xfs_cil		*cil = log->l_cilp;
-> +	struct xfs_log_item	*pos, *ppos;
-> +	bool			ret = false;
-> +
-> +	spin_lock(&cil->xc_relog_lock);
-> +	list_for_each_entry_safe(pos, ppos, &cil->xc_relog, li_cil) {
-> +		if (pos == lip) {
-> +			list_del_init(&pos->li_cil);
-> +			ret = true;
-> +			break;
-> +		}
-> +	}
-> +	spin_unlock(&cil->xc_relog_lock);
-
-This is a remove operation, not a "steal" operation. But why are
-we walking the relog list to find it? It would be much better to use
-a flag to indicate what list the item is on, and then this just
-becomes
-
-	spin_lock(&cil->xc_relog_lock);
-	if (test_and_clear_bit(XFS_LI_RELOG_LIST, &lip->li_flags))
-		list_del_init(&pos->li_cil);
-	spin_unlock(&cil->xc_relog_lock);
-
-
-
-> @@ -556,6 +558,16 @@ xfs_qm_log_quotaoff_end(
->  					flags & XFS_ALL_QUOTA_ACCT);
->  	xfs_trans_log_quotaoff_item(tp, qoffi);
->  
-> +	/*
-> +	 * XXX: partly open coded relog of the start item to ensure no relogging
-> +	 * after this point.
-> +	 */
-> +	clear_bit(XFS_LI_RELOG, &startqoff->qql_item.li_flags);
-> +	if (xfs_cil_relog_steal(mp->m_log, &startqoff->qql_item)) {
-> +		xfs_trans_add_item(tp, &startqoff->qql_item);
-> +		xfs_trans_log_quotaoff_item(tp, startqoff);
-> +	}
-
-Urk. :)
-
-> @@ -863,6 +864,9 @@ xfs_trans_committed_bulk(
->  		if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) == 0)
->  			continue;
->  
-> +		if (test_bit(XFS_LI_RELOG, &lip->li_flags))
-> +			xfs_cil_relog_item(lip->li_mountp->m_log, lip);
-
-Ok, so this is moving the item from commit back onto the relog list.
-This is going to hammer the relog lock on workloads where there is a
-lot of transaction concurrency and a substantial number of items on
-the relog list....
-
-----
-
-Ok, so I mentioned that we removed the hooks that could have been
-used for this some time ago.
-
-What we actually want here is a notification that an object needs
-relogging. I can see how appealing the concept of automatically
-relogging is, but I'm unconvinced that we can make it work,
-especially when there aren't sufficient reservations to relog
-the items that need relogging.
-
-commit d420e5c810bce5debce0238021b410d0ef99cf08
-Author: Dave Chinner <dchinner@redhat.com>
-Date:   Tue Oct 15 09:17:53 2013 +1100
-
-    xfs: remove unused transaction callback variables
-    
-    We don't do callbacks at transaction commit time, no do we have any
-    infrastructure to set up or run such callbacks, so remove the
-    variables and typedefs for these operations. If we ever need to add
-    callbacks, we can reintroduce the variables at that time.
-    
-    Signed-off-by: Dave Chinner <dchinner@redhat.com>
-    Reviewed-by: Ben Myers <bpm@sgi.com>
-    Signed-off-by: Ben Myers <bpm@sgi.com>
-
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 09cf40b89e8c..71c835e9e810 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -85,18 +85,11 @@ struct xfs_item_ops {
- #define XFS_ITEM_LOCKED                2
- #define XFS_ITEM_FLUSHING      3
- 
--/*
-- * This is the type of function which can be given to xfs_trans_callback()
-- * to be called upon the transaction's commit to disk.
-- */
--typedef void (*xfs_trans_callback_t)(struct xfs_trans *, void *);
--
- /*
-  * This is the structure maintained for every active transaction.
-  */
- typedef struct xfs_trans {
-        unsigned int            t_magic;        /* magic number */
--       xfs_log_callback_t      t_logcb;        /* log callback struct */
-        unsigned int            t_type;         /* transaction type */
-        unsigned int            t_log_res;      /* amt of log space resvd */
-        unsigned int            t_log_count;    /* count for perm log res */
-
-That's basically the functionality we want here - when the log item
-hits the journal, we want a callback to tell us so we can relog it
-ourselves if deemed necessary. i.e. it's time to reintroduce the
-transaction/log commit callback infrastructure...
-
-This would get used in conjunction with a permanent transaction
-reservation, allowing the owner of the object to keep it locked over
-transaction commit (while whatever work is running between intent
-and done), and the transaction commit turns into a trans_roll. Then
-we reserve space for the next relogging commit, and go about our
-business.
-
-On notification of the intent being logged, the relogging work
-(which already has a transaction and a reservation) can be dumped to
-a workqueue (to get it out of iclog completion context) and the item
-relogged and the transaction rolled and re-reserved again.
-
-This would work with any type of log item, not just intents, and it
-doesn't have any reservation "stealing" requirements. ANd because
-we've pre-reserved the log space for the relogging transaction, the
-relogging callback will never get hung up on it's own items
-preventing it from getting more log space.
-
-i.e. we essentially make use of the existing relogging mechanism,
-just with callbacks to trigger periodic relogging of the items for
-long running transactions...
-
-Thoughts?
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > 
+> > --D
+> > 
+> > > +
+> > >  /*
+> > >   * Table driven mount option parser.
+> > >   */
+> > > @@ -455,6 +457,68 @@ xfs_mount_free(
+> > >  	kmem_free(mp);
+> > >  }
+> > >  
+> > > +static int
+> > > +xfs_remount_rw(
+> > > +	struct xfs_mount	*mp)
+> > > +{
+> > > +	struct xfs_sb		*sbp = &mp->m_sb;
+> > > +	int			error;
+> > > +
+> > > +	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+> > > +		xfs_warn(mp,
+> > > +			"ro->rw transition prohibited on norecovery
+> > > mount");
+> > > +		return -EINVAL;
+> > > +	}
+> > > +
+> > > +	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> > > +	    xfs_sb_has_ro_compat_feature(sbp,
+> > > XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
+> > > +		xfs_warn(mp,
+> > > +	"ro->rw transition prohibited on unknown (0x%x) ro-compat
+> > > filesystem",
+> > > +			(sbp->sb_features_ro_compat &
+> > > +				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
+> > > +		return -EINVAL;
+> > > +	}
+> > > +
+> > > +	mp->m_flags &= ~XFS_MOUNT_RDONLY;
+> > > +
+> > > +	/*
+> > > +	 * If this is the first remount to writeable state we might
+> > > have some
+> > > +	 * superblock changes to update.
+> > > +	 */
+> > > +	if (mp->m_update_sb) {
+> > > +		error = xfs_sync_sb(mp, false);
+> > > +		if (error) {
+> > > +			xfs_warn(mp, "failed to write sb changes");
+> > > +			return error;
+> > > +		}
+> > > +		mp->m_update_sb = false;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * Fill out the reserve pool if it is empty. Use the stashed
+> > > value if
+> > > +	 * it is non-zero, otherwise go with the default.
+> > > +	 */
+> > > +	xfs_restore_resvblks(mp);
+> > > +	xfs_log_work_queue(mp);
+> > > +
+> > > +	/* Recover any CoW blocks that never got remapped. */
+> > > +	error = xfs_reflink_recover_cow(mp);
+> > > +	if (error) {
+> > > +		xfs_err(mp,
+> > > +			"Error %d recovering leftover CoW
+> > > allocations.", error);
+> > > +			xfs_force_shutdown(mp,
+> > > SHUTDOWN_CORRUPT_INCORE);
+> > > +		return error;
+> > > +	}
+> > > +	xfs_start_block_reaping(mp);
+> > > +
+> > > +	/* Create the per-AG metadata reservation pool .*/
+> > > +	error = xfs_fs_reserve_ag_blocks(mp);
+> > > +	if (error && error != -ENOSPC)
+> > > +		return error;
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > >  struct proc_xfs_info {
+> > >  	uint64_t	flag;
+> > >  	char		*str;
+> > > @@ -1169,7 +1233,7 @@ xfs_save_resvblks(struct xfs_mount *mp)
+> > >  	xfs_reserve_blocks(mp, &resblks, NULL);
+> > >  }
+> > >  
+> > > -STATIC void
+> > > +static void
+> > >  xfs_restore_resvblks(struct xfs_mount *mp)
+> > >  {
+> > >  	uint64_t resblks;
+> > > @@ -1307,57 +1371,8 @@ xfs_fs_remount(
+> > >  
+> > >  	/* ro -> rw */
+> > >  	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & SB_RDONLY))
+> > > {
+> > > -		if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
+> > > -			xfs_warn(mp,
+> > > -		"ro->rw transition prohibited on norecovery mount");
+> > > -			return -EINVAL;
+> > > -		}
+> > > -
+> > > -		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
+> > > -		    xfs_sb_has_ro_compat_feature(sbp,
+> > > -					XFS_SB_FEAT_RO_COMPAT_UNKNOWN))
+> > > {
+> > > -			xfs_warn(mp,
+> > > -"ro->rw transition prohibited on unknown (0x%x) ro-compat
+> > > filesystem",
+> > > -				(sbp->sb_features_ro_compat &
+> > > -					XFS_SB_FEAT_RO_COMPAT_UNKNOWN))
+> > > ;
+> > > -			return -EINVAL;
+> > > -		}
+> > > -
+> > > -		mp->m_flags &= ~XFS_MOUNT_RDONLY;
+> > > -
+> > > -		/*
+> > > -		 * If this is the first remount to writeable state we
+> > > -		 * might have some superblock changes to update.
+> > > -		 */
+> > > -		if (mp->m_update_sb) {
+> > > -			error = xfs_sync_sb(mp, false);
+> > > -			if (error) {
+> > > -				xfs_warn(mp, "failed to write sb
+> > > changes");
+> > > -				return error;
+> > > -			}
+> > > -			mp->m_update_sb = false;
+> > > -		}
+> > > -
+> > > -		/*
+> > > -		 * Fill out the reserve pool if it is empty. Use the
+> > > stashed
+> > > -		 * value if it is non-zero, otherwise go with the
+> > > default.
+> > > -		 */
+> > > -		xfs_restore_resvblks(mp);
+> > > -		xfs_log_work_queue(mp);
+> > > -
+> > > -		/* Recover any CoW blocks that never got remapped. */
+> > > -		error = xfs_reflink_recover_cow(mp);
+> > > -		if (error) {
+> > > -			xfs_err(mp,
+> > > -	"Error %d recovering leftover CoW allocations.", error);
+> > > -			xfs_force_shutdown(mp,
+> > > SHUTDOWN_CORRUPT_INCORE);
+> > > -			return error;
+> > > -		}
+> > > -		xfs_start_block_reaping(mp);
+> > > -
+> > > -		/* Create the per-AG metadata reservation pool .*/
+> > > -		error = xfs_fs_reserve_ag_blocks(mp);
+> > > -		if (error && error != -ENOSPC)
+> > > +		error = xfs_remount_rw(mp);
+> > > +		if (error)
+> > >  			return error;
+> > >  	}
+> > >  
+> > > 
+> 
