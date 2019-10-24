@@ -2,472 +2,233 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DF926CA9EBC
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 04:47:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0FD65CA9EBC
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 04:52:15 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B5EC121928
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 04:47:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DA0C621925
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 04:52:14 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="La6VXPtr"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iyxI6uCk"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2408362AbfJXEr2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 00:47:28 -0400
-Received: from us-smtp-1.mimecast.com ([205.139.110.61]:20526 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1725811AbfJXEr2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 00:47:28 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571892445;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=zeiB/AJJWnZpMI6Wf5exg+Ey2tgYEfh1gZ4mMp6pcuc=;
-        b=La6VXPtrOPUFI/PEk3MNpzHK0K3zrpOAwINLAq6PtfyLIm/AJ2VO6HkJDGHgSFQfsyaouv
-        nVU+RBQgIqLV2xf2r6SyinTdQlPRM23Nq9WWRPnlFYjLGU6aWp8Aqxejurm1SO8+qVmlcV
-        WJlcN1I9tUWQpQuHaMS+d1iQoNXWqWM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-266-QMca1ie-Mo-REyQ-vz62Ig-1; Thu, 24 Oct 2019 00:47:21 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 093EC107AD31;
-        Thu, 24 Oct 2019 04:47:21 +0000 (UTC)
-Received: from donald.localdomain (vpn2-54-113.bne.redhat.com [10.64.54.113])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 77263600CC;
-        Thu, 24 Oct 2019 04:47:20 +0000 (UTC)
-Received: from localhost (localhost [IPv6:::1])
-        by donald.localdomain (Postfix) with ESMTP id F0C3928013F;
-        Thu, 24 Oct 2019 12:47:17 +0800 (AWST)
-Message-ID: <b2056efe3bd3cb17811442ca4a8720b9d51e087d.camel@redhat.com>
-Subject: Re: [PATCH] xfstests: xfs mount option sanity test
-From:   Ian Kent <ikent@redhat.com>
-To:     Zorro Lang <zlang@redhat.com>, fstests@vger.kernel.org
-Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 24 Oct 2019 12:47:17 +0800
-In-Reply-To: <20191022100118.18506-1-zlang@redhat.com>
-References: <20191022100118.18506-1-zlang@redhat.com>
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30)
+        id S2406616AbfJXEwO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 00:52:14 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:33740 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725811AbfJXEwO (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 00:52:14 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O4nXp6087722;
+        Thu, 24 Oct 2019 04:52:11 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=D86G79K9s9/7971GwIzFZC91QrznxheLFioXcWmQ+cQ=;
+ b=iyxI6uCkMeJdThun5PAtNxraZzqC6QSXWLl8pDwzWNThWGjjhWpsnSc14CIWxx/QFqsl
+ e0xFsLhEKAyzQtlPAwOK1ltmS3Xe8voR0Zc7nYnukqpzHjt8H2uMq1B4wFcwuOmr6gXD
+ mAa7Xvcnw6/ZWDLnEAH+sR6CS4Ri8JwcfIXV3peaUAu+KwvzkuViADrEtf40uHC3BcZv
+ 244ElyhRl/CJ9mOwiswvAalfi2DwuvknGmmr8a79DcRR6GmLUzlYjJTRLSogk0L4bjin
+ C/RWWZRz9WYpOWz9PekONMfCrz5y1eZ0hcruxESdbrpdKWC1tmZuRjmHdwlntss1PFBe vw== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2vqu4r0ya3-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Oct 2019 04:52:11 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9O4nViS044083;
+        Thu, 24 Oct 2019 04:52:10 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by aserp3020.oracle.com with ESMTP id 2vu0fne695-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Thu, 24 Oct 2019 04:52:10 +0000
+Received: from abhmp0019.oracle.com (abhmp0019.oracle.com [141.146.116.25])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9O4q87k018019;
+        Thu, 24 Oct 2019 04:52:09 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 23 Oct 2019 21:52:08 -0700
+Date:   Wed, 23 Oct 2019 21:52:07 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     guaneryu@gmail.com
+Cc:     linux-xfs@vger.kernel.org, fstests@vger.kernel.org
+Subject: Re: [PATCH v2 2/2] xfs: make sure the kernel and repair tools catch
+ bad names
+Message-ID: <20191024045207.GF6706@magnolia>
+References: <157170897992.1172383.2128928990011336996.stgit@magnolia>
+ <157170899277.1172383.10473571682266133494.stgit@magnolia>
+ <20191024003106.GD6706@magnolia>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-MC-Unique: QMca1ie-Mo-REyQ-vz62Ig-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191024003106.GD6706@magnolia>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910240044
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9419 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910240044
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2019-10-22 at 18:01 +0800, Zorro Lang wrote:
-> XFS is changing to suit the new mount API, so add this case to make
-> sure the changing won't bring in regression issue on xfs mount option
-> parse phase, and won't change some default behaviors either.
-
-I think this isn't quite right:
-
-[root@f30 xfstests-dev]# diff -u /home/raven/xfstests-dev/tests/xfs/148.out=
- /home/raven/xfstests-dev/results//xfs/148.out.bad
---- /home/raven/xfstests-dev/tests/xfs/148.out=092019-10-24 09:27:27.304929=
-313 +0800
-+++ /home/raven/xfstests-dev/results//xfs/148.out.bad=092019-10-24 10:42:40=
-.739436223 +0800
-@@ -3,4 +3,10 @@
- ** create loop log device
- ** create loop mount point
- ** start xfs mount testing ...
-+[FAILED]: mount /dev/loop0 /mnt/test/148.mnt=20
-+ERROR: expect there's logbufs in rw,relatime,seclabel,attr2,inode64,logbuf=
-s=3D8,logbsize=3D32k,noquota, but not found
-+[FAILED]: mount /dev/loop0 /mnt/test/148.mnt=20
-+ERROR: expect there's logbsize in rw,relatime,seclabel,attr2,inode64,logbu=
-fs=3D8,logbsize=3D32k,noquota, but not found
-+[FAILED]: mount /dev/loop0 /mnt/test/148.mnt=20
-+ERROR: expect there's logbsize in rw,relatime,seclabel,attr2,inode64,logbu=
-fs=3D8,logbsize=3D32k,noquota, but not found
- ** end of testing
-
-Above logbufs and logbsize are present in the options string but
-an error is reported.
-
-Ian
-
->=20
-> Signed-off-by: Zorro Lang <zlang@redhat.com>
+On Wed, Oct 23, 2019 at 05:31:06PM -0700, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Make sure we actually catch bad names in the kernel.
+> 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > ---
->  tests/xfs/148     | 315
-> ++++++++++++++++++++++++++++++++++++++++++++++
->  tests/xfs/148.out |   6 +
->  tests/xfs/group   |   1 +
->  3 files changed, 322 insertions(+)
->  create mode 100755 tests/xfs/148
->  create mode 100644 tests/xfs/148.out
->=20
-> diff --git a/tests/xfs/148 b/tests/xfs/148
+> v2: fix various things as pointed out by Eryu
+
+Self NAK, I found some bugs in this test and withdraw this patch.
+
+--D
+
+> ---
+>  tests/xfs/749     |  106 +++++++++++++++++++++++++++++++++++++++++++++++++++++
+>  tests/xfs/749.out |    3 ++
+>  tests/xfs/group   |    1 +
+>  3 files changed, 110 insertions(+)
+>  create mode 100755 tests/xfs/749
+>  create mode 100644 tests/xfs/749.out
+> 
+> diff --git a/tests/xfs/749 b/tests/xfs/749
 > new file mode 100755
-> index 00000000..5c268f18
+> index 00000000..e8371351
 > --- /dev/null
-> +++ b/tests/xfs/148
-> @@ -0,0 +1,315 @@
+> +++ b/tests/xfs/749
+> @@ -0,0 +1,106 @@
 > +#! /bin/bash
-> +# SPDX-License-Identifier: GPL-2.0
-> +# Copyright (c) 2019 Red Hat, Inc. All Rights Reserved.
+> +# SPDX-License-Identifier: GPL-2.0-or-newer
+> +# Copyright (c) 2019, Oracle and/or its affiliates.  All Rights Reserved.
 > +#
-> +# FS QA Test 148
+> +# FS QA Test No. 749
 > +#
-> +# XFS mount options sanity check, refer to 'man 5 xfs'.
-> +#
-> +seq=3D`basename $0`
-> +seqres=3D$RESULT_DIR/$seq
+> +# See if we catch corrupt directory names or attr names with nulls or slashes
+> +# in them.
+> +
+> +seq=`basename $0`
+> +seqres=$RESULT_DIR/$seq
 > +echo "QA output created by $seq"
 > +
-> +here=3D`pwd`
-> +tmp=3D/tmp/$$
-> +status=3D1=09# failure is the default!
+> +here=`pwd`
+> +tmp=/tmp/$$
+> +status=1    # failure is the default!
 > +trap "_cleanup; exit \$status" 0 1 2 3 15
 > +
 > +_cleanup()
 > +{
-> +=09cd /
-> +=09rm -f $tmp.*
-> +=09$UMOUNT_PROG $LOOP_MNT 2>/dev/null
-> +=09if [ -n "$LOOP_DEV" ];then
-> +=09=09_destroy_loop_device $LOOP_DEV 2>/dev/null
-> +=09fi
-> +=09if [ -n "$LOOP_SPARE_DEV" ];then
-> +=09=09_destroy_loop_device $LOOP_SPARE_DEV 2>/dev/null
-> +=09fi
-> +=09rm -f $LOOP_IMG
-> +=09rm -f $LOOP_SPARE_IMG
-> +=09rmdir $LOOP_MNT
+> +	cd /
+> +	$UMOUNT_PROG $mntpt > /dev/null 2>&1
+> +	test -n "$loopdev" && _destroy_loop_device $loopdev > /dev/null 2>&1
+> +	rm -r -f $imgfile $mntpt $tmp.*
 > +}
 > +
 > +# get standard environment, filters and checks
 > +. ./common/rc
 > +. ./common/filter
-> +
-> +# remove previous $seqres.full before test
-> +rm -f $seqres.full
+> +. ./common/attr
 > +
 > +# real QA test starts here
 > +_supported_fs xfs
 > +_supported_os Linux
 > +_require_test
-> +_require_loop
-> +_require_xfs_io_command "falloc"
+> +_require_attrs
 > +
-> +LOOP_IMG=3D$TEST_DIR/$seq.dev
-> +LOOP_SPARE_IMG=3D$TEST_DIR/$seq.logdev
-> +LOOP_MNT=3D$TEST_DIR/$seq.mnt
+> +rm -f $seqres.full
 > +
-> +echo "** create loop device"
-> +$XFS_IO_PROG -f -c "falloc 0 1g" $LOOP_IMG
-> +LOOP_DEV=3D`_create_loop_device $LOOP_IMG`
+> +imgfile=$TEST_DIR/img-$seq
+> +mntpt=$TEST_DIR/mount-$seq
+> +testdir=$mntpt/testdir
+> +testfile=$mntpt/testfile
+> +nullstr="too_many_beans"
+> +slashstr="are_bad_for_you"
 > +
-> +echo "** create loop log device"
-> +$XFS_IO_PROG -f -c "falloc 0 512m" $LOOP_SPARE_IMG
-> +LOOP_SPARE_DEV=3D`_create_loop_device $LOOP_SPARE_IMG`
+> +# Format image file
+> +$XFS_IO_PROG -f -c 'truncate 40m' $imgfile
+> +loopdev=$(_create_loop_device $imgfile)
+> +_mkfs_dev $loopdev >> $seqres.full
 > +
-> +echo "** create loop mount point"
-> +rmdir $LOOP_MNT 2>/dev/null
-> +mkdir -p $LOOP_MNT || _fail "cannot create loopback mount point"
+> +# Mount image file
+> +mkdir -p $mntpt
+> +_mount $loopdev $mntpt
 > +
-> +# avoid the effection from MKFS_OPTIONS
-> +MKFS_OPTIONS=3D""
-> +do_mkfs()
-> +{
-> +=09$MKFS_XFS_PROG -f $* $LOOP_DEV | _filter_mkfs >$seqres.full
-> 2>$tmp.mkfs
-> +=09if [ "${PIPESTATUS[0]}" -ne 0 ]; then
-> +=09=09_fail "Fails on _mkfs_dev $* $LOOP_DEV"
-> +=09fi
-> +=09. $tmp.mkfs
-> +}
+> +# Create directory entries
+> +mkdir -p $testdir
+> +touch $testdir/$nullstr
+> +touch $testdir/$slashstr
 > +
-> +is_dev_mounted()
-> +{
-> +=09findmnt --source $LOOP_DEV >/dev/null
-> +=09return $?
-> +}
+> +# Create attrs
+> +touch $testfile
+> +$ATTR_PROG -s $nullstr -V heh $testfile >> $seqres.full
+> +$ATTR_PROG -s $slashstr -V heh $testfile >> $seqres.full
 > +
-> +get_mount_info()
-> +{
-> +=09findmnt --source $LOOP_DEV -o OPTIONS -n
-> +}
+> +# Corrupt the entries
+> +$UMOUNT_PROG $mntpt
+> +_destroy_loop_device $loopdev
+> +cp $imgfile $imgfile.old
+> +sed -b \
+> +	-e "s/$nullstr/too_many\x00beans/g" \
+> +	-e "s/$slashstr/are_bad\/for_you/g" \
+> +	-i $imgfile
+> +test "$(md5sum < $imgfile)" != "$(md5sum < $imgfile.old)" ||
+> +	_fail "sed failed to change the image file?"
+> +rm -f $imgfile.old
+> +loopdev=$(_create_loop_device $imgfile)
+> +_mount $loopdev $mntpt
 > +
-> +force_unmount()
-> +{
-> +=09$UMOUNT_PROG $LOOP_MNT >/dev/null 2>&1
-> +}
+> +# Try to access the corrupt metadata
+> +ls $testdir >> $seqres.full 2> $tmp.err
+> +$ATTR_PROG -l $testfile >> $seqres.full 2>> $tmp.err
+> +cat $tmp.err >> $seqres.full
+> +cat $tmp.err | _filter_test_dir | sed -e '/Could not list/d'
 > +
-> +# _do_test <mount options> <should be mounted?> [<key string> <key
-> should be found?>]
-> +_do_test()
-> +{
-> +=09local opts=3D"$1"
-> +=09local mounted=3D"$2"=09# pass or fail
-> +=09local key=3D"$3"
-> +=09local found=3D"$4"=09# true or false
-> +=09local rc
-> +=09local info
-> +
-> +=09# mount test
-> +=09_mount $LOOP_DEV $LOOP_MNT $opts 2>/dev/null
-> +=09rc=3D$?
-> +=09if [ $rc -eq 0 ];then
-> +=09=09if [ "${mounted}" =3D "fail" ];then
-> +=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT
-> $opts"
-> +=09=09=09echo "ERROR: expect ${mounted}, but pass"
-> +=09=09=09return 1
-> +=09=09fi
-> +=09=09is_dev_mounted
-> +=09=09if [ $? -ne 0 ];then
-> +=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT
-> $opts"
-> +=09=09=09echo "ERROR: fs not mounted even mount return
-> 0"
-> +=09=09=09return 1
-> +=09=09fi
-> +=09else
-> +=09=09if [ "${mount_ret}" =3D "pass" ];then
-> +=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT
-> $opts"
-> +=09=09=09echo "ERROR: expect ${mounted}, but fail"
-> +=09=09=09return 1
-> +=09=09fi
-> +=09=09is_dev_mounted
-> +=09=09if [ $? -eq 0 ];then
-> +=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT
-> $opts"
-> +=09=09=09echo "ERROR: fs is mounted even mount return
-> non-zero"
-> +=09=09=09return 1
-> +=09=09fi
-> +=09fi
-> +
-> +=09# Skip below checking if "$key" argument isn't specified
-> +=09if [ -z "$key" ];then
-> +=09=09return 0
-> +=09fi
-> +=09# Check the mount options after fs mounted.
-> +=09info=3D`get_mount_info`
-> +=09echo $info | grep -q "${key}"
-> +=09rc=3D$?
-> +=09if [ $rc -eq 0 ];then
-> +=09=09if [ "$found" !=3D "true" ];then
-> +=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT
-> $opts"
-> +=09=09=09echo "ERROR: expect there's $key in $info, but
-> not found"
-> +=09=09=09return 1
-> +=09=09fi
-> +=09else
-> +=09=09if [ "$found" !=3D "false" ];then
-> +=09=09=09echo "[FAILED]: mount $LOOP_DEV $LOOP_MNT
-> $opts"
-> +=09=09=09echo "ERROR: expect there's not $key in $info,
-> but found"
-> +=09=09=09return 1
-> +=09=09fi
-> +=09fi
-> +
-> +=09return 0
-> +}
-> +
-> +do_test()
-> +{
-> +=09# force unmount before testing
-> +=09force_unmount
-> +=09_do_test "$@"
-> +=09# force unmount after testing
-> +=09force_unmount
-> +}
-> +
-> +echo "** start xfs mount testing ..."
-> +# Test allocsize=3Dsize
-> +# Valid values for this option are page size (typically 4KiB)
-> through to 1GiB
-> +do_mkfs
-> +if [ $dbsize -ge 1024 ];then
-> +=09blsize=3D"$((dbsize / 1024))k"
+> +# Does scrub complain about this?
+> +if _supports_xfs_scrub $mntpt $loopdev; then
+> +	$XFS_SCRUB_PROG -n $mntpt >> $seqres.full 2>&1
+> +	res=$?
+> +	test $((res & 1)) -eq 0 && \
+> +		echo "scrub failed to report corruption ($res)"
 > +fi
-> +do_test "" pass "allocsize" "false"
-> +do_test "-o allocsize=3D$blsize" pass "allocsize=3D$blsize" "true"
-> +do_test "-o allocsize=3D1048576k" pass "allocsize=3D1048576k" "true"
-> +do_test "-o allocsize=3D$((dbsize / 2))" fail
-> +do_test "-o allocsize=3D2g" fail
 > +
-> +# Test attr2
-> +do_mkfs -m crc=3D1
-> +do_test "" pass "attr2" "true"
-> +do_test "-o attr2" pass "attr2" "true"
-> +do_test "-o noattr2" fail
-> +do_mkfs -m crc=3D0
-> +do_test "" pass "attr2" "true"
-> +do_test "-o attr2" pass "attr2" "true"
-> +do_test "-o noattr2" pass "attr2" "false"
+> +# Does repair complain about this?
+> +$UMOUNT_PROG $mntpt
+> +$XFS_REPAIR_PROG -n $loopdev >> $seqres.full 2>&1
+> +res=$?
+> +test $res -eq 1 || \
+> +	echo "repair failed to report corruption ($res)"
 > +
-> +# Test discard
-> +do_mkfs
-> +do_test "" pass "discard" "false"
-> +do_test "-o discard" pass "discard" "true"
-> +do_test "-o nodiscard" pass "discard" "false"
+> +_destroy_loop_device $loopdev
+> +loopdev=
 > +
-> +# Test grpid|bsdgroups|nogrpid|sysvgroups
-> +do_test "" pass "grpid" "false"
-> +do_test "-o grpid" pass "grpid" "true"
-> +do_test "-o bsdgroups" pass "grpid" "true"
-> +do_test "-o nogrpid" pass "grpid" "false"
-> +do_test "-o sysvgroups" pass "grpid" "false"
-> +
-> +# Test filestreams
-> +do_test "" pass "filestreams" "false"
-> +do_test "-o filestreams" pass "filestreams" "true"
-> +
-> +# Test ikeep
-> +do_test "" pass "ikeep" "false"
-> +do_test "-o ikeep" pass "ikeep" "true"
-> +do_test "-o noikeep" pass "ikeep" "false"
-> +
-> +# Test inode32|inode64
-> +do_test "" pass "inode64" "true"
-> +do_test "-o inode32" pass "inode32" "true"
-> +do_test "-o inode64" pass "inode64" "true"
-> +
-> +# Test largeio
-> +do_test "" pass "largeio" "false"
-> +do_test "-o largeio" pass "largeio" "true"
-> +do_test "-o nolargeio" pass "largeio" "false"
-> +
-> +# Test logbufs=3Dvalue. Valid numbers range from 2=E2=80=938 inclusive.
-> +do_test "" pass "logbufs" "false"
-> +do_test "-o logbufs=3D8" pass "logbufs=3D8" "true"
-> +do_test "-o logbufs=3D2" pass "logbufs=3D2" "true"
-> +do_test "-o logbufs=3D1" fail
-> +###### but it gets logbufs=3D8 now, why? bug? #######
-> +# do_test "-o logbufs=3D0" fail
-> +do_test "-o logbufs=3D9" fail
-> +do_test "-o logbufs=3D99999999999999" fail
-> +
-> +# Test logbsize=3Dvalue.
-> +do_mkfs -m crc=3D1 -l version=3D2
-> +do_test "" pass "logbsize" "false"
-> +do_test "-o logbsize=3D16384" pass "logbsize=3D16k" "true"
-> +do_test "-o logbsize=3D16k" pass "logbsize=3D16k" "true"
-> +do_test "-o logbsize=3D32k" pass "logbsize=3D32k" "true"
-> +do_test "-o logbsize=3D64k" pass "logbsize=3D64k" "true"
-> +do_test "-o logbsize=3D128k" pass "logbsize=3D128k" "true"
-> +do_test "-o logbsize=3D256k" pass "logbsize=3D256k" "true"
-> +do_test "-o logbsize=3D8k" fail
-> +do_test "-o logbsize=3D512k" fail
-> +####### it's invalid, but it set to default size 32k
-> +# do_test "-o logbsize=3D0" false
-> +do_mkfs -m crc=3D0 -l version=3D1
-> +do_test "" pass "logbsize" "false"
-> +do_test "-o logbsize=3D16384" pass "logbsize=3D16k" "true"
-> +do_test "-o logbsize=3D16k" pass "logbsize=3D16k" "true"
-> +do_test "-o logbsize=3D32k" pass "logbsize=3D32k" "true"
-> +do_test "-o logbsize=3D64k" fail
-> +
-> +# Test logdev
-> +do_mkfs
-> +do_test "" pass "logdev" "false"
-> +do_test "-o logdev=3D$LOOP_SPARE_DEV" fail
-> +do_mkfs -l logdev=3D$LOOP_SPARE_DEV
-> +do_test "-o logdev=3D$LOOP_SPARE_DEV" pass "logdev=3D$LOOP_SPARE_DEV"
-> "true"
-> +do_test "" fail
-> +
-> +# Test noalign
-> +do_mkfs
-> +do_test "" pass "noalign" "false"
-> +do_test "-o noalign" pass "noalign" "true"
-> +
-> +# Test norecovery
-> +do_test "" pass "norecovery" "false"
-> +do_test "-o norecovery,ro" pass "norecovery" "true"
-> +do_test "-o norecovery" fail
-> +
-> +# Test nouuid
-> +do_test "" pass "nouuid" "false"
-> +do_test "-o nouuid" pass "nouuid" "true"
-> +
-> +# Test noquota
-> +do_test "" pass "noquota" "true"
-> +do_test "-o noquota" pass "noquota" "true"
-> +
-> +# Test uquota/usrquota/quota/uqnoenforce/qnoenforce
-> +do_test "" pass "usrquota" "false"
-> +do_test "-o uquota" pass "usrquota" "true"
-> +do_test "-o usrquota" pass "usrquota" "true"
-> +do_test "-o quota" pass "usrquota" "true"
-> +do_test "-o uqnoenforce" pass "usrquota" "true"
-> +do_test "-o qnoenforce" pass "usrquota" "true"
-> +
-> +# Test gquota/grpquota/gqnoenforce
-> +do_test "" pass "grpquota" "false"
-> +do_test "-o gquota" pass "grpquota" "true"
-> +do_test "-o grpquota" pass "grpquota" "true"
-> +do_test "-o gqnoenforce" pass "gqnoenforce" "true"
-> +
-> +# Test pquota/prjquota/pqnoenforce
-> +do_test "" pass "prjquota" "false"
-> +do_test "-o pquota" pass "prjquota" "true"
-> +do_test "-o prjquota" pass "prjquota" "true"
-> +do_test "-o pqnoenforce" pass "pqnoenforce" "true"
-> +
-> +# Test sunit=3Dvalue and swidth=3Dvalue
-> +do_mkfs -d sunit=3D128,swidth=3D128
-> +do_test "-o sunit=3D8,swidth=3D8" pass "sunit=3D8,swidth=3D8" "true"
-> +do_test "-o sunit=3D8,swidth=3D64" pass "sunit=3D8,swidth=3D64" "true"
-> +do_test "-o sunit=3D128,swidth=3D128" pass "sunit=3D128,swidth=3D128" "t=
-rue"
-> +do_test "-o sunit=3D256,swidth=3D256" pass "sunit=3D256,swidth=3D256" "t=
-rue"
-> +do_test "-o sunit=3D2,swidth=3D2" fail
-> +
-> +# Test swalloc
-> +do_mkfs
-> +do_test "" pass "swalloc" "false"
-> +do_test "-o swalloc" pass "swalloc" "true"
-> +
-> +# Test wsync
-> +do_test "" pass "wsync" "false"
-> +do_test "-o wsync" pass "wsync" "true"
-> +
-> +echo "** end of testing"
 > +# success, all done
-> +status=3D0
+> +status=0
 > +exit
-> diff --git a/tests/xfs/148.out b/tests/xfs/148.out
+> diff --git a/tests/xfs/749.out b/tests/xfs/749.out
 > new file mode 100644
-> index 00000000..a71d9231
+> index 00000000..db3b1beb
 > --- /dev/null
-> +++ b/tests/xfs/148.out
-> @@ -0,0 +1,6 @@
-> +QA output created by 148
-> +** create loop device
-> +** create loop log device
-> +** create loop mount point
-> +** start xfs mount testing ...
-> +** end of testing
+> +++ b/tests/xfs/749.out
+> @@ -0,0 +1,3 @@
+> +QA output created by 749
+> +ls: cannot access 'TEST_DIR/mount-749/testdir': Structure needs cleaning
+> +attr_list: Structure needs cleaning
 > diff --git a/tests/xfs/group b/tests/xfs/group
-> index f4ebcd8c..019aebad 100644
+> index f4ebcd8c..9600cb4e 100644
 > --- a/tests/xfs/group
 > +++ b/tests/xfs/group
-> @@ -145,6 +145,7 @@
->  145 dmapi
->  146 dmapi
->  147 dmapi
-> +148 auto quick mount
->  150 dmapi
->  151 dmapi
->  152 dmapi
-
+> @@ -507,3 +507,4 @@
+>  509 auto ioctl
+>  510 auto ioctl quick
+>  511 auto quick quota
+> +749 auto quick fuzzers
