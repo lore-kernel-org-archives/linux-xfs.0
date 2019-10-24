@@ -2,179 +2,133 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EFADACA9EAF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 18:35:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C4EACA9EAF
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 21:35:17 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B2F2921925
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 18:35:04 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eliSfbUc"
+	by mail.kernel.org (Postfix) with ESMTP id 1367221929
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 21:35:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2504068AbfJXSfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 14:35:04 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:39074 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726155AbfJXSfD (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 14:35:03 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9OIYZDW001178
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=MEA7Ty16uUnq++Q02UlKQChHnb+/rNM5LqCBdqmTl+8=;
- b=eliSfbUc3ht8uIWlT68axhnJmAKprZk6YyZYw/ME6QNFKClCR5a+RuVqmkEw1Gy6KleC
- Xapjw/dN1YoIB1/HV6HiXA9XKcKp3hvG8wGEgk7LTO7iy26955O0ornG4+A8n2ORFhs7
- b1uRqm6XwcxVfTJGOVemlDIGRu22I9foePc+O3jO8vsU6EXXCGjRCqaXos0YwvhgMphT
- lIhuUv+vtUIO5l9MgFXO2kpWvyE6rj1bH2wrs5wXmBQgXwy21eURtsObAUbZKNWoVx7M
- N9jOz/F9Zg1HcQqo0j1C5MbwvGv3lL2KrA3nqF/Kn7yvjH1yFRhO54rwiZyAW8v+q8Ol tQ== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2vqu4r5a72-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:01 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9OIRoXl124538
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:00 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by aserp3020.oracle.com with ESMTP id 2vu0fptgaf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:00 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9OIZ0JJ007029
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:00 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Oct 2019 11:34:59 -0700
-Date:   Thu, 24 Oct 2019 11:34:59 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 3dd4d40b4208
-Message-ID: <20191024183459.GY913374@magnolia>
+        id S1729470AbfJXVfQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 17:35:16 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45749 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726386AbfJXVfQ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 17:35:16 -0400
+Received: from dread.disaster.area (pa49-181-161-154.pa.nsw.optusnet.com.au [49.181.161.154])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 7386F43F07B;
+        Fri, 25 Oct 2019 08:35:09 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iNklA-0006Nu-K4; Fri, 25 Oct 2019 08:35:08 +1100
+Date:   Fri, 25 Oct 2019 08:35:08 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Boaz Harrosh <boaz@plexistor.com>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+Message-ID: <20191024213508.GB4614@dread.disaster.area>
+References: <20191020155935.12297-1-ira.weiny@intel.com>
+ <b7849297-e4a4-aaec-9a64-2b481663588b@plexistor.com>
+ <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
+ <20191023221332.GE2044@dread.disaster.area>
+ <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+ <20191024073446.GA4614@dread.disaster.area>
+ <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910240173
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910240174
+In-Reply-To: <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
+        a=l3vQdJ1SkhDHY1nke8Lmag==:117 a=l3vQdJ1SkhDHY1nke8Lmag==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=7-415B0cAAAA:8 a=Qt9MKOuts2txuSNu_AQA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+On Thu, Oct 24, 2019 at 05:05:45PM +0300, Boaz Harrosh wrote:
+> On 24/10/2019 10:34, Dave Chinner wrote:
+> > On Thu, Oct 24, 2019 at 05:31:13AM +0300, Boaz Harrosh wrote:
+> <>
+> > 
+> > The on disk DAX flag is inherited from the parent directory at
+> > create time. Hence an admin only need to set it on the data
+> > directory of the application when first configuring it, and
+> > everything the app creates will be configured for DAX access
+> > automatically.
+> > 
+> 
+> Yes I said that as well.
 
-The for-next branch of the xfs-linux repository at:
+You said "it must be set between creation and first write",
+stating the requirement for an on-disk flag to work. I'm
+decribing how that requirement is actually implemented. i.e. what
+you are stating is something we actually implemented years ago...
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+> > I also seem
+> > to recall that there was a need to take some vm level lock to really
+> > prevent page fault races, and that we can't safely take that in a
+> > safe combination with all the filesystem locks we need.
+> > 
+> 
+> We do not really care with page fault races in the Kernel as long
 
-has just been updated.
+Oh yes we do. A write fault is a 2-part operation - a read fault to
+populate the pte and mapping, then a write fault (->page_mkwrite) to 
+do all the filesystem work needed to dirty the page and pte.
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  Yeah, I'm still looking through the mount api
-conversion series.
+The read fault sets up the state for the write fault, and if we
+change the aops between these two operations, then the
+->page_mkwrite implementation goes kaboom.
 
-The new head of the for-next branch is commit:
+This isn't a theoretical problem - this is exactly the race
+condition that lead us to disabling the flag in the first place.
+There is no serialisation between the read and write parts of the
+page fault iand the filesystem changing the DAX flag and ops vector,
+and so fixing this problem requires hold yet more locks in the
+filesystem path to completely lock out page fault processing on the
+inode's mapping.
 
-3dd4d40b4208 xfs: Sanity check flags of Q_XQUOTARM call
+> as I protect the xarray access and these are protected well if we
+> take truncate locking. But we have a bigger problem that you pointed
+> out with the change of the operations vector pointer.
+> 
+> I was thinking about this last night. One way to do this is with
+> file-exclusive-lock. Correct me if I'm wrong:
+> file-exclusive-readwrite-lock means any other openers will fail and
+> if there are openers already the lock will fail. Which is what we want
+> no?
 
-New Commits:
+The filesystem ioctls and page faults have no visibility of file
+locks.  They don't know and can't find out in a sane manner that an
+inode has a single -user- reference.
 
-Ben Dooks (Codethink) (1):
-      [1aa6300638e7] xfs: add mising include of xfs_pnfs.h for missing declarations
+And it introduces a new problem for any application using the
+fssetxattr() ioctl - accidentally not setting the S_DAX flag to be
+unmodified will now fail, and that means such a change breaks
+existing applications. Sure, you can say they are "buggy
+applications", but the fact is this user API change breaks them.
 
-Brian Foster (12):
-      [f6b428a46d60] xfs: track active state of allocation btree cursors
-      [f5e7dbea1e3e] xfs: introduce allocation cursor data structure
-      [d6d3aff20377] xfs: track allocation busy state in allocation cursor
-      [c62321a2a0ea] xfs: track best extent from cntbt lastblock scan in alloc cursor
-      [396bbf3c657e] xfs: refactor cntbt lastblock scan best extent logic into helper
-      [fec0afdaf498] xfs: reuse best extent tracking logic for bnobt scan
-      [4a65b7c2c72c] xfs: refactor allocation tree fixup code
-      [78d7aabdeea3] xfs: refactor and reuse best extent scanning logic
-      [0e26d5ca4a40] xfs: refactor near mode alloc bnobt scan into separate function
-      [d29688257fd4] xfs: factor out tree fixup logic into helper
-      [dc8e69bd7218] xfs: optimize near mode bnobt scans with concurrent cntbt lookups
-      [da781e64b28c] xfs: don't set bmapi total block req where minleft is
+Hence I don't think we can change the user API for setting/clearing
+this flag like this.
 
-Christoph Hellwig (21):
-      [bdb2ed2dbdc2] xfs: ignore extent size hints for always COW inodes
-      [cd95cb962b7d] xfs: pass the correct flag to xlog_write_iclog
-      [2c68a1dfbd8e] xfs: remove the unused ic_io_size field from xlog_in_core
-      [390aab0a1640] xfs: move the locking from xlog_state_finish_copy to the callers
-      [df732b29c807] xfs: call xlog_state_release_iclog with l_icloglock held
-      [032cc34ed517] xfs: remove dead ifdef XFSERRORDEBUG code
-      [fe9c0e77acc5] xfs: remove the unused XLOG_STATE_ALL and XLOG_STATE_UNUSED flags
-      [1858bb0bec61] xfs: turn ic_state into an enum
-      [4b29ab04ab0d] xfs: remove the XLOG_STATE_DO_CALLBACK state
-      [0d45e3a20822] xfs: also call xfs_file_iomap_end_delalloc for zeroing operations
-      [dd26b84640cc] xfs: remove xfs_reflink_dirty_extents
-      [ffb375a8cf20] xfs: pass two imaps to xfs_reflink_allocate_cow
-      [ae36b53c6c60] xfs: refactor xfs_file_iomap_begin_delay
-      [36adcbace24e] xfs: fill out the srcmap in iomap_begin
-      [43568226a4a3] xfs: factor out a helper to calculate the end_fsb
-      [690c2a38878e] xfs: split out a new set of read-only iomap ops
-      [a526c85c2236] xfs: move xfs_file_iomap_begin_delay around
-      [f150b4234397] xfs: split the iomap ops for buffered vs direct writes
-      [12dfb58af61d] xfs: rename the whichfork variable in xfs_buffered_write_iomap_begin
-      [5c5b6f7585d2] xfs: cleanup xfs_direct_write_iomap_begin
-      [1e190f8e8098] xfs: improve the IOMAP_NOWAIT check for COW inodes
+Cheers,
 
-Dave Chinner (2):
-      [3f8a4f1d876d] xfs: fix inode fork extent count overflow
-      [1c743574de8b] xfs: cap longest free extent to maximum allocatable
-
-Jan Kara (1):
-      [3dd4d40b4208] xfs: Sanity check flags of Q_XQUOTARM call
-
-kaixuxia (1):
-      [3fb21fc8cc04] xfs: remove the duplicated inode log fieldmask set
-
-yu kuai (1):
-      [e5e634041bc1] xfs: include QUOTA, FATAL ASSERT build options in XFS_BUILD_OPTIONS
-
-
-Code Diffstat:
-
- fs/xfs/libxfs/xfs_alloc.c       | 900 +++++++++++++++++++++++-----------------
- fs/xfs/libxfs/xfs_alloc_btree.c |   1 +
- fs/xfs/libxfs/xfs_attr_leaf.c   |  18 +-
- fs/xfs/libxfs/xfs_bmap.c        |  19 +-
- fs/xfs/libxfs/xfs_btree.h       |   3 +
- fs/xfs/libxfs/xfs_dir2_sf.c     |   2 +-
- fs/xfs/libxfs/xfs_iext_tree.c   |   2 +-
- fs/xfs/libxfs/xfs_inode_fork.c  |   8 +-
- fs/xfs/libxfs/xfs_inode_fork.h  |  14 +-
- fs/xfs/xfs_aops.c               |   9 +-
- fs/xfs/xfs_bmap_util.c          |   7 +-
- fs/xfs/xfs_dquot.c              |   4 +-
- fs/xfs/xfs_file.c               |  23 +-
- fs/xfs/xfs_inode.c              |   7 +-
- fs/xfs/xfs_iomap.c              | 679 +++++++++++++++---------------
- fs/xfs/xfs_iomap.h              |   4 +-
- fs/xfs/xfs_iops.c               |   6 +-
- fs/xfs/xfs_log.c                | 428 ++++++++-----------
- fs/xfs/xfs_log_cil.c            |   2 +-
- fs/xfs/xfs_log_priv.h           |  25 +-
- fs/xfs/xfs_pnfs.c               |   1 +
- fs/xfs/xfs_quotaops.c           |   3 +
- fs/xfs/xfs_reflink.c            | 138 +-----
- fs/xfs/xfs_reflink.h            |   4 +-
- fs/xfs/xfs_rtalloc.c            |   3 +-
- fs/xfs/xfs_super.h              |  10 +
- fs/xfs/xfs_trace.h              |  33 +-
- 27 files changed, 1187 insertions(+), 1166 deletions(-)
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
