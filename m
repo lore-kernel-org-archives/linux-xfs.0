@@ -2,318 +2,215 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 434CDCA9EAF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 23:13:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1AFD3CA9EAF
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 23:29:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0BB2A21A4C
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 23:13:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id CF8A9205F4
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 23:29:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CUg84uSM"
+	dkim=pass (2048-bit key) header.d=plexistor-com.20150623.gappssmtp.com header.i=@plexistor-com.20150623.gappssmtp.com header.b="fq94FQCV"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726716AbfJXXNj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 19:13:39 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:50128 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726683AbfJXXNj (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 19:13:39 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ON8swE025643;
-        Thu, 24 Oct 2019 23:13:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=ewQar+arDr9zB/YUcp2XWykJTKyGO0o2ETqgydYNous=;
- b=CUg84uSMEhEh0KgW8g1L9qT9Wh+m0tYug0LlTHrj/QaIdMb9ZEk36H5RmL+qdE2wKGLb
- CNHysL2VUXRQmjiuyh5NN45jRuTF/r7TFijWL1hNIaj6k5hjgCfC69+P0Gn4liHmJ6OY
- BiXOcI+in/p3yXUPl8zJRIIxe8DRdn8+6Jd187V+WR4LMy4MT7oOObze4+WUbQUQIZzk
- 7HNLWYbtziYIYL83ieN3BwSot60NXweKC0u8PSyDOY891NlTH0I1L+PwpW8JYXI1LCw8
- vrREtTM+gn+VsQTYNTrXdWg/eEfLPFLbMkliNhx4zGFIa52n0ie63XNey5rtPsyLUp+g xg== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2vqu4r6jqc-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 23:13:07 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9ON7ewx073772;
-        Thu, 24 Oct 2019 23:13:06 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2vunbk05hk-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 24 Oct 2019 23:13:06 +0000
-Received: from abhmp0013.oracle.com (abhmp0013.oracle.com [141.146.116.19])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9OND0Qu016355;
-        Thu, 24 Oct 2019 23:13:00 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Oct 2019 16:13:00 -0700
-Date:   Thu, 24 Oct 2019 16:12:58 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH v7 09/17] xfs: add xfs_remount_rw() helper
-Message-ID: <20191024231258.GZ913374@magnolia>
-References: <157190333868.27074.13987695222060552856.stgit@fedora-28>
- <157190348247.27074.12897905716268545882.stgit@fedora-28>
- <20191024153123.GS913374@magnolia>
- <90501efd6808a0816dbdf03b508130136bc8a94e.camel@themaw.net>
+        id S1731155AbfJXX3K (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 19:29:10 -0400
+Received: from mail-ed1-f65.google.com ([209.85.208.65]:43929 "EHLO
+        mail-ed1-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726395AbfJXX3K (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 19:29:10 -0400
+Received: by mail-ed1-f65.google.com with SMTP id q24so345969edr.10
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 16:29:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=plexistor-com.20150623.gappssmtp.com; s=20150623;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=imd8LYeUoBm8DTeA8qPBj6oTMtTRlNJlWrB8UNsRURg=;
+        b=fq94FQCVljJL8n1QnCTPl/iL6H5w3bnf/+l73zNSFs6OakFnAWfM/UwnbraJrYTHkU
+         RQJxiVE6Pg1pfH3tAT2Ec+5vYbBGRvUfyMvoNi/mVJKbXl7dfS6Y+SPfbGz6XPTzfl+f
+         HIvKAuJaS0SEbGEg2Pd+yy8ModIRF7utPp6COh9wiLgA6uP/xMfcf4vh7SZ5Nki0Jg5j
+         ZPJiJKF7easac64tVp6DJrdgf6iAfGXoOYXUJEqwWtWbXTU3ZA0JqTTTNefzB4PTQkCh
+         Dinc4V36iNos5fK3zMAAqGXi2E+yX/ukF13w5iCb5GbleOn3I/vQddbJaieLDpV5EXwr
+         lxkA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=imd8LYeUoBm8DTeA8qPBj6oTMtTRlNJlWrB8UNsRURg=;
+        b=cWo79CcNLukbmsS+YnTeA0m9nIAW7XnX8WzrNnlCNAxFUM8rq2BHG64J+PEMmtxTba
+         iGhQw9FTPzLKs6VZrfJwM+yoDFp27FiApevB7ywj4F6iFod6gihrxr8VI/+KHC7Zs90S
+         S7cfkm3Kf8lIPFij1el0DH8grqn+uhBag6K1+EybRAmbYx9S5yas4t2FNlmbF3ZW5rOY
+         54SIYNQwCdvGs10r6jG38Ve91IC8E68qzWb/kXWixBnmQdZNKddrlpwS6WIZMlGIsVtN
+         gkLpibdoiVQKjFw1g9JweOBCpyzcLN62wLnz+VtwPxuEp0d62tbqIbKvmDZmo4SI1+Uy
+         //ow==
+X-Gm-Message-State: APjAAAWivgQQp71TYE39ivrYP6zmLHrRJQ73lxx+Tyd/QJhnq88DZJuj
+        He7k2IknvShrzRBVPaAPMqIBJA==
+X-Google-Smtp-Source: APXvYqw3KtG7+DSk8VtpXuw54AjSUY96h6dk6WFFfObVLeErXJlPS27jxyXyV6GZmNS8RM7R6Qen9g==
+X-Received: by 2002:a50:da0f:: with SMTP id z15mr769859edj.137.1571959747939;
+        Thu, 24 Oct 2019 16:29:07 -0700 (PDT)
+Received: from [10.68.217.182] ([217.70.210.43])
+        by smtp.googlemail.com with ESMTPSA id oq18sm1653ejb.22.2019.10.24.16.29.05
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 24 Oct 2019 16:29:07 -0700 (PDT)
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+To:     Dave Chinner <david@fromorbit.com>,
+        Boaz Harrosh <boaz@plexistor.com>
+Cc:     ira.weiny@intel.com, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+References: <20191020155935.12297-1-ira.weiny@intel.com>
+ <b7849297-e4a4-aaec-9a64-2b481663588b@plexistor.com>
+ <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
+ <20191023221332.GE2044@dread.disaster.area>
+ <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+ <20191024073446.GA4614@dread.disaster.area>
+ <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
+ <20191024213508.GB4614@dread.disaster.area>
+From:   Boaz Harrosh <boaz@plexistor.com>
+Message-ID: <ab101f90-6ec1-7527-1859-5f6309640cfa@plexistor.com>
+Date:   Fri, 25 Oct 2019 02:29:04 +0300
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
+ Thunderbird/68.1.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <90501efd6808a0816dbdf03b508130136bc8a94e.camel@themaw.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910240218
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910240218
+In-Reply-To: <20191024213508.GB4614@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 25, 2019 at 05:53:08AM +0800, Ian Kent wrote:
-> On Thu, 2019-10-24 at 08:31 -0700, Darrick J. Wong wrote:
-> > On Thu, Oct 24, 2019 at 03:51:22PM +0800, Ian Kent wrote:
-> > > Factor the remount read write code into a helper to simplify the
-> > > subsequent change from the super block method .remount_fs to the
-> > > mount-api fs_context_operations method .reconfigure.
-> > > 
-> > > This helper is only used by the mount code, so locate it along with
-> > > that code.
-> > > 
-> > > While we are at it change STATIC -> static for
-> > > xfs_restore_resvblks().
-> > > 
-> > > Signed-off-by: Ian Kent <raven@themaw.net>
-> > > Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > >  fs/xfs/xfs_super.c |  119 +++++++++++++++++++++++++++++-----------
-> > > ------------
-> > >  1 file changed, 67 insertions(+), 52 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index 297e6c98742e..c07e41489e75 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -47,6 +47,8 @@ static struct kset *xfs_kset;		/* top-
-> > > level xfs sysfs dir */
-> > >  static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs
-> > > attrs */
-> > >  #endif
-> > >  
-> > > +static void xfs_restore_resvblks(struct xfs_mount *mp);
-> > 
-> > What's the reason for putting xfs_remount_rw above
-> > xfs_restore_resvblks?
-> > I assume that's related to where you want to land later code chunks?
+On 25/10/2019 00:35, Dave Chinner wrote:
+> On Thu, Oct 24, 2019 at 05:05:45PM +0300, Boaz Harrosh wrote:
+<>
+>> Yes I said that as well.
 > 
-> In the cover letter:
-> 
-> Note: the patches "xfs: add xfs_remount_rw() helper" and
->  "xfs: add xfs_remount_ro() helper" that have Reviewed-by attributions
->  each needed a forward declartion added due grouping all the mount
->  related code together. Reviewers may want to check the attribution
->  is still acceptable.
-> 
-> The fill super method needs quite a few more forward declarations
-> too.
-> 
-> I responded to Christoph's suggestion of grouping the mount code
-> together saying this would be needed, and that I thought the
-> improvement of grouping the code together was worth the forward
-> declarations, and asked if anyone had a different POV on it and
-> got no replies, ;)
-> 
-> The other thing is that the options definitions notionally belong
-> near the top of the mount/super block handling code so moving it
-> all down seemed like the wrong thing to do ...
-> 
-> So what do you think of the extra noise of forward declarations
-> in this case?
+> You said "it must be set between creation and first write",
+> stating the requirement for an on-disk flag to work.
 
-Eh, fine with me.  I was just curious, having speed-read over the
-previous iterations. :)
+Sorry for not being clear. Its not new, I do not explain myself
+very well.
 
---D
+The above quote is if you set/clear the flag directly.
 
-> Ian
+> I'm describing how that requirement is actually implemented. i.e. what
+> you are stating is something we actually implemented years ago...
 > 
-> > 
-> > --D
-> > 
-> > > +
-> > >  /*
-> > >   * Table driven mount option parser.
-> > >   */
-> > > @@ -455,6 +457,68 @@ xfs_mount_free(
-> > >  	kmem_free(mp);
-> > >  }
-> > >  
-> > > +static int
-> > > +xfs_remount_rw(
-> > > +	struct xfs_mount	*mp)
-> > > +{
-> > > +	struct xfs_sb		*sbp = &mp->m_sb;
-> > > +	int			error;
-> > > +
-> > > +	if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> > > +		xfs_warn(mp,
-> > > +			"ro->rw transition prohibited on norecovery
-> > > mount");
-> > > +		return -EINVAL;
-> > > +	}
-> > > +
-> > > +	if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> > > +	    xfs_sb_has_ro_compat_feature(sbp,
-> > > XFS_SB_FEAT_RO_COMPAT_UNKNOWN)) {
-> > > +		xfs_warn(mp,
-> > > +	"ro->rw transition prohibited on unknown (0x%x) ro-compat
-> > > filesystem",
-> > > +			(sbp->sb_features_ro_compat &
-> > > +				XFS_SB_FEAT_RO_COMPAT_UNKNOWN));
-> > > +		return -EINVAL;
-> > > +	}
-> > > +
-> > > +	mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> > > +
-> > > +	/*
-> > > +	 * If this is the first remount to writeable state we might
-> > > have some
-> > > +	 * superblock changes to update.
-> > > +	 */
-> > > +	if (mp->m_update_sb) {
-> > > +		error = xfs_sync_sb(mp, false);
-> > > +		if (error) {
-> > > +			xfs_warn(mp, "failed to write sb changes");
-> > > +			return error;
-> > > +		}
-> > > +		mp->m_update_sb = false;
-> > > +	}
-> > > +
-> > > +	/*
-> > > +	 * Fill out the reserve pool if it is empty. Use the stashed
-> > > value if
-> > > +	 * it is non-zero, otherwise go with the default.
-> > > +	 */
-> > > +	xfs_restore_resvblks(mp);
-> > > +	xfs_log_work_queue(mp);
-> > > +
-> > > +	/* Recover any CoW blocks that never got remapped. */
-> > > +	error = xfs_reflink_recover_cow(mp);
-> > > +	if (error) {
-> > > +		xfs_err(mp,
-> > > +			"Error %d recovering leftover CoW
-> > > allocations.", error);
-> > > +			xfs_force_shutdown(mp,
-> > > SHUTDOWN_CORRUPT_INCORE);
-> > > +		return error;
-> > > +	}
-> > > +	xfs_start_block_reaping(mp);
-> > > +
-> > > +	/* Create the per-AG metadata reservation pool .*/
-> > > +	error = xfs_fs_reserve_ag_blocks(mp);
-> > > +	if (error && error != -ENOSPC)
-> > > +		return error;
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > >  struct proc_xfs_info {
-> > >  	uint64_t	flag;
-> > >  	char		*str;
-> > > @@ -1169,7 +1233,7 @@ xfs_save_resvblks(struct xfs_mount *mp)
-> > >  	xfs_reserve_blocks(mp, &resblks, NULL);
-> > >  }
-> > >  
-> > > -STATIC void
-> > > +static void
-> > >  xfs_restore_resvblks(struct xfs_mount *mp)
-> > >  {
-> > >  	uint64_t resblks;
-> > > @@ -1307,57 +1371,8 @@ xfs_fs_remount(
-> > >  
-> > >  	/* ro -> rw */
-> > >  	if ((mp->m_flags & XFS_MOUNT_RDONLY) && !(*flags & SB_RDONLY))
-> > > {
-> > > -		if (mp->m_flags & XFS_MOUNT_NORECOVERY) {
-> > > -			xfs_warn(mp,
-> > > -		"ro->rw transition prohibited on norecovery mount");
-> > > -			return -EINVAL;
-> > > -		}
-> > > -
-> > > -		if (XFS_SB_VERSION_NUM(sbp) == XFS_SB_VERSION_5 &&
-> > > -		    xfs_sb_has_ro_compat_feature(sbp,
-> > > -					XFS_SB_FEAT_RO_COMPAT_UNKNOWN))
-> > > {
-> > > -			xfs_warn(mp,
-> > > -"ro->rw transition prohibited on unknown (0x%x) ro-compat
-> > > filesystem",
-> > > -				(sbp->sb_features_ro_compat &
-> > > -					XFS_SB_FEAT_RO_COMPAT_UNKNOWN))
-> > > ;
-> > > -			return -EINVAL;
-> > > -		}
-> > > -
-> > > -		mp->m_flags &= ~XFS_MOUNT_RDONLY;
-> > > -
-> > > -		/*
-> > > -		 * If this is the first remount to writeable state we
-> > > -		 * might have some superblock changes to update.
-> > > -		 */
-> > > -		if (mp->m_update_sb) {
-> > > -			error = xfs_sync_sb(mp, false);
-> > > -			if (error) {
-> > > -				xfs_warn(mp, "failed to write sb
-> > > changes");
-> > > -				return error;
-> > > -			}
-> > > -			mp->m_update_sb = false;
-> > > -		}
-> > > -
-> > > -		/*
-> > > -		 * Fill out the reserve pool if it is empty. Use the
-> > > stashed
-> > > -		 * value if it is non-zero, otherwise go with the
-> > > default.
-> > > -		 */
-> > > -		xfs_restore_resvblks(mp);
-> > > -		xfs_log_work_queue(mp);
-> > > -
-> > > -		/* Recover any CoW blocks that never got remapped. */
-> > > -		error = xfs_reflink_recover_cow(mp);
-> > > -		if (error) {
-> > > -			xfs_err(mp,
-> > > -	"Error %d recovering leftover CoW allocations.", error);
-> > > -			xfs_force_shutdown(mp,
-> > > SHUTDOWN_CORRUPT_INCORE);
-> > > -			return error;
-> > > -		}
-> > > -		xfs_start_block_reaping(mp);
-> > > -
-> > > -		/* Create the per-AG metadata reservation pool .*/
-> > > -		error = xfs_fs_reserve_ag_blocks(mp);
-> > > -		if (error && error != -ENOSPC)
-> > > +		error = xfs_remount_rw(mp);
-> > > +		if (error)
-> > >  			return error;
-> > >  	}
-> > >  
-> > > 
+
+What you are talking about is when the flag is inherited from parent.
+And I did mention that option as well.
+
+[Which is my concern because my main point is that I want creation+write
+ to be none-DAX. Then after writer is done. Switch to DAX-on so READs can
+ be fast and not take any memory.
+ And you talked about another case when I start DAX-on and then for
+ say, use for RDMA turn it off later.
+]
+
+This flag is Unique because current RFC has an i_size == 0 check
+that other flags do not have
+
+>>> I also seem
+>>> to recall that there was a need to take some vm level lock to really
+>>> prevent page fault races, and that we can't safely take that in a
+>>> safe combination with all the filesystem locks we need.
+>>>
+>>
+>> We do not really care with page fault races in the Kernel as long
 > 
+> Oh yes we do. A write fault is a 2-part operation - a read fault to
+> populate the pte and mapping, then a write fault (->page_mkwrite) to 
+> do all the filesystem work needed to dirty the page and pte.
+> 
+> The read fault sets up the state for the write fault, and if we
+> change the aops between these two operations, then the
+> ->page_mkwrite implementation goes kaboom.
+> 
+> This isn't a theoretical problem - this is exactly the race
+> condition that lead us to disabling the flag in the first place.
+> There is no serialisation between the read and write parts of the
+> page fault iand the filesystem changing the DAX flag and ops vector,
+> and so fixing this problem requires hold yet more locks in the
+> filesystem path to completely lock out page fault processing on the
+> inode's mapping.
+> 
+
+Again sorry that I do not explain very good.
+
+Already on the read fault we populate the xarray,
+My point was that if I want to set the DAX mode I must enforce that
+there are no other parallel users on my inode. The check that the
+xarray is empty is my convoluted way to check that there are no other
+users except me. If xarray is not empty I bail out with EBUISY
+
+I agree this is stupid.
+
+Which is the same stupid as i_size==0 check. Both have the same
+intention, to make sure that nothing is going on in parallel to
+me.
+
+>> as I protect the xarray access and these are protected well if we
+>> take truncate locking. But we have a bigger problem that you pointed
+>> out with the change of the operations vector pointer.
+>>
+>> I was thinking about this last night. One way to do this is with
+>> file-exclusive-lock. Correct me if I'm wrong:
+>> file-exclusive-readwrite-lock means any other openers will fail and
+>> if there are openers already the lock will fail. Which is what we want
+>> no?
+> 
+> The filesystem ioctls and page faults have no visibility of file
+> locks.  They don't know and can't find out in a sane manner that an
+> inode has a single -user- reference.
+> 
+
+This is not true. The FS has full control. It is not too hard a work
+to take a file-excl-lock from within the IOCTL implementation. then
+unlock. that is option 1. Option 2 of the App taking the lock then
+for the check we might need a new export from the lock-subsystem.
+
+> And it introduces a new problem for any application using the
+> fssetxattr() ioctl - accidentally not setting the S_DAX flag to be
+> unmodified will now fail, and that means such a change breaks
+> existing applications. Sure, you can say they are "buggy
+> applications", but the fact is this user API change breaks them.
+> 
+
+I am not sure I completely understood. let me try ...
+
+The app wants to set some foo flag. It can set the ignore mask to all
+1(s) except the flag it wants to set/clear.
+And/or get_current_flags(); modify foo_flag; set_flags().
+
+Off course in both the ignore case or when the DAX bit does not change
+we do not go on a locking rampage.
+
+So I'm not sure I see the problem
+
+> Hence I don't think we can change the user API for setting/clearing
+> this flag like this.
+> 
+
+Yes we must not modify behavior of Apps that are modifing other flags.
+
+> Cheers,
+> Dave.
+> 
+
+Perhaps we always go by the directory. And then do an mv dir_DAX/foo dir_NODAX/foo
+to have an effective change. In hard links the first one at iget time before populating
+the inode cache takes affect. (And never change the flag on the fly)
+(Just brain storming here)
+
+Or perhaps another API?
+
+Thanks Dave
+Boaz
