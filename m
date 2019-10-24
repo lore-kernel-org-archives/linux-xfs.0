@@ -2,342 +2,179 @@ Return-Path: <SRS0=feM8=YR=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F0D2BCA9EAF
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 17:28:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EFADACA9EAF
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 18:35:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B422720659
-	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 17:28:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B2F2921925
+	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 18:35:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Nm9wzC4T"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eliSfbUc"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2394032AbfJXR25 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 13:28:57 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:60165 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S2394031AbfJXR24 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 13:28:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1571938134;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=kC8ZEQUjaeFONMGe5QMeXnRAt0ehDsqTBvupQ2+jIzE=;
-        b=Nm9wzC4TVDWF/08/qZZ5k077vaaSB6U/l3tGUz+sEmPbkcsA33TnRpOm7wJEtDSTBqGudI
-        9rR70OmgmzkfYsmTMeFY+FOQ+bHixW3ZuxKKfGd9JcfdsIsZqQJSgcJw6XErVGAbtTfoiO
-        ZWJw1xOCh9Tiiv++Phn8iN05zLzHdHM=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-150-i6KZ8rg9NPWjUHccOghDZg-1; Thu, 24 Oct 2019 13:28:52 -0400
-Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.phx2.redhat.com [10.5.11.12])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 7D0F7107AD31
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 17:28:51 +0000 (UTC)
-Received: from bfoster.bos.redhat.com (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTP id 38E8660BE0
-        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 17:28:51 +0000 (UTC)
-From:   Brian Foster <bfoster@redhat.com>
-To:     linux-xfs@vger.kernel.org
-Subject: [PATCH RFC] xfs: automatic log item relogging experiment
-Date:   Thu, 24 Oct 2019 13:28:50 -0400
-Message-Id: <20191024172850.7698-1-bfoster@redhat.com>
+        id S2504068AbfJXSfE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 14:35:04 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:39074 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726155AbfJXSfD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 14:35:03 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9OIYZDW001178
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=MEA7Ty16uUnq++Q02UlKQChHnb+/rNM5LqCBdqmTl+8=;
+ b=eliSfbUc3ht8uIWlT68axhnJmAKprZk6YyZYw/ME6QNFKClCR5a+RuVqmkEw1Gy6KleC
+ Xapjw/dN1YoIB1/HV6HiXA9XKcKp3hvG8wGEgk7LTO7iy26955O0ornG4+A8n2ORFhs7
+ b1uRqm6XwcxVfTJGOVemlDIGRu22I9foePc+O3jO8vsU6EXXCGjRCqaXos0YwvhgMphT
+ lIhuUv+vtUIO5l9MgFXO2kpWvyE6rj1bH2wrs5wXmBQgXwy21eURtsObAUbZKNWoVx7M
+ N9jOz/F9Zg1HcQqo0j1C5MbwvGv3lL2KrA3nqF/Kn7yvjH1yFRhO54rwiZyAW8v+q8Ol tQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2vqu4r5a72-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:01 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9OIRoXl124538
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:00 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2vu0fptgaf-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:00 +0000
+Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9OIZ0JJ007029
+        for <linux-xfs@vger.kernel.org>; Thu, 24 Oct 2019 18:35:00 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 24 Oct 2019 11:34:59 -0700
+Date:   Thu, 24 Oct 2019 11:34:59 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 3dd4d40b4208
+Message-ID: <20191024183459.GY913374@magnolia>
 MIME-Version: 1.0
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.12
-X-MC-Unique: i6KZ8rg9NPWjUHccOghDZg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910240173
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910240174
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-An experimental mechanism to automatically relog specified log
-items.  This is useful for long running operations, like quotaoff,
-that otherwise risk deadlocking on log space usage.
+Hi folks,
 
-Not-signed-off-by: Brian Foster <bfoster@redhat.com>
----
+The for-next branch of the xfs-linux repository at:
 
-Hi all,
+	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
-This is an experiment that came out of a discussion with Darrick[1] on
-some design bits of the latest online btree repair work. Specifically,
-it logs free intents in the same transaction as block allocation to
-guard against inconsistency in the event of a crash during the repair
-sequence. These intents happen pin the log tail for an indeterminate
-amount of time. Darrick was looking for some form of auto relog
-mechanism to facilitate this general approach. It occurred to us that
-this is the same problem we've had with quotaoff for some time, so I
-figured it might be worth prototyping something against that to try and
-prove the concept.
+has just been updated.
 
-Note that this is RFC because the code and interfaces are a complete
-mess and this is broken in certain ways. This occasionally triggers log
-reservation overrun shutdowns because transaction reservation checking
-has not yet been added, the cancellation path is overkill, etc. IOW, the
-purpose of this patch is purely to test a concept.
+Patches often get missed, so please check if your outstanding patches
+were in this update. If they have not been in this update, please
+resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
+the next update.  Yeah, I'm still looking through the mount api
+conversion series.
 
-The concept is essentially to flag a log item for relogging on first
-transaction commit such that once it commits to the AIL, the next
-transaction that happens to commit with sufficient unused reservation
-opportunistically relogs the item to the current CIL context. For the
-log intent case, the transaction that commits the done item is required
-to cancel the relog state of the original intent to prevent further
-relogging.
+The new head of the for-next branch is commit:
 
-In practice, this allows a log item to automatically roll through CIL
-checkpoints and not pin the tail of the log while something like a
-quotaoff is running for a potentially long period of time. This is
-applied to quotaoff and focused testing shows that it avoids the
-associated deadlock.
+3dd4d40b4208 xfs: Sanity check flags of Q_XQUOTARM call
 
-Thoughts, reviews, flames appreciated.
+New Commits:
 
-[1] https://lore.kernel.org/linux-xfs/20191018143856.GA25763@bfoster/
+Ben Dooks (Codethink) (1):
+      [1aa6300638e7] xfs: add mising include of xfs_pnfs.h for missing declarations
 
- fs/xfs/xfs_log_cil.c     | 69 ++++++++++++++++++++++++++++++++++++++++
- fs/xfs/xfs_log_priv.h    |  6 ++++
- fs/xfs/xfs_qm_syscalls.c | 13 ++++++++
- fs/xfs/xfs_trace.h       |  2 ++
- fs/xfs/xfs_trans.c       |  4 +++
- fs/xfs/xfs_trans.h       |  4 ++-
- 6 files changed, 97 insertions(+), 1 deletion(-)
+Brian Foster (12):
+      [f6b428a46d60] xfs: track active state of allocation btree cursors
+      [f5e7dbea1e3e] xfs: introduce allocation cursor data structure
+      [d6d3aff20377] xfs: track allocation busy state in allocation cursor
+      [c62321a2a0ea] xfs: track best extent from cntbt lastblock scan in alloc cursor
+      [396bbf3c657e] xfs: refactor cntbt lastblock scan best extent logic into helper
+      [fec0afdaf498] xfs: reuse best extent tracking logic for bnobt scan
+      [4a65b7c2c72c] xfs: refactor allocation tree fixup code
+      [78d7aabdeea3] xfs: refactor and reuse best extent scanning logic
+      [0e26d5ca4a40] xfs: refactor near mode alloc bnobt scan into separate function
+      [d29688257fd4] xfs: factor out tree fixup logic into helper
+      [dc8e69bd7218] xfs: optimize near mode bnobt scans with concurrent cntbt lookups
+      [da781e64b28c] xfs: don't set bmapi total block req where minleft is
 
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index a1204424a938..b2d8b2d54df6 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -75,6 +75,33 @@ xlog_cil_iovec_space(
- =09=09=09sizeof(uint64_t));
- }
-=20
-+static void
-+xlog_cil_relog_items(
-+=09struct xlog=09=09*log,
-+=09struct xfs_trans=09*tp)
-+{
-+=09struct xfs_cil=09=09*cil =3D log->l_cilp;
-+=09struct xfs_log_item=09*lip;
-+
-+=09ASSERT(tp->t_flags & XFS_TRANS_DIRTY);
-+
-+=09if (list_empty(&cil->xc_relog))
-+=09=09return;
-+
-+=09/* XXX: need to check trans reservation, process multiple items, etc. *=
-/
-+=09spin_lock(&cil->xc_relog_lock);
-+=09lip =3D list_first_entry_or_null(&cil->xc_relog, struct xfs_log_item, l=
-i_cil);
-+=09if (lip)
-+=09=09list_del_init(&lip->li_cil);
-+=09spin_unlock(&cil->xc_relog_lock);
-+
-+=09if (lip) {
-+=09=09xfs_trans_add_item(tp, lip);
-+=09=09set_bit(XFS_LI_DIRTY, &lip->li_flags);
-+=09=09trace_xfs_cil_relog(lip);
-+=09}
-+}
-+
- /*
-  * Allocate or pin log vector buffers for CIL insertion.
-  *
-@@ -1001,6 +1028,8 @@ xfs_log_commit_cil(
- =09struct xfs_log_item=09*lip, *next;
- =09xfs_lsn_t=09=09xc_commit_lsn;
-=20
-+=09xlog_cil_relog_items(log, tp);
-+
- =09/*
- =09 * Do all necessary memory allocation before we lock the CIL.
- =09 * This ensures the allocation does not deadlock with a CIL
-@@ -1196,6 +1225,8 @@ xlog_cil_init(
- =09spin_lock_init(&cil->xc_push_lock);
- =09init_rwsem(&cil->xc_ctx_lock);
- =09init_waitqueue_head(&cil->xc_commit_wait);
-+=09INIT_LIST_HEAD(&cil->xc_relog);
-+=09spin_lock_init(&cil->xc_relog_lock);
-=20
- =09INIT_LIST_HEAD(&ctx->committing);
- =09INIT_LIST_HEAD(&ctx->busy_extents);
-@@ -1223,3 +1254,41 @@ xlog_cil_destroy(
- =09kmem_free(log->l_cilp);
- }
-=20
-+void
-+xfs_cil_relog_item(
-+=09struct xlog=09=09*log,
-+=09struct xfs_log_item=09*lip)
-+{
-+=09struct xfs_cil=09=09*cil =3D log->l_cilp;
-+
-+=09ASSERT(test_bit(XFS_LI_RELOG, &lip->li_flags));
-+=09ASSERT(list_empty(&lip->li_cil));
-+
-+=09spin_lock(&cil->xc_relog_lock);
-+=09list_add_tail(&lip->li_cil, &cil->xc_relog);
-+=09spin_unlock(&cil->xc_relog_lock);
-+
-+=09trace_xfs_cil_relog_queue(lip);
-+}
-+
-+bool
-+xfs_cil_relog_steal(
-+=09struct xlog=09=09*log,
-+=09struct xfs_log_item=09*lip)
-+{
-+=09struct xfs_cil=09=09*cil =3D log->l_cilp;
-+=09struct xfs_log_item=09*pos, *ppos;
-+=09bool=09=09=09ret =3D false;
-+
-+=09spin_lock(&cil->xc_relog_lock);
-+=09list_for_each_entry_safe(pos, ppos, &cil->xc_relog, li_cil) {
-+=09=09if (pos =3D=3D lip) {
-+=09=09=09list_del_init(&pos->li_cil);
-+=09=09=09ret =3D true;
-+=09=09=09break;
-+=09=09}
-+=09}
-+=09spin_unlock(&cil->xc_relog_lock);
-+
-+=09return ret;
-+}
-diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
-index 4f19375f6592..f75a0a9f6984 100644
---- a/fs/xfs/xfs_log_priv.h
-+++ b/fs/xfs/xfs_log_priv.h
-@@ -10,6 +10,7 @@ struct xfs_buf;
- struct xlog;
- struct xlog_ticket;
- struct xfs_mount;
-+struct xfs_log_item;
-=20
- /*
-  * Flags for log structure
-@@ -275,6 +276,9 @@ struct xfs_cil {
- =09wait_queue_head_t=09xc_commit_wait;
- =09xfs_lsn_t=09=09xc_current_sequence;
- =09struct work_struct=09xc_push_work;
-+
-+=09struct list_head=09xc_relog;
-+=09spinlock_t=09=09xc_relog_lock;
- } ____cacheline_aligned_in_smp;
-=20
- /*
-@@ -511,6 +515,8 @@ int=09xlog_cil_init(struct xlog *log);
- void=09xlog_cil_init_post_recovery(struct xlog *log);
- void=09xlog_cil_destroy(struct xlog *log);
- bool=09xlog_cil_empty(struct xlog *log);
-+void=09xfs_cil_relog_item(struct xlog *log, struct xfs_log_item *lip);
-+bool=09xfs_cil_relog_steal(struct xlog *log, struct xfs_log_item *lip);
-=20
- /*
-  * CIL force routines
-diff --git a/fs/xfs/xfs_qm_syscalls.c b/fs/xfs/xfs_qm_syscalls.c
-index da7ad0383037..5e529190029d 100644
---- a/fs/xfs/xfs_qm_syscalls.c
-+++ b/fs/xfs/xfs_qm_syscalls.c
-@@ -18,6 +18,8 @@
- #include "xfs_quota.h"
- #include "xfs_qm.h"
- #include "xfs_icache.h"
-+#include "xfs_log_priv.h"
-+#include "xfs_trans_priv.h"
-=20
- STATIC int=09xfs_qm_log_quotaoff(xfs_mount_t *, xfs_qoff_logitem_t **, uin=
-t);
- STATIC int=09xfs_qm_log_quotaoff_end(xfs_mount_t *, xfs_qoff_logitem_t *,
-@@ -556,6 +558,16 @@ xfs_qm_log_quotaoff_end(
- =09=09=09=09=09flags & XFS_ALL_QUOTA_ACCT);
- =09xfs_trans_log_quotaoff_item(tp, qoffi);
-=20
-+=09/*
-+=09 * XXX: partly open coded relog of the start item to ensure no reloggin=
-g
-+=09 * after this point.
-+=09 */
-+=09clear_bit(XFS_LI_RELOG, &startqoff->qql_item.li_flags);
-+=09if (xfs_cil_relog_steal(mp->m_log, &startqoff->qql_item)) {
-+=09=09xfs_trans_add_item(tp, &startqoff->qql_item);
-+=09=09xfs_trans_log_quotaoff_item(tp, startqoff);
-+=09}
-+
- =09/*
- =09 * We have to make sure that the transaction is secure on disk before w=
-e
- =09 * return and actually stop quota accounting. So, make it synchronous.
-@@ -583,6 +595,7 @@ xfs_qm_log_quotaoff(
- =09=09goto out;
-=20
- =09qoffi =3D xfs_trans_get_qoff_item(tp, NULL, flags & XFS_ALL_QUOTA_ACCT)=
-;
-+=09set_bit(XFS_LI_RELOG, &qoffi->qql_item.li_flags);
- =09xfs_trans_log_quotaoff_item(tp, qoffi);
-=20
- =09spin_lock(&mp->m_sb_lock);
-diff --git a/fs/xfs/xfs_trace.h b/fs/xfs/xfs_trace.h
-index 926f4d10dc02..6fe31a00e362 100644
---- a/fs/xfs/xfs_trace.h
-+++ b/fs/xfs/xfs_trace.h
-@@ -1063,6 +1063,8 @@ DEFINE_LOG_ITEM_EVENT(xfs_ail_push);
- DEFINE_LOG_ITEM_EVENT(xfs_ail_pinned);
- DEFINE_LOG_ITEM_EVENT(xfs_ail_locked);
- DEFINE_LOG_ITEM_EVENT(xfs_ail_flushing);
-+DEFINE_LOG_ITEM_EVENT(xfs_cil_relog);
-+DEFINE_LOG_ITEM_EVENT(xfs_cil_relog_queue);
-=20
- DECLARE_EVENT_CLASS(xfs_ail_class,
- =09TP_PROTO(struct xfs_log_item *lip, xfs_lsn_t old_lsn, xfs_lsn_t new_lsn=
-),
-diff --git a/fs/xfs/xfs_trans.c b/fs/xfs/xfs_trans.c
-index f4795fdb7389..95c74c6de4e2 100644
---- a/fs/xfs/xfs_trans.c
-+++ b/fs/xfs/xfs_trans.c
-@@ -19,6 +19,7 @@
- #include "xfs_trace.h"
- #include "xfs_error.h"
- #include "xfs_defer.h"
-+#include "xfs_log_priv.h"
-=20
- kmem_zone_t=09*xfs_trans_zone;
-=20
-@@ -863,6 +864,9 @@ xfs_trans_committed_bulk(
- =09=09if (XFS_LSN_CMP(item_lsn, (xfs_lsn_t)-1) =3D=3D 0)
- =09=09=09continue;
-=20
-+=09=09if (test_bit(XFS_LI_RELOG, &lip->li_flags))
-+=09=09=09xfs_cil_relog_item(lip->li_mountp->m_log, lip);
-+
- =09=09/*
- =09=09 * if we are aborting the operation, no point in inserting the
- =09=09 * object into the AIL as we are in a shutdown situation.
-diff --git a/fs/xfs/xfs_trans.h b/fs/xfs/xfs_trans.h
-index 64d7f171ebd3..596102405acf 100644
---- a/fs/xfs/xfs_trans.h
-+++ b/fs/xfs/xfs_trans.h
-@@ -59,12 +59,14 @@ struct xfs_log_item {
- #define=09XFS_LI_ABORTED=091
- #define=09XFS_LI_FAILED=092
- #define=09XFS_LI_DIRTY=093=09/* log item dirty in transaction */
-+#define XFS_LI_RELOG=094=09/* relog item on checkpoint commit */
-=20
- #define XFS_LI_FLAGS \
- =09{ (1 << XFS_LI_IN_AIL),=09=09"IN_AIL" }, \
- =09{ (1 << XFS_LI_ABORTED),=09"ABORTED" }, \
- =09{ (1 << XFS_LI_FAILED),=09=09"FAILED" }, \
--=09{ (1 << XFS_LI_DIRTY),=09=09"DIRTY" }
-+=09{ (1 << XFS_LI_DIRTY),=09=09"DIRTY" }, \
-+=09{ (1 << XFS_LI_RELOG),=09=09"RELOG" }
-=20
- struct xfs_item_ops {
- =09unsigned flags;
---=20
-2.20.1
+Christoph Hellwig (21):
+      [bdb2ed2dbdc2] xfs: ignore extent size hints for always COW inodes
+      [cd95cb962b7d] xfs: pass the correct flag to xlog_write_iclog
+      [2c68a1dfbd8e] xfs: remove the unused ic_io_size field from xlog_in_core
+      [390aab0a1640] xfs: move the locking from xlog_state_finish_copy to the callers
+      [df732b29c807] xfs: call xlog_state_release_iclog with l_icloglock held
+      [032cc34ed517] xfs: remove dead ifdef XFSERRORDEBUG code
+      [fe9c0e77acc5] xfs: remove the unused XLOG_STATE_ALL and XLOG_STATE_UNUSED flags
+      [1858bb0bec61] xfs: turn ic_state into an enum
+      [4b29ab04ab0d] xfs: remove the XLOG_STATE_DO_CALLBACK state
+      [0d45e3a20822] xfs: also call xfs_file_iomap_end_delalloc for zeroing operations
+      [dd26b84640cc] xfs: remove xfs_reflink_dirty_extents
+      [ffb375a8cf20] xfs: pass two imaps to xfs_reflink_allocate_cow
+      [ae36b53c6c60] xfs: refactor xfs_file_iomap_begin_delay
+      [36adcbace24e] xfs: fill out the srcmap in iomap_begin
+      [43568226a4a3] xfs: factor out a helper to calculate the end_fsb
+      [690c2a38878e] xfs: split out a new set of read-only iomap ops
+      [a526c85c2236] xfs: move xfs_file_iomap_begin_delay around
+      [f150b4234397] xfs: split the iomap ops for buffered vs direct writes
+      [12dfb58af61d] xfs: rename the whichfork variable in xfs_buffered_write_iomap_begin
+      [5c5b6f7585d2] xfs: cleanup xfs_direct_write_iomap_begin
+      [1e190f8e8098] xfs: improve the IOMAP_NOWAIT check for COW inodes
 
+Dave Chinner (2):
+      [3f8a4f1d876d] xfs: fix inode fork extent count overflow
+      [1c743574de8b] xfs: cap longest free extent to maximum allocatable
+
+Jan Kara (1):
+      [3dd4d40b4208] xfs: Sanity check flags of Q_XQUOTARM call
+
+kaixuxia (1):
+      [3fb21fc8cc04] xfs: remove the duplicated inode log fieldmask set
+
+yu kuai (1):
+      [e5e634041bc1] xfs: include QUOTA, FATAL ASSERT build options in XFS_BUILD_OPTIONS
+
+
+Code Diffstat:
+
+ fs/xfs/libxfs/xfs_alloc.c       | 900 +++++++++++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_alloc_btree.c |   1 +
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  18 +-
+ fs/xfs/libxfs/xfs_bmap.c        |  19 +-
+ fs/xfs/libxfs/xfs_btree.h       |   3 +
+ fs/xfs/libxfs/xfs_dir2_sf.c     |   2 +-
+ fs/xfs/libxfs/xfs_iext_tree.c   |   2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |   8 +-
+ fs/xfs/libxfs/xfs_inode_fork.h  |  14 +-
+ fs/xfs/xfs_aops.c               |   9 +-
+ fs/xfs/xfs_bmap_util.c          |   7 +-
+ fs/xfs/xfs_dquot.c              |   4 +-
+ fs/xfs/xfs_file.c               |  23 +-
+ fs/xfs/xfs_inode.c              |   7 +-
+ fs/xfs/xfs_iomap.c              | 679 +++++++++++++++---------------
+ fs/xfs/xfs_iomap.h              |   4 +-
+ fs/xfs/xfs_iops.c               |   6 +-
+ fs/xfs/xfs_log.c                | 428 ++++++++-----------
+ fs/xfs/xfs_log_cil.c            |   2 +-
+ fs/xfs/xfs_log_priv.h           |  25 +-
+ fs/xfs/xfs_pnfs.c               |   1 +
+ fs/xfs/xfs_quotaops.c           |   3 +
+ fs/xfs/xfs_reflink.c            | 138 +-----
+ fs/xfs/xfs_reflink.h            |   4 +-
+ fs/xfs/xfs_rtalloc.c            |   3 +-
+ fs/xfs/xfs_super.h              |  10 +
+ fs/xfs/xfs_trace.h              |  33 +-
+ 27 files changed, 1187 insertions(+), 1166 deletions(-)
