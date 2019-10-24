@@ -8,61 +8,61 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 58EC4CA9EBB
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E2006CA9EBC
 	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 14:21:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29E6221A4C
+	by mail.kernel.org (Postfix) with ESMTP id AA23721D7E
 	for <linux-xfs@archiver.kernel.org>; Thu, 24 Oct 2019 14:21:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ri7384Iz"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ACwS+YRO"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393908AbfJXOVA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 10:21:00 -0400
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:46530 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2391402AbfJXOVA (ORCPT
+        id S2391402AbfJXOVB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 24 Oct 2019 10:21:01 -0400
+Received: from mail-pg1-f196.google.com ([209.85.215.196]:41294 "EHLO
+        mail-pg1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2393910AbfJXOVA (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 10:21:00 -0400
-Received: by mail-pl1-f193.google.com with SMTP id q21so3873839plr.13;
-        Thu, 24 Oct 2019 07:20:59 -0700 (PDT)
+Received: by mail-pg1-f196.google.com with SMTP id l3so888666pgr.8;
+        Thu, 24 Oct 2019 07:21:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
         h=from:to:cc:subject:date:message-id:in-reply-to:references
          :in-reply-to:references;
-        bh=5weXVE8D74ZpDgTCsTPBlghdFkubvz9zA+RhXzpBilc=;
-        b=ri7384IzH6n5JX19ESQXXFYqti1SMh64pYe2yDOyu3wHuYqxzLXF40qTz+OqTEfnRa
-         HuDW9CAbVMzzwlQfOGgKlhSKOnRKmizhOnt6FPvQ6qd9g1bA5mNsC9YgdJHC5ruuwxgx
-         LbZ6YommnZzLqB+qCsOP4NDMQpvsMAs+Jc860RxQwnahpj7T8XJ58gc/kirZJiwJGaA3
-         C5hiUwVDsI5MrlLf8PXt9jK4aoST8gUJUktJY1fv5GJeezra9vDJI1QimqTv/vbI7Nni
-         ehTCY1i1/MBo6XUzuQ7WntaHvTUAeCcaLnJK+0w4OFJ5lrVAjpIN0w3NarK9psq04kh4
-         Neqw==
+        bh=xVuudhrUPQOKU6TpXvgcEqgxHYwWQz+YQhLeG2kax1Q=;
+        b=ACwS+YROyTlrF9WJJ1ndhb2gtcxRoYIcyrk70pqSLgYb13hNWeXOIEtzbUnDeK2oup
+         t4qsLA/cSgQdA/U/pcwkXNfrOfK5dFX1XKliIOAo1rTRtRZK8tk0EAS1wPx08zkYyCHE
+         81h0XE71pJmwaKjPVkVGCYcz7P0j20Rk4uFPa8EQk4AgD9w20q7xDalPHK1tNXVwbobl
+         RGSK7pr6xYpHPdd4ueliSIgWLVjtGbkAInskivlZW9qvuZ3kXt97P5LPsAFibFoiKAhc
+         nJ0D8qtcu/E9wTVHpX21NsK2kCP1wjwEzuaoxKcP2YImvCtB9J1JTK+u62dRh+J1MbBJ
+         r2wg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
         h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
          :references:in-reply-to:references;
-        bh=5weXVE8D74ZpDgTCsTPBlghdFkubvz9zA+RhXzpBilc=;
-        b=FtoGLCiQS/WucFz9aLM60aTtyEHpbKZuy2DtUG7gXGQqUygmSwZA+HTxNxOXlt4laj
-         TYOoODuFFdBdQzcVPU11Rx+I64AUIOMSsvpUrC6CdovZCwnUiF+Pf1kMH5cXttvKz61U
-         /T+eR4wFibz7A7m4eR/cYwZ+ct2+Ku2o/1TuUDNyxuEwKrWhnmZrl/oekvgfNnJhB6k1
-         UKDuEh4PAVqBrhu8uSNCT2vicdfDzHceGkog6LYN4/ovtmZRn3zr5aCTxHaqQE7bW/Hq
-         12cRnBjWLjQ7RVuMhvBw1F5Pz5p45Mt008cCMOjwYJrafOi+Mc1iEn1NbY3WO9NQhAAK
-         nA9g==
-X-Gm-Message-State: APjAAAUVkjL1/yBu/2TmIx0ruvXGY5Bi6RcqxsZkM+mXrDKJ12Spynf7
-        seNfbGFAl1iJ65UOMJyi9y7zlTgtnJhO
-X-Google-Smtp-Source: APXvYqxeBmHhMSPHwfYlBta7BB2z4zW4z+153nLpgQNszT2Iz66DTi8YUJigkiwJfdYP/vey/2/mrA==
-X-Received: by 2002:a17:902:b095:: with SMTP id p21mr4464794plr.159.1571926858919;
-        Thu, 24 Oct 2019 07:20:58 -0700 (PDT)
+        bh=xVuudhrUPQOKU6TpXvgcEqgxHYwWQz+YQhLeG2kax1Q=;
+        b=qRmZhGa+uRX8/s20MlT9qbzeTExHH2bV2qiR4JSLmkTLae0bQhx0WzAEIv3cv3gIHu
+         ZJrmBF+7OMH2WLVLLaxVa47y1wU3/hyOEKUs0kMWjOrLE3hBI0fKOeyI/xYvDxZHnBRc
+         a99ybmBKTumDxkXrI0FK0JwmBAs15yz9tzH/k8slCroEkX9VyvDKRitOnWr2DzF1MRTc
+         FREFX4g50d/tAmHSv6ZXNmXYqJxHSwPjZg6WjKFDLeNRgmPQNJym+i0dqhtsIaCpvgA/
+         GLK57nwYX4ocCO2BsOW/8KdOhnWKN/LOpzTua6/yiHCqnS8sH6/k8QrD+vJCim9mWpvm
+         76Wg==
+X-Gm-Message-State: APjAAAXKlOMtRWjCgfHmSAMBRX5zZICmlDXoftEB8mGhpq97iKa7L5SF
+        bm1qu/WJfvFPtClpwNn2JFys8iQd+HQa
+X-Google-Smtp-Source: APXvYqz4DOQiTaSouNXUp48eMY2SNTBxOSh4F4W0rRs/CSoPh7MCgHU1FeXEwTsHcQDQ5zpPAh6d4A==
+X-Received: by 2002:a63:1606:: with SMTP id w6mr2032811pgl.245.1571926859795;
+        Thu, 24 Oct 2019 07:20:59 -0700 (PDT)
 Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
         by smtp.gmail.com with ESMTPSA id i11sm24368284pgd.7.2019.10.24.07.20.58
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 24 Oct 2019 07:20:58 -0700 (PDT)
+        Thu, 24 Oct 2019 07:20:59 -0700 (PDT)
 From:   kaixuxia <xiakaixu1987@gmail.com>
 X-Google-Original-From: kaixuxia <kaixuxia@tencent.com>
 To:     fstests@vger.kernel.org
 Cc:     linux-xfs@vger.kernel.org, guaneryu@gmail.com, bfoster@redhat.com,
         newtongao@tencent.com, jasperwang@tencent.com
-Subject: [PATCH 2/4] fsstress: add NOREPLACE and WHITEOUT renameat2 support
-Date:   Thu, 24 Oct 2019 22:20:49 +0800
-Message-Id: <1c7113e038b084962acf34f30b93a50ec5ed20aa.1571926790.git.kaixuxia@tencent.com>
+Subject: [PATCH 3/4] fsstress: add EXCHANGE renameat2 support
+Date:   Thu, 24 Oct 2019 22:20:50 +0800
+Message-Id: <71744e89979dfd25f1bffc44c70f6df214a5477b.1571926791.git.kaixuxia@tencent.com>
 X-Mailer: git-send-email 1.8.3.1
 In-Reply-To: <cover.1571926790.git.kaixuxia@tencent.com>
 References: <cover.1571926790.git.kaixuxia@tencent.com>
@@ -73,237 +73,188 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Support the renameat2(NOREPLACE and WHITEOUT) syscall in fsstress.
+Support the EXCHANGE renameat2 syscall in fsstress.
 
 Signed-off-by: kaixuxia <kaixuxia@tencent.com>
 ---
- ltp/fsstress.c | 104 ++++++++++++++++++++++++++++++++++++++++++++++++---------
- 1 file changed, 89 insertions(+), 15 deletions(-)
+ ltp/fsstress.c | 86 +++++++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 64 insertions(+), 22 deletions(-)
 
 diff --git a/ltp/fsstress.c b/ltp/fsstress.c
-index 95285f1..5059639 100644
+index 5059639..958adf9 100644
 --- a/ltp/fsstress.c
 +++ b/ltp/fsstress.c
-@@ -44,6 +44,35 @@ io_context_t	io_ctx;
- #define IOV_MAX 1024
+@@ -69,6 +69,9 @@ static int renameat2(int dfd1, const char *path1,
+ #ifndef RENAME_NOREPLACE
+ #define RENAME_NOREPLACE	(1 << 0)	/* Don't overwrite target */
  #endif
- 
-+#ifndef HAVE_RENAMEAT2
-+#if !defined(SYS_renameat2) && defined(__x86_64__)
-+#define SYS_renameat2 316
++#ifndef RENAME_EXCHANGE
++#define RENAME_EXCHANGE		(1 << 1)	/* Exchange source and dest */
 +#endif
-+
-+#if !defined(SYS_renameat2) && defined(__i386__)
-+#define SYS_renameat2 353
-+#endif
-+
-+static int renameat2(int dfd1, const char *path1,
-+		     int dfd2, const char *path2,
-+		     unsigned int flags)
-+{
-+#ifdef SYS_renameat2
-+	return syscall(SYS_renameat2, dfd1, path1, dfd2, path2, flags);
-+#else
-+	errno = ENOSYS;
-+	return -1;
-+#endif
-+}
-+#endif
-+
-+#ifndef RENAME_NOREPLACE
-+#define RENAME_NOREPLACE	(1 << 0)	/* Don't overwrite target */
-+#endif
-+#ifndef RENAME_WHITEOUT
-+#define RENAME_WHITEOUT		(1 << 2)	/* Whiteout source */
-+#endif
-+
- #define FILELEN_MAX		(32*4096)
- 
- typedef enum {
-@@ -85,6 +114,8 @@ typedef enum {
- 	OP_READV,
+ #ifndef RENAME_WHITEOUT
+ #define RENAME_WHITEOUT		(1 << 2)	/* Whiteout source */
+ #endif
+@@ -115,6 +118,7 @@ typedef enum {
  	OP_REMOVEFATTR,
  	OP_RENAME,
-+	OP_RNOREPLACE,
-+	OP_RWHITEOUT,
+ 	OP_RNOREPLACE,
++	OP_REXCHANGE,
+ 	OP_RWHITEOUT,
  	OP_RESVSP,
  	OP_RMDIR,
- 	OP_SETATTR,
-@@ -203,6 +234,8 @@ void	readlink_f(int, long);
- void	readv_f(int, long);
+@@ -235,6 +239,7 @@ void	readv_f(int, long);
  void	removefattr_f(int, long);
  void	rename_f(int, long);
-+void	rnoreplace_f(int, long);
-+void	rwhiteout_f(int, long);
+ void	rnoreplace_f(int, long);
++void	rexchange_f(int, long);
+ void	rwhiteout_f(int, long);
  void	resvsp_f(int, long);
  void	rmdir_f(int, long);
- void	setattr_f(int, long);
-@@ -262,6 +295,8 @@ opdesc_t	ops[] = {
- 	/* remove (delete) extended attribute */
+@@ -296,6 +301,7 @@ opdesc_t	ops[] = {
  	{ OP_REMOVEFATTR, "removefattr", removefattr_f, 1, 1 },
  	{ OP_RENAME, "rename", rename_f, 2, 1 },
-+	{ OP_RNOREPLACE, "rnoreplace", rnoreplace_f, 2, 1 },
-+	{ OP_RWHITEOUT, "rwhiteout", rwhiteout_f, 2, 1 },
+ 	{ OP_RNOREPLACE, "rnoreplace", rnoreplace_f, 2, 1 },
++	{ OP_REXCHANGE, "rexchange", rexchange_f, 2, 1 },
+ 	{ OP_RWHITEOUT, "rwhiteout", rwhiteout_f, 2, 1 },
  	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
  	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
- 	/* set attribute flag (FS_IOC_SETFLAGS ioctl) */
-@@ -354,7 +389,7 @@ int	open_path(pathname_t *, int);
- DIR	*opendir_path(pathname_t *);
- void	process_freq(char *);
- int	readlink_path(pathname_t *, char *, size_t);
--int	rename_path(pathname_t *, pathname_t *);
-+int	rename_path(pathname_t *, pathname_t *, int);
- int	rmdir_path(pathname_t *);
- void	separate_pathname(pathname_t *, char *, pathname_t *);
- void	show_ops(int, char *);
-@@ -1519,7 +1554,7 @@ readlink_path(pathname_t *name, char *lbuf, size_t lbufsiz)
+@@ -371,7 +377,7 @@ void	del_from_flist(int, int);
+ int	dirid_to_name(char *, int);
+ void	doproc(void);
+ int	fent_to_name(pathname_t *, flist_t *, fent_t *);
+-void	fix_parent(int, int);
++void	fix_parent(int, int, int);
+ void	free_pathname(pathname_t *);
+ int	generate_fname(fent_t *, int, pathname_t *, int *, int *);
+ int	generate_xattr_name(int, char *, int);
+@@ -1118,7 +1124,7 @@ fent_to_name(pathname_t *name, flist_t *flp, fent_t *fep)
  }
  
- int
--rename_path(pathname_t *name1, pathname_t *name2)
-+rename_path(pathname_t *name1, pathname_t *name2, int mode)
- {
- 	char		buf1[NAME_MAX + 1];
- 	char		buf2[NAME_MAX + 1];
-@@ -1528,14 +1563,18 @@ rename_path(pathname_t *name1, pathname_t *name2)
- 	pathname_t	newname2;
- 	int		rval;
- 
--	rval = rename(name1->path, name2->path);
-+	if (mode == 0)
-+		rval = rename(name1->path, name2->path);
-+	else
-+		rval = renameat2(AT_FDCWD, name1->path,
-+				 AT_FDCWD, name2->path, mode);
- 	if (rval >= 0 || errno != ENAMETOOLONG)
- 		return rval;
- 	separate_pathname(name1, buf1, &newname1);
- 	separate_pathname(name2, buf2, &newname2);
- 	if (strcmp(buf1, buf2) == 0) {
- 		if (chdir(buf1) == 0) {
--			rval = rename_path(&newname1, &newname2);
-+			rval = rename_path(&newname1, &newname2, mode);
- 			assert(chdir("..") == 0);
- 		}
- 	} else {
-@@ -1555,7 +1594,7 @@ rename_path(pathname_t *name1, pathname_t *name2)
- 			append_pathname(&newname2, "../");
- 			append_pathname(&newname2, name2->path);
- 			if (chdir(buf1) == 0) {
--				rval = rename_path(&newname1, &newname2);
-+				rval = rename_path(&newname1, &newname2, mode);
- 				assert(chdir("..") == 0);
- 			}
- 		} else {
-@@ -1563,7 +1602,7 @@ rename_path(pathname_t *name1, pathname_t *name2)
- 			append_pathname(&newname1, "../");
- 			append_pathname(&newname1, name1->path);
- 			if (chdir(buf2) == 0) {
--				rval = rename_path(&newname1, &newname2);
-+				rval = rename_path(&newname1, &newname2, mode);
- 				assert(chdir("..") == 0);
- 			}
- 		}
-@@ -4215,8 +4254,17 @@ out:
- 	free_pathname(&f);
- }
- 
-+struct print_flags renameat2_flags [] = {
-+	{ RENAME_NOREPLACE, "NOREPLACE"},
-+	{ RENAME_WHITEOUT, "WHITEOUT"},
-+	{ -1, NULL}
-+};
-+
-+#define translate_renameat2_flags(mode)        \
-+	({translate_flags(mode, "|", renameat2_flags);})
-+
  void
--rename_f(int opno, long r)
-+do_renameat2(int opno, long r, int mode)
+-fix_parent(int oldid, int newid)
++fix_parent(int oldid, int newid, int swap)
  {
- 	fent_t		*dfep;
- 	int		e;
-@@ -4228,14 +4276,17 @@ rename_f(int opno, long r)
- 	int		oldid;
- 	int		parid;
- 	int		oldparid;
-+	int		which;
- 	int		v;
- 	int		v1;
+ 	fent_t	*fep;
+ 	flist_t	*flp;
+@@ -1129,6 +1135,8 @@ fix_parent(int oldid, int newid)
+ 		for (j = 0, fep = flp->fents; j < flp->nfiles; j++, fep++) {
+ 			if (fep->parent == oldid)
+ 				fep->parent = newid;
++			if (swap && fep->parent == newid)
++				fep->parent = oldid;
+ 		}
+ 	}
+ }
+@@ -4256,6 +4264,7 @@ out:
  
- 	/* get an existing path for the source of the rename */
- 	init_pathname(&f);
--	if (!get_fname(FT_ANYm, r, &f, &flp, &fep, &v1)) {
-+	which = (mode == RENAME_WHITEOUT) ? FT_DEVm : FT_ANYm;
-+	if (!get_fname(which, r, &f, &flp, &fep, &v1)) {
- 		if (v1)
--			printf("%d/%d: rename - no filename\n", procid, opno);
-+			printf("%d/%d: rename - no source filename\n",
-+				procid, opno);
- 		free_pathname(&f);
+ struct print_flags renameat2_flags [] = {
+ 	{ RENAME_NOREPLACE, "NOREPLACE"},
++	{ RENAME_EXCHANGE, "EXCHANGE"},
+ 	{ RENAME_WHITEOUT, "WHITEOUT"},
+ 	{ -1, NULL}
+ };
+@@ -4291,41 +4300,68 @@ do_renameat2(int opno, long r, int mode)
  		return;
  	}
-@@ -4261,7 +4312,7 @@ rename_f(int opno, long r)
- 		free_pathname(&f);
- 		return;
+ 
+-	/* get an existing directory for the destination parent directory name */
+-	if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
+-		parid = -1;
+-	else
+-		parid = dfep->id;
+-	v |= v1;
++	/* Both pathnames must exist for the RENAME_EXCHANGE */
++	if (mode == RENAME_EXCHANGE) {
++		which = 1 << (flp - flist);
++		init_pathname(&newf);
++		if (!get_fname(which, random(), &newf, NULL, &dfep, &v)) {
++			if (v)
++				printf("%d/%d: rename - no target filename\n",
++					procid, opno);
++			free_pathname(&newf);
++			free_pathname(&f);
++			return;
++		}
++		v |= v1;
++		id = dfep->id;
++		parid = dfep->parent;
++	} else {
++		/*
++		 * get an existing directory for the destination parent
++		 * directory name.
++		 */
++		if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
++			parid = -1;
++		else
++			parid = dfep->id;
++		v |= v1;
+ 
+-	/* generate a new path using an existing parent directory in name */
+-	init_pathname(&newf);
+-	e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
+-	v |= v1;
+-	if (!e) {
+-		if (v) {
+-			(void)fent_to_name(&f, &flist[FT_DIR], dfep);
+-			printf("%d/%d: rename - no filename from %s\n",
+-				procid, opno, f.path);
++		/*
++		 * generate a new path using an existing parent directory
++		 * in name.
++		 */
++		init_pathname(&newf);
++		e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
++		v |= v1;
++		if (!e) {
++			if (v) {
++				(void)fent_to_name(&f, &flist[FT_DIR], dfep);
++				printf("%d/%d: rename - no filename from %s\n",
++					procid, opno, f.path);
++			}
++			free_pathname(&newf);
++			free_pathname(&f);
++			return;
+ 		}
+-		free_pathname(&newf);
+-		free_pathname(&f);
+-		return;
  	}
--	e = rename_path(&f, &newf) < 0 ? errno : 0;
-+	e = rename_path(&f, &newf, mode) < 0 ? errno : 0;
+ 	e = rename_path(&f, &newf, mode) < 0 ? errno : 0;
  	check_cwd();
  	if (e == 0) {
  		int xattr_counter = fep->xattr_counter;
-@@ -4272,16 +4323,21 @@ rename_f(int opno, long r)
- 		if (flp - flist == FT_DIR)
- 			fix_parent(oldid, id);
++		int swap = (mode == RENAME_EXCHANGE) ? 1 : 0;
  
--		del_from_flist(flp - flist, fep - flp->fents);
--		add_to_flist(flp - flist, id, parid, xattr_counter);
-+		if (mode == RENAME_WHITEOUT)
-+			add_to_flist(flp - flist, id, parid, xattr_counter);
-+		else {
-+			del_from_flist(flp - flist, fep - flp->fents);
-+			add_to_flist(flp - flist, id, parid, xattr_counter);
-+		}
- 	}
- 	if (v) {
--		printf("%d/%d: rename %s to %s %d\n", procid, opno, f.path,
-+		printf("%d/%d: rename(%s) %s to %s %d\n", procid,
-+			opno, translate_renameat2_flags(mode), f.path,
- 			newf.path, e);
- 		if (e == 0) {
--			printf("%d/%d: rename del entry: id=%d,parent=%d\n",
-+			printf("%d/%d: rename source entry: id=%d,parent=%d\n",
- 				procid, opno, oldid, oldparid);
--			printf("%d/%d: rename add entry: id=%d,parent=%d\n",
-+			printf("%d/%d: rename target entry: id=%d,parent=%d\n",
- 				procid, opno, id, parid);
+ 		oldid = fep->id;
+ 		oldparid = fep->parent;
+ 
+ 		if (flp - flist == FT_DIR)
+-			fix_parent(oldid, id);
++			fix_parent(oldid, id, swap);
+ 
+ 		if (mode == RENAME_WHITEOUT)
+ 			add_to_flist(flp - flist, id, parid, xattr_counter);
+-		else {
++		else if (mode == RENAME_EXCHANGE) {
++			fep->xattr_counter = dfep->xattr_counter;
++			dfep->xattr_counter = xattr_counter;
++		} else {
+ 			del_from_flist(flp - flist, fep - flp->fents);
+ 			add_to_flist(flp - flist, id, parid, xattr_counter);
  		}
- 	}
-@@ -4290,6 +4346,24 @@ rename_f(int opno, long r)
+@@ -4358,6 +4394,12 @@ rnoreplace_f(int opno, long r)
  }
  
  void
-+rename_f(int opno, long r)
++rexchange_f(int opno, long r)
 +{
-+	do_renameat2(opno, r, 0);
++	do_renameat2(opno, r, RENAME_EXCHANGE);
 +}
 +
 +void
-+rnoreplace_f(int opno, long r)
-+{
-+	do_renameat2(opno, r, RENAME_NOREPLACE);
-+}
-+
-+void
-+rwhiteout_f(int opno, long r)
-+{
-+	do_renameat2(opno, r, RENAME_WHITEOUT);
-+}
-+
-+void
- resvsp_f(int opno, long r)
+ rwhiteout_f(int opno, long r)
  {
- 	int		e;
+ 	do_renameat2(opno, r, RENAME_WHITEOUT);
 -- 
 1.8.3.1
 
