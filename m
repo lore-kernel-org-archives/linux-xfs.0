@@ -7,56 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 29707CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 85D18CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:33 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E985D21872
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 509FF21D71
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:33 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="j5ah+o6u"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TJNdVAa4"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392732AbfJYFPZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 01:15:25 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:56968 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729081AbfJYFPZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:15:25 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5EHQ6107868
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:24 GMT
+        id S2392719AbfJYFPd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 01:15:33 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:45992 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729081AbfJYFPc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:15:32 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5DkuW123733
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:30 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=cklCALz8FhMEhZBd5RH+n+3Vy+sH2uibrH0uBn9+ahg=;
- b=j5ah+o6uvpTh2j/4p5O/gVf/UsZwxfoNXjQ1G1TT9pZTcOlvhOhTdV0jITT2YgHDpJSl
- liHpYQm3BQNiTKZi6KGXZPqngqY9ACVzVL2g/xqIYFXYoqxnlnhZT7W3p0QF8DQaFKyb
- +Txc+hzI93qhTiN1ySMr6wqdqfsBA6Y85PuONnIHgzSB0xjjh9IYciqKrFvpngNlvWNr
- w9Atb11g/DuiTJVHMIPwsuWrTAl4rqlbjG2czDPfghy0PXFH7QQwZLn8HclOyJXM2xbf
- 8J+Hl/6VDGSzMAPv6Yt4Za7oaYjkgeK4mbItthM06eW09FBwgErNmwWLv35bi4pQr/W5 ug== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2vqteq8512-1
+ bh=29Emh+6IE9zmBtHbYpXVNvNVyqQ4YhzjXpXVoGROuCo=;
+ b=TJNdVAa48mSLSBCA4IgyC5P4uRA5RRs+H/S/HrrDS4X+/SBEiZ+YXG87/Dl5OvBv+Yza
+ Ql9RQq0uT0SUNW9jdWfBX3Ujnvr0LW1LcEMSgv+q3Oe9ut1bIxih0qlW7jZiBcoz+QnQ
+ tlqmYT0uWRumV6J4iIdEiCoLwpyViZQhfLpsiRu1X66zV+YzBJhv7TAc2tWQ4dlGLPqi
+ pcdOORSxugxRCr10KakxypHY4DyDC1RgVB/mNyUjiOeQKx0ZM10qs1qsDXT5/S3Co4Vk
+ qulpfOa2FFRimMdgDdKhyTyZPTIhgBCIFQIwXAfh5lvNerXo37zWg236SiYCiXK50vNh 8Q== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2130.oracle.com with ESMTP id 2vqswu08pm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:24 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5DagA125957
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:24 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2vunbkgux6-1
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:30 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5Dm1G073603
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:29 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2vu0fqsckc-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:23 +0000
-Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9P5FM5e002433
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:22 GMT
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:29 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9P5FSrR019204
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:28 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Oct 2019 22:15:22 -0700
-Subject: [PATCH 1/2] xfs: refactor xfs_bmap_count_blocks using newer btree
- helpers
+        with ESMTP ; Fri, 25 Oct 2019 05:15:28 +0000
+Subject: [PATCH 2/2] xfs: refactor xfs_iread_extents to use
+ xfs_btree_visit_blocks
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 24 Oct 2019 22:15:21 -0700
-Message-ID: <157198052157.2873576.11427854428031607748.stgit@magnolia>
+Date:   Thu, 24 Oct 2019 22:15:27 -0700
+Message-ID: <157198052776.2873576.12691586684307027826.stgit@magnolia>
 In-Reply-To: <157198051549.2873576.10430329078588571923.stgit@magnolia>
 References: <157198051549.2873576.10430329078588571923.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,195 +81,310 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Currently, this function open-codes walking a bmbt to count the extents
-and blocks in use by a particular inode fork.  Since we now have a
-function to tally extent records from the incore extent tree and a btree
-helper to count every block in a btree, replace all that with calls to
-the helpers.
+xfs_iread_extents open-codes everything in xfs_btree_visit_blocks, so
+refactor the btree helper to be able to iterate only the records on
+level 0, then port iread_extents to use it.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_bmap_util.c |  146 +++++-------------------------------------------
- 1 file changed, 15 insertions(+), 131 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c  |  191 ++++++++++++++++++---------------------------
+ fs/xfs/libxfs/xfs_btree.c |    8 +-
+ fs/xfs/libxfs/xfs_btree.h |    4 +
+ fs/xfs/scrub/bitmap.c     |    3 -
+ 4 files changed, 88 insertions(+), 118 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 4f443703065e..b70d5513b7e9 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -228,106 +228,6 @@ xfs_bmap_count_leaves(
- 	return numrecs;
- }
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 587889585a23..31a7c7768ea0 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1154,6 +1154,65 @@ xfs_bmap_add_attrfork(
+  * Internal and external extent tree search functions.
+  */
  
--/*
-- * Count leaf blocks given a range of extent records originally
-- * in btree format.
-- */
--STATIC void
--xfs_bmap_disk_count_leaves(
--	struct xfs_mount	*mp,
--	struct xfs_btree_block	*block,
--	int			numrecs,
--	xfs_filblks_t		*count)
--{
--	int		b;
--	xfs_bmbt_rec_t	*frp;
--
--	for (b = 1; b <= numrecs; b++) {
--		frp = XFS_BMBT_REC_ADDR(mp, block, b);
--		*count += xfs_bmbt_disk_get_blockcount(frp);
--	}
--}
--
--/*
-- * Recursively walks each level of a btree
-- * to count total fsblocks in use.
-- */
--STATIC int
--xfs_bmap_count_tree(
--	struct xfs_mount	*mp,
--	struct xfs_trans	*tp,
--	struct xfs_ifork	*ifp,
--	xfs_fsblock_t		blockno,
--	int			levelin,
--	xfs_extnum_t		*nextents,
--	xfs_filblks_t		*count)
--{
--	int			error;
--	struct xfs_buf		*bp, *nbp;
--	int			level = levelin;
--	__be64			*pp;
--	xfs_fsblock_t           bno = blockno;
--	xfs_fsblock_t		nextbno;
--	struct xfs_btree_block	*block, *nextblock;
--	int			numrecs;
--
--	error = xfs_btree_read_bufl(mp, tp, bno, &bp, XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--	if (error)
--		return error;
--	*count += 1;
--	block = XFS_BUF_TO_BLOCK(bp);
--
--	if (--level) {
--		/* Not at node above leaves, count this level of nodes */
--		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
--		while (nextbno != NULLFSBLOCK) {
--			error = xfs_btree_read_bufl(mp, tp, nextbno, &nbp,
--						XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--			if (error)
--				return error;
--			*count += 1;
--			nextblock = XFS_BUF_TO_BLOCK(nbp);
--			nextbno = be64_to_cpu(nextblock->bb_u.l.bb_rightsib);
--			xfs_trans_brelse(tp, nbp);
--		}
--
--		/* Dive to the next level */
--		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
--		bno = be64_to_cpu(*pp);
--		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level, nextents,
--				count);
--		if (error) {
--			xfs_trans_brelse(tp, bp);
--			XFS_ERROR_REPORT("xfs_bmap_count_tree(1)",
--					 XFS_ERRLEVEL_LOW, mp);
--			return -EFSCORRUPTED;
--		}
--		xfs_trans_brelse(tp, bp);
--	} else {
--		/* count all level 1 nodes and their leaves */
--		for (;;) {
--			nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
--			numrecs = be16_to_cpu(block->bb_numrecs);
--			(*nextents) += numrecs;
--			xfs_bmap_disk_count_leaves(mp, block, numrecs, count);
--			xfs_trans_brelse(tp, bp);
--			if (nextbno == NULLFSBLOCK)
--				break;
--			bno = nextbno;
--			error = xfs_btree_read_bufl(mp, tp, bno, &bp,
--						XFS_BMAP_BTREE_REF,
--						&xfs_bmbt_buf_ops);
--			if (error)
--				return error;
--			*count += 1;
--			block = XFS_BUF_TO_BLOCK(bp);
--		}
--	}
--	return 0;
--}
--
++struct xfs_iread_state {
++	struct xfs_iext_cursor	icur;
++	struct xfs_ifork	*ifp;
++	xfs_extnum_t		loaded;
++	xfs_extnum_t		nextents;
++	int			state;
++};
++
++/* Stuff every bmbt record from this block into the incore extent map. */
++static int
++xfs_iread_bmbt_block(
++	struct xfs_btree_cur	*cur,
++	int			level,
++	void			*priv)
++{
++	struct xfs_iread_state	*ir = priv;
++	struct xfs_mount	*mp = cur->bc_mp;
++	struct xfs_inode	*ip = cur->bc_private.b.ip;
++	struct xfs_btree_block	*block;
++	struct xfs_buf		*bp;
++	struct xfs_bmbt_rec	*frp;
++	xfs_extnum_t		num_recs;
++	xfs_extnum_t		j;
++	int			whichfork = cur->bc_private.b.whichfork;
++
++	block = xfs_btree_get_block(cur, level, &bp);
++
++	/* Abort if we find more records than nextents. */
++	num_recs = xfs_btree_get_numrecs(block);
++	if (unlikely(ir->loaded + num_recs > ir->nextents)) {
++		xfs_warn(ip->i_mount, "corrupt dinode %llu, (btree extents).",
++				(unsigned long long)ip->i_ino);
++		xfs_inode_verifier_error(ip, -EFSCORRUPTED, __func__, block,
++				sizeof(*block), __this_address);
++		return -EFSCORRUPTED;
++	}
++
++	/* Copy records into the incore cache. */
++	frp = XFS_BMBT_REC_ADDR(mp, block, 1);
++	for (j = 0; j < num_recs; j++, frp++, ir->loaded++) {
++		struct xfs_bmbt_irec	new;
++		xfs_failaddr_t		fa;
++
++		xfs_bmbt_disk_get_all(frp, &new);
++		fa = xfs_bmap_validate_extent(ip, whichfork, &new);
++		if (fa) {
++			xfs_inode_verifier_error(ip, -EFSCORRUPTED,
++					"xfs_iread_extents(2)", frp,
++					sizeof(*frp), fa);
++			return -EFSCORRUPTED;
++		}
++		xfs_iext_insert(ip, &ir->icur, &new, ir->state);
++		trace_xfs_read_extent(ip, &ir->icur, ir->state, _THIS_IP_);
++		xfs_iext_next(ir->ifp, &ir->icur);
++	}
++
++	return 0;
++}
++
  /*
-  * Count fsblocks of the given fork.  Delayed allocation extents are
-  * not counted towards the totals.
-@@ -340,26 +240,19 @@ xfs_bmap_count_blocks(
- 	xfs_extnum_t		*nextents,
- 	xfs_filblks_t		*count)
+  * Read in extents from a btree-format inode.
+  */
+@@ -1163,136 +1222,40 @@ xfs_iread_extents(
+ 	struct xfs_inode	*ip,
+ 	int			whichfork)
  {
--	struct xfs_mount	*mp;	/* file system mount structure */
--	__be64			*pp;	/* pointer to block address */
--	struct xfs_btree_block	*block;	/* current btree block */
--	struct xfs_ifork	*ifp;	/* fork structure */
--	xfs_fsblock_t		bno;	/* block # of "block" */
--	int			level;	/* btree level, for checking */
-+	struct xfs_mount	*mp = ip->i_mount;
-+	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
++	struct xfs_iread_state	ir = {
++		.state		= xfs_bmap_fork_to_state(whichfork),
++		.ifp		= XFS_IFORK_PTR(ip, whichfork),
++		.nextents	= XFS_IFORK_NEXTENTS(ip, whichfork),
++	};
+ 	struct xfs_mount	*mp = ip->i_mount;
+-	int			state = xfs_bmap_fork_to_state(whichfork);
+-	struct xfs_ifork	*ifp = XFS_IFORK_PTR(ip, whichfork);
+-	xfs_extnum_t		nextents = XFS_IFORK_NEXTENTS(ip, whichfork);
+-	struct xfs_btree_block	*block = ifp->if_broot;
+-	struct xfs_iext_cursor	icur;
+-	struct xfs_bmbt_irec	new;
+-	xfs_fsblock_t		bno;
+-	struct xfs_buf		*bp;
+-	xfs_extnum_t		i, j;
+-	int			level;
+-	__be64			*pp;
 +	struct xfs_btree_cur	*cur;
-+	xfs_extlen_t		btblocks = 0;
  	int			error;
  
--	bno = NULLFSBLOCK;
--	mp = ip->i_mount;
- 	*nextents = 0;
- 	*count = 0;
--	ifp = XFS_IFORK_PTR(ip, whichfork);
-+
- 	if (!ifp)
- 		return 0;
+ 	ASSERT(xfs_isilocked(ip, XFS_ILOCK_EXCL));
  
- 	switch (XFS_IFORK_FORMAT(ip, whichfork)) {
--	case XFS_DINODE_FMT_EXTENTS:
--		*nextents = xfs_bmap_count_leaves(ifp, count);
--		return 0;
- 	case XFS_DINODE_FMT_BTREE:
- 		if (!(ifp->if_flags & XFS_IFEXTENTS)) {
- 			error = xfs_iread_extents(tp, ip, whichfork);
-@@ -367,25 +260,16 @@ xfs_bmap_count_blocks(
- 				return error;
- 		}
- 
--		/*
--		 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
--		 */
--		block = ifp->if_broot;
--		level = be16_to_cpu(block->bb_level);
--		ASSERT(level > 0);
--		pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
--		bno = be64_to_cpu(*pp);
--		ASSERT(bno != NULLFSBLOCK);
--		ASSERT(XFS_FSB_TO_AGNO(mp, bno) < mp->m_sb.sb_agcount);
--		ASSERT(XFS_FSB_TO_AGBNO(mp, bno) < mp->m_sb.sb_agblocks);
+ 	if (unlikely(XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE)) {
+ 		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+-		return -EFSCORRUPTED;
+-	}
 -
--		error = xfs_bmap_count_tree(mp, tp, ifp, bno, level,
--				nextents, count);
--		if (error) {
--			XFS_ERROR_REPORT("xfs_bmap_count_blocks(2)",
--					XFS_ERRLEVEL_LOW, mp);
--			return -EFSCORRUPTED;
--		}
-+		cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
-+		error = xfs_btree_count_blocks(cur, &btblocks);
-+		xfs_btree_del_cursor(cur, error);
-+		if (error)
-+			return error;
-+
-+		*count += btblocks - 1;
-+		/* fall through */
-+	case XFS_DINODE_FMT_EXTENTS:
-+		*nextents = xfs_bmap_count_leaves(ifp, count);
- 		return 0;
+-	/*
+-	 * Root level must use BMAP_BROOT_PTR_ADDR macro to get ptr out.
+-	 */
+-	level = be16_to_cpu(block->bb_level);
+-	if (unlikely(level == 0)) {
+-		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW, mp);
+-		return -EFSCORRUPTED;
+-	}
+-	pp = XFS_BMAP_BROOT_PTR_ADDR(mp, block, 1, ifp->if_broot_bytes);
+-	bno = be64_to_cpu(*pp);
+-
+-	/*
+-	 * Go down the tree until leaf level is reached, following the first
+-	 * pointer (leftmost) at each level.
+-	 */
+-	while (level-- > 0) {
+-		error = xfs_btree_read_bufl(mp, tp, bno, &bp,
+-				XFS_BMAP_BTREE_REF, &xfs_bmbt_buf_ops);
+-		if (error)
+-			goto out;
+-		block = XFS_BUF_TO_BLOCK(bp);
+-		if (level == 0)
+-			break;
+-		pp = XFS_BMBT_PTR_ADDR(mp, block, 1, mp->m_bmap_dmxr[1]);
+-		bno = be64_to_cpu(*pp);
+-		XFS_WANT_CORRUPTED_GOTO(mp,
+-			xfs_verify_fsbno(mp, bno), out_brelse);
+-		xfs_trans_brelse(tp, bp);
++		error = -EFSCORRUPTED;
++		goto out;
  	}
  
+-	/*
+-	 * Here with bp and block set to the leftmost leaf node in the tree.
+-	 */
+-	i = 0;
+-	xfs_iext_first(ifp, &icur);
+-
+-	/*
+-	 * Loop over all leaf nodes.  Copy information to the extent records.
+-	 */
+-	for (;;) {
+-		xfs_bmbt_rec_t	*frp;
+-		xfs_fsblock_t	nextbno;
+-		xfs_extnum_t	num_recs;
+-
+-		num_recs = xfs_btree_get_numrecs(block);
+-		if (unlikely(i + num_recs > nextents)) {
+-			xfs_warn(ip->i_mount,
+-				"corrupt dinode %Lu, (btree extents).",
+-				(unsigned long long) ip->i_ino);
+-			xfs_inode_verifier_error(ip, -EFSCORRUPTED,
+-					__func__, block, sizeof(*block),
+-					__this_address);
+-			error = -EFSCORRUPTED;
+-			goto out_brelse;
+-		}
+-		/*
+-		 * Read-ahead the next leaf block, if any.
+-		 */
+-		nextbno = be64_to_cpu(block->bb_u.l.bb_rightsib);
+-		if (nextbno != NULLFSBLOCK)
+-			xfs_btree_reada_bufl(mp, nextbno, 1,
+-					     &xfs_bmbt_buf_ops);
+-		/*
+-		 * Copy records into the extent records.
+-		 */
+-		frp = XFS_BMBT_REC_ADDR(mp, block, 1);
+-		for (j = 0; j < num_recs; j++, frp++, i++) {
+-			xfs_failaddr_t	fa;
+-
+-			xfs_bmbt_disk_get_all(frp, &new);
+-			fa = xfs_bmap_validate_extent(ip, whichfork, &new);
+-			if (fa) {
+-				error = -EFSCORRUPTED;
+-				xfs_inode_verifier_error(ip, error,
+-						"xfs_iread_extents(2)",
+-						frp, sizeof(*frp), fa);
+-				goto out_brelse;
+-			}
+-			xfs_iext_insert(ip, &icur, &new, state);
+-			trace_xfs_read_extent(ip, &icur, state, _THIS_IP_);
+-			xfs_iext_next(ifp, &icur);
+-		}
+-		xfs_trans_brelse(tp, bp);
+-		bno = nextbno;
+-		/*
+-		 * If we've reached the end, stop.
+-		 */
+-		if (bno == NULLFSBLOCK)
+-			break;
+-		error = xfs_btree_read_bufl(mp, tp, bno, &bp,
+-				XFS_BMAP_BTREE_REF, &xfs_bmbt_buf_ops);
+-		if (error)
+-			goto out;
+-		block = XFS_BUF_TO_BLOCK(bp);
+-	}
++	cur = xfs_bmbt_init_cursor(mp, tp, ip, whichfork);
++	error = xfs_btree_visit_blocks(cur, xfs_iread_bmbt_block,
++			XFS_BTREE_VISIT_RECORDS_ONLY, &ir);
++	xfs_btree_del_cursor(cur, error);
++	if (error)
++		goto out;
+ 
+-	if (i != XFS_IFORK_NEXTENTS(ip, whichfork)) {
++	if (ir.loaded != ir.nextents) {
+ 		error = -EFSCORRUPTED;
+ 		goto out;
+ 	}
+-	ASSERT(i == xfs_iext_count(ifp));
++	ASSERT(ir.loaded == xfs_iext_count(ir.ifp));
+ 
+-	ifp->if_flags |= XFS_IFEXTENTS;
++	ir.ifp->if_flags |= XFS_IFEXTENTS;
+ 	return 0;
+-
+-out_brelse:
+-	xfs_trans_brelse(tp, bp);
+ out:
+-	xfs_iext_destroy(ifp);
++	xfs_iext_destroy(ir.ifp);
+ 	return error;
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.c b/fs/xfs/libxfs/xfs_btree.c
+index 71de937f9e64..8f2c151b543a 100644
+--- a/fs/xfs/libxfs/xfs_btree.c
++++ b/fs/xfs/libxfs/xfs_btree.c
+@@ -4286,6 +4286,7 @@ int
+ xfs_btree_visit_blocks(
+ 	struct xfs_btree_cur		*cur,
+ 	xfs_btree_visit_blocks_fn	fn,
++	unsigned int			flags,
+ 	void				*data)
+ {
+ 	union xfs_btree_ptr		lptr;
+@@ -4313,6 +4314,9 @@ xfs_btree_visit_blocks(
+ 			xfs_btree_copy_ptrs(cur, &lptr, ptr, 1);
+ 		}
+ 
++		if ((flags & XFS_BTREE_VISIT_RECORDS_ONLY) && level > 0)
++			continue;
++
+ 		/* for each buffer in the level */
+ 		do {
+ 			error = xfs_btree_visit_block(cur, level, fn, data);
+@@ -4412,7 +4416,7 @@ xfs_btree_change_owner(
+ 	bbcoi.new_owner = new_owner;
+ 	bbcoi.buffer_list = buffer_list;
+ 
+-	return xfs_btree_visit_blocks(cur, xfs_btree_block_change_owner,
++	return xfs_btree_visit_blocks(cur, xfs_btree_block_change_owner, 0,
+ 			&bbcoi);
+ }
+ 
+@@ -4864,7 +4868,7 @@ xfs_btree_count_blocks(
+ 	xfs_extlen_t		*blocks)
+ {
+ 	*blocks = 0;
+-	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper,
++	return xfs_btree_visit_blocks(cur, xfs_btree_count_blocks_helper, 0,
+ 			blocks);
+ }
+ 
+diff --git a/fs/xfs/libxfs/xfs_btree.h b/fs/xfs/libxfs/xfs_btree.h
+index ced1e65d1483..d2fc17f84d9b 100644
+--- a/fs/xfs/libxfs/xfs_btree.h
++++ b/fs/xfs/libxfs/xfs_btree.h
+@@ -482,8 +482,10 @@ int xfs_btree_query_all(struct xfs_btree_cur *cur, xfs_btree_query_range_fn fn,
+ 
+ typedef int (*xfs_btree_visit_blocks_fn)(struct xfs_btree_cur *cur, int level,
+ 		void *data);
++/* Only visit record blocks. */
++#define XFS_BTREE_VISIT_RECORDS_ONLY	(0x1)
+ int xfs_btree_visit_blocks(struct xfs_btree_cur *cur,
+-		xfs_btree_visit_blocks_fn fn, void *data);
++		xfs_btree_visit_blocks_fn fn, unsigned int flags, void *data);
+ 
+ int xfs_btree_count_blocks(struct xfs_btree_cur *cur, xfs_extlen_t *blocks);
+ 
+diff --git a/fs/xfs/scrub/bitmap.c b/fs/xfs/scrub/bitmap.c
+index 3d47d111be5a..6e5e28fcdd4a 100644
+--- a/fs/xfs/scrub/bitmap.c
++++ b/fs/xfs/scrub/bitmap.c
+@@ -294,5 +294,6 @@ xfs_bitmap_set_btblocks(
+ 	struct xfs_bitmap	*bitmap,
+ 	struct xfs_btree_cur	*cur)
+ {
+-	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, bitmap);
++	return xfs_btree_visit_blocks(cur, xfs_bitmap_collect_btblock, 0,
++			bitmap);
+ }
 
