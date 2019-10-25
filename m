@@ -7,55 +7,55 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C714BCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:04 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6DC0DCA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8F71921872
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:04 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4445D21872
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:15:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ddagZR+S"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="On8Df2oW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392691AbfJYFPE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 01:15:04 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:45492 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729081AbfJYFPE (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:15:04 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5Dkdp123713
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:03 GMT
+        id S2392698AbfJYFPK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 01:15:10 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:56420 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729081AbfJYFPJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:15:09 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5Dm6v102644
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=yarOo7g07vFG0hy0ibtp91U16e8vPmwdOYZr7kdbZTQ=;
- b=ddagZR+SM2jhhqBzdFd4oc8bPhzwrak+Akt0tkWXa+8K7Wn5983xRXEkheZz7OwW2D/K
- vn/MpZ2L9WKGjajcleAv0UGIZIavYiUBkvXURhx928RJ4HcVA8CytwcGuJ5zd/sKvhs2
- PEd0/LG/6LJcAPkz3rfs5E7v515YvPt8tSklpkCoo6AARkAiCcba2MYPvIJ07T9KydN8
- 3j3EqhKiMoVUySdAZ7djeM7NEESDE2ytYu6gmWdLRIrQG5l1/8zQWSlylCWwkjCsr5pT
- ziapqUOXlEJ3RfMpem+i4sTQL2I1Dkznq/gGKNdfQuOcgYJV9tJqjJpakDxUW9UeZv8Z lg== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2130.oracle.com with ESMTP id 2vqswu08n6-1
+ bh=h4S8ivx/sX/n4/y1+2X2rofM/kE0Lcv3JMP4ite+M2E=;
+ b=On8Df2oWGme0YvAcLa3vtPdzJYm/ieAYyD/ZhYfNBE2FQFZJ3HFpWYnrd+qmdUXXIRmE
+ I1H4BRo3D3J3EdjUSH1Smtg7NIXEDG11KEIL8rYIfddqICjpTRAVVOnFgg0WsdH5bAVa
+ GyJUM3PUbFWmENfkYYHnk3carZVerxwL1v6qO5bSM9OMiAg03PYZarW2bcf9V1KArQuj
+ 2iOBXleIizvtoqNWpfBzVSCIkNl+GwFH5rMWKbhF6jpsYA9tVj7w0i+UQs5ZDgtGF9Jn
+ IGdJLqb4GqKT1TNutqCkJwB417jUC5a0aOuU8dlfBxWtMIZAG7L5t83xrxyWZemMND/R JA== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vqu4r7yhm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:02 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5Dlam073525
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:02 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2vu0fqsbq5-1
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:08 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5DhMr073733
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:07 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2vtsk6uerx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:01 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9P5F0qc002027
-        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:00 GMT
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:07 +0000
+Received: from abhmp0008.oracle.com (abhmp0008.oracle.com [141.146.116.14])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9P5F6xb020972
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:15:06 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Oct 2019 22:15:00 -0700
-Subject: [PATCH 2/4] xfs: namecheck attribute names before listing them
+        with ESMTP ; Thu, 24 Oct 2019 22:15:06 -0700
+Subject: [PATCH 3/4] xfs: namecheck directory entry names before listing them
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Thu, 24 Oct 2019 22:14:59 -0700
-Message-ID: <157198049955.2873445.974102983711142585.stgit@magnolia>
+Date:   Thu, 24 Oct 2019 22:15:05 -0700
+Message-ID: <157198050564.2873445.4054092614183428143.stgit@magnolia>
 In-Reply-To: <157198048552.2873445.18067788660614948888.stgit@magnolia>
 References: <157198048552.2873445.18067788660614948888.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,149 +80,61 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Actually call namecheck on attribute names before we hand them over to
-userspace.
+Actually call namecheck on directory entry names before we hand them
+over to userspace.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/libxfs/xfs_attr_leaf.h |    4 ++--
- fs/xfs/xfs_attr_list.c        |   40 ++++++++++++++++++++++++++++++++--------
- 2 files changed, 34 insertions(+), 10 deletions(-)
+ fs/xfs/xfs_dir2_readdir.c |   16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
 
-diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
-index 7b74e18becff..bb0880057ee3 100644
---- a/fs/xfs/libxfs/xfs_attr_leaf.h
-+++ b/fs/xfs/libxfs/xfs_attr_leaf.h
-@@ -67,8 +67,8 @@ int	xfs_attr3_leaf_add(struct xfs_buf *leaf_buffer,
- 				 struct xfs_da_args *args);
- int	xfs_attr3_leaf_remove(struct xfs_buf *leaf_buffer,
- 				    struct xfs_da_args *args);
--void	xfs_attr3_leaf_list_int(struct xfs_buf *bp,
--				      struct xfs_attr_list_context *context);
-+int	xfs_attr3_leaf_list_int(struct xfs_buf *bp,
-+				struct xfs_attr_list_context *context);
+diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+index 283df898dd9f..a8fb0a6829fd 100644
+--- a/fs/xfs/xfs_dir2_readdir.c
++++ b/fs/xfs/xfs_dir2_readdir.c
+@@ -17,6 +17,7 @@
+ #include "xfs_trace.h"
+ #include "xfs_bmap.h"
+ #include "xfs_trans.h"
++#include "xfs_error.h"
  
  /*
-  * Routines used for shrinking the Btree.
-diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-index 00758fdc2fec..3a1158a1347d 100644
---- a/fs/xfs/xfs_attr_list.c
-+++ b/fs/xfs/xfs_attr_list.c
-@@ -84,6 +84,11 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
- 	    (XFS_ISRESET_CURSOR(cursor) &&
- 	     (dp->i_afp->if_bytes + sf->hdr.count * 16) < context->bufsize)) {
- 		for (i = 0, sfe = &sf->list[0]; i < sf->hdr.count; i++) {
-+			if (!xfs_attr_namecheck(sfe->nameval, sfe->namelen)) {
-+				XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+						 context->dp->i_mount);
-+				return -EFSCORRUPTED;
-+			}
- 			context->put_listent(context,
- 					     sfe->flags,
- 					     sfe->nameval,
-@@ -174,6 +179,11 @@ xfs_attr_shortform_list(xfs_attr_list_context_t *context)
- 			cursor->hashval = sbp->hash;
- 			cursor->offset = 0;
- 		}
-+		if (!xfs_attr_namecheck(sbp->name, sbp->namelen)) {
+  * Directory file type support functions
+@@ -115,6 +116,11 @@ xfs_dir2_sf_getdents(
+ 		ino = dp->d_ops->sf_get_ino(sfp, sfep);
+ 		filetype = dp->d_ops->sf_get_ftype(sfep);
+ 		ctx->pos = off & 0x7fffffff;
++		if (!xfs_dir2_namecheck(sfep->name, sfep->namelen)) {
 +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+					 context->dp->i_mount);
++					 dp->i_mount);
 +			return -EFSCORRUPTED;
 +		}
- 		context->put_listent(context,
- 				     sbp->flags,
- 				     sbp->name,
-@@ -284,7 +294,7 @@ xfs_attr_node_list(
- 	struct xfs_buf			*bp;
- 	struct xfs_inode		*dp = context->dp;
- 	struct xfs_mount		*mp = dp->i_mount;
--	int				error;
-+	int				error = 0;
- 
- 	trace_xfs_attr_node_list(context);
- 
-@@ -358,7 +368,9 @@ xfs_attr_node_list(
- 	 */
- 	for (;;) {
- 		leaf = bp->b_addr;
--		xfs_attr3_leaf_list_int(bp, context);
-+		error = xfs_attr3_leaf_list_int(bp, context);
-+		if (error)
-+			break;
- 		xfs_attr3_leaf_hdr_from_disk(mp->m_attr_geo, &leafhdr, leaf);
- 		if (context->seen_enough || leafhdr.forw == 0)
- 			break;
-@@ -369,13 +381,13 @@ xfs_attr_node_list(
- 			return error;
- 	}
- 	xfs_trans_brelse(context->tp, bp);
--	return 0;
-+	return error;
- }
- 
- /*
-  * Copy out attribute list entries for attr_list(), for leaf attribute lists.
-  */
--void
-+int
- xfs_attr3_leaf_list_int(
- 	struct xfs_buf			*bp,
- 	struct xfs_attr_list_context	*context)
-@@ -417,7 +429,7 @@ xfs_attr3_leaf_list_int(
- 		}
- 		if (i == ichdr.count) {
- 			trace_xfs_attr_list_notfound(context);
--			return;
-+			return 0;
- 		}
- 	} else {
- 		entry = &entries[0];
-@@ -457,6 +469,11 @@ xfs_attr3_leaf_list_int(
- 			valuelen = be32_to_cpu(name_rmt->valuelen);
- 		}
- 
-+		if (!xfs_attr_namecheck(name, namelen)) {
+ 		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen, ino,
+ 			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
+ 			return 0;
+@@ -208,6 +214,11 @@ xfs_dir2_block_getdents(
+ 		/*
+ 		 * If it didn't fit, set the final offset to here & return.
+ 		 */
++		if (!xfs_dir2_namecheck(dep->name, dep->namelen)) {
 +			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+					 context->dp->i_mount);
++					 dp->i_mount);
 +			return -EFSCORRUPTED;
 +		}
- 		context->put_listent(context, entry->flags,
- 					      name, namelen, valuelen);
- 		if (context->seen_enough)
-@@ -464,7 +481,7 @@ xfs_attr3_leaf_list_int(
- 		cursor->offset++;
- 	}
- 	trace_xfs_attr_list_leaf_end(context);
--	return;
-+	return 0;
- }
+ 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
+ 			    be64_to_cpu(dep->inumber),
+ 			    xfs_dir3_get_dtype(dp->i_mount, filetype))) {
+@@ -456,6 +467,11 @@ xfs_dir2_leaf_getdents(
+ 		filetype = dp->d_ops->data_get_ftype(dep);
  
- /*
-@@ -483,9 +500,9 @@ xfs_attr_leaf_list(xfs_attr_list_context_t *context)
- 	if (error)
- 		return error;
- 
--	xfs_attr3_leaf_list_int(bp, context);
-+	error = xfs_attr3_leaf_list_int(bp, context);
- 	xfs_trans_brelse(context->tp, bp);
--	return 0;
-+	return error;
- }
- 
- int
-@@ -557,6 +574,13 @@ xfs_attr_put_listent(
- 	ASSERT(context->firstu >= sizeof(*alist));
- 	ASSERT(context->firstu <= context->bufsize);
- 
-+	if (!xfs_attr_namecheck(name, namelen)) {
-+		XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+				 context->dp->i_mount);
-+		context->seen_enough = -EFSCORRUPTED;
-+		return;
-+	}
-+
- 	/*
- 	 * Only list entries in the right namespace.
- 	 */
+ 		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
++		if (!xfs_dir2_namecheck(dep->name, dep->namelen)) {
++			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
++					 dp->i_mount);
++			return -EFSCORRUPTED;
++		}
+ 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
+ 			    be64_to_cpu(dep->inumber),
+ 			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
 
