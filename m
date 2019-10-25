@@ -2,225 +2,98 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-1.5 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_SBL,URIBL_SBL_A,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BF2DCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:49:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F319CCA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 07:23:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DBA1C21929
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:49:22 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bjVa9d9d"
+	by mail.kernel.org (Postfix) with ESMTP id CF1BD206DD
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 07:23:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2393366AbfJYFtW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 01:49:22 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:37442 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2390519AbfJYFtW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:49:22 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5nDxC136298;
-        Fri, 25 Oct 2019 05:49:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=bzgKDxxrdr9lL8i69RC4xSCWbKGxL5MvlfDJuiL7k5w=;
- b=bjVa9d9dmSpL4BA0bLik9XNNj6jmL/Kh9cQW46YEMJNRUdcvCGkS9sp9KrfCr6g4Euzn
- 751BFzR3V9uRNfut6blskmFGyYjqIhwS11cMGykn6Bgo5Lc7KFg3mf34ae4NBEnbqkYk
- b4NemLNxp6O78gX5j3vKEZLr2x2NgWvYiIUxKToBtJ1S7fyVePyb/lYr5vTmjsU2QNMU
- pDrWZGhIJyuUDZJKd+Mm2rRqnbxeDnwOxXeHhFmPAy6McU52zVZApOeGshS/5FfJupAb
- KDaHGOIyb//WZE6q5F7bX6xgSFI2I5rQeqTSl+Ki3JqZIh+wJv0JaVeoGpV/PXAy4PMi Ng== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vqteq8a9w-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Oct 2019 05:49:17 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5n9b9041564;
-        Fri, 25 Oct 2019 05:49:16 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2vug0daqw6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Oct 2019 05:49:11 +0000
-Received: from abhmp0005.oracle.com (abhmp0005.oracle.com [141.146.116.11])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9P5mRrS011680;
-        Fri, 25 Oct 2019 05:48:27 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Oct 2019 22:48:26 -0700
-Date:   Thu, 24 Oct 2019 22:48:25 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 4/4] xfs: consolidate preallocation in xfs_file_fallocate
-Message-ID: <20191025054825.GH913374@magnolia>
-References: <20191025023609.22295-1-hch@lst.de>
- <20191025023609.22295-5-hch@lst.de>
+        id S2405856AbfJYHXX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 03:23:23 -0400
+Received: from mr012msb.fastweb.it ([85.18.95.109]:34313 "EHLO
+        mr012msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2391415AbfJYHXX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 03:23:23 -0400
+Received-SPF: pass (mr012msb.fastweb.it: domain assyoma.it designates
+ 93.63.55.57 as permitted sender) identity=mailfrom;
+ receiver=mr012msb.fastweb.it; client-ip=93.63.55.57;
+ envelope-from=g.danti@assyoma.it; helo=ceres.assyoma.it;
+X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedufedrledvgdduudehucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuhfetuffvhgfguedpucfqfgfvnecuuegrihhlohhuthemuceftddtnecunecujfgurhepuffvfhfhohfkffgfgggjtgfgsehtjeertddtfeejnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucfrrghrrghmpehhvghloheptggvrhgvshdrrghsshihohhmrgdrihhtpdhinhgvthepleefrdeifedrheehrdehjedpmhgrihhlfhhrohhmpeeoghdruggrnhhtihesrghsshihohhmrgdrihhtqecuuefqffgjpeekuefkvffokffogfdprhgtphhtthhopeeouggrvhhiugesfhhrohhmohhrsghithdrtghomhequcfqtfevrffvpehrfhgtkedvvdenuggrvhhiugesfhhrohhmohhrsghithdrtghomhdprhgtphhtthhopeeolhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghequcfqtfevrffvpehrfhgtkedvvdenlhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedt
+X-RazorGate-Vade-Verdict: clean 0
+X-RazorGate-Vade-Classification: clean
+Received: from ceres.assyoma.it (93.63.55.57) by mr012msb.fastweb.it (5.8.208)
+        id 5DA963000099DB2A; Fri, 25 Oct 2019 09:10:34 +0200
+Received: from gdanti-lenovo.assyoma.it (unknown [172.31.255.5])
+        (using TLSv1.2 with cipher AES128-SHA (128/128 bits))
+        (No client certificate requested)
+        by ceres.assyoma.it (Postfix) with ESMTPSA id BF3D0258087;
+        Fri, 25 Oct 2019 09:10:33 +0200 (CEST)
+Subject: Re: Question about logbsize default value
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, g.danti@assyoma.it
+References: <00242d70-1d8e-231d-7ba0-1594412714ad@assyoma.it>
+ <20191024215027.GC4614@dread.disaster.area>
+From:   Gionatan Danti <g.danti@assyoma.it>
+Organization: Assyoma s.r.l.
+Message-ID: <eb0ef021-27be-c0bd-5950-103cd8b04594@assyoma.it>
+Date:   Fri, 25 Oct 2019 09:10:28 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.8.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191025023609.22295-5-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910250057
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910250057
+In-Reply-To: <20191024215027.GC4614@dread.disaster.area>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: it-IT
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 25, 2019 at 11:36:09AM +0900, Christoph Hellwig wrote:
-> Remove xfs_zero_file_space and reorganize xfs_file_fallocate so that a
-> single call to xfs_alloc_file_space covers all modes that preallocate
-> blocks.
+On 24/10/19 23:50, Dave Chinner wrote:
+> On Wed, Oct 23, 2019 at 11:40:33AM +0200, Gionatan Danti wrote:
+> Defaults are for best compatibility and general behaviour, not
+> best performance. A log stripe unit of 32kB allows the user to
+> configure a logbsize appropriate for their workload, as it supports
+> logbsize of 32kB, 64kB, 128kB and 256kB. If we chose 256kB as the
+> default log stripe unit, then you have no opportunity to set the
+> logbsize appropriately for your workload.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Seems pretty straightforward.
-
-On a side note I think Dave and Eric might have noticed that fallocate
-doesn't drain directio which could lead to incorrect file size.
-
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
-> ---
->  fs/xfs/xfs_bmap_util.c | 37 -------------------------------------
->  fs/xfs/xfs_bmap_util.h |  2 --
->  fs/xfs/xfs_file.c      | 32 ++++++++++++++++++++++++--------
->  3 files changed, 24 insertions(+), 47 deletions(-)
+> remember, LSU determines how much padding is added to every non-full
+> log write - 32kB pads out ot 32kB, 256kB pads out to 256kB. Hence if
+> you have a workload that frequnetly writes non-full iclogs (e.g.
+> regular fsyncs) then a small LSU results in much better performance
+> as there is less padding that needs to be initialised and the IOs
+> are much smaller.
 > 
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 9b0572a7b03a..11658da40640 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -1133,43 +1133,6 @@ xfs_free_file_space(
->  	return error;
->  }
->  
-> -/*
-> - * Preallocate and zero a range of a file. This mechanism has the allocation
-> - * semantics of fallocate and in addition converts data in the range to zeroes.
-> - */
-> -int
-> -xfs_zero_file_space(
-> -	struct xfs_inode	*ip,
-> -	xfs_off_t		offset,
-> -	xfs_off_t		len)
-> -{
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -	uint			blksize;
-> -	int			error;
-> -
-> -	trace_xfs_zero_file_space(ip);
-> -
-> -	blksize = 1 << mp->m_sb.sb_blocklog;
-> -
-> -	/*
-> -	 * Punch a hole and prealloc the range. We use hole punch rather than
-> -	 * unwritten extent conversion for two reasons:
-> -	 *
-> -	 * 1.) Hole punch handles partial block zeroing for us.
-> -	 *
-> -	 * 2.) If prealloc returns ENOSPC, the file range is still zero-valued
-> -	 * by virtue of the hole punch.
-> -	 */
-> -	error = xfs_free_file_space(ip, offset, len);
-> -	if (error || xfs_is_always_cow_inode(ip))
-> -		return error;
-> -
-> -	return xfs_alloc_file_space(ip, round_down(offset, blksize),
-> -				     round_up(offset + len, blksize) -
-> -				     round_down(offset, blksize),
-> -				     XFS_BMAPI_PREALLOC);
-> -}
-> -
->  static int
->  xfs_prepare_shift(
->  	struct xfs_inode	*ip,
-> diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-> index 7a78229cf1a7..3e0fa0d363d1 100644
-> --- a/fs/xfs/xfs_bmap_util.h
-> +++ b/fs/xfs/xfs_bmap_util.h
-> @@ -59,8 +59,6 @@ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
->  			     xfs_off_t len, int alloc_type);
->  int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
->  			    xfs_off_t len);
-> -int	xfs_zero_file_space(struct xfs_inode *ip, xfs_off_t offset,
-> -			    xfs_off_t len);
->  int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
->  				xfs_off_t len);
->  int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 156238d5af19..525b29b99116 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -880,16 +880,30 @@ xfs_file_fallocate(
->  		}
->  
->  		if (mode & FALLOC_FL_ZERO_RANGE) {
-> -			error = xfs_zero_file_space(ip, offset, len);
-> +			/*
-> +			 * Punch a hole and prealloc the range.  We use a hole
-> +			 * punch rather than unwritten extent conversion for two
-> +			 * reasons:
-> +			 *
-> +			 *   1.) Hole punch handles partial block zeroing for us.
-> +			 *   2.) If prealloc returns ENOSPC, the file range is
-> +			 *       still zero-valued by virtue of the hole punch.
-> +			 */
-> +			unsigned int blksize = i_blocksize(inode);
-> +
-> +			trace_xfs_zero_file_space(ip);
-> +
-> +			error = xfs_free_file_space(ip, offset, len);
-> +			if (error)
-> +				goto out_unlock;
-> +
-> +			len = round_up(offset + len, blksize) -
-> +			      round_down(offset, blksize);
-> +			offset = round_down(offset, blksize);
->  		} else if (mode & FALLOC_FL_UNSHARE_RANGE) {
->  			error = xfs_reflink_unshare(ip, offset, len);
->  			if (error)
->  				goto out_unlock;
-> -
-> -			if (!xfs_is_always_cow_inode(ip)) {
-> -				error = xfs_alloc_file_space(ip, offset, len,
-> -						XFS_BMAPI_PREALLOC);
-> -			}
->  		} else {
->  			/*
->  			 * If always_cow mode we can't use preallocations and
-> @@ -899,12 +913,14 @@ xfs_file_fallocate(
->  				error = -EOPNOTSUPP;
->  				goto out_unlock;
->  			}
-> +		}
->  
-> +		if (!xfs_is_always_cow_inode(ip)) {
->  			error = xfs_alloc_file_space(ip, offset, len,
->  						     XFS_BMAPI_PREALLOC);
-> +			if (error)
-> +				goto out_unlock;
->  		}
-> -		if (error)
-> -			goto out_unlock;
->  	}
->  
->  	if (file->f_flags & O_DSYNC)
-> -- 
-> 2.20.1
-> 
+> Hence for the general case (i.e. what the defaults are aimed at), a
+> small LSU is a much better choice. you can still use a large
+> logbsize mount option and it will perform identically to a large LSU
+> filesystem on full iclog workloads (like the above fsmark workload
+> that doesn't use fsync). However, a small LSU is likely to perform
+> better over a wider range of workloads and storage than a large LSU,
+> and so small LSU is a better choice for the default....
+
+Hi Dave, thank you for your explanation. The observed behavior of a 
+large LSU surely matches what you described - less-than-optimal fsync perf.
+
+That said, I was wondering why *logbsize* (rather than LSU) has a low 
+default of 32k (or, better, its default is to match LSU size). If I 
+understand it correctly, a large logbsize (eg: 256k) on top of a small 
+LSU (32k) would give high performance on both full-log-writes and 
+partial-log-writes (eg: frequent fsync).
+
+Is my understanding correct? If you, do you suggest to always set 
+logbsize to the maximum supported value?
+
+Thanks.
+
+-- 
+Danti Gionatan
+Supporto Tecnico
+Assyoma S.r.l. - www.assyoma.it
+email: g.danti@assyoma.it - info@assyoma.it
+GPG public key ID: FF5F32A8
