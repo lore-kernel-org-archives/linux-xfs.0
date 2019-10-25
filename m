@@ -2,87 +2,198 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E9B8CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:43:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D7EB7CA9EBD
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:49:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D25682084C
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:43:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B45B321872
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:49:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728692AbfJYUne (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 16:43:34 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:49222 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726008AbfJYUne (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 16:43:34 -0400
-Received: from dread.disaster.area (pa49-181-161-154.pa.nsw.optusnet.com.au [49.181.161.154])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 43CEB3A02D8;
-        Sat, 26 Oct 2019 07:43:30 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iO6Qj-0006Be-6N; Sat, 26 Oct 2019 07:43:29 +1100
-Date:   Sat, 26 Oct 2019 07:43:29 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org,
-        Ian Kent <raven@themaw.net>
-Subject: Re: [PATCH 3/7] xfs: remove the m_readio_log field from struct
- xfs_mount
-Message-ID: <20191025204329.GF4614@dread.disaster.area>
-References: <20191025174026.31878-1-hch@lst.de>
- <20191025174026.31878-4-hch@lst.de>
- <851dcbf3-afbf-77fa-bd6e-3e1a8ccba7c7@sandeen.net>
+        id S1726562AbfJYUt1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 16:49:27 -0400
+Received: from mga11.intel.com ([192.55.52.93]:23023 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725874AbfJYUt1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Oct 2019 16:49:27 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from fmsmga001.fm.intel.com ([10.253.24.23])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Oct 2019 13:49:26 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,229,1569308400"; 
+   d="scan'208";a="210441346"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by fmsmga001.fm.intel.com with ESMTP; 25 Oct 2019 13:49:26 -0700
+Date:   Fri, 25 Oct 2019 13:49:26 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+Message-ID: <20191025204926.GA26184@iweiny-DESK2.sc.intel.com>
+References: <20191020155935.12297-1-ira.weiny@intel.com>
+ <b7849297-e4a4-aaec-9a64-2b481663588b@plexistor.com>
+ <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
+ <20191023221332.GE2044@dread.disaster.area>
+ <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+ <20191024073446.GA4614@dread.disaster.area>
+ <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
+ <20191024213508.GB4614@dread.disaster.area>
+ <ab101f90-6ec1-7527-1859-5f6309640cfa@plexistor.com>
+ <20191025003603.GE4614@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <851dcbf3-afbf-77fa-bd6e-3e1a8ccba7c7@sandeen.net>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=l3vQdJ1SkhDHY1nke8Lmag==:117 a=l3vQdJ1SkhDHY1nke8Lmag==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=7-415B0cAAAA:8 a=6X7Q8ocAT_GAQLeLGJ4A:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191025003603.GE4614@dread.disaster.area>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 25, 2019 at 01:26:05PM -0500, Eric Sandeen wrote:
-> On 10/25/19 12:40 PM, Christoph Hellwig wrote:
-> > The m_readio_log is only used for reporting the blksize (aka preferred
-> > I/O size) in struct stat.  For all cases but a file system that does not
-> > use stripe alignment, but which has the wsync and largeio mount option
-> > set the value is the same as the write I/O size.
-> > 
-> > Remove the field and report a smaller preferred I/O size for that corner
-> > case, which actually is the right thing to do for that case (except for
-> > the fact that is probably is entirely unused).
+On Fri, Oct 25, 2019 at 11:36:03AM +1100, Dave Chinner wrote:
+> On Fri, Oct 25, 2019 at 02:29:04AM +0300, Boaz Harrosh wrote:
+> > On 25/10/2019 00:35, Dave Chinner wrote:
 > 
-> hm, I wonder what the history of the WSYNC_ sizes are, tbh.  So while I can't
-> speak to the need for a separate READIO_LOG or not, this doesn't seem 
-> too far fetched...
+> If something like a find or backup program brings the inode into
+> cache, the app may not even get the behaviour it wants, and it can't
+> change it until the inode is evicted from cache, which may be never.
 
-NFSv2 had a maximum client IO size of 8kB and writes were
-synchronous. The Irix NFS server had some magic in it (enabled by
-the filesystem wsync mount option) that allowed clients to have two
-sequential 8k writes in flight at once, allowing XFS to optimise for
-16KB write IOs instead of the normal default of 64kB. This
-optimisation was the reason that, at the time (early-mid 90s), SGI
-machines had double the NFS write throughput of any other Unix
-systems.
+Why would this be never?
 
-I'm surprised we still support NFSv2 at all in this day and age - I
-suspect we should just kill NFSv2 altogether. We need to keep the
-wsync option around for HA systems serving files to NFS and CIFS
-clients, but the 8kB IO size optimisations can certainly die....
+> Nobody wants implicit/random/uncontrollable/unchangeable behaviour
+> like this.
 
-Cheers,
+I'm thinking this could work with a bit of effort on the users part.  While the
+behavior does have a bit of uncertainty, I feel like there has to be a way to
+get the inode to drop from the cache when a final iput() happens on the inode.
 
-Dave.
+Admin programs should not leave files open forever, without the users knowing
+about it.  So I don't understand why the inode could not be evicted from the
+cache if the FS knew that this change had been made and the inode needs to be
+"re-loaded".  See below...
+
+> 
+> > (And never change the flag on the fly)
+> > (Just brain storming here)
+> 
+> We went over all this ground when we disabled the flag in the first
+> place. We disabled the flag because we couldn't come up with a sane
+> way to flip the ops vector short of tracking the number of aops
+> calls in progress at any given time. i.e. reference counting the
+> aops structure, but that's hard to do with a const ops structure,
+> and so it got disabled rather than allowing users to crash
+> kernels....
+
+Agreed.  We can't change the a_ops without some guarantee that no one is using
+the file.  Which means we need all fds to close and a final iput().  I thought
+that would mean an eviction of the inode and a subsequent reload.
+
+Yesterday I coded up the following (applies on top of this series) but I can't
+seem to get it to work because I believe xfs is keeping a reference on the
+inode.  What am I missing?  I think if I could get xfs to recognize that the
+inode needs to be cleared from it's cache this would work, with some caveats.
+
+Currently this works if I remount the fs or if I use <procfs>/drop_caches like
+Boaz mentioned.
+
+Isn't there a way to get xfs to do that on it's own?
+
+Ira
+
+
+From 7762afd95a3e21a782dffd2fd8e13ae4a23b5e4a Mon Sep 17 00:00:00 2001
+From: Ira Weiny <ira.weiny@intel.com>
+Date: Fri, 25 Oct 2019 13:32:07 -0700
+Subject: [PATCH] squash: Allow phys change on any length file
+
+delay the changing of the effective bit to when the inode is re-read
+into the cache.
+
+Currently a work in Progress because xfs seems to cache the inodes as
+well and I'm not sure how to get xfs to release it's reference.
+---
+ fs/xfs/xfs_ioctl.c | 18 +++++++-----------
+ include/linux/fs.h |  5 ++++-
+ 2 files changed, 11 insertions(+), 12 deletions(-)
+
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 89cf47ef273e..4d730d5781d9 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -1233,10 +1233,13 @@ xfs_diflags_to_linux(
+ 		inode->i_flags |= S_NOATIME;
+ 	else
+ 		inode->i_flags &= ~S_NOATIME;
+-	if (xflags & FS_XFLAG_DAX)
+-		inode->i_flags |= S_DAX;
+-	else
+-		inode->i_flags &= ~S_DAX;
++	/* NOTE: we do not allow the physical DAX flag to immediately change
++	 * the effective IS_DAX() flag tell the VFS layer to remove the inode
++	 * from the cache on the final iput() to force recreation on the next
++	 * 'fresh' open */
++	if (((xflags & FS_XFLAG_DAX) && !IS_DAX(inode)) ||
++	    (!(xflags & FS_XFLAG_DAX) && IS_DAX(inode)))
++		inode->i_flags |= S_REVALIDATE;
+ }
+ 
+ static int
+@@ -1320,13 +1323,6 @@ xfs_ioctl_setattr_dax_invalidate(
+ 	/* lock, flush and invalidate mapping in preparation for flag change */
+ 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
+ 
+-	/* File size must be zero to avoid races with asynchronous page
+-	 * faults */
+-	if (i_size_read(inode) > 0) {
+-		error = -EINVAL;
+-		goto out_unlock;
+-	}
+-
+ 	error = filemap_write_and_wait(inode->i_mapping);
+ 	if (error)
+ 		goto out_unlock;
+diff --git a/include/linux/fs.h b/include/linux/fs.h
+index 0b4d8fc79e0f..4e9b7bf53c86 100644
+--- a/include/linux/fs.h
++++ b/include/linux/fs.h
+@@ -1998,6 +1998,7 @@ struct super_operations {
+ #define S_ENCRYPTED	16384	/* Encrypted file (using fs/crypto/) */
+ #define S_CASEFOLD	32768	/* Casefolded file */
+ #define S_VERITY	65536	/* Verity file (using fs/verity/) */
++#define S_REVALIDATE	131072	/* Drop inode from cache on final put */
+ 
+ /*
+  * Note that nosuid etc flags are inode-specific: setting some file-system
+@@ -2040,6 +2041,7 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
+ #define IS_ENCRYPTED(inode)	((inode)->i_flags & S_ENCRYPTED)
+ #define IS_CASEFOLDED(inode)	((inode)->i_flags & S_CASEFOLD)
+ #define IS_VERITY(inode)	((inode)->i_flags & S_VERITY)
++#define IS_REVALIDATE(inode)	((inode)->i_flags & S_REVALIDATE)
+ 
+ #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
+ 				 (inode)->i_rdev == WHITEOUT_DEV)
+@@ -3027,7 +3029,8 @@ extern int inode_needs_sync(struct inode *inode);
+ extern int generic_delete_inode(struct inode *inode);
+ static inline int generic_drop_inode(struct inode *inode)
+ {
+-	return !inode->i_nlink || inode_unhashed(inode);
++	return !inode->i_nlink || inode_unhashed(inode) ||
++		IS_REVALIDATE(inode);
+ }
+ 
+ extern struct inode *ilookup5_nowait(struct super_block *sb,
 -- 
-Dave Chinner
-david@fromorbit.com
+2.20.1
+
+
