@@ -2,33 +2,32 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5A5DFCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 18:29:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9AAC0CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 18:35:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3178121D7F
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 18:29:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6938121D81
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 18:35:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726139AbfJYS3M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 14:29:12 -0400
-Received: from sandeen.net ([63.231.237.45]:41778 "EHLO sandeen.net"
+        id S1726214AbfJYSfJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 14:35:09 -0400
+Received: from sandeen.net ([63.231.237.45]:42168 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726217AbfJYS3M (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Oct 2019 14:29:12 -0400
+        id S1726030AbfJYSfJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Oct 2019 14:35:09 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 2CFF178D7;
-        Fri, 25 Oct 2019 13:28:20 -0500 (CDT)
-Subject: Re: [PATCH 4/7] xfs: remove the dsunit and dswidth variables in
- xfs_parseargs
+        by sandeen.net (Postfix) with ESMTPSA id 70AAF78D7;
+        Fri, 25 Oct 2019 13:34:16 -0500 (CDT)
+Subject: Re: [PATCH 5/7] xfs: remove the iosizelog variable in xfs_parseargs
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Cc:     Ian Kent <raven@themaw.net>
 References: <20191025174026.31878-1-hch@lst.de>
- <20191025174026.31878-5-hch@lst.de>
+ <20191025174026.31878-6-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <fd6462af-ed46-ce88-cac9-b42b3692ab09@sandeen.net>
-Date:   Fri, 25 Oct 2019 13:29:10 -0500
+Message-ID: <31757020-becb-1a54-645b-8bce2c5edf44@sandeen.net>
+Date:   Fri, 25 Oct 2019 13:35:06 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20191025174026.31878-5-hch@lst.de>
+In-Reply-To: <20191025174026.31878-6-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -87,11 +86,73 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 10/25/19 12:40 PM, Christoph Hellwig wrote:
-> There is no real need for the local variables here - either they
-> are applied to the mount structure, or if the noalign mount option
-> is set the mount will fail entirely if either is set.  Removing
-> them helps cleaning up the mount API conversion.
+> There is no real need for a local variables here - either the I/O size
+> is valid and gets applied to the mount structure, or it is invalid and
+> the mount will fail entirely.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/xfs/xfs_super.c | 17 +++++++----------
+>  1 file changed, 7 insertions(+), 10 deletions(-)
+> 
+> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+> index ee2dde897fb7..1467f4bebc41 100644
+> --- a/fs/xfs/xfs_super.c
+> +++ b/fs/xfs/xfs_super.c
+> @@ -161,7 +161,6 @@ xfs_parseargs(
+>  	char			*p;
+>  	substring_t		args[MAX_OPT_ARGS];
+>  	int			iosize = 0;
+> -	uint8_t			iosizelog = 0;
+>  
+>  	/*
+>  	 * set up the mount name first so all the errors will refer to the
+> @@ -229,7 +228,8 @@ xfs_parseargs(
+>  		case Opt_biosize:
+>  			if (suffix_kstrtoint(args, 10, &iosize))
+>  				return -EINVAL;
+> -			iosizelog = ffs(iosize) - 1;
+> +			mp->m_writeio_log = ffs(iosize) - 1;
+> +			mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
+>  			break;
+>  		case Opt_grpid:
+>  		case Opt_bsdgroups:
+> @@ -397,17 +397,14 @@ xfs_parseargs(
+>  		return -EINVAL;
+>  	}
+>  
+> -	if (iosizelog) {
+> -		if (iosizelog > XFS_MAX_IO_LOG ||
+> -		    iosizelog < XFS_MIN_IO_LOG) {
+> +	if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) {
+> +		if (mp->m_writeio_log > XFS_MAX_IO_LOG ||
+> +		    mp->m_writeio_log < XFS_MIN_IO_LOG) {
 
-<checks that mp is zeroed on allocation - it is>
+There's a slight change in behavior here.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+Before, "mount -o biosize=0" would pass, because iosizelog, though specified,
+did not satisfy "if (iosizelog)"and so it was never tested, so it was
+essentially ignored.
+
+Now the same specification will fail mount.
+
+To make this a completely cosmetic change, perhaps this should test
+mp->m_writeio_log rather than the flag.
+
+If a change in behavior is desired I think that should be an explicit
+2nd change.
+
+>  			xfs_warn(mp, "invalid log iosize: %d [not %d-%d]",
+> -				iosizelog, XFS_MIN_IO_LOG,
+> -				XFS_MAX_IO_LOG);
+> +				mp->m_writeio_log,
+> +				XFS_MIN_IO_LOG, XFS_MAX_IO_LOG);
+>  			return -EINVAL;
+>  		}
+> -
+> -		mp->m_flags |= XFS_MOUNT_DFLT_IOSIZE;
+> -		mp->m_writeio_log = iosizelog;
+>  	}
+>  
+>  	return 0;
+> 
