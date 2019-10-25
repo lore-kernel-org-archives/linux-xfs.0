@@ -2,335 +2,389 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-5.5 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+	UNWANTED_LANGUAGE_BODY,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BBF7ACA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:33:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08D9FCA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:45:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 792FD21D71
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:33:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id BAFE321929
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:45:01 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WZ3Kk6CX"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="CWMx1dvS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2392963AbfJYFd4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 01:33:56 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:48972 "EHLO
+        id S2393000AbfJYFpB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 01:45:01 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:60924 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1732032AbfJYFd4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:33:56 -0400
+        with ESMTP id S2390519AbfJYFpA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:45:00 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5StPn119548;
-        Fri, 25 Oct 2019 05:33:52 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5igwf132814;
+        Fri, 25 Oct 2019 05:44:57 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=9eSIjGzv2AVGuQiFgQwsVMFWsxbQmve4+wltKlJQzC0=;
- b=WZ3Kk6CXd3z0oKXXw5b9ZC4/LzeLFZUESm8/16G9GwNT4ASycvQS9073RqLjiSG5ASFm
- z/xNNrwm3L7to6en4v6TFdUavn0zZc02wxmQx+WdokN7wBa80Y2wBeJqT/gwTmftochp
- +d3jyB4c+OjqO2PkxkXANFHBhMO2W9Jtf1icuTuu0/qrYg+WJv5/BVhgcbnR+IEmEpxi
- 6dalqEWWW1I4skzfHcCFm8zmUbf+/i1XnnaSp1h1VqAQkBNOubTm7DSrEVK1UjoOdYx3
- M0l3luo0J5Er72R4ZtoEoxxMLiV//e+ohSoqlwXt+bWI7a6DO5HzshKQVivuikw6POm3 mA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vqteq880a-1
+ bh=OUU0zL271M5aEfB241ria1wTXY6/WMJsPo/JWO9121E=;
+ b=CWMx1dvSRiID+tuRTFvWU33Qxb0uL6F566WvWAD1RMVZ9qeGBtjMy6sF8RhfzrwvMQoz
+ yuha0+7ne1ywNsRrPEpF6FzMUzR/dxfY2WS0Og54f9rRgKfUz3MBrcq4JEyz1hGlzCbS
+ pUt6zSsv61wFA1Le2p6Frsu8WR/hCJpEWnSpgNe+TWTVgTu9asxw7ohbsdNP009eILJv
+ ew9ZDeu8O/5tFbA5Ja2S9G/JGjuLZOSm8G7wlO5R8tBYNlaFYg0a+w/PqqCS7WerMepH
+ 2CQu2uYaPV9b17JBq+Z6xP3vxFLk+X6ivHJJxHHvDSQQ6RXpBcHrQKzN8THuYRA/8dSq Gg== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2vqteq89qs-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Oct 2019 05:33:52 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5RfZK189716;
-        Fri, 25 Oct 2019 05:31:51 GMT
+        Fri, 25 Oct 2019 05:44:56 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5htZ9137710;
+        Fri, 25 Oct 2019 05:44:56 GMT
 Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2vug0d9vt1-1
+        by aserp3020.oracle.com with ESMTP id 2vu0fqudy5-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 25 Oct 2019 05:31:51 +0000
-Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9P5Voxr014141;
-        Fri, 25 Oct 2019 05:31:50 GMT
+        Fri, 25 Oct 2019 05:44:56 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9P5ir5d009119;
+        Fri, 25 Oct 2019 05:44:53 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 24 Oct 2019 22:31:49 -0700
-Date:   Thu, 24 Oct 2019 22:31:49 -0700
+        with ESMTP ; Thu, 24 Oct 2019 22:44:53 -0700
+Date:   Thu, 24 Oct 2019 22:44:52 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 1/3] xfs: add a xfs_inode_buftarg helper
-Message-ID: <20191025053149.GD913374@magnolia>
-References: <20191025021852.20172-1-hch@lst.de>
- <20191025021852.20172-2-hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/4] fs: add generic UNRESVSP and ZERO_RANGE ioctl
+ handlers
+Message-ID: <20191025054452.GF913374@magnolia>
+References: <20191025023609.22295-1-hch@lst.de>
+ <20191025023609.22295-3-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191025021852.20172-2-hch@lst.de>
+In-Reply-To: <20191025023609.22295-3-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910250053
+ engine=8.0.1-1908290000 definitions=main-1910250056
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910250053
+ definitions=main-1910250056
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 25, 2019 at 11:18:50AM +0900, Christoph Hellwig wrote:
-> Add a new xfs_inode_buftarg helper that gets the data I/O buftarg for a
-> given inode.  Replace the existing xfs_find_bdev_for_inode and
-> xfs_find_daxdev_for_inode helpers with this new general one and cleanup
-> some of the callers.
+On Fri, Oct 25, 2019 at 11:36:07AM +0900, Christoph Hellwig wrote:
+> These use the same scheme as the pre-existing mapping of the XFS
+> RESVP ioctls to ->falloc, so just extend it and remove the XFS
+> implementation.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-
---D
-
 > ---
->  fs/xfs/xfs_aops.c      | 34 +++++-----------------------------
->  fs/xfs/xfs_aops.h      |  3 ---
->  fs/xfs/xfs_bmap_util.c | 15 ++++++++-------
->  fs/xfs/xfs_file.c      | 14 +++++++-------
->  fs/xfs/xfs_inode.h     |  7 +++++++
->  fs/xfs/xfs_ioctl.c     |  7 +++----
->  fs/xfs/xfs_iomap.c     | 11 +++++++----
->  fs/xfs/xfs_iops.c      |  2 +-
->  8 files changed, 38 insertions(+), 55 deletions(-)
+>  fs/compat_ioctl.c      | 32 ++++++++++++++++---
+>  fs/ioctl.c             | 12 +++++--
+>  fs/xfs/xfs_ioctl.c     | 72 +++++++-----------------------------------
+>  fs/xfs/xfs_ioctl.h     |  1 -
+>  fs/xfs/xfs_ioctl32.c   |  7 ++--
+>  include/linux/falloc.h |  3 ++
+>  include/linux/fs.h     |  2 +-
+>  7 files changed, 54 insertions(+), 75 deletions(-)
 > 
-> diff --git a/fs/xfs/xfs_aops.c b/fs/xfs/xfs_aops.c
-> index 5d3503f6412a..3a688eb5c5ae 100644
-> --- a/fs/xfs/xfs_aops.c
-> +++ b/fs/xfs/xfs_aops.c
-> @@ -30,32 +30,6 @@ XFS_WPC(struct iomap_writepage_ctx *ctx)
->  	return container_of(ctx, struct xfs_writepage_ctx, ctx);
->  }
+> diff --git a/fs/compat_ioctl.c b/fs/compat_ioctl.c
+> index a7ec2d3dff92..7d920dda2811 100644
+> --- a/fs/compat_ioctl.c
+> +++ b/fs/compat_ioctl.c
+> @@ -480,11 +480,14 @@ struct space_resv_32 {
+>  	__s32		l_pad[4];	/* reserve area */
+>  };
 >  
-> -struct block_device *
-> -xfs_find_bdev_for_inode(
-> -	struct inode		*inode)
-> -{
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -
-> -	if (XFS_IS_REALTIME_INODE(ip))
-> -		return mp->m_rtdev_targp->bt_bdev;
-> -	else
-> -		return mp->m_ddev_targp->bt_bdev;
-> -}
-> -
-> -struct dax_device *
-> -xfs_find_daxdev_for_inode(
-> -	struct inode		*inode)
-> -{
-> -	struct xfs_inode	*ip = XFS_I(inode);
-> -	struct xfs_mount	*mp = ip->i_mount;
-> -
-> -	if (XFS_IS_REALTIME_INODE(ip))
-> -		return mp->m_rtdev_targp->bt_daxdev;
-> -	else
-> -		return mp->m_ddev_targp->bt_daxdev;
-> -}
-> -
->  /*
->   * Fast and loose check if this write could update the on-disk inode size.
+> -#define FS_IOC_RESVSP_32		_IOW ('X', 40, struct space_resv_32)
+> +#define FS_IOC_RESVSP_32	_IOW ('X', 40, struct space_resv_32)
+> +#define FS_IOC_UNRESVSP_32	_IOW ('X', 41, struct space_resv_32)
+>  #define FS_IOC_RESVSP64_32	_IOW ('X', 42, struct space_resv_32)
+> +#define FS_IOC_UNRESVSP64_32	_IOW ('X', 43, struct space_resv_32)
+> +#define FS_IOC_ZERO_RANGE_32	_IOW ('X', 57, struct space_resv_32)
+>  
+>  /* just account for different alignment */
+> -static int compat_ioctl_preallocate(struct file *file,
+> +static int compat_ioctl_preallocate(struct file *file, int mode,
+>  			struct space_resv_32    __user *p32)
+>  {
+>  	struct space_resv	__user *p = compat_alloc_user_space(sizeof(*p));
+> @@ -498,7 +501,7 @@ static int compat_ioctl_preallocate(struct file *file,
+>  	    copy_in_user(&p->l_pad,	&p32->l_pad,	4*sizeof(u32)))
+>  		return -EFAULT;
+>  
+> -	return ioctl_preallocate(file, p);
+> +	return ioctl_preallocate(file, mode, p);
+>  }
+>  #endif
+>  
+> @@ -1022,13 +1025,32 @@ COMPAT_SYSCALL_DEFINE3(ioctl, unsigned int, fd, unsigned int, cmd,
+>  #if defined(CONFIG_IA64) || defined(CONFIG_X86_64)
+>  	case FS_IOC_RESVSP_32:
+>  	case FS_IOC_RESVSP64_32:
+> -		error = compat_ioctl_preallocate(f.file, compat_ptr(arg));
+> +		error = compat_ioctl_preallocate(f.file, 0, compat_ptr(arg));
+> +		goto out_fput;
+> +	case FS_IOC_UNRESVSP_32:
+> +	case FS_IOC_UNRESVSP64_32:
+> +		error = compat_ioctl_preallocate(f.file, FALLOC_FL_PUNCH_HOLE,
+> +				compat_ptr(arg));
+> +		goto out_fput;
+> +	case FS_IOC_ZERO_RANGE_32:
+> +		error = compat_ioctl_preallocate(f.file, FALLOC_FL_ZERO_RANGE,
+> +				compat_ptr(arg));
+>  		goto out_fput;
+>  #else
+>  	case FS_IOC_RESVSP:
+>  	case FS_IOC_RESVSP64:
+> -		error = ioctl_preallocate(f.file, compat_ptr(arg));
+> +		error = ioctl_preallocate(f.file, 0, compat_ptr(arg));
+> +		goto out_fput;
+> +	case FS_IOC_UNRESVSP:
+> +	case FS_IOC_UNRESVSP64:
+> +		error = ioctl_preallocate(f.file, FALLOC_FL_PUNCH_HOLE,
+> +				compat_ptr(arg));
+>  		goto out_fput;
+> +	case FS_IOC_ZERO_RANGE:
+> +		error = ioctl_preallocate(f.file, FALLOC_FL_ZERO_RANGE,
+> +				compat_ptr(arg));
+> +		goto out_fput;
+> +	}
+>  #endif
+>  
+>  	case FICLONE:
+> diff --git a/fs/ioctl.c b/fs/ioctl.c
+> index fef3a6bf7c78..55c7cfb0e599 100644
+> --- a/fs/ioctl.c
+> +++ b/fs/ioctl.c
+> @@ -466,7 +466,7 @@ EXPORT_SYMBOL(generic_block_fiemap);
+>   * Only the l_start, l_len and l_whence fields of the 'struct space_resv'
+>   * are used here, rest are ignored.
 >   */
-> @@ -609,9 +583,11 @@ xfs_dax_writepages(
->  	struct address_space	*mapping,
->  	struct writeback_control *wbc)
+> -int ioctl_preallocate(struct file *filp, void __user *argp)
+> +int ioctl_preallocate(struct file *filp, int mode, void __user *argp)
 >  {
-> -	xfs_iflags_clear(XFS_I(mapping->host), XFS_ITRUNCATED);
-> +	struct xfs_inode	*ip = XFS_I(mapping->host);
-> +
-> +	xfs_iflags_clear(ip, XFS_ITRUNCATED);
->  	return dax_writeback_mapping_range(mapping,
-> -			xfs_find_bdev_for_inode(mapping->host), wbc);
-> +			xfs_inode_buftarg(ip)->bt_bdev, wbc);
+>  	struct inode *inode = file_inode(filp);
+>  	struct space_resv sr;
+> @@ -487,7 +487,8 @@ int ioctl_preallocate(struct file *filp, void __user *argp)
+>  		return -EINVAL;
+>  	}
+>  
+> -	return vfs_fallocate(filp, FALLOC_FL_KEEP_SIZE, sr.l_start, sr.l_len);
+> +	return vfs_fallocate(filp, mode | FALLOC_FL_KEEP_SIZE, sr.l_start,
+> +			sr.l_len);
 >  }
 >  
->  STATIC sector_t
-> @@ -661,7 +637,7 @@ xfs_iomap_swapfile_activate(
->  	struct file			*swap_file,
->  	sector_t			*span)
->  {
-> -	sis->bdev = xfs_find_bdev_for_inode(file_inode(swap_file));
-> +	sis->bdev = xfs_inode_buftarg(XFS_I(file_inode(swap_file)))->bt_bdev;
->  	return iomap_swapfile_activate(sis, swap_file, span,
->  			&xfs_read_iomap_ops);
->  }
-> diff --git a/fs/xfs/xfs_aops.h b/fs/xfs/xfs_aops.h
-> index 687b11f34fa2..e0bd68419764 100644
-> --- a/fs/xfs/xfs_aops.h
-> +++ b/fs/xfs/xfs_aops.h
-> @@ -11,7 +11,4 @@ extern const struct address_space_operations xfs_dax_aops;
+>  static int file_ioctl(struct file *filp, unsigned int cmd,
+> @@ -503,7 +504,12 @@ static int file_ioctl(struct file *filp, unsigned int cmd,
+>  		return put_user(i_size_read(inode) - filp->f_pos, p);
+>  	case FS_IOC_RESVSP:
+>  	case FS_IOC_RESVSP64:
+> -		return ioctl_preallocate(filp, p);
+> +		return ioctl_preallocate(filp, 0, p);
+> +	case FS_IOC_UNRESVSP:
+> +	case FS_IOC_UNRESVSP64:
+> +		return ioctl_preallocate(filp, FALLOC_FL_PUNCH_HOLE, p);
+> +	case FS_IOC_ZERO_RANGE:
+> +		return ioctl_preallocate(filp, FALLOC_FL_ZERO_RANGE, p);
+>  	}
 >  
->  int	xfs_setfilesize(struct xfs_inode *ip, xfs_off_t offset, size_t size);
->  
-> -extern struct block_device *xfs_find_bdev_for_inode(struct inode *);
-> -extern struct dax_device *xfs_find_daxdev_for_inode(struct inode *);
-> -
->  #endif /* __XFS_AOPS_H__ */
-> diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-> index 5d8632b7f549..9b0572a7b03a 100644
-> --- a/fs/xfs/xfs_bmap_util.c
-> +++ b/fs/xfs/xfs_bmap_util.c
-> @@ -53,15 +53,16 @@ xfs_fsb_to_db(struct xfs_inode *ip, xfs_fsblock_t fsb)
->   */
->  int
->  xfs_zero_extent(
-> -	struct xfs_inode *ip,
-> -	xfs_fsblock_t	start_fsb,
-> -	xfs_off_t	count_fsb)
-> +	struct xfs_inode	*ip,
-> +	xfs_fsblock_t		start_fsb,
-> +	xfs_off_t		count_fsb)
->  {
-> -	struct xfs_mount *mp = ip->i_mount;
-> -	xfs_daddr_t	sector = xfs_fsb_to_db(ip, start_fsb);
-> -	sector_t	block = XFS_BB_TO_FSBT(mp, sector);
-> +	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
-> +	xfs_daddr_t		sector = xfs_fsb_to_db(ip, start_fsb);
-> +	sector_t		block = XFS_BB_TO_FSBT(mp, sector);
->  
-> -	return blkdev_issue_zeroout(xfs_find_bdev_for_inode(VFS_I(ip)),
-> +	return blkdev_issue_zeroout(target->bt_bdev,
->  		block << (mp->m_super->s_blocksize_bits - 9),
->  		count_fsb << (mp->m_super->s_blocksize_bits - 9),
->  		GFP_NOFS, 0);
-> diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-> index 24659667d5cb..ee4ebb7904f6 100644
-> --- a/fs/xfs/xfs_file.c
-> +++ b/fs/xfs/xfs_file.c
-> @@ -1229,22 +1229,22 @@ static const struct vm_operations_struct xfs_file_vm_ops = {
->  
->  STATIC int
->  xfs_file_mmap(
-> -	struct file	*filp,
-> -	struct vm_area_struct *vma)
-> +	struct file		*file,
-> +	struct vm_area_struct	*vma)
->  {
-> -	struct dax_device 	*dax_dev;
-> +	struct inode		*inode = file_inode(file);
-> +	struct xfs_buftarg	*target = xfs_inode_buftarg(XFS_I(inode));
->  
-> -	dax_dev = xfs_find_daxdev_for_inode(file_inode(filp));
->  	/*
->  	 * We don't support synchronous mappings for non-DAX files and
->  	 * for DAX files if underneath dax_device is not synchronous.
->  	 */
-> -	if (!daxdev_mapping_supported(vma, dax_dev))
-> +	if (!daxdev_mapping_supported(vma, target->bt_daxdev))
->  		return -EOPNOTSUPP;
->  
-> -	file_accessed(filp);
-> +	file_accessed(file);
->  	vma->vm_ops = &xfs_file_vm_ops;
-> -	if (IS_DAX(file_inode(filp)))
-> +	if (IS_DAX(inode))
->  		vma->vm_flags |= VM_HUGEPAGE;
->  	return 0;
->  }
-> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
-> index 558173f95a03..bcfb35a9c5ca 100644
-> --- a/fs/xfs/xfs_inode.h
-> +++ b/fs/xfs/xfs_inode.h
-> @@ -219,6 +219,13 @@ static inline bool xfs_inode_has_cow_data(struct xfs_inode *ip)
->  	return ip->i_cowfp && ip->i_cowfp->if_bytes;
->  }
->  
-> +/*
-> + * Return the buftarg used for data allocations on a given inode.
-> + */
-> +#define xfs_inode_buftarg(ip) \
-> +	(XFS_IS_REALTIME_INODE(ip) ? \
-> +		(ip)->i_mount->m_rtdev_targp : (ip)->i_mount->m_ddev_targp)
-> +
->  /*
->   * In-core inode flags.
->   */
+>  	return vfs_ioctl(filp, cmd, arg);
 > diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-> index d58f0d6a699e..b7b5c17131cd 100644
+> index da4aaa75cfd3..3fe1543f9f02 100644
 > --- a/fs/xfs/xfs_ioctl.c
 > +++ b/fs/xfs/xfs_ioctl.c
-> @@ -1311,10 +1311,9 @@ xfs_ioctl_setattr_dax_invalidate(
->  	 * have to check the device for dax support or flush pagecache.
->  	 */
->  	if (fa->fsx_xflags & FS_XFLAG_DAX) {
-> -		if (!(S_ISREG(inode->i_mode) || S_ISDIR(inode->i_mode)))
-> -			return -EINVAL;
+> @@ -588,13 +588,12 @@ xfs_attrmulti_by_handle(
+>  int
+>  xfs_ioc_space(
+>  	struct file		*filp,
+> -	unsigned int		cmd,
+>  	xfs_flock64_t		*bf)
+>  {
+>  	struct inode		*inode = file_inode(filp);
+>  	struct xfs_inode	*ip = XFS_I(inode);
+>  	struct iattr		iattr;
+> -	enum xfs_prealloc_flags	flags = 0;
+> +	enum xfs_prealloc_flags	flags = XFS_PREALLOC_CLEAR;
+>  	uint			iolock = XFS_IOLOCK_EXCL | XFS_MMAPLOCK_EXCL;
+>  	int			error;
+>  
+> @@ -635,65 +634,21 @@ xfs_ioc_space(
+>  		goto out_unlock;
+>  	}
+>  
+> -	/*
+> -	 * length of <= 0 for resv/unresv/zero is invalid.  length for
+> -	 * alloc/free is ignored completely and we have no idea what userspace
+> -	 * might have set it to, so set it to zero to allow range
+> -	 * checks to pass.
+> -	 */
+> -	switch (cmd) {
+> -	case XFS_IOC_ZERO_RANGE:
+> -	case XFS_IOC_UNRESVSP:
+> -	case XFS_IOC_UNRESVSP64:
+> -		if (bf->l_len <= 0) {
+> -			error = -EINVAL;
+> -			goto out_unlock;
+> -		}
+> -		break;
+> -	default:
+> -		bf->l_len = 0;
+> -		break;
+> -	}
+> -
+> -	if (bf->l_start < 0 ||
+> -	    bf->l_start > inode->i_sb->s_maxbytes ||
+> -	    bf->l_start + bf->l_len < 0 ||
+> -	    bf->l_start + bf->l_len >= inode->i_sb->s_maxbytes) {
+> +	if (bf->l_start < 0 || bf->l_start > inode->i_sb->s_maxbytes) {
+>  		error = -EINVAL;
+>  		goto out_unlock;
+>  	}
+>  
+> -	switch (cmd) {
+> -	case XFS_IOC_ZERO_RANGE:
+> -		flags |= XFS_PREALLOC_SET;
+> -		error = xfs_zero_file_space(ip, bf->l_start, bf->l_len);
+> -		break;
+> -	case XFS_IOC_UNRESVSP:
+> -	case XFS_IOC_UNRESVSP64:
+> -		error = xfs_free_file_space(ip, bf->l_start, bf->l_len);
+> -		break;
+> -	case XFS_IOC_ALLOCSP:
+> -	case XFS_IOC_ALLOCSP64:
+> -	case XFS_IOC_FREESP:
+> -	case XFS_IOC_FREESP64:
+> -		flags |= XFS_PREALLOC_CLEAR;
+> -		if (bf->l_start > XFS_ISIZE(ip)) {
+> -			error = xfs_alloc_file_space(ip, XFS_ISIZE(ip),
+> -					bf->l_start - XFS_ISIZE(ip), 0);
+> -			if (error)
+> -				goto out_unlock;
+> -		}
+> -
+> -		iattr.ia_valid = ATTR_SIZE;
+> -		iattr.ia_size = bf->l_start;
+> -
+> -		error = xfs_vn_setattr_size(file_dentry(filp), &iattr);
+> -		break;
+> -	default:
+> -		ASSERT(0);
+> -		error = -EINVAL;
+> +	if (bf->l_start > XFS_ISIZE(ip)) {
+> +		error = xfs_alloc_file_space(ip, XFS_ISIZE(ip),
+> +				bf->l_start - XFS_ISIZE(ip), 0);
+> +		if (error)
+> +			goto out_unlock;
+>  	}
+>  
+> +	iattr.ia_valid = ATTR_SIZE;
+> +	iattr.ia_size = bf->l_start;
+> +	error = xfs_vn_setattr_size(file_dentry(filp), &iattr);
+>  	if (error)
+>  		goto out_unlock;
+>  
+> @@ -2113,16 +2068,13 @@ xfs_file_ioctl(
+>  		return xfs_ioc_setlabel(filp, mp, arg);
+>  	case XFS_IOC_ALLOCSP:
+>  	case XFS_IOC_FREESP:
+> -	case XFS_IOC_UNRESVSP:
+>  	case XFS_IOC_ALLOCSP64:
+> -	case XFS_IOC_FREESP64:
+> -	case XFS_IOC_UNRESVSP64:
+> -	case XFS_IOC_ZERO_RANGE: {
+> +	case XFS_IOC_FREESP64: {
 
-Um... why are we're removing this mode check?
+Ok, so this hoists everything to the vfs except for ALLOCSP and FREESP,
+which seems to be ... "set new size; allocate between old and new EOF if
+appropriate"?
+
+I'm asking because I was never really clear on what those things are
+supposed to do. :)
 
 --D
 
-> -		if (!bdev_dax_supported(xfs_find_bdev_for_inode(VFS_I(ip)),
-> -				sb->s_blocksize))
-> +		struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
-> +
-> +		if (!bdev_dax_supported(target->bt_bdev, sb->s_blocksize))
->  			return -EINVAL;
+>  		xfs_flock64_t		bf;
+>  
+>  		if (copy_from_user(&bf, arg, sizeof(bf)))
+>  			return -EFAULT;
+> -		return xfs_ioc_space(filp, cmd, &bf);
+> +		return xfs_ioc_space(filp, &bf);
 >  	}
+>  	case XFS_IOC_DIOINFO: {
+>  		struct dioattr		da;
+> diff --git a/fs/xfs/xfs_ioctl.h b/fs/xfs/xfs_ioctl.h
+> index 654c0bb1bcf8..25ef178cbb74 100644
+> --- a/fs/xfs/xfs_ioctl.h
+> +++ b/fs/xfs/xfs_ioctl.h
+> @@ -9,7 +9,6 @@
+>  extern int
+>  xfs_ioc_space(
+>  	struct file		*filp,
+> -	unsigned int		cmd,
+>  	xfs_flock64_t		*bf);
 >  
-> diff --git a/fs/xfs/xfs_iomap.c b/fs/xfs/xfs_iomap.c
-> index bf0c7756ac90..c1063507e5fd 100644
-> --- a/fs/xfs/xfs_iomap.c
-> +++ b/fs/xfs/xfs_iomap.c
-> @@ -57,6 +57,7 @@ xfs_bmbt_to_iomap(
->  	u16			flags)
->  {
->  	struct xfs_mount	*mp = ip->i_mount;
-> +	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
+>  int
+> diff --git a/fs/xfs/xfs_ioctl32.c b/fs/xfs/xfs_ioctl32.c
+> index 257b7caf7fed..3c0d518e1039 100644
+> --- a/fs/xfs/xfs_ioctl32.c
+> +++ b/fs/xfs/xfs_ioctl32.c
+> @@ -557,16 +557,13 @@ xfs_file_compat_ioctl(
+>  	case XFS_IOC_ALLOCSP_32:
+>  	case XFS_IOC_FREESP_32:
+>  	case XFS_IOC_ALLOCSP64_32:
+> -	case XFS_IOC_FREESP64_32:
+> -	case XFS_IOC_RESVSP64_32:
+> -	case XFS_IOC_UNRESVSP64_32:
+> -	case XFS_IOC_ZERO_RANGE_32: {
+> +	case XFS_IOC_FREESP64_32: {
+>  		struct xfs_flock64	bf;
 >  
->  	if (unlikely(!xfs_valid_startblock(ip, imap->br_startblock)))
->  		return xfs_alert_fsblock_zero(ip, imap);
-> @@ -77,8 +78,8 @@ xfs_bmbt_to_iomap(
+>  		if (xfs_compat_flock64_copyin(&bf, arg))
+>  			return -EFAULT;
+>  		cmd = _NATIVE_IOC(cmd, struct xfs_flock64);
+> -		return xfs_ioc_space(filp, cmd, &bf);
+> +		return xfs_ioc_space(filp, &bf);
 >  	}
->  	iomap->offset = XFS_FSB_TO_B(mp, imap->br_startoff);
->  	iomap->length = XFS_FSB_TO_B(mp, imap->br_blockcount);
-> -	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> -	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
-> +	iomap->bdev = target->bt_bdev;
-> +	iomap->dax_dev = target->bt_daxdev;
->  	iomap->flags = flags;
+>  	case XFS_IOC_FSGEOMETRY_V1_32:
+>  		return xfs_compat_ioc_fsgeometry_v1(mp, arg);
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index 674d59f4d6ce..f5c73f0ec22d 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -20,7 +20,10 @@ struct space_resv {
+>  };
 >  
->  	if (xfs_ipincount(ip) &&
-> @@ -94,12 +95,14 @@ xfs_hole_to_iomap(
->  	xfs_fileoff_t		offset_fsb,
->  	xfs_fileoff_t		end_fsb)
->  {
-> +	struct xfs_buftarg	*target = xfs_inode_buftarg(ip);
-> +
->  	iomap->addr = IOMAP_NULL_ADDR;
->  	iomap->type = IOMAP_HOLE;
->  	iomap->offset = XFS_FSB_TO_B(ip->i_mount, offset_fsb);
->  	iomap->length = XFS_FSB_TO_B(ip->i_mount, end_fsb - offset_fsb);
-> -	iomap->bdev = xfs_find_bdev_for_inode(VFS_I(ip));
-> -	iomap->dax_dev = xfs_find_daxdev_for_inode(VFS_I(ip));
-> +	iomap->bdev = target->bt_bdev;
-> +	iomap->dax_dev = target->bt_daxdev;
->  }
+>  #define FS_IOC_RESVSP		_IOW('X', 40, struct space_resv)
+> +#define FS_IOC_UNRESVSP		_IOW('X', 41, struct space_resv)
+>  #define FS_IOC_RESVSP64		_IOW('X', 42, struct space_resv)
+> +#define FS_IOC_UNRESVSP64	_IOW('X', 43, struct space_resv)
+> +#define FS_IOC_ZERO_RANGE	_IOW('X', 57, struct space_resv)
 >  
->  static inline xfs_fileoff_t
-> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-> index 329a34af8e79..404f2dd58698 100644
-> --- a/fs/xfs/xfs_iops.c
-> +++ b/fs/xfs/xfs_iops.c
-> @@ -1227,7 +1227,7 @@ xfs_inode_supports_dax(
->  		return false;
+>  #define	FALLOC_FL_SUPPORTED_MASK	(FALLOC_FL_KEEP_SIZE |		\
+>  					 FALLOC_FL_PUNCH_HOLE |		\
+> diff --git a/include/linux/fs.h b/include/linux/fs.h
+> index e0d909d35763..2b5692207c1d 100644
+> --- a/include/linux/fs.h
+> +++ b/include/linux/fs.h
+> @@ -2547,7 +2547,7 @@ extern int finish_no_open(struct file *file, struct dentry *dentry);
 >  
->  	/* Device has to support DAX too. */
-> -	return xfs_find_daxdev_for_inode(VFS_I(ip)) != NULL;
-> +	return xfs_inode_buftarg(ip)->bt_daxdev != NULL;
->  }
+>  /* fs/ioctl.c */
 >  
->  STATIC void
+> -extern int ioctl_preallocate(struct file *filp, void __user *argp);
+> +extern int ioctl_preallocate(struct file *filp, int mode, void __user *argp);
+>  
+>  /* fs/dcache.c */
+>  extern void __init vfs_caches_init_early(void);
 > -- 
 > 2.20.1
 > 
