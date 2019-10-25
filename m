@@ -2,198 +2,450 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7EB7CA9EBD
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:49:32 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7601ACA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:53:02 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B45B321872
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:49:32 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2C20521E6F
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 20:53:02 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="P+iyZ0UI"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726562AbfJYUt1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 16:49:27 -0400
-Received: from mga11.intel.com ([192.55.52.93]:23023 "EHLO mga11.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725874AbfJYUt1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Oct 2019 16:49:27 -0400
-X-Amp-Result: UNKNOWN
-X-Amp-Original-Verdict: FILE UNKNOWN
-X-Amp-File-Uploaded: False
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 25 Oct 2019 13:49:26 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="5.68,229,1569308400"; 
-   d="scan'208";a="210441346"
-Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
-  by fmsmga001.fm.intel.com with ESMTP; 25 Oct 2019 13:49:26 -0700
-Date:   Fri, 25 Oct 2019 13:49:26 -0700
-From:   Ira Weiny <ira.weiny@intel.com>
-To:     Dave Chinner <david@fromorbit.com>
-Cc:     Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Christoph Hellwig <hch@lst.de>,
-        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
-        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
-Message-ID: <20191025204926.GA26184@iweiny-DESK2.sc.intel.com>
-References: <20191020155935.12297-1-ira.weiny@intel.com>
- <b7849297-e4a4-aaec-9a64-2b481663588b@plexistor.com>
- <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
- <20191023221332.GE2044@dread.disaster.area>
- <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
- <20191024073446.GA4614@dread.disaster.area>
- <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
- <20191024213508.GB4614@dread.disaster.area>
- <ab101f90-6ec1-7527-1859-5f6309640cfa@plexistor.com>
- <20191025003603.GE4614@dread.disaster.area>
+        id S1726069AbfJYUxB (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 16:53:01 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:59322 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725801AbfJYUxB (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 16:53:01 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9PKmjXS144673;
+        Fri, 25 Oct 2019 20:52:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=mIB8jxHzm5veaYq0ti9N+mHixlQnRAAvoYsoT7bQnRc=;
+ b=P+iyZ0UIeyASpXIWz2TiwsguUGvF4TaQIZJR5/bF1puPdEotTnSjkbVhNFTep54WPF9O
+ fhKediEdwystCRwqMk0KRQwevzmdWr53f5gWROwLypSNrPqIDDHu7cSjoEYmzreWbzZp
+ dAYU6NsYof9uw+4iNXd6pZkT47KoVtbXQXJBQBsAeJpZfxnS2ZhCl6BjaLFe4ugD/oTI
+ aww0PztbehlGABQR6MnGk09USYNrN+V1I5zU/AG9QWzSP/TZoOsNa5plyO6Dw+1+7TYe
+ HDBC0KWEZM4FfTI3CW5TwdgIRzVSU5CuFljGwM1gnl1uVO9U+rvmIUHN85a3Jk9AFLlE Eg== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2vqteqdh9y-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 25 Oct 2019 20:52:48 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9PKm9B6047595;
+        Fri, 25 Oct 2019 20:52:47 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3030.oracle.com with ESMTP id 2vug0fak0e-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 25 Oct 2019 20:52:47 +0000
+Received: from abhmp0012.oracle.com (abhmp0012.oracle.com [141.146.116.18])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9PKqkfv019692;
+        Fri, 25 Oct 2019 20:52:46 GMT
+Received: from localhost (/10.145.178.128)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 25 Oct 2019 13:52:45 -0700
+Date:   Fri, 25 Oct 2019 13:52:41 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 2/3] xfs: implement block reservation accounting for
+ btrees we're staging
+Message-ID: <20191025205241.GR913374@magnolia>
+References: <157063978750.2914891.14339604572380248276.stgit@magnolia>
+ <157063979983.2914891.13811468205423934367.stgit@magnolia>
+ <20191025142227.GB11837@bfoster>
+ <20191025163517.GK913374@magnolia>
+ <20191025173554.GH11837@bfoster>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191025003603.GE4614@dread.disaster.area>
-User-Agent: Mutt/1.11.1 (2018-12-01)
+In-Reply-To: <20191025173554.GH11837@bfoster>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9421 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910250191
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9421 signatures=668683
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910250191
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Oct 25, 2019 at 11:36:03AM +1100, Dave Chinner wrote:
-> On Fri, Oct 25, 2019 at 02:29:04AM +0300, Boaz Harrosh wrote:
-> > On 25/10/2019 00:35, Dave Chinner wrote:
+On Fri, Oct 25, 2019 at 01:35:54PM -0400, Brian Foster wrote:
+> On Fri, Oct 25, 2019 at 09:35:17AM -0700, Darrick J. Wong wrote:
+> > On Fri, Oct 25, 2019 at 10:22:27AM -0400, Brian Foster wrote:
+> > > On Wed, Oct 09, 2019 at 09:49:59AM -0700, Darrick J. Wong wrote:
+> > > > From: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > 
+> > > > Create a new xrep_newbt structure to encapsulate a fake root for
+> > > > creating a staged btree cursor as well as to track all the blocks that
+> > > > we need to reserve in order to build that btree.
+> > > > 
+> > > > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> > > > ---
+> > > >  fs/xfs/scrub/repair.c |  260 +++++++++++++++++++++++++++++++++++++++++++++++++
+> > > >  fs/xfs/scrub/repair.h |   61 +++++++++++
+> > > >  fs/xfs/scrub/trace.h  |   58 +++++++++++
+> > > >  3 files changed, 379 insertions(+)
+> > > > 
+> > > > 
+> > > > diff --git a/fs/xfs/scrub/repair.c b/fs/xfs/scrub/repair.c
+> > > > index 588bc054db5c..beebd484c5f3 100644
+> > > > --- a/fs/xfs/scrub/repair.c
+> > > > +++ b/fs/xfs/scrub/repair.c
+> > > > @@ -359,6 +359,266 @@ xrep_init_btblock(
+> > > >  	return 0;
+> > > >  }
+> > > >  
+> > > ...
+> > > > +/* Initialize accounting resources for staging a new inode fork btree. */
+> > > > +void
+> > > > +xrep_newbt_init_inode(
+> > > > +	struct xrep_newbt		*xnr,
+> > > > +	struct xfs_scrub		*sc,
+> > > > +	int				whichfork,
+> > > > +	const struct xfs_owner_info	*oinfo)
+> > > > +{
+> > > > +	memset(xnr, 0, sizeof(struct xrep_newbt));
+> > > > +	xnr->sc = sc;
+> > > > +	xnr->oinfo = *oinfo; /* structure copy */
+> > > > +	xnr->alloc_hint = XFS_INO_TO_FSB(sc->mp, sc->ip->i_ino);
+> > > > +	xnr->resv = XFS_AG_RESV_NONE;
+> > > > +	xnr->ifake.if_fork = kmem_zone_zalloc(xfs_ifork_zone, 0);
+> > > > +	xnr->ifake.if_fork_size = XFS_IFORK_SIZE(sc->ip, whichfork);
+> > > > +	INIT_LIST_HEAD(&xnr->reservations);
+> > > 
+> > > Looks like this could reuse the above function for everything outside of
+> > > the fake root bits.
+> > 
+> > Ok.
+> > 
+> > > > +}
+> > > > +
+> > > > +/*
+> > > > + * Initialize accounting resources for staging a new btree.  Callers are
+> > > > + * expected to add their own reservations (and clean them up) manually.
+> > > > + */
+> > > > +void
+> > > > +xrep_newbt_init_bare(
+> > > > +	struct xrep_newbt		*xnr,
+> > > > +	struct xfs_scrub		*sc)
+> > > > +{
+> > > > +	xrep_newbt_init_ag(xnr, sc, &XFS_RMAP_OINFO_ANY_OWNER, NULLFSBLOCK,
+> > > > +			XFS_AG_RESV_NONE);
+> > > > +}
+> > > > +
+> > > > +/* Add a space reservation manually. */
+> > > > +int
+> > > > +xrep_newbt_add_reservation(
+> > > > +	struct xrep_newbt		*xnr,
+> > > > +	xfs_fsblock_t			fsbno,
+> > > > +	xfs_extlen_t			len)
+> > > > +{
+> > > 
+> > > FWIW the "reservation" terminology sounds a bit funny to me. Perhaps
+> > > it's just because I've had log reservation on my mind :P, but something
+> > > that "reserves blocks" as opposed to "adds reservation" might be a bit
+> > > more clear from a naming perspective.
+> > 
+> > xrep_newbt_reserve_space() ?
+> > 
+> > I feel that's a little awkward since it's not actually reserving
+> > anything; all it's doing is some accounting work for some space that the
+> > caller already allocated.  But it's probably no worse than the current
+> > name. :)
+> > 
 > 
-> If something like a find or backup program brings the inode into
-> cache, the app may not even get the behaviour it wants, and it can't
-> change it until the inode is evicted from cache, which may be never.
+> Maybe _add_blocks() and _alloc_blocks() for these two and something like
+> _[get|use]_block() in the later helper that populates the btree..? That
+> seems more descriptive to me than "reservation" and "space," but that's
+> just my .02.
 
-Why would this be never?
+Yeah, that works.  Fixed.
 
-> Nobody wants implicit/random/uncontrollable/unchangeable behaviour
-> like this.
-
-I'm thinking this could work with a bit of effort on the users part.  While the
-behavior does have a bit of uncertainty, I feel like there has to be a way to
-get the inode to drop from the cache when a final iput() happens on the inode.
-
-Admin programs should not leave files open forever, without the users knowing
-about it.  So I don't understand why the inode could not be evicted from the
-cache if the FS knew that this change had been made and the inode needs to be
-"re-loaded".  See below...
-
+> Brian
 > 
-> > (And never change the flag on the fly)
-> > (Just brain storming here)
+> > > > +	struct xrep_newbt_resv	*resv;
+> > > > +
+> > > > +	resv = kmem_alloc(sizeof(struct xrep_newbt_resv), KM_MAYFAIL);
+> > > > +	if (!resv)
+> > > > +		return -ENOMEM;
+> > > > +
+> > > > +	INIT_LIST_HEAD(&resv->list);
+> > > > +	resv->fsbno = fsbno;
+> > > > +	resv->len = len;
+> > > > +	resv->used = 0;
+> > > 
+> > > Is ->used purely a count or does it also serve as a pointer to the next
+> > > "unused" block?
+> > 
+> > It's a counter, as documented in the struct declaration.
+> > 
+> > > > +	list_add_tail(&resv->list, &xnr->reservations);
+> > > > +	return 0;
+> > > > +}
+> > > > +
+> > > > +/* Reserve disk space for our new btree. */
+> > > > +int
+> > > > +xrep_newbt_reserve_space(
+> > > > +	struct xrep_newbt	*xnr,
+> > > > +	uint64_t		nr_blocks)
+> > > > +{
+> > > > +	struct xfs_scrub	*sc = xnr->sc;
+> > > > +	xfs_alloctype_t		type;
+> > > > +	xfs_fsblock_t		alloc_hint = xnr->alloc_hint;
+> > > > +	int			error = 0;
+> > > > +
+> > > > +	type = sc->ip ? XFS_ALLOCTYPE_START_BNO : XFS_ALLOCTYPE_NEAR_BNO;
+> > > > +
+> > > 
+> > > So I take it this distinguishes between reconstruction of a bmapbt
+> > > where we can allocate across AGs vs an AG tree..? If so, a one liner
+> > > comment wouldn't hurt here.
+> > 
+> > Ok.
+> > 
+> > > > +	while (nr_blocks > 0 && !error) {
+> > > > +		struct xfs_alloc_arg	args = {
+> > > > +			.tp		= sc->tp,
+> > > > +			.mp		= sc->mp,
+> > > > +			.type		= type,
+> > > > +			.fsbno		= alloc_hint,
+> > > > +			.oinfo		= xnr->oinfo,
+> > > > +			.minlen		= 1,
+> > > > +			.maxlen		= nr_blocks,
+> > > > +			.prod		= nr_blocks,
+> > > 
+> > > Why .prod? Is this relevant if .mod isn't set?
+> > 
+> > Not sure why that's even in there. :/
+> > 
+> > > > +			.resv		= xnr->resv,
+> > > > +		};
+> > > > +
+> > > > +		error = xfs_alloc_vextent(&args);
+> > > > +		if (error)
+> > > > +			return error;
+> > > > +		if (args.fsbno == NULLFSBLOCK)
+> > > > +			return -ENOSPC;
+> > > > +
+> > > > +		trace_xrep_newbt_reserve_space(sc->mp,
+> > > > +				XFS_FSB_TO_AGNO(sc->mp, args.fsbno),
+> > > > +				XFS_FSB_TO_AGBNO(sc->mp, args.fsbno),
+> > > > +				args.len, xnr->oinfo.oi_owner);
+> > > > +
+> > > > +		error = xrep_newbt_add_reservation(xnr, args.fsbno, args.len);
+> > > > +		if (error)
+> > > > +			break;
+> > > > +
+> > > > +		nr_blocks -= args.len;
+> > > > +		alloc_hint = args.fsbno + args.len - 1;
+> > > > +
+> > > > +		if (sc->ip)
+> > > > +			error = xfs_trans_roll_inode(&sc->tp, sc->ip);
+> > > > +		else
+> > > > +			error = xrep_roll_ag_trans(sc);
+> > > > +	}
+> > > > +
+> > > > +	return error;
+> > > > +}
+> > > > +
+> > > > +/* Free all the accounting info and disk space we reserved for a new btree. */
+> > > > +void
+> > > > +xrep_newbt_destroy(
+> > > > +	struct xrep_newbt	*xnr,
+> > > > +	int			error)
+> > > > +{
+> > > > +	struct xfs_scrub	*sc = xnr->sc;
+> > > > +	struct xrep_newbt_resv	*resv, *n;
+> > > > +
+> > > > +	if (error)
+> > > > +		goto junkit;
+> > > > +
+> > > > +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> > > > +		/* Free every block we didn't use. */
+> > > > +		resv->fsbno += resv->used;
+> > > > +		resv->len -= resv->used;
+> > > > +		resv->used = 0;
+> > > 
+> > > That answers my count/pointer question. :)
+> > 
+> > > > +
+> > > > +		if (resv->len > 0) {
+> > > > +			trace_xrep_newbt_unreserve_space(sc->mp,
+> > > > +					XFS_FSB_TO_AGNO(sc->mp, resv->fsbno),
+> > > > +					XFS_FSB_TO_AGBNO(sc->mp, resv->fsbno),
+> > > > +					resv->len, xnr->oinfo.oi_owner);
+> > > > +
+> > > > +			__xfs_bmap_add_free(sc->tp, resv->fsbno, resv->len,
+> > > > +					&xnr->oinfo, true);
+> > > > +		}
+> > > > +
+> > > > +		list_del(&resv->list);
+> > > > +		kmem_free(resv);
+> > > > +	}
+> > > > +
+> > > > +junkit:
+> > > > +	list_for_each_entry_safe(resv, n, &xnr->reservations, list) {
+> > > > +		list_del(&resv->list);
+> > > > +		kmem_free(resv);
+> > > > +	}
+> > > 
+> > > Seems like this could be folded into the above loop by just checking
+> > > error and skipping the free logic appropriately.
+> > > 
+> > > > +
+> > > > +	if (sc->ip) {
+> > > > +		kmem_zone_free(xfs_ifork_zone, xnr->ifake.if_fork);
+> > > > +		xnr->ifake.if_fork = NULL;
+> > > > +	}
+> > > > +}
+> > > > +
+> > > > +/* Feed one of the reserved btree blocks to the bulk loader. */
+> > > > +int
+> > > > +xrep_newbt_alloc_block(
+> > > > +	struct xfs_btree_cur	*cur,
+> > > > +	struct xrep_newbt	*xnr,
+> > > > +	union xfs_btree_ptr	*ptr)
+> > > > +{
+> > > > +	struct xrep_newbt_resv	*resv;
+> > > > +	xfs_fsblock_t		fsb;
+> > > > +
+> > > > +	/*
+> > > > +	 * If last_resv doesn't have a block for us, move forward until we find
+> > > > +	 * one that does (or run out of reservations).
+> > > > +	 */
+> > > > +	if (xnr->last_resv == NULL) {
+> > > > +		list_for_each_entry(resv, &xnr->reservations, list) {
+> > > > +			if (resv->used < resv->len) {
+> > > > +				xnr->last_resv = resv;
+> > > > +				break;
+> > > > +			}
+> > > > +		}
+> > > 
+> > > Not a big deal right now, but it might be worth eventually considering
+> > > something more efficient. For example, perhaps we could rotate depleted
+> > > entries to the end of the list and if we rotate and find nothing in the
+> > > next entry at the head, we know we've run out of space.
+> > 
+> > Hm, yeah, this part would be much simpler if all we had to do was latch
+> > on to the head element and rotate them to the tail when we're done.
+> > 
+> > > 
+> > > > +		if (xnr->last_resv == NULL)
+> > > > +			return -ENOSPC;
+> > > > +	} else if (xnr->last_resv->used == xnr->last_resv->len) {
+> > > > +		if (xnr->last_resv->list.next == &xnr->reservations)
+> > > > +			return -ENOSPC;
+> > > > +		xnr->last_resv = list_entry(xnr->last_resv->list.next,
+> > > > +				struct xrep_newbt_resv, list);
+> > > > +	}
+> > > > +
+> > > > +	/* Nab the block. */
+> > > > +	fsb = xnr->last_resv->fsbno + xnr->last_resv->used;
+> > > > +	xnr->last_resv->used++;
+> > > > +
+> > > > +	trace_xrep_newbt_alloc_block(cur->bc_mp,
+> > > > +			XFS_FSB_TO_AGNO(cur->bc_mp, fsb),
+> > > > +			XFS_FSB_TO_AGBNO(cur->bc_mp, fsb),
+> > > > +			xnr->oinfo.oi_owner);
+> > > > +
+> > > > +	if (cur->bc_flags & XFS_BTREE_LONG_PTRS)
+> > > > +		ptr->l = cpu_to_be64(fsb);
+> > > > +	else
+> > > > +		ptr->s = cpu_to_be32(XFS_FSB_TO_AGBNO(cur->bc_mp, fsb));
+> > > > +	return 0;
+> > > > +}
+> > > > +
+> > > ...
+> > > > diff --git a/fs/xfs/scrub/repair.h b/fs/xfs/scrub/repair.h
+> > > > index 479cfe38065e..ab6c1199ecc0 100644
+> > > > --- a/fs/xfs/scrub/repair.h
+> > > > +++ b/fs/xfs/scrub/repair.h
+> > > ...
+> > > > @@ -59,6 +63,63 @@ int xrep_agf(struct xfs_scrub *sc);
+> > > >  int xrep_agfl(struct xfs_scrub *sc);
+> > > >  int xrep_agi(struct xfs_scrub *sc);
+> > > >  
+> > > ...
+> > > > +
+> > > > +#define for_each_xrep_newbt_reservation(xnr, resv, n)	\
+> > > > +	list_for_each_entry_safe((resv), (n), &(xnr)->reservations, list)
+> > > 
+> > > This is unused (and seems unnecessary for a simple list).
+> > 
+> > It's used by the free space rebuilder in the next patch; I suppose I
+> > could move it down.  That said, I've been trying to keep the common code
+> > out of that particular patch so that the repair patches can be merged in
+> > any order.
+> > 
+> > > ...
+> > > > diff --git a/fs/xfs/scrub/trace.h b/fs/xfs/scrub/trace.h
+> > > > index 3362bae28b46..deb177abf652 100644
+> > > > --- a/fs/xfs/scrub/trace.h
+> > > > +++ b/fs/xfs/scrub/trace.h
+> > > > @@ -904,6 +904,64 @@ TRACE_EVENT(xrep_ialloc_insert,
+> > > >  		  __entry->freemask)
+> > > >  )
+> > > >  
+> > > ...
+> > > > +#define DEFINE_NEWBT_EXTENT_EVENT(name) \
+> > > > +DEFINE_EVENT(xrep_newbt_extent_class, name, \
+> > > > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno, \
+> > > > +		 xfs_agblock_t agbno, xfs_extlen_t len, \
+> > > > +		 int64_t owner), \
+> > > > +	TP_ARGS(mp, agno, agbno, len, owner))
+> > > > +DEFINE_NEWBT_EXTENT_EVENT(xrep_newbt_reserve_space);
+> > > > +DEFINE_NEWBT_EXTENT_EVENT(xrep_newbt_unreserve_space);
+> > > > +
+> > > > +TRACE_EVENT(xrep_newbt_alloc_block,
+> > > > +	TP_PROTO(struct xfs_mount *mp, xfs_agnumber_t agno,
+> > > > +		 xfs_agblock_t agbno, int64_t owner),
+> > > 
+> > > This could be folded into the above class if we just passed 1 for the
+> > > length, eh?
+> > 
+> > Er, yes.  Fixed.
+> > 
+> > --D
+> > 
+> > > Brian
+> > > 
+> > > > +	TP_ARGS(mp, agno, agbno, owner),
+> > > > +	TP_STRUCT__entry(
+> > > > +		__field(dev_t, dev)
+> > > > +		__field(xfs_agnumber_t, agno)
+> > > > +		__field(xfs_agblock_t, agbno)
+> > > > +		__field(int64_t, owner)
+> > > > +	),
+> > > > +	TP_fast_assign(
+> > > > +		__entry->dev = mp->m_super->s_dev;
+> > > > +		__entry->agno = agno;
+> > > > +		__entry->agbno = agbno;
+> > > > +		__entry->owner = owner;
+> > > > +	),
+> > > > +	TP_printk("dev %d:%d agno %u agbno %u owner %lld",
+> > > > +		  MAJOR(__entry->dev), MINOR(__entry->dev),
+> > > > +		  __entry->agno,
+> > > > +		  __entry->agbno,
+> > > > +		  __entry->owner)
+> > > > +);
+> > > > +
+> > > >  #endif /* IS_ENABLED(CONFIG_XFS_ONLINE_REPAIR) */
+> > > >  
+> > > >  #endif /* _TRACE_XFS_SCRUB_TRACE_H */
+> > > > 
+> > > 
 > 
-> We went over all this ground when we disabled the flag in the first
-> place. We disabled the flag because we couldn't come up with a sane
-> way to flip the ops vector short of tracking the number of aops
-> calls in progress at any given time. i.e. reference counting the
-> aops structure, but that's hard to do with a const ops structure,
-> and so it got disabled rather than allowing users to crash
-> kernels....
-
-Agreed.  We can't change the a_ops without some guarantee that no one is using
-the file.  Which means we need all fds to close and a final iput().  I thought
-that would mean an eviction of the inode and a subsequent reload.
-
-Yesterday I coded up the following (applies on top of this series) but I can't
-seem to get it to work because I believe xfs is keeping a reference on the
-inode.  What am I missing?  I think if I could get xfs to recognize that the
-inode needs to be cleared from it's cache this would work, with some caveats.
-
-Currently this works if I remount the fs or if I use <procfs>/drop_caches like
-Boaz mentioned.
-
-Isn't there a way to get xfs to do that on it's own?
-
-Ira
-
-
-From 7762afd95a3e21a782dffd2fd8e13ae4a23b5e4a Mon Sep 17 00:00:00 2001
-From: Ira Weiny <ira.weiny@intel.com>
-Date: Fri, 25 Oct 2019 13:32:07 -0700
-Subject: [PATCH] squash: Allow phys change on any length file
-
-delay the changing of the effective bit to when the inode is re-read
-into the cache.
-
-Currently a work in Progress because xfs seems to cache the inodes as
-well and I'm not sure how to get xfs to release it's reference.
----
- fs/xfs/xfs_ioctl.c | 18 +++++++-----------
- include/linux/fs.h |  5 ++++-
- 2 files changed, 11 insertions(+), 12 deletions(-)
-
-diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
-index 89cf47ef273e..4d730d5781d9 100644
---- a/fs/xfs/xfs_ioctl.c
-+++ b/fs/xfs/xfs_ioctl.c
-@@ -1233,10 +1233,13 @@ xfs_diflags_to_linux(
- 		inode->i_flags |= S_NOATIME;
- 	else
- 		inode->i_flags &= ~S_NOATIME;
--	if (xflags & FS_XFLAG_DAX)
--		inode->i_flags |= S_DAX;
--	else
--		inode->i_flags &= ~S_DAX;
-+	/* NOTE: we do not allow the physical DAX flag to immediately change
-+	 * the effective IS_DAX() flag tell the VFS layer to remove the inode
-+	 * from the cache on the final iput() to force recreation on the next
-+	 * 'fresh' open */
-+	if (((xflags & FS_XFLAG_DAX) && !IS_DAX(inode)) ||
-+	    (!(xflags & FS_XFLAG_DAX) && IS_DAX(inode)))
-+		inode->i_flags |= S_REVALIDATE;
- }
- 
- static int
-@@ -1320,13 +1323,6 @@ xfs_ioctl_setattr_dax_invalidate(
- 	/* lock, flush and invalidate mapping in preparation for flag change */
- 	xfs_ilock(ip, XFS_MMAPLOCK_EXCL | XFS_IOLOCK_EXCL);
- 
--	/* File size must be zero to avoid races with asynchronous page
--	 * faults */
--	if (i_size_read(inode) > 0) {
--		error = -EINVAL;
--		goto out_unlock;
--	}
--
- 	error = filemap_write_and_wait(inode->i_mapping);
- 	if (error)
- 		goto out_unlock;
-diff --git a/include/linux/fs.h b/include/linux/fs.h
-index 0b4d8fc79e0f..4e9b7bf53c86 100644
---- a/include/linux/fs.h
-+++ b/include/linux/fs.h
-@@ -1998,6 +1998,7 @@ struct super_operations {
- #define S_ENCRYPTED	16384	/* Encrypted file (using fs/crypto/) */
- #define S_CASEFOLD	32768	/* Casefolded file */
- #define S_VERITY	65536	/* Verity file (using fs/verity/) */
-+#define S_REVALIDATE	131072	/* Drop inode from cache on final put */
- 
- /*
-  * Note that nosuid etc flags are inode-specific: setting some file-system
-@@ -2040,6 +2041,7 @@ static inline bool sb_rdonly(const struct super_block *sb) { return sb->s_flags
- #define IS_ENCRYPTED(inode)	((inode)->i_flags & S_ENCRYPTED)
- #define IS_CASEFOLDED(inode)	((inode)->i_flags & S_CASEFOLD)
- #define IS_VERITY(inode)	((inode)->i_flags & S_VERITY)
-+#define IS_REVALIDATE(inode)	((inode)->i_flags & S_REVALIDATE)
- 
- #define IS_WHITEOUT(inode)	(S_ISCHR(inode->i_mode) && \
- 				 (inode)->i_rdev == WHITEOUT_DEV)
-@@ -3027,7 +3029,8 @@ extern int inode_needs_sync(struct inode *inode);
- extern int generic_delete_inode(struct inode *inode);
- static inline int generic_drop_inode(struct inode *inode)
- {
--	return !inode->i_nlink || inode_unhashed(inode);
-+	return !inode->i_nlink || inode_unhashed(inode) ||
-+		IS_REVALIDATE(inode);
- }
- 
- extern struct inode *ilookup5_nowait(struct super_block *sb,
--- 
-2.20.1
-
-
