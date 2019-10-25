@@ -2,32 +2,32 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5826FCA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 19:18:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E68DCA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 19:24:46 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 26CB020679
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 19:18:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 07A8020679
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 19:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726395AbfJYTSH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 15:18:07 -0400
-Received: from sandeen.net ([63.231.237.45]:44914 "EHLO sandeen.net"
+        id S1726202AbfJYTYp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 15:24:45 -0400
+Received: from sandeen.net ([63.231.237.45]:45342 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725783AbfJYTSH (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Oct 2019 15:18:07 -0400
+        id S1725783AbfJYTYp (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Oct 2019 15:24:45 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 301421726A;
-        Fri, 25 Oct 2019 14:17:14 -0500 (CDT)
-Subject: Re: [PATCH 6/7] xfs: clean up setting m_readio_* / m_writeio_*
+        by sandeen.net (Postfix) with ESMTPSA id 23D6878D7;
+        Fri, 25 Oct 2019 14:23:53 -0500 (CDT)
+Subject: Re: [PATCH 7/7] xfs: reverse the polarity of XFS_MOUNT_COMPAT_IOSIZE
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Cc:     Ian Kent <raven@themaw.net>
 References: <20191025174026.31878-1-hch@lst.de>
- <20191025174026.31878-7-hch@lst.de>
+ <20191025174026.31878-8-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <258d888c-e359-c264-33c3-910ebbd37bac@sandeen.net>
-Date:   Fri, 25 Oct 2019 14:18:02 -0500
+Message-ID: <30da470c-9f43-da4a-9d6d-f6fb2c7296c3@sandeen.net>
+Date:   Fri, 25 Oct 2019 14:24:43 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20191025174026.31878-7-hch@lst.de>
+In-Reply-To: <20191025174026.31878-8-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -86,106 +86,11 @@ List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 10/25/19 12:40 PM, Christoph Hellwig wrote:
-> Fill in the default _log values in xfs_parseargs similar to other
-> defaults, and open code the updates based on the on-disk superblock
-> in xfs_mountfs now that they are completely trivial.
+> Replace XFS_MOUNT_COMPAT_IOSIZE with an inverted XFS_MOUNT_LARGEIO flag
+> that makes the usage more clear.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  fs/xfs/xfs_mount.c | 36 +++++-------------------------------
->  fs/xfs/xfs_super.c |  5 +++++
->  2 files changed, 10 insertions(+), 31 deletions(-)
-> 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index 9800401a7d6f..bae53fdd5d51 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -425,35 +425,6 @@ xfs_update_alignment(xfs_mount_t *mp)
->  	return 0;
->  }
->  
-> -/*
-> - * Set the default minimum read and write sizes unless
-> - * already specified in a mount option.
-> - * We use smaller I/O sizes when the file system
-> - * is being used for NFS service (wsync mount option).
-> - */
-> -STATIC void
-> -xfs_set_rw_sizes(xfs_mount_t *mp)
-> -{
-> -	xfs_sb_t	*sbp = &(mp->m_sb);
-> -	int		writeio_log;
-> -
-> -	if (!(mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)) {
-> -		if (mp->m_flags & XFS_MOUNT_WSYNC)
-> -			writeio_log = XFS_WRITEIO_LOG_WSYNC;
-> -		else
-> -			writeio_log = XFS_WRITEIO_LOG_LARGE;
-> -	} else {
-> -		writeio_log = mp->m_writeio_log;
-> -	}
-> -
-> -	if (sbp->sb_blocklog > writeio_log) {
-> -		mp->m_writeio_log = sbp->sb_blocklog;
-> -	} else {
-> -		mp->m_writeio_log = writeio_log;
-> -	}
-> -	mp->m_writeio_blocks = 1 << (mp->m_writeio_log - sbp->sb_blocklog);
-> -}
-> -
->  /*
->   * precalculate the low space thresholds for dynamic speculative preallocation.
->   */
-> @@ -718,9 +689,12 @@ xfs_mountfs(
->  		goto out_remove_errortag;
->  
->  	/*
-> -	 * Set the minimum read and write sizes
-> +	 * Update the preferred write size based on the information from the
-> +	 * on-disk superblock.
->  	 */
-> -	xfs_set_rw_sizes(mp);
-> +	mp->m_writeio_log =
-> +		max_t(uint32_t, mp->m_sb.sb_blocklog, mp->m_writeio_log);
-> +	mp->m_writeio_blocks = 1 << (mp->m_writeio_log - mp->m_sb.sb_blocklog);
->  
->  	/* set the low space thresholds for dynamic preallocation */
->  	xfs_set_low_space_thresholds(mp);
-> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> index 1467f4bebc41..83dbfcc5a02d 100644
-> --- a/fs/xfs/xfs_super.c
-> +++ b/fs/xfs/xfs_super.c
-> @@ -405,6 +405,11 @@ xfs_parseargs(
->  				XFS_MIN_IO_LOG, XFS_MAX_IO_LOG);
->  			return -EINVAL;
->  		}
-> +	} else {
-> +		if (mp->m_flags & XFS_MOUNT_WSYNC)
-> +			mp->m_writeio_log = XFS_WRITEIO_LOG_WSYNC;
-> +		else
-> +			mp->m_writeio_log = XFS_WRITEIO_LOG_LARGE;
->  	}
 
-Ok let's see, by here, if Opt_allocsize was specified, we set
-mp->m_writeio_log to the specified value, else if Opt_wsync was set, we 
-set m_writeio_log to XFS_WRITEIO_LOG_WSYNC (14), otherwise we default to
-XFS_WRITEIO_LOG_LARGE (16).  So that's it for parseargs.
+I like it.
 
-AFAICT we can't escape parseargs w/ writeio_log less than PAGE_SHIFT
-(i.e. page size).
-
-Then in xfs_mountfs, you have it reset to the max of sb_blocklog and
-m_writeio_log.  i.e. it gets resized iff sb_blocklog is greater than
-the current m_writeio_log, which has a minimum of page size.
-
-IOWS, it only gets a new value in mountfs if block size is > page size.
-
-Which is a little surprising and nonobvious and it makes me wonder
-if you're intentionally future-proofing here, or if that's just weird.
-:)
-
--Eric
-
-
->  	return 0;
-> 
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
