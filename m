@@ -7,44 +7,42 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 108A7CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 17:41:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 58524CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 17:42:18 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D7223222BD
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 17:41:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26A1620684
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 17:42:18 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="TqG81/ci"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Quui3oSn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2505957AbfJYRlk (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 13:41:40 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:39596 "EHLO
+        id S2502620AbfJYRmR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 13:42:17 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:39622 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S2505952AbfJYRlk (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 13:41:40 -0400
+        with ESMTP id S2393902AbfJYRmR (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 13:42:17 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=Sf48E0ZilmJkJ/aUHFEQWI8VkToVrgdIBVrdlyozehI=; b=TqG81/ciDwUiysTDcOhnDGnNzk
-        Vcgudo/N6wOnca+AWN3uLpx08iiv24n/04p/40Ln58E1uyZGLpL6AaveXyIjbxVdAYzhEjPgYo4D5
-        7Ry6nBtKD1raSjUfl8/VpVJjpjRkC/WqdjwO14Dv68dsemtsOdud2NEx/iKXKqhuR7BtMf3eEchoY
-        emmS6b6pj8d8ryvmIUAoBTsGJT+cFQghrvDbL0M2EeETSrqKSeJWl5vBEf+SAMGT0LNWWpeZXPSHt
-        9J2gs4mjjcy2Y3y2BCPLbOEu60Wl4M2yMvtu2bT0IbT7/XYCPFq8IT45SVDQ81vGds4JruHtzikzK
-        eMouQ0gw==;
+        MIME-Version:Message-Id:Date:Subject:To:From:Sender:Reply-To:Cc:Content-Type:
+        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
+        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=U8hSuIb3/layaozFvCisdDDTKC2Oj7XbDvn4ulPQF/k=; b=Quui3oSn+yyxfgdFdx+P7WXt6
+        gB9pR/TSh1UYCOOJrpottnj/upnGL2ijuFVCtptId/o9X+MHzR8ZuR+pnbIg9i4V6a+f7vB72A/rG
+        EbALyU/s+ETRZzbiYraA8kWABX5PQ8MuJPSIy6keVopeTf0UG8OYHfxQA4mW5ZeN0sVIFXvbIkcU0
+        F/PT6IwIeMfXPsFgknTCHZBbm0cyPxXmyylSZjh30/Euw5kyvl4Nb+ayf5D0kFhn7szxWaJfBauZ0
+        BenB37CVRRKKzTd94FvYnH6fxWUHUuh1DYG+RUlMdpPKErsXB7DdpuFdzWpezGUkK59AxkqOxgkOW
+        fF2yCa8sA==;
 Received: from [88.128.80.25] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iO3al-0005bs-Ia; Fri, 25 Oct 2019 17:41:40 +0000
+        id 1iO3bM-0005fR-TK
+        for linux-xfs@vger.kernel.org; Fri, 25 Oct 2019 17:42:17 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     Ian Kent <raven@themaw.net>
-Subject: [PATCH 7/7] xfs: reverse the polarity of XFS_MOUNT_COMPAT_IOSIZE
-Date:   Fri, 25 Oct 2019 19:40:26 +0200
-Message-Id: <20191025174026.31878-8-hch@lst.de>
+Subject: [PATCH] xfs: simplify setting bio flags
+Date:   Fri, 25 Oct 2019 19:42:13 +0200
+Message-Id: <20191025174213.32143-1-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191025174026.31878-1-hch@lst.de>
-References: <20191025174026.31878-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -53,86 +51,73 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Replace XFS_MOUNT_COMPAT_IOSIZE with an inverted XFS_MOUNT_LARGEIO flag
-that makes the usage more clear.
+Stop using the deprecated bio_set_op_attrs helper, and use a single
+argument to xfs_buf_ioapply_map for the operation and flags.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_iops.c  |  2 +-
- fs/xfs/xfs_mount.h |  2 +-
- fs/xfs/xfs_super.c | 12 +++---------
- 3 files changed, 5 insertions(+), 11 deletions(-)
+ fs/xfs/xfs_buf.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index 271fcbe04d48..98e30a300c64 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -510,7 +510,7 @@ xfs_stat_blksize(
- 	 * default buffered I/O size, return that, otherwise return the compat
- 	 * default.
- 	 */
--	if (!(mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)) {
-+	if (mp->m_flags & XFS_MOUNT_LARGEIO) {
- 		if (mp->m_swidth)
- 			return mp->m_swidth << mp->m_sb.sb_blocklog;
- 		if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
-diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
-index fb3a36a048cc..dde45d5664f4 100644
---- a/fs/xfs/xfs_mount.h
-+++ b/fs/xfs/xfs_mount.h
-@@ -236,7 +236,7 @@ typedef struct xfs_mount {
- 						 * allocation */
- #define XFS_MOUNT_RDONLY	(1ULL << 20)	/* read-only fs */
- #define XFS_MOUNT_DIRSYNC	(1ULL << 21)	/* synchronous directory ops */
--#define XFS_MOUNT_COMPAT_IOSIZE	(1ULL << 22)	/* don't report large preferred
-+#define XFS_MOUNT_LARGEIO	(1ULL << 22)	/* report large preferred
- 						 * I/O size in stat() */
- #define XFS_MOUNT_FILESTREAMS	(1ULL << 24)	/* enable the filestreams
- 						   allocator */
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 83dbfcc5a02d..52f4629278b0 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -181,12 +181,6 @@ xfs_parseargs(
- 	if (sb->s_flags & SB_SYNCHRONOUS)
- 		mp->m_flags |= XFS_MOUNT_WSYNC;
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 9640e4174552..1e63dd3d1257 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -1261,8 +1261,7 @@ xfs_buf_ioapply_map(
+ 	int		map,
+ 	int		*buf_offset,
+ 	int		*count,
+-	int		op,
+-	int		op_flags)
++	int		op)
+ {
+ 	int		page_index;
+ 	int		total_nr_pages = bp->b_page_count;
+@@ -1297,7 +1296,7 @@ xfs_buf_ioapply_map(
+ 	bio->bi_iter.bi_sector = sector;
+ 	bio->bi_end_io = xfs_buf_bio_end_io;
+ 	bio->bi_private = bp;
+-	bio_set_op_attrs(bio, op, op_flags);
++	bio->bi_opf = op;
  
--	/*
--	 * Set some default flags that could be cleared by the mount option
--	 * parsing.
--	 */
--	mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
--
+ 	for (; size && nr_pages; nr_pages--, page_index++) {
+ 		int	rbytes, nbytes = PAGE_SIZE - offset;
+@@ -1342,7 +1341,6 @@ _xfs_buf_ioapply(
+ {
+ 	struct blk_plug	plug;
+ 	int		op;
+-	int		op_flags = 0;
+ 	int		offset;
+ 	int		size;
+ 	int		i;
+@@ -1384,15 +1382,14 @@ _xfs_buf_ioapply(
+ 				dump_stack();
+ 			}
+ 		}
+-	} else if (bp->b_flags & XBF_READ_AHEAD) {
+-		op = REQ_OP_READ;
+-		op_flags = REQ_RAHEAD;
+ 	} else {
+ 		op = REQ_OP_READ;
++		if (bp->b_flags & XBF_READ_AHEAD)
++			op |= REQ_RAHEAD;
+ 	}
+ 
+ 	/* we only use the buffer cache for meta-data */
+-	op_flags |= REQ_META;
++	op |= REQ_META;
+ 
  	/*
- 	 * These can be overridden by the mount option parsing.
- 	 */
-@@ -275,10 +269,10 @@ xfs_parseargs(
- 			mp->m_flags &= ~XFS_MOUNT_IKEEP;
+ 	 * Walk all the vectors issuing IO on them. Set up the initial offset
+@@ -1404,7 +1401,7 @@ _xfs_buf_ioapply(
+ 	size = BBTOB(bp->b_length);
+ 	blk_start_plug(&plug);
+ 	for (i = 0; i < bp->b_map_count; i++) {
+-		xfs_buf_ioapply_map(bp, i, &offset, &size, op, op_flags);
++		xfs_buf_ioapply_map(bp, i, &offset, &size, op);
+ 		if (bp->b_error)
  			break;
- 		case Opt_largeio:
--			mp->m_flags &= ~XFS_MOUNT_COMPAT_IOSIZE;
-+			mp->m_flags |= XFS_MOUNT_LARGEIO;
- 			break;
- 		case Opt_nolargeio:
--			mp->m_flags |= XFS_MOUNT_COMPAT_IOSIZE;
-+			mp->m_flags &= ~XFS_MOUNT_LARGEIO;
- 			break;
- 		case Opt_attr2:
- 			mp->m_flags |= XFS_MOUNT_ATTR2;
-@@ -438,12 +432,12 @@ xfs_showargs(
- 		{ XFS_MOUNT_GRPID,		",grpid" },
- 		{ XFS_MOUNT_DISCARD,		",discard" },
- 		{ XFS_MOUNT_SMALL_INUMS,	",inode32" },
-+		{ XFS_MOUNT_LARGEIO,		",largeio" },
- 		{ XFS_MOUNT_DAX,		",dax" },
- 		{ 0, NULL }
- 	};
- 	static struct proc_xfs_info xfs_info_unset[] = {
- 		/* the few simple ones we can get from the mount struct */
--		{ XFS_MOUNT_COMPAT_IOSIZE,	",largeio" },
- 		{ XFS_MOUNT_SMALL_INUMS,	",inode64" },
- 		{ 0, NULL }
- 	};
+ 		if (size <= 0)
 -- 
 2.20.1
 
