@@ -2,186 +2,95 @@ Return-Path: <SRS0=Pn/S=YS=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B5F12CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 02:36:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1FAD5CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:14:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8765C206DD
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 02:36:34 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E341C21872
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 05:14:51 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="ltU+LTDx"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ItQ67ytT"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S2390182AbfJYCge (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 24 Oct 2019 22:36:34 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:41354 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728416AbfJYCge (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 24 Oct 2019 22:36:34 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
-        Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=LNcjTYweWLROtw0+6qrNHyWm/b7rJm5aqhasGw1fHRo=; b=ltU+LTDxyHZPF5Jxfikl7ZqUf
-        qt4kuz8YHvTATIsdetvN3qTKKizR/L/tm/EMXIT9TsOkhzVpEwLlC14qPt+ZmL7LLrtLySLe9eLn6
-        08jWeRDuJSNQsQ946gxkQP277ssOSt9Axv3XUEvUz8KXlYn3bdmrrkcqglYI5bNgwAf1nQZRX4S+4
-        jZpqWfwOG2AgFn/0kB5akizHJXo9PNkjmyZwYOecOkZJjYJcR9rd/h5IN5OKUgK3e9rql8bpmVDCn
-        0snLY98YepM7EZnimKmZJU0eaHCXMODtIYMYTC4ZrHngYPLBAjjOGB88rc7bVk9B8VwkGsS7hDtue
-        BuP0xwz6A==;
-Received: from p91006-ipngnfx01marunouchi.tokyo.ocn.ne.jp ([153.156.43.6] helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iNpSr-0003ey-4I; Fri, 25 Oct 2019 02:36:33 +0000
-From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Subject: [PATCH 4/4] xfs: consolidate preallocation in xfs_file_fallocate
-Date:   Fri, 25 Oct 2019 11:36:09 +0900
-Message-Id: <20191025023609.22295-5-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191025023609.22295-1-hch@lst.de>
-References: <20191025023609.22295-1-hch@lst.de>
+        id S2391798AbfJYFOv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 01:14:51 -0400
+Received: from userp2130.oracle.com ([156.151.31.86]:45228 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729081AbfJYFOv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 25 Oct 2019 01:14:51 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5Dkg2123722
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:14:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=rYBvfadBAmtbmY7aNbAPAKCvSVKq8sgWHPxyO6G482I=;
+ b=ItQ67ytT2WaDKXWFbexZZL9a9p+RfqvUfAJgpSREDMur7HDUNWvPw7Bv8994oILxMwGM
+ 4CCu8EqEzL2ZYdphsE4RRDRS8irCN2pz4wPnmaRlELc7zFQSJewa9bsaaZYGqK2lLC6h
+ qOPQ8f1nPG0GznboziEBjjHVkRvFGo+uhGJ202JaxIs9Ct4nJaxMzyAVO7ML+7rLTT+e
+ 9WK5ASc6Y7TU1ZvRTuHNLUfw1Ssors0d/6dK1nc1hfUYUi1M2KAHoYQwD2OFg6/ieH5j
+ d9eMRWIuw9IJBh0u5NFG9PToQr1xe8V1QuCEo3K0XhrrD/0mBgBC8XHNpBSYgcJNpU9h 2g== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2130.oracle.com with ESMTP id 2vqswu08ks-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:14:49 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9P5EEjG160738
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:14:49 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3030.oracle.com with ESMTP id 2vug0d8vsx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:14:49 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9P5EmA8001868
+        for <linux-xfs@vger.kernel.org>; Fri, 25 Oct 2019 05:14:48 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Thu, 24 Oct 2019 22:14:48 -0700
+Subject: [PATCH 0/4] xfs: more metadata verifier tightening
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org
+Date:   Thu, 24 Oct 2019 22:14:45 -0700
+Message-ID: <157198048552.2873445.18067788660614948888.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=905
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910250050
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9420 signatures=668684
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910250050
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Remove xfs_zero_file_space and reorganize xfs_file_fallocate so that a
-single call to xfs_alloc_file_space covers all modes that preallocate
-blocks.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_bmap_util.c | 37 -------------------------------------
- fs/xfs/xfs_bmap_util.h |  2 --
- fs/xfs/xfs_file.c      | 32 ++++++++++++++++++++++++--------
- 3 files changed, 24 insertions(+), 47 deletions(-)
+Here are some enhancements I made to the metadata verifiers.  The first
+adds structure checking to the attr leaf verifier.  The next two look
+for obviously invalid dirent and attr names before passing them up to
+the VFS.  The fourth patch fixes some problems where we return EIO on
+metadata corruption instead of EFSCORRUPTED.
 
-diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
-index 9b0572a7b03a..11658da40640 100644
---- a/fs/xfs/xfs_bmap_util.c
-+++ b/fs/xfs/xfs_bmap_util.c
-@@ -1133,43 +1133,6 @@ xfs_free_file_space(
- 	return error;
- }
- 
--/*
-- * Preallocate and zero a range of a file. This mechanism has the allocation
-- * semantics of fallocate and in addition converts data in the range to zeroes.
-- */
--int
--xfs_zero_file_space(
--	struct xfs_inode	*ip,
--	xfs_off_t		offset,
--	xfs_off_t		len)
--{
--	struct xfs_mount	*mp = ip->i_mount;
--	uint			blksize;
--	int			error;
--
--	trace_xfs_zero_file_space(ip);
--
--	blksize = 1 << mp->m_sb.sb_blocklog;
--
--	/*
--	 * Punch a hole and prealloc the range. We use hole punch rather than
--	 * unwritten extent conversion for two reasons:
--	 *
--	 * 1.) Hole punch handles partial block zeroing for us.
--	 *
--	 * 2.) If prealloc returns ENOSPC, the file range is still zero-valued
--	 * by virtue of the hole punch.
--	 */
--	error = xfs_free_file_space(ip, offset, len);
--	if (error || xfs_is_always_cow_inode(ip))
--		return error;
--
--	return xfs_alloc_file_space(ip, round_down(offset, blksize),
--				     round_up(offset + len, blksize) -
--				     round_down(offset, blksize),
--				     XFS_BMAPI_PREALLOC);
--}
--
- static int
- xfs_prepare_shift(
- 	struct xfs_inode	*ip,
-diff --git a/fs/xfs/xfs_bmap_util.h b/fs/xfs/xfs_bmap_util.h
-index 7a78229cf1a7..3e0fa0d363d1 100644
---- a/fs/xfs/xfs_bmap_util.h
-+++ b/fs/xfs/xfs_bmap_util.h
-@@ -59,8 +59,6 @@ int	xfs_alloc_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 			     xfs_off_t len, int alloc_type);
- int	xfs_free_file_space(struct xfs_inode *ip, xfs_off_t offset,
- 			    xfs_off_t len);
--int	xfs_zero_file_space(struct xfs_inode *ip, xfs_off_t offset,
--			    xfs_off_t len);
- int	xfs_collapse_file_space(struct xfs_inode *, xfs_off_t offset,
- 				xfs_off_t len);
- int	xfs_insert_file_space(struct xfs_inode *, xfs_off_t offset,
-diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
-index 156238d5af19..525b29b99116 100644
---- a/fs/xfs/xfs_file.c
-+++ b/fs/xfs/xfs_file.c
-@@ -880,16 +880,30 @@ xfs_file_fallocate(
- 		}
- 
- 		if (mode & FALLOC_FL_ZERO_RANGE) {
--			error = xfs_zero_file_space(ip, offset, len);
-+			/*
-+			 * Punch a hole and prealloc the range.  We use a hole
-+			 * punch rather than unwritten extent conversion for two
-+			 * reasons:
-+			 *
-+			 *   1.) Hole punch handles partial block zeroing for us.
-+			 *   2.) If prealloc returns ENOSPC, the file range is
-+			 *       still zero-valued by virtue of the hole punch.
-+			 */
-+			unsigned int blksize = i_blocksize(inode);
-+
-+			trace_xfs_zero_file_space(ip);
-+
-+			error = xfs_free_file_space(ip, offset, len);
-+			if (error)
-+				goto out_unlock;
-+
-+			len = round_up(offset + len, blksize) -
-+			      round_down(offset, blksize);
-+			offset = round_down(offset, blksize);
- 		} else if (mode & FALLOC_FL_UNSHARE_RANGE) {
- 			error = xfs_reflink_unshare(ip, offset, len);
- 			if (error)
- 				goto out_unlock;
--
--			if (!xfs_is_always_cow_inode(ip)) {
--				error = xfs_alloc_file_space(ip, offset, len,
--						XFS_BMAPI_PREALLOC);
--			}
- 		} else {
- 			/*
- 			 * If always_cow mode we can't use preallocations and
-@@ -899,12 +913,14 @@ xfs_file_fallocate(
- 				error = -EOPNOTSUPP;
- 				goto out_unlock;
- 			}
-+		}
- 
-+		if (!xfs_is_always_cow_inode(ip)) {
- 			error = xfs_alloc_file_space(ip, offset, len,
- 						     XFS_BMAPI_PREALLOC);
-+			if (error)
-+				goto out_unlock;
- 		}
--		if (error)
--			goto out_unlock;
- 	}
- 
- 	if (file->f_flags & O_DSYNC)
--- 
-2.20.1
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
+
+--D
+
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=tighten-verifiers
