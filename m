@@ -6,28 +6,29 @@ X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B630CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 17:56:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CC4C9CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 18:02:08 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 63268205F4
-	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 17:56:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A7805205F4
+	for <linux-xfs@archiver.kernel.org>; Fri, 25 Oct 2019 18:02:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726024AbfJYR4l (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 25 Oct 2019 13:56:41 -0400
-Received: from sandeen.net ([63.231.237.45]:39742 "EHLO sandeen.net"
+        id S1731222AbfJYSCI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 25 Oct 2019 14:02:08 -0400
+Received: from sandeen.net ([63.231.237.45]:40112 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725874AbfJYR4l (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 25 Oct 2019 13:56:41 -0400
+        id S1731197AbfJYSCI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 25 Oct 2019 14:02:08 -0400
 Received: from [10.0.0.4] (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8757278D7;
-        Fri, 25 Oct 2019 12:55:48 -0500 (CDT)
-Subject: Re: [PATCH 1/7] xfs: cleanup stat blksize reporting
+        by sandeen.net (Postfix) with ESMTPSA id ACF3D78D7;
+        Fri, 25 Oct 2019 13:01:14 -0500 (CDT)
+Subject: Re: [PATCH 2/7] xfs: remove the unused m_readio_blocks field from
+ struct xfs_mount
 To:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
 Cc:     Ian Kent <raven@themaw.net>
 References: <20191025174026.31878-1-hch@lst.de>
- <20191025174026.31878-2-hch@lst.de>
+ <20191025174026.31878-3-hch@lst.de>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,31 +72,27 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <63d76e55-f46d-70c0-bb49-002158b7112d@sandeen.net>
-Date:   Fri, 25 Oct 2019 12:56:38 -0500
+Message-ID: <044aef43-b457-f62a-05c3-0e7dd328a896@sandeen.net>
+Date:   Fri, 25 Oct 2019 13:02:05 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.1.2
 MIME-Version: 1.0
-In-Reply-To: <20191025174026.31878-2-hch@lst.de>
+In-Reply-To: <20191025174026.31878-3-hch@lst.de>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
 On 10/25/19 12:40 PM, Christoph Hellwig wrote:
-> Move xfs_preferred_iosize to xfs_iops.c, unobsfucate it and also handle
-> the realtime special case in the helper.
-> 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  fs/xfs/xfs_iops.c  | 47 ++++++++++++++++++++++++++++++++++++----------
->  fs/xfs/xfs_mount.h | 24 -----------------------
->  2 files changed, 37 insertions(+), 34 deletions(-)
-
-Looks legit.
+>  fs/xfs/xfs_mount.c | 1 -
+>  fs/xfs/xfs_mount.h | 1 -
+>  2 files changed, 2 deletions(-)
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
 
