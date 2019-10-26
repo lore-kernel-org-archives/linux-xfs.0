@@ -2,128 +2,97 @@ Return-Path: <SRS0=KB2e=YT=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.0 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,URIBL_SBL,URIBL_SBL_A
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-3.6 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8576CA9EB9
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Oct 2019 09:54:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3EB7CA9EBD
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Oct 2019 11:18:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B82A2206DD
-	for <linux-xfs@archiver.kernel.org>; Sat, 26 Oct 2019 09:54:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 9A5D3214DA
+	for <linux-xfs@archiver.kernel.org>; Sat, 26 Oct 2019 11:18:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hftY3ZqS"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726232AbfJZJyJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sat, 26 Oct 2019 05:54:09 -0400
-Received: from mr011msb.fastweb.it ([85.18.95.108]:36806 "EHLO
-        mr011msb.fastweb.it" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726193AbfJZJyI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Oct 2019 05:54:08 -0400
-Received-SPF: pass (mr011msb.fastweb.it: domain assyoma.it designates
- 93.63.55.57 as permitted sender) identity=mailfrom;
- receiver=mr011msb.fastweb.it; client-ip=93.63.55.57;
- envelope-from=g.danti@assyoma.it; helo=ceres.assyoma.it;
-X-RazorGate-Vade: gggruggvucftvghtrhhoucdtuddrgedufedrleehgddvvdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfhtefuvfghgfeupdcuqfgfvfenuceurghilhhouhhtmecufedttdenucenucfjughrpefvufggtgfgfffhohgjfhfkgigfsehtjehjtddtredvnecuhfhrohhmpefiihhonhgrthgrnhcuffgrnhhtihcuoehgrdgurghnthhisegrshhshihomhgrrdhitheqnecuffhomhgrihhnpegrshhshihomhgrrdhithenucfkphepleefrdeifedrheehrdehjeenucfrrghrrghmpehhvghloheptggvrhgvshdrrghsshihohhmrgdrihhtpdhinhgvthepleefrdeifedrheehrdehjedpmhgrihhlfhhrohhmpeeoghdruggrnhhtihesrghsshihohhmrgdrihhtqedprhgtphhtthhopeeouggrvhhiugesfhhrohhmohhrsghithdrtghomhequcfqtfevrffvpehrfhgtkedvvdenuggrvhhiugesfhhrohhmohhrsghithdrtghomhdprhgtphhtthhopeeolhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghequcfqtfevrffvpehrfhgtkedvvdenlhhinhhugidqgihfshesvhhgvghrrdhkvghrnhgvlhdrohhrghenucevlhhushhtvghrufhiiigvpedt
-X-RazorGate-Vade-Verdict: clean 0
-X-RazorGate-Vade-Classification: clean
-Received: from ceres.assyoma.it (93.63.55.57) by mr011msb.fastweb.it (5.8.208)
-        id 5DA0477F0141949B; Sat, 26 Oct 2019 11:54:03 +0200
-Received: by ceres.assyoma.it (Postfix, from userid 48)
-        id E80E325C83F; Sat, 26 Oct 2019 11:54:02 +0200 (CEST)
-To:     Dave Chinner <david@fromorbit.com>
-Subject: Re: Question about logbsize default value
-X-PHP-Originating-Script: 0:rcube.php
-MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Date:   Sat, 26 Oct 2019 11:54:02 +0200
-From:   Gionatan Danti <g.danti@assyoma.it>
-Cc:     linux-xfs@vger.kernel.org, g.danti@assyoma.it
-Organization: Assyoma s.r.l.
-In-Reply-To: <20191025233934.GI4614@dread.disaster.area>
-References: <00242d70-1d8e-231d-7ba0-1594412714ad@assyoma.it>
- <20191024215027.GC4614@dread.disaster.area>
- <eb0ef021-27be-c0bd-5950-103cd8b04594@assyoma.it>
- <20191025233934.GI4614@dread.disaster.area>
-Message-ID: <51fef5c8e58db12a72b693680c2feaa5@assyoma.it>
-X-Sender: g.danti@assyoma.it
-User-Agent: Roundcube Webmail/1.0.12
+        id S1726189AbfJZLSs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sat, 26 Oct 2019 07:18:48 -0400
+Received: from mail-pf1-f170.google.com ([209.85.210.170]:44057 "EHLO
+        mail-pf1-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726124AbfJZLSr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sat, 26 Oct 2019 07:18:47 -0400
+Received: by mail-pf1-f170.google.com with SMTP id q21so3441627pfn.11;
+        Sat, 26 Oct 2019 04:18:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=IgFF6zS14hw7SKn8pFRxr4hmemobEBPoxeSD/fMKMg0=;
+        b=hftY3ZqSmJgjI+1nNULTIB9eJsyfhL6Ud/gSv5R+iaOoqsUSsj9C5GF9ch+x+2up1w
+         Nrk4zwXwVCeBs3pxA5NNdf+DJZYCbAra6NySjK+9y+qB0FIcLrt+PwJyelM8rbr8m4XR
+         Q+lU3pe2Rbi/7XAPG9q9+0s2KLPvP+Rp+5GIrkVI2TSVMIGR6SRFCG6yQXzyJQotq1kF
+         i0qtEz6o41RGKJNWRQQUOBzP+68MVGs/tdCx+CLudgkAtFWysJOouEZhfo5dWaI6m4YJ
+         BRW4hpMhOZ5Qzzwq0mgFBHKRU71JNyjrRp9Q0RQWPOy9pBEtP9jxks8WpKwtsHERcoIt
+         ZR9A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=IgFF6zS14hw7SKn8pFRxr4hmemobEBPoxeSD/fMKMg0=;
+        b=h/15YPIPxucivQSSonrNEV8dgQn1zpJtLeSdj3JEmU8s7ujKtP0Z31DCJRr4CqZLBl
+         aQyhi8ouRqeGfHRxryPcXBvmzuAhX7suFcYcr8QZid6bZPHAHZ/sdTFVnzehGtaI2HmF
+         9IWCE6vgs0Tn/1kpkNHXEOiW5l4tBEqmT+MiB5nMxXauiATXlsWWyJX/0Z1W69nPb5f1
+         31Xr3e8BlDr1G3LjFJl7qq55PHVr+AtAb9kLpN4lT+MdJjZ56mGan9eIkD2IF0epid8I
+         O19bMRYvSbwkt+z3sFxoFiX7gP5I4feUM/BhvvD9hWzE0tl70LgEhQUbXwUZQKFip/We
+         td6g==
+X-Gm-Message-State: APjAAAXxuzz09zc9kx8suXeAm2zfxi3FcmT6lzXbknrEShNHoe2kVBQ9
+        CGGlYjR+i8uLMyDNF0d4Ln3+0I8=
+X-Google-Smtp-Source: APXvYqzWYzf/q+nfWwpt5cHngbTowfNwOhMSNvUFuR3wz+FRttvWjvHD+ICTg6mJZ/xcaRlN5aTNTw==
+X-Received: by 2002:a63:f95f:: with SMTP id q31mr1868041pgk.6.1572088726906;
+        Sat, 26 Oct 2019 04:18:46 -0700 (PDT)
+Received: from he-cluster.localdomain ([67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id y2sm6104534pfe.126.2019.10.26.04.18.45
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Sat, 26 Oct 2019 04:18:46 -0700 (PDT)
+From:   kaixuxia <xiakaixu1987@gmail.com>
+X-Google-Original-From: kaixuxia <kaixuxia@tencent.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, guaneryu@gmail.com, bfoster@redhat.com,
+        newtongao@tencent.com, jasperwang@tencent.com
+Subject: [PATCH v2 0/4] xfstests: add deadlock between the AGI and AGF with RENAME_WHITEOUT test
+Date:   Sat, 26 Oct 2019 19:18:34 +0800
+Message-Id: <cover.1572057903.git.kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Il 26-10-2019 01:39 Dave Chinner ha scritto:
-> Again, it's a trade-off.
-> 
-> 256kB iclogs mean that a crash can leave an unrecoverable 2MB hole
-> in the journal, while 32kB iclogs means it's only 256kB.
+Hi all,
 
-Sure, but a crash will always cause the loss of unsynced data, 
-especially when using deferred logging and/or deferred allocation, 
-right?
+There is ABBA deadlock bug between the AGI and AGF when performing
+rename() with RENAME_WHITEOUT flag, so add test to check that whether
+the rename() call works well. We add the renameat2 syscall support to
+fsstress, and then reproduce the deadlock problem by using fsstress.
 
-> 256kB iclogs mean 2MB of memory usage per filesystem, 32kB is only
-> 256kB. We have users with hundreds of individual XFS filesystems
-> mounted on single machines, and so 256kB iclogs is a lot of wasted
-> memory...
+Changes for v2:
+ - Fix the xattr_count value of the original devnode in
+   RENAME_WHITEOUT.
+ - Fix the parent ids swap problem in RENAME_EXCHANGE.
+ - Add the necessary comments.
 
-Just wondering: 1000 filesystems with 256k logbsize would result in 2 GB 
-of memory consumed by journal buffers. Is this considered too much 
-memory for a system managing 1000 filesystems? The pagecache write back 
-memory consumption on these systems (probably equipped with 10s GB of 
-RAM) would dwarfs any journal buffers, no?
+kaixuxia (4):
+  fsstress: show the real file id and parid in rename_f()
+  fsstress: add NOREPLACE and WHITEOUT renameat2 support
+  fsstress: add EXCHANGE renameat2 support
+  xfs: test the deadlock between the AGI and AGF with RENAME_WHITEOUT
 
-> On small logs and filesystems, 256kB iclogs doesn't provide any real
-> benefit because throughput is limited by log tail pushing (metadata
-> writeback), not async transaction throughput.
-> 
-> It's not uncommon for modern disks to have best throughput and/or
-> lowest latency at IO sizes of 128kB or smaller.
-> 
-> If you have lots of NVRAM in front of your spinning disks, then log
-> IO sizes mostly don't matter - they end up bandwidth limited before
-> the iclog size is an issue.
-
-Yes, this matches my observation.
-
-> Testing on a pristine filesystem doesn't show what happens as the
-> filesystem ages over years of constant use, and so what provides
-> "best performance on empty filesystem" often doesn't provide best
-> long term production performance.
-> 
-> And so on.
-> 
-> Storage is complex, filesystems are complex, and no one setting is
-> right for everyone. The defaults are intended to be "good enough" in
-> the majority of typical user configs.
-
-Yep.
-
-> 
-> For you're specific storage setup, yes.
-> 
->> If you, do you suggest to always set logbsize
->> to the maximum supported value?
-> 
-> No. I recommend that people use the defaults, and only if there are
-> performance issues with their -actual production workload- should
-> they consider changing anything.
-> 
-> Benchmarks rarely match the behaviour of production workloads -
-> tuning for benchmarks can actively harm production performance,
-> especially over the long term...
-> 
-> Cheers,
-> 
-> Dave.
-
-Ok, very clear.
-Thank you so much.
+ ltp/fsstress.c        | 206 ++++++++++++++++++++++++++++++++++++++++----------
+ tests/generic/579     |  56 ++++++++++++++
+ tests/generic/579.out |   2 +
+ tests/generic/group   |   1 +
+ 4 files changed, 226 insertions(+), 39 deletions(-)
+ create mode 100755 tests/generic/579
+ create mode 100644 tests/generic/579.out
 
 -- 
-Danti Gionatan
-Supporto Tecnico
-Assyoma S.r.l. - www.assyoma.it
-email: g.danti@assyoma.it - info@assyoma.it
-GPG public key ID: FF5F32A8
+1.8.3.1
+
