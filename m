@@ -2,46 +2,50 @@ Return-Path: <SRS0=AY68=YU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3A0ABCA9EAF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DCBCFCA9EAF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 051D321726
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:51 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B160D214AF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:53 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Mgq1yBv5"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="cW/uJ1LE"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726796AbfJ0Ozu (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:55:50 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:37536 "EHLO
+        id S1726817AbfJ0Ozx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:55:53 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:37540 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726682AbfJ0Ozu (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Oct 2019 10:55:50 -0400
+        with ESMTP id S1726682AbfJ0Ozx (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Oct 2019 10:55:53 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:Message-Id:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-        Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:
-        Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=t9oe6gO/hRE4MIp6pjNKEPGTeua7SwZkZ6IyFCopCxM=; b=Mgq1yBv5/j8atYmhz4PW/fu6X
-        MP3Vd9XBRuDQAfHdSsNIAUnUxn77VfDTjCBOSsbDWFEoiegip2g+6/Wh7Dv1k5Pd7FQx1ZZWGeGcH
-        Lgb4xRnYij1vltve6+FCUE2Il3aaW7sX+aes0XcY1LOp/iES0wN/M3ynw3iO8lNdqTPiKbB+QZDsB
-        slRO72noj65kdXXlGKIY1SScmRWYK3oodSyT+sHNo9hAaSIxM3+bWVqZdTm4Q9Fc1LgPcIhIxvQOX
-        rtQH8lHICFuEQOGYUY0dd2Kt/yx6O3FUrEIpeWHrHJIne6ULK2f3Q8Mkub5vlVH8MR3lslhXZ0GIx
-        nrTxY3RBw==;
+        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
+        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
+        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=fdPD0PJRrQ7GPmglGPg+Xo7p0yMadAzfdmncArnbhY0=; b=cW/uJ1LEL/WCnzV+SwY8flRqN+
+        HZMZgA7fpOnXTctyNHvLPexg1SWUl5mUXZFafLd3I2pQMAh2h8xj5Op8WIhYrvksXd1XLGveH0Au6
+        0G/QKeiBbIq9RBWrFJzL4Ds2Dn5Oyythy2Z5rZVSv7maXXBg7gf+wPoHIvP0nLCVJsZ12BbPhcNvn
+        d3jBd4OF9/WzAtaNsKecNuen5R4DDTxjAlSQjNw7GLTRk48+rkdgn+rnEWgyEBsJlk7rQZuF/fPrh
+        vTHIm3b4oWJVNVcEOAxB5famVSbpa6eavXAdHscHbyRonSsl6LhbK7hQW2JFxDJCDl8FVarlrft6k
+        7KcL5hWg==;
 Received: from [2001:4bb8:184:47ee:760d:fb4d:483e:6b79] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iOjxN-0005LM-K4; Sun, 27 Oct 2019 14:55:50 +0000
+        id 1iOjxQ-0005LZ-Ja; Sun, 27 Oct 2019 14:55:53 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Cc:     Ian Kent <raven@themaw.net>
-Subject: decruft misc mount related code v2
-Date:   Sun, 27 Oct 2019 15:55:35 +0100
-Message-Id: <20191027145547.25157-1-hch@lst.de>
+Cc:     Ian Kent <raven@themaw.net>, Brian Foster <bfoster@redhat.com>,
+        "Darrick J . Wong" <darrick.wong@oracle.com>
+Subject: [PATCH 01/12] xfs: remove the biosize mount option
+Date:   Sun, 27 Oct 2019 15:55:36 +0100
+Message-Id: <20191027145547.25157-2-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
+In-Reply-To: <20191027145547.25157-1-hch@lst.de>
+References: <20191027145547.25157-1-hch@lst.de>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
@@ -50,21 +54,49 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi all,
+From: Ian Kent <raven@themaw.net>
 
-this series decrufts various bits of vaguely mount / mount option
-related code.  The background is the mount API from series, which
-currently is a lot more ugly than it should be do the way how
-we parse two mount options with arguments into local variables
-instead of directly into the mount structure.  This series cleans
-that and a few nearby warts.
+It appears the biosize mount option hasn't been documented as a valid
+option since 2005, remove it.
 
-Changes since v1:
- - document the behavior change for allocsize=0
- - pick up the patch to remove the biosize option from the mount API
-   series
- - remove the -o wsync allocsize hack entirely
- - remove the m_readio_* fields entirely
- - rename the m_writeio_* fields to m_allocio_*
- - more tweaks to xfs_parseargs
- - clean up printing the mount options
+Signed-off-by: Ian Kent <raven@themaw.net>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ fs/xfs/xfs_super.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index 0a8cf6b87a21..589c080cabfe 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -50,7 +50,7 @@ static struct xfs_kobj xfs_dbg_kobj;	/* global debug sysfs attrs */
+  * Table driven mount option parser.
+  */
+ enum {
+-	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev, Opt_biosize,
++	Opt_logbufs, Opt_logbsize, Opt_logdev, Opt_rtdev,
+ 	Opt_wsync, Opt_noalign, Opt_swalloc, Opt_sunit, Opt_swidth, Opt_nouuid,
+ 	Opt_grpid, Opt_nogrpid, Opt_bsdgroups, Opt_sysvgroups,
+ 	Opt_allocsize, Opt_norecovery, Opt_inode64, Opt_inode32, Opt_ikeep,
+@@ -66,7 +66,6 @@ static const match_table_t tokens = {
+ 	{Opt_logbsize,	"logbsize=%s"},	/* size of XFS log buffers */
+ 	{Opt_logdev,	"logdev=%s"},	/* log device */
+ 	{Opt_rtdev,	"rtdev=%s"},	/* realtime I/O device */
+-	{Opt_biosize,	"biosize=%u"},	/* log2 of preferred buffered io size */
+ 	{Opt_wsync,	"wsync"},	/* safe-mode nfs compatible mount */
+ 	{Opt_noalign,	"noalign"},	/* turn off stripe alignment */
+ 	{Opt_swalloc,	"swalloc"},	/* turn on stripe width allocation */
+@@ -228,7 +227,6 @@ xfs_parseargs(
+ 				return -ENOMEM;
+ 			break;
+ 		case Opt_allocsize:
+-		case Opt_biosize:
+ 			if (suffix_kstrtoint(args, 10, &iosize))
+ 				return -EINVAL;
+ 			iosizelog = ffs(iosize) - 1;
+-- 
+2.20.1
+
