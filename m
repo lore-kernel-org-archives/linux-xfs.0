@@ -2,116 +2,54 @@ Return-Path: <SRS0=AY68=YU=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A5BAACA9EAF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:56:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5CDECA9EAF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 15:19:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DEC0214AF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:56:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="alDrcAZ1"
+	by mail.kernel.org (Postfix) with ESMTP id 82C8C21850
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 15:19:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727001AbfJ0O4Z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:56:25 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:37642 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726682AbfJ0O4Y (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Oct 2019 10:56:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
-        MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
-        :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
-        :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=bmzzPqxKN/2BqLOsiLuKF4o6Vroe5WrWSf+s4epREQM=; b=alDrcAZ1U+fxHXzbhooJiup7gC
-        tULvHpdteQyO2TKsEDqBXbAxNAeZtG1jwi0XwoL56qFCjkQm55o7aKFa5nQ4u7lrrrxlCtjg2fFzh
-        +l+ElqzxJaGLJMpV688WHKGGgYF5v4AFEiGVhBeMUrUEZLyaXfDIW6yCIMNC4o8iTa5w8c3eOMZSx
-        wue/yebanpj2dk2fTlu0y6d9wgmGmH/70iPAA/6EKtHyQvd6HcbMquKZJeIuIwnAQhQ4VbIdoQ73D
-        klZxchSt15j7komQ6f5rnSUlriO4+v5JJfhQu5zufV53fJ5aFhpd5C4+nLtCWLLOt90KSQsbjPYo6
-        kLHpusbQ==;
-Received: from [2001:4bb8:184:47ee:760d:fb4d:483e:6b79] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iOjxw-0005Pr-BI; Sun, 27 Oct 2019 14:56:24 +0000
+        id S1727154AbfJ0PTw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Oct 2019 11:19:52 -0400
+Received: from verein.lst.de ([213.95.11.211]:58485 "EHLO verein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726996AbfJ0PTw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Sun, 27 Oct 2019 11:19:52 -0400
+Received: by verein.lst.de (Postfix, from userid 2407)
+        id C4BED68B05; Sun, 27 Oct 2019 16:19:49 +0100 (CET)
+Date:   Sun, 27 Oct 2019 16:19:49 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     linux-xfs@vger.kernel.org
-Cc:     Ian Kent <raven@themaw.net>
-Subject: [PATCH 12/12] xfs: merge xfs_showargs into xfs_fs_show_options
-Date:   Sun, 27 Oct 2019 15:55:47 +0100
-Message-Id: <20191027145547.25157-13-hch@lst.de>
-X-Mailer: git-send-email 2.20.1
-In-Reply-To: <20191027145547.25157-1-hch@lst.de>
-References: <20191027145547.25157-1-hch@lst.de>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 2/4] fs: add generic UNRESVSP and ZERO_RANGE ioctl
+ handlers
+Message-ID: <20191027151949.GB6199@lst.de>
+References: <20191025023609.22295-1-hch@lst.de> <20191025023609.22295-3-hch@lst.de> <20191025054452.GF913374@magnolia> <20191025095005.GA9613@lst.de> <20191026205609.GJ4614@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191026205609.GJ4614@dread.disaster.area>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-No need for a trivial wrapper.
+On Sun, Oct 27, 2019 at 07:56:09AM +1100, Dave Chinner wrote:
+> We should plan to deprecate and remove ALLOCSP/FREESP - they just
+> aren't useful APIs anymore, and nobody has used them in preference
+> to the RESVSP/UNRESVSP ioctls since they were introduced in ~1998
+> with unwritten extents. We probably should have deprecated then 10
+> years ago....
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- fs/xfs/xfs_super.c | 20 +++++++-------------
- 1 file changed, 7 insertions(+), 13 deletions(-)
-
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 0e8942bbf840..bcb1575a5652 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -406,10 +406,10 @@ struct proc_xfs_info {
- 	char		*str;
- };
- 
--STATIC void
--xfs_showargs(
--	struct xfs_mount	*mp,
--	struct seq_file		*m)
-+static int
-+xfs_fs_show_options(
-+	struct seq_file		*m,
-+	struct dentry		*root)
- {
- 	static struct proc_xfs_info xfs_info_set[] = {
- 		/* the few simple ones we can get from the mount struct */
-@@ -427,6 +427,7 @@ xfs_showargs(
- 		{ XFS_MOUNT_DAX,		",dax" },
- 		{ 0, NULL }
- 	};
-+	struct xfs_mount	*mp = XFS_M(root->d_sb);
- 	struct proc_xfs_info	*xfs_infop;
- 
- 	for (xfs_infop = xfs_info_set; xfs_infop->flag; xfs_infop++) {
-@@ -478,6 +479,8 @@ xfs_showargs(
- 
- 	if (!(mp->m_qflags & XFS_ALL_QUOTA_ACCT))
- 		seq_puts(m, ",noquota");
-+
-+	return 0;
- }
- 
- static uint64_t
-@@ -1378,15 +1381,6 @@ xfs_fs_unfreeze(
- 	return 0;
- }
- 
--STATIC int
--xfs_fs_show_options(
--	struct seq_file		*m,
--	struct dentry		*root)
--{
--	xfs_showargs(XFS_M(root->d_sb), m);
--	return 0;
--}
--
- /*
-  * This function fills in xfs_mount_t fields based on mount args.
-  * Note: the superblock _has_ now been read in.
--- 
-2.20.1
-
+I vaguely remember an actually reported bug beeing fixed in the code
+just a few years ago, which suggests actual users.  That being said
+I'm all for throwing in a deprecation warnings and then see if anyone
+screams.  With this series the code becomes more self-contained, and
+I have another patch that moves the IOC_RESVP / fallocate implementation
+over to use iomap, at which point it is entirely standalone.
