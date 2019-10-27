@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.5 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA9A2CA9EAF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BA2E4CA9EAF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BBA1A214AF
-	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:56 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8FEA2214AF
+	for <linux-xfs@archiver.kernel.org>; Sun, 27 Oct 2019 14:55:59 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="aagcFgas"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="E4hMkVTr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726861AbfJ0Oz4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 27 Oct 2019 10:55:56 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:37556 "EHLO
+        id S1726884AbfJ0Oz7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 27 Oct 2019 10:55:59 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:37566 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726682AbfJ0Oz4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Oct 2019 10:55:56 -0400
+        with ESMTP id S1726682AbfJ0Oz7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 27 Oct 2019 10:55:59 -0400
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Sender
         :Reply-To:Content-Type:Content-ID:Content-Description:Resent-Date:Resent-From
         :Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
         List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-        bh=JTaj6XYcaxkhPNoyboyxA+ASdk2d2DJk+EsNV6331Io=; b=aagcFgasQFt+RY9s1Gm09xpgTw
-        WgLco8flNzthtDvb79ugeBmlUJ+oeFvxBe8FkArty/Ox/CzUrgzWPLijPHwCOFr5fVeDYaCXy5kmW
-        sA9BtlDcMAVMYM0bpZaOpSqL5fY9Zd5H+A9N32CJliDEU2cRgZVzyde52ouB/U/QBjBriCtxsbsat
-        1c4YNpOIz4G3wjJfWwzKLMg/BS2Wdiu9vpiUne182KyGUNa7YTCA7IJhNodg0LmK0ElJahmApZ3tR
-        ZBfkf4LakZKT8MeUEfF36h0ephizwQiCClMM2P/Go3faqT1uKkiexkTzedP5D8ywvPJxEd9K/cbOg
-        A3xiGfZg==;
+        bh=EObejU4YOGTgRZ2EklTnk7knwQb4Clt8KLIwQrKQzd8=; b=E4hMkVTri4my3Gi6MXroNr2voX
+        peqbpFt19ykn2+M8q0xfU7tbczR0lqEFcEI5/xf4Pn0ACxS/8YPJHCxRxaTSjAA26e7KFYSFyfYDG
+        SivdVfFtipFUsQsdcsLrR0w23S4T0mwfiV+ftvYpY7NG7ktHuvCouTXyGNkO6DYY+F5KOM9/VG0Mv
+        rr4FztiCbWGVhM9Dn/Aocz9Q3e0ioml5ss5WAUwQamW0mF6sNMYcY49ZIrVM88CinDyLKjLJcP7Y/
+        1z1VP274V59wSe93or0YjNXCZVxfKkVtOFGQle0zR8YCQ3S0oLGa17JnToRngczEXitDYSctJMGB9
+        385/imEA==;
 Received: from [2001:4bb8:184:47ee:760d:fb4d:483e:6b79] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iOjxT-0005Ll-Ih; Sun, 27 Oct 2019 14:55:56 +0000
+        id 1iOjxW-0005MH-EO; Sun, 27 Oct 2019 14:55:58 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
 Cc:     Ian Kent <raven@themaw.net>, Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH 02/12] xfs: remove the dsunit and dswidth variables in xfs_parseargs
-Date:   Sun, 27 Oct 2019 15:55:37 +0100
-Message-Id: <20191027145547.25157-3-hch@lst.de>
+Subject: [PATCH 03/12] xfs: cleanup calculating the stat optimal I/O size
+Date:   Sun, 27 Oct 2019 15:55:38 +0100
+Message-Id: <20191027145547.25157-4-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191027145547.25157-1-hch@lst.de>
 References: <20191027145547.25157-1-hch@lst.de>
@@ -53,89 +53,116 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There is no real need for the local variables here - either they
-are applied to the mount structure, or if the noalign mount option
-is set the mount will fail entirely if either is set.  Removing
-them helps cleaning up the mount API conversion.
+Move xfs_preferred_iosize to xfs_iops.c, unobsfucate it and also handle
+the realtime special case in the helper.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 ---
- fs/xfs/xfs_super.c | 27 ++++++++-------------------
- 1 file changed, 8 insertions(+), 19 deletions(-)
+ fs/xfs/xfs_iops.c  | 47 ++++++++++++++++++++++++++++++++++++----------
+ fs/xfs/xfs_mount.h | 24 -----------------------
+ 2 files changed, 37 insertions(+), 34 deletions(-)
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 589c080cabfe..4089de3daded 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -159,8 +159,6 @@ xfs_parseargs(
- 	const struct super_block *sb = mp->m_super;
- 	char			*p;
- 	substring_t		args[MAX_OPT_ARGS];
--	int			dsunit = 0;
--	int			dswidth = 0;
- 	int			iosize = 0;
- 	uint8_t			iosizelog = 0;
+diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+index 404f2dd58698..b6dbfd8eb6a1 100644
+--- a/fs/xfs/xfs_iops.c
++++ b/fs/xfs/xfs_iops.c
+@@ -484,6 +484,42 @@ xfs_vn_get_link_inline(
+ 	return link;
+ }
  
-@@ -252,11 +250,11 @@ xfs_parseargs(
- 			mp->m_flags |= XFS_MOUNT_SWALLOC;
- 			break;
- 		case Opt_sunit:
--			if (match_int(args, &dsunit))
-+			if (match_int(args, &mp->m_dalign))
- 				return -EINVAL;
- 			break;
- 		case Opt_swidth:
--			if (match_int(args, &dswidth))
-+			if (match_int(args, &mp->m_swidth))
- 				return -EINVAL;
- 			break;
- 		case Opt_inode32:
-@@ -350,7 +348,8 @@ xfs_parseargs(
- 		return -EINVAL;
++static uint32_t
++xfs_stat_blksize(
++	struct xfs_inode	*ip)
++{
++	struct xfs_mount	*mp = ip->i_mount;
++
++	/*
++	 * If the file blocks are being allocated from a realtime volume, then
++	 * always return the realtime extent size.
++	 */
++	if (XFS_IS_REALTIME_INODE(ip))
++		return xfs_get_extsz_hint(ip) << mp->m_sb.sb_blocklog;
++
++	/*
++	 * Allow large block sizes to be reported to userspace programs if the
++	 * "largeio" mount option is used.
++	 *
++	 * If compatibility mode is specified, simply return the basic unit of
++	 * caching so that we don't get inefficient read/modify/write I/O from
++	 * user apps. Otherwise....
++	 *
++	 * If the underlying volume is a stripe, then return the stripe width in
++	 * bytes as the recommended I/O size. It is not a stripe and we've set a
++	 * default buffered I/O size, return that, otherwise return the compat
++	 * default.
++	 */
++	if (!(mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)) {
++		if (mp->m_swidth)
++			return mp->m_swidth << mp->m_sb.sb_blocklog;
++		if (mp->m_flags & XFS_MOUNT_DFLT_IOSIZE)
++			return 1U << max(mp->m_readio_log, mp->m_writeio_log);
++	}
++
++	return PAGE_SIZE;
++}
++
+ STATIC int
+ xfs_vn_getattr(
+ 	const struct path	*path,
+@@ -543,16 +579,7 @@ xfs_vn_getattr(
+ 		stat->rdev = inode->i_rdev;
+ 		break;
+ 	default:
+-		if (XFS_IS_REALTIME_INODE(ip)) {
+-			/*
+-			 * If the file blocks are being allocated from a
+-			 * realtime volume, then return the inode's realtime
+-			 * extent size or the realtime volume's extent size.
+-			 */
+-			stat->blksize =
+-				xfs_get_extsz_hint(ip) << mp->m_sb.sb_blocklog;
+-		} else
+-			stat->blksize = xfs_preferred_iosize(mp);
++		stat->blksize = xfs_stat_blksize(ip);
+ 		stat->rdev = 0;
+ 		break;
  	}
+diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+index fdb60e09a9c5..f69e370db341 100644
+--- a/fs/xfs/xfs_mount.h
++++ b/fs/xfs/xfs_mount.h
+@@ -267,30 +267,6 @@ typedef struct xfs_mount {
+ #define	XFS_WSYNC_READIO_LOG	15	/* 32k */
+ #define	XFS_WSYNC_WRITEIO_LOG	14	/* 16k */
  
--	if ((mp->m_flags & XFS_MOUNT_NOALIGN) && (dsunit || dswidth)) {
-+	if ((mp->m_flags & XFS_MOUNT_NOALIGN) &&
-+	    (mp->m_dalign || mp->m_swidth)) {
- 		xfs_warn(mp,
- 	"sunit and swidth options incompatible with the noalign option");
- 		return -EINVAL;
-@@ -363,30 +362,20 @@ xfs_parseargs(
- 	}
- #endif
- 
--	if ((dsunit && !dswidth) || (!dsunit && dswidth)) {
-+	if ((mp->m_dalign && !mp->m_swidth) ||
-+	    (!mp->m_dalign && mp->m_swidth)) {
- 		xfs_warn(mp, "sunit and swidth must be specified together");
- 		return -EINVAL;
- 	}
- 
--	if (dsunit && (dswidth % dsunit != 0)) {
-+	if (mp->m_dalign && (mp->m_swidth % mp->m_dalign != 0)) {
- 		xfs_warn(mp,
- 	"stripe width (%d) must be a multiple of the stripe unit (%d)",
--			dswidth, dsunit);
-+			mp->m_swidth, mp->m_dalign);
- 		return -EINVAL;
- 	}
- 
- done:
--	if (dsunit && !(mp->m_flags & XFS_MOUNT_NOALIGN)) {
--		/*
--		 * At this point the superblock has not been read
--		 * in, therefore we do not know the block size.
--		 * Before the mount call ends we will convert
--		 * these to FSBs.
--		 */
--		mp->m_dalign = dsunit;
--		mp->m_swidth = dswidth;
--	}
+-/*
+- * Allow large block sizes to be reported to userspace programs if the
+- * "largeio" mount option is used.
+- *
+- * If compatibility mode is specified, simply return the basic unit of caching
+- * so that we don't get inefficient read/modify/write I/O from user apps.
+- * Otherwise....
+- *
+- * If the underlying volume is a stripe, then return the stripe width in bytes
+- * as the recommended I/O size. It is not a stripe and we've set a default
+- * buffered I/O size, return that, otherwise return the compat default.
+- */
+-static inline unsigned long
+-xfs_preferred_iosize(xfs_mount_t *mp)
+-{
+-	if (mp->m_flags & XFS_MOUNT_COMPAT_IOSIZE)
+-		return PAGE_SIZE;
+-	return (mp->m_swidth ?
+-		(mp->m_swidth << mp->m_sb.sb_blocklog) :
+-		((mp->m_flags & XFS_MOUNT_DFLT_IOSIZE) ?
+-			(1 << (int)max(mp->m_readio_log, mp->m_writeio_log)) :
+-			PAGE_SIZE));
+-}
 -
- 	if (mp->m_logbufs != -1 &&
- 	    mp->m_logbufs != 0 &&
- 	    (mp->m_logbufs < XLOG_MIN_ICLOGS ||
+ #define XFS_LAST_UNMOUNT_WAS_CLEAN(mp)	\
+ 				((mp)->m_flags & XFS_MOUNT_WAS_CLEAN)
+ #define XFS_FORCED_SHUTDOWN(mp)	((mp)->m_flags & XFS_MOUNT_FS_SHUTDOWN)
 -- 
 2.20.1
 
