@@ -2,196 +2,135 @@ Return-Path: <SRS0=q11v=YV=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-7.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 387D1CA9EC2
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Oct 2019 23:18:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A22F9CA9EC1
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Oct 2019 23:35:00 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0836A218BA
-	for <linux-xfs@archiver.kernel.org>; Mon, 28 Oct 2019 23:18:26 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 71ACC21479
+	for <linux-xfs@archiver.kernel.org>; Mon, 28 Oct 2019 23:35:00 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="X3uqHRaz"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="iDDhcbnF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1731174AbfJ1XSV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Oct 2019 19:18:21 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:58946 "EHLO
+        id S1731554AbfJ1Xe7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Oct 2019 19:34:59 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:43986 "EHLO
         aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726075AbfJ1XSV (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Oct 2019 19:18:21 -0400
+        with ESMTP id S1729755AbfJ1Xe7 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Oct 2019 19:34:59 -0400
 Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9SNELWV177951;
-        Mon, 28 Oct 2019 23:18:12 GMT
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9SNXdEV190720;
+        Mon, 28 Oct 2019 23:34:52 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=9d3JR5jpAcTUbBrCVGrVI6UPR6/10AURvRYnUEBmtvA=;
- b=X3uqHRazdNah/AnrMsqezGnZumRr+M71vsbBDaBoxFZH7h9WmfdagifSETMC+RLCDPHA
- T2rtMFlWt3gk93DLLmPD4cmYrHf5OL+1YGYpjX6OJ/g6c3vkvaHtr2Cfu0yM9NNyPujE
- gfbyzKRVh6P9Xoj7DF/KEBlv5n+XDNTiArQ49Q4v3V0turbnbAg6akRavH0r55OMp9i7
- C6we+D2Pnhm1wX+feYyzBzWY1Sn/nt8iq3JoU9udTa5is/IfFO3w8goV1qFJES7gdOt+
- NhFIJxUSkPlJnswS21kzVrP9rUzQqU9p1vJ1iz/VA7wUMewIFqCw9UtauLv/EJHS5fyJ VQ== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2vve3q53s3-1
+ bh=u/flHAMyb8LaLruQWCmNz7QrrtlbDFpiJepoWYZ6iV8=;
+ b=iDDhcbnF9E8Ibc3YSmIxU6Kt1vYOG9AQi8u1rxiP7FxKzyKBpJazuOC7qGDcr8sqYu7l
+ 5swEXWGa+EoVQdj0OMo26+q/KGbEPcFdRhGrIAFWS4kQu7mQsddPPOFmzM6kKnMA0MIm
+ uLSUHtbYgkNriVRF+2Jm6GB/2VuBv/Exj+mJPwV8E6tnajffwR4LGzpXGyfOFr5LrMbs
+ CDGv8mmoGxDp9Ja7Mk9FXBdp/9GkXlvSUFNcj8PmFvTC1VEOOsRbBqs339KrKcVsN/Kf
+ wXTCIwU5VPnqvDIoCHy451Txnks1TC1eEjSuAnjgESsSbrA0QOrWQBxlkF/a22JPgqZT ww== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by aserp2120.oracle.com with ESMTP id 2vve3q54x6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 28 Oct 2019 23:18:11 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9SNHcHV109864;
-        Mon, 28 Oct 2019 23:18:11 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2vvyksswsf-1
+        Mon, 28 Oct 2019 23:34:52 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9SNYd5p157823;
+        Mon, 28 Oct 2019 23:34:52 GMT
+Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
+        by aserp3020.oracle.com with ESMTP id 2vvyn0kdtu-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 28 Oct 2019 23:18:10 +0000
-Received: from abhmp0023.oracle.com (abhmp0023.oracle.com [141.146.116.29])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9SNI7Nl004624;
-        Mon, 28 Oct 2019 23:18:08 GMT
+        Mon, 28 Oct 2019 23:34:52 +0000
+Received: from abhmp0001.oracle.com (abhmp0001.oracle.com [141.146.116.7])
+        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9SNYnmG001116;
+        Mon, 28 Oct 2019 23:34:49 GMT
 Received: from localhost (/10.159.156.71)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 28 Oct 2019 23:18:07 +0000
-Date:   Mon, 28 Oct 2019 16:18:06 -0700
+        with ESMTP ; Mon, 28 Oct 2019 16:34:49 -0700
+Date:   Mon, 28 Oct 2019 16:34:48 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Stephen Rothwell <sfr@canb.auug.org.au>
-Cc:     David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        Linux Next Mailing List <linux-next@vger.kernel.org>,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-Subject: Re: linux-next: build failure after merge of the xfs tree
-Message-ID: <20191028231806.GA15222@magnolia>
-References: <20191029101151.54807d2f@canb.auug.org.au>
+To:     Ian Kent <raven@themaw.net>
+Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
+Subject: Re: About xfstests generic/361
+Message-ID: <20191028233448.GB15221@magnolia>
+References: <1d94634d5c990dc0d21673ff2596bd276b728ab1.camel@themaw.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191029101151.54807d2f@canb.auug.org.au>
+In-Reply-To: <1d94634d5c990dc0d21673ff2596bd276b728ab1.camel@themaw.net>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=856
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910280219
+ engine=8.0.1-1908290000 definitions=main-1910280222
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1011
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1031
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910280218
+ definitions=main-1910280222
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 29, 2019 at 10:11:51AM +1100, Stephen Rothwell wrote:
-> Hi all,
+On Mon, Oct 28, 2019 at 05:17:05PM +0800, Ian Kent wrote:
+> Hi Darrick,
 > 
-> After merging the xfs tree, today's linux-next build (powerpc
-> ppc64_defconfig) failed like this:
+> Unfortunately I'm having a bit of trouble with my USB keyboard
+> and random key repeats, I lost several important messages this
+> morning due to it.
+> 
+> Your report of the xfstests generic/361 problem was one of them
+> (as was Christoph's mail about the mount code location, I'll post
+> on that a bit later). So I'm going to have to refer to the posts
+> and hope that I can supply enough context to avoid confusion.
+> 
+> Sorry about this.
+> 
+> Anyway, you posted:
+> 
+> "Dunno what's up with this particular patch, but I see regressions on
+> generic/361 (and similar asserts on a few others).  The patches leading
+> up to this patch do not generate this error."
+> 
+> I've reverted back to a point more or less before moving the mount
+> and super block handling code around and tried to reproduce the problem
+> on my test VM and I din't see the problem.
+> 
+> Is there anything I need to do when running the test, other have
+> SCRATCH_MNT and SCRATCH_DEV defined in the local config, and the
+> mount point, and the device existing?
 
-<groan> Yeah, that's the same thing reported by the kbuild robot an hour
-ago.  FWIW I pushed a fixed branch but I guess it's too late for today,
-oh well....
+Um... here's the kernel branch that I used:
 
-...the root cause of course was the stray '}' in one of the commits,
-that I didn't catch because compat ioctls are hard. :(
+https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=mount-api-crash
 
-Sorry about the mess.
+Along with:
+
+MKFS_OPTIONS -- -m crc=0
+MOUNT_OPTIONS -- -o usrquota,grpquota
+
+and both TEST_DEV and SCRATCH_DEV pointed at boring scsi disks.
+
+> This could have been a problem with the series I posted because
+> I did have some difficulty resolving some conflicts along the
+> way and may have made mistakes, hence reverting to earlier patches
+> (but also keeping the recent small pre-patch changes).
+
+Yeah, I had the same problem too; you might spot check the commits in
+there just in case /I/ screwed them up.
+
+(I would say 'or rebase on for-next' but (a) I don't know how
+Christoph's mount cleanups intermix with that and (b) let's see if
+this afternoon's for-next is less broken on s390 than this morning's was
+<frown>)
 
 --D
 
-> fs/compat_ioctl.c: In function '__do_compat_sys_ioctl':
-> fs/compat_ioctl.c:1056:2: error: case label not within a switch statement
->  1056 |  case FICLONE:
->       |  ^~~~
-> fs/compat_ioctl.c:1057:2: error: case label not within a switch statement
->  1057 |  case FICLONERANGE:
->       |  ^~~~
-> fs/compat_ioctl.c:1058:2: error: case label not within a switch statement
->  1058 |  case FIDEDUPERANGE:
->       |  ^~~~
-> fs/compat_ioctl.c:1059:2: error: case label not within a switch statement
->  1059 |  case FS_IOC_FIEMAP:
->       |  ^~~~
-> fs/compat_ioctl.c:1062:2: error: case label not within a switch statement
->  1062 |  case FIBMAP:
->       |  ^~~~
-> fs/compat_ioctl.c:1063:2: error: case label not within a switch statement
->  1063 |  case FIGETBSZ:
->       |  ^~~~
-> fs/compat_ioctl.c:1064:2: error: case label not within a switch statement
->  1064 |  case FIONREAD:
->       |  ^~~~
-> fs/compat_ioctl.c:1066:4: error: break statement not within loop or switch
->  1066 |    break;
->       |    ^~~~~
-> fs/compat_ioctl.c:1069:2: error: 'default' label not within a switch statement
->  1069 |  default:
->       |  ^~~~~~~
-> fs/compat_ioctl.c:1078:3: error: break statement not within loop or switch
->  1078 |   break;
->       |   ^~~~~
-> fs/compat_ioctl.c:1077:4: error: label 'do_ioctl' used but not defined
->  1077 |    goto do_ioctl;
->       |    ^~~~
-> fs/compat_ioctl.c:1073:5: error: label 'out_fput' used but not defined
->  1073 |     goto out_fput;
->       |     ^~~~
-> fs/compat_ioctl.c:1005:3: error: label 'out' used but not defined
->  1005 |   goto out;
->       |   ^~~~
-> fs/compat_ioctl.c:1079:2: warning: no return statement in function returning non-void [-Wreturn-type]
->  1079 |  }
->       |  ^
-> fs/compat_ioctl.c: At top level:
-> fs/compat_ioctl.c:1081:2: error: expected identifier or '(' before 'if'
->  1081 |  if (compat_ioctl_check_table(XFORM(cmd)))
->       |  ^~
-> fs/compat_ioctl.c:1084:2: warning: data definition has no type or storage class
->  1084 |  error = do_ioctl_trans(cmd, arg, f.file);
->       |  ^~~~~
-> fs/compat_ioctl.c:1084:2: error: type defaults to 'int' in declaration of 'error' [-Werror=implicit-int]
-> fs/compat_ioctl.c:1084:25: error: 'cmd' undeclared here (not in a function)
->  1084 |  error = do_ioctl_trans(cmd, arg, f.file);
->       |                         ^~~
-> fs/compat_ioctl.c:1084:30: error: 'arg' undeclared here (not in a function)
->  1084 |  error = do_ioctl_trans(cmd, arg, f.file);
->       |                              ^~~
-> fs/compat_ioctl.c:1084:35: error: 'f' undeclared here (not in a function); did you mean 'fd'?
->  1084 |  error = do_ioctl_trans(cmd, arg, f.file);
->       |                                   ^
->       |                                   fd
-> fs/compat_ioctl.c:1085:2: error: expected identifier or '(' before 'if'
->  1085 |  if (error == -ENOIOCTLCMD)
->       |  ^~
-> fs/compat_ioctl.c:1088:2: error: expected identifier or '(' before 'goto'
->  1088 |  goto out_fput;
->       |  ^~~~
-> fs/compat_ioctl.c:1090:15: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
->  1090 |  found_handler:
->       |               ^
-> fs/compat_ioctl.c:1092:10: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
->  1092 |  do_ioctl:
->       |          ^
-> fs/compat_ioctl.c:1094:10: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
->  1094 |  out_fput:
->       |          ^
-> fs/compat_ioctl.c:1096:5: error: expected '=', ',', ';', 'asm' or '__attribute__' before ':' token
->  1096 |  out:
->       |     ^
-> fs/compat_ioctl.c:1098:1: error: expected identifier or '(' before '}' token
->  1098 | }
->       | ^
-> fs/compat_ioctl.c:976:12: warning: 'compat_ioctl_check_table' defined but not used [-Wunused-function]
->   976 | static int compat_ioctl_check_table(unsigned int xcmd)
->       |            ^~~~~~~~~~~~~~~~~~~~~~~~
+> Ian
 > 
-> Caused by commit
-> 
->   d5e20bfa0b77 ("fs: add generic UNRESVSP and ZERO_RANGE ioctl handlers")
-> 
-> I have used the xfs tree from next-20191028 for today.
-> 
-> -- 
-> Cheers,
-> Stephen Rothwell
-
-
