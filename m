@@ -2,126 +2,95 @@ Return-Path: <SRS0=yuEF=YW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 26CD7CA9EB9
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:02:26 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 73CA3CA9EB9
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:03:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 040CF20717
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:02:25 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 43235214B2
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:03:56 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="olAsQEQP"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726025AbfJ2ECZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Oct 2019 00:02:25 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52348 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725830AbfJ2ECZ (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 00:02:25 -0400
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CA0D043FC09
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2019 15:02:20 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iPIhy-00005b-Oy
-        for linux-xfs@vger.kernel.org; Tue, 29 Oct 2019 15:02:14 +1100
-Date:   Tue, 29 Oct 2019 15:02:14 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH] xfs: properly serialise fallocate against AIO+DIO
-Message-ID: <20191029040214.GM4614@dread.disaster.area>
-References: <20191029034850.8212-1-david@fromorbit.com>
+        id S1726037AbfJ2EDz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Oct 2019 00:03:55 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:43370 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725830AbfJ2EDz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 00:03:55 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T4117K183479;
+        Tue, 29 Oct 2019 04:03:45 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
+ cc : date : message-id : mime-version : content-type :
+ content-transfer-encoding; s=corp-2019-08-05;
+ bh=rYBvfadBAmtbmY7aNbAPAKCvSVKq8sgWHPxyO6G482I=;
+ b=olAsQEQPvv9LeEqPbXc7YvlKPcTA/fFXj1lgjOjuYCEMQNhfOrWtRR9UOM+6tUdGtGPy
+ L1dKyuAtootGMfJ4ZonhnFLSUYHBAwg1T+WyeeuH1gZePPNtpHJxAj0hTBLNmXC9sitE
+ j8eyi1zm9/V4jnHYkguTdgU2SQoMoUK1Cbd843ZP7mcnTTgzzE7piOfpSVuA3gUL51jE
+ +Whzb2TP2t8rgGOQLTtzkqP24HYkk/v6m3GZ3kgDlcSFE4M/FLBUbUprZjCfpvHvu7tZ
+ FESp5tazvjrnxdLqf2iqH0imz70PH4tAq1Kf+EFhovjLgsNGBmOle5LnMkcvXjMnITDP kQ== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2120.oracle.com with ESMTP id 2vvumfb0ca-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Oct 2019 04:03:45 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T407Yh188390;
+        Tue, 29 Oct 2019 04:03:44 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2vw09h0fjw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Tue, 29 Oct 2019 04:03:44 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9T43hPw029979;
+        Tue, 29 Oct 2019 04:03:44 GMT
+Received: from localhost (/10.159.156.71)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 28 Oct 2019 21:03:43 -0700
+Subject: [PATCH v2 0/4] xfs: more metadata verifier tightening
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     darrick.wong@oracle.com
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
+Date:   Mon, 28 Oct 2019 21:03:42 -0700
+Message-ID: <157232182246.593721.4902116478429075171.stgit@magnolia>
+User-Agent: StGit/0.17.1-dirty
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191029034850.8212-1-david@fromorbit.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=gSlDgGGJmhgFA1TwjlYA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=902
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910290042
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910290042
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Oct 29, 2019 at 02:48:50PM +1100, Dave Chinner wrote:
-> From: Dave Chinner <dchinner@redhat.com>
-> 
-> AIO+DIO can extend the file size on IO completion, and it holds
-> no inode locks while the IO is in flight. Therefore, a race
-> condition exists in file size updates if we do something like this:
-> 
-> aio-thread			fallocate-thread
-> 
-> lock inode
-> submit IO beyond inode->i_size
-> unlock inode
-> .....
-> 				lock inode
-> 				break layouts
-> 				if (off + len > inode->i_size)
-> 					new_size = off + len
-> 				.....
-> 				inode_dio_wait()
-> 				<blocks>
-> .....
-> completes
-> inode->i_size updated
-> inode_dio_done()
-> ....
-> 				<wakes>
-> 				<does stuff no long beyond EOF>
-> 				if (new_size)
-> 					xfs_vn_setattr(inode, new_size)
-> 
-> 
-> Yup, that attempt to extend the file size in the fallocate code
-> turns into a truncate - it removes the whatever the aio write
-> allocated and put to disk, and reduced the inode size back down to
-> where the fallocate operation ends.
-> 
-> Fundamentally, xfs_file_fallocate()  not compatible with racing
-> AIO+DIO completions, so we need to move the inode_dio_wait() call
-> up to where the lock the inode and break the layouts.
-> 
-> Secondly, storing the inode size and then using it unchecked without
-> holding the ILOCK is not safe; we can only do such a thing if we've
-> locked out and drained all IO and other modification operations,
-> which we don't do initially in xfs_file_fallocate.
-> 
-> It should be noted that some of the fallocate operations are
-> compound operations - they are made up of multiple manipulations
-> that may zero data, and so we may need to flush and invalidate the
-> file multiple times during an operation. However, we only need to
-> lock out IO and other space manipulation operations once, as that
-> lockout is maintained until the entire fallocate operation has been
-> completed.
-> 
-> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Hi all,
 
-Just a note for anyone considering backporting this patch - I
-intentionally did not mark it for stable kernel backports because it
-is not just a simple backport.
+Here are some enhancements I made to the metadata verifiers.  The first
+adds structure checking to the attr leaf verifier.  The next two look
+for obviously invalid dirent and attr names before passing them up to
+the VFS.  The fourth patch fixes some problems where we return EIO on
+metadata corruption instead of EFSCORRUPTED.
 
-i.e. while it may apply cleanly to older kernels, this is based on
-the current xfs for-next tree and so is based on Christoph's
-xfs_ioc_space() redirection to fallocate() patch set. That means the
-changes to xfs_ioc_space() are tiny and trivial. Backporting this to
-kernels that don't have Christoph's patch set will require adding
-all the flush/invalidation calls that I added to
-xfs_file_fallocate().
+If you're going to start using this mess, you probably ought to just
+pull from my git trees, which are linked below.
 
-i.e. all the older XFS_IOC_UNRESVSP, XFS_IOC_ZERO_RANGE, etc
-interfaces look to have the same serialisation problem against
-AIO-DIO writes, and so older kernels will need them fixed as well.
-That code is not in this patch.
+This is an extraordinary way to destroy everything.  Enjoy!
+Comments and questions are, as always, welcome.
 
-Cheers,
+--D
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+kernel git tree:
+https://git.kernel.org/cgit/linux/kernel/git/djwong/xfs-linux.git/log/?h=tighten-verifiers
