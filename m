@@ -2,115 +2,126 @@ Return-Path: <SRS0=yuEF=YW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D3BFCA9EB9
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 03:58:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26CD7CA9EB9
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:02:26 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CB31120862
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 03:58:44 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="r2LPFFgR"
+	by mail.kernel.org (Postfix) with ESMTP id 040CF20717
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:02:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727107AbfJ2D6o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Oct 2019 23:58:44 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:43258 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726025AbfJ2D6o (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Oct 2019 23:58:44 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T3t1nK183128;
-        Tue, 29 Oct 2019 03:58:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=UYBvEhM01dE1PYclUWFQKX+8PyG3BmJmPceX/miPf/s=;
- b=r2LPFFgROn9tRxaWqsZeO/cMq4s0NIFAo5JA4V2m3KH469EA33fMzN6hSlNrCbNrPyAC
- PIW65a6LbpnbkNfJNXB0aQA+zSVxnOyx4iN6/kr2VWNT5SmQLIduyskik7JtzEv30vug
- k3/5fr+4/XZnOt7yps04g25+vcd5Mkaf0MhkDsbSw+JTCn12AktusuLqBLjJ+TCoCKWh
- gyLdFEQDRI8lSFX2kh+S7rOF1v+2uBF2eMX67L5cOuP3GFcwXcKj0W5cyojfeuQ9EPwy
- hLBwyYgJkbPPaka7aQaoDCqoZ9pE1nvUPU6aIpzMqMDwAfhLQw12XNIHvFXL2XK5cRp6 5Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2vve3q61uy-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 03:58:39 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T3mZmZ141765;
-        Tue, 29 Oct 2019 03:58:39 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by aserp3030.oracle.com with ESMTP id 2vwam06hkm-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 03:58:38 +0000
-Received: from abhmp0006.oracle.com (abhmp0006.oracle.com [141.146.116.12])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9T3wWex022059;
-        Tue, 29 Oct 2019 03:58:32 GMT
-Received: from localhost (/10.159.156.71)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 28 Oct 2019 20:58:32 -0700
-Date:   Mon, 28 Oct 2019 20:58:31 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: softlockup with CONFIG_XFS_ONLINE_SCRUB enabled
-Message-ID: <20191029035831.GE15221@magnolia>
-References: <20191025102404.GA12255@lst.de>
- <20191027183232.GA15221@magnolia>
- <20191028073003.GA20274@lst.de>
+        id S1726025AbfJ2ECZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Oct 2019 00:02:25 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52348 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725830AbfJ2ECZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 00:02:25 -0400
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id CA0D043FC09
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2019 15:02:20 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iPIhy-00005b-Oy
+        for linux-xfs@vger.kernel.org; Tue, 29 Oct 2019 15:02:14 +1100
+Date:   Tue, 29 Oct 2019 15:02:14 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs: properly serialise fallocate against AIO+DIO
+Message-ID: <20191029040214.GM4614@dread.disaster.area>
+References: <20191029034850.8212-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191028073003.GA20274@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910290040
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9424 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910290041
+In-Reply-To: <20191029034850.8212-1-david@fromorbit.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=gSlDgGGJmhgFA1TwjlYA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 28, 2019 at 08:30:03AM +0100, Christoph Hellwig wrote:
-> On Sun, Oct 27, 2019 at 11:32:32AM -0700, Darrick J. Wong wrote:
-> > On Fri, Oct 25, 2019 at 12:24:04PM +0200, Christoph Hellwig wrote:
-> > > Hi Darrick,
-> > > 
-> > > the current xfs tree seems to easily cause sotlockups in generic/175
-> > > (and a few other tests, but not as reproducible) for me.  This is on
-> > > 20GB 4k block size images on a VM with 4 CPUs and 4G of RAM.
-> > 
-> > Hrm.  I haven't seen that before... what's your kernel config?
-> > This looks like some kind of lockup in slub debugging...?
-> > 
-> > Also, is this a new thing?  Or something that used to happen with low
-> > frequency but has slowly increased to the point that it's annoying?
-> > 
-> > (Or something else?)
+On Tue, Oct 29, 2019 at 02:48:50PM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
 > 
-> Seems to happen with 5.3 as well.  I only recently turned
-> CONFIG_XFS_ONLINE_SCRUB back on in my usual test config, that is what
-> made it show up..
+> AIO+DIO can extend the file size on IO completion, and it holds
+> no inode locks while the IO is in flight. Therefore, a race
+> condition exists in file size updates if we do something like this:
 > 
-> .config attached.
+> aio-thread			fallocate-thread
+> 
+> lock inode
+> submit IO beyond inode->i_size
+> unlock inode
+> .....
+> 				lock inode
+> 				break layouts
+> 				if (off + len > inode->i_size)
+> 					new_size = off + len
+> 				.....
+> 				inode_dio_wait()
+> 				<blocks>
+> .....
+> completes
+> inode->i_size updated
+> inode_dio_done()
+> ....
+> 				<wakes>
+> 				<does stuff no long beyond EOF>
+> 				if (new_size)
+> 					xfs_vn_setattr(inode, new_size)
+> 
+> 
+> Yup, that attempt to extend the file size in the fallocate code
+> turns into a truncate - it removes the whatever the aio write
+> allocated and put to disk, and reduced the inode size back down to
+> where the fallocate operation ends.
+> 
+> Fundamentally, xfs_file_fallocate()  not compatible with racing
+> AIO+DIO completions, so we need to move the inode_dio_wait() call
+> up to where the lock the inode and break the layouts.
+> 
+> Secondly, storing the inode size and then using it unchecked without
+> holding the ILOCK is not safe; we can only do such a thing if we've
+> locked out and drained all IO and other modification operations,
+> which we don't do initially in xfs_file_fallocate.
+> 
+> It should be noted that some of the fallocate operations are
+> compound operations - they are made up of multiple manipulations
+> that may zero data, and so we may need to flush and invalidate the
+> file multiple times during an operation. However, we only need to
+> lock out IO and other space manipulation operations once, as that
+> lockout is maintained until the entire fallocate operation has been
+> completed.
+> 
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 
-Aha, you have preempt disabled and slub debugging on by default, which
-(on the million-extent files produced by generic/175) mean that scrub
-takes long enough to trip the soft lockup watchdog while checking the
-bmap.  The test eventually finishes, but the obvious(ly stupid) bandaid
-of calling touch_softlockup_watchdog merely plunged the VM into
-"rcu_sched self-detected stall on CPU" messages and as it's late I'll
-set it aside until tomorrow.
+Just a note for anyone considering backporting this patch - I
+intentionally did not mark it for stable kernel backports because it
+is not just a simple backport.
 
-IOWs I think I know what's going on but don't yet know how to fix it. :/
+i.e. while it may apply cleanly to older kernels, this is based on
+the current xfs for-next tree and so is based on Christoph's
+xfs_ioc_space() redirection to fallocate() patch set. That means the
+changes to xfs_ioc_space() are tiny and trivial. Backporting this to
+kernels that don't have Christoph's patch set will require adding
+all the flush/invalidation calls that I added to
+xfs_file_fallocate().
 
---D
+i.e. all the older XFS_IOC_UNRESVSP, XFS_IOC_ZERO_RANGE, etc
+interfaces look to have the same serialisation problem against
+AIO-DIO writes, and so older kernels will need them fixed as well.
+That code is not in this patch.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
