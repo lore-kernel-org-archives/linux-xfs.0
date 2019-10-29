@@ -6,63 +6,65 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B098CA9EB9
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 06:28:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A021ECA9EC2
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 06:32:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2B60621734
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 06:28:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7DD172053B
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 06:32:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1732336AbfJ2G2n (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Oct 2019 02:28:43 -0400
-Received: from verein.lst.de ([213.95.11.211]:38149 "EHLO verein.lst.de"
+        id S1730531AbfJ2Gc2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Oct 2019 02:32:28 -0400
+Received: from verein.lst.de ([213.95.11.211]:38162 "EHLO verein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1732535AbfJ2G2n (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 29 Oct 2019 02:28:43 -0400
+        id S1730227AbfJ2Gc2 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 29 Oct 2019 02:32:28 -0400
 Received: by verein.lst.de (Postfix, from userid 2407)
-        id E0C1D68AFE; Tue, 29 Oct 2019 07:28:40 +0100 (CET)
-Date:   Tue, 29 Oct 2019 07:28:40 +0100
+        id 2D0D868B05; Tue, 29 Oct 2019 07:32:25 +0100 (CET)
+Date:   Tue, 29 Oct 2019 07:32:24 +0100
 From:   Christoph Hellwig <hch@lst.de>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
-Subject: Re: [PATCH 2/2] xfs: refactor xfs_iread_extents to use
- xfs_btree_visit_blocks
-Message-ID: <20191029062840.GB17004@lst.de>
-References: <157232185555.594704.14846501683468956862.stgit@magnolia> <157232186801.594704.5915391485002020723.stgit@magnolia>
+To:     Stephen Rothwell <sfr@canb.auug.org.au>
+Cc:     Christoph Hellwig <hch@lst.de>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        David Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        Linux Next Mailing List <linux-next@vger.kernel.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Subject: Re: linux-next: build failure after merge of the xfs tree
+Message-ID: <20191029063224.GA17179@lst.de>
+References: <20191029101151.54807d2f@canb.auug.org.au> <20191028231806.GA15222@magnolia> <20191029055605.GA16630@lst.de> <20191029172351.40eae30d@canb.auug.org.au>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <157232186801.594704.5915391485002020723.stgit@magnolia>
+In-Reply-To: <20191029172351.40eae30d@canb.auug.org.au>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Oct 28, 2019 at 09:04:28PM -0700, Darrick J. Wong wrote:
-> @@ -4313,6 +4314,11 @@ xfs_btree_visit_blocks(
->  			xfs_btree_copy_ptrs(cur, &lptr, ptr, 1);
+On Tue, Oct 29, 2019 at 05:23:51PM +1100, Stephen Rothwell wrote:
+> Hi Christoph,
+> 
+> On Tue, 29 Oct 2019 06:56:05 +0100 Christoph Hellwig <hch@lst.de> wrote:
+> >
+> > On Mon, Oct 28, 2019 at 04:18:06PM -0700, Darrick J. Wong wrote:
+> > > On Tue, Oct 29, 2019 at 10:11:51AM +1100, Stephen Rothwell wrote:  
+> > > > Hi all,
+> > > > 
+> > > > After merging the xfs tree, today's linux-next build (powerpc
+> > > > ppc64_defconfig) failed like this:  
+> > > 
+> > > <groan> Yeah, that's the same thing reported by the kbuild robot an hour
+> > > ago.  FWIW I pushed a fixed branch but I guess it's too late for today,
+> > > oh well....
+> > > 
+> > > ...the root cause of course was the stray '}' in one of the commits,
+> > > that I didn't catch because compat ioctls are hard. :(  
+> > 
+> > Weird.  My usual builds have compat ioclts enabled, and I never got
+> > any report like this.
+> 
+> It only fails for !(defined(CONFIG_IA64) || defined(CONFIG_X86_64))
+> I reported it failing in my powerpc build.
 
->  
-> +		/* Skip whatever we don't want. */
-> +		if ((level == 0 && !(flags & XFS_BTREE_VISIT_RECORDS)) ||
-> +		    (level > 0 && !(flags & XFS_BTREE_VISIT_LEAVES)))
-> +			continue;
-
-Nipick:  I'd make this two separate if statements as that flows a little
-easier.  In fact the closing brace above is the start of a level > 0
-check, so the whole thing could become:
-
-		if (level > 0) {
-			// existing code, maybe also move the comment above
-			// the if here
-
-			if (!(flags & XFS_BTREE_VISIT_RECORDS))
-				continue;
-		} else {
-			if (!(flags & XFS_BTREE_VISIT_LEAVES))
-				continue;
-		}
-
-which would be even nicer.  Otherwise this patch looks fine to me:
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Oh, ok.  I actually see your report now as well, which for some reason
+got sorted into my spam folder.
