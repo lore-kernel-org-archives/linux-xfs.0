@@ -2,123 +2,196 @@ Return-Path: <SRS0=yuEF=YW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 38A1DCA9EC0
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 03:23:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 858F5CA9EB9
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 03:48:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 0892D20717
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 03:23:57 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ayi2Svba"
+	by mail.kernel.org (Postfix) with ESMTP id 4FB1720862
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 03:48:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726201AbfJ2DX4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 28 Oct 2019 23:23:56 -0400
-Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:35034 "EHLO
-        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1726025AbfJ2DX4 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Oct 2019 23:23:56 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1572319434;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding;
-        bh=e4Y8MDLIi8jbEkMG0u+JQ1zIEgwL1hnxlyrxsyYvqZU=;
-        b=Ayi2Svba/Iwjh5CeP0iHKpUkCzZaPFHcpRAG2YfFwqKTlt90Y3YRM+hDO+pf5gg4BEzMth
-        6F5ua9Z1228fDIz1GyTM7xcaa3kxOsgHUskoidCQPbEwGCfvp5fcaSFuDs9pBgRjn+lvI4
-        pdnG7Cdws5azY7DTwBrC6J2UEJexR4c=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-386-2nMmc0gqPKu9YExcDP1MfQ-1; Mon, 28 Oct 2019 23:23:53 -0400
-Received: from smtp.corp.redhat.com (int-mx01.intmail.prod.int.phx2.redhat.com [10.5.11.11])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 705485E6
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2019 03:23:52 +0000 (UTC)
-Received: from [IPv6:::1] (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 457D8600C1
-        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2019 03:23:52 +0000 (UTC)
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-From:   Eric Sandeen <sandeen@redhat.com>
-Subject: [PATCH] xfs_growfs: allow mounted device node as argument
-Message-ID: <0283f073-88d8-977f-249c-f813dabd9390@redhat.com>
-Date:   Mon, 28 Oct 2019 22:23:51 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.0
+        id S1727702AbfJ2Dsz (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 28 Oct 2019 23:48:55 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58769 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727107AbfJ2Dsz (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 28 Oct 2019 23:48:55 -0400
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id A65A53A1BE6
+        for <linux-xfs@vger.kernel.org>; Tue, 29 Oct 2019 14:48:51 +1100 (AEDT)
+Received: from discord.disaster.area ([192.168.253.110])
+        by dread.disaster.area with esmtp (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iPIV0-0008Na-3w
+        for linux-xfs@vger.kernel.org; Tue, 29 Oct 2019 14:48:50 +1100
+Received: from dave by discord.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iPIV0-00029B-1e
+        for linux-xfs@vger.kernel.org; Tue, 29 Oct 2019 14:48:50 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     linux-xfs@vger.kernel.org
+Subject: [PATCH] xfs: properly serialise fallocate against AIO+DIO
+Date:   Tue, 29 Oct 2019 14:48:50 +1100
+Message-Id: <20191029034850.8212-1-david@fromorbit.com>
+X-Mailer: git-send-email 2.24.0.rc0
 MIME-Version: 1.0
-Content-Language: en-US
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.11
-X-MC-Unique: 2nMmc0gqPKu9YExcDP1MfQ-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=XobE76Q3jBoA:10 a=20KFwNOVAAAA:8 a=WUWNor0LOpfXaxb9K2cA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Up until:
+From: Dave Chinner <dchinner@redhat.com>
 
- b97815a0 xfs_growfs: ensure target path is an active xfs mountpoint
+AIO+DIO can extend the file size on IO completion, and it holds
+no inode locks while the IO is in flight. Therefore, a race
+condition exists in file size updates if we do something like this:
 
-xfs_growfs actually accepted a mounted block device name as the
-primary argument, because it could be found in the mount table.
+aio-thread			fallocate-thread
 
-It turns out that Ansible was making use of this undocumented behavior,
-and it's trivial to allow it, so put it back in place and document
-it this time.
+lock inode
+submit IO beyond inode->i_size
+unlock inode
+.....
+				lock inode
+				break layouts
+				if (off + len > inode->i_size)
+					new_size = off + len
+				.....
+				inode_dio_wait()
+				<blocks>
+.....
+completes
+inode->i_size updated
+inode_dio_done()
+....
+				<wakes>
+				<does stuff no long beyond EOF>
+				if (new_size)
+					xfs_vn_setattr(inode, new_size)
 
-Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+
+Yup, that attempt to extend the file size in the fallocate code
+turns into a truncate - it removes the whatever the aio write
+allocated and put to disk, and reduced the inode size back down to
+where the fallocate operation ends.
+
+Fundamentally, xfs_file_fallocate()  not compatible with racing
+AIO+DIO completions, so we need to move the inode_dio_wait() call
+up to where the lock the inode and break the layouts.
+
+Secondly, storing the inode size and then using it unchecked without
+holding the ILOCK is not safe; we can only do such a thing if we've
+locked out and drained all IO and other modification operations,
+which we don't do initially in xfs_file_fallocate.
+
+It should be noted that some of the fallocate operations are
+compound operations - they are made up of multiple manipulations
+that may zero data, and so we may need to flush and invalidate the
+file multiple times during an operation. However, we only need to
+lock out IO and other space manipulation operations once, as that
+lockout is maintained until the entire fallocate operation has been
+completed.
+
+Signed-off-by: Dave Chinner <dchinner@redhat.com>
 ---
+ fs/xfs/xfs_bmap_util.c |  8 +-------
+ fs/xfs/xfs_file.c      | 30 ++++++++++++++++++++++++++++++
+ fs/xfs/xfs_ioctl.c     |  1 +
+ 3 files changed, 32 insertions(+), 7 deletions(-)
 
-I can clone tests/xfs/289 to do tests of similar permutations for
-device names.
-
-diff --git a/growfs/xfs_growfs.c b/growfs/xfs_growfs.c
-index 20089d2b..4224c5a0 100644
---- a/growfs/xfs_growfs.c
-+++ b/growfs/xfs_growfs.c
-@@ -140,6 +140,9 @@ main(int argc, char **argv)
- =09}
-=20
- =09fs =3D fs_table_lookup_mount(rpath);
-+=09if (!fs)
-+=09=09fs =3D fs_table_lookup_blkdev(rpath);
+diff --git a/fs/xfs/xfs_bmap_util.c b/fs/xfs/xfs_bmap_util.c
+index fb31d7d6701e..dea68308fb64 100644
+--- a/fs/xfs/xfs_bmap_util.c
++++ b/fs/xfs/xfs_bmap_util.c
+@@ -1040,6 +1040,7 @@ xfs_unmap_extent(
+ 	goto out_unlock;
+ }
+ 
++/* Caller must first wait for the completion of any pending DIOs if required. */
+ int
+ xfs_flush_unmap_range(
+ 	struct xfs_inode	*ip,
+@@ -1051,9 +1052,6 @@ xfs_flush_unmap_range(
+ 	xfs_off_t		rounding, start, end;
+ 	int			error;
+ 
+-	/* wait for the completion of any pending DIOs */
+-	inode_dio_wait(inode);
+-
+ 	rounding = max_t(xfs_off_t, 1 << mp->m_sb.sb_blocklog, PAGE_SIZE);
+ 	start = round_down(offset, rounding);
+ 	end = round_up(offset + len, rounding) - 1;
+@@ -1085,10 +1083,6 @@ xfs_free_file_space(
+ 	if (len <= 0)	/* if nothing being freed */
+ 		return 0;
+ 
+-	error = xfs_flush_unmap_range(ip, offset, len);
+-	if (error)
+-		return error;
+-
+ 	startoffset_fsb = XFS_B_TO_FSB(mp, offset);
+ 	endoffset_fsb = XFS_B_TO_FSBT(mp, offset + len);
+ 
+diff --git a/fs/xfs/xfs_file.c b/fs/xfs/xfs_file.c
+index 525b29b99116..865543e41fb4 100644
+--- a/fs/xfs/xfs_file.c
++++ b/fs/xfs/xfs_file.c
+@@ -817,6 +817,36 @@ xfs_file_fallocate(
+ 	if (error)
+ 		goto out_unlock;
+ 
++	/*
++	 * Must wait for all AIO to complete before we continue as AIO can
++	 * change the file size on completion without holding any locks we
++	 * currently hold. We must do this first because AIO can update both
++	 * the on disk and in memory inode sizes, and the operations that follow
++	 * require the in-memory size to be fully up-to-date.
++	 */
++	inode_dio_wait(inode);
 +
- =09if (!fs) {
- =09=09fprintf(stderr, _("%s: %s is not a mounted XFS filesystem\n"),
- =09=09=09progname, argv[optind]);
-diff --git a/man/man8/xfs_growfs.8 b/man/man8/xfs_growfs.8
-index 7e6a387c..60a88189 100644
---- a/man/man8/xfs_growfs.8
-+++ b/man/man8/xfs_growfs.8
-@@ -35,7 +35,12 @@ xfs_growfs \- expand an XFS filesystem
- .B \-R
- .I size
- ]
-+[
- .I mount-point
-+|
-+.I block-device
-+]
++	/*
++	 * Now AIO and DIO has drained we flush and (if necessary) invalidate
++	 * the cached range over the first operation we are about to run.
++	 *
++	 * We care about zero and collapse here because they both run a hole
++	 * punch over the range first. Because that can zero data, and the range
++	 * of invalidation for the shift operations is much larger, we still do
++	 * the required flush for collapse in xfs_prepare_shift().
++	 *
++	 * Insert has the same range requirements as collapse, and we extend the
++	 * file first which can zero data. Hence insert has the same
++	 * flush/invalidate requirements as collapse and so they are both
++	 * handled at the right time by xfs_prepare_shift().
++	 */
++	if (mode & (FALLOC_FL_PUNCH_HOLE | FALLOC_FL_ZERO_RANGE |
++		    FALLOC_FL_COLLAPSE_RANGE)) {
++		error = xfs_flush_unmap_range(ip, offset, len);
++		if (error)
++			goto out_unlock;
++	}
 +
- .br
- .B xfs_growfs \-V
- .SH DESCRIPTION
-@@ -45,7 +50,10 @@ expands an existing XFS filesystem (see
- The
- .I mount-point
- argument is the pathname of the directory where the filesystem
--is mounted. The filesystem must be mounted to be grown (see
-+is mounted. The
-+.I block-device
-+argument is the device name of a mounted XFS filesystem.
-+The filesystem must be mounted to be grown (see
- .BR mount (8)).
- The existing contents of the filesystem are undisturbed, and the added spa=
-ce
- becomes available for additional file storage.
+ 	if (mode & FALLOC_FL_PUNCH_HOLE) {
+ 		error = xfs_free_file_space(ip, offset, len);
+ 		if (error)
+diff --git a/fs/xfs/xfs_ioctl.c b/fs/xfs/xfs_ioctl.c
+index 287f83eb791f..800f07044636 100644
+--- a/fs/xfs/xfs_ioctl.c
++++ b/fs/xfs/xfs_ioctl.c
+@@ -623,6 +623,7 @@ xfs_ioc_space(
+ 	error = xfs_break_layouts(inode, &iolock, BREAK_UNMAP);
+ 	if (error)
+ 		goto out_unlock;
++	inode_dio_wait(inode);
+ 
+ 	switch (bf->l_whence) {
+ 	case 0: /*SEEK_SET*/
+-- 
+2.24.0.rc0
 
