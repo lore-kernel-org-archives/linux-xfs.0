@@ -7,56 +7,55 @@ X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 666E7CA9EC4
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:46:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DE2EFCA9EAE
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:47:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3701B20862
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:46:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A24BA20862
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:47:44 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="qMbP0vUv"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QjAI+pNg"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726495AbfJ2Xq3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Oct 2019 19:46:29 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:54616 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726703AbfJ2Xq2 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 19:46:28 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9TNe6UH045257;
-        Tue, 29 Oct 2019 23:46:26 GMT
+        id S1726310AbfJ2Xro (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Oct 2019 19:47:44 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:34722 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726273AbfJ2Xro (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 19:47:44 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9TNdxeG017420;
+        Tue, 29 Oct 2019 23:47:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=HOK3jJpVpnnCmVQFhqLhS3PqnEov2zHnQeFXcnU+y+4=;
- b=qMbP0vUvCd4DjmBa3HcqUcXbi3T90cIwW0SEMHVTOy9L6tW760gVnVLA+/aY6zZ1x2GZ
- Wexk/QXbQ4+KxXVw8vQzPqYHek428DR5O9YeZ1hAekxb+sviYpb6cCRRusIBSHwbSRps
- +rpeJceSJNrQuyCbP3X7NfXSaGw/eVFwVxTZ+JZh4nkciUmZYtWmR/JKAh26HZly0COP
- xXFxBx15x+c1pmdFhG6g0Ds94imyXJ/it0PDrFLq5VYeJf4ENaJfrjftzU3SqA7eHHq0
- UDQ/g1yn4FpROthyD5R8h7ck/1gOsJkg9DIIECp7OCvM2iWu4o6RHLR8OcyJ+E9s1j59 Qw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2vxwhfgc3n-1
+ bh=LBDGGvPLgWnqH0N0uccKi+QcZvR1/Vi91i19VdVLu0I=;
+ b=QjAI+pNgDPfC8ePEbdcaTVqr277R1/P4yAKGmVzFxivP3BhdwKMOWlMLxKpXiarQgP+i
+ APJ2jYbts156gUUcMtPdYEZY20qAMw+CTFpRU12R7Xxk9RbCTYcIupwjsoJdhns6yXnV
+ YM39a6FNnDs+rhiKR+TRwHV1GKVKyHNz5O8ectfDLxLqlJBV615lnaqsvbVEm63syWu3
+ axLdsrrpCPPuYt3+kpIrnIUJQ2nJxPkgT752FZDS7KboY/QsH2+mGklbZJDxmKmYs6DV
+ +Qm4ok3NrK8H2HJFpDKuN/ojYZNt1yxSEy/iTwY/gJjh4HHZclCgTsC2skZRwlzLJ4SL /w== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2vxwhfgc3t-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 23:46:25 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9TNhkli015708;
-        Tue, 29 Oct 2019 23:46:25 GMT
+        Tue, 29 Oct 2019 23:47:41 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9TNht5F098086;
+        Tue, 29 Oct 2019 23:45:40 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2vxwj84rtf-1
+        by userp3030.oracle.com with ESMTP id 2vxwhuvyk6-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 23:46:25 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9TNkOGQ018415;
-        Tue, 29 Oct 2019 23:46:25 GMT
+        Tue, 29 Oct 2019 23:45:40 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9TNjeib018057;
+        Tue, 29 Oct 2019 23:45:40 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 29 Oct 2019 16:46:24 -0700
-Subject: [PATCH 9/9] xfs_repair: track blocks lost during btree construction
- via extents
+        with ESMTP ; Tue, 29 Oct 2019 16:45:39 -0700
+Subject: [PATCH 2/9] xfs_repair: unindent phase 5 function
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net, darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 29 Oct 2019 16:46:23 -0700
-Message-ID: <157239278377.1277435.318232659414339051.stgit@magnolia>
+Date:   Tue, 29 Oct 2019 16:45:38 -0700
+Message-ID: <157239273877.1277435.16862225248212585892.stgit@magnolia>
 In-Reply-To: <157239272641.1277435.17698788915454836309.stgit@magnolia>
 References: <157239272641.1277435.17698788915454836309.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -81,172 +80,372 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Use extent records (not just raw fsbs) to track blocks that were lost
-during btree construction.  This makes it somewhat more efficient.
+Remove the unnecessary indent in phase5_func.  No functional changes.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase5.c |   60 +++++++++++++++++++++++++++++++------------------------
- 1 file changed, 34 insertions(+), 26 deletions(-)
+ repair/phase5.c |  309 +++++++++++++++++++++++++++----------------------------
+ 1 file changed, 154 insertions(+), 155 deletions(-)
 
 
 diff --git a/repair/phase5.c b/repair/phase5.c
-index 94fc17d8..1519a372 100644
+index 7f7d3d18..4108e22b 100644
 --- a/repair/phase5.c
 +++ b/repair/phase5.c
-@@ -20,6 +20,11 @@
- #include "rmap.h"
- #include "bload.h"
+@@ -2237,201 +2237,200 @@ phase5_func(
+ 	if (verbose)
+ 		do_log(_("        - agno = %d\n"), agno);
  
-+struct lost_fsb {
-+	xfs_fsblock_t		fsbno;
-+	xfs_extlen_t		len;
-+};
-+
- struct bt_rebuild {
- 	struct xrep_newbt	newbt;
- 	struct xfs_btree_bload	bload;
-@@ -301,21 +306,24 @@ static void
- finish_rebuild(
- 	struct xfs_mount	*mp,
- 	struct bt_rebuild	*btr,
--	struct xfs_slab		*lost_fsb)
-+	struct xfs_slab		*lost_fsbs)
- {
- 	struct xrep_newbt_resv	*resv, *n;
+-	{
+-		/*
+-		 * build up incore bno and bcnt extent btrees
+-		 */
+-		num_extents = mk_incore_fstree(mp, agno);
++	/*
++	 * build up incore bno and bcnt extent btrees
++	 */
++	num_extents = mk_incore_fstree(mp, agno);
  
- 	for_each_xrep_newbt_reservation(&btr->newbt, resv, n) {
--		while (resv->used < resv->len) {
--			xfs_fsblock_t	fsb = resv->fsbno + resv->used;
--			int		error;
-+		struct lost_fsb	lost;
-+		int		error;
+ #ifdef XR_BLD_FREE_TRACE
+-		fprintf(stderr, "# of bno extents is %d\n",
+-				count_bno_extents(agno));
++	fprintf(stderr, "# of bno extents is %d\n",
++			count_bno_extents(agno));
+ #endif
  
--			error = slab_add(lost_fsb, &fsb);
--			if (error)
--				do_error(
-+		if (resv->used == resv->len)
-+			continue;
-+
-+		lost.fsbno = resv->fsbno + resv->used;
-+		lost.len = resv->len - resv->used;
-+		error = slab_add(lost_fsbs, &lost);
-+		if (error)
-+			do_error(
- _("Insufficient memory saving lost blocks.\n"));
--			resv->used++;
+-		if (num_extents == 0)  {
+-			/*
+-			 * XXX - what we probably should do here is pick an
+-			 * inode for a regular file in the allocation group
+-			 * that has space allocated and shoot it by traversing
+-			 * the bmap list and putting all its extents on the
+-			 * incore freespace trees, clearing the inode,
+-			 * and clearing the in-use bit in the incore inode
+-			 * tree.  Then try mk_incore_fstree() again.
+-			 */
+-			do_error(_("unable to rebuild AG %u.  "
+-				  "Not enough free space in on-disk AG.\n"),
+-				agno);
 -		}
-+		resv->used = resv->len;
- 	}
+-
++	if (num_extents == 0)  {
+ 		/*
+-		 * ok, now set up the btree cursors for the
+-		 * on-disk btrees (includs pre-allocating all
+-		 * required blocks for the trees themselves)
++		 * XXX - what we probably should do here is pick an
++		 * inode for a regular file in the allocation group
++		 * that has space allocated and shoot it by traversing
++		 * the bmap list and putting all its extents on the
++		 * incore freespace trees, clearing the inode,
++		 * and clearing the in-use bit in the incore inode
++		 * tree.  Then try mk_incore_fstree() again.
+ 		 */
+-		init_ino_cursor(mp, agno, &ino_btree_curs, &num_inos,
+-				&num_free_inos, 0);
++		do_error(_("unable to rebuild AG %u.  "
++			  "Not enough free space in on-disk AG.\n"),
++			agno);
++	}
  
- 	xrep_newbt_destroy(&btr->newbt, 0);
-@@ -1039,7 +1047,7 @@ build_agf_agfl(
- 	int			lostblocks,	/* # blocks that will be lost */
- 	struct bt_rebuild	*btr_rmap,
- 	struct bt_rebuild	*btr_refcount,
--	struct xfs_slab		*lost_fsb)
-+	struct xfs_slab		*lost_fsbs)
- {
- 	struct extent_tree_node	*ext_ptr;
- 	struct xfs_buf		*agf_buf, *agfl_buf;
-@@ -1238,7 +1246,7 @@ static void
- phase5_func(
- 	struct xfs_mount	*mp,
- 	xfs_agnumber_t		agno,
--	struct xfs_slab		*lost_fsb)
-+	struct xfs_slab		*lost_fsbs)
- {
- 	struct repair_ctx	sc = { .mp = mp, };
- 	struct agi_stat		agi_stat = {0,};
-@@ -1373,7 +1381,7 @@ phase5_func(
- 	 * set up agf and agfl
- 	 */
- 	build_agf_agfl(mp, agno, &btr_bno, &btr_cnt, freeblks1, extra_blocks,
--			&btr_rmap, &btr_refcount, lost_fsb);
-+			&btr_rmap, &btr_refcount, lost_fsbs);
+-		if (xfs_sb_version_hasfinobt(&mp->m_sb))
+-			init_ino_cursor(mp, agno, &fino_btree_curs,
+-					&finobt_num_inos, &finobt_num_free_inos,
+-					1);
++	/*
++	 * ok, now set up the btree cursors for the
++	 * on-disk btrees (includs pre-allocating all
++	 * required blocks for the trees themselves)
++	 */
++	init_ino_cursor(mp, agno, &ino_btree_curs, &num_inos,
++			&num_free_inos, 0);
  
- 	/*
- 	 * build inode allocation trees.
-@@ -1388,15 +1396,15 @@ phase5_func(
- 	/*
- 	 * tear down cursors
- 	 */
--	finish_rebuild(mp, &btr_bno, lost_fsb);
--	finish_rebuild(mp, &btr_cnt, lost_fsb);
--	finish_rebuild(mp, &btr_ino, lost_fsb);
-+	finish_rebuild(mp, &btr_bno, lost_fsbs);
-+	finish_rebuild(mp, &btr_cnt, lost_fsbs);
-+	finish_rebuild(mp, &btr_ino, lost_fsbs);
- 	if (xfs_sb_version_hasfinobt(&mp->m_sb))
--		finish_rebuild(mp, &btr_fino, lost_fsb);
-+		finish_rebuild(mp, &btr_fino, lost_fsbs);
- 	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
--		finish_rebuild(mp, &btr_rmap, lost_fsb);
-+		finish_rebuild(mp, &btr_rmap, lost_fsbs);
- 	if (xfs_sb_version_hasreflink(&mp->m_sb))
--		finish_rebuild(mp, &btr_refcount, lost_fsb);
-+		finish_rebuild(mp, &btr_refcount, lost_fsbs);
+-		sb_icount_ag[agno] += num_inos;
+-		sb_ifree_ag[agno] += num_free_inos;
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		init_ino_cursor(mp, agno, &fino_btree_curs,
++				&finobt_num_inos, &finobt_num_free_inos,
++				1);
  
- 	/*
- 	 * release the incore per-AG bno/bcnt trees so
-@@ -1416,19 +1424,19 @@ inject_lost_blocks(
- {
- 	struct xfs_trans	*tp = NULL;
- 	struct xfs_slab_cursor	*cur = NULL;
--	xfs_fsblock_t		*fsb;
-+	struct lost_fsb		*lost;
- 	int			error;
+-		/*
+-		 * Set up the btree cursors for the on-disk rmap btrees,
+-		 * which includes pre-allocating all required blocks.
+-		 */
+-		init_rmapbt_cursor(mp, agno, &rmap_btree_curs);
++	sb_icount_ag[agno] += num_inos;
++	sb_ifree_ag[agno] += num_free_inos;
  
- 	error = init_slab_cursor(lost_fsbs, NULL, &cur);
- 	if (error)
- 		return error;
+-		/*
+-		 * Set up the btree cursors for the on-disk refcount btrees,
+-		 * which includes pre-allocating all required blocks.
+-		 */
+-		init_refc_cursor(mp, agno, &refcnt_btree_curs);
++	/*
++	 * Set up the btree cursors for the on-disk rmap btrees,
++	 * which includes pre-allocating all required blocks.
++	 */
++	init_rmapbt_cursor(mp, agno, &rmap_btree_curs);
  
--	while ((fsb = pop_slab_cursor(cur)) != NULL) {
-+	while ((lost = pop_slab_cursor(cur)) != NULL) {
- 		error = -libxfs_trans_alloc_rollable(mp, 16, &tp);
- 		if (error)
- 			goto out_cancel;
+-		num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
++	/*
++	 * Set up the btree cursors for the on-disk refcount btrees,
++	 * which includes pre-allocating all required blocks.
++	 */
++	init_refc_cursor(mp, agno, &refcnt_btree_curs);
++
++	num_extents = count_bno_extents_blocks(agno, &num_freeblocks);
++	/*
++	 * lose two blocks per AG -- the space tree roots
++	 * are counted as allocated since the space trees
++	 * always have roots
++	 */
++	sb_fdblocks_ag[agno] += num_freeblocks - 2;
++
++	if (num_extents == 0)  {
+ 		/*
+-		 * lose two blocks per AG -- the space tree roots
+-		 * are counted as allocated since the space trees
+-		 * always have roots
++		 * XXX - what we probably should do here is pick an
++		 * inode for a regular file in the allocation group
++		 * that has space allocated and shoot it by traversing
++		 * the bmap list and putting all its extents on the
++		 * incore freespace trees, clearing the inode,
++		 * and clearing the in-use bit in the incore inode
++		 * tree.  Then try mk_incore_fstree() again.
+ 		 */
+-		sb_fdblocks_ag[agno] += num_freeblocks - 2;
+-
+-		if (num_extents == 0)  {
+-			/*
+-			 * XXX - what we probably should do here is pick an
+-			 * inode for a regular file in the allocation group
+-			 * that has space allocated and shoot it by traversing
+-			 * the bmap list and putting all its extents on the
+-			 * incore freespace trees, clearing the inode,
+-			 * and clearing the in-use bit in the incore inode
+-			 * tree.  Then try mk_incore_fstree() again.
+-			 */
+-			do_error(
+-			_("unable to rebuild AG %u.  No free space.\n"), agno);
+-		}
++		do_error(
++		_("unable to rebuild AG %u.  No free space.\n"), agno);
++	}
  
--		error = -libxfs_free_extent(tp, *fsb, 1,
-+		error = -libxfs_free_extent(tp, lost->fsbno, lost->len,
- 				&XFS_RMAP_OINFO_ANY_OWNER, XFS_AG_RESV_NONE);
- 		if (error)
- 			goto out_cancel;
-@@ -1449,7 +1457,7 @@ inject_lost_blocks(
- void
- phase5(xfs_mount_t *mp)
- {
--	struct xfs_slab		*lost_fsb;
-+	struct xfs_slab		*lost_fsbs;
- 	xfs_agnumber_t		agno;
- 	int			error;
+ #ifdef XR_BLD_FREE_TRACE
+-		fprintf(stderr, "# of bno extents is %d\n", num_extents);
++	fprintf(stderr, "# of bno extents is %d\n", num_extents);
+ #endif
  
-@@ -1492,12 +1500,12 @@ phase5(xfs_mount_t *mp)
- 	if (sb_fdblocks_ag == NULL)
- 		do_error(_("cannot alloc sb_fdblocks_ag buffers\n"));
+-		/*
+-		 * track blocks that we might really lose
+-		 */
+-		extra_blocks = calculate_freespace_cursor(mp, agno,
+-					&num_extents, &bno_btree_curs);
++	/*
++	 * track blocks that we might really lose
++	 */
++	extra_blocks = calculate_freespace_cursor(mp, agno,
++				&num_extents, &bno_btree_curs);
  
--	error = init_slab(&lost_fsb, sizeof(xfs_fsblock_t));
-+	error = init_slab(&lost_fsbs, sizeof(struct lost_fsb));
- 	if (error)
- 		do_error(_("cannot alloc lost block slab\n"));
+-		/*
+-		 * freespace btrees live in the "free space" but
+-		 * the filesystem treats AGFL blocks as allocated
+-		 * since they aren't described by the freespace trees
+-		 */
++	/*
++	 * freespace btrees live in the "free space" but
++	 * the filesystem treats AGFL blocks as allocated
++	 * since they aren't described by the freespace trees
++	 */
  
- 	for (agno = 0; agno < mp->m_sb.sb_agcount; agno++)
--		phase5_func(mp, agno, lost_fsb);
-+		phase5_func(mp, agno, lost_fsbs);
+-		/*
+-		 * see if we can fit all the extra blocks into the AGFL
+-		 */
+-		extra_blocks = (extra_blocks - libxfs_agfl_size(mp) > 0)
+-				? extra_blocks - libxfs_agfl_size(mp)
+-				: 0;
++	/*
++	 * see if we can fit all the extra blocks into the AGFL
++	 */
++	extra_blocks = (extra_blocks - libxfs_agfl_size(mp) > 0)
++			? extra_blocks - libxfs_agfl_size(mp)
++			: 0;
  
- 	print_final_rpt();
+-		if (extra_blocks > 0)
+-			sb_fdblocks_ag[agno] -= extra_blocks;
++	if (extra_blocks > 0)
++		sb_fdblocks_ag[agno] -= extra_blocks;
  
-@@ -1540,10 +1548,10 @@ _("unable to add AG %u reverse-mapping data to btree.\n"), agno);
- 	 * Put blocks that were unnecessarily reserved for btree
- 	 * reconstruction back into the filesystem free space data.
- 	 */
--	error = inject_lost_blocks(mp, lost_fsb);
-+	error = inject_lost_blocks(mp, lost_fsbs);
- 	if (error)
- 		do_error(_("Unable to reinsert lost blocks into filesystem.\n"));
--	free_slab(&lost_fsb);
-+	free_slab(&lost_fsbs);
+-		bcnt_btree_curs = bno_btree_curs;
++	bcnt_btree_curs = bno_btree_curs;
  
- 	bad_ino_btree = 0;
+-		bno_btree_curs.owner = XFS_RMAP_OWN_AG;
+-		bcnt_btree_curs.owner = XFS_RMAP_OWN_AG;
+-		setup_cursor(mp, agno, &bno_btree_curs);
+-		setup_cursor(mp, agno, &bcnt_btree_curs);
++	bno_btree_curs.owner = XFS_RMAP_OWN_AG;
++	bcnt_btree_curs.owner = XFS_RMAP_OWN_AG;
++	setup_cursor(mp, agno, &bno_btree_curs);
++	setup_cursor(mp, agno, &bcnt_btree_curs);
+ 
+ #ifdef XR_BLD_FREE_TRACE
+-		fprintf(stderr, "# of bno extents is %d\n",
+-				count_bno_extents(agno));
+-		fprintf(stderr, "# of bcnt extents is %d\n",
+-				count_bcnt_extents(agno));
++	fprintf(stderr, "# of bno extents is %d\n",
++			count_bno_extents(agno));
++	fprintf(stderr, "# of bcnt extents is %d\n",
++			count_bcnt_extents(agno));
+ #endif
+ 
+-		/*
+-		 * now rebuild the freespace trees
+-		 */
+-		freeblks1 = build_freespace_tree(mp, agno,
+-					&bno_btree_curs, XFS_BTNUM_BNO);
++	/*
++	 * now rebuild the freespace trees
++	 */
++	freeblks1 = build_freespace_tree(mp, agno,
++				&bno_btree_curs, XFS_BTNUM_BNO);
+ #ifdef XR_BLD_FREE_TRACE
+-		fprintf(stderr, "# of free blocks == %d\n", freeblks1);
++	fprintf(stderr, "# of free blocks == %d\n", freeblks1);
+ #endif
+-		write_cursor(&bno_btree_curs);
++	write_cursor(&bno_btree_curs);
+ 
+ #ifdef DEBUG
+-		freeblks2 = build_freespace_tree(mp, agno,
+-					&bcnt_btree_curs, XFS_BTNUM_CNT);
++	freeblks2 = build_freespace_tree(mp, agno,
++				&bcnt_btree_curs, XFS_BTNUM_CNT);
+ #else
+-		(void) build_freespace_tree(mp, agno,
+-					&bcnt_btree_curs, XFS_BTNUM_CNT);
++	(void) build_freespace_tree(mp, agno,
++				&bcnt_btree_curs, XFS_BTNUM_CNT);
+ #endif
+-		write_cursor(&bcnt_btree_curs);
++	write_cursor(&bcnt_btree_curs);
+ 
+-		ASSERT(freeblks1 == freeblks2);
++	ASSERT(freeblks1 == freeblks2);
+ 
+-		if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
+-			build_rmap_tree(mp, agno, &rmap_btree_curs);
+-			write_cursor(&rmap_btree_curs);
+-			sb_fdblocks_ag[agno] += (rmap_btree_curs.num_tot_blocks -
+-					rmap_btree_curs.num_free_blocks) - 1;
+-		}
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb)) {
++		build_rmap_tree(mp, agno, &rmap_btree_curs);
++		write_cursor(&rmap_btree_curs);
++		sb_fdblocks_ag[agno] += (rmap_btree_curs.num_tot_blocks -
++				rmap_btree_curs.num_free_blocks) - 1;
++	}
+ 
+-		if (xfs_sb_version_hasreflink(&mp->m_sb)) {
+-			build_refcount_tree(mp, agno, &refcnt_btree_curs);
+-			write_cursor(&refcnt_btree_curs);
+-		}
++	if (xfs_sb_version_hasreflink(&mp->m_sb)) {
++		build_refcount_tree(mp, agno, &refcnt_btree_curs);
++		write_cursor(&refcnt_btree_curs);
++	}
+ 
+-		/*
+-		 * set up agf and agfl
+-		 */
+-		build_agf_agfl(mp, agno, &bno_btree_curs,
+-				&bcnt_btree_curs, freeblks1, extra_blocks,
+-				&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
+-		/*
+-		 * build inode allocation tree.
+-		 */
+-		build_ino_tree(mp, agno, &ino_btree_curs, XFS_BTNUM_INO,
+-				&agi_stat);
+-		write_cursor(&ino_btree_curs);
++	/*
++	 * set up agf and agfl
++	 */
++	build_agf_agfl(mp, agno, &bno_btree_curs,
++			&bcnt_btree_curs, freeblks1, extra_blocks,
++			&rmap_btree_curs, &refcnt_btree_curs, lost_fsb);
++	/*
++	 * build inode allocation tree.
++	 */
++	build_ino_tree(mp, agno, &ino_btree_curs, XFS_BTNUM_INO,
++			&agi_stat);
++	write_cursor(&ino_btree_curs);
+ 
+-		/*
+-		 * build free inode tree
+-		 */
+-		if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
+-			build_ino_tree(mp, agno, &fino_btree_curs,
+-					XFS_BTNUM_FINO, NULL);
+-			write_cursor(&fino_btree_curs);
+-		}
++	/*
++	 * build free inode tree
++	 */
++	if (xfs_sb_version_hasfinobt(&mp->m_sb)) {
++		build_ino_tree(mp, agno, &fino_btree_curs,
++				XFS_BTNUM_FINO, NULL);
++		write_cursor(&fino_btree_curs);
++	}
+ 
+-		/* build the agi */
+-		build_agi(mp, agno, &ino_btree_curs, &fino_btree_curs,
+-			  &agi_stat);
++	/* build the agi */
++	build_agi(mp, agno, &ino_btree_curs, &fino_btree_curs,
++		  &agi_stat);
+ 
+-		/*
+-		 * tear down cursors
+-		 */
+-		finish_cursor(&bno_btree_curs);
+-		finish_cursor(&ino_btree_curs);
+-		if (xfs_sb_version_hasrmapbt(&mp->m_sb))
+-			finish_cursor(&rmap_btree_curs);
+-		if (xfs_sb_version_hasreflink(&mp->m_sb))
+-			finish_cursor(&refcnt_btree_curs);
+-		if (xfs_sb_version_hasfinobt(&mp->m_sb))
+-			finish_cursor(&fino_btree_curs);
+-		finish_cursor(&bcnt_btree_curs);
++	/*
++	 * tear down cursors
++	 */
++	finish_cursor(&bno_btree_curs);
++	finish_cursor(&ino_btree_curs);
++	if (xfs_sb_version_hasrmapbt(&mp->m_sb))
++		finish_cursor(&rmap_btree_curs);
++	if (xfs_sb_version_hasreflink(&mp->m_sb))
++		finish_cursor(&refcnt_btree_curs);
++	if (xfs_sb_version_hasfinobt(&mp->m_sb))
++		finish_cursor(&fino_btree_curs);
++	finish_cursor(&bcnt_btree_curs);
++
++	/*
++	 * release the incore per-AG bno/bcnt trees so
++	 * the extent nodes can be recycled
++	 */
++	release_agbno_extent_tree(agno);
++	release_agbcnt_extent_tree(agno);
+ 
+-		/*
+-		 * release the incore per-AG bno/bcnt trees so
+-		 * the extent nodes can be recycled
+-		 */
+-		release_agbno_extent_tree(agno);
+-		release_agbcnt_extent_tree(agno);
+-	}
+ 	PROG_RPT_INC(prog_rpt_done[agno], 1);
+ }
  
 
