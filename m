@@ -7,55 +7,56 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 971E6CA9EB9
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:04:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FF99CA9EC1
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:04:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5E00B214B2
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:04:27 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2526B214B2
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 04:04:28 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Jd9thKRu"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="D7EIoKnY"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726088AbfJ2EE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1726068AbfJ2EE1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Tue, 29 Oct 2019 00:04:27 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:43804 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726068AbfJ2EE0 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 00:04:26 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T41LIq183811;
-        Tue, 29 Oct 2019 04:04:08 GMT
+Received: from userp2130.oracle.com ([156.151.31.86]:53374 "EHLO
+        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726084AbfJ2EE1 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 00:04:27 -0400
+Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
+        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T40xOt014040;
+        Tue, 29 Oct 2019 04:04:14 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
  cc : date : message-id : in-reply-to : references : mime-version :
  content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=z9bJcoUsVqn2z/aHEBFfopYMxY5mMsONKO4uFvTVPPU=;
- b=Jd9thKRuv86iXol2u/gDiOHfIMKxoeM4/dpjI0UQzj9Y/w4dCvng4do5LT6ilUMZ1l/I
- 1rVI7cbuILReXevFGCIQUFBrnYM+IRgaZWn6pSkEjRdOqWcMcQJ2/n7lovR/2pHLayoz
- zJ2BhlAJjpMnvNbOQUYFnBWidrlOcCC8IkMuxGHYQGE28JoioY6AaM4DuLRN3OfEaz+E
- QloROZaCni2qaet1e27i4RAcqnv3tWr5IB9iuGAc1YUHN9Rrkw3dCcIu5kbQ78XAC/ew
- guT3hs0+ChhNElp2FsCCH5ovoJsyqXymz4VQhLF3ZOWr4AJ+rhrT0m2dgiMw1ewYVItj 8Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by userp2120.oracle.com with ESMTP id 2vvumfb0e7-1
+ bh=woMeLU654RCjt9oJfPrE2UOkCRr6WBLym+1c0QHO0SU=;
+ b=D7EIoKnYBIOStnLViel2qqOVsUf3a+4OTwN081jgUlJvsyxJqwq9T5nJxc4OgnkOn/lC
+ i4LB0I3AHA8DV0WtWf90epGwXaKsXEr+Q0S7v/0jVR4NoYi0Vge3U23iWrHE+uiZImdZ
+ V/i3p/r0m8A9oalQgCEMMTzYG79W7GzkbfP+9bq6ovJWqm2jxw8grfKemrEdoQTIP2pj
+ Pqm6odejLJC0kqDkt/fQzKLRcZKi2DrH1uoiuWgm1oqIgSBEhp3yBVK0n+Nx4asc7ChZ
+ TrBb8eFeEn5WUQ9lKDReojOtFB+pDMRFBi5TQ3X8N+LLfnddGHnGU4MlQvnXsRO0kyuG fw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by userp2130.oracle.com with ESMTP id 2vvdju69hm-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 04:04:08 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T40LHC164897;
-        Tue, 29 Oct 2019 04:04:07 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3030.oracle.com with ESMTP id 2vwam06req-1
+        Tue, 29 Oct 2019 04:04:14 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9T409T8188615;
+        Tue, 29 Oct 2019 04:04:13 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2vw09h0gc4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 04:04:07 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9T446NS018721;
-        Tue, 29 Oct 2019 04:04:06 GMT
+        Tue, 29 Oct 2019 04:04:13 +0000
+Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9T44Dje026464;
+        Tue, 29 Oct 2019 04:04:13 GMT
 Received: from localhost (/10.159.156.71)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 28 Oct 2019 21:04:06 -0700
-Subject: [PATCH 3/4] xfs: namecheck directory entry names before listing them
+        with ESMTP ; Mon, 28 Oct 2019 21:04:12 -0700
+Subject: [PATCH 4/4] xfs: replace -EIO with -EFSCORRUPTED for corrupt
+ metadata
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     darrick.wong@oracle.com
 Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com, hch@lst.de
-Date:   Mon, 28 Oct 2019 21:04:05 -0700
-Message-ID: <157232184576.593721.4790987759528633416.stgit@magnolia>
+Date:   Mon, 28 Oct 2019 21:04:11 -0700
+Message-ID: <157232185190.593721.16559128532526388329.stgit@magnolia>
 In-Reply-To: <157232182246.593721.4902116478429075171.stgit@magnolia>
 References: <157232182246.593721.4902116478429075171.stgit@magnolia>
 User-Agent: StGit/0.17.1-dirty
@@ -80,83 +81,92 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-Actually call namecheck on directory entry names before we hand them
-over to userspace.
+There are a few places where we return -EIO instead of -EFSCORRUPTED
+when we find corrupt metadata.  Fix those places.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- fs/xfs/xfs_dir2_readdir.c |   27 ++++++++++++++++++++++-----
- 1 file changed, 22 insertions(+), 5 deletions(-)
+ fs/xfs/libxfs/xfs_bmap.c   |    6 +++---
+ fs/xfs/xfs_attr_inactive.c |    6 +++---
+ fs/xfs/xfs_dquot.c         |    2 +-
+ 3 files changed, 7 insertions(+), 7 deletions(-)
 
 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 283df898dd9f..a0bec0931f3b 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -17,6 +17,7 @@
- #include "xfs_trace.h"
- #include "xfs_bmap.h"
- #include "xfs_trans.h"
-+#include "xfs_error.h"
- 
- /*
-  * Directory file type support functions
-@@ -115,6 +116,11 @@ xfs_dir2_sf_getdents(
- 		ino = dp->d_ops->sf_get_ino(sfp, sfep);
- 		filetype = dp->d_ops->sf_get_ftype(sfep);
- 		ctx->pos = off & 0x7fffffff;
-+		if (!xfs_dir2_namecheck(sfep->name, sfep->namelen)) {
-+			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+					 dp->i_mount);
-+			return -EFSCORRUPTED;
-+		}
- 		if (!dir_emit(ctx, (char *)sfep->name, sfep->namelen, ino,
- 			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
- 			return 0;
-@@ -208,12 +214,16 @@ xfs_dir2_block_getdents(
- 		/*
- 		 * If it didn't fit, set the final offset to here & return.
- 		 */
-+		if (!xfs_dir2_namecheck(dep->name, dep->namelen)) {
-+			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+					 dp->i_mount);
-+			error = -EFSCORRUPTED;
-+			goto out_rele;
-+		}
- 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
- 			    be64_to_cpu(dep->inumber),
--			    xfs_dir3_get_dtype(dp->i_mount, filetype))) {
--			xfs_trans_brelse(args->trans, bp);
--			return 0;
--		}
-+			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
-+			goto out_rele;
+diff --git a/fs/xfs/libxfs/xfs_bmap.c b/fs/xfs/libxfs/xfs_bmap.c
+index 02469d59c787..587889585a23 100644
+--- a/fs/xfs/libxfs/xfs_bmap.c
++++ b/fs/xfs/libxfs/xfs_bmap.c
+@@ -1374,7 +1374,7 @@ xfs_bmap_last_before(
+ 	case XFS_DINODE_FMT_EXTENTS:
+ 		break;
+ 	default:
+-		return -EIO;
++		return -EFSCORRUPTED;
  	}
  
- 	/*
-@@ -222,8 +232,9 @@ xfs_dir2_block_getdents(
+ 	if (!(ifp->if_flags & XFS_IFEXTENTS)) {
+@@ -1475,7 +1475,7 @@ xfs_bmap_last_offset(
+ 
+ 	if (XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_BTREE &&
+ 	    XFS_IFORK_FORMAT(ip, whichfork) != XFS_DINODE_FMT_EXTENTS)
+-	       return -EIO;
++		return -EFSCORRUPTED;
+ 
+ 	error = xfs_bmap_last_extent(NULL, ip, whichfork, &rec, &is_empty);
+ 	if (error || is_empty)
+@@ -5864,7 +5864,7 @@ xfs_bmap_insert_extents(
+ 				del_cursor);
+ 
+ 	if (stop_fsb >= got.br_startoff + got.br_blockcount) {
+-		error = -EIO;
++		error = -EFSCORRUPTED;
+ 		goto del_cursor;
+ 	}
+ 
+diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
+index a640a285cc52..f83f11d929e4 100644
+--- a/fs/xfs/xfs_attr_inactive.c
++++ b/fs/xfs/xfs_attr_inactive.c
+@@ -209,7 +209,7 @@ xfs_attr3_node_inactive(
  	 */
- 	ctx->pos = xfs_dir2_db_off_to_dataptr(geo, geo->datablk + 1, 0) &
- 								0x7fffffff;
-+out_rele:
- 	xfs_trans_brelse(args->trans, bp);
--	return 0;
-+	return error;
- }
+ 	if (level > XFS_DA_NODE_MAXDEPTH) {
+ 		xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
+-		return -EIO;
++		return -EFSCORRUPTED;
+ 	}
  
- /*
-@@ -456,6 +467,12 @@ xfs_dir2_leaf_getdents(
- 		filetype = dp->d_ops->data_get_ftype(dep);
- 
- 		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
-+		if (!xfs_dir2_namecheck(dep->name, dep->namelen)) {
-+			XFS_ERROR_REPORT(__func__, XFS_ERRLEVEL_LOW,
-+					 dp->i_mount);
+ 	node = bp->b_addr;
+@@ -258,7 +258,7 @@ xfs_attr3_node_inactive(
+ 			error = xfs_attr3_leaf_inactive(trans, dp, child_bp);
+ 			break;
+ 		default:
+-			error = -EIO;
 +			error = -EFSCORRUPTED;
-+			break;
-+		}
- 		if (!dir_emit(ctx, (char *)dep->name, dep->namelen,
- 			    be64_to_cpu(dep->inumber),
- 			    xfs_dir3_get_dtype(dp->i_mount, filetype)))
+ 			xfs_trans_brelse(*trans, child_bp);
+ 			break;
+ 		}
+@@ -341,7 +341,7 @@ xfs_attr3_root_inactive(
+ 		error = xfs_attr3_leaf_inactive(trans, dp, bp);
+ 		break;
+ 	default:
+-		error = -EIO;
++		error = -EFSCORRUPTED;
+ 		xfs_trans_brelse(*trans, bp);
+ 		break;
+ 	}
+diff --git a/fs/xfs/xfs_dquot.c b/fs/xfs/xfs_dquot.c
+index aeb95e7391c1..2b87c96fb2c0 100644
+--- a/fs/xfs/xfs_dquot.c
++++ b/fs/xfs/xfs_dquot.c
+@@ -1126,7 +1126,7 @@ xfs_qm_dqflush(
+ 		xfs_buf_relse(bp);
+ 		xfs_dqfunlock(dqp);
+ 		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
+-		return -EIO;
++		return -EFSCORRUPTED;
+ 	}
+ 
+ 	/* This is the only portion of data that needs to persist */
 
