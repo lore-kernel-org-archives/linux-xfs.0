@@ -2,362 +2,117 @@ Return-Path: <SRS0=yuEF=YW=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.9 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5AC15CA9EAE
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:48:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12AFECA9EAE
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:54:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16DF020862
-	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:48:23 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IJQY6cT9"
+	by mail.kernel.org (Postfix) with ESMTP id DD98720862
+	for <linux-xfs@archiver.kernel.org>; Tue, 29 Oct 2019 23:54:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726053AbfJ2XsW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Oct 2019 19:48:22 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:35214 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726037AbfJ2XsW (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 19:48:22 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9TNdfNZ017359;
-        Tue, 29 Oct 2019 23:48:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=NTUUjxhUrmj+Ji2X468fqImTPyRY71WYAD7Eaf7mNf4=;
- b=IJQY6cT9X1FsEfNCppAHucPnZ2RSsV5mzXrXs8zgdXho6H4TEuNn2JMTUi5hrdTclbc0
- Yf2EtuML/7LaZKFG/hB8n/CGhOSK9JFwz4RMXwzwTY7YvqXClwrGgK8KM5izTh5VPi8C
- B093Q/ICxiqdyv5f4Rw+Lgup6MaY1Qhtes05Fc0jV8rNz7XwvX8OzcC0gl0x/rWGrRbm
- HsMIHtCdi8JWGyNH/8ULwHWGrlEf0KtnmOd9mpKVE6cM3/CaEy+NCg7ZZ8zEX+W+jZYS
- glVb9dDQI58JefONZXPJvBbmkYUoAg86AXl55jCCqB/X5VwtgBRqFCdVNkW/Q/tjVnzE MA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2vxwhfgc56-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 23:48:19 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9TNhsrk097955;
-        Tue, 29 Oct 2019 23:46:19 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2vxwhuw0ek-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 29 Oct 2019 23:46:19 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9TNkIFQ013850;
-        Tue, 29 Oct 2019 23:46:18 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 29 Oct 2019 16:46:18 -0700
-Subject: [PATCH 8/9] xfs_repair: remove old btree rebuild support code
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     sandeen@sandeen.net, darrick.wong@oracle.com
+        id S1726089AbfJ2Xyn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Oct 2019 19:54:43 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:37804 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725974AbfJ2Xyn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 19:54:43 -0400
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 07EA93A1D39;
+        Wed, 30 Oct 2019 10:54:40 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iPbJv-00073b-Op; Wed, 30 Oct 2019 10:54:39 +1100
+Date:   Wed, 30 Oct 2019 10:54:39 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-Date:   Tue, 29 Oct 2019 16:46:17 -0700
-Message-ID: <157239277750.1277435.16947904966484666791.stgit@magnolia>
-In-Reply-To: <157239272641.1277435.17698788915454836309.stgit@magnolia>
-References: <157239272641.1277435.17698788915454836309.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+Subject: Re: [PATCH V2] xfs: properly serialise fallocate against AIO+DIO
+Message-ID: <20191029235439.GP4614@dread.disaster.area>
+References: <20191029223752.28562-1-david@fromorbit.com>
+ <20191029233337.GH15222@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9425 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910290208
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9425 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910290208
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191029233337.GH15222@magnolia>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=2tdcmslYzAxlwHnCbwcA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Oct 29, 2019 at 04:33:37PM -0700, Darrick J. Wong wrote:
+> On Wed, Oct 30, 2019 at 09:37:52AM +1100, Dave Chinner wrote:
+> > From: Dave Chinner <dchinner@redhat.com>
+> > 
+> > AIO+DIO can extend the file size on IO completion, and it holds
+> > no inode locks while the IO is in flight. Therefore, a race
+> > condition exists in file size updates if we do something like this:
+> > 
+> > aio-thread			fallocate-thread
+> > 
+> > lock inode
+> > submit IO beyond inode->i_size
+> > unlock inode
+> > .....
+> > 				lock inode
+> > 				break layouts
+> > 				if (off + len > inode->i_size)
+> > 					new_size = off + len
+> > 				.....
+> > 				inode_dio_wait()
+> > 				<blocks>
+> > .....
+> > completes
+> > inode->i_size updated
+> > inode_dio_done()
+> > ....
+> > 				<wakes>
+> > 				<does stuff no long beyond EOF>
+> > 				if (new_size)
+> > 					xfs_vn_setattr(inode, new_size)
+> > 
+> > 
+> > Yup, that attempt to extend the file size in the fallocate code
+> > turns into a truncate - it removes the whatever the aio write
+> > allocated and put to disk, and reduced the inode size back down to
+> > where the fallocate operation ends.
+> > 
+> > Fundamentally, xfs_file_fallocate()  not compatible with racing
+> > AIO+DIO completions, so we need to move the inode_dio_wait() call
+> > up to where the lock the inode and break the layouts.
+> > 
+> > Secondly, storing the inode size and then using it unchecked without
+> > holding the ILOCK is not safe; we can only do such a thing if we've
+> > locked out and drained all IO and other modification operations,
+> > which we don't do initially in xfs_file_fallocate.
+> > 
+> > It should be noted that some of the fallocate operations are
+> > compound operations - they are made up of multiple manipulations
+> > that may zero data, and so we may need to flush and invalidate the
+> > file multiple times during an operation. However, we only need to
+> > lock out IO and other space manipulation operations once, as that
+> > lockout is maintained until the entire fallocate operation has been
+> > completed.
+> > 
+> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> 
+> Looks reasonable to me; what do you think of my regression test?
 
-This code isn't needed anymore, so get rid of it.
+Looks reasonable at a first glance. Not much different what I was
+using to test this patch. I haven't looked in more detail than that
+yet...
 
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- repair/phase5.c |  240 -------------------------------------------------------
- 1 file changed, 240 deletions(-)
+Cheers,
 
-
-diff --git a/repair/phase5.c b/repair/phase5.c
-index ee4a4563..94fc17d8 100644
---- a/repair/phase5.c
-+++ b/repair/phase5.c
-@@ -20,52 +20,6 @@
- #include "rmap.h"
- #include "bload.h"
- 
--/*
-- * we maintain the current slice (path from root to leaf)
-- * of the btree incore.  when we need a new block, we ask
-- * the block allocator for the address of a block on that
-- * level, map the block in, and set up the appropriate
-- * pointers (child, silbing, etc.) and keys that should
-- * point to the new block.
-- */
--typedef struct bt_stat_level  {
--	/*
--	 * set in setup_cursor routine and maintained in the tree-building
--	 * routines
--	 */
--	xfs_buf_t		*buf_p;		/* 2 buffer pointers to ... */
--	xfs_buf_t		*prev_buf_p;
--	xfs_agblock_t		agbno;		/* current block being filled */
--	xfs_agblock_t		prev_agbno;	/* previous block */
--	/*
--	 * set in calculate/init cursor routines for each btree level
--	 */
--	int			num_recs_tot;	/* # tree recs in level */
--	int			num_blocks;	/* # tree blocks in level */
--	int			num_recs_pb;	/* num_recs_tot / num_blocks */
--	int			modulo;		/* num_recs_tot % num_blocks */
--} bt_stat_level_t;
--
--typedef struct bt_status  {
--	int			init;		/* cursor set up once? */
--	int			num_levels;	/* # of levels in btree */
--	xfs_extlen_t		num_tot_blocks;	/* # blocks alloc'ed for tree */
--	xfs_extlen_t		num_free_blocks;/* # blocks currently unused */
--
--	xfs_agblock_t		root;		/* root block */
--	/*
--	 * list of blocks to be used to set up this tree
--	 * and pointer to the first unused block on the list
--	 */
--	xfs_agblock_t		*btree_blocks;		/* block list */
--	xfs_agblock_t		*free_btree_blocks;	/* first unused block */
--	/*
--	 * per-level status info
--	 */
--	bt_stat_level_t		level[XFS_BTREE_MAXLEVELS];
--	uint64_t		owner;		/* owner */
--} bt_status_t;
--
- struct bt_rebuild {
- 	struct xrep_newbt	newbt;
- 	struct xfs_btree_bload	bload;
-@@ -188,148 +142,6 @@ mk_incore_fstree(
- 	return(num_extents);
- }
- 
--static xfs_agblock_t
--get_next_blockaddr(xfs_agnumber_t agno, int level, bt_status_t *curs)
--{
--	ASSERT(curs->free_btree_blocks < curs->btree_blocks +
--						curs->num_tot_blocks);
--	ASSERT(curs->num_free_blocks > 0);
--
--	curs->num_free_blocks--;
--	return(*curs->free_btree_blocks++);
--}
--
--/*
-- * set up the dynamically allocated block allocation data in the btree
-- * cursor that depends on the info in the static portion of the cursor.
-- * allocates space from the incore bno/bcnt extent trees and sets up
-- * the first path up the left side of the tree.  Also sets up the
-- * cursor pointer to the btree root.   called by init_freespace_cursor()
-- * and init_ino_cursor()
-- */
--static void
--setup_cursor(xfs_mount_t *mp, xfs_agnumber_t agno, bt_status_t *curs)
--{
--	int			j;
--	unsigned int		u;
--	xfs_extlen_t		big_extent_len;
--	xfs_agblock_t		big_extent_start;
--	extent_tree_node_t	*ext_ptr;
--	extent_tree_node_t	*bno_ext_ptr;
--	xfs_extlen_t		blocks_allocated;
--	xfs_agblock_t		*agb_ptr;
--	int			error;
--
--	/*
--	 * get the number of blocks we need to allocate, then
--	 * set up block number array, set the free block pointer
--	 * to the first block in the array, and null the array
--	 */
--	big_extent_len = curs->num_tot_blocks;
--	blocks_allocated = 0;
--
--	ASSERT(big_extent_len > 0);
--
--	if ((curs->btree_blocks = malloc(sizeof(xfs_agblock_t)
--					* big_extent_len)) == NULL)
--		do_error(_("could not set up btree block array\n"));
--
--	agb_ptr = curs->free_btree_blocks = curs->btree_blocks;
--
--	for (j = 0; j < curs->num_free_blocks; j++, agb_ptr++)
--		*agb_ptr = NULLAGBLOCK;
--
--	/*
--	 * grab the smallest extent and use it up, then get the
--	 * next smallest.  This mimics the init_*_cursor code.
--	 */
--	ext_ptr =  findfirst_bcnt_extent(agno);
--
--	agb_ptr = curs->btree_blocks;
--
--	/*
--	 * set up the free block array
--	 */
--	while (blocks_allocated < big_extent_len)  {
--		if (!ext_ptr)
--			do_error(
--_("error - not enough free space in filesystem\n"));
--		/*
--		 * use up the extent we've got
--		 */
--		for (u = 0; u < ext_ptr->ex_blockcount &&
--				blocks_allocated < big_extent_len; u++)  {
--			ASSERT(agb_ptr < curs->btree_blocks
--					+ curs->num_tot_blocks);
--			*agb_ptr++ = ext_ptr->ex_startblock + u;
--			blocks_allocated++;
--		}
--
--		error = rmap_add_ag_rec(mp, agno, ext_ptr->ex_startblock, u,
--				curs->owner);
--		if (error)
--			do_error(_("could not set up btree rmaps: %s\n"),
--				strerror(-error));
--
--		/*
--		 * if we only used part of this last extent, then we
--		 * need only to reset the extent in the extent
--		 * trees and we're done
--		 */
--		if (u < ext_ptr->ex_blockcount)  {
--			big_extent_start = ext_ptr->ex_startblock + u;
--			big_extent_len = ext_ptr->ex_blockcount - u;
--
--			ASSERT(big_extent_len > 0);
--
--			bno_ext_ptr = find_bno_extent(agno,
--						ext_ptr->ex_startblock);
--			ASSERT(bno_ext_ptr != NULL);
--			get_bno_extent(agno, bno_ext_ptr);
--			release_extent_tree_node(bno_ext_ptr);
--
--			ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
--					ext_ptr->ex_blockcount);
--			release_extent_tree_node(ext_ptr);
--#ifdef XR_BLD_FREE_TRACE
--			fprintf(stderr, "releasing extent: %u [%u %u]\n",
--				agno, ext_ptr->ex_startblock,
--				ext_ptr->ex_blockcount);
--			fprintf(stderr, "blocks_allocated = %d\n",
--				blocks_allocated);
--#endif
--
--			add_bno_extent(agno, big_extent_start, big_extent_len);
--			add_bcnt_extent(agno, big_extent_start, big_extent_len);
--
--			return;
--		}
--		/*
--		 * delete the used-up extent from both extent trees and
--		 * find next biggest extent
--		 */
--#ifdef XR_BLD_FREE_TRACE
--		fprintf(stderr, "releasing extent: %u [%u %u]\n",
--			agno, ext_ptr->ex_startblock, ext_ptr->ex_blockcount);
--#endif
--		bno_ext_ptr = find_bno_extent(agno, ext_ptr->ex_startblock);
--		ASSERT(bno_ext_ptr != NULL);
--		get_bno_extent(agno, bno_ext_ptr);
--		release_extent_tree_node(bno_ext_ptr);
--
--		ext_ptr = get_bcnt_extent(agno, ext_ptr->ex_startblock,
--				ext_ptr->ex_blockcount);
--		ASSERT(ext_ptr != NULL);
--		release_extent_tree_node(ext_ptr);
--
--		ext_ptr = findfirst_bcnt_extent(agno);
--	}
--#ifdef XR_BLD_FREE_TRACE
--	fprintf(stderr, "blocks_allocated = %d\n",
--		blocks_allocated);
--#endif
--}
--
- /*
-  * Estimate proper slack values for a btree that's being reloaded.
-  *
-@@ -481,34 +293,6 @@ rebuild_alloc_block(
- 	return xrep_newbt_alloc_block(cur, &btr->newbt, ptr);
- }
- 
--static void
--write_cursor(bt_status_t *curs)
--{
--	int i;
--
--	for (i = 0; i < curs->num_levels; i++)  {
--#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
--		fprintf(stderr, "writing bt block %u\n", curs->level[i].agbno);
--#endif
--		if (curs->level[i].prev_buf_p != NULL)  {
--			ASSERT(curs->level[i].prev_agbno != NULLAGBLOCK);
--#if defined(XR_BLD_FREE_TRACE) || defined(XR_BLD_INO_TRACE)
--			fprintf(stderr, "writing bt prev block %u\n",
--						curs->level[i].prev_agbno);
--#endif
--			libxfs_writebuf(curs->level[i].prev_buf_p, 0);
--		}
--		libxfs_writebuf(curs->level[i].buf_p, 0);
--	}
--}
--
--static void
--finish_cursor(bt_status_t *curs)
--{
--	ASSERT(curs->num_free_blocks == 0);
--	free(curs->btree_blocks);
--}
--
- /*
-  * Scoop up leftovers from a rebuild cursor for later freeing, then free the
-  * rebuild context.
-@@ -537,30 +321,6 @@ _("Insufficient memory saving lost blocks.\n"));
- 	xrep_newbt_destroy(&btr->newbt, 0);
- }
- 
--/* Map btnum to buffer ops for the types that need it. */
--static const struct xfs_buf_ops *
--btnum_to_ops(
--	xfs_btnum_t	btnum)
--{
--	switch (btnum) {
--	case XFS_BTNUM_BNO:
--		return &xfs_bnobt_buf_ops;
--	case XFS_BTNUM_CNT:
--		return &xfs_cntbt_buf_ops;
--	case XFS_BTNUM_INO:
--		return &xfs_inobt_buf_ops;
--	case XFS_BTNUM_FINO:
--		return &xfs_finobt_buf_ops;
--	case XFS_BTNUM_RMAP:
--		return &xfs_rmapbt_buf_ops;
--	case XFS_BTNUM_REFC:
--		return &xfs_refcountbt_buf_ops;
--	default:
--		ASSERT(0);
--		return NULL;
--	}
--}
--
- /*
-  * Free Space Btrees
-  *
-
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
