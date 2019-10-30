@@ -2,139 +2,113 @@ Return-Path: <SRS0=aCB+=YX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CC49BCA9EC7
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 21:43:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7FBCACA9EC7
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 22:18:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id AA7DE20862
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 21:43:42 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 47F1E20874
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 22:18:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NGRMsJT2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727182AbfJ3Vnm (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Oct 2019 17:43:42 -0400
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:43060 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726171AbfJ3Vnl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 17:43:41 -0400
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id C48267E9BCE;
-        Thu, 31 Oct 2019 08:43:37 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iPvkd-0006QK-OU; Thu, 31 Oct 2019 08:43:35 +1100
-Date:   Thu, 31 Oct 2019 08:43:35 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
-Message-ID: <20191030214335.GQ4614@dread.disaster.area>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191009032124.10541-5-david@fromorbit.com>
- <20191030172517.GO15222@magnolia>
+        id S1726646AbfJ3WSi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Oct 2019 18:18:38 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:42158 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726268AbfJ3WSi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 18:18:38 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9UMDs0n170350;
+        Wed, 30 Oct 2019 22:18:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=997q3/rxOEsewbFCvvhVN4n9yWYBI+gcbkAMjLXO5IQ=;
+ b=NGRMsJT2XmOTSqT2FV11AgUG5uwjtUwf0yvRDGtaauTMLGwFrSxzTjD9eHV5vC6KD+zO
+ aj7TNMRPQyhM3k0dzx+nfPoJxsYdx9oEK4wWs8PuEJMTzVM4Eeno9RXzW8D23HaSDfcn
+ /3kTE3K/lx9uegCZJSpCaYguXtYPWK5/MTa9R+9oXP78lcnlc2TU3qxkNdQA/4TI1xoV
+ +qhzNA8gvESGziWOLt/ih8SEFDMWGY2XSppljBDNmoe1mGejQTROHQHLrkB7f9DHWQC2
+ mYMPtSCdpXRlWhWspvvnZ6lUlgwzNSJh5D/0rkqUZChYythjtUDzMtz0S/LKk1x3wuZN VQ== 
+Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
+        by userp2120.oracle.com with ESMTP id 2vxwhfq9dw-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 30 Oct 2019 22:18:27 +0000
+Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
+        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9UMI0uA142349;
+        Wed, 30 Oct 2019 22:18:26 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3030.oracle.com with ESMTP id 2vxwjard4a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 30 Oct 2019 22:18:26 +0000
+Received: from abhmp0014.oracle.com (abhmp0014.oracle.com [141.146.116.20])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9UMIP5x020548;
+        Wed, 30 Oct 2019 22:18:25 GMT
+Received: from localhost (/10.145.178.60)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 30 Oct 2019 15:18:25 -0700
+Date:   Wed, 30 Oct 2019 15:18:25 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@infradead.org>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 3/4] xfs: namecheck directory entry names before listing
+ them
+Message-ID: <20191030221825.GU15222@magnolia>
+References: <157198048552.2873445.18067788660614948888.stgit@magnolia>
+ <157198050564.2873445.4054092614183428143.stgit@magnolia>
+ <20191025125628.GD16251@infradead.org>
+ <20191025160448.GI913374@magnolia>
+ <20191029071615.GB31501@infradead.org>
+ <20191029162330.GD15222@magnolia>
+ <20191030213202.GA24872@infradead.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191030172517.GO15222@magnolia>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=XobE76Q3jBoA:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=D5QIZhWRPjQ8d_Cs2q0A:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191030213202.GA24872@infradead.org>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9426 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1910300197
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9426 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1910300196
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 30, 2019 at 10:25:17AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 09, 2019 at 02:21:02PM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Wed, Oct 30, 2019 at 02:32:02PM -0700, Christoph Hellwig wrote:
+> On Tue, Oct 29, 2019 at 09:23:30AM -0700, Darrick J. Wong wrote:
+> > > So we'll at least need to document that for now.  And maybe find a way
+> > > to not do the work twice eventually in a way that doesn't break repair.
 > > 
-> > The buffer cache shrinker frees more than just the xfs_buf slab
-> > objects - it also frees the pages attached to the buffers. Make sure
-> > the memory reclaim code accounts for this memory being freed
-> > correctly, similar to how the inode shrinker accounts for pages
-> > freed from the page cache due to mapping invalidation.
-> > 
-> > We also need to make sure that the mm subsystem knows these are
-> > reclaimable objects. We provide the memory reclaim subsystem with a
-> > a shrinker to reclaim xfs_bufs, so we should really mark the slab
-> > that way.
-> > 
-> > We also have a lot of xfs_bufs in a busy system, spread them around
-> > like we do inodes.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > ---
-> >  fs/xfs/xfs_buf.c | 6 +++++-
-> >  1 file changed, 5 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
-> > index e484f6bead53..45b470f55ad7 100644
-> > --- a/fs/xfs/xfs_buf.c
-> > +++ b/fs/xfs/xfs_buf.c
-> > @@ -324,6 +324,9 @@ xfs_buf_free(
-> >  
-> >  			__free_page(page);
-> >  		}
-> > +		if (current->reclaim_state)
-> > +			current->reclaim_state->reclaimed_slab +=
-> > +							bp->b_page_count;
-> 
-> Hmm, ok, I see how ZONE_RECLAIM and reclaimed_slab fit together.
-> 
-> >  	} else if (bp->b_flags & _XBF_KMEM)
-> >  		kmem_free(bp->b_addr);
-> >  	_xfs_buf_free_pages(bp);
-> > @@ -2064,7 +2067,8 @@ int __init
-> >  xfs_buf_init(void)
-> >  {
-> >  	xfs_buf_zone = kmem_zone_init_flags(sizeof(xfs_buf_t), "xfs_buf",
-> > -						KM_ZONE_HWALIGN, NULL);
-> > +			KM_ZONE_HWALIGN | KM_ZONE_SPREAD | KM_ZONE_RECLAIM,
-> 
-> I guess I'm fine with ZONE_SPREAD too, insofar as it only seems to apply
-> to a particular "use another node" memory policy when slab is in use.
-> Was that your intent?
+> > What if we promote EFSCORRUPTED and EFSBADCRC to the vfs (since 5
+> > filesystems use them now); change the VFS check function to return that;
+> > and then we can just drop the xfs readdir calls to dir2_namecheck?
 
-It's more documentation than anything - that we shouldn't be piling
-these structures all on to one node because that can have severe
-issues with NUMA memory reclaim algorithms. i.e. the xfs-buf
-shrinker sets SHRINKER_NUMA_AWARE, so memory pressure on a single
-node can reclaim all the xfs-bufs on that node without touching any
-other node.
+Having looked more carefully at verify_dirent_name(), I now think XFS
+shouldn't drop the xfs_readdir calls to dir2_namecheck because the VFS
+namecheck function permits nulls in the middle of the name.  Linus says
+the function does that intentionally because (in his opinion) userspace
+expects a null terminated string and won't care if namelen is longer
+than that.
 
-That means, for example, if we instantiate all the AG header buffers
-on a single node (e.g. like we do at mount time) then memory
-pressure on that one node will generate IO stalls across the entire
-filesystem as other nodes doing work have to repopulate the buffer
-cache for any allocation for freeing of space/inodes..
+> EFSCORRUPTED should have moved to common code a long time ago, so that
+> is overdue.  Not sure about EFSBADCRC, but that might not be a horrible
+> idea either.
 
-IOWs, for large NUMA systems using cpusets this cache should be
-spread around all of memory, especially as it has NUMA aware
-reclaim. For everyone else, it's just documentation that improper
-cgroup or NUMA memory policy could cause you all sorts of problems
-with this cache.
+We might as well, since ext4 and XFS both standardized on both of those
+error codes.
 
-It's worth noting that SLAB_MEM_SPREAD is used almost exclusively in
-filesystems for inode caches largely because, at the time (~2006),
-the only reclaimable cache that could grow to any size large enough
-to cause problems was the inode cache. It's been cargo-culted ever
-since, whether it is needed or not (e.g. ceph).
+Hm, btrfs uses EUCLEAN and EIO for EFSCORRUPTED and EFSBADCRC,
+respectively.  We probably ought to get them on board too.
 
-In the case of the xfs_bufs, I've been running workloads recently
-that cache several million xfs_bufs and only a handful of inodes
-rather than the other way around. If we spread inodes because
-caching millions on a single node can cause problems on large NUMA
-machines, then we also need to spread xfs_bufs...
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+--D
