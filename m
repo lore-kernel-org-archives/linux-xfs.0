@@ -2,111 +2,125 @@ Return-Path: <SRS0=aCB+=YX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C5E05CA9EC5
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 12:53:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 91829CA9EC5
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 13:33:38 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A148C208C0
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 12:53:24 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 65F1B2080F
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 13:33:38 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GA7RQpBB"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ms1tA2c2"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726269AbfJ3MxY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Oct 2019 08:53:24 -0400
-Received: from us-smtp-2.mimecast.com ([205.139.110.61]:36772 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726209AbfJ3MxY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 08:53:24 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1572440002;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=xEm7If272zgBUaaTDZ9GOaX/N26+KNfnDd8n2XNZSWk=;
-        b=GA7RQpBBtYRCnXMdp1yHvUVS1SxNFCvlNHEPp7vErVxCfBSQZI01rAWSJSXxIyt8WNZf2C
-        oP8VmrIb0i3FKG7+yNl38WBTrIUYFuF0B55WtiNZF0YedO9eqPp/vPWM06NGTndINvwqCa
-        flmdPMBgdylWfoIFC0dV0t5HhIKxvpw=
-Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
- [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-154-wY2Aes37MRCfG9JiAEpIgg-1; Wed, 30 Oct 2019 08:53:19 -0400
-Received: from smtp.corp.redhat.com (int-mx08.intmail.prod.int.phx2.redhat.com [10.5.11.23])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 708AB1800D55;
-        Wed, 30 Oct 2019 12:53:18 +0000 (UTC)
-Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id E669119486;
-        Wed, 30 Oct 2019 12:53:17 +0000 (UTC)
-Date:   Wed, 30 Oct 2019 08:53:16 -0400
-From:   Brian Foster <bfoster@redhat.com>
-To:     Pingfan Liu <kernelfans@gmail.com>
+        id S1726460AbfJ3Ndh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Oct 2019 09:33:37 -0400
+Received: from mail-pl1-f194.google.com ([209.85.214.194]:38339 "EHLO
+        mail-pl1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726209AbfJ3Ndh (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 09:33:37 -0400
+Received: by mail-pl1-f194.google.com with SMTP id w8so1004274plq.5;
+        Wed, 30 Oct 2019 06:33:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=NmJMKAmy/TavxqAqA2RWtnDhN8WsDQ/AjcqxUwK9McE=;
+        b=ms1tA2c2pmV0DWT5qIE8aPePo7wRhFCDlxxY267QVvF+Pp6sdl3yPBfMYNlkAWJSR0
+         7uikFPSmia0TNkyi8EJiRPYz1cieCRwBK4TWY7ovgl+RWxTEVzPng9W6R1vXPAU1pnrd
+         lcYtvNdTX0XkbNEqoHTgqx01vxROGtqIs1rnb21xK7vKpyIwOf5KjomowillRHVxWNKf
+         7OmN9s8z9snD64rTZtF9QH8xOqOcHvPd6g14sMbHjxXAmsNpBMoiKi56VbLAHaVinIk+
+         Qw+BQhY/Qi8x1d1GZE71VIJv1rrU+h/wkbTEcf5hIUy7i+BLwrxrmSWcOEwc8YwFwpRA
+         pcIg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=NmJMKAmy/TavxqAqA2RWtnDhN8WsDQ/AjcqxUwK9McE=;
+        b=aBalofSzaCkJP8p5dAeKylc+cAqlvmhwHEBf4Dcdsi3n3OWgcBPwV55DsycVoA2VsR
+         MDMmYKP/CZWE74GovwcQQJPUa4kqa9mvpCD0i1P0XcQFqC1XLe7fxYnljSiFrv5Rau5+
+         HNuQKaaWEo1U7D0XLdeQKJ60gV+flJX/3EG811Zwv5aTygTPJMs+he77eZNhJpxkx+hg
+         BuvMKdo2c/Ww/oY+UZ594/NHrZG16R1vTJ4LFnFkJGEEHs/uswml9fjEH9vTSIjMZwZ/
+         uTjX3OS6t8a81c4yoGmHP8xgSZgp75uVdiTejRX/EMG78IbfoBE9dDVLjGFSVauLgLsV
+         oRdg==
+X-Gm-Message-State: APjAAAX5BiTq3SXG342mRyanR1vMkJXf9vlU3CH6OZEzNBVXdo0lTaX1
+        KbRFBRq2kUr2pvn9yYdouA==
+X-Google-Smtp-Source: APXvYqwIBhqj3xEj906hIz41l7SUxMgaGNrb2ffi9JBnFMhMVCnscc2wc5NstMGVv0MjeSmJUAeEAQ==
+X-Received: by 2002:a17:902:b713:: with SMTP id d19mr4653988pls.245.1572442416598;
+        Wed, 30 Oct 2019 06:33:36 -0700 (PDT)
+Received: from mypc ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id f189sm3869906pgc.94.2019.10.30.06.33.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Oct 2019 06:33:35 -0700 (PDT)
+Date:   Wed, 30 Oct 2019 21:33:27 +0800
+From:   Pingfan Liu <kernelfans@gmail.com>
+To:     Brian Foster <bfoster@redhat.com>
 Cc:     linux-xfs@vger.kernel.org,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-fsdevel@vger.kernel.org
 Subject: Re: [PATCH] xfs/log: protect xc_cil in xlog_cil_push()
-Message-ID: <20191030125316.GC46856@bfoster>
+Message-ID: <20191030133327.GA29340@mypc>
 References: <1572416980-25274-1-git-send-email-kernelfans@gmail.com>
+ <20191030125316.GC46856@bfoster>
 MIME-Version: 1.0
-In-Reply-To: <1572416980-25274-1-git-send-email-kernelfans@gmail.com>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.84 on 10.5.11.23
-X-MC-Unique: wY2Aes37MRCfG9JiAEpIgg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=WINDOWS-1252
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
+In-Reply-To: <20191030125316.GC46856@bfoster>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 30, 2019 at 02:29:40PM +0800, Pingfan Liu wrote:
-> xlog_cil_push() is the reader and writer of xc_cil, and should be protect=
-ed
-> against xlog_cil_insert_items().
->=20
-> Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> To: linux-xfs@vger.kernel.org
-> Cc: linux-fsdevel@vger.kernel.org
-> ---
->  fs/xfs/xfs_log_cil.c | 2 ++
->  1 file changed, 2 insertions(+)
->=20
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index ef652abd..004af09 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -723,6 +723,7 @@ xlog_cil_push(
->  =09 */
->  =09lv =3D NULL;
->  =09num_iovecs =3D 0;
-> +=09spin_lock(&cil->xc_cil_lock);
->  =09while (!list_empty(&cil->xc_cil)) {
->  =09=09struct xfs_log_item=09*item;
-> =20
-> @@ -737,6 +738,7 @@ xlog_cil_push(
->  =09=09item->li_lv =3D NULL;
->  =09=09num_iovecs +=3D lv->lv_niovecs;
->  =09}
-> +=09spin_unlock(&cil->xc_cil_lock);
+On Wed, Oct 30, 2019 at 08:53:16AM -0400, Brian Foster wrote:
+> On Wed, Oct 30, 2019 at 02:29:40PM +0800, Pingfan Liu wrote:
+> > xlog_cil_push() is the reader and writer of xc_cil, and should be protected
+> > against xlog_cil_insert_items().
+> > 
+> > Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
+> > Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
+> > To: linux-xfs@vger.kernel.org
+> > Cc: linux-fsdevel@vger.kernel.org
+> > ---
+> >  fs/xfs/xfs_log_cil.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> > 
+> > diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+> > index ef652abd..004af09 100644
+> > --- a/fs/xfs/xfs_log_cil.c
+> > +++ b/fs/xfs/xfs_log_cil.c
+> > @@ -723,6 +723,7 @@ xlog_cil_push(
+> >  	 */
+> >  	lv = NULL;
+> >  	num_iovecs = 0;
+> > +	spin_lock(&cil->xc_cil_lock);
+> >  	while (!list_empty(&cil->xc_cil)) {
+> >  		struct xfs_log_item	*item;
+> >  
+> > @@ -737,6 +738,7 @@ xlog_cil_push(
+> >  		item->li_lv = NULL;
+> >  		num_iovecs += lv->lv_niovecs;
+> >  	}
+> > +	spin_unlock(&cil->xc_cil_lock);
+> 
+> The majority of this function executes under exclusive ->xc_ctx_lock.
+> xlog_cil_insert_items() runs with the ->xc_ctx_lock taken in read mode.
+> The ->xc_cil_lock spinlock is used in the latter case to protect the
+> list under concurrent transaction commits.
+> 
+I think the logic of xc_ctx_lock should be at a higher level of file
+system. But on the fundamental level, reader and writer should be
+protected against each other. And there is no protection for the list
+ops here.
 
-The majority of this function executes under exclusive ->xc_ctx_lock.
-xlog_cil_insert_items() runs with the ->xc_ctx_lock taken in read mode.
-The ->xc_cil_lock spinlock is used in the latter case to protect the
-list under concurrent transaction commits.
+BTW, even spinlock is not enough to protect integrity of a trans, and I
+think another patch should be involved. I will send the extra patch,
+which is applied on this one.
 
-Brian
+Thanks for your kindly review.
 
-> =20
->  =09/*
->  =09 * initialise the new context and attach it to the CIL. Then attach
-> --=20
-> 2.7.5
->=20
-
+Regards,
+	Pingfan
