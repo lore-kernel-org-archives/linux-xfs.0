@@ -2,261 +2,331 @@ Return-Path: <SRS0=aCB+=YX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.9 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B169CA9EAE
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 01:23:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 845D4C47E49
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 03:17:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 026F820866
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 01:23:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5C61D208C0
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 03:17:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="21eaHC3u";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="c+w4rPAp"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KkxlCBU8"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726262AbfJ3BXi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 29 Oct 2019 21:23:38 -0400
-Received: from out2-smtp.messagingengine.com ([66.111.4.26]:37855 "EHLO
-        out2-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726257AbfJ3BXi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 21:23:38 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.nyi.internal (Postfix) with ESMTP id 5841B21249;
-        Tue, 29 Oct 2019 21:23:36 -0400 (EDT)
-Received: from mailfrontend1 ([10.202.2.162])
-  by compute1.internal (MEProxy); Tue, 29 Oct 2019 21:23:36 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:cc:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        zYDUCDFjTXEa43+EOcpRcbiRdM145ZHssUE4iQlIqmo=; b=21eaHC3u/h7FxmmX
-        WbnO/OM0e7qpra5yTm8eWXia99Cu7Y6IUy/+7TP6aAmJdDR7eLmiG9Mr8mGti4bJ
-        Oo2HiKG8ir57x+jR6D2wDrZrihx1072pvwcgqvXa+JSPXq7770IssDVILmcMVN2d
-        NpwptM9ZRP/tBSkzK8B7rZws/KszgW80JG+pJhh+/lXmqT6mtvPi3xJGfKLPnzsJ
-        BMrmOdJMBcPYmbAkkkEKyO977PSocJN2pCEoY3Tkw1M9/d68xMieOqtAVfbaJBSw
-        bIR1j1CinzC1S/fSmwjgd1JoUWP03KDWlret80htjpxUABSdD9VGOnDmdfvzY/kg
-        2KSZvg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; bh=zYDUCDFjTXEa43+EOcpRcbiRdM145ZHssUE4iQlIq
-        mo=; b=c+w4rPAppblhw/n78queV84uL1+JVaXfq8MohpqIIez11CioqMftM6dm3
-        mV3dGJzz9TSLWmRMkbIaL/CdbdKGWfBlquOcPXO169iI0MF0TsQSZCHFVOdyshKT
-        2/OB9GKCASEFa2ICqHz856Tke9oyzQUw5Aw3SjSildcpSAS8DDwbR9QNiyfv7Cx0
-        rAlxMXfOPQ1O3pZ3m7x6HtsR2LJssnCGXyRwAnnQYBXUFuDLWL+oWeCM4SiooWqL
-        uUA75NV2r/5yO2XQQ+LdcXfYvmxr1TzNTcB9WM4TREql6ai6+ufjxEBP3uHtRpyC
-        fBWcEL+Z7QfLU4aY1+w7K0Rpsj6iA==
-X-ME-Sender: <xms:F-a4XRbPesl8svg-VdlmHPUYhw_lj7yvBFU1Y3wev_MDQxvNVJg7-Q>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedruddtvddgfeegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepkffuhffvffgjfhgtfggggfesthejredttderjeenucfhrhhomhepkfgrnhcu
-    mfgvnhhtuceorhgrvhgvnhesthhhvghmrgifrdhnvghtqeenucffohhmrghinhepkhgvrh
-    hnvghlrdhorhhgnecukfhppeduudekrddvtdekrddukeejrdefvdenucfrrghrrghmpehm
-    rghilhhfrhhomheprhgrvhgvnhesthhhvghmrgifrdhnvghtnecuvehluhhsthgvrhfuih
-    iivgeptd
-X-ME-Proxy: <xmx:F-a4XVznH3Kh8H2wY3onOG0os9VDMRKh_hw8lr7mo1eY_XY_ePDL1g>
-    <xmx:F-a4Xf8eJCdpSH6QFDGBv3yTr4LMxSciVbNoC8Rkm4P4mDM8ilsC7A>
-    <xmx:F-a4XTXPGHVPTmoBnW236Sw9lol_9vH3aAgQAUW6VKD5jtVLx1yz4A>
-    <xmx:GOa4XUuXfw9G4sRgRhvE7nKcTrr0CnkBM5TbduS2c9vVGUZWM2autw>
-Received: from mickey.themaw.net (unknown [118.208.187.32])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 0CD5F80061;
-        Tue, 29 Oct 2019 21:23:33 -0400 (EDT)
-Message-ID: <0bdb9d2d663a53aac4b0ae14b2c975265d26993f.camel@themaw.net>
-Subject: Re: About xfstests generic/361
-From:   Ian Kent <raven@themaw.net>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Christoph Hellwig <hch@lst.de>, linux-xfs@vger.kernel.org
-Date:   Wed, 30 Oct 2019 09:23:29 +0800
-In-Reply-To: <49459a0a89a891d98c7345f43958e87bc0fefa99.camel@themaw.net>
-References: <1d94634d5c990dc0d21673ff2596bd276b728ab1.camel@themaw.net>
-         <20191028233448.GB15221@magnolia>
-         <b6a64fa89ab24912b840c0772c2ffa615c0c6118.camel@themaw.net>
-         <20191029005208.GD15221@magnolia>
-         <ec905b80dc327ab4b95195cfe4f2e55321799ef6.camel@themaw.net>
-         <49459a0a89a891d98c7345f43958e87bc0fefa99.camel@themaw.net>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1726747AbfJ3DRJ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 29 Oct 2019 23:17:09 -0400
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:36773 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726714AbfJ3DRJ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 29 Oct 2019 23:17:09 -0400
+Received: by mail-pg1-f195.google.com with SMTP id j22so478303pgh.3;
+        Tue, 29 Oct 2019 20:17:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=Gp8gdSutfHIwARAnhnkXdCV/dYJjL04B3d8bjAZgzSE=;
+        b=KkxlCBU8mXC2VcRbpZk/fEtePwIYkRSpUgI7dO6akhFdcxGDUvqOKk16xpgDw83sFV
+         v6KatqTf7mjx6ElsSoxERkVIXFX9bg85HxyGYmY5w4ipqbsYgbbUDGiX8REhlYt0LT6g
+         5z5aNqKNvaAauCdEvxXN2O5vc9kvor2ehDqh5yAoYluFUA/t/f54IzmuFbCk9tU7FZfS
+         ZCflkbHNJDSeQvT1FAVIMY+yBtN4F5jmTpooSCGhF3R1o0glz27tTbX6+RE5l42yjA2v
+         6E/vZXL6RdH2qYU0IXGru8DLpJEPRPEtb89FsV54Q25a3UtFdIMtQdVjvXB0rCmpRSkh
+         aZyw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=Gp8gdSutfHIwARAnhnkXdCV/dYJjL04B3d8bjAZgzSE=;
+        b=UfEULSPFeZGPCffJK7tujIsJlzxBbwbowtoL24vG9lS7A9hMrucJW8j0wtqLfnvPd4
+         eSrojn07pFHFR40ICndyCTlXogW78xNdZqLkQdqzNO0eaJdKaiYiRDMBNVhqratVNBS0
+         IefsXEFotMOb16NcPtdWk2XJRw+VZcH59X3D11aYxu7fwoNTw25DK/WYMKL9DDcpPuMW
+         nBz/YCITy+PqHUKTI+01FMQmmsdaDS06hhEMTqCHtmXGx+K2nx+lewY95+a3pUJSp2my
+         47D5431bFgBGQpHhFhdczEIDzL4rq7KZI86YPm/VHdDWMbfE7lEtCOwSGPOKCZewHwPX
+         uVSA==
+X-Gm-Message-State: APjAAAWjmb7knWvtt0ohsUAJoBEHCRSpS4y6BAdCDnnDYmfle+lrcfw0
+        q6sMdTT77Th1CiQIwn/Msw==
+X-Google-Smtp-Source: APXvYqxwRLivhRa0c74/8zEsu1+4RbZtlBacneamie1XNBRwV8xxTykwo8IguB7OfNT6DWKwLvWc3Q==
+X-Received: by 2002:a17:90a:d149:: with SMTP id t9mr10812396pjw.108.1572405428151;
+        Tue, 29 Oct 2019 20:17:08 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id q26sm574827pgk.60.2019.10.29.20.17.05
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Tue, 29 Oct 2019 20:17:07 -0700 (PDT)
+Subject: Re: [PATCH v2 3/4] fsstress: add EXCHANGE renameat2 support
+To:     Brian Foster <bfoster@redhat.com>
+Cc:     fstests@vger.kernel.org, linux-xfs@vger.kernel.org,
+        guaneryu@gmail.com, newtongao@tencent.com, jasperwang@tencent.com
+References: <cover.1572057903.git.kaixuxia@tencent.com>
+ <8e8cf5e50bc3c26c90d2677d3194d36346ef0c24.1572057903.git.kaixuxia@tencent.com>
+ <20191029134010.GF41131@bfoster>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <8b5f167b-2d7c-a387-c440-80cfe6f95c42@gmail.com>
+Date:   Wed, 30 Oct 2019 11:17:04 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
+In-Reply-To: <20191029134010.GF41131@bfoster>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, 2019-10-29 at 10:02 +0800, Ian Kent wrote:
-> On Tue, 2019-10-29 at 09:11 +0800, Ian Kent wrote:
-> > On Mon, 2019-10-28 at 17:52 -0700, Darrick J. Wong wrote:
-> > > On Tue, Oct 29, 2019 at 08:29:38AM +0800, Ian Kent wrote:
-> > > > On Mon, 2019-10-28 at 16:34 -0700, Darrick J. Wong wrote:
-> > > > > On Mon, Oct 28, 2019 at 05:17:05PM +0800, Ian Kent wrote:
-> > > > > > Hi Darrick,
-> > > > > > 
-> > > > > > Unfortunately I'm having a bit of trouble with my USB
-> > > > > > keyboard
-> > > > > > and random key repeats, I lost several important messages
-> > > > > > this
-> > > > > > morning due to it.
-> > > > > > 
-> > > > > > Your report of the xfstests generic/361 problem was one of
-> > > > > > them
-> > > > > > (as was Christoph's mail about the mount code location,
-> > > > > > I'll
-> > > > > > post
-> > > > > > on that a bit later). So I'm going to have to refer to the
-> > > > > > posts
-> > > > > > and hope that I can supply enough context to avoid
-> > > > > > confusion.
-> > > > > > 
-> > > > > > Sorry about this.
-> > > > > > 
-> > > > > > Anyway, you posted:
-> > > > > > 
-> > > > > > "Dunno what's up with this particular patch, but I see
-> > > > > > regressions
-> > > > > > on
-> > > > > > generic/361 (and similar asserts on a few others).  The
-> > > > > > patches
-> > > > > > leading
-> > > > > > up to this patch do not generate this error."
-> > > > > > 
-> > > > > > I've reverted back to a point more or less before moving
-> > > > > > the
-> > > > > > mount
-> > > > > > and super block handling code around and tried to reproduce
-> > > > > > the
-> > > > > > problem
-> > > > > > on my test VM and I din't see the problem.
-> > > > > > 
-> > > > > > Is there anything I need to do when running the test, other
-> > > > > > have
-> > > > > > SCRATCH_MNT and SCRATCH_DEV defined in the local config,
-> > > > > > and
-> > > > > > the
-> > > > > > mount point, and the device existing?
-> > > > > 
-> > > > > Um... here's the kernel branch that I used:
-> > > > > 
-> > > > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git/log/?h=mount-api-crash
-> > > > 
-> > > > Ok, I'll see what I can do with that.
-> > > > 
-> > > > > Along with:
-> > > > > 
-> > > > > MKFS_OPTIONS -- -m crc=0
-> > > > 
-> > > > Right.
-> > > > 
-> > > > > MOUNT_OPTIONS -- -o usrquota,grpquota
-> > > > 
-> > > > It looked like generic/361 used only the SCRATCH_DEV so I
-> > > > thought
-> > > > that meant making a file system and mounting it within the
-> > > > test.
-> > > 
-> > > Yes.  MOUNT_OPTIONS are used to mount the scratch device (and in
-> > > my
-> > > case
-> > > the test device too).
-> > > 
-> > > > > and both TEST_DEV and SCRATCH_DEV pointed at boring scsi
-> > > > > disks.
-> > > > 
-> > > > My VM disks are VirtIO (file based) virtual disks, so that
-> > > > sounds
-> > > > a bit different.
-> > > > 
-> > > > Unfortunately I can't use raw disks on the NAS I use for VMs
-> > > > and
-> > > > I've migrated away from having a desktop machine with a couple
-> > > > of
-> > > > disks to help with testing.
-> > > > 
-> > > > I have other options if I really need to but it's a little bit
-> > > > harder to setup and use company lab machines remotely, compared
-> > > > to
-> > > > local hardware (requesting additional disks is hard to do), and
-> > > > I'm not sure (probably not) if they can/will use raw disks (or
-> > > > partitions) either.
-> > > 
-> > > Sorry, I meant 'boring SCSI disks' in a VM.
-> > > 
-> > > Er let's see what the libvirt config is...
-> > > 
-> > >     <disk type='file' device='disk'>
-> > >       <driver name='qemu' type='raw' cache='unsafe'
-> > > discard='unmap'/>
-> > >       <source file='/run/mtrdisk/a.img'/>
-> > >       <target dev='sda' bus='scsi'/>
-> > >       <address type='drive' controller='0' bus='0' target='0'
-> > > unit='0'/>
-> > >     </disk>
-> > > 
-> > > Which currently translates to virtio-scsi disks.
-> > 
-> > I could use the scsi driver for the disk I guess but IO is already
-> > a bottleneck for me.
-> > 
-> > For my VM disks I have:
-> > 
-> >     <disk type='file' device='disk'>
-> >       <driver name='qemu' type='qcow2' cache='writeback'/>
-> >       <source file='/share/VS-VM/images/F30 test/F30
-> > test_2.1565610215' startupPolicy='optional'/>
-> >       <target dev='vdc' bus='virtio'/>
-> >       <address type='pci' domain='0x0000' bus='0x00' slot='0x08'
-> > function='0x0'/>
-> >     </disk>
-> > 
-> > I'm pretty much restricted to cow type VM disks if I don't do
-> > some questionable manual customization to the xml, ;)
-> > 
-> > In any case the back trace you saw looks like it's in the mount/VFS
-> > code
-> > so it probably isn't disk driver related.
-> > 
-> > I'll try and reproduce it with a checkout of you branch above.
+On 2019/10/29 21:40, Brian Foster wrote:
+> On Sat, Oct 26, 2019 at 07:18:37PM +0800, kaixuxia wrote:
+>> Support the EXCHANGE renameat2 syscall in fsstress.
+>>
+>> In order to maintain filelist/filename integrity, we restrict
+>> rexchange to files of the same type.
+>>
+>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+>> ---
 > 
-> I guess this is where things get difficult.
+> While this looks pretty good to me at this point, I do notice instances
+> of the following in a quick test:
 > 
-> I can't reproduce it, I tried creating an additional VM disk that
-> uses a SCSI controller as well but no joy.
+> 0/29: rename(EXCHANGE) d3/d9/dc/dd to d3/d9/dc/dd/df 22
+> ...
+> 0/43: rename(EXCHANGE) d3 to d3/d9/dc/d18 22
+> ...
 > 
-> I used this config:
-> [xfs]
-> FSTYPE=xfs
-> MKFS_OPTIONS="-m crc=0"
-> MOUNT_OPTIONS="-o usrquota,grpquota"
-> TEST_DIR=/mnt/test
-> TEST_DEV=/dev/vdb
-> TEST_LOGDEV=/dev/vdd
-> SCRATCH_MNT=/mnt/scratch
-> SCRATCH_DEV=/dev/sda
-> SCRATCH_LOGDEV=/dev/vde
+> It looks like we're getting an EINVAL error on rexchange of directories.
+> That same operation seems to work fine via the ./src/renameat2 tool. Any
+> idea what's going on there?
+
+Hmm.. I am not sure if I understand what your mean. Seems like
+this is because the special source and target parameters setting.
+There are parameters check for RENAME_EXCHANGE in renameat2() call,
+
+ static int do_renameat2(int olddfd, const char __user *oldname, int newdfd,
+                         const char __user *newname, unsigned int flags)
+ {
+  ...
+         /* source should not be ancestor of target */
+         error = -EINVAL;
+         if (old_dentry == trap)
+                 goto exit5;
+         /* target should not be an ancestor of source */
+         if (!(flags & RENAME_EXCHANGE))
+                 error = -ENOTEMPTY;
+         if (new_dentry == trap)
+                 goto exit5;
+ ...
+ } 
+
+so we get the EINVAL error on rexchange of directories. I also tested it
+via the ./src/renameat2 tool, and the strace result as below,
+
+ # src/renameat2 -x /xfs-bufdeadlock/d3 /xfs-bufdeadlock/d3/d9/dc/d18
+  Invalid argument
+
+ syscall_316(0xffffff9c, 0x7ffe38930813, 0xffffff9c, 0x7ffe38930827, 0x2, 0) = -1 (errno 22)
+ 
+Exchange looks a bit more tricky here.. Maybe we have two choices,
+one is just leave the EINVAL there since the fsstress is stress
+test and the EINVAL possibility is low. The other one is we should
+do parameters check before invoking the renameat2() call, if the
+source and target file fents are not suitable we will try more
+until get the right file fents...
+
 > 
-> and used:
-> ./check -s xfs generic/361
+> Brian
 > 
-> Perhaps some of the earlier tests played a part in the problem,
-> I'll try running all the tests next ...
+>>  ltp/fsstress.c | 92 ++++++++++++++++++++++++++++++++++++++++++++--------------
+>>  1 file changed, 71 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+>> index ecc1adc..83d6337 100644
+>> --- a/ltp/fsstress.c
+>> +++ b/ltp/fsstress.c
+>> @@ -69,6 +69,9 @@ static int renameat2(int dfd1, const char *path1,
+>>  #ifndef RENAME_NOREPLACE
+>>  #define RENAME_NOREPLACE	(1 << 0)	/* Don't overwrite target */
+>>  #endif
+>> +#ifndef RENAME_EXCHANGE
+>> +#define RENAME_EXCHANGE		(1 << 1)	/* Exchange source and dest */
+>> +#endif
+>>  #ifndef RENAME_WHITEOUT
+>>  #define RENAME_WHITEOUT		(1 << 2)	/* Whiteout source */
+>>  #endif
+>> @@ -115,6 +118,7 @@ typedef enum {
+>>  	OP_REMOVEFATTR,
+>>  	OP_RENAME,
+>>  	OP_RNOREPLACE,
+>> +	OP_REXCHANGE,
+>>  	OP_RWHITEOUT,
+>>  	OP_RESVSP,
+>>  	OP_RMDIR,
+>> @@ -235,6 +239,7 @@ void	readv_f(int, long);
+>>  void	removefattr_f(int, long);
+>>  void	rename_f(int, long);
+>>  void	rnoreplace_f(int, long);
+>> +void	rexchange_f(int, long);
+>>  void	rwhiteout_f(int, long);
+>>  void	resvsp_f(int, long);
+>>  void	rmdir_f(int, long);
+>> @@ -296,6 +301,7 @@ opdesc_t	ops[] = {
+>>  	{ OP_REMOVEFATTR, "removefattr", removefattr_f, 1, 1 },
+>>  	{ OP_RENAME, "rename", rename_f, 2, 1 },
+>>  	{ OP_RNOREPLACE, "rnoreplace", rnoreplace_f, 2, 1 },
+>> +	{ OP_REXCHANGE, "rexchange", rexchange_f, 2, 1 },
+>>  	{ OP_RWHITEOUT, "rwhiteout", rwhiteout_f, 2, 1 },
+>>  	{ OP_RESVSP, "resvsp", resvsp_f, 1, 1 },
+>>  	{ OP_RMDIR, "rmdir", rmdir_f, 1, 1 },
+>> @@ -371,7 +377,7 @@ void	del_from_flist(int, int);
+>>  int	dirid_to_name(char *, int);
+>>  void	doproc(void);
+>>  int	fent_to_name(pathname_t *, flist_t *, fent_t *);
+>> -void	fix_parent(int, int);
+>> +void	fix_parent(int, int, bool);
+>>  void	free_pathname(pathname_t *);
+>>  int	generate_fname(fent_t *, int, pathname_t *, int *, int *);
+>>  int	generate_xattr_name(int, char *, int);
+>> @@ -1118,7 +1124,7 @@ fent_to_name(pathname_t *name, flist_t *flp, fent_t *fep)
+>>  }
+>>  
+>>  void
+>> -fix_parent(int oldid, int newid)
+>> +fix_parent(int oldid, int newid, bool swap)
+>>  {
+>>  	fent_t	*fep;
+>>  	flist_t	*flp;
+>> @@ -1129,6 +1135,8 @@ fix_parent(int oldid, int newid)
+>>  		for (j = 0, fep = flp->fents; j < flp->nfiles; j++, fep++) {
+>>  			if (fep->parent == oldid)
+>>  				fep->parent = newid;
+>> +			else if (swap && fep->parent == newid)
+>> +				fep->parent = oldid;
+>>  		}
+>>  	}
+>>  }
+>> @@ -4256,6 +4264,7 @@ out:
+>>  
+>>  struct print_flags renameat2_flags [] = {
+>>  	{ RENAME_NOREPLACE, "NOREPLACE"},
+>> +	{ RENAME_EXCHANGE, "EXCHANGE"},
+>>  	{ RENAME_WHITEOUT, "WHITEOUT"},
+>>  	{ -1, NULL}
+>>  };
+>> @@ -4291,41 +4300,76 @@ do_renameat2(int opno, long r, int mode)
+>>  		return;
+>>  	}
+>>  
+>> -	/* get an existing directory for the destination parent directory name */
+>> -	if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
+>> -		parid = -1;
+>> -	else
+>> -		parid = dfep->id;
+>> -	v |= v1;
+>> +	/*
+>> +	 * Both pathnames must exist for the RENAME_EXCHANGE, and in
+>> +	 * order to maintain filelist/filename integrity, we should
+>> +	 * restrict exchange operation to files of the same type.
+>> +	 */
+>> +	if (mode == RENAME_EXCHANGE) {
+>> +		which = 1 << (flp - flist);
+>> +		init_pathname(&newf);
+>> +		if (!get_fname(which, random(), &newf, NULL, &dfep, &v)) {
+>> +			if (v)
+>> +				printf("%d/%d: rename - no target filename\n",
+>> +					procid, opno);
+>> +			free_pathname(&newf);
+>> +			free_pathname(&f);
+>> +			return;
+>> +		}
+>> +		v |= v1;
+>> +		id = dfep->id;
+>> +		parid = dfep->parent;
+>> +	} else {
+>> +		/*
+>> +		 * Get an existing directory for the destination parent
+>> +		 * directory name.
+>> +		 */
+>> +		if (!get_fname(FT_DIRm, random(), NULL, NULL, &dfep, &v))
+>> +			parid = -1;
+>> +		else
+>> +			parid = dfep->id;
+>> +		v |= v1;
+>>  
+>> -	/* generate a new path using an existing parent directory in name */
+>> -	init_pathname(&newf);
+>> -	e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
+>> -	v |= v1;
+>> -	if (!e) {
+>> -		if (v) {
+>> -			(void)fent_to_name(&f, &flist[FT_DIR], dfep);
+>> -			printf("%d/%d: rename - no filename from %s\n",
+>> -				procid, opno, f.path);
+>> +		/*
+>> +		 * Generate a new path using an existing parent directory
+>> +		 * in name.
+>> +		 */
+>> +		init_pathname(&newf);
+>> +		e = generate_fname(dfep, flp - flist, &newf, &id, &v1);
+>> +		v |= v1;
+>> +		if (!e) {
+>> +			if (v) {
+>> +				(void)fent_to_name(&f, &flist[FT_DIR], dfep);
+>> +				printf("%d/%d: rename - no filename from %s\n",
+>> +					procid, opno, f.path);
+>> +			}
+>> +			free_pathname(&newf);
+>> +			free_pathname(&f);
+>> +			return;
+>>  		}
+>> -		free_pathname(&newf);
+>> -		free_pathname(&f);
+>> -		return;
+>>  	}
+>>  	e = rename_path(&f, &newf, mode) < 0 ? errno : 0;
+>>  	check_cwd();
+>>  	if (e == 0) {
+>>  		int xattr_counter = fep->xattr_counter;
+>> +		bool swap = (mode == RENAME_EXCHANGE) ? true : false;
+>>  
+>>  		oldid = fep->id;
+>>  		oldparid = fep->parent;
+>>  
+>> +		/*
+>> +		 * Swap the parent ids for RENAME_EXCHANGE, and replace the
+>> +		 * old parent id for the others.
+>> +		 */
+>>  		if (flp - flist == FT_DIR)
+>> -			fix_parent(oldid, id);
+>> +			fix_parent(oldid, id, swap);
+>>  
+>>  		if (mode == RENAME_WHITEOUT) {
+>>  			fep->xattr_counter = 0;
+>>  			add_to_flist(flp - flist, id, parid, xattr_counter);
+>> +		} else if (mode == RENAME_EXCHANGE) {
+>> +			fep->xattr_counter = dfep->xattr_counter;
+>> +			dfep->xattr_counter = xattr_counter;
+>>  		} else {
+>>  			del_from_flist(flp - flist, fep - flp->fents);
+>>  			add_to_flist(flp - flist, id, parid, xattr_counter);
+>> @@ -4359,6 +4403,12 @@ rnoreplace_f(int opno, long r)
+>>  }
+>>  
+>>  void
+>> +rexchange_f(int opno, long r)
+>> +{
+>> +	do_renameat2(opno, r, RENAME_EXCHANGE);
+>> +}
+>> +
+>> +void
+>>  rwhiteout_f(int opno, long r)
+>>  {
+>>  	do_renameat2(opno, r, RENAME_WHITEOUT);
+>> -- 
+>> 1.8.3.1
+>>
 > 
-> Perhaps I'll need to try a different platform ... mmm.
 
-Well, that was rather more painful that I had hoped.
-
-I have been able to reproduce the problem by using a libvirt VM on
-my NUC desktop.
-
-That raises the question of whether the (older version) qemu on my
-NAS is at fault or the newer libvirt is at fault.
-
-I don't think it's the raw vs. qcow virtaul disk difference but I
-may need to check that in the libvirt setup.
-
-I think a bare metal install should be definitive ... what do you
-think Darrick?
-
-Ian
-
+-- 
+kaixuxia
