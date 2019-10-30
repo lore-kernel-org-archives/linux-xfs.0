@@ -7,60 +7,60 @@ X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0AF2CA9EC5
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 17:53:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2D70CA9EC5
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 17:53:24 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 939AB2173E
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 17:53:02 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A4542217F9
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 17:53:24 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="m5nO6o/n"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="detE2UPd"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727232AbfJ3RxC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Oct 2019 13:53:02 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:41056 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726747AbfJ3RxB (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 13:53:01 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9UHj0D1142678;
-        Wed, 30 Oct 2019 17:52:58 GMT
+        id S1727484AbfJ3RxX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Oct 2019 13:53:23 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:39612 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727267AbfJ3RxX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 13:53:23 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9UHinLS151840;
+        Wed, 30 Oct 2019 17:53:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=o/Il95n1YkPZ+FpaOthExYpjwvBYDPDrPj42sv3aQ7I=;
- b=m5nO6o/n+Y2hgfR0k4kDviS7owlXrWw9ePg4iUFgaUamQWykzM5/k07vTikxV07I0ieA
- LJZE9W4eMS1JzApOhPoitt9K/hEBYvWq73vkZi6Kwg/XJAM02llJkcCEB2RRk0M88C0b
- LHFviXpMA9hwvvuBE19swA4/UCFub4fsonJBlO/DIs4Kd/qhovgewjhD+vYGiBv7DWXn
- 0z3e/94u0UdqEmsqCQ4cHCZM1mj6L+QrASXDYAal+hZaiUUbiqbxMho8Evsh0AWyMvmE
- cXDFhJjk/W/cDOj5KBW6ZgXn4pKBY/2KvsLPiHfNKvnmw6ic6w2Lqq6p/J8vBmrx9LoV vA== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by userp2120.oracle.com with ESMTP id 2vxwhfp033-1
+ content-transfer-encoding : in-reply-to; s=corp-2019-08-05;
+ bh=HE5QkdAmxs7Z+z7ZJyEx5nes3udKJgzaiTF8sp2+SEI=;
+ b=detE2UPdhVBQYtXF3iFf8/KYIbSCTEOcyxpb7b5ItCxQ4eabujcTeSw2K3Pes5vVmiIl
+ wQT2CPNYwfQHl23+V4pELn5cTTTd64BWZ+GlEVeJVkuScieL0GEwiYKU0pBKNpB+j3h6
+ AkVEB/112fqaEHJYMp666HB7NhcmENL/mGCtEYBYWSKDda9YBVg3xL2Nb0bxflQr0/O4
+ pz2XAzhFqcNOg3YYh8zU53I0eOZDVgXEATi+clDuyi9CWwU+DWmIO7xmZ3dQH+ZNuaOV
+ 20UT2YG10YAIp+F3p319hBk8NkqaQ47QV6gIrFd0mCZ5VL0bN+aVXo5bCUme0jKnptv/ 8Q== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by aserp2120.oracle.com with ESMTP id 2vxwhfe0ym-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 30 Oct 2019 17:52:58 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9UHiqna014121;
-        Wed, 30 Oct 2019 17:52:58 GMT
+        Wed, 30 Oct 2019 17:53:19 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9UHjWVh182482;
+        Wed, 30 Oct 2019 17:53:18 GMT
 Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by aserp3020.oracle.com with ESMTP id 2vxwj76e0j-1
+        by userp3030.oracle.com with ESMTP id 2vxwhwh62p-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 30 Oct 2019 17:52:57 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9UHqvWI006375;
-        Wed, 30 Oct 2019 17:52:57 GMT
+        Wed, 30 Oct 2019 17:53:18 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id x9UHrGPQ006461;
+        Wed, 30 Oct 2019 17:53:16 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Wed, 30 Oct 2019 10:52:57 -0700
-Date:   Wed, 30 Oct 2019 10:52:56 -0700
+        with ESMTP ; Wed, 30 Oct 2019 10:53:16 -0700
+Date:   Wed, 30 Oct 2019 10:53:15 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     sandeen@sandeen.net
 Cc:     linux-xfs@vger.kernel.org
-Subject: [PATCH 6/5] xfs_repair: print better information when metadata
- updates fail
-Message-ID: <20191030175256.GP15222@magnolia>
+Subject: [PATCH 7/5] libxfs: fix typo in message about write verifier
+Message-ID: <20191030175315.GQ15222@magnolia>
 References: <157176999124.1458930.5678023201951458107.stgit@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 In-Reply-To: <157176999124.1458930.5678023201951458107.stgit@magnolia>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9426 signatures=668685
@@ -81,40 +81,37 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Darrick J. Wong <darrick.wong@oracle.com>
 
-If a metadata update fails during phase 6, we should print an error
-message that can be traced back to a specific line of code.  Also,
-res_failed spits out a general message about "xfs_trans_reserve failed",
-which is probably not where the failure happened.  Fix two incorrect
-call sites.
+Fix a silly typo.
 
 Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- repair/phase6.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ libxfs/rdwr.c |    2 +-
+ po/pl.po      |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/repair/phase6.c b/repair/phase6.c
-index 28e633de..91d208a6 100644
---- a/repair/phase6.c
-+++ b/repair/phase6.c
-@@ -1354,7 +1354,8 @@ longform_dir2_rebuild(
+diff --git a/libxfs/rdwr.c b/libxfs/rdwr.c
+index 0d3e6089..7080cd9c 100644
+--- a/libxfs/rdwr.c
++++ b/libxfs/rdwr.c
+@@ -1117,7 +1117,7 @@ libxfs_writebufr(xfs_buf_t *bp)
+ 		bp->b_ops->verify_write(bp);
+ 		if (bp->b_error) {
+ 			fprintf(stderr,
+-	_("%s: write verifer failed on %s bno 0x%llx/0x%x\n"),
++	_("%s: write verifier failed on %s bno 0x%llx/0x%x\n"),
+ 				__func__, bp->b_ops->name,
+ 				(long long)bp->b_bn, bp->b_bcount);
+ 			return bp->b_error;
+diff --git a/po/pl.po b/po/pl.po
+index ab5b11da..87109f6b 100644
+--- a/po/pl.po
++++ b/po/pl.po
+@@ -7466,7 +7466,7 @@ msgstr "%s: błąd - wykonano pwrite tylko %d z %d bajtów\n"
  
- 	error = dir_binval(tp, ip, XFS_DATA_FORK);
- 	if (error)
--		res_failed(error);
-+		do_error(_("error %d invalidating directory %llu blocks\n"),
-+				error, (unsigned long long)ip->i_ino);
+ #: .././libxfs/rdwr.c:1138
+ #, c-format
+-msgid "%s: write verifer failed on %s bno 0x%llx/0x%x\n"
++msgid "%s: write verifier failed on %s bno 0x%llx/0x%x\n"
+ msgstr "%s: weryfikacja zapisu nie powiodła się na %s bno 0x%llx/0x%x\n"
  
- 	if ((error = -libxfs_bmap_last_offset(ip, &lastblock, XFS_DATA_FORK)))
- 		do_error(_("xfs_bmap_last_offset failed -- error - %d\n"),
-@@ -2972,7 +2973,10 @@ process_dir_inode(
- 					XFS_ILOG_CORE | XFS_ILOG_DDATA);
- 				error = -libxfs_trans_commit(tp);
- 				if (error)
--					res_failed(error);
-+					do_error(
-+_("error %d fixing shortform directory %llu\n"),
-+						error,
-+						(unsigned long long)ip->i_ino);
- 			} else  {
- 				libxfs_trans_cancel(tp);
- 			}
+ #: .././libxfs/trans.c:733
