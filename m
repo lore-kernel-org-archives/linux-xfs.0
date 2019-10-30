@@ -2,155 +2,64 @@ Return-Path: <SRS0=aCB+=YX=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_GIT autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B1C42CA9EC5
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 13:37:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 128F4CA9EC5
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 14:26:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8356520578
-	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 13:37:39 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C7AE42087E
+	for <linux-xfs@archiver.kernel.org>; Wed, 30 Oct 2019 14:26:22 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="P6Jn09Vq"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="UgyoGHaq"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726171AbfJ3Nhj (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Oct 2019 09:37:39 -0400
-Received: from mail-pg1-f194.google.com ([209.85.215.194]:43502 "EHLO
-        mail-pg1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726119AbfJ3Nhi (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 09:37:38 -0400
-Received: by mail-pg1-f194.google.com with SMTP id l24so1497137pgh.10;
-        Wed, 30 Oct 2019 06:37:36 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=from:to:cc:subject:date:message-id:in-reply-to:references;
-        bh=Rz7QH0F6wLnmKP0y/0TivVCFIkM5VAJcLbadkXKVaJo=;
-        b=P6Jn09VqprfdoLMHIA7fbSnGpHm/jwFe4tzwSN1qX1hvhsL8x+pjEjP3MzZQNK3ZBx
-         cnei2JQ5/PK/0sAKgXaxnQfDAB5lsnZrM4Xvzr6nMA1RugoKMW2RZvsQXZz1wv4dmiyZ
-         OCKmS9ItqEOsJtZ8/eOKFwzbW6CTBu58e07x6TLTzaodXI08k3XHKMxbLBtDoqrqv045
-         THN5J7wxztiU3Pb907JPi96mqDXtwp4NfdcCuMh3uDTyAqbPMUEZJqM0f9V3GU3CK2fL
-         AF1rX4E1mfJq4AU0b4kVy1TAMeKYntjB8veFVESi5jHHh1u53+pY9BWWJKix9jeVp1/K
-         +cyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:from:to:cc:subject:date:message-id:in-reply-to
-         :references;
-        bh=Rz7QH0F6wLnmKP0y/0TivVCFIkM5VAJcLbadkXKVaJo=;
-        b=GO7Y4pUggX5LWCXOV71jtyECcIrv+84toJhFDuXz6xTxUeWCiYS8oG4NuZOQLOhVsW
-         7cpSMw2OApgdXZ6kKPvhqJZrbsbnwCiWViAkffk28cCpLTMY6uTKTQoAINdkXuS6h6/0
-         nnACS4gwU0SN/n7DCiaNyMvDfBgubiPk5QkuiLlXczhOfZPoii6cjR6zPT/HzF0mFtFF
-         BzLyENTYFx0GjzooLAeee/fZpcUG+RIpr36H+JK4DE7GEPCUSVQGQC+OeuajR0SL6urO
-         JYAztIyYXeOqVxh2yKi9XuwHZAJgwY+Z41vm9TAMHHkQ2AdGRHQjen9UmGitqrrmrS/M
-         odnQ==
-X-Gm-Message-State: APjAAAX3B0fgAJxeAVMjBxBXa2DQU8OSnvvuZxQuUORBQbAZrzl1TaFs
-        Yg034c5ksTCzKsj+bg+8CgIxiiU=
-X-Google-Smtp-Source: APXvYqxy6M1jhGWqr6DIAHM7goNhtjLlOC5Lcn7zVYM2e9WOIziYtw6tdFoDLaF3Tpjb+e2vX691Bg==
-X-Received: by 2002:a62:2b94:: with SMTP id r142mr33773899pfr.251.1572442656400;
-        Wed, 30 Oct 2019 06:37:36 -0700 (PDT)
-Received: from mylaptop.redhat.com ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id j10sm2333233pfn.128.2019.10.30.06.37.33
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 30 Oct 2019 06:37:35 -0700 (PDT)
-From:   Pingfan Liu <kernelfans@gmail.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     Pingfan Liu <kernelfans@gmail.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        linux-fsdevel@vger.kernel.org
-Subject: [PATCH] xfs/log: protect the logging content under xc_ctx_lock
-Date:   Wed, 30 Oct 2019 21:37:11 +0800
-Message-Id: <1572442631-4472-1-git-send-email-kernelfans@gmail.com>
-X-Mailer: git-send-email 2.7.5
-In-Reply-To: <20191030133327.GA29340@mypc>
-References: <20191030133327.GA29340@mypc>
+        id S1726607AbfJ3O0W (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Oct 2019 10:26:22 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:36412 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726137AbfJ3O0W (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 10:26:22 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Transfer-Encoding
+        :Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+        Sender:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+        Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+        List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+        bh=nhztzaIsS/uHsRljaQMJ2sHAvtAOwKAp+LP1aH+6tkc=; b=UgyoGHaq/HDrz17zVIZzMKsj56
+        9N1Lb1IoztW+mx5ukU0XqkFZv9Ew46DGrVK+XdyZqTgd1uDbTx/xCyTsw4N1jHQB20X5F7kC9fuHN
+        FfK0L+e9cLe/BYrV5L8bcROca4O4nY2cdlIfCjIHTr10Dyt1d8a3ZA4hSobnJESH166VA2oB6kBHn
+        3u8V+qDR44Kpr4j7g7VJQmiA1iGZb+kLwXXqTDwKQozeu2W4qm3ZAZDN/bue7hwkOszFvYX1tfp4r
+        8EUNxanXmCjM4rNYCQKgv/FQV5ZaC2feOgosixlkdK+xIJ1P0MlyiZKaoAZ7EUM8j6fpgqU+mJu4J
+        vsXB+8gQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iPovW-0004GX-12; Wed, 30 Oct 2019 14:26:22 +0000
+Date:   Wed, 30 Oct 2019 07:26:22 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH V2] xfs: properly serialise fallocate against AIO+DIO
+Message-ID: <20191030142622.GA10453@infradead.org>
+References: <20191029223752.28562-1-david@fromorbit.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191029223752.28562-1-david@fromorbit.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-xc_cil_lock is not enough to protect the integrity of a trans logging.
-Taking the scenario:
-  cpuA                                 cpuB                          cpuC
+Looks good,
 
-  xlog_cil_insert_format_items()
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
-  spin_lock(&cil->xc_cil_lock)
-  link transA's items to xc_cil,
-     including item1
-  spin_unlock(&cil->xc_cil_lock)
-                                                                      xlog_cil_push() fetches transA's item under xc_cil_lock
-                                       issue transB, modify item1
-                                                                      xlog_write(), but now, item1 contains content from transB and we have a broken transA
-
-Survive this race issue by putting under the protection of xc_ctx_lock.
-Meanwhile the xc_cil_lock can be dropped as xc_ctx_lock does it against
-xlog_cil_insert_items()
-
-Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc: Brian Foster <bfoster@redhat.com>
-To: linux-xfs@vger.kernel.org
-Cc: linux-fsdevel@vger.kernel.org
----
- fs/xfs/xfs_log_cil.c | 35 +++++++++++++++++++----------------
- 1 file changed, 19 insertions(+), 16 deletions(-)
-
-diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-index 004af09..f8df3b5 100644
---- a/fs/xfs/xfs_log_cil.c
-+++ b/fs/xfs/xfs_log_cil.c
-@@ -723,22 +723,6 @@ xlog_cil_push(
- 	 */
- 	lv = NULL;
- 	num_iovecs = 0;
--	spin_lock(&cil->xc_cil_lock);
--	while (!list_empty(&cil->xc_cil)) {
--		struct xfs_log_item	*item;
--
--		item = list_first_entry(&cil->xc_cil,
--					struct xfs_log_item, li_cil);
--		list_del_init(&item->li_cil);
--		if (!ctx->lv_chain)
--			ctx->lv_chain = item->li_lv;
--		else
--			lv->lv_next = item->li_lv;
--		lv = item->li_lv;
--		item->li_lv = NULL;
--		num_iovecs += lv->lv_niovecs;
--	}
--	spin_unlock(&cil->xc_cil_lock);
- 
- 	/*
- 	 * initialise the new context and attach it to the CIL. Then attach
-@@ -783,6 +767,25 @@ xlog_cil_push(
- 	up_write(&cil->xc_ctx_lock);
- 
- 	/*
-+	 * cil->xc_cil_lock around this loop can be dropped, since xc_ctx_lock
-+	 * protects us against xlog_cil_insert_items().
-+	 */
-+	while (!list_empty(&cil->xc_cil)) {
-+		struct xfs_log_item	*item;
-+
-+		item = list_first_entry(&cil->xc_cil,
-+					struct xfs_log_item, li_cil);
-+		list_del_init(&item->li_cil);
-+		if (!ctx->lv_chain)
-+			ctx->lv_chain = item->li_lv;
-+		else
-+			lv->lv_next = item->li_lv;
-+		lv = item->li_lv;
-+		item->li_lv = NULL;
-+		num_iovecs += lv->lv_niovecs;
-+	}
-+
-+	/*
- 	 * Build a checkpoint transaction header and write it to the log to
- 	 * begin the transaction. We need to account for the space used by the
- 	 * transaction header here as it is not accounted for in xlog_write().
--- 
-2.7.5
-
+Btw, I've been pondering multiple times if we can kill off i_dio_count
+again, at least for iomap users.  I've added in the request of Thomas
+how want to kill non-owner rw_semaphore unlocks.  But it turns out those
+were needed in other placeѕ and have been added back at least partially.
+I'll try to just use those again when I find some time, which should
+simplify a lot of the mess we around waiting for direct I/O.
