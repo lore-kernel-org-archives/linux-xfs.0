@@ -2,177 +2,180 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED autolearn=ham
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D4949CA9EC7
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 00:06:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 19AACCA9EC7
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 01:08:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9326F20656
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 00:06:56 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=themaw.net header.i=@themaw.net header.b="I7rJ27fI";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="LqybDlr1"
+	by mail.kernel.org (Postfix) with ESMTP id E36F32080F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 01:08:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727743AbfJaAG4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Oct 2019 20:06:56 -0400
-Received: from wout3-smtp.messagingengine.com ([64.147.123.19]:40895 "EHLO
-        wout3-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727617AbfJaAGz (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 20:06:55 -0400
-Received: from compute1.internal (compute1.nyi.internal [10.202.2.41])
-        by mailout.west.internal (Postfix) with ESMTP id 493FA52D;
-        Wed, 30 Oct 2019 20:06:54 -0400 (EDT)
-Received: from mailfrontend2 ([10.202.2.163])
-  by compute1.internal (MEProxy); Wed, 30 Oct 2019 20:06:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=themaw.net; h=
-        message-id:subject:from:to:cc:date:in-reply-to:references
-        :content-type:mime-version:content-transfer-encoding; s=fm1; bh=
-        v9XEk8uMvpCUndHRUtMMY5MfSVPQrGQEonOht4k9uBw=; b=I7rJ27fIF9NpdstB
-        5HCzA86hxqNbd5tLL3GJf/dD5naX9pAdSm98UTldCP185BXrDa8hgBjmJKqa4lkT
-        7uIr7+889uZrf+qwpChbCebfHU2rwKxKHc+o90dfMtt3a/drtok2beA8dxyYnRvm
-        iXNne/ytThZeOUo6oApsrt9ZiJsipqkrLWbA3QjFXG4xBDAFQPNTTkQO7SjCVLES
-        r3ng3+3s1zx0NvBNSszEQVE16ClHHzLazyQZveEEVIKHrFIZTEIlwaB0hcnt3HjE
-        4dL3OvOchr3SZTC2JKQydlunB1VUdF74+jPH+sjSTGt+gEkDFY4fNwBrtPrqqlCG
-        LFYsbQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-        messagingengine.com; h=cc:content-transfer-encoding:content-type
-        :date:from:in-reply-to:message-id:mime-version:references
-        :subject:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-        :x-sasl-enc; s=fm1; bh=v9XEk8uMvpCUndHRUtMMY5MfSVPQrGQEonOht4k9u
-        Bw=; b=LqybDlr1F/hfdHJ8Ux02vY26Oji63RH8iOfTg7AwnsuZp/NfeCHTTKX36
-        lTLuLuzkHajJ+WMejnyjm/bKiiNNkLAeJilt6HK0+3OuQJYMIvuNn8R01mNpMwjz
-        UBg4/z5MIHRFwsh0t+IM1o2Gc/33CbZ0Gc0T76dH5IQTqnXGFn4T5Z1MdLlh2xV3
-        YNiP+bu97lzMMywB4R++UG289TpAqiMC69xBR1T5RVg40cQjm56ZrQ+aKX+DYZNZ
-        BRsE80eQqpaFcVXWmeHc730Ti2XKpTc+t/6XYHsZdM8oa85A+3OsfeagpoAO22bb
-        WxIR3z64mV/i87GRQml7ae27sn3eg==
-X-ME-Sender: <xms:nSW6XZBiOb4FkfDmc1XtRm1b286YwiFsI1lMd3mX5XgRh3ZHAjHl0A>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedruddtgedgudelucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepkffuhffvffgjfhgtfggggfesthejredttderjeenucfhrhhomhepkfgrnhcu
-    mfgvnhhtuceorhgrvhgvnhesthhhvghmrgifrdhnvghtqeenucffohhmrghinhepkhgvrh
-    hnvghlrdhorhhgpddtuddrohhrghenucfkphepuddukedrvddtkedrudekjedrfedvnecu
-    rfgrrhgrmhepmhgrihhlfhhrohhmpehrrghvvghnsehthhgvmhgrfidrnhgvthenucevlh
-    hushhtvghrufhiiigvpedt
-X-ME-Proxy: <xmx:nSW6XU4v2qVeqjp6alTwu84qxItcm636QUDf42g3wgk1ySrEaWDsww>
-    <xmx:nSW6Xb6vUL1goX_vBPY4WHPgl2FSrNjmfQdnYu57J2wAIUYuP7x9Cg>
-    <xmx:nSW6XeTwJ3R_SMb05I5-mchhVqjUwd1s-rEvAuBVJ2Q0HclfUofZlA>
-    <xmx:nSW6XcWF1ITqPFWwm_pliXtZvwE6P86h9l3Vw7rV6nFTrW0RxX9zYw>
-Received: from mickey.themaw.net (unknown [118.208.187.32])
-        by mail.messagingengine.com (Postfix) with ESMTPA id 87B6B3060065;
-        Wed, 30 Oct 2019 20:06:50 -0400 (EDT)
-Message-ID: <64f818691c707dfaecff334aafaabd74b14948c7.camel@themaw.net>
-Subject: Re: [djwong-xfs:mount-api-crash 91/104] fs/xfs/xfs_message.c:23:40:
- warning: address of array 'mp->m_super->s_id' will always evaluate to 'true'
-From:   Ian Kent <raven@themaw.net>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Nathan Chancellor <natechancellor@gmail.com>
-Cc:     kbuild@lists.01.org, Nick Desaulniers <ndesaulniers@google.com>,
-        clang-built-linux@googlegroups.com,
-        kbuild test robot <lkp@intel.com>,
-        xfs <linux-xfs@vger.kernel.org>
-Date:   Thu, 31 Oct 2019 08:06:46 +0800
-In-Reply-To: <20191030154543.GF15221@magnolia>
-References: <201910291437.fsxNAnIM%lkp@intel.com>
-         <20191030033925.GA14630@ubuntu-m2-xlarge-x86>
-         <20191030154543.GF15221@magnolia>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.32.4 (3.32.4-1.fc30) 
+        id S1726472AbfJaBID (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 30 Oct 2019 21:08:03 -0400
+Received: from outbound.smtp.vt.edu ([198.82.183.121]:36384 "EHLO
+        omr2.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725927AbfJaBID (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 21:08:03 -0400
+Received: from mr1.cc.vt.edu (mr1.cc.vt.edu [IPv6:2607:b400:92:8300:0:31:1732:8aa4])
+        by omr2.cc.vt.edu (8.14.4/8.14.4) with ESMTP id x9V181pc003700
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Oct 2019 21:08:01 -0400
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+        by mr1.cc.vt.edu (8.14.7/8.14.7) with ESMTP id x9V17ufM017376
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Oct 2019 21:08:01 -0400
+Received: by mail-qk1-f198.google.com with SMTP id a129so4068398qkg.22
+        for <linux-xfs@vger.kernel.org>; Wed, 30 Oct 2019 18:08:01 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :mime-version:content-transfer-encoding;
+        bh=A6x5zvKJWNelVsaR2qz0QPsCww3yKpvWiohVOKat7vg=;
+        b=JjVGl8ct3ko6FfnRROcFFKMeD+WwGmLX7mWURCnEPlVECjjiCE01+L5XvqbXGGYz8A
+         FJRXGff77LkyuTn6kfdgqBocwaI33jC2kcQCF7zY+HDwIbVCYMgBUxtcNiiVCdGw9Xt1
+         gOXW8sGvGeHs9RPDdhKPc6K2UmjcN9Ntzzc0MwRRWGB5l0pqByi7aj3Kmat/SBwtF9Y9
+         0upbaP7xcuTUJFmDi5Nx6di5McsRRKyKRvwoW+EM2G7cSHEWnTnMlsz5ADhnZDrdAvSp
+         aaxxMx4W2rOm5kAbS2e8nJqeer/mEmEChdA96HoLqs/A5ya5uiL9giI4lbaF2U6uxu1Z
+         sLlQ==
+X-Gm-Message-State: APjAAAXmtWX4WD8CGJOYslcY2Fu8f2JSs1MMGEqle8Wy0EwNUgCDmaYq
+        FZ6uIQPsabL6FGKTQEbgcl+D5CBp2vqtAlaio938AFZGmnorAgcsflJPaFnIQJf5vXD/BRx8U8q
+        rYv2xcRyUlXue0qbN45H7aD3GpRweeL0=
+X-Received: by 2002:a05:620a:12c2:: with SMTP id e2mr2944269qkl.162.1572484075627;
+        Wed, 30 Oct 2019 18:07:55 -0700 (PDT)
+X-Google-Smtp-Source: APXvYqxlE8kPCGfGf/g8Sz78JkaUwhSUp0GYw6gPnzEQRzaLcuBtPOcj575mA0HsP7G//KxKX1X8dA==
+X-Received: by 2002:a05:620a:12c2:: with SMTP id e2mr2944240qkl.162.1572484075278;
+        Wed, 30 Oct 2019 18:07:55 -0700 (PDT)
+Received: from turing-police.lan ([2601:5c0:c001:c9e1::359])
+        by smtp.gmail.com with ESMTPSA id u9sm1042529qke.50.2019.10.30.18.07.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Oct 2019 18:07:53 -0700 (PDT)
+From:   Valdis Kletnieks <valdis.kletnieks@vt.edu>
+X-Google-Original-From: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc:     Valdis Kletnieks <Valdis.Kletnieks@vt.edu>,
+        Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+        "Theodore Ts'o" <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-arch@vger.kernel.org
+Subject: [RFC] errno.h: Provide EFSCORRUPTED for everybody
+Date:   Wed, 30 Oct 2019 21:07:33 -0400
+Message-Id: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
+X-Mailer: git-send-email 2.24.0.rc1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, 2019-10-30 at 08:45 -0700, Darrick J. Wong wrote:
-> On Tue, Oct 29, 2019 at 08:39:25PM -0700, Nathan Chancellor wrote:
-> > On Tue, Oct 29, 2019 at 02:45:40PM +0800, kbuild test robot wrote:
-> > > CC: kbuild-all@lists.01.org
-> > > CC: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > > TO: Ian Kent <raven@themaw.net>
-> > > CC: "Darrick J. Wong" <darrick.wong@oracle.com>
-> > > CC: Christoph Hellwig <hch@lst.de>
-> 
-> FYI, It's customary to cc the patch author [and the xfs list]...
-> 
-> > > tree:   
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/djwong/xfs-linux.git
-> > > mount-api-crash
-> > > head:   e35c37b1b9987c8d87d91dbeca6c24aade2a3390
-> > > commit: a5a36409da3a608c815b38b0ff2eb5bcfc1adec6 [91/104] xfs:
-> > > use super s_id instead of struct xfs_mount
-> > > config: x86_64-rhel-7.6 (attached as .config)
-> > > compiler: clang version 10.0.0 (git://gitmirror/llvm_project
-> > > 7cd595df96d5929488063d8ff5cc3b5d800386da)
-> > > reproduce:
-> > >         git checkout a5a36409da3a608c815b38b0ff2eb5bcfc1adec6
-> > >         # save the attached .config to linux build tree
-> > >         make ARCH=x86_64 
-> > > 
-> > > If you fix the issue, kindly add following tag
-> > > Reported-by: kbuild test robot <lkp@intel.com>
-> > > 
-> > > All warnings (new ones prefixed by >>):
-> > > 
-> > > > > fs/xfs/xfs_message.c:23:40: warning: address of array 'mp-
-> > > > > >m_super->s_id' will always evaluate to 'true' [-Wpointer-
-> > > > > bool-conversion]
-> > >            if (mp && mp->m_super && mp->m_super->s_id) {
-> > >                                  ~~ ~~~~~~~~~~~~~^~~~
-> 
-> ...so, Ian, I guess this isn't necessary ^^^^^^^^^^^^^^^^
-> because it's a char array, not a pointer. :)
-> 
-> Good catch!
+Three questions: (a) ACK/NAK on this patch, (b) should it be all in one
+patch, or one to add to errno.h and 6 patches for 6 filesystems?), and
+(c) if one patch, who gets to shepherd it through?
 
-Indeed, better now than later, ;)
 
-> 
-> --D
-> 
-> > >    1 warning generated.
-> > > 
-> > > vim +23 fs/xfs/xfs_message.c
-> > > 
-> > >     13	
-> > >     14	/*
-> > >     15	 * XFS logging functions
-> > >     16	 */
-> > >     17	static void
-> > >     18	__xfs_printk(
-> > >     19		const char		*level,
-> > >     20		const struct xfs_mount	*mp,
-> > >     21		struct va_format	*vaf)
-> > >     22	{
-> > >   > 23		if (mp && mp->m_super && mp->m_super->s_id) {
-> > >     24			printk("%sXFS (%s): %pV\n", level, mp-
-> > > >m_super->s_id, vaf);
-> > >     25			return;
-> > >     26		}
-> > >     27		printk("%sXFS: %pV\n", level, vaf);
-> > >     28	}
-> > >     29	
-> > > 
-> > > ---
-> > > 0-DAY kernel test infrastructure                Open Source
-> > > Technology Center
-> > > https://lists.01.org/pipermail/kbuild-all                   Intel
-> > > Corporation
-> > > 
-> > 
-> > Hi Darrick,
-> > 
-> > The 0day team has been doing clang builds for us and we've been
-> > forwarding the valid warnings along to developers. This appeared
-> > after
-> > the commit listed above. That check should be unnecessary, perhaps
-> > you
-> > meant to check for something else? Thanks for looking into this.
-> > 
-> > Cheers,
-> > Nathan
+There's currently 6 filesystems that have the same #define. Move it
+into errno.h so it's defined in just one place.
+
+Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+---
+ drivers/staging/exfat/exfat.h    | 2 --
+ fs/erofs/internal.h              | 2 --
+ fs/ext4/ext4.h                   | 1 -
+ fs/f2fs/f2fs.h                   | 1 -
+ fs/xfs/xfs_linux.h               | 1 -
+ include/linux/jbd2.h             | 1 -
+ include/uapi/asm-generic/errno.h | 1 +
+ 7 files changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/drivers/staging/exfat/exfat.h b/drivers/staging/exfat/exfat.h
+index 84de1123e178..3cf7e54af0b7 100644
+--- a/drivers/staging/exfat/exfat.h
++++ b/drivers/staging/exfat/exfat.h
+@@ -30,8 +30,6 @@
+ #undef DEBUG
+ #endif
+ 
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+-
+ #define DENTRY_SIZE		32	/* dir entry size */
+ #define DENTRY_SIZE_BITS	5
+ 
+diff --git a/fs/erofs/internal.h b/fs/erofs/internal.h
+index 544a453f3076..3980026a8882 100644
+--- a/fs/erofs/internal.h
++++ b/fs/erofs/internal.h
+@@ -425,7 +425,5 @@ static inline int z_erofs_init_zip_subsystem(void) { return 0; }
+ static inline void z_erofs_exit_zip_subsystem(void) {}
+ #endif	/* !CONFIG_EROFS_FS_ZIP */
+ 
+-#define EFSCORRUPTED    EUCLEAN         /* Filesystem is corrupted */
+-
+ #endif	/* __EROFS_INTERNAL_H */
+ 
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index 03db3e71676c..a86c2585457d 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -3396,6 +3396,5 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
+ #endif	/* __KERNEL__ */
+ 
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ 
+ #endif	/* _EXT4_H */
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 4024790028aa..04ebe77569a3 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -3752,6 +3752,5 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
+ }
+ 
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ 
+ #endif /* _LINUX_F2FS_H */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index ca15105681ca..3409d02a7d21 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -123,7 +123,6 @@ typedef __u32			xfs_nlink_t;
+ 
+ #define ENOATTR		ENODATA		/* Attribute not found */
+ #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+ 
+ #define SYNCHRONIZE()	barrier()
+diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
+index 564793c24d12..1ecd3859d040 100644
+--- a/include/linux/jbd2.h
++++ b/include/linux/jbd2.h
+@@ -1657,6 +1657,5 @@ static inline tid_t  jbd2_get_latest_transaction(journal_t *journal)
+ #endif	/* __KERNEL__ */
+ 
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ 
+ #endif	/* _LINUX_JBD2_H */
+diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
+index cf9c51ac49f9..1d5ffdf54cb0 100644
+--- a/include/uapi/asm-generic/errno.h
++++ b/include/uapi/asm-generic/errno.h
+@@ -98,6 +98,7 @@
+ #define	EINPROGRESS	115	/* Operation now in progress */
+ #define	ESTALE		116	/* Stale file handle */
+ #define	EUCLEAN		117	/* Structure needs cleaning */
++#define	EFSCORRUPTED	EUCLEAN
+ #define	ENOTNAM		118	/* Not a XENIX named type file */
+ #define	ENAVAIL		119	/* No XENIX semaphores available */
+ #define	EISNAM		120	/* Is a named type file */
+-- 
+2.24.0.rc1
 
