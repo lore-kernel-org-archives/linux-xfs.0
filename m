@@ -4,37 +4,38 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DB363CA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AFAB7CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B89CB208C0
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:18 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8EF5C2087F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729203AbfJaXsO (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 19:48:14 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55729 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728398AbfJaXq3 (ORCPT
+        id S1728589AbfJaXq3 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 19:46:29 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40131 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728443AbfJaXq3 (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:29 -0400
 Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 178993A288C;
-        Fri,  1 Nov 2019 10:46:25 +1100 (AEDT)
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 699FD7EA73F;
+        Fri,  1 Nov 2019 10:46:20 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-0007CS-Ie; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-0007C6-6J; Fri, 01 Nov 2019 10:46:19 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-00041y-Gp; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-00041R-3r; Fri, 01 Nov 2019 10:46:19 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 17/28] xfs: synchronous AIL pushing
-Date:   Fri,  1 Nov 2019 10:46:07 +1100
-Message-Id: <20191031234618.15403-18-david@fromorbit.com>
+Subject: [PATCH 06/28] xfs: factor common AIL item deletion code
+Date:   Fri,  1 Nov 2019 10:45:56 +1100
+Message-Id: <20191031234618.15403-7-david@fromorbit.com>
 X-Mailer: git-send-email 2.24.0.rc0
 In-Reply-To: <20191031234618.15403-1-david@fromorbit.com>
 References: <20191031234618.15403-1-david@fromorbit.com>
@@ -44,7 +45,7 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
         a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=MeAgGD-zjQ4A:10 a=20KFwNOVAAAA:8
-        a=Yw-OB7zFZuFGJ-GQUAcA:9
+        a=MYL0kNLdbJVOrCnBhk4A:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,107 +53,140 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-Provide an interface to push the AIL to a target LSN and wait for
-the tail of the log to move past that LSN. This is used to wait for
-all items older than a specific LSN to either be cleaned (written
-back) or relogged to a higher LSN in the AIL. The primary use for
-this is to allow IO free inode reclaim throttling.
-
 Factor the common AIL deletion code that does all the wakeups into a
 helper so we only have one copy of this somewhat tricky code to
 interface with all the wakeups necessary when the LSN of the log
 tail changes.
 
-xfs_ail_push_sync() is temporary infrastructure to facilitate
-non-blocking, IO-less inode reclaim throttling that allows further
-structural changes to be made. Once those structural changes are
-made, the need for this function goes away and it is removed. In
-essence, it is only provided to ensure git bisects don't break while
-the changes to the reclaim algorithms are in progress.
-
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_trans_ail.c  | 32 ++++++++++++++++++++++++++++++++
- fs/xfs/xfs_trans_priv.h |  2 ++
- 2 files changed, 34 insertions(+)
+ fs/xfs/xfs_inode_item.c | 12 +----------
+ fs/xfs/xfs_trans_ail.c  | 48 ++++++++++++++++++++++-------------------
+ fs/xfs/xfs_trans_priv.h |  4 +++-
+ 3 files changed, 30 insertions(+), 34 deletions(-)
 
+diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
+index bb8f076805b9..ab12e526540a 100644
+--- a/fs/xfs/xfs_inode_item.c
++++ b/fs/xfs/xfs_inode_item.c
+@@ -743,17 +743,7 @@ xfs_iflush_done(
+ 				xfs_clear_li_failed(blip);
+ 			}
+ 		}
+-
+-		if (mlip_changed) {
+-			if (!XFS_FORCED_SHUTDOWN(ailp->ail_mount))
+-				xlog_assign_tail_lsn_locked(ailp->ail_mount);
+-			if (list_empty(&ailp->ail_head))
+-				wake_up_all(&ailp->ail_empty);
+-		}
+-		spin_unlock(&ailp->ail_lock);
+-
+-		if (mlip_changed)
+-			xfs_log_space_wake(ailp->ail_mount);
++		xfs_ail_update_finish(ailp, mlip_changed);
+ 	}
+ 
+ 	/*
 diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 685a21cd24c0..3e1d0e1439e2 100644
+index 6ccfd75d3c24..656819523bbd 100644
 --- a/fs/xfs/xfs_trans_ail.c
 +++ b/fs/xfs/xfs_trans_ail.c
-@@ -662,6 +662,36 @@ xfs_ail_push_all(
- 		xfs_ail_push(ailp, threshold_lsn);
+@@ -678,6 +678,27 @@ xfs_ail_push_all_sync(
+ 	finish_wait(&ailp->ail_empty, &wait);
  }
  
-+/*
-+ * Push the AIL to a specific lsn and wait for it to complete.
-+ */
 +void
-+xfs_ail_push_sync(
++xfs_ail_update_finish(
 +	struct xfs_ail		*ailp,
-+	xfs_lsn_t		threshold_lsn)
++	bool			do_tail_update) __releases(ailp->ail_lock)
 +{
-+	struct xfs_log_item	*lip;
-+	DEFINE_WAIT(wait);
++	struct xfs_mount	*mp = ailp->ail_mount;
 +
-+	spin_lock(&ailp->ail_lock);
-+	while ((lip = xfs_ail_min(ailp)) != NULL) {
-+		prepare_to_wait(&ailp->ail_push, &wait, TASK_UNINTERRUPTIBLE);
-+		if (XFS_FORCED_SHUTDOWN(ailp->ail_mount) ||
-+		    XFS_LSN_CMP(threshold_lsn, lip->li_lsn) < 0)
-+			break;
-+		if (XFS_LSN_CMP(threshold_lsn, ailp->ail_target) > 0)
-+			ailp->ail_target = threshold_lsn;
-+		wake_up_process(ailp->ail_task);
++	if (!do_tail_update) {
 +		spin_unlock(&ailp->ail_lock);
-+		schedule();
-+		spin_lock(&ailp->ail_lock);
++		return;
 +	}
-+	spin_unlock(&ailp->ail_lock);
 +
-+	finish_wait(&ailp->ail_push, &wait);
++	if (!XFS_FORCED_SHUTDOWN(mp))
++		xlog_assign_tail_lsn_locked(mp);
++
++	if (list_empty(&ailp->ail_head))
++		wake_up_all(&ailp->ail_empty);
++	spin_unlock(&ailp->ail_lock);
++	xfs_log_space_wake(mp);
 +}
 +
-+
  /*
-  * Push out all items in the AIL immediately and wait until the AIL is empty.
-  */
-@@ -702,6 +732,7 @@ xfs_ail_update_finish(
- 	if (!XFS_FORCED_SHUTDOWN(mp))
- 		xlog_assign_tail_lsn_locked(mp);
+  * xfs_trans_ail_update - bulk AIL insertion operation.
+  *
+@@ -737,15 +758,7 @@ xfs_trans_ail_update_bulk(
+ 	if (!list_empty(&tmp))
+ 		xfs_ail_splice(ailp, cur, &tmp, lsn);
  
-+	wake_up_all(&ailp->ail_push);
- 	if (list_empty(&ailp->ail_head))
- 		wake_up_all(&ailp->ail_empty);
- 	spin_unlock(&ailp->ail_lock);
-@@ -858,6 +889,7 @@ xfs_trans_ail_init(
- 	spin_lock_init(&ailp->ail_lock);
- 	INIT_LIST_HEAD(&ailp->ail_buf_list);
- 	init_waitqueue_head(&ailp->ail_empty);
-+	init_waitqueue_head(&ailp->ail_push);
- 
- 	ailp->ail_task = kthread_run(xfsaild, ailp, "xfsaild/%s",
- 			ailp->ail_mount->m_fsname);
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 35655eac01a6..1b6f4bbd47c0 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -61,6 +61,7 @@ struct xfs_ail {
- 	int			ail_log_flush;
- 	struct list_head	ail_buf_list;
- 	wait_queue_head_t	ail_empty;
-+	wait_queue_head_t	ail_push;
- };
- 
- /*
-@@ -113,6 +114,7 @@ xfs_trans_ail_remove(
+-	if (mlip_changed) {
+-		if (!XFS_FORCED_SHUTDOWN(ailp->ail_mount))
+-			xlog_assign_tail_lsn_locked(ailp->ail_mount);
+-		spin_unlock(&ailp->ail_lock);
+-
+-		xfs_log_space_wake(ailp->ail_mount);
+-	} else {
+-		spin_unlock(&ailp->ail_lock);
+-	}
++	xfs_ail_update_finish(ailp, mlip_changed);
  }
  
- void			xfs_ail_push(struct xfs_ail *, xfs_lsn_t);
-+void			xfs_ail_push_sync(struct xfs_ail *, xfs_lsn_t);
- void			xfs_ail_push_all(struct xfs_ail *);
- void			xfs_ail_push_all_sync(struct xfs_ail *);
- struct xfs_log_item	*xfs_ail_min(struct xfs_ail  *ailp);
+ bool
+@@ -789,10 +802,10 @@ void
+ xfs_trans_ail_delete(
+ 	struct xfs_ail		*ailp,
+ 	struct xfs_log_item	*lip,
+-	int			shutdown_type) __releases(ailp->ail_lock)
++	int			shutdown_type)
+ {
+ 	struct xfs_mount	*mp = ailp->ail_mount;
+-	bool			mlip_changed;
++	bool			need_update;
+ 
+ 	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
+ 		spin_unlock(&ailp->ail_lock);
+@@ -805,17 +818,8 @@ xfs_trans_ail_delete(
+ 		return;
+ 	}
+ 
+-	mlip_changed = xfs_ail_delete_one(ailp, lip);
+-	if (mlip_changed) {
+-		if (!XFS_FORCED_SHUTDOWN(mp))
+-			xlog_assign_tail_lsn_locked(mp);
+-		if (list_empty(&ailp->ail_head))
+-			wake_up_all(&ailp->ail_empty);
+-	}
+-
+-	spin_unlock(&ailp->ail_lock);
+-	if (mlip_changed)
+-		xfs_log_space_wake(ailp->ail_mount);
++	need_update = xfs_ail_delete_one(ailp, lip);
++	xfs_ail_update_finish(ailp, need_update);
+ }
+ 
+ int
+diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
+index 2e073c1c4614..64ffa746730e 100644
+--- a/fs/xfs/xfs_trans_priv.h
++++ b/fs/xfs/xfs_trans_priv.h
+@@ -92,8 +92,10 @@ xfs_trans_ail_update(
+ }
+ 
+ bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
++void xfs_ail_update_finish(struct xfs_ail *ailp, bool do_tail_update)
++			__releases(ailp->ail_lock);
+ void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
+-		int shutdown_type) __releases(ailp->ail_lock);
++		int shutdown_type);
+ 
+ static inline void
+ xfs_trans_ail_remove(
 -- 
 2.24.0.rc0
 
