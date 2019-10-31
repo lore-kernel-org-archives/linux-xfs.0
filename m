@@ -4,47 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham autolearn_force=no version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1EE24CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 15CFFCA9ECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id F17672173E
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id EA2F4208E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729255AbfJaXrI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 19:47:08 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55491 "EHLO
+        id S1728193AbfJaXrH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 19:47:07 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56355 "EHLO
         mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728774AbfJaXqe (ORCPT
+        by vger.kernel.org with ESMTP id S1728726AbfJaXqe (ORCPT
         <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:34 -0400
 Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 283A53A2815;
-        Fri,  1 Nov 2019 10:46:26 +1100 (AEDT)
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CF9383A28AC;
+        Fri,  1 Nov 2019 10:46:25 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-0007CW-Kq; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-0007CG-Bo; Fri, 01 Nov 2019 10:46:19 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-000424-Iy; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-00041g-9R; Fri, 01 Nov 2019 10:46:19 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 19/28] xfs: reduce kswapd blocking on inode locking.
-Date:   Fri,  1 Nov 2019 10:46:09 +1100
-Message-Id: <20191031234618.15403-20-david@fromorbit.com>
+Subject: [PATCH 11/28] mm: factor shrinker work calculations
+Date:   Fri,  1 Nov 2019 10:46:01 +1100
+Message-Id: <20191031234618.15403-12-david@fromorbit.com>
 X-Mailer: git-send-email 2.24.0.rc0
 In-Reply-To: <20191031234618.15403-1-david@fromorbit.com>
 References: <20191031234618.15403-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
         a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=MeAgGD-zjQ4A:10 a=20KFwNOVAAAA:8
-        a=KE6An8oM74Ymw0apzXAA:9
+        a=rQ5XUWRrd7byYprixfUA:9 a=NH2oGUoCzA-B3QL-:21 a=DSgJKIrDGFEhNJPj:21
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,84 +52,173 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When doing async node reclaiming, we grab a batch of inodes that we
-are likely able to reclaim and ignore those that are already
-flushing. However, when we actually go to reclaim them, the first
-thing we do is lock the inode. If we are racing with something
-else reclaiming the inode or flushing it because it is dirty,
-we block on the inode lock. Hence we can still block kswapd here.
+Start to clean up the shrinker code by factoring out the calculation
+that determines how much work to do. This separates the calculation
+from clamping and other adjustments that are done before the
+shrinker work is run. Document the scan batch size calculation
+better while we are there.
 
-Further, if we flush an inode, we also cluster all the other dirty
-inodes in that cluster into the same IO, flush locking them all.
-However, if the workload is operating on sequential inodes (e.g.
-created by a tarball extraction) most of these inodes will be
-sequntial in the cache and so in the same batch
-we've already grabbed for reclaim scanning.
-
-As a result, it is common for all the inodes in the batch to be
-dirty and it is common for the first inode flushed to also flush all
-the inodes in the reclaim batch. In which case, they are now all
-going to be flush locked and we do not want to block on them.
-
-Hence, for async reclaim (SYNC_TRYLOCK) make sure we always use
-trylock semantics and abort reclaim of an inode as quickly as we can
-without blocking kswapd. This will be necessary for the upcoming
-conversion to LRU lists for inode reclaim tracking.
-
-Found via tracing and finding big batches of repeated lock/unlock
-runs on inodes that we just flushed by write clustering during
-reclaim.
+Also convert the calculation for the amount of work to be done to
+use 64 bit logic so we don't have to keep jumping through hoops to
+keep calculations within 32 bits on 32 bit systems.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_icache.c | 23 ++++++++++++++++++-----
- 1 file changed, 18 insertions(+), 5 deletions(-)
+ mm/vmscan.c | 97 ++++++++++++++++++++++++++++++++++++++---------------
+ 1 file changed, 70 insertions(+), 27 deletions(-)
 
-diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
-index edcc3f6bb3bf..189cf423fe8f 100644
---- a/fs/xfs/xfs_icache.c
-+++ b/fs/xfs/xfs_icache.c
-@@ -1104,11 +1104,23 @@ xfs_reclaim_inode(
+diff --git a/mm/vmscan.c b/mm/vmscan.c
+index a215d71d9d4b..2d39ec37c04d 100644
+--- a/mm/vmscan.c
++++ b/mm/vmscan.c
+@@ -459,13 +459,68 @@ EXPORT_SYMBOL(unregister_shrinker);
  
- restart:
- 	error = 0;
--	xfs_ilock(ip, XFS_ILOCK_EXCL);
--	if (!xfs_iflock_nowait(ip)) {
--		if (!(sync_mode & SYNC_WAIT))
-+	/*
-+	 * Don't try to flush the inode if another inode in this cluster has
-+	 * already flushed it after we did the initial checks in
-+	 * xfs_reclaim_inode_grab().
-+	 */
-+	if (sync_mode & SYNC_TRYLOCK) {
-+		if (!xfs_ilock_nowait(ip, XFS_ILOCK_EXCL))
- 			goto out;
--		xfs_iflock(ip);
-+		if (!xfs_iflock_nowait(ip))
-+			goto out_unlock;
+ #define SHRINK_BATCH 128
+ 
++/*
++ * Calculate the number of new objects to scan this time around. Return
++ * the work to be done. If there are freeable objects, return that number in
++ * @freeable_objects.
++ */
++static int64_t shrink_scan_count(struct shrink_control *shrinkctl,
++			    struct shrinker *shrinker, int priority,
++			    int64_t *freeable_objects)
++{
++	int64_t delta;
++	int64_t freeable;
++
++	freeable = shrinker->count_objects(shrinker, shrinkctl);
++	if (freeable == 0 || freeable == SHRINK_EMPTY)
++		return freeable;
++
++	if (shrinker->seeks) {
++		/*
++		 * shrinker->seeks is a measure of how much IO is required to
++		 * reinstantiate the object in memory. The default value is 2
++		 * which is typical for a cold inode requiring a directory read
++		 * and an inode read to re-instantiate.
++		 *
++		 * The scan batch size is defined by the shrinker priority, but
++		 * to be able to bias the reclaim we increase the default batch
++		 * size by 4. Hence we end up with a scan batch multipler that
++		 * scales like so:
++		 *
++		 * ->seeks	scan batch multiplier
++		 *    1		      4.00x
++		 *    2               2.00x
++		 *    3               1.33x
++		 *    4               1.00x
++		 *    8               0.50x
++		 *
++		 * IOWs, the more seeks it takes to pull the item into cache,
++		 * the smaller the reclaim scan batch. Hence we put more reclaim
++		 * pressure on caches that are fast to repopulate and to keep a
++		 * rough balance between caches that have different costs.
++		 */
++		delta = freeable >> (priority - 2);
++		do_div(delta, shrinker->seeks);
 +	} else {
-+		xfs_ilock(ip, XFS_ILOCK_EXCL);
-+		if (!xfs_iflock_nowait(ip)) {
-+			if (!(sync_mode & SYNC_WAIT))
-+				goto out_unlock;
-+			xfs_iflock(ip);
-+		}
- 	}
++		/*
++		 * These objects don't require any IO to create. Trim them
++		 * aggressively under memory pressure to keep them from causing
++		 * refetches in the IO caches.
++		 */
++		delta = freeable / 2;
++	}
++
++	*freeable_objects = freeable;
++	return delta > 0 ? delta : 0;
++}
++
+ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 				    struct shrinker *shrinker, int priority)
+ {
+ 	unsigned long freed = 0;
+-	unsigned long long delta;
+ 	long total_scan;
+-	long freeable;
++	int64_t freeable_objects = 0;
++	int64_t scan_count;
+ 	long nr;
+ 	long new_nr;
+ 	int nid = shrinkctl->nid;
+@@ -476,9 +531,10 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	if (!(shrinker->flags & SHRINKER_NUMA_AWARE))
+ 		nid = 0;
  
- 	if (XFS_FORCED_SHUTDOWN(ip->i_mount)) {
-@@ -1215,9 +1227,10 @@ xfs_reclaim_inode(
+-	freeable = shrinker->count_objects(shrinker, shrinkctl);
+-	if (freeable == 0 || freeable == SHRINK_EMPTY)
+-		return freeable;
++	scan_count = shrink_scan_count(shrinkctl, shrinker, priority,
++					&freeable_objects);
++	if (scan_count == 0 || scan_count == SHRINK_EMPTY)
++		return scan_count;
  
- out_ifunlock:
- 	xfs_ifunlock(ip);
-+out_unlock:
-+	xfs_iunlock(ip, XFS_ILOCK_EXCL);
- out:
- 	xfs_iflags_clear(ip, XFS_IRECLAIM);
--	xfs_iunlock(ip, XFS_ILOCK_EXCL);
  	/*
- 	 * We could return -EAGAIN here to make reclaim rescan the inode tree in
- 	 * a short while. However, this just burns CPU time scanning the tree
+ 	 * copy the current shrinker scan count into a local variable
+@@ -487,25 +543,11 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	 */
+ 	nr = atomic_long_xchg(&shrinker->nr_deferred[nid], 0);
+ 
+-	total_scan = nr;
+-	if (shrinker->seeks) {
+-		delta = freeable >> priority;
+-		delta *= 4;
+-		do_div(delta, shrinker->seeks);
+-	} else {
+-		/*
+-		 * These objects don't require any IO to create. Trim
+-		 * them aggressively under memory pressure to keep
+-		 * them from causing refetches in the IO caches.
+-		 */
+-		delta = freeable / 2;
+-	}
+-
+-	total_scan += delta;
++	total_scan = nr + scan_count;
+ 	if (total_scan < 0) {
+ 		pr_err("shrink_slab: %pS negative objects to delete nr=%ld\n",
+ 		       shrinker->scan_objects, total_scan);
+-		total_scan = freeable;
++		total_scan = scan_count;
+ 		next_deferred = nr;
+ 	} else
+ 		next_deferred = total_scan;
+@@ -522,19 +564,20 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	 * Hence only allow the shrinker to scan the entire cache when
+ 	 * a large delta change is calculated directly.
+ 	 */
+-	if (delta < freeable / 4)
+-		total_scan = min(total_scan, freeable / 2);
++	if (scan_count < freeable_objects / 4)
++		total_scan = min_t(long, total_scan, freeable_objects / 2);
+ 
+ 	/*
+ 	 * Avoid risking looping forever due to too large nr value:
+ 	 * never try to free more than twice the estimate number of
+ 	 * freeable entries.
+ 	 */
+-	if (total_scan > freeable * 2)
+-		total_scan = freeable * 2;
++	if (total_scan > freeable_objects * 2)
++		total_scan = freeable_objects * 2;
+ 
+ 	trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+-				   freeable, delta, total_scan, priority);
++				   freeable_objects, scan_count,
++				   total_scan, priority);
+ 
+ 	/*
+ 	 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+@@ -559,7 +602,7 @@ static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+ 	 * possible.
+ 	 */
+ 	while (total_scan >= batch_size ||
+-	       total_scan >= freeable) {
++	       total_scan >= freeable_objects) {
+ 		unsigned long ret;
+ 		unsigned long nr_to_scan = min(batch_size, total_scan);
+ 
 -- 
 2.24.0.rc0
 
