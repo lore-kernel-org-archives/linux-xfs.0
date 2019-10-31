@@ -2,105 +2,92 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9BA10CA9EC3
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 03:48:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A82EAC47E49
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 04:55:01 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 67E992067D
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 03:48:19 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eDg5UPzY"
+	by mail.kernel.org (Postfix) with ESMTP id 8763620862
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 04:55:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726347AbfJaDsS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 30 Oct 2019 23:48:18 -0400
-Received: from mail-pf1-f195.google.com ([209.85.210.195]:45266 "EHLO
-        mail-pf1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725909AbfJaDsS (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 30 Oct 2019 23:48:18 -0400
-Received: by mail-pf1-f195.google.com with SMTP id c7so3245446pfo.12;
-        Wed, 30 Oct 2019 20:48:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=p2PeV58d4yctU+jAVSTHiC69cEMtADehYCoieHlRJZE=;
-        b=eDg5UPzYS099qljAxt+kAgzZCmV3uWjnLZn1xy2q/vPRpf7n+zS0v5/ZJaI61BAv2x
-         sWqSBOtwqIuRexlJErOjuk7Xt/wMj90TfumKStFM3kZIeyYCBTTbpH0GPhbIOgopJjFC
-         FGfZeaL0BphssufGilTvVfDtRAeUmWbMnjFnjTE0bTXbOSNBeAMNjI8zJvLGs6GIoXaR
-         1AQPM2HaskvPQdv6oJiumCUYFE5A3mKYvyDhfPdc84zjbQw8TYvBCTHVm8EXbRMmCuYX
-         8MHVhZt+zRcVblYqz02LQX5J/3KzMMnoa2+q4vMGIv1E2qn9bWOSb6fOY3KhAG7JH5Vt
-         /2lw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=p2PeV58d4yctU+jAVSTHiC69cEMtADehYCoieHlRJZE=;
-        b=b3FsN6eOhW0+DmmNiGqSnz38mSYyJEyga6BxHzhIhOCjF5YZkj6RV6lD5/yks7p8sU
-         vjHMA+4f//9LQgwfKeMZBKFfNDb6rdlrDTEPYv23NEqYFDHW7jG+iCkLMskxiCDhNoe3
-         ZXMf9+bGchlTrxBm8W6xLBKaPA3YxaVaArji3cRsR0ooQp3P6Q4Ay8ddl34mzK9Kpo+Q
-         9brwfBV0jxtgvy4WnlSUd4bhbA9G3oz14V6hUaZv8h0gn8Ak6peiEoGxcUWw0okhIoQV
-         84fmYuMr4APaakDRYZmbT7/TAycJaPLfyPfQ37htl5vQ1zOTDgL2ejNiIQ7vdbEfjDMV
-         dcuw==
-X-Gm-Message-State: APjAAAWm3gMQ8Lybqk2Y7xVqL5Lv/5rWtV7Y1WFHAKaAzsQhgk0ueuuP
-        mHx4ufdeKkskJ4bVq9fzXh2kRZg=
-X-Google-Smtp-Source: APXvYqxlk03vdtAdBkTuOEUe0INg64+OpyIjKjXpLMXKzfaVg0PFXLhvP2Xq/5a1fNya+WCHE2lxcg==
-X-Received: by 2002:a63:c405:: with SMTP id h5mr3653316pgd.60.1572493697798;
-        Wed, 30 Oct 2019 20:48:17 -0700 (PDT)
-Received: from mypc ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id z18sm1316313pgv.90.2019.10.30.20.48.15
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Oct 2019 20:48:17 -0700 (PDT)
-Date:   Thu, 31 Oct 2019 11:48:08 +0800
-From:   Pingfan Liu <kernelfans@gmail.com>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, Brian Foster <bfoster@redhat.com>,
-        linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH] xfs/log: protect the logging content under xc_ctx_lock
-Message-ID: <20191031034808.GA479@mypc>
-References: <20191030133327.GA29340@mypc>
- <1572442631-4472-1-git-send-email-kernelfans@gmail.com>
- <20191030164825.GJ15222@magnolia>
+        id S1726675AbfJaEzA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 00:55:00 -0400
+Received: from mail.cn.fujitsu.com ([183.91.158.132]:27908 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1725816AbfJaEzA (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 00:55:00 -0400
+X-IronPort-AV: E=Sophos;i="5.68,250,1569254400"; 
+   d="scan'208";a="77722261"
+Received: from unknown (HELO cn.fujitsu.com) ([10.167.33.5])
+  by heian.cn.fujitsu.com with ESMTP; 31 Oct 2019 12:54:57 +0800
+Received: from G08CNEXCHPEKD01.g08.fujitsu.local (unknown [10.167.33.80])
+        by cn.fujitsu.com (Postfix) with ESMTP id 7B345486A852;
+        Thu, 31 Oct 2019 12:46:58 +0800 (CST)
+Received: from [10.167.225.140] (10.167.225.140) by
+ G08CNEXCHPEKD01.g08.fujitsu.local (10.167.33.89) with Microsoft SMTP Server
+ (TLS) id 14.3.439.0; Thu, 31 Oct 2019 12:55:08 +0800
+Subject: Re: [RFC PATCH v2 0/7] xfs: reflink & dedupe for fsdax (read/write
+ path).
+To:     Goldwyn Rodrigues <rgoldwyn@suse.de>
+CC:     <linux-xfs@vger.kernel.org>, <linux-nvdimm@lists.01.org>,
+        <darrick.wong@oracle.com>, <hch@infradead.org>,
+        <david@fromorbit.com>, <linux-kernel@vger.kernel.org>,
+        <gujx@cn.fujitsu.com>, <qi.fuli@fujitsu.com>,
+        <caoj.fnst@cn.fujitsu.com>
+References: <20191030041358.14450-1-ruansy.fnst@cn.fujitsu.com>
+ <20191030114818.emvmgfgqadiqintw@fiona>
+From:   Shiyang Ruan <ruansy.fnst@cn.fujitsu.com>
+Message-ID: <2737c6f6-5cca-2b92-edff-fb9227ccc6d1@cn.fujitsu.com>
+Date:   Thu, 31 Oct 2019 12:54:54 +0800
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191030164825.GJ15222@magnolia>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+In-Reply-To: <20191030114818.emvmgfgqadiqintw@fiona>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.167.225.140]
+X-yoursite-MailScanner-ID: 7B345486A852.A9538
+X-yoursite-MailScanner: Found to be clean
+X-yoursite-MailScanner-From: ruansy.fnst@cn.fujitsu.com
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 30, 2019 at 09:48:25AM -0700, Darrick J. Wong wrote:
-> On Wed, Oct 30, 2019 at 09:37:11PM +0800, Pingfan Liu wrote:
-> > xc_cil_lock is not enough to protect the integrity of a trans logging.
-> > Taking the scenario:
-> >   cpuA                                 cpuB                          cpuC
-> > 
-> >   xlog_cil_insert_format_items()
-> > 
-> >   spin_lock(&cil->xc_cil_lock)
-> >   link transA's items to xc_cil,
-> >      including item1
-> >   spin_unlock(&cil->xc_cil_lock)
-> >                                                                       xlog_cil_push() fetches transA's item under xc_cil_lock
-> >                                        issue transB, modify item1
-> >                                                                       xlog_write(), but now, item1 contains content from transB and we have a broken transA
-> > 
-> > Survive this race issue by putting under the protection of xc_ctx_lock.
-> > Meanwhile the xc_cil_lock can be dropped as xc_ctx_lock does it against
-> > xlog_cil_insert_items()
-> 
-> How did you trigger this race?  Is there a test case to reproduce, or
-> did you figure this out via code inspection?
-> 
-Via code inspection. To hit this bug, the condition is hard to meet:
-a broken transA is written to disk, then system encounters a failure before
-transB is written. Only if this happens, the recovery will bring us to a
-broken context.
 
-Regards,
-	Pingfan
+
+On 10/30/19 7:48 PM, Goldwyn Rodrigues wrote:
+> On 12:13 30/10, Shiyang Ruan wrote:
+>> This patchset aims to take care of this issue to make reflink and dedupe
+>> work correctly (actually in read/write path, there still has some problems,
+>> such as the page->mapping and page->index issue, in mmap path) in XFS under
+>> fsdax mode.
+> 
+> Have you managed to solve the problem of multi-mapped pages? I don't
+> think we can include this until we solve that problem. This is the
+> problem I faced when I was doing the btrfs dax support.
+
+That problem still exists, didn't be solved in this patchset.  But I am 
+also looking into it.  As you know, it's a bit difficult.
+
+Since the iomap for cow is merged in for-next tree, I think it's time to 
+update this in order to get some comments.
+
+> 
+> Suppose there is an extent shared with multiple files. You map data for
+> both files. Which inode should page->mapping->host (precisely
+> page->mapping) point to? As Dave pointed out, this needs to be fixed at
+> the mm level, and will not only benefit dax with CoW but other
+> areas such as overlayfs and possibly containers.
+
+Yes, I will try to figure out a solution.
+> 
+
+-- 
+Thanks,
+Shiyang Ruan.
+
+
