@@ -2,60 +2,60 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
-	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
-	autolearn_force=no version=3.4.0
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34C90CA9EC3
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 11:36:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E5CDCA9EC3
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 12:27:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 089F72086D
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 11:36:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 3A2372087F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 12:27:10 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="HGFmq5Zn"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SPEI5UtB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726612AbfJaLgs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 07:36:48 -0400
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:44291 "EHLO
+        id S1726506AbfJaM1J (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 08:27:09 -0400
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:39709 "EHLO
         us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1726462AbfJaLgs (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 07:36:48 -0400
+        by vger.kernel.org with ESMTP id S1726462AbfJaM1J (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 08:27:09 -0400
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1572521806;
+        s=mimecast20190719; t=1572524828;
         h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
          to:to:cc:cc:mime-version:mime-version:content-type:content-type:
          content-transfer-encoding:content-transfer-encoding:
          in-reply-to:in-reply-to:references:references;
-        bh=oPCHUGvUjfG7nd7np1pXhXOaUgzkarz8pKoalLarKMU=;
-        b=HGFmq5ZnG7uvlwcApURvE/FtDh1vZVJ6VFXKp9QmswpdvAzBuol6JQSr7oSBdFX3RFSjjF
-        p48omSQMwNURdnVWmDuYuCeE6y/NGZbVU0hBANIARwM6Wv7rHBboP6I/aLlb6BoH6uNMpF
-        POSzGuGwPbYLmQ0mK8fAIEyLqsEvFKA=
+        bh=nIqfT+/2vYRoC2kpKMJcg/VaMJmUPm0KgXk3jTKbJ4w=;
+        b=SPEI5UtBzYK/9gApsSpCrUkg1NvSuBzYeqZGcQgZCF4dE2BGdPjfbGb2u7KEvO8VuFC2oN
+        0j4G25/UgCxkyNwBFj+qtFrezMuUhFFT4lIn93eH3fNfuRMyJeRRnAQ36tuFQa8sPY74/x
+        MmNMy3Dj1+9HDVMu2nJLGEUPNmuaguQ=
 Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
  [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-321-GPn-p7aJOyaDDdtxuY3hug-1; Thu, 31 Oct 2019 07:36:43 -0400
-Received: from smtp.corp.redhat.com (int-mx06.intmail.prod.int.phx2.redhat.com [10.5.11.16])
+ us-mta-374-ML98GbvwNAKEta7AGETO9w-1; Thu, 31 Oct 2019 08:27:05 -0400
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
         (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id B3D70800EB4;
-        Thu, 31 Oct 2019 11:36:42 +0000 (UTC)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 0D0168017E0;
+        Thu, 31 Oct 2019 12:27:04 +0000 (UTC)
 Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
-        by smtp.corp.redhat.com (Postfix) with ESMTPS id 47ACE5C1BB;
-        Thu, 31 Oct 2019 11:36:42 +0000 (UTC)
-Date:   Thu, 31 Oct 2019 07:36:40 -0400
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 4810B5D6A3;
+        Thu, 31 Oct 2019 12:27:03 +0000 (UTC)
+Date:   Thu, 31 Oct 2019 08:27:01 -0400
 From:   Brian Foster <bfoster@redhat.com>
-To:     Pingfan Liu <kernelfans@gmail.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs/log: protect the logging content under xc_ctx_lock
-Message-ID: <20191031113640.GA54006@bfoster>
-References: <20191030133327.GA29340@mypc>
- <1572442631-4472-1-git-send-email-kernelfans@gmail.com>
+To:     kaixuxia <xiakaixu1987@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        newtongao@tencent.com, jasperwang@tencent.com
+Subject: Re: [PATCH RFC] xfs: Fix deadlock between AGI and AGF when target_ip
+ exists in xfs_rename()
+Message-ID: <20191031122701.GB54006@bfoster>
+References: <1572428974-8657-1-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
-In-Reply-To: <1572442631-4472-1-git-send-email-kernelfans@gmail.com>
+In-Reply-To: <1572428974-8657-1-git-send-email-kaixuxia@tencent.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
-X-Scanned-By: MIMEDefang 2.79 on 10.5.11.16
-X-MC-Unique: GPn-p7aJOyaDDdtxuY3hug-1
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: ML98GbvwNAKEta7AGETO9w-1
 X-Mimecast-Spam-Score: 0
 Content-Type: text/plain; charset=WINDOWS-1252
 Content-Transfer-Encoding: quoted-printable
@@ -65,140 +65,128 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Dropped linux-fsdevel from cc. There's no reason to spam -fsdevel with
-low level XFS patches.
-
-On Wed, Oct 30, 2019 at 09:37:11PM +0800, Pingfan Liu wrote:
-> xc_cil_lock is not enough to protect the integrity of a trans logging.
-> Taking the scenario:
->   cpuA                                 cpuB                          cpuC
+On Wed, Oct 30, 2019 at 05:49:34PM +0800, kaixuxia wrote:
+> When target_ip exists in xfs_rename(), the xfs_dir_replace() call may
+> need to hold the AGF lock to allocate more blocks, and then invoking
+> the xfs_droplink() call to hold AGI lock to drop target_ip onto the
+> unlinked list, so we get the lock order AGF->AGI. This would break the
+> ordering constraint on AGI and AGF locking - inode allocation locks
+> the AGI, then can allocate a new extent for new inodes, locking the
+> AGF after the AGI.
 >=20
->   xlog_cil_insert_format_items()
+> In this patch we check whether the replace operation need more
+> blocks firstly. If so, acquire the agi lock firstly to preserve
+> locking order(AGI/AGF). Actually, the locking order problem only
+> occurs when we are locking the AGI/AGF of the same AG. For multiple
+> AGs the AGI lock will be released after the transaction committed.
 >=20
->   spin_lock(&cil->xc_cil_lock)
->   link transA's items to xc_cil,
->      including item1
->   spin_unlock(&cil->xc_cil_lock)
-
-So you commit a transaction, item1 ends up on the CIL.
-
->                                                                       xlo=
-g_cil_push() fetches transA's item under xc_cil_lock
-
-xlog_cil_push() doesn't use ->xc_cil_lock, so I'm not sure what this
-means. This sequence executes under ->xc_ctx_lock in write mode, which
-locks out all transaction committers.
-
->                                        issue transB, modify item1
-
-So presumably transB joins item1 while it is on the CIL from trans A and
-commits.=20
-
->                                                                       xlo=
-g_write(), but now, item1 contains content from transB and we have a broken=
- transA
-
-I'm not following how this is possible. The CIL push above, under
-exclusive lock, removes each log item from ->xc_cil and pulls the log
-vectors off of the log items to form the lv chain on the CIL context.
-This means that the transB commit either updates the lv attached to the
-log item from transA with the latest in-core version or uses the new
-shadow buffer allocated in the commit path of transB. Either way is fine
-because there is no guarantee of per-transaction granularity in the
-on-disk log. The purpose of the on-disk log is to guarantee filesystem
-consistency after a crash.
-
-All in all, I can't really tell what problem you're describing here. If
-you believe there's an issue in this code, I'd suggest to either try and
-instrument it manually to reproduce a demonstrable problem and/or
-provide far more detailed of a description to explain it.
-
->=20
-> Survive this race issue by putting under the protection of xc_ctx_lock.
-> Meanwhile the xc_cil_lock can be dropped as xc_ctx_lock does it against
-> xlog_cil_insert_items()
->=20
-> Signed-off-by: Pingfan Liu <kernelfans@gmail.com>
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Cc: Brian Foster <bfoster@redhat.com>
-> To: linux-xfs@vger.kernel.org
-> Cc: linux-fsdevel@vger.kernel.org
+> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
 > ---
-
-FYI, this patch also doesn't apply to for-next. I'm guessing because
-it's based on your previous patch to add the spinlock around the loop.
-
->  fs/xfs/xfs_log_cil.c | 35 +++++++++++++++++++----------------
->  1 file changed, 19 insertions(+), 16 deletions(-)
+>  fs/xfs/libxfs/xfs_dir2.c | 30 ++++++++++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_dir2.h |  2 ++
+>  fs/xfs/xfs_inode.c       | 14 ++++++++++++++
+>  3 files changed, 46 insertions(+)
 >=20
-> diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
-> index 004af09..f8df3b5 100644
-> --- a/fs/xfs/xfs_log_cil.c
-> +++ b/fs/xfs/xfs_log_cil.c
-> @@ -723,22 +723,6 @@ xlog_cil_push(
->  =09 */
->  =09lv =3D NULL;
->  =09num_iovecs =3D 0;
-> -=09spin_lock(&cil->xc_cil_lock);
-> -=09while (!list_empty(&cil->xc_cil)) {
-
-There's a comment just above that documents this loop that isn't
-moved/modified.
-
-> -=09=09struct xfs_log_item=09*item;
-> -
-> -=09=09item =3D list_first_entry(&cil->xc_cil,
-> -=09=09=09=09=09struct xfs_log_item, li_cil);
-> -=09=09list_del_init(&item->li_cil);
-> -=09=09if (!ctx->lv_chain)
-> -=09=09=09ctx->lv_chain =3D item->li_lv;
-> -=09=09else
-> -=09=09=09lv->lv_next =3D item->li_lv;
-> -=09=09lv =3D item->li_lv;
-> -=09=09item->li_lv =3D NULL;
-> -=09=09num_iovecs +=3D lv->lv_niovecs;
-> -=09}
-> -=09spin_unlock(&cil->xc_cil_lock);
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index 867c5de..9d9ae16 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -463,6 +463,36 @@
+>  }
 > =20
->  =09/*
->  =09 * initialise the new context and attach it to the CIL. Then attach
-> @@ -783,6 +767,25 @@ xlog_cil_push(
->  =09up_write(&cil->xc_ctx_lock);
-> =20
->  =09/*
-> +=09 * cil->xc_cil_lock around this loop can be dropped, since xc_ctx_loc=
-k
-> +=09 * protects us against xlog_cil_insert_items().
+>  /*
+> + * Check whether the replace operation need more blocks. Ignore
+> + * the parameters check since the real replace() call below will
+> + * do that.
+> + */
+> +bool
+> +xfs_dir_replace_needblock(
+> +=09struct xfs_inode=09*dp,
+> +=09xfs_ino_t=09=09inum)
+> +{
+> +=09int=09=09=09newsize;
+> +=09xfs_dir2_sf_hdr_t=09*sfp;
+> +
+> +=09/*
+> +=09 * Only convert the shortform directory to block form maybe need
+> +=09 * more blocks.
 > +=09 */
-> +=09while (!list_empty(&cil->xc_cil)) {
-> +=09=09struct xfs_log_item=09*item;
+> +=09if (dp->i_d.di_format !=3D XFS_DINODE_FMT_LOCAL)
+> +=09=09return false;
 > +
-> +=09=09item =3D list_first_entry(&cil->xc_cil,
-> +=09=09=09=09=09struct xfs_log_item, li_cil);
-> +=09=09list_del_init(&item->li_cil);
-> +=09=09if (!ctx->lv_chain)
-> +=09=09=09ctx->lv_chain =3D item->li_lv;
-> +=09=09else
-> +=09=09=09lv->lv_next =3D item->li_lv;
-> +=09=09lv =3D item->li_lv;
-> +=09=09item->li_lv =3D NULL;
-> +=09=09num_iovecs +=3D lv->lv_niovecs;
-> +=09}
+> +=09sfp =3D (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+> +=09newsize =3D dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
+> +
+> +=09if (inum > XFS_DIR2_MAX_SHORT_INUM &&
+> +=09    sfp->i8count =3D=3D 0 && newsize > XFS_IFORK_DSIZE(dp))
+> +=09=09return true;
+> +=09else
+> +=09=09return false;
+> +}
 > +
 
-This places the associated loop outside of ->xc_ctx_lock, which means we
-can now race modifying ->xc_cil during a CIL push and a transaction
-commit. Have you tested this?
+It's slightly unfortunate we need to do these kind of double checks, but
+it seems reasonable enough as an isolated fix. From a factoring
+standpoint, it might be a little cleaner to move this down in
+xfs_dir2_sf.c as an xfs_dir2_sf_replace_needblock() helper, actually use
+it in the xfs_dir2_sf_replace() function where these checks are
+currently open coded and then export it so we can call it in the higher
+level function as well for the locking fix.
 
 Brian
 
-> +=09/*
->  =09 * Build a checkpoint transaction header and write it to the log to
->  =09 * begin the transaction. We need to account for the space used by th=
-e
->  =09 * transaction header here as it is not accounted for in xlog_write()=
-.
+> +/*
+>   * Replace the inode number of a directory entry.
+>   */
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index f542447..e436c14 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -124,6 +124,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struc=
+t xfs_inode *dp,
+>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp=
+,
+>  =09=09=09=09struct xfs_name *name, xfs_ino_t ino,
+>  =09=09=09=09xfs_extlen_t tot);
+> +extern bool xfs_dir_replace_needblock(struct xfs_inode *dp,
+> +=09=09=09=09xfs_ino_t inum);
+>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>  =09=09=09=09struct xfs_name *name, xfs_ino_t inum,
+>  =09=09=09=09xfs_extlen_t tot);
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 18f4b26..c239070 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3196,6 +3196,7 @@ struct xfs_iunlink {
+>  =09struct xfs_trans=09*tp;
+>  =09struct xfs_inode=09*wip =3D NULL;=09=09/* whiteout inode */
+>  =09struct xfs_inode=09*inodes[__XFS_SORT_INODES];
+> +=09struct xfs_buf=09=09*agibp;
+>  =09int=09=09=09num_inodes =3D __XFS_SORT_INODES;
+>  =09bool=09=09=09new_parent =3D (src_dp !=3D target_dp);
+>  =09bool=09=09=09src_is_directory =3D S_ISDIR(VFS_I(src_ip)->i_mode);
+> @@ -3361,6 +3362,19 @@ struct xfs_iunlink {
+>  =09=09 * In case there is already an entry with the same
+>  =09=09 * name at the destination directory, remove it first.
+>  =09=09 */
+> +
+> +=09=09/*
+> +=09=09 * Check whether the replace operation need more blocks.
+> +=09=09 * If so, acquire the agi lock firstly to preserve locking
+> +=09=09 * order(AGI/AGF).
+> +=09=09 */
+> +=09=09if (xfs_dir_replace_needblock(target_dp, src_ip->i_ino)) {
+> +=09=09=09error =3D xfs_read_agi(mp, tp,
+> +=09=09=09=09=09XFS_INO_TO_AGNO(mp, target_ip->i_ino), &agibp);
+> +=09=09=09if (error)
+> +=09=09=09=09goto out_trans_cancel;
+> +=09=09}
+> +
+>  =09=09error =3D xfs_dir_replace(tp, target_dp, target_name,
+>  =09=09=09=09=09src_ip->i_ino, spaceres);
+>  =09=09if (error)
 > --=20
-> 2.7.5
+> 1.8.3.1
 >=20
 
