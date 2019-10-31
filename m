@@ -4,48 +4,47 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 277F4CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8B9B2CA9ECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 051A9217F9
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:40 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6AB3B2087F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728528AbfJaXq2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        id S1728497AbfJaXq2 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
         Thu, 31 Oct 2019 19:46:28 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55491 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728307AbfJaXq1 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:27 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:39711 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728207AbfJaXqZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:25 -0400
 Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 9459C3A23D0;
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 692A27EA8CC;
         Fri,  1 Nov 2019 10:46:20 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-0007C8-7k; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-0007Bw-0I; Fri, 01 Nov 2019 10:46:19 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-00041U-51; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8w-00041C-Te; Fri, 01 Nov 2019 10:46:18 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 07/28] xfs: tail updates only need to occur when LSN changes
-Date:   Fri,  1 Nov 2019 10:45:57 +1100
-Message-Id: <20191031234618.15403-8-david@fromorbit.com>
+Subject: [PATCH 01/28] xfs: Lower CIL flush limit for large logs
+Date:   Fri,  1 Nov 2019 10:45:51 +1100
+Message-Id: <20191031234618.15403-2-david@fromorbit.com>
 X-Mailer: git-send-email 2.24.0.rc0
 In-Reply-To: <20191031234618.15403-1-david@fromorbit.com>
 References: <20191031234618.15403-1-david@fromorbit.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=MeAgGD-zjQ4A:10 a=20KFwNOVAAAA:8
-        a=W3SVq3cs_kfo-QxLsoMA:9
+        a=yPCof4ZbAAAA:8 a=UuDO-KUg2xYWwgiXHJ0A:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -53,214 +52,91 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-We currently wake anything waiting on the log tail to move whenever
-the log item at the tail of the log is removed. Historically this
-was fine behaviour because there were very few items at any given
-LSN. But with delayed logging, there may be thousands of items at
-any given LSN, and we can't move the tail until they are all gone.
+The current CIL size aggregation limit is 1/8th the log size. This
+means for large logs we might be aggregating at least 250MB of dirty objects
+in memory before the CIL is flushed to the journal. With CIL shadow
+buffers sitting around, this means the CIL is often consuming >500MB
+of temporary memory that is all allocated under GFP_NOFS conditions.
 
-Hence if we are removing them in near tail-first order, we might be
-waking up processes waiting on the tail LSN to change (e.g. log
-space waiters) repeatedly without them being able to make progress.
-This also occurs with the new sync push waiters, and can result in
-thousands of spurious wakeups every second when under heavy direct
-reclaim pressure.
+Flushing the CIL can take some time to do if there is other IO
+ongoing, and can introduce substantial log force latency by itself.
+It also pins the memory until the objects are in the AIL and can be
+written back and reclaimed by shrinkers. Hence this threshold also
+tends to determine the minimum amount of memory XFS can operate in
+under heavy modification without triggering the OOM killer.
 
-To fix this, check that the tail LSN has actually changed on the
-AIL before triggering wakeups. This will reduce the number of
-spurious wakeups when doing bulk AIL removal and make this code much
-more efficient.
+Modify the CIL space limit to prevent such huge amounts of pinned
+metadata from aggregating. We can have 2MB of log IO in flight at
+once, so limit aggregation to 16x this size. This threshold was
+chosen as it little impact on performance (on 16-way fsmark) or log
+traffic but pins a lot less memory on large logs especially under
+heavy memory pressure.  An aggregation limit of 8x had 5-10%
+performance degradation and a 50% increase in log throughput for
+the same workload, so clearly that was too small for highly
+concurrent workloads on large logs.
+
+This was found via trace analysis of AIL behaviour. e.g. insertion
+from a single CIL flush:
+
+xfs_ail_insert: old lsn 0/0 new lsn 1/3033090 type XFS_LI_INODE flags IN_AIL
+
+$ grep xfs_ail_insert /mnt/scratch/s.t |grep "new lsn 1/3033090" |wc -l
+1721823
+$
+
+So there were 1.7 million objects inserted into the AIL from this
+CIL checkpoint, the first at 2323.392108, the last at 2325.667566 which
+was the end of the trace (i.e. it hadn't finished). Clearly a major
+problem.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_inode_item.c | 18 ++++++++++----
- fs/xfs/xfs_trans_ail.c  | 52 ++++++++++++++++++++++++++++-------------
- fs/xfs/xfs_trans_priv.h |  4 ++--
- 3 files changed, 51 insertions(+), 23 deletions(-)
+ fs/xfs/xfs_log_priv.h | 29 +++++++++++++++++++++++------
+ 1 file changed, 23 insertions(+), 6 deletions(-)
 
-diff --git a/fs/xfs/xfs_inode_item.c b/fs/xfs/xfs_inode_item.c
-index ab12e526540a..79ffe6dff115 100644
---- a/fs/xfs/xfs_inode_item.c
-+++ b/fs/xfs/xfs_inode_item.c
-@@ -731,19 +731,27 @@ xfs_iflush_done(
- 	 * holding the lock before removing the inode from the AIL.
- 	 */
- 	if (need_ail) {
--		bool			mlip_changed = false;
-+		xfs_lsn_t	tail_lsn = 0;
- 
- 		/* this is an opencoded batch version of xfs_trans_ail_delete */
- 		spin_lock(&ailp->ail_lock);
- 		list_for_each_entry(blip, &tmp, li_bio_list) {
- 			if (INODE_ITEM(blip)->ili_logged &&
--			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn)
--				mlip_changed |= xfs_ail_delete_one(ailp, blip);
--			else {
-+			    blip->li_lsn == INODE_ITEM(blip)->ili_flush_lsn) {
-+				/*
-+				 * xfs_ail_update_finish() only cares about the
-+				 * lsn of the first tail item removed, any
-+				 * others will be at the same or higher lsn so
-+				 * we just ignore them.
-+				 */
-+				xfs_lsn_t lsn = xfs_ail_delete_one(ailp, blip);
-+				if (!tail_lsn && lsn)
-+					tail_lsn = lsn;
-+			} else {
- 				xfs_clear_li_failed(blip);
- 			}
- 		}
--		xfs_ail_update_finish(ailp, mlip_changed);
-+		xfs_ail_update_finish(ailp, tail_lsn);
- 	}
- 
- 	/*
-diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
-index 656819523bbd..685a21cd24c0 100644
---- a/fs/xfs/xfs_trans_ail.c
-+++ b/fs/xfs/xfs_trans_ail.c
-@@ -108,17 +108,25 @@ xfs_ail_next(
-  * We need the AIL lock in order to get a coherent read of the lsn of the last
-  * item in the AIL.
-  */
-+static xfs_lsn_t
-+__xfs_ail_min_lsn(
-+	struct xfs_ail		*ailp)
-+{
-+	struct xfs_log_item	*lip = xfs_ail_min(ailp);
-+
-+	if (lip)
-+		return lip->li_lsn;
-+	return 0;
-+}
-+
- xfs_lsn_t
- xfs_ail_min_lsn(
- 	struct xfs_ail		*ailp)
- {
--	xfs_lsn_t		lsn = 0;
--	struct xfs_log_item	*lip;
-+	xfs_lsn_t		lsn;
- 
- 	spin_lock(&ailp->ail_lock);
--	lip = xfs_ail_min(ailp);
--	if (lip)
--		lsn = lip->li_lsn;
-+	lsn = __xfs_ail_min_lsn(ailp);
- 	spin_unlock(&ailp->ail_lock);
- 
- 	return lsn;
-@@ -681,11 +689,12 @@ xfs_ail_push_all_sync(
- void
- xfs_ail_update_finish(
- 	struct xfs_ail		*ailp,
--	bool			do_tail_update) __releases(ailp->ail_lock)
-+	xfs_lsn_t		old_lsn) __releases(ailp->ail_lock)
- {
- 	struct xfs_mount	*mp = ailp->ail_mount;
- 
--	if (!do_tail_update) {
-+	/* if the tail lsn hasn't changed, don't do updates or wakeups. */
-+	if (!old_lsn || old_lsn == __xfs_ail_min_lsn(ailp)) {
- 		spin_unlock(&ailp->ail_lock);
- 		return;
- 	}
-@@ -730,7 +739,7 @@ xfs_trans_ail_update_bulk(
- 	xfs_lsn_t		lsn) __releases(ailp->ail_lock)
- {
- 	struct xfs_log_item	*mlip;
--	int			mlip_changed = 0;
-+	xfs_lsn_t		tail_lsn = 0;
- 	int			i;
- 	LIST_HEAD(tmp);
- 
-@@ -745,9 +754,10 @@ xfs_trans_ail_update_bulk(
- 				continue;
- 
- 			trace_xfs_ail_move(lip, lip->li_lsn, lsn);
-+			if (mlip == lip && !tail_lsn)
-+				tail_lsn = lip->li_lsn;
-+
- 			xfs_ail_delete(ailp, lip);
--			if (mlip == lip)
--				mlip_changed = 1;
- 		} else {
- 			trace_xfs_ail_insert(lip, 0, lsn);
- 		}
-@@ -758,15 +768,23 @@ xfs_trans_ail_update_bulk(
- 	if (!list_empty(&tmp))
- 		xfs_ail_splice(ailp, cur, &tmp, lsn);
- 
--	xfs_ail_update_finish(ailp, mlip_changed);
-+	xfs_ail_update_finish(ailp, tail_lsn);
- }
- 
--bool
-+/*
-+ * Delete one log item from the AIL.
+diff --git a/fs/xfs/xfs_log_priv.h b/fs/xfs/xfs_log_priv.h
+index 4f19375f6592..abd382cfffe3 100644
+--- a/fs/xfs/xfs_log_priv.h
++++ b/fs/xfs/xfs_log_priv.h
+@@ -318,13 +318,30 @@ struct xfs_cil {
+  * tries to keep 25% of the log free, so we need to keep below that limit or we
+  * risk running out of free log space to start any new transactions.
+  *
+- * In order to keep background CIL push efficient, we will set a lower
+- * threshold at which background pushing is attempted without blocking current
+- * transaction commits.  A separate, higher bound defines when CIL pushes are
+- * enforced to ensure we stay within our maximum checkpoint size bounds.
+- * threshold, yet give us plenty of space for aggregation on large logs.
++ * In order to keep background CIL push efficient, we only need to ensure the
++ * CIL is large enough to maintain sufficient in-memory relogging to avoid
++ * repeated physical writes of frequently modified metadata. If we allow the CIL
++ * to grow to a substantial fraction of the log, then we may be pinning hundreds
++ * of megabytes of metadata in memory until the CIL flushes. This can cause
++ * issues when we are running low on memory - pinned memory cannot be reclaimed,
++ * and the CIL consumes a lot of memory. Hence we need to set an upper physical
++ * size limit for the CIL that limits the maximum amount of memory pinned by the
++ * CIL but does not limit performance by reducing relogging efficiency
++ * significantly.
 + *
-+ * If this item was at the tail of the AIL, return the LSN of the log item so
-+ * that we can use it to check if the LSN of the tail of the log has moved
-+ * when finishing up the AIL delete process in xfs_ail_update_finish().
-+ */
-+xfs_lsn_t
- xfs_ail_delete_one(
- 	struct xfs_ail		*ailp,
- 	struct xfs_log_item	*lip)
- {
- 	struct xfs_log_item	*mlip = xfs_ail_min(ailp);
-+	xfs_lsn_t		lsn = lip->li_lsn;
++ * As such, the CIL push threshold ends up being the smaller of two thresholds:
++ * - a threshold large enough that it allows CIL to be pushed and progress to be
++ *   made without excessive blocking of incoming transaction commits. This is
++ *   defined to be 12.5% of the log space - half the 25% push threshold of the
++ *   AIL.
++ * - small enough that it doesn't pin excessive amounts of memory but maintains
++ *   close to peak relogging efficiency. This is defined to be 16x the iclog
++ *   buffer window (32MB) as measurements have shown this to be roughly the
++ *   point of diminishing performance increases under highly concurrent
++ *   modification workloads.
+  */
+-#define XLOG_CIL_SPACE_LIMIT(log)	(log->l_logsize >> 3)
++#define XLOG_CIL_SPACE_LIMIT(log)	\
++	min_t(int, (log)->l_logsize >> 3, BBTOB(XLOG_TOTAL_REC_SHIFT(log)) << 4)
  
- 	trace_xfs_ail_delete(lip, mlip->li_lsn, lip->li_lsn);
- 	xfs_ail_delete(ailp, lip);
-@@ -774,7 +792,9 @@ xfs_ail_delete_one(
- 	clear_bit(XFS_LI_IN_AIL, &lip->li_flags);
- 	lip->li_lsn = 0;
- 
--	return mlip == lip;
-+	if (mlip == lip)
-+		return lsn;
-+	return 0;
- }
- 
- /**
-@@ -805,7 +825,7 @@ xfs_trans_ail_delete(
- 	int			shutdown_type)
- {
- 	struct xfs_mount	*mp = ailp->ail_mount;
--	bool			need_update;
-+	xfs_lsn_t		tail_lsn;
- 
- 	if (!test_bit(XFS_LI_IN_AIL, &lip->li_flags)) {
- 		spin_unlock(&ailp->ail_lock);
-@@ -818,8 +838,8 @@ xfs_trans_ail_delete(
- 		return;
- 	}
- 
--	need_update = xfs_ail_delete_one(ailp, lip);
--	xfs_ail_update_finish(ailp, need_update);
-+	tail_lsn = xfs_ail_delete_one(ailp, lip);
-+	xfs_ail_update_finish(ailp, tail_lsn);
- }
- 
- int
-diff --git a/fs/xfs/xfs_trans_priv.h b/fs/xfs/xfs_trans_priv.h
-index 64ffa746730e..35655eac01a6 100644
---- a/fs/xfs/xfs_trans_priv.h
-+++ b/fs/xfs/xfs_trans_priv.h
-@@ -91,8 +91,8 @@ xfs_trans_ail_update(
- 	xfs_trans_ail_update_bulk(ailp, NULL, &lip, 1, lsn);
- }
- 
--bool xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
--void xfs_ail_update_finish(struct xfs_ail *ailp, bool do_tail_update)
-+xfs_lsn_t xfs_ail_delete_one(struct xfs_ail *ailp, struct xfs_log_item *lip);
-+void xfs_ail_update_finish(struct xfs_ail *ailp, xfs_lsn_t old_lsn)
- 			__releases(ailp->ail_lock);
- void xfs_trans_ail_delete(struct xfs_ail *ailp, struct xfs_log_item *lip,
- 		int shutdown_type);
+ /*
+  * ticket grant locks, queues and accounting have their own cachlines
 -- 
 2.24.0.rc0
 
