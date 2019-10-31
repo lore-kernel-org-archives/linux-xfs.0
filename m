@@ -2,68 +2,59 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DFB72CA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:22:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D07ECCA9ECF
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:23:54 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 97C042067D
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:22:07 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Zu8aMJLW"
+	by mail.kernel.org (Postfix) with ESMTP id AD842208E3
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:23:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728680AbfJaVWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 17:22:07 -0400
-Received: from bombadil.infradead.org ([198.137.202.133]:55134 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726680AbfJaVWH (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 17:22:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
-        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=xJnS2gKgHjZwKIXoPBsFqoULOP0zn3va2TnZ/oOJ3gw=; b=Zu8aMJLWjIYFVQR1/YLr7B6fX
-        nz2eqJ4vQdXty7zLXyepGBMGFvcNRitsdlp9URLiH51b1V2AVOMRexVZAObnKb0VERCBSoP/yak/L
-        nhgNS+BRkms5Nd0D2kNFhquds/QSKki19XH/FnjdjolXimiMPpS0k95oMDNbKgCT1giYanPdMoQn4
-        im+KO1duNYuP4umtwyFOQISP8/EvZWW8q+UyLoys02aYC+hzv9CPhoFe+kRAJhUZTuFLKQDmMQoc1
-        9n0Evz5tGYfWURNL2whZUuScTx1e1ovBq/kOgKzl8ly38rIeawCD3/sMtcqNu13EEF4+YhsXZQz4w
-        3qV9r9R6Q==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iQHtN-0008MS-T6; Thu, 31 Oct 2019 21:22:05 +0000
-Date:   Thu, 31 Oct 2019 14:22:05 -0700
-From:   Christoph Hellwig <hch@infradead.org>
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
-        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
-Subject: Re: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
-Message-ID: <20191031212205.GB6244@infradead.org>
-References: <20191009032124.10541-1-david@fromorbit.com>
- <20191009032124.10541-5-david@fromorbit.com>
- <20191030172517.GO15222@magnolia>
- <20191030214335.GQ4614@dread.disaster.area>
- <20191031030658.GW15222@magnolia>
- <20191031205049.GS4614@dread.disaster.area>
- <20191031210551.GK15221@magnolia>
+        id S1729940AbfJaVXv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 17:23:51 -0400
+Received: from outgoing-auth-1.mit.edu ([18.9.28.11]:43116 "EHLO
+        outgoing.mit.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1726680AbfJaVXv (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 17:23:51 -0400
+Received: from callcc.thunk.org (guestnat-104-133-0-98.corp.google.com [104.133.0.98] (may be forged))
+        (authenticated bits=0)
+        (User authenticated as tytso@ATHENA.MIT.EDU)
+        by outgoing.mit.edu (8.14.7/8.12.4) with ESMTP id x9VLNDrq015053
+        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 31 Oct 2019 17:23:14 -0400
+Received: by callcc.thunk.org (Postfix, from userid 15806)
+        id 74851420456; Thu, 31 Oct 2019 17:23:13 -0400 (EDT)
+Date:   Thu, 31 Oct 2019 17:23:13 -0400
+From:   "Theodore Y. Ts'o" <tytso@mit.edu>
+To:     Valdis Kletnieks <valdis.kletnieks@vt.edu>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-arch@vger.kernel.org
+Subject: Re: [RFC] errno.h: Provide EFSCORRUPTED for everybody
+Message-ID: <20191031212313.GH16197@mit.edu>
+References: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191031210551.GK15221@magnolia>
-User-Agent: Mutt/1.12.1 (2019-06-15)
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 31, 2019 at 02:05:51PM -0700, Darrick J. Wong wrote:
-> Sounds like a reasonable place (to me) to record the fact that we want
-> inodes and metadata buffers not to end up concentrating on a single node.
-> 
-> At least until we start having NUMA systems with a separate "IO node" in
-> which to confine all the IO threads and whatnot <shudder>. :P
+On Wed, Oct 30, 2019 at 09:07:33PM -0400, Valdis Kletnieks wrote:
+> Three questions: (a) ACK/NAK on this patch, (b) should it be all in one
+> patch, or one to add to errno.h and 6 patches for 6 filesystems?), and
+> (c) if one patch, who gets to shepherd it through?
 
-Wait until someone does a Linux port to the Cray T3E ;-)
+Acked-by: Theodore Ts'o <tytso@mit.edu>
