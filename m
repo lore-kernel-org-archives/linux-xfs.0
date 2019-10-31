@@ -6,35 +6,35 @@ X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_GIT autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D2B78C47E49
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 430F9CA9ED0
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B38BE2087F
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:23 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 1E0B52087F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:47:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727938AbfJaXrW (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 19:47:22 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:56405 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728692AbfJaXqd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:33 -0400
+        id S1728895AbfJaXqd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 19:46:33 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:40531 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1728637AbfJaXqc (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:32 -0400
 Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id B8F183A28A0;
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id B172F7EA8AA;
         Fri,  1 Nov 2019 10:46:25 +1100 (AEDT)
 Received: from discord.disaster.area ([192.168.253.110])
         by dread.disaster.area with esmtp (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-0007CQ-Hd; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-0007Cb-O2; Fri, 01 Nov 2019 10:46:19 +1100
 Received: from dave by discord.disaster.area with local (Exim 4.92.3)
         (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-00041v-FL; Fri, 01 Nov 2019 10:46:19 +1100
+        id 1iQK8x-00042E-M1; Fri, 01 Nov 2019 10:46:19 +1100
 From:   Dave Chinner <david@fromorbit.com>
 To:     linux-xfs@vger.kernel.org
 Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
         linux-kernel@vger.kernel.org
-Subject: [PATCH 16/28] mm: kswapd backoff for shrinkers
-Date:   Fri,  1 Nov 2019 10:46:06 +1100
-Message-Id: <20191031234618.15403-17-david@fromorbit.com>
+Subject: [PATCH 22/28] xfs: remove mode from xfs_reclaim_inodes()
+Date:   Fri,  1 Nov 2019 10:46:12 +1100
+Message-Id: <20191031234618.15403-23-david@fromorbit.com>
 X-Mailer: git-send-email 2.24.0.rc0
 In-Reply-To: <20191031234618.15403-1-david@fromorbit.com>
 References: <20191031234618.15403-1-david@fromorbit.com>
@@ -44,7 +44,7 @@ X-Optus-CM-Score: 0
 X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
         a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
         a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=MeAgGD-zjQ4A:10 a=20KFwNOVAAAA:8
-        a=NNMOctoXzqbiiAOzY8AA:9
+        a=rBCjN8xBrULXB8iKm2EA:9
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -52,77 +52,89 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 
 From: Dave Chinner <dchinner@redhat.com>
 
-When kswapd reaches the end of the page LRU and starts hitting dirty
-pages, the logic in shrink_node() allows it to back off and wait for
-IO to complete, thereby preventing kswapd from scanning excessively
-and driving the system into swap thrashing and OOM conditions.
-
-When we have inode cache heavy workloads on XFS, we have exactly the
-same problem with reclaim inodes. The non-blocking kswapd reclaim
-will keep putting pressure onto the inode cache which is unable to
-make progress. When the system gets to the point where there is no
-pages in the LRU to free, there is no swap left and there are no
-clean inodes that can be freed, it will OOM. This has a specific
-signature in OOM:
-
-[  110.841987] Mem-Info:
-[  110.842816] active_anon:241 inactive_anon:82 isolated_anon:1
-                active_file:168 inactive_file:143 isolated_file:0
-                unevictable:2621523 dirty:1 writeback:8 unstable:0
-                slab_reclaimable:564445 slab_unreclaimable:420046
-                mapped:1042 shmem:11 pagetables:6509 bounce:0
-                free:77626 free_pcp:2 free_cma:0
-
-In this case, we have about 500-600 pages left in teh LRUs, but we
-have ~565000 reclaimable slab pages still available for reclaim.
-Unfortunately, they are mostly dirty inodes, and so we really need
-to be able to throttle kswapd when shrinker progress is limited due
-to reaching the dirty end of the LRU...
-
-So, add a flag into the reclaim_state so if the shrinker decides it
-needs kswapd to back off and wait for a while (for whatever reason)
-it can do so.
+Because it's always SYNC_WAIT now. Rename it to
+xfs_reclaim_all_inodes() to make it clear how it is different to the
+other similarly named reclaim functions.
 
 Signed-off-by: Dave Chinner <dchinner@redhat.com>
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 ---
- include/linux/swap.h |  1 +
- mm/vmscan.c          | 10 +++++++++-
- 2 files changed, 10 insertions(+), 1 deletion(-)
+ fs/xfs/xfs_icache.c | 9 ++++-----
+ fs/xfs/xfs_icache.h | 2 +-
+ fs/xfs/xfs_mount.c  | 4 ++--
+ fs/xfs/xfs_super.c  | 3 +--
+ 4 files changed, 8 insertions(+), 10 deletions(-)
 
-diff --git a/include/linux/swap.h b/include/linux/swap.h
-index da0913e14bb9..76fc28f0e483 100644
---- a/include/linux/swap.h
-+++ b/include/linux/swap.h
-@@ -133,6 +133,7 @@ struct reclaim_state {
- 	unsigned long	reclaimed_pages;	/* pages freed by shrinkers */
- 	unsigned long	scanned_objects;	/* quantity of work done */ 
- 	unsigned long	deferred_objects;	/* work that wasn't done */
-+	bool		need_backoff;		/* tell kswapd to slow down */
- };
+diff --git a/fs/xfs/xfs_icache.c b/fs/xfs/xfs_icache.c
+index ff8ae32614a6..048f7f1b54ff 100644
+--- a/fs/xfs/xfs_icache.c
++++ b/fs/xfs/xfs_icache.c
+@@ -1288,12 +1288,11 @@ xfs_reclaim_inodes_ag(
+ 	return freed;
+ }
+ 
+-int
+-xfs_reclaim_inodes(
+-	xfs_mount_t	*mp,
+-	int		mode)
++void
++xfs_reclaim_all_inodes(
++	struct xfs_mount	*mp)
+ {
+-	return xfs_reclaim_inodes_ag(mp, mode, INT_MAX);
++	xfs_reclaim_inodes_ag(mp, SYNC_WAIT, INT_MAX);
+ }
  
  /*
-diff --git a/mm/vmscan.c b/mm/vmscan.c
-index 13c11e10c9c5..0f7d35820057 100644
---- a/mm/vmscan.c
-+++ b/mm/vmscan.c
-@@ -2949,8 +2949,16 @@ static bool shrink_node(pg_data_t *pgdat, struct scan_control *sc)
- 			 * implies that pages are cycling through the LRU
- 			 * faster than they are written so also forcibly stall.
- 			 */
--			if (sc->nr.immediate)
-+			if (sc->nr.immediate) {
- 				congestion_wait(BLK_RW_ASYNC, HZ/10);
-+			} else if (reclaim_state && reclaim_state->need_backoff) {
-+				/*
-+				 * Ditto, but it's a slab cache that is cycling
-+				 * through the LRU faster than they are written
-+				 */
-+				congestion_wait(BLK_RW_ASYNC, HZ/10);
-+				reclaim_state->need_backoff = false;
-+			}
- 		}
+diff --git a/fs/xfs/xfs_icache.h b/fs/xfs/xfs_icache.h
+index 4c0d8920cc54..37cd33741bee 100644
+--- a/fs/xfs/xfs_icache.h
++++ b/fs/xfs/xfs_icache.h
+@@ -49,7 +49,7 @@ int xfs_iget(struct xfs_mount *mp, struct xfs_trans *tp, xfs_ino_t ino,
+ struct xfs_inode * xfs_inode_alloc(struct xfs_mount *mp, xfs_ino_t ino);
+ void xfs_inode_free(struct xfs_inode *ip);
  
- 		/*
+-int xfs_reclaim_inodes(struct xfs_mount *mp, int mode);
++void xfs_reclaim_all_inodes(struct xfs_mount *mp);
+ int xfs_reclaim_inodes_count(struct xfs_mount *mp);
+ long xfs_reclaim_inodes_nr(struct xfs_mount *mp, int nr_to_scan);
+ 
+diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
+index 8f76c2add18b..5f3fd1d8f63f 100644
+--- a/fs/xfs/xfs_mount.c
++++ b/fs/xfs/xfs_mount.c
+@@ -952,7 +952,7 @@ xfs_mountfs(
+ 	 * qm_unmount_quotas and therefore rely on qm_unmount to release the
+ 	 * quota inodes.
+ 	 */
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_reclaim_all_inodes(mp);
+ 	xfs_health_unmount(mp);
+  out_log_dealloc:
+ 	mp->m_flags |= XFS_MOUNT_UNMOUNTING;
+@@ -1034,7 +1034,7 @@ xfs_unmountfs(
+ 	 * reclaim just to be sure. We can stop background inode reclaim
+ 	 * here as well if it is still running.
+ 	 */
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_reclaim_all_inodes(mp);
+ 	xfs_health_unmount(mp);
+ 
+ 	xfs_qm_unmount(mp);
+diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
+index a4fe679207ef..456a398aad82 100644
+--- a/fs/xfs/xfs_super.c
++++ b/fs/xfs/xfs_super.c
+@@ -1151,8 +1151,7 @@ xfs_quiesce_attr(
+ 	xfs_log_force(mp, XFS_LOG_SYNC);
+ 
+ 	/* reclaim inodes to do any IO before the freeze completes */
+-	xfs_reclaim_inodes(mp, 0);
+-	xfs_reclaim_inodes(mp, SYNC_WAIT);
++	xfs_reclaim_all_inodes(mp);
+ 
+ 	/* Push the superblock and write an unmount record */
+ 	error = xfs_log_sbcount(mp);
 -- 
 2.24.0.rc0
 
