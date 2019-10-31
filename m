@@ -2,210 +2,123 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,
-	SPF_PASS,URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 34AD3CA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 15:36:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C3F6BCA9ECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:18:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id EF0E72086D
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 15:36:51 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=zadara-com.20150623.gappssmtp.com header.i=@zadara-com.20150623.gappssmtp.com header.b="Kl+WNO9+"
+	by mail.kernel.org (Postfix) with ESMTP id A4CEE208C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:18:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727580AbfJaPgv (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 11:36:51 -0400
-Received: from mail-il1-f194.google.com ([209.85.166.194]:44013 "EHLO
-        mail-il1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727579AbfJaPgv (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 11:36:51 -0400
-Received: by mail-il1-f194.google.com with SMTP id j2so3640267ilc.10
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 08:36:50 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=zadara-com.20150623.gappssmtp.com; s=20150623;
-        h=mime-version:references:in-reply-to:from:date:message-id:subject:to
-         :cc;
-        bh=eybFv9TksRaRuykiLtKaiiRJ9IgYN2m38aExykQQoY0=;
-        b=Kl+WNO9+ThQxJA8BW1Nn3kwb4eAmfnh02fYb0ZdyN23qGBFYkTelqS5OcThpOKg4Ch
-         jMSCg8wE4ymWIRtcsu8p+QYMwZSgFPBTHORygZoeFiCI9qWG0eWr9Vz8Steu1UJOyYV7
-         wbjiJU78szh7/rXCWKZrZbLcsU0ch9/4Q2Ubhi3i4Ovnpl1fMFONK73USTF+lcl8bdcu
-         KewKCsL3WFwiHB7EcugLVXkDx3HpZRXI84hH0CxX4R6qB+6wJhxb4bw7eocYjcqBdUIv
-         XwBP13LGbFQZ+AfSXBBDGdVdhhfVJdmvCLaOd7WmG/XXrUG6KPXfL+B8MBqmRYAcKGQR
-         8Qiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=eybFv9TksRaRuykiLtKaiiRJ9IgYN2m38aExykQQoY0=;
-        b=MEly8p2tRo5jnwwMrtnJDCHQzhVnDmO8wuUkmAF6ITYke0kzKJdBxdxRnGbXKWkyYG
-         Dz3LFDnSPVNZHsVvv5eprsE3To+rY2l0fOB0/e6GeBbXs+j8f0hSeRqOZ7ru7seGMHSC
-         eeXf5WJZmfYV9dZ7E2x8IjGXqUTHD5Wl3uEFbTdIasdg+OPUZ0mcJXAy5C/ozYy/oVDV
-         p/4d+SOkHGkdQX6JFbYwTEOUVRsvdq4ZwBUZc0bUzfyI1NbhRBfA+5ZwhX+IB4y4Plv4
-         mMuty3iyrzf9UNBcILj+v0tmVEZJ5xwg07LjI1IFgv2bBWenYmXf2fr+vG8Li5EeEPJG
-         4fgQ==
-X-Gm-Message-State: APjAAAWeEG81URwaDrujcZrWJfrLHbqqHBi790QdgDUGguSVe9evSX1u
-        KPDq7RH1Ah+KRKv70W+J94ncZYC5Z9AmrqZcCtPV4g==
-X-Google-Smtp-Source: APXvYqw535MJgfohP9garydRsUUYHTz87tRwIHI9FnR2JJTIJyjRiKXTd+KPqMPYJ8YhozY6UAk5/kj0WSv2mSCU2SU=
-X-Received: by 2002:a92:889c:: with SMTP id m28mr6737542ilh.157.1572536209703;
- Thu, 31 Oct 2019 08:36:49 -0700 (PDT)
+        id S1728544AbfJaQR7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 12:17:59 -0400
+Received: from mga07.intel.com ([134.134.136.100]:63414 "EHLO mga07.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728486AbfJaQR7 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Oct 2019 12:17:59 -0400
+X-Amp-Result: UNKNOWN
+X-Amp-Original-Verdict: FILE UNKNOWN
+X-Amp-File-Uploaded: False
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orsmga105.jf.intel.com with ESMTP/TLS/DHE-RSA-AES256-GCM-SHA384; 31 Oct 2019 09:17:58 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="5.68,252,1569308400"; 
+   d="scan'208";a="351689706"
+Received: from iweiny-desk2.sc.intel.com ([10.3.52.157])
+  by orsmga004.jf.intel.com with ESMTP; 31 Oct 2019 09:17:58 -0700
+Date:   Thu, 31 Oct 2019 09:17:58 -0700
+From:   Ira Weiny <ira.weiny@intel.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+Message-ID: <20191031161757.GA14771@iweiny-DESK2.sc.intel.com>
+References: <b883142c-ecfe-3c5b-bcd9-ebe4ff28d852@plexistor.com>
+ <20191023221332.GE2044@dread.disaster.area>
+ <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+ <20191024073446.GA4614@dread.disaster.area>
+ <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
+ <20191024213508.GB4614@dread.disaster.area>
+ <ab101f90-6ec1-7527-1859-5f6309640cfa@plexistor.com>
+ <20191025003603.GE4614@dread.disaster.area>
+ <20191025204926.GA26184@iweiny-DESK2.sc.intel.com>
+ <20191027221039.GL4614@dread.disaster.area>
 MIME-Version: 1.0
-References: <CC133B1B9D9B46AFAB2D35A366BF7DC4@alyakaslap> <20191021124714.GA26105@bfoster>
- <CAOcd+r1cwsoGD5=VtJjRwmh5Sp9MVmSv9xRq8S9STs=cUyMH+Q@mail.gmail.com> <20191022110600.GA50656@bfoster>
-In-Reply-To: <20191022110600.GA50656@bfoster>
-From:   Alex Lyakas <alex@zadara.com>
-Date:   Thu, 31 Oct 2019 17:36:37 +0200
-Message-ID: <CAOcd+r3N9qywHLnodcFNDcHeQ67HxGNPw53oL3XR8p++UapRRQ@mail.gmail.com>
-Subject: Re: xfs_buftarg_isolate(): "Correctly invert xfs_buftarg LRU
- isolation logic"
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     vbendel@redhat.com, linux-xfs@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191027221039.GL4614@dread.disaster.area>
+User-Agent: Mutt/1.11.1 (2018-12-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi Brian,
+On Mon, Oct 28, 2019 at 09:10:39AM +1100, Dave Chinner wrote:
+> On Fri, Oct 25, 2019 at 01:49:26PM -0700, Ira Weiny wrote:
 
-On Tue, Oct 22, 2019 at 2:06 PM Brian Foster <bfoster@redhat.com> wrote:
->
-> On Tue, Oct 22, 2019 at 09:49:56AM +0300, Alex Lyakas wrote:
-> > Hi Brian,
-> >
-> > Thank you for your response.
-> >
-> > On Mon, Oct 21, 2019 at 3:47 PM Brian Foster <bfoster@redhat.com> wrote:
-> > >
-> > > On Sun, Oct 20, 2019 at 05:54:03PM +0300, Alex Lyakas wrote:
-> > > > Hello Vratislav, Brian,
-> > > >
-> > > > This is with regards to commit "xfs: Correctly invert xfs_buftarg LRU
-> > > > isolation logic" [1].
-> > > >
-> > > > I am hitting this issue in kernel 4.14. However, after some debugging, I do
-> > > > not fully agree with the commit message, describing the effect of this
-> > > > defect.
-> > > >
-> > > > In case b_lru_ref > 1, then indeed this xfs_buf will be taken off the LRU
-> > > > list, and immediately added back to it, with b_lru_ref being lesser by 1
-> > > > now.
-> > > >
-> > > > In case b_lru_ref==1, then this xfs_buf will be similarly isolated (due to a
-> > > > bug), and xfs_buf_rele() will be called on it. But now its b_lru_ref==0. In
-> > > > this case, xfs_buf_rele() will free the buffer, rather than re-adding it
-> > > > back to the LRU. This is a problem, because we intended for this buffer to
-> > > > have another trip on the LRU. Only when b_lru_ref==0 upon entry to
-> > > > xfs_buftarg_isolate(), we want to free the buffer. So we are freeing the
-> > > > buffer one trip too early in this case.
-> > > >
-> > > > In case b_lru_ref==0 (somehow), then due to a bug, this xfs_buf will not be
-> > > > removed off the LRU. It will remain sitting in the LRU with b_lru_ref==0. On
-> > > > next shrinker call, this xfs_buff will also remain on the LRU, due to the
-> > > > same bug. So this xfs_buf will be freed only on unmount or if
-> > > > xfs_buf_stale() is called on it.
-> > > >
-> > > > Do you agree with the above?
-> > > >
-> > >
-> > > I'm not really sure how you're inferring what cases free the buffer vs.
-> > > what don't based on ->b_lru_ref. A buffer is freed when its reference
-> > > count (->b_hold) drops to zero unless ->b_lru_ref is non-zero, at which
-> > > point the buffer goes on the LRU and the LRU itself takes a ->b_hold
-> > > reference to keep the buffer from being freed. This reference is not
-> > > associated with how many cycles through the LRU a buffer is allowed
-> > > before it is dropped from the LRU, which is what ->b_lru_ref tracks.
-> > >
-> > > Since the LRU holds a (single) reference to the buffer just like any
-> > > other user of the buffer, it doesn't make any direct decision on when to
-> > > free a buffer or not. In other words, the bug fixed by this patch is
-> > > related to when we decide to drop the buffer from the LRU based on the
-> > > LRU ref count. If the LRU ->b_hold reference happens to be the last on
-> > > the buffer when it is dropped from the LRU, then the buffer is freed.
-> >
-> > I apologize for the confusion. By "freed" I really meant "taken off
-> > the LRU". I am aware of the fact that b_hold is controlling whether
-> > the buffer will be freed or not.
-> >
->
-> Ok.
->
-> > What I meant is that the commit description does not address the issue
-> > accurately. From the description one can understand that the only
-> > problem is the additional trip through the LRU.
-> > But in fact, due to this issue, buffers will spend one cycle less in
-> > the LRU than intended. If we initialize b_lru_ref to X, we intend the
-> > buffer to survive X shrinker calls, and on the X+1'th call to be taken
-> > off the LRU (and maybe freed). But with this issue, the buffer will be
-> > taken off the LRU and immediately re-added back. But this will happen
-> > X-1 times, because on the X'th time the b_lru_ref will be 0, and the
-> > buffer will not be readded to the LRU. So the buffer will survive X-1
-> > shrinker calls and not X as intended.
-> >
->
-> That sounds like a reasonable description of behavior to me. Personally,
-> I also think the commit log description is fine because I read it
-> generically as just pointing out the logic is backwards. Your
-> description above is more detailed and probably more technically
-> accurate, but I'm not sure if/why it matters at this point for anything
-> beyond just attempting to understand a historical bug (for stable
-> backport purposes?).
-Mostly I wanted to confirm my understanding. I have sent the stable
-patch with this fix.
+[snip]
 
-Thanks,
-Alex.
+> 
+> > Currently this works if I remount the fs or if I use <procfs>/drop_caches like
+> > Boaz mentioned.
+> 
+> drop_caches frees all the dentries that don't have an active
+> references before it iterates over inodes, thereby dropping the
+> cached reference(s) to the inode that pins it in memory before it
+> iterates the inode LRU.
+> 
+> > Isn't there a way to get xfs to do that on it's own?
+> 
+> Not reliably. Killing all the dentries doesn't guarantee the inode
+> will be reclaimed immediately. The ioctl() itself requires an open
+> file reference to the inode, and there's no telling how many other
+> references there are to the inode that the filesystem a) can't find,
+> and b) even if it can find them, it is illegal to release them.
+> 
+> IOWs, if you are relying on being able to force eviction of inode
+> from the cache for correct operation of a user controlled flag, then
+> it's just not going to work.
 
+Agree, I see the difficulty of forcing the effective flag to change in this
+path.  However, the only thing I am relying on is that the ioctl will change
+the physical flag.
 
+IOW I am proposing that the semantic be that changing the physical flag does
+_not_ immediately change the effective flag.  With that clarified up front the
+user can adjust accordingly.
 
->
-> Brian
->
-> > Furthermore, if somehow we end up with the buffer sitting on the LRU
-> > and having b_lru_ref==0, this buffer will never be taken off the LRU,
-> > due to the bug. I am not sure this can happen, because by default
-> > b_lru_ref is set to 1.
-> >
-> >
-> > >
-> > > > If so, I think this fix should be backported to stable kernels.
-> > > >
-> > >
-> > > Seems reasonable to me. Feel free to post a patch. :)
-> > Will do.
-> >
-> > Thanks,
-> > Alex.
-> >
-> >
-> > >
-> > > Brian
-> > >
-> > > > Thanks,
-> > > > Alex.
-> > > >
-> > > > [1]
-> > > > commit 19957a181608d25c8f4136652d0ea00b3738972d
-> > > > Author: Vratislav Bendel <vbendel@redhat.com>
-> > > > Date:   Tue Mar 6 17:07:44 2018 -0800
-> > > >
-> > > >    xfs: Correctly invert xfs_buftarg LRU isolation logic
-> > > >
-> > > >    Due to an inverted logic mistake in xfs_buftarg_isolate()
-> > > >    the xfs_buffers with zero b_lru_ref will take another trip
-> > > >    around LRU, while isolating buffers with non-zero b_lru_ref.
-> > > >
-> > > >    Additionally those isolated buffers end up right back on the LRU
-> > > >    once they are released, because b_lru_ref remains elevated.
-> > > >
-> > > >    Fix that circuitous route by leaving them on the LRU
-> > > >    as originally intended.
-> > > >
-> > > >    Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
-> > > >    Reviewed-by: Brian Foster <bfoster@redhat.com>
-> > > >    Reviewed-by: Christoph Hellwig <hch@lst.de>
-> > > >    Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > >    Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> > > >
-> > >
->
+After thinking about this more I think there is a strong use case to be able to
+change the physical flag on a non-zero length file.  That use case is to be
+able to restore files from backups.
+
+Therefore, having the effective flag flip at some later time when the a_ops can
+safely be changed (for example a remount/drop_cache event) is beneficial.
+
+I propose the user has no direct control over this event and it is mainly used
+to restore files from backups which is mainly an admin operation where a
+remount is a reasonable thing to do.
+
+Users direct control of the effective flag is through inheritance.  The user
+needs to create the file in a DAX enable dir and they get effective operation
+right away.
+
+If in the future we can determine a safe way to trigger the a_ops change we can
+add that to the semantic as an alternative for users.
+
+Ira
+
+> 
+> Cheers,
+> 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
