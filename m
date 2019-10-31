@@ -2,75 +2,68 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.1 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B590CA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:06:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFB72CA9ECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:22:07 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29CB320679
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:06:09 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 97C042067D
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 21:22:07 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Zu8aMJLW"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728291AbfJaVGI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 17:06:08 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:40113 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726680AbfJaVGI (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 17:06:08 -0400
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 756FC3A2737;
-        Fri,  1 Nov 2019 08:06:06 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iQHds-0006HY-TC; Fri, 01 Nov 2019 08:06:04 +1100
-Date:   Fri, 1 Nov 2019 08:06:04 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH V2] xfs: properly serialise fallocate against AIO+DIO
-Message-ID: <20191031210604.GT4614@dread.disaster.area>
-References: <20191029223752.28562-1-david@fromorbit.com>
- <20191030142622.GA10453@infradead.org>
+        id S1728680AbfJaVWH (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 17:22:07 -0400
+Received: from bombadil.infradead.org ([198.137.202.133]:55134 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726680AbfJaVWH (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 17:22:07 -0400
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+        d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
+        :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+        Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+        Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+        List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+         bh=xJnS2gKgHjZwKIXoPBsFqoULOP0zn3va2TnZ/oOJ3gw=; b=Zu8aMJLWjIYFVQR1/YLr7B6fX
+        nz2eqJ4vQdXty7zLXyepGBMGFvcNRitsdlp9URLiH51b1V2AVOMRexVZAObnKb0VERCBSoP/yak/L
+        nhgNS+BRkms5Nd0D2kNFhquds/QSKki19XH/FnjdjolXimiMPpS0k95oMDNbKgCT1giYanPdMoQn4
+        im+KO1duNYuP4umtwyFOQISP8/EvZWW8q+UyLoys02aYC+hzv9CPhoFe+kRAJhUZTuFLKQDmMQoc1
+        9n0Evz5tGYfWURNL2whZUuScTx1e1ovBq/kOgKzl8ly38rIeawCD3/sMtcqNu13EEF4+YhsXZQz4w
+        3qV9r9R6Q==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
+        id 1iQHtN-0008MS-T6; Thu, 31 Oct 2019 21:22:05 +0000
+Date:   Thu, 31 Oct 2019 14:22:05 -0700
+From:   Christoph Hellwig <hch@infradead.org>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     Dave Chinner <david@fromorbit.com>, linux-xfs@vger.kernel.org,
+        linux-mm@kvack.org, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
+Message-ID: <20191031212205.GB6244@infradead.org>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-5-david@fromorbit.com>
+ <20191030172517.GO15222@magnolia>
+ <20191030214335.GQ4614@dread.disaster.area>
+ <20191031030658.GW15222@magnolia>
+ <20191031205049.GS4614@dread.disaster.area>
+ <20191031210551.GK15221@magnolia>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20191030142622.GA10453@infradead.org>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=IkcTkHD0fZMA:10 a=MeAgGD-zjQ4A:10
-        a=7-415B0cAAAA:8 a=UVE_EpKRGt1gxgIJBDsA:9 a=QEXdDO2ut3YA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191031210551.GK15221@magnolia>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Oct 30, 2019 at 07:26:22AM -0700, Christoph Hellwig wrote:
-> Looks good,
+On Thu, Oct 31, 2019 at 02:05:51PM -0700, Darrick J. Wong wrote:
+> Sounds like a reasonable place (to me) to record the fact that we want
+> inodes and metadata buffers not to end up concentrating on a single node.
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> 
-> Btw, I've been pondering multiple times if we can kill off i_dio_count
-> again, at least for iomap users.  I've added in the request of Thomas
-> how want to kill non-owner rw_semaphore unlocks.  But it turns out those
-> were needed in other placeѕ and have been added back at least partially.
-> I'll try to just use those again when I find some time, which should
-> simplify a lot of the mess we around waiting for direct I/O.
+> At least until we start having NUMA systems with a separate "IO node" in
+> which to confine all the IO threads and whatnot <shudder>. :P
 
-I kinda planned to kill off inode_dio_wait() for XFS via range
-locks. i.e. hold the range lock all the way to DIO completion, then
-release it there. This allows things like fallocate, truncate, EOF
-extension, etc to run concurrently with all IO and not require
-serialisation of the IO in progress to perform extent and size
-modification operations.
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+Wait until someone does a Linux port to the Cray T3E ;-)
