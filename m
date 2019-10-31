@@ -2,233 +2,168 @@ Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6818CA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:24:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DFCCA9ECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:43:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A0839208C0
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:24:31 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="O/jaWKX6"
+	by mail.kernel.org (Postfix) with ESMTP id 092352087F
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:43:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728554AbfJaQYb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 12:24:31 -0400
-Received: from userp2120.oracle.com ([156.151.31.85]:36414 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727593AbfJaQYa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 12:24:30 -0400
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9VGOFue080797
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:28 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
- subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=uEPgR4mfUk+585Xed+pXbKFllyhrCUblrDiQYQj/hoo=;
- b=O/jaWKX6GybjXUbuyfcXui0Y+3+vmZyQU2YGqWV9M217l4SzH0ZNNMjH10qLiR1gLCnv
- S9fKdAtB0/t5BFjR/db2MssUCoyLJk9NvQza1Df0LaOwPYatV1c5TSqUE8OR8uLinfuf
- em5voNo4khKLeeO/WUkVjhGKg6Ape+wRmv2vEX4co/STevxhoWF9JPNJHwQkTqFz5uKt
- JTU+xRHcZnXhF3Dne3h29G1orNN9XMWczIxqStCLuQg8KpRI/RIUXa6ocstA8g4uqQSC
- OSiHWq0d0e5HbFyGWzTrJ9+YWXfqEhWLj24GXFhElLUtReo/NEj5/XwJhxPhod82FEzL IA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2vxwhfvfm0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:28 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9VGOPgq035670
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:28 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3030.oracle.com with ESMTP id 2vyqpee6vx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:26 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9VGNVu5017451
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:23:31 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 31 Oct 2019 09:23:30 -0700
-Date:   Thu, 31 Oct 2019 09:23:30 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     xfs <linux-xfs@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: for-next updated to 249bd9087a52
-Message-ID: <20191031162329.GX15222@magnolia>
+        id S1728638AbfJaQn0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 12:43:26 -0400
+Received: from mx2.suse.de ([195.135.220.15]:59658 "EHLO mx1.suse.de"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1728521AbfJaQn0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Thu, 31 Oct 2019 12:43:26 -0400
+X-Virus-Scanned: by amavisd-new at test-mx.suse.de
+Received: from relay2.suse.de (unknown [195.135.220.254])
+        by mx1.suse.de (Postfix) with ESMTP id 71E17B243;
+        Thu, 31 Oct 2019 16:43:23 +0000 (UTC)
+Received: by quack2.suse.cz (Postfix, from userid 1000)
+        id 5597C1E482D; Thu, 31 Oct 2019 17:43:22 +0100 (CET)
+Date:   Thu, 31 Oct 2019 17:43:22 +0100
+From:   Jan Kara <jack@suse.cz>
+To:     Valdis Kletnieks <valdis.kletnieks@vt.edu>
+Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
+        Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
+        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
+        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
+        linux-f2fs-devel@lists.sourceforge.net, linux-arch@vger.kernel.org
+Subject: Re: [RFC] errno.h: Provide EFSCORRUPTED for everybody
+Message-ID: <20191031164322.GC13321@quack2.suse.cz>
+References: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9427 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910310164
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9427 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910310164
+In-Reply-To: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Happy Halloweeeeeeeeen!  The ghosts of past bad code are arisen!
+On Wed 30-10-19 21:07:33, Valdis Kletnieks wrote:
+> Three questions: (a) ACK/NAK on this patch, (b) should it be all in one
+> patch, or one to add to errno.h and 6 patches for 6 filesystems?), and
+> (c) if one patch, who gets to shepherd it through?
+> 
+> 
+> There's currently 6 filesystems that have the same #define. Move it
+> into errno.h so it's defined in just one place.
+> 
+> Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
 
-The for-next branch of the xfs-linux repository at:
+Looks good to me. You can add:
 
-	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
+Reviewed-by: Jan Kara <jack@suse.cz>
 
-has just been updated.
+								Honza
 
-Patches often get missed, so please check if your outstanding patches
-were in this update. If they have not been in this update, please
-resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  I'm still waiting for some stability testing of
-Christoph's series from yesterday, but I figured I should incorporate
-the fallocate/aiodio race sooner than later.
-
-The new head of the for-next branch is commit:
-
-249bd9087a52 xfs: properly serialise fallocate against AIO+DIO
-
-New Commits:
-
-Ben Dooks (Codethink) (1):
-      [1aa6300638e7] xfs: add mising include of xfs_pnfs.h for missing declarations
-
-Brian Foster (12):
-      [f6b428a46d60] xfs: track active state of allocation btree cursors
-      [f5e7dbea1e3e] xfs: introduce allocation cursor data structure
-      [d6d3aff20377] xfs: track allocation busy state in allocation cursor
-      [c62321a2a0ea] xfs: track best extent from cntbt lastblock scan in alloc cursor
-      [396bbf3c657e] xfs: refactor cntbt lastblock scan best extent logic into helper
-      [fec0afdaf498] xfs: reuse best extent tracking logic for bnobt scan
-      [4a65b7c2c72c] xfs: refactor allocation tree fixup code
-      [78d7aabdeea3] xfs: refactor and reuse best extent scanning logic
-      [0e26d5ca4a40] xfs: refactor near mode alloc bnobt scan into separate function
-      [d29688257fd4] xfs: factor out tree fixup logic into helper
-      [dc8e69bd7218] xfs: optimize near mode bnobt scans with concurrent cntbt lookups
-      [da781e64b28c] xfs: don't set bmapi total block req where minleft is
-
-Christoph Hellwig (41):
-      [bdb2ed2dbdc2] xfs: ignore extent size hints for always COW inodes
-      [cd95cb962b7d] xfs: pass the correct flag to xlog_write_iclog
-      [2c68a1dfbd8e] xfs: remove the unused ic_io_size field from xlog_in_core
-      [390aab0a1640] xfs: move the locking from xlog_state_finish_copy to the callers
-      [df732b29c807] xfs: call xlog_state_release_iclog with l_icloglock held
-      [032cc34ed517] xfs: remove dead ifdef XFSERRORDEBUG code
-      [fe9c0e77acc5] xfs: remove the unused XLOG_STATE_ALL and XLOG_STATE_UNUSED flags
-      [1858bb0bec61] xfs: turn ic_state into an enum
-      [4b29ab04ab0d] xfs: remove the XLOG_STATE_DO_CALLBACK state
-      [0d45e3a20822] xfs: also call xfs_file_iomap_end_delalloc for zeroing operations
-      [dd26b84640cc] xfs: remove xfs_reflink_dirty_extents
-      [ffb375a8cf20] xfs: pass two imaps to xfs_reflink_allocate_cow
-      [ae36b53c6c60] xfs: refactor xfs_file_iomap_begin_delay
-      [36adcbace24e] xfs: fill out the srcmap in iomap_begin
-      [43568226a4a3] xfs: factor out a helper to calculate the end_fsb
-      [690c2a38878e] xfs: split out a new set of read-only iomap ops
-      [a526c85c2236] xfs: move xfs_file_iomap_begin_delay around
-      [f150b4234397] xfs: split the iomap ops for buffered vs direct writes
-      [12dfb58af61d] xfs: rename the whichfork variable in xfs_buffered_write_iomap_begin
-      [5c5b6f7585d2] xfs: cleanup xfs_direct_write_iomap_begin
-      [1e190f8e8098] xfs: improve the IOMAP_NOWAIT check for COW inodes
-      [25a409572b5f] xfs: mark xfs_buf_free static
-      [30fa529e3b2e] xfs: add a xfs_inode_buftarg helper
-      [f9acc19c8cbe] xfs: use xfs_inode_buftarg in xfs_file_dio_aio_write
-      [c7d68318c9ae] xfs: use xfs_inode_buftarg in xfs_file_ioctl
-      [9afe1d5c14e0] xfs: don't implement XFS_IOC_RESVSP / XFS_IOC_RESVSP64
-      [837a6e7f5cdb] fs: add generic UNRESVSP and ZERO_RANGE ioctl handlers
-      [7a42c70ea0dd] xfs: disable xfs_ioc_space for always COW inodes
-      [360c09c01c5a] xfs: consolidate preallocation in xfs_file_fallocate
-      [2123ef851083] xfs: simplify setting bio flags
-      [69e8575dee42] xfs: remove the dsunit and dswidth variables in
-      [dd2d535e3fb2] xfs: cleanup calculating the stat optimal I/O size
-      [b5ad616c3edf] xfs: don't use a different allocsice for -o wsync
-      [3cd1d18b0d40] xfs: remove the m_readio_* fields in struct xfs_mount
-      [5da8a07c79e8] xfs: rename the m_writeio_* fields in struct xfs_mount
-      [2fcddee8cd8f] xfs: simplify parsing of allocsize mount option
-      [3274d0080100] xfs: rename the XFS_MOUNT_DFLT_IOSIZE option to
-      [7c6b94b1b526] xfs: reverse the polarity of XFS_MOUNT_COMPAT_IOSIZE
-      [aa58d4455a11] xfs: clean up printing the allocsize option in
-      [1775c506a31e] xfs: clean up printing inode32/64 in xfs_showargs
-      [21f55993eb7a] xfs: merge xfs_showargs into xfs_fs_show_options
-
-Darrick J. Wong (6):
-      [c84760659dcf] xfs: check attribute leaf block structure
-      [16c6e92c7e98] xfs: namecheck attribute names before listing them
-      [04df34ac6494] xfs: namecheck directory entry names before listing them
-      [c2414ad6e66a] xfs: replace -EIO with -EFSCORRUPTED for corrupt metadata
-      [fec40e220ffc] xfs: refactor xfs_bmap_count_blocks using newer btree helpers
-      [e992ae8afded] xfs: refactor xfs_iread_extents to use xfs_btree_visit_blocks
-
-Dave Chinner (3):
-      [3f8a4f1d876d] xfs: fix inode fork extent count overflow
-      [1c743574de8b] xfs: cap longest free extent to maximum allocatable
-      [249bd9087a52] xfs: properly serialise fallocate against AIO+DIO
-
-Ian Kent (1):
-      [8da57c5c000c] xfs: remove the biosize mount option
-
-Jan Kara (1):
-      [3dd4d40b4208] xfs: Sanity check flags of Q_XQUOTARM call
-
-kaixuxia (1):
-      [3fb21fc8cc04] xfs: remove the duplicated inode log fieldmask set
-
-yu kuai (1):
-      [e5e634041bc1] xfs: include QUOTA, FATAL ASSERT build options in XFS_BUILD_OPTIONS
-
-
-Code Diffstat:
-
- fs/compat_ioctl.c               |  31 +-
- fs/ioctl.c                      |  12 +-
- fs/xfs/libxfs/xfs_alloc.c       | 900 +++++++++++++++++++++++-----------------
- fs/xfs/libxfs/xfs_alloc_btree.c |   1 +
- fs/xfs/libxfs/xfs_attr_leaf.c   |  85 +++-
- fs/xfs/libxfs/xfs_attr_leaf.h   |   4 +-
- fs/xfs/libxfs/xfs_bmap.c        | 212 ++++------
- fs/xfs/libxfs/xfs_btree.c       |  10 +-
- fs/xfs/libxfs/xfs_btree.h       |  12 +-
- fs/xfs/libxfs/xfs_dir2_sf.c     |   2 +-
- fs/xfs/libxfs/xfs_iext_tree.c   |   2 +-
- fs/xfs/libxfs/xfs_inode_fork.c  |   8 +-
- fs/xfs/libxfs/xfs_inode_fork.h  |  14 +-
- fs/xfs/scrub/bitmap.c           |   3 +-
- fs/xfs/xfs_aops.c               |  43 +-
- fs/xfs/xfs_aops.h               |   3 -
- fs/xfs/xfs_attr_inactive.c      |   6 +-
- fs/xfs/xfs_attr_list.c          |  60 ++-
- fs/xfs/xfs_bmap_util.c          | 217 ++--------
- fs/xfs/xfs_bmap_util.h          |   2 -
- fs/xfs/xfs_buf.c                |  17 +-
- fs/xfs/xfs_buf.h                |   1 -
- fs/xfs/xfs_dir2_readdir.c       |  27 +-
- fs/xfs/xfs_dquot.c              |   6 +-
- fs/xfs/xfs_file.c               | 102 +++--
- fs/xfs/xfs_inode.c              |   7 +-
- fs/xfs/xfs_inode.h              |   7 +
- fs/xfs/xfs_ioctl.c              | 100 +----
- fs/xfs/xfs_ioctl.h              |   1 -
- fs/xfs/xfs_ioctl32.c            |   9 +-
- fs/xfs/xfs_iomap.c              | 708 +++++++++++++++----------------
- fs/xfs/xfs_iomap.h              |   4 +-
- fs/xfs/xfs_iops.c               |  55 ++-
- fs/xfs/xfs_log.c                | 428 ++++++++-----------
- fs/xfs/xfs_log_cil.c            |   2 +-
- fs/xfs/xfs_log_priv.h           |  25 +-
- fs/xfs/xfs_mount.c              |  46 +-
- fs/xfs/xfs_mount.h              |  48 +--
- fs/xfs/xfs_pnfs.c               |   1 +
- fs/xfs/xfs_quotaops.c           |   3 +
- fs/xfs/xfs_reflink.c            | 138 +-----
- fs/xfs/xfs_reflink.h            |   4 +-
- fs/xfs/xfs_rtalloc.c            |   3 +-
- fs/xfs/xfs_super.c              | 107 ++---
- fs/xfs/xfs_super.h              |  10 +
- fs/xfs/xfs_trace.h              |  35 +-
- include/linux/falloc.h          |   3 +
- include/linux/fs.h              |   2 +-
- 48 files changed, 1687 insertions(+), 1839 deletions(-)
+> ---
+>  drivers/staging/exfat/exfat.h    | 2 --
+>  fs/erofs/internal.h              | 2 --
+>  fs/ext4/ext4.h                   | 1 -
+>  fs/f2fs/f2fs.h                   | 1 -
+>  fs/xfs/xfs_linux.h               | 1 -
+>  include/linux/jbd2.h             | 1 -
+>  include/uapi/asm-generic/errno.h | 1 +
+>  7 files changed, 1 insertion(+), 8 deletions(-)
+> 
+> diff --git a/drivers/staging/exfat/exfat.h b/drivers/staging/exfat/exfat.h
+> index 84de1123e178..3cf7e54af0b7 100644
+> --- a/drivers/staging/exfat/exfat.h
+> +++ b/drivers/staging/exfat/exfat.h
+> @@ -30,8 +30,6 @@
+>  #undef DEBUG
+>  #endif
+>  
+> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+> -
+>  #define DENTRY_SIZE		32	/* dir entry size */
+>  #define DENTRY_SIZE_BITS	5
+>  
+> diff --git a/fs/erofs/internal.h b/fs/erofs/internal.h
+> index 544a453f3076..3980026a8882 100644
+> --- a/fs/erofs/internal.h
+> +++ b/fs/erofs/internal.h
+> @@ -425,7 +425,5 @@ static inline int z_erofs_init_zip_subsystem(void) { return 0; }
+>  static inline void z_erofs_exit_zip_subsystem(void) {}
+>  #endif	/* !CONFIG_EROFS_FS_ZIP */
+>  
+> -#define EFSCORRUPTED    EUCLEAN         /* Filesystem is corrupted */
+> -
+>  #endif	/* __EROFS_INTERNAL_H */
+>  
+> diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+> index 03db3e71676c..a86c2585457d 100644
+> --- a/fs/ext4/ext4.h
+> +++ b/fs/ext4/ext4.h
+> @@ -3396,6 +3396,5 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
+>  #endif	/* __KERNEL__ */
+>  
+>  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+>  
+>  #endif	/* _EXT4_H */
+> diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+> index 4024790028aa..04ebe77569a3 100644
+> --- a/fs/f2fs/f2fs.h
+> +++ b/fs/f2fs/f2fs.h
+> @@ -3752,6 +3752,5 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
+>  }
+>  
+>  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+>  
+>  #endif /* _LINUX_F2FS_H */
+> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+> index ca15105681ca..3409d02a7d21 100644
+> --- a/fs/xfs/xfs_linux.h
+> +++ b/fs/xfs/xfs_linux.h
+> @@ -123,7 +123,6 @@ typedef __u32			xfs_nlink_t;
+>  
+>  #define ENOATTR		ENODATA		/* Attribute not found */
+>  #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
+> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+>  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+>  
+>  #define SYNCHRONIZE()	barrier()
+> diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
+> index 564793c24d12..1ecd3859d040 100644
+> --- a/include/linux/jbd2.h
+> +++ b/include/linux/jbd2.h
+> @@ -1657,6 +1657,5 @@ static inline tid_t  jbd2_get_latest_transaction(journal_t *journal)
+>  #endif	/* __KERNEL__ */
+>  
+>  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+>  
+>  #endif	/* _LINUX_JBD2_H */
+> diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
+> index cf9c51ac49f9..1d5ffdf54cb0 100644
+> --- a/include/uapi/asm-generic/errno.h
+> +++ b/include/uapi/asm-generic/errno.h
+> @@ -98,6 +98,7 @@
+>  #define	EINPROGRESS	115	/* Operation now in progress */
+>  #define	ESTALE		116	/* Stale file handle */
+>  #define	EUCLEAN		117	/* Structure needs cleaning */
+> +#define	EFSCORRUPTED	EUCLEAN
+>  #define	ENOTNAM		118	/* Not a XENIX named type file */
+>  #define	ENAVAIL		119	/* No XENIX semaphores available */
+>  #define	EISNAM		120	/* Is a named type file */
+> -- 
+> 2.24.0.rc1
+> 
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
