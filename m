@@ -7,163 +7,146 @@ X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
 	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 27DFCCA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:43:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7E1DCCA9ECE
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 20:50:57 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 092352087F
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:43:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5BF962086D
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 20:50:57 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728638AbfJaQn0 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 12:43:26 -0400
-Received: from mx2.suse.de ([195.135.220.15]:59658 "EHLO mx1.suse.de"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1728521AbfJaQn0 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Thu, 31 Oct 2019 12:43:26 -0400
-X-Virus-Scanned: by amavisd-new at test-mx.suse.de
-Received: from relay2.suse.de (unknown [195.135.220.254])
-        by mx1.suse.de (Postfix) with ESMTP id 71E17B243;
-        Thu, 31 Oct 2019 16:43:23 +0000 (UTC)
-Received: by quack2.suse.cz (Postfix, from userid 1000)
-        id 5597C1E482D; Thu, 31 Oct 2019 17:43:22 +0100 (CET)
-Date:   Thu, 31 Oct 2019 17:43:22 +0100
-From:   Jan Kara <jack@suse.cz>
-To:     Valdis Kletnieks <valdis.kletnieks@vt.edu>
-Cc:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-        Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-fsdevel@vger.kernel.org,
-        devel@driverdev.osuosl.org, linux-kernel@vger.kernel.org,
-        linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-arch@vger.kernel.org
-Subject: Re: [RFC] errno.h: Provide EFSCORRUPTED for everybody
-Message-ID: <20191031164322.GC13321@quack2.suse.cz>
-References: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
+        id S1727647AbfJaUu4 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 16:50:56 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:34322 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727511AbfJaUu4 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 16:50:56 -0400
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id EBB5A3A27CA;
+        Fri,  1 Nov 2019 07:50:51 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iQHP7-00067n-Az; Fri, 01 Nov 2019 07:50:49 +1100
+Date:   Fri, 1 Nov 2019 07:50:49 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-mm@kvack.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 04/26] xfs: Improve metadata buffer reclaim accountability
+Message-ID: <20191031205049.GS4614@dread.disaster.area>
+References: <20191009032124.10541-1-david@fromorbit.com>
+ <20191009032124.10541-5-david@fromorbit.com>
+ <20191030172517.GO15222@magnolia>
+ <20191030214335.GQ4614@dread.disaster.area>
+ <20191031030658.GW15222@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
+In-Reply-To: <20191031030658.GW15222@magnolia>
 User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=fPFIRJHpAtQw70PwBpUA:9
+        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed 30-10-19 21:07:33, Valdis Kletnieks wrote:
-> Three questions: (a) ACK/NAK on this patch, (b) should it be all in one
-> patch, or one to add to errno.h and 6 patches for 6 filesystems?), and
-> (c) if one patch, who gets to shepherd it through?
+On Wed, Oct 30, 2019 at 08:06:58PM -0700, Darrick J. Wong wrote:
+> On Thu, Oct 31, 2019 at 08:43:35AM +1100, Dave Chinner wrote:
+> > On Wed, Oct 30, 2019 at 10:25:17AM -0700, Darrick J. Wong wrote:
+> > > On Wed, Oct 09, 2019 at 02:21:02PM +1100, Dave Chinner wrote:
+> > > > From: Dave Chinner <dchinner@redhat.com>
+> > > > 
+> > > > The buffer cache shrinker frees more than just the xfs_buf slab
+> > > > objects - it also frees the pages attached to the buffers. Make sure
+> > > > the memory reclaim code accounts for this memory being freed
+> > > > correctly, similar to how the inode shrinker accounts for pages
+> > > > freed from the page cache due to mapping invalidation.
+> > > > 
+> > > > We also need to make sure that the mm subsystem knows these are
+> > > > reclaimable objects. We provide the memory reclaim subsystem with a
+> > > > a shrinker to reclaim xfs_bufs, so we should really mark the slab
+> > > > that way.
+> > > > 
+> > > > We also have a lot of xfs_bufs in a busy system, spread them around
+> > > > like we do inodes.
+> > > > 
+> > > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> > > > ---
+> > > >  fs/xfs/xfs_buf.c | 6 +++++-
+> > > >  1 file changed, 5 insertions(+), 1 deletion(-)
+> > > > 
+> > > > diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> > > > index e484f6bead53..45b470f55ad7 100644
+> > > > --- a/fs/xfs/xfs_buf.c
+> > > > +++ b/fs/xfs/xfs_buf.c
+> > > > @@ -324,6 +324,9 @@ xfs_buf_free(
+> > > >  
+> > > >  			__free_page(page);
+> > > >  		}
+> > > > +		if (current->reclaim_state)
+> > > > +			current->reclaim_state->reclaimed_slab +=
+> > > > +							bp->b_page_count;
+> > > 
+> > > Hmm, ok, I see how ZONE_RECLAIM and reclaimed_slab fit together.
+> > > 
+> > > >  	} else if (bp->b_flags & _XBF_KMEM)
+> > > >  		kmem_free(bp->b_addr);
+> > > >  	_xfs_buf_free_pages(bp);
+> > > > @@ -2064,7 +2067,8 @@ int __init
+> > > >  xfs_buf_init(void)
+> > > >  {
+> > > >  	xfs_buf_zone = kmem_zone_init_flags(sizeof(xfs_buf_t), "xfs_buf",
+> > > > -						KM_ZONE_HWALIGN, NULL);
+> > > > +			KM_ZONE_HWALIGN | KM_ZONE_SPREAD | KM_ZONE_RECLAIM,
+> > > 
+> > > I guess I'm fine with ZONE_SPREAD too, insofar as it only seems to apply
+> > > to a particular "use another node" memory policy when slab is in use.
+> > > Was that your intent?
+> > 
+> > It's more documentation than anything - that we shouldn't be piling
+> > these structures all on to one node because that can have severe
+> > issues with NUMA memory reclaim algorithms. i.e. the xfs-buf
+> > shrinker sets SHRINKER_NUMA_AWARE, so memory pressure on a single
+> > node can reclaim all the xfs-bufs on that node without touching any
+> > other node.
+> > 
+> > That means, for example, if we instantiate all the AG header buffers
+> > on a single node (e.g. like we do at mount time) then memory
+> > pressure on that one node will generate IO stalls across the entire
+> > filesystem as other nodes doing work have to repopulate the buffer
+> > cache for any allocation for freeing of space/inodes..
+> > 
+> > IOWs, for large NUMA systems using cpusets this cache should be
+> > spread around all of memory, especially as it has NUMA aware
+> > reclaim. For everyone else, it's just documentation that improper
+> > cgroup or NUMA memory policy could cause you all sorts of problems
+> > with this cache.
+> > 
+> > It's worth noting that SLAB_MEM_SPREAD is used almost exclusively in
+> > filesystems for inode caches largely because, at the time (~2006),
+> > the only reclaimable cache that could grow to any size large enough
+> > to cause problems was the inode cache. It's been cargo-culted ever
+> > since, whether it is needed or not (e.g. ceph).
+> > 
+> > In the case of the xfs_bufs, I've been running workloads recently
+> > that cache several million xfs_bufs and only a handful of inodes
+> > rather than the other way around. If we spread inodes because
+> > caching millions on a single node can cause problems on large NUMA
+> > machines, then we also need to spread xfs_bufs...
 > 
-> 
-> There's currently 6 filesystems that have the same #define. Move it
-> into errno.h so it's defined in just one place.
-> 
-> Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+> Hmm, could we capture this as a comment somewhere?
 
-Looks good to me. You can add:
+Sure, but where? We're planning on getting rid of the KM_ZONE flags
+in the near future, and most of this is specific to the impacts on
+XFS. I could put it in xfs-super.c above where we initialise all the
+slabs, I guess. Probably a separate patch, though....
 
-Reviewed-by: Jan Kara <jack@suse.cz>
+Cheers,
 
-								Honza
-
-> ---
->  drivers/staging/exfat/exfat.h    | 2 --
->  fs/erofs/internal.h              | 2 --
->  fs/ext4/ext4.h                   | 1 -
->  fs/f2fs/f2fs.h                   | 1 -
->  fs/xfs/xfs_linux.h               | 1 -
->  include/linux/jbd2.h             | 1 -
->  include/uapi/asm-generic/errno.h | 1 +
->  7 files changed, 1 insertion(+), 8 deletions(-)
-> 
-> diff --git a/drivers/staging/exfat/exfat.h b/drivers/staging/exfat/exfat.h
-> index 84de1123e178..3cf7e54af0b7 100644
-> --- a/drivers/staging/exfat/exfat.h
-> +++ b/drivers/staging/exfat/exfat.h
-> @@ -30,8 +30,6 @@
->  #undef DEBUG
->  #endif
->  
-> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
-> -
->  #define DENTRY_SIZE		32	/* dir entry size */
->  #define DENTRY_SIZE_BITS	5
->  
-> diff --git a/fs/erofs/internal.h b/fs/erofs/internal.h
-> index 544a453f3076..3980026a8882 100644
-> --- a/fs/erofs/internal.h
-> +++ b/fs/erofs/internal.h
-> @@ -425,7 +425,5 @@ static inline int z_erofs_init_zip_subsystem(void) { return 0; }
->  static inline void z_erofs_exit_zip_subsystem(void) {}
->  #endif	/* !CONFIG_EROFS_FS_ZIP */
->  
-> -#define EFSCORRUPTED    EUCLEAN         /* Filesystem is corrupted */
-> -
->  #endif	/* __EROFS_INTERNAL_H */
->  
-> diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-> index 03db3e71676c..a86c2585457d 100644
-> --- a/fs/ext4/ext4.h
-> +++ b/fs/ext4/ext4.h
-> @@ -3396,6 +3396,5 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
->  #endif	/* __KERNEL__ */
->  
->  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
-> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
->  
->  #endif	/* _EXT4_H */
-> diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-> index 4024790028aa..04ebe77569a3 100644
-> --- a/fs/f2fs/f2fs.h
-> +++ b/fs/f2fs/f2fs.h
-> @@ -3752,6 +3752,5 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
->  }
->  
->  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
-> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
->  
->  #endif /* _LINUX_F2FS_H */
-> diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-> index ca15105681ca..3409d02a7d21 100644
-> --- a/fs/xfs/xfs_linux.h
-> +++ b/fs/xfs/xfs_linux.h
-> @@ -123,7 +123,6 @@ typedef __u32			xfs_nlink_t;
->  
->  #define ENOATTR		ENODATA		/* Attribute not found */
->  #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
-> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
->  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
->  
->  #define SYNCHRONIZE()	barrier()
-> diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
-> index 564793c24d12..1ecd3859d040 100644
-> --- a/include/linux/jbd2.h
-> +++ b/include/linux/jbd2.h
-> @@ -1657,6 +1657,5 @@ static inline tid_t  jbd2_get_latest_transaction(journal_t *journal)
->  #endif	/* __KERNEL__ */
->  
->  #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
-> -#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
->  
->  #endif	/* _LINUX_JBD2_H */
-> diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
-> index cf9c51ac49f9..1d5ffdf54cb0 100644
-> --- a/include/uapi/asm-generic/errno.h
-> +++ b/include/uapi/asm-generic/errno.h
-> @@ -98,6 +98,7 @@
->  #define	EINPROGRESS	115	/* Operation now in progress */
->  #define	ESTALE		116	/* Stale file handle */
->  #define	EUCLEAN		117	/* Structure needs cleaning */
-> +#define	EFSCORRUPTED	EUCLEAN
->  #define	ENOTNAM		118	/* Not a XENIX named type file */
->  #define	ENAVAIL		119	/* No XENIX semaphores available */
->  #define	EISNAM		120	/* Is a named type file */
-> -- 
-> 2.24.0.rc1
-> 
+Dave.
 -- 
-Jan Kara <jack@suse.com>
-SUSE Labs, CR
+Dave Chinner
+david@fromorbit.com
