@@ -7,82 +7,76 @@ X-Spam-Status: No, score=-7.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2FB73CA9ECB
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:22:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E6818CA9ECB
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:24:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 001B3208E3
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:22:12 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0839208C0
+	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 16:24:31 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TUBvFhuR"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="O/jaWKX6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728484AbfJaQWM (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 12:22:12 -0400
-Received: from aserp2120.oracle.com ([141.146.126.78]:32778 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726540AbfJaQWM (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 12:22:12 -0400
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9VG8gcn077408;
-        Thu, 31 Oct 2019 16:21:46 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : mime-version : content-type; s=corp-2019-08-05;
- bh=jKnmogrjBI421cgKzUpswjdcCEV/ia2xm5HwuLv6enY=;
- b=TUBvFhuRX+zkHNuvieKI704i0GjUMruro171WzUcoW+nEJw/5h4DFLpY4wfrTHFlJDZ5
- PF/mtt0ePYY9w5D5biPKw5d9y3yJ9SGKSV9Z12xHOEuLt4u/wmu3M7QVIEUpvb0MBJ52
- cRArqv2+zXodb9bLlwDpdpn83OKeISvNTRP47cmoln2BmQAQHN0Un1/+EZK/opJ2IaPG
- BVQZX+BVjU3VDVSXsi9J6XbrkhTxtNOBvWMpGWxu5BDNJcjQYgkyh4yf1gZ4tExgH/Rl
- 0S6QZX8zDWRtx4bzU95UW66/aH1EO9H/dkOMlrD+/VsUPrSMHYF7Gvnp6516Ax5qdNSu 5Q== 
-Received: from aserp3030.oracle.com (aserp3030.oracle.com [141.146.126.71])
-        by aserp2120.oracle.com with ESMTP id 2vxwhfmhbr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 31 Oct 2019 16:21:46 +0000
-Received: from pps.filterd (aserp3030.oracle.com [127.0.0.1])
-        by aserp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9VG9i1K140201;
-        Thu, 31 Oct 2019 16:21:45 GMT
+        id S1728554AbfJaQYb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 12:24:31 -0400
+Received: from userp2120.oracle.com ([156.151.31.85]:36414 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727593AbfJaQYa (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 12:24:30 -0400
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9VGOFue080797
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:28 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to :
+ subject : message-id : mime-version : content-type; s=corp-2019-08-05;
+ bh=uEPgR4mfUk+585Xed+pXbKFllyhrCUblrDiQYQj/hoo=;
+ b=O/jaWKX6GybjXUbuyfcXui0Y+3+vmZyQU2YGqWV9M217l4SzH0ZNNMjH10qLiR1gLCnv
+ S9fKdAtB0/t5BFjR/db2MssUCoyLJk9NvQza1Df0LaOwPYatV1c5TSqUE8OR8uLinfuf
+ em5voNo4khKLeeO/WUkVjhGKg6Ape+wRmv2vEX4co/STevxhoWF9JPNJHwQkTqFz5uKt
+ JTU+xRHcZnXhF3Dne3h29G1orNN9XMWczIxqStCLuQg8KpRI/RIUXa6ocstA8g4uqQSC
+ OSiHWq0d0e5HbFyGWzTrJ9+YWXfqEhWLj24GXFhElLUtReo/NEj5/XwJhxPhod82FEzL IA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2vxwhfvfm0-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:28 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id x9VGOPgq035670
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:28 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3030.oracle.com with ESMTP id 2vykw1mev6-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Thu, 31 Oct 2019 16:21:45 +0000
-Received: from abhmp0016.oracle.com (abhmp0016.oracle.com [141.146.116.22])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9VGLbOd016467;
-        Thu, 31 Oct 2019 16:21:37 GMT
+        by userp3030.oracle.com with ESMTP id 2vyqpee6vx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:24:26 +0000
+Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id x9VGNVu5017451
+        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 16:23:31 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Thu, 31 Oct 2019 09:21:37 -0700
-Date:   Thu, 31 Oct 2019 09:21:35 -0700
+        with ESMTP ; Thu, 31 Oct 2019 09:23:30 -0700
+Date:   Thu, 31 Oct 2019 09:23:30 -0700
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@infradead.org>
-Cc:     xfs <linux-xfs@vger.kernel.org>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Andreas Gruenbacher <agruenba@redhat.com>,
-        Damien Le Moal <Damien.LeMoal@wdc.com>,
-        Jan Kara <jack@suse.cz>, mbobrowski@mbobrowski.org,
-        riteshh@linux.ibm.com, linux-ext4 <linux-ext4@vger.kernel.org>
-Subject: [ANNOUNCE] xfs-linux: iomap-for-next updated to a90100421499
-Message-ID: <20191031162135.GB15212@magnolia>
+To:     xfs <linux-xfs@vger.kernel.org>
+Subject: [ANNOUNCE] xfs-linux: for-next updated to 249bd9087a52
+Message-ID: <20191031162329.GX15222@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9427 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1910310163
+ engine=8.0.1-1908290000 definitions=main-1910310164
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9427 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1910310163
+ definitions=main-1910310164
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Hi folks,
+Happy Halloweeeeeeeeen!  The ghosts of past bad code are arisen!
 
-The iomap-for-next branch of the xfs-linux repository at:
+The for-next branch of the xfs-linux repository at:
 
 	git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git
 
@@ -91,82 +85,150 @@ has just been updated.
 Patches often get missed, so please check if your outstanding patches
 were in this update. If they have not been in this update, please
 resubmit them to linux-xfs@vger.kernel.org so they can be picked up in
-the next update.  This is a minor cleanup of a duplicated check, so
-there's no need to rebase your development trees.
+the next update.  I'm still waiting for some stability testing of
+Christoph's series from yesterday, but I figured I should incorporate
+the fallocate/aiodio race sooner than later.
 
-The new head of the iomap-for-next branch is commit:
+The new head of the for-next branch is commit:
 
-a90100421499 fs/iomap: remove redundant check in iomap_dio_rw()
+249bd9087a52 xfs: properly serialise fallocate against AIO+DIO
 
 New Commits:
 
-Christoph Hellwig (20):
-      [2492a606b3d2] xfs: initialize iomap->flags in xfs_bmbt_to_iomap
-      [05b30949f1aa] xfs: set IOMAP_F_NEW more carefully
-      [4e087a3b313c] xfs: use a struct iomap in xfs_writepage_ctx
-      [433dad94ec5d] xfs: refactor the ioend merging code
-      [5653017bc44e] xfs: turn io_append_trans into an io_private void pointer
-      [760fea8bfb7f] xfs: remove the fork fields in the writepage_ctx and ioend
-      [009d8d849d3f] iomap: zero newly allocated mapped blocks
-      [9e91c5728cab] iomap: lift common tracing code from xfs to iomap
-      [598ecfbaa742] iomap: lift the xfs writeback code to iomap
-      [3e19e6f3eeea] iomap: warn on inline maps in iomap_writepage_map
-      [ab08b01ec0a2] iomap: move struct iomap_page out of iomap.h
-      [b3d423ec898a] iomap: cleanup iomap_ioend_compare
-      [48d64cd18b33] iomap: pass a struct page to iomap_finish_page_writeback
-      [65a60e8687c1] iomap: better document the IOMAP_F_* flags
-      [c12d6fa88d09] iomap: remove the unused iomap argument to __iomap_write_end
-      [dcd6158d15c7] iomap: always use AOP_FLAG_NOFS in iomap_write_begin
-      [3590c4d8979b] iomap: ignore non-shared or non-data blocks in xfs_file_dirty
-      [d3b404396977] iomap: move the zeroing case out of iomap_read_page_sync
-      [32a38a499104] iomap: use write_begin to read pages to unshare
-      [eb81cf9d0e18] iomap: renumber IOMAP_HOLE to 0
+Ben Dooks (Codethink) (1):
+      [1aa6300638e7] xfs: add mising include of xfs_pnfs.h for missing declarations
 
-Darrick J. Wong (1):
-      [9cd0ed63ca51] iomap: enhance writeback error message
+Brian Foster (12):
+      [f6b428a46d60] xfs: track active state of allocation btree cursors
+      [f5e7dbea1e3e] xfs: introduce allocation cursor data structure
+      [d6d3aff20377] xfs: track allocation busy state in allocation cursor
+      [c62321a2a0ea] xfs: track best extent from cntbt lastblock scan in alloc cursor
+      [396bbf3c657e] xfs: refactor cntbt lastblock scan best extent logic into helper
+      [fec0afdaf498] xfs: reuse best extent tracking logic for bnobt scan
+      [4a65b7c2c72c] xfs: refactor allocation tree fixup code
+      [78d7aabdeea3] xfs: refactor and reuse best extent scanning logic
+      [0e26d5ca4a40] xfs: refactor near mode alloc bnobt scan into separate function
+      [d29688257fd4] xfs: factor out tree fixup logic into helper
+      [dc8e69bd7218] xfs: optimize near mode bnobt scans with concurrent cntbt lookups
+      [da781e64b28c] xfs: don't set bmapi total block req where minleft is
 
-Dave Chinner (1):
-      [7684e2c4384d] iomap: iomap that extends beyond EOF should be marked dirty
+Christoph Hellwig (41):
+      [bdb2ed2dbdc2] xfs: ignore extent size hints for always COW inodes
+      [cd95cb962b7d] xfs: pass the correct flag to xlog_write_iclog
+      [2c68a1dfbd8e] xfs: remove the unused ic_io_size field from xlog_in_core
+      [390aab0a1640] xfs: move the locking from xlog_state_finish_copy to the callers
+      [df732b29c807] xfs: call xlog_state_release_iclog with l_icloglock held
+      [032cc34ed517] xfs: remove dead ifdef XFSERRORDEBUG code
+      [fe9c0e77acc5] xfs: remove the unused XLOG_STATE_ALL and XLOG_STATE_UNUSED flags
+      [1858bb0bec61] xfs: turn ic_state into an enum
+      [4b29ab04ab0d] xfs: remove the XLOG_STATE_DO_CALLBACK state
+      [0d45e3a20822] xfs: also call xfs_file_iomap_end_delalloc for zeroing operations
+      [dd26b84640cc] xfs: remove xfs_reflink_dirty_extents
+      [ffb375a8cf20] xfs: pass two imaps to xfs_reflink_allocate_cow
+      [ae36b53c6c60] xfs: refactor xfs_file_iomap_begin_delay
+      [36adcbace24e] xfs: fill out the srcmap in iomap_begin
+      [43568226a4a3] xfs: factor out a helper to calculate the end_fsb
+      [690c2a38878e] xfs: split out a new set of read-only iomap ops
+      [a526c85c2236] xfs: move xfs_file_iomap_begin_delay around
+      [f150b4234397] xfs: split the iomap ops for buffered vs direct writes
+      [12dfb58af61d] xfs: rename the whichfork variable in xfs_buffered_write_iomap_begin
+      [5c5b6f7585d2] xfs: cleanup xfs_direct_write_iomap_begin
+      [1e190f8e8098] xfs: improve the IOMAP_NOWAIT check for COW inodes
+      [25a409572b5f] xfs: mark xfs_buf_free static
+      [30fa529e3b2e] xfs: add a xfs_inode_buftarg helper
+      [f9acc19c8cbe] xfs: use xfs_inode_buftarg in xfs_file_dio_aio_write
+      [c7d68318c9ae] xfs: use xfs_inode_buftarg in xfs_file_ioctl
+      [9afe1d5c14e0] xfs: don't implement XFS_IOC_RESVSP / XFS_IOC_RESVSP64
+      [837a6e7f5cdb] fs: add generic UNRESVSP and ZERO_RANGE ioctl handlers
+      [7a42c70ea0dd] xfs: disable xfs_ioc_space for always COW inodes
+      [360c09c01c5a] xfs: consolidate preallocation in xfs_file_fallocate
+      [2123ef851083] xfs: simplify setting bio flags
+      [69e8575dee42] xfs: remove the dsunit and dswidth variables in
+      [dd2d535e3fb2] xfs: cleanup calculating the stat optimal I/O size
+      [b5ad616c3edf] xfs: don't use a different allocsice for -o wsync
+      [3cd1d18b0d40] xfs: remove the m_readio_* fields in struct xfs_mount
+      [5da8a07c79e8] xfs: rename the m_writeio_* fields in struct xfs_mount
+      [2fcddee8cd8f] xfs: simplify parsing of allocsize mount option
+      [3274d0080100] xfs: rename the XFS_MOUNT_DFLT_IOSIZE option to
+      [7c6b94b1b526] xfs: reverse the polarity of XFS_MOUNT_COMPAT_IOSIZE
+      [aa58d4455a11] xfs: clean up printing the allocsize option in
+      [1775c506a31e] xfs: clean up printing inode32/64 in xfs_showargs
+      [21f55993eb7a] xfs: merge xfs_showargs into xfs_fs_show_options
 
-Goldwyn Rodrigues (1):
-      [c039b9979272] iomap: use a srcmap for a read-modify-write I/O
+Darrick J. Wong (6):
+      [c84760659dcf] xfs: check attribute leaf block structure
+      [16c6e92c7e98] xfs: namecheck attribute names before listing them
+      [04df34ac6494] xfs: namecheck directory entry names before listing them
+      [c2414ad6e66a] xfs: replace -EIO with -EFSCORRUPTED for corrupt metadata
+      [fec40e220ffc] xfs: refactor xfs_bmap_count_blocks using newer btree helpers
+      [e992ae8afded] xfs: refactor xfs_iread_extents to use xfs_btree_visit_blocks
 
-Jan Kara (2):
-      [13ef954445df] iomap: Allow forcing of waiting for running DIO in iomap_dio_rw()
-      [906753befc4d] xfs: Use iomap_dio_rw to wait for unaligned direct IO
+Dave Chinner (3):
+      [3f8a4f1d876d] xfs: fix inode fork extent count overflow
+      [1c743574de8b] xfs: cap longest free extent to maximum allocatable
+      [249bd9087a52] xfs: properly serialise fallocate against AIO+DIO
 
-Joseph Qi (1):
-      [a90100421499] fs/iomap: remove redundant check in iomap_dio_rw()
+Ian Kent (1):
+      [8da57c5c000c] xfs: remove the biosize mount option
+
+Jan Kara (1):
+      [3dd4d40b4208] xfs: Sanity check flags of Q_XQUOTARM call
+
+kaixuxia (1):
+      [3fb21fc8cc04] xfs: remove the duplicated inode log fieldmask set
+
+yu kuai (1):
+      [e5e634041bc1] xfs: include QUOTA, FATAL ASSERT build options in XFS_BUILD_OPTIONS
 
 
 Code Diffstat:
 
- fs/dax.c                 |  13 +-
- fs/ext2/inode.c          |   2 +-
- fs/ext4/inode.c          |   2 +-
- fs/gfs2/bmap.c           |   3 +-
- fs/gfs2/file.c           |   6 +-
- fs/iomap/Makefile        |  16 +-
- fs/iomap/apply.c         |  25 +-
- fs/iomap/buffered-io.c   | 749 ++++++++++++++++++++++++++++++++++++++++------
- fs/iomap/direct-io.c     |  11 +-
- fs/iomap/fiemap.c        |   4 +-
- fs/iomap/seek.c          |   4 +-
- fs/iomap/swapfile.c      |   3 +-
- fs/iomap/trace.c         |  12 +
- fs/iomap/trace.h         |  88 ++++++
- fs/xfs/libxfs/xfs_bmap.c |  14 +-
- fs/xfs/libxfs/xfs_bmap.h |   3 +-
- fs/xfs/xfs_aops.c        | 754 ++++++++---------------------------------------
- fs/xfs/xfs_aops.h        |  17 --
- fs/xfs/xfs_file.c        |  13 +-
- fs/xfs/xfs_iomap.c       |  51 +++-
- fs/xfs/xfs_iomap.h       |   2 +-
- fs/xfs/xfs_pnfs.c        |   2 +-
- fs/xfs/xfs_reflink.c     |   2 +-
- fs/xfs/xfs_super.c       |  11 +-
- fs/xfs/xfs_trace.h       |  65 ----
- include/linux/iomap.h    | 129 +++++---
- 26 files changed, 1086 insertions(+), 915 deletions(-)
- create mode 100644 fs/iomap/trace.c
- create mode 100644 fs/iomap/trace.h
+ fs/compat_ioctl.c               |  31 +-
+ fs/ioctl.c                      |  12 +-
+ fs/xfs/libxfs/xfs_alloc.c       | 900 +++++++++++++++++++++++-----------------
+ fs/xfs/libxfs/xfs_alloc_btree.c |   1 +
+ fs/xfs/libxfs/xfs_attr_leaf.c   |  85 +++-
+ fs/xfs/libxfs/xfs_attr_leaf.h   |   4 +-
+ fs/xfs/libxfs/xfs_bmap.c        | 212 ++++------
+ fs/xfs/libxfs/xfs_btree.c       |  10 +-
+ fs/xfs/libxfs/xfs_btree.h       |  12 +-
+ fs/xfs/libxfs/xfs_dir2_sf.c     |   2 +-
+ fs/xfs/libxfs/xfs_iext_tree.c   |   2 +-
+ fs/xfs/libxfs/xfs_inode_fork.c  |   8 +-
+ fs/xfs/libxfs/xfs_inode_fork.h  |  14 +-
+ fs/xfs/scrub/bitmap.c           |   3 +-
+ fs/xfs/xfs_aops.c               |  43 +-
+ fs/xfs/xfs_aops.h               |   3 -
+ fs/xfs/xfs_attr_inactive.c      |   6 +-
+ fs/xfs/xfs_attr_list.c          |  60 ++-
+ fs/xfs/xfs_bmap_util.c          | 217 ++--------
+ fs/xfs/xfs_bmap_util.h          |   2 -
+ fs/xfs/xfs_buf.c                |  17 +-
+ fs/xfs/xfs_buf.h                |   1 -
+ fs/xfs/xfs_dir2_readdir.c       |  27 +-
+ fs/xfs/xfs_dquot.c              |   6 +-
+ fs/xfs/xfs_file.c               | 102 +++--
+ fs/xfs/xfs_inode.c              |   7 +-
+ fs/xfs/xfs_inode.h              |   7 +
+ fs/xfs/xfs_ioctl.c              | 100 +----
+ fs/xfs/xfs_ioctl.h              |   1 -
+ fs/xfs/xfs_ioctl32.c            |   9 +-
+ fs/xfs/xfs_iomap.c              | 708 +++++++++++++++----------------
+ fs/xfs/xfs_iomap.h              |   4 +-
+ fs/xfs/xfs_iops.c               |  55 ++-
+ fs/xfs/xfs_log.c                | 428 ++++++++-----------
+ fs/xfs/xfs_log_cil.c            |   2 +-
+ fs/xfs/xfs_log_priv.h           |  25 +-
+ fs/xfs/xfs_mount.c              |  46 +-
+ fs/xfs/xfs_mount.h              |  48 +--
+ fs/xfs/xfs_pnfs.c               |   1 +
+ fs/xfs/xfs_quotaops.c           |   3 +
+ fs/xfs/xfs_reflink.c            | 138 +-----
+ fs/xfs/xfs_reflink.h            |   4 +-
+ fs/xfs/xfs_rtalloc.c            |   3 +-
+ fs/xfs/xfs_super.c              | 107 ++---
+ fs/xfs/xfs_super.h              |  10 +
+ fs/xfs/xfs_trace.h              |  35 +-
+ include/linux/falloc.h          |   3 +
+ include/linux/fs.h              |   2 +-
+ 48 files changed, 1687 insertions(+), 1839 deletions(-)
