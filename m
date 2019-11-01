@@ -6,34 +6,34 @@ X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8D6E2CA9EC9
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:51:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F1C05CA9EC9
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:51:23 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6072B2080F
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:51:21 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id D29A12080F
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:51:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729754AbfKAHvV (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 03:51:21 -0400
+        id S1729825AbfKAHvX (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 03:51:23 -0400
 Received: from icp-osb-irony-out7.external.iinet.net.au ([203.59.1.107]:9024
         "EHLO icp-osb-irony-out7.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1727053AbfKAHvU (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 03:51:20 -0400
+        by vger.kernel.org with ESMTP id S1727053AbfKAHvX (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 03:51:23 -0400
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2APAACY47td/xK90HYNVxsBAQEBAQE?=
- =?us-ascii?q?BBQEBAREBAQMDAQEBgWsEAQEBCwGEPIQoj1oBAQEBAQEGgRGKCIUwAYoVgXs?=
- =?us-ascii?q?JAQEBAQEBAQEBNwEBhDsDAgKEHjYHDgIMAQEBBAEBAQEBBQMBhViGKgIBAyM?=
- =?us-ascii?q?EUhAYDQImAgJHEAYThXWwXnV/MxqKN4EOKAGBZIpEeIEHgREzgx2HVYJeBI0?=
- =?us-ascii?q?Tgi83hkFDlnWCLpVQDIIwi3gDEIseLaloA4IHTS4KgydQgzYXjjBnjmwBAQ?=
-X-IPAS-Result: =?us-ascii?q?A2APAACY47td/xK90HYNVxsBAQEBAQEBBQEBAREBAQMDA?=
- =?us-ascii?q?QEBgWsEAQEBCwGEPIQoj1oBAQEBAQEGgRGKCIUwAYoVgXsJAQEBAQEBAQEBN?=
- =?us-ascii?q?wEBhDsDAgKEHjYHDgIMAQEBBAEBAQEBBQMBhViGKgIBAyMEUhAYDQImAgJHE?=
- =?us-ascii?q?AYThXWwXnV/MxqKN4EOKAGBZIpEeIEHgREzgx2HVYJeBI0Tgi83hkFDlnWCL?=
- =?us-ascii?q?pVQDIIwi3gDEIseLaloA4IHTS4KgydQgzYXjjBnjmwBAQ?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2BhAACY47td/xK90HYNVxwBAQEBAQc?=
+ =?us-ascii?q?BAREBBAQBAYFsBAEBCwGEPIQoj1oBAQEBAQEGgRGKCIUwAYRthTyBZwkBAQE?=
+ =?us-ascii?q?BAQEBAQE3AQGEOwMCAoQeNwYOAgwBAQEEAQEBAQEFAwGFWIYqAgEDIwRSEBg?=
+ =?us-ascii?q?NAiYCAkcQBhOFdbBedX8zGoo3gQ4oAYFkikR4gQeBRIMdhC2DKIJeBI1CggA?=
+ =?us-ascii?q?3hkFDlnWCLpVQDIIwi3gDEIseLal3gXtNLgqDJ1CRfWeObAEB?=
+X-IPAS-Result: =?us-ascii?q?A2BhAACY47td/xK90HYNVxwBAQEBAQcBAREBBAQBAYFsB?=
+ =?us-ascii?q?AEBCwGEPIQoj1oBAQEBAQEGgRGKCIUwAYRthTyBZwkBAQEBAQEBAQE3AQGEO?=
+ =?us-ascii?q?wMCAoQeNwYOAgwBAQEEAQEBAQEFAwGFWIYqAgEDIwRSEBgNAiYCAkcQBhOFd?=
+ =?us-ascii?q?bBedX8zGoo3gQ4oAYFkikR4gQeBRIMdhC2DKIJeBI1CggA3hkFDlnWCLpVQD?=
+ =?us-ascii?q?IIwi3gDEIseLal3gXtNLgqDJ1CRfWeObAEB?=
 X-IronPort-AV: E=Sophos;i="5.68,254,1569254400"; 
-   d="scan'208";a="215829975"
+   d="scan'208";a="215830019"
 Received: from unknown (HELO [192.168.1.222]) ([118.208.189.18])
-  by icp-osb-irony-out7.iinet.net.au with ESMTP; 01 Nov 2019 15:50:39 +0800
-Subject: [PATCH v8 07/16] xfs: add xfs_remount_ro() helper
+  by icp-osb-irony-out7.iinet.net.au with ESMTP; 01 Nov 2019 15:50:45 +0800
+Subject: [PATCH v8 08/16] xfs: refactor suffix_kstrtoint()
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -43,8 +43,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Fri, 01 Nov 2019 15:50:39 +0800
-Message-ID: <157259463969.28278.13374185572499414619.stgit@fedora-28>
+Date:   Fri, 01 Nov 2019 15:50:45 +0800
+Message-ID: <157259464504.28278.7881741705300582881.stgit@fedora-28>
 In-Reply-To: <157259452909.28278.1001302742832626046.stgit@fedora-28>
 References: <157259452909.28278.1001302742832626046.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -56,107 +56,100 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-Factor the remount read only code into a helper to simplify the
-subsequent change from the super block method .remount_fs to the
-mount-api fs_context_operations method .reconfigure.
+The mount-api doesn't have a "human unit" parse type yet so the options
+that have values like "10k" etc. still need to be converted by the fs.
+
+But the value comes to the fs as a string (not a substring_t type) so
+there's a need to change the conversion function to take a character
+string instead.
+
+When xfs is switched to use the new mount-api match_kstrtoint() will no
+longer be used and will be removed.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
 Reviewed-by: Brian Foster <bfoster@redhat.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_super.c |   73 +++++++++++++++++++++++++++++++---------------------
- 1 file changed, 43 insertions(+), 30 deletions(-)
+ fs/xfs/xfs_super.c |   38 +++++++++++++++++++++++++++++---------
+ 1 file changed, 29 insertions(+), 9 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6eaa1b05897a..bdf6c069e3ea 100644
+index bdf6c069e3ea..0dc072700599 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -1246,6 +1246,47 @@ xfs_remount_rw(
- 	return 0;
+@@ -108,14 +108,17 @@ static const match_table_t tokens = {
+ };
+ 
+ 
+-STATIC int
+-suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
++static int
++suffix_kstrtoint(
++	const char	*s,
++	unsigned int	base,
++	int		*res)
+ {
+-	int	last, shift_left_factor = 0, _res;
+-	char	*value;
+-	int	ret = 0;
++	int		last, shift_left_factor = 0, _res;
++	char		*value;
++	int		ret = 0;
+ 
+-	value = match_strdup(s);
++	value = kstrdup(s, GFP_KERNEL);
+ 	if (!value)
+ 		return -ENOMEM;
+ 
+@@ -140,6 +143,23 @@ suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
+ 	return ret;
  }
  
 +static int
-+xfs_remount_ro(
-+	struct xfs_mount	*mp)
++match_kstrtoint(
++	const substring_t	*s,
++	unsigned int		base,
++	int			*res)
 +{
-+	int error;
++	const char		*value;
++	int			ret;
 +
-+	/*
-+	 * Cancel background eofb scanning so it cannot race with the final
-+	 * log force+buftarg wait and deadlock the remount.
-+	 */
-+	xfs_stop_block_reaping(mp);
-+
-+	/* Get rid of any leftover CoW reservations... */
-+	error = xfs_icache_free_cowblocks(mp, NULL);
-+	if (error) {
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		return error;
-+	}
-+
-+	/* Free the per-AG metadata reservation pool. */
-+	error = xfs_fs_unreserve_ag_blocks(mp);
-+	if (error) {
-+		xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		return error;
-+	}
-+
-+	/*
-+	 * Before we sync the metadata, we need to free up the reserve block
-+	 * pool so that the used block count in the superblock on disk is
-+	 * correct at the end of the remount. Stash the current* reserve pool
-+	 * size so that if we get remounted rw, we can return it to the same
-+	 * size.
-+	 */
-+	xfs_save_resvblks(mp);
-+
-+	xfs_quiesce_attr(mp);
-+	mp->m_flags |= XFS_MOUNT_RDONLY;
-+
-+	return 0;
++	value = match_strdup(s);
++	if (!value)
++		return -ENOMEM;
++	ret = suffix_kstrtoint(value, base, res);
++	kfree(value);
++	return ret;
 +}
 +
- STATIC int
- xfs_fs_remount(
- 	struct super_block	*sb,
-@@ -1316,37 +1357,9 @@ xfs_fs_remount(
- 
- 	/* rw -> ro */
- 	if (!(mp->m_flags & XFS_MOUNT_RDONLY) && (*flags & SB_RDONLY)) {
--		/*
--		 * Cancel background eofb scanning so it cannot race with the
--		 * final log force+buftarg wait and deadlock the remount.
--		 */
--		xfs_stop_block_reaping(mp);
--
--		/* Get rid of any leftover CoW reservations... */
--		error = xfs_icache_free_cowblocks(mp, NULL);
--		if (error) {
--			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
--			return error;
--		}
--
--		/* Free the per-AG metadata reservation pool. */
--		error = xfs_fs_unreserve_ag_blocks(mp);
--		if (error) {
--			xfs_force_shutdown(mp, SHUTDOWN_CORRUPT_INCORE);
-+		error = xfs_remount_ro(mp);
-+		if (error)
- 			return error;
--		}
--
--		/*
--		 * Before we sync the metadata, we need to free up the reserve
--		 * block pool so that the used block count in the superblock on
--		 * disk is correct at the end of the remount. Stash the current
--		 * reserve pool size so that if we get remounted rw, we can
--		 * return it to the same size.
--		 */
--		xfs_save_resvblks(mp);
--
--		xfs_quiesce_attr(mp);
--		mp->m_flags |= XFS_MOUNT_RDONLY;
- 	}
- 
- 	return 0;
+ /*
+  * This function fills in xfs_mount_t fields based on mount args.
+  * Note: the superblock has _not_ yet been read in.
+@@ -151,7 +171,7 @@ suffix_kstrtoint(const substring_t *s, unsigned int base, int *res)
+  * path, and we don't want this to have any side effects at remount time.
+  * Today this function does not change *sb, but just to future-proof...
+  */
+-STATIC int
++static int
+ xfs_parseargs(
+ 	struct xfs_mount	*mp,
+ 	char			*options)
+@@ -194,7 +214,7 @@ xfs_parseargs(
+ 				return -EINVAL;
+ 			break;
+ 		case Opt_logbsize:
+-			if (suffix_kstrtoint(args, 10, &mp->m_logbsize))
++			if (match_kstrtoint(args, 10, &mp->m_logbsize))
+ 				return -EINVAL;
+ 			break;
+ 		case Opt_logdev:
+@@ -210,7 +230,7 @@ xfs_parseargs(
+ 				return -ENOMEM;
+ 			break;
+ 		case Opt_allocsize:
+-			if (suffix_kstrtoint(args, 10, &size))
++			if (match_kstrtoint(args, 10, &size))
+ 				return -EINVAL;
+ 			mp->m_allocsize_log = ffs(size) - 1;
+ 			mp->m_flags |= XFS_MOUNT_ALLOCSIZE;
 
