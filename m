@@ -2,140 +2,122 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E79A8CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:32:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4A1CFCA9ED1
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:38:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C01A7217D9
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:32:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 27A65218AC
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:38:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726651AbfKAVcb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 17:32:31 -0400
-Received: from sandeen.net ([63.231.237.45]:45090 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726689AbfKAVcb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 17:32:31 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B8795544;
-        Fri,  1 Nov 2019 16:31:28 -0500 (CDT)
-Subject: Re: [PATCH 7/7] xfs_scrub: create a new category for unfixable errors
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <157177012894.1460394.4672572733673534420.stgit@magnolia>
- <157177017442.1460394.7425325906254151917.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <83c8754e-acbf-4046-0ace-09bd4ebfa823@sandeen.net>
-Date:   Fri, 1 Nov 2019 16:32:28 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.0
+        id S1726396AbfKAVig (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 17:38:36 -0400
+Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:33897 "EHLO
+        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725989AbfKAVig (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 17:38:36 -0400
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 239EF3A03EA;
+        Sat,  2 Nov 2019 08:38:26 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iQech-0006ba-Hr; Sat, 02 Nov 2019 08:38:23 +1100
+Date:   Sat, 2 Nov 2019 08:38:23 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Geert Uytterhoeven <geert@linux-m68k.org>
+Cc:     Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+        Theodore Ts'o <tytso@mit.edu>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
+        Arnd Bergmann <arnd@arndb.de>,
+        Linux FS Devel <linux-fsdevel@vger.kernel.org>,
+        driverdevel <devel@driverdev.osuosl.org>,
+        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+        linux-erofs@lists.ozlabs.org,
+        Ext4 Developers List <linux-ext4@vger.kernel.org>,
+        linux-f2fs-devel@lists.sourceforge.net,
+        Linux-Arch <linux-arch@vger.kernel.org>
+Subject: Re: [RFC] errno.h: Provide EFSCORRUPTED for everybody
+Message-ID: <20191101213823.GW4614@dread.disaster.area>
+References: <20191031010736.113783-1-Valdis.Kletnieks@vt.edu>
+ <CAMuHMdXzyVBa4TZEc5eRaBzu50thgJ2TrHJLZqwhbQ=JASgWOA@mail.gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <157177017442.1460394.7425325906254151917.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAMuHMdXzyVBa4TZEc5eRaBzu50thgJ2TrHJLZqwhbQ=JASgWOA@mail.gmail.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=7-415B0cAAAA:8 a=aJW9rHtRmq1v9DlCOwQA:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/22/19 1:49 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Fri, Nov 01, 2019 at 09:57:31PM +0100, Geert Uytterhoeven wrote:
+> Hi Valdis,
 > 
-> There's nothing that xfs_scrub (or XFS) can do about media errors for
-> data file blocks -- the data are gone.  Create a new category for these
-> unfixable errors so that we don't advise the user to take further action
-> that won't fix the problem.
+> On Thu, Oct 31, 2019 at 2:11 AM Valdis Kletnieks
+> <valdis.kletnieks@vt.edu> wrote:
+> > Three questions: (a) ACK/NAK on this patch, (b) should it be all in one
+> > patch, or one to add to errno.h and 6 patches for 6 filesystems?), and
+> > (c) if one patch, who gets to shepherd it through?
+> >
+> > There's currently 6 filesystems that have the same #define. Move it
+> > into errno.h so it's defined in just one place.
+> >
+> > Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
 > 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Thanks for your patch!
+> 
+> > --- a/include/uapi/asm-generic/errno.h
+> > +++ b/include/uapi/asm-generic/errno.h
+> > @@ -98,6 +98,7 @@
+> >  #define        EINPROGRESS     115     /* Operation now in progress */
+> >  #define        ESTALE          116     /* Stale file handle */
+> >  #define        EUCLEAN         117     /* Structure needs cleaning */
+> > +#define        EFSCORRUPTED    EUCLEAN
+> 
+> I have two questions:
+> a) Why not use EUCLEAN everywhere instead?
+>     Having two different names for the same errno complicates grepping.
 
-are "unfixable errors" /exclusively/ file data media errors?
+Because:
+	a) EUCLEAN is horrible for code documentation. EFSCORRUPTED
+	describes exactly the error being returned and/or checked for.
 
-> diff --git a/scrub/phase4.c b/scrub/phase4.c
-> index 1cf3f6b7..a276bc32 100644
-> --- a/scrub/phase4.c
-> +++ b/scrub/phase4.c
-> @@ -99,7 +99,10 @@ xfs_process_action_items(
->  	workqueue_destroy(&wq);
->  
->  	pthread_mutex_lock(&ctx->lock);
-> -	if (moveon && ctx->corruptions_found == 0 && want_fstrim) {
-> +	if (moveon &&
-> +	    ctx->corruptions_found == 0 &&
-> +	    ctx->unfixable_errors == 0 &&
-> +	    want_fstrim) {
->  		fstrim(ctx);
->  		progress_add(1);
->  	}
+	b) we've used EFSCORRUPTED in XFS since 1993. i.e. it was an
+	official, published error value on Irix, and we've kept it
+	in the linux code for the past ~20 years because of a)
 
+	c) Userspace programs that include filesystem specific
+	headers have already been exposed to and use EFSCORRUPTED,
+	so we can't remove/change it without breaking userspace.
 
-why would a file data media error preclude fstrim?
+	d) EUCLEAN has a convenient userspace string description
+	that is appropriate for filesystem corruption: "Structure
+	needs cleaning" is precisely what needs to happen. Repair of
+	the filesystem (i.e. recovery to a clean state) is what is
+	required to fix the error....
 
-> diff --git a/scrub/phase5.c b/scrub/phase5.c
-> index dc0ee5e8..e0c4a3df 100644
-> --- a/scrub/phase5.c
-> +++ b/scrub/phase5.c
-> @@ -336,7 +336,7 @@ xfs_scan_connections(
->  	bool			moveon = true;
->  	bool			ret;
->  
-> -	if (ctx->corruptions_found) {
-> +	if (ctx->corruptions_found || ctx->unfixable_errors) {
->  		str_info(ctx, ctx->mntpoint,
->  _("Filesystem has errors, skipping connectivity checks."));
+> b) Perhaps both errors should use different values?
 
-why would a file data media error stop the connectivity check?
+That horse bolted to userspace years ago - this is just formalising
+the practice that has spread across multiple linux filesystems from
+XFS over the past ~10 years..
 
-unless "unfixable" may be other types, in which case it makes sense.
+Cheers,
 
-But the commit log indicates it's just for a file data media error.
-
-What's the intent?
-
--Eric
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
