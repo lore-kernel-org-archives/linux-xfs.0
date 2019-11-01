@@ -2,98 +2,134 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
+X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D0219CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:40:44 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 38DABCA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:48:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id A9E502067D
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:40:44 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 091AF21734
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:48:48 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oZRaw6WB"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726554AbfKAVko (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 17:40:44 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:43735 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1725989AbfKAVko (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 17:40:44 -0400
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id DBCB03A0834;
-        Sat,  2 Nov 2019 08:40:40 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iQeeu-0006bm-DO; Sat, 02 Nov 2019 08:40:40 +1100
-Date:   Sat, 2 Nov 2019 08:40:40 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-        linux-mm@kvack.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 02/28] xfs: Throttle commits on delayed background CIL
- push
-Message-ID: <20191101214040.GX4614@dread.disaster.area>
-References: <20191031234618.15403-1-david@fromorbit.com>
- <20191031234618.15403-3-david@fromorbit.com>
- <20191101120426.GC59146@bfoster>
+        id S1726663AbfKAVsr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 17:48:47 -0400
+Received: from aserp2120.oracle.com ([141.146.126.78]:58396 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1725989AbfKAVsr (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 17:48:47 -0400
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA1LjZDc105605;
+        Fri, 1 Nov 2019 21:48:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=fl3XouavKgwTL/7GkFZCzrqb5bN9V+t8h24w+HGc6e8=;
+ b=oZRaw6WBgPO7h/DPp4SVjLwc54U57jRMHsMt+74kMCtxft7P79a0CeNTieeDHg8fxKSL
+ F2BzBT/bED2b4XlOhj8NFnS5BjATN5K6Ijpt8u1KXfXjupo407fi92CsGmcb0i4+L5fM
+ dUW9XEnVLne/XjxLl6ysd1sceJMRb1Cb2fKxtaXfEsO6pjQuaQ/uff9t61ACwTgnNVvW
+ fgIS/Kh0VUKjn/QLF0CGtOfWDgVpuu5mhq1qC2hvqqBDv0B4zXH19t2TRRQu2Ee9JHKA
+ wSzqFThH8Muii0cbR0ykb3PR4+Hw1EntnK0Tlx4Fiesq38XYbJlYrQEfWtPn5YM8MYPq yw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2vxwhfva2k-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 01 Nov 2019 21:48:44 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA1Lj1EY029704;
+        Fri, 1 Nov 2019 21:46:43 GMT
+Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
+        by userp3020.oracle.com with ESMTP id 2w0utgtxvb-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 01 Nov 2019 21:46:43 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA1LkgfF009624;
+        Fri, 1 Nov 2019 21:46:42 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Fri, 01 Nov 2019 14:46:42 -0700
+Date:   Fri, 1 Nov 2019 14:46:41 -0700
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Eric Sandeen <sandeen@sandeen.net>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 6/7] xfs_scrub: refactor xfs_scrub_excessive_errors
+Message-ID: <20191101214641.GK15222@magnolia>
+References: <157177012894.1460394.4672572733673534420.stgit@magnolia>
+ <157177016827.1460394.10119847764483927499.stgit@magnolia>
+ <1ef6570e-e32f-7925-7f3c-27a0cdf1d059@sandeen.net>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191101120426.GC59146@bfoster>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=20KFwNOVAAAA:8 a=7-415B0cAAAA:8 a=0MiyBbjkrBVIBRQmzFcA:9
-        a=CjuIK1q_8ugA:10 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <1ef6570e-e32f-7925-7f3c-27a0cdf1d059@sandeen.net>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9428 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1911010200
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9428 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1911010200
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 01, 2019 at 08:04:26AM -0400, Brian Foster wrote:
-> On Fri, Nov 01, 2019 at 10:45:52AM +1100, Dave Chinner wrote:
-> > From: Dave Chinner <dchinner@redhat.com>
+On Fri, Nov 01, 2019 at 04:25:55PM -0500, Eric Sandeen wrote:
+> On 10/22/19 1:49 PM, Darrick J. Wong wrote:
+> > From: Darrick J. Wong <darrick.wong@oracle.com>
 > > 
-> > In certain situations the background CIL push can be indefinitely
-> > delayed. While we have workarounds from the obvious cases now, it
-> > doesn't solve the underlying issue. This issue is that there is no
-> > upper limit on the CIL where we will either force or wait for
-> > a background push to start, hence allowing the CIL to grow without
-> > bound until it consumes all log space.
+> > Refactor this helper to avoid cycling the scrub context lock when the
+> > user hasn't configured a maximum error count threshold.
 > > 
-> > To fix this, add a new wait queue to the CIL which allows background
-> > pushes to wait for the CIL context to be switched out. This happens
-> > when the push starts, so it will allow us to block incoming
-> > transaction commit completion until the push has started. This will
-> > only affect processes that are running modifications, and only when
-> > the CIL threshold has been significantly overrun.
-> > 
-> > This has no apparent impact on performance, and doesn't even trigger
-> > until over 45 million inodes had been created in a 16-way fsmark
-> > test on a 2GB log. That was limiting at 64MB of log space used, so
-> > the active CIL size is only about 3% of the total log in that case.
-> > The concurrent removal of those files did not trigger the background
-> > sleep at all.
-> > 
-> > Signed-off-by: Dave Chinner <dchinner@redhat.com>
-> > Reviewed-by: Brian Foster <bfoster@redhat.com>
+> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 > > ---
+> >  scrub/common.c |   13 ++++++++++---
+> >  1 file changed, 10 insertions(+), 3 deletions(-)
+> > 
+> > 
+> > diff --git a/scrub/common.c b/scrub/common.c
+> > index b1c6abd1..261c6bb2 100644
+> > --- a/scrub/common.c
+> > +++ b/scrub/common.c
+> > @@ -33,13 +33,20 @@ bool
+> >  xfs_scrub_excessive_errors(
+> >  	struct scrub_ctx	*ctx)
+> >  {
+> > -	bool			ret;
+> > +	unsigned long long	errors_seen;
+> > +
+> > +	/*
+> > +	 * We only set max_errors at the start of the program, so it's safe to
+> > +	 * access it locklessly.
+> > +	 */
+> > +	if (ctx->max_errors <= 0)
 > 
-> I don't recall posting an R-b tag for this one...
+> max_errors is an /unsigned/ long long, 'sup w/ the < part?
 
-Argh, sorry. I must have screwed up transcribing them from the
-mailing list.
+Being thorough. :)
 
-> That said, I think my only outstanding feedback (side discussion aside)
-> was the code factoring in xlog_cil_push_background().
+> == maybe?
 
-I'll go back and look at that, 'cause clearly I was looking at the
-wrong patch when I screwed up the rvb tag...
+Yes, that works.
 
-Cheers,
+--D
 
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> > +		return false;
+> >  
+> >  	pthread_mutex_lock(&ctx->lock);
+> > -	ret = ctx->max_errors > 0 && ctx->corruptions_found >= ctx->max_errors;
+> > +	errors_seen = ctx->corruptions_found;
+> >  	pthread_mutex_unlock(&ctx->lock);
+> >  
+> > -	return ret;
+> > +	return errors_seen >= ctx->max_errors;
+> >  }
+> >  
+> >  static struct {
+> > 
