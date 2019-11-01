@@ -2,33 +2,32 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D90CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:31:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1650BCA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:33:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 894C5218AC
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:31:59 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E531021734
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:33:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727222AbfKASb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 14:31:59 -0400
-Received: from sandeen.net ([63.231.237.45]:36244 "EHLO sandeen.net"
+        id S1726532AbfKASdK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 14:33:10 -0400
+Received: from sandeen.net ([63.231.237.45]:36312 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726532AbfKASb6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 14:31:58 -0400
+        id S1726671AbfKASdK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 14:33:10 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 91B16544;
-        Fri,  1 Nov 2019 13:30:56 -0500 (CDT)
-Subject: Re: [PATCH 4/5] xfs_scrub: don't allow error or negative error
- injection interval
+        by sandeen.net (Postfix) with ESMTPSA id 5ADDA544;
+        Fri,  1 Nov 2019 13:32:08 -0500 (CDT)
+Subject: Re: [PATCH 5/5] libfrog: fix workqueue_add error out
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157176999124.1458930.5678023201951458107.stgit@magnolia>
- <157177001659.1458930.2704912012566010203.stgit@magnolia>
+ <157177002278.1458930.9155151793278556546.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <c3aa96a9-5623-88e6-5f55-24733f0c16ea@sandeen.net>
-Date:   Fri, 1 Nov 2019 13:31:56 -0500
+Message-ID: <612cb2d2-cb40-9eaa-3169-cc1ccd4d1b81@sandeen.net>
+Date:   Fri, 1 Nov 2019 13:33:08 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177001659.1458930.2704912012566010203.stgit@magnolia>
+In-Reply-To: <157177002278.1458930.9155151793278556546.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -86,43 +85,13 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/22/19 1:46 PM, Darrick J. Wong wrote:
+On 10/22/19 1:47 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Don't allow zero or negative values from XFS_SCRUB_DISK_ERROR_INTERVAL
-> to slip into the system.  This is a debugging knob so we don't need to
-> be rigorous, but we can at least take care of obvious garbage values.
+> Don't forget to unlock before erroring out.
 > 
-> Coverity-id: 1454842
+> Coverity-id: 1454843
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
-so we can't /set/ it to 0 or -1, and if it is, set it to -1. (!)
-
-but ok, -1 means disabled, so invalid value -> disabled.
-
-dbg_printf might be nice intead of silently ignoring but ... it's just
-a debug knob so
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> ---
->  scrub/disk.c |    4 ++++
->  1 file changed, 4 insertions(+)
-> 
-> 
-> diff --git a/scrub/disk.c b/scrub/disk.c
-> index 214a5346..8a8a411b 100644
-> --- a/scrub/disk.c
-> +++ b/scrub/disk.c
-> @@ -303,6 +303,10 @@ disk_simulate_read_error(
->  		interval = strtoull(p, NULL, 10);
->  		interval &= ~((1U << disk->d_lbalog) - 1);
->  	}
-> +	if (interval <= 0) {
-> +		interval = -1;
-> +		return 0;
-> +	}
->  
->  	/*
->  	 * We simulate disk errors by pretending that there are media errors at
-> 
