@@ -2,33 +2,32 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D7F8CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:42:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A5741CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:44:32 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id DE58521734
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:42:57 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 801EC21855
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:44:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727059AbfKASm5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 14:42:57 -0400
-Received: from sandeen.net ([63.231.237.45]:36772 "EHLO sandeen.net"
+        id S1727279AbfKASoc (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 14:44:32 -0400
+Received: from sandeen.net ([63.231.237.45]:36874 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726817AbfKASm5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 14:42:57 -0400
+        id S1726817AbfKASob (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 14:44:31 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 33E73544;
-        Fri,  1 Nov 2019 13:41:55 -0500 (CDT)
-Subject: Re: [PATCH 6/5] xfs_repair: print better information when metadata
- updates fail
+        by sandeen.net (Postfix) with ESMTPSA id B2E36544;
+        Fri,  1 Nov 2019 13:43:29 -0500 (CDT)
+Subject: Re: [PATCH 7/5] libxfs: fix typo in message about write verifier
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157176999124.1458930.5678023201951458107.stgit@magnolia>
- <20191030175256.GP15222@magnolia>
+ <20191030175315.GQ15222@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <f13d55ea-bcba-edba-d1fc-eb1c1802dafe@sandeen.net>
-Date:   Fri, 1 Nov 2019 13:42:55 -0500
+Message-ID: <17270cda-f8c4-8573-6c5f-7beed6603e11@sandeen.net>
+Date:   Fri, 1 Nov 2019 13:44:29 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <20191030175256.GP15222@magnolia>
+In-Reply-To: <20191030175315.GQ15222@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -86,29 +85,13 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/30/19 12:52 PM, Darrick J. Wong wrote:
+On 10/30/19 12:53 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> If a metadata update fails during phase 6, we should print an error
-> message that can be traced back to a specific line of code.  Also,
-> res_failed spits out a general message about "xfs_trans_reserve failed",
-> which is probably not where the failure happened.  Fix two incorrect
-> call sites.
+> Fix a silly typo.
 
-looks like mkfs could use a fix too,
-
-        c = -libxfs_trans_commit(tp);
-        if (c)
-                res_failed(c);
-
-but for this,
+I have no complaints about this.  :)
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-not sure if we care, but:
-
-Fixes: f9c559f4e ("xfs_repair: invalidate dirty dir buffers when we zap a  directory")
-Fixes: f2279d8de ("libxfs: check libxfs_trans_commit return values")
-
-
-
+ 
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
