@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 90E9CCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:25:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E79A8CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:32:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 68ECA21897
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:25:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C01A7217D9
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:32:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726651AbfKAVZ5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 17:25:57 -0400
-Received: from sandeen.net ([63.231.237.45]:44762 "EHLO sandeen.net"
+        id S1726651AbfKAVcb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 17:32:31 -0400
+Received: from sandeen.net ([63.231.237.45]:45090 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726023AbfKAVZ5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 17:25:57 -0400
+        id S1726689AbfKAVcb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 17:32:31 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 60841544;
-        Fri,  1 Nov 2019 16:24:55 -0500 (CDT)
-Subject: Re: [PATCH 6/7] xfs_scrub: refactor xfs_scrub_excessive_errors
+        by sandeen.net (Postfix) with ESMTPSA id B8795544;
+        Fri,  1 Nov 2019 16:31:28 -0500 (CDT)
+Subject: Re: [PATCH 7/7] xfs_scrub: create a new category for unfixable errors
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157177012894.1460394.4672572733673534420.stgit@magnolia>
- <157177016827.1460394.10119847764483927499.stgit@magnolia>
+ <157177017442.1460394.7425325906254151917.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <1ef6570e-e32f-7925-7f3c-27a0cdf1d059@sandeen.net>
-Date:   Fri, 1 Nov 2019 16:25:55 -0500
+Message-ID: <83c8754e-acbf-4046-0ace-09bd4ebfa823@sandeen.net>
+Date:   Fri, 1 Nov 2019 16:32:28 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177016827.1460394.10119847764483927499.stgit@magnolia>
+In-Reply-To: <157177017442.1460394.7425325906254151917.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,46 +88,54 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 10/22/19 1:49 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Refactor this helper to avoid cycling the scrub context lock when the
-> user hasn't configured a maximum error count threshold.
+> There's nothing that xfs_scrub (or XFS) can do about media errors for
+> data file blocks -- the data are gone.  Create a new category for these
+> unfixable errors so that we don't advise the user to take further action
+> that won't fix the problem.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/common.c |   13 ++++++++++---
->  1 file changed, 10 insertions(+), 3 deletions(-)
-> 
-> 
-> diff --git a/scrub/common.c b/scrub/common.c
-> index b1c6abd1..261c6bb2 100644
-> --- a/scrub/common.c
-> +++ b/scrub/common.c
-> @@ -33,13 +33,20 @@ bool
->  xfs_scrub_excessive_errors(
->  	struct scrub_ctx	*ctx)
->  {
-> -	bool			ret;
-> +	unsigned long long	errors_seen;
-> +
-> +	/*
-> +	 * We only set max_errors at the start of the program, so it's safe to
-> +	 * access it locklessly.
-> +	 */
-> +	if (ctx->max_errors <= 0)
 
-max_errors is an /unsigned/ long long, 'sup w/ the < part?
+are "unfixable errors" /exclusively/ file data media errors?
 
-== maybe?
-
-> +		return false;
+> diff --git a/scrub/phase4.c b/scrub/phase4.c
+> index 1cf3f6b7..a276bc32 100644
+> --- a/scrub/phase4.c
+> +++ b/scrub/phase4.c
+> @@ -99,7 +99,10 @@ xfs_process_action_items(
+>  	workqueue_destroy(&wq);
 >  
 >  	pthread_mutex_lock(&ctx->lock);
-> -	ret = ctx->max_errors > 0 && ctx->corruptions_found >= ctx->max_errors;
-> +	errors_seen = ctx->corruptions_found;
->  	pthread_mutex_unlock(&ctx->lock);
+> -	if (moveon && ctx->corruptions_found == 0 && want_fstrim) {
+> +	if (moveon &&
+> +	    ctx->corruptions_found == 0 &&
+> +	    ctx->unfixable_errors == 0 &&
+> +	    want_fstrim) {
+>  		fstrim(ctx);
+>  		progress_add(1);
+>  	}
+
+
+why would a file data media error preclude fstrim?
+
+> diff --git a/scrub/phase5.c b/scrub/phase5.c
+> index dc0ee5e8..e0c4a3df 100644
+> --- a/scrub/phase5.c
+> +++ b/scrub/phase5.c
+> @@ -336,7 +336,7 @@ xfs_scan_connections(
+>  	bool			moveon = true;
+>  	bool			ret;
 >  
-> -	return ret;
-> +	return errors_seen >= ctx->max_errors;
->  }
->  
->  static struct {
-> 
+> -	if (ctx->corruptions_found) {
+> +	if (ctx->corruptions_found || ctx->unfixable_errors) {
+>  		str_info(ctx, ctx->mntpoint,
+>  _("Filesystem has errors, skipping connectivity checks."));
+
+why would a file data media error stop the connectivity check?
+
+unless "unfixable" may be other types, in which case it makes sense.
+
+But the commit log indicates it's just for a file data media error.
+
+What's the intent?
+
+-Eric
