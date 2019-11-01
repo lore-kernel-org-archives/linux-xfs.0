@@ -2,169 +2,99 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7757BCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:10:36 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B12C6CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:15:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 46E3D2085B
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:10:36 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ra/3/by2"
+	by mail.kernel.org (Postfix) with ESMTP id 8A9892085B
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:15:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727086AbfKAWKf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 18:10:35 -0400
-Received: from userp2130.oracle.com ([156.151.31.86]:50206 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725989AbfKAWKf (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 18:10:35 -0400
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA1M9vEr136068;
-        Fri, 1 Nov 2019 22:10:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=/MQFCI3dROR5jgiSSxuFOMw21zyIzui7MUJ55FOFi64=;
- b=Ra/3/by2pjKuroYoyT/W+bPKR7KS+RF6vYTAK37Z3Cps51LTjKN4uU+OgZ4qviXzQ6jF
- uBwBsnY2naGqvKxs2YynBFrZyDROcq7+Iz2lMRbAkx7WayLkrK3wk/QlCBWtAZV54uV6
- 105luG4ChP8lCRX2k5nS1zBtynDRbzP99GvbeyYAKrwMEL+cfk6iFkYeiERWJiTXJFpM
- zFg7u/DvYzY3ZIbwJ69EGf0AcVWei0r/BRQ///nsXRpinXsjkI5JgGw7ZaM67TcN80y6
- rE5jXUNL/6GTqHH75SH39s8iu2AgSR4aFc8w4ytM4o02Jh5BAXDfa1tAPIIF84yq1MET Uw== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2vxwhg49b7-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 Nov 2019 22:10:32 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA1M7TIX079136;
-        Fri, 1 Nov 2019 22:10:32 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3020.oracle.com with ESMTP id 2w0utgv0d9-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 01 Nov 2019 22:10:32 +0000
-Received: from abhmp0018.oracle.com (abhmp0018.oracle.com [141.146.116.24])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA1MAVmD030873;
-        Fri, 1 Nov 2019 22:10:31 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Fri, 01 Nov 2019 15:10:30 -0700
-Date:   Fri, 1 Nov 2019 15:10:30 -0700
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Eric Sandeen <sandeen@sandeen.net>
-Cc:     linux-xfs@vger.kernel.org
+        id S1726023AbfKAWPn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 18:15:43 -0400
+Received: from sandeen.net ([63.231.237.45]:47224 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725989AbfKAWPm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 18:15:42 -0400
+Received: from Liberator-6.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id B2E70544;
+        Fri,  1 Nov 2019 17:14:40 -0500 (CDT)
 Subject: Re: [PATCH 7/7] xfs_scrub: create a new category for unfixable errors
-Message-ID: <20191101221030.GL15222@magnolia>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
 References: <157177012894.1460394.4672572733673534420.stgit@magnolia>
  <157177017442.1460394.7425325906254151917.stgit@magnolia>
- <83c8754e-acbf-4046-0ace-09bd4ebfa823@sandeen.net>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <04103912-0bbd-521f-1e0f-3676b9b8601c@sandeen.net>
+Date:   Fri, 1 Nov 2019 17:15:40 -0500
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <83c8754e-acbf-4046-0ace-09bd4ebfa823@sandeen.net>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9428 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911010204
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9428 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911010204
+In-Reply-To: <157177017442.1460394.7425325906254151917.stgit@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 01, 2019 at 04:32:28PM -0500, Eric Sandeen wrote:
-> On 10/22/19 1:49 PM, Darrick J. Wong wrote:
-> > From: Darrick J. Wong <darrick.wong@oracle.com>
-> > 
-> > There's nothing that xfs_scrub (or XFS) can do about media errors for
-> > data file blocks -- the data are gone.  Create a new category for these
-> > unfixable errors so that we don't advise the user to take further action
-> > that won't fix the problem.
-> > 
-> > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+On 10/22/19 1:49 PM, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> are "unfixable errors" /exclusively/ file data media errors?
+> There's nothing that xfs_scrub (or XFS) can do about media errors for
+> data file blocks -- the data are gone.  Create a new category for these
+> unfixable errors so that we don't advise the user to take further action
+> that won't fix the problem.
 
-The intent behind this new classification is for things that we can't
-ever fix or rebuild in the filesystem.  However, at least for now, file
-data loss is the only source of unfixable errors.
+Ok.  I'll just slightly edit this to indicate that it's not exclusively
+media errors and the rest makes sense.
 
-> > diff --git a/scrub/phase4.c b/scrub/phase4.c
-> > index 1cf3f6b7..a276bc32 100644
-> > --- a/scrub/phase4.c
-> > +++ b/scrub/phase4.c
-> > @@ -99,7 +99,10 @@ xfs_process_action_items(
-> >  	workqueue_destroy(&wq);
-> >  
-> >  	pthread_mutex_lock(&ctx->lock);
-> > -	if (moveon && ctx->corruptions_found == 0 && want_fstrim) {
-> > +	if (moveon &&
-> > +	    ctx->corruptions_found == 0 &&
-> > +	    ctx->unfixable_errors == 0 &&
-> > +	    want_fstrim) {
-> >  		fstrim(ctx);
-> >  		progress_add(1);
-> >  	}
-> 
-> 
-> why would a file data media error preclude fstrim?
-
-If there's even the slightest hint of things still being wrong with the
-filesystem or the underlying storage, we should avoid writing to the
-storage (e.g. FITRIM) because that could screw things up even more.
-
-Note that this fstrim happens at the end of phase 4, so that means that
-if we have any corruptions or unfixable errors at this point, they're in
-the metadata, our attempts to fix them have failed, and so we absolutely
-should not go writing more things to the disk.
-
-> > diff --git a/scrub/phase5.c b/scrub/phase5.c
-> > index dc0ee5e8..e0c4a3df 100644
-> > --- a/scrub/phase5.c
-> > +++ b/scrub/phase5.c
-> > @@ -336,7 +336,7 @@ xfs_scan_connections(
-> >  	bool			moveon = true;
-> >  	bool			ret;
-> >  
-> > -	if (ctx->corruptions_found) {
-> > +	if (ctx->corruptions_found || ctx->unfixable_errors) {
-> >  		str_info(ctx, ctx->mntpoint,
-> >  _("Filesystem has errors, skipping connectivity checks."));
-> 
-> why would a file data media error stop the connectivity check?
-
-It won't, because the media scan happens during phase 6.
-
-> unless "unfixable" may be other types, in which case it makes sense.
-
-They will, presumably.  For an unfixable error to stop the connectivity
-checks (phase 5), the unfixable error would have to be observed during
-phases 1-4.  Those first four phases exclusively look for (and repair)
-internal fs metadata, so if we reach phase 5 with an unfixable error
-that means the fs metadata are trashed and xfs_scrub is going to fail
-anyway.
-
-Note that I haven't actually tried to write a directory repair function
-yet.  The last time I asked viro about it he wondered what in the hell I
-was going to do about the dentry cache and doubted that it could be
-done... so either I have to prove him wrong, or maybe directories /will/
-become the first source of unfixable errors for phase 1-4.
-
-So yes, the 'unfixable' category is supposed to be broad enough to cover
-more than just file data loss, though for now it's only used for that.
-
---D
-
-> But the commit log indicates it's just for a file data media error.
-> 
-> What's the intent?
->
-> -Eric
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+ 
