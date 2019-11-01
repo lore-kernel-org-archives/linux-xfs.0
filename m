@@ -2,33 +2,32 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
+	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6373CCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:17:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB6DCA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:21:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 3FBC521855
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:17:14 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E250221897
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:21:15 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726457AbfKASRN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 14:17:13 -0400
-Received: from sandeen.net ([63.231.237.45]:35512 "EHLO sandeen.net"
+        id S1726229AbfKASVP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 14:21:15 -0400
+Received: from sandeen.net ([63.231.237.45]:35738 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726229AbfKASRN (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 14:17:13 -0400
+        id S1725989AbfKASVP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 14:21:15 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id C2AE7544;
-        Fri,  1 Nov 2019 13:16:11 -0500 (CDT)
-Subject: Re: [PATCH 1/5] xfs_spaceman: always report sick metadata, checked or
- not
+        by sandeen.net (Postfix) with ESMTPSA id 25DBA1726B;
+        Fri,  1 Nov 2019 13:20:13 -0500 (CDT)
+Subject: Re: [PATCH 2/5] xfs_db: btheight should check geometry more carefully
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157176999124.1458930.5678023201951458107.stgit@magnolia>
- <157176999737.1458930.11352482066082675215.stgit@magnolia>
+ <157177000412.1458930.8971655647877190011.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <877be5a9-d19c-cecf-10d7-e4ea3626d0f5@sandeen.net>
-Date:   Fri, 1 Nov 2019 13:17:11 -0500
+Message-ID: <0e4c00b1-8a3d-3f30-a937-b80af1971eae@sandeen.net>
+Date:   Fri, 1 Nov 2019 13:21:13 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157176999737.1458930.11352482066082675215.stgit@magnolia>
+In-Reply-To: <157177000412.1458930.8971655647877190011.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,45 +88,13 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 10/22/19 1:46 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> If the kernel thinks a piece of metadata is bad, we must always report
-> it.  This will happen with an upcoming series to mark things sick
-> whenever we return EFSCORRUPTED at runtime.
-> 
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> The btheight command needs to check user-supplied geometry more
+> carefully so that we don't hit floating point exceptions.
 
-I gotta say, I find this all really hard to read - something I should
-have commented on earlier.  Masks, maps, and functions oh my.  bad and
-sick and checked ... reported++ with no actual reporting ....
-
-I'll try to think about what would make my poor brain happier later.
-Comments, for one I think.  Maybe some bikeshedding over variable names.
-
-I guess the upshot here is that if it's marked sick due to the kernel
-sumbling over corruption, report it whether or not we ever explicitly
-/asked/ for a check via the scrub interfaces?
+ok
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> ---
->  spaceman/health.c |    4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/spaceman/health.c b/spaceman/health.c
-> index 8fd985a2..0d3aa243 100644
-> --- a/spaceman/health.c
-> +++ b/spaceman/health.c
-> @@ -171,10 +171,10 @@ report_sick(
->  	for (f = maps; f->mask != 0; f++) {
->  		if (f->has_fn && !f->has_fn(&file->xfd.fsgeom))
->  			continue;
-> -		if (!(checked & f->mask))
-> +		bad = sick & f->mask;
-> +		if (!bad && !(checked & f->mask))
->  			continue;
->  		reported++;
-> -		bad = sick & f->mask;
->  		if (!bad && quiet)
->  			continue;
->  		printf("%s %s: %s\n", descr, _(f->descr),
-> 
+> Coverity-id: 1453661, 1453659
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+
