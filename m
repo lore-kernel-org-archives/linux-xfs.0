@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0B53DCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:36:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 50DE5CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:51:28 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D709C20679
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:36:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2804E218AC
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:51:27 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727269AbfKAUgI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 16:36:08 -0400
-Received: from sandeen.net ([63.231.237.45]:42268 "EHLO sandeen.net"
+        id S1726701AbfKAUv1 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 16:51:27 -0400
+Received: from sandeen.net ([63.231.237.45]:43056 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727222AbfKAUgI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 16:36:08 -0400
+        id S1726477AbfKAUv1 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 16:51:27 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id D190E544;
-        Fri,  1 Nov 2019 15:35:06 -0500 (CDT)
-Subject: Re: [PATCH 4/4] libfrog: take over platform headers
+        by sandeen.net (Postfix) with ESMTPSA id 9C3D017DCC;
+        Fri,  1 Nov 2019 15:50:24 -0500 (CDT)
+Subject: Re: [PATCH 2/2] xfs_scrub: refactor xfs_iterate_inodes_range_check
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <157177008495.1460186.12329293699422541895.stgit@magnolia>
- <157177011182.1460186.9452615454342854032.stgit@magnolia>
+References: <157177011420.1460310.11140985141007340173.stgit@magnolia>
+ <157177012698.1460310.12927607736966109750.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,15 +71,15 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <df54625e-3862-2d6f-5e3a-6683b29a5425@sandeen.net>
-Date:   Fri, 1 Nov 2019 15:36:07 -0500
+Message-ID: <0a7d5750-6144-f11e-d7d4-11973d51ab46@sandeen.net>
+Date:   Fri, 1 Nov 2019 15:51:24 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177011182.1460186.9452615454342854032.stgit@magnolia>
+In-Reply-To: <157177012698.1460310.12927607736966109750.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
@@ -88,9 +88,12 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 10/22/19 1:48 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Move all the declarations for platform-specific functions into
-> libfrog/platform.h, since they're a part of libfrog now.
-> 
+> Move all the bulkstat action into a single helper function.  This gets
+> rid of the awkward name and increases cohesion.
+
+mmm, cohesion.
+
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
