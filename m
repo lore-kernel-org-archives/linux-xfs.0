@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2C458CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6AF4CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:05:10 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 041D721855
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A22BE21855
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 21:05:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726396AbfKAU7q (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 16:59:46 -0400
-Received: from sandeen.net ([63.231.237.45]:43432 "EHLO sandeen.net"
+        id S1726689AbfKAVFK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 17:05:10 -0400
+Received: from sandeen.net ([63.231.237.45]:43750 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726229AbfKAU7q (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 16:59:46 -0400
+        id S1726229AbfKAVFJ (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 17:05:09 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 07B3D544;
-        Fri,  1 Nov 2019 15:58:43 -0500 (CDT)
-Subject: Re: [PATCH 1/7] xfs_scrub: fix misclassified error reporting
+        by sandeen.net (Postfix) with ESMTPSA id D1B9D544;
+        Fri,  1 Nov 2019 16:04:07 -0500 (CDT)
+Subject: Re: [PATCH 2/7] xfs_scrub: simplify post-run reporting logic
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157177012894.1460394.4672572733673534420.stgit@magnolia>
- <157177013543.1460394.2045917914550132194.stgit@magnolia>
+ <157177014195.1460394.14453951715857384456.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <6034cfbe-877c-4db1-a840-0cc71859663b@sandeen.net>
-Date:   Fri, 1 Nov 2019 15:59:43 -0500
+Message-ID: <f6ef2a36-1479-e9b5-7c2a-145ac2337d49@sandeen.net>
+Date:   Fri, 1 Nov 2019 16:05:07 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177013543.1460394.2045917914550132194.stgit@magnolia>
+In-Reply-To: <157177014195.1460394.14453951715857384456.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -85,14 +85,13 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/22/19 1:48 PM, Darrick J. Wong wrote:
+On 10/22/19 1:49 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Fix a few places where we assign error reports to the wrong
-> classification.
+> Simplify the post-run error and warning reporting logic so that in
+> subsequent patches we can be more specific about what types of things
+> went wrong.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
-
-
