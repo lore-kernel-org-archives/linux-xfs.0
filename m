@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 98597CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:31:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0D561CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:35:22 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 745E420650
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:31:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id DBFD5218AC
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:35:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727641AbfKAUba (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 16:31:30 -0400
-Received: from sandeen.net ([63.231.237.45]:42076 "EHLO sandeen.net"
+        id S1727595AbfKAUfU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 16:35:20 -0400
+Received: from sandeen.net ([63.231.237.45]:42244 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727595AbfKAUb3 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 16:31:29 -0400
+        id S1726709AbfKAUfU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 16:35:20 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id F2272544;
-        Fri,  1 Nov 2019 15:30:27 -0500 (CDT)
-Subject: Re: [PATCH 8/9] xfs_scrub: request fewer bmaps when we can
+        by sandeen.net (Postfix) with ESMTPSA id 6D9D7544;
+        Fri,  1 Nov 2019 15:34:18 -0500 (CDT)
+Subject: Re: [PATCH 1/4] libfrog: clean up platform_nproc
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
-References: <157177002473.1459098.11320398367215468164.stgit@magnolia>
- <157177007451.1459098.7077839567802348147.stgit@magnolia>
+References: <157177008495.1460186.12329293699422541895.stgit@magnolia>
+ <157177009113.1460186.17260250829884616599.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <bf3a4a47-29b6-76e6-c5ea-79ea873aeece@sandeen.net>
-Date:   Fri, 1 Nov 2019 15:31:28 -0500
+Message-ID: <a067949a-04a8-1248-fa82-362af3aad772@sandeen.net>
+Date:   Fri, 1 Nov 2019 15:35:18 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177007451.1459098.7077839567802348147.stgit@magnolia>
+In-Reply-To: <157177009113.1460186.17260250829884616599.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,13 +85,15 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/22/19 1:47 PM, Darrick J. Wong wrote:
+On 10/22/19 1:48 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> In xfs_iterate_filemaps, we query the number of bmaps for a given file
-> that we're going to iterate, so feed that information to bmap so that
-> the kernel won't waste time allocating in-kernel memory unnecessarily.
+> The platform_nproc function should check for error returns and obviously
+> garbage values and deal with them appropriately.  Fix the header
+> declaration since it's part of the libfrog platform support code, not
+> libxfs.  xfs_scrub will make use of it in the next patch.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
+
