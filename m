@@ -2,32 +2,33 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB6DCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:21:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F3BCCA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:26:52 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E250221897
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:21:15 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 4C11421897
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:26:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726229AbfKASVP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 14:21:15 -0400
-Received: from sandeen.net ([63.231.237.45]:35738 "EHLO sandeen.net"
+        id S1726934AbfKAS0v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 14:26:51 -0400
+Received: from sandeen.net ([63.231.237.45]:35992 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725989AbfKASVP (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 14:21:15 -0400
+        id S1726532AbfKAS0v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 14:26:51 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 25DBA1726B;
-        Fri,  1 Nov 2019 13:20:13 -0500 (CDT)
-Subject: Re: [PATCH 2/5] xfs_db: btheight should check geometry more carefully
+        by sandeen.net (Postfix) with ESMTPSA id AC5CB544;
+        Fri,  1 Nov 2019 13:25:49 -0500 (CDT)
+Subject: Re: [PATCH 3/5] xfs_scrub: report repair activities on stdout, not
+ stderr
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157176999124.1458930.5678023201951458107.stgit@magnolia>
- <157177000412.1458930.8971655647877190011.stgit@magnolia>
+ <157177001031.1458930.10794386697707805480.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <0e4c00b1-8a3d-3f30-a937-b80af1971eae@sandeen.net>
-Date:   Fri, 1 Nov 2019 13:21:13 -0500
+Message-ID: <ff4b4193-c6e1-130f-7e09-f8bb9790c33a@sandeen.net>
+Date:   Fri, 1 Nov 2019 13:26:49 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177000412.1458930.8971655647877190011.stgit@magnolia>
+In-Reply-To: <157177001031.1458930.10794386697707805480.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -88,13 +89,51 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 10/22/19 1:46 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> The btheight command needs to check user-supplied geometry more
-> carefully so that we don't hit floating point exceptions.
+> Reduce the severity of reports about successful metadata repairs.  We
+> fixed the problem, so there's no action necessary on the part of the
+> system admin.
 
-ok
+Hm, ok.  "we found corruption" seems quite important, but I guess it's
+not an operational error of the utility.  *shrug*
+
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> ---
+>  scrub/common.c |    2 +-
+>  scrub/common.h |    2 +-
+>  2 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> 
+> diff --git a/scrub/common.c b/scrub/common.c
+> index b41f443d..7632a8d8 100644
+> --- a/scrub/common.c
+> +++ b/scrub/common.c
+> @@ -48,7 +48,7 @@ static struct {
+>  } err_levels[] = {
+>  	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
+>  	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
+> -	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
+> +	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_INFO },
+>  	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
+>  	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
+
+My OCD wants this in the same order as error_level, I'll change that
+on commit if it's ok w/ you.  And if I remember.
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
-> Coverity-id: 1453661, 1453659
-> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-
+>  };
+> diff --git a/scrub/common.h b/scrub/common.h
+> index 9a37e9ed..ef4cf439 100644
+> --- a/scrub/common.h
+> +++ b/scrub/common.h
+> @@ -18,8 +18,8 @@ bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
+>  enum error_level {
+>  	S_ERROR	= 0,
+>  	S_WARN,
+> -	S_REPAIR,
+>  	S_INFO,
+> +	S_REPAIR,
+>  	S_PREEN,
+>  };
+>  
+> 
