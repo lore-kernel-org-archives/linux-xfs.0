@@ -6,28 +6,28 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DE1FFCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:35:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98869CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:35:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BA9B520679
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:35:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 7574A21897
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:35:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726709AbfKAUfb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 16:35:31 -0400
-Received: from sandeen.net ([63.231.237.45]:42248 "EHLO sandeen.net"
+        id S1727926AbfKAUf5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 16:35:57 -0400
+Received: from sandeen.net ([63.231.237.45]:42252 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726701AbfKAUfb (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 16:35:31 -0400
+        id S1727758AbfKAUf5 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 16:35:57 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 43C07544;
-        Fri,  1 Nov 2019 15:34:29 -0500 (CDT)
-Subject: Re: [PATCH 2/4] libxfs: remove libxfs_nproc
+        by sandeen.net (Postfix) with ESMTPSA id 7D843544;
+        Fri,  1 Nov 2019 15:34:55 -0500 (CDT)
+Subject: Re: [PATCH 3/4] libxfs: remove libxfs_physmem
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157177008495.1460186.12329293699422541895.stgit@magnolia>
- <157177009727.1460186.2780524441344390421.stgit@magnolia>
+ <157177010343.1460186.15100646078363671205.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -71,12 +71,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <a416eae0-59c2-f0d4-2575-6fb5d760bf1a@sandeen.net>
-Date:   Fri, 1 Nov 2019 15:35:29 -0500
+Message-ID: <e574f2dd-4c7c-5e8e-ca32-3f43d0dc1c88@sandeen.net>
+Date:   Fri, 1 Nov 2019 15:35:55 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177009727.1460186.2780524441344390421.stgit@magnolia>
+In-Reply-To: <157177010343.1460186.15100646078363671205.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -85,12 +85,10 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-
-
 On 10/22/19 1:48 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Remove libxfs_nproc since it's a wrapper around a libfrog function.
+> Remove this thin wrapper too.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
