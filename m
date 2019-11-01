@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6F3BCCA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:26:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B0D90CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:31:59 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4C11421897
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:26:52 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 894C5218AC
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 18:31:59 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726934AbfKAS0v (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 14:26:51 -0400
-Received: from sandeen.net ([63.231.237.45]:35992 "EHLO sandeen.net"
+        id S1727222AbfKASb7 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 14:31:59 -0400
+Received: from sandeen.net ([63.231.237.45]:36244 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726532AbfKAS0v (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 14:26:51 -0400
+        id S1726532AbfKASb6 (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 14:31:58 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id AC5CB544;
-        Fri,  1 Nov 2019 13:25:49 -0500 (CDT)
-Subject: Re: [PATCH 3/5] xfs_scrub: report repair activities on stdout, not
- stderr
+        by sandeen.net (Postfix) with ESMTPSA id 91B16544;
+        Fri,  1 Nov 2019 13:30:56 -0500 (CDT)
+Subject: Re: [PATCH 4/5] xfs_scrub: don't allow error or negative error
+ injection interval
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157176999124.1458930.5678023201951458107.stgit@magnolia>
- <157177001031.1458930.10794386697707805480.stgit@magnolia>
+ <157177001659.1458930.2704912012566010203.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <ff4b4193-c6e1-130f-7e09-f8bb9790c33a@sandeen.net>
-Date:   Fri, 1 Nov 2019 13:26:49 -0500
+Message-ID: <c3aa96a9-5623-88e6-5f55-24733f0c16ea@sandeen.net>
+Date:   Fri, 1 Nov 2019 13:31:56 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177001031.1458930.10794386697707805480.stgit@magnolia>
+In-Reply-To: <157177001659.1458930.2704912012566010203.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 8bit
@@ -89,51 +89,40 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 10/22/19 1:46 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Reduce the severity of reports about successful metadata repairs.  We
-> fixed the problem, so there's no action necessary on the part of the
-> system admin.
-
-Hm, ok.  "we found corruption" seems quite important, but I guess it's
-not an operational error of the utility.  *shrug*
-
+> Don't allow zero or negative values from XFS_SCRUB_DISK_ERROR_INTERVAL
+> to slip into the system.  This is a debugging knob so we don't need to
+> be rigorous, but we can at least take care of obvious garbage values.
+> 
+> Coverity-id: 1454842
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
-> ---
->  scrub/common.c |    2 +-
->  scrub/common.h |    2 +-
->  2 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> 
-> diff --git a/scrub/common.c b/scrub/common.c
-> index b41f443d..7632a8d8 100644
-> --- a/scrub/common.c
-> +++ b/scrub/common.c
-> @@ -48,7 +48,7 @@ static struct {
->  } err_levels[] = {
->  	[S_ERROR]  = { .string = "Error",	.loglevel = LOG_ERR },
->  	[S_WARN]   = { .string = "Warning",	.loglevel = LOG_WARNING },
-> -	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_WARNING },
-> +	[S_REPAIR] = { .string = "Repaired",	.loglevel = LOG_INFO },
->  	[S_INFO]   = { .string = "Info",	.loglevel = LOG_INFO },
->  	[S_PREEN]  = { .string = "Optimized",	.loglevel = LOG_INFO }
 
-My OCD wants this in the same order as error_level, I'll change that
-on commit if it's ok w/ you.  And if I remember.
+so we can't /set/ it to 0 or -1, and if it is, set it to -1. (!)
+
+but ok, -1 means disabled, so invalid value -> disabled.
+
+dbg_printf might be nice intead of silently ignoring but ... it's just
+a debug knob so
 
 Reviewed-by: Eric Sandeen <sandeen@redhat.com>
 
->  };
-> diff --git a/scrub/common.h b/scrub/common.h
-> index 9a37e9ed..ef4cf439 100644
-> --- a/scrub/common.h
-> +++ b/scrub/common.h
-> @@ -18,8 +18,8 @@ bool xfs_scrub_excessive_errors(struct scrub_ctx *ctx);
->  enum error_level {
->  	S_ERROR	= 0,
->  	S_WARN,
-> -	S_REPAIR,
->  	S_INFO,
-> +	S_REPAIR,
->  	S_PREEN,
->  };
+> ---
+>  scrub/disk.c |    4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> 
+> diff --git a/scrub/disk.c b/scrub/disk.c
+> index 214a5346..8a8a411b 100644
+> --- a/scrub/disk.c
+> +++ b/scrub/disk.c
+> @@ -303,6 +303,10 @@ disk_simulate_read_error(
+>  		interval = strtoull(p, NULL, 10);
+>  		interval &= ~((1U << disk->d_lbalog) - 1);
+>  	}
+> +	if (interval <= 0) {
+> +		interval = -1;
+> +		return 0;
+> +	}
 >  
+>  	/*
+>  	 * We simulate disk errors by pretending that there are media errors at
 > 
