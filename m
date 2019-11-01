@@ -2,229 +2,224 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-5.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F126CA9EC9
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:04:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10DFECA9EC9
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:50:03 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 6DA0E2080F
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:04:16 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aVaNchYi"
+	by mail.kernel.org (Postfix) with ESMTP id CCC882080F
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:50:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728506AbfKAHEQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 03:04:16 -0400
-Received: from mail-pf1-f194.google.com ([209.85.210.194]:44849 "EHLO
-        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727038AbfKAHEP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 03:04:15 -0400
-Received: by mail-pf1-f194.google.com with SMTP id q26so6394233pfn.11
-        for <linux-xfs@vger.kernel.org>; Fri, 01 Nov 2019 00:04:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=3gzcaN4OCt/ST4U8JBzVidIqDWiCZIOraQo3jXKW4BA=;
-        b=aVaNchYia4vAekBMOhXWE4W+p4bKGX0VrrYbU8eDSAzNnJe90Y2JqEbo4yExCQbyRX
-         XWsM8+Ux7Z5G+0KPKDHg+iBClES3cDrfgtpy9Jl5Vt2qbLwQSzNF4i1fXRudWXJA1WZN
-         XVvo6oDPvmgdyESrfvJyOHcdjraxcVr3tbkyxHv3cInasaLdbz+POZLy4a1Pt/YneqPw
-         aS0DS9kWGLz/mw8yuytmLvwpLds7NRxDg4QTGM/wcnSkP6xw9UsRfoTbPPMztYKlNcrZ
-         h29Mww8UxwRoXzs2g9ip9FaHMn6kSa2jy6fHQcK8FVvwHwdcibm7KltMfOGpHT4MxsvO
-         RhHQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=3gzcaN4OCt/ST4U8JBzVidIqDWiCZIOraQo3jXKW4BA=;
-        b=QS1VO5pzX9+lbOlRcbY6Yf8ToBpvZLq+5ksJnR1Q+KCVxjrOfNjUlbdZzxHebOyuH4
-         YDnuT8ETMPfeVwdOwHM2U8T3+wEGRoDFDCUmhZCpps3Km9YouAQNpqfsXmxaLXIORT8K
-         dt37EMK/CbT+BS8Dcu93JZmDKna2poH4VsTrDrWSX+h7Fj14iWCj7pszaHhfWYTTk/Vl
-         U5o+dp7opVmLqpgNM/Lneesqt++sx1QbOd+TKKL3i8Fqol41Rz7jbAofM37dM5yzcU/+
-         Ff4vd1YHTVNxh4rkOTPgPE5XkslQBba+OP6dm4lX62u52qQ0s7SzjvJoOaeqgYwuN+zS
-         otow==
-X-Gm-Message-State: APjAAAVHgFIsKY0lNGYp5dDnu3D1bTh+rsYxTXlNIVqzd8GI2KXclAMx
-        kaX8zl8E/gVtMAoq6UXaCw==
-X-Google-Smtp-Source: APXvYqwIZSns62rOSntJJEykChJYYQXR1GVoK88FbnM2foc5ZTJdJQ1ngk47rBO+55yeDQTAmvSG+g==
-X-Received: by 2002:a63:5c4a:: with SMTP id n10mr11949268pgm.120.1572591854936;
-        Fri, 01 Nov 2019 00:04:14 -0700 (PDT)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id y2sm5761131pfe.126.2019.11.01.00.04.12
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Fri, 01 Nov 2019 00:04:14 -0700 (PDT)
-Subject: Re: [PATCH RFC] xfs: Fix deadlock between AGI and AGF when target_ip
- exists in xfs_rename()
-To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
-        newtongao@tencent.com, jasperwang@tencent.com
-References: <1572428974-8657-1-git-send-email-kaixuxia@tencent.com>
- <20191031122701.GB54006@bfoster>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <3eb29cb7-8cb4-4cdd-dcf5-2acbca5d2719@gmail.com>
-Date:   Fri, 1 Nov 2019 15:04:11 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+        id S1726921AbfKAHuC (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 03:50:02 -0400
+Received: from icp-osb-irony-out7.external.iinet.net.au ([203.59.1.107]:8687
+        "EHLO icp-osb-irony-out7.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1725787AbfKAHuC (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 03:50:02 -0400
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AUAABb4rtd/xK90HYNVxwBAQEBAQc?=
+ =?us-ascii?q?BAREBBAQBAYFpBwEBCwGBbgWBGIExhCiII4c2AQEBAQEBBoERgSSIZIUwAYo?=
+ =?us-ascii?q?VFIFnCQEBAQEBAQEBAScQAQGEOwMChCA0CQ4CDAEBAQQBAQEBAQUDAYVYTIV?=
+ =?us-ascii?q?gJwRSKA0CJgJJFgqDLIJSsGR1fzMahB8BCwGGC4EOKAGBZIpEeIEHgREzgip?=
+ =?us-ascii?q?zgmIBA4FEA4Mogl4EjG8kgi83hWBhQ5Z1gi6HEY4/DIIwi3gDiy6QAIZukyC?=
+ =?us-ascii?q?CEU0uCoMnCRYxgzYXgQQBAociO4VMZ4wuASuCEgEB?=
+X-IPAS-Result: =?us-ascii?q?A2AUAABb4rtd/xK90HYNVxwBAQEBAQcBAREBBAQBAYFpB?=
+ =?us-ascii?q?wEBCwGBbgWBGIExhCiII4c2AQEBAQEBBoERgSSIZIUwAYoVFIFnCQEBAQEBA?=
+ =?us-ascii?q?QEBAScQAQGEOwMChCA0CQ4CDAEBAQQBAQEBAQUDAYVYTIVgJwRSKA0CJgJJF?=
+ =?us-ascii?q?gqDLIJSsGR1fzMahB8BCwGGC4EOKAGBZIpEeIEHgREzgipzgmIBA4FEA4Mog?=
+ =?us-ascii?q?l4EjG8kgi83hWBhQ5Z1gi6HEY4/DIIwi3gDiy6QAIZukyCCEU0uCoMnCRYxg?=
+ =?us-ascii?q?zYXgQQBAociO4VMZ4wuASuCEgEB?=
+X-IronPort-AV: E=Sophos;i="5.68,254,1569254400"; 
+   d="scan'208";a="215829825"
+Received: from unknown (HELO [192.168.1.222]) ([118.208.189.18])
+  by icp-osb-irony-out7.iinet.net.au with ESMTP; 01 Nov 2019 15:49:56 +0800
+Subject: [PATCH v8 00/16] xfs: mount API patch series
+From:   Ian Kent <raven@themaw.net>
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Cc:     Christoph Hellwig <hch@infradead.org>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        Eric Sandeen <sandeen@sandeen.net>,
+        David Howells <dhowells@redhat.com>,
+        Dave Chinner <dchinner@redhat.com>,
+        Al Viro <viro@ZenIV.linux.org.uk>
+Date:   Fri, 01 Nov 2019 15:49:56 +0800
+Message-ID: <157259452909.28278.1001302742832626046.stgit@fedora-28>
+User-Agent: StGit/unknown-version
 MIME-Version: 1.0
-In-Reply-To: <20191031122701.GB54006@bfoster>
-Content-Type: text/plain; charset=windows-1252
-Content-Language: en-US
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+This patch series add support to xfs for the new kernel mount API as
+described in the LWN article at https://lwn.net/Articles/780267/.
+
+In the article there's a lengthy description of the reasons for adopting
+the API and problems expected to be resolved by using it.
+
+The series has been applied to the repository located at
+git://git.kernel.org/pub/scm/fs/xfs/xfs-linux.git for-next branch, and
+built and some simple tests run on it along with the default xfstests.
+
+Note: since I reverted to an earlier revision of the series ad applied
+  some changes again it's probably worth reviewers casting an eye over
+  patches that have Reviewed-by attributions to ensure they are still
+  acceptable.
+
+Other things that continue to cause me concern:
+
+- Message logging.
+  There is error logging done in the VFS by the mount-api code, some is
+  VFS specific while some is file system specific. This can lead to
+  duplicated and sometimes inconsistent logging.
+
+  The mount-api feature of saving error message text to the mount
+  context for later retrieval by fsopen()/fsconfig()/fsmount() users is
+  the reason the mount-api log macros are present. But, at the moment
+  (last time I looked), these macros will either log the error message
+  or save it to the mount context. There's not yet a way to modify this
+  behaviour so it which can lead to messages, possibly needed for debug
+  purposes, not being sent to the kernel log. There's also the pr_xxx()
+  log functions (not a problem for xfs AFAICS) that aren't aware of the
+  mount context at all.
+
+  In the xfs patches I've used the same method that is used in gfs2 and
+  was suggested by Al Viro (essentially return the error if fs_parse()
+  returns one) except that I've also not used the mount api log macros
+  to minimise the possibility of lost log messages.
+
+  This isn't the best so follow up patches for RFC (with a slightly
+  wider audience) will be needed to try and improve this aspect of the
+  mount api. 
+
+Changes for v8:
+- update to for-next 21f55993eb7a.
+- accomodate Christoph's options handling changes (thanks Christoph).
+- remove redundant check in __xfs_printk().
+- add missing sync_filesystem() in .reconfigure (fixes assertion fail
+  reported by Darrick).
+- fix IS_ENABLED() macro usage.
+- move the xfs_fc_*() functions and related functions above the struct
+  fs_context_operations to bring the parameter parsing and mount
+  handling code together.
+
+Changes for v7:
+- fix s/mount info/struct xfs_mount/g in the patches that remove the
+  m_fsname_len and m_fsname struct xfs_mount fields.
+- also use IS_ENABLED() macro for the quota config check.
+- don't use typedef'ed struct definitions in new or chencged code.
+- extend comment lines to use full 80 characters and to 72 characters
+  for commit log entries.
+- fix function parameter and variable declaration style inconsistencies.
+- use "return 0" instead of "break" in xfs_parse_param() as recommended.
+- avoid redundant option checks for the case where no options are given.
+- merge freeing of mp names and mp.
+- change name field of struct fs_parameter_description to lower case.
+- group mount related code together as much as possible to enhance
+  readability.
+- changed mount api related functions to all use an "xfs_fc" prefix.
+
+Changes for v6:
+- drop get_tree_bdev() patch since it's now present in the xfs-linux
+  repo.
+- eliminate unused mount info. field m_fsname_len.
+- eliminate mount info field m_fsname, use super block field s_id
+  instead.
+- dont use XFS_IS_QUOTA_RUNNING() when checking if quota options have
+  been specified.
+- combine mount-api specific patches into a single patch to help with
+  bi-sectability.
+
+Changes for v5:
+- give error exit label in xfs_fill_super() a sensible name.
+- use original comment about options handling in xfs_fs_remount() for
+  comment above xfs_reconfigure().
+- use a much simpler comment in xfs_fc_free(), thanks to Brian Foster.
+- move cover letter comment about the first two patches above the
+  revision comentary so it isn't missed. 
+
+Changes for v4:
+- changed xfs_fill_super() cleanup back to what it was in v2, until I
+  can work out what's causing the problem had previously seen (I can't
+  reproduce it myself), since it looks like it was right from the start.
+- use get_tree_bdev() instead of vfs_get_block_super() in xfs_get_tree()
+  as requested by Al Viro.
+- removed redundant initialisation in xfs_fs_fill_super().
+- fix long line in xfs_validate_params().
+- no need to validate if parameter parsing fails, just return the error.
+- summarise reconfigure comment about option handling, transfer bulk of
+  comment to commit log message.
+- use minimal change in xfs_parse_param(), deffer discussion of mount
+  api logging improvements until later and with a wider audience.
+
+Changes for v3:
+- fix struct xfs_fs_context initialization in xfs_parseargs().
+- move call to xfs_validate_params() below label "done".
+- if allocation of xfs_mount fails return ENOMEM immediately.
+- remove erroneous kfree(mp) in xfs_fill_super().
+- move the removal of xfs_fs_remount() and xfs_test_remount_options()
+  to the switch to mount api patch.
+- retain original usage of distinct <option>, no<option> usage.
+- fix line length and a white space problem in xfs_parseargs().
+- defer introduction of struct fs_context_operations until mount api
+  implementation.
+- don't use a new line for the void parameter of xfs_mount_alloc().
+- check for -ENOPARAM in xfs_parse_param() to report invalid options
+  using the options switch.
+- remove obolete mount option biosize.
+- try and make comment in xfs_fc_free() more understandable.
+
+Changes for v2:
+- changed .name to uppercase in fs_parameter_description to ensure
+  consistent error log messages between the vfs parser and the xfs
+  parameter parser.
+- clearify comment above xfs_parse_param() about when possibly allocated
+  mp->m_logname or mp->m_rtname are freed.
+- factor out xfs_remount_rw() and xfs_remount_ro() from  xfs_remount().
+- changed xfs_mount_alloc() to not set super block in xfs_mount so it
+  can be re-used when switching to the mount-api.
+- fixed don't check for NULL when calling kfree() in xfs_fc_free().
+- refactored xfs_parseargs() in an attempt to highlight the code that
+  actually changes in converting to use the new mount api.
+- dropped xfs-mount-api-rename-xfs_fill_super.patch, it didn't seem
+  necessary.
+- move comment about remount difficulties above xfs_reconfigure() and
+  increase line length to try and make the comment managable.
+---
+
+Ian Kent (16):
+      xfs: remove unused struct xfs_mount field m_fsname_len
+      xfs: use super s_id instead of struct xfs_mount m_fsname
+      xfs: dont use XFS_IS_QUOTA_RUNNING() for option check
+      xfs: use kmem functions for struct xfs_mount
+      xfs: merge freeing of mp names and mp
+      xfs: add xfs_remount_rw() helper
+      xfs: add xfs_remount_ro() helper
+      xfs: refactor suffix_kstrtoint()
+      xfs: avoid redundant checks when options is empty
+      xfs: refactor xfs_parseags()
+      xfs: move xfs_parseargs() validation to a helper
+      xfs: dont set sb in xfs_mount_alloc()
+      xfs: switch to use the new mount-api
+      xfs: move xfs_fc_reconfigure() above xfs_fc_free()
+      xfs: move xfs_fc_get_tree() above xfs_fc_reconfigure()
+      xfs: move xfs_fc_parse_param() above xfs_fc_get_tree()
 
 
-On 2019/10/31 20:27, Brian Foster wrote:
-> On Wed, Oct 30, 2019 at 05:49:34PM +0800, kaixuxia wrote:
->> When target_ip exists in xfs_rename(), the xfs_dir_replace() call may
->> need to hold the AGF lock to allocate more blocks, and then invoking
->> the xfs_droplink() call to hold AGI lock to drop target_ip onto the
->> unlinked list, so we get the lock order AGF->AGI. This would break the
->> ordering constraint on AGI and AGF locking - inode allocation locks
->> the AGI, then can allocate a new extent for new inodes, locking the
->> AGF after the AGI.
->>
->> In this patch we check whether the replace operation need more
->> blocks firstly. If so, acquire the agi lock firstly to preserve
->> locking order(AGI/AGF). Actually, the locking order problem only
->> occurs when we are locking the AGI/AGF of the same AG. For multiple
->> AGs the AGI lock will be released after the transaction committed.
->>
->> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
->> ---
->>  fs/xfs/libxfs/xfs_dir2.c | 30 ++++++++++++++++++++++++++++++
->>  fs/xfs/libxfs/xfs_dir2.h |  2 ++
->>  fs/xfs/xfs_inode.c       | 14 ++++++++++++++
->>  3 files changed, 46 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
->> index 867c5de..9d9ae16 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.c
->> +++ b/fs/xfs/libxfs/xfs_dir2.c
->> @@ -463,6 +463,36 @@
->>  }
->>  
->>  /*
->> + * Check whether the replace operation need more blocks. Ignore
->> + * the parameters check since the real replace() call below will
->> + * do that.
->> + */
->> +bool
->> +xfs_dir_replace_needblock(
->> +	struct xfs_inode	*dp,
->> +	xfs_ino_t		inum)
->> +{
->> +	int			newsize;
->> +	xfs_dir2_sf_hdr_t	*sfp;
->> +
->> +	/*
->> +	 * Only convert the shortform directory to block form maybe need
->> +	 * more blocks.
->> +	 */
->> +	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
->> +		return false;
->> +
->> +	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
->> +	newsize = dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
->> +
->> +	if (inum > XFS_DIR2_MAX_SHORT_INUM &&
->> +	    sfp->i8count == 0 && newsize > XFS_IFORK_DSIZE(dp))
->> +		return true;
->> +	else
->> +		return false;
->> +}
->> +
-> 
-> It's slightly unfortunate we need to do these kind of double checks, but
-> it seems reasonable enough as an isolated fix. From a factoring
-> standpoint, it might be a little cleaner to move this down in
-> xfs_dir2_sf.c as an xfs_dir2_sf_replace_needblock() helper, actually use
-> it in the xfs_dir2_sf_replace() function where these checks are
-> currently open coded and then export it so we can call it in the higher
-> level function as well for the locking fix.
-> 
-Yeah, makes more sense. Also maybe we could add a function helper like
-the xfs_dir_canenter() call, it just check whether the replace operation
-need more blocks,
+ fs/xfs/xfs_error.c     |    2 
+ fs/xfs/xfs_log.c       |    2 
+ fs/xfs/xfs_message.c   |    4 
+ fs/xfs/xfs_mount.c     |    5 
+ fs/xfs/xfs_mount.h     |    2 
+ fs/xfs/xfs_pnfs.c      |    2 
+ fs/xfs/xfs_super.c     | 1232 ++++++++++++++++++++++++------------------------
+ fs/xfs/xfs_trans_ail.c |    2 
+ 8 files changed, 618 insertions(+), 633 deletions(-)
 
- int xfs_dir_replace_needblock(...)
- {
- 	xfs_dir_replace(tp, dp, name, 0, 0);
- }
-
-I'm not sure if this approach is reasonable...
-
-Actually, there are some different solutions for the locking fix. One solution
-is checking whether the replace operation need more blocks and acquiring AGI
-lock before AGF lock. Another one is moving xfs_droplink() call to before the
-xfs_dir_replace() call, but this solution may not be suitable. The third one
-is expanding the directory in one transaction, but I'm not sure about this
-solution and have no idea how to do it... 
-Comments about these solutions, which one is more reasonable?
-
-kaixu    
-
-> Brian
-> 
->> +/*
->>   * Replace the inode number of a directory entry.
->>   */
->>  int
->> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
->> index f542447..e436c14 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.h
->> +++ b/fs/xfs/libxfs/xfs_dir2.h
->> @@ -124,6 +124,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
->>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
->>  				struct xfs_name *name, xfs_ino_t ino,
->>  				xfs_extlen_t tot);
->> +extern bool xfs_dir_replace_needblock(struct xfs_inode *dp,
->> +				xfs_ino_t inum);
->>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
->>  				struct xfs_name *name, xfs_ino_t inum,
->>  				xfs_extlen_t tot);
->> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->> index 18f4b26..c239070 100644
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -3196,6 +3196,7 @@ struct xfs_iunlink {
->>  	struct xfs_trans	*tp;
->>  	struct xfs_inode	*wip = NULL;		/* whiteout inode */
->>  	struct xfs_inode	*inodes[__XFS_SORT_INODES];
->> +	struct xfs_buf		*agibp;
->>  	int			num_inodes = __XFS_SORT_INODES;
->>  	bool			new_parent = (src_dp != target_dp);
->>  	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
->> @@ -3361,6 +3362,19 @@ struct xfs_iunlink {
->>  		 * In case there is already an entry with the same
->>  		 * name at the destination directory, remove it first.
->>  		 */
->> +
->> +		/*
->> +		 * Check whether the replace operation need more blocks.
->> +		 * If so, acquire the agi lock firstly to preserve locking
->> +		 * order(AGI/AGF).
->> +		 */
->> +		if (xfs_dir_replace_needblock(target_dp, src_ip->i_ino)) {
->> +			error = xfs_read_agi(mp, tp,
->> +					XFS_INO_TO_AGNO(mp, target_ip->i_ino), &agibp);
->> +			if (error)
->> +				goto out_trans_cancel;
->> +		}
->> +
->>  		error = xfs_dir_replace(tp, target_dp, target_name,
->>  					src_ip->i_ino, spaceres);
->>  		if (error)
->> -- 
->> 1.8.3.1
->>
-> 
-
--- 
-kaixuxia
+--
+Ian
