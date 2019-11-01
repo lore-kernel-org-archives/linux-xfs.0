@@ -2,106 +2,229 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
 	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 881EBCA9EC9
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 04:02:46 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9F126CA9EC9
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:04:16 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 4EE482083E
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 04:02:46 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DA0E2080F
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 07:04:16 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="F3LOefIM"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aVaNchYi"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726798AbfKAECp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 00:02:45 -0400
-Received: from mail-pf1-f196.google.com ([209.85.210.196]:38720 "EHLO
-        mail-pf1-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725208AbfKAECp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 00:02:45 -0400
-Received: by mail-pf1-f196.google.com with SMTP id c13so6097196pfp.5
-        for <linux-xfs@vger.kernel.org>; Thu, 31 Oct 2019 21:02:45 -0700 (PDT)
+        id S1728506AbfKAHEQ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 03:04:16 -0400
+Received: from mail-pf1-f194.google.com ([209.85.210.194]:44849 "EHLO
+        mail-pf1-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727038AbfKAHEP (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 03:04:15 -0400
+Received: by mail-pf1-f194.google.com with SMTP id q26so6394233pfn.11
+        for <linux-xfs@vger.kernel.org>; Fri, 01 Nov 2019 00:04:15 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=34BmgyfVqaaCcuUyLhQdPVb7gObGLSSCd90lxaYvEN0=;
-        b=F3LOefIM2SyfmLDqydgprywZNuT/Uyyjry6RJmGtEZ17Y2k2G5msAzz+4TOwkmgrHI
-         xayuiIOh0B6ypoAatf8LrJ3UCATfUQd7SxrKN6/5KtLy6l5qF5oBVFTSVSI4ILE7Akxt
-         dhN9eH1blfCCUKcMKx3zPtYAzNldiogdmhm4rWHHciYbZjkBl+7kStrWv2gzEkr6cgjU
-         +gTVOjUABtYzP74E81qtXDbt7nOOi9abga3u3nJ4l6MLtsKZAtnI0tQfzfX5EjqVzjrh
-         hY1RMwtzg8oAHuEdkQyOdaE5ZdnYGb2yXG0ceDIYoXOCSH2v90jpbbC+2OF/7Fhm0fpv
-         KIhg==
+        h=subject:to:cc:references:from:message-id:date:user-agent
+         :mime-version:in-reply-to:content-language:content-transfer-encoding;
+        bh=3gzcaN4OCt/ST4U8JBzVidIqDWiCZIOraQo3jXKW4BA=;
+        b=aVaNchYia4vAekBMOhXWE4W+p4bKGX0VrrYbU8eDSAzNnJe90Y2JqEbo4yExCQbyRX
+         XWsM8+Ux7Z5G+0KPKDHg+iBClES3cDrfgtpy9Jl5Vt2qbLwQSzNF4i1fXRudWXJA1WZN
+         XVvo6oDPvmgdyESrfvJyOHcdjraxcVr3tbkyxHv3cInasaLdbz+POZLy4a1Pt/YneqPw
+         aS0DS9kWGLz/mw8yuytmLvwpLds7NRxDg4QTGM/wcnSkP6xw9UsRfoTbPPMztYKlNcrZ
+         h29Mww8UxwRoXzs2g9ip9FaHMn6kSa2jy6fHQcK8FVvwHwdcibm7KltMfOGpHT4MxsvO
+         RhHQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
         d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=34BmgyfVqaaCcuUyLhQdPVb7gObGLSSCd90lxaYvEN0=;
-        b=bloStaAHGAp87zgWrxKMUmwbCqnfVDYQTUDK8jHTWXcBoQSS6ZjR9CIXzo2YOs9sHi
-         PhHb/6EFFHZ6fs4GK6CMFWfYbJdjtEt8BEotOgSpulG8Nk1ObKSyfi0DJtUPN6TeeN33
-         jLcj3fQ1CmtMO2NA1Yq16R4CbWdVYgZx0z+GYG4XE94q2KMZ6iuXoRx6anG8EvA3aD3R
-         0QUlm44pgLHJ8YrWS/T6LfM2/UnaXPZO96X9sTq05f3MfOt7BHzEK7bTUNfXPQRx8NDd
-         RTomvADhZC3LaGvRdtxGuCLi6UQGAkP8fv39E+fHd93kT5aZDZvr64hyQjbuUgktUkPE
-         fLYQ==
-X-Gm-Message-State: APjAAAU9YraSmk2zJUAahlzGwO7SkhR5QMUMonFBNCueYRNbdgBlIxZs
-        DhZCV9vk6Jx3g6sNpEDjdhWThFg=
-X-Google-Smtp-Source: APXvYqzGHHbV4WI9vXJylbsGuKRxETZYCQhzzJRaEFZk1v5SXG2BnbBr732/cmqzprtoBsVLDF+Qow==
-X-Received: by 2002:a62:7553:: with SMTP id q80mr11167208pfc.203.1572580964854;
-        Thu, 31 Oct 2019 21:02:44 -0700 (PDT)
-Received: from mypc ([209.132.188.80])
-        by smtp.gmail.com with ESMTPSA id 65sm5552528pfv.50.2019.10.31.21.02.42
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Oct 2019 21:02:43 -0700 (PDT)
-Date:   Fri, 1 Nov 2019 12:02:34 +0800
-From:   Pingfan Liu <kernelfans@gmail.com>
+        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
+         :user-agent:mime-version:in-reply-to:content-language
+         :content-transfer-encoding;
+        bh=3gzcaN4OCt/ST4U8JBzVidIqDWiCZIOraQo3jXKW4BA=;
+        b=QS1VO5pzX9+lbOlRcbY6Yf8ToBpvZLq+5ksJnR1Q+KCVxjrOfNjUlbdZzxHebOyuH4
+         YDnuT8ETMPfeVwdOwHM2U8T3+wEGRoDFDCUmhZCpps3Km9YouAQNpqfsXmxaLXIORT8K
+         dt37EMK/CbT+BS8Dcu93JZmDKna2poH4VsTrDrWSX+h7Fj14iWCj7pszaHhfWYTTk/Vl
+         U5o+dp7opVmLqpgNM/Lneesqt++sx1QbOd+TKKL3i8Fqol41Rz7jbAofM37dM5yzcU/+
+         Ff4vd1YHTVNxh4rkOTPgPE5XkslQBba+OP6dm4lX62u52qQ0s7SzjvJoOaeqgYwuN+zS
+         otow==
+X-Gm-Message-State: APjAAAVHgFIsKY0lNGYp5dDnu3D1bTh+rsYxTXlNIVqzd8GI2KXclAMx
+        kaX8zl8E/gVtMAoq6UXaCw==
+X-Google-Smtp-Source: APXvYqwIZSns62rOSntJJEykChJYYQXR1GVoK88FbnM2foc5ZTJdJQ1ngk47rBO+55yeDQTAmvSG+g==
+X-Received: by 2002:a63:5c4a:: with SMTP id n10mr11949268pgm.120.1572591854936;
+        Fri, 01 Nov 2019 00:04:14 -0700 (PDT)
+Received: from [10.76.90.34] ([203.205.141.123])
+        by smtp.gmail.com with ESMTPSA id y2sm5761131pfe.126.2019.11.01.00.04.12
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Fri, 01 Nov 2019 00:04:14 -0700 (PDT)
+Subject: Re: [PATCH RFC] xfs: Fix deadlock between AGI and AGF when target_ip
+ exists in xfs_rename()
 To:     Brian Foster <bfoster@redhat.com>
-Cc:     linux-xfs@vger.kernel.org,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs/log: protect the logging content under xc_ctx_lock
-Message-ID: <20191101040234.GA7598@mypc>
-References: <20191030133327.GA29340@mypc>
- <1572442631-4472-1-git-send-email-kernelfans@gmail.com>
- <20191031113640.GA54006@bfoster>
+Cc:     linux-xfs@vger.kernel.org, darrick.wong@oracle.com,
+        newtongao@tencent.com, jasperwang@tencent.com
+References: <1572428974-8657-1-git-send-email-kaixuxia@tencent.com>
+ <20191031122701.GB54006@bfoster>
+From:   kaixuxia <xiakaixu1987@gmail.com>
+Message-ID: <3eb29cb7-8cb4-4cdd-dcf5-2acbca5d2719@gmail.com>
+Date:   Fri, 1 Nov 2019 15:04:11 +0800
+User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.0
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191031113640.GA54006@bfoster>
-User-Agent: Mutt/1.11.3 (2019-02-01)
+In-Reply-To: <20191031122701.GB54006@bfoster>
+Content-Type: text/plain; charset=windows-1252
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Thu, Oct 31, 2019 at 07:36:40AM -0400, Brian Foster wrote:
-> Dropped linux-fsdevel from cc. There's no reason to spam -fsdevel with
-> low level XFS patches.
-> 
-> On Wed, Oct 30, 2019 at 09:37:11PM +0800, Pingfan Liu wrote:
-[...]
-> 
-> I'm not following how this is possible. The CIL push above, under
-It turns out not to be a bug as I replied to Dave's mail in this thread.
-> exclusive lock, removes each log item from ->xc_cil and pulls the log
-> vectors off of the log items to form the lv chain on the CIL context.
-> This means that the transB commit either updates the lv attached to the
-> log item from transA with the latest in-core version or uses the new
-> shadow buffer allocated in the commit path of transB. Either way is fine
-> because there is no guarantee of per-transaction granularity in the
-Yes, no guarantee of per-transaction granularity, but there is a
-boundary placed on several effect-merged transactions. That is what
-xc_ctx_lock and private chain ctx->lv_chain guarantee.
-> on-disk log. The purpose of the on-disk log is to guarantee filesystem
-> consistency after a crash.
-> 
-> All in all, I can't really tell what problem you're describing here. If
-> you believe there's an issue in this code, I'd suggest to either try and
-> instrument it manually to reproduce a demonstrable problem and/or
-> provide far more detailed of a description to explain it.
-> 
-Sorry that I raise a false alarm. But thank you all for helping me to figure
-out through this.
 
-Regards,
-	Pingfan
+
+On 2019/10/31 20:27, Brian Foster wrote:
+> On Wed, Oct 30, 2019 at 05:49:34PM +0800, kaixuxia wrote:
+>> When target_ip exists in xfs_rename(), the xfs_dir_replace() call may
+>> need to hold the AGF lock to allocate more blocks, and then invoking
+>> the xfs_droplink() call to hold AGI lock to drop target_ip onto the
+>> unlinked list, so we get the lock order AGF->AGI. This would break the
+>> ordering constraint on AGI and AGF locking - inode allocation locks
+>> the AGI, then can allocate a new extent for new inodes, locking the
+>> AGF after the AGI.
+>>
+>> In this patch we check whether the replace operation need more
+>> blocks firstly. If so, acquire the agi lock firstly to preserve
+>> locking order(AGI/AGF). Actually, the locking order problem only
+>> occurs when we are locking the AGI/AGF of the same AG. For multiple
+>> AGs the AGI lock will be released after the transaction committed.
+>>
+>> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+>> ---
+>>  fs/xfs/libxfs/xfs_dir2.c | 30 ++++++++++++++++++++++++++++++
+>>  fs/xfs/libxfs/xfs_dir2.h |  2 ++
+>>  fs/xfs/xfs_inode.c       | 14 ++++++++++++++
+>>  3 files changed, 46 insertions(+)
+>>
+>> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+>> index 867c5de..9d9ae16 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2.c
+>> +++ b/fs/xfs/libxfs/xfs_dir2.c
+>> @@ -463,6 +463,36 @@
+>>  }
+>>  
+>>  /*
+>> + * Check whether the replace operation need more blocks. Ignore
+>> + * the parameters check since the real replace() call below will
+>> + * do that.
+>> + */
+>> +bool
+>> +xfs_dir_replace_needblock(
+>> +	struct xfs_inode	*dp,
+>> +	xfs_ino_t		inum)
+>> +{
+>> +	int			newsize;
+>> +	xfs_dir2_sf_hdr_t	*sfp;
+>> +
+>> +	/*
+>> +	 * Only convert the shortform directory to block form maybe need
+>> +	 * more blocks.
+>> +	 */
+>> +	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+>> +		return false;
+>> +
+>> +	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+>> +	newsize = dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
+>> +
+>> +	if (inum > XFS_DIR2_MAX_SHORT_INUM &&
+>> +	    sfp->i8count == 0 && newsize > XFS_IFORK_DSIZE(dp))
+>> +		return true;
+>> +	else
+>> +		return false;
+>> +}
+>> +
+> 
+> It's slightly unfortunate we need to do these kind of double checks, but
+> it seems reasonable enough as an isolated fix. From a factoring
+> standpoint, it might be a little cleaner to move this down in
+> xfs_dir2_sf.c as an xfs_dir2_sf_replace_needblock() helper, actually use
+> it in the xfs_dir2_sf_replace() function where these checks are
+> currently open coded and then export it so we can call it in the higher
+> level function as well for the locking fix.
+> 
+Yeah, makes more sense. Also maybe we could add a function helper like
+the xfs_dir_canenter() call, it just check whether the replace operation
+need more blocks,
+
+ int xfs_dir_replace_needblock(...)
+ {
+ 	xfs_dir_replace(tp, dp, name, 0, 0);
+ }
+
+I'm not sure if this approach is reasonable...
+
+Actually, there are some different solutions for the locking fix. One solution
+is checking whether the replace operation need more blocks and acquiring AGI
+lock before AGF lock. Another one is moving xfs_droplink() call to before the
+xfs_dir_replace() call, but this solution may not be suitable. The third one
+is expanding the directory in one transaction, but I'm not sure about this
+solution and have no idea how to do it... 
+Comments about these solutions, which one is more reasonable?
+
+kaixu    
+
+> Brian
+> 
+>> +/*
+>>   * Replace the inode number of a directory entry.
+>>   */
+>>  int
+>> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+>> index f542447..e436c14 100644
+>> --- a/fs/xfs/libxfs/xfs_dir2.h
+>> +++ b/fs/xfs/libxfs/xfs_dir2.h
+>> @@ -124,6 +124,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+>>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+>>  				struct xfs_name *name, xfs_ino_t ino,
+>>  				xfs_extlen_t tot);
+>> +extern bool xfs_dir_replace_needblock(struct xfs_inode *dp,
+>> +				xfs_ino_t inum);
+>>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>>  				struct xfs_name *name, xfs_ino_t inum,
+>>  				xfs_extlen_t tot);
+>> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+>> index 18f4b26..c239070 100644
+>> --- a/fs/xfs/xfs_inode.c
+>> +++ b/fs/xfs/xfs_inode.c
+>> @@ -3196,6 +3196,7 @@ struct xfs_iunlink {
+>>  	struct xfs_trans	*tp;
+>>  	struct xfs_inode	*wip = NULL;		/* whiteout inode */
+>>  	struct xfs_inode	*inodes[__XFS_SORT_INODES];
+>> +	struct xfs_buf		*agibp;
+>>  	int			num_inodes = __XFS_SORT_INODES;
+>>  	bool			new_parent = (src_dp != target_dp);
+>>  	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
+>> @@ -3361,6 +3362,19 @@ struct xfs_iunlink {
+>>  		 * In case there is already an entry with the same
+>>  		 * name at the destination directory, remove it first.
+>>  		 */
+>> +
+>> +		/*
+>> +		 * Check whether the replace operation need more blocks.
+>> +		 * If so, acquire the agi lock firstly to preserve locking
+>> +		 * order(AGI/AGF).
+>> +		 */
+>> +		if (xfs_dir_replace_needblock(target_dp, src_ip->i_ino)) {
+>> +			error = xfs_read_agi(mp, tp,
+>> +					XFS_INO_TO_AGNO(mp, target_ip->i_ino), &agibp);
+>> +			if (error)
+>> +				goto out_trans_cancel;
+>> +		}
+>> +
+>>  		error = xfs_dir_replace(tp, target_dp, target_name,
+>>  					src_ip->i_ino, spaceres);
+>>  		if (error)
+>> -- 
+>> 1.8.3.1
+>>
+> 
+
+-- 
+kaixuxia
