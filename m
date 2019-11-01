@@ -2,99 +2,153 @@ Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B12C6CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:15:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 32CAAC47E49
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:47:30 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8A9892085B
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:15:43 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 13EFA21855
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 22:47:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726023AbfKAWPn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 18:15:43 -0400
-Received: from sandeen.net ([63.231.237.45]:47224 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725989AbfKAWPm (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 18:15:42 -0400
-Received: from Liberator-6.local (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B2E70544;
-        Fri,  1 Nov 2019 17:14:40 -0500 (CDT)
-Subject: Re: [PATCH 7/7] xfs_scrub: create a new category for unfixable errors
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org
-References: <157177012894.1460394.4672572733673534420.stgit@magnolia>
- <157177017442.1460394.7425325906254151917.stgit@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <04103912-0bbd-521f-1e0f-3676b9b8601c@sandeen.net>
-Date:   Fri, 1 Nov 2019 17:15:40 -0500
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.0
+        id S1727861AbfKAWrZ (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 18:47:25 -0400
+Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:52248 "EHLO
+        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1727751AbfKAWrZ (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Fri, 1 Nov 2019 18:47:25 -0400
+Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
+        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 1A8E043E42B;
+        Sat,  2 Nov 2019 09:47:17 +1100 (AEDT)
+Received: from dave by dread.disaster.area with local (Exim 4.92.3)
+        (envelope-from <david@fromorbit.com>)
+        id 1iQfhL-00070m-Nv; Sat, 02 Nov 2019 09:47:15 +1100
+Date:   Sat, 2 Nov 2019 09:47:15 +1100
+From:   Dave Chinner <david@fromorbit.com>
+To:     Ira Weiny <ira.weiny@intel.com>
+Cc:     Boaz Harrosh <boaz@plexistor.com>, linux-kernel@vger.kernel.org,
+        Alexander Viro <viro@zeniv.linux.org.uk>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Christoph Hellwig <hch@lst.de>,
+        "Theodore Y. Ts'o" <tytso@mit.edu>, Jan Kara <jack@suse.cz>,
+        linux-ext4@vger.kernel.org, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH 0/5] Enable per-file/directory DAX operations
+Message-ID: <20191101224715.GY4614@dread.disaster.area>
+References: <20191023221332.GE2044@dread.disaster.area>
+ <efffc9e7-8948-a117-dc7f-e394e50606ab@plexistor.com>
+ <20191024073446.GA4614@dread.disaster.area>
+ <fb4f8be7-bca6-733a-7f16-ced6557f7108@plexistor.com>
+ <20191024213508.GB4614@dread.disaster.area>
+ <ab101f90-6ec1-7527-1859-5f6309640cfa@plexistor.com>
+ <20191025003603.GE4614@dread.disaster.area>
+ <20191025204926.GA26184@iweiny-DESK2.sc.intel.com>
+ <20191027221039.GL4614@dread.disaster.area>
+ <20191031161757.GA14771@iweiny-DESK2.sc.intel.com>
 MIME-Version: 1.0
-In-Reply-To: <157177017442.1460394.7425325906254151917.stgit@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191031161757.GA14771@iweiny-DESK2.sc.intel.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
+X-Optus-CM-Score: 0
+X-Optus-CM-Analysis: v=2.2 cv=P6RKvmIu c=1 sm=1 tr=0
+        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
+        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
+        a=7-415B0cAAAA:8 a=DDk79rDXCmxeI5gZc_4A:9 a=CjuIK1q_8ugA:10
+        a=biEYGPWJfzWAr4FL6Ov7:22
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 10/22/19 1:49 PM, Darrick J. Wong wrote:
-> From: Darrick J. Wong <darrick.wong@oracle.com>
+On Thu, Oct 31, 2019 at 09:17:58AM -0700, Ira Weiny wrote:
+> On Mon, Oct 28, 2019 at 09:10:39AM +1100, Dave Chinner wrote:
+> > On Fri, Oct 25, 2019 at 01:49:26PM -0700, Ira Weiny wrote:
 > 
-> There's nothing that xfs_scrub (or XFS) can do about media errors for
-> data file blocks -- the data are gone.  Create a new category for these
-> unfixable errors so that we don't advise the user to take further action
-> that won't fix the problem.
+> [snip]
+> 
+> > 
+> > > Currently this works if I remount the fs or if I use <procfs>/drop_caches like
+> > > Boaz mentioned.
+> > 
+> > drop_caches frees all the dentries that don't have an active
+> > references before it iterates over inodes, thereby dropping the
+> > cached reference(s) to the inode that pins it in memory before it
+> > iterates the inode LRU.
+> > 
+> > > Isn't there a way to get xfs to do that on it's own?
+> > 
+> > Not reliably. Killing all the dentries doesn't guarantee the inode
+> > will be reclaimed immediately. The ioctl() itself requires an open
+> > file reference to the inode, and there's no telling how many other
+> > references there are to the inode that the filesystem a) can't find,
+> > and b) even if it can find them, it is illegal to release them.
+> > 
+> > IOWs, if you are relying on being able to force eviction of inode
+> > from the cache for correct operation of a user controlled flag, then
+> > it's just not going to work.
+> 
+> Agree, I see the difficulty of forcing the effective flag to change in this
+> path.  However, the only thing I am relying on is that the ioctl will change
+> the physical flag.
+> 
+> IOW I am proposing that the semantic be that changing the physical flag does
+> _not_ immediately change the effective flag.  With that clarified up front the
+> user can adjust accordingly.
 
-Ok.  I'll just slightly edit this to indicate that it's not exclusively
-media errors and the rest makes sense.
+Which makes it useless from an admin perspective. i.e. to change the
+way the application uses DAX now, admins are going to have to end up
+rebooting the machine to guarantee that the kernel has picked up the
+change in the on-disk flag.
 
-Reviewed-by: Eric Sandeen <sandeen@redhat.com>
- 
+> After thinking about this more I think there is a strong use case to be able to
+> change the physical flag on a non-zero length file.  That use case is to be
+> able to restore files from backups.
+
+Why does that matter? Backup programs need to set the flag before
+the data is written into the destination file, just like they do
+with restoring other flags that influence data placement like the RT
+device bit and extent size hints...
+
+Basically, all these issues you keep trying to work around go away
+if we can come up with a way of swapping the aops vector safely.
+That's the problem we need to solve, anything else results in
+largely unacceptible user visible admin warts.
+
+> I propose the user has no direct control over this event and it is mainly used
+> to restore files from backups which is mainly an admin operation where a
+> remount is a reasonable thing to do.
+
+As soon as users understand that they flag can be changed, they are
+going to want to do that and they are going to want it to work
+reliably.
+
+> Users direct control of the effective flag is through inheritance.  The user
+> needs to create the file in a DAX enable dir and they get effective operation
+> right away.
+
+Until they realise the application is slow or broken because it is
+using DAX, and they want to turn DAX off for that application. Then
+they have *no control*. You cannot have it both ways - being able to
+turn something on but not turn it off is not "effective operation"
+or user friendly.
+
+> If in the future we can determine a safe way to trigger the a_ops change we can
+> add that to the semantic as an alternative for users.
+
+No, the flag does not get turned on until we've solved the problems
+that resulted in us turning it off. We've gone over this mutliple
+times, and nobody has solved the issues that need solving - everyone
+seems to just hack around the issues rather than solving it
+properly. If we thought taking some kind of shortcut full of
+compromises and gotchas was the right solution, we would have never
+turned the flag off in the first place.
+
+Cheers,
+
+Dave.
+-- 
+Dave Chinner
+david@fromorbit.com
