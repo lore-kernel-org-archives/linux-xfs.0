@@ -6,29 +6,29 @@ X-Spam-Status: No, score=-5.3 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1
 	autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C0B67CA9ECF
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:00:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 55A03CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:04:20 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9531120650
-	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:00:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2B3FF21855
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 20:04:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727064AbfKAUAI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Fri, 1 Nov 2019 16:00:08 -0400
-Received: from sandeen.net ([63.231.237.45]:40516 "EHLO sandeen.net"
+        id S1727001AbfKAUET (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Fri, 1 Nov 2019 16:04:19 -0400
+Received: from sandeen.net ([63.231.237.45]:40720 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1726709AbfKAUAI (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Fri, 1 Nov 2019 16:00:08 -0400
+        id S1726846AbfKAUET (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Fri, 1 Nov 2019 16:04:19 -0400
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 37328544;
-        Fri,  1 Nov 2019 14:59:06 -0500 (CDT)
-Subject: Re: [PATCH 2/9] xfs_scrub: separate media error reporting for
- attribute forks
+        by sandeen.net (Postfix) with ESMTPSA id 73C7B544;
+        Fri,  1 Nov 2019 15:03:17 -0500 (CDT)
+Subject: Re: [PATCH 3/9] xfs_scrub: improve reporting of file data media
+ errors
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
 Cc:     linux-xfs@vger.kernel.org
 References: <157177002473.1459098.11320398367215468164.stgit@magnolia>
- <157177003747.1459098.9907215192108037995.stgit@magnolia>
+ <157177004356.1459098.4142160848040771793.stgit@magnolia>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -72,12 +72,12 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <5b32f315-5306-6e2f-fcb3-66c8e0870dc8@sandeen.net>
-Date:   Fri, 1 Nov 2019 15:00:06 -0500
+Message-ID: <35a3bad6-5fb8-168e-45a1-389ff253f5a6@sandeen.net>
+Date:   Fri, 1 Nov 2019 15:04:17 -0500
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.0
 MIME-Version: 1.0
-In-Reply-To: <157177003747.1459098.9907215192108037995.stgit@magnolia>
+In-Reply-To: <157177004356.1459098.4142160848040771793.stgit@magnolia>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
 Content-Transfer-Encoding: 7bit
@@ -89,9 +89,9 @@ X-Mailing-List: linux-xfs@vger.kernel.org
 On 10/22/19 1:47 PM, Darrick J. Wong wrote:
 > From: Darrick J. Wong <darrick.wong@oracle.com>
 > 
-> Use different functions to warn about media errors that were detected in
-> underlying xattr data because logical offsets for attribute fork extents
-> have no meaning to users.
+> When we report media errors, we should tell the administrator the file
+> offset and length of the bad region, not just the offset of the entire
+> file extent record that overlaps a bad region.
 > 
 > Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
 
