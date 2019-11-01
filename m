@@ -1,108 +1,127 @@
-Return-Path: <SRS0=K+Ru=YY=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=5kOL=YZ=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7777CCA9ED0
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:50 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1282CA9EC9
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 03:39:45 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 5874520873
-	for <linux-xfs@archiver.kernel.org>; Thu, 31 Oct 2019 23:48:50 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6E0062086D
+	for <linux-xfs@archiver.kernel.org>; Fri,  1 Nov 2019 03:39:45 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="U/XIL3lC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728243AbfJaXqY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 31 Oct 2019 19:46:24 -0400
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:55291 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726680AbfJaXqY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 19:46:24 -0400
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id 687293A27E3;
-        Fri,  1 Nov 2019 10:46:20 +1100 (AEDT)
-Received: from discord.disaster.area ([192.168.253.110])
-        by dread.disaster.area with esmtp (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-0007C0-2h; Fri, 01 Nov 2019 10:46:19 +1100
-Received: from dave by discord.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iQK8x-00041I-0X; Fri, 01 Nov 2019 10:46:19 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     linux-xfs@vger.kernel.org
-Cc:     linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
-        linux-kernel@vger.kernel.org
-Subject: [PATCH 03/28] xfs: don't allow log IO to be throttled
-Date:   Fri,  1 Nov 2019 10:45:53 +1100
-Message-Id: <20191031234618.15403-4-david@fromorbit.com>
-X-Mailer: git-send-email 2.24.0.rc0
-In-Reply-To: <20191031234618.15403-1-david@fromorbit.com>
-References: <20191031234618.15403-1-david@fromorbit.com>
+        id S1726772AbfKADjo (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 31 Oct 2019 23:39:44 -0400
+Received: from mail-pl1-f193.google.com ([209.85.214.193]:46982 "EHLO
+        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726600AbfKADjo (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 31 Oct 2019 23:39:44 -0400
+Received: by mail-pl1-f193.google.com with SMTP id q21so3719123plr.13;
+        Thu, 31 Oct 2019 20:39:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=date:from:to:cc:subject:message-id:references:mime-version
+         :content-disposition:in-reply-to:user-agent;
+        bh=XwgBM4tH1Q8I4Gfu0R8qT8WSU2nCFDzcBchnJHKspqw=;
+        b=U/XIL3lCaOi0gX7mAqApGfYU+6QQ+ZylWY9Noj9uyAuPfmlNdM6UM2PvhZeRNA70u5
+         RB9WqTFENxvRB+AffKCFgMGLPVnQe2dS+qCvsOApRoDgKTm+nBPMVT7fzcKMjc53qRR7
+         silhRQvljJwFISxfyCVW7kgeNow43bQ9YPg00Y9DLZlmhpJTWPPGz+we+L4/CAPJwd9z
+         niaGxSqCplgRbfA883bpYC+DBKQki3R/9IGTIpQltqnosgNl3q4bIvnEZtm2sdJbFiFP
+         T7H+jTtSXkiSQ/Kmz/HdGAdmCm4wVk3k2f2NAKbZKxmYV2ulS1IYTK7kZC5RvUyDwHY/
+         XpkQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
+         :mime-version:content-disposition:in-reply-to:user-agent;
+        bh=XwgBM4tH1Q8I4Gfu0R8qT8WSU2nCFDzcBchnJHKspqw=;
+        b=lLKIQz61IK5kCriPkV4cvq5z5rZx/5PdEFVlXy4kW6NkP2Ay4Il0UwvfiTbQy/d58V
+         X0FpsujVggosCZ0LqJ7kfGc4Tbz1uXSAqL3EQnuy1iN5FcGUI973mHrvIA/Ltr4w0fzb
+         TwbbtCYRN1VaSC+RlnMmzOq39YFr4TJIxEYrhrzeJT2kKyCNQ5bRXzA2BrPCf3P8k0kV
+         /ux+viW1VABoPCNr5s3uDnff+GR3BKNFgnyyQE/IdMzS/2O9Veyborcro6V98vH8tQdv
+         AQo1AsyzO+I1IklMPf1cD/d38nCSKPTSQJwc54kiHV14Jo/UXim8+Ob2XqPU0vXsBIvs
+         PwKQ==
+X-Gm-Message-State: APjAAAUvgWoy81JyvGMcuTt54+7e825d2YQg1T8rK1uQJghDDw8tiYpZ
+        uKWCeEuT1u+gU/V8Rna4Qw==
+X-Google-Smtp-Source: APXvYqytVzOvXBKVGtOeseyP+9IAS9KExyRLld2RnMGSy9BytG4hu3DMp7Df1r3xY5nRQdvawu+wqQ==
+X-Received: by 2002:a17:902:b10c:: with SMTP id q12mr9789131plr.97.1572579583711;
+        Thu, 31 Oct 2019 20:39:43 -0700 (PDT)
+Received: from mypc ([209.132.188.80])
+        by smtp.gmail.com with ESMTPSA id z18sm4840827pgv.90.2019.10.31.20.39.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Oct 2019 20:39:42 -0700 (PDT)
+Date:   Fri, 1 Nov 2019 11:39:33 +0800
+From:   Pingfan Liu <kernelfans@gmail.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        Brian Foster <bfoster@redhat.com>,
+        linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH] xfs/log: protect the logging content under xc_ctx_lock
+Message-ID: <20191101033933.GA7498@mypc>
+References: <20191030133327.GA29340@mypc>
+ <1572442631-4472-1-git-send-email-kernelfans@gmail.com>
+ <20191031214031.GV4614@dread.disaster.area>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=MeAgGD-zjQ4A:10 a=20KFwNOVAAAA:8
-        a=yPCof4ZbAAAA:8 a=5HahVxdoFHTWBnBQlCYA:9 a=DiKeHqHhRZ4A:10
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191031214031.GV4614@dread.disaster.area>
+User-Agent: Mutt/1.11.3 (2019-02-01)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Dave Chinner <dchinner@redhat.com>
+On Fri, Nov 01, 2019 at 08:40:31AM +1100, Dave Chinner wrote:
+> On Wed, Oct 30, 2019 at 09:37:11PM +0800, Pingfan Liu wrote:
+> > xc_cil_lock is not enough to protect the integrity of a trans logging.
+> > Taking the scenario:
+> >   cpuA                                 cpuB                          cpuC
+> > 
+> >   xlog_cil_insert_format_items()
+> > 
+> >   spin_lock(&cil->xc_cil_lock)
+> >   link transA's items to xc_cil,
+> >      including item1
+> >   spin_unlock(&cil->xc_cil_lock)
+> >                                                                       xlog_cil_push() fetches transA's item under xc_cil_lock
+> >                                        issue transB, modify item1
+> >                                                                       xlog_write(), but now, item1 contains content from transB and we have a broken transA
+> 
+> TL;DR: 1. log vectors. 2. CIL context lock exclusion.
+> 
+> When CPU A formats the item during commit, it copies all the changes
+> into a list of log vectors, and that is attached to the log item
+> and the item is added to the CIL. The item is then unlocked. This is
+> done with the CIL context lock held excluding CIL pushes.
+> 
+> When CPU C pushes on the CIL, it detatches the -log vectors- from
+> the log item and removes the item from the CIL. This is done hold
+> the CIL context lock, excluding transaction commits from modifying
+> the CIL log vector list. It then formats the -log vectors- into the
+> journal by passing them to xlog_write().  It does not use log items
+> for this, and because the log vector list has been isolated and is
+> now private to the push context, we don't need to hold any locks
+> anymore to call xlog_write....
+Yes. I failed to realize it. The critical "item->li_lv = NULL" in
+xlog_cil_push(), which isolates the vectors and free of new
+modification even after releasing xc_ctx_lock.
+[...]
+> >  	 * initialise the new context and attach it to the CIL. Then attach
+> > @@ -783,6 +767,25 @@ xlog_cil_push(
+> >  	up_write(&cil->xc_ctx_lock);
+>         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 
+> We don't hold the CIL context lock anymore....
+> 
+Doze on it, make a mistaken reverse recognition of the up/down meaning.
 
-Running metadata intensive workloads, I've been seeing the AIL
-pushing getting stuck on pinned buffers and triggering log forces.
-The log force is taking a long time to run because the log IO is
-getting throttled by wbt_wait() - the block layer writeback
-throttle. It's being throttled because there is a huge amount of
-metadata writeback going on which is filling the request queue.
+Thank you for very patient and detailed explain. I get a full
+understanding now.
 
-IOWs, we have a priority inversion problem here.
-
-Mark the log IO bios with REQ_IDLE so they don't get throttled
-by the block layer writeback throttle. When we are forcing the CIL,
-we are likely to need to to tens of log IOs, and they are issued as
-fast as they can be build and IO completed. Hence REQ_IDLE is
-appropriate - it's an indication that more IO will follow shortly.
-
-And because we also set REQ_SYNC, the writeback throttle will now
-treat log IO the same way it treats direct IO writes - it will not
-throttle them at all. Hence we solve the priority inversion problem
-caused by the writeback throttle being unable to distinguish between
-high priority log IO and background metadata writeback.
-
-Signed-off-by: Dave Chinner <dchinner@redhat.com>
-Reviewed-by: Brian Foster <bfoster@redhat.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/xfs_log.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/fs/xfs/xfs_log.c b/fs/xfs/xfs_log.c
-index 33fb38864207..e7441a983b3b 100644
---- a/fs/xfs/xfs_log.c
-+++ b/fs/xfs/xfs_log.c
-@@ -1792,7 +1792,15 @@ xlog_write_iclog(
- 	iclog->ic_bio.bi_iter.bi_sector = log->l_logBBstart + bno;
- 	iclog->ic_bio.bi_end_io = xlog_bio_end_io;
- 	iclog->ic_bio.bi_private = iclog;
--	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC | REQ_FUA;
-+
-+	/*
-+	 * We use REQ_SYNC | REQ_IDLE here to tell the block layer the are more
-+	 * IOs coming immediately after this one. This prevents the block layer
-+	 * writeback throttle from throttling log writes behind background
-+	 * metadata writeback and causing priority inversions.
-+	 */
-+	iclog->ic_bio.bi_opf = REQ_OP_WRITE | REQ_META | REQ_SYNC |
-+				REQ_IDLE | REQ_FUA;
- 	if (need_flush)
- 		iclog->ic_bio.bi_opf |= REQ_PREFLUSH;
- 
--- 
-2.24.0.rc0
-
+Regards,
+	Pingfan
