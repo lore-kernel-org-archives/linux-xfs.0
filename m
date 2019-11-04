@@ -2,187 +2,136 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,URIBL_BLOCKED,
+	USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 55417CA9EB5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 21:12:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4B63CA9EC9
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 22:49:04 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 29B3320659
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 21:12:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 95AA420663
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 22:49:04 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HO31hhHl"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VhGbPN0m"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728940AbfKDVMa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 16:12:30 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:57568 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728377AbfKDVMa (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 16:12:30 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KxLLg146817;
-        Mon, 4 Nov 2019 21:12:09 GMT
+        id S1729583AbfKDWtE (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 17:49:04 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:43072 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729122AbfKDWtD (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 17:49:03 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4MmoVW023005;
+        Mon, 4 Nov 2019 22:48:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=UdhC0i7d9IaFSMuv6szahCqY8IPwx+vmyPo5h5DVd0o=;
- b=HO31hhHlxesDFYg5LVIBonN40zWIKCjbbWwNfwNqFlwRHkVvIGZvpyFr64Z6Z8ULghK8
- d0doryXd0fGGFlJssn3fDeUyOwh8XLV269ZpV+HIIso1Gwjw0iAWb/PrJD90fCjqemy0
- /zOhsHm/f28ckBaavxEbD7GGDWmmO4d71D8dH81qx2qz/BoJko5IcgRHWfwvY7fpgX6p
- 3QfGjxb2rD3mAJEiP/A/qa9fvuYJjiU0EmK9dFuJc3hZpVglQuaCNSNnZKWKtzcwpZ/9
- BPXya/9hLZCyn7Py88LzqFy5zsW6w26gq4YW5bpuDJSWcztt0PL4s9SpsArGExMecI6k gw== 
-Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
-        by aserp2120.oracle.com with ESMTP id 2w11rpt4rv-1
+ bh=XihttW8iHtYgB3SkypFTop+qrKpNylzrgZ21w5VxPSg=;
+ b=VhGbPN0m37/IM7Fbe88wZIalot5pvyEbpQ4Sntt3b4s+Vtkm0dJJP068gdrklpZVta+V
+ bypQzhAqDRUygRQEy13OWqfRUOG0ZUDsHJ+JKrrA4z4fqVkV1a1Ovo1xMhNVkclx8Z2L
+ 27Z554USMEFvj04dcOm7iSLmDew3V98jcbXZrGeQBhv/7zFDp9N9A6tGvfFZSvv1V/gm
+ YSXl6tlCy0InFDJDdjw7yNnU6B+FrH2mNHMWg5GdcW0QTcA2qU7zMWRm14uA3QgZsiHl
+ huHFDbsOg79pLT+3w8jGwXECDlZmA+tu/uoVxYtPjtFkgGCNp0835ULwHrrEFsVce+c/ cA== 
+Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
+        by userp2120.oracle.com with ESMTP id 2w12er2cc4-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 21:12:09 +0000
-Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
-        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4L2cXl026692;
-        Mon, 4 Nov 2019 21:12:09 GMT
+        Mon, 04 Nov 2019 22:48:50 +0000
+Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
+        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4MmeeN189196;
+        Mon, 4 Nov 2019 22:48:49 GMT
 Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by aserp3020.oracle.com with ESMTP id 2w1kacd1ug-1
+        by userp3030.oracle.com with ESMTP id 2w1k8vn85a-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 21:12:09 +0000
-Received: from abhmp0021.oracle.com (abhmp0021.oracle.com [141.146.116.27])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA4LC7Ge027382;
-        Mon, 4 Nov 2019 21:12:07 GMT
+        Mon, 04 Nov 2019 22:48:48 +0000
+Received: from abhmp0015.oracle.com (abhmp0015.oracle.com [141.146.116.21])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA4MmJgl017025;
+        Mon, 4 Nov 2019 22:48:20 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Nov 2019 13:12:06 -0800
-Date:   Mon, 4 Nov 2019 13:12:05 -0800
+        with ESMTP ; Mon, 04 Nov 2019 14:48:19 -0800
+Date:   Mon, 4 Nov 2019 14:48:18 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Ian Kent <raven@themaw.net>
-Cc:     linux-xfs <linux-xfs@vger.kernel.org>,
-        Christoph Hellwig <hch@infradead.org>,
-        Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@ZenIV.linux.org.uk>
-Subject: Re: [PATCH v8 12/16] xfs: dont set sb in xfs_mount_alloc()
-Message-ID: <20191104211205.GL4153244@magnolia>
-References: <157259452909.28278.1001302742832626046.stgit@fedora-28>
- <157259466607.28278.4456308072088112584.stgit@fedora-28>
- <20191101201536.GG15222@magnolia>
- <ae8c1a5f4c357c6c9060f09b374bad472b422ebf.camel@themaw.net>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     Brian Foster <bfoster@redhat.com>, linux-xfs@vger.kernel.org,
+        linux-fsdevel@vger.kernel.org, linux-mm@kvack.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 02/28] xfs: Throttle commits on delayed background CIL
+ push
+Message-ID: <20191104224818.GM4153244@magnolia>
+References: <20191031234618.15403-1-david@fromorbit.com>
+ <20191031234618.15403-3-david@fromorbit.com>
+ <20191101120426.GC59146@bfoster>
+ <20191101214040.GX4614@dread.disaster.area>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <ae8c1a5f4c357c6c9060f09b374bad472b422ebf.camel@themaw.net>
+In-Reply-To: <20191101214040.GX4614@dread.disaster.area>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911040203
+ engine=8.0.1-1908290000 definitions=main-1911040216
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
  suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911040203
+ definitions=main-1911040216
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sat, Nov 02, 2019 at 12:41:39PM +0800, Ian Kent wrote:
-> On Fri, 2019-11-01 at 13:15 -0700, Darrick J. Wong wrote:
-> > On Fri, Nov 01, 2019 at 03:51:06PM +0800, Ian Kent wrote:
-> > > When changing to use the new mount api the super block won't be
-> > > available when the xfs_mount struct is allocated so move setting
-> > > the
-> > > super block in xfs_mount to xfs_fs_fill_super().
+On Sat, Nov 02, 2019 at 08:40:40AM +1100, Dave Chinner wrote:
+> On Fri, Nov 01, 2019 at 08:04:26AM -0400, Brian Foster wrote:
+> > On Fri, Nov 01, 2019 at 10:45:52AM +1100, Dave Chinner wrote:
+> > > From: Dave Chinner <dchinner@redhat.com>
 > > > 
-> > > Signed-off-by: Ian Kent <raven@themaw.net>
+> > > In certain situations the background CIL push can be indefinitely
+> > > delayed. While we have workarounds from the obvious cases now, it
+> > > doesn't solve the underlying issue. This issue is that there is no
+> > > upper limit on the CIL where we will either force or wait for
+> > > a background push to start, hence allowing the CIL to grow without
+> > > bound until it consumes all log space.
+> > > 
+> > > To fix this, add a new wait queue to the CIL which allows background
+> > > pushes to wait for the CIL context to be switched out. This happens
+> > > when the push starts, so it will allow us to block incoming
+> > > transaction commit completion until the push has started. This will
+> > > only affect processes that are running modifications, and only when
+> > > the CIL threshold has been significantly overrun.
+> > > 
+> > > This has no apparent impact on performance, and doesn't even trigger
+> > > until over 45 million inodes had been created in a 16-way fsmark
+> > > test on a 2GB log. That was limiting at 64MB of log space used, so
+> > > the active CIL size is only about 3% of the total log in that case.
+> > > The concurrent removal of those files did not trigger the background
+> > > sleep at all.
+> > > 
+> > > Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > > > Reviewed-by: Brian Foster <bfoster@redhat.com>
 > > > ---
-> > >  fs/xfs/xfs_super.c |    7 +++----
-> > >  1 file changed, 3 insertions(+), 4 deletions(-)
-> > > 
-> > > diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-> > > index 4b570ba3456a..62dfc678c415 100644
-> > > --- a/fs/xfs/xfs_super.c
-> > > +++ b/fs/xfs/xfs_super.c
-> > > @@ -1560,8 +1560,7 @@ xfs_destroy_percpu_counters(
-> > >  }
-> > >  
-> > >  static struct xfs_mount *
-> > > -xfs_mount_alloc(
-> > > -	struct super_block	*sb)
-> > > +xfs_mount_alloc(void)
-> > >  {
-> > >  	struct xfs_mount	*mp;
-> > >  
-> > > @@ -1569,7 +1568,6 @@ xfs_mount_alloc(
-> > >  	if (!mp)
-> > >  		return NULL;
-> > >  
-> > > -	mp->m_super = sb;
 > > 
-> > Just out of curiosity, is there any place where we need m_super in
-> > between here...
-> > 
-> > >  	spin_lock_init(&mp->m_sb_lock);
-> > >  	spin_lock_init(&mp->m_agirotor_lock);
-> > >  	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
-> > > @@ -1605,9 +1603,10 @@ xfs_fs_fill_super(
-> > >  	 * allocate mp and do all low-level struct initializations
-> > > before we
-> > >  	 * attach it to the super
-> > >  	 */
-> > > -	mp = xfs_mount_alloc(sb);
-> > > +	mp = xfs_mount_alloc();
-> > >  	if (!mp)
-> > >  		goto out;
-> > > +	mp->m_super = sb;
-> > 
-> > ...and here?  For example, logging errors?  AFAICT the only thing
-> > that
-> > goes on between these two points is option parsing, right?  (And the
-> > parsing has its own prefixed logging, etc.)
+> > I don't recall posting an R-b tag for this one...
 > 
-> Yes, only option parsing is going on between these two points.
+> Argh, sorry. I must have screwed up transcribing them from the
+> mailing list.
 > 
-> And, for now, the error reporting is caught by the VFS.
+> > That said, I think my only outstanding feedback (side discussion aside)
+> > was the code factoring in xlog_cil_push_background().
 > 
-> There is one location in xfs_fc_parse_param() where an xfs log
-> message could be emitted although it's never reached (because of
-> the return if the fs_parse() call fails).
-> 
-> If log messages were issued in between these two points the consequence
-> is a missing block device name in the message. You remember, a check on
-> mp->m_super was added to __xfs_printk() to cover this case when struct
-> xfs_mount field m_fsname was eliminated.
+> I'll go back and look at that, 'cause clearly I was looking at the
+> wrong patch when I screwed up the rvb tag...
 
-It's true that (AFAICT) this is the only place where xfs might need
-mp->m_super but it doesn't yet have one, but you'd agree that this is a
-significant change to the scoping rules, right?  In the past there was
-never a place in xfs where we'd have to check mp->m_super == NULL, but
-now we have to keep that possibility in mind, at least for any function
-that can be called before get_tree_bdev.
-
-> This potential lack of device name in log messages is a problem I can't
-> fix because the block device isn't obtained until after parameter
-> parsing, just before the super block is acquired. Changing that in the
-> VFS would be quite significant so I'm stuck!
-
-Um, we used to obtain the block device and the superblock before we
-started option parsing.  I guess the worst that happens is that anything
-trying to dereference mp->m_super is just going to crash...
-
-...oh well I should probably go complain to the new series, not this
-one.
+I'll keep an eye on the list for a revised series.
 
 --D
 
-
-> > 
-> > --D
-> > 
-> > >  	sb->s_fs_info = mp;
-> > >  
-> > >  	error = xfs_parseargs(mp, (char *)data);
-> > > 
+> Cheers,
 > 
+> Dave.
+> -- 
+> Dave Chinner
+> david@fromorbit.com
