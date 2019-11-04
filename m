@@ -2,181 +2,112 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4155DCA9ED2
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 01:46:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2B348C47E49
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 01:49:47 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 22C5A20848
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 01:46:58 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 01C17222C6
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 01:49:47 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XZffH1wn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729092AbfKDBq5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Nov 2019 20:46:57 -0500
-Received: from outbound.smtp.vt.edu ([198.82.183.121]:35672 "EHLO
-        omr2.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1728607AbfKDBq5 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Nov 2019 20:46:57 -0500
-Received: from mr6.cc.vt.edu (mr6.cc.ipv6.vt.edu [IPv6:2607:b400:92:8500:0:af:2d00:4488])
-        by omr2.cc.vt.edu (8.14.4/8.14.4) with ESMTP id xA41kurh010095
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 20:46:56 -0500
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
-        by mr6.cc.vt.edu (8.14.7/8.14.7) with ESMTP id xA41kpp3018164
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 20:46:56 -0500
-Received: by mail-qk1-f198.google.com with SMTP id d127so16235379qkc.1
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Nov 2019 17:46:56 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
-         :in-reply-to:references:mime-version:content-transfer-encoding;
-        bh=r7c0I8SvMYKpHRjqYv9HI6yFzb55f/VPo02TJ216c5Q=;
-        b=Te5VfVlQerd71/vqYXpU6Ukw1YkZrvrNuCoGcbrddC3+izZ3omPCBjEP1EM6K+SUU9
-         G+14pYQqZkx1EG/deczLKAkPv7tGtiptqDo5YsgRPZoBM6G9PNmdM3ahF/hlLRMEGeKO
-         d2GIYh3bBxTwcXgbpoi19m5bDt0ATAQWilLrNOALyxGWnF1XcMD4apAzukL1IWVgZ3Rl
-         G/Q0k9GjatlrT0x+TQL5B7I2uZXnoxE/DTyejktHM0m+NinPNcv24oudMxQrlM2itGiR
-         iAqw38E+1DKdNS2JJVQJb6d8XOXByQ4RugVnzK7EaDGJ0IRxQFE1nPG1Yy04YRoqTUtN
-         3qBg==
-X-Gm-Message-State: APjAAAW1URxhL8hcV6LOpke2YS34UCPpLVmv99ZGS4aud74asRhNS5Jo
-        P6kMHQ101tdd44d+ltEzcWRmugh0Hl97MqDkHGQTN0aW+UVurxmxXiGnVPU81mHPOW/kveRUI7Y
-        Urq9jI3GDEInoebViDEV++bPxEF5PlK8=
-X-Received: by 2002:a05:6214:70f:: with SMTP id b15mr19848523qvz.97.1572832010209;
-        Sun, 03 Nov 2019 17:46:50 -0800 (PST)
-X-Google-Smtp-Source: APXvYqyZ6TMTqkBpyXQGPAZMIMj5EH3dwBQ8r4Ftf0xofxFI/BWghZasoJHnZlzuhtG3wrll2Arcjw==
-X-Received: by 2002:a05:6214:70f:: with SMTP id b15mr19848512qvz.97.1572832009874;
-        Sun, 03 Nov 2019 17:46:49 -0800 (PST)
-Received: from turing-police.lan ([2601:5c0:c001:c9e1::359])
-        by smtp.gmail.com with ESMTPSA id d2sm8195354qkg.77.2019.11.03.17.46.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 03 Nov 2019 17:46:49 -0800 (PST)
-From:   Valdis Kletnieks <valdis.kletnieks@vt.edu>
-X-Google-Original-From: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
-To:     Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Jan Kara <jack@suse.cz>, "Theodore Ts'o" <tytso@mit.edu>,
-        Valdis Kletnieks <valdis.kletnieks@vt.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-xfs@vger.kernel.org,
-        Jan Kara <jack@suse.com>, Arnd Bergmann <arnd@arndb.de>,
-        linux-fsdevel@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-arch@vger.kernel.org
-Subject: [PATCH 10/10] errno.h: Provide EFSCORRUPTED for everybody
-Date:   Sun,  3 Nov 2019 20:45:06 -0500
-Message-Id: <20191104014510.102356-11-Valdis.Kletnieks@vt.edu>
-X-Mailer: git-send-email 2.24.0.rc1
-In-Reply-To: <20191104014510.102356-1-Valdis.Kletnieks@vt.edu>
-References: <20191104014510.102356-1-Valdis.Kletnieks@vt.edu>
+        id S1728812AbfKDBtq (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Nov 2019 20:49:46 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([205.139.110.120]:53628 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728822AbfKDBtq (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Nov 2019 20:49:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1572832185;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=LKwjEx3F+8yVd3sbD3qWcd2xtXeFJuRdOn/qJPJ+bX4=;
+        b=XZffH1wnPiaN2BrSJSl94nqp3roeOH8pbI2pG6VP1m1dNKVLylR6e4LJyg2EOAFw4ATrRb
+        SC9mHw3KR6uqiGOjxctX8zOT9Yt0jyxVFZOP2UFb5dMOKb69f6ZN+ofz6FYpcIq9jAholE
+        SQP+3v3VmoZ7vFfjmLnKeOq+9Hhj8iQ=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-172-FmzZZY6bPxesMNrF4hQ6Bg-1; Sun, 03 Nov 2019 20:49:41 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9D7F5800A1A;
+        Mon,  4 Nov 2019 01:49:40 +0000 (UTC)
+Received: from Liberator-6.local (ovpn04.gateway.prod.ext.phx2.redhat.com [10.5.9.4])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id 52D901001B23;
+        Mon,  4 Nov 2019 01:49:40 +0000 (UTC)
+Subject: Re: [PATCH] fstests: verify that xfs_growfs can operate on mounted
+ device node
+To:     Eryu Guan <guaneryu@gmail.com>
+Cc:     fstests <fstests@vger.kernel.org>,
+        linux-xfs <linux-xfs@vger.kernel.org>
+References: <1253fd24-a0ef-26ca-6ff9-b3b7a451e78a@redhat.com>
+ <20191103152446.GA8664@desktop>
+From:   Eric Sandeen <sandeen@redhat.com>
+Message-ID: <fc635655-1feb-6a31-197b-cea9d0daf855@redhat.com>
+Date:   Sun, 3 Nov 2019 19:49:39 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.1
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <20191103152446.GA8664@desktop>
+Content-Language: en-US
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: FmzZZY6bPxesMNrF4hQ6Bg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-There's currently 6 filesystems that have the same #define. Move it
-into errno.h so it's defined in just one place.
+On 11/3/19 9:24 AM, Eryu Guan wrote:
+> On Tue, Oct 29, 2019 at 12:53:48PM -0500, Eric Sandeen wrote:
+>> The ability to use a mounted device node as the primary argument
+>> to xfs_growfs will be added back in, because it was an undocumented
+>> behavior that some userspace depended on.  This test exercises that
+>> functionality.
+>>
+>> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
+>> ---
+>>
+>> diff --git a/tests/xfs/148 b/tests/xfs/148
+>> new file mode 100755
+>> index 00000000..357ae01c
+>> --- /dev/null
+>> +++ b/tests/xfs/148
+>> @@ -0,0 +1,100 @@
+>> +#! /bin/bash
+>> +# SPDX-License-Identifier: GPL-2.0
+>> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
+>> +#
+>> +# FS QA Test 148
+>> +#
+>> +# Test to ensure xfs_growfs command accepts device nodes if & only
+>> +# if they are mounted.
+>> +# This functionality, though undocumented, worked until xfsprogs v4.12
+>> +# It was added back and documented after xfsprogs v5.2
+>=20
+> I'm testing with xfsprogs from for-next branch, which is v5.3.0-rc1
+> based xfs_growfs, but I still see failures like
+>=20
+>      =3D=3D=3D xfs_growfs - check device node =3D=3D=3D
+>     +xfs_growfs: /dev/loop0 is not a mounted XFS filesystem
+>      =3D=3D=3D xfs_growfs - check device symlink =3D=3D=3D
+>     +xfs_growfs: /mnt/test/loop_symlink.21781 is not a mounted XFS filesy=
+stem
+>      =3D=3D=3D unmount =3D=3D=3D
+>=20
+> If it's already fixed, would you please list the related commits in
+> commit log as well?
 
-Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
-Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
-Reviewed-by: Jan Kara <jack@suse.cz>
-Acked-by: Theodore Ts'o <tytso@mit.edu>
----
- drivers/staging/exfat/exfat.h    | 2 --
- fs/erofs/internal.h              | 2 --
- fs/ext4/ext4.h                   | 1 -
- fs/f2fs/f2fs.h                   | 1 -
- fs/xfs/xfs_linux.h               | 1 -
- include/linux/jbd2.h             | 1 -
- include/uapi/asm-generic/errno.h | 1 +
- 7 files changed, 1 insertion(+), 8 deletions(-)
+I haven't merged the fix yet.
 
-diff --git a/drivers/staging/exfat/exfat.h b/drivers/staging/exfat/exfat.h
-index 72cf40e123de..58b091a077e8 100644
---- a/drivers/staging/exfat/exfat.h
-+++ b/drivers/staging/exfat/exfat.h
-@@ -30,8 +30,6 @@
- #undef DEBUG
- #endif
- 
--#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
--
- #define DENTRY_SIZE		32	/* dir entry size */
- #define DENTRY_SIZE_BITS	5
- 
-diff --git a/fs/erofs/internal.h b/fs/erofs/internal.h
-index 544a453f3076..3980026a8882 100644
---- a/fs/erofs/internal.h
-+++ b/fs/erofs/internal.h
-@@ -425,7 +425,5 @@ static inline int z_erofs_init_zip_subsystem(void) { return 0; }
- static inline void z_erofs_exit_zip_subsystem(void) {}
- #endif	/* !CONFIG_EROFS_FS_ZIP */
- 
--#define EFSCORRUPTED    EUCLEAN         /* Filesystem is corrupted */
--
- #endif	/* __EROFS_INTERNAL_H */
- 
-diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
-index 03db3e71676c..a86c2585457d 100644
---- a/fs/ext4/ext4.h
-+++ b/fs/ext4/ext4.h
-@@ -3396,6 +3396,5 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
- #endif	/* __KERNEL__ */
- 
- #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
--#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
- 
- #endif	/* _EXT4_H */
-diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
-index 4024790028aa..04ebe77569a3 100644
---- a/fs/f2fs/f2fs.h
-+++ b/fs/f2fs/f2fs.h
-@@ -3752,6 +3752,5 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
- }
- 
- #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
--#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
- 
- #endif /* _LINUX_F2FS_H */
-diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
-index ca15105681ca..3409d02a7d21 100644
---- a/fs/xfs/xfs_linux.h
-+++ b/fs/xfs/xfs_linux.h
-@@ -123,7 +123,6 @@ typedef __u32			xfs_nlink_t;
- 
- #define ENOATTR		ENODATA		/* Attribute not found */
- #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
--#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
- #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
- 
- #define SYNCHRONIZE()	barrier()
-diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
-index 603fbc4e2f70..69411d7e0431 100644
---- a/include/linux/jbd2.h
-+++ b/include/linux/jbd2.h
-@@ -1657,6 +1657,5 @@ static inline tid_t  jbd2_get_latest_transaction(journal_t *journal)
- #endif	/* __KERNEL__ */
- 
- #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
--#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
- 
- #endif	/* _LINUX_JBD2_H */
-diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
-index cf9c51ac49f9..1d5ffdf54cb0 100644
---- a/include/uapi/asm-generic/errno.h
-+++ b/include/uapi/asm-generic/errno.h
-@@ -98,6 +98,7 @@
- #define	EINPROGRESS	115	/* Operation now in progress */
- #define	ESTALE		116	/* Stale file handle */
- #define	EUCLEAN		117	/* Structure needs cleaning */
-+#define	EFSCORRUPTED	EUCLEAN
- #define	ENOTNAM		118	/* Not a XENIX named type file */
- #define	ENAVAIL		119	/* No XENIX semaphores available */
- #define	EISNAM		120	/* Is a named type file */
--- 
-2.24.0.rc1
+If you like I can resend the test when it's merged.
 
