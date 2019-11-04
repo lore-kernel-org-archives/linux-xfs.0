@@ -6,35 +6,34 @@ X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
 	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CA16CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 10:54:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CD087CA9EA0
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 10:54:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 13B26217F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 10:54:55 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id A0FD1217F5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 10:54:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728654AbfKDKyy (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 05:54:54 -0500
+        id S1728559AbfKDKy6 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 05:54:58 -0500
 Received: from icp-osb-irony-out4.external.iinet.net.au ([203.59.1.220]:34019
         "EHLO icp-osb-irony-out4.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728559AbfKDKyy (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 05:54:54 -0500
+        by vger.kernel.org with ESMTP id S1728520AbfKDKy6 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 05:54:58 -0500
 X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2APAAC6AsBd/xK90HYNWRsBAQEBAQE?=
- =?us-ascii?q?BBQEBAREBAQMDAQEBgWsEAQEBCwGEPIQpj1gBAQEBAQEGgRGKCYUxhG6FKIF?=
- =?us-ascii?q?7CQEBAQEBAQEBATcBAYQ7AwIChDA2Bw4CDgEBAQQBAQEBAQUDAYVYhioCAQM?=
- =?us-ascii?q?jBFIQGA0CJgICRxAGE4V1sGJ1fzMaijOBDigBgWSKRniBB4FEgx2EKoMrgl4?=
- =?us-ascii?q?Ej0M3hkBDlnWCLpVRDI4oA4suLYo+ny8BgglNLgqDJ1CRfmeML4I+AQE?=
-X-IPAS-Result: =?us-ascii?q?A2APAAC6AsBd/xK90HYNWRsBAQEBAQEBBQEBAREBAQMDA?=
- =?us-ascii?q?QEBgWsEAQEBCwGEPIQpj1gBAQEBAQEGgRGKCYUxhG6FKIF7CQEBAQEBAQEBA?=
- =?us-ascii?q?TcBAYQ7AwIChDA2Bw4CDgEBAQQBAQEBAQUDAYVYhioCAQMjBFIQGA0CJgICR?=
- =?us-ascii?q?xAGE4V1sGJ1fzMaijOBDigBgWSKRniBB4FEgx2EKoMrgl4Ej0M3hkBDlnWCL?=
- =?us-ascii?q?pVRDI4oA4suLYo+ny8BgglNLgqDJ1CRfmeML4I+AQE?=
+X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2AKAAC6AsBd/xK90HYNWRsBAQEBAQE?=
+ =?us-ascii?q?BBQEBAREBAQMDAQEBgWoFAQEBCwGEPIQpj1gBAQEBAQEGgRGKCYUxihaBewk?=
+ =?us-ascii?q?BAQEBAQEBAQE3AQGEOwMCAoQwNQgOAg4BAQEEAQEBAQEFAwGFWIYqAgEDIwR?=
+ =?us-ascii?q?SEBgNAiYCAkcQBhOFdbBidX8zGoozgQ4oAYFkikZ4gQeBETODHYdVgl4Ej0M?=
+ =?us-ascii?q?3hkBDlnWCLpVRDI4oA4suLalnAYIPTS4KgydQkX5njm0BAQ?=
+X-IPAS-Result: =?us-ascii?q?A2AKAAC6AsBd/xK90HYNWRsBAQEBAQEBBQEBAREBAQMDA?=
+ =?us-ascii?q?QEBgWoFAQEBCwGEPIQpj1gBAQEBAQEGgRGKCYUxihaBewkBAQEBAQEBAQE3A?=
+ =?us-ascii?q?QGEOwMCAoQwNQgOAg4BAQEEAQEBAQEFAwGFWIYqAgEDIwRSEBgNAiYCAkcQB?=
+ =?us-ascii?q?hOFdbBidX8zGoozgQ4oAYFkikZ4gQeBETODHYdVgl4Ej0M3hkBDlnWCLpVRD?=
+ =?us-ascii?q?I4oA4suLalnAYIPTS4KgydQkX5njm0BAQ?=
 X-IronPort-AV: E=Sophos;i="5.68,266,1569254400"; 
-   d="scan'208";a="207138647"
+   d="scan'208";a="207138649"
 Received: from unknown (HELO [192.168.1.222]) ([118.208.189.18])
-  by icp-osb-irony-out4.iinet.net.au with ESMTP; 04 Nov 2019 18:54:51 +0800
-Subject: [PATCH v9 03/17] xfs: dont use XFS_IS_QUOTA_RUNNING() for option
- check
+  by icp-osb-irony-out4.iinet.net.au with ESMTP; 04 Nov 2019 18:54:56 +0800
+Subject: [PATCH v9 04/17] xfs: use kmem functions for struct xfs_mount
 From:   Ian Kent <raven@themaw.net>
 To:     linux-xfs <linux-xfs@vger.kernel.org>
 Cc:     Christoph Hellwig <hch@infradead.org>,
@@ -44,8 +43,8 @@ Cc:     Christoph Hellwig <hch@infradead.org>,
         David Howells <dhowells@redhat.com>,
         Dave Chinner <dchinner@redhat.com>,
         Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Mon, 04 Nov 2019 18:54:51 +0800
-Message-ID: <157286489165.18393.1272288484990933796.stgit@fedora-28>
+Date:   Mon, 04 Nov 2019 18:54:57 +0800
+Message-ID: <157286489698.18393.11608985261787201461.stgit@fedora-28>
 In-Reply-To: <157286480109.18393.6285224459642752559.stgit@fedora-28>
 References: <157286480109.18393.6285224459642752559.stgit@fedora-28>
 User-Agent: StGit/unknown-version
@@ -57,37 +56,46 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-When CONFIG_XFS_QUOTA is not defined any quota option is invalid.
-
-Using the macro XFS_IS_QUOTA_RUNNING() as a check if any quota option
-has been given is a little misleading so use a simple m_qflags != 0
-check to make the intended use more explicit.
-
-Also change to use the IS_ENABLED() macro for the kernel config check.
+The remount function uses the kmem functions for allocating and freeing
+struct xfs_mount, for consistency use the kmem functions everwhere for
+struct xfs_mount.
 
 Signed-off-by: Ian Kent <raven@themaw.net>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 ---
- fs/xfs/xfs_super.c |    4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+ fs/xfs/xfs_super.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index 6438738a204a..fb90beeb3184 100644
+index fb90beeb3184..eb919e74d8eb 100644
 --- a/fs/xfs/xfs_super.c
 +++ b/fs/xfs/xfs_super.c
-@@ -341,12 +341,10 @@ xfs_parseargs(
- 		return -EINVAL;
- 	}
+@@ -1497,7 +1497,7 @@ xfs_mount_alloc(
+ {
+ 	struct xfs_mount	*mp;
  
--#ifndef CONFIG_XFS_QUOTA
--	if (XFS_IS_QUOTA_RUNNING(mp)) {
-+	if (!IS_ENABLED(CONFIG_XFS_QUOTA) && mp->m_qflags != 0) {
- 		xfs_warn(mp, "quota support not available in this kernel.");
- 		return -EINVAL;
- 	}
--#endif
+-	mp = kzalloc(sizeof(struct xfs_mount), GFP_KERNEL);
++	mp = kmem_alloc(sizeof(struct xfs_mount), KM_ZERO);
+ 	if (!mp)
+ 		return NULL;
  
- 	if ((mp->m_dalign && !mp->m_swidth) ||
- 	    (!mp->m_dalign && mp->m_swidth)) {
+@@ -1711,7 +1711,7 @@ xfs_fs_fill_super(
+  out_free_names:
+ 	sb->s_fs_info = NULL;
+ 	xfs_free_names(mp);
+-	kfree(mp);
++	kmem_free(mp);
+  out:
+ 	return error;
+ 
+@@ -1743,7 +1743,7 @@ xfs_fs_put_super(
+ 
+ 	sb->s_fs_info = NULL;
+ 	xfs_free_names(mp);
+-	kfree(mp);
++	kmem_free(mp);
+ }
+ 
+ STATIC struct dentry *
 
