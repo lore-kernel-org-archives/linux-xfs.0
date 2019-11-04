@@ -1,159 +1,182 @@
-Return-Path: <SRS0=4Z0m=Y3=vger.kernel.org=linux-xfs-owner@kernel.org>
+Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY
-	autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-9.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4ABE2CA9EB0
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Nov 2019 22:27:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4155DCA9ED2
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 01:46:58 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1AFFF2190F
-	for <linux-xfs@archiver.kernel.org>; Sun,  3 Nov 2019 22:27:27 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ZSYlfbk/"
+	by mail.kernel.org (Postfix) with ESMTP id 22C5A20848
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 01:46:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727842AbfKCW10 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Sun, 3 Nov 2019 17:27:26 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:41548 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727856AbfKCW10 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Nov 2019 17:27:26 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA3MOEgt073203
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 22:27:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=gKB2tWUQv+dTW2omRVVQgqVUC6Fr4MfKhk7GLU1LfnA=;
- b=ZSYlfbk/WmhECl2yvqyMPrLVgfMAnt87+g8ChqFH6ped7O8FRX2mL127SmNU72BItUH9
- sDbOh+f1MnQjembtR8hlF/uurVRZ88v/q9qCi76FhLW9gsWK53RKWt51ay63sTIJNb1m
- /NOfSEmQix2kv+0Bri7oAB3+qYz0cokHV0LAdwk632Ic4zyN3KS1cHH8buuUg8XGF75k
- CqedqfGqLZVgpg7Iar6txOM6a9HCdy0X0HM998oFecHUOKJmO92HKYpZ8NYdM04oaVeD
- O9aG0OSvUc7GzeS8SnTE4U+tpqYmR9R5GRrjVE0cd7RhbpxpQE2sND49CPkzhsRIt5uo Vg== 
-Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by aserp2120.oracle.com with ESMTP id 2w11rpm4b4-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Nov 2019 22:27:24 +0000
-Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA3MOIcc136742
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 22:25:24 GMT
-Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
-        by userp3020.oracle.com with ESMTP id 2w1kxc3ntp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-xfs@vger.kernel.org>; Sun, 03 Nov 2019 22:25:24 +0000
-Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
-        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA3MPNhe005719
-        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 22:25:23 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Sun, 03 Nov 2019 14:25:23 -0800
-Subject: [PATCH 06/10] xfs: report symlink block corruption errors to the
- health system
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     linux-xfs@vger.kernel.org
-Date:   Sun, 03 Nov 2019 14:25:22 -0800
-Message-ID: <157281992200.4152102.11858859069139016629.stgit@magnolia>
-In-Reply-To: <157281988489.4152102.1632857939932700344.stgit@magnolia>
-References: <157281988489.4152102.1632857939932700344.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+        id S1729092AbfKDBq5 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Sun, 3 Nov 2019 20:46:57 -0500
+Received: from outbound.smtp.vt.edu ([198.82.183.121]:35672 "EHLO
+        omr2.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728607AbfKDBq5 (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Sun, 3 Nov 2019 20:46:57 -0500
+Received: from mr6.cc.vt.edu (mr6.cc.ipv6.vt.edu [IPv6:2607:b400:92:8500:0:af:2d00:4488])
+        by omr2.cc.vt.edu (8.14.4/8.14.4) with ESMTP id xA41kurh010095
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 20:46:56 -0500
+Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
+        by mr6.cc.vt.edu (8.14.7/8.14.7) with ESMTP id xA41kpp3018164
+        for <linux-xfs@vger.kernel.org>; Sun, 3 Nov 2019 20:46:56 -0500
+Received: by mail-qk1-f198.google.com with SMTP id d127so16235379qkc.1
+        for <linux-xfs@vger.kernel.org>; Sun, 03 Nov 2019 17:46:56 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:sender:from:to:cc:subject:date:message-id
+         :in-reply-to:references:mime-version:content-transfer-encoding;
+        bh=r7c0I8SvMYKpHRjqYv9HI6yFzb55f/VPo02TJ216c5Q=;
+        b=Te5VfVlQerd71/vqYXpU6Ukw1YkZrvrNuCoGcbrddC3+izZ3omPCBjEP1EM6K+SUU9
+         G+14pYQqZkx1EG/deczLKAkPv7tGtiptqDo5YsgRPZoBM6G9PNmdM3ahF/hlLRMEGeKO
+         d2GIYh3bBxTwcXgbpoi19m5bDt0ATAQWilLrNOALyxGWnF1XcMD4apAzukL1IWVgZ3Rl
+         G/Q0k9GjatlrT0x+TQL5B7I2uZXnoxE/DTyejktHM0m+NinPNcv24oudMxQrlM2itGiR
+         iAqw38E+1DKdNS2JJVQJb6d8XOXByQ4RugVnzK7EaDGJ0IRxQFE1nPG1Yy04YRoqTUtN
+         3qBg==
+X-Gm-Message-State: APjAAAW1URxhL8hcV6LOpke2YS34UCPpLVmv99ZGS4aud74asRhNS5Jo
+        P6kMHQ101tdd44d+ltEzcWRmugh0Hl97MqDkHGQTN0aW+UVurxmxXiGnVPU81mHPOW/kveRUI7Y
+        Urq9jI3GDEInoebViDEV++bPxEF5PlK8=
+X-Received: by 2002:a05:6214:70f:: with SMTP id b15mr19848523qvz.97.1572832010209;
+        Sun, 03 Nov 2019 17:46:50 -0800 (PST)
+X-Google-Smtp-Source: APXvYqyZ6TMTqkBpyXQGPAZMIMj5EH3dwBQ8r4Ftf0xofxFI/BWghZasoJHnZlzuhtG3wrll2Arcjw==
+X-Received: by 2002:a05:6214:70f:: with SMTP id b15mr19848512qvz.97.1572832009874;
+        Sun, 03 Nov 2019 17:46:49 -0800 (PST)
+Received: from turing-police.lan ([2601:5c0:c001:c9e1::359])
+        by smtp.gmail.com with ESMTPSA id d2sm8195354qkg.77.2019.11.03.17.46.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 03 Nov 2019 17:46:49 -0800 (PST)
+From:   Valdis Kletnieks <valdis.kletnieks@vt.edu>
+X-Google-Original-From: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+To:     Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
+        Jan Kara <jack@suse.cz>, "Theodore Ts'o" <tytso@mit.edu>,
+        Valdis Kletnieks <valdis.kletnieks@vt.edu>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
+        Andreas Dilger <adilger.kernel@dilger.ca>,
+        Jaegeuk Kim <jaegeuk@kernel.org>, linux-xfs@vger.kernel.org,
+        Jan Kara <jack@suse.com>, Arnd Bergmann <arnd@arndb.de>,
+        linux-fsdevel@vger.kernel.org, devel@driverdev.osuosl.org,
+        linux-kernel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
+        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+        linux-arch@vger.kernel.org
+Subject: [PATCH 10/10] errno.h: Provide EFSCORRUPTED for everybody
+Date:   Sun,  3 Nov 2019 20:45:06 -0500
+Message-Id: <20191104014510.102356-11-Valdis.Kletnieks@vt.edu>
+X-Mailer: git-send-email 2.24.0.rc1
+In-Reply-To: <20191104014510.102356-1-Valdis.Kletnieks@vt.edu>
+References: <20191104014510.102356-1-Valdis.Kletnieks@vt.edu>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9430 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=1 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911030234
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9430 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=1 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911030234
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+There's currently 6 filesystems that have the same #define. Move it
+into errno.h so it's defined in just one place.
 
-Whenever we encounter corrupt symbolic link blocks, we should report
-that to the health monitoring system for later reporting.
-
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
+Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
+Reviewed-by: Jan Kara <jack@suse.cz>
+Acked-by: Theodore Ts'o <tytso@mit.edu>
 ---
- fs/xfs/xfs_iops.c    |    2 ++
- fs/xfs/xfs_symlink.c |    6 ++++++
- 2 files changed, 8 insertions(+)
+ drivers/staging/exfat/exfat.h    | 2 --
+ fs/erofs/internal.h              | 2 --
+ fs/ext4/ext4.h                   | 1 -
+ fs/f2fs/f2fs.h                   | 1 -
+ fs/xfs/xfs_linux.h               | 1 -
+ include/linux/jbd2.h             | 1 -
+ include/uapi/asm-generic/errno.h | 1 +
+ 7 files changed, 1 insertion(+), 8 deletions(-)
 
-
-diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
-index f18b3167b43e..94068de9cae9 100644
---- a/fs/xfs/xfs_iops.c
-+++ b/fs/xfs/xfs_iops.c
-@@ -21,6 +21,7 @@
- #include "xfs_dir2.h"
- #include "xfs_iomap.h"
- #include "xfs_error.h"
-+#include "xfs_health.h"
+diff --git a/drivers/staging/exfat/exfat.h b/drivers/staging/exfat/exfat.h
+index 72cf40e123de..58b091a077e8 100644
+--- a/drivers/staging/exfat/exfat.h
++++ b/drivers/staging/exfat/exfat.h
+@@ -30,8 +30,6 @@
+ #undef DEBUG
+ #endif
  
- #include <linux/xattr.h>
- #include <linux/posix_acl.h>
-@@ -482,6 +483,7 @@ xfs_vn_get_link_inline(
- 	 */
- 	link = ip->i_df.if_u1.if_data;
- 	if (XFS_CORRUPT_ON(ip->i_mount, !link)) {
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
- 		return ERR_PTR(-EFSCORRUPTED);
- 	}
- 	return link;
-diff --git a/fs/xfs/xfs_symlink.c b/fs/xfs/xfs_symlink.c
-index ed66fd2de327..9fb6e5eb5920 100644
---- a/fs/xfs/xfs_symlink.c
-+++ b/fs/xfs/xfs_symlink.c
-@@ -20,6 +20,7 @@
- #include "xfs_trans_space.h"
- #include "xfs_trace.h"
- #include "xfs_trans.h"
-+#include "xfs_health.h"
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+-
+ #define DENTRY_SIZE		32	/* dir entry size */
+ #define DENTRY_SIZE_BITS	5
  
- /* ----- Kernel only functions below ----- */
- int
-@@ -62,6 +63,8 @@ xfs_readlink_bmap_ilocked(
- 			xfs_buf_relse(bp);
+diff --git a/fs/erofs/internal.h b/fs/erofs/internal.h
+index 544a453f3076..3980026a8882 100644
+--- a/fs/erofs/internal.h
++++ b/fs/erofs/internal.h
+@@ -425,7 +425,5 @@ static inline int z_erofs_init_zip_subsystem(void) { return 0; }
+ static inline void z_erofs_exit_zip_subsystem(void) {}
+ #endif	/* !CONFIG_EROFS_FS_ZIP */
  
- 			/* bad CRC means corrupted metadata */
-+			if (xfs_metadata_is_sick(error))
-+				xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
- 			if (error == -EFSBADCRC)
- 				error = -EFSCORRUPTED;
- 			goto out;
-@@ -74,6 +77,7 @@ xfs_readlink_bmap_ilocked(
- 		if (xfs_sb_version_hascrc(&mp->m_sb)) {
- 			if (!xfs_symlink_hdr_ok(ip->i_ino, offset,
- 							byte_cnt, bp)) {
-+				xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
- 				error = -EFSCORRUPTED;
- 				xfs_alert(mp,
- "symlink header does not match required off/len/owner (0x%x/Ox%x,0x%llx)",
-@@ -129,6 +133,7 @@ xfs_readlink(
- 			 __func__, (unsigned long long) ip->i_ino,
- 			 (long long) pathlen);
- 		ASSERT(0);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
- 		error = -EFSCORRUPTED;
- 		goto out;
- 	}
-@@ -501,6 +506,7 @@ xfs_inactive_symlink(
- 			 __func__, (unsigned long long)ip->i_ino, pathlen);
- 		xfs_iunlock(ip, XFS_ILOCK_EXCL);
- 		ASSERT(0);
-+		xfs_inode_mark_sick(ip, XFS_SICK_INO_SYMLINK);
- 		return -EFSCORRUPTED;
- 	}
+-#define EFSCORRUPTED    EUCLEAN         /* Filesystem is corrupted */
+-
+ #endif	/* __EROFS_INTERNAL_H */
  
+diff --git a/fs/ext4/ext4.h b/fs/ext4/ext4.h
+index 03db3e71676c..a86c2585457d 100644
+--- a/fs/ext4/ext4.h
++++ b/fs/ext4/ext4.h
+@@ -3396,6 +3396,5 @@ static inline int ext4_buffer_uptodate(struct buffer_head *bh)
+ #endif	/* __KERNEL__ */
+ 
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ 
+ #endif	/* _EXT4_H */
+diff --git a/fs/f2fs/f2fs.h b/fs/f2fs/f2fs.h
+index 4024790028aa..04ebe77569a3 100644
+--- a/fs/f2fs/f2fs.h
++++ b/fs/f2fs/f2fs.h
+@@ -3752,6 +3752,5 @@ static inline bool is_journalled_quota(struct f2fs_sb_info *sbi)
+ }
+ 
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ 
+ #endif /* _LINUX_F2FS_H */
+diff --git a/fs/xfs/xfs_linux.h b/fs/xfs/xfs_linux.h
+index ca15105681ca..3409d02a7d21 100644
+--- a/fs/xfs/xfs_linux.h
++++ b/fs/xfs/xfs_linux.h
+@@ -123,7 +123,6 @@ typedef __u32			xfs_nlink_t;
+ 
+ #define ENOATTR		ENODATA		/* Attribute not found */
+ #define EWRONGFS	EINVAL		/* Mount with wrong filesystem type */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+ 
+ #define SYNCHRONIZE()	barrier()
+diff --git a/include/linux/jbd2.h b/include/linux/jbd2.h
+index 603fbc4e2f70..69411d7e0431 100644
+--- a/include/linux/jbd2.h
++++ b/include/linux/jbd2.h
+@@ -1657,6 +1657,5 @@ static inline tid_t  jbd2_get_latest_transaction(journal_t *journal)
+ #endif	/* __KERNEL__ */
+ 
+ #define EFSBADCRC	EBADMSG		/* Bad CRC detected */
+-#define EFSCORRUPTED	EUCLEAN		/* Filesystem is corrupted */
+ 
+ #endif	/* _LINUX_JBD2_H */
+diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
+index cf9c51ac49f9..1d5ffdf54cb0 100644
+--- a/include/uapi/asm-generic/errno.h
++++ b/include/uapi/asm-generic/errno.h
+@@ -98,6 +98,7 @@
+ #define	EINPROGRESS	115	/* Operation now in progress */
+ #define	ESTALE		116	/* Stale file handle */
+ #define	EUCLEAN		117	/* Structure needs cleaning */
++#define	EFSCORRUPTED	EUCLEAN
+ #define	ENOTNAM		118	/* Not a XENIX named type file */
+ #define	ENAVAIL		119	/* No XENIX semaphores available */
+ #define	EISNAM		120	/* Is a named type file */
+-- 
+2.24.0.rc1
 
