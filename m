@@ -2,313 +2,229 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3C495CA9EB5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 19:52:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CC6FCA9EB5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 19:58:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id E749E2089C
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 19:52:41 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 26919206BA
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 19:58:13 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YfdzmKjf"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Vm7DmHM6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728346AbfKDTwl (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 14:52:41 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:47420 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728332AbfKDTwl (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 14:52:41 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4JnKXT088037;
-        Mon, 4 Nov 2019 19:52:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=fYAY1amalOpYCUUZ8mPg+f5Tqm8lDWwEWIntAc8jz/8=;
- b=YfdzmKjfGVh71vynscqDMRi1If75/ATfllX5ZtUFZuGLT3n1K+ja5PEydacc3hCVuIw5
- efNWOMm9G3uCO2OCLlSpqwHnQC/9sq+zE0znRybi0AeBRNXLuIKugsxUf/FqY1jak1fw
- 71Ad3u08s21qmUN39cYBS4chu99pBTma2D6wfiBhO7+Zx1pgrI8cnCs+B/pCgeTyCuDK
- JO8acsbvuioBskSXH4Kryn0LRm22Cal8bEANv5ShhE7Jo4uR1b0jwlfL7ZAACYF6NG7E
- CHfcv36ayoRifz+H+VFWtlfpOeunFMm7/Emj/cen5pQMdzIt0Qk8LrmENqR/CvX5PjcF Bw== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2w11rpsqk5-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 19:52:37 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4JivFN145257;
-        Mon, 4 Nov 2019 19:52:36 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2w1k8vdbrd-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 19:52:36 +0000
-Received: from abhmp0017.oracle.com (abhmp0017.oracle.com [141.146.116.23])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA4JqZQJ015226;
-        Mon, 4 Nov 2019 19:52:35 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Nov 2019 11:52:35 -0800
-Date:   Mon, 4 Nov 2019 11:52:33 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 05/34] xfs: add a btree entries pointer to struct
- xfs_da3_icnode_hdr
-Message-ID: <20191104195233.GF4153244@magnolia>
-References: <20191101220719.29100-1-hch@lst.de>
- <20191101220719.29100-6-hch@lst.de>
+        id S1728648AbfKDT6M (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 14:58:12 -0500
+Received: from us-smtp-2.mimecast.com ([205.139.110.61]:29683 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1728322AbfKDT6M (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 14:58:12 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1572897490;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=iX0Im6ez8fONq6vZ1zCe7AGoAcurOkQ0kqYgRpSpeq0=;
+        b=Vm7DmHM6XjQRWL4UiTmP2GjL9ynA2KjPJ5UfWw6oeilNG1xbT8km+ZXQ9mIr6IyEJcBJ7n
+        PAqyXso3P9XVPDFUeKV5VWLRaxe/eJVzqCYVyy86jtWydp18e62krS5YooM6MS1kMSu5x5
+        Wqkg0XvTWscNNmB7+UIksEcenW69E3c=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-350-3OxW0jTKP_-hNyjL7dQDdA-1; Mon, 04 Nov 2019 14:58:08 -0500
+Received: from smtp.corp.redhat.com (int-mx04.intmail.prod.int.phx2.redhat.com [10.5.11.14])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 774391800D53;
+        Mon,  4 Nov 2019 19:58:07 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id D9BE15D9E5;
+        Mon,  4 Nov 2019 19:58:06 +0000 (UTC)
+Date:   Mon, 4 Nov 2019 14:58:05 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 14/28] mm: reclaim_state records pages reclaimed, not
+ slabs
+Message-ID: <20191104195805.GE10665@bfoster>
+References: <20191031234618.15403-1-david@fromorbit.com>
+ <20191031234618.15403-15-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+In-Reply-To: <20191031234618.15403-15-david@fromorbit.com>
+User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.14
+X-MC-Unique: 3OxW0jTKP_-hNyjL7dQDdA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Content-Disposition: inline
-In-Reply-To: <20191101220719.29100-6-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911040189
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911040190
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 01, 2019 at 03:06:50PM -0700, Christoph Hellwig wrote:
-> All but two callers of the ->node_tree_p dir operation already have a
-> xfs_da3_icnode_hdr from a previous call to xfs_da3_node_hdr_from_disk at
-> hand.  Add a pointer to the btree entries to struct xfs_da3_icnode_hdr
-> to clean up this pattern.  The two remaining callers now expand the
-> whole header as well, but that isn't very expensive and not in a super
-> hot path anyway.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+On Fri, Nov 01, 2019 at 10:46:04AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>=20
+> Add a wrapper to account for page freeing in shrinker reclaim so
+> that the high level scanning accounts for all the memory freed
+> during a shrinker scan.
+>=20
+> No logic changes, just replacing open coded checks with a simple
+> wrapper.
+>=20
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
 > ---
->  fs/xfs/libxfs/xfs_attr_leaf.c |  6 ++--
->  fs/xfs/libxfs/xfs_da_btree.c  | 68 ++++++++++++++++-------------------
->  fs/xfs/libxfs/xfs_da_btree.h  |  1 +
->  fs/xfs/libxfs/xfs_da_format.c | 21 -----------
->  fs/xfs/libxfs/xfs_dir2.h      |  2 --
->  fs/xfs/scrub/dabtree.c        |  6 ++--
->  fs/xfs/xfs_attr_inactive.c    | 34 +++++++++---------
->  fs/xfs/xfs_attr_list.c        |  2 +-
->  8 files changed, 55 insertions(+), 85 deletions(-)
-> 
 
-<snip>
+Looks straightforward:
 
-> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
-> index 69ebf6a50d85..63ed45057fa5 100644
-> --- a/fs/xfs/libxfs/xfs_da_btree.h
-> +++ b/fs/xfs/libxfs/xfs_da_btree.h
-> @@ -135,6 +135,7 @@ struct xfs_da3_icnode_hdr {
->  	uint16_t		magic;
->  	uint16_t		count;
->  	uint16_t		level;
-> +	struct xfs_da_node_entry *btree;
+Reviewed-by: Brian Foster <bfoster@redhat.com>
 
-This adds to the incore node header structure a pointer to raw disk
-structures, right?  Can we make this a little more explicit by naming
-the field "raw_entries" or something?
-
---D
-
->  };
->  
+>  fs/inode.c           |  3 +--
+>  fs/xfs/xfs_buf.c     |  4 +---
+>  include/linux/swap.h | 20 ++++++++++++++++++--
+>  mm/slab.c            |  3 +--
+>  mm/slob.c            |  4 +---
+>  mm/slub.c            |  3 +--
+>  mm/vmscan.c          |  4 ++--
+>  7 files changed, 25 insertions(+), 16 deletions(-)
+>=20
+> diff --git a/fs/inode.c b/fs/inode.c
+> index fef457a42882..a77caf216659 100644
+> --- a/fs/inode.c
+> +++ b/fs/inode.c
+> @@ -764,8 +764,7 @@ static enum lru_status inode_lru_isolate(struct list_=
+head *item,
+>  =09=09=09=09__count_vm_events(KSWAPD_INODESTEAL, reap);
+>  =09=09=09else
+>  =09=09=09=09__count_vm_events(PGINODESTEAL, reap);
+> -=09=09=09if (current->reclaim_state)
+> -=09=09=09=09current->reclaim_state->reclaimed_slab +=3D reap;
+> +=09=09=09current_reclaim_account_pages(reap);
+>  =09=09}
+>  =09=09iput(inode);
+>  =09=09spin_lock(lru_lock);
+> diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+> index d34e5d2edacd..55b082bc53b3 100644
+> --- a/fs/xfs/xfs_buf.c
+> +++ b/fs/xfs/xfs_buf.c
+> @@ -324,9 +324,7 @@ xfs_buf_free(
+> =20
+>  =09=09=09__free_page(page);
+>  =09=09}
+> -=09=09if (current->reclaim_state)
+> -=09=09=09current->reclaim_state->reclaimed_slab +=3D
+> -=09=09=09=09=09=09=09bp->b_page_count;
+> +=09=09current_reclaim_account_pages(bp->b_page_count);
+>  =09} else if (bp->b_flags & _XBF_KMEM)
+>  =09=09kmem_free(bp->b_addr);
+>  =09_xfs_buf_free_pages(bp);
+> diff --git a/include/linux/swap.h b/include/linux/swap.h
+> index 063c0c1e112b..72b855fe20b0 100644
+> --- a/include/linux/swap.h
+> +++ b/include/linux/swap.h
+> @@ -126,12 +126,28 @@ union swap_header {
+> =20
 >  /*
-> diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
-> index 912096416a86..f896d37c845f 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.c
-> +++ b/fs/xfs/libxfs/xfs_da_format.c
-> @@ -494,22 +494,6 @@ xfs_dir3_leaf_hdr_to_disk(
->  	hdr3->stale = cpu_to_be16(from->stale);
->  }
->  
-> -
-> -/*
-> - * Directory/Attribute Node block operations
-> - */
-> -static struct xfs_da_node_entry *
-> -xfs_da2_node_tree_p(struct xfs_da_intnode *dap)
-> -{
-> -	return dap->__btree;
-> -}
-> -
-> -static struct xfs_da_node_entry *
-> -xfs_da3_node_tree_p(struct xfs_da_intnode *dap)
-> -{
-> -	return ((struct xfs_da3_intnode *)dap)->__btree;
-> -}
-> -
->  /*
->   * Directory free space block operations
+>   * current->reclaim_state points to one of these when a task is running
+> - * memory reclaim
+> + * memory reclaim. It is typically used by shrinkers to return reclaim
+> + * information back to the main vmscan loop.
 >   */
-> @@ -669,7 +653,6 @@ static const struct xfs_dir_ops xfs_dir2_ops = {
->  	.leaf_ents_p = xfs_dir2_leaf_ents_p,
->  
->  	.node_hdr_size = sizeof(struct xfs_da_node_hdr),
-> -	.node_tree_p = xfs_da2_node_tree_p,
->  
->  	.free_hdr_size = sizeof(struct xfs_dir2_free_hdr),
->  	.free_hdr_to_disk = xfs_dir2_free_hdr_to_disk,
-> @@ -717,7 +700,6 @@ static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
->  	.leaf_ents_p = xfs_dir2_leaf_ents_p,
->  
->  	.node_hdr_size = sizeof(struct xfs_da_node_hdr),
-> -	.node_tree_p = xfs_da2_node_tree_p,
->  
->  	.free_hdr_size = sizeof(struct xfs_dir2_free_hdr),
->  	.free_hdr_to_disk = xfs_dir2_free_hdr_to_disk,
-> @@ -765,7 +747,6 @@ static const struct xfs_dir_ops xfs_dir3_ops = {
->  	.leaf_ents_p = xfs_dir3_leaf_ents_p,
->  
->  	.node_hdr_size = sizeof(struct xfs_da3_node_hdr),
-> -	.node_tree_p = xfs_da3_node_tree_p,
->  
->  	.free_hdr_size = sizeof(struct xfs_dir3_free_hdr),
->  	.free_hdr_to_disk = xfs_dir3_free_hdr_to_disk,
-> @@ -778,12 +759,10 @@ static const struct xfs_dir_ops xfs_dir3_ops = {
->  
->  static const struct xfs_dir_ops xfs_dir2_nondir_ops = {
->  	.node_hdr_size = sizeof(struct xfs_da_node_hdr),
-> -	.node_tree_p = xfs_da2_node_tree_p,
+>  struct reclaim_state {
+> -=09unsigned long reclaimed_slab;
+> +=09unsigned long=09reclaimed_pages;=09/* pages freed by shrinkers */
 >  };
->  
->  static const struct xfs_dir_ops xfs_dir3_nondir_ops = {
->  	.node_hdr_size = sizeof(struct xfs_da3_node_hdr),
-> -	.node_tree_p = xfs_da3_node_tree_p,
->  };
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index c16efeae0f2b..6eee4c1b20da 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.h
-> +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -82,8 +82,6 @@ struct xfs_dir_ops {
->  		(*leaf_ents_p)(struct xfs_dir2_leaf *lp);
->  
->  	int	node_hdr_size;
-> -	struct xfs_da_node_entry *
-> -		(*node_tree_p)(struct xfs_da_intnode *dap);
->  
->  	int	free_hdr_size;
->  	void	(*free_hdr_to_disk)(struct xfs_dir2_free *to,
-> diff --git a/fs/xfs/scrub/dabtree.c b/fs/xfs/scrub/dabtree.c
-> index be19a48716b7..52aa69743dfa 100644
-> --- a/fs/xfs/scrub/dabtree.c
-> +++ b/fs/xfs/scrub/dabtree.c
-> @@ -83,10 +83,12 @@ xchk_da_btree_node_entry(
->  	int				level)
->  {
->  	struct xfs_da_state_blk		*blk = &ds->state->path.blk[level];
-> +	struct xfs_da3_icnode_hdr	hdr;
->  
->  	ASSERT(blk->magic == XFS_DA_NODE_MAGIC);
->  
-> -	return (void *)ds->dargs.dp->d_ops->node_tree_p(blk->bp->b_addr) +
-> +	xfs_da3_node_hdr_from_disk(ds->sc->mp, &hdr, blk->bp->b_addr);
-> +	return (void *)hdr.btree +
->  		(blk->index * sizeof(struct xfs_da_node_entry));
->  }
->  
-> @@ -411,7 +413,7 @@ xchk_da_btree_block(
->  		blk->magic = XFS_DA_NODE_MAGIC;
->  		node = blk->bp->b_addr;
->  		xfs_da3_node_hdr_from_disk(ip->i_mount, &nodehdr, node);
-> -		btree = ip->d_ops->node_tree_p(node);
-> +		btree = nodehdr.btree;
->  		*pmaxrecs = nodehdr.count;
->  		blk->hashval = be32_to_cpu(btree[*pmaxrecs - 1].hashval);
->  		if (level == 0) {
-> diff --git a/fs/xfs/xfs_attr_inactive.c b/fs/xfs/xfs_attr_inactive.c
-> index c1ce06ccfab0..f6d8967f0a8e 100644
-> --- a/fs/xfs/xfs_attr_inactive.c
-> +++ b/fs/xfs/xfs_attr_inactive.c
-> @@ -190,19 +190,17 @@ xfs_attr3_leaf_inactive(
->   */
->  STATIC int
->  xfs_attr3_node_inactive(
-> -	struct xfs_trans **trans,
-> -	struct xfs_inode *dp,
-> -	struct xfs_buf	*bp,
-> -	int		level)
-> +	struct xfs_trans	**trans,
-> +	struct xfs_inode	*dp,
-> +	struct xfs_buf		*bp,
-> +	int			level)
->  {
-> -	xfs_da_blkinfo_t *info;
-> -	xfs_da_intnode_t *node;
-> -	xfs_dablk_t child_fsb;
-> -	xfs_daddr_t parent_blkno, child_blkno;
-> -	int error, i;
-> -	struct xfs_buf *child_bp;
-> -	struct xfs_da_node_entry *btree;
-> +	struct xfs_da_blkinfo	*info;
-> +	xfs_dablk_t		child_fsb;
-> +	xfs_daddr_t		parent_blkno, child_blkno;
-> +	struct xfs_buf		*child_bp;
->  	struct xfs_da3_icnode_hdr ichdr;
-> +	int			error, i;
->  
->  	/*
->  	 * Since this code is recursive (gasp!) we must protect ourselves.
-> @@ -212,15 +210,13 @@ xfs_attr3_node_inactive(
->  		return -EFSCORRUPTED;
->  	}
->  
-> -	node = bp->b_addr;
-> -	xfs_da3_node_hdr_from_disk(dp->i_mount, &ichdr, node);
-> +	xfs_da3_node_hdr_from_disk(dp->i_mount, &ichdr, bp->b_addr);
->  	parent_blkno = bp->b_bn;
->  	if (!ichdr.count) {
->  		xfs_trans_brelse(*trans, bp);
->  		return 0;
->  	}
-> -	btree = dp->d_ops->node_tree_p(node);
-> -	child_fsb = be32_to_cpu(btree[0].before);
-> +	child_fsb = be32_to_cpu(ichdr.btree[0].before);
->  	xfs_trans_brelse(*trans, bp);	/* no locks for later trans */
->  
->  	/*
-> @@ -279,13 +275,15 @@ xfs_attr3_node_inactive(
->  		 * child block number.
->  		 */
->  		if (i + 1 < ichdr.count) {
-> +			struct xfs_da3_icnode_hdr phdr;
+> =20
+> +/*
+> + * When code frees a page that may be run from a memory reclaim context,=
+ it
+> + * needs to account for the pages it frees so memory reclaim can track t=
+hem.
+> + * Slab memory that is freed is accounted via this mechanism, so this is=
+ not
+> + * necessary for slab or heap memory being freed. However, if the object=
+ being
+> + * freed frees pages directly, then those pages should be accounted as w=
+ell when
+> + * in memory reclaim. This helper function takes care accounting for the=
+ pages
+> + * being reclaimed when it is required.
+> + */
+> +static inline void current_reclaim_account_pages(int nr_pages)
+> +{
+> +=09if (current->reclaim_state)
+> +=09=09current->reclaim_state->reclaimed_pages +=3D nr_pages;
+> +}
 > +
->  			error = xfs_da3_node_read(*trans, dp, 0, parent_blkno,
->  						 &bp, XFS_ATTR_FORK);
->  			if (error)
->  				return error;
-> -			node = bp->b_addr;
-> -			btree = dp->d_ops->node_tree_p(node);
-> -			child_fsb = be32_to_cpu(btree[i + 1].before);
-> +			xfs_da3_node_hdr_from_disk(dp->i_mount, &phdr,
-> +						  bp->b_addr);
-> +			child_fsb = be32_to_cpu(phdr.btree[i + 1].before);
->  			xfs_trans_brelse(*trans, bp);
->  		}
->  		/*
-> diff --git a/fs/xfs/xfs_attr_list.c b/fs/xfs/xfs_attr_list.c
-> index 5b5a3772ed24..032920952aa2 100644
-> --- a/fs/xfs/xfs_attr_list.c
-> +++ b/fs/xfs/xfs_attr_list.c
-> @@ -254,7 +254,7 @@ xfs_attr_node_list_lookup(
->  		else
->  			expected_level--;
->  
-> -		btree = dp->d_ops->node_tree_p(node);
-> +		btree = nodehdr.btree;
->  		for (i = 0; i < nodehdr.count; btree++, i++) {
->  			if (cursor->hashval <= be32_to_cpu(btree->hashval)) {
->  				cursor->blkno = be32_to_cpu(btree->before);
-> -- 
-> 2.20.1
-> 
+>  #ifdef __KERNEL__
+> =20
+>  struct address_space;
+> diff --git a/mm/slab.c b/mm/slab.c
+> index 66e5d8032bae..419be005f41a 100644
+> --- a/mm/slab.c
+> +++ b/mm/slab.c
+> @@ -1395,8 +1395,7 @@ static void kmem_freepages(struct kmem_cache *cache=
+p, struct page *page)
+>  =09page_mapcount_reset(page);
+>  =09page->mapping =3D NULL;
+> =20
+> -=09if (current->reclaim_state)
+> -=09=09current->reclaim_state->reclaimed_slab +=3D 1 << order;
+> +=09current_reclaim_account_pages(1 << order);
+>  =09uncharge_slab_page(page, order, cachep);
+>  =09__free_pages(page, order);
+>  }
+> diff --git a/mm/slob.c b/mm/slob.c
+> index fa53e9f73893..c54a7eeee86d 100644
+> --- a/mm/slob.c
+> +++ b/mm/slob.c
+> @@ -211,9 +211,7 @@ static void slob_free_pages(void *b, int order)
+>  {
+>  =09struct page *sp =3D virt_to_page(b);
+> =20
+> -=09if (current->reclaim_state)
+> -=09=09current->reclaim_state->reclaimed_slab +=3D 1 << order;
+> -
+> +=09current_reclaim_account_pages(1 << order);
+>  =09mod_node_page_state(page_pgdat(sp), NR_SLAB_UNRECLAIMABLE,
+>  =09=09=09    -(1 << order));
+>  =09__free_pages(sp, order);
+> diff --git a/mm/slub.c b/mm/slub.c
+> index b25c807a111f..478554082079 100644
+> --- a/mm/slub.c
+> +++ b/mm/slub.c
+> @@ -1746,8 +1746,7 @@ static void __free_slab(struct kmem_cache *s, struc=
+t page *page)
+>  =09__ClearPageSlab(page);
+> =20
+>  =09page->mapping =3D NULL;
+> -=09if (current->reclaim_state)
+> -=09=09current->reclaim_state->reclaimed_slab +=3D pages;
+> +=09current_reclaim_account_pages(pages);
+>  =09uncharge_slab_page(page, order, s);
+>  =09__free_pages(page, order);
+>  }
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index 7a8256322150..967e3d3c7748 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -2870,8 +2870,8 @@ static bool shrink_node(pg_data_t *pgdat, struct sc=
+an_control *sc)
+>  =09=09} while ((memcg =3D mem_cgroup_iter(root, memcg, NULL)));
+> =20
+>  =09=09if (reclaim_state) {
+> -=09=09=09sc->nr_reclaimed +=3D reclaim_state->reclaimed_slab;
+> -=09=09=09reclaim_state->reclaimed_slab =3D 0;
+> +=09=09=09sc->nr_reclaimed +=3D reclaim_state->reclaimed_pages;
+> +=09=09=09reclaim_state->reclaimed_pages =3D 0;
+>  =09=09}
+> =20
+>  =09=09/* Record the subtree's reclaim efficiency */
+> --=20
+> 2.24.0.rc0
+>=20
+
