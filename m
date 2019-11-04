@@ -2,434 +2,237 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+X-Spam-Status: No, score=-7.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,MENTIONS_GIT_HOSTING,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D16C5CA9EB5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:52:15 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B0F1CA9EB5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:53:11 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 8E7602067D
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:52:15 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="UOwwfM6L"
+	by mail.kernel.org (Postfix) with ESMTP id E36992067D
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:53:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728556AbfKDUwP (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 15:52:15 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:59138 "EHLO
-        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728519AbfKDUwP (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 15:52:15 -0500
-Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KmsrN121138;
-        Mon, 4 Nov 2019 20:52:10 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=j/NvCUz3OwMafUlSTYl9xVIaNR9Ug+gaCipd9SdIEms=;
- b=UOwwfM6LQy0KQeHg1EElIK1v5jPgOeB21+OyzDwZFDdEkHSun/DWitI272dzOglzAUS1
- J3dkVmsPN1gdHljkpSp8VWHo7l+HAaetuB45/w7YkgmiMrdG5sG9xRe9Pfnqmxs/9rP4
- R9xIMPEMI1IsY33qHHZewjOBMCzYxMCOgWz9hST39tWWme/9ecBFdbQH3EP8aP/xUwjI
- xl9X2EGPpUXMgft5uiPvjWNioZn4qcbGbILiKr7VaDznG1fkXX5JN+Wmnx+dO7e2xpAd
- YMUgZQ0XiCRe0mAiwiLsrRDwaON4L7R0qgjUjTqEG9xUqBtuypCj6WE5RRttwqHdXiUh mg== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by userp2120.oracle.com with ESMTP id 2w12er1ubp-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 20:52:09 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KnVgf115085;
-        Mon, 4 Nov 2019 20:50:09 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3030.oracle.com with ESMTP id 2w1k8vg2ds-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 20:50:09 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA4Ko8eH018687;
-        Mon, 4 Nov 2019 20:50:08 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Nov 2019 12:50:07 -0800
-Date:   Mon, 4 Nov 2019 12:50:07 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 31/34] xfs: devirtualize ->data_get_ftype and
- ->data_put_ftype
-Message-ID: <20191104205007.GG4153244@magnolia>
-References: <20191101220719.29100-1-hch@lst.de>
- <20191101220719.29100-32-hch@lst.de>
+        id S1728519AbfKDUxK (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 15:53:10 -0500
+Received: from sandeen.net ([63.231.237.45]:58122 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1728510AbfKDUxK (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Mon, 4 Nov 2019 15:53:10 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id D93F717272
+        for <linux-xfs@vger.kernel.org>; Mon,  4 Nov 2019 14:52:03 -0600 (CST)
+From:   Eric Sandeen <sandeen@sandeen.net>
+Subject: [ANNOUNCE] xfsprogs for-next updated to 7e8275f8
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+To:     linux-xfs <linux-xfs@vger.kernel.org>
+Message-ID: <1d841799-1ce6-1902-7968-6c5c66c545f0@sandeen.net>
+Date:   Mon, 4 Nov 2019 14:53:07 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191101220719.29100-32-hch@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911040201
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911040201
+Content-Type: multipart/signed; micalg=pgp-sha256;
+ protocol="application/pgp-signature";
+ boundary="pDRnP8NTdSHZ1jxdYGV5W4dkmRVzEwTgS"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 01, 2019 at 03:07:16PM -0700, Christoph Hellwig wrote:
-> Replace the ->data_get_ftype and ->data_put_ftype dir ops methods with
-> directly called xfs_dir2_data_get_ftype and xfs_dir2_data_put_ftype
-> helpers that takes care of the differences between the directory format
-> with and without the file type field.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
+--pDRnP8NTdSHZ1jxdYGV5W4dkmRVzEwTgS
+Content-Type: multipart/mixed; boundary="CGELveDVEyNC4Ji49DszBpYp0dmMkU3XU"
 
-Looks ok,
-Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+--CGELveDVEyNC4Ji49DszBpYp0dmMkU3XU
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: quoted-printable
 
---D
+Hi folks,
 
-> ---
->  fs/xfs/libxfs/xfs_da_format.c  | 47 ----------------------------------
->  fs/xfs/libxfs/xfs_dir2.h       |  3 ---
->  fs/xfs/libxfs/xfs_dir2_block.c | 13 +++++-----
->  fs/xfs/libxfs/xfs_dir2_data.c  | 47 +++++++++++++++++++++++-----------
->  fs/xfs/libxfs/xfs_dir2_leaf.c  |  6 ++---
->  fs/xfs/libxfs/xfs_dir2_node.c  |  6 ++---
->  fs/xfs/libxfs/xfs_dir2_priv.h  |  4 +++
->  fs/xfs/libxfs/xfs_dir2_sf.c    |  2 +-
->  fs/xfs/xfs_dir2_readdir.c      |  4 +--
->  9 files changed, 52 insertions(+), 80 deletions(-)
-> 
-> diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
-> index b9f9fbf7eee2..498363ac193d 100644
-> --- a/fs/xfs/libxfs/xfs_da_format.c
-> +++ b/fs/xfs/libxfs/xfs_da_format.c
-> @@ -15,60 +15,13 @@
->  #include "xfs_dir2.h"
->  #include "xfs_dir2_priv.h"
->  
-> -/*
-> - * Directory data block operations
-> - */
-> -
-> -static uint8_t
-> -xfs_dir2_data_get_ftype(
-> -	struct xfs_dir2_data_entry *dep)
-> -{
-> -	return XFS_DIR3_FT_UNKNOWN;
-> -}
-> -
-> -static void
-> -xfs_dir2_data_put_ftype(
-> -	struct xfs_dir2_data_entry *dep,
-> -	uint8_t			ftype)
-> -{
-> -	ASSERT(ftype < XFS_DIR3_FT_MAX);
-> -}
-> -
-> -static uint8_t
-> -xfs_dir3_data_get_ftype(
-> -	struct xfs_dir2_data_entry *dep)
-> -{
-> -	uint8_t		ftype = dep->name[dep->namelen];
-> -
-> -	if (ftype >= XFS_DIR3_FT_MAX)
-> -		return XFS_DIR3_FT_UNKNOWN;
-> -	return ftype;
-> -}
-> -
-> -static void
-> -xfs_dir3_data_put_ftype(
-> -	struct xfs_dir2_data_entry *dep,
-> -	uint8_t			type)
-> -{
-> -	ASSERT(type < XFS_DIR3_FT_MAX);
-> -	ASSERT(dep->namelen != 0);
-> -
-> -	dep->name[dep->namelen] = type;
-> -}
-> -
->  static const struct xfs_dir_ops xfs_dir2_ops = {
-> -	.data_get_ftype = xfs_dir2_data_get_ftype,
-> -	.data_put_ftype = xfs_dir2_data_put_ftype,
->  };
->  
->  static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
-> -	.data_get_ftype = xfs_dir3_data_get_ftype,
-> -	.data_put_ftype = xfs_dir3_data_put_ftype,
->  };
->  
->  static const struct xfs_dir_ops xfs_dir3_ops = {
-> -	.data_get_ftype = xfs_dir3_data_get_ftype,
-> -	.data_put_ftype = xfs_dir3_data_put_ftype,
->  };
->  
->  /*
-> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index 76d6d38154fb..f869ee01a381 100644
-> --- a/fs/xfs/libxfs/xfs_dir2.h
-> +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -32,9 +32,6 @@ extern unsigned char xfs_mode_to_ftype(int mode);
->   * directory operations vector for encode/decode routines
->   */
->  struct xfs_dir_ops {
-> -	uint8_t (*data_get_ftype)(struct xfs_dir2_data_entry *dep);
-> -	void	(*data_put_ftype)(struct xfs_dir2_data_entry *dep,
-> -				uint8_t ftype);
->  };
->  
->  extern const struct xfs_dir_ops *
-> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
-> index 50b4f1bf25a3..94d32e515478 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_block.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
-> @@ -541,7 +541,7 @@ xfs_dir2_block_addname(
->  	dep->inumber = cpu_to_be64(args->inumber);
->  	dep->namelen = args->namelen;
->  	memcpy(dep->name, args->name, args->namelen);
-> -	dp->d_ops->data_put_ftype(dep, args->filetype);
-> +	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
->  	/*
-> @@ -633,7 +633,7 @@ xfs_dir2_block_lookup(
->  	 * Fill in inode number, CI name if appropriate, release the block.
->  	 */
->  	args->inumber = be64_to_cpu(dep->inumber);
-> -	args->filetype = dp->d_ops->data_get_ftype(dep);
-> +	args->filetype = xfs_dir2_data_get_ftype(dp->i_mount, dep);
->  	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
->  	xfs_trans_brelse(args->trans, bp);
->  	return error;
-> @@ -865,7 +865,7 @@ xfs_dir2_block_replace(
->  	 * Change the inode number to the new value.
->  	 */
->  	dep->inumber = cpu_to_be64(args->inumber);
-> -	dp->d_ops->data_put_ftype(dep, args->filetype);
-> +	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	xfs_dir2_data_log_entry(args, bp, dep);
->  	xfs_dir3_data_check(dp, bp);
->  	return 0;
-> @@ -1154,7 +1154,7 @@ xfs_dir2_sf_to_block(
->  	dep->inumber = cpu_to_be64(dp->i_ino);
->  	dep->namelen = 1;
->  	dep->name[0] = '.';
-> -	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
-> +	xfs_dir2_data_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
->  	tagp = xfs_dir2_data_entry_tag_p(mp, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
->  	xfs_dir2_data_log_entry(args, bp, dep);
-> @@ -1168,7 +1168,7 @@ xfs_dir2_sf_to_block(
->  	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
->  	dep->namelen = 2;
->  	dep->name[0] = dep->name[1] = '.';
-> -	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
-> +	xfs_dir2_data_put_ftype(mp, dep, XFS_DIR3_FT_DIR);
->  	tagp = xfs_dir2_data_entry_tag_p(mp, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
->  	xfs_dir2_data_log_entry(args, bp, dep);
-> @@ -1218,7 +1218,8 @@ xfs_dir2_sf_to_block(
->  		dep = (xfs_dir2_data_entry_t *)((char *)hdr + newoffset);
->  		dep->inumber = cpu_to_be64(xfs_dir2_sf_get_ino(mp, sfp, sfep));
->  		dep->namelen = sfep->namelen;
-> -		dp->d_ops->data_put_ftype(dep, xfs_dir2_sf_get_ftype(mp, sfep));
-> +		xfs_dir2_data_put_ftype(mp, dep,
-> +				xfs_dir2_sf_get_ftype(mp, sfep));
->  		memcpy(dep->name, sfep->name, dep->namelen);
->  		tagp = xfs_dir2_data_entry_tag_p(mp, dep);
->  		*tagp = cpu_to_be16((char *)dep - (char *)hdr);
-> diff --git a/fs/xfs/libxfs/xfs_dir2_data.c b/fs/xfs/libxfs/xfs_dir2_data.c
-> index 353629c3a1e8..9752a0da5b95 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_data.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_data.c
-> @@ -60,6 +60,34 @@ xfs_dir2_data_entry_tag_p(
->  		xfs_dir2_data_entsize(mp, dep->namelen) - sizeof(__be16));
->  }
->  
-> +uint8_t
-> +xfs_dir2_data_get_ftype(
-> +	struct xfs_mount		*mp,
-> +	struct xfs_dir2_data_entry	*dep)
-> +{
-> +	if (xfs_sb_version_hasftype(&mp->m_sb)) {
-> +		uint8_t			ftype = dep->name[dep->namelen];
-> +
-> +		if (likely(ftype < XFS_DIR3_FT_MAX))
-> +			return ftype;
-> +	}
-> +
-> +	return XFS_DIR3_FT_UNKNOWN;
-> +}
-> +
-> +void
-> +xfs_dir2_data_put_ftype(
-> +	struct xfs_mount		*mp,
-> +	struct xfs_dir2_data_entry	*dep,
-> +	uint8_t				ftype)
-> +{
-> +	ASSERT(ftype < XFS_DIR3_FT_MAX);
-> +	ASSERT(dep->namelen != 0);
-> +
-> +	if (xfs_sb_version_hasftype(&mp->m_sb))
-> +		dep->name[dep->namelen] = ftype;
-> +}
-> +
->  /*
->   * Check the consistency of the data block.
->   * The input can also be a block-format directory.
-> @@ -88,23 +116,12 @@ __xfs_dir3_data_check(
->  	char			*p;		/* current data position */
->  	int			stale;		/* count of stale leaves */
->  	struct xfs_name		name;
-> -	const struct xfs_dir_ops *ops;
-> -	struct xfs_da_geometry	*geo;
-> -
-> -	geo = mp->m_dir_geo;
-> -
-> -	/*
-> -	 * We can be passed a null dp here from a verifier, so we need to go the
-> -	 * hard way to get them.
-> -	 */
-> -	ops = xfs_dir_get_ops(mp, dp);
-> +	struct xfs_da_geometry	*geo = mp->m_dir_geo;
->  
->  	/*
-> -	 * If this isn't a directory, or we don't get handed the dir ops,
-> -	 * something is seriously wrong.  Bail out.
-> +	 * If this isn't a directory, something is seriously wrong.  Bail out.
->  	 */
-> -	if ((dp && !S_ISDIR(VFS_I(dp)->i_mode)) ||
-> -	    ops != xfs_dir_get_ops(mp, NULL))
-> +	if (dp && !S_ISDIR(VFS_I(dp)->i_mode))
->  		return __this_address;
->  
->  	hdr = bp->b_addr;
-> @@ -215,7 +232,7 @@ __xfs_dir3_data_check(
->  		if (be16_to_cpu(*xfs_dir2_data_entry_tag_p(mp, dep)) !=
->  		    (char *)dep - (char *)hdr)
->  			return __this_address;
-> -		if (ops->data_get_ftype(dep) >= XFS_DIR3_FT_MAX)
-> +		if (xfs_dir2_data_get_ftype(mp, dep) >= XFS_DIR3_FT_MAX)
->  			return __this_address;
->  		count++;
->  		lastfree = 0;
-> diff --git a/fs/xfs/libxfs/xfs_dir2_leaf.c b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> index 30ccf44d817a..ff54c8f08ded 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_leaf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_leaf.c
-> @@ -865,7 +865,7 @@ xfs_dir2_leaf_addname(
->  	dep->inumber = cpu_to_be64(args->inumber);
->  	dep->namelen = args->namelen;
->  	memcpy(dep->name, args->name, dep->namelen);
-> -	dp->d_ops->data_put_ftype(dep, args->filetype);
-> +	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
->  	/*
-> @@ -1195,7 +1195,7 @@ xfs_dir2_leaf_lookup(
->  	 * Return the found inode number & CI name if appropriate
->  	 */
->  	args->inumber = be64_to_cpu(dep->inumber);
-> -	args->filetype = dp->d_ops->data_get_ftype(dep);
-> +	args->filetype = xfs_dir2_data_get_ftype(dp->i_mount, dep);
->  	error = xfs_dir_cilookup_result(args, dep->name, dep->namelen);
->  	xfs_trans_brelse(tp, dbp);
->  	xfs_trans_brelse(tp, lbp);
-> @@ -1524,7 +1524,7 @@ xfs_dir2_leaf_replace(
->  	 * Put the new inode number in, log it.
->  	 */
->  	dep->inumber = cpu_to_be64(args->inumber);
-> -	dp->d_ops->data_put_ftype(dep, args->filetype);
-> +	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tp = args->trans;
->  	xfs_dir2_data_log_entry(args, dbp, dep);
->  	xfs_dir3_leaf_check(dp, lbp);
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index d4a1d2455e72..e51b103fd429 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -878,7 +878,7 @@ xfs_dir2_leafn_lookup_for_entry(
->  				xfs_trans_brelse(tp, state->extrablk.bp);
->  			args->cmpresult = cmp;
->  			args->inumber = be64_to_cpu(dep->inumber);
-> -			args->filetype = dp->d_ops->data_get_ftype(dep);
-> +			args->filetype = xfs_dir2_data_get_ftype(mp, dep);
->  			*indexp = index;
->  			state->extravalid = 1;
->  			state->extrablk.bp = curbp;
-> @@ -1963,7 +1963,7 @@ xfs_dir2_node_addname_int(
->  	dep->inumber = cpu_to_be64(args->inumber);
->  	dep->namelen = args->namelen;
->  	memcpy(dep->name, args->name, dep->namelen);
-> -	dp->d_ops->data_put_ftype(dep, args->filetype);
-> +	xfs_dir2_data_put_ftype(dp->i_mount, dep, args->filetype);
->  	tagp = xfs_dir2_data_entry_tag_p(dp->i_mount, dep);
->  	*tagp = cpu_to_be16((char *)dep - (char *)hdr);
->  	xfs_dir2_data_log_entry(args, dbp, dep);
-> @@ -2247,7 +2247,7 @@ xfs_dir2_node_replace(
->  		 * Fill in the new inode number and log the entry.
->  		 */
->  		dep->inumber = cpu_to_be64(inum);
-> -		args->dp->d_ops->data_put_ftype(dep, ftype);
-> +		xfs_dir2_data_put_ftype(state->mp, dep, ftype);
->  		xfs_dir2_data_log_entry(args, state->extrablk.bp, dep);
->  		rval = 0;
->  	}
-> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
-> index 436693514c7c..5258d9da5f12 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
-> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
-> @@ -52,6 +52,10 @@ struct xfs_dir2_data_free *xfs_dir2_data_bestfree_p(struct xfs_mount *mp,
->  int xfs_dir2_data_entsize(struct xfs_mount *mp, int n);
->  __be16 *xfs_dir2_data_entry_tag_p(struct xfs_mount *mp,
->  		struct xfs_dir2_data_entry *dep);
-> +uint8_t xfs_dir2_data_get_ftype(struct xfs_mount *mp,
-> +		struct xfs_dir2_data_entry *dep);
-> +void xfs_dir2_data_put_ftype(struct xfs_mount *mp,
-> +		struct xfs_dir2_data_entry *dep, uint8_t ftype);
->  
->  #ifdef DEBUG
->  extern void xfs_dir3_data_check(struct xfs_inode *dp, struct xfs_buf *bp);
-> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
-> index 8ecbb0828e42..9a3958aee9f2 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
-> @@ -337,7 +337,7 @@ xfs_dir2_block_to_sf(
->  			xfs_dir2_sf_put_ino(mp, sfp, sfep,
->  					      be64_to_cpu(dep->inumber));
->  			xfs_dir2_sf_put_ftype(mp, sfep,
-> -					dp->d_ops->data_get_ftype(dep));
-> +					xfs_dir2_data_get_ftype(mp, dep));
->  
->  			sfep = xfs_dir2_sf_nextentry(mp, sfp, sfep);
->  		}
-> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-> index 7519317d7a21..7885616bdfe5 100644
-> --- a/fs/xfs/xfs_dir2_readdir.c
-> +++ b/fs/xfs/xfs_dir2_readdir.c
-> @@ -208,7 +208,7 @@ xfs_dir2_block_getdents(
->  					    (char *)dep - (char *)hdr);
->  
->  		ctx->pos = cook & 0x7fffffff;
-> -		filetype = dp->d_ops->data_get_ftype(dep);
-> +		filetype = xfs_dir2_data_get_ftype(dp->i_mount, dep);
->  		/*
->  		 * If it didn't fit, set the final offset to here & return.
->  		 */
-> @@ -463,7 +463,7 @@ xfs_dir2_leaf_getdents(
->  
->  		dep = (xfs_dir2_data_entry_t *)ptr;
->  		length = xfs_dir2_data_entsize(mp, dep->namelen);
-> -		filetype = dp->d_ops->data_get_ftype(dep);
-> +		filetype = xfs_dir2_data_get_ftype(mp, dep);
->  
->  		ctx->pos = xfs_dir2_byte_to_dataptr(curoff) & 0x7fffffff;
->  		if (!xfs_dir2_namecheck(dep->name, dep->namelen)) {
-> -- 
-> 2.20.1
-> 
+The for-next branch of the xfsprogs repository at:
+
+	git://git.kernel.org/pub/scm/fs/xfs/xfsprogs-dev.git
+
+has just been updated.
+
+Patches often get missed, so please check if your outstanding
+patches were in this update. If they have not been in this update,
+please resubmit them to linux-xfs@vger.kernel.org so they can be
+picked up in the next update.
+
+My plan is to finish up Darrick's last few series and tag this
+beast, unless anyone reminds me of other outstanding patches
+I've missed.
+
+The new head of the for-next branch is commit:
+
+7e8275f8 (HEAD -> for-next, origin/for-next, korg/for-next) xfs_growfs: a=
+llow mounted device node as argument
+
+New Commits:
+
+Darrick J. Wong (30):
+      [d9b8ae44] xfs_spaceman: always report sick metadata, checked or no=
+t
+      [4546e66d] xfs_db: btheight should check geometry more carefully
+      [ca427fe8] xfs_scrub: report repair activities on stdout, not stder=
+r
+      [b8302b7f] xfs_scrub: don't allow zero or negative error injection =
+interval
+      [a57cc320] libfrog: fix workqueue_add error out
+      [af06261f] xfs_repair: print better information when metadata updat=
+es fail
+      [eb20c4ca] libxfs: fix typo in message about write verifier
+      [5770b2f0] mkfs: fix incorrect error message
+      [aeff0641] libfrog/xfs_scrub: improve iteration function documentat=
+ion
+      [663e02a0] xfs_scrub: separate media error reporting for attribute =
+forks
+      [ed953d26] xfs_scrub: improve reporting of file data media errors
+      [f1f5fd3a] xfs_scrub: better reporting of metadata media errors
+      [02d0069e] xfs_scrub: improve reporting of file metadata media erro=
+rs
+      [909c6a54] xfs_scrub: don't report media errors on unwritten extent=
+s
+      [c9b349bd] xfs_scrub: reduce fsmap activity for media errors
+      [0f402dd8] xfs_scrub: request fewer bmaps when we can
+      [eacea707] xfs_scrub: fix media verification thread pool size calcu=
+lations
+      [d530e589] libfrog: clean up platform_nproc
+      [4b45ff6f] libxfs: remove libxfs_nproc
+      [4e5fe123] libxfs: remove libxfs_physmem
+      [b658de93] libfrog: take over platform headers
+      [ae14fe63] xfs_scrub: clean out the nproc global variable
+      [e3724c8b] xfs_scrub: refactor xfs_iterate_inodes_range_check
+      [e98616ba] xfs_scrub: fix misclassified error reporting
+      [5155653f] xfs_scrub: simplify post-run reporting logic
+      [420fad2d] xfs_scrub: clean up error level table
+      [abc2e70d] xfs_scrub: explicitly track corruptions, not just errors=
+
+      [e458f3f1] xfs_scrub: promote some of the str_info to str_error cal=
+ls
+      [05921544] xfs_scrub: refactor xfs_scrub_excessive_errors
+      [49e05cb0] xfs_scrub: create a new category for unfixable errors
+
+Eric Sandeen (1):
+      [7e8275f8] xfs_growfs: allow mounted device node as argument
+
+
+Code Diffstat:
+
+ db/btheight.c              |  88 +++++++++++++-
+ growfs/xfs_growfs.c        |   3 +
+ include/libxfs.h           |   6 -
+ include/platform_defs.h.in |   2 +
+ libfrog/bitmap.c           |  39 +++++-
+ libfrog/bitmap.h           |   2 +
+ libfrog/linux.c            |   9 +-
+ libfrog/platform.h         |  26 ++++
+ libfrog/ptvar.h            |   8 +-
+ libfrog/topology.c         |   1 +
+ libfrog/workqueue.c        |  10 +-
+ libxfs/init.c              |  18 +--
+ libxfs/init.h              |  14 ---
+ libxfs/rdwr.c              |   2 +-
+ man/man8/xfs_growfs.8      |  10 +-
+ man/man8/xfs_scrub.8       |   4 +
+ mkfs/xfs_mkfs.c            |   7 +-
+ po/pl.po                   |   2 +-
+ repair/phase4.c            |   6 +-
+ repair/phase6.c            |   8 +-
+ repair/prefetch.c          |   2 +-
+ repair/slab.c              |   2 +-
+ repair/xfs_repair.c        |   3 +-
+ scrub/common.c             |  54 +++++++--
+ scrub/common.h             |   8 +-
+ scrub/disk.c               |   6 +
+ scrub/filemap.c            |   8 +-
+ scrub/filemap.h            |   4 +
+ scrub/fscounters.c         |   2 +-
+ scrub/inodes.c             |  44 ++++---
+ scrub/inodes.h             |   6 +
+ scrub/phase1.c             |  12 +-
+ scrub/phase4.c             |   5 +-
+ scrub/phase5.c             |   2 +-
+ scrub/phase6.c             | 287 ++++++++++++++++++++++++++++++++++-----=
+------
+ scrub/read_verify.c        |   8 +-
+ scrub/scrub.c              |  17 ++-
+ scrub/spacemap.h           |   4 +
+ scrub/vfs.h                |  10 ++
+ scrub/xfs_scrub.c          |  57 +++++----
+ scrub/xfs_scrub.h          |   4 +-
+ spaceman/health.c          |   4 +-
+ 42 files changed, 594 insertions(+), 220 deletions(-)
+ create mode 100644 libfrog/platform.h
+
+
+--CGELveDVEyNC4Ji49DszBpYp0dmMkU3XU--
+
+--pDRnP8NTdSHZ1jxdYGV5W4dkmRVzEwTgS
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl3Aj7MACgkQIK4WkuE9
+3uB/bg/+M6UKG0v03Eh2O6KVhN9QMKBEKaBNRIgYEJjhZ3Rrx4JdIhY/GFBSQb8D
+78wCfFUSqjCNCyagydqOvkyBvH8irkXouVfJ9GxSi2Hr8d6vzgBpApRQ1IAmUjOk
+e0CCgvc5lh8j460DaOfT1G41YgZip3QcCKL3GGtE2Rk6tq/idlSBRAtRlehsmEuv
+J6Yw0eev+F8EemkeqKJ8SdfjoW5Jd2NQkeqtX0716/Beqkd2L7tPV+PsRmAcrt1j
+tnknF+F8F32gC/ove+oy0D2QDGoR1+6EqjesVoKkAMTwvzqQsOPOSyzUXABXlJU7
+MrJ26foAyRih3ojYCbuIAwEl/xxh3+dL2Kp7jUcHzXbDEXR4Zx1tL9Jce6S95LZR
+6wUT6/+shz+4ZeMcknEV5rk0EPFvPt7i76WCaWGecu2P0st8gLOUW2Th9VQcF5oI
+TVINQOwzW1eWAKVrLrQbS+HaiepeTJNNr0QWiTUKGzkPylWECSIqT8sy18lwsTxf
+wf8C0TAHcR2H7cpVSkD/CL1y0epDoDFEBy0YljItC4aK2/sbmww/HblFrylLB2/N
+KJB0V+mkF5OWMEvpFGQDPv4N/rqwopPUHME094pCsD9v5MHl/UPWNfgrKbTP5CxG
+RqOJ9aIbo0hPyEhg1j3k6KPVDJWGOfC+ksoLoD/OHY70dVEmFFY=
+=2EhJ
+-----END PGP SIGNATURE-----
+
+--pDRnP8NTdSHZ1jxdYGV5W4dkmRVzEwTgS--
