@@ -2,139 +2,258 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EEB9ECA9ED3
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:49:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C6ED6CA9EB5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:50:37 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id D059620869
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:49:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 8D6522089C
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:50:37 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bi18BXMC"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729745AbfKDUtR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 15:49:17 -0500
-Received: from mail105.syd.optusnet.com.au ([211.29.132.249]:58751 "EHLO
-        mail105.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1729710AbfKDUtR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 15:49:17 -0500
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail105.syd.optusnet.com.au (Postfix) with ESMTPS id CCF993A0A9C;
-        Tue,  5 Nov 2019 07:49:10 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iRjHh-0006Hb-FZ; Tue, 05 Nov 2019 07:49:09 +1100
-Date:   Tue, 5 Nov 2019 07:49:09 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Shaokun Zhang <zhangshaokun@hisilicon.com>
-Cc:     linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Yang Guo <guoyang2@huawei.com>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>
-Subject: Re: [PATCH] xfs: optimise xfs_mod_icount/ifree when delta < 0
-Message-ID: <20191104204909.GB4614@dread.disaster.area>
-References: <1572866980-13001-1-git-send-email-zhangshaokun@hisilicon.com>
+        id S1728987AbfKDUuh (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 15:50:37 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59532 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728940AbfKDUug (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 15:50:36 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4Kmv9k138009;
+        Mon, 4 Nov 2019 20:50:33 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=8IjPpZKXXTtBbUvAa+jwcBI7TngsxGnpkWjI+X/LiXc=;
+ b=bi18BXMCmxgVf2P1cxve9ejcbv+/EEZT9XeT/lC1HHTbBGnx38nZFgZ9nds8ogVfmqQv
+ R7dHIt73Zq43F6ZcB/+DCJBCsliBKtpTq7Oqke4Ea51OeVQ3P+8DPnc9CFwxFx5l/2Hh
+ w05vZW/NlQTXqP6Lu9Kii3ZEVkOH70/9KJMqBtov8Hrmc/hguDDtySvsxncqXk9Ky55k
+ 53WYyAED1c97vOZRzefCBqvdRte1g0dNdtpEvaWIIz7sN7MeQTteCGdKUYVn0hB38aFY
+ KHirw0OcZs9pZhhLU+sRAN3wsEcX8Id5ktoy71Mk9iwKq4L1Q0H+6XbaRJfkXZOgr4Zy Jw== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2w11rpt14x-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 04 Nov 2019 20:50:33 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KmQqq189704;
+        Mon, 4 Nov 2019 20:50:32 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2w1kxdxt7a-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 04 Nov 2019 20:50:32 +0000
+Received: from abhmp0023.oracle.com (abhmp0023.oracle.com [141.146.116.29])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA4KoUu6014833;
+        Mon, 4 Nov 2019 20:50:31 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 04 Nov 2019 20:50:30 +0000
+Date:   Mon, 4 Nov 2019 12:50:29 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 32/34] xfs: remove the now unused dir ops infrastructure
+Message-ID: <20191104205029.GH4153244@magnolia>
+References: <20191101220719.29100-1-hch@lst.de>
+ <20191101220719.29100-33-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1572866980-13001-1-git-send-email-zhangshaokun@hisilicon.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=D+Q3ErZj c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=i0EeH86SAAAA:8 a=yPCof4ZbAAAA:8 a=BTeA3XvPAAAA:8 a=7-415B0cAAAA:8
-        a=9rK2l8cHGEVl0CmEovAA:9 a=OCCxXlEOGsAPRoHQ:21 a=EEn7Qb-6C_fkYYwB:21
-        a=CjuIK1q_8ugA:10 a=tafbbOV3vt1XuEhzTjGK:22 a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <20191101220719.29100-33-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1911040201
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1911040201
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 04, 2019 at 07:29:40PM +0800, Shaokun Zhang wrote:
-> From: Yang Guo <guoyang2@huawei.com>
-> 
-> percpu_counter_compare will be called by xfs_mod_icount/ifree to check
-> whether the counter less than 0 and it is a expensive function.
-> let's check it only when delta < 0, it will be good for xfs's performance.
+On Fri, Nov 01, 2019 at 03:07:17PM -0700, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Hmmm. I don't recall this as being expensive.
+YAY!
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-How did you find this? Can you please always document how you found
-the problem being addressed in the commit message so that we don't
-then have to ask how the problem being fixed is reproduced.
+--D
 
-> Cc: "Darrick J. Wong" <darrick.wong@oracle.com>
-> Signed-off-by: Yang Guo <guoyang2@huawei.com>
-> Signed-off-by: Shaokun Zhang <zhangshaokun@hisilicon.com>
 > ---
->  fs/xfs/xfs_mount.c | 6 ++++++
->  1 file changed, 6 insertions(+)
+>  fs/xfs/Makefile               |  1 -
+>  fs/xfs/libxfs/xfs_da_btree.h  |  1 -
+>  fs/xfs/libxfs/xfs_da_format.c | 46 -----------------------------------
+>  fs/xfs/libxfs/xfs_dir2.c      |  2 --
+>  fs/xfs/libxfs/xfs_dir2.h      |  9 -------
+>  fs/xfs/xfs_inode.h            |  3 ---
+>  fs/xfs/xfs_iops.c             |  1 -
+>  fs/xfs/xfs_mount.h            |  2 --
+>  8 files changed, 65 deletions(-)
+>  delete mode 100644 fs/xfs/libxfs/xfs_da_format.c
 > 
-> diff --git a/fs/xfs/xfs_mount.c b/fs/xfs/xfs_mount.c
-> index ba5b6f3b2b88..5e8314e6565e 100644
-> --- a/fs/xfs/xfs_mount.c
-> +++ b/fs/xfs/xfs_mount.c
-> @@ -1174,6 +1174,9 @@ xfs_mod_icount(
->  	int64_t			delta)
->  {
->  	percpu_counter_add_batch(&mp->m_icount, delta, XFS_ICOUNT_BATCH);
-> +	if (delta > 0)
-> +		return 0;
-> +
->  	if (__percpu_counter_compare(&mp->m_icount, 0, XFS_ICOUNT_BATCH) < 0) {
->  		ASSERT(0);
->  		percpu_counter_add(&mp->m_icount, -delta);
-
-I struggle to see how this is expensive when you have more than
-num_online_cpus() * XFS_ICOUNT_BATCH inodes allocated.
-__percpu_counter_compare() will always take the fast path so ends up
-being very little code at all.
-
-> @@ -1188,6 +1191,9 @@ xfs_mod_ifree(
->  	int64_t			delta)
->  {
->  	percpu_counter_add(&mp->m_ifree, delta);
-> +	if (delta > 0)
-> +		return 0;
-> +
->  	if (percpu_counter_compare(&mp->m_ifree, 0) < 0) {
->  		ASSERT(0);
->  		percpu_counter_add(&mp->m_ifree, -delta);
-
-This one might have some overhead because the count is often at or
-around zero, but I haven't noticed it being expensive in kernel
-profiles when creating/freeing hundreds of thousands of inodes every
-second.
-
-IOWs, we typically measure the overhead of such functions by kernel
-profile.  Creating ~200,000 inodes a second, so hammering the icount
-and ifree counters, I see:
-
-      0.16%  [kernel]  [k] percpu_counter_add_batch
-      0.03%  [kernel]  [k] __percpu_counter_compare
-
-Almost nothing - it's way down the long tail of noise in the
-profile.
-
-IOWs, the CPU consumed by percpu_counter_compare() is low that
-optimisation isn't going to produce any measurable performance
-improvement. Hence it's not really something we've concerned
-ourselves about.  The profile is pretty much identical for removing
-hundreds of thousands of files a second, too, so there really isn't
-any performance gain to be had here.
-
-If you want to optimise code to make it faster and show a noticable
-performance improvement, start by running kernel profiles while your
-performance critical workload is running. Then look at what the
-functions and call chains that consume the most CPU and work out how
-to do them better. Those are the places that optimisation will
-result in measurable performance gains....
-
-Cheers,
-
-Dave.
-
--- 
-Dave Chinner
-david@fromorbit.com
+> diff --git a/fs/xfs/Makefile b/fs/xfs/Makefile
+> index 06b68b6115bc..aceca2f9a3db 100644
+> --- a/fs/xfs/Makefile
+> +++ b/fs/xfs/Makefile
+> @@ -27,7 +27,6 @@ xfs-y				+= $(addprefix libxfs/, \
+>  				   xfs_bmap_btree.o \
+>  				   xfs_btree.o \
+>  				   xfs_da_btree.o \
+> -				   xfs_da_format.o \
+>  				   xfs_defer.o \
+>  				   xfs_dir2.o \
+>  				   xfs_dir2_block.o \
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index a3333e7a084d..7362e706cda7 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -10,7 +10,6 @@
+>  struct xfs_inode;
+>  struct xfs_trans;
+>  struct zone;
+> -struct xfs_dir_ops;
+>  
+>  /*
+>   * Directory/attribute geometry information. There will be one of these for each
+> diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
+> deleted file mode 100644
+> index 498363ac193d..000000000000
+> --- a/fs/xfs/libxfs/xfs_da_format.c
+> +++ /dev/null
+> @@ -1,46 +0,0 @@
+> -// SPDX-License-Identifier: GPL-2.0
+> -/*
+> - * Copyright (c) 2000,2002,2005 Silicon Graphics, Inc.
+> - * Copyright (c) 2013 Red Hat, Inc.
+> - * All Rights Reserved.
+> - */
+> -#include "xfs.h"
+> -#include "xfs_fs.h"
+> -#include "xfs_shared.h"
+> -#include "xfs_format.h"
+> -#include "xfs_log_format.h"
+> -#include "xfs_trans_resv.h"
+> -#include "xfs_mount.h"
+> -#include "xfs_inode.h"
+> -#include "xfs_dir2.h"
+> -#include "xfs_dir2_priv.h"
+> -
+> -static const struct xfs_dir_ops xfs_dir2_ops = {
+> -};
+> -
+> -static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+> -};
+> -
+> -static const struct xfs_dir_ops xfs_dir3_ops = {
+> -};
+> -
+> -/*
+> - * Return the ops structure according to the current config.  If we are passed
+> - * an inode, then that overrides the default config we use which is based on
+> - * feature bits.
+> - */
+> -const struct xfs_dir_ops *
+> -xfs_dir_get_ops(
+> -	struct xfs_mount	*mp,
+> -	struct xfs_inode	*dp)
+> -{
+> -	if (dp)
+> -		return dp->d_ops;
+> -	if (mp->m_dir_inode_ops)
+> -		return mp->m_dir_inode_ops;
+> -	if (xfs_sb_version_hascrc(&mp->m_sb))
+> -		return &xfs_dir3_ops;
+> -	if (xfs_sb_version_hasftype(&mp->m_sb))
+> -		return &xfs_dir2_ftype_ops;
+> -	return &xfs_dir2_ops;
+> -}
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index 33a6e8aacdba..b1fc89173ea6 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -104,8 +104,6 @@ xfs_da_mount(
+>  	ASSERT(mp->m_sb.sb_versionnum & XFS_SB_VERSION_DIRV2BIT);
+>  	ASSERT(xfs_dir2_dirblock_bytes(&mp->m_sb) <= XFS_MAX_BLOCKSIZE);
+>  
+> -	mp->m_dir_inode_ops = xfs_dir_get_ops(mp, NULL);
+> -
+>  	mp->m_dir_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
+>  				    KM_MAYFAIL);
+>  	mp->m_attr_geo = kmem_zalloc(sizeof(struct xfs_da_geometry),
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index f869ee01a381..ccdbc612fb76 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -28,15 +28,6 @@ extern struct xfs_name	xfs_name_dotdot;
+>   */
+>  extern unsigned char xfs_mode_to_ftype(int mode);
+>  
+> -/*
+> - * directory operations vector for encode/decode routines
+> - */
+> -struct xfs_dir_ops {
+> -};
+> -
+> -extern const struct xfs_dir_ops *
+> -	xfs_dir_get_ops(struct xfs_mount *mp, struct xfs_inode *dp);
+> -
+>  /*
+>   * Generic directory interface routines
+>   */
+> diff --git a/fs/xfs/xfs_inode.h b/fs/xfs/xfs_inode.h
+> index bcfb35a9c5ca..6516dd1fc86a 100644
+> --- a/fs/xfs/xfs_inode.h
+> +++ b/fs/xfs/xfs_inode.h
+> @@ -37,9 +37,6 @@ typedef struct xfs_inode {
+>  	struct xfs_ifork	*i_cowfp;	/* copy on write extents */
+>  	struct xfs_ifork	i_df;		/* data fork */
+>  
+> -	/* operations vectors */
+> -	const struct xfs_dir_ops *d_ops;		/* directory ops vector */
+> -
+>  	/* Transaction and locking information. */
+>  	struct xfs_inode_log_item *i_itemp;	/* logging information */
+>  	mrlock_t		i_lock;		/* inode lock */
+> diff --git a/fs/xfs/xfs_iops.c b/fs/xfs/xfs_iops.c
+> index 40d4495e013c..155c9269b7bb 100644
+> --- a/fs/xfs/xfs_iops.c
+> +++ b/fs/xfs/xfs_iops.c
+> @@ -1317,7 +1317,6 @@ xfs_setup_inode(
+>  		lockdep_set_class(&inode->i_rwsem,
+>  				  &inode->i_sb->s_type->i_mutex_dir_key);
+>  		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_dir_ilock_class);
+> -		ip->d_ops = ip->i_mount->m_dir_inode_ops;
+>  	} else {
+>  		lockdep_set_class(&ip->i_lock.mr_lock, &xfs_nondir_ilock_class);
+>  	}
+> diff --git a/fs/xfs/xfs_mount.h b/fs/xfs/xfs_mount.h
+> index 3ddc5f4d1053..6dc1ff761572 100644
+> --- a/fs/xfs/xfs_mount.h
+> +++ b/fs/xfs/xfs_mount.h
+> @@ -12,7 +12,6 @@ struct xfs_mru_cache;
+>  struct xfs_nameops;
+>  struct xfs_ail;
+>  struct xfs_quotainfo;
+> -struct xfs_dir_ops;
+>  struct xfs_da_geometry;
+>  
+>  /* dynamic preallocation free space thresholds, 5% down to 1% */
+> @@ -158,7 +157,6 @@ typedef struct xfs_mount {
+>  	int			m_swidth;	/* stripe width */
+>  	uint8_t			m_sectbb_log;	/* sectlog - BBSHIFT */
+>  	const struct xfs_nameops *m_dirnameops;	/* vector of dir name ops */
+> -	const struct xfs_dir_ops *m_dir_inode_ops; /* vector of dir inode ops */
+>  	uint			m_chsize;	/* size of next field */
+>  	atomic_t		m_active_trans;	/* number trans frozen */
+>  	struct xfs_mru_cache	*m_filestream;  /* per-mount filestream data */
+> -- 
+> 2.20.1
+> 
