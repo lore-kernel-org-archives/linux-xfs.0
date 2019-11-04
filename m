@@ -3,131 +3,245 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
 X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04A82CA9ED3
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 15:29:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 201F1CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 15:29:50 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id CDE8C20842
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 15:29:13 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id E14B320842
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 15:29:49 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="SQh8nJFv"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="SQAsJ5if"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728012AbfKDP3N (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 10:29:13 -0500
-Received: from mail-pf1-f193.google.com ([209.85.210.193]:40294 "EHLO
-        mail-pf1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1727796AbfKDP3N (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 10:29:13 -0500
-Received: by mail-pf1-f193.google.com with SMTP id r4so12394803pfl.7;
-        Mon, 04 Nov 2019 07:29:12 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=date:from:to:cc:subject:message-id:references:mime-version
-         :content-disposition:in-reply-to:user-agent;
-        bh=tR/G1cw6My9b6LBDZY3DodOYiK7b6P71z9TI2bVO9Aw=;
-        b=SQh8nJFvgCHLM9OQfUl1GG789Tu6P4ItfwgkSA5dqhWo2J+PtrCpzIRcORkBCWOhmB
-         hu1kxEU3OgxkwLMGyXg71+mTKUw+Oyy5zSdO+4h+Q7eHk5zX/WKJTPlYnAhlQ1JD20kF
-         re1LFFU03hRnIy4cA/cU5otC0LoGGtGSk4lTMrtKCclslqAAvVVb8xwvK0/Rzx4sIXI2
-         MTlxGpN99cqvRp1M/hz9yGC1y3fOvpCc2o4pXu6Tx1JZ5xlRCbo/as20mXhA6rKyZ/3e
-         2dKNwxUMNG8wyzKhTHrCCErKrjZIWnXhrwl9845bFvkmh1GTw4k3bJzzzpSGEhxvzrsh
-         hqgg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:date:from:to:cc:subject:message-id:references
-         :mime-version:content-disposition:in-reply-to:user-agent;
-        bh=tR/G1cw6My9b6LBDZY3DodOYiK7b6P71z9TI2bVO9Aw=;
-        b=AEkjqfUkicjW21zsObr3avxZY+FnljZjSSatT9X71Lbm2Io2HkNC5pHLNG5OiklX/Z
-         6Sa9ePTCDn7cog/gO53imkAqau7LQ7ZDTOgz63CU+pnadzEoAj+MAUa+wZ0qAB9/nsr4
-         XGQYPC0Ej+dPLIbb61SQQvUFrGMRPVJn9rJyNm/lnSrlAWp34Juzzk145vE2anjCRwpi
-         rp365WiTJsHXXUQTa9YJe96Jk9Emrxu3EGlqU1yAGfQ5juMP2GeSSp9njKSk8u3ZQn/3
-         6vuSZqHrPirN7blTT3MwIZY4DYhXHzImq6iSWyEquJT5EszFkZJzrZ1X57Z0eNIRdnba
-         pNjw==
-X-Gm-Message-State: APjAAAW5gQRqHWWP56eqOxyzET2kbb9pFSpVnjQr+uZHG9f34aBNgoR8
-        ptyvuMHUbtxdscRLsQiUtJQ=
-X-Google-Smtp-Source: APXvYqy8NW0OXO6pEAde1bAc8ksKTv+SEByBxXc08jfzcuis7YOsFT0gXVbyzOOpxaulnzIQi6iYUA==
-X-Received: by 2002:a65:5c0a:: with SMTP id u10mr9943472pgr.315.1572881352301;
-        Mon, 04 Nov 2019 07:29:12 -0800 (PST)
-Received: from localhost ([178.128.102.47])
-        by smtp.gmail.com with ESMTPSA id v16sm10535645pje.1.2019.11.04.07.29.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 04 Nov 2019 07:29:11 -0800 (PST)
-Date:   Mon, 4 Nov 2019 23:29:02 +0800
-From:   Eryu Guan <guaneryu@gmail.com>
-To:     Eric Sandeen <sandeen@redhat.com>
-Cc:     fstests <fstests@vger.kernel.org>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-Subject: Re: [PATCH] fstests: verify that xfs_growfs can operate on mounted
- device node
-Message-ID: <20191104152902.GC8664@desktop>
-References: <1253fd24-a0ef-26ca-6ff9-b3b7a451e78a@redhat.com>
- <20191103152446.GA8664@desktop>
- <fc635655-1feb-6a31-197b-cea9d0daf855@redhat.com>
+        id S1728474AbfKDP3s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 10:29:48 -0500
+Received: from us-smtp-delivery-1.mimecast.com ([207.211.31.120]:35452 "EHLO
+        us-smtp-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1728392AbfKDP3s (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 10:29:48 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1572881383;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=xnIpPAsEfh3l+jictAmtLN7RDDQx739S6dh9HTHu7Ag=;
+        b=SQAsJ5ifj8TTRoLpe8cV7WggKI/5Hw0dYA7hvRd8qfcJA57CEJMnLkiA82MliToma5YwAE
+        uIAqCzczvbjz6LEXh9IAi0VZZ1rxdhcpVPda1cOqVX8WuzC58S/ZcGLkEWt1lV57D9U5rW
+        PbJdLdVrW4uSqX8VUsp1DmDWJvoaY+U=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-197-PWExnVQ_PW6blTwMdJIEhg-1; Mon, 04 Nov 2019 10:29:42 -0500
+Received: from smtp.corp.redhat.com (int-mx05.intmail.prod.int.phx2.redhat.com [10.5.11.15])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
+        (No client certificate requested)
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 69C77800C73;
+        Mon,  4 Nov 2019 15:29:41 +0000 (UTC)
+Received: from bfoster (dhcp-41-2.bos.redhat.com [10.18.41.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTPS id B7A925D6C5;
+        Mon,  4 Nov 2019 15:29:40 +0000 (UTC)
+Date:   Mon, 4 Nov 2019 10:29:39 -0500
+From:   Brian Foster <bfoster@redhat.com>
+To:     Dave Chinner <david@fromorbit.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+        linux-mm@kvack.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 11/28] mm: factor shrinker work calculations
+Message-ID: <20191104152939.GB10665@bfoster>
+References: <20191031234618.15403-1-david@fromorbit.com>
+ <20191031234618.15403-12-david@fromorbit.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <fc635655-1feb-6a31-197b-cea9d0daf855@redhat.com>
+In-Reply-To: <20191031234618.15403-12-david@fromorbit.com>
 User-Agent: Mutt/1.12.1 (2019-06-15)
+X-Scanned-By: MIMEDefang 2.79 on 10.5.11.15
+X-MC-Unique: PWExnVQ_PW6blTwMdJIEhg-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Nov 03, 2019 at 07:49:39PM -0600, Eric Sandeen wrote:
-> On 11/3/19 9:24 AM, Eryu Guan wrote:
-> > On Tue, Oct 29, 2019 at 12:53:48PM -0500, Eric Sandeen wrote:
-> >> The ability to use a mounted device node as the primary argument
-> >> to xfs_growfs will be added back in, because it was an undocumented
-> >> behavior that some userspace depended on.  This test exercises that
-> >> functionality.
-> >>
-> >> Signed-off-by: Eric Sandeen <sandeen@redhat.com>
-> >> ---
-> >>
-> >> diff --git a/tests/xfs/148 b/tests/xfs/148
-> >> new file mode 100755
-> >> index 00000000..357ae01c
-> >> --- /dev/null
-> >> +++ b/tests/xfs/148
-> >> @@ -0,0 +1,100 @@
-> >> +#! /bin/bash
-> >> +# SPDX-License-Identifier: GPL-2.0
-> >> +# Copyright (c) 2019 Red Hat, Inc.  All Rights Reserved.
-> >> +#
-> >> +# FS QA Test 148
-> >> +#
-> >> +# Test to ensure xfs_growfs command accepts device nodes if & only
-> >> +# if they are mounted.
-> >> +# This functionality, though undocumented, worked until xfsprogs v4.12
-> >> +# It was added back and documented after xfsprogs v5.2
-> > 
-> > I'm testing with xfsprogs from for-next branch, which is v5.3.0-rc1
-> > based xfs_growfs, but I still see failures like
-> > 
-> >      === xfs_growfs - check device node ===
-> >     +xfs_growfs: /dev/loop0 is not a mounted XFS filesystem
-> >      === xfs_growfs - check device symlink ===
-> >     +xfs_growfs: /mnt/test/loop_symlink.21781 is not a mounted XFS filesystem
-> >      === unmount ===
-> > 
-> > If it's already fixed, would you please list the related commits in
-> > commit log as well?
-> 
-> I haven't merged the fix yet.
+On Fri, Nov 01, 2019 at 10:46:01AM +1100, Dave Chinner wrote:
+> From: Dave Chinner <dchinner@redhat.com>
+>=20
+> Start to clean up the shrinker code by factoring out the calculation
+> that determines how much work to do. This separates the calculation
+> from clamping and other adjustments that are done before the
+> shrinker work is run. Document the scan batch size calculation
+> better while we are there.
+>=20
+> Also convert the calculation for the amount of work to be done to
+> use 64 bit logic so we don't have to keep jumping through hoops to
+> keep calculations within 32 bits on 32 bit systems.
+>=20
+> Signed-off-by: Dave Chinner <dchinner@redhat.com>
+> ---
 
-Ah, that explains. I saw "It was added back and documented after
-xfsprogs v5.2", so I expected it to be PASS when testing with v5.3-rc1.
+I assume the kbuild warning thing will be fixed up...
 
-> 
-> If you like I can resend the test when it's merged.
-> 
+>  mm/vmscan.c | 97 ++++++++++++++++++++++++++++++++++++++---------------
+>  1 file changed, 70 insertions(+), 27 deletions(-)
+>=20
+> diff --git a/mm/vmscan.c b/mm/vmscan.c
+> index a215d71d9d4b..2d39ec37c04d 100644
+> --- a/mm/vmscan.c
+> +++ b/mm/vmscan.c
+> @@ -459,13 +459,68 @@ EXPORT_SYMBOL(unregister_shrinker);
+> =20
+>  #define SHRINK_BATCH 128
+> =20
+> +/*
+> + * Calculate the number of new objects to scan this time around. Return
+> + * the work to be done. If there are freeable objects, return that numbe=
+r in
+> + * @freeable_objects.
+> + */
+> +static int64_t shrink_scan_count(struct shrink_control *shrinkctl,
+> +=09=09=09    struct shrinker *shrinker, int priority,
+> +=09=09=09    int64_t *freeable_objects)
+> +{
+> +=09int64_t delta;
+> +=09int64_t freeable;
+> +
+> +=09freeable =3D shrinker->count_objects(shrinker, shrinkctl);
+> +=09if (freeable =3D=3D 0 || freeable =3D=3D SHRINK_EMPTY)
+> +=09=09return freeable;
+> +
+> +=09if (shrinker->seeks) {
+> +=09=09/*
+> +=09=09 * shrinker->seeks is a measure of how much IO is required to
+> +=09=09 * reinstantiate the object in memory. The default value is 2
+> +=09=09 * which is typical for a cold inode requiring a directory read
+> +=09=09 * and an inode read to re-instantiate.
+> +=09=09 *
+> +=09=09 * The scan batch size is defined by the shrinker priority, but
+> +=09=09 * to be able to bias the reclaim we increase the default batch
+> +=09=09 * size by 4. Hence we end up with a scan batch multipler that
+> +=09=09 * scales like so:
+> +=09=09 *
+> +=09=09 * ->seeks=09scan batch multiplier
+> +=09=09 *    1=09=09      4.00x
+> +=09=09 *    2               2.00x
+> +=09=09 *    3               1.33x
+> +=09=09 *    4               1.00x
+> +=09=09 *    8               0.50x
+> +=09=09 *
+> +=09=09 * IOWs, the more seeks it takes to pull the item into cache,
+> +=09=09 * the smaller the reclaim scan batch. Hence we put more reclaim
+> +=09=09 * pressure on caches that are fast to repopulate and to keep a
+> +=09=09 * rough balance between caches that have different costs.
+> +=09=09 */
+> +=09=09delta =3D freeable >> (priority - 2);
 
-Either way is fine, as long as the fix is referenced somewhere (either
-in commit log or in test description, and refer to the patch summary if
-it's not merged yet).
+Does anything prevent priority < 2 here?
 
-Thanks,
-Eryu
+> +=09=09do_div(delta, shrinker->seeks);
+> +=09} else {
+> +=09=09/*
+> +=09=09 * These objects don't require any IO to create. Trim them
+> +=09=09 * aggressively under memory pressure to keep them from causing
+> +=09=09 * refetches in the IO caches.
+> +=09=09 */
+> +=09=09delta =3D freeable / 2;
+> +=09}
+> +
+> +=09*freeable_objects =3D freeable;
+> +=09return delta > 0 ? delta : 0;
+> +}
+> +
+>  static unsigned long do_shrink_slab(struct shrink_control *shrinkctl,
+>  =09=09=09=09    struct shrinker *shrinker, int priority)
+>  {
+>  =09unsigned long freed =3D 0;
+> -=09unsigned long long delta;
+>  =09long total_scan;
+> -=09long freeable;
+> +=09int64_t freeable_objects =3D 0;
+> +=09int64_t scan_count;
+>  =09long nr;
+>  =09long new_nr;
+>  =09int nid =3D shrinkctl->nid;
+...
+> @@ -487,25 +543,11 @@ static unsigned long do_shrink_slab(struct shrink_c=
+ontrol *shrinkctl,
+>  =09 */
+>  =09nr =3D atomic_long_xchg(&shrinker->nr_deferred[nid], 0);
+> =20
+> -=09total_scan =3D nr;
+> -=09if (shrinker->seeks) {
+> -=09=09delta =3D freeable >> priority;
+> -=09=09delta *=3D 4;
+> -=09=09do_div(delta, shrinker->seeks);
+> -=09} else {
+> -=09=09/*
+> -=09=09 * These objects don't require any IO to create. Trim
+> -=09=09 * them aggressively under memory pressure to keep
+> -=09=09 * them from causing refetches in the IO caches.
+> -=09=09 */
+> -=09=09delta =3D freeable / 2;
+> -=09}
+> -
+> -=09total_scan +=3D delta;
+> +=09total_scan =3D nr + scan_count;
+>  =09if (total_scan < 0) {
+>  =09=09pr_err("shrink_slab: %pS negative objects to delete nr=3D%ld\n",
+>  =09=09       shrinker->scan_objects, total_scan);
+> -=09=09total_scan =3D freeable;
+> +=09=09total_scan =3D scan_count;
+
+Same question as before: why the change in assignment? freeable was the
+->count_objects() return value, which is now stored in freeable_objects.
+
+FWIW, the change seems to make sense in that it just factors out the
+deferred count, but it's not clear if it's intentional...
+
+Brian
+
+>  =09=09next_deferred =3D nr;
+>  =09} else
+>  =09=09next_deferred =3D total_scan;
+> @@ -522,19 +564,20 @@ static unsigned long do_shrink_slab(struct shrink_c=
+ontrol *shrinkctl,
+>  =09 * Hence only allow the shrinker to scan the entire cache when
+>  =09 * a large delta change is calculated directly.
+>  =09 */
+> -=09if (delta < freeable / 4)
+> -=09=09total_scan =3D min(total_scan, freeable / 2);
+> +=09if (scan_count < freeable_objects / 4)
+> +=09=09total_scan =3D min_t(long, total_scan, freeable_objects / 2);
+> =20
+>  =09/*
+>  =09 * Avoid risking looping forever due to too large nr value:
+>  =09 * never try to free more than twice the estimate number of
+>  =09 * freeable entries.
+>  =09 */
+> -=09if (total_scan > freeable * 2)
+> -=09=09total_scan =3D freeable * 2;
+> +=09if (total_scan > freeable_objects * 2)
+> +=09=09total_scan =3D freeable_objects * 2;
+> =20
+>  =09trace_mm_shrink_slab_start(shrinker, shrinkctl, nr,
+> -=09=09=09=09   freeable, delta, total_scan, priority);
+> +=09=09=09=09   freeable_objects, scan_count,
+> +=09=09=09=09   total_scan, priority);
+> =20
+>  =09/*
+>  =09 * If the shrinker can't run (e.g. due to gfp_mask constraints), then
+> @@ -559,7 +602,7 @@ static unsigned long do_shrink_slab(struct shrink_con=
+trol *shrinkctl,
+>  =09 * possible.
+>  =09 */
+>  =09while (total_scan >=3D batch_size ||
+> -=09       total_scan >=3D freeable) {
+> +=09       total_scan >=3D freeable_objects) {
+>  =09=09unsigned long ret;
+>  =09=09unsigned long nr_to_scan =3D min(batch_size, total_scan);
+> =20
+> --=20
+> 2.24.0.rc0
+>=20
+
