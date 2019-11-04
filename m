@@ -2,138 +2,139 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-5.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37624CA9EA0
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 10:56:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DF378CA9ECF
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 11:02:43 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 16EBA217F5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 10:56:08 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B658E222C1
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 11:02:43 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=kroah.com header.i=@kroah.com header.b="HBaTfVxq";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Hb08SMpD"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728682AbfKDK4H (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 05:56:07 -0500
-Received: from icp-osb-irony-out4.external.iinet.net.au ([203.59.1.220]:34330
-        "EHLO icp-osb-irony-out4.external.iinet.net.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1728663AbfKDK4H (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 05:56:07 -0500
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-Anti-Spam-Result: =?us-ascii?q?A2C2AAC6AsBd/xK90HYNWRsBAQEBAQE?=
- =?us-ascii?q?BBQEBAREBAQMDAQEBgX0ChDuEKY9YAQEBAQEBBoERigmFMYRuhyMJAQEBAQE?=
- =?us-ascii?q?BAQEBNwEBhDsDAgKEMDgTAg4BAQEEAQEBAQEFAwGFWIEaARABhH4CAQMjBFI?=
- =?us-ascii?q?QGA0CJgICRxAGE4V1sGJ1fzMaijOBDigBgWSKRniBB4ERM4Mdh1WCXgSNFII?=
- =?us-ascii?q?vN4ZAQ5Z1gi6VUQyOKAOLLi2pfYF6TS4KgydQgzcXjjBniWSFCQEB?=
-X-IPAS-Result: =?us-ascii?q?A2C2AAC6AsBd/xK90HYNWRsBAQEBAQEBBQEBAREBAQMDA?=
- =?us-ascii?q?QEBgX0ChDuEKY9YAQEBAQEBBoERigmFMYRuhyMJAQEBAQEBAQEBNwEBhDsDA?=
- =?us-ascii?q?gKEMDgTAg4BAQEEAQEBAQEFAwGFWIEaARABhH4CAQMjBFIQGA0CJgICRxAGE?=
- =?us-ascii?q?4V1sGJ1fzMaijOBDigBgWSKRniBB4ERM4Mdh1WCXgSNFIIvN4ZAQ5Z1gi6VU?=
- =?us-ascii?q?QyOKAOLLi2pfYF6TS4KgydQgzcXjjBniWSFCQEB?=
-X-IronPort-AV: E=Sophos;i="5.68,266,1569254400"; 
-   d="scan'208";a="207138746"
-Received: from unknown (HELO [192.168.1.222]) ([118.208.189.18])
-  by icp-osb-irony-out4.iinet.net.au with ESMTP; 04 Nov 2019 18:56:05 +0800
-Subject: [PATCH v9 17/17] xfs: fold xfs_mount-alloc() into
- xfs_init_fs_context()
-From:   Ian Kent <raven@themaw.net>
-To:     linux-xfs <linux-xfs@vger.kernel.org>
-Cc:     Christoph Hellwig <hch@infradead.org>,
-        "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Brian Foster <bfoster@redhat.com>,
-        Eric Sandeen <sandeen@sandeen.net>,
-        David Howells <dhowells@redhat.com>,
-        Dave Chinner <dchinner@redhat.com>,
-        Al Viro <viro@ZenIV.linux.org.uk>
-Date:   Mon, 04 Nov 2019 18:56:05 +0800
-Message-ID: <157286496581.18393.3802665855647124772.stgit@fedora-28>
-In-Reply-To: <157286480109.18393.6285224459642752559.stgit@fedora-28>
-References: <157286480109.18393.6285224459642752559.stgit@fedora-28>
-User-Agent: StGit/unknown-version
+        id S1726441AbfKDLCn (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 06:02:43 -0500
+Received: from out5-smtp.messagingengine.com ([66.111.4.29]:49257 "EHLO
+        out5-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1726071AbfKDLCn (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 06:02:43 -0500
+Received: from compute6.internal (compute6.nyi.internal [10.202.2.46])
+        by mailout.nyi.internal (Postfix) with ESMTP id 5A3AC20A3C;
+        Mon,  4 Nov 2019 06:02:42 -0500 (EST)
+Received: from mailfrontend1 ([10.202.2.162])
+  by compute6.internal (MEProxy); Mon, 04 Nov 2019 06:02:42 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=kroah.com; h=
+        date:from:to:cc:subject:message-id:references:mime-version
+        :content-type:in-reply-to; s=fm2; bh=PD/nXFuZxFeP4A6XthDcFbpgf0f
+        KT9V6esc+3nPt8e8=; b=HBaTfVxqXAb5dlc26dyZkkGwHjjxtOxCks3jd+Fnoby
+        bhRQiHe6N4mLAv94PvUfgb+5JdGigghETu6zWKz0QYzXSDA7riUc7AB2Jf0CiWhi
+        y9RYNnEiWSgjJ8eF0N9dskBBYWvbO6y2uUR5gbBUc9o0f1xoWHhX9znYhopMXJSw
+        823elYB2vv2uGrAkQMAcA/lwFQbQFH0YTC4vvza4kCXVINowp38sMVwyAgN7MqsL
+        7Op0Irr/tZnI6+4Yje3bITuG+44lYVTjZdJtM33scsBoWmvcnHyCfZ7ZV3bvxGrc
+        a+aaR5LO43w/IYvmDzGM9eJ66BuP0EApqwwu8Gluu8w==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+        messagingengine.com; h=cc:content-type:date:from:in-reply-to
+        :message-id:mime-version:references:subject:to:x-me-proxy
+        :x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; bh=PD/nXF
+        uZxFeP4A6XthDcFbpgf0fKT9V6esc+3nPt8e8=; b=Hb08SMpDvgXSFS2Z7o89pL
+        wadGLWEIrjY4hU/Jx51fQWXYh7ai3LTnAtNFz4UjBswJsW83O7g3tvz+HCVkKL+f
+        NH6yTncDCmIbi28RiNX+Ot/UZRr8N5G0bzptc4JMFcjPOQGfvlrTQbYHS4EAXFW2
+        Ds4LY6RAMdM6pE8srD3FreTAm1QyplJj2Aw4Jba0ZTUyPCIBLSV8gJ5pWGMkeVKs
+        l+Udtw1UXEQcnXBJgb6+cK6J1bxykTU95rDyKi6bVKID7BVwEaIRUIs0GAgT5EOJ
+        SSfIeF4M3JyeWxXLV4mBqxh1JfFkbEXv08ruair8CIFfy/FA7PVYwEbMIZmWwwBA
+        ==
+X-ME-Sender: <xms:UQXAXXP_JKsoqPfqfgttS2mPUQuafLDmUOlWNPbsRHMQm3cnXH1hsg>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedufedruddufedgvdefucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepfffhvffukfhfgggtuggjfgesthdtredttdervdenucfhrhhomhepifhrvghg
+    ucfmjfcuoehgrhgvgheskhhrohgrhhdrtghomheqnecukfhppeekfedrkeeirdekledrud
+    dtjeenucfrrghrrghmpehmrghilhhfrhhomhepghhrvghgsehkrhhorghhrdgtohhmnecu
+    vehluhhsthgvrhfuihiivgeptd
+X-ME-Proxy: <xmx:UQXAXc0fGcLbOyz_yiYPR6jtBsfBzFrKeTdAHLiLzkrRwGEYObP6GQ>
+    <xmx:UQXAXeF4b7GNKku_XvOX4VJhMVa7IW70fvZmpi6Skokh4J4UjeTUNQ>
+    <xmx:UQXAXZ6rZq4a4UO1mJfDaav-OizEv_yoFczrFP7Rv135dftUwOGvUg>
+    <xmx:UgXAXbEynlylKYMtKqnGE__rgKGWw6b9_eux6LeMchsZIlWCf7XnpQ>
+Received: from localhost (83-86-89-107.cable.dynamic.v4.ziggo.nl [83.86.89.107])
+        by mail.messagingengine.com (Postfix) with ESMTPA id 71C6D80063;
+        Mon,  4 Nov 2019 06:02:41 -0500 (EST)
+Date:   Mon, 4 Nov 2019 12:02:37 +0100
+From:   Greg KH <greg@kroah.com>
+To:     Alex Lyakas <alex@zadara.com>
+Cc:     linux-xfs@vger.kernel.org, stable@vger.kernel.org,
+        vbendel@redhat.com, bfoster@redhat.com, hch@lst.de,
+        darrick.wong@oracle.com
+Subject: Re: [STABLE-PATCH] xfs: Correctly invert xfs_buftarg LRU isolation
+ logic
+Message-ID: <20191104110237.GD1945210@kroah.com>
+References: <1572535975-32634-1-git-send-email-alex@zadara.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1572535975-32634-1-git-send-email-alex@zadara.com>
+User-Agent: Mutt/1.12.2 (2019-09-21)
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-After switching to use the mount-api the only remaining caller of
-xfs_mount_alloc() is xfs_init_fs_context(), so fold xfs_mount_alloc()
-into it.
+On Thu, Oct 31, 2019 at 05:32:55PM +0200, Alex Lyakas wrote:
+> From: Vratislav Bendel <vbendel@redhat.com>
+> 
+> [upstream commit 19957a181608d25c8f4136652d0ea00b3738972d]
+> 
+> Due to an inverted logic mistake in xfs_buftarg_isolate()
+> the xfs_buffers with zero b_lru_ref will take another trip
+> around LRU, while isolating buffers with non-zero b_lru_ref.
+> 
+> Additionally those isolated buffers end up right back on the LRU
+> once they are released, because b_lru_ref remains elevated.
+> 
+> Fix that circuitous route by leaving them on the LRU
+> as originally intended.
+> 
+> [Additional description for the issue]
+> 
+> Due to this issue, buffers will spend one cycle less in
+> the LRU than intended. If we initialize b_lru_ref to X, we intend the
+> buffer to survive X shrinker calls, and on the X+1'th call to be taken
+> off the LRU (and maybe freed). But with this issue, the buffer will be
+> taken off the LRU and immediately re-added back. But this will happen
+> X-1 times, because on the X'th time the b_lru_ref will be 0, and the
+> buffer will not be re-added to the LRU. So the buffer will survive X-1
+> shrinker calls and not X as intended.
+> 
+> Furthermore, if somehow we end up with the buffer sitting on the LRU
+> and having b_lru_ref==0, this buffer will never be taken off the LRU,
+> due to the bug. Not sure that this can happen, because by default
+> b_lru_ref is set to 1.
+> 
+> This issue existed since the introduction of lru in XFS buffer cache
+> in commit
+> "430cbeb86fdcbbdabea7d4aa65307de8de425350 xfs: add a lru to the XFS buffer cache".
+> 
+> However, the integration with the "list_lru" insfrastructure was done in kernel 3.12,
+> in commit
+> "e80dfa19976b884db1ac2bc5d7d6ca0a4027bd1c xfs: convert buftarg LRU to generic code"
+> 
+> Therefore this patch is relevant for all kernels from 3.12 to 4.15
+> (upstream fix was made in 4.16).
+> 
+> Signed-off-by: Alex Lyakas <alex@zadara.com>
+> Signed-off-by: Vratislav Bendel <vbendel@redhat.com>
+> Reviewed-by: Brian Foster <bfoster@redhat.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
+> Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
+> (cherry picked from commit 19957a181608d25c8f4136652d0ea00b3738972d)
+> ---
+>  fs/xfs/xfs_buf.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 
-Signed-off-by: Ian Kent <raven@themaw.net>
----
- fs/xfs/xfs_super.c |   49 +++++++++++++++++++------------------------------
- 1 file changed, 19 insertions(+), 30 deletions(-)
+Now queued up, thanks.
 
-diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
-index e156fd59d592..c14f285f3256 100644
---- a/fs/xfs/xfs_super.c
-+++ b/fs/xfs/xfs_super.c
-@@ -1096,35 +1096,6 @@ static const struct super_operations xfs_super_operations = {
- 	.free_cached_objects	= xfs_fs_free_cached_objects,
- };
- 
--static struct xfs_mount *
--xfs_mount_alloc(void)
--{
--	struct xfs_mount	*mp;
--
--	mp = kmem_alloc(sizeof(struct xfs_mount), KM_ZERO);
--	if (!mp)
--		return NULL;
--
--	spin_lock_init(&mp->m_sb_lock);
--	spin_lock_init(&mp->m_agirotor_lock);
--	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
--	spin_lock_init(&mp->m_perag_lock);
--	mutex_init(&mp->m_growlock);
--	atomic_set(&mp->m_active_trans, 0);
--	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
--	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
--	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
--	mp->m_kobj.kobject.kset = xfs_kset;
--	/*
--	 * We don't create the finobt per-ag space reservation until after log
--	 * recovery, so we must set this to true so that an ifree transaction
--	 * started during log recovery will not depend on space reservations
--	 * for finobt expansion.
--	 */
--	mp->m_finobt_nores = true;
--	return mp;
--}
--
- static int
- suffix_kstrtoint(
- 	const char	*s,
-@@ -1763,10 +1734,28 @@ static int xfs_init_fs_context(
- {
- 	struct xfs_mount	*mp;
- 
--	mp = xfs_mount_alloc();
-+	mp = kmem_alloc(sizeof(struct xfs_mount), KM_ZERO);
- 	if (!mp)
- 		return -ENOMEM;
- 
-+	spin_lock_init(&mp->m_sb_lock);
-+	spin_lock_init(&mp->m_agirotor_lock);
-+	INIT_RADIX_TREE(&mp->m_perag_tree, GFP_ATOMIC);
-+	spin_lock_init(&mp->m_perag_lock);
-+	mutex_init(&mp->m_growlock);
-+	atomic_set(&mp->m_active_trans, 0);
-+	INIT_DELAYED_WORK(&mp->m_reclaim_work, xfs_reclaim_worker);
-+	INIT_DELAYED_WORK(&mp->m_eofblocks_work, xfs_eofblocks_worker);
-+	INIT_DELAYED_WORK(&mp->m_cowblocks_work, xfs_cowblocks_worker);
-+	mp->m_kobj.kobject.kset = xfs_kset;
-+	/*
-+	 * We don't create the finobt per-ag space reservation until after log
-+	 * recovery, so we must set this to true so that an ifree transaction
-+	 * started during log recovery will not depend on space reservations
-+	 * for finobt expansion.
-+	 */
-+	mp->m_finobt_nores = true;
-+
- 	/*
- 	 * These can be overridden by the mount option parsing.
- 	 */
-
+greg k-h
