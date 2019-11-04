@@ -2,144 +2,306 @@ Return-Path: <SRS0=9rhF=Y4=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78FAFCA9EB5
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 17:21:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A91B1CA9EB5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 18:21:39 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 54554205C9
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 17:21:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 76D1020B7C
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 18:21:39 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="YhLIRbcn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728188AbfKDRVb (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 12:21:31 -0500
-Received: from sandeen.net ([63.231.237.45]:45730 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727989AbfKDRVa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Nov 2019 12:21:30 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 567CC17272;
-        Mon,  4 Nov 2019 11:20:24 -0600 (CST)
-Subject: Re: xfs_repair keeps reporting errors
-To:     Emmanuel Florac <eflorac@intellique.com>,
-        Brian Foster <bfoster@redhat.com>
+        id S1728322AbfKDSVi (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 13:21:38 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:50876 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1728216AbfKDSVi (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 13:21:38 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4IIuZU007468;
+        Mon, 4 Nov 2019 18:21:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=3GKuJemnuvs7+XFJd1ynfVfJKDt4C8EfNKKC93lApO4=;
+ b=YhLIRbcnPVt8LSgnaOBlyGEyTNCYK5rULaaZYBvlyLk0c5Vr6PgfKZqWqoG7823hBhxf
+ TiAI/NE6T3fFSEHZ8zQRloPQT/OvUNTjzPzzcpBKykMkwWrsOhDmg7fctoFJ7TKvYooz
+ HEPR2kxGdlBgMHhepgZgqixRMqI98cx79caxftVMKSydN4LNhnEWgwmKfdSz6qU5qLot
+ x3zfDPGUdi3rOmKhLgJDkwqtzLFdJEN/37/TRf23v8fa7U31ZbdQ4zb+Wm8VTTtG/5dP
+ xKQAYVfWFV3vnUULbN6/eUs4TsDLM5iLProyCMa0HMBzD+acGiaSvmwGsL5hsbA/uftX Ew== 
+Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
+        by aserp2120.oracle.com with ESMTP id 2w11rps71u-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 04 Nov 2019 18:21:34 +0000
+Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4IJXf6183126;
+        Mon, 4 Nov 2019 18:21:33 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by userp3020.oracle.com with ESMTP id 2w1kxdqmwa-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Mon, 04 Nov 2019 18:21:29 +0000
+Received: from abhmp0007.oracle.com (abhmp0007.oracle.com [141.146.116.13])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA4ILSaT017025;
+        Mon, 4 Nov 2019 18:21:28 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Mon, 04 Nov 2019 10:21:28 -0800
+Date:   Mon, 4 Nov 2019 10:21:27 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-References: <20191031154049.166549a3@harpe.intellique.com>
- <20191101104551.GB59146@bfoster>
- <20191104143113.682d1e9d@harpe.intellique.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
- nQZV32nqJBYnDpBDITBqTa/EF+IrHx8gKq8TaSBLHUq2ju2gJJLfBoL7V3807PQcI18YzkF+
- WL05ODFQ2cemDhx5uLghHEeOxuGj+1AI+kh/FCzMedHc6k87Yu2ZuaWF+Gh1W2ix6hikRJmQ
- vj5BEeAx7xKkyBhzdbNIbbjV/iGi9b26B/dNcyd5w2My2gxMtxaiP7q5b6GM2rsQklHP8FtW
- ZiYO7jsg/qIppR1C6Zr5jK1GQlMUIclYFeBbKggJ9mSwXJH7MIftilGQ8KDvNuV5AbkronGC
- sEEHj2khs7GfVv4pmUUHf1MRIvV0x3WJkpmhuZaYg8AdJlyGKgp+TQ7B+wCjNTdVqMI1vDk2
- BS6Rg851ay7AypbCPx2w4d8jIkQEgNjACHVDU89PNKAjScK1aTnW+HNUqg9BliCvuX5g4z2j
- gJBs57loTWAGe2Ve3cMy3VoQ40Wt3yKK0Eno8jfgzgb48wyycINZgnseMRhxc2c8hd51tftK
- LKhPj4c7uqjnBjrgOVaVBupGUmvLiePlnW56zJZ51BR5igWnILeOJ1ZIcf7KsaHyE6B1mG+X
- dmYtjDhjf3NAcoBWJuj8euxMB6TcQN2MrSXy5wSKaw40evooGwARAQABtCVFcmljIFIuIFNh
- bmRlZW4gPHNhbmRlZW5Ac2FuZGVlbi5uZXQ+iQI7BBMBAgAlAhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgAUCUzMzbAIZAQAKCRAgrhaS4T3e4Fr7D/wO+fenqVvHjq21SCjDCrt8HdVj
- aJ28B1SqSU2toxyg5I160GllAxEHpLFGdbFAhQfBtnmlY9eMjwmJb0sCIrkrB6XNPSPA/B2B
- UPISh0z2odJv35/euJF71qIFgWzp2czJHkHWwVZaZpMWWNvsLIroXoR+uA9c2V1hQFVAJZyk
- EE4xzfm1+oVtjIC12B9tTCuS00pY3AUy21yzNowT6SSk7HAzmtG/PJ/uSB5wEkwldB6jVs2A
- sjOg1wMwVvh/JHilsQg4HSmDfObmZj1d0RWlMWcUE7csRnCE0ZWBMp/ttTn+oosioGa09HAS
- 9jAnauznmYg43oQ5Akd8iQRxz5I58F/+JsdKvWiyrPDfYZtFS+UIgWD7x+mHBZ53Qjazszox
- gjwO9ehZpwUQxBm4I0lPDAKw3HJA+GwwiubTSlq5PS3P7QoCjaV8llH1bNFZMz2o8wPANiDx
- 5FHgpRVgwLHakoCU1Gc+LXHXBzDXt7Cj02WYHdFzMm2hXaslRdhNGowLo1SXZFXa41KGTlNe
- 4di53y9CK5ynV0z+YUa+5LR6RdHrHtgywdKnjeWdqhoVpsWIeORtwWGX8evNOiKJ7j0RsHha
- WrePTubr5nuYTDsQqgc2r4aBIOpeSRR2brlT/UE3wGgy9LY78L4EwPR0MzzecfE1Ws60iSqw
- Pu3vhb7h3bkCDQROsffUARAA0DrUifTrXQzqxO8aiQOC5p9Tz25Np/Tfpv1rofOwL8VPBMvJ
- X4P5l1V2yd70MZRUVgjmCydEyxLJ6G2YyHO2IZTEajUY0Up+b3ErOpLpZwhvgWatjifpj6bB
- SKuDXeThqFdkphF5kAmgfVAIkan5SxWK3+S0V2F/oxstIViBhMhDwI6XsRlnVBoLLYcEilxA
- 2FlRUS7MOZGmRJkRtdGD5koVZSM6xVZQSmfEBaYQ/WJBGJQdPy94nnlAVn3lH3+N7pXvNUuC
- GV+t4YUt3tLcRuIpYBCOWlc7bpgeCps5Xa0dIZgJ8Louu6OBJ5vVXjPxTlkFdT0S0/uerCG5
- 1u8p6sGRLnUeAUGkQfIUqGUjW2rHaXgWNvzOV6i3tf9YaiXKl3avFaNW1kKBs0T5M1cnlWZU
- Utl6k04lz5OjoNY9J/bGyV3DSlkblXRMK87iLYQSrcV6cFz9PRl4vW1LGff3xRQHngeN5fPx
- ze8X5NE3hb+SSwyMSEqJxhVTXJVfQWWW0dQxP7HNwqmOWYF/6m+1gK/Y2gY3jAQnsWTru4RV
- TZGnKwEPmOCpSUvsTRXsVHgsWJ70qd0yOSjWuiv4b8vmD3+QFgyvCBxPMdP3xsxN5etheLMO
- gRwWpLn6yNFq/xtgs+ECgG+gR78yXQyA7iCs5tFs2OrMqV5juSMGmn0kxJUAEQEAAYkCHwQY
- AQIACQUCTrH31AIbDAAKCRAgrhaS4T3e4BKwD/0ZOOmUNOZCSOLAMjZx3mtYtjYgfUNKi0ki
- YPveGoRWTqbis8UitPtNrG4XxgzLOijSdOEzQwkdOIp/QnZhGNssMejCnsluK0GQd+RkFVWN
- mcQT78hBeGcnEMAXZKq7bkIKzvc06GFmkMbX/gAl6DiNGv0UNAX+5FYh+ucCJZSyAp3sA+9/
- LKjxnTedX0aygXA6rkpX0Y0FvN/9dfm47+LGq7WAqBOyYTU3E6/+Z72bZoG/cG7ANLxcPool
- LOrU43oqFnD8QwcN56y4VfFj3/jDF2MX3xu4v2OjglVjMEYHTCxP3mpxesGHuqOit/FR+mF0
- MP9JGfj6x+bj/9JMBtCW1bY/aPeMdPGTJvXjGtOVYblGZrSjXRn5++Uuy36CvkcrjuziSDG+
- JEexGxczWwN4mrOQWhMT5Jyb+18CO+CWxJfHaYXiLEW7dI1AynL4jjn4W0MSiXpWDUw+fsBO
- Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
- m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
- fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <0920e4a0-638b-bcc9-282f-5ac6e41d30cf@sandeen.net>
-Date:   Mon, 4 Nov 2019 11:21:27 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.1
+Subject: Re: [PATCH 01/34] xfs: move incore structures out of xfs_da_format.h
+Message-ID: <20191104182127.GB4153244@magnolia>
+References: <20191101220719.29100-1-hch@lst.de>
+ <20191101220719.29100-2-hch@lst.de>
 MIME-Version: 1.0
-In-Reply-To: <20191104143113.682d1e9d@harpe.intellique.com>
-Content-Type: multipart/signed; micalg=pgp-sha256;
- protocol="application/pgp-signature";
- boundary="xSd6GdXFnPQ4LXS36mP4yj7OKcsb27UZB"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191101220719.29100-2-hch@lst.de>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1911040179
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1911040179
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 4880 and 3156)
---xSd6GdXFnPQ4LXS36mP4yj7OKcsb27UZB
-Content-Type: multipart/mixed; boundary="9S0Y5zT1zXb9oiOp9kM8Tgdw7AZrsVwR9"
+On Fri, Nov 01, 2019 at 03:06:46PM -0700, Christoph Hellwig wrote:
+> Move the abstract in-memory version of various btree block headers
+> out of xfs_da_format.h as they aren't on-disk formats.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
---9S0Y5zT1zXb9oiOp9kM8Tgdw7AZrsVwR9
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
+Looks ok,
+Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
-On 11/4/19 7:31 AM, Emmanuel Florac wrote:
-> Le Fri, 1 Nov 2019 06:45:51 -0400
-> Brian Foster <bfoster@redhat.com> =C3=A9crivait:
->=20
->> I think it's hard to say what might be going on here without some view=
+--D
 
->> into the state of the fs. Perhaps some large chunk of the fs has been
->> zeroed given all of the zeroed out on-disk inode fields? We'd probably=
-
->> want to see a metadump of the fs to get a closer look.
->>
->=20
-> Alas, the metadump is 28 GB... (this is a 500 TB filesystem). So far it=
-
-> seems to behave better with no background RAID controller operation.
-
-They sometimes compress quite well FWIW.
-
--Eric
-
-
---9S0Y5zT1zXb9oiOp9kM8Tgdw7AZrsVwR9--
-
---xSd6GdXFnPQ4LXS36mP4yj7OKcsb27UZB
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Comment: GPGTools - http://gpgtools.org
-
-iQIzBAEBCAAdFiEEK4GFkZ6NJImBhp3tIK4WkuE93uAFAl3AXhgACgkQIK4WkuE9
-3uB35xAAmvVlT8TbPBeeRMDpkBuJHSAvgHXMoCaJgfI4kKqMJIDu1YGE/v3jsFQQ
-qoZZ+lNCUI8wu/4DrZlUSU5xnwxeUG/xuGMgN3uP9LF9f+ce6uPkuxBQzcDNIQEy
-fQPrI3hFfhF3TRsoC5ENWYmVmP+Np4Agnj8xfO20WUbz40KNGb3tuz8YQszX9lTV
-sOjg/gZ7bxNYq42y3SjuRHiWK+NQxY8AGfpfFFqM5J20olnTeokHBGI7FWv+GCEg
-tL8bM+TzBcqLnnQFKAY/RDE9ag0pP8zxpPGNnfgxiqF/YVIuWQSlMZXn9kB9J8Vr
-rwklXUES4WXzeDNvHZy5wBrmry6q3M8ZCu9tN24H+Cf+YwQSSx9tb7EvcA71FHru
-fAnPvqeRy0UTQG8dk7GJ18B4RaNqZTrz+pfVswCN5Jx+2NlArs1NPxjH5bfmbyM7
-0jcGBwydYUKEfdrEZZFQ5F3TOFRb341nhp/7ibqKK1J20KGLTip+xgpgU9sthCyG
-b4ub18oUjzmVpA5+mFYKpmNDM+xrX9XOWxdBprSLLRAdBb/k3U/Z4p2kspBZmnMB
-dDN9QVajs1iDW5/gaIctav8k3zLWr/u74WYfwbcK8tIPCTZhQ1u7Dvs24IW24vG8
-/sUErd7SKmJ63Avylj+xOKsKVkxvxkKPF253EjeWp/iyyL16Dks=
-=U/CR
------END PGP SIGNATURE-----
-
---xSd6GdXFnPQ4LXS36mP4yj7OKcsb27UZB--
+> ---
+>  fs/xfs/libxfs/xfs_attr_leaf.h | 23 ++++++++++++++
+>  fs/xfs/libxfs/xfs_da_btree.h  | 13 ++++++++
+>  fs/xfs/libxfs/xfs_da_format.c |  1 +
+>  fs/xfs/libxfs/xfs_da_format.h | 57 -----------------------------------
+>  fs/xfs/libxfs/xfs_dir2.h      |  2 ++
+>  fs/xfs/libxfs/xfs_dir2_priv.h | 20 ++++++++++++
+>  6 files changed, 59 insertions(+), 57 deletions(-)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_attr_leaf.h b/fs/xfs/libxfs/xfs_attr_leaf.h
+> index bb0880057ee3..16208a7743df 100644
+> --- a/fs/xfs/libxfs/xfs_attr_leaf.h
+> +++ b/fs/xfs/libxfs/xfs_attr_leaf.h
+> @@ -16,6 +16,29 @@ struct xfs_da_state_blk;
+>  struct xfs_inode;
+>  struct xfs_trans;
+>  
+> +/*
+> + * Incore version of the attribute leaf header.
+> + */
+> +struct xfs_attr3_icleaf_hdr {
+> +	uint32_t	forw;
+> +	uint32_t	back;
+> +	uint16_t	magic;
+> +	uint16_t	count;
+> +	uint16_t	usedbytes;
+> +	/*
+> +	 * Firstused is 32-bit here instead of 16-bit like the on-disk variant
+> +	 * to support maximum fsb size of 64k without overflow issues throughout
+> +	 * the attr code. Instead, the overflow condition is handled on
+> +	 * conversion to/from disk.
+> +	 */
+> +	uint32_t	firstused;
+> +	__u8		holes;
+> +	struct {
+> +		uint16_t	base;
+> +		uint16_t	size;
+> +	} freemap[XFS_ATTR_LEAF_MAPSIZE];
+> +};
+> +
+>  /*
+>   * Used to keep a list of "remote value" extents when unlinking an inode.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_da_btree.h b/fs/xfs/libxfs/xfs_da_btree.h
+> index ae0bbd20d9ca..02f7a21ab3a5 100644
+> --- a/fs/xfs/libxfs/xfs_da_btree.h
+> +++ b/fs/xfs/libxfs/xfs_da_btree.h
+> @@ -124,6 +124,19 @@ typedef struct xfs_da_state {
+>  						/* for dirv2 extrablk is data */
+>  } xfs_da_state_t;
+>  
+> +/*
+> + * In-core version of the node header to abstract the differences in the v2 and
+> + * v3 disk format of the headers. Callers need to convert to/from disk format as
+> + * appropriate.
+> + */
+> +struct xfs_da3_icnode_hdr {
+> +	uint32_t		forw;
+> +	uint32_t		back;
+> +	uint16_t		magic;
+> +	uint16_t		count;
+> +	uint16_t		level;
+> +};
+> +
+>  /*
+>   * Utility macros to aid in logging changed structure fields.
+>   */
+> diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
+> index b1ae572496b6..31bb250c1899 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.c
+> +++ b/fs/xfs/libxfs/xfs_da_format.c
+> @@ -13,6 +13,7 @@
+>  #include "xfs_mount.h"
+>  #include "xfs_inode.h"
+>  #include "xfs_dir2.h"
+> +#include "xfs_dir2_priv.h"
+>  
+>  /*
+>   * Shortform directory ops
+> diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+> index ae654e06b2fb..548806060f45 100644
+> --- a/fs/xfs/libxfs/xfs_da_format.h
+> +++ b/fs/xfs/libxfs/xfs_da_format.h
+> @@ -93,19 +93,6 @@ struct xfs_da3_intnode {
+>  	struct xfs_da_node_entry __btree[];
+>  };
+>  
+> -/*
+> - * In-core version of the node header to abstract the differences in the v2 and
+> - * v3 disk format of the headers. Callers need to convert to/from disk format as
+> - * appropriate.
+> - */
+> -struct xfs_da3_icnode_hdr {
+> -	uint32_t	forw;
+> -	uint32_t	back;
+> -	uint16_t	magic;
+> -	uint16_t	count;
+> -	uint16_t	level;
+> -};
+> -
+>  /*
+>   * Directory version 2.
+>   *
+> @@ -434,14 +421,6 @@ struct xfs_dir3_leaf_hdr {
+>  	__be32			pad;		/* 64 bit alignment */
+>  };
+>  
+> -struct xfs_dir3_icleaf_hdr {
+> -	uint32_t		forw;
+> -	uint32_t		back;
+> -	uint16_t		magic;
+> -	uint16_t		count;
+> -	uint16_t		stale;
+> -};
+> -
+>  /*
+>   * Leaf block entry.
+>   */
+> @@ -520,19 +499,6 @@ struct xfs_dir3_free {
+>  
+>  #define XFS_DIR3_FREE_CRC_OFF  offsetof(struct xfs_dir3_free, hdr.hdr.crc)
+>  
+> -/*
+> - * In core version of the free block header, abstracted away from on-disk format
+> - * differences. Use this in the code, and convert to/from the disk version using
+> - * xfs_dir3_free_hdr_from_disk/xfs_dir3_free_hdr_to_disk.
+> - */
+> -struct xfs_dir3_icfree_hdr {
+> -	uint32_t	magic;
+> -	uint32_t	firstdb;
+> -	uint32_t	nvalid;
+> -	uint32_t	nused;
+> -
+> -};
+> -
+>  /*
+>   * Single block format.
+>   *
+> @@ -709,29 +675,6 @@ struct xfs_attr3_leafblock {
+>  	 */
+>  };
+>  
+> -/*
+> - * incore, neutral version of the attribute leaf header
+> - */
+> -struct xfs_attr3_icleaf_hdr {
+> -	uint32_t	forw;
+> -	uint32_t	back;
+> -	uint16_t	magic;
+> -	uint16_t	count;
+> -	uint16_t	usedbytes;
+> -	/*
+> -	 * firstused is 32-bit here instead of 16-bit like the on-disk variant
+> -	 * to support maximum fsb size of 64k without overflow issues throughout
+> -	 * the attr code. Instead, the overflow condition is handled on
+> -	 * conversion to/from disk.
+> -	 */
+> -	uint32_t	firstused;
+> -	__u8		holes;
+> -	struct {
+> -		uint16_t	base;
+> -		uint16_t	size;
+> -	} freemap[XFS_ATTR_LEAF_MAPSIZE];
+> -};
+> -
+>  /*
+>   * Special value to represent fs block size in the leaf header firstused field.
+>   * Only used when block size overflows the 2-bytes available on disk.
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index f54244779492..e170792c0acc 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -18,6 +18,8 @@ struct xfs_dir2_sf_entry;
+>  struct xfs_dir2_data_hdr;
+>  struct xfs_dir2_data_entry;
+>  struct xfs_dir2_data_unused;
+> +struct xfs_dir3_icfree_hdr;
+> +struct xfs_dir3_icleaf_hdr;
+>  
+>  extern struct xfs_name	xfs_name_dotdot;
+>  
+> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> index 59f9fb2241a5..973b1527b7ba 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> @@ -8,6 +8,26 @@
+>  
+>  struct dir_context;
+>  
+> +/*
+> + * In-core version of the leaf and free block headers to abstract the
+> + * differences in the v2 and v3 disk format of the headers.
+> + */
+> +struct xfs_dir3_icleaf_hdr {
+> +	uint32_t		forw;
+> +	uint32_t		back;
+> +	uint16_t		magic;
+> +	uint16_t		count;
+> +	uint16_t		stale;
+> +};
+> +
+> +struct xfs_dir3_icfree_hdr {
+> +	uint32_t		magic;
+> +	uint32_t		firstdb;
+> +	uint32_t		nvalid;
+> +	uint32_t		nused;
+> +
+> +};
+> +
+>  /* xfs_dir2.c */
+>  extern int xfs_dir2_grow_inode(struct xfs_da_args *args, int space,
+>  				xfs_dir2_db_t *dbp);
+> -- 
+> 2.20.1
+> 
