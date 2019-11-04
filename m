@@ -7,61 +7,62 @@ X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E09C4C47E49
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:26:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4AD69CA9EB5
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:26:56 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id ABA3F20848
-	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:26:28 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 140AF204FD
+	for <linux-xfs@archiver.kernel.org>; Mon,  4 Nov 2019 20:26:56 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RDHDw/kv"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="ezjF9bMr"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728602AbfKDU02 (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 15:26:28 -0500
-Received: from userp2130.oracle.com ([156.151.31.86]:37542 "EHLO
-        userp2130.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1728322AbfKDU02 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 15:26:28 -0500
-Received: from pps.filterd (userp2130.oracle.com [127.0.0.1])
-        by userp2130.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KNoKf127257;
-        Mon, 4 Nov 2019 20:26:24 GMT
+        id S1728322AbfKDU0z (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 15:26:55 -0500
+Received: from aserp2120.oracle.com ([141.146.126.78]:59464 "EHLO
+        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1726417AbfKDU0z (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 15:26:55 -0500
+Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
+        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KOJZW117279;
+        Mon, 4 Nov 2019 20:26:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
  : subject : message-id : references : mime-version : content-type :
  in-reply-to; s=corp-2019-08-05;
- bh=VpUKyXJh5EEJA7+6rc+74aQy0XdmV9RVWOzjNzDhTWw=;
- b=RDHDw/kvYpZmG6ziOcW+vLD+dnS9/77sdVEHAivghrZRXJnwpjtDp1kuCp4qO7kI0b/c
- 4g85MhDwhmgILw8kQdU6TWHe70oTpmSxTYP8liOD1JfWkALvRfoJFHbcCmhrmbVaJk4U
- moK5GXFy0NvQAuX5odDBt/y7B8vhVfn8aA8hwAIXAimRw3h+Mf9ceWLag+16cacDoZjY
- y78IxucTsBAwJ3UyALtXA2XqknhB6+dYAEyZx6bs558FiKLBocVPRdSItBfOBonT2wAA
- F9ZwR75OgYqoYoU1bHcTtYc4PEl5BR3JDPWK7AlYvGzCxqFTeS26/wdTIbLMcHRrWzAq bQ== 
+ bh=Fft5oYs0YPLKYhGiHOAb5iJZ+G3CZpvdg1GbJ0q2kto=;
+ b=ezjF9bMrieWFOExTsBSnTa4Ktw8PYAP9toIp88PxUWcQljs3uNY8BmeN4hC8D31TgtAO
+ gOGNZO0XXEZ6y8O4/OlIUDtbqqqk+hV3GjU1qW/5ab9zUvDqfJfuXDSQDTjIEfhglt8S
+ eAp0FrvPKGfD9LD0TxpJFMHY94BcWx1uZspJLFNbEP3ZhJVzgQsceBjZ/xvx3npTgDa5
+ 7L5MQnbKrVQaiCEs5L5VHSNAkkvBRyFiNDUMZU/Kog5oF2ZIi+LGJzDd/W0NuvmTtcEB
+ /2y0F7f+P/1oqB8Sd/Y8c6LR8NBRK0caje4j3ocp46nboCzcXwHvG/aFPERHwdhS7WkM nw== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2130.oracle.com with ESMTP id 2w117tsxe8-1
+        by aserp2120.oracle.com with ESMTP id 2w11rpsw3v-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 20:26:24 +0000
+        Mon, 04 Nov 2019 20:26:51 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KODi3129538;
-        Mon, 4 Nov 2019 20:26:24 GMT
-Received: from userv0121.oracle.com (userv0121.oracle.com [156.151.31.72])
-        by userp3020.oracle.com with ESMTP id 2w1kxdwrfq-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA4KOGB6129662;
+        Mon, 4 Nov 2019 20:26:50 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2w1kxdws3j-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Mon, 04 Nov 2019 20:26:24 +0000
-Received: from abhmp0020.oracle.com (abhmp0020.oracle.com [141.146.116.26])
-        by userv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA4KQM7W003956;
-        Mon, 4 Nov 2019 20:26:23 GMT
+        Mon, 04 Nov 2019 20:26:50 +0000
+Received: from abhmp0022.oracle.com (abhmp0022.oracle.com [141.146.116.28])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA4KQoM4032280;
+        Mon, 4 Nov 2019 20:26:50 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Nov 2019 12:26:22 -0800
-Date:   Mon, 4 Nov 2019 12:26:21 -0800
+        with ESMTP ; Mon, 04 Nov 2019 12:26:49 -0800
+Date:   Mon, 4 Nov 2019 12:26:48 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
 To:     Christoph Hellwig <hch@lst.de>
 Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 18/34] xfs: devirtualize ->db_to_fdb and ->db_to_fdindex
-Message-ID: <20191104202621.GT4153244@magnolia>
+Subject: Re: [PATCH 19/34] xfs: devirtualize ->sf_get_parent_ino and
+ ->sf_put_parent_ino
+Message-ID: <20191104202648.GU4153244@magnolia>
 References: <20191101220719.29100-1-hch@lst.de>
- <20191101220719.29100-19-hch@lst.de>
+ <20191101220719.29100-20-hch@lst.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191101220719.29100-19-hch@lst.de>
+In-Reply-To: <20191101220719.29100-20-hch@lst.de>
 User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
@@ -79,218 +80,216 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Fri, Nov 01, 2019 at 03:07:03PM -0700, Christoph Hellwig wrote:
-> Now that the max bests value is in struct xfs_da_geometry both instances
-> of ->db_to_fdb and ->db_to_fdindex are identical.  Replace them with
-> local xfs_dir2_db_to_fdb and xfs_dir2_db_to_fdindex functions in
-> xfs_dir2_node.c.
+On Fri, Nov 01, 2019 at 03:07:04PM -0700, Christoph Hellwig wrote:
+> The parent inode handling is the same for all directory format variants,
+> just use direct calls instead of going through a pointless indirect
+> call.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Seems pretty straightforward,
+Looks ok,
 Reviewed-by: Darrick J. Wong <darrick.wong@oracle.com>
 
 --D
 
 > ---
->  fs/xfs/libxfs/xfs_da_format.c | 47 -----------------------------------
->  fs/xfs/libxfs/xfs_dir2.h      |  5 ----
->  fs/xfs/libxfs/xfs_dir2_node.c | 35 ++++++++++++++++++++------
->  3 files changed, 27 insertions(+), 60 deletions(-)
+>  fs/xfs/libxfs/xfs_da_format.c  | 10 ++--------
+>  fs/xfs/libxfs/xfs_dir2.h       |  3 ---
+>  fs/xfs/libxfs/xfs_dir2_block.c |  2 +-
+>  fs/xfs/libxfs/xfs_dir2_priv.h  |  2 ++
+>  fs/xfs/libxfs/xfs_dir2_sf.c    | 20 ++++++++++----------
+>  fs/xfs/xfs_dir2_readdir.c      |  2 +-
+>  6 files changed, 16 insertions(+), 23 deletions(-)
 > 
 > diff --git a/fs/xfs/libxfs/xfs_da_format.c b/fs/xfs/libxfs/xfs_da_format.c
-> index d2d3144c1598..2b708b9fae1a 100644
+> index 2b708b9fae1a..7858469c09e4 100644
 > --- a/fs/xfs/libxfs/xfs_da_format.c
 > +++ b/fs/xfs/libxfs/xfs_da_format.c
-> @@ -400,44 +400,6 @@ xfs_dir3_data_unused_p(struct xfs_dir2_data_hdr *hdr)
->  		((char *)hdr + sizeof(struct xfs_dir3_data_hdr));
+> @@ -132,14 +132,14 @@ xfs_dir2_sf_put_ino(
+>  		put_unaligned_be32(ino, to);
 >  }
 >  
-> -/*
-> - * Convert data space db to the corresponding free db.
-> - */
-> -static xfs_dir2_db_t
-> -xfs_dir2_db_to_fdb(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> -{
-> -	return xfs_dir2_byte_to_db(geo, XFS_DIR2_FREE_OFFSET) +
-> -			(db / geo->free_max_bests);
-> -}
-> -
-> -/*
-> - * Convert data space db to the corresponding index in a free db.
-> - */
-> -static int
-> -xfs_dir2_db_to_fdindex(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> -{
-> -	return db % geo->free_max_bests;
-> -}
-> -
-> -/*
-> - * Convert data space db to the corresponding free db.
-> - */
-> -static xfs_dir2_db_t
-> -xfs_dir3_db_to_fdb(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> -{
-> -	return xfs_dir2_byte_to_db(geo, XFS_DIR2_FREE_OFFSET) +
-> -			(db / geo->free_max_bests);
-> -}
-> -
-> -/*
-> - * Convert data space db to the corresponding index in a free db.
-> - */
-> -static int
-> -xfs_dir3_db_to_fdindex(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> -{
-> -	return db % geo->free_max_bests;
-> -}
-> -
->  static const struct xfs_dir_ops xfs_dir2_ops = {
->  	.sf_entsize = xfs_dir2_sf_entsize,
->  	.sf_nextentry = xfs_dir2_sf_nextentry,
-> @@ -467,9 +429,6 @@ static const struct xfs_dir_ops xfs_dir2_ops = {
->  	.data_first_entry_p = xfs_dir2_data_first_entry_p,
->  	.data_entry_p = xfs_dir2_data_entry_p,
->  	.data_unused_p = xfs_dir2_data_unused_p,
-> -
-> -	.db_to_fdb = xfs_dir2_db_to_fdb,
-> -	.db_to_fdindex = xfs_dir2_db_to_fdindex,
->  };
+> -static xfs_ino_t
+> +xfs_ino_t
+>  xfs_dir2_sf_get_parent_ino(
+>  	struct xfs_dir2_sf_hdr	*hdr)
+>  {
+>  	return xfs_dir2_sf_get_ino(hdr, hdr->parent);
+>  }
 >  
->  static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
-> @@ -501,9 +460,6 @@ static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
->  	.data_first_entry_p = xfs_dir2_ftype_data_first_entry_p,
->  	.data_entry_p = xfs_dir2_data_entry_p,
->  	.data_unused_p = xfs_dir2_data_unused_p,
-> -
-> -	.db_to_fdb = xfs_dir2_db_to_fdb,
-> -	.db_to_fdindex = xfs_dir2_db_to_fdindex,
->  };
+> -static void
+> +void
+>  xfs_dir2_sf_put_parent_ino(
+>  	struct xfs_dir2_sf_hdr	*hdr,
+>  	xfs_ino_t		ino)
+> @@ -407,8 +407,6 @@ static const struct xfs_dir_ops xfs_dir2_ops = {
+>  	.sf_put_ftype = xfs_dir2_sfe_put_ftype,
+>  	.sf_get_ino = xfs_dir2_sfe_get_ino,
+>  	.sf_put_ino = xfs_dir2_sfe_put_ino,
+> -	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
+> -	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
 >  
->  static const struct xfs_dir_ops xfs_dir3_ops = {
-> @@ -535,9 +491,6 @@ static const struct xfs_dir_ops xfs_dir3_ops = {
->  	.data_first_entry_p = xfs_dir3_data_first_entry_p,
->  	.data_entry_p = xfs_dir3_data_entry_p,
->  	.data_unused_p = xfs_dir3_data_unused_p,
-> -
-> -	.db_to_fdb = xfs_dir3_db_to_fdb,
-> -	.db_to_fdindex = xfs_dir3_db_to_fdindex,
->  };
+>  	.data_entsize = xfs_dir2_data_entsize,
+>  	.data_get_ftype = xfs_dir2_data_get_ftype,
+> @@ -438,8 +436,6 @@ static const struct xfs_dir_ops xfs_dir2_ftype_ops = {
+>  	.sf_put_ftype = xfs_dir3_sfe_put_ftype,
+>  	.sf_get_ino = xfs_dir3_sfe_get_ino,
+>  	.sf_put_ino = xfs_dir3_sfe_put_ino,
+> -	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
+> -	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
 >  
->  /*
+>  	.data_entsize = xfs_dir3_data_entsize,
+>  	.data_get_ftype = xfs_dir3_data_get_ftype,
+> @@ -469,8 +465,6 @@ static const struct xfs_dir_ops xfs_dir3_ops = {
+>  	.sf_put_ftype = xfs_dir3_sfe_put_ftype,
+>  	.sf_get_ino = xfs_dir3_sfe_get_ino,
+>  	.sf_put_ino = xfs_dir3_sfe_put_ino,
+> -	.sf_get_parent_ino = xfs_dir2_sf_get_parent_ino,
+> -	.sf_put_parent_ino = xfs_dir2_sf_put_parent_ino,
+>  
+>  	.data_entsize = xfs_dir3_data_entsize,
+>  	.data_get_ftype = xfs_dir3_data_get_ftype,
 > diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
-> index e3c1385d1522..e302679d8c80 100644
+> index e302679d8c80..d3a0b8daab5f 100644
 > --- a/fs/xfs/libxfs/xfs_dir2.h
 > +++ b/fs/xfs/libxfs/xfs_dir2.h
-> @@ -71,11 +71,6 @@ struct xfs_dir_ops {
->  		(*data_entry_p)(struct xfs_dir2_data_hdr *hdr);
->  	struct xfs_dir2_data_unused *
->  		(*data_unused_p)(struct xfs_dir2_data_hdr *hdr);
-> -
-> -	xfs_dir2_db_t (*db_to_fdb)(struct xfs_da_geometry *geo,
-> -				   xfs_dir2_db_t db);
-> -	int	(*db_to_fdindex)(struct xfs_da_geometry *geo,
-> -				 xfs_dir2_db_t db);
->  };
+> @@ -44,9 +44,6 @@ struct xfs_dir_ops {
+>  	void	(*sf_put_ino)(struct xfs_dir2_sf_hdr *hdr,
+>  			      struct xfs_dir2_sf_entry *sfep,
+>  			      xfs_ino_t ino);
+> -	xfs_ino_t (*sf_get_parent_ino)(struct xfs_dir2_sf_hdr *hdr);
+> -	void	(*sf_put_parent_ino)(struct xfs_dir2_sf_hdr *hdr,
+> -				     xfs_ino_t ino);
 >  
->  extern const struct xfs_dir_ops *
-> diff --git a/fs/xfs/libxfs/xfs_dir2_node.c b/fs/xfs/libxfs/xfs_dir2_node.c
-> index 0fcd7351038e..ceb5936b58dd 100644
-> --- a/fs/xfs/libxfs/xfs_dir2_node.c
-> +++ b/fs/xfs/libxfs/xfs_dir2_node.c
-> @@ -33,6 +33,25 @@ static int xfs_dir2_leafn_remove(xfs_da_args_t *args, struct xfs_buf *bp,
->  				 int index, xfs_da_state_blk_t *dblk,
->  				 int *rval);
->  
-> +/*
-> + * Convert data space db to the corresponding free db.
-> + */
-> +static xfs_dir2_db_t
-> +xfs_dir2_db_to_fdb(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> +{
-> +	return xfs_dir2_byte_to_db(geo, XFS_DIR2_FREE_OFFSET) +
-> +			(db / geo->free_max_bests);
-> +}
-> +
-> +/*
-> + * Convert data space db to the corresponding index in a free db.
-> + */
-> +static int
-> +xfs_dir2_db_to_fdindex(struct xfs_da_geometry *geo, xfs_dir2_db_t db)
-> +{
-> +	return db % geo->free_max_bests;
-> +}
-> +
->  /*
->   * Check internal consistency of a leafn block.
->   */
-> @@ -676,7 +695,7 @@ xfs_dir2_leafn_lookup_for_addname(
->  			 * Convert the data block to the free block
->  			 * holding its freespace information.
->  			 */
-> -			newfdb = dp->d_ops->db_to_fdb(args->geo, newdb);
-> +			newfdb = xfs_dir2_db_to_fdb(args->geo, newdb);
->  			/*
->  			 * If it's not the one we have in hand, read it in.
->  			 */
-> @@ -700,7 +719,7 @@ xfs_dir2_leafn_lookup_for_addname(
->  			/*
->  			 * Get the index for our entry.
->  			 */
-> -			fi = dp->d_ops->db_to_fdindex(args->geo, curdb);
-> +			fi = xfs_dir2_db_to_fdindex(args->geo, curdb);
->  			/*
->  			 * If it has room, return it.
->  			 */
-> @@ -1320,7 +1339,7 @@ xfs_dir2_leafn_remove(
->  		 * Convert the data block number to a free block,
->  		 * read in the free block.
->  		 */
-> -		fdb = dp->d_ops->db_to_fdb(args->geo, db);
-> +		fdb = xfs_dir2_db_to_fdb(args->geo, db);
->  		error = xfs_dir2_free_read(tp, dp,
->  					   xfs_dir2_db_to_da(args->geo, fdb),
->  					   &fbp);
-> @@ -1340,7 +1359,7 @@ xfs_dir2_leafn_remove(
->  		/*
->  		 * Calculate which entry we need to fix.
->  		 */
-> -		findex = dp->d_ops->db_to_fdindex(args->geo, db);
-> +		findex = xfs_dir2_db_to_fdindex(args->geo, db);
->  		longest = be16_to_cpu(bf[0].length);
->  		/*
->  		 * If the data block is now empty we can get rid of it
-> @@ -1683,7 +1702,7 @@ xfs_dir2_node_add_datablk(
->  	 * Get the freespace block corresponding to the data block
->  	 * that was just allocated.
+>  	int	(*data_entsize)(int len);
+>  	uint8_t (*data_get_ftype)(struct xfs_dir2_data_entry *dep);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_block.c b/fs/xfs/libxfs/xfs_dir2_block.c
+> index 38886b9c7b48..2ee9fdd182e1 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_block.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_block.c
+> @@ -1163,7 +1163,7 @@ xfs_dir2_sf_to_block(
+>  	 * Create entry for ..
 >  	 */
-> -	fbno = dp->d_ops->db_to_fdb(args->geo, *dbno);
-> +	fbno = xfs_dir2_db_to_fdb(args->geo, *dbno);
->  	error = xfs_dir2_free_try_read(tp, dp,
->  			       xfs_dir2_db_to_da(args->geo, fbno), &fbp);
+>  	dep = dp->d_ops->data_dotdot_entry_p(hdr);
+> -	dep->inumber = cpu_to_be64(dp->d_ops->sf_get_parent_ino(sfp));
+> +	dep->inumber = cpu_to_be64(xfs_dir2_sf_get_parent_ino(sfp));
+>  	dep->namelen = 2;
+>  	dep->name[0] = dep->name[1] = '.';
+>  	dp->d_ops->data_put_ftype(dep, XFS_DIR3_FT_DIR);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> index b73cf38c6969..d5104fdb8543 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> @@ -135,6 +135,8 @@ extern int xfs_dir2_free_read(struct xfs_trans *tp, struct xfs_inode *dp,
+>  		xfs_dablk_t fbno, struct xfs_buf **bpp);
+>  
+>  /* xfs_dir2_sf.c */
+> +xfs_ino_t xfs_dir2_sf_get_parent_ino(struct xfs_dir2_sf_hdr *hdr);
+> +void xfs_dir2_sf_put_parent_ino(struct xfs_dir2_sf_hdr *hdr, xfs_ino_t ino);
+>  extern int xfs_dir2_block_sfsize(struct xfs_inode *dp,
+>  		struct xfs_dir2_data_hdr *block, struct xfs_dir2_sf_hdr *sfhp);
+>  extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index ae16ca7c422a..1d7c26d0157c 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -125,7 +125,7 @@ xfs_dir2_block_sfsize(
+>  	 */
+>  	sfhp->count = count;
+>  	sfhp->i8count = i8count;
+> -	dp->d_ops->sf_put_parent_ino(sfhp, parent);
+> +	xfs_dir2_sf_put_parent_ino(sfhp, parent);
+>  	return size;
+>  }
+>  
+> @@ -204,7 +204,7 @@ xfs_dir2_block_to_sf(
+>  		else if (dep->namelen == 2 &&
+>  			 dep->name[0] == '.' && dep->name[1] == '.')
+>  			ASSERT(be64_to_cpu(dep->inumber) ==
+> -			       dp->d_ops->sf_get_parent_ino(sfp));
+> +			       xfs_dir2_sf_get_parent_ino(sfp));
+>  		/*
+>  		 * Normal entry, copy it into shortform.
+>  		 */
+> @@ -590,7 +590,7 @@ xfs_dir2_sf_check(
+>  
+>  	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+>  	offset = dp->d_ops->data_first_offset;
+> -	ino = dp->d_ops->sf_get_parent_ino(sfp);
+> +	ino = xfs_dir2_sf_get_parent_ino(sfp);
+>  	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+>  
+>  	for (i = 0, sfep = xfs_dir2_sf_firstentry(sfp);
+> @@ -653,7 +653,7 @@ xfs_dir2_sf_verify(
+>  	endp = (char *)sfp + size;
+>  
+>  	/* Check .. entry */
+> -	ino = dops->sf_get_parent_ino(sfp);
+> +	ino = xfs_dir2_sf_get_parent_ino(sfp);
+>  	i8count = ino > XFS_DIR2_MAX_SHORT_INUM;
+>  	error = xfs_dir_ino_validate(mp, ino);
 >  	if (error)
-> @@ -1698,11 +1717,11 @@ xfs_dir2_node_add_datablk(
->  		if (error)
->  			return error;
->  
-> -		if (dp->d_ops->db_to_fdb(args->geo, *dbno) != fbno) {
-> +		if (xfs_dir2_db_to_fdb(args->geo, *dbno) != fbno) {
->  			xfs_alert(mp,
->  "%s: dir ino %llu needed freesp block %lld for data block %lld, got %lld",
->  				__func__, (unsigned long long)dp->i_ino,
-> -				(long long)dp->d_ops->db_to_fdb(args->geo, *dbno),
-> +				(long long)xfs_dir2_db_to_fdb(args->geo, *dbno),
->  				(long long)*dbno, (long long)fbno);
->  			if (fblk) {
->  				xfs_alert(mp,
-> @@ -1731,7 +1750,7 @@ xfs_dir2_node_add_datablk(
+> @@ -763,7 +763,7 @@ xfs_dir2_sf_create(
+>  	/*
+>  	 * Now can put in the inode number, since i8count is set.
+>  	 */
+> -	dp->d_ops->sf_put_parent_ino(sfp, pino);
+> +	xfs_dir2_sf_put_parent_ino(sfp, pino);
+>  	sfp->count = 0;
+>  	dp->i_d.di_size = size;
+>  	xfs_dir2_sf_check(args);
+> @@ -818,7 +818,7 @@ xfs_dir2_sf_lookup(
+>  	 */
+>  	if (args->namelen == 2 &&
+>  	    args->name[0] == '.' && args->name[1] == '.') {
+> -		args->inumber = dp->d_ops->sf_get_parent_ino(sfp);
+> +		args->inumber = xfs_dir2_sf_get_parent_ino(sfp);
+>  		args->cmpresult = XFS_CMP_EXACT;
+>  		args->filetype = XFS_DIR3_FT_DIR;
+>  		return -EEXIST;
+> @@ -1008,9 +1008,9 @@ xfs_dir2_sf_replace(
+>  	 */
+>  	if (args->namelen == 2 &&
+>  	    args->name[0] == '.' && args->name[1] == '.') {
+> -		ino = dp->d_ops->sf_get_parent_ino(sfp);
+> +		ino = xfs_dir2_sf_get_parent_ino(sfp);
+>  		ASSERT(args->inumber != ino);
+> -		dp->d_ops->sf_put_parent_ino(sfp, args->inumber);
+> +		xfs_dir2_sf_put_parent_ino(sfp, args->inumber);
 >  	}
->  
->  	/* Set the freespace block index from the data block number. */
-> -	*findex = dp->d_ops->db_to_fdindex(args->geo, *dbno);
-> +	*findex = xfs_dir2_db_to_fdindex(args->geo, *dbno);
->  
->  	/* Extend the freespace table if the new data block is off the end. */
->  	if (*findex >= hdr->nvalid) {
+>  	/*
+>  	 * Normal entry, look for the name.
+> @@ -1116,7 +1116,7 @@ xfs_dir2_sf_toino4(
+>  	 */
+>  	sfp->count = oldsfp->count;
+>  	sfp->i8count = 0;
+> -	dp->d_ops->sf_put_parent_ino(sfp, dp->d_ops->sf_get_parent_ino(oldsfp));
+> +	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
+>  	/*
+>  	 * Copy the entries field by field.
+>  	 */
+> @@ -1189,7 +1189,7 @@ xfs_dir2_sf_toino8(
+>  	 */
+>  	sfp->count = oldsfp->count;
+>  	sfp->i8count = 1;
+> -	dp->d_ops->sf_put_parent_ino(sfp, dp->d_ops->sf_get_parent_ino(oldsfp));
+> +	xfs_dir2_sf_put_parent_ino(sfp, xfs_dir2_sf_get_parent_ino(oldsfp));
+>  	/*
+>  	 * Copy the entries field by field.
+>  	 */
+> diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
+> index a0bec0931f3b..6f94d2a45174 100644
+> --- a/fs/xfs/xfs_dir2_readdir.c
+> +++ b/fs/xfs/xfs_dir2_readdir.c
+> @@ -92,7 +92,7 @@ xfs_dir2_sf_getdents(
+>  	 * Put .. entry unless we're starting past it.
+>  	 */
+>  	if (ctx->pos <= dotdot_offset) {
+> -		ino = dp->d_ops->sf_get_parent_ino(sfp);
+> +		ino = xfs_dir2_sf_get_parent_ino(sfp);
+>  		ctx->pos = dotdot_offset & 0x7fffffff;
+>  		if (!dir_emit(ctx, "..", 2, ino, DT_DIR))
+>  			return 0;
 > -- 
 > 2.20.1
 > 
