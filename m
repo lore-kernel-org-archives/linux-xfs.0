@@ -2,83 +2,139 @@ Return-Path: <SRS0=V6/9=Y5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
-	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=unavailable autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
+	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B26A9C5DF60
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:07:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FAEFC5DF60
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:08:31 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7032B2084D
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:07:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 57FDC2084D
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:08:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727063AbfKEUHp (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Nov 2019 15:07:45 -0500
-Received: from mail104.syd.optusnet.com.au ([211.29.132.246]:45534 "EHLO
-        mail104.syd.optusnet.com.au" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1726141AbfKEUHp (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Nov 2019 15:07:45 -0500
-Received: from dread.disaster.area (pa49-180-67-183.pa.nsw.optusnet.com.au [49.180.67.183])
-        by mail104.syd.optusnet.com.au (Postfix) with ESMTPS id 340A77E7AB3;
-        Wed,  6 Nov 2019 07:07:40 +1100 (AEDT)
-Received: from dave by dread.disaster.area with local (Exim 4.92.3)
-        (envelope-from <david@fromorbit.com>)
-        id 1iS574-0006S9-TG; Wed, 06 Nov 2019 07:07:38 +1100
-Date:   Wed, 6 Nov 2019 07:07:38 +1100
-From:   Dave Chinner <david@fromorbit.com>
-To:     Valdis Kletnieks <valdis.kletnieks@vt.edu>
-Cc:     Theodore Ts'o <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
+        id S1726697AbfKEUIa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Nov 2019 15:08:30 -0500
+Received: from sandeen.net ([63.231.237.45]:41382 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1725806AbfKEUIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Nov 2019 15:08:30 -0500
+Received: from Liberator-6.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id B01D917DE3;
+        Tue,  5 Nov 2019 14:07:22 -0600 (CST)
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
+To:     Chris Holcombe <cholcombe@box.com>
+Cc:     Blake Golliher <bgolliher@box.com>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
-        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-ext4@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-arch@vger.kernel.org
-Subject: Re: [PATCH 1/1] errno.h: Provide EFSBADCRC for everybody
-Message-ID: <20191105200045.GD4614@dread.disaster.area>
-References: <20191105024618.194134-1-Valdis.Kletnieks@vt.edu>
+        linux-xfs@vger.kernel.org
+References: <CAL3_v4PZLtb4hVWksWR_tkia+A6rjeR2Xc3H-buCp7pMySxE2Q@mail.gmail.com>
+ <20191105000138.GT4153244@magnolia>
+ <c677bc5b-aa27-5f9b-65bd-5f03e4c06d7b@sandeen.net>
+ <CAC752AmahECFry9x=pvqDkwQUj1PEJjoWGa2KFG1uaTzT1Bbnw@mail.gmail.com>
+ <e34f4417-6ccf-3a2f-de74-edb1b54a31f5@sandeen.net>
+ <CAL3_v4NEKn6omXJYW3emfjApi7smW+c_sZyqWnQEpfDx4yPtdA@mail.gmail.com>
+ <450b41a6-4fd5-6244-229c-b7cc9512c2a7@sandeen.net>
+ <CAL3_v4P+HwxegYCO3czD56nT0rGTwZ=qgDLOWAoppOR=6mMZ+Q@mail.gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <982194a0-4ab4-d3ca-dfc0-31427ace87fe@sandeen.net>
+Date:   Tue, 5 Nov 2019 14:08:27 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191105024618.194134-1-Valdis.Kletnieks@vt.edu>
-User-Agent: Mutt/1.10.1 (2018-07-13)
-X-Optus-CM-Score: 0
-X-Optus-CM-Analysis: v=2.2 cv=G6BsK5s5 c=1 sm=1 tr=0
-        a=3wLbm4YUAFX2xaPZIabsgw==:117 a=3wLbm4YUAFX2xaPZIabsgw==:17
-        a=jpOVt7BSZ2e4Z31A5e1TngXxSK0=:19 a=kj9zAlcOel0A:10 a=MeAgGD-zjQ4A:10
-        a=7-415B0cAAAA:8 a=rJHQ1rk6g6_wif3L1mMA:9 a=CjuIK1q_8ugA:10
-        a=biEYGPWJfzWAr4FL6Ov7:22
+In-Reply-To: <CAL3_v4P+HwxegYCO3czD56nT0rGTwZ=qgDLOWAoppOR=6mMZ+Q@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Mon, Nov 04, 2019 at 09:46:14PM -0500, Valdis Kletnieks wrote:
-> Four filesystems have their own defines for this. Move it
-> into errno.h so it's defined in just one place.
+I don't think that's the information I requested:
+
+>> Can you please do:
+>>
+>> # echo 11 > /proc/sys/fs/xfs/error_level
+>>
+>> and hit it again, then send a few of the backtraces from dmesg?
+
+-Eric
+
+
+On 11/5/19 1:53 PM, Chris Holcombe wrote:
+> I've got the stack traces and they're massive.
+> https://cloud.box.com/s/5grgnjwej5prmahl92v49937w6hgdnsv
+> https://cloud.box.com/s/wfrjg7yhiwufpgidoq1qos8mrwtu4ij3
+> https://cloud.box.com/s/3wcfgfdyvcsbslfdxc9ntfdt7yrhtcjt
 > 
-> Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
-
-Looks good, minor nit below:
-
-> diff --git a/include/uapi/asm-generic/errno.h b/include/uapi/asm-generic/errno.h
-> index 1d5ffdf54cb0..e4cae9a9ae79 100644
-> --- a/include/uapi/asm-generic/errno.h
-> +++ b/include/uapi/asm-generic/errno.h
-> @@ -55,6 +55,7 @@
->  #define	EMULTIHOP	72	/* Multihop attempted */
->  #define	EDOTDOT		73	/* RFS specific error */
->  #define	EBADMSG		74	/* Not a data message */
-> +#define EFSBADCRC	EBADMSG	/* Bad CRC detected */
-
-Inconsistent whitespace here. When you get tab vs space after
-#define wrong it only shows up in patches. :/
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-david@fromorbit.com
+> On Tue, Nov 5, 2019 at 9:11 AM Eric Sandeen <sandeen@sandeen.net> wrote:
+>>
+>>
+>>
+>> CAUTION: External Email
+>>
+>>
+>>
+>>
+>> On 11/5/19 10:25 AM, Chris Holcombe wrote:
+>>> Hi Eric,
+>>> I've attached both the dmesg command output and /var/log/dmesg.log
+>>> which have different values in them.
+>>
+>> Thanks.  Aaand .... I forgot that we don't dump a stack trace by default.
+>>
+>> Can you please do:
+>>
+>> # echo 11 > /proc/sys/fs/xfs/error_level
+>>
+>> and hit it again, then send a few of the backtraces from dmesg?
+>>
+>> # echo 3 > /proc/sys/fs/xfs/error_level
+>>
+>> will quiet things down again.
+>>
+>> -Eric
+> 
