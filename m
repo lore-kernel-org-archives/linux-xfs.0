@@ -6,26 +6,26 @@ X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
 	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_SANE_1
 	autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FAEFC5DF60
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:08:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94C7DC5DF60
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:47:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 57FDC2084D
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:08:31 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 5479E214B2
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:47:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1726697AbfKEUIa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Nov 2019 15:08:30 -0500
-Received: from sandeen.net ([63.231.237.45]:41382 "EHLO sandeen.net"
+        id S1727821AbfKEUrx (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Nov 2019 15:47:53 -0500
+Received: from sandeen.net ([63.231.237.45]:43224 "EHLO sandeen.net"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1725806AbfKEUIa (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Tue, 5 Nov 2019 15:08:30 -0500
+        id S1727401AbfKEUrw (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Nov 2019 15:47:52 -0500
 Received: from Liberator-6.local (liberator [10.0.0.4])
         (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B01D917DE3;
-        Tue,  5 Nov 2019 14:07:22 -0600 (CST)
+        by sandeen.net (Postfix) with ESMTPSA id 82A5B17DE3;
+        Tue,  5 Nov 2019 14:46:44 -0600 (CST)
 Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
-To:     Chris Holcombe <cholcombe@box.com>
-Cc:     Blake Golliher <bgolliher@box.com>,
+To:     Blake Golliher <bgolliher@box.com>
+Cc:     Chris Holcombe <cholcombe@box.com>,
         "Darrick J. Wong" <darrick.wong@oracle.com>,
         linux-xfs@vger.kernel.org
 References: <CAL3_v4PZLtb4hVWksWR_tkia+A6rjeR2Xc3H-buCp7pMySxE2Q@mail.gmail.com>
@@ -36,6 +36,8 @@ References: <CAL3_v4PZLtb4hVWksWR_tkia+A6rjeR2Xc3H-buCp7pMySxE2Q@mail.gmail.com>
  <CAL3_v4NEKn6omXJYW3emfjApi7smW+c_sZyqWnQEpfDx4yPtdA@mail.gmail.com>
  <450b41a6-4fd5-6244-229c-b7cc9512c2a7@sandeen.net>
  <CAL3_v4P+HwxegYCO3czD56nT0rGTwZ=qgDLOWAoppOR=6mMZ+Q@mail.gmail.com>
+ <982194a0-4ab4-d3ca-dfc0-31427ace87fe@sandeen.net>
+ <CAC752AnZ4biDGk6V17URQm5YVp=MwZBhiMH8=t733zaypxUsmA@mail.gmail.com>
 From:   Eric Sandeen <sandeen@sandeen.net>
 Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  mQINBE6x99QBEADMR+yNFBc1Y5avoUhzI/sdR9ANwznsNpiCtZlaO4pIWvqQJCjBzp96cpCs
@@ -79,62 +81,77 @@ Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
  Pk6ah10C4+R1Jc7dyUsKksMfvvhRX1hTIXhth85H16706bneTayZBhlZ/hK18uqTX+s0onG/
  m1F3vYvdlE4p2ts1mmixMF7KajN9/E5RQtiSArvKTbfsB6Two4MthIuLuf+M0mI4gPl9SPlf
  fWCYVPhaU9o83y1KFbD/+lh1pjP7bEu/YudBvz7F2Myjh4/9GUAijrCTNeDTDAgvIJDjXuLX pA==
-Message-ID: <982194a0-4ab4-d3ca-dfc0-31427ace87fe@sandeen.net>
-Date:   Tue, 5 Nov 2019 14:08:27 -0600
+Message-ID: <33b9bde4-fd14-8754-f98a-ae0f363e76be@sandeen.net>
+Date:   Tue, 5 Nov 2019 14:47:50 -0600
 User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
  Gecko/20100101 Thunderbird/68.2.1
 MIME-Version: 1.0
-In-Reply-To: <CAL3_v4P+HwxegYCO3czD56nT0rGTwZ=qgDLOWAoppOR=6mMZ+Q@mail.gmail.com>
+In-Reply-To: <CAC752AnZ4biDGk6V17URQm5YVp=MwZBhiMH8=t733zaypxUsmA@mail.gmail.com>
 Content-Type: text/plain; charset=utf-8
 Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-I don't think that's the information I requested:
+On 11/5/19 2:36 PM, Blake Golliher wrote:
+> We don't get anything more then this messages.
+> 
+> [Tue Nov  5 11:18:34 2019] XFS: nginx(2540) possible memory allocation deadlock size 63960 in kmem_alloc (mode:0x250)
+> 
+> [Tue Nov  5 11:18:34 2019] XFS: nginx(2517) possible memory allocation deadlock size 56880 in kmem_alloc (mode:0x250)
+> 
+> [Tue Nov  5 11:18:34 2019] XFS: nginx(2540) possible memory allocation deadlock size 63960 in kmem_alloc (mode:0x250)
+> 
+> [Tue Nov  5 11:18:35 2019] XFS: nginx(2517) possible memory allocation deadlock size 56880 in kmem_alloc (mode:0x250)
+> 
+> [Tue Nov  5 11:18:36 2019] XFS: nginx(2514) possible memory allocation deadlock size 63960 in kmem_alloc (mode:0x250)
+> 
+> [Tue Nov  5 11:18:36 2019] XFS: nginx(2540) possible memory allocation deadlock size 63960 in kmem_alloc (mode:0x250)
+> 
+> [Tue Nov  5 11:18:37 2019] XFS: nginx(2517) possible memory allocation deadlock size 56880 in kmem_alloc (mode:0x250)
 
->> Can you please do:
->>
->> # echo 11 > /proc/sys/fs/xfs/error_level
->>
->> and hit it again, then send a few of the backtraces from dmesg?
+no sure what to say.  In that kernel, when we print the message:
+
+                        xfs_err(NULL,
+        "%s(%u) possible memory allocation deadlock size %u in %s (mode:0x%x)",
+                                current->comm, current->pid,
+                                (unsigned int)size, __func__, lflags);
+
+xfs_err() is:
+
+define_xfs_printk_level(xfs_err, KERN_ERR);
+
+which is the macro:
+
+#define define_xfs_printk_level(func, kern_level)               \
+void func(const struct xfs_mount *mp, const char *fmt, ...)     \
+{                                                               \
+        struct va_format        vaf;                            \
+        va_list                 args;                           \
+        int                     level;                          \
+                                                                \
+        va_start(args, fmt);                                    \
+                                                                \
+        vaf.fmt = fmt;                                          \
+        vaf.va = &args;                                         \
+                                                                \
+        __xfs_printk(kern_level, mp, &vaf);                     \
+        va_end(args);                                           \
+                                                                \
+        if (!kstrtoint(kern_level, 0, &level) &&                \ 
+            level <= 3 /* LOGLEVEL_ERR */ &&                    \
+            xfs_error_level >= XFS_ERRLEVEL_HIGH)               \
+                xfs_stack_trace();                              \
+}                                                               \
+
+which should dump a stack if called w/ ERR priority and the xfs_error_level is at 11.
+
+I suppose your general kernel ring buffer needs to be turned up high enough
+as well (i.e. dmesg -n 8 to be sure?)
+
+The resulting stack trace would tell us exactly how you got to the 
+allocation message.
 
 -Eric
-
-
-On 11/5/19 1:53 PM, Chris Holcombe wrote:
-> I've got the stack traces and they're massive.
-> https://cloud.box.com/s/5grgnjwej5prmahl92v49937w6hgdnsv
-> https://cloud.box.com/s/wfrjg7yhiwufpgidoq1qos8mrwtu4ij3
-> https://cloud.box.com/s/3wcfgfdyvcsbslfdxc9ntfdt7yrhtcjt
-> 
-> On Tue, Nov 5, 2019 at 9:11 AM Eric Sandeen <sandeen@sandeen.net> wrote:
->>
->>
->>
->> CAUTION: External Email
->>
->>
->>
->>
->> On 11/5/19 10:25 AM, Chris Holcombe wrote:
->>> Hi Eric,
->>> I've attached both the dmesg command output and /var/log/dmesg.log
->>> which have different values in them.
->>
->> Thanks.  Aaand .... I forgot that we don't dump a stack trace by default.
->>
->> Can you please do:
->>
->> # echo 11 > /proc/sys/fs/xfs/error_level
->>
->> and hit it again, then send a few of the backtraces from dmesg?
->>
->> # echo 3 > /proc/sys/fs/xfs/error_level
->>
->> will quiet things down again.
->>
->> -Eric
-> 
