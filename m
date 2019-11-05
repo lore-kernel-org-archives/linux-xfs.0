@@ -2,114 +2,145 @@ Return-Path: <SRS0=V6/9=Y5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
+	URIBL_BLOCKED autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 41EF2CA9EC7
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 04:21:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E79C1CA9EDB
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 07:27:44 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1C62E20663
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 04:21:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id B3C57206BA
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 07:27:44 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E09qkUco"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729655AbfKEEVs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 23:21:48 -0500
-Received: from sandeen.net ([63.231.237.45]:52122 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1728064AbfKEEVs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Mon, 4 Nov 2019 23:21:48 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-        (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id B1672D6F;
-        Mon,  4 Nov 2019 22:20:41 -0600 (CST)
-Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
-To:     Blake Golliher <bgolliher@box.com>
-Cc:     "Darrick J. Wong" <darrick.wong@oracle.com>,
-        Chris Holcombe <cholcombe@box.com>, linux-xfs@vger.kernel.org
-References: <CAL3_v4PZLtb4hVWksWR_tkia+A6rjeR2Xc3H-buCp7pMySxE2Q@mail.gmail.com>
- <20191105000138.GT4153244@magnolia>
- <c677bc5b-aa27-5f9b-65bd-5f03e4c06d7b@sandeen.net>
- <CAC752AmahECFry9x=pvqDkwQUj1PEJjoWGa2KFG1uaTzT1Bbnw@mail.gmail.com>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <e34f4417-6ccf-3a2f-de74-edb1b54a31f5@sandeen.net>
-Date:   Mon, 4 Nov 2019 22:21:45 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.1
+        id S2387771AbfKEH1o (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Nov 2019 02:27:44 -0500
+Received: from mail-wm1-f66.google.com ([209.85.128.66]:39129 "EHLO
+        mail-wm1-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S2387482AbfKEH1o (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Nov 2019 02:27:44 -0500
+Received: by mail-wm1-f66.google.com with SMTP id t26so14769099wmi.4;
+        Mon, 04 Nov 2019 23:27:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=mime-version:from:date:message-id:subject:to:cc;
+        bh=u3oNbA4I10/mjIuskX/q0SYWtQUKKiw+bIAOAK1v+YI=;
+        b=E09qkUcoc5nFUiOs4ZMnUI5kLeWXUYZANcKpLy8a5kpLoy1tcjJ2E0UcTzG0tx71e6
+         MJujARVkXcrHfkkP9T067RIGoZAcuuuWQVj+u8C+x+TQEpKDiWq6+uzDktUXHqvMDR67
+         OR5NGG7PqcVZM5hrSBJytOySdIzUwEXx2aKpc4WQGtC5+KmLEQU10BKKMSI9J16o+zs0
+         Ye3nN+1xR7yqeHN2V6rEp/lHzlggjPa0coOQLw3FCbsgTDK91JTCgYv0B5eoxON5JK5M
+         9n+Ck0V4MUgffQmM9GGf34JoM0SSBwX510SqOimWO1QgqcOjo0vDRo9MDbtNqmNw313r
+         xNEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:mime-version:from:date:message-id:subject:to:cc;
+        bh=u3oNbA4I10/mjIuskX/q0SYWtQUKKiw+bIAOAK1v+YI=;
+        b=i/bukS2dslYtKBsSodPh/WW17RTTt3gnNqzN+859LPlA4DLoGKDu1Zm1nkO0gyEWx6
+         NeFQbfxBj3IJsUUldslmrCn/JGw69Bfbj3MkEZVGE3SoGElzNfygnwm5Oi0MlBGVnbaE
+         HroItaExdXzxemmqkWgFqWmx3gZh9owIpgfNXYQCw6k/aGKxCo/Ujnxzv5pl0qfCTLMX
+         +wlysy2APfO87BJbH6ZBaowWQ9/Ag0mgEr9PJ4IliCPIUI+uITveZMdhN0e8b3PBLYwM
+         /ycf+7+I4xiKWul7mh6GrP/7WHlXpi5byTYmDONehq9sE8dHGOo/w59cgLXeWII5xKXR
+         auag==
+X-Gm-Message-State: APjAAAVeVpOU1N04ZWTL1XlM6OLxzDyevLTqp9xBcCQdzhheFtVEZVm+
+        1oLLGBPH66QFloYAdeMvnf52+3PWcx7otDkdFb298+HP
+X-Google-Smtp-Source: APXvYqwgS/xVJLOvqdRmTRu6ArMf9NiA/mxQfZbWsZkm1qbyTMNc3VCxdK2jhLA8uWTGXS0f7zjQheAF3GqnJvge+jE=
+X-Received: by 2002:a1c:e308:: with SMTP id a8mr2762645wmh.55.1572938861603;
+ Mon, 04 Nov 2019 23:27:41 -0800 (PST)
 MIME-Version: 1.0
-In-Reply-To: <CAC752AmahECFry9x=pvqDkwQUj1PEJjoWGa2KFG1uaTzT1Bbnw@mail.gmail.com>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 8bit
+From:   Sitsofe Wheeler <sitsofe@gmail.com>
+Date:   Tue, 5 Nov 2019 07:27:16 +0000
+Message-ID: <CALjAwxiuTYAVvGGUXLx6Bo-zNuW5+WXL=A8DqR5oD6D5tsKwng@mail.gmail.com>
+Subject: Tasks blocking forever with XFS stack traces
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org, linux-fsdevel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 11/4/19 8:28 PM, Blake Golliher wrote:
-> Hi!  I work with Chris.
-> 
-> Linux boxfiler3038 3.10.0-957.10.1.el7.x86_64 #1 SMP Mon Mar 18 15:06:45 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> 
-> Is the kernel release.  We're using the Centos7 release CentOS Linux release 7.6.1810 (Core) 
-> 
-> 
-> The previous version that didn't have the problem is this kernel
-> 
-> Linux boxfiler3006 2.6.32-754.6.3.el6.x86_64 #1 SMP Tue Oct 9 11:31:50 CDT 2018 x86_64 x86_64 x86_64 GNU/Linux
-> 
-> 
-> Scientific Linux release 6.7 (Carbon)
-> 
-> 
-> So SL6, didn't have the problem on 2.6.32.  Centos7 does have the xfs deadlock issue, on 3.10.0-957.
-> 
+Hi,
 
-Thanks.
+We have a system that has been seeing tasks with XFS calls in their
+stacks. Once these tasks start hanging with uninterruptible sleep any
+write I/O to the directory they were doing I/O to will also hang
+forever. The I/O they doing is being done to a bind mounted directory
+atop an XFS filesystem on top an MD device (the MD device seems to be
+still functional and isn't offline). The kernel is fairly old but I
+thought I'd post a stack in case anyone can describe this or has seen
+it before:
 
-We need the full kernel log Darrick asked for, too.
+kernel: [425684.110424] INFO: task kworker/u162:0:58843 blocked for
+more than 120 seconds.
+kernel: [425684.110800]       Tainted: G           OE
+4.15.0-64-generic #73-Ubuntu
+kernel: [425684.111164] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kernel: [425684.111568] kworker/u162:0  D    0 58843      2 0x80000080
+kernel: [425684.111581] Workqueue: writeback wb_workfn (flush-9:126)
+kernel: [425684.111585] Call Trace:
+kernel: [425684.111595]  __schedule+0x24e/0x880
+kernel: [425684.111664]  ? xfs_map_blocks+0x82/0x250 [xfs]
+kernel: [425684.111668]  schedule+0x2c/0x80
+kernel: [425684.111671]  rwsem_down_read_failed+0xf0/0x160
+kernel: [425684.111675]  ? bitmap_startwrite+0x9f/0x1f0
+kernel: [425684.111679]  call_rwsem_down_read_failed+0x18/0x30
+kernel: [425684.111682]  ? call_rwsem_down_read_failed+0x18/0x30
+kernel: [425684.111685]  down_read+0x20/0x40
+kernel: [425684.111736]  xfs_ilock+0xd5/0x100 [xfs]
+kernel: [425684.111782]  xfs_map_blocks+0x82/0x250 [xfs]
+kernel: [425684.111823]  xfs_do_writepage+0x167/0x6a0 [xfs]
+kernel: [425684.111830]  ? clear_page_dirty_for_io+0x19f/0x1f0
+kernel: [425684.111834]  write_cache_pages+0x207/0x4e0
+kernel: [425684.111869]  ? xfs_vm_writepages+0xf0/0xf0 [xfs]
+kernel: [425684.111875]  ? submit_bio+0x73/0x140
+kernel: [425684.111878]  ? submit_bio+0x73/0x140
+kernel: [425684.111911]  ? xfs_setfilesize_trans_alloc.isra.13+0x3e/0x90 [xfs]
+kernel: [425684.111944]  xfs_vm_writepages+0xbe/0xf0 [xfs]
+kernel: [425684.111949]  do_writepages+0x4b/0xe0
+kernel: [425684.111954]  ? fprop_fraction_percpu+0x2f/0x80
+kernel: [425684.111958]  ? __wb_calc_thresh+0x3e/0x130
+kernel: [425684.111963]  __writeback_single_inode+0x45/0x350
+kernel: [425684.111966]  ? __writeback_single_inode+0x45/0x350
+kernel: [425684.111970]  writeback_sb_inodes+0x1e1/0x510
+kernel: [425684.111975]  __writeback_inodes_wb+0x67/0xb0
+kernel: [425684.111979]  wb_writeback+0x271/0x300
+kernel: [425684.111983]  wb_workfn+0x1bb/0x400
+kernel: [425684.111986]  ? wb_workfn+0x1bb/0x400
+kernel: [425684.111992]  process_one_work+0x1de/0x420
+kernel: [425684.111996]  worker_thread+0x32/0x410
+kernel: [425684.111999]  kthread+0x121/0x140
+kernel: [425684.112003]  ? process_one_work+0x420/0x420
+kernel: [425684.112005]  ? kthread_create_worker_on_cpu+0x70/0x70
+kernel: [425684.112009]  ret_from_fork+0x35/0x40
+kernel: [425684.112024] INFO: task kworker/74:0:9623 blocked for more
+than 120 seconds.
+kernel: [425684.112461]       Tainted: G           OE
+4.15.0-64-generic #73-Ubuntu
+kernel: [425684.112925] "echo 0 >
+/proc/sys/kernel/hung_task_timeout_secs" disables this message.
+kernel: [425684.113438] kworker/74:0    D    0  9623      2 0x80000080
+kernel: [425684.113500] Workqueue: xfs-cil/md126 xlog_cil_push_work [xfs]
+kernel: [425684.113502] Call Trace:
+kernel: [425684.113508]  __schedule+0x24e/0x880
+kernel: [425684.113559]  ? xlog_bdstrat+0x2b/0x60 [xfs]
+kernel: [425684.113564]  schedule+0x2c/0x80
+kernel: [425684.113609]  xlog_state_get_iclog_space+0x105/0x2d0 [xfs]
+kernel: [425684.113614]  ? wake_up_q+0x80/0x80
+kernel: [425684.113656]  xlog_write+0x163/0x6e0 [xfs]
+kernel: [425684.113699]  xlog_cil_push+0x2a7/0x410 [xfs]
+kernel: [425684.113740]  xlog_cil_push_work+0x15/0x20 [xfs]
+kernel: [425684.113743]  process_one_work+0x1de/0x420
+kernel: [425684.113747]  worker_thread+0x32/0x410
+kernel: [425684.113750]  kthread+0x121/0x140
+kernel: [425684.113753]  ? process_one_work+0x420/0x420
+kernel: [425684.113756]  ? kthread_create_worker_on_cpu+0x70/0x70
+kernel: [425684.113759]  ret_from_fork+0x35/0x40
 
--Eric
+Other directories on the same filesystem seem fine as do other XFS
+filesystems on the same system.
+
+-- 
+Sitsofe | http://sucs.org/~sits/
