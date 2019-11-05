@@ -2,117 +2,110 @@ Return-Path: <SRS0=V6/9=Y5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-3.7 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED
-	autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B663C5DF60
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:58:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 717A3C5DF60
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 21:23:48 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 2292B21A49
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 20:58:49 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 31FE321A4A
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 21:23:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729877AbfKEU6s (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Nov 2019 15:58:48 -0500
-Received: from outbound.smtp.vt.edu ([198.82.183.121]:52222 "EHLO
-        omr1.cc.vt.edu" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1729739AbfKEU6s (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Nov 2019 15:58:48 -0500
-Received: from mr4.cc.vt.edu (junk.cc.ipv6.vt.edu [IPv6:2607:b400:92:9:0:9d:8fcb:4116])
-        by omr1.cc.vt.edu (8.14.4/8.14.4) with ESMTP id xA5Kwl49011551
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Nov 2019 15:58:47 -0500
-Received: from mail-qk1-f198.google.com (mail-qk1-f198.google.com [209.85.222.198])
-        by mr4.cc.vt.edu (8.14.7/8.14.7) with ESMTP id xA5KwgP9020374
-        for <linux-xfs@vger.kernel.org>; Tue, 5 Nov 2019 15:58:47 -0500
-Received: by mail-qk1-f198.google.com with SMTP id 64so22574294qkm.5
-        for <linux-xfs@vger.kernel.org>; Tue, 05 Nov 2019 12:58:47 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:sender:from:to:cc:subject:in-reply-to:references
-         :mime-version:content-transfer-encoding:date:message-id;
-        bh=S50K21onMwLaHq3dPT4Qwhc6hjGO5VfOOOJ5JGwTxQE=;
-        b=hlkJPVVwsiYyzTTwV/xDsftI6azsoJ0dSj3C3n4/VNM0kGVjRij/vEuFRuSXf/u23d
-         2fmkQfK1JZXrvkBy2MoiS5J2wGCI56mZJ3JQMrHxCcdQ9NQEAb3xGbSgPLbM+7uMkfGS
-         uM1xqKowivQQwCPZlcgJvnSi9y43EjehwnVXkQYT0pl7Q5OaUOjepwF0ysGAG1d0332d
-         HiWjqQzd20ktDm9/iU4yBpq/KDsMGtu/8vGl4Q607S7ySYCcUOIOcNV/z9gIRDYOTSQQ
-         3Us3ph7ocLCNtkDz9QUPtQ/QHtxNdaaYtpsuUqesa8qrSi45rw2Cvp6z/9iGWVOLlLb3
-         +m7w==
-X-Gm-Message-State: APjAAAVt5lwM108wK45VhmizGwB96oABGOG1Y2TnAESLsqyhyKPAEIcW
-        n9sGMTzD101KhQPkpBi06e3JWlz69j1EW1NsFn0JexvzEoKQJCzxRMUcPAJCrXZhy75r5cWQhD/
-        8VOFZKPsRfuyq5Pk3T0/arWRhqxNSYNk=
-X-Received: by 2002:ac8:524a:: with SMTP id y10mr18951014qtn.325.1572987522080;
-        Tue, 05 Nov 2019 12:58:42 -0800 (PST)
-X-Google-Smtp-Source: APXvYqx24doZC2vszjGyzN8ksjbbXYHRswolJBukeRP8MxDNjSGnmrve+cRRNS5kWu9wK6cSyWOUJw==
-X-Received: by 2002:ac8:524a:: with SMTP id y10mr18950991qtn.325.1572987521831;
-        Tue, 05 Nov 2019 12:58:41 -0800 (PST)
-Received: from turing-police ([2601:5c0:c001:c9e1::359])
-        by smtp.gmail.com with ESMTPSA id k17sm9903799qkg.63.2019.11.05.12.58.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Nov 2019 12:58:40 -0800 (PST)
-From:   "Valdis Kl=?utf-8?Q?=c4=93?=tnieks" <valdis.kletnieks@vt.edu>
-X-Google-Original-From: "Valdis Kl=?utf-8?Q?=c4=93?=tnieks" <Valdis.Kletnieks@vt.edu>
-X-Mailer: exmh version 2.9.0 11/07/2018 with nmh-1.7+dev
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     "Theodore Ts'o" <tytso@mit.edu>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, Chao Yu <chao@kernel.org>,
-        linux-xfs@vger.kernel.org, Jan Kara <jack@suse.com>,
-        Arnd Bergmann <arnd@arndb.de>, linux-ext4@vger.kernel.org,
-        linux-kernel@vger.kernel.org,
-        linux-f2fs-devel@lists.sourceforge.net, linux-arch@vger.kernel.org
-Subject: Re: [PATCH 1/1] errno.h: Provide EFSBADCRC for everybody
-In-Reply-To: <20191105151736.GB4153244@magnolia>
-References: <20191105024618.194134-1-Valdis.Kletnieks@vt.edu>
- <20191105151736.GB4153244@magnolia>
-Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="==_Exmh_1572987519_14215P";
-         micalg=pgp-sha1; protocol="application/pgp-signature"
-Content-Transfer-Encoding: 7bit
-Date:   Tue, 05 Nov 2019 15:58:39 -0500
-Message-ID: <250143.1572987519@turing-police>
+        id S1729832AbfKEVXr (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Nov 2019 16:23:47 -0500
+Received: from sandeen.net ([63.231.237.45]:44880 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1729656AbfKEVXr (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Tue, 5 Nov 2019 16:23:47 -0500
+Received: from Liberator-6.local (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id AE19D1910F;
+        Tue,  5 Nov 2019 15:22:39 -0600 (CST)
+Subject: Re: XFS: possible memory allocation deadlock in kmem_alloc
+To:     Blake Golliher <bgolliher@box.com>
+Cc:     Chris Holcombe <cholcombe@box.com>,
+        "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+References: <CAL3_v4PZLtb4hVWksWR_tkia+A6rjeR2Xc3H-buCp7pMySxE2Q@mail.gmail.com>
+ <20191105000138.GT4153244@magnolia>
+ <c677bc5b-aa27-5f9b-65bd-5f03e4c06d7b@sandeen.net>
+ <CAC752AmahECFry9x=pvqDkwQUj1PEJjoWGa2KFG1uaTzT1Bbnw@mail.gmail.com>
+ <e34f4417-6ccf-3a2f-de74-edb1b54a31f5@sandeen.net>
+ <CAL3_v4NEKn6omXJYW3emfjApi7smW+c_sZyqWnQEpfDx4yPtdA@mail.gmail.com>
+ <450b41a6-4fd5-6244-229c-b7cc9512c2a7@sandeen.net>
+ <CAL3_v4P+HwxegYCO3czD56nT0rGTwZ=qgDLOWAoppOR=6mMZ+Q@mail.gmail.com>
+ <982194a0-4ab4-d3ca-dfc0-31427ace87fe@sandeen.net>
+ <CAC752AnZ4biDGk6V17URQm5YVp=MwZBhiMH8=t733zaypxUsmA@mail.gmail.com>
+ <33b9bde4-fd14-8754-f98a-ae0f363e76be@sandeen.net>
+ <CAC752A=y9PMEQ1e4mXskha1GFeKXWi8PsdBW-nX40pgFCYp1Uw@mail.gmail.com>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <efc16678-d10a-95cc-3be4-4f8866c34b33@sandeen.net>
+Date:   Tue, 5 Nov 2019 15:23:45 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.1
+MIME-Version: 1.0
+In-Reply-To: <CAC752A=y9PMEQ1e4mXskha1GFeKXWi8PsdBW-nX40pgFCYp1Uw@mail.gmail.com>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
---==_Exmh_1572987519_14215P
-Content-Type: text/plain; charset=us-ascii
+On 11/5/19 3:01 PM, Blake Golliher wrote:
+> OK. Does the stacktrace show up in dmesg?  we have kernel.* in rsyslog going to /var/log/kern.log will it go there?  We capture 5 samples of 
+> 
+> /sys/kernel/debug/tracing/stack_trace
+> 
+> 
+> While the kmem_alloc was being pushed into dmesg.  I set dmesg -n 8 and I'll set xfs_error_level to 11 again and see if we can get a stacktrace.  Where do I look?
 
-On Tue, 05 Nov 2019 07:17:36 -0800, "Darrick J. Wong" said:
-> On Mon, Nov 04, 2019 at 09:46:14PM -0500, Valdis Kletnieks wrote:
-> > Four filesystems have their own defines for this. Move it
-> > into errno.h so it's defined in just one place.
-> >
-> > Signed-off-by: Valdis Kletnieks <Valdis.Kletnieks@vt.edu>
->
-> Acked-by: Darrick J. Wong <darrick.wong@oracle.com>
->
-> You can build all six filesystems with both this and the EFSCORRUPTED
-> patch applied, correct?
+dmesg
 
-I can.  But it was pointed out to me that it blows up on some architectures..
+-Eric
 
-
-
---==_Exmh_1572987519_14215P
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Comment: Exmh version 2.9.0 11/07/2018
-
-iQIVAwUBXcHifwdmEQWDXROgAQLj5RAApcBiDjlLyeNreRjX2DmNwO+Ua9G5e5Sp
-eXKK/n2L2aQzyRQz7vGUMquNdBYorbtXuzT13bysejTkkkISSGz9lABhFZibT3n5
-EUxZmFM8LKoRYx+sAkw3sHfwj4pmLhuz3O5GXA3IkEn57++QiOoi+QR01H7B6KIU
-2W2NoauIR6t5hiO83EIpioJq07WOm1QP46diNozGGCskSwgEeJVXnWMNoIS23Xc7
-OK1FlYHnJ0wxDtnuzCEb9rOoi7u1Fr3FXTwpLo5V2krxLdW+jYhIRSoK+UPM0yky
-HIKCcTErRDckrbcT4+T6uszVrt+tXLdZE/mWgHLqbWnfB3g3Hh4C1ccX7TWqAG5S
-63ok39pe6rDa5sTRwHhEhIfBKOWXhGA1XNay3cWCgBroEwPpz0Zhy8xBP397bwZA
-7RubcSMY6Ct4tTUsS/8Ocmo/U0Kuo6k3El246di3UILbLQ1hvUXBeHtBbNKD0u4u
-nHhCqndqK0JAluIzlkpqVkcFXSWBlzlxfpNNNpgrr3aIGkwFWjJnsgkhB9T0cT4L
-8gK8W3Ly4V8A+oYoI4MgZ1LJ+jN/y7aDpDMHL3mjBECucfSmvaZLbRTOiAN7OHdz
-J7lkyAPaFi9NCVNYzS4tKLPOQcgJIA+GMCfSGmEAWiW07o2qb62I1kJz2vSkiTQC
-j0Tlv0TH9BI=
-=1Y8S
------END PGP SIGNATURE-----
-
---==_Exmh_1572987519_14215P--
