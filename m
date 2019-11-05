@@ -4,58 +4,48 @@ X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 X-Spam-Level: 
 X-Spam-Status: No, score=-2.0 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,
-	USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=no autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F28E3CA9ED5
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 00:33:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 5E50ECA9ED3
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 00:44:19 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id C852320869
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 00:33:22 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 2739C2080F
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 00:44:19 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="CqMn8kbl"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="dcM4L/hn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1729521AbfKEAdR (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 19:33:17 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:40998 "EHLO
+        id S1729654AbfKEAoS (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 19:44:18 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:42506 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729137AbfKEAdR (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 19:33:17 -0500
+        with ESMTP id S1729632AbfKEAoS (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 19:44:18 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=In-Reply-To:Content-Type:MIME-Version
         :References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
         Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=wV0F6yJ/zqq3L+kv3YDjr6sdISX9U0BeCs3/AfpD054=; b=CqMn8kblt+lfvWoNWdFlWsw+b
-        Zo46970njfdNwt3QRWM9lbscwc9/jQaLVesxeNBKAShK9e2cQSjxsjUhS85C40bAyBWBTnuyb7Ljz
-        NFHdKav6y9rx8vgst5V757cV/xnMg/KxvvJ92IgGrgAJexdSuAzPinKiRSm0CQCvzN9mhSp/oJxcU
-        uVGuEX3Ylo1UfXkB000SrVabC4tr09oc1IoKbg5Y65woTviF+Q6aeWyikT/pLKGhgOCpGt4OU7Vbp
-        hpVnjG0kzFHdcpRDz6sSNaFh6pfqWMnvpykaV+euK5DXGTAWchpaXUTLXXI897GRsGrKXgClCt5yq
-        /EGmKJ7uA==;
+         bh=zlbQH+2y8LoZ/+HLM8Bqt3U7ypSfCQueE9jZw7HNrT0=; b=dcM4L/hn13vPtF4DIJcQeP5eS
+        k7VXU8yYekUhZxuAfH7Lc+ewgT1ztqE8IAUZJDfhFwqyk3+rXQQb1tcxJ62a+t9Mh8xNVeCVx0Gmu
+        4hAsjUei0Q2fQ5Ppoj2XA2YmCKLhKDr4y33VjD/ovqAqAqzFcvso8i7VfQe8tddbtQWpHCa0YACdh
+        riICAb9OeNUreVC0ZUfTcujhQZ0l4okFnovQHgtfkyZADNEsskVmcT4nKu5oM2vh5mtEKPKGvQfCT
+        x5yoENCUt5MJASiqEE0Yx9vFyPqwG19qh8xItVp6uZNUuG5Eybje/z7O1PJmjthqZF46g2U+LNw+C
+        DhlSe5EEg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iRmmQ-00061c-1a; Tue, 05 Nov 2019 00:33:06 +0000
-Date:   Mon, 4 Nov 2019 16:33:06 -0800
+        id 1iRmxG-0006Ei-BE; Tue, 05 Nov 2019 00:44:18 +0000
+Date:   Mon, 4 Nov 2019 16:44:18 -0800
 From:   Christoph Hellwig <hch@infradead.org>
-To:     Valdis Kletnieks <valdis.kletnieks@vt.edu>
-Cc:     "Darrick J . Wong" <darrick.wong@oracle.com>,
-        Jan Kara <jack@suse.cz>, Theodore Ts'o <tytso@mit.edu>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Gao Xiang <xiang@kernel.org>, Chao Yu <chao@kernel.org>,
-        Andreas Dilger <adilger.kernel@dilger.ca>,
-        Jaegeuk Kim <jaegeuk@kernel.org>, linux-xfs@vger.kernel.org,
-        Jan Kara <jack@suse.com>, Arnd Bergmann <arnd@arndb.de>,
-        linux-fsdevel@vger.kernel.org, devel@driverdev.osuosl.org,
-        linux-kernel@vger.kernel.org, linux-erofs@lists.ozlabs.org,
-        linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
-        linux-arch@vger.kernel.org
-Subject: Re: [PATCH 10/10] errno.h: Provide EFSCORRUPTED for everybody
-Message-ID: <20191105003306.GA22791@infradead.org>
-References: <20191104014510.102356-1-Valdis.Kletnieks@vt.edu>
- <20191104014510.102356-11-Valdis.Kletnieks@vt.edu>
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>
+Cc:     linux-xfs@vger.kernel.org
+Subject: Re: [PATCH 1/6] xfs: decrease indenting problems in xfs_dabuf_map
+Message-ID: <20191105004418.GA22247@infradead.org>
+References: <157281984457.4151907.11281776450827989936.stgit@magnolia>
+ <157281985084.4151907.11548453010559620958.stgit@magnolia>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20191104014510.102356-11-Valdis.Kletnieks@vt.edu>
+In-Reply-To: <157281985084.4151907.11548453010559620958.stgit@magnolia>
 User-Agent: Mutt/1.12.1 (2019-06-15)
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 Sender: linux-xfs-owner@vger.kernel.org
@@ -63,8 +53,14 @@ Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Sun, Nov 03, 2019 at 08:45:06PM -0500, Valdis Kletnieks wrote:
-> There's currently 6 filesystems that have the same #define. Move it
-> into errno.h so it's defined in just one place.
+On Sun, Nov 03, 2019 at 02:24:10PM -0800, Darrick J. Wong wrote:
+> From: Darrick J. Wong <darrick.wong@oracle.com>
+> 
+> Refactor the code that complains when a dir/attr mapping doesn't exist
+> but the caller requires a mapping.  This small restructuring helps us to
+> reduce the indenting level.
 
-And 4 out of 6 also define EFSBADCRC, so please lift that as well.
+I have to say I hate the calling convention here..  But the actual
+change is perfectly fine, so:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
