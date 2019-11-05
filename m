@@ -2,122 +2,139 @@ Return-Path: <SRS0=V6/9=Y5=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.4 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
-	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,
-	SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,USER_AGENT_SANE_1 autolearn=no
+X-Spam-Status: No, score=-9.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
+	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
+	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=unavailable
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FE43CA9ED3
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 02:08:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 8E8A8CA9ED5
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 02:41:34 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 7377D21882
-	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 02:08:01 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 64F96218BA
+	for <linux-xfs@archiver.kernel.org>; Tue,  5 Nov 2019 02:41:34 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="egenY8IO"
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lfwUTtRn"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730048AbfKECIA (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Mon, 4 Nov 2019 21:08:00 -0500
-Received: from aserp2120.oracle.com ([141.146.126.78]:40288 "EHLO
-        aserp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729428AbfKECIA (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 21:08:00 -0500
-Received: from pps.filterd (aserp2120.oracle.com [127.0.0.1])
-        by aserp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA524ScT173210;
-        Tue, 5 Nov 2019 02:07:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
- : subject : message-id : references : mime-version : content-type :
- in-reply-to; s=corp-2019-08-05;
- bh=KU1akmE4658chpedvcpdU1xHvUmPgjCC1K7YTCzZ8zY=;
- b=egenY8IOBR4+Rp0B3MYaGCpyHw407eRWiIXQVG8iIGwgXzVz13V/mP9Bejxs1OI0+QL6
- LrQ2c0AiRf9XPa2qcy6eqx7DMTqoK4gXg2YNSqhby0crdpka0F8jiHOVRZ4oX/jv+E89
- Gc7XXfbHPf09C3l/UJysv9jxyawPsf8yJSTGDfABvoHCs9oe3XI70R9E1leCmz2EKBEI
- aH3EgN0yxS6IZIPpLQqXgJiJ8C7QlRVMc7aiiLpieQsvVDCjUqEbBFlGrMy+WaKPM8DV
- R2hzOtV8EapISQVsYhOgJ8ZA7oxcwGztueQP/VntM+mhb+3t6qbPi/HIbcXMWfPyAjcO ZA== 
-Received: from userp3030.oracle.com (userp3030.oracle.com [156.151.31.80])
-        by aserp2120.oracle.com with ESMTP id 2w11rpu47q-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Nov 2019 02:07:56 +0000
-Received: from pps.filterd (userp3030.oracle.com [127.0.0.1])
-        by userp3030.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA51x1kZ179981;
-        Tue, 5 Nov 2019 02:05:56 GMT
-Received: from aserv0122.oracle.com (aserv0122.oracle.com [141.146.126.236])
-        by userp3030.oracle.com with ESMTP id 2w1k8vw6un-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Tue, 05 Nov 2019 02:05:55 +0000
-Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
-        by aserv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA525sT4014628;
-        Tue, 5 Nov 2019 02:05:54 GMT
-Received: from localhost (/67.169.218.210)
-        by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Mon, 04 Nov 2019 18:05:54 -0800
-Date:   Mon, 4 Nov 2019 18:05:53 -0800
-From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     Christoph Hellwig <hch@lst.de>
-Cc:     linux-xfs@vger.kernel.org
-Subject: Re: [PATCH 15/34] xfs: add a bests pointer to struct
- xfs_dir3_icfree_hdr
-Message-ID: <20191105020553.GA4153244@magnolia>
-References: <20191101220719.29100-1-hch@lst.de>
- <20191101220719.29100-16-hch@lst.de>
- <20191104202145.GP4153244@magnolia>
- <20191105014403.GD32531@lst.de>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20191105014403.GD32531@lst.de>
-User-Agent: Mutt/1.9.4 (2018-02-28)
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=2 malwarescore=0
- phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911050014
-X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9431 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=2 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
- lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911050015
+        id S1729855AbfKECld (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Mon, 4 Nov 2019 21:41:33 -0500
+Received: from mail-pg1-f195.google.com ([209.85.215.195]:46420 "EHLO
+        mail-pg1-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1729717AbfKECld (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Mon, 4 Nov 2019 21:41:33 -0500
+Received: by mail-pg1-f195.google.com with SMTP id f19so12909931pgn.13;
+        Mon, 04 Nov 2019 18:41:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20161025;
+        h=from:to:cc:subject:date:message-id;
+        bh=f1f0vDscinwQtWcesf13Q2HxOIzoI+V95YhD2P5lQ4k=;
+        b=lfwUTtRnMc/ahhwW/SyMKlDB8soPe3v4yDRpYSX6KvSG5krK22826He7VKVVvUDjrJ
+         BtqdScNpsyOMYo0RXuhLHkQrA8MY0ufkp47+sMsBCYIC+ljHNnAidFIpicz+hTShxuYB
+         yWoxZHVWD5MOCjr3qeWYgciONmKujY2npPdlvlryUgWI7CIfup6UzqqLBn7d56ghzOQ4
+         GsUcaDtFtblUZ+WsAfEEDRCq9vPYQGvrH4MHGzvxEhowW1pWW9SZ+3C+hUWDQAUKj+qS
+         CNrTQWMmo5G/ZrF6lj7JW7cWjMrHQEqPfOgsm93dAAtpmcr8W97YE0FDkBGWTxuKF9oR
+         RXzA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20161025;
+        h=x-gm-message-state:from:to:cc:subject:date:message-id;
+        bh=f1f0vDscinwQtWcesf13Q2HxOIzoI+V95YhD2P5lQ4k=;
+        b=PzvUdPXGexwemXH08gHeYpyFzK1ZLiFmETWvNSpFikXoDClGYRd1nXHWbcUJJB1w/3
+         J00V4T9+mzLb7lMxx7H23pEzsM0DhBADcZJ4xt5Y8eIi6+kFoSV8J0tGdGruexjJCivx
+         BFLoSOayf0Yn43rLiFj7ft3vnQ0bs/9cLnGqQVGcS3GAPpAQKyZeBmWQ77ZWX5ZumuKE
+         cLakl44Eg+mRCJDoOHcdC7MSJC4LVbfRoswpulVPhGFutkLF4iN6ttram9rehvNRIUhR
+         AwNcnkQictF/wuBbqVs3RucJLAAFm/D6AvjIM0Joz8kuEB+66yGmjqdXrE9RK+teOPTW
+         VKHQ==
+X-Gm-Message-State: APjAAAVgM8zDUaBLrClz2qQ/4nsoaYJizzN1cyz2VcMbCRAYL/WJefnu
+        q1KOThqMZiC6L8JgUinpR1Rdh3Y=
+X-Google-Smtp-Source: APXvYqx7rxZyryLcopEOy4EEbyXfmPrih1cM1zXM2mWlqO7+TWz2jVG63NVigivzxZ0z6bT76wQEgg==
+X-Received: by 2002:a62:fb15:: with SMTP id x21mr33281798pfm.79.1572921691203;
+        Mon, 04 Nov 2019 18:41:31 -0800 (PST)
+Received: from he-cluster.localdomain (67.216.221.250.16clouds.com. [67.216.221.250])
+        by smtp.gmail.com with ESMTPSA id j25sm16199535pfi.113.2019.11.04.18.41.30
+        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 04 Nov 2019 18:41:30 -0800 (PST)
+From:   kaixuxia <xiakaixu1987@gmail.com>
+X-Google-Original-From: kaixuxia <kaixuxia@tencent.com>
+To:     fstests@vger.kernel.org
+Cc:     linux-xfs@vger.kernel.org, guaneryu@gmail.com, bfoster@redhat.com,
+        newtongao@tencent.com, jasperwang@tencent.com
+Subject: [PATCH] fsstress: show the real file id and parid in rmdir() and unlink()
+Date:   Tue,  5 Nov 2019 10:41:26 +0800
+Message-Id: <1572921686-3441-1-git-send-email-kaixuxia@tencent.com>
+X-Mailer: git-send-email 1.8.3.1
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Tue, Nov 05, 2019 at 02:44:03AM +0100, Christoph Hellwig wrote:
-> On Mon, Nov 04, 2019 at 12:21:45PM -0800, Darrick J. Wong wrote:
-> > > @@ -233,6 +233,7 @@ xfs_dir2_free_hdr_from_disk(
-> > >  		to->firstdb = be32_to_cpu(from3->hdr.firstdb);
-> > >  		to->nvalid = be32_to_cpu(from3->hdr.nvalid);
-> > >  		to->nused = be32_to_cpu(from3->hdr.nused);
-> > > +		to->bests = (void *)from3 + sizeof(struct xfs_dir3_free_hdr);
-> > 
-> > Urgh, isn't void pointer arithmetic technically illegal according to C?
-> 
-> It is not specified in ISO C, but clearly specified in the GNU C
-> extensions and used all over the kernel.
+The source file id and parentid are overwritten by del_from_flist()
+call, so should show the actually values.
 
-Just out of curiosity, do you know if clang supports that extension?
+Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+---
+ ltp/fsstress.c | 18 ++++++++++++++----
+ 1 file changed, 14 insertions(+), 4 deletions(-)
 
-Once in a while we get patches from them to fix various clang warnings,
-and at least as of a few years ago clang got grouchy about void pointer
-arithmetic.
+diff --git a/ltp/fsstress.c b/ltp/fsstress.c
+index 0125571..9f5ec1d 100644
+--- a/ltp/fsstress.c
++++ b/ltp/fsstress.c
+@@ -4499,6 +4499,8 @@ rmdir_f(int opno, long r)
+ 	int		e;
+ 	pathname_t	f;
+ 	fent_t		*fep;
++	int		oldid;
++	int		oldparid;
+ 	int		v;
+ 
+ 	init_pathname(&f);
+@@ -4510,13 +4512,16 @@ rmdir_f(int opno, long r)
+ 	}
+ 	e = rmdir_path(&f) < 0 ? errno : 0;
+ 	check_cwd();
+-	if (e == 0)
++	if (e == 0) {
++		oldid = fep->id;
++		oldparid = fep->parent;
+ 		del_from_flist(FT_DIR, fep - flist[FT_DIR].fents);
++	}
+ 	if (v) {
+ 		printf("%d/%d: rmdir %s %d\n", procid, opno, f.path, e);
+ 		if (e == 0)
+ 			printf("%d/%d: rmdir del entry: id=%d,parent=%d\n",
+-				procid, opno, fep->id, fep->parent);
++				procid, opno, oldid, oldparid);
+ 	}
+ 	free_pathname(&f);
+ }
+@@ -4746,6 +4751,8 @@ unlink_f(int opno, long r)
+ 	pathname_t	f;
+ 	fent_t		*fep;
+ 	flist_t		*flp;
++	int		oldid;
++	int		oldparid;
+ 	int		v;
+ 
+ 	init_pathname(&f);
+@@ -4757,13 +4764,16 @@ unlink_f(int opno, long r)
+ 	}
+ 	e = unlink_path(&f) < 0 ? errno : 0;
+ 	check_cwd();
+-	if (e == 0)
++	if (e == 0) {
++		oldid = fep->id;
++		oldparid = fep->parent;
+ 		del_from_flist(flp - flist, fep - flp->fents);
++	}
+ 	if (v) {
+ 		printf("%d/%d: unlink %s %d\n", procid, opno, f.path, e);
+ 		if (e == 0)
+ 			printf("%d/%d: unlink del entry: id=%d,parent=%d\n",
+-				procid, opno, fep->id, fep->parent);
++				procid, opno, oldid, oldparid);
+ 	}
+ 	free_pathname(&f);
+ }
+-- 
+1.8.3.1
 
-> > In any case, shouldn't this cast through struct xfs_dir3_free instead of
-> > open-coding details of the disk format that we've already captured?  The
-> > same question also applies to the other patches that add pointers to
-> > ondisk leaf and intnode pointers into the incore header struct.
-> 
-> I don't really understand that sentence.  What would do you instead?
-
-if (xfs_sb_version_hascrc(&mp->m_sb)) {
-	struct xfs_dir3_free	*from3 = (struct xfs_dir3_free *)from;
-
-	...
-	to->nused = be32_to_cpu(from3->hdr.nused);
-	to->bests = &from3->bests[0];
-}
-
-Since we're already passing around pointers to the xfs_dir[23]_free
-structure, we might as well use it instead of open-coding the arithmetic.
-Sorry that wasn't clear. :/
-
---D
