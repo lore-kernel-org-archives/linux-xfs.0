@@ -2,121 +2,102 @@ Return-Path: <SRS0=KqY6=Y6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
-	autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
+	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,
+	SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS autolearn=ham autolearn_force=no
+	version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E9003C5DF63
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 18:53:48 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4B3C8C5DF63
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 19:04:09 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id BE56820869
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 18:53:48 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 100052187F
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 19:04:09 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="GiYqP6St"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727341AbfKFSxs (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Nov 2019 13:53:48 -0500
-Received: from sandeen.net ([63.231.237.45]:47946 "EHLO sandeen.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1727319AbfKFSxs (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
-        Wed, 6 Nov 2019 13:53:48 -0500
-Received: from [10.0.0.4] (liberator [10.0.0.4])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        id S1728492AbfKFTEI (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Nov 2019 14:04:08 -0500
+Received: from us-smtp-1.mimecast.com ([205.139.110.61]:37631 "EHLO
+        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1727410AbfKFTEI (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Nov 2019 14:04:08 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1573067046;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding;
+        bh=mWTSqOOTt3Dk2ZPvesbfsapc/5QXTzyY0nl7eR6Zqto=;
+        b=GiYqP6StSTAe7U2q7hRP7B0BusD5DgzMJw+XtiwxnaUHYl5pvfYw+j+6xYcD5H3jqs48z1
+        ZgJM8yMjQCyitIAdyoK5amV2ShKkC537aIj5DUnCvuvw+q2g9H017KZuo3miq1U+Xf/CoK
+        LBEW68dm9YiOrvo9y7y89CKSGF3rEu0=
+Received: from mimecast-mx01.redhat.com (mimecast-mx01.redhat.com
+ [209.132.183.4]) (Using TLS) by relay.mimecast.com with ESMTP id
+ us-mta-434-y9o0P_5YOvyqcIpOWoYuDA-1; Wed, 06 Nov 2019 14:04:05 -0500
+Received: from smtp.corp.redhat.com (int-mx07.intmail.prod.int.phx2.redhat.com [10.5.11.22])
+        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
         (No client certificate requested)
-        by sandeen.net (Postfix) with ESMTPSA id 8A0DB17DE3;
-        Wed,  6 Nov 2019 12:52:39 -0600 (CST)
-Subject: Re: [PATCH] xfs_io/lsattr: expose FS_XFLAG_HASATTR flag
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     Amir Goldstein <amir73il@gmail.com>,
-        linux-xfs <linux-xfs@vger.kernel.org>
-References: <20191106055855.31517-1-amir73il@gmail.com>
- <20191106160139.GK4153244@magnolia>
- <CAOQ4uxhg=44nShrnmVYAgCGMno4QaeAZKc5cW8bko-dVOd_Scw@mail.gmail.com>
- <ab290f98-0992-43bd-9680-ef3db5142c8e@sandeen.net>
- <20191106185238.GM4153244@magnolia>
-From:   Eric Sandeen <sandeen@sandeen.net>
-Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
- 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 pA==
-Message-ID: <21d97237-03ef-7388-dbca-ab76ba304205@sandeen.net>
-Date:   Wed, 6 Nov 2019 12:53:46 -0600
-User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
- Gecko/20100101 Thunderbird/68.2.1
+        by mimecast-mx01.redhat.com (Postfix) with ESMTPS id 9C63D800C72;
+        Wed,  6 Nov 2019 19:04:03 +0000 (UTC)
+Received: from max.com (unknown [10.40.206.2])
+        by smtp.corp.redhat.com (Postfix) with ESMTP id 3FD991001B35;
+        Wed,  6 Nov 2019 19:04:02 +0000 (UTC)
+From:   Andreas Gruenbacher <agruenba@redhat.com>
+To:     linux-xfs@vger.kernel.org
+Cc:     Alexander Viro <viro@zeniv.linux.org.uk>,
+        linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
+        Andreas Gruenbacher <agruenba@redhat.com>
+Subject: [PATCH] iomap: Fix overflow in iomap_page_mkwrite
+Date:   Wed,  6 Nov 2019 20:04:00 +0100
+Message-Id: <20191106190400.20969-1-agruenba@redhat.com>
 MIME-Version: 1.0
-In-Reply-To: <20191106185238.GM4153244@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 2.84 on 10.5.11.22
+X-MC-Unique: y9o0P_5YOvyqcIpOWoYuDA-1
+X-Mimecast-Spam-Score: 0
+Content-Type: text/plain; charset=WINDOWS-1252
+Content-Transfer-Encoding: quoted-printable
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
+On architectures where ssize_t is wider than pgoff_t, the expression
+((page->index + 1) << PAGE_SHIFT) can overflow.  Rewrite to use the page
+offset, which we already compute here anyway.
 
+Signed-off-by: Andreas Gruenbacher <agruenba@redhat.com>
+---
+ fs/iomap/buffered-io.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-On 11/6/19 12:52 PM, Darrick J. Wong wrote:
-> On Wed, Nov 06, 2019 at 12:45:55PM -0600, Eric Sandeen wrote:
->> On 11/6/19 12:29 PM, Amir Goldstein wrote:
+diff --git a/fs/iomap/buffered-io.c b/fs/iomap/buffered-io.c
+index e25901ae3ff4..a30ea7ecb790 100644
+--- a/fs/iomap/buffered-io.c
++++ b/fs/iomap/buffered-io.c
+@@ -1040,20 +1040,19 @@ vm_fault_t iomap_page_mkwrite(struct vm_fault *vmf,=
+ const struct iomap_ops *ops)
+=20
+ =09lock_page(page);
+ =09size =3D i_size_read(inode);
+-=09if ((page->mapping !=3D inode->i_mapping) ||
+-=09    (page_offset(page) > size)) {
++=09offset =3D page_offset(page);
++=09if (page->mapping !=3D inode->i_mapping || offset > size) {
+ =09=09/* We overload EFAULT to mean page got truncated */
+ =09=09ret =3D -EFAULT;
+ =09=09goto out_unlock;
+ =09}
+=20
+ =09/* page is wholly or partially inside EOF */
+-=09if (((page->index + 1) << PAGE_SHIFT) > size)
++=09if (offset > size - PAGE_SIZE)
+ =09=09length =3D offset_in_page(size);
+ =09else
+ =09=09length =3D PAGE_SIZE;
+=20
+-=09offset =3D page_offset(page);
+ =09while (length > 0) {
+ =09=09ret =3D iomap_apply(inode, offset, length,
+ =09=09=09=09IOMAP_WRITE | IOMAP_FAULT, ops, page,
+--=20
+2.20.1
 
->>>>>  #define CHATTR_XFLAG_LIST    "r"/*p*/"iasAdtPneEfSxC"
->>>>
->>>> /me wonders if this should have /*X*/ commented out the same way we do
->>>> for "p".
->>>
->>> Sure. Eric, please let me know if you want a re-submit for this.
->>
->> Ummm I'll just stage it now and add it so I don't forget
->>
->> like:
->>
->> #define CHATTR_XFLAG_LIST    "r"/*p*/"iasAdtPneEfS"/*X*/"xC"
->>
->> that, right?
-> 
-> Right.
-
-
-Actually for consistent ordering w/ the array, I guess maybe
-
-#define CHATTR_XFLAG_LIST    "r"/*p*/"iasAdtPneEfSxC"/*X*/
-
-Thanks
-
--Eric
