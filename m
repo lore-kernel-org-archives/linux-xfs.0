@@ -2,128 +2,123 @@ Return-Path: <SRS0=KqY6=Y6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
-	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
+	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
 	USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D8332C5DF63
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 15:59:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9B0B2C5DF63
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 16:03:53 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id B1E1421882
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 15:59:47 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 6DBCA20650
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 16:03:53 +0000 (UTC)
+Authentication-Results: mail.kernel.org;
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nt+Nfy5O"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727206AbfKFP7r (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Nov 2019 10:59:47 -0500
-Received: from youngberry.canonical.com ([91.189.89.112]:57029 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1726926AbfKFP7q (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Nov 2019 10:59:46 -0500
-Received: from 1.general.cking.uk.vpn ([10.172.193.212])
-        by youngberry.canonical.com with esmtpsa (TLS1.2:ECDHE_RSA_AES_128_GCM_SHA256:128)
-        (Exim 4.86_2)
-        (envelope-from <colin.king@canonical.com>)
-        id 1iSNij-0003E2-0Y; Wed, 06 Nov 2019 15:59:45 +0000
-Subject: Re: [PATCH][next] xfs: remove redundant assignment to variable error
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, kernel-janitors@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-References: <20191106155248.266489-1-colin.king@canonical.com>
- <20191106155631.GJ4153244@magnolia>
-From:   Colin Ian King <colin.king@canonical.com>
-Autocrypt: addr=colin.king@canonical.com; prefer-encrypt=mutual; keydata=
- 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
-Message-ID: <cbb99652-c6b2-c81c-128d-6d85be04fddc@canonical.com>
-Date:   Wed, 6 Nov 2019 15:59:44 +0000
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101
- Thunderbird/68.2.1
+        id S1727192AbfKFQDw (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Nov 2019 11:03:52 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:60976 "EHLO
+        userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1727028AbfKFQDw (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Nov 2019 11:03:52 -0500
+Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA6G37hh076574;
+        Wed, 6 Nov 2019 16:03:44 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=ESpk+ubONiAWIAit/WIiPvt1eR9pT3tlJuXga5lf96g=;
+ b=nt+Nfy5O2UBsQKdTcVWXI8aeg8UEvsZGo62VSytmdiYwMg4A41yEVoijOFe+WpwTXivT
+ r4yZKErfiATt/vNzbsYbPm1sFDGx0clJrIp2lygUFJ5CKB2RJqqrTrZQdg3RahjuKDoR
+ nz4TqD1U6rlBW5GvPu5krqzKWEBqCiM16W58yBh+oxMbXxT8TY8VCxR0zB17PysXhmfU
+ wUx+mZeQ5hH5FNyyBlJzm9z3EeEOC440czDmsUcPT3D0bA/VV3TA7nHrZmtAmvC1iUbF
+ W9qiIRLid+XF1vPt3/85r6NSidhW5qhZwZ7KDRGL8lz1uG3CRykUI3nWy9vMHhwv1l+g WQ== 
+Received: from aserp3020.oracle.com (aserp3020.oracle.com [141.146.126.70])
+        by userp2120.oracle.com with ESMTP id 2w12erfknm-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 Nov 2019 16:03:44 +0000
+Received: from pps.filterd (aserp3020.oracle.com [127.0.0.1])
+        by aserp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA6FxSk8176028;
+        Wed, 6 Nov 2019 16:01:43 GMT
+Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
+        by aserp3020.oracle.com with ESMTP id 2w3vr329jg-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Wed, 06 Nov 2019 16:01:43 +0000
+Received: from abhmp0010.oracle.com (abhmp0010.oracle.com [141.146.116.16])
+        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA6G1gJT011468;
+        Wed, 6 Nov 2019 16:01:42 GMT
+Received: from localhost (/67.169.218.210)
+        by default (Oracle Beehive Gateway v4.0)
+        with ESMTP ; Wed, 06 Nov 2019 08:01:42 -0800
+Date:   Wed, 6 Nov 2019 08:01:39 -0800
+From:   "Darrick J. Wong" <darrick.wong@oracle.com>
+To:     Amir Goldstein <amir73il@gmail.com>
+Cc:     Eric Sandeen <sandeen@sandeen.net>, linux-xfs@vger.kernel.org
+Subject: Re: [PATCH] xfs_io/lsattr: expose FS_XFLAG_HASATTR flag
+Message-ID: <20191106160139.GK4153244@magnolia>
+References: <20191106055855.31517-1-amir73il@gmail.com>
 MIME-Version: 1.0
-In-Reply-To: <20191106155631.GJ4153244@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20191106055855.31517-1-amir73il@gmail.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9433 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
+ phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.0.1-1908290000 definitions=main-1911060154
+X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9433 signatures=668685
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
+ definitions=main-1911060154
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 06/11/2019 15:56, Darrick J. Wong wrote:
-> On Wed, Nov 06, 2019 at 03:52:48PM +0000, Colin King wrote:
->> From: Colin Ian King <colin.king@canonical.com>
->>
->> Variable error is being initialized with a value that is never read
->> and is being re-assigned a couple of statements later on. The
->> assignment is redundant and hence can be removed.
->>
->> Addresses-Coverity: ("Unused value")
+On Wed, Nov 06, 2019 at 07:58:55AM +0200, Amir Goldstein wrote:
+> For efficient check if file has xattrs.
 > 
-> Er... is there a coverity id that goes with this?
+> Signed-off-by: Amir Goldstein <amir73il@gmail.com>
+> ---
+>  io/attr.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/io/attr.c b/io/attr.c
+> index b713d017..ba88ef16 100644
+> --- a/io/attr.c
+> +++ b/io/attr.c
+> @@ -37,6 +37,7 @@ static struct xflags {
+>  	{ FS_XFLAG_FILESTREAM,		"S", "filestream"	},
+>  	{ FS_XFLAG_DAX,			"x", "dax"		},
+>  	{ FS_XFLAG_COWEXTSIZE,		"C", "cowextsize"	},
+> +	{ FS_XFLAG_HASATTR,		"X", "has-xattr"	},
+>  	{ 0, NULL, NULL }
+>  };
+>  #define CHATTR_XFLAG_LIST	"r"/*p*/"iasAdtPneEfSxC"
 
-Unfortunately it is a private one, so it does not make sense to use it.
+/me wonders if this should have /*X*/ commented out the same way we do
+for "p".
 
-> 
-> Patch looks fine otherwise.
-> 
-> --D
-> 
->> Signed-off-by: Colin Ian King <colin.king@canonical.com>
->> ---
->>  fs/xfs/xfs_super.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/fs/xfs/xfs_super.c b/fs/xfs/xfs_super.c
->> index b3188ea49413..2302f67d1a18 100644
->> --- a/fs/xfs/xfs_super.c
->> +++ b/fs/xfs/xfs_super.c
->> @@ -1362,7 +1362,7 @@ xfs_fc_fill_super(
->>  {
->>  	struct xfs_mount	*mp = sb->s_fs_info;
->>  	struct inode		*root;
->> -	int			flags = 0, error = -ENOMEM;
->> +	int			flags = 0, error;
->>  
->>  	mp->m_super = sb;
->>  
->> -- 
->> 2.20.1
->>
+Otherwise, the patch looks ok to me...
 
+/me *also* wonders how many filesystems fail to implement this flag but
+support xattrs.
+
+Oh.  All of them.  Though I assume overlayfs is being patched... :)
+
+--D
+
+> @@ -65,6 +66,7 @@ lsattr_help(void)
+>  " S -- enable filestreams allocator for this directory\n"
+>  " x -- Use direct access (DAX) for data in this file\n"
+>  " C -- for files with shared blocks, observe the inode CoW extent size value\n"
+> +" X -- file has extended attributes (cannot be changed using chattr)\n"
+>  "\n"
+>  " Options:\n"
+>  " -R -- recursively descend (useful when current file is a directory)\n"
+> -- 
+> 2.17.1
+> 
