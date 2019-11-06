@@ -2,98 +2,120 @@ Return-Path: <SRS0=KqY6=Y6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-0.8 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,MAILING_LIST_MULTI,SPF_HELO_NONE,
-	SPF_PASS autolearn=no autolearn_force=no version=3.4.0
+X-Spam-Status: No, score=-2.2 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	MAILING_LIST_MULTI,SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=no
+	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67B84C5DF65
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 19:34:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0DB61C5DF63
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 19:47:21 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 34F0D217F5
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 19:34:42 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MwbE77lF"
+	by mail.kernel.org (Postfix) with ESMTP id DD801217F4
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 19:47:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1727208AbfKFTel (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Wed, 6 Nov 2019 14:34:41 -0500
-Received: from us-smtp-2.mimecast.com ([207.211.31.81]:30327 "EHLO
-        us-smtp-delivery-1.mimecast.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1727547AbfKFTel (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Wed, 6 Nov 2019 14:34:41 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1573068880;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=qEO1LlS+wx20cugYICVdXzykrKwgfNh8MhubhOzG8Ws=;
-        b=MwbE77lFngTG6Dsq8xUz5kzfSbOyaNWI3YESv3YJL4sbCdWKUr7KaYe9RJzW4b9nWkYECq
-        PvSB6W4Jz8AZVsHBV7udsYf0py6B/Rm7YWVV+3HAuM1QEaPxviSNufmIIuO+7alMo2dFr4
-        gNoKNTkSvKyL/tHwQgGqwxBzB4suK9k=
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
- [209.85.210.70]) (Using TLS) by relay.mimecast.com with ESMTP id
- us-mta-391-CUQm_jziNJGeALLR2cNdJg-1; Wed, 06 Nov 2019 14:34:39 -0500
-Received: by mail-ot1-f70.google.com with SMTP id s5so15269439otk.19
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Nov 2019 11:34:39 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:mime-version:references:in-reply-to:from:date
-         :message-id:subject:to:cc;
-        bh=2+4oqdhQ7XrescyUouTmBb2WkDtFgojtFKKsRM3EtqU=;
-        b=RwmA7PFdnjPdTDV96li3NeyKGesB5Ctk5D0bsN8bsqfU/xpWYJMuKdFESeE1SCfyC6
-         Qa0TnNZmeLaYrnpHBW9m4RRFaYw28mZMQ9Sb/UnjHMBmA3CBGvDnGrJ2y2fH83EwGMCf
-         HHJDGd+CiM7/IZBD8G7ErTjFSw4o8Q+K+OrHLHLCqWMUnyQ1dEEgK8n+tW2YPOcOCg57
-         FpEDU7IfIUsOFPjC5erXjW0aEeHRSm1fzXmCqsKEomBZG4DzgWzhF25X0l3THZaSaeAd
-         glIk7UMu0PmMUvW53awO2ydBByA3AxZXmMRp0gZp0O6Bg+TKO3UAyEtXmiWEDCCELrz1
-         kM4w==
-X-Gm-Message-State: APjAAAUs1YSTQLXqpSWsiDMIdOX+NOAs4XRTFIj8boYZ2xEWbYbZFksI
-        xT38HobgWMs2R0A4DfyzYGOYHWfjGVNfwYkWbqsyxwnqD0eI5x3EXyHq5zj1WzhtKOr55FhGM+F
-        rpUmH3yCwt88inH1fSDImfKlWgRvIQZnxaRrd
-X-Received: by 2002:a05:6808:1cf:: with SMTP id x15mr3807582oic.147.1573068878067;
-        Wed, 06 Nov 2019 11:34:38 -0800 (PST)
-X-Google-Smtp-Source: APXvYqwPzYD92f6MsHAshLnXaaJ+RPJgHkX6+wC94uNc+LizG8qwMH31bwK+IWqpoAuDU814qf9pItQs92dqpJwrbxw=
-X-Received: by 2002:a05:6808:1cf:: with SMTP id x15mr3807551oic.147.1573068877746;
- Wed, 06 Nov 2019 11:34:37 -0800 (PST)
+        id S1728820AbfKFTrU (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Wed, 6 Nov 2019 14:47:20 -0500
+Received: from sandeen.net ([63.231.237.45]:50456 "EHLO sandeen.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1726713AbfKFTrU (ORCPT <rfc822;linux-xfs@vger.kernel.org>);
+        Wed, 6 Nov 2019 14:47:20 -0500
+Received: from [10.0.0.4] (liberator [10.0.0.4])
+        (using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+        (No client certificate requested)
+        by sandeen.net (Postfix) with ESMTPSA id CCC2E19114;
+        Wed,  6 Nov 2019 13:46:11 -0600 (CST)
+Subject: Re: [PATCH 2/3] xfs_scrub: implement deferred description string
+ rendering
+To:     "Darrick J. Wong" <darrick.wong@oracle.com>,
+        linux-xfs@vger.kernel.org
+References: <157177017664.1460581.13561167273786314634.stgit@magnolia>
+ <157177018914.1460581.6983232302876165323.stgit@magnolia>
+ <20191106103809.so66jtxxz3kb5zwf@orion> <20191106155148.GI4153244@magnolia>
+From:   Eric Sandeen <sandeen@sandeen.net>
+Autocrypt: addr=sandeen@sandeen.net; prefer-encrypt=mutual; keydata=
+ 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 pA==
+Message-ID: <f9ebec79-4a46-c98d-026e-8b803aea8752@sandeen.net>
+Date:   Wed, 6 Nov 2019 13:47:19 -0600
+User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:68.0)
+ Gecko/20100101 Thunderbird/68.2.1
 MIME-Version: 1.0
-References: <20191106190400.20969-1-agruenba@redhat.com> <20191106191656.GC15212@magnolia>
-In-Reply-To: <20191106191656.GC15212@magnolia>
-From:   Andreas Gruenbacher <agruenba@redhat.com>
-Date:   Wed, 6 Nov 2019 20:34:26 +0100
-Message-ID: <CAHc6FU4BXZ7fiLa_tVhZWZmqoXNCJWQwUvb7UPzGrWt_ZBBvxQ@mail.gmail.com>
-Subject: Re: [PATCH] iomap: Fix overflow in iomap_page_mkwrite
-To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org,
-        Alexander Viro <viro@zeniv.linux.org.uk>,
-        linux-fsdevel <linux-fsdevel@vger.kernel.org>,
-        Christoph Hellwig <hch@lst.de>
-X-MC-Unique: CUQm_jziNJGeALLR2cNdJg-1
-X-Mimecast-Spam-Score: 0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20191106155148.GI4153244@magnolia>
+Content-Type: text/plain; charset=utf-8
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On Wed, Nov 6, 2019 at 8:17 PM Darrick J. Wong <darrick.wong@oracle.com> wr=
-ote:
-> On Wed, Nov 06, 2019 at 08:04:00PM +0100, Andreas Gruenbacher wrote:
-> > On architectures where ssize_t is wider than pgoff_t, the expression
->
-> ssize_t?  But you're changing @offset, which is loff_t.   I'm confused.
 
-Oops, should have been loff_t instead of ssize_t.
 
-> Also, which architectures are you talking about here?
+On 11/6/19 9:51 AM, Darrick J. Wong wrote:
+>> but it's not clear to me, if, this is the case, who is responsible to
+>> free up the memory previously associated with the dsc->where pointer
+>> here, and so, it just feels like a potential memory leak landmine
+>> here.
+> It's the caller's responsibility.  So far all three callers passed in
+> pointers local stack variables, so the variable and the @dsc disappear
+> into the aether when the function returns.
+> 
+>> Maybe I've got confused by the comment or didn't fully understand your
+>> intention here.
+> Nah, the problem is that the comment is unclear.  How about:
+> 
+> /*
+>  * Set a new location context for this deferred-rendering string.
+>  * The caller is responsible for freeing the old context, if necessary.
+>  */
 
-From the kernel headers:
+LGTM, maybe "if any" to indicate there may not be (probably is not) an
+old context.
 
-#define pgoff_t unsigned long
-typedef long long __kernel_loff_t;
-typedef __kernel_loff_t loff_t;
+> Question: does this API need to return the old context?  For now the
+> void return is fine under the "YAGNI" principle, since we can always add
+> it later if the usage pattern changes.
 
-So for example, sizeof(loff_t) > sizeof(pgoff_t) on x86.
+Can't imagine why you'd need the old one....
+ 
+W/ the comment-flogging,
 
-Thanks,
-Andreas
-
+Reviewed-by: Eric Sandeen <sandeen@redhat.com>
