@@ -2,189 +2,281 @@ Return-Path: <SRS0=KqY6=Y6=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-6.8 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
+X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIMWL_WL_HIGH,DKIM_SIGNED,
 	DKIM_VALID,DKIM_VALID_AU,HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,
 	MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS,UNPARSEABLE_RELAY,
-	URIBL_BLOCKED autolearn=ham autolearn_force=no version=3.4.0
+	URIBL_BLOCKED,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 78D61C5DF62
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 04:44:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1741FC5DF62
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 04:57:41 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 367CF2075C
-	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 04:44:30 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id C0C1C2173B
+	for <linux-xfs@archiver.kernel.org>; Wed,  6 Nov 2019 04:57:40 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="hqXeteqn"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Bd85XeYF"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1730944AbfKFEoa (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Tue, 5 Nov 2019 23:44:30 -0500
-Received: from userp2120.oracle.com ([156.151.31.85]:55982 "EHLO
+        id S1729790AbfKFE5k (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Tue, 5 Nov 2019 23:57:40 -0500
+Received: from userp2120.oracle.com ([156.151.31.85]:38232 "EHLO
         userp2120.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1729303AbfKFEo3 (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Nov 2019 23:44:29 -0500
+        with ESMTP id S1727266AbfKFE5k (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Tue, 5 Nov 2019 23:57:40 -0500
 Received: from pps.filterd (userp2120.oracle.com [127.0.0.1])
-        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA64i6ru078411;
-        Wed, 6 Nov 2019 04:44:07 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=subject : from : to :
- cc : date : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=corp-2019-08-05;
- bh=snGtq/nWttwN90OKhn98bwpRunQm/1+ub5EJOLJ66LQ=;
- b=hqXeteqnWSzzx2R3CiT5bBOY6U57ZWALBVVpNJ10HvXy+7WJ6ZbhwTFGjmdbg/V6JS6l
- f+bOXimsPd2HmqqQPVWJaMhFhidi0jzLrOOH/2ko4u7taEmxAnFya3STGgv1yYahY0sM
- UviyToWBhCNQ6pdHI48n8du/dJJjaP2zXkkTAhHphfG81nFQaYmFFN+N+PJJRUIP2/MW
- JrBxdSDCXY3cpoM1RQSaDrl7fayCFqsAiz6mZMGq0EZB8JGq/C5ATMB7KGiXqNb1TWzm
- Njs0YyNNAvJ81F8sf369K8c/qldTTWG/n9VoGKh99rT401lmTdcKPMyoZlpDImdCrjQB Sw== 
+        by userp2120.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA64sFk5085645;
+        Wed, 6 Nov 2019 04:56:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=date : from : to : cc
+ : subject : message-id : references : mime-version : content-type :
+ in-reply-to; s=corp-2019-08-05;
+ bh=IB+vmgOTXFOZowHsW0LgzaXnMReafNKQuIbZDUpwN1A=;
+ b=Bd85XeYFL9i13hPjrqvgvaeURX5JaRsToKRWBGSzWLMOmLvmkJnhehUd+VOTECwgkCag
+ oOof/PCV1Wp4LRHQy7NPX8s17YwWHIbf2EtzNG4MC6zTFEGXGL/bhVuiTrAOfmPFt7Z0
+ ggbXi92e6Jw/ppIIIYXUDE0yNXynbQ8W1Ib3kYd67cv8ifxEUoz7HyNA8k1dBRyJDoY7
+ FUqesWSlYEL/IhOBhjyL2VgmMl7lPb2cqOpH/UQDdC2CE6bt73rCgv9PvjH+U/DWtJzz
+ Lq4CMkJDh1URm1mZlBQT+FcodEuYAZSXnNvcdIoNXP3/cO6DyWu425UYLXVEkDehxssZ lA== 
 Received: from userp3020.oracle.com (userp3020.oracle.com [156.151.31.79])
-        by userp2120.oracle.com with ESMTP id 2w12eraxt4-1
+        by userp2120.oracle.com with ESMTP id 2w12erb02x-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 06 Nov 2019 04:44:07 +0000
+        Wed, 06 Nov 2019 04:56:33 +0000
 Received: from pps.filterd (userp3020.oracle.com [127.0.0.1])
-        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA64i2Er175785;
-        Wed, 6 Nov 2019 04:44:06 GMT
-Received: from aserv0121.oracle.com (aserv0121.oracle.com [141.146.126.235])
-        by userp3020.oracle.com with ESMTP id 2w3162ns6k-1
+        by userp3020.oracle.com (8.16.0.27/8.16.0.27) with SMTP id xA64s4qu193927;
+        Wed, 6 Nov 2019 04:56:33 GMT
+Received: from userv0122.oracle.com (userv0122.oracle.com [156.151.31.75])
+        by userp3020.oracle.com with ESMTP id 2w3162p933-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Wed, 06 Nov 2019 04:44:06 +0000
-Received: from abhmp0011.oracle.com (abhmp0011.oracle.com [141.146.116.17])
-        by aserv0121.oracle.com (8.14.4/8.13.8) with ESMTP id xA64h6Em031459;
-        Wed, 6 Nov 2019 04:43:06 GMT
+        Wed, 06 Nov 2019 04:56:33 +0000
+Received: from abhmp0003.oracle.com (abhmp0003.oracle.com [141.146.116.9])
+        by userv0122.oracle.com (8.14.4/8.14.4) with ESMTP id xA64uVmu007002;
+        Wed, 6 Nov 2019 04:56:31 GMT
 Received: from localhost (/67.169.218.210)
         by default (Oracle Beehive Gateway v4.0)
-        with ESMTP ; Tue, 05 Nov 2019 20:43:06 -0800
-Subject: [PATCH 2/2] xfs: periodically yield scrub threads to the scheduler
+        with ESMTP ; Tue, 05 Nov 2019 20:56:31 -0800
+Date:   Tue, 5 Nov 2019 20:56:30 -0800
 From:   "Darrick J. Wong" <darrick.wong@oracle.com>
-To:     darrick.wong@oracle.com
-Cc:     Christoph Hellwig <hch@infradead.org>, linux-xfs@vger.kernel.org,
-        hch@lst.de
-Date:   Tue, 05 Nov 2019 20:43:06 -0800
-Message-ID: <157301538629.678524.5328247190031479757.stgit@magnolia>
-In-Reply-To: <157301537390.678524.16085197974806955970.stgit@magnolia>
-References: <157301537390.678524.16085197974806955970.stgit@magnolia>
-User-Agent: StGit/0.17.1-dirty
+To:     kaixuxia <xiakaixu1987@gmail.com>
+Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com,
+        newtongao@tencent.com, jasperwang@tencent.com
+Subject: Re: [PATCH v2] xfs: Fix deadlock between AGI and AGF when target_ip
+ exists in xfs_rename()
+Message-ID: <20191106045630.GO15221@magnolia>
+References: <1572947532-4972-1-git-send-email-kaixuxia@tencent.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1572947532-4972-1-git-send-email-kaixuxia@tencent.com>
+User-Agent: Mutt/1.9.4 (2018-02-28)
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9432 signatures=668685
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=3 malwarescore=0
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 suspectscore=0 malwarescore=0
  phishscore=0 bulkscore=0 spamscore=0 mlxscore=0 mlxlogscore=999
  adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.0.1-1908290000 definitions=main-1911060049
+ engine=8.0.1-1908290000 definitions=main-1911060051
 X-Proofpoint-Virus-Version: vendor=nai engine=6000 definitions=9432 signatures=668685
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 priorityscore=1501 malwarescore=0
- suspectscore=3 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 bulkscore=0 spamscore=0 clxscore=1015
  lowpriorityscore=0 mlxscore=0 impostorscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.0.1-1908290000
- definitions=main-1911060049
+ definitions=main-1911060051
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-From: Darrick J. Wong <darrick.wong@oracle.com>
+On Tue, Nov 05, 2019 at 05:52:12PM +0800, kaixuxia wrote:
+> When target_ip exists in xfs_rename(), the xfs_dir_replace() call may
+> need to hold the AGF lock to allocate more blocks, and then invoking
+> the xfs_droplink() call to hold AGI lock to drop target_ip onto the
+> unlinked list, so we get the lock order AGF->AGI. This would break the
+> ordering constraint on AGI and AGF locking - inode allocation locks
+> the AGI, then can allocate a new extent for new inodes, locking the
+> AGF after the AGI.
+> 
+> In this patch we check whether the replace operation need more
+> blocks firstly. If so, acquire the agi lock firstly to preserve
+> locking order(AGI/AGF). Actually, the locking order problem only
+> occurs when we are locking the AGI/AGF of the same AG. For multiple
+> AGs the AGI lock will be released after the transaction committed.
+> 
+> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
+> ---
+> Changes in v2:
+>  - Add xfs_dir2_sf_replace_needblock() helper in
+>    xfs_dir2_sf.c.
+> 
+>  fs/xfs/libxfs/xfs_dir2.c      | 23 +++++++++++++++++++++++
+>  fs/xfs/libxfs/xfs_dir2.h      |  2 ++
+>  fs/xfs/libxfs/xfs_dir2_priv.h |  2 ++
+>  fs/xfs/libxfs/xfs_dir2_sf.c   | 24 ++++++++++++++++++++++++
+>  fs/xfs/xfs_inode.c            | 14 ++++++++++++++
+>  5 files changed, 65 insertions(+)
+> 
+> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
+> index 867c5de..1917990 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.c
+> +++ b/fs/xfs/libxfs/xfs_dir2.c
+> @@ -463,6 +463,29 @@
+>  }
+>  
+>  /*
+> + * Check whether the replace operation need more blocks. Ignore
+> + * the parameters check since the real replace() call below will
+> + * do that.
+> + */
+> +bool
+> +xfs_dir_replace_needblock(
 
-Christoph Hellwig complained about the following soft lockup warning
-when running scrub after generic/175 when preemption is disabled and
-slub debugging is enabled:
+xfs_dir2, to be consistent.
 
-watchdog: BUG: soft lockup - CPU#3 stuck for 22s! [xfs_scrub:161]
-Modules linked in:
-irq event stamp: 41692326
-hardirqs last  enabled at (41692325): [<ffffffff8232c3b7>] _raw_0
-hardirqs last disabled at (41692326): [<ffffffff81001c5a>] trace0
-softirqs last  enabled at (41684994): [<ffffffff8260031f>] __do_e
-softirqs last disabled at (41684987): [<ffffffff81127d8c>] irq_e0
-CPU: 3 PID: 16189 Comm: xfs_scrub Not tainted 5.4.0-rc3+ #30
-Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.124
-RIP: 0010:_raw_spin_unlock_irqrestore+0x39/0x40
-Code: 89 f3 be 01 00 00 00 e8 d5 3a e5 fe 48 89 ef e8 ed 87 e5 f2
-RSP: 0018:ffffc9000233f970 EFLAGS: 00000286 ORIG_RAX: ffffffffff3
-RAX: ffff88813b398040 RBX: 0000000000000286 RCX: 0000000000000006
-RDX: 0000000000000006 RSI: ffff88813b3988c0 RDI: ffff88813b398040
-RBP: ffff888137958640 R08: 0000000000000001 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000000 R12: ffffea00042b0c00
-R13: 0000000000000001 R14: ffff88810ac32308 R15: ffff8881376fc040
-FS:  00007f6113dea700(0000) GS:ffff88813bb80000(0000) knlGS:00000
-CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-CR2: 00007f6113de8ff8 CR3: 000000012f290000 CR4: 00000000000006e0
-Call Trace:
- free_debug_processing+0x1dd/0x240
- __slab_free+0x231/0x410
- kmem_cache_free+0x30e/0x360
- xchk_ag_btcur_free+0x76/0xb0
- xchk_ag_free+0x10/0x80
- xchk_bmap_iextent_xref.isra.14+0xd9/0x120
- xchk_bmap_iextent+0x187/0x210
- xchk_bmap+0x2e0/0x3b0
- xfs_scrub_metadata+0x2e7/0x500
- xfs_ioc_scrub_metadata+0x4a/0xa0
- xfs_file_ioctl+0x58a/0xcd0
- do_vfs_ioctl+0xa0/0x6f0
- ksys_ioctl+0x5b/0x90
- __x64_sys_ioctl+0x11/0x20
- do_syscall_64+0x4b/0x1a0
- entry_SYSCALL_64_after_hwframe+0x49/0xbe
+> +	struct xfs_inode	*dp,
+> +	xfs_ino_t		inum)
 
-If preemption is disabled, all metadata buffers needed to perform the
-scrub are already in memory, and there are a lot of records to check,
-it's possible that the scrub thread will run for an extended period of
-time without sleeping for IO or any other reason.  Then the watchdog
-timer or the RCU stall timeout can trigger, producing the backtrace
-above.
+If you passed the inode pointer (instead of ip->i_ino) here then you
+don't need to revalidate the inode number.
 
-To fix this problem, we detect when preemption is disabled and
-explicitly schedule() the scrub thread every few seconds.
+> +{
+> +	int			rval;
+> +
+> +	rval = xfs_dir_ino_validate(dp->i_mount, inum);
+> +	if (rval)
+> +		return false;
+> +
+> +	/*
+> +	 * Only convert the shortform directory to block form maybe
+> +	 * need more blocks.
+> +	 */
+> +	return xfs_dir2_sf_replace_needblock(dp, inum);
 
-Reported-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Darrick J. Wong <darrick.wong@oracle.com>
----
- fs/xfs/scrub/common.h |   14 +++++++++++++-
- fs/xfs/scrub/scrub.h  |    9 +++++++++
- 2 files changed, 22 insertions(+), 1 deletion(-)
+	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+		return xfs_dir2_sf_replace_needblock(...);
 
+Also, do other directories formats need extra blocks allocated?
 
-diff --git a/fs/xfs/scrub/common.h b/fs/xfs/scrub/common.h
-index 003a772cd26c..597b4d45e990 100644
---- a/fs/xfs/scrub/common.h
-+++ b/fs/xfs/scrub/common.h
-@@ -14,8 +14,20 @@
- static inline bool
- xchk_should_terminate(
- 	struct xfs_scrub	*sc,
--	int				*error)
-+	int			*error)
- {
-+#if !IS_ENABLED(CONFIG_PREEMPT)
-+	/*
-+	 * If preemption is disabled, we need to yield to the scheduler every
-+	 * few seconds so that we don't run afoul of the soft lockup watchdog
-+	 * or RCU stall detector.
-+	 */
-+	if (sc->next_yield != 0 && time_after(jiffies, sc->next_yield))
-+		return false;
-+	schedule();
-+	sc->next_yield = jiffies + msecs_to_jiffies(5000);
-+#endif
-+
- 	if (fatal_signal_pending(current)) {
- 		if (*error == 0)
- 			*error = -EAGAIN;
-diff --git a/fs/xfs/scrub/scrub.h b/fs/xfs/scrub/scrub.h
-index ad1ceb44a628..ada8e4976024 100644
---- a/fs/xfs/scrub/scrub.h
-+++ b/fs/xfs/scrub/scrub.h
-@@ -75,6 +75,15 @@ struct xfs_scrub {
- 
- 	/* State tracking for single-AG operations. */
- 	struct xchk_ag			sa;
-+
-+#if !IS_ENABLED(CONFIG_PREEMPT)
-+	/*
-+	 * This is the time (in jiffies) when this scrub thread needs to
-+	 * yield the processor back to the scheduler so that we don't run
-+	 * afoul of either the soft lockup watchdog or RCU stall detector.
-+	 */
-+	unsigned long			next_yield;
-+#endif
- };
- 
- /* XCHK state flags grow up from zero, XREP state flags grown down from 2^31 */
+> +}
+> +
+> +/*
+>   * Replace the inode number of a directory entry.
+>   */
+>  int
+> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
+> index f542447..e436c14 100644
+> --- a/fs/xfs/libxfs/xfs_dir2.h
+> +++ b/fs/xfs/libxfs/xfs_dir2.h
+> @@ -124,6 +124,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
+>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t ino,
+>  				xfs_extlen_t tot);
+> +extern bool xfs_dir_replace_needblock(struct xfs_inode *dp,
+> +				xfs_ino_t inum);
+>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
+>  				struct xfs_name *name, xfs_ino_t inum,
+>  				xfs_extlen_t tot);
+> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
+> index 59f9fb2..002103f 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
+> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
+> @@ -116,6 +116,8 @@ extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
+>  extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
+>  extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
+>  extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
+> +extern bool xfs_dir2_sf_replace_needblock(struct xfs_inode *dp,
+> +		xfs_ino_t inum);
+>  extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
+>  extern xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_inode *ip);
+>  
+> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
+> index 85f14fc..0906f91 100644
+> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
+> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
+> @@ -945,6 +945,30 @@ static int xfs_dir2_sf_addname_pick(xfs_da_args_t *args, int objchange,
+>  }
+>  
+>  /*
+> + * Check whether the replace operation need more blocks.
+> + */
+> +bool
+> +xfs_dir2_sf_replace_needblock(
 
+Urgggh.  This is a predicate that we only ever call from xfs_rename(),
+right?  And it addresses a particular quirk of the locking when the
+caller wants us to rename on top of an existing entry and drop the link
+count of the old inode, right?  So why can't this just be a predicate in
+xfs_inode.c ?  Nobody else needs to know this particular piece of
+information, AFAICT.
+
+(Apologies, for Brian and I clearly aren't on the same page about
+that...)
+
+> +	struct xfs_inode	*dp,
+> +	xfs_ino_t		inum)
+> +{
+> +	int			newsize;
+> +	xfs_dir2_sf_hdr_t	*sfp;
+> +
+> +	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
+> +		return false;
+
+This check should be used up in xfs_dir2_replace_needblock() to decide
+if we're calling xfs_dir2_sf_replace_needblock(), or just returning
+false.
+
+> +
+> +	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
+> +	newsize = dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
+> +
+> +	if (inum > XFS_DIR2_MAX_SHORT_INUM &&
+> +	    sfp->i8count == 0 && newsize > XFS_IFORK_DSIZE(dp))
+> +		return true;
+> +	else
+> +		return false;
+
+return inum > XFS_DIR2_MAX_SHORT_INUM && (all the rest of that);
+
+> +}
+> +
+> +/*
+>   * Replace the inode number of an entry in a shortform directory.
+>   */
+>  int						/* error */
+> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
+> index 18f4b26..c239070 100644
+> --- a/fs/xfs/xfs_inode.c
+> +++ b/fs/xfs/xfs_inode.c
+> @@ -3196,6 +3196,7 @@ struct xfs_iunlink {
+>  	struct xfs_trans	*tp;
+>  	struct xfs_inode	*wip = NULL;		/* whiteout inode */
+>  	struct xfs_inode	*inodes[__XFS_SORT_INODES];
+> +	struct xfs_buf		*agibp;
+>  	int			num_inodes = __XFS_SORT_INODES;
+>  	bool			new_parent = (src_dp != target_dp);
+>  	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
+> @@ -3361,6 +3362,19 @@ struct xfs_iunlink {
+>  		 * In case there is already an entry with the same
+>  		 * name at the destination directory, remove it first.
+>  		 */
+> +
+> +		/*
+> +		 * Check whether the replace operation need more blocks.
+> +		 * If so, acquire the agi lock firstly to preserve locking
+
+                                               "first"
+
+> +		 * order(AGI/AGF).
+
+Nit: space between "order" and "(AGI/AGF)".
+> +		 */
+> +		if (xfs_dir_replace_needblock(target_dp, src_ip->i_ino)) {
+> +			error = xfs_read_agi(mp, tp,
+> +					XFS_INO_TO_AGNO(mp, target_ip->i_ino), &agibp);
+
+Overly long line here.
+
+--D
+
+> +			if (error)
+> +				goto out_trans_cancel;
+> +		}
+> +
+>  		error = xfs_dir_replace(tp, target_dp, target_name,
+>  					src_ip->i_ino, spaceres);
+>  		if (error)
+> -- 
+> 1.8.3.1
+> 
