@@ -7,41 +7,41 @@ X-Spam-Status: No, score=-9.6 required=3.0 tests=DKIM_INVALID,DKIM_SIGNED,
 	SPF_HELO_NONE,SPF_PASS,URIBL_BLOCKED,USER_AGENT_GIT autolearn=ham
 	autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BB74CC5DF60
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3426EC43331
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:36 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 9130E206DF
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:33 +0000 (UTC)
+	by mail.kernel.org (Postfix) with ESMTP id 0E8A2206DF
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 18:25:36 +0000 (UTC)
 Authentication-Results: mail.kernel.org;
-	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="oY7Rcuv+"
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Alh8cRA6"
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1728734AbfKGSZd (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 13:25:33 -0500
-Received: from bombadil.infradead.org ([198.137.202.133]:44204 "EHLO
+        id S1726697AbfKGSZf (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 13:25:35 -0500
+Received: from bombadil.infradead.org ([198.137.202.133]:44210 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725991AbfKGSZd (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:25:33 -0500
+        with ESMTP id S1725991AbfKGSZf (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 13:25:35 -0500
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
         d=infradead.org; s=bombadil.20170209; h=Content-Transfer-Encoding:
         MIME-Version:References:In-Reply-To:Message-Id:Date:Subject:To:From:Sender:
         Reply-To:Cc:Content-Type:Content-ID:Content-Description:Resent-Date:
         Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
         List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-         bh=b7RABoVBnES0Jx+F7q3+rPqCyYyWZbwW112ckBws6bc=; b=oY7Rcuv+tf10ZUE7HCSfY/25K
-        be+MO5wGjHJ9zj0jd/ZBDVUn9qa33jSmXr844hFrkkYfaIBvpiqxvN2SwwXyxWu4/ItEVP36Gn0e9
-        7AaLheICD10DXru6SgW49BakREBtFO6HxiJlxgcsfbRYpIxkzEOQl8G7MpmjTrJqRWGS5+Ybx8LQQ
-        9CXQpaUqDaxDqFFkds/i/z6TmyY6sIeINTOeZIG1LETPL3QB6k50l06zSKyCKi0v0/ZZfH2WLu1UJ
-        96TBh2SJ3Ulu0Mnl450o+rEQ0X2VWcCyVFgzSaI8q1XpoHFKZIyio6SPFyePkDl3NE/ywAJvvq8fO
-        UHn3h8wZA==;
+         bh=7RWczxnzQDR3jIng3nSmQiFi2Or2kQA20xO8tGLGi80=; b=Alh8cRA62UlUJyBVt2wlFXHgd
+        f1XR8TKQ8yMXthhvW/Hy4LtF2II4bSBhpuBxi3b3VlTU87tWpvNI8fsXv9UIGA/857RRkjEI1Wxq2
+        YzILflxMlmOP9LpyOWZMiHS6v00cxJYdysEuVQSMvGxylycD5QQzAu6kvE3JRxwW0mui1fbmw2xd1
+        t9pofFS+5sEXz0wTtraQfUD51LTuoN+CGYlPq65lfX9dyYGtSIhBVklAKZTMlWS8cq5ihbm3tE5Fd
+        9YCdLp+90mf7JuKKa3fVjV3lszOGq44im+mKtKnp1IHJoQCN9H0UZz4Mk+7yC/kjdoues2cHXUblC
+        AtRtsmelQ==;
 Received: from [2001:4bb8:184:e48:c70:4a89:bc61:2] (helo=localhost)
         by bombadil.infradead.org with esmtpsa (Exim 4.92.3 #3 (Red Hat Linux))
-        id 1iSmTM-0004PT-Fy
-        for linux-xfs@vger.kernel.org; Thu, 07 Nov 2019 18:25:32 +0000
+        id 1iSmTP-0004Pr-1y
+        for linux-xfs@vger.kernel.org; Thu, 07 Nov 2019 18:25:35 +0000
 From:   Christoph Hellwig <hch@lst.de>
 To:     linux-xfs@vger.kernel.org
-Subject: [PATCH 30/46] xfs: cleanup xfs_dir2_leaf_getdents
-Date:   Thu,  7 Nov 2019 19:23:54 +0100
-Message-Id: <20191107182410.12660-31-hch@lst.de>
+Subject: [PATCH 31/46] xfs: cleanup xchk_dir_rec
+Date:   Thu,  7 Nov 2019 19:23:55 +0100
+Message-Id: <20191107182410.12660-32-hch@lst.de>
 X-Mailer: git-send-email 2.20.1
 In-Reply-To: <20191107182410.12660-1-hch@lst.de>
 References: <20191107182410.12660-1-hch@lst.de>
@@ -58,118 +58,68 @@ arithmetics to find the data/unused entries.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- fs/xfs/xfs_dir2_readdir.c | 34 +++++++++++++++++-----------------
- 1 file changed, 17 insertions(+), 17 deletions(-)
+ fs/xfs/scrub/dir.c | 28 ++++++++++++++--------------
+ 1 file changed, 14 insertions(+), 14 deletions(-)
 
-diff --git a/fs/xfs/xfs_dir2_readdir.c b/fs/xfs/xfs_dir2_readdir.c
-index 0d234b649d65..c4314e9e3dd8 100644
---- a/fs/xfs/xfs_dir2_readdir.c
-+++ b/fs/xfs/xfs_dir2_readdir.c
-@@ -351,13 +351,13 @@ xfs_dir2_leaf_getdents(
- 	xfs_dir2_data_hdr_t	*hdr;		/* data block header */
- 	xfs_dir2_data_entry_t	*dep;		/* data entry */
- 	xfs_dir2_data_unused_t	*dup;		/* unused entry */
--	char			*ptr = NULL;	/* pointer to current data */
- 	struct xfs_da_geometry	*geo = args->geo;
- 	xfs_dablk_t		rablk = 0;	/* current readahead block */
- 	xfs_dir2_off_t		curoff;		/* current overall offset */
- 	int			length;		/* temporary length value */
- 	int			byteoff;	/* offset in current block */
- 	int			lock_mode;
-+	unsigned int		offset = 0;
- 	int			error = 0;	/* error return value */
+diff --git a/fs/xfs/scrub/dir.c b/fs/xfs/scrub/dir.c
+index bb08a1cbe523..501d60c9b09a 100644
+--- a/fs/xfs/scrub/dir.c
++++ b/fs/xfs/scrub/dir.c
+@@ -187,7 +187,8 @@ xchk_dir_rec(
+ 	struct xfs_dir2_data_entry	*dent;
+ 	struct xfs_buf			*bp;
+ 	struct xfs_dir2_leaf_entry	*ent;
+-	char				*p, *endp;
++	void				*endp;
++	unsigned int			offset;
+ 	xfs_ino_t			ino;
+ 	xfs_dablk_t			rec_bno;
+ 	xfs_dir2_db_t			db;
+@@ -237,32 +238,31 @@ xchk_dir_rec(
+ 	if (ds->sc->sm->sm_flags & XFS_SCRUB_OFLAG_CORRUPT)
+ 		goto out_relse;
  
- 	/*
-@@ -384,7 +384,7 @@ xfs_dir2_leaf_getdents(
- 		 * If we have no buffer, or we're off the end of the
- 		 * current buffer, need to get another one.
- 		 */
--		if (!bp || ptr >= (char *)bp->b_addr + geo->blksize) {
-+		if (!bp || offset + geo->blksize) {
- 			if (bp) {
- 				xfs_trans_brelse(args->trans, bp);
- 				bp = NULL;
-@@ -402,7 +402,7 @@ xfs_dir2_leaf_getdents(
- 			/*
- 			 * Find our position in the block.
- 			 */
--			ptr = (char *)dp->d_ops->data_entry_p(hdr);
-+			offset = dp->d_ops->data_entry_offset;
- 			byteoff = xfs_dir2_byte_to_off(geo, curoff);
- 			/*
- 			 * Skip past the header.
-@@ -413,20 +413,20 @@ xfs_dir2_leaf_getdents(
- 			 * Skip past entries until we reach our offset.
- 			 */
- 			else {
--				while ((char *)ptr - (char *)hdr < byteoff) {
--					dup = (xfs_dir2_data_unused_t *)ptr;
-+				while (offset < byteoff) {
-+					dup = bp->b_addr + offset;
+-	dent = (struct xfs_dir2_data_entry *)(((char *)bp->b_addr) + off);
++	dent = bp->b_addr + off;
  
- 					if (be16_to_cpu(dup->freetag)
- 						  == XFS_DIR2_DATA_FREE_TAG) {
+ 	/* Make sure we got a real directory entry. */
+-	p = (char *)mp->m_dir_inode_ops->data_entry_p(bp->b_addr);
++	offset = mp->m_dir_inode_ops->data_entry_offset;
+ 	endp = xfs_dir3_data_endp(mp->m_dir_geo, bp->b_addr);
+ 	if (!endp) {
+ 		xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
+ 		goto out_relse;
+ 	}
+-	while (p < endp) {
+-		struct xfs_dir2_data_entry	*dep;
+-		struct xfs_dir2_data_unused	*dup;
++	for (;;) {
++		struct xfs_dir2_data_entry	*dep = bp->b_addr + offset;
++		struct xfs_dir2_data_unused	*dup = bp->b_addr + offset;
++	
++		if (offset >= endp - bp->b_addr) {
++			xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
++			goto out_relse;
++		}
  
- 						length = be16_to_cpu(dup->length);
--						ptr += length;
-+						offset += length;
- 						continue;
- 					}
--					dep = (xfs_dir2_data_entry_t *)ptr;
-+					dep = bp->b_addr + offset;
- 					length =
- 					   dp->d_ops->data_entsize(dep->namelen);
--					ptr += length;
-+					offset += length;
- 				}
- 				/*
- 				 * Now set our real offset.
-@@ -434,28 +434,28 @@ xfs_dir2_leaf_getdents(
- 				curoff =
- 					xfs_dir2_db_off_to_byte(geo,
- 					    xfs_dir2_byte_to_db(geo, curoff),
--					    (char *)ptr - (char *)hdr);
--				if (ptr >= (char *)hdr + geo->blksize) {
-+					    offset);
-+				if (offset >= geo->blksize)
- 					continue;
--				}
- 			}
- 		}
-+
- 		/*
--		 * We have a pointer to an entry.
--		 * Is it a live one?
-+		 * We have a pointer to an entry.  Is it a live one?
- 		 */
--		dup = (xfs_dir2_data_unused_t *)ptr;
-+		dup = bp->b_addr + offset;
-+
- 		/*
- 		 * No, it's unused, skip over it.
- 		 */
+-		dup = (struct xfs_dir2_data_unused *)p;
  		if (be16_to_cpu(dup->freetag) == XFS_DIR2_DATA_FREE_TAG) {
- 			length = be16_to_cpu(dup->length);
--			ptr += length;
-+			offset += length;
- 			curoff += length;
+-			p += be16_to_cpu(dup->length);
++			offset += be16_to_cpu(dup->length);
  			continue;
  		}
+-		dep = (struct xfs_dir2_data_entry *)p;
+ 		if (dep == dent)
+ 			break;
+-		p += mp->m_dir_inode_ops->data_entsize(dep->namelen);
+-	}
+-	if (p >= endp) {
+-		xchk_fblock_set_corrupt(ds->sc, XFS_DATA_FORK, rec_bno);
+-		goto out_relse;
++		offset += mp->m_dir_inode_ops->data_entsize(dep->namelen);
+ 	}
  
--		dep = (xfs_dir2_data_entry_t *)ptr;
-+		dep = bp->b_addr + offset;
- 		length = dp->d_ops->data_entsize(dep->namelen);
- 		filetype = dp->d_ops->data_get_ftype(dep);
- 
-@@ -474,7 +474,7 @@ xfs_dir2_leaf_getdents(
- 		/*
- 		 * Advance to next entry in the block.
- 		 */
--		ptr += length;
-+		offset += length;
- 		curoff += length;
- 		/* bufsize may have just been a guess; don't go negative */
- 		bufsize = bufsize > length ? bufsize - length : 0;
+ 	/* Retrieve the entry, sanity check it, and compare hashes. */
 -- 
 2.20.1
 
