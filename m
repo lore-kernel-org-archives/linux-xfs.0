@@ -2,293 +2,227 @@ Return-Path: <SRS0=aC/G=Y7=vger.kernel.org=linux-xfs-owner@kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 X-Spam-Level: 
-X-Spam-Status: No, score=-8.3 required=3.0 tests=DKIM_SIGNED,DKIM_VALID,
-	DKIM_VALID_AU,FREEMAIL_FORGED_FROMDOMAIN,FREEMAIL_FROM,
-	HEADER_FROM_DIFFERENT_DOMAINS,INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,
-	SPF_HELO_NONE,SPF_PASS,USER_AGENT_SANE_1 autolearn=ham autolearn_force=no
-	version=3.4.0
+X-Spam-Status: No, score=-6.8 required=3.0 tests=HEADER_FROM_DIFFERENT_DOMAINS,
+	INCLUDES_PATCH,MAILING_LIST_MULTI,SIGNED_OFF_BY,SPF_HELO_NONE,SPF_PASS
+	autolearn=unavailable autolearn_force=no version=3.4.0
 Received: from mail.kernel.org (mail.kernel.org [198.145.29.99])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 65DD8C5DF60
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 05:15:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9F8CC5DF60
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 06:08:13 +0000 (UTC)
 Received: from vger.kernel.org (vger.kernel.org [209.132.180.67])
-	by mail.kernel.org (Postfix) with ESMTP id 1DE632166E
-	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 05:15:25 +0000 (UTC)
-Authentication-Results: mail.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ItbUUjGr"
+	by mail.kernel.org (Postfix) with ESMTP id 9376D21D6C
+	for <linux-xfs@archiver.kernel.org>; Thu,  7 Nov 2019 06:08:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1725870AbfKGFPY (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
-        Thu, 7 Nov 2019 00:15:24 -0500
-Received: from mail-pl1-f193.google.com ([209.85.214.193]:39963 "EHLO
-        mail-pl1-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1725763AbfKGFPY (ORCPT
-        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 00:15:24 -0500
-Received: by mail-pl1-f193.google.com with SMTP id e3so607916plt.7
-        for <linux-xfs@vger.kernel.org>; Wed, 06 Nov 2019 21:15:23 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20161025;
-        h=subject:to:cc:references:from:message-id:date:user-agent
-         :mime-version:in-reply-to:content-language:content-transfer-encoding;
-        bh=idMU2HnkOGduXUe6RyXWfVbudbzp70Ue3yBUVfLpXMo=;
-        b=ItbUUjGrRYSgSCZV+WLz0mgv8AJXH5g+zZ6Y6SYrAoshJz3zYN2F/GdRWEzN9EnJNu
-         mY+jrPO13J0YThMUr319igZ0c5T6doc5F86wWbEh7a1sOm5kCRxz4NbYD3n+M3Nz0ZT+
-         Bk++s1919NF/gKHol6X8bIV+QzIPMk3Rr33lUTf7VMidZwjcDto51hsCOROtrfFD/PgS
-         ZLIBj3p2ZVdx2qg1AqT8sOXjpfWc1yEn1fqgFjCCkHoFj1RR/K0ff+H5VWGcA7mMHsXj
-         4DrgS5EEeJriaiOofG+7hKAy5kJZmTO2oraUPpB1Zp+rUvlOalYQ4/iSHbfc8ksuAAcN
-         qvdA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20161025;
-        h=x-gm-message-state:subject:to:cc:references:from:message-id:date
-         :user-agent:mime-version:in-reply-to:content-language
-         :content-transfer-encoding;
-        bh=idMU2HnkOGduXUe6RyXWfVbudbzp70Ue3yBUVfLpXMo=;
-        b=ZYxsh1e8WhbdZuDRx46V0sdrXwvd9P2Pw4wzjTmoYEncP1jbHb9Juk0WaudNrREzk3
-         j921wPF0M016QBRrVxK1Zpd2TYGj2/0Km8AyzxTIQUwWAjZY+sjtB+G/Tsq2HR+zAWZE
-         dNl27cIhwou4HYw2TETfNxOTY0ivfkXMwGvk7mA7iigJf9R2K4AGB2H2br24rlxrwXtW
-         O4/VrY9pJrTK7hPrlYI7omk4GHCa+y8OymiUcIr7aSgLN0iIpjAZS5xwRN7tGICnMKlu
-         p1EFk6uzBc6KOyyp2Q6nXOVuMdSLilTldW3b6tFnQk4RaBXIxzmL9/x09+C8wAyCyhPl
-         rKAw==
-X-Gm-Message-State: APjAAAXu6RayrSTEEqw7OA0hmUKT17JD1uIICoDCAwZxJEjnaPSVPsrQ
-        dkwV/V3T0eKeDK3zo46U6w==
-X-Google-Smtp-Source: APXvYqyf3UT6YkrGlB+Mdn/Kpx2j7mYdTuUb5DFrviM89d1Ii0Eg4hJo9UOCwtlYlCF3O1nMWnum8w==
-X-Received: by 2002:a17:902:9a8b:: with SMTP id w11mr1705662plp.9.1573103723267;
-        Wed, 06 Nov 2019 21:15:23 -0800 (PST)
-Received: from [10.76.90.34] ([203.205.141.123])
-        by smtp.gmail.com with ESMTPSA id r24sm843611pgu.36.2019.11.06.21.15.21
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 06 Nov 2019 21:15:22 -0800 (PST)
-Subject: Re: [PATCH v2] xfs: Fix deadlock between AGI and AGF when target_ip
- exists in xfs_rename()
+        id S1725893AbfKGGIN (ORCPT <rfc822;linux-xfs@archiver.kernel.org>);
+        Thu, 7 Nov 2019 01:08:13 -0500
+Received: from smtprelay0211.hostedemail.com ([216.40.44.211]:58411 "EHLO
+        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1725763AbfKGGIM (ORCPT
+        <rfc822;linux-xfs@vger.kernel.org>); Thu, 7 Nov 2019 01:08:12 -0500
+X-Greylist: delayed 402 seconds by postgrey-1.27 at vger.kernel.org; Thu, 07 Nov 2019 01:08:11 EST
+Received: from smtprelay.hostedemail.com (10.5.19.251.rfc1918.com [10.5.19.251])
+        by smtpgrave07.hostedemail.com (Postfix) with ESMTP id 7288D1802E617
+        for <linux-xfs@vger.kernel.org>; Thu,  7 Nov 2019 06:01:30 +0000 (UTC)
+Received: from filter.hostedemail.com (clb03-v110.bra.tucows.net [216.40.38.60])
+        by smtprelay08.hostedemail.com (Postfix) with ESMTP id EDACC182CED28;
+        Thu,  7 Nov 2019 06:01:28 +0000 (UTC)
+X-Session-Marker: 6A6F6540706572636865732E636F6D
+X-HE-Tag: oven08_470620914dc0d
+X-Filterd-Recvd-Size: 7435
+Received: from XPS-9350.home (unknown [47.151.135.224])
+        (Authenticated sender: joe@perches.com)
+        by omf05.hostedemail.com (Postfix) with ESMTPA;
+        Thu,  7 Nov 2019 06:01:27 +0000 (UTC)
+Message-ID: <0ceb6a89da4424a4500789610fae4d05ba45ba86.camel@perches.com>
+Subject: [PATCH] xfs: Correct comment tyops -> typos
+From:   Joe Perches <joe@perches.com>
 To:     "Darrick J. Wong" <darrick.wong@oracle.com>
-Cc:     linux-xfs@vger.kernel.org, bfoster@redhat.com,
-        newtongao@tencent.com, jasperwang@tencent.com
-References: <1572947532-4972-1-git-send-email-kaixuxia@tencent.com>
- <20191106045630.GO15221@magnolia>
-From:   kaixuxia <xiakaixu1987@gmail.com>
-Message-ID: <28d11503-5ac0-0a3d-9b7d-0d7daec7da8b@gmail.com>
-Date:   Thu, 7 Nov 2019 13:15:20 +0800
-User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; rv:60.0) Gecko/20100101
- Thunderbird/60.9.0
+Cc:     linux-xfs@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Date:   Wed, 06 Nov 2019 22:01:15 -0800
+Content-Type: text/plain; charset="ISO-8859-1"
+User-Agent: Evolution 3.34.1-2 
 MIME-Version: 1.0
-In-Reply-To: <20191106045630.GO15221@magnolia>
-Content-Type: text/plain; charset=utf-8
-Content-Language: en-US
 Content-Transfer-Encoding: 7bit
 Sender: linux-xfs-owner@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-xfs.vger.kernel.org>
 X-Mailing-List: linux-xfs@vger.kernel.org
 
-On 2019/11/6 12:56, Darrick J. Wong wrote:
-> On Tue, Nov 05, 2019 at 05:52:12PM +0800, kaixuxia wrote:
->> When target_ip exists in xfs_rename(), the xfs_dir_replace() call may
->> need to hold the AGF lock to allocate more blocks, and then invoking
->> the xfs_droplink() call to hold AGI lock to drop target_ip onto the
->> unlinked list, so we get the lock order AGF->AGI. This would break the
->> ordering constraint on AGI and AGF locking - inode allocation locks
->> the AGI, then can allocate a new extent for new inodes, locking the
->> AGF after the AGI.
->>
->> In this patch we check whether the replace operation need more
->> blocks firstly. If so, acquire the agi lock firstly to preserve
->> locking order(AGI/AGF). Actually, the locking order problem only
->> occurs when we are locking the AGI/AGF of the same AG. For multiple
->> AGs the AGI lock will be released after the transaction committed.
->>
->> Signed-off-by: kaixuxia <kaixuxia@tencent.com>
->> ---
->> Changes in v2:
->>  - Add xfs_dir2_sf_replace_needblock() helper in
->>    xfs_dir2_sf.c.
->>
->>  fs/xfs/libxfs/xfs_dir2.c      | 23 +++++++++++++++++++++++
->>  fs/xfs/libxfs/xfs_dir2.h      |  2 ++
->>  fs/xfs/libxfs/xfs_dir2_priv.h |  2 ++
->>  fs/xfs/libxfs/xfs_dir2_sf.c   | 24 ++++++++++++++++++++++++
->>  fs/xfs/xfs_inode.c            | 14 ++++++++++++++
->>  5 files changed, 65 insertions(+)
->>
->> diff --git a/fs/xfs/libxfs/xfs_dir2.c b/fs/xfs/libxfs/xfs_dir2.c
->> index 867c5de..1917990 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.c
->> +++ b/fs/xfs/libxfs/xfs_dir2.c
->> @@ -463,6 +463,29 @@
->>  }
->>  
->>  /*
->> + * Check whether the replace operation need more blocks. Ignore
->> + * the parameters check since the real replace() call below will
->> + * do that.
->> + */
->> +bool
->> +xfs_dir_replace_needblock(
-> 
-> xfs_dir2, to be consistent.
-> 
->> +	struct xfs_inode	*dp,
->> +	xfs_ino_t		inum)
-> 
-> If you passed the inode pointer (instead of ip->i_ino) here then you
-> don't need to revalidate the inode number.
-> 
->> +{
->> +	int			rval;
->> +
->> +	rval = xfs_dir_ino_validate(dp->i_mount, inum);
->> +	if (rval)
->> +		return false;
->> +
->> +	/*
->> +	 * Only convert the shortform directory to block form maybe
->> +	 * need more blocks.
->> +	 */
->> +	return xfs_dir2_sf_replace_needblock(dp, inum);
-> 
-> 	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
-> 		return xfs_dir2_sf_replace_needblock(...);
-> 
-> Also, do other directories formats need extra blocks allocated?
+Just fix the typos checkpatch notices...
 
-Yeah, I think so. Other dirs formats only need to change the
-inode number to the new value and extra blocks are not necessary
-for them.
-> 
->> +}
->> +
->> +/*
->>   * Replace the inode number of a directory entry.
->>   */
->>  int
->> diff --git a/fs/xfs/libxfs/xfs_dir2.h b/fs/xfs/libxfs/xfs_dir2.h
->> index f542447..e436c14 100644
->> --- a/fs/xfs/libxfs/xfs_dir2.h
->> +++ b/fs/xfs/libxfs/xfs_dir2.h
->> @@ -124,6 +124,8 @@ extern int xfs_dir_lookup(struct xfs_trans *tp, struct xfs_inode *dp,
->>  extern int xfs_dir_removename(struct xfs_trans *tp, struct xfs_inode *dp,
->>  				struct xfs_name *name, xfs_ino_t ino,
->>  				xfs_extlen_t tot);
->> +extern bool xfs_dir_replace_needblock(struct xfs_inode *dp,
->> +				xfs_ino_t inum);
->>  extern int xfs_dir_replace(struct xfs_trans *tp, struct xfs_inode *dp,
->>  				struct xfs_name *name, xfs_ino_t inum,
->>  				xfs_extlen_t tot);
->> diff --git a/fs/xfs/libxfs/xfs_dir2_priv.h b/fs/xfs/libxfs/xfs_dir2_priv.h
->> index 59f9fb2..002103f 100644
->> --- a/fs/xfs/libxfs/xfs_dir2_priv.h
->> +++ b/fs/xfs/libxfs/xfs_dir2_priv.h
->> @@ -116,6 +116,8 @@ extern int xfs_dir2_block_to_sf(struct xfs_da_args *args, struct xfs_buf *bp,
->>  extern int xfs_dir2_sf_create(struct xfs_da_args *args, xfs_ino_t pino);
->>  extern int xfs_dir2_sf_lookup(struct xfs_da_args *args);
->>  extern int xfs_dir2_sf_removename(struct xfs_da_args *args);
->> +extern bool xfs_dir2_sf_replace_needblock(struct xfs_inode *dp,
->> +		xfs_ino_t inum);
->>  extern int xfs_dir2_sf_replace(struct xfs_da_args *args);
->>  extern xfs_failaddr_t xfs_dir2_sf_verify(struct xfs_inode *ip);
->>  
->> diff --git a/fs/xfs/libxfs/xfs_dir2_sf.c b/fs/xfs/libxfs/xfs_dir2_sf.c
->> index 85f14fc..0906f91 100644
->> --- a/fs/xfs/libxfs/xfs_dir2_sf.c
->> +++ b/fs/xfs/libxfs/xfs_dir2_sf.c
->> @@ -945,6 +945,30 @@ static int xfs_dir2_sf_addname_pick(xfs_da_args_t *args, int objchange,
->>  }
->>  
->>  /*
->> + * Check whether the replace operation need more blocks.
->> + */
->> +bool
->> +xfs_dir2_sf_replace_needblock(
-> 
-> Urgggh.  This is a predicate that we only ever call from xfs_rename(),
-> right?  And it addresses a particular quirk of the locking when the
-> caller wants us to rename on top of an existing entry and drop the link
-> count of the old inode, right?  So why can't this just be a predicate in
-> xfs_inode.c ?  Nobody else needs to know this particular piece of
-> information, AFAICT.
-> > (Apologies, for Brian and I clearly aren't on the same page about
-> that...)
-Hmm... sorry, I had misunderstood Brian's mean. Right, maybe we only
-need the xfs_dir2_sf_replace_needblock() call, and then involve it
-in both places.
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ fs/xfs/kmem.c                  | 2 +-
+ fs/xfs/libxfs/xfs_alloc.c      | 2 +-
+ fs/xfs/libxfs/xfs_attr_leaf.c  | 2 +-
+ fs/xfs/libxfs/xfs_da_format.h  | 2 +-
+ fs/xfs/libxfs/xfs_fs.h         | 2 +-
+ fs/xfs/libxfs/xfs_log_format.h | 4 ++--
+ fs/xfs/xfs_buf.c               | 2 +-
+ fs/xfs/xfs_log_cil.c           | 4 ++--
+ fs/xfs/xfs_symlink.h           | 2 +-
+ fs/xfs/xfs_trans_ail.c         | 8 ++++----
+ 10 files changed, 15 insertions(+), 15 deletions(-)
 
-Thanks for your comments, will address them soon and send v3.
+diff --git a/fs/xfs/kmem.c b/fs/xfs/kmem.c
+index da031b9..1da942 100644
+--- a/fs/xfs/kmem.c
++++ b/fs/xfs/kmem.c
+@@ -32,7 +32,7 @@ kmem_alloc(size_t size, xfs_km_flags_t flags)
+ 
+ 
+ /*
+- * __vmalloc() will allocate data pages and auxillary structures (e.g.
++ * __vmalloc() will allocate data pages and auxiliary structures (e.g.
+  * pagetables) with GFP_KERNEL, yet we may be under GFP_NOFS context here. Hence
+  * we need to tell memory reclaim that we are in such a context via
+  * PF_MEMALLOC_NOFS to prevent memory reclaim re-entering the filesystem here
+diff --git a/fs/xfs/libxfs/xfs_alloc.c b/fs/xfs/libxfs/xfs_alloc.c
+index f7a4b5..b39bd8 100644
+--- a/fs/xfs/libxfs/xfs_alloc.c
++++ b/fs/xfs/libxfs/xfs_alloc.c
+@@ -1488,7 +1488,7 @@ xfs_alloc_ag_vextent_near(
+ 	dofirst = prandom_u32() & 1;
+ #endif
+ 
+-	/* handle unitialized agbno range so caller doesn't have to */
++	/* handle uninitialized agbno range so caller doesn't have to */
+ 	if (!args->min_agbno && !args->max_agbno)
+ 		args->max_agbno = args->mp->m_sb.sb_agblocks - 1;
+ 	ASSERT(args->min_agbno <= args->max_agbno);
+diff --git a/fs/xfs/libxfs/xfs_attr_leaf.c b/fs/xfs/libxfs/xfs_attr_leaf.c
+index dca884..8ba3ae8 100644
+--- a/fs/xfs/libxfs/xfs_attr_leaf.c
++++ b/fs/xfs/libxfs/xfs_attr_leaf.c
+@@ -829,7 +829,7 @@ xfs_attr_shortform_lookup(xfs_da_args_t *args)
+ }
+ 
+ /*
+- * Retreive the attribute value and length.
++ * Retrieve the attribute value and length.
+  *
+  * If ATTR_KERNOVAL is specified, only the length needs to be returned.
+  * Unlike a lookup, we only return an error if the attribute does not
+diff --git a/fs/xfs/libxfs/xfs_da_format.h b/fs/xfs/libxfs/xfs_da_format.h
+index ae654e0..6702a08 100644
+--- a/fs/xfs/libxfs/xfs_da_format.h
++++ b/fs/xfs/libxfs/xfs_da_format.h
+@@ -482,7 +482,7 @@ xfs_dir2_leaf_bests_p(struct xfs_dir2_leaf_tail *ltp)
+ }
+ 
+ /*
+- * Free space block defintions for the node format.
++ * Free space block definitions for the node format.
+  */
+ 
+ /*
+diff --git a/fs/xfs/libxfs/xfs_fs.h b/fs/xfs/libxfs/xfs_fs.h
+index e9371a..038a16a 100644
+--- a/fs/xfs/libxfs/xfs_fs.h
++++ b/fs/xfs/libxfs/xfs_fs.h
+@@ -416,7 +416,7 @@ struct xfs_bulkstat {
+ 
+ /*
+  * Project quota id helpers (previously projid was 16bit only
+- * and using two 16bit values to hold new 32bit projid was choosen
++ * and using two 16bit values to hold new 32bit projid was chosen
+  * to retain compatibility with "old" filesystems).
+  */
+ static inline uint32_t
+diff --git a/fs/xfs/libxfs/xfs_log_format.h b/fs/xfs/libxfs/xfs_log_format.h
+index e5f97c6..8ef31d7 100644
+--- a/fs/xfs/libxfs/xfs_log_format.h
++++ b/fs/xfs/libxfs/xfs_log_format.h
+@@ -432,9 +432,9 @@ static inline uint xfs_log_dinode_size(int version)
+ }
+ 
+ /*
+- * Buffer Log Format defintions
++ * Buffer Log Format definitions
+  *
+- * These are the physical dirty bitmap defintions for the log format structure.
++ * These are the physical dirty bitmap definitions for the log format structure.
+  */
+ #define	XFS_BLF_CHUNK		128
+ #define	XFS_BLF_SHIFT		7
+diff --git a/fs/xfs/xfs_buf.c b/fs/xfs/xfs_buf.c
+index 1e63dd3..2ed3c65 100644
+--- a/fs/xfs/xfs_buf.c
++++ b/fs/xfs/xfs_buf.c
+@@ -461,7 +461,7 @@ _xfs_buf_map_pages(
+ 		unsigned nofs_flag;
+ 
+ 		/*
+-		 * vm_map_ram() will allocate auxillary structures (e.g.
++		 * vm_map_ram() will allocate auxiliary structures (e.g.
+ 		 * pagetables) with GFP_KERNEL, yet we are likely to be under
+ 		 * GFP_NOFS context here. Hence we need to tell memory reclaim
+ 		 * that we are in such a context via PF_MEMALLOC_NOFS to prevent
+diff --git a/fs/xfs/xfs_log_cil.c b/fs/xfs/xfs_log_cil.c
+index a120442..48435c 100644
+--- a/fs/xfs/xfs_log_cil.c
++++ b/fs/xfs/xfs_log_cil.c
+@@ -179,7 +179,7 @@ xlog_cil_alloc_shadow_bufs(
+ 
+ 			/*
+ 			 * We free and allocate here as a realloc would copy
+-			 * unecessary data. We don't use kmem_zalloc() for the
++			 * unnecessary data. We don't use kmem_zalloc() for the
+ 			 * same reason - we don't need to zero the data area in
+ 			 * the buffer, only the log vector header and the iovec
+ 			 * storage.
+@@ -682,7 +682,7 @@ xlog_cil_push(
+ 	}
+ 
+ 
+-	/* check for a previously pushed seqeunce */
++	/* check for a previously pushed sequence */
+ 	if (push_seq < cil->xc_ctx->sequence) {
+ 		spin_unlock(&cil->xc_push_lock);
+ 		goto out_skip;
+diff --git a/fs/xfs/xfs_symlink.h b/fs/xfs/xfs_symlink.h
+index 9743d8c..b1fa09 100644
+--- a/fs/xfs/xfs_symlink.h
++++ b/fs/xfs/xfs_symlink.h
+@@ -5,7 +5,7 @@
+ #ifndef __XFS_SYMLINK_H
+ #define __XFS_SYMLINK_H 1
+ 
+-/* Kernel only symlink defintions */
++/* Kernel only symlink definitions */
+ 
+ int xfs_symlink(struct xfs_inode *dp, struct xfs_name *link_name,
+ 		const char *target_path, umode_t mode, struct xfs_inode **ipp);
+diff --git a/fs/xfs/xfs_trans_ail.c b/fs/xfs/xfs_trans_ail.c
+index aea71e..00cc5b 100644
+--- a/fs/xfs/xfs_trans_ail.c
++++ b/fs/xfs/xfs_trans_ail.c
+@@ -427,15 +427,15 @@ xfsaild_push(
+ 
+ 		case XFS_ITEM_FLUSHING:
+ 			/*
+-			 * The item or its backing buffer is already beeing
++			 * The item or its backing buffer is already being
+ 			 * flushed.  The typical reason for that is that an
+ 			 * inode buffer is locked because we already pushed the
+ 			 * updates to it as part of inode clustering.
+ 			 *
+ 			 * We do not want to to stop flushing just because lots
+-			 * of items are already beeing flushed, but we need to
++			 * of items are already being flushed, but we need to
+ 			 * re-try the flushing relatively soon if most of the
+-			 * AIL is beeing flushed.
++			 * AIL is being flushed.
+ 			 */
+ 			XFS_STATS_INC(mp, xs_push_ail_flushing);
+ 			trace_xfs_ail_flushing(lip);
+@@ -612,7 +612,7 @@ xfsaild(
+  * The push is run asynchronously in a workqueue, which means the caller needs
+  * to handle waiting on the async flush for space to become available.
+  * We don't want to interrupt any push that is in progress, hence we only queue
+- * work if we set the pushing bit approriately.
++ * work if we set the pushing bit appropriately.
+  *
+  * We do this unlocked - we only need to know whether there is anything in the
+  * AIL at the time we are called. We don't need to access the contents of
 
-Kaixu
-> 
->> +	struct xfs_inode	*dp,
->> +	xfs_ino_t		inum)
->> +{
->> +	int			newsize;
->> +	xfs_dir2_sf_hdr_t	*sfp;
->> +
->> +	if (dp->i_d.di_format != XFS_DINODE_FMT_LOCAL)
->> +		return false;
-> 
-> This check should be used up in xfs_dir2_replace_needblock() to decide
-> if we're calling xfs_dir2_sf_replace_needblock(), or just returning
-> false.
-> 
->> +
->> +	sfp = (xfs_dir2_sf_hdr_t *)dp->i_df.if_u1.if_data;
->> +	newsize = dp->i_df.if_bytes + (sfp->count + 1) * XFS_INO64_DIFF;
->> +
->> +	if (inum > XFS_DIR2_MAX_SHORT_INUM &&
->> +	    sfp->i8count == 0 && newsize > XFS_IFORK_DSIZE(dp))
->> +		return true;
->> +	else
->> +		return false;
-> 
-> return inum > XFS_DIR2_MAX_SHORT_INUM && (all the rest of that);
-> 
->> +}
->> +
->> +/*
->>   * Replace the inode number of an entry in a shortform directory.
->>   */
->>  int						/* error */
->> diff --git a/fs/xfs/xfs_inode.c b/fs/xfs/xfs_inode.c
->> index 18f4b26..c239070 100644
->> --- a/fs/xfs/xfs_inode.c
->> +++ b/fs/xfs/xfs_inode.c
->> @@ -3196,6 +3196,7 @@ struct xfs_iunlink {
->>  	struct xfs_trans	*tp;
->>  	struct xfs_inode	*wip = NULL;		/* whiteout inode */
->>  	struct xfs_inode	*inodes[__XFS_SORT_INODES];
->> +	struct xfs_buf		*agibp;
->>  	int			num_inodes = __XFS_SORT_INODES;
->>  	bool			new_parent = (src_dp != target_dp);
->>  	bool			src_is_directory = S_ISDIR(VFS_I(src_ip)->i_mode);
->> @@ -3361,6 +3362,19 @@ struct xfs_iunlink {
->>  		 * In case there is already an entry with the same
->>  		 * name at the destination directory, remove it first.
->>  		 */
->> +
->> +		/*
->> +		 * Check whether the replace operation need more blocks.
->> +		 * If so, acquire the agi lock firstly to preserve locking
-> 
->                                                "first"
-> 
->> +		 * order(AGI/AGF).
-> 
-> Nit: space between "order" and "(AGI/AGF)".
->> +		 */
->> +		if (xfs_dir_replace_needblock(target_dp, src_ip->i_ino)) {
->> +			error = xfs_read_agi(mp, tp,
->> +					XFS_INO_TO_AGNO(mp, target_ip->i_ino), &agibp);
-> 
-> Overly long line here.
-> 
-> --D
-> 
->> +			if (error)
->> +				goto out_trans_cancel;
->> +		}
->> +
->>  		error = xfs_dir_replace(tp, target_dp, target_name,
->>  					src_ip->i_ino, spaceres);
->>  		if (error)
->> -- 
->> 1.8.3.1
->>
 
--- 
-kaixuxia
